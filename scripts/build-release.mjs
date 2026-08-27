@@ -42,7 +42,7 @@ const npmPackage = createNpmPackage(manifest.packageVersion);
 console.log(`release: ${archive}, ${npmPackage}`);
 
 function releaseCommit() {
-  const configured = process.env.GITHUB_SHA ?? process.env.RETROM_RUNTIME_COMMIT;
+  const configured = process.env.GITHUB_SHA ?? process.env.RPG_RUNTIME_RELEASE_COMMIT;
   if (configured && /^[0-9a-f]{40}$/u.test(configured)) {return configured;}
   const result = spawnSync("git", ["rev-parse", "HEAD"], { cwd: root, encoding: "utf8" });
   const value = result.stdout?.trim();

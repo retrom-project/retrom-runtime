@@ -1,11 +1,9 @@
 import type { RpgAdapterConfig, RpgGeneration, RpgPosition, RpgRuntimeConfig } from "./contract.js";
 
 export const runtimeCatalog = [
-  { runtimeId: "easyrpg-0811-r2", generations: ["RPG2000", "RPG2003"], adapterKind: "EASYRPG_WEB", adapterId: "easyrpg-web-v1", adapterAbi: "easyrpg-save-v1" },
-  { runtimeId: "easyrpg-0811-r3", generations: ["RPG2000", "RPG2003"], adapterKind: "EASYRPG_WEB", adapterId: "easyrpg-web-v1", adapterAbi: "easyrpg-save-v1" },
-  { runtimeId: "mkxp-f2efc98-r3", generations: ["RPGXP", "RPGVX", "RPGVXACE"], adapterKind: "MKXP_LIBRETRO_WEB", adapterId: "mkxp-z-libretro-v4", adapterAbi: "mkxp-state-v1" },
-  { runtimeId: "native-mv-v4", generations: ["RPGMV"], adapterKind: "NATIVE_WEB", adapterId: "rpg-native-web-v2", adapterAbi: "rpg-native-save-v1" },
-  { runtimeId: "native-mz-v7", generations: ["RPGMZ"], adapterKind: "NATIVE_WEB", adapterId: "rpg-native-web-v5", adapterAbi: "rpg-native-save-v1" },
+  { runtimeId: "easyrpg", generations: ["RPG2000", "RPG2003"], adapterKind: "EASYRPG_WEB", adapterId: "easyrpg-web", adapterAbi: "easyrpg-save" },
+  { runtimeId: "mkxp", generations: ["RPGXP", "RPGVX", "RPGVXACE"], adapterKind: "MKXP_LIBRETRO_WEB", adapterId: "mkxp-libretro-web", adapterAbi: "mkxp-state" },
+  { runtimeId: "native", generations: ["RPGMV", "RPGMZ"], adapterKind: "NATIVE_WEB", adapterId: "native-web", adapterAbi: "native-save" },
 ] as const;
 
 export function validateRuntimeConfig(config: RpgRuntimeConfig): void {
@@ -31,7 +29,7 @@ function validEasyAdapter(
   adapter: Extract<RpgAdapterConfig, { adapterKind: "EASYRPG_WEB" }>,
 ) {
   return (generation === "RPG2000" || generation === "RPG2003") &&
-    adapter.adapterId === "easyrpg-web-v1" && adapter.checkpointSlot === 100 &&
+    adapter.adapterId === "easyrpg-web" && adapter.checkpointSlot === 100 &&
     adapter.engineMode === (generation === "RPG2000" ? "rpg2k" : "rpg2k3") &&
     validUrl(adapter.runtimeBaseUrl) && validUrl(adapter.projectRootUrl) &&
     validUrl(adapter.projectIndexUrl) &&
@@ -43,7 +41,7 @@ function validMkxpAdapter(
   adapter: Extract<RpgAdapterConfig, { adapterKind: "MKXP_LIBRETRO_WEB" }>,
 ) {
   const rgss = generation === "RPGXP" ? 1 : generation === "RPGVX" ? 2 : generation === "RPGVXACE" ? 3 : 0;
-  return rgss !== 0 && adapter.adapterId === "mkxp-z-libretro-v4" && adapter.rgssVersion === rgss &&
+  return rgss !== 0 && adapter.adapterId === "mkxp-libretro-web" && adapter.rgssVersion === rgss &&
     adapter.stateBufferBytes === 268435456 && validUrl(adapter.runtimeBaseUrl) &&
     validArchive(adapter.projectArchive) && validCore(adapter.core) &&
     adapter.rtpArchives.every((archive) => boundedText(archive.declaredName, 255) && validArchive(archive));
@@ -54,9 +52,15 @@ function validNativeAdapter(
   adapter: Extract<RpgAdapterConfig, { adapterKind: "NATIVE_WEB" }>,
 ) {
   return (generation === "RPGMV" || generation === "RPGMZ") &&
-    adapter.bridgeProfile === (generation === "RPGMV" ? "mv-v1" : "mz-v1") &&
+    adapter.adapterId === "native-web" && adapter.bridgeProfile === generation &&
     validUrl(adapter.uniqueOrigin) && validUrl(adapter.bootstrapUrl) &&
+    (adapter.cleanupUrl === null || sameOrigin(adapter.cleanupUrl, adapter.uniqueOrigin)) &&
     /^[A-Za-z0-9_-]{43,128}$/u.test(adapter.bootstrapTicket);
+}
+
+function sameOrigin(left: string, right: string) {
+  try {return new URL(left).origin === new URL(right).origin;}
+  catch {return false;}
 }
 
 function validCore(core: Extract<RpgAdapterConfig, { adapterKind: "MKXP_LIBRETRO_WEB" }>["core"]) {

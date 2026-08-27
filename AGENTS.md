@@ -1,6 +1,6 @@
 # retrom-runtime Agent 实施规范
 
-本仓库维护可被任意 Web 项目引用的 RPG Maker 浏览器运行时，不包含 Retrom 的上传、审核、权限、数据库、HTTP 路由或产品验收逻辑。
+本仓库维护可被任意 Web 项目引用的 RPG Maker 浏览器运行时，不包含宿主应用的上传、审核、权限、数据库、HTTP 路由或产品验收逻辑。
 
 ## 边界
 
@@ -8,7 +8,7 @@
 - `assets/` 保存项目自有 bridge、补丁说明和小型文本资产；第三方 JS/Wasm 只进入 tag Release，不提交 Git。
 - `runtime-manifest.json` 是支持核心、上游 Release、adapter ABI 与发布资产的唯一机器事实源。
 - `tests/` 和与源码同目录的 `*.test.ts` 覆盖运行时行为；宿主产品的导入、发布和权限测试留在宿主仓库。
-- 不引用 Retrom 的源码、生成类型、API 路径、数据库模型或本机绝对路径。
+- 不引用任何宿主应用的源码、生成类型、API 路径、数据库模型或本机绝对路径。
 
 ## 工作方式
 

@@ -1,4 +1,4 @@
-# Retrom mkxp-z position evidence bridge, protocol version 2.
+# Host-independent mkxp-z position evidence bridge.
 #
 # This script is injected through mkxp-z's fixed preload-script mechanism. It
 # never changes game state. The browser reads the bounded ASCII record from the
@@ -6,9 +6,9 @@
 # is required because mkxp-z switches the PhysFS write directory from System to
 # the game save directory before any RGSS script executes.
 
-module RetromPositionBridge
-  PATH = "retrom-position-v1"
-  TEMP_PATH = "retrom-position-v1.tmp"
+module RpgRuntimePositionBridge
+  PATH = "rpg-runtime-position"
+  TEMP_PATH = "rpg-runtime-position.tmp"
 
   def self.capture
     return unless defined?($game_map) && $game_map
@@ -27,12 +27,12 @@ end
 
 module Graphics
   class << self
-    unless respond_to?(:retrom_update_without_position_bridge)
-      alias_method :retrom_update_without_position_bridge, :update
+    unless respond_to?(:rpg_runtime_update_without_position_bridge)
+      alias_method :rpg_runtime_update_without_position_bridge, :update
 
       def update
-        retrom_update_without_position_bridge
-        RetromPositionBridge.capture
+        rpg_runtime_update_without_position_bridge
+        RpgRuntimePositionBridge.capture
       end
     end
   end

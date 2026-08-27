@@ -39,8 +39,12 @@ Runtime JS/Wasm is not committed. `npm run release:build` downloads assets from 
 - `release/xxxsen-retrom-runtime-<version>.tgz` (installable npm package)
 - `release/retrom-runtime-release.json`
 
-The legacy `RETROM_*` bridge message names and checkpoint store token are retained as protocol ABI only. They do
-not call or import the Retrom application.
+The repository keeps one current asset for each runtime role and never creates parallel versioned asset
+directories. The `retrom-runtime` Git tag versions the complete set; older sets remain available only from their
+immutable release tags.
+
+Adapter IDs and asset paths describe roles, not migration revisions. Version selection happens only at the
+repository release tag; the source tree and each release contain one implementation per runtime role.
 
 ## Adding and integrating a core
 

@@ -20,11 +20,11 @@ type EasyState = RpgPosition & {
 type EasyModule = {
   FS: EasyFileSystem;
   api: {
-    createRetromCheckpoint(): boolean;
-    retromState(): string;
+    createRuntimeCheckpoint(): boolean;
+    runtimeState(): string;
   };
   canvas: HTMLCanvasElement;
-  retromFileSystemReady?: boolean;
+  runtimeFileSystemReady?: boolean;
   initApi(): void;
   pauseMainLoop(): void;
   resumeMainLoop(): void;
@@ -35,11 +35,11 @@ type EasyModuleOptions = {
   noExitRuntime: true;
   saveFs: undefined;
   locateFile(path: string): string;
-  retromEngineMode: string;
-  retromRtpMountPath?: string;
-  retromRtpFiles: Array<{ path: string; bytes: Uint8Array }>;
-  retromRestoreSlot?: number;
-  retromRestoreFiles: Array<{ path: string; bytes: Uint8Array }>;
+  runtimeEngineMode: string;
+  runtimeRtpMountPath?: string;
+  runtimeRtpFiles: Array<{ path: string; bytes: Uint8Array }>;
+  runtimeRestoreSlot?: number;
+  runtimeRestoreFiles: Array<{ path: string; bytes: Uint8Array }>;
 };
 
 type EasyWindow = Window & {
@@ -58,7 +58,7 @@ export async function mountEasyRpg(
   try {return await mountEasyRpgUnchecked(config, target, frameWindow, restorePayload);}
   catch (error) {
     target.replaceChildren();
-    frameWindow.document.querySelectorAll("script[data-retrom-rpg-runtime]").forEach((script) => script.remove());
+    frameWindow.document.querySelectorAll("script[data-rpg-runtime]").forEach((script) => script.remove());
     throw error;
   }
 }
@@ -94,11 +94,11 @@ async function mountEasyRpgUnchecked(
     noExitRuntime: true,
     saveFs: undefined,
     locateFile: (path) => `${config.adapter.runtimeBaseUrl}${path}`,
-    retromEngineMode: config.adapter.engineMode,
-    ...(config.adapter.rtpArchive ? { retromRtpMountPath: config.adapter.rtpArchive.mountPath } : {}),
-    retromRtpFiles: rtpFiles,
-    ...(restoreFiles.length ? { retromRestoreSlot: config.adapter.checkpointSlot } : {}),
-    retromRestoreFiles: restoreFiles,
+    runtimeEngineMode: config.adapter.engineMode,
+    ...(config.adapter.rtpArchive ? { runtimeRtpMountPath: config.adapter.rtpArchive.mountPath } : {}),
+    runtimeRtpFiles: rtpFiles,
+    ...(restoreFiles.length ? { runtimeRestoreSlot: config.adapter.checkpointSlot } : {}),
+    runtimeRestoreFiles: restoreFiles,
   });
   playerModule.initApi();
   const expectedEngine = config.generation === "RPG2000" ? "RPG2000" : "RPG2003";
@@ -117,7 +117,7 @@ async function mountEasyRpgUnchecked(
     },
     takeScreenshot: async () => ({ blob: await canvasBlob(playerModule.canvas), format: "png" }),
     gameManager: {
-      savePayloadKind: "NATIVE_SAVE_BUNDLE_V1",
+      savePayloadKind: "NATIVE_SAVE_BUNDLE",
       validationPurpose: config.validationPurpose,
       getRpgPosition: () => position(readState(playerModule)),
       getCheckpointAvailability: () => {
@@ -125,7 +125,7 @@ async function mountEasyRpgUnchecked(
         return { available, reason: available ? null : "BUSY" };
       },
       getStateAsync: async () => {
-        if (!playerModule.api.createRetromCheckpoint()) {throw new Error("RPG_CHECKPOINT_UNAVAILABLE");}
+        if (!playerModule.api.createRuntimeCheckpoint()) {throw new Error("RPG_CHECKPOINT_UNAVAILABLE");}
         const bytes = readCheckpoint(playerModule.FS);
         return encodeRpgCheckpoint({
           engine: expectedEngine,
@@ -157,7 +157,7 @@ async function mountEasyRpgUnchecked(
 
 function readState(module: EasyModule): EasyState {
   let parsed: unknown;
-  try {parsed = JSON.parse(module.api.retromState());}
+  try {parsed = JSON.parse(module.api.runtimeState());}
   catch {throw new Error("RPG_RUNTIME_POSITION_UNAVAILABLE");}
   if (!parsed || typeof parsed !== "object") {throw new Error("RPG_RUNTIME_POSITION_UNAVAILABLE");}
   const state = parsed as Partial<EasyState>;
@@ -185,7 +185,7 @@ async function waitForReady(
   module: EasyModule,
   expectedEngine: EasyState["engine"],
 ) {
-  if (module.retromFileSystemReady !== true) {
+  if (module.runtimeFileSystemReady !== true) {
     throw new Error("RPG_RUNTIME_FILESYSTEM_NOT_READY");
   }
   const deadline = performance.now() + 30_000;
@@ -278,7 +278,7 @@ async function digest(bytes: Uint8Array) {
 function loadScript(document: Document, url: string) {
   return new Promise<HTMLScriptElement>((resolve, reject) => {
     const script = document.createElement("script");
-    script.dataset.retromRpgRuntime = "easyrpg";
+    script.dataset.rpgRuntime = "easyrpg";
     script.src = url;
     script.async = true;
     script.addEventListener("load", () => resolve(script), { once: true });

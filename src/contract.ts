@@ -7,7 +7,7 @@ export type RpgGeneration =
   | "RPGMV"
   | "RPGMZ";
 
-export type CheckpointPayloadKind = "RUNTIME_STATE" | "NATIVE_SAVE_BUNDLE_V1";
+export type CheckpointPayloadKind = "RUNTIME_STATE" | "NATIVE_SAVE_BUNDLE";
 
 export type CheckpointUnavailableReason =
   | "NOT_ON_MAP"
@@ -40,7 +40,7 @@ export type RuntimeArchive = {
 
 export type EasyRpgAdapterConfig = {
   adapterKind: "EASYRPG_WEB";
-  adapterId: "easyrpg-web-v1";
+  adapterId: "easyrpg-web";
   engineMode: "rpg2k" | "rpg2k3";
   runtimeBaseUrl: string;
   projectRootUrl: string;
@@ -51,7 +51,7 @@ export type EasyRpgAdapterConfig = {
 
 export type MkxpAdapterConfig = {
   adapterKind: "MKXP_LIBRETRO_WEB";
-  adapterId: "mkxp-z-libretro-v4";
+  adapterId: "mkxp-libretro-web";
   core: {
     jsUrl: string;
     jsSizeBytes: number;
@@ -70,11 +70,12 @@ export type MkxpAdapterConfig = {
 
 export type NativeWebAdapterConfig = {
   adapterKind: "NATIVE_WEB";
-  adapterId: "rpg-native-web-v1" | "rpg-native-web-v2" | "rpg-native-web-v3" | "rpg-native-web-v4" | "rpg-native-web-v5";
-  bridgeProfile: "mv-v1" | "mz-v1";
+  adapterId: "native-web";
+  bridgeProfile: "RPGMV" | "RPGMZ";
   uniqueOrigin: string;
   bootstrapUrl: string;
   bootstrapTicket: string;
+  cleanupUrl: string | null;
 };
 
 export type RpgAdapterConfig = EasyRpgAdapterConfig | MkxpAdapterConfig | NativeWebAdapterConfig;

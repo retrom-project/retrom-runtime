@@ -80,7 +80,7 @@ export async function mountNativeRpg(
     },
     takeScreenshot: async () => ({ blob: await channel.screenshot(), format: "png" }),
     gameManager: {
-      savePayloadKind: "NATIVE_SAVE_BUNDLE_V1",
+      savePayloadKind: "NATIVE_SAVE_BUNDLE",
       validationPurpose: config.validationPurpose,
       getRpgPosition: () => channel.position(),
       getCheckpointAvailability: () => ({ available: channel.checkpointAvailable(), reason: channel.checkpointAvailable() ? null : "BUSY" }),
@@ -131,9 +131,9 @@ class NativeChannel {
     if (this.connected) {throw new Error("RPG_NATIVE_PROTOCOL_INVALID");}
     this.connected = true;
     target.postMessage({
-      type: "RETROM_RPG_NATIVE_CONNECT", protocolVersion,
+      type: "RPG_RUNTIME_NATIVE_CONNECT", protocolVersion,
       launchId: this.config.sessionId, nonce: this.nonce, parentOrigin: window.location.origin,
-      profile: this.config.adapter.bridgeProfile,
+      profile: this.config.adapter.bridgeProfile, cleanupUrl: this.config.adapter.cleanupUrl,
     }, this.config.adapter.uniqueOrigin, [this.port.port2]);
   }
 
@@ -321,7 +321,7 @@ async function bootstrapNativeFrame(config: NativeConfig, frame: HTMLIFrameEleme
       if (action === "SEND_TICKET") {
         stage = "BRIDGE";
         if (!bootstrapTicket) {finish(new Error("RPG_NATIVE_BOOTSTRAP_TIMEOUT")); return;}
-        runtimeWindow.postMessage({ type: "RETROM_RPG_NATIVE_BOOTSTRAP", protocolVersion, ticket: bootstrapTicket }, config.adapter.uniqueOrigin);
+        runtimeWindow.postMessage({ type: "RPG_RUNTIME_NATIVE_BOOTSTRAP", protocolVersion, ticket: bootstrapTicket }, config.adapter.uniqueOrigin);
         bootstrapTicket = "";
       } else if (action === "CONNECT") {
         channel.connect(runtimeWindow);
@@ -338,8 +338,8 @@ export function nativeBootstrapAction(stage: NativeBootstrapStage, value: unknow
     Object.keys(value).sort().join(",") !== "protocolVersion,type") {return "IGNORE";}
   const message = value as { protocolVersion?: unknown; type?: unknown };
   if (message.protocolVersion !== protocolVersion) {return "IGNORE";}
-  if (message.type === "RETROM_RPG_NATIVE_BRIDGE_READY") {return "CONNECT";}
-  return stage === "BOOTSTRAP" && message.type === "RETROM_RPG_NATIVE_BOOTSTRAP_READY"
+  if (message.type === "RPG_RUNTIME_NATIVE_BRIDGE_READY") {return "CONNECT";}
+  return stage === "BOOTSTRAP" && message.type === "RPG_RUNTIME_NATIVE_BOOTSTRAP_READY"
     ? "SEND_TICKET" : "IGNORE";
 }
 

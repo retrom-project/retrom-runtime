@@ -19,7 +19,7 @@ type FakePort = {
 describe("native-web RPG Maker bridge", () => {
   it("reports the engine ready on the title screen before a map is available", () => {
     const source = readFileSync(
-      resolve(process.cwd(), "assets/runtime/v7/native-bridge.js"),
+      resolve(process.cwd(), "assets/runtime/native/bridge.js"),
       "utf8",
     );
     const listeners = new Map<string, Array<(event: BridgeEvent) => void>>();
@@ -45,14 +45,15 @@ describe("native-web RPG Maker bridge", () => {
 
     listeners.get("message")?.[0]?.({
       data: {
+        cleanupUrl: null,
         launchId: "01980000-0000-7000-8000-000000000001",
         nonce: "test-nonce",
-        parentOrigin: "https://retrom.example",
-        profile: "mv-v1",
+        parentOrigin: "https://host.example",
+        profile: "RPGMV",
         protocolVersion: 1,
-        type: "RETROM_RPG_NATIVE_CONNECT",
+        type: "RPG_RUNTIME_NATIVE_CONNECT",
       },
-      origin: "https://retrom.example",
+      origin: "https://host.example",
       ports: [port],
       stopImmediatePropagation: () => undefined,
     });
@@ -61,7 +62,7 @@ describe("native-web RPG Maker bridge", () => {
     expect(replies).toContainEqual({
       body: {
         engine: "RPGMV",
-        engineProfile: "mv-v1",
+        engineProfile: "RPGMV",
         position: { fixtureState: 0, mapId: 0, playerX: 0, playerY: 0 },
       },
       launchId: "01980000-0000-7000-8000-000000000001",
@@ -74,7 +75,7 @@ describe("native-web RPG Maker bridge", () => {
 
   it("waits for the engine database before restoring an MV save", async () => {
     const source = readFileSync(
-      resolve(process.cwd(), "assets/runtime/v7/native-bridge.js"),
+      resolve(process.cwd(), "assets/runtime/native/bridge.js"),
       "utf8",
     );
     const listeners = new Map<string, Array<(event: BridgeEvent) => void>>();
@@ -139,8 +140,8 @@ describe("native-web RPG Maker bridge", () => {
     const launchId = "01980000-0000-7000-8000-000000000001";
     const nonce = "test-nonce";
     listeners.get("message")?.[0]?.({
-      data: { launchId, nonce, parentOrigin: "https://retrom.example", profile: "mv-v1", protocolVersion: 1, type: "RETROM_RPG_NATIVE_CONNECT" },
-      origin: "https://retrom.example",
+      data: { cleanupUrl: null, launchId, nonce, parentOrigin: "https://host.example", profile: "RPGMV", protocolVersion: 1, type: "RPG_RUNTIME_NATIVE_CONNECT" },
+      origin: "https://host.example",
       ports: [port],
       stopImmediatePropagation: () => undefined,
     });
@@ -179,7 +180,7 @@ describe("native-web RPG Maker bridge", () => {
 
   it("round-trips MZ saves through JsonEx so restored game objects keep their semantics", async () => {
     const source = readFileSync(
-      resolve(process.cwd(), "assets/runtime/v7/native-bridge.js"),
+      resolve(process.cwd(), "assets/runtime/native/bridge.js"),
       "utf8",
     );
     const listeners = new Map<string, Array<(event: BridgeEvent) => void>>();
@@ -255,8 +256,8 @@ describe("native-web RPG Maker bridge", () => {
     const launchId = "01980000-0000-7000-8000-000000000001";
     const nonce = "test-nonce";
     listeners.get("message")?.[0]?.({
-      data: { launchId, nonce, parentOrigin: "https://retrom.example", profile: "mz-v1", protocolVersion: 1, type: "RETROM_RPG_NATIVE_CONNECT" },
-      origin: "https://retrom.example",
+      data: { cleanupUrl: null, launchId, nonce, parentOrigin: "https://host.example", profile: "RPGMZ", protocolVersion: 1, type: "RPG_RUNTIME_NATIVE_CONNECT" },
+      origin: "https://host.example",
       ports: [port],
       stopImmediatePropagation: () => undefined,
     });
@@ -312,7 +313,7 @@ describe("native-web RPG Maker bridge", () => {
 describe("native-web RPG Maker screenshot bridge", () => {
   it("renders a native screenshot from the current scene instead of the discarded WebGL canvas", async () => {
     const source = readFileSync(
-      resolve(process.cwd(), "assets/runtime/v7/native-bridge.js"),
+      resolve(process.cwd(), "assets/runtime/native/bridge.js"),
       "utf8",
     );
     const listeners = new Map<string, Array<(event: BridgeEvent) => void>>();
@@ -356,8 +357,8 @@ describe("native-web RPG Maker screenshot bridge", () => {
     const launchId = "01980000-0000-7000-8000-000000000001";
     const nonce = "test-nonce";
     listeners.get("message")?.[0]?.({
-      data: {launchId, nonce, parentOrigin: "https://retrom.example", profile: "mv-v1", protocolVersion: 1, type: "RETROM_RPG_NATIVE_CONNECT"},
-      origin: "https://retrom.example",
+      data: {cleanupUrl: null, launchId, nonce, parentOrigin: "https://host.example", profile: "RPGMV", protocolVersion: 1, type: "RPG_RUNTIME_NATIVE_CONNECT"},
+      origin: "https://host.example",
       ports: [port],
       stopImmediatePropagation: () => undefined,
     });

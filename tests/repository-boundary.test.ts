@@ -5,7 +5,7 @@ import { describe, expect, it } from "vitest";
 const root = process.cwd();
 
 describe("independent package boundary", () => {
-  it("does not import Retrom application modules", async () => {
+  it("does not import host-application modules", async () => {
     const files = await sourceFiles(join(root, "src"));
     for (const file of files) {
       const contents = await readFile(file, "utf8");
@@ -22,6 +22,30 @@ describe("independent package boundary", () => {
       "RPG2000", "RPG2003", "RPGMV", "RPGMZ", "RPGVX", "RPGVXACE", "RPGXP",
     ]);
     expect(manifest.cores.every((core: object) => !("routeKey" in core))).toBe(true);
+    expect(manifest.localAssets.map((asset: { output: string }) => asset.output).sort()).toEqual([
+      "runtime/mkxp/position_bridge.rb",
+      "runtime/native/bridge.js",
+    ]);
+    expect(JSON.stringify(manifest)).not.toMatch(/runtime\/(?:v\d+|[^/]+-v\d+)\//u);
+  });
+
+  it("contains one clean runtime role without migration-era aliases", async () => {
+    const manifest = JSON.parse(await readFile(join(root, "runtime-manifest.json"), "utf8")) as {
+      cores: Array<{ adapterAbi: string; adapterId: string; runtimeId: string }>;
+    };
+    expect([...new Set(manifest.cores.map((core) => core.runtimeId))].sort()).toEqual([
+      "easyrpg", "mkxp", "native",
+    ]);
+    expect([...new Set(manifest.cores.map((core) => core.adapterId))].sort()).toEqual([
+      "easyrpg-web", "mkxp-libretro-web", "native-web",
+    ]);
+    expect([...new Set(manifest.cores.map((core) => core.adapterAbi))].sort()).toEqual([
+      "easyrpg-save", "mkxp-state", "native-save",
+    ]);
+    expect((await readdir(join(root, "assets/runtime"))).sort()).toEqual(["mkxp", "native"]);
+    for (const asset of ["assets/runtime/mkxp/position_bridge.rb", "assets/runtime/native/bridge.js"]) {
+      expect(await readFile(join(root, asset), "utf8"), asset).not.toMatch(/RETROM|__retrom|-[vr][1-9]/u);
+    }
   });
 });
 

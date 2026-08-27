@@ -21,8 +21,8 @@ type TestFileSystem = {
 
 const statePath = "/home/web_user/retroarch/userdata/states/mkxp-z/game.state";
 const coreStateRoot = "/home/web_user/retroarch/userdata/states/mkxp-z";
-const evidencePath = "/home/web_user/retroarch/userdata/saves/mkxp-z/mkxp-z/Saves/RETROM RPGXP-/retrom-position-v1";
-const movedEvidencePath = "/home/web_user/retroarch/userdata/saves/mkxp-z/mkxp-z/Saves/RETROM RPGVX-/retrom-position-v1";
+const evidencePath = "/home/web_user/retroarch/userdata/saves/mkxp-z/mkxp-z/Saves/RPG RUNTIME XP-/rpg-runtime-position";
+const movedEvidencePath = "/home/web_user/retroarch/userdata/saves/mkxp-z/mkxp-z/Saves/RPG RUNTIME VX-/rpg-runtime-position";
 const stateSize = 268435456;
 const stateFixture = new Uint8Array(stateSize);
 stateFixture.set([0x6d, 0x6b, 0x78, 0x70, 1, 0, 0, 0]);
@@ -145,7 +145,7 @@ describe("mkxp runtime mount", () => {
       harness.actions.push(code);
       if (code === "F4") {
         harness.files.delete(evidencePath);
-        harness.setSaveDirectoryName("RETROM RPGVX-");
+        harness.setSaveDirectoryName("RPG RUNTIME VX-");
         harness.files.set(movedEvidencePath, positionBytes(7, 4, 6, 9, 600));
       }
     };
@@ -244,7 +244,7 @@ function createHarness() {
   const files = new Map<string, Uint8Array>();
   const actions: string[] = [];
   const directories: string[] = [];
-  let saveDirectoryName = "RETROM RPGXP-";
+  let saveDirectoryName = "RPG RUNTIME XP-";
   const fileSystem = {
     analyzePath: (path: string) => ({ exists: files.has(path) }),
     mkdirTree: (path: string) => {
@@ -343,19 +343,19 @@ function mkxpConfig(restore: boolean): MkxpConfig {
     expectedRestorePosition: restore ? { mapId: 7, playerX: 4, playerY: 6, fixtureState: 9 } : null,
     adapter: {
       adapterKind: "MKXP_LIBRETRO_WEB",
-      adapterId: "mkxp-z-libretro-v4",
-      runtimeBaseUrl: "/runtime/rpgmaker/f2efc98-v5/",
+      adapterId: "mkxp-libretro-web",
+      runtimeBaseUrl: "/runtime/mkxp/",
       core: {
-        jsUrl: "/runtime/rpgmaker/f2efc98-v5/mkxp-z_libretro.js",
+        jsUrl: "/runtime/mkxp/mkxp-z_libretro.js",
         jsSizeBytes: 258192,
         jsSha256: "c".repeat(64),
-        wasmUrl: "/runtime/rpgmaker/f2efc98-v5/mkxp-z_libretro.wasm",
+        wasmUrl: "/runtime/mkxp/mkxp-z_libretro.wasm",
         wasmSizeBytes: 42487229,
         wasmSha256: "d".repeat(64),
         artifactSetSha256: "a".repeat(64),
       },
       projectArchive: {
-        url: `/runtime/rpg-project/${sessionId}/__retrom__/game.mkxpz`,
+        url: `/projects/${sessionId}/game.mkxpz`,
         sha256: "b".repeat(64),
         sizeBytes: 1,
       },

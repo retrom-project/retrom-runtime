@@ -30,7 +30,7 @@ function easyConfig(): RpgRuntimeConfig {
     expectedRestorePosition: null,
     adapter: {
       adapterKind: "EASYRPG_WEB",
-      adapterId: "easyrpg-web-v1",
+      adapterId: "easyrpg-web",
       engineMode: "rpg2k",
       runtimeBaseUrl: "https://runtime.example/easyrpg/",
       projectRootUrl: "https://runtime.example/project/",

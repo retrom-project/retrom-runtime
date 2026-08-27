@@ -25,15 +25,15 @@ type MkxpMountDependencies = {
   prepare: (options: Parameters<typeof Nostalgist.prepare>[0]) => Promise<MkxpRuntime>;
 };
 
-const bridgeV3 = { size: 1487, sha256: "524a0b3210f33f5a01220134548eb2947678ca5ef7a75b5caf3cfea2804fd5fa" };
+const positionBridge = { size: 1504, sha256: "097dac75b3394cae471ea1a21af65d64035bb87a9d1d8781d555446693c200c2" };
 const systemRoot = "/home/web_user/retroarch/userdata/system";
 const saveRoot = "/home/web_user/retroarch/userdata/saves";
 const stateRoot = "/home/web_user/retroarch/userdata/states";
 const coreStateRoot = `${stateRoot}/mkxp-z`;
 const statePath = `${coreStateRoot}/game.state`;
-const bridgePath = `${systemRoot}/mkxp-z/Scripts/Preload/retrom_position.rb`;
-const evidenceName = "retrom-position-v1";
-const bridgeOption = "mkxp-z_preload-726574726f6d5f706f736974696f6e2e7262";
+const bridgePath = `${systemRoot}/mkxp-z/Scripts/Preload/position_bridge.rb`;
+const evidenceName = "rpg-runtime-position";
+const bridgeOption = "mkxp-z_preload-706f736974696f6e5f6272696467652e7262";
 const saveStateHotkey = { code: "F2", keyCode: 113 } as const;
 const loadStateHotkey = { code: "F4", keyCode: 115 } as const;
 const pauseToggleHotkey = { code: "F6", keyCode: 117 } as const;
@@ -91,7 +91,7 @@ async function mountMkxpUnchecked(
       config.adapter.core.wasmUrl, config.adapter.core.wasmSizeBytes, config.adapter.core.wasmSha256,
     ),
     dependencies.fetchVerified(config.adapter.projectArchive.url, config.adapter.projectArchive.sizeBytes, config.adapter.projectArchive.sha256),
-    dependencies.fetchVerified(`${config.adapter.runtimeBaseUrl}retrom_position.rb`, bridgeV3.size, bridgeV3.sha256),
+    dependencies.fetchVerified(`${config.adapter.runtimeBaseUrl}position_bridge.rb`, positionBridge.size, positionBridge.sha256),
     ...config.adapter.rtpArchives.map((archive) => dependencies.fetchVerified(archive.url, archive.sizeBytes, archive.sha256)),
   ]);
   const nostalgist = await dependencies.prepare({

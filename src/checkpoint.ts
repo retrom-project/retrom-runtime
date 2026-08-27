@@ -1,8 +1,8 @@
 /** Stable binary envelope magic shared by native-save adapters. */
-export const rpgCheckpointMagic = "RTRPGSV1";
+export const rpgCheckpointMagic = "RPGRUN01";
 
 export type RpgCheckpointEngine = "RPG2000" | "RPG2003" | "RPGMV" | "RPGMZ";
-export type RpgCheckpointStore = "FILESYSTEM" | "LOCAL_STORAGE" | "LOCALFORAGE" | "RETROM_NATIVE";
+export type RpgCheckpointStore = "FILESYSTEM" | "LOCAL_STORAGE" | "LOCALFORAGE";
 
 export type RpgCheckpointEntry = {
   store: RpgCheckpointStore;
@@ -47,7 +47,7 @@ function validEngine(value: unknown): value is RpgCheckpointEngine {
 }
 
 function validStore(value: unknown): value is RpgCheckpointStore {
-  return value === "FILESYSTEM" || value === "LOCAL_STORAGE" || value === "LOCALFORAGE" || value === "RETROM_NATIVE";
+  return value === "FILESYSTEM" || value === "LOCAL_STORAGE" || value === "LOCALFORAGE";
 }
 
 function validResumeSlot(engine: RpgCheckpointEngine, slot: number) {

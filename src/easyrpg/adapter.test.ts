@@ -10,7 +10,7 @@ afterEach(() => {
   vi.restoreAllMocks();
   delete (window as Window & { createEasyRpgPlayer?: unknown }).createEasyRpgPlayer;
   Object.defineProperty(window, "createImageBitmap", { configurable: true, value: undefined });
-  document.head.querySelectorAll("script[data-retrom-rpg-runtime=easyrpg]").forEach((script) => script.remove());
+  document.head.querySelectorAll("script[data-rpg-runtime=easyrpg]").forEach((script) => script.remove());
   document.body.replaceChildren();
 });
 
@@ -19,14 +19,14 @@ describe("EasyRPG adapter cleanup", () => {
     const target = document.createElement("div");
     document.body.append(target);
     const mounting = mountEasyRpg(easyConfig(), target, window, null);
-    await vi.waitFor(() => expect(document.head.querySelector("script[data-retrom-rpg-runtime=easyrpg]")).not.toBeNull());
-    const script = document.head.querySelector<HTMLScriptElement>("script[data-retrom-rpg-runtime=easyrpg]");
+    await vi.waitFor(() => expect(document.head.querySelector("script[data-rpg-runtime=easyrpg]")).not.toBeNull());
+    const script = document.head.querySelector<HTMLScriptElement>("script[data-rpg-runtime=easyrpg]");
     expect(script).not.toBeNull();
     script?.dispatchEvent(new Event("error"));
 
     await expect(mounting).rejects.toThrow("RPG_RUNTIME_ARTIFACT_UNAVAILABLE");
     expect(target.childElementCount).toBe(0);
-    expect(document.head.querySelector("script[data-retrom-rpg-runtime=easyrpg]")).toBeNull();
+    expect(document.head.querySelector("script[data-rpg-runtime=easyrpg]")).toBeNull();
     target.remove();
   });
 
@@ -37,18 +37,18 @@ describe("EasyRPG adapter cleanup", () => {
     Object.defineProperty(window, "createEasyRpgPlayer", {
       configurable: true,
       value: vi.fn().mockResolvedValue({
-        FS: {}, api: { retromState: () => "{}" }, canvas,
-        retromFileSystemReady: false, initApi: vi.fn(), pauseMainLoop: vi.fn(), resumeMainLoop: vi.fn(),
+        FS: {}, api: { runtimeState: () => "{}" }, canvas,
+        runtimeFileSystemReady: false, initApi: vi.fn(), pauseMainLoop: vi.fn(), resumeMainLoop: vi.fn(),
       }),
     });
     const mounting = mountEasyRpg(easyConfig(), target, window, null);
-    await vi.waitFor(() => expect(document.head.querySelector("script[data-retrom-rpg-runtime=easyrpg]")).not.toBeNull());
-    document.head.querySelector<HTMLScriptElement>("script[data-retrom-rpg-runtime=easyrpg]")
+    await vi.waitFor(() => expect(document.head.querySelector("script[data-rpg-runtime=easyrpg]")).not.toBeNull());
+    document.head.querySelector<HTMLScriptElement>("script[data-rpg-runtime=easyrpg]")
       ?.dispatchEvent(new Event("load"));
 
     await expect(mounting).rejects.toThrow("RPG_RUNTIME_FILESYSTEM_NOT_READY");
     expect(target.childElementCount).toBe(0);
-    expect(document.head.querySelector("script[data-retrom-rpg-runtime=easyrpg]")).toBeNull();
+    expect(document.head.querySelector("script[data-rpg-runtime=easyrpg]")).toBeNull();
     delete (window as Window & { createEasyRpgPlayer?: unknown }).createEasyRpgPlayer;
     target.remove();
   });
@@ -60,13 +60,13 @@ describe("EasyRPG adapter cleanup", () => {
     const createPlayer = vi.fn().mockResolvedValue({
       FS: {},
       api: {
-        createRetromCheckpoint: vi.fn(),
-        retromState: () => JSON.stringify({
+        createRuntimeCheckpoint: vi.fn(),
+        runtimeState: () => JSON.stringify({
           engine: "RPG2000", ready: true, canCheckpoint: true,
           frameCount: 1, mapId: 1, playerX: 8, playerY: 6, fixtureState: 0,
         }),
       },
-      canvas, retromFileSystemReady: true, initApi: vi.fn(), pauseMainLoop: vi.fn(), resumeMainLoop: vi.fn(),
+      canvas, runtimeFileSystemReady: true, initApi: vi.fn(), pauseMainLoop: vi.fn(), resumeMainLoop: vi.fn(),
     });
     Object.defineProperty(window, "createEasyRpgPlayer", {
       configurable: true,
@@ -74,8 +74,8 @@ describe("EasyRPG adapter cleanup", () => {
     });
     const config = easyConfig();
     const mounting = mountEasyRpg(config, target, window, null);
-    await vi.waitFor(() => expect(document.head.querySelector("script[data-retrom-rpg-runtime=easyrpg]")).not.toBeNull());
-    document.head.querySelector<HTMLScriptElement>("script[data-retrom-rpg-runtime=easyrpg]")
+    await vi.waitFor(() => expect(document.head.querySelector("script[data-rpg-runtime=easyrpg]")).not.toBeNull());
+    document.head.querySelector<HTMLScriptElement>("script[data-rpg-runtime=easyrpg]")
       ?.dispatchEvent(new Event("load"));
 
     const mounted = await mounting;
@@ -97,20 +97,20 @@ describe("EasyRPG adapter cleanup", () => {
       return {
         FS: {},
         api: {
-          createRetromCheckpoint: vi.fn(),
-          retromState: () => JSON.stringify({
+          createRuntimeCheckpoint: vi.fn(),
+          runtimeState: () => JSON.stringify({
             engine: "RPG2000", ready: true, canCheckpoint: true,
             frameCount: 1, mapId: 1, playerX: 10, playerY: 8, fixtureState: 0,
           }),
         },
-        canvas, retromFileSystemReady: true,
+        canvas, runtimeFileSystemReady: true,
         initApi: vi.fn(), pauseMainLoop: vi.fn(), resumeMainLoop: vi.fn(),
       };
     });
     Object.defineProperty(window, "createEasyRpgPlayer", { configurable: true, value: createPlayer });
     const mounting = mountEasyRpg(easyConfig(), target, window, null);
-    await vi.waitFor(() => expect(document.head.querySelector("script[data-retrom-rpg-runtime=easyrpg]")).not.toBeNull());
-    document.head.querySelector<HTMLScriptElement>("script[data-retrom-rpg-runtime=easyrpg]")
+    await vi.waitFor(() => expect(document.head.querySelector("script[data-rpg-runtime=easyrpg]")).not.toBeNull());
+    document.head.querySelector<HTMLScriptElement>("script[data-rpg-runtime=easyrpg]")
       ?.dispatchEvent(new Event("load"));
 
     const mounted = await mounting;
@@ -167,20 +167,20 @@ describe("EasyRPG adapter cleanup", () => {
         return {
           FS: {},
           api: {
-            createRetromCheckpoint: vi.fn(),
-            retromState: () => JSON.stringify({
+            createRuntimeCheckpoint: vi.fn(),
+            runtimeState: () => JSON.stringify({
               engine: "RPG2000", ready: true, canCheckpoint: true,
               frameCount: 1, mapId: 1, playerX: 10, playerY: 8, fixtureState: 0,
             }),
           },
-          canvas, retromFileSystemReady: true,
+          canvas, runtimeFileSystemReady: true,
           initApi: vi.fn(), pauseMainLoop: vi.fn(), resumeMainLoop: vi.fn(),
         };
       }),
     });
     const mounting = mountEasyRpg(easyConfig(), target, window, null);
-    await vi.waitFor(() => expect(document.head.querySelector("script[data-retrom-rpg-runtime=easyrpg]")).not.toBeNull());
-    document.head.querySelector<HTMLScriptElement>("script[data-retrom-rpg-runtime=easyrpg]")
+    await vi.waitFor(() => expect(document.head.querySelector("script[data-rpg-runtime=easyrpg]")).not.toBeNull());
+    document.head.querySelector<HTMLScriptElement>("script[data-rpg-runtime=easyrpg]")
       ?.dispatchEvent(new Event("load"));
 
     const mounted = await mounting;
@@ -193,7 +193,7 @@ describe("EasyRPG adapter cleanup", () => {
     const target = document.createElement("div");
     document.body.append(target);
     const canvas = document.createElement("canvas");
-    const retromState = vi.fn()
+    const runtimeState = vi.fn()
       .mockReturnValueOnce("{}")
       .mockReturnValue(JSON.stringify({
         engine: "RPG2003", ready: true, canCheckpoint: true,
@@ -202,17 +202,17 @@ describe("EasyRPG adapter cleanup", () => {
     Object.defineProperty(window, "createEasyRpgPlayer", {
       configurable: true,
       value: vi.fn().mockResolvedValue({
-        FS: {}, api: { retromState, createRetromCheckpoint: vi.fn() }, canvas,
-        retromFileSystemReady: true, initApi: vi.fn(), pauseMainLoop: vi.fn(), resumeMainLoop: vi.fn(),
+        FS: {}, api: { runtimeState, createRuntimeCheckpoint: vi.fn() }, canvas,
+        runtimeFileSystemReady: true, initApi: vi.fn(), pauseMainLoop: vi.fn(), resumeMainLoop: vi.fn(),
       }),
     });
     const mounting = mountEasyRpg(easyConfig("RPG2003"), target, window, null);
-    await vi.waitFor(() => expect(document.head.querySelector("script[data-retrom-rpg-runtime=easyrpg]")).not.toBeNull());
-    document.head.querySelector<HTMLScriptElement>("script[data-retrom-rpg-runtime=easyrpg]")
+    await vi.waitFor(() => expect(document.head.querySelector("script[data-rpg-runtime=easyrpg]")).not.toBeNull());
+    document.head.querySelector<HTMLScriptElement>("script[data-rpg-runtime=easyrpg]")
       ?.dispatchEvent(new Event("load"));
 
     const mounted = await mounting;
-    expect(retromState).toHaveBeenCalledTimes(2);
+    expect(runtimeState).toHaveBeenCalledTimes(2);
     expect(mounted.position()).toEqual({ mapId: 1, playerX: 10, playerY: 8, fixtureState: 0 });
     mounted.cleanup();
     delete (window as Window & { createEasyRpgPlayer?: unknown }).createEasyRpgPlayer;
@@ -230,8 +230,8 @@ function easyConfig(generation: "RPG2000" | "RPG2003" = "RPG2000"): EasyConfig {
     validationPurpose: true,
     expectedRestorePosition: null,
     adapter: {
-      adapterKind: "EASYRPG_WEB", adapterId: "easyrpg-web-v1", engineMode: rpg2003 ? "rpg2k3" : "rpg2k",
-      runtimeBaseUrl: "/runtime/rpgmaker/0.8.1.1-v4/", projectRootUrl: root,
+      adapterKind: "EASYRPG_WEB", adapterId: "easyrpg-web", engineMode: rpg2003 ? "rpg2k3" : "rpg2k",
+      runtimeBaseUrl: "/runtime/easyrpg/", projectRootUrl: root,
       projectIndexUrl: `${root}index.json`, rtpArchive: null, checkpointSlot: 100,
     },
   };

@@ -1,4 +1,4 @@
-(function installRetromRpgNativeBridge(global) {
+(function installRpgRuntimeNativeBridge(global) {
   "use strict";
 
   const PROTOCOL_VERSION = 1;
@@ -12,6 +12,7 @@
   let parentOrigin = null;
   let port = null;
   let profile = null;
+  let cleanupUrl = null;
   let lastRequestId = 0;
   let requestPending = false;
   let frameCount = 0;
@@ -26,9 +27,20 @@
     return keys.length === expected.length && keys.every((key, index) => key === expected[index]);
   }
 
+  function readCleanupUrl(value) {
+    if (value === null) return null;
+    if (typeof value !== "string" || !global.location) return undefined;
+    try {
+      const parsed = new URL(value, global.location.href);
+      return parsed.origin === global.location.origin ? parsed.href : undefined;
+    } catch {
+      return undefined;
+    }
+  }
+
   function engine() {
-    if (profile === "mv-v1") return "RPGMV";
-    if (profile === "mz-v1") return "RPGMZ";
+    if (profile === "RPGMV") return "RPGMV";
+    if (profile === "RPGMZ") return "RPGMZ";
     throw new Error("RPG_NATIVE_PROFILE_INVALID");
   }
 
@@ -81,13 +93,13 @@
   function engineRuntimeReady() {
     const manager = global.SceneManager;
     const utils = global.Utils;
-    const expectedName = profile === "mv-v1" ? "MV" : "MZ";
+    const expectedName = profile === "RPGMV" ? "MV" : "MZ";
     return Boolean(manager && typeof manager.updateMain === "function" && global.DataManager &&
       global.StorageManager && utils && utils.RPGMAKER_NAME === expectedName);
   }
 
   function storageNames(slot) {
-    return profile === "mz-v1" ? ["global", `file${slot}`] : ["0", String(slot)];
+    return profile === "RPGMZ" ? ["global", `file${slot}`] : ["0", String(slot)];
   }
 
   function replaceMethod(target, name, create, restorers) {
@@ -107,8 +119,8 @@
     const restorers = [];
     const allowed = new Set(storageNames(slot));
     let supported = false;
-    if (profile === "mv-v1") {
-      supported = replaceMethod(storage, "save", (original) => function retromSave(savefileId, json) {
+    if (profile === "RPGMV") {
+      supported = replaceMethod(storage, "save", (original) => function runtimeSave(savefileId, json) {
         const key = String(savefileId);
         if (!allowed.has(key)) return original.apply(this, arguments);
         const bytes = encoder.encode(String(json));
@@ -117,7 +129,7 @@
         return undefined;
       }, restorers);
     } else {
-      supported = replaceMethod(storage, "saveObject", (original) => async function retromSaveObject(saveName, object) {
+      supported = replaceMethod(storage, "saveObject", (original) => async function runtimeSaveObject(saveName, object) {
         const key = String(saveName);
         if (!allowed.has(key)) return original.apply(this, arguments);
         const jsonEx = global.JsonEx;
@@ -140,7 +152,7 @@
       restorers.reverse().forEach((restore) => restore());
     }
     const entries = [...captured.entries()].map(([key, bytes]) => ({
-      store: profile === "mz-v1" ? "LOCALFORAGE" : "LOCAL_STORAGE",
+      store: profile === "RPGMZ" ? "LOCALFORAGE" : "LOCAL_STORAGE",
       key,
       mediaType: "application/octet-stream",
       data: bytes.slice().buffer,
@@ -154,7 +166,7 @@
       throw new Error("RPG_CHECKPOINT_RESTORE_INVALID");
     }
     const allowed = new Set(storageNames(bundle.resumeSlot));
-    const expectedStore = profile === "mz-v1" ? "LOCALFORAGE" : "LOCAL_STORAGE";
+    const expectedStore = profile === "RPGMZ" ? "LOCALFORAGE" : "LOCAL_STORAGE";
     const entries = new Map();
     for (const entry of bundle.entries) {
       if (!ownKeys(entry, ["data", "key", "mediaType", "store"]) || entry.store !== expectedStore ||
@@ -175,16 +187,16 @@
     const storage = global.StorageManager;
     const restorers = [];
     let supported = false;
-    if (profile === "mv-v1") {
-      supported = replaceMethod(storage, "load", (original) => function retromLoad(savefileId) {
+    if (profile === "RPGMV") {
+      supported = replaceMethod(storage, "load", (original) => function runtimeLoad(savefileId) {
         const value = validated.entries.get(String(savefileId));
         return value ? decoder.decode(value) : original.apply(this, arguments);
       }, restorers);
-      replaceMethod(storage, "exists", (original) => function retromExists(savefileId) {
+      replaceMethod(storage, "exists", (original) => function runtimeExists(savefileId) {
         return validated.entries.has(String(savefileId)) || original.apply(this, arguments);
       }, restorers);
     } else {
-      supported = replaceMethod(storage, "loadObject", (original) => async function retromLoadObject(saveName) {
+      supported = replaceMethod(storage, "loadObject", (original) => async function runtimeLoadObject(saveName) {
         const value = validated.entries.get(String(saveName));
         if (!value) return original.apply(this, arguments);
         const jsonEx = global.JsonEx;
@@ -193,12 +205,12 @@
         }
         return jsonEx.parse(decoder.decode(value));
       }, restorers);
-      replaceMethod(storage, "exists", (original) => function retromExists(saveName) {
+      replaceMethod(storage, "exists", (original) => function runtimeExists(saveName) {
         return validated.entries.has(String(saveName)) || original.apply(this, arguments);
       }, restorers);
     }
     if (!supported) throw new Error("RPG_CHECKPOINT_STORAGE_UNSUPPORTED");
-    if (profile === "mv-v1") global.DataManager._globalInfo = null;
+    if (profile === "RPGMV") global.DataManager._globalInfo = null;
     try {
       const loaded = await global.DataManager.loadGame(validated.slot);
       if (loaded === false) throw new Error("RPG_CHECKPOINT_RESTORE_FAILED");
@@ -227,14 +239,16 @@
   }
 
   function waitForMZRestoreRuntime() {
-    if (profile !== "mz-v1") return Promise.resolve();
+    if (profile !== "RPGMZ") return Promise.resolve();
     const deadline = performance.now() + 30000;
     return new Promise((resolve, reject) => {
       function poll() {
         const manager = global.SceneManager;
         const colors = global.ColorManager;
+        const graphics = global.Graphics;
         const windowskin = colors && colors._windowskin;
-        if (manager && manager._scene && windowskin && typeof windowskin.getPixel === "function") {
+        if (manager && manager._scene && graphics && graphics.width > 0 && graphics.height > 0 &&
+          windowskin && typeof windowskin.getPixel === "function") {
           resolve();
           return;
         }
@@ -259,14 +273,63 @@
     });
   }
 
-  function screenshot() {
+  async function screenshot() {
+    for (let attempt = 0; attempt < 60; attempt += 1) {
+      await new Promise((resolve) => global.requestAnimationFrame(resolve));
+      try {
+        const capture = screenshotCanvas();
+        if (capture) return await encodeScreenshot(capture);
+      } catch {
+        // A newly restored WebGL scene may not have presented an extractable frame yet.
+      }
+    }
+    throw new Error("PLAYER_SCREENSHOT_UNAVAILABLE");
+  }
+
+  function encodeScreenshot(capture) {
+    return new Promise((resolve, reject) => {
+      try {
+        capture.canvas.toBlob((blob) => {
+          if (!blob || !blob.size || blob.size > MAX_SCREENSHOT_BYTES) {
+            capture.release();
+            reject(new Error("PLAYER_SCREENSHOT_UNAVAILABLE"));
+            return;
+          }
+          blob.arrayBuffer().then((data) => {
+            capture.release();
+            resolve({ data, mediaType: blob.type || "image/png" });
+          }, (error) => {
+            capture.release();
+            reject(error);
+          });
+        }, "image/png");
+      } catch (error) {
+        capture.release();
+        reject(error);
+      }
+    });
+  }
+
+  function screenshotCanvas() {
+    const bitmapType = global.Bitmap;
+    const scene = global.SceneManager && global.SceneManager._scene;
+    if (bitmapType && typeof bitmapType.snap === "function" && scene) {
+      const bitmap = bitmapType.snap(scene);
+      const canvas = bitmap && bitmap.canvas;
+      if (!canvas || typeof canvas.toBlob !== "function") {
+        if (bitmap && typeof bitmap.destroy === "function") bitmap.destroy();
+        throw new Error("PLAYER_SCREENSHOT_UNAVAILABLE");
+      }
+      return {
+        canvas,
+        release: function releaseBitmap() {
+          if (typeof bitmap.destroy === "function") bitmap.destroy();
+        },
+      };
+    }
     const canvas = global.document.querySelector("canvas");
-    if (!canvas || typeof canvas.toBlob !== "function") return Promise.reject(new Error("PLAYER_SCREENSHOT_UNAVAILABLE"));
-    return new Promise((resolve, reject) => canvas.toBlob(async (blob) => {
-      if (!blob || !blob.size || blob.size > MAX_SCREENSHOT_BYTES) { reject(new Error("PLAYER_SCREENSHOT_UNAVAILABLE")); return; }
-      const data = await blob.arrayBuffer();
-      resolve({ data, mediaType: blob.type || "image/png" });
-    }, "image/png"));
+    if (!canvas || typeof canvas.toBlob !== "function") return null;
+    return { canvas, release: function releaseCanvas() {} };
   }
 
   function setPaused(paused) {
@@ -298,7 +361,9 @@
     case "RESUME": setPaused(false); return { type: "RESUME_RESULT", body: {} };
     case "SET_VOLUME": setVolume(message.body.value); return { type: "SET_VOLUME_RESULT", body: {} };
     case "CLEANUP":
-      await global.fetch("/__retrom/cleanup", { method: "POST", credentials: "same-origin", keepalive: true });
+      if (cleanupUrl) {
+        await global.fetch(cleanupUrl, { method: "POST", credentials: "same-origin", keepalive: true });
+      }
       return { type: "CLEANUP_RESULT", body: {} };
     default: throw new Error("RPG_NATIVE_MESSAGE_INVALID");
     }
@@ -340,7 +405,7 @@
     const manager = global.SceneManager;
     if (sceneManagerHooked || !manager || typeof manager.updateMain !== "function") return;
     const original = manager.updateMain;
-    manager.updateMain = function retromUpdateMain() {
+    manager.updateMain = function runtimeUpdateMain() {
       const result = original.apply(this, arguments);
       observeFrame();
       return result;
@@ -357,7 +422,7 @@
     const prototype = global.AudioBufferSourceNode && global.AudioBufferSourceNode.prototype;
     if (!prototype || typeof prototype.start !== "function") return;
     const original = prototype.start;
-    prototype.start = function retromAudioStart() {
+    prototype.start = function runtimeAudioStart() {
       if (!audioObserved) { audioObserved = true; event("AUDIO", { observed: true }); }
       return original.apply(this, arguments);
     };
@@ -369,11 +434,13 @@
 
   global.addEventListener("message", function connect(eventMessage) {
     const message = eventMessage.data;
-    if (!ownKeys(message, ["launchId", "nonce", "parentOrigin", "profile", "protocolVersion", "type"]) ||
-      message.type !== "RETROM_RPG_NATIVE_CONNECT" || message.protocolVersion !== PROTOCOL_VERSION ||
+    const validatedCleanupUrl = readCleanupUrl(message && message.cleanupUrl);
+    if (!ownKeys(message, ["cleanupUrl", "launchId", "nonce", "parentOrigin", "profile", "protocolVersion", "type"]) ||
+      message.type !== "RPG_RUNTIME_NATIVE_CONNECT" || message.protocolVersion !== PROTOCOL_VERSION ||
       typeof message.launchId !== "string" || typeof message.nonce !== "string" ||
       typeof message.parentOrigin !== "string" || eventMessage.origin !== message.parentOrigin ||
-      (message.profile !== "mv-v1" && message.profile !== "mz-v1") || eventMessage.ports.length !== 1 || port) {
+      (message.profile !== "RPGMV" && message.profile !== "RPGMZ") || validatedCleanupUrl === undefined ||
+      eventMessage.ports.length !== 1 || port) {
       return;
     }
     eventMessage.stopImmediatePropagation();
@@ -381,6 +448,7 @@
     nonce = message.nonce;
     parentOrigin = message.parentOrigin;
     profile = message.profile;
+    cleanupUrl = validatedCleanupUrl;
     port = eventMessage.ports[0];
     port.onmessage = (portEvent) => { void receive(portEvent.data); };
     port.start();
@@ -388,6 +456,6 @@
     installAudioObserver();
   }, true);
 
-  global.parent.postMessage({ type: "RETROM_RPG_NATIVE_BRIDGE_READY", protocolVersion: PROTOCOL_VERSION }, "*");
-  global.__RETROM_RPG_NATIVE_BRIDGE__ = Object.freeze({ protocolVersion: PROTOCOL_VERSION });
+  global.parent.postMessage({ type: "RPG_RUNTIME_NATIVE_BRIDGE_READY", protocolVersion: PROTOCOL_VERSION }, "*");
+  global.__RPG_RUNTIME_NATIVE_BRIDGE__ = Object.freeze({ protocolVersion: PROTOCOL_VERSION });
 })(window);

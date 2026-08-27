@@ -15,6 +15,7 @@ export function validateManifest(manifest) {
     throw new Error("RUNTIME_MANIFEST_INVALID");
   }
   const releases = new Map();
+  const assetPaths = new Set();
   for (const release of manifest.upstreamReleases) {
     if (!release?.id || releases.has(release.id) || !/^https:\/\/github\.com\//u.test(release.repository) ||
       !/^[0-9a-f]{40}$/u.test(release.commit) || !Array.isArray(release.assets) || release.assets.length !== 2) {
@@ -26,18 +27,21 @@ export function validateManifest(manifest) {
         !safePath(asset.output) || !Number.isSafeInteger(asset.maxSizeBytes) || asset.maxSizeBytes < 1) {
         throw new Error("RUNTIME_MANIFEST_INVALID");
       }
+      assetPaths.add(asset.output);
     }
+  }
+  for (const asset of manifest.localAssets) {
+    if (!safePath(asset.source) || !safePath(asset.output)) {throw new Error("RUNTIME_MANIFEST_INVALID");}
+    assetPaths.add(asset.output);
   }
   const generations = new Set();
   for (const core of manifest.cores) {
     if (!core?.id || generations.has(core.generation) || !core.adapterId || !core.adapterAbi ||
-      core.runtimeId.startsWith("native-") === false && !releases.has(core.runtimeId)) {
+      core.runtimeId !== "native" && !releases.has(core.runtimeId) || !Array.isArray(core.assetPaths) ||
+      !core.assetPaths.length || !core.assetPaths.every((path) => assetPaths.has(path))) {
       throw new Error("RUNTIME_MANIFEST_INVALID");
     }
     generations.add(core.generation);
-  }
-  for (const asset of manifest.localAssets) {
-    if (!safePath(asset.source) || !safePath(asset.output)) {throw new Error("RUNTIME_MANIFEST_INVALID");}
   }
 }
 

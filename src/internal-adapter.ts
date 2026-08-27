@@ -3,7 +3,7 @@ import type {
   CheckpointPayload,
   CheckpointPayloadKind,
   RpgPosition,
-} from "./contract";
+} from "./contract.js";
 
 export type RpgPlayerInstance = {
   canvas?: HTMLCanvasElement;

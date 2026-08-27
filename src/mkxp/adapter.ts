@@ -1,7 +1,7 @@
 import { Nostalgist } from "nostalgist";
-import type { RpgPlayerInstance } from "../internal-adapter";
-import type { RpgPosition, RpgRuntimeConfig } from "../contract";
-import { decodeMkxpRastate, encodeMkxpRastate, mkxpRastateEnvelopeBytes } from "./state";
+import type { RpgPlayerInstance } from "../internal-adapter.js";
+import type { RpgPosition, RpgRuntimeConfig } from "../contract.js";
+import { decodeMkxpRastate, encodeMkxpRastate, mkxpRastateEnvelopeBytes } from "./state.js";
 
 type MkxpConfig = RpgRuntimeConfig & { adapter: Extract<RpgRuntimeConfig["adapter"], { adapterKind: "MKXP_LIBRETRO_WEB" }> };
 

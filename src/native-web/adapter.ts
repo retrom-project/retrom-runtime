@@ -1,11 +1,11 @@
-import type { RpgPlayerInstance } from "../internal-adapter";
+import type { RpgPlayerInstance } from "../internal-adapter.js";
 import {
   decodeRpgCheckpoint,
   encodeRpgCheckpoint,
   type RpgCheckpointBundle,
   type RpgCheckpointStore,
-} from "../checkpoint";
-import type { RpgPosition, RpgRuntimeConfig } from "../contract";
+} from "../checkpoint.js";
+import type { RpgPosition, RpgRuntimeConfig } from "../contract.js";
 
 type NativeConfig = RpgRuntimeConfig & {
   adapter: Extract<RpgRuntimeConfig["adapter"], { adapterKind: "NATIVE_WEB" }>;

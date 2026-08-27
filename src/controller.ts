@@ -4,8 +4,8 @@ import type {
   RpgRuntime,
   RuntimeEvent,
   RuntimeState,
-} from "./contract";
-import type { RpgPlayerInstance, RpgRuntimeAdapter } from "./internal-adapter";
+} from "./contract.js";
+import type { RpgPlayerInstance, RpgRuntimeAdapter } from "./internal-adapter.js";
 
 type AdapterMount = (target: HTMLElement) => Promise<RpgRuntimeAdapter>;
 

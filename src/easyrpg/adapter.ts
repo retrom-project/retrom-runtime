@@ -1,7 +1,7 @@
 import { unzip } from "fflate";
-import type { RpgPlayerInstance } from "../internal-adapter";
-import { decodeRpgCheckpoint, encodeRpgCheckpoint } from "../checkpoint";
-import type { RpgPosition, RpgRuntimeConfig } from "../contract";
+import type { RpgPlayerInstance } from "../internal-adapter.js";
+import { decodeRpgCheckpoint, encodeRpgCheckpoint } from "../checkpoint.js";
+import type { RpgPosition, RpgRuntimeConfig } from "../contract.js";
 
 type EasyConfig = RpgRuntimeConfig & { adapter: Extract<RpgRuntimeConfig["adapter"], { adapterKind: "EASYRPG_WEB" }> };
 

@@ -10,6 +10,9 @@ const stage = new URL("../release/stage/", import.meta.url);
 const output = new URL("../release/", import.meta.url);
 await mkdir(stage, { recursive: true });
 await cp(new URL("../dist", import.meta.url), new URL("library", stage), { recursive: true });
+for (const document of ["LICENSE", "THIRD_PARTY_NOTICES.md"]) {
+  await publish(await readFile(new URL(`../${document}`, import.meta.url)), new URL(document, stage));
+}
 for (const asset of manifest.localAssets) {
   await publish(await readFile(new URL(asset.source, root)), new URL(asset.output, stage));
 }
@@ -86,7 +89,8 @@ async function publish(contents, target) {
 }
 
 async function collectRecords(value, directory) {
-  const paths = ["library/index.js", "library/index.d.ts", ...value.localAssets.map((asset) => asset.output),
+  const paths = ["LICENSE", "THIRD_PARTY_NOTICES.md", "library/index.js", "library/index.d.ts",
+    ...value.localAssets.map((asset) => asset.output),
     ...value.upstreamReleases.flatMap((release) => release.assets.map((asset) => asset.output))].sort();
   return Promise.all(paths.map(async (path) => {
     const contents = await readFile(new URL(path, directory));

@@ -47,6 +47,12 @@ describe("independent package boundary", () => {
       expect(await readFile(join(root, asset), "utf8"), asset).not.toMatch(/RETROM|__retrom|-[vr][1-9]/u);
     }
   });
+
+  it("ships the current license closure in the aggregate release", async () => {
+    const script = await readFile(join(root, "scripts/build-release.mjs"), "utf8");
+    expect(script).toContain('["LICENSE", "THIRD_PARTY_NOTICES.md"]');
+    expect(script).toContain('"LICENSE", "THIRD_PARTY_NOTICES.md", "library/index.js"');
+  });
 });
 
 async function sourceFiles(directory: string): Promise<string[]> {

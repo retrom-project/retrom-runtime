@@ -51,10 +51,10 @@ repository release tag; the source tree and each release contain one implementat
 1. Add the runtime entry and adapter implementation without aliases or fallback implementations.
 2. Add adapter unit tests and a small owned or redistributable compatibility fixture.
 3. Open a PR to `master`; the quality workflow runs lint, types, unit tests and the package build.
-4. Publish a prerelease tag such as `v0.2.0-rc.1`.
-5. A host application points its development override at that prerelease tag without changing its stable pin.
+4. Publish a prerelease tag such as `v0.3.0-rc.1`.
+5. A host application changes its runtime pin on a short-lived integration branch; production keeps its stable pin.
 6. Run the host's real import/launch/save/restore product test for the new core.
-7. Publish the stable tag and replace the host's single pinned runtime tag after the candidate passes.
+7. Publish the stable tag and merge the host's single pinned runtime tag change after the candidate passes.
 
 This keeps core development independent: a new core can be tested without replacing the stable runtime used by
 other games or requiring unrelated host changes.

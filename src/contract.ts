@@ -7,7 +7,7 @@ export type RpgGeneration =
   | "RPGMV"
   | "RPGMZ";
 
-export type CheckpointPayloadKind = "RUNTIME_STATE" | "NATIVE_SAVE_BUNDLE";
+export type CheckpointPayloadKind = "RUNTIME_STATE" | "NATIVE_SAVE_BUNDLE_V1";
 
 export type CheckpointUnavailableReason =
   | "NOT_ON_MAP"

@@ -1,5 +1,5 @@
 /** Stable binary envelope magic shared by native-save adapters. */
-export const rpgCheckpointMagic = "RPGRUN01";
+export const rpgCheckpointMagic = "RTRPGSV1";
 
 export type RpgCheckpointEngine = "RPG2000" | "RPG2003" | "RPGMV" | "RPGMZ";
 export type RpgCheckpointStore = "FILESYSTEM" | "LOCAL_STORAGE" | "LOCALFORAGE";

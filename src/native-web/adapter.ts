@@ -80,7 +80,7 @@ export async function mountNativeRpg(
     },
     takeScreenshot: async () => ({ blob: await channel.screenshot(), format: "png" }),
     gameManager: {
-      savePayloadKind: "NATIVE_SAVE_BUNDLE",
+      savePayloadKind: "NATIVE_SAVE_BUNDLE_V1",
       validationPurpose: config.validationPurpose,
       getRpgPosition: () => channel.position(),
       getCheckpointAvailability: () => ({ available: channel.checkpointAvailable(), reason: channel.checkpointAvailable() ? null : "BUSY" }),

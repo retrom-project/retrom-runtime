@@ -117,7 +117,7 @@ async function mountEasyRpgUnchecked(
     },
     takeScreenshot: async () => ({ blob: await canvasBlob(playerModule.canvas), format: "png" }),
     gameManager: {
-      savePayloadKind: "NATIVE_SAVE_BUNDLE",
+      savePayloadKind: "NATIVE_SAVE_BUNDLE_V1",
       validationPurpose: config.validationPurpose,
       getRpgPosition: () => position(readState(playerModule)),
       getCheckpointAvailability: () => {

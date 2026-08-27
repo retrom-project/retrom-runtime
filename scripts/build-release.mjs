@@ -1,0 +1,95 @@
+import { spawnSync } from "node:child_process";
+import { mkdir, readFile, cp, writeFile } from "node:fs/promises";
+import { basename } from "node:path";
+import { loadManifest, sha256 } from "./manifest.mjs";
+
+const root = new URL("../", import.meta.url);
+const manifest = await loadManifest(root);
+const commit = releaseCommit();
+const stage = new URL("../release/stage/", import.meta.url);
+const output = new URL("../release/", import.meta.url);
+await mkdir(stage, { recursive: true });
+await cp(new URL("../dist", import.meta.url), new URL("library", stage), { recursive: true });
+for (const asset of manifest.localAssets) {
+  await publish(await readFile(new URL(asset.source, root)), new URL(asset.output, stage));
+}
+for (const release of manifest.upstreamReleases) {
+  const metadata = await download(release.metadataUrl, 65536);
+  validateUpstreamMetadata(release, JSON.parse(new TextDecoder().decode(metadata)));
+  for (const asset of release.assets) {
+    await publish(await download(asset.url, asset.maxSizeBytes), new URL(asset.output, stage));
+  }
+}
+const records = await collectRecords(manifest, stage);
+const metadata = {
+  schemaVersion: 1,
+  repository: "https://github.com/xxxsen/retrom-runtime",
+  tag: `v${manifest.packageVersion}`,
+  commit,
+  version: manifest.packageVersion,
+  publicApiVersion: manifest.publicApiVersion,
+  files: records,
+};
+await writeFile(new URL("retrom-runtime-release.json", output), `${JSON.stringify(metadata, null, 2)}\n`);
+await writeFile(new URL("runtime-manifest.json", stage), `${JSON.stringify(manifest, null, 2)}\n`);
+const archive = `retrom-runtime-${manifest.packageVersion}.tar.gz`;
+const tar = spawnSync("tar", ["--sort=name", "--mtime=UTC 2020-01-01", "--owner=0", "--group=0", "--numeric-owner", "-czf", archive, "-C", "stage", "."], {
+  cwd: new URL("../release", import.meta.url),
+  stdio: "inherit",
+});
+if (tar.status !== 0) {throw new Error("RELEASE_ARCHIVE_FAILED");}
+const npmPackage = createNpmPackage(manifest.packageVersion);
+console.log(`release: ${archive}, ${npmPackage}`);
+
+function releaseCommit() {
+  const configured = process.env.GITHUB_SHA ?? process.env.RETROM_RUNTIME_COMMIT;
+  if (configured && /^[0-9a-f]{40}$/u.test(configured)) {return configured;}
+  const result = spawnSync("git", ["rev-parse", "HEAD"], { cwd: root, encoding: "utf8" });
+  const value = result.stdout?.trim();
+  if (result.status !== 0 || !/^[0-9a-f]{40}$/u.test(value)) {throw new Error("RELEASE_COMMIT_UNAVAILABLE");}
+  return value;
+}
+
+function createNpmPackage(version) {
+  const result = spawnSync("npm", ["pack", "--pack-destination", "release"], {
+    cwd: root,
+    encoding: "utf8",
+  });
+  if (result.status !== 0) {
+    process.stderr.write(result.stderr ?? "");
+    throw new Error("NPM_PACKAGE_FAILED");
+  }
+  const generated = result.stdout.trim().split(/\r?\n/u).at(-1);
+  const expected = `xxxsen-retrom-runtime-${version}.tgz`;
+  if (generated !== expected) {throw new Error("NPM_PACKAGE_NAME_INVALID");}
+  return expected;
+}
+
+async function download(url, maximum) {
+  const response = await fetch(url, { redirect: "follow", headers: { "User-Agent": "retrom-runtime-release" } });
+  if (!response.ok || !response.url.startsWith("https://")) {throw new Error(`DOWNLOAD_FAILED:${url}`);}
+  const contents = new Uint8Array(await response.arrayBuffer());
+  if (!contents.length || contents.length > maximum) {throw new Error(`DOWNLOAD_SIZE_INVALID:${url}`);}
+  return contents;
+}
+
+function validateUpstreamMetadata(release, metadata) {
+  if (metadata?.repository !== release.repository || metadata.tag !== release.tag ||
+    metadata.commit !== release.commit || metadata.adapterAbi !== release.adapterAbi) {
+    throw new Error(`UPSTREAM_METADATA_INVALID:${release.id}`);
+  }
+}
+
+async function publish(contents, target) {
+  await mkdir(new URL(".", target), { recursive: true });
+  await writeFile(target, contents);
+}
+
+async function collectRecords(value, directory) {
+  const paths = ["library/index.js", "library/index.d.ts", ...value.localAssets.map((asset) => asset.output),
+    ...value.upstreamReleases.flatMap((release) => release.assets.map((asset) => asset.output))].sort();
+  return Promise.all(paths.map(async (path) => {
+    const contents = await readFile(new URL(path, directory));
+    return { path, filename: basename(path), sizeBytes: contents.length, sha256: sha256(contents) };
+  }));
+}

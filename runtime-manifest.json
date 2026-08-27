@@ -1,0 +1,61 @@
+{
+  "schemaVersion": 1,
+  "packageName": "@xxxsen/retrom-runtime",
+  "packageVersion": "0.1.0",
+  "publicApiVersion": 1,
+  "upstreamReleases": [
+    {
+      "id": "easyrpg-0811-r2",
+      "repository": "https://github.com/xxxsen/Player",
+      "tag": "retrom-web-0.8.1.1-r2",
+      "commit": "41a98c367685e0bd7ccb5f8f180b2799a1fae909",
+      "adapterAbi": "easyrpg-save-v1",
+      "metadataUrl": "https://github.com/xxxsen/Player/releases/download/retrom-web-0.8.1.1-r2/retrom-runtime-release.json",
+      "assets": [
+        { "filename": "easyrpg-player.js", "url": "https://github.com/xxxsen/Player/releases/download/retrom-web-0.8.1.1-r2/easyrpg-player.js", "output": "runtime/0.8.1.1-v4/easyrpg-player.js", "maxSizeBytes": 1048576 },
+        { "filename": "easyrpg-player.wasm", "url": "https://github.com/xxxsen/Player/releases/download/retrom-web-0.8.1.1-r2/easyrpg-player.wasm", "output": "runtime/0.8.1.1-v4/easyrpg-player.wasm", "maxSizeBytes": 16777216 }
+      ]
+    },
+    {
+      "id": "easyrpg-0811-r3",
+      "repository": "https://github.com/xxxsen/Player",
+      "tag": "retrom-web-0.8.1.1-r3",
+      "commit": "2fdfa9a6af6036c3dc0a5fadc695886c2c59e5a7",
+      "adapterAbi": "easyrpg-save-v1",
+      "metadataUrl": "https://github.com/xxxsen/Player/releases/download/retrom-web-0.8.1.1-r3/retrom-runtime-release.json",
+      "assets": [
+        { "filename": "easyrpg-player.js", "url": "https://github.com/xxxsen/Player/releases/download/retrom-web-0.8.1.1-r3/easyrpg-player.js", "output": "runtime/0.8.1.1-v5/easyrpg-player.js", "maxSizeBytes": 1048576 },
+        { "filename": "easyrpg-player.wasm", "url": "https://github.com/xxxsen/Player/releases/download/retrom-web-0.8.1.1-r3/easyrpg-player.wasm", "output": "runtime/0.8.1.1-v5/easyrpg-player.wasm", "maxSizeBytes": 16777216 }
+      ]
+    },
+    {
+      "id": "mkxp-f2efc98-r3",
+      "repository": "https://github.com/xxxsen/mkxp-z-libretro-emscripten",
+      "tag": "retrom-web-f2efc98-r3",
+      "commit": "6e75022c2d015a7af29a433014599cb56d6d2262",
+      "adapterAbi": "mkxp-state-v1",
+      "metadataUrl": "https://github.com/xxxsen/mkxp-z-libretro-emscripten/releases/download/retrom-web-f2efc98-r3/retrom-runtime-release.json",
+      "assets": [
+        { "filename": "mkxp-z_libretro.js", "url": "https://github.com/xxxsen/mkxp-z-libretro-emscripten/releases/download/retrom-web-f2efc98-r3/mkxp-z_libretro.js", "output": "runtime/f2efc98-v5/mkxp-z_libretro.js", "maxSizeBytes": 1048576 },
+        { "filename": "mkxp-z_libretro.wasm", "url": "https://github.com/xxxsen/mkxp-z-libretro-emscripten/releases/download/retrom-web-f2efc98-r3/mkxp-z_libretro.wasm", "output": "runtime/f2efc98-v5/mkxp-z_libretro.wasm", "maxSizeBytes": 67108864 }
+      ]
+    }
+  ],
+  "localAssets": [
+    { "source": "assets/runtime/f2efc98-v5/retrom_position.rb", "output": "runtime/f2efc98-v5/retrom_position.rb" },
+    { "source": "assets/runtime/v3/native-bridge.js", "output": "runtime/v3/native-bridge.js" },
+    { "source": "assets/runtime/v4/native-bridge.js", "output": "runtime/v4/native-bridge.js" },
+    { "source": "assets/runtime/v5/native-bridge.js", "output": "runtime/v5/native-bridge.js" },
+    { "source": "assets/runtime/v6/native-bridge.js", "output": "runtime/v6/native-bridge.js" },
+    { "source": "assets/runtime/v7/native-bridge.js", "output": "runtime/v7/native-bridge.js" }
+  ],
+  "cores": [
+    { "id": "rpgmaker-2000", "generation": "RPG2000", "runtimeId": "easyrpg-0811-r2", "adapterKind": "EASYRPG_WEB", "adapterId": "easyrpg-web-v1", "adapterAbi": "easyrpg-save-v1" },
+    { "id": "rpgmaker-2003", "generation": "RPG2003", "runtimeId": "easyrpg-0811-r2", "adapterKind": "EASYRPG_WEB", "adapterId": "easyrpg-web-v1", "adapterAbi": "easyrpg-save-v1" },
+    { "id": "rpgmaker-xp", "generation": "RPGXP", "runtimeId": "mkxp-f2efc98-r3", "adapterKind": "MKXP_LIBRETRO_WEB", "adapterId": "mkxp-z-libretro-v4", "adapterAbi": "mkxp-state-v1" },
+    { "id": "rpgmaker-vx", "generation": "RPGVX", "runtimeId": "mkxp-f2efc98-r3", "adapterKind": "MKXP_LIBRETRO_WEB", "adapterId": "mkxp-z-libretro-v4", "adapterAbi": "mkxp-state-v1" },
+    { "id": "rpgmaker-vx-ace", "generation": "RPGVXACE", "runtimeId": "mkxp-f2efc98-r3", "adapterKind": "MKXP_LIBRETRO_WEB", "adapterId": "mkxp-z-libretro-v4", "adapterAbi": "mkxp-state-v1" },
+    { "id": "rpgmaker-mv", "generation": "RPGMV", "runtimeId": "native-mv-v4", "adapterKind": "NATIVE_WEB", "adapterId": "rpg-native-web-v2", "adapterAbi": "rpg-native-save-v1" },
+    { "id": "rpgmaker-mz", "generation": "RPGMZ", "runtimeId": "native-mz-v7", "adapterKind": "NATIVE_WEB", "adapterId": "rpg-native-web-v5", "adapterAbi": "rpg-native-save-v1" }
+  ]
+}

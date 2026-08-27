@@ -1,0 +1,45 @@
+{
+  "name": "@xxxsen/retrom-runtime",
+  "version": "0.1.0",
+  "description": "Host-independent browser runtimes for RPG Maker projects",
+  "type": "module",
+  "license": "MIT",
+  "packageManager": "npm@11.16.0",
+  "files": [
+    "dist",
+    "assets",
+    "runtime-manifest.json",
+    "README.md",
+    "LICENSE",
+    "THIRD_PARTY_NOTICES.md"
+  ],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./runtime-manifest.json": "./runtime-manifest.json"
+  },
+  "scripts": {
+    "clean": "node scripts/clean.mjs",
+    "lint": "eslint src scripts tests --max-warnings=0",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run",
+    "build": "npm run clean && tsc -p tsconfig.build.json",
+    "package:check": "node scripts/package-check.mjs",
+    "release:build": "npm run build && node scripts/build-release.mjs"
+  },
+  "dependencies": {
+    "fflate": "0.8.2",
+    "nostalgist": "0.20.2"
+  },
+  "devDependencies": {
+    "@eslint/js": "9.39.0",
+    "@types/node": "24.13.3",
+    "eslint": "9.39.0",
+    "jsdom": "29.1.1",
+    "typescript": "5.9.3",
+    "typescript-eslint": "8.66.0",
+    "vitest": "4.1.8"
+  }
+}

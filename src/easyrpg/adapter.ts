@@ -36,6 +36,7 @@ type EasyModuleOptions = {
   saveFs: undefined;
   locateFile(path: string): string;
   runtimeEngineMode: string;
+  runtimeProjectRootUrl: string;
   runtimeRtpMountPath?: string;
   runtimeRtpFiles: Array<{ path: string; bytes: Uint8Array }>;
   runtimeRestoreSlot?: number;
@@ -95,6 +96,7 @@ async function mountEasyRpgUnchecked(
     saveFs: undefined,
     locateFile: (path) => `${config.adapter.runtimeBaseUrl}${path}`,
     runtimeEngineMode: config.adapter.engineMode,
+    runtimeProjectRootUrl: config.adapter.projectRootUrl,
     ...(config.adapter.rtpArchive ? { runtimeRtpMountPath: config.adapter.rtpArchive.mountPath } : {}),
     runtimeRtpFiles: rtpFiles,
     ...(restoreFiles.length ? { runtimeRestoreSlot: config.adapter.checkpointSlot } : {}),

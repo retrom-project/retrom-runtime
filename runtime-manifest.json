@@ -1,26 +1,26 @@
 {
   "schemaVersion": 1,
   "packageName": "@xxxsen/retrom-runtime",
-  "packageVersion": "0.3.2",
+  "packageVersion": "0.3.3",
   "publicApiVersion": 1,
   "upstreamReleases": [
     {
       "id": "easyrpg",
       "repository": "https://github.com/xxxsen/Player",
-      "tag": "rpg-runtime-0.8.1.1-r1",
-      "commit": "146702bd8454da288dc6a140f60d99ca7e18a984",
+      "tag": "rpg-runtime-0.8.1.1-r2",
+      "commit": "0cce2de5c19b10500d650a54318ad41bcf332022",
       "adapterAbi": "easyrpg-save",
-      "metadataUrl": "https://github.com/xxxsen/Player/releases/download/rpg-runtime-0.8.1.1-r1/rpg-runtime-release.json",
+      "metadataUrl": "https://github.com/xxxsen/Player/releases/download/rpg-runtime-0.8.1.1-r2/rpg-runtime-release.json",
       "assets": [
         {
           "filename": "easyrpg-player.js",
-          "url": "https://github.com/xxxsen/Player/releases/download/rpg-runtime-0.8.1.1-r1/easyrpg-player.js",
+          "url": "https://github.com/xxxsen/Player/releases/download/rpg-runtime-0.8.1.1-r2/easyrpg-player.js",
           "output": "runtime/easyrpg/easyrpg-player.js",
           "maxSizeBytes": 1048576
         },
         {
           "filename": "easyrpg-player.wasm",
-          "url": "https://github.com/xxxsen/Player/releases/download/rpg-runtime-0.8.1.1-r1/easyrpg-player.wasm",
+          "url": "https://github.com/xxxsen/Player/releases/download/rpg-runtime-0.8.1.1-r2/easyrpg-player.wasm",
           "output": "runtime/easyrpg/easyrpg-player.wasm",
           "maxSizeBytes": 16777216
         }

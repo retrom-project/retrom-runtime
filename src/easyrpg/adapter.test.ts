@@ -79,7 +79,10 @@ describe("EasyRPG adapter cleanup", () => {
       ?.dispatchEvent(new Event("load"));
 
     const mounted = await mounting;
-    expect(createPlayer).toHaveBeenCalledWith(expect.objectContaining({ noExitRuntime: true }));
+    expect(createPlayer).toHaveBeenCalledWith(expect.objectContaining({
+      noExitRuntime: true,
+      runtimeProjectRootUrl: config.adapter.projectRootUrl,
+    }));
     expect(mounted.position()).toEqual({ mapId: 1, playerX: 8, playerY: 6, fixtureState: 0 });
     mounted.cleanup();
     delete (window as Window & { createEasyRpgPlayer?: unknown }).createEasyRpgPlayer;
@@ -222,7 +225,7 @@ describe("EasyRPG adapter cleanup", () => {
 
 function easyConfig(generation: "RPG2000" | "RPG2003" = "RPG2000"): EasyConfig {
   const sessionId = "01980000-0000-7000-8000-000000000001";
-  const root = `/runtime/rpg-project/${sessionId}/`;
+  const root = `https://games.example/projects/${sessionId}/`;
   const rpg2003 = generation === "RPG2003";
   return {
     sessionId,

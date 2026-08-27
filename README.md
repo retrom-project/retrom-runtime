@@ -20,6 +20,8 @@ await runtime.mount(container);
 
 The host supplies URLs, an isolated frame where required, an optional restore payload and an explicit adapter
 configuration. The library never calls a host review, upload, save-state or authentication endpoint.
+For EasyRPG, `adapter.projectRootUrl` is passed to the core as the complete
+project directory URL; neither the adapter nor the core assumes a host route.
 
 ONS is a separate public runtime rather than an RPG Maker generation:
 

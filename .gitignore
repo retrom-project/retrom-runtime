@@ -1,6 +1,7 @@
 node_modules/
 dist/
 release/
+build/
 .cache/
 coverage/
 *.log

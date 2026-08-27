@@ -23,6 +23,15 @@ for (const release of manifest.upstreamReleases) {
     await publish(await download(asset.url, asset.maxSizeBytes), new URL(asset.output, stage));
   }
 }
+for (const build of manifest.sourceBuilds) {
+  for (const asset of build.assets) {
+    const contents = await readFile(new URL(asset.source, root));
+    if (!contents.length || contents.length > asset.maxSizeBytes) {
+      throw new Error(`BUILT_ASSET_SIZE_INVALID:${build.id}/${asset.filename}`);
+    }
+    await publish(contents, new URL(asset.output, stage));
+  }
+}
 const records = await collectRecords(manifest, stage);
 const metadata = {
   schemaVersion: 1,
@@ -91,6 +100,7 @@ async function publish(contents, target) {
 async function collectRecords(value, directory) {
   const paths = ["LICENSE", "THIRD_PARTY_NOTICES.md", "library/index.js", "library/index.d.ts",
     ...value.localAssets.map((asset) => asset.output),
+    ...value.sourceBuilds.flatMap((build) => build.assets.map((asset) => asset.output)),
     ...value.upstreamReleases.flatMap((release) => release.assets.map((asset) => asset.output))].sort();
   return Promise.all(paths.map(async (path) => {
     const contents = await readFile(new URL(path, directory));

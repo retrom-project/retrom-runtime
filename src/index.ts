@@ -25,6 +25,19 @@ export type {
 export { runtimeCatalog, validateRuntimeConfig } from "./catalog.js";
 export { decodeRpgCheckpoint, encodeRpgCheckpoint, rpgCheckpointMagic } from "./checkpoint.js";
 export { decodeMkxpRastate, encodeMkxpRastate, mkxpRastateEnvelopeBytes } from "./mkxp/state.js";
+export {
+  createOnsRuntime,
+  decodeOnsCheckpoint,
+  encodeOnsCheckpoint,
+  onsCheckpointMagic,
+  type OnsAdapterConfig,
+  type OnsCheckpointPayload,
+  type OnsRuntime,
+  type OnsRuntimeConfig,
+  type OnsRuntimeEvent,
+  type OnsRuntimeOptions,
+  type OnsScriptEncoding,
+} from "./ons/index.js";
 
 export type RuntimeDiagnostic = { runtime: string; message: string };
 

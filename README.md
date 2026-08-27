@@ -1,7 +1,7 @@
 # retrom-runtime
 
 `retrom-runtime` is a host-independent browser library and release bundle for RPG Maker 2000, 2003, XP,
-VX, VX Ace, MV and MZ. It owns runtime lifecycle, adapters, checkpoint codecs, bridge assets and pinned core
+VX, VX Ace, MV and MZ, plus ONS games powered by ONScripterYuri. It owns runtime lifecycle, adapters, checkpoint codecs, bridge assets and pinned core
 Release inputs. It does not know about a host application's users, database, review flow, storage or HTTP API.
 
 ## Public API
@@ -21,6 +21,30 @@ await runtime.mount(container);
 The host supplies URLs, an isolated frame where required, an optional restore payload and an explicit adapter
 configuration. The library never calls a host review, upload, save-state or authentication endpoint.
 
+ONS is a separate public runtime rather than an RPG Maker generation:
+
+```ts
+import { createOnsRuntime, type OnsRuntimeConfig } from "@xxxsen/retrom-runtime";
+
+const runtime = createOnsRuntime(config, { frameWindow, restorePayload });
+await runtime.mount(container);
+const checkpoint = await runtime.checkpoint();
+```
+
+An ONS project index has the stable shape below. Paths are project-relative and URLs remain supplied by the host:
+
+```json
+{
+  "schemaVersion": 1,
+  "title": "Example",
+  "fontPath": "default.ttf",
+  "files": [{ "path": "0.txt", "url": "https://content.example/0.txt" }]
+}
+```
+
+Each session must use its own frame. `exit()` pauses the core and removes library-owned DOM and globals; the host
+then discards that frame to release Emscripten's document-level input hooks.
+
 ## Development
 
 ```bash
@@ -32,8 +56,8 @@ npm run build
 npm run package:check
 ```
 
-Runtime JS/Wasm is not committed. `npm run release:build` downloads assets from the immutable upstream tags in
-`runtime-manifest.json`, checks their release metadata, and produces:
+Runtime JS/Wasm is not committed. The tag workflow downloads the fixed upstream releases and builds the fixed
+ONScripterYuri tag with the small host save/load patch in `assets/runtime/ons/host-api.patch`. It then produces:
 
 - `release/retrom-runtime-<version>.tar.gz`
 - `release/xxxsen-retrom-runtime-<version>.tgz` (installable npm package)
@@ -45,11 +69,14 @@ immutable release tags.
 
 Adapter IDs and asset paths describe roles, not migration revisions. Version selection happens only at the
 repository release tag; the source tree and each release contain one implementation per runtime role.
+SHA-256 values in release metadata detect corrupt downloads; compatibility identity is the immutable
+`retrom-runtime` tag and its recorded upstream repository, tag and commit.
 
 ## Adding and integrating a core
 
 1. Add the runtime entry and adapter implementation without aliases or fallback implementations.
-2. Add adapter unit tests and a small owned or redistributable compatibility fixture.
+2. Add adapter unit tests and a small owned or redistributable compatibility fixture. Private operator games may
+   be used for an ignored local smoke but never enter Git or ordinary automated tests.
 3. Open a PR to `master`; the quality workflow runs lint, types, unit tests and the package build.
 4. Publish a prerelease tag such as `v0.3.0-rc.1`.
 5. A host application changes its runtime pin on a short-lived integration branch; production keeps its stable pin.

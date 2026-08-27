@@ -12,5 +12,6 @@ await Promise.all([
     const contents = await readFile(new URL(asset.source, root));
     if (!contents.length || sha256(contents).length !== 64) {throw new Error("LOCAL_ASSET_INVALID");}
   }),
+  ...manifest.sourceBuilds.map((build) => access(new URL(build.patch, root))),
 ]);
 console.log(`package-check: ok (${manifest.cores.length} cores)`);

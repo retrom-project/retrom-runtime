@@ -1,7 +1,7 @@
 {
   "name": "@xxxsen/retrom-runtime",
-  "version": "0.2.0",
-  "description": "Host-independent browser runtimes for RPG Maker projects",
+  "version": "0.3.0",
+  "description": "Host-independent browser runtimes for RPG Maker and ONS projects",
   "type": "module",
   "license": "MIT",
   "packageManager": "npm@11.16.0",
@@ -26,6 +26,7 @@
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "vitest run",
     "build": "npm run clean && tsc -p tsconfig.build.json",
+    "core:ons:build": "bash scripts/build-ons-core.sh",
     "package:check": "node scripts/package-check.mjs",
     "release:build": "npm run build && node scripts/build-release.mjs"
   },

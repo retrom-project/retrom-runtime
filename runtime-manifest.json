@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "packageName": "@xxxsen/retrom-runtime",
-  "packageVersion": "0.2.0",
+  "packageVersion": "0.3.0",
   "publicApiVersion": 1,
   "upstreamReleases": [
     {
@@ -49,6 +49,37 @@
       ]
     }
   ],
+  "sourceBuilds": [
+    {
+      "id": "onsyuri",
+      "repository": "https://github.com/YuriSizuku/OnscripterYuri",
+      "tag": "v0.7.7beta",
+      "commit": "08f744b31cc1907b66a15f0402e62321a131ed81",
+      "adapterAbi": "ons-save",
+      "license": "GPL-2.0-or-later",
+      "patch": "assets/runtime/ons/host-api.patch",
+      "assets": [
+        {
+          "source": "build/ons/onsyuri.js",
+          "filename": "onsyuri.js",
+          "output": "runtime/ons/onsyuri.js",
+          "maxSizeBytes": 1048576
+        },
+        {
+          "source": "build/ons/onsyuri.wasm",
+          "filename": "onsyuri.wasm",
+          "output": "runtime/ons/onsyuri.wasm",
+          "maxSizeBytes": 16777216
+        },
+        {
+          "source": "build/ons/COPYING",
+          "filename": "COPYING",
+          "output": "licenses/onsyuri/COPYING",
+          "maxSizeBytes": 65536
+        }
+      ]
+    }
+  ],
   "localAssets": [
     {
       "source": "assets/runtime/mkxp/position_bridge.rb",
@@ -62,6 +93,7 @@
   "cores": [
     {
       "id": "rpgmaker-2000",
+      "family": "RPG_MAKER",
       "generation": "RPG2000",
       "runtimeId": "easyrpg",
       "adapterKind": "EASYRPG_WEB",
@@ -71,6 +103,7 @@
     },
     {
       "id": "rpgmaker-2003",
+      "family": "RPG_MAKER",
       "generation": "RPG2003",
       "runtimeId": "easyrpg",
       "adapterKind": "EASYRPG_WEB",
@@ -80,6 +113,7 @@
     },
     {
       "id": "rpgmaker-xp",
+      "family": "RPG_MAKER",
       "generation": "RPGXP",
       "runtimeId": "mkxp",
       "adapterKind": "MKXP_LIBRETRO_WEB",
@@ -89,6 +123,7 @@
     },
     {
       "id": "rpgmaker-vx",
+      "family": "RPG_MAKER",
       "generation": "RPGVX",
       "runtimeId": "mkxp",
       "adapterKind": "MKXP_LIBRETRO_WEB",
@@ -98,6 +133,7 @@
     },
     {
       "id": "rpgmaker-vx-ace",
+      "family": "RPG_MAKER",
       "generation": "RPGVXACE",
       "runtimeId": "mkxp",
       "adapterKind": "MKXP_LIBRETRO_WEB",
@@ -107,6 +143,7 @@
     },
     {
       "id": "rpgmaker-mv",
+      "family": "RPG_MAKER",
       "generation": "RPGMV",
       "runtimeId": "native",
       "adapterKind": "NATIVE_WEB",
@@ -116,12 +153,23 @@
     },
     {
       "id": "rpgmaker-mz",
+      "family": "RPG_MAKER",
       "generation": "RPGMZ",
       "runtimeId": "native",
       "adapterKind": "NATIVE_WEB",
       "adapterId": "native-web",
       "adapterAbi": "native-save",
       "assetPaths": ["runtime/native/bridge.js"]
+    },
+    {
+      "id": "onscripter-yuri",
+      "family": "ONS",
+      "generation": "ONS",
+      "runtimeId": "onsyuri",
+      "adapterKind": "ONS_YURI_WEB",
+      "adapterId": "ons-yuri-web",
+      "adapterAbi": "ons-save",
+      "assetPaths": ["runtime/ons/onsyuri.js", "runtime/ons/onsyuri.wasm"]
     }
   ]
 }

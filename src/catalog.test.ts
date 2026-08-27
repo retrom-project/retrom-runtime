@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import { runtimeCatalog, validateRuntimeConfig } from "./catalog.js";
 import type { RpgRuntimeConfig } from "./contract.js";
+import { validateOnsRuntimeConfig } from "./ons/contract.js";
 
 describe("runtime catalog", () => {
   it("covers all seven supported RPG Maker generations", () => {
@@ -19,6 +20,21 @@ describe("runtime catalog", () => {
     const config = easyConfig();
     config.generation = "RPG2003";
     expect(() => validateRuntimeConfig(config)).toThrow("RPG_RUNTIME_CONFIG_INVALID");
+  });
+
+  it("accepts the standalone ONS adapter without treating it as an RPG Maker generation", () => {
+    expect(() => validateOnsRuntimeConfig({
+      sessionId: "runtime-session",
+      adapter: {
+        adapterKind: "ONS_YURI_WEB",
+        adapterId: "ons-yuri-web",
+        checkpointSlot: 999,
+        projectIndexUrl: "https://content.example/ons/index.json",
+        runtimeBaseUrl: "https://runtime.example/ons/",
+        scriptEncoding: "gbk",
+      },
+    })).not.toThrow();
+    expect(runtimeCatalog.flatMap((entry) => entry.generations)).not.toContain("ONS");
   });
 });
 

@@ -114,6 +114,31 @@ describe("ONS Yuri runtime", () => {
     await rejected;
   });
 
+  it("accepts same-origin root-relative project content URLs", async () => {
+    const module = fakeModule();
+    (window as HostWindow).onsyuri = vi.fn(async (options: Record<string, unknown>) => {
+      Object.assign(options, module);
+      const configured = options as FakeModule;
+      configured.preRun?.();
+      return configured;
+    });
+    const body = JSON.stringify({
+      schemaVersion: 1,
+      title: "fixture",
+      fontPath: "default.ttf",
+      files: [
+        { path: "0.txt", url: "/runtime/projects/preview/0.txt" },
+        { path: "default.ttf", url: "/runtime/projects/preview/default.ttf" },
+      ],
+    });
+    vi.stubGlobal("fetch", vi.fn(async () => new Response(body, { status: 200 })));
+    const runtime = createOnsRuntime(config(), { frameWindow: window, restorePayload: null });
+    const mounting = runtime.mount(document.createElement("div"));
+    await loadRuntimeScript();
+    await mounting;
+    await runtime.exit();
+  });
+
   it("rejects a project index with ambiguous case-insensitive paths", async () => {
     const body = JSON.stringify({
       schemaVersion: 1,

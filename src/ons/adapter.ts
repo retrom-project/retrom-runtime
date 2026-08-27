@@ -169,7 +169,7 @@ function validIndex(value: unknown): value is ProjectIndex {
   const seen = new Set<string>();
   let fontFound = false;
   for (const item of value.files) {
-    if (!isRecord(item) || !exactKeys(item, ["path", "url"]) || !validPath(item.path) || !validUrl(item.url)) {return false;}
+    if (!isRecord(item) || !exactKeys(item, ["path", "url"]) || !validPath(item.path) || !validProjectUrl(item.url)) {return false;}
     const identity = item.path.toLowerCase();
     if (seen.has(identity)) {return false;}
     seen.add(identity);
@@ -356,8 +356,9 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 function exactKeys(value: Record<string, unknown>, expected: string[]) {
   return Object.keys(value).sort().join("\0") === [...expected].sort().join("\0");
 }
-function validUrl(value: unknown) {
+function validProjectUrl(value: unknown) {
   if (typeof value !== "string") {return false;}
+  if (value.startsWith("/") && !value.startsWith("//") && !value.includes("\\") && !value.includes("#")) {return true;}
   try {return ["http:", "https:"].includes(new URL(value).protocol);} catch {return false;}
 }
 function validPath(value: unknown): value is string {

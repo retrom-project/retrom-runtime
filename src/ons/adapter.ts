@@ -72,7 +72,7 @@ export async function mountOnsYuri(
   let exited = false;
   let videoCleanup: () => void = () => undefined;
   const ready = deferred<void>();
-  const base = normalizedBase(config.adapter.runtimeBaseUrl);
+  const base = new URL(normalizedBase(config.adapter.runtimeBaseUrl), document.baseURI).href;
   const moduleOptions: Partial<OnsModule> = {
     canvas,
     locateFile: (path) => new URL(path, base).href,

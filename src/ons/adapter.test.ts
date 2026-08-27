@@ -139,6 +139,26 @@ describe("ONS Yuri runtime", () => {
     await runtime.exit();
   });
 
+  it("loads a same-origin runtime from a root-relative base URL", async () => {
+    const module = fakeModule();
+    (window as HostWindow).onsyuri = vi.fn(async (options: Record<string, unknown>) => {
+      Object.assign(options, module);
+      const configured = options as FakeModule;
+      configured.preRun?.();
+      return configured;
+    });
+    mockIndex();
+    const runtimeConfig = config();
+    runtimeConfig.adapter.runtimeBaseUrl = "/runtime/retrom-runtime/test/";
+    const runtime = createOnsRuntime(runtimeConfig, { frameWindow: window, restorePayload: null });
+    const mounting = runtime.mount(document.createElement("div"));
+    await loadRuntimeScript();
+    expect(document.head.querySelector<HTMLScriptElement>("script[data-runtime=ons-yuri]")?.src)
+      .toBe(new URL("/runtime/retrom-runtime/test/onsyuri.js", document.baseURI).href);
+    await mounting;
+    await runtime.exit();
+  });
+
   it("rejects a project index with ambiguous case-insensitive paths", async () => {
     const body = JSON.stringify({
       schemaVersion: 1,

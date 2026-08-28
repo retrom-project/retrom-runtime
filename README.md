@@ -47,6 +47,11 @@ An ONS project index has the stable shape below. Paths are project-relative and 
 Each session must use its own frame. `exit()` pauses the core and removes library-owned DOM and globals; the host
 then discards that frame to release Emscripten's document-level input hooks.
 
+ONScripterYuri receives its native standard-gamepad D-pad and face-button events through SDL. The adapter adds
+only the missing standard left-stick direction mapping, with dead-zone hysteresis and complete key release on
+exit. It also creates the core's WebGL context with a retained drawing buffer so host-requested review and save
+screenshots contain the displayed frame instead of a cleared black buffer.
+
 ## Development
 
 ```bash

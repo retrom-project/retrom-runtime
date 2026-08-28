@@ -33,7 +33,11 @@ export function validateManifest(manifest) {
   }
   for (const release of manifest.upstreamReleases) {
     if (!release?.id || releases.has(release.id) || !/^https:\/\/github\.com\//u.test(release.repository) ||
-      !/^[0-9a-f]{40}$/u.test(release.commit) || !Array.isArray(release.assets) || release.assets.length !== 2) {
+      !/^[0-9a-f]{40}$/u.test(release.commit) ||
+      !/^rpg-runtime-[0-9A-Za-z][0-9A-Za-z._-]*-r[1-9][0-9]*(?:-rc\.[1-9][0-9]*)?$/u.test(release.tag) ||
+      release.metadataUrl !==
+        `${release.repository}/releases/download/${release.tag}/rpg-runtime-release.json` ||
+      !Array.isArray(release.assets) || release.assets.length !== 2) {
       throw new Error("RUNTIME_MANIFEST_INVALID");
     }
     releases.set(release.id, release);

@@ -87,3 +87,17 @@ SHA-256 values in release metadata detect corrupt downloads; compatibility ident
 
 This keeps core development independent: a new core can be tested without replacing the stable runtime used by
 other games or requiring unrelated host changes.
+
+## Maintaining upstream forks
+
+The Player and mkxp-z Web forks each keep one protected maintenance branch and
+record their exact tagged or commit-only upstream baseline in a root
+`retrom-fork.json`. Work happens on short-lived `fix/*`, `feat/*`, `build/*`,
+or `sync/upstream-*` branches and is merged before a release tag is created.
+
+Fork releases use only `rpg-runtime-<upstream-baseline>-rN` tags. For a new
+upstream without a tag, the baseline token is `g` plus 12 hexadecimal commit
+characters; the release metadata still records the full commit. Tags and
+assets are immutable, and aliases such as `latest`, `stable`, and the retired
+`retrom-web-*` namespace are not supported. This aggregate repository pins the
+fork repository, stable tag, tag commit, filenames, and adapter ABI.

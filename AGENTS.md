@@ -38,3 +38,18 @@ npm run package:check
 - PR 到 `master` 必须通过 `.github/workflows/quality.yml`。
 - `v*` tag 由 `.github/workflows/release.yml` 构建 GitHub Release；tag 不移动、不覆盖。
 - 发布产物是兼容边界。破坏公共类型、checkpoint 格式或 adapter ABI 时必须升级相应版本并在 CHANGELOG 说明。
+
+## 上游 fork 维护
+
+- `xxxsen/Player` 只使用 `master`，`xxxsen/mkxp-z-libretro-emscripten`
+  只使用 `main`；各自根目录 `AGENTS.md` 和 `retrom-fork.json` 是分支、
+  上游基线与 Release 资产的事实源。
+- fork 工作分支只允许 `fix/*`、`feat/*`、`build/*` 与
+  `sync/upstream-*`，合并后删除；不得创建 `runtime-clean`、平行版本
+  长分支或以 Agent 名命名的分支。
+- fork Release 只使用 `rpg-runtime-<upstream-baseline>-rN`；上游没有
+  tag 时以 `g<12-hex-commit>` 表示新基线。不得再创建
+  `retrom-web-*`、`latest`、`stable` 或其他别名 tag。
+- `retrom-runtime` 的 prerelease 可以固定 fork 的 `-rc.N` 候选；稳定
+  tag 只能固定已发布的稳定 fork tag。任何 fork tag、tag commit、资产名
+  或 adapter ABI 变化都必须作为独立 manifest 变更验证。

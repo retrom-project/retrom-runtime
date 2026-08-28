@@ -29,8 +29,10 @@ describe("ONS Yuri runtime", () => {
       configured.printErr?.("INFO: normal ONS startup diagnostic");
       configured.preRun?.();
       expect(typeof (window as HostWindow).scale_full).toBe("function");
-      const canvas = document.querySelector<HTMLCanvasElement>("canvas");
-      if (!canvas) {throw new Error("test canvas missing");}
+      const canvas = document.getElementById("canvas");
+      if (!(canvas instanceof HTMLCanvasElement)) {throw new Error("test canvas missing");}
+      canvas.width = 800;
+      canvas.height = 600;
       (window as HostWindow).scale_full?.(canvas, 4 / 3);
       expect(canvas.style.width).not.toBe("");
       return configured;

@@ -56,14 +56,24 @@ export async function mountOnsYuri(
   const restore = await readRestore(restorePayload);
   const host = frameWindow as OnsHostWindow;
   const document = frameWindow.document;
+  const surface = document.createElement("div");
   const canvas = document.createElement("canvas");
   const video = document.createElement("video");
+  surface.dataset.onsRuntimeSurface = "";
+  Object.assign(surface.style, {
+    display: "grid", height: "100%", overflow: "hidden", placeItems: "center", width: "100%",
+  });
+  Object.assign(canvas.style, { gridArea: "1 / 1", maxHeight: "100%", maxWidth: "100%" });
+  Object.assign(video.style, { gridArea: "1 / 1", maxHeight: "100%", maxWidth: "100%" });
   canvas.tabIndex = 0;
   canvas.setAttribute("aria-label", index.title);
   video.hidden = true;
-  target.replaceChildren(canvas, video);
-  const focusCanvas = () => canvas.focus();
-  canvas.addEventListener("pointerdown", focusCanvas);
+  surface.append(canvas, video);
+  target.replaceChildren(surface);
+  const focusCanvas = () => {
+    canvas.focus({ preventScroll: true });
+  };
+  canvas.addEventListener("pointerdown", focusCanvas, true);
 
   const globals = captureGlobals(host);
   const fileMap = createFileMap(index.files);
@@ -82,7 +92,7 @@ export async function mountOnsYuri(
       if (!current?.FS) {throw new Error("ONS_RUNTIME_FILESYSTEM_UNAVAILABLE");}
       prepareFileSystem(current.FS, index.files, restore);
     },
-    printErr: (message) => {if (message) {console.error(`[ons-yuri] ${message}`);}},
+    printErr: (message) => {if (message) {console.debug(`[ons-yuri] ${message}`);}},
   };
   host.g_onsyuri_module = moduleOptions;
   host.g_onsyuri_index = { gamedir: gameRoot, savedir: saveRoot };
@@ -103,11 +113,12 @@ export async function mountOnsYuri(
     const started = module.callMain(runtimeArgs(config, index));
     if (started instanceof Promise) {void started.catch(() => ready.reject(new Error("ONS_RUNTIME_START_FAILED")));}
     await withTimeout(waitForEngine(ready.promise, module), readyTimeoutMs, "ONS_RUNTIME_TIMEOUT");
+    focusCanvas();
   } catch (error) {
     module?._onsyuri_host_set_paused(1);
     videoCleanup();
     script?.remove();
-    canvas.removeEventListener("pointerdown", focusCanvas);
+    canvas.removeEventListener("pointerdown", focusCanvas, true);
     target.replaceChildren();
     restoreGlobals(host, globals);
     throw error;
@@ -141,7 +152,7 @@ export async function mountOnsYuri(
       activeModule._onsyuri_host_set_paused(1);
       videoCleanup();
       script?.remove();
-      canvas.removeEventListener("pointerdown", focusCanvas);
+      canvas.removeEventListener("pointerdown", focusCanvas, true);
       target.replaceChildren();
       restoreGlobals(host, globals);
     },
@@ -339,8 +350,9 @@ function withTimeout<T>(promise: Promise<T>, timeoutMs: number, code: string) {
 
 function normalizedBase(value: string) {return value.endsWith("/") ? value : `${value}/`;}
 function scaleToFrame(frameWindow: Window, element: HTMLElement, ratio: number) {
-  const width = frameWindow.innerWidth;
-  const height = frameWindow.innerHeight;
+  const bounds = element.parentElement?.getBoundingClientRect();
+  const width = bounds?.width || frameWindow.innerWidth;
+  const height = bounds?.height || frameWindow.innerHeight;
   const fitWidth = ratio <= 0 || width / height <= ratio;
   element.style.width = `${fitWidth ? width : height * ratio}px`;
   element.style.height = `${fitWidth && ratio > 0 ? width / ratio : height}px`;

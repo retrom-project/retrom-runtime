@@ -99,6 +99,6 @@ function validPath(path: unknown): path is string {
 }
 
 async function digest(bytes: Uint8Array) {
-  const value = await crypto.subtle.digest("SHA-256", bytes.slice().buffer);
+  const value = await crypto.subtle.digest("SHA-256", bytes.slice());
   return [...new Uint8Array(value)].map((part) => part.toString(16).padStart(2, "0")).join("");
 }

@@ -21,10 +21,12 @@ afterEach(() => {
 
 describe("ONS Yuri runtime", () => {
   it("mounts the tagged core, accepts keyboard focus and checkpoints the reserved slot", async () => {
+    const errorSpy = vi.spyOn(console, "error").mockImplementation(() => undefined);
     const module = fakeModule();
     const factory = vi.fn(async (options: Record<string, unknown>) => {
       Object.assign(options, module);
       const configured = options as FakeModule;
+      configured.printErr?.("INFO: normal ONS startup diagnostic");
       configured.preRun?.();
       expect(typeof (window as HostWindow).scale_full).toBe("function");
       const canvas = document.querySelector<HTMLCanvasElement>("canvas");
@@ -46,6 +48,11 @@ describe("ONS Yuri runtime", () => {
       "--root", "/game", "--font", "/game/default.ttf", "--save-dir", "/save", "--enc:utf8",
     ]);
     expect(runtime.getCheckpointAvailability()).toEqual({ available: true, reason: null });
+    expect(errorSpy).not.toHaveBeenCalled();
+    expect(target.firstElementChild?.getAttribute("data-ons-runtime-surface")).toBe("");
+    expect((target.firstElementChild as HTMLElement).style.display).toBe("grid");
+    expect((target.firstElementChild as HTMLElement).style.placeItems).toBe("center");
+    expect(document.activeElement).toBe(target.querySelector("canvas"));
     target.querySelector("canvas")?.dispatchEvent(new Event("pointerdown", { bubbles: true }));
     expect(document.activeElement).toBe(target.querySelector("canvas"));
 
@@ -231,6 +238,7 @@ type FakeModule = {
   FS: FakeFs;
   callMain: ReturnType<typeof vi.fn>;
   preRun?: () => void;
+  printErr?: (message: string) => void;
   _onsyuri_host_load: ReturnType<typeof vi.fn>;
   _onsyuri_host_did_restore_fail: ReturnType<typeof vi.fn>;
   _onsyuri_host_is_ready: ReturnType<typeof vi.fn>;

@@ -10,7 +10,7 @@ const gzipCodec = 1;
 
 export async function encodeMkxpCheckpoint(core: Uint8Array, expectedCoreSize: number) {
   validateMkxpCoreState(core, expectedCoreSize);
-  const prefixSize = significantPrefixSize(core);
+  const prefixSize = await significantPrefixSize(core);
   const compressed = await compress(core.slice(0, prefixSize));
   if (compressed.byteLength + mkxpCompactHeaderBytes >= core.byteLength) {return core.slice();}
   const checkpoint = new Uint8Array(mkxpCompactHeaderBytes + compressed.byteLength);
@@ -91,9 +91,15 @@ function validateMkxpCoreState(core: Uint8Array, expectedCoreSize: number) {
   }
 }
 
-function significantPrefixSize(core: Uint8Array) {
+async function significantPrefixSize(core: Uint8Array) {
+  const scanChunkBytes = 1 << 20;
   let size = core.byteLength;
-  while (size > 8 && core[size - 1] === 0) {size -= 1;}
+  while (size > 8) {
+    const boundary = Math.max(8, size - scanChunkBytes);
+    while (size > boundary && core[size - 1] === 0) {size -= 1;}
+    if (size > boundary) {return size;}
+    await new Promise((resolve) => setTimeout(resolve, 0));
+  }
   return size;
 }
 

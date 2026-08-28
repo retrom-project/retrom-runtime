@@ -1,3 +1,4 @@
+import { readFile } from "node:fs/promises";
 import { describe, expect, it } from "vitest";
 
 import { runtimeCatalog, validateRuntimeConfig } from "./catalog.js";
@@ -10,6 +11,41 @@ describe("runtime catalog", () => {
     expect([...generations].sort()).toEqual([
       "RPG2000", "RPG2003", "RPGMV", "RPGMZ", "RPGVX", "RPGVXACE", "RPGXP",
     ]);
+  });
+
+  it("matches the RPG Maker entries in the release manifest", async () => {
+    const manifest = JSON.parse(await readFile("runtime-manifest.json", "utf8")) as {
+      cores: Array<{
+        adapterAbi: string;
+        adapterId: string;
+        adapterKind: string;
+        generation: string;
+        runtimeId: string;
+      }>;
+    };
+    const catalogByGeneration = new Map<string, {
+      adapterAbi: string;
+      adapterId: string;
+      adapterKind: string;
+      runtimeId: string;
+    }>(runtimeCatalog.flatMap((entry) => entry.generations.map((generation) => [
+      generation,
+      {
+        adapterAbi: entry.adapterAbi,
+        adapterId: entry.adapterId,
+        adapterKind: entry.adapterKind,
+        runtimeId: entry.runtimeId,
+      },
+    ])));
+
+    for (const core of manifest.cores.filter((entry) => entry.generation.startsWith("RPG"))) {
+      expect(catalogByGeneration.get(core.generation)).toEqual({
+        adapterAbi: core.adapterAbi,
+        adapterId: core.adapterId,
+        adapterKind: core.adapterKind,
+        runtimeId: core.runtimeId,
+      });
+    }
   });
 
   it("accepts a host-independent EasyRPG session", () => {

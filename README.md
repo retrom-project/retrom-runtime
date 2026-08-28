@@ -79,6 +79,12 @@ repository release tag; the source tree and each release contain one implementat
 SHA-256 values in release metadata detect corrupt downloads; compatibility identity is the immutable
 `retrom-runtime` tag and its recorded upstream repository, tag and commit.
 
+The mkxp core still serializes into its fixed 256 MiB memory buffer. The adapter does not upload that zero-padded
+buffer directly: it trims the unused zero tail, compresses the meaningful prefix in a worker and stores a compact
+`mkxp-state-compact` checkpoint. Restore expands the checkpoint back to the exact 256 MiB core buffer before the
+private load hotkey is sent. This is an aggregate-runtime ABI; the pinned upstream core Release continues to expose
+its raw serializer ABI and does not need a host-specific patch for compression.
+
 ## Adding and integrating a core
 
 1. Add the runtime entry and adapter implementation without aliases or fallback implementations.

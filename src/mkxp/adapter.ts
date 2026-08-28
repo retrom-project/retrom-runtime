@@ -1,7 +1,13 @@
 import { Nostalgist } from "nostalgist";
 import type { RpgPlayerInstance } from "../internal-adapter.js";
 import type { RpgPosition, RpgRuntimeConfig } from "../contract.js";
-import { decodeMkxpRastate, encodeMkxpRastate, mkxpRastateEnvelopeBytes } from "./state.js";
+import {
+  decodeMkxpCheckpoint,
+  decodeMkxpRastate,
+  encodeMkxpCheckpoint,
+  encodeMkxpRastate,
+  mkxpRastateEnvelopeBytes,
+} from "./state.js";
 
 type MkxpConfig = RpgRuntimeConfig & { adapter: Extract<RpgRuntimeConfig["adapter"], { adapterKind: "MKXP_LIBRETRO_WEB" }> };
 
@@ -21,6 +27,8 @@ type MkxpRuntime = Pick<Nostalgist,
 >;
 
 type MkxpMountDependencies = {
+  decodeCheckpoint: typeof decodeMkxpCheckpoint;
+  encodeCheckpoint: typeof encodeMkxpCheckpoint;
   fetchVerified: (url: string, expectedSize: number, expectedDigest: string) => Promise<Uint8Array>;
   prepare: (options: Parameters<typeof Nostalgist.prepare>[0]) => Promise<MkxpRuntime>;
 };
@@ -38,6 +46,8 @@ const saveStateHotkey = { code: "F2", keyCode: 113 } as const;
 const loadStateHotkey = { code: "F4", keyCode: 115 } as const;
 const pauseToggleHotkey = { code: "F6", keyCode: 117 } as const;
 const browserDependencies: MkxpMountDependencies = {
+  decodeCheckpoint: decodeMkxpCheckpoint,
+  encodeCheckpoint: encodeMkxpCheckpoint,
   fetchVerified,
   prepare: (options) => Nostalgist.prepare(options),
 };
@@ -137,7 +147,10 @@ async function mountMkxpUnchecked(
   const fileSystem = nostalgist.getEmscriptenFS() as MkxpFileSystem;
   try {
     installRuntimeFiles(fileSystem, config, bridgeBytes, rtpBytes);
-    if (restorePayload) {installRestoreState(fileSystem, restorePayload, config.adapter.stateBufferBytes);}
+    if (restorePayload) {
+      const rawState = await dependencies.decodeCheckpoint(restorePayload, config.adapter.stateBufferBytes);
+      installRestoreState(fileSystem, rawState, config.adapter.stateBufferBytes);
+    }
     await nostalgist.start();
   } catch (error) {
     await nostalgist.exit();
@@ -175,7 +188,9 @@ async function mountMkxpUnchecked(
       validationPurpose: config.validationPurpose,
       getRpgPosition: () => readCurrentPosition(fileSystem).position,
       getCheckpointAvailability: () => ({ available: true, reason: null }),
-      getStateAsync: () => saveStateBytes(canvas, fileSystem, config.adapter.stateBufferBytes),
+      getStateAsync: () => saveStateBytes(
+        canvas, fileSystem, config.adapter.stateBufferBytes, dependencies.encodeCheckpoint,
+      ),
       getFrameNum: () => readCurrentPosition(fileSystem).frameCount,
       getVideoDimensions: (dimension) => dimension === "aspect" ? canvas.width / canvas.height :
         dimension === "width" ? canvas.width : canvas.height,
@@ -317,7 +332,12 @@ function canvasBlob(canvas: HTMLCanvasElement) {
   }, "image/png"));
 }
 
-async function saveStateBytes(canvas: HTMLCanvasElement, fileSystem: MkxpFileSystem, expectedSize: number) {
+async function saveStateBytes(
+  canvas: HTMLCanvasElement,
+  fileSystem: MkxpFileSystem,
+  expectedSize: number,
+  encodeCheckpoint: typeof encodeMkxpCheckpoint,
+) {
   try {fileSystem.unlink(statePath);} catch { /* A previous state file is optional. */ }
   await pressPrivateHotkey(canvas, saveStateHotkey);
   const expectedPayloadSize = expectedSize + mkxpRastateEnvelopeBytes;
@@ -330,7 +350,8 @@ async function saveStateBytes(canvas: HTMLCanvasElement, fileSystem: MkxpFileSys
         const state = fileSystem.readFile(statePath);
         const core = decodeMkxpRastate(state, expectedSize);
         try {fileSystem.unlink(statePath);} catch { /* The in-memory copy is authoritative. */ }
-        return core;
+        try {return await encodeCheckpoint(core, expectedSize);}
+        catch {throw new Error("RPG_CHECKPOINT_CREATE_FAILED");}
       }
     } catch (error) {
       if (error instanceof Error && error.message === "RPG_CHECKPOINT_CREATE_FAILED") {throw error;}

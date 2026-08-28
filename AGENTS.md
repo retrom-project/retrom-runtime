@@ -41,11 +41,14 @@ npm run package:check
 
 ## 上游 fork 维护
 
-- `xxxsen/Player` 只使用 `master`，`xxxsen/mkxp-z-libretro-emscripten`
-  只使用 `main`；各自根目录 `AGENTS.md` 和 `retrom-fork.json` 是分支、
-  上游基线与 Release 资产的事实源。
+- `xxxsen/Player` 的 `master` 与 `xxxsen/mkxp-z-libretro-emscripten` 的
+  `main` 只做上游 fast-forward 镜像，不含 Retrom 修改；当前维护与默认
+  分支分别是 `retrom/0.8.1.1` 和 `retrom/f2efc98`。各 fork 根目录
+  `AGENTS.md` 和 `retrom-fork.json` 是镜像、维护基线与 Release 资产的
+  事实源。
 - fork 工作分支只允许 `fix/*`、`feat/*`、`build/*` 与
-  `sync/upstream-*`，合并后删除；不得创建 `runtime-clean`、平行版本
+  `sync/upstream-*`，并从当前 `retrom/<baseline>` 创建、合并后删除；
+  不得把补丁并入移动的上游镜像，不得创建 `runtime-clean`、平行版本
   长分支或以 Agent 名命名的分支。
 - fork Release 只使用 `rpg-runtime-<upstream-baseline>-rN`；上游没有
   tag 时以 `g<12-hex-commit>` 表示新基线。不得再创建

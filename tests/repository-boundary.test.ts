@@ -43,7 +43,7 @@ describe("independent package boundary", () => {
       "easyrpg-web", "mkxp-libretro-web", "native-web", "ons-yuri-web",
     ]);
     expect([...new Set(manifest.cores.map((core) => core.adapterAbi))].sort()).toEqual([
-      "easyrpg-save", "mkxp-state", "native-save", "ons-save",
+      "easyrpg-save", "mkxp-state-compact", "native-save", "ons-save",
     ]);
     expect((await readdir(join(root, "assets/runtime"))).sort()).toEqual(["mkxp", "native", "ons"]);
     for (const asset of ["assets/runtime/mkxp/position_bridge.rb", "assets/runtime/native/bridge.js"]) {
@@ -53,8 +53,8 @@ describe("independent package boundary", () => {
 
   it("ships the current license closure in the aggregate release", async () => {
     const script = await readFile(join(root, "scripts/build-release.mjs"), "utf8");
-    expect(script).toContain('["LICENSE", "THIRD_PARTY_NOTICES.md"]');
-    expect(script).toContain('"LICENSE", "THIRD_PARTY_NOTICES.md", "library/index.js"');
+    expect(script).toContain('["CHANGELOG.md", "LICENSE", "THIRD_PARTY_NOTICES.md"]');
+    expect(script).toContain('"CHANGELOG.md", "LICENSE", "THIRD_PARTY_NOTICES.md", "library/index.js"');
     expect(script).toContain("value.sourceBuilds.flatMap");
   });
 

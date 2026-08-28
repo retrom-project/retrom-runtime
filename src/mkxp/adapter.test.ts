@@ -26,6 +26,7 @@ const movedEvidencePath = "/home/web_user/retroarch/userdata/saves/mkxp-z/mkxp-z
 const stateSize = 268435456;
 const stateFixture = new Uint8Array(stateSize);
 stateFixture.set([0x6d, 0x6b, 0x78, 0x70, 1, 0, 0, 0]);
+const checkpointFixture = Uint8Array.of(0x52, 0x54, 0x4d, 0x4b, 0x58, 0x50, 0x53, 1, 1);
 const originalCrossOriginIsolated = Object.getOwnPropertyDescriptor(window, "crossOriginIsolated");
 
 afterEach(() => {
@@ -70,7 +71,7 @@ describe("mkxp runtime mount", () => {
       if (code === "F4") {harness.files.set(evidencePath, positionBytes(7, 4, 6, 9, 600));}
     };
 
-    const mountPromise = mountMkxp(mkxpConfig(true), harness.target, stateFixture, harness.dependencies);
+    const mountPromise = mountMkxp(mkxpConfig(true), harness.target, checkpointFixture, harness.dependencies);
     await vi.advanceTimersByTimeAsync(499);
 
     expect(harness.actions).toEqual([`mkdir:${coreStateRoot}`, `write:${statePath}`, "start"]);
@@ -88,7 +89,7 @@ describe("mkxp runtime mount", () => {
       if (code === "F4") {harness.files.set(evidencePath, positionBytes(7, 4, 6, 9, 600));}
       if (code === "F2") {harness.writeRuntimeState(encodeMkxpRastate(stateFixture, stateSize));}
     };
-    const mountPromise = mountMkxp(mkxpConfig(true), harness.target, stateFixture, harness.dependencies);
+    const mountPromise = mountMkxp(mkxpConfig(true), harness.target, checkpointFixture, harness.dependencies);
 
     await vi.advanceTimersByTimeAsync(1_000);
 
@@ -127,8 +128,9 @@ describe("mkxp runtime mount", () => {
     const checkpointPromise = getState();
     await vi.advanceTimersByTimeAsync(1_000);
     const checkpoint = await checkpointPromise;
-    expect(checkpoint?.byteLength).toBe(stateSize);
-    expect(checkpoint?.slice(0, 8)).toEqual(Uint8Array.of(0x6d, 0x6b, 0x78, 0x70, 1, 0, 0, 0));
+    expect(checkpoint?.byteLength).toBeLessThan(1024);
+    expect(checkpoint?.slice(0, 8)).toEqual(Uint8Array.of(0x52, 0x54, 0x4d, 0x4b, 0x58, 0x50, 0x53, 1));
+    expect(checkpoint).toEqual(checkpointFixture);
     expect(harness.actions).toEqual([
       `mkdir:${coreStateRoot}`, `write:${statePath}`, "start", "F4", "F2", `write:${statePath}`,
     ]);
@@ -150,7 +152,7 @@ describe("mkxp runtime mount", () => {
       }
     };
 
-    const mountPromise = mountMkxp(mkxpConfig(true), harness.target, stateFixture, harness.dependencies);
+    const mountPromise = mountMkxp(mkxpConfig(true), harness.target, checkpointFixture, harness.dependencies);
     await vi.advanceTimersByTimeAsync(1_000);
 
     const mounted = await mountPromise;
@@ -168,7 +170,7 @@ describe("mkxp runtime mount", () => {
       harness.actions.push(code);
       if (code === "F4") {harness.files.set(evidencePath, positionBytes(7, 8, 6, 10, 601));}
     };
-    const result = mountMkxp(mkxpConfig(true), harness.target, stateFixture, harness.dependencies)
+    const result = mountMkxp(mkxpConfig(true), harness.target, checkpointFixture, harness.dependencies)
       .then(() => null, (error: unknown) => error);
 
     await vi.advanceTimersByTimeAsync(31_000);
@@ -206,6 +208,28 @@ describe("mkxp runtime mount", () => {
     await expect(result).resolves.toMatchObject({ message: "RPG_CHECKPOINT_CREATE_TIMEOUT" });
     expect(harness.actions).toEqual([`mkdir:${coreStateRoot}`, "start", "F2"]);
     expect(harness.runtime).not.toHaveProperty("sendCommand");
+    await mounted.cleanup();
+    harness.frame.remove();
+  });
+
+  it("maps compact checkpoint encoding failures to the create stage", async () => {
+    const harness = createHarness();
+    harness.onKeyDown = (code) => {
+      harness.actions.push(code);
+      if (code === "F2") {harness.writeRuntimeState(encodeMkxpRastate(stateFixture, stateSize));}
+    };
+    harness.dependencies.encodeCheckpoint = async () => {throw new Error("worker failed");};
+    const mountPromise = mountMkxp(mkxpConfig(false), harness.target, null, harness.dependencies);
+    await vi.advanceTimersByTimeAsync(1_000);
+    const mounted = await mountPromise;
+
+    const result = mounted.instance.gameManager?.getStateAsync?.().then(
+      () => null,
+      (error: unknown) => error,
+    );
+    await vi.advanceTimersByTimeAsync(1_000);
+
+    await expect(result).resolves.toMatchObject({ message: "RPG_CHECKPOINT_CREATE_FAILED" });
     await mounted.cleanup();
     harness.frame.remove();
   });
@@ -293,7 +317,7 @@ function createHarness() {
     frame: document.createElement("iframe"),
     target: undefined as unknown as HTMLElement,
     runtime: undefined as unknown as ReturnType<typeof runtimeFixture>,
-    dependencies: undefined as unknown as Parameters<typeof mountMkxp>[3],
+    dependencies: undefined as unknown as NonNullable<Parameters<typeof mountMkxp>[3]>,
   };
   const runtime = runtimeFixture(fileSystem, () => {
     harness.stateAtStart = files.get(statePath);
@@ -307,6 +331,19 @@ function createHarness() {
   harness.frame.contentDocument.body.append(target);
   harness.target = target;
   harness.dependencies = {
+    decodeCheckpoint: async (checkpoint, expectedSize) => {
+      if (checkpoint !== checkpointFixture || expectedSize !== stateSize) {
+        throw new Error("RPG_CHECKPOINT_RESTORE_FAILED");
+      }
+      return stateFixture;
+    },
+    encodeCheckpoint: async (state, expectedSize) => {
+      expect(state.byteLength).toBe(stateFixture.byteLength);
+      expect(state.slice(0, 8)).toEqual(stateFixture.slice(0, 8));
+      expect(state[stateSize - 1]).toBe(0);
+      expect(expectedSize).toBe(stateSize);
+      return checkpointFixture;
+    },
     fetchVerified: async () => Uint8Array.of(1),
     prepare: async (options) => {
       harness.prepareOptions = options;

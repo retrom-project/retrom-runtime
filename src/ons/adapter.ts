@@ -59,6 +59,7 @@ export async function mountOnsYuri(
   const surface = document.createElement("div");
   const canvas = document.createElement("canvas");
   const video = document.createElement("video");
+  canvas.id = "canvas";
   surface.dataset.onsRuntimeSurface = "";
   Object.assign(surface.style, {
     display: "grid", height: "100%", overflow: "hidden", placeItems: "center", width: "100%",

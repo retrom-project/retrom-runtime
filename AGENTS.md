@@ -42,7 +42,7 @@ npm run package:check
 ## 与 Retrom 的本地联调
 
 - 功能分支完成旧行为必红的回归和聚焦门禁后，先保留在分支，不要为了让 Retrom 取得候选 bytes 而提前合并、打 tag 或创建 Release。
-- 相邻 Retrom checkout 使用 `RETROM_RUNTIME_DEV_ROOT=/absolute/path/to/this/checkout make dev`。该入口只链接本仓库已构建的 `dist`，并覆盖已经存在的 `sourceBuilds` 产物与本地 bridge；不会改变 Retrom 的正式 manifest/package lock。普通 adapter 改动只需 `npm run build`，该步骤由 Retrom link target 自动执行；修改 ONS core 或 host patch 时才先显式运行 `npm run core:ons:build`。
+- 相邻 Retrom checkout 使用 `RETROM_RUNTIME_DEV_ROOT=/absolute/path/to/this/checkout make dev`。该入口默认只链接本仓库已构建的 `dist`，不会改变 Retrom 的正式 manifest/package lock 或 core bytes。普通 adapter 改动只需 `npm run build`，该步骤由 Retrom link target 自动执行；修改 ONS core 或 host patch 时才先显式运行 `npm run core:ons:build`，并在可删除的 fresh Retrom dev DB 上额外设置 `RETROM_RUNTIME_DEV_INCLUDE_ASSETS=true`。不得在已有 artifact 引用的数据库中用本地 bytes 冒充同一正式 Release identity。
 - 必须用本地链接完成受影响 core 的真实 Retrom 导入、审核预览、Product Launch、控制、checkpoint 与不同 Launch 恢复验证。确认通过后才合并 PR，按 package version 创建一个新的不可移动 `v*` tag，并等待 Release workflow 成功。
 - Release 完成后，Retrom 先运行 `make retrom-runtime-dev-unlink`，再以独立提交固定新 tag、tag commit、package asset 与 aggregate runtime assets，重新运行正式依赖门禁和同一产品 Case。不得把本地 observed digest、工作树路径或未发布版本写进正式 manifest、证据或文档。
 

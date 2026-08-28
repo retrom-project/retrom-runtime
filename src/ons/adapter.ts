@@ -1,5 +1,6 @@
 import { decodeOnsCheckpoint, encodeOnsCheckpoint, type OnsCheckpointBundle } from "./checkpoint.js";
 import type { OnsRuntimeConfig } from "./contract.js";
+import { installOnsAnalogGamepad } from "./gamepad-input.js";
 import type { MountedOnsAdapter } from "./internal-adapter.js";
 
 type OnsConfig = OnsRuntimeConfig & { adapter: OnsRuntimeConfig["adapter"] };
@@ -60,6 +61,7 @@ export async function mountOnsYuri(
   const canvas = document.createElement("canvas");
   const video = document.createElement("video");
   canvas.id = "canvas";
+  retainDisplayedWebGLFrame(canvas);
   surface.dataset.onsRuntimeSurface = "";
   Object.assign(surface.style, {
     display: "grid", height: "100%", overflow: "hidden", placeItems: "center", width: "100%",
@@ -75,6 +77,7 @@ export async function mountOnsYuri(
     canvas.focus({ preventScroll: true });
   };
   canvas.addEventListener("pointerdown", focusCanvas, true);
+  const gamepadCleanup = installOnsAnalogGamepad(frameWindow, canvas);
 
   const globals = captureGlobals(host);
   const fileMap = createFileMap(index.files);
@@ -118,6 +121,7 @@ export async function mountOnsYuri(
   } catch (error) {
     module?._onsyuri_host_set_paused(1);
     videoCleanup();
+    gamepadCleanup();
     script?.remove();
     canvas.removeEventListener("pointerdown", focusCanvas, true);
     target.replaceChildren();
@@ -152,6 +156,7 @@ export async function mountOnsYuri(
       exited = true;
       activeModule._onsyuri_host_set_paused(1);
       videoCleanup();
+      gamepadCleanup();
       script?.remove();
       canvas.removeEventListener("pointerdown", focusCanvas, true);
       target.replaceChildren();
@@ -298,6 +303,21 @@ async function readRestore(payload: Uint8Array | null) {
 function canvasScreenshot(canvas: HTMLCanvasElement) {
   return new Promise<Blob>((resolve, reject) => {
     canvas.toBlob((blob) => blob?.size ? resolve(blob) : reject(new Error("PLAYER_SCREENSHOT_UNAVAILABLE")), "image/png");
+  });
+}
+
+function retainDisplayedWebGLFrame(canvas: HTMLCanvasElement) {
+  const getContext = canvas.getContext;
+  Object.defineProperty(canvas, "getContext", {
+    configurable: true,
+    value(contextId: string, options?: unknown) {
+      const webGL = contextId === "webgl" || contextId === "webgl2" || contextId === "experimental-webgl";
+      const attributes = options && typeof options === "object" ? options : {};
+      return Reflect.apply(getContext, canvas, [
+        contextId,
+        webGL ? { ...attributes, preserveDrawingBuffer: true } : options,
+      ]);
+    },
   });
 }
 

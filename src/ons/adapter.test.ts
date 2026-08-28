@@ -13,6 +13,7 @@ type HostWindow = Window & {
 afterEach(() => {
   vi.restoreAllMocks();
   vi.unstubAllGlobals();
+  Reflect.deleteProperty(window.navigator, "getGamepads");
   delete (window as HostWindow).onsyuri;
   delete (window as HostWindow).onsyuriHostReady;
   document.head.querySelectorAll("script[data-runtime=ons-yuri]").forEach((script) => script.remove());
@@ -20,6 +21,75 @@ afterEach(() => {
 });
 
 describe("ONS Yuri runtime", () => {
+  it("maps the standard gamepad left stick to directional keyboard input", async () => {
+    const module = fakeModule();
+    (window as HostWindow).onsyuri = vi.fn(async (options: Record<string, unknown>) => {
+      Object.assign(options, module);
+      const configured = options as FakeModule;
+      configured.preRun?.();
+      return configured;
+    });
+    mockIndex();
+    const animationFrames: FrameRequestCallback[] = [];
+    vi.spyOn(window, "requestAnimationFrame").mockImplementation((callback) => {
+      animationFrames.push(callback);
+      return animationFrames.length;
+    });
+    const cancelAnimationFrame = vi.spyOn(window, "cancelAnimationFrame").mockImplementation(() => undefined);
+    const axes = [0, 0];
+    Object.defineProperty(window.navigator, "getGamepads", {
+      configurable: true,
+      value: vi.fn(() => [{ axes, connected: true, mapping: "standard" }]),
+    });
+    const target = document.createElement("div");
+    document.body.append(target);
+    const runtime = createOnsRuntime(config(), { frameWindow: window, restorePayload: null });
+    const mounting = runtime.mount(target);
+    await loadRuntimeScript();
+    await mounting;
+    const canvas = target.querySelector("canvas");
+    if (!canvas) {throw new Error("test canvas missing");}
+    const inputs: string[] = [];
+    canvas.addEventListener("keydown", (event) => inputs.push(`down:${event.key}`));
+    canvas.addEventListener("keyup", (event) => inputs.push(`up:${event.key}`));
+
+    axes[0] = 0.75;
+    animationFrames.shift()?.(1);
+    axes[0] = 0;
+    animationFrames.shift()?.(2);
+
+    expect(inputs).toEqual(["down:ArrowRight", "up:ArrowRight"]);
+    await runtime.exit();
+    expect(cancelAnimationFrame).toHaveBeenCalled();
+  });
+
+  it("retains the WebGL drawing buffer used by review and save screenshots", async () => {
+    const getContext = vi.spyOn(HTMLCanvasElement.prototype, "getContext").mockReturnValue(null);
+    const module = fakeModule();
+    (window as HostWindow).onsyuri = vi.fn(async (options: Record<string, unknown>) => {
+      Object.assign(options, module);
+      const canvas = document.getElementById("canvas");
+      if (!(canvas instanceof HTMLCanvasElement)) {throw new Error("test canvas missing");}
+      canvas.getContext("webgl", { alpha: false, preserveDrawingBuffer: false });
+      const configured = options as FakeModule;
+      configured.preRun?.();
+      return configured;
+    });
+    mockIndex();
+    const target = document.createElement("div");
+    document.body.append(target);
+    const runtime = createOnsRuntime(config(), { frameWindow: window, restorePayload: null });
+    const mounting = runtime.mount(target);
+    await loadRuntimeScript();
+    await mounting;
+
+    expect(getContext).toHaveBeenCalledWith("webgl", {
+      alpha: false,
+      preserveDrawingBuffer: true,
+    });
+    await runtime.exit();
+  });
+
   it("mounts the tagged core, accepts keyboard focus and checkpoints the reserved slot", async () => {
     const errorSpy = vi.spyOn(console, "error").mockImplementation(() => undefined);
     const module = fakeModule();

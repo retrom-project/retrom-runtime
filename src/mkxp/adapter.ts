@@ -193,7 +193,7 @@ async function mountMkxpUnchecked(
     throw error;
   }
   try {
-    await prepareEvidencePath(fileSystem);
+    await prepareEvidencePath(fileSystem, onDiagnostic);
     if (restorePayload) {
       await restoreStateAndWait(canvas, fileSystem, expectedRestorePosition(config));
     }
@@ -280,7 +280,10 @@ function remoteContentManifest(config: MkxpConfig) {
   };
 }
 
-async function prepareEvidencePath(fileSystem: MkxpFileSystem) {
+async function prepareEvidencePath(
+  fileSystem: MkxpFileSystem,
+  onDiagnostic: (diagnostic: { runtime: string; message: string }) => void,
+) {
   // RetroArch first scopes savefile_directory by the core name and mkxp-z then
   // mounts its own mkxp-z/Saves directory below that effective save root.
   const deadline = performance.now() + 30_000;
@@ -289,6 +292,14 @@ async function prepareEvidencePath(fileSystem: MkxpFileSystem) {
     if (evidencePath) {return evidencePath;}
     await new Promise((resolve) => setTimeout(resolve, 50));
   }
+  const gameSaveRoot = `${saveRoot}/mkxp-z/mkxp-z/Saves`;
+  const names = readDirectory(fileSystem, gameSaveRoot);
+  const evidencePresent = names.length === 1 &&
+    fileSystem.analyzePath(`${gameSaveRoot}/${names[0]}/${evidenceName}`).exists;
+  onDiagnostic({
+    runtime: "mkxp-z",
+    message: `RPG_RUNTIME_BRIDGE_TRACE:saveDirectories=${names.length},evidence=${String(evidencePresent)}`,
+  });
   throw new Error("RPG_RUNTIME_BRIDGE_UNAVAILABLE");
 }
 

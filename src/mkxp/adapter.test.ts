@@ -83,6 +83,25 @@ describe("mkxp runtime mount", () => {
     harness.frame.remove();
   });
 
+  it("reports bounded filesystem state when position evidence never appears", async () => {
+    const harness = createHarness();
+    const diagnostics: Array<{ runtime: string; message: string }> = [];
+    harness.runtime.start.mockImplementation(async () => {harness.actions.push("start");});
+    const result = mountMkxp(
+      mkxpConfig(false), harness.target, null, harness.dependencies,
+      (diagnostic) => diagnostics.push(diagnostic),
+    ).then(() => null, (error: unknown) => error);
+
+    await vi.advanceTimersByTimeAsync(31_000);
+
+    await expect(result).resolves.toMatchObject({ message: "RPG_RUNTIME_BRIDGE_UNAVAILABLE" });
+    expect(diagnostics).toContainEqual({
+      runtime: "mkxp-z",
+      message: "RPG_RUNTIME_BRIDGE_TRACE:saveDirectories=1,evidence=false",
+    });
+    harness.frame.remove();
+  });
+
   it("registers project and RTP archives as strict remote files without downloading them", async () => {
     const harness = createHarness();
     const config = mkxpConfig(false);

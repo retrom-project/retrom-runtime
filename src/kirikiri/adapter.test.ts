@@ -10,6 +10,7 @@ type FakeModule = {
   resumeMainLoop: ReturnType<typeof vi.fn>;
   _krkr2_host_bookmark_is_ready: ReturnType<typeof vi.fn>;
   _krkr2_host_load_bookmark: ReturnType<typeof vi.fn>;
+  _krkr2_host_load_bookmark_state: ReturnType<typeof vi.fn>;
   _krkr2_host_save_bookmark: ReturnType<typeof vi.fn>;
   _startupXp3Path?: string;
   [key: string]: unknown;
@@ -42,7 +43,13 @@ describe("KiriKiri2 KAG runtime", () => {
     expect(module._startupXp3Path).toBe("/data.xp3");
     expect(document.activeElement).toBe(target.querySelector("canvas"));
     expect(target.firstElementChild?.getAttribute("data-kirikiri-runtime-surface")).toBe("");
-    const checkpoint = await runtime.checkpoint();
+    module._krkr2_host_bookmark_is_ready.mockReturnValue(0);
+    const checkpointPromise = runtime.checkpoint();
+    await Promise.resolve();
+    expect(module.pauseMainLoop).not.toHaveBeenCalled();
+    expect(module._krkr2_host_save_bookmark).not.toHaveBeenCalled();
+    module._krkr2_host_bookmark_is_ready.mockReturnValue(1);
+    const checkpoint = await checkpointPromise;
     expect(checkpoint.payloadKind).toBe("KIRIKIRI_SAVE_BUNDLE_V1");
     expect(checkpoint.bytes.byteLength).toBeLessThan(1024);
     expect(module._krkr2_host_save_bookmark).toHaveBeenCalledWith(1999);
@@ -60,7 +67,20 @@ describe("KiriKiri2 KAG runtime", () => {
     const restoredTarget = document.createElement("div");
     const restoredMount = restored.mount(restoredTarget);
     await loadVlfs(restoredVlfs);
-    const restoredModule = await loadCore(restoredVlfs);
+    const restoredModule = await loadCore(restoredVlfs, { restoreState: 1 });
+    let mountCompleted = false;
+    void restoredMount.then(() => {
+      mountCompleted = true;
+    });
+    await vi.waitFor(() =>
+      expect(restoredModule._krkr2_host_load_bookmark).toHaveBeenCalledWith(1999),
+    );
+    expect(mountCompleted).toBe(false);
+    restoredModule._krkr2_host_bookmark_is_ready.mockReturnValue(0);
+    restoredModule._krkr2_host_load_bookmark_state.mockReturnValue(2);
+    await new Promise((resolve) => setTimeout(resolve, 100));
+    expect(mountCompleted).toBe(false);
+    restoredModule._krkr2_host_bookmark_is_ready.mockReturnValue(1);
     await restoredMount;
     expect(restoredVlfs.registerOverlayFile).toHaveBeenCalledWith(
       "/savedata/data1999.ksd", Uint8Array.of(1, 9, 9, 9),
@@ -151,7 +171,7 @@ async function loadVlfs(vlfs: FakeVlfs) {
   runtimeScripts()[0]!.dispatchEvent(new Event("load"));
 }
 
-async function loadCore(vlfs: FakeVlfs, options: { restoreResult?: number } = {}) {
+async function loadCore(vlfs: FakeVlfs, options: { restoreResult?: number; restoreState?: number } = {}) {
   await vi.waitFor(() => expect(runtimeScripts()).toHaveLength(2));
   const configured = (window as HostWindow).Module ?? {};
   const module = Object.assign(configured, {
@@ -159,6 +179,7 @@ async function loadCore(vlfs: FakeVlfs, options: { restoreResult?: number } = {}
     resumeMainLoop: vi.fn(),
     _krkr2_host_bookmark_is_ready: vi.fn(() => 1),
     _krkr2_host_load_bookmark: vi.fn(() => options.restoreResult ?? 0),
+    _krkr2_host_load_bookmark_state: vi.fn(() => options.restoreState ?? 2),
     _krkr2_host_save_bookmark: vi.fn((slot: number) => {
       vlfs.onWriteClose?.(`/savedata/data${slot}.ksd`, Uint8Array.of(1, 9, 9, 9));
       vlfs.onWriteClose?.("/savedata/datasu.ksd", Uint8Array.of(2, 8));

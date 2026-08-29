@@ -92,8 +92,19 @@ describe("independent package boundary", () => {
     expect(kirikiriPatch).toContain("krkr2_host_save_bookmark");
     expect(kirikiriPatch).toContain("krkr2_host_load_bookmark");
     expect(kirikiriPatch).toContain(
-      "EXPORTED_FUNCTIONS=['_main','_krkr2_host_bookmark_is_ready','_krkr2_host_save_bookmark','_krkr2_host_load_bookmark']",
+      "EXPORTED_FUNCTIONS=['_main','_krkr2_host_bookmark_is_ready','_krkr2_host_save_bookmark','_krkr2_host_load_bookmark','_krkr2_host_load_bookmark_state']",
     );
+    expect(kirikiriPatch).toContain("krkr2_host_load_bookmark_state");
+    expect(kirikiriPatch).toContain("performFunctionInCocosThread");
+    expect(kirikiriPatch).toContain('TJS_W("currentLabel")');
+    expect(kirikiriPatch).toContain('TJS_W("inStable")');
+    const bridgeHunk = kirikiriPatch.match(
+      /@@ -0,0 \+1,(\d+) @@\n([\s\S]*?)\ndiff --git a\/vcpkg\/ports\/libgdiplus/u,
+    );
+    expect(bridgeHunk).not.toBeNull();
+    const declaredBridgeLines = Number(bridgeHunk?.[1]);
+    const actualBridgeLines = bridgeHunk?.[2]?.split("\n").filter((line) => line.startsWith("+")).length;
+    expect(actualBridgeLines).toBe(declaredBridgeLines);
     expect(kirikiriPatch).toContain(
       'VCPKG_MAKE_BUILD_TRIPLET "--host=wasm32-unknown-emscripten"',
     );

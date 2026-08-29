@@ -28,6 +28,7 @@ type KirikiriModule = {
   resumeMainLoop(): void;
   _krkr2_host_bookmark_is_ready(): number;
   _krkr2_host_load_bookmark(slot: number): number;
+  _krkr2_host_load_bookmark_state(): number;
   _krkr2_host_save_bookmark(slot: number): number;
   _startupXp3Path?: string;
 };
@@ -117,8 +118,8 @@ export async function mountKirikiri2(
     module = host.Module as KirikiriModule;
     await withTimeout(ready.promise, readyTimeoutMs, "KIRIKIRI_RUNTIME_TIMEOUT");
     await waitFor(() => module?._krkr2_host_bookmark_is_ready?.() === 1, readyTimeoutMs);
-    if (restore && module._krkr2_host_load_bookmark(config.adapter.checkpointSlot) !== 0) {
-      throw new Error("KIRIKIRI_CHECKPOINT_RESTORE_FAILED");
+    if (restore) {
+      await restoreBookmark(module, config.adapter.checkpointSlot);
     }
     focusCanvas();
   } catch (error) {
@@ -131,6 +132,12 @@ export async function mountKirikiri2(
   if (!activeModule || !activeVlfs) {throw new Error("KIRIKIRI_RUNTIME_ARTIFACT_INVALID");}
   return {
     checkpoint: async () => {
+      if (exited) {throw new Error("KIRIKIRI_RUNTIME_INVALID_STATE");}
+      try {
+        await waitFor(() => activeModule._krkr2_host_bookmark_is_ready() === 1, readyTimeoutMs);
+      } catch {
+        throw new Error("KIRIKIRI_CHECKPOINT_CREATE_FAILED");
+      }
       if (exited) {throw new Error("KIRIKIRI_RUNTIME_INVALID_STATE");}
       const shouldResume = !paused;
       if (shouldResume) {activeModule.pauseMainLoop();}
@@ -165,6 +172,25 @@ export async function mountKirikiri2(
     resume: async () => {activeModule.resumeMainLoop(); paused = false;},
     screenshot: () => canvasScreenshot(canvas),
   };
+}
+
+async function restoreBookmark(module: KirikiriModule, slot: number) {
+  if (module._krkr2_host_load_bookmark(slot) !== 0) {
+    throw new Error("KIRIKIRI_CHECKPOINT_RESTORE_FAILED");
+  }
+  try {
+    await waitFor(() => module._krkr2_host_load_bookmark_state() !== 1, readyTimeoutMs);
+  } catch {
+    throw new Error("KIRIKIRI_CHECKPOINT_RESTORE_FAILED");
+  }
+  if (module._krkr2_host_load_bookmark_state() !== 2) {
+    throw new Error("KIRIKIRI_CHECKPOINT_RESTORE_FAILED");
+  }
+  try {
+    await waitFor(() => module._krkr2_host_bookmark_is_ready() === 1, readyTimeoutMs);
+  } catch {
+    throw new Error("KIRIKIRI_CHECKPOINT_RESTORE_FAILED");
+  }
 }
 
 async function registerRuntimeAssets(vlfs: KirikiriVlfs, url: URL) {

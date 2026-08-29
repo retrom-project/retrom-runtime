@@ -8,41 +8,27 @@ export async function loadManifest(root) {
 }
 
 export function validateManifest(manifest) {
-  if (manifest?.schemaVersion !== 2 || manifest.packageName !== "@xxxsen/retrom-runtime" ||
+  if (manifest?.schemaVersion !== 3 || manifest.packageName !== "@xxxsen/retrom-runtime" ||
     !/^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?$/u.test(manifest.packageVersion) ||
-    !Array.isArray(manifest.upstreamReleases) || !Array.isArray(manifest.sourceBuilds) ||
+    Object.hasOwn(manifest, "sourceBuilds") || !Array.isArray(manifest.upstreamReleases) ||
     !Array.isArray(manifest.localAssets) || !Array.isArray(manifest.cores) || manifest.cores.length !== 9) {
     throw new Error("RUNTIME_MANIFEST_INVALID");
   }
   const releases = new Map();
   const assetPaths = new Set();
-  for (const build of manifest.sourceBuilds) {
-    if (!build?.id || releases.has(build.id) || !/^https:\/\/github\.com\//u.test(build.repository) ||
-      !/^[0-9a-f]{40}$/u.test(build.commit) || !safePath(build.patch) ||
-      !Array.isArray(build.assets) || build.assets.length < 2) {
-      throw new Error("RUNTIME_MANIFEST_INVALID");
-    }
-    releases.set(build.id, build);
-    for (const asset of build.assets) {
-      if (!safePath(asset.source) || !safePath(asset.output) || !asset.filename ||
-        !Number.isSafeInteger(asset.maxSizeBytes) || asset.maxSizeBytes < 1) {
-        throw new Error("RUNTIME_MANIFEST_INVALID");
-      }
-      assetPaths.add(asset.output);
-    }
-  }
   for (const release of manifest.upstreamReleases) {
     if (!release?.id || releases.has(release.id) || !/^https:\/\/github\.com\//u.test(release.repository) ||
       !/^[0-9a-f]{40}$/u.test(release.commit) ||
       !/^rpg-runtime-[0-9A-Za-z][0-9A-Za-z._-]*-r[1-9][0-9]*(?:-rc\.[1-9][0-9]*)?$/u.test(release.tag) ||
       release.metadataUrl !==
         `${release.repository}/releases/download/${release.tag}/rpg-runtime-release.json` ||
-      !Array.isArray(release.assets) || release.assets.length !== 2) {
+      !Array.isArray(release.assets) || release.assets.length < 2 || release.assets.length > 8) {
       throw new Error("RUNTIME_MANIFEST_INVALID");
     }
     releases.set(release.id, release);
     for (const asset of release.assets) {
-      if (asset.url !== `${release.repository}/releases/download/${release.tag}/${asset.filename}` ||
+      if (!safePath(asset.filename) ||
+        asset.url !== `${release.repository}/releases/download/${release.tag}/${asset.filename}` ||
         !safePath(asset.output) || !Number.isSafeInteger(asset.maxSizeBytes) || asset.maxSizeBytes < 1) {
         throw new Error("RUNTIME_MANIFEST_INVALID");
       }

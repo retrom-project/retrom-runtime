@@ -65,6 +65,11 @@ a project file index and, only when that project contains multiple XP3 archives,
 entry selected during import. Runtime slot `1999` is outside the normal KAG save menu and produces the special
 `data1999.ksd` bookmark used by the host checkpoint bundle.
 
+The KiriKiri Web core does not expose its native pad-key conversion in Emscripten builds. The adapter therefore
+provides a visible virtual pointer: a standard gamepad's D-pad and left stick move it, A performs a left click and
+B performs a right-click cancel. Runtime cleanup releases every held button. The same runtime path is used by host
+review previews and product players.
+
 ONScripterYuri receives its native standard-gamepad D-pad and face-button events through SDL. The adapter adds
 only the missing standard left-stick direction mapping, with dead-zone hysteresis and complete key release on
 exit. It also creates the core's WebGL context with a retained drawing buffer so host-requested review and save

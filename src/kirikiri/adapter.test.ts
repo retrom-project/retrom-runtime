@@ -21,6 +21,7 @@ type HostWindow = Window & { Module?: Partial<FakeModule>; VLFS?: FakeVlfs };
 afterEach(() => {
   vi.restoreAllMocks();
   vi.unstubAllGlobals();
+  Reflect.deleteProperty(window.navigator, "getGamepads");
   delete (window as HostWindow).Module;
   delete (window as HostWindow).VLFS;
   document.body.replaceChildren();
@@ -28,6 +29,68 @@ afterEach(() => {
 });
 
 describe("KiriKiri2 KAG runtime", () => {
+  it("maps standard gamepad directions and face buttons to KiriKiri mouse input", async () => {
+    enableRuntimeFeatures();
+    const animationFrames: FrameRequestCallback[] = [];
+    vi.spyOn(window, "requestAnimationFrame").mockImplementation((callback) => {
+      animationFrames.push(callback);
+      return animationFrames.length;
+    });
+    const cancelAnimationFrame = vi.spyOn(window, "cancelAnimationFrame").mockImplementation(() => undefined);
+    const axes = [0, 0];
+    const buttons = Array.from({ length: 16 }, () => gamepadButton());
+    Object.defineProperty(window.navigator, "getGamepads", {
+      configurable: true,
+      value: vi.fn(() => [{ axes, buttons, connected: true, mapping: "standard" }]),
+    });
+    const vlfs = fakeVlfs();
+    mockDownloads();
+    const target = document.createElement("div");
+    document.body.append(target);
+    const runtime = createKirikiriRuntime(config(), { frameWindow: window, restorePayload: null });
+    const mounting = runtime.mount(target);
+    await loadVlfs(vlfs);
+    await loadCore(vlfs);
+    await mounting;
+    const canvas = target.querySelector("canvas");
+    if (!canvas) {throw new Error("test canvas missing");}
+    vi.spyOn(canvas, "getBoundingClientRect").mockReturnValue(domRect(100, 50, 800, 600));
+    const inputs: string[] = [];
+    for (const type of ["mousemove", "mousedown", "mouseup", "click", "contextmenu"]) {
+      canvas.addEventListener(type, (event) => {
+        const mouse = event as MouseEvent;
+        inputs.push(`${type}:${mouse.button}:${Math.round(mouse.clientX)}:${Math.round(mouse.clientY)}`);
+      });
+    }
+
+    animationFrames.shift()?.(0);
+    axes[0] = 0.75;
+    animationFrames.shift()?.(100);
+    axes[0] = 0;
+    animationFrames.shift()?.(116);
+    buttons[0] = gamepadButton(true);
+    animationFrames.shift()?.(132);
+    buttons[0] = gamepadButton();
+    animationFrames.shift()?.(148);
+    buttons[1] = gamepadButton(true);
+    animationFrames.shift()?.(164);
+    buttons[1] = gamepadButton();
+    animationFrames.shift()?.(180);
+
+    expect(inputs.some((value) => value.startsWith("mousemove:0:"))).toBe(true);
+    expect(inputs.some((value) => value.startsWith("mousedown:0:"))).toBe(true);
+    expect(inputs.some((value) => value.startsWith("mouseup:0:"))).toBe(true);
+    expect(inputs.some((value) => value.startsWith("click:0:"))).toBe(true);
+    expect(inputs.some((value) => value.startsWith("mousedown:2:"))).toBe(true);
+    expect(inputs.some((value) => value.startsWith("mouseup:2:"))).toBe(true);
+    expect(inputs.some((value) => value.startsWith("contextmenu:2:"))).toBe(true);
+    const cursor = target.querySelector<HTMLElement>("[data-kirikiri-gamepad-cursor]");
+    expect(cursor?.hidden).toBe(false);
+    expect(cursor?.style.transform).toContain("translate");
+    await runtime.exit();
+    expect(cancelAnimationFrame).toHaveBeenCalled();
+  });
+
   it("mounts, focuses, creates a small semantic checkpoint and restores it", async () => {
     enableRuntimeFeatures();
     const vlfs = fakeVlfs();
@@ -115,6 +178,17 @@ describe("KiriKiri2 KAG runtime", () => {
     await expect(mounting).rejects.toThrow("KIRIKIRI_PROJECT_ENTRY_AMBIGUOUS");
   });
 });
+
+function gamepadButton(pressed = false): GamepadButton {
+  return { pressed, touched: pressed, value: pressed ? 1 : 0 };
+}
+
+function domRect(left: number, top: number, width: number, height: number): DOMRect {
+  return {
+    bottom: top + height, height, left, right: left + width, top, width, x: left, y: top,
+    toJSON: () => ({}),
+  };
+}
 
 function config(): KirikiriRuntimeConfig {
   return {

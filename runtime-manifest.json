@@ -1,7 +1,7 @@
 {
   "schemaVersion": 2,
   "packageName": "@xxxsen/retrom-runtime",
-  "packageVersion": "0.4.2",
+  "packageVersion": "0.5.0",
   "publicApiVersion": 1,
   "upstreamReleases": [
     {
@@ -75,6 +75,46 @@
           "source": "build/ons/COPYING",
           "filename": "COPYING",
           "output": "licenses/onsyuri/COPYING",
+          "maxSizeBytes": 65536
+        }
+      ]
+    },
+    {
+      "id": "kirikiri2",
+      "repository": "https://github.com/fenghengzhi/kirikiroid2-web",
+      "commit": "338d2029f16969b84becfd163c67f99740e28296",
+      "adapterAbi": "kirikiri-kag-bookmark",
+      "license": "GPL-3.0-only",
+      "patch": "assets/runtime/kirikiri/host-api.patch",
+      "assets": [
+        {
+          "source": "build/kirikiri/index.js",
+          "filename": "index.js",
+          "output": "runtime/kirikiri/index.js",
+          "maxSizeBytes": 1048576
+        },
+        {
+          "source": "build/kirikiri/index.wasm",
+          "filename": "index.wasm",
+          "output": "runtime/kirikiri/index.wasm",
+          "maxSizeBytes": 67108864
+        },
+        {
+          "source": "build/kirikiri/vlfs.js",
+          "filename": "vlfs.js",
+          "output": "runtime/kirikiri/vlfs.js",
+          "maxSizeBytes": 262144
+        },
+        {
+          "source": "build/kirikiri/assets.zip",
+          "filename": "assets.zip",
+          "output": "runtime/kirikiri/assets.zip",
+          "maxSizeBytes": 16777216
+        },
+        {
+          "source": "build/kirikiri/LICENSE",
+          "filename": "LICENSE",
+          "output": "licenses/kirikiri2/LICENSE",
           "maxSizeBytes": 65536
         }
       ]
@@ -194,6 +234,24 @@
       "saveAbi": "ons-save-v1",
       "readableSaveAbis": ["ons-save-v1"],
       "assetPaths": ["runtime/ons/onsyuri.js", "runtime/ons/onsyuri.wasm"]
+    },
+    {
+      "id": "kirikiri2-kag",
+      "family": "KIRIKIRI",
+      "generation": "KIRIKIRI2",
+      "runtimeId": "kirikiri2",
+      "adapterKind": "KIRIKIRI2_WEB",
+      "adapterId": "kirikiri2-web",
+      "adapterAbi": "kirikiri-kag-bookmark",
+      "gameCompatibilityLine": "kirikiri2-kag-v1",
+      "saveAbi": "kirikiri-kag-bookmark-v1",
+      "readableSaveAbis": ["kirikiri-kag-bookmark-v1"],
+      "assetPaths": [
+        "runtime/kirikiri/index.js",
+        "runtime/kirikiri/index.wasm",
+        "runtime/kirikiri/vlfs.js",
+        "runtime/kirikiri/assets.zip"
+      ]
     }
   ]
 }

@@ -1,0 +1,197 @@
+import { afterEach, describe, expect, it, vi } from "vitest";
+
+import { decodeKirikiriCheckpoint, encodeKirikiriCheckpoint } from "./checkpoint.js";
+import type { KirikiriRuntimeConfig } from "./contract.js";
+import { createKirikiriRuntime } from "./index.js";
+
+type FakeModule = {
+  postRun: Array<() => void>;
+  pauseMainLoop: ReturnType<typeof vi.fn>;
+  resumeMainLoop: ReturnType<typeof vi.fn>;
+  _krkr2_host_bookmark_is_ready: ReturnType<typeof vi.fn>;
+  _krkr2_host_load_bookmark: ReturnType<typeof vi.fn>;
+  _krkr2_host_load_bookmark_state: ReturnType<typeof vi.fn>;
+  _krkr2_host_save_bookmark: ReturnType<typeof vi.fn>;
+  _startupXp3Path?: string;
+  [key: string]: unknown;
+};
+type FakeVlfs = ReturnType<typeof fakeVlfs>;
+type HostWindow = Window & { Module?: Partial<FakeModule>; VLFS?: FakeVlfs };
+
+afterEach(() => {
+  vi.restoreAllMocks();
+  vi.unstubAllGlobals();
+  delete (window as HostWindow).Module;
+  delete (window as HostWindow).VLFS;
+  document.body.replaceChildren();
+  document.head.querySelectorAll("script[data-runtime=kirikiri2]").forEach((script) => script.remove());
+});
+
+describe("KiriKiri2 KAG runtime", () => {
+  it("mounts, focuses, creates a small semantic checkpoint and restores it", async () => {
+    enableRuntimeFeatures();
+    const vlfs = fakeVlfs();
+    mockDownloads();
+    const target = document.createElement("div");
+    document.body.append(target);
+    const runtime = createKirikiriRuntime(config(), { frameWindow: window, restorePayload: null });
+    const mounting = runtime.mount(target);
+    await loadVlfs(vlfs);
+    const module = await loadCore(vlfs);
+    await mounting;
+
+    expect(module._startupXp3Path).toBe("/data.xp3");
+    expect(document.activeElement).toBe(target.querySelector("canvas"));
+    expect(target.firstElementChild?.getAttribute("data-kirikiri-runtime-surface")).toBe("");
+    module._krkr2_host_bookmark_is_ready.mockReturnValue(0);
+    const checkpointPromise = runtime.checkpoint();
+    await Promise.resolve();
+    expect(module.pauseMainLoop).not.toHaveBeenCalled();
+    expect(module._krkr2_host_save_bookmark).not.toHaveBeenCalled();
+    module._krkr2_host_bookmark_is_ready.mockReturnValue(1);
+    const checkpoint = await checkpointPromise;
+    expect(checkpoint.payloadKind).toBe("KIRIKIRI_SAVE_BUNDLE_V1");
+    expect(checkpoint.bytes.byteLength).toBeLessThan(1024);
+    expect(module._krkr2_host_save_bookmark).toHaveBeenCalledWith(1999);
+    expect(module.pauseMainLoop).toHaveBeenCalledBefore(module._krkr2_host_save_bookmark);
+    expect(module.resumeMainLoop).toHaveBeenCalledAfter(module._krkr2_host_save_bookmark);
+    expect((await decodeKirikiriCheckpoint(checkpoint.bytes)).entries.map((entry) => entry.path)).toEqual([
+      "savedata/data1999.ksd", "savedata/datasu.ksd",
+    ]);
+    await runtime.exit();
+    expect(target.childElementCount).toBe(0);
+    expect(document.head.querySelector("script[data-runtime=kirikiri2]")).toBeNull();
+
+    const restoredVlfs = fakeVlfs();
+    const restored = createKirikiriRuntime(config(), { frameWindow: window, restorePayload: checkpoint.bytes });
+    const restoredTarget = document.createElement("div");
+    const restoredMount = restored.mount(restoredTarget);
+    await loadVlfs(restoredVlfs);
+    const restoredModule = await loadCore(restoredVlfs, { restoreState: 1 });
+    let mountCompleted = false;
+    void restoredMount.then(() => {
+      mountCompleted = true;
+    });
+    await vi.waitFor(() =>
+      expect(restoredModule._krkr2_host_load_bookmark).toHaveBeenCalledWith(1999),
+    );
+    expect(mountCompleted).toBe(false);
+    restoredModule._krkr2_host_bookmark_is_ready.mockReturnValue(0);
+    restoredModule._krkr2_host_load_bookmark_state.mockReturnValue(2);
+    await new Promise((resolve) => setTimeout(resolve, 100));
+    expect(mountCompleted).toBe(false);
+    restoredModule._krkr2_host_bookmark_is_ready.mockReturnValue(1);
+    await restoredMount;
+    expect(restoredVlfs.registerOverlayFile).toHaveBeenCalledWith(
+      "/savedata/data1999.ksd", Uint8Array.of(1, 9, 9, 9),
+    );
+    expect(restoredModule._krkr2_host_load_bookmark).toHaveBeenCalledWith(1999);
+    await restored.exit();
+  });
+
+  it("rejects a restore when the KAG bookmark API rejects the slot", async () => {
+    enableRuntimeFeatures();
+    const restore = await encodeKirikiriCheckpoint({
+      entries: [{ path: "savedata/data1999.ksd", data: Uint8Array.of(1) }],
+      resumeSlot: 1999,
+    });
+    const vlfs = fakeVlfs();
+    mockDownloads();
+    const runtime = createKirikiriRuntime(config(), { frameWindow: window, restorePayload: restore });
+    const mounting = runtime.mount(document.createElement("div"));
+    await loadVlfs(vlfs);
+    const rejected = expect(mounting).rejects.toThrow("KIRIKIRI_CHECKPOINT_RESTORE_FAILED");
+    await loadCore(vlfs, { restoreResult: -4 });
+    await rejected;
+  });
+
+  it("fails closed when multiple XP3 files have no selected entry", async () => {
+    enableRuntimeFeatures();
+    const vlfs = fakeVlfs();
+    mockDownloads(["/data.xp3", "/patch.xp3"]);
+    const runtime = createKirikiriRuntime(config(), { frameWindow: window, restorePayload: null });
+    const mounting = runtime.mount(document.createElement("div"));
+    await loadVlfs(vlfs);
+    await expect(mounting).rejects.toThrow("KIRIKIRI_PROJECT_ENTRY_AMBIGUOUS");
+  });
+});
+
+function config(): KirikiriRuntimeConfig {
+  return {
+    sessionId: "kirikiri-session",
+    adapter: {
+      adapterKind: "KIRIKIRI2_WEB",
+      adapterId: "kirikiri2-web",
+      checkpointSlot: 1999,
+      projectIndexUrl: "https://content.example/project/index.json",
+      runtimeBaseUrl: "https://runtime.example/kirikiri/",
+      startupXp3Path: null,
+    },
+  };
+}
+
+function enableRuntimeFeatures() {
+  Object.defineProperty(window, "crossOriginIsolated", { configurable: true, value: true });
+  Object.defineProperty(window, "SharedArrayBuffer", { configurable: true, value: SharedArrayBuffer });
+  Object.defineProperty(window.WebAssembly, "Suspending", { configurable: true, value: function Suspending() {} });
+  Object.defineProperty(window.WebAssembly, "promising", { configurable: true, value: function promising() {} });
+}
+
+function mockDownloads(xp3Paths = ["/data.xp3"]) {
+  vi.stubGlobal("fetch", vi.fn(async (input: string | URL | Request, init?: RequestInit) => {
+    const url = String(input);
+    if (url.endsWith("assets.zip")) {return new Response(Uint8Array.of(1), { status: 200 });}
+    if (url.endsWith("project/index.json") && !init?.method) {
+      return Response.json({ schemaVersion: 1, files: [
+        ...xp3Paths.map((path) => ({
+          path: path.replace(/^\//u, ""), sizeBytes: 1234, url: `/runtime/projects/launch${path}`,
+        })),
+        { path: "startup.tjs", sizeBytes: 40, url: "/runtime/projects/launch/startup.tjs" },
+      ] });
+    }
+    throw new Error(`unexpected request: ${url}`);
+  }));
+}
+
+function fakeVlfs() {
+  const value = {
+    init: vi.fn(async () => undefined),
+    mkdir: vi.fn(() => 0),
+    onWriteClose: null as ((path: string, data: Uint8Array) => void) | null,
+    registerOverlayFile: vi.fn(),
+    registerRemote: vi.fn(),
+    registerZipBlob: vi.fn(async () => ({ paths: ["/ui/font.ttf"], xp3Paths: [] as string[] })),
+  };
+  return value;
+}
+
+async function loadVlfs(vlfs: FakeVlfs) {
+  await vi.waitFor(() => expect(runtimeScripts()).toHaveLength(1));
+  (window as HostWindow).VLFS = vlfs;
+  runtimeScripts()[0]!.dispatchEvent(new Event("load"));
+}
+
+async function loadCore(vlfs: FakeVlfs, options: { restoreResult?: number; restoreState?: number } = {}) {
+  await vi.waitFor(() => expect(runtimeScripts()).toHaveLength(2));
+  const configured = (window as HostWindow).Module ?? {};
+  const module = Object.assign(configured, {
+    pauseMainLoop: vi.fn(),
+    resumeMainLoop: vi.fn(),
+    _krkr2_host_bookmark_is_ready: vi.fn(() => 1),
+    _krkr2_host_load_bookmark: vi.fn(() => options.restoreResult ?? 0),
+    _krkr2_host_load_bookmark_state: vi.fn(() => options.restoreState ?? 2),
+    _krkr2_host_save_bookmark: vi.fn((slot: number) => {
+      vlfs.onWriteClose?.(`/savedata/data${slot}.ksd`, Uint8Array.of(1, 9, 9, 9));
+      vlfs.onWriteClose?.("/savedata/datasu.ksd", Uint8Array.of(2, 8));
+      return 0;
+    }),
+  }) as FakeModule;
+  (window as HostWindow).Module = module;
+  runtimeScripts()[1]!.dispatchEvent(new Event("load"));
+  module.postRun[0]?.();
+  return module;
+}
+
+function runtimeScripts() {
+  return [...document.head.querySelectorAll<HTMLScriptElement>("script[data-runtime=kirikiri2]")];
+}

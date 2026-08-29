@@ -9,6 +9,7 @@ Release archives aggregate the following independently licensed components:
 - Nostalgist — MIT — <https://github.com/arianrhodsandlot/nostalgist>
 - fflate — MIT — <https://github.com/101arrowz/fflate>
 - ONScripterYuri — GPL-2.0-or-later — <https://github.com/YuriSizuku/OnscripterYuri>
+- Kirikiroid2 Web — GPL-3.0-only — <https://github.com/fenghengzhi/kirikiroid2-web>
 
 The exact repository, release tag, commit and adapter ABI used by a release are recorded in
 `runtime-manifest.json`. GitHub source archives for those immutable commits and the build workflows in the

@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.5.0
+
+- Add a KiriKiri2 Web runtime for KAG-compatible games, with a host-provided project index and explicit XP3 selection, browser controls,
+  screenshots and small semantic checkpoints backed by KAG's native bookmark files.
+- Schedule bookmark restore on the engine thread and report the runtime ready only after KAG reaches the restored stable save point.
+- Pin the upstream `kirikiroid2-web` commit and apply an isolated Web-only bookmark host bridge during the tag
+  build; no third-party runtime binary is committed to the repository.
+
 ## 0.4.2
 
 - Declare a stable game compatibility line, the save ABI written by each core, and the exact save ABIs each

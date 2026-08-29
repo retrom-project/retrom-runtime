@@ -1,7 +1,7 @@
 # retrom-runtime
 
 `retrom-runtime` is a host-independent browser library and release bundle for RPG Maker 2000, 2003, XP,
-VX, VX Ace, MV and MZ, plus ONS games powered by ONScripterYuri. It owns runtime lifecycle, adapters, checkpoint codecs, bridge assets and pinned core
+VX, VX Ace, MV and MZ, ONS games powered by ONScripterYuri, and KAG-based KiriKiri2 games. It owns runtime lifecycle, adapters, checkpoint codecs, bridge assets and pinned core
 Release inputs. It does not know about a host application's users, database, review flow, storage or HTTP API.
 
 ## Public API
@@ -47,6 +47,24 @@ An ONS project index has the stable shape below. Paths are project-relative and 
 Each session must use its own frame. `exit()` pauses the core and removes library-owned DOM and globals; the host
 then discards that frame to release Emscripten's document-level input hooks.
 
+KiriKiri is also an independent runtime:
+
+```ts
+import { createKirikiriRuntime, type KirikiriRuntimeConfig } from "@xxxsen/retrom-runtime";
+
+const runtime = createKirikiriRuntime(config, { frameWindow, restorePayload });
+await runtime.mount(container);
+const checkpoint = await runtime.checkpoint();
+```
+
+The first compatibility line is deliberately limited to games exposing the standard KAG
+`saveBookMark`/`loadBookMark` API. Its checkpoint contains the small native KAG save files written under
+`/savedata` or `/save`; it is not a raw Wasm memory snapshot. A pure TJS/custom-engine title without these KAG
+methods fails closed as unsupported instead of producing a checkpoint that cannot be restored. The host supplies
+a project file index and, only when that project contains multiple XP3 archives, the explicit project-relative XP3
+entry selected during import. Runtime slot `1999` is outside the normal KAG save menu and produces the special
+`data1999.ksd` bookmark used by the host checkpoint bundle.
+
 ONScripterYuri receives its native standard-gamepad D-pad and face-button events through SDL. The adapter adds
 only the missing standard left-stick direction mapping, with dead-zone hysteresis and complete key release on
 exit. It also creates the core's WebGL context with a retained drawing buffer so host-requested review and save
@@ -63,8 +81,11 @@ npm run build
 npm run package:check
 ```
 
+修改 KiriKiri host patch 后先运行 `npm run core:kirikiri:build`；该命令从固定 commit 构建
+`build/kirikiri/`，供 Release 和宿主的本地候选 stage 使用。它不会发布 tag 或 GitHub Release。
+
 Runtime JS/Wasm is not committed. The tag workflow downloads the fixed upstream releases and builds the fixed
-ONScripterYuri tag with the small host save/load patch in `assets/runtime/ons/host-api.patch`. It then produces:
+ONScripterYuri and KiriKiri2 source commits with small host save/load patches. It then produces:
 
 - `release/retrom-runtime-<version>.tar.gz`
 - `release/xxxsen-retrom-runtime-<version>.tgz` (installable npm package)
@@ -77,7 +98,7 @@ immutable release tags.
 Adapter IDs and asset paths describe roles, not migration revisions. Version selection happens only at the
 repository release tag; the source tree and each release contain one implementation per runtime role.
 SHA-256 values in release metadata detect corrupt downloads; compatibility identity is the immutable
-`retrom-runtime` tag and its recorded upstream repository, tag and commit.
+`retrom-runtime` tag and each upstream repository plus its tag, when one exists, and exact commit.
 
 Each core also declares three forward-upgrade fields in `runtime-manifest.json`:
 

@@ -30,14 +30,20 @@ type MkxpFileSystem = {
 };
 
 type MkxpRuntime = Pick<Nostalgist,
-  "exit" | "getEmscripten" | "getEmscriptenFS" | "start"
+  "exit" | "getEmscriptenFS" | "start"
 >;
+
+type MkxpPrepareOptions = Parameters<typeof Nostalgist.prepare>[0] & {
+  emscriptenModule: NonNullable<Parameters<typeof Nostalgist.prepare>[0]["emscriptenModule"]> & {
+    ENV: Record<string, string>;
+  };
+};
 
 type MkxpMountDependencies = {
   decodeCheckpoint: typeof decodeMkxpCheckpoint;
   encodeCheckpoint: typeof encodeMkxpCheckpoint;
   fetchVerified: (url: string, expectedSize: number, expectedDigest: string) => Promise<Uint8Array>;
-  prepare: (options: Parameters<typeof Nostalgist.prepare>[0]) => Promise<MkxpRuntime>;
+  prepare: (options: MkxpPrepareOptions) => Promise<MkxpRuntime>;
 };
 
 const positionBridge = { size: 1504, sha256: "097dac75b3394cae471ea1a21af65d64035bb87a9d1d8781d555446693c200c2" };
@@ -133,6 +139,7 @@ async function mountMkxpUnchecked(
     element: canvas,
     emscriptenModule: {
       arguments: [remoteGamePath],
+      ENV: fetchEnvironment(),
       printErr: (...args: unknown[]) => onDiagnostic({ runtime: "mkxp-z", message: args.map(String).join(" ") }),
     },
     retroarchConfig: {
@@ -163,7 +170,6 @@ async function mountMkxpUnchecked(
   const fileSystem = nostalgist.getEmscriptenFS() as MkxpFileSystem;
   try {
     installRuntimeFiles(fileSystem, bridgeBytes, remoteContent.manifest);
-    installFetchEnvironment(nostalgist, remoteContent.baseUrl);
     if (restorePayload) {
       const rawState = await dependencies.decodeCheckpoint(restorePayload, config.adapter.stateBufferBytes);
       installRestoreState(fileSystem, rawState, config.adapter.stateBufferBytes);
@@ -231,15 +237,12 @@ function installRuntimeFiles(
   if (!fileSystem.analyzePath(fetchManifestPath).exists) {throw new Error("RPG_RUNTIME_CONTENT_UNAVAILABLE");}
 }
 
-function installFetchEnvironment(runtime: MkxpRuntime, baseUrl: string) {
-  const emscripten = runtime.getEmscripten() as { Module?: { ENV?: Record<string, string> } };
-  if (!emscripten.Module?.ENV) {throw new Error("RPG_RUNTIME_CONTENT_UNAVAILABLE");}
-  Object.assign(emscripten.Module.ENV, {
+function fetchEnvironment() {
+  return {
     FETCH_BASE_DIR: fetchBaseDirectory,
     FETCH_CHUNK_SIZE_BYTES: String(fetchChunkSizeBytes),
     FETCH_MANIFEST: fetchManifestPath,
-  });
-  if (!baseUrl.endsWith("/")) {throw new Error("RPG_RUNTIME_CONTENT_UNAVAILABLE");}
+  };
 }
 
 function remoteContentManifest(config: MkxpConfig) {
@@ -265,7 +268,6 @@ function remoteContentManifest(config: MkxpConfig) {
     return `${fetchPath} ${entry.localPath}`;
   });
   return {
-    baseUrl,
     manifest: new TextEncoder().encode([baseUrl, ...lines, ""].join("\n")),
     totalBytes: entries.reduce((total, entry) => total + entry.source.sizeBytes, 0),
   };

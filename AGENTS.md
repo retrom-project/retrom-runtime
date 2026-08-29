@@ -64,7 +64,8 @@ npm run package:check
 - 修改第三方核心时，进入对应 fork，按其根 `AGENTS.md` 运行
   `.github/rpg-runtime/build-web.sh <absolute-output-directory>` 与
   `.github/rpg-runtime/verify-release.py`。联调阶段不提前打 tag：在本仓库设置
-  `RETROM_RUNTIME_DEV_RELEASE_OVERRIDES='{"onsyuri":"/absolute/output"}'`（KiriKiri 使用 `kirikiri2`）运行
+  `RETROM_RUNTIME_DEV_RELEASE_OVERRIDES='{"onsyuri":"/absolute/output"}'`（EasyRPG、mkxp 与 KiriKiri
+  分别使用 `easyrpg`、`mkxp`、`kirikiri2`）运行
   `npm run release:build`；再把同一变量与 `RETROM_RUNTIME_DEV_ROOT`、`RETROM_RUNTIME_DEV_INCLUDE_ASSETS=true`
   一并传给 fresh Retrom dev 实例。该 override 只替换被忽略的本地 stage，不修改正式 manifest、package lock 或 Release identity。
 - 必须先用本地 fork 资产完成真实 Retrom 产品链，再在 fork 打不可移动 tag；随后本仓库才把 manifest 固定到该

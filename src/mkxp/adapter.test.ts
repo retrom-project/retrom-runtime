@@ -59,7 +59,7 @@ describe("mkxp runtime mount", () => {
     });
   });
 
-  it("keeps native stderr diagnostics out of the Next development error channel", async () => {
+  it("forwards native stdout and stderr without using the Next development error channel", async () => {
     const harness = createHarness();
     const consoleError = vi.spyOn(console, "error").mockImplementation(() => undefined);
     const diagnostics: unknown[] = [];
@@ -67,13 +67,38 @@ describe("mkxp runtime mount", () => {
     const mounted = await mountMkxp(
       mkxpConfig(false), harness.target, null, harness.dependencies, (diagnostic) => diagnostics.push(diagnostic),
     );
+    const print = harness.prepareOptions?.emscriptenModule?.print;
     const printErr = harness.prepareOptions?.emscriptenModule?.printErr;
+    expect(print).toBeTypeOf("function");
     expect(printErr).toBeTypeOf("function");
+    print?.("[INFO] mkxp startup");
     printErr?.("[INFO] RetroArch startup");
 
     expect(consoleError).not.toHaveBeenCalled();
-    expect(diagnostics).toEqual([{ runtime: "mkxp-z", message: "[INFO] RetroArch startup" }]);
+    expect(diagnostics).toEqual([
+      { runtime: "mkxp-z", message: "[INFO] mkxp startup" },
+      { runtime: "mkxp-z", message: "[INFO] RetroArch startup" },
+    ]);
     await mounted.exit();
+    harness.frame.remove();
+  });
+
+  it("reports bounded filesystem state when position evidence never appears", async () => {
+    const harness = createHarness();
+    const diagnostics: Array<{ runtime: string; message: string }> = [];
+    harness.runtime.start.mockImplementation(async () => {harness.actions.push("start");});
+    const result = mountMkxp(
+      mkxpConfig(false), harness.target, null, harness.dependencies,
+      (diagnostic) => diagnostics.push(diagnostic),
+    ).then(() => null, (error: unknown) => error);
+
+    await vi.advanceTimersByTimeAsync(31_000);
+
+    await expect(result).resolves.toMatchObject({ message: "RPG_RUNTIME_BRIDGE_UNAVAILABLE" });
+    expect(diagnostics).toContainEqual({
+      runtime: "mkxp-z",
+      message: "RPG_RUNTIME_BRIDGE_TRACE:saveDirectories=1,evidence=false",
+    });
     harness.frame.remove();
   });
 

@@ -130,6 +130,9 @@ async function mountMkxpUnchecked(
   reportProgress({ phase: "RUNTIME_ASSET", loadedBytes: runtimeAssetBytes, totalBytes: runtimeAssetBytes });
   const remoteContent = remoteContentManifest(config);
   reportProgress({ phase: "PROJECT_INDEX", loadedBytes: 0, totalBytes: remoteContent.manifest.byteLength });
+  const printDiagnostic = (...args: unknown[]) => {
+    onDiagnostic({ runtime: "mkxp-z", message: args.map(String).join(" ") });
+  };
   const nostalgist = await dependencies.prepare({
     core: {
       name: "mkxp-z",
@@ -143,7 +146,8 @@ async function mountMkxpUnchecked(
       // overwrites a caller-provided Module.ENV. Populate the final object at
       // preRun instead, before RetroArch calls into the core and libc getenv().
       preRun: [(module) => {Object.assign(module.ENV, fetchEnvironment());}],
-      printErr: (...args: unknown[]) => onDiagnostic({ runtime: "mkxp-z", message: args.map(String).join(" ") }),
+      print: printDiagnostic,
+      printErr: printDiagnostic,
     },
     retroarchConfig: {
       savefile_directory: "/home/web_user/retroarch/userdata/saves",
@@ -189,7 +193,7 @@ async function mountMkxpUnchecked(
     throw error;
   }
   try {
-    await prepareEvidencePath(fileSystem);
+    await prepareEvidencePath(fileSystem, onDiagnostic);
     if (restorePayload) {
       await restoreStateAndWait(canvas, fileSystem, expectedRestorePosition(config));
     }
@@ -276,7 +280,10 @@ function remoteContentManifest(config: MkxpConfig) {
   };
 }
 
-async function prepareEvidencePath(fileSystem: MkxpFileSystem) {
+async function prepareEvidencePath(
+  fileSystem: MkxpFileSystem,
+  onDiagnostic: (diagnostic: { runtime: string; message: string }) => void,
+) {
   // RetroArch first scopes savefile_directory by the core name and mkxp-z then
   // mounts its own mkxp-z/Saves directory below that effective save root.
   const deadline = performance.now() + 30_000;
@@ -285,6 +292,14 @@ async function prepareEvidencePath(fileSystem: MkxpFileSystem) {
     if (evidencePath) {return evidencePath;}
     await new Promise((resolve) => setTimeout(resolve, 50));
   }
+  const gameSaveRoot = `${saveRoot}/mkxp-z/mkxp-z/Saves`;
+  const names = readDirectory(fileSystem, gameSaveRoot);
+  const evidencePresent = names.length === 1 &&
+    fileSystem.analyzePath(`${gameSaveRoot}/${names[0]}/${evidenceName}`).exists;
+  onDiagnostic({
+    runtime: "mkxp-z",
+    message: `RPG_RUNTIME_BRIDGE_TRACE:saveDirectories=${names.length},evidence=${String(evidencePresent)}`,
+  });
   throw new Error("RPG_RUNTIME_BRIDGE_UNAVAILABLE");
 }
 

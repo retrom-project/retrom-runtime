@@ -108,12 +108,12 @@ describe("mkxp runtime mount", () => {
     expect(harness.prepareOptions).not.toHaveProperty("rom");
     expect(harness.prepareOptions).not.toHaveProperty("bios");
     expect(harness.prepareOptions?.emscriptenModule?.arguments).toEqual(["/retrom-content/game.mkxpz"]);
-    expect(harness.prepareOptions?.emscriptenModule?.ENV).toEqual({
+    expect(harness.prepareOptions?.emscriptenModule).not.toHaveProperty("ENV");
+    expect(harness.emscriptenEnvironment).toEqual({
       FETCH_BASE_DIR: "/retrom-fetch",
       FETCH_CHUNK_SIZE_BYTES: "262144",
       FETCH_MANIFEST: "/home/web_user/retroarch/userdata/system/mkxp-z/fetch.manifest",
     });
-    expect(harness.emscriptenEnvironment).toEqual({});
     const manifestBytes = harness.files.get(
       "/home/web_user/retroarch/userdata/system/mkxp-z/fetch.manifest",
     );
@@ -429,6 +429,9 @@ function createHarness() {
     prepare: async (options) => {
       harness.prepareOptions = options;
       if (!(options.element instanceof HTMLCanvasElement)) {throw new TypeError("invalid element");}
+      for (const callback of options.emscriptenModule?.preRun ?? []) {
+        callback({ ENV: runtime.environment });
+      }
       harness.canvasIdAtPrepare = options.element.id;
       options.element.id = "canvas";
       options.element.addEventListener("keydown", (event) => harness.onKeyDown(event.code));

@@ -35,7 +35,7 @@ type MkxpRuntime = Pick<Nostalgist,
 
 type MkxpPrepareOptions = Parameters<typeof Nostalgist.prepare>[0] & {
   emscriptenModule: NonNullable<Parameters<typeof Nostalgist.prepare>[0]["emscriptenModule"]> & {
-    ENV: Record<string, string>;
+    preRun: Array<(module: { ENV: Record<string, string> }) => void>;
   };
 };
 
@@ -139,7 +139,10 @@ async function mountMkxpUnchecked(
     element: canvas,
     emscriptenModule: {
       arguments: [remoteGamePath],
-      ENV: fetchEnvironment(),
+      // Emscripten creates its ENV object after applying Module overrides and
+      // overwrites a caller-provided Module.ENV. Populate the final object at
+      // preRun instead, before RetroArch calls into the core and libc getenv().
+      preRun: [(module) => {Object.assign(module.ENV, fetchEnvironment());}],
       printErr: (...args: unknown[]) => onDiagnostic({ runtime: "mkxp-z", message: args.map(String).join(" ") }),
     },
     retroarchConfig: {

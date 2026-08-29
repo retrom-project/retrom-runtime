@@ -1,8 +1,8 @@
 {
-  "schemaVersion": 3,
+  "schemaVersion": 4,
   "packageName": "@xxxsen/retrom-runtime",
-  "packageVersion": "0.6.1",
-  "publicApiVersion": 1,
+  "packageVersion": "0.7.0",
+  "publicApiVersion": 2,
   "upstreamReleases": [
     {
       "id": "easyrpg",
@@ -125,6 +125,83 @@
     {
       "source": "assets/runtime/native/bridge.js",
       "output": "runtime/native/bridge.js"
+    }
+  ],
+  "adapters": [
+    {
+      "adapterKind": "EASYRPG_WEB",
+      "adapterId": "easyrpg-web",
+      "adapterAbi": "easyrpg-save",
+      "checkpointFormat": "easyrpg-save-bundle-v1",
+      "capabilities": {
+        "pause": true,
+        "screenshot": true,
+        "checkpoint": true,
+        "standardGamepad": true,
+        "frameCounter": true,
+        "validationProbes": ["rpgmaker.position.v1"],
+        "volume": false
+      }
+    },
+    {
+      "adapterKind": "MKXP_LIBRETRO_WEB",
+      "adapterId": "mkxp-libretro-web",
+      "adapterAbi": "mkxp-state-compact",
+      "checkpointFormat": "mkxp-state-compact-v1",
+      "capabilities": {
+        "pause": true,
+        "screenshot": true,
+        "checkpoint": true,
+        "standardGamepad": true,
+        "frameCounter": true,
+        "validationProbes": ["rpgmaker.position.v1"],
+        "volume": false
+      }
+    },
+    {
+      "adapterKind": "NATIVE_WEB",
+      "adapterId": "native-web",
+      "adapterAbi": "native-save",
+      "checkpointFormat": "native-save-bundle-v1",
+      "capabilities": {
+        "pause": true,
+        "screenshot": true,
+        "checkpoint": true,
+        "standardGamepad": true,
+        "frameCounter": true,
+        "validationProbes": ["rpgmaker.position.v1"],
+        "volume": true
+      }
+    },
+    {
+      "adapterKind": "ONS_YURI_WEB",
+      "adapterId": "ons-yuri-web",
+      "adapterAbi": "ons-save",
+      "checkpointFormat": "ons-save-bundle-v1",
+      "capabilities": {
+        "pause": true,
+        "screenshot": true,
+        "checkpoint": true,
+        "standardGamepad": true,
+        "frameCounter": false,
+        "validationProbes": [],
+        "volume": false
+      }
+    },
+    {
+      "adapterKind": "KIRIKIRI2_WEB",
+      "adapterId": "kirikiri2-web",
+      "adapterAbi": "kirikiri-kag-bookmark",
+      "checkpointFormat": "kirikiri-save-bundle-v1",
+      "capabilities": {
+        "pause": true,
+        "screenshot": true,
+        "checkpoint": true,
+        "standardGamepad": true,
+        "frameCounter": false,
+        "validationProbes": [],
+        "volume": false
+      }
     }
   ],
   "cores": [

@@ -1,13 +1,13 @@
 import { readFile } from "node:fs/promises";
 import { describe, expect, it } from "vitest";
 
-import { runtimeCatalog, validateRuntimeConfig } from "./catalog.js";
-import type { RpgRuntimeConfig } from "./contract.js";
+import { rpgMakerRuntimeCatalog, runtimeAdapters, validateRuntimeConfig } from "./catalog.js";
 import { validateOnsRuntimeConfig } from "./ons/contract.js";
+import type { RpgMakerRuntimeConfig } from "./rpgmaker/contract.js";
 
 describe("runtime catalog", () => {
   it("covers all seven supported RPG Maker generations", () => {
-    const generations = new Set(runtimeCatalog.flatMap((entry) => entry.generations));
+    const generations = new Set(rpgMakerRuntimeCatalog.flatMap((entry) => entry.generations));
     expect([...generations].sort()).toEqual([
       "RPG2000", "RPG2003", "RPGMV", "RPGMZ", "RPGVX", "RPGVXACE", "RPGXP",
     ]);
@@ -28,7 +28,7 @@ describe("runtime catalog", () => {
       adapterId: string;
       adapterKind: string;
       runtimeId: string;
-    }>(runtimeCatalog.flatMap((entry) => entry.generations.map((generation) => [
+    }>(rpgMakerRuntimeCatalog.flatMap((entry) => entry.generations.map((generation) => [
       generation,
       {
         adapterAbi: entry.adapterAbi,
@@ -46,6 +46,13 @@ describe("runtime catalog", () => {
         runtimeId: core.runtimeId,
       });
     }
+  });
+
+  it("matches every public adapter descriptor in the release manifest", async () => {
+    const manifest = JSON.parse(await readFile("runtime-manifest.json", "utf8")) as {
+      adapters: typeof runtimeAdapters;
+    };
+    expect(manifest.adapters).toEqual(runtimeAdapters);
   });
 
   it("accepts a host-independent EasyRPG session", () => {
@@ -70,11 +77,12 @@ describe("runtime catalog", () => {
         scriptEncoding: "gbk",
       },
     })).not.toThrow();
-    expect(runtimeCatalog.flatMap((entry) => entry.generations)).not.toContain("ONS");
+    expect(rpgMakerRuntimeCatalog.flatMap((entry) => entry.generations)).not.toContain("ONS");
+    expect(runtimeAdapters.map((entry) => entry.adapterKind)).toContain("ONS_YURI_WEB");
   });
 });
 
-function easyConfig(): RpgRuntimeConfig {
+function easyConfig(): RpgMakerRuntimeConfig {
   return {
     sessionId: "runtime-session",
     generation: "RPG2000",

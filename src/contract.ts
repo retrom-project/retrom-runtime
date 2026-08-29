@@ -1,94 +1,3 @@
-export type RpgGeneration =
-  | "RPG2000"
-  | "RPG2003"
-  | "RPGXP"
-  | "RPGVX"
-  | "RPGVXACE"
-  | "RPGMV"
-  | "RPGMZ";
-
-export type CheckpointPayloadKind = "RUNTIME_STATE" | "NATIVE_SAVE_BUNDLE_V1";
-
-export type CheckpointUnavailableReason =
-  | "NOT_ON_MAP"
-  | "SAVE_DISABLED"
-  | "MESSAGE_ACTIVE"
-  | "EVENT_ACTIVE"
-  | "BUSY"
-  | "RUNTIME_NOT_READY"
-  | "RUNTIME_FAILED"
-  | "CHECKPOINT_ALREADY_CREATED"
-  | "NETPLAY_UNSUPPORTED";
-
-export type CheckpointAvailability = {
-  available: boolean;
-  reason: CheckpointUnavailableReason | null;
-};
-
-export type RpgPosition = {
-  mapId: number;
-  playerX: number;
-  playerY: number;
-  fixtureState: number;
-};
-
-export type RuntimeArchive = {
-  url: string;
-  sha256: string;
-  sizeBytes: number;
-};
-
-export type EasyRpgAdapterConfig = {
-  adapterKind: "EASYRPG_WEB";
-  adapterId: "easyrpg-web";
-  engineMode: "rpg2k" | "rpg2k3";
-  runtimeBaseUrl: string;
-  projectRootUrl: string;
-  projectIndexUrl: string;
-  rtpArchive: { url: string; sha256: string; mountPath: "/data/rtp/2000" | "/data/rtp/2003" } | null;
-  checkpointSlot: 100;
-};
-
-export type MkxpAdapterConfig = {
-  adapterKind: "MKXP_LIBRETRO_WEB";
-  adapterId: "mkxp-libretro-web";
-  core: {
-    jsUrl: string;
-    jsSizeBytes: number;
-    jsSha256: string;
-    wasmUrl: string;
-    wasmSizeBytes: number;
-    wasmSha256: string;
-    artifactSetSha256: string;
-  };
-  runtimeBaseUrl: string;
-  projectArchive: RuntimeArchive;
-  rtpArchives: Array<RuntimeArchive & { declaredName: string }>;
-  rgssVersion: 1 | 2 | 3;
-  stateBufferBytes: 268435456;
-};
-
-export type NativeWebAdapterConfig = {
-  adapterKind: "NATIVE_WEB";
-  adapterId: "native-web";
-  bridgeProfile: "RPGMV" | "RPGMZ";
-  uniqueOrigin: string;
-  bootstrapUrl: string;
-  bootstrapTicket: string;
-  cleanupUrl: string | null;
-};
-
-export type RpgAdapterConfig = EasyRpgAdapterConfig | MkxpAdapterConfig | NativeWebAdapterConfig;
-
-/** Host-independent input required to start one isolated runtime session. */
-export type RpgRuntimeConfig = {
-  sessionId: string;
-  generation: RpgGeneration;
-  validationPurpose: boolean;
-  expectedRestorePosition: RpgPosition | null;
-  adapter: RpgAdapterConfig;
-};
-
 export type RuntimeState =
   | "CREATED"
   | "LOADING"
@@ -99,27 +8,69 @@ export type RuntimeState =
   | "EXITED"
   | "FAILED";
 
-export type CheckpointPayload = {
+export type CheckpointBlocker =
+  | "NOT_READY"
+  | "BUSY"
+  | "SAVE_DISABLED"
+  | "UNSUPPORTED"
+  | "FAILED"
+  | "ALREADY_CREATED"
+  | "MODE_UNSUPPORTED";
+
+export type CheckpointAvailability =
+  | { available: true; blocker: null }
+  | { available: false; blocker: CheckpointBlocker };
+
+export type RuntimeCheckpoint = {
   bytes: Uint8Array;
-  payloadKind: CheckpointPayloadKind;
+  format: string;
 };
 
-export type RuntimeEvent =
+export type RuntimeValidationProbe = {
+  kind: string;
+  schemaVersion: number;
+  value: unknown;
+};
+
+export type RuntimeLoadPhase = "RUNTIME_ASSET" | "PROJECT_INDEX" | "PROJECT_CONTENT" | "RESTORE";
+
+export type RuntimeLoadProgress = {
+  phase: RuntimeLoadPhase;
+  loadedBytes: number;
+  totalBytes: number | null;
+};
+
+export type RuntimeCapabilities = {
+  checkpoint: boolean;
+  frameCounter: boolean;
+  pause: boolean;
+  screenshot: boolean;
+  standardGamepad: boolean;
+  validationProbes: readonly string[];
+  volume: boolean;
+};
+
+export type GameRuntimeEvent =
   | { type: "READY" }
-  | { type: "LOAD_PROGRESS"; loadedBytes: number; totalBytes: number | null }
+  | ({ type: "LOAD_PROGRESS" } & RuntimeLoadProgress)
   | { type: "STATE_CHANGED"; previous: RuntimeState; state: RuntimeState }
   | { type: "CHECKPOINT_AVAILABILITY_CHANGED"; availability: CheckpointAvailability }
   | { type: "FATAL_ERROR"; code: string }
   | { type: "EXIT_REQUESTED" };
 
-export interface RpgRuntime {
+export interface GameRuntime {
   mount(target: HTMLElement): Promise<void>;
   pause(): Promise<void>;
   resume(): Promise<void>;
-  checkpoint(): Promise<CheckpointPayload>;
+  checkpoint(): Promise<RuntimeCheckpoint>;
   screenshot(): Promise<Blob>;
   exit(): Promise<void>;
   getState(): RuntimeState;
+  getCapabilities(): RuntimeCapabilities;
   getCheckpointAvailability(): CheckpointAvailability;
-  subscribe(listener: (event: RuntimeEvent) => void): () => void;
+  getCanvas(): HTMLCanvasElement | null;
+  getFrameCount(): number | null;
+  getValidationProbe(kind: string): RuntimeValidationProbe | null;
+  setVolume(value: number): void;
+  subscribe(listener: (event: GameRuntimeEvent) => void): () => void;
 }

@@ -1,9 +1,9 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import type { RpgRuntimeConfig } from "../contract";
+import { rpgMakerPositionProbeKind, type RpgMakerRuntimeConfig } from "../rpgmaker/contract";
 import { mountEasyRpg } from "./adapter";
 
-type EasyConfig = RpgRuntimeConfig & {
-  adapter: Extract<RpgRuntimeConfig["adapter"], { adapterKind: "EASYRPG_WEB" }>;
+type EasyConfig = RpgMakerRuntimeConfig & {
+  adapter: Extract<RpgMakerRuntimeConfig["adapter"], { adapterKind: "EASYRPG_WEB" }>;
 };
 
 afterEach(() => {
@@ -83,8 +83,9 @@ describe("EasyRPG adapter cleanup", () => {
       noExitRuntime: true,
       runtimeProjectRootUrl: config.adapter.projectRootUrl,
     }));
-    expect(mounted.position()).toEqual({ mapId: 1, playerX: 8, playerY: 6, fixtureState: 0 });
-    mounted.cleanup();
+    expect(mounted.getValidationProbe(rpgMakerPositionProbeKind)?.value)
+      .toEqual({ mapId: 1, playerX: 8, playerY: 6, fixtureState: 0 });
+    await mounted.exit();
     delete (window as Window & { createEasyRpgPlayer?: unknown }).createEasyRpgPlayer;
     target.remove();
   });
@@ -121,7 +122,7 @@ describe("EasyRPG adapter cleanup", () => {
       alpha: false,
       preserveDrawingBuffer: true,
     });
-    mounted.cleanup();
+    await mounted.exit();
     getContext.mockRestore();
     delete (window as Window & { createEasyRpgPlayer?: unknown }).createEasyRpgPlayer;
     target.remove();
@@ -187,9 +188,9 @@ describe("EasyRPG adapter cleanup", () => {
       ?.dispatchEvent(new Event("load"));
 
     const mounted = await mounting;
-    await expect(mounted.instance.takeScreenshot?.()).resolves.toEqual({ blob: screenshot, format: "png" });
+    await expect(mounted.screenshot()).resolves.toBe(screenshot);
     expect(toBlob).toHaveBeenCalledTimes(2);
-    mounted.cleanup();
+    await mounted.exit();
   });
 
   it("waits through an incomplete startup state and validates the ready engine", async () => {
@@ -216,8 +217,9 @@ describe("EasyRPG adapter cleanup", () => {
 
     const mounted = await mounting;
     expect(runtimeState).toHaveBeenCalledTimes(2);
-    expect(mounted.position()).toEqual({ mapId: 1, playerX: 10, playerY: 8, fixtureState: 0 });
-    mounted.cleanup();
+    expect(mounted.getValidationProbe(rpgMakerPositionProbeKind)?.value)
+      .toEqual({ mapId: 1, playerX: 10, playerY: 8, fixtureState: 0 });
+    await mounted.exit();
     delete (window as Window & { createEasyRpgPlayer?: unknown }).createEasyRpgPlayer;
     target.remove();
   });

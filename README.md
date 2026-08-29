@@ -7,9 +7,10 @@ Release inputs. It does not know about a host application's users, database, rev
 ## Public API
 
 ```ts
-import { createRpgRuntime, type RpgRuntimeConfig } from "@xxxsen/retrom-runtime";
+import { createRuntime, type RuntimeConfig } from "@xxxsen/retrom-runtime";
 
-const runtime = createRpgRuntime(config, {
+const config: RuntimeConfig = launchConfig;
+const runtime = createRuntime(config, {
   frame,
   frameWindow,
   restorePayload,
@@ -23,12 +24,17 @@ configuration. The library never calls a host review, upload, save-state or auth
 For EasyRPG, `adapter.projectRootUrl` is passed to the core as the complete
 project directory URL; neither the adapter nor the core assumes a host route.
 
+Every adapter uses the same engine-neutral `GameRuntime` lifecycle. Capabilities and checkpoint formats are
+declared in `runtime-manifest.json`; hosts do not infer them from a generation name. Core-specific validation is
+an extension probe. RPG Maker exposes `rpgmaker.position.v1`, while ONS and KiriKiri do not fabricate map IDs or
+player coordinates.
+
 ONS is a separate public runtime rather than an RPG Maker generation:
 
 ```ts
-import { createOnsRuntime, type OnsRuntimeConfig } from "@xxxsen/retrom-runtime";
+import { createRuntime, type OnsRuntimeConfig } from "@xxxsen/retrom-runtime";
 
-const runtime = createOnsRuntime(config, { frameWindow, restorePayload });
+const runtime = createRuntime(config, { frameWindow, restorePayload });
 await runtime.mount(container);
 const checkpoint = await runtime.checkpoint();
 ```
@@ -50,9 +56,9 @@ then discards that frame to release Emscripten's document-level input hooks.
 KiriKiri is also an independent runtime:
 
 ```ts
-import { createKirikiriRuntime, type KirikiriRuntimeConfig } from "@xxxsen/retrom-runtime";
+import { createRuntime, type KirikiriRuntimeConfig } from "@xxxsen/retrom-runtime";
 
-const runtime = createKirikiriRuntime(config, { frameWindow, restorePayload });
+const runtime = createRuntime(config, { frameWindow, restorePayload });
 await runtime.mount(container);
 const checkpoint = await runtime.checkpoint();
 ```

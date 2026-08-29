@@ -1,7 +1,7 @@
 import { decodeOnsCheckpoint, encodeOnsCheckpoint, type OnsCheckpointBundle } from "./checkpoint.js";
+import type { MountedRuntimeAdapter } from "../internal-adapter.js";
 import type { OnsRuntimeConfig } from "./contract.js";
 import { installOnsAnalogGamepad } from "./gamepad-input.js";
-import type { MountedOnsAdapter } from "./internal-adapter.js";
 
 type OnsConfig = OnsRuntimeConfig & { adapter: OnsRuntimeConfig["adapter"] };
 type ProjectFile = { path: string; url: string };
@@ -51,7 +51,7 @@ export async function mountOnsYuri(
   target: HTMLElement,
   frameWindow: Window,
   restorePayload: Uint8Array | null,
-): Promise<MountedOnsAdapter> {
+): Promise<MountedRuntimeAdapter> {
   if (target.ownerDocument !== frameWindow.document) {throw new Error("ONS_RUNTIME_TARGET_INVALID");}
   const index = await loadProjectIndex(config.adapter.projectIndexUrl);
   const restore = await readRestore(restorePayload);
@@ -143,7 +143,10 @@ export async function mountOnsYuri(
         if (!entries.some((entry) => entry.path === `save${config.adapter.checkpointSlot}.dat`)) {
           throw new Error("ONS_CHECKPOINT_CREATE_FAILED");
         }
-        return await encodeOnsCheckpoint({ entries, resumeSlot: config.adapter.checkpointSlot });
+        return {
+          bytes: await encodeOnsCheckpoint({ entries, resumeSlot: config.adapter.checkpointSlot }),
+          format: "ons-save-bundle-v1",
+        };
       } catch (error) {
         if (error instanceof Error && error.message === "ONS_CHECKPOINT_CREATE_FAILED") {throw error;}
         throw new Error("ONS_CHECKPOINT_CREATE_FAILED");
@@ -162,9 +165,14 @@ export async function mountOnsYuri(
       target.replaceChildren();
       restoreGlobals(host, globals);
     },
+    getCanvas: () => canvas,
+    getCheckpointAvailability: () => ({ available: true, blocker: null }),
+    getFrameCount: () => null,
+    getValidationProbe: () => null,
     pause: async () => {activeModule._onsyuri_host_set_paused(1); paused = true;},
     resume: async () => {activeModule._onsyuri_host_set_paused(0); paused = false;},
     screenshot: () => canvasScreenshot(canvas),
+    setVolume: null,
   };
 }
 

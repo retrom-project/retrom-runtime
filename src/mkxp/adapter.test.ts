@@ -1,11 +1,11 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import type { Nostalgist } from "nostalgist";
-import type { RpgRuntimeConfig } from "../contract";
+import { rpgMakerPositionProbeKind, type RpgMakerRuntimeConfig } from "../rpgmaker/contract";
 import { mountMkxp } from "./adapter";
 import { encodeMkxpRastate } from "./state";
 
-type MkxpConfig = RpgRuntimeConfig & {
-  adapter: Extract<RpgRuntimeConfig["adapter"], { adapterKind: "MKXP_LIBRETRO_WEB" }>;
+type MkxpConfig = RpgMakerRuntimeConfig & {
+  adapter: Extract<RpgMakerRuntimeConfig["adapter"], { adapterKind: "MKXP_LIBRETRO_WEB" }>;
 };
 
 type TestFileSystem = {
@@ -54,7 +54,7 @@ describe("mkxp runtime mount", () => {
 
     expect(consoleError).not.toHaveBeenCalled();
     expect(diagnostics).toEqual([{ runtime: "mkxp-z", message: "[INFO] RetroArch startup" }]);
-    await mounted.cleanup();
+    await mounted.exit();
     harness.frame.remove();
   });
 
@@ -101,7 +101,8 @@ describe("mkxp runtime mount", () => {
       0x4d, 0x45, 0x4d, 0x20, 0, 0, 0, 16,
       0x6d, 0x6b, 0x78, 0x70, 1, 0, 0, 0,
     ));
-    expect(mounted.position()).toEqual({ mapId: 7, playerX: 4, playerY: 6, fixtureState: 9 });
+    expect(mounted.getValidationProbe(rpgMakerPositionProbeKind)?.value)
+      .toEqual({ mapId: 7, playerX: 4, playerY: 6, fixtureState: 9 });
     expect(harness.prepareOptions?.retroarchConfig).toMatchObject({
       input_save_state: "f2",
       input_load_state: "f4",
@@ -112,32 +113,30 @@ describe("mkxp runtime mount", () => {
     expect(harness.canvasIdAtPrepare).toBe("canvas");
     expect(harness.directories).toContain(coreStateRoot);
     expect("state" in (harness.prepareOptions ?? {})).toBe(false);
-    expect(mounted.instance.canvas?.ownerDocument).toBe(harness.frame.contentDocument);
-    expect(harness.prepareOptions?.element).toBe(mounted.instance.canvas);
-    expect(mounted.instance.canvas?.id).toBe("canvas");
+    expect(mounted.getCanvas()?.ownerDocument).toBe(harness.frame.contentDocument);
+    expect(harness.prepareOptions?.element).toBe(mounted.getCanvas());
+    expect(mounted.getCanvas()?.id).toBe("canvas");
 
     const screenshot = new Blob([Uint8Array.of(1)], { type: "image/png" });
-    Object.defineProperty(mounted.instance.canvas, "toBlob", {
+    Object.defineProperty(mounted.getCanvas(), "toBlob", {
       configurable: true,
       value: (callback: BlobCallback) => callback(screenshot),
     });
-    expect(await mounted.instance.takeScreenshot?.()).toEqual({ blob: screenshot, format: "png" });
+    expect(await mounted.screenshot()).toBe(screenshot);
 
-    const getState = mounted.instance.gameManager?.getStateAsync;
-    if (!getState) {throw new Error("getStateAsync unavailable");}
-    const checkpointPromise = getState();
+    const checkpointPromise = mounted.checkpoint();
     await vi.advanceTimersByTimeAsync(1_000);
     const checkpoint = await checkpointPromise;
-    expect(checkpoint?.byteLength).toBeLessThan(1024);
-    expect(checkpoint?.slice(0, 8)).toEqual(Uint8Array.of(0x52, 0x54, 0x4d, 0x4b, 0x58, 0x50, 0x53, 1));
-    expect(checkpoint).toEqual(checkpointFixture);
+    expect(checkpoint.bytes.byteLength).toBeLessThan(1024);
+    expect(checkpoint.bytes.slice(0, 8)).toEqual(Uint8Array.of(0x52, 0x54, 0x4d, 0x4b, 0x58, 0x50, 0x53, 1));
+    expect(checkpoint).toEqual({ bytes: checkpointFixture, format: "mkxp-state-compact-v1" });
     expect(harness.actions).toEqual([
       `mkdir:${coreStateRoot}`, `write:${statePath}`, "start", "F4", "F2", `write:${statePath}`,
     ]);
     expect(harness.runtime).not.toHaveProperty("sendCommand");
     expect(harness.runtime).not.toHaveProperty("saveState");
     expect(harness.runtime).not.toHaveProperty("loadState");
-    await mounted.cleanup();
+    await mounted.exit();
     harness.frame.remove();
   });
 
@@ -156,11 +155,10 @@ describe("mkxp runtime mount", () => {
     await vi.advanceTimersByTimeAsync(1_000);
 
     const mounted = await mountPromise;
-    expect(mounted.position()).toEqual({ mapId: 7, playerX: 4, playerY: 6, fixtureState: 9 });
-    const getFrameNum = mounted.instance.gameManager?.getFrameNum;
-    if (!getFrameNum) {throw new Error("getFrameNum unavailable");}
-    expect(getFrameNum()).toBe(600);
-    await mounted.cleanup();
+    expect(mounted.getValidationProbe(rpgMakerPositionProbeKind)?.value)
+      .toEqual({ mapId: 7, playerX: 4, playerY: 6, fixtureState: 9 });
+    expect(mounted.getFrameCount()).toBe(600);
+    await mounted.exit();
     harness.frame.remove();
   });
 
@@ -201,14 +199,14 @@ describe("mkxp runtime mount", () => {
     const mountPromise = mountMkxp(mkxpConfig(false), harness.target, null, harness.dependencies);
     await vi.advanceTimersByTimeAsync(1_000);
     const mounted = await mountPromise;
-    const result = mounted.instance.gameManager?.getStateAsync?.().then(() => null, (error: unknown) => error);
+    const result = mounted.checkpoint().then(() => null, (error: unknown) => error);
 
     await vi.advanceTimersByTimeAsync(121_000);
 
     await expect(result).resolves.toMatchObject({ message: "RPG_CHECKPOINT_CREATE_TIMEOUT" });
     expect(harness.actions).toEqual([`mkdir:${coreStateRoot}`, "start", "F2"]);
     expect(harness.runtime).not.toHaveProperty("sendCommand");
-    await mounted.cleanup();
+    await mounted.exit();
     harness.frame.remove();
   });
 
@@ -223,14 +221,14 @@ describe("mkxp runtime mount", () => {
     await vi.advanceTimersByTimeAsync(1_000);
     const mounted = await mountPromise;
 
-    const result = mounted.instance.gameManager?.getStateAsync?.().then(
+    const result = mounted.checkpoint().then(
       () => null,
       (error: unknown) => error,
     );
     await vi.advanceTimersByTimeAsync(1_000);
 
     await expect(result).resolves.toMatchObject({ message: "RPG_CHECKPOINT_CREATE_FAILED" });
-    await mounted.cleanup();
+    await mounted.exit();
     harness.frame.remove();
   });
 
@@ -242,22 +240,17 @@ describe("mkxp runtime mount", () => {
     const mountPromise = mountMkxp(mkxpConfig(false), harness.target, null, harness.dependencies);
     await vi.advanceTimersByTimeAsync(1_000);
     const mounted = await mountPromise;
-    const toggle = mounted.instance.gameManager?.toggleMainLoop;
-    if (!toggle) {throw new Error("toggleMainLoop unavailable");}
-
-    const pause = toggle(false);
+    const pause = mounted.pause();
     await vi.advanceTimersByTimeAsync(100);
     await pause;
-    expect(mounted.instance.paused).toBe(true);
-    const resume = toggle(true);
+    const resume = mounted.resume();
     await vi.advanceTimersByTimeAsync(100);
     await resume;
-    expect(mounted.instance.paused).toBe(false);
 
     expect(harness.actions).toEqual([`mkdir:${coreStateRoot}`, "start", "F6", "F6"]);
     expect(harness.runtime.pause).not.toHaveBeenCalled();
     expect(harness.runtime.resume).not.toHaveBeenCalled();
-    await mounted.cleanup();
+    await mounted.exit();
     harness.frame.remove();
   });
 });

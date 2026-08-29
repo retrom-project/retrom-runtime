@@ -2,6 +2,15 @@
 
 ## Unreleased
 
+## 0.7.0
+
+- Replace the RPG-shaped root API with one engine-neutral `createRuntime` / `GameRuntime` contract shared by
+  RPG Maker, ONS and KiriKiri adapters.
+- Move RPG Maker generation and position evidence behind the versioned `rpgmaker.position.v1` validation probe;
+  generic checkpoint availability no longer exposes map, message or event semantics.
+- Consolidate the duplicated RPG, ONS and KiriKiri lifecycle state machines into one controller and declare
+  adapter capabilities plus checkpoint formats in the runtime manifest.
+
 ## 0.6.1
 
 - Add a visible standard-gamepad virtual pointer to the shared KiriKiri adapter, with D-pad/left-stick movement,

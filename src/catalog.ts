@@ -1,95 +1,75 @@
-import type { RpgAdapterConfig, RpgGeneration, RpgPosition, RpgRuntimeConfig } from "./contract.js";
+import type { RuntimeCapabilities } from "./contract.js";
+import { validateKirikiriRuntimeConfig, type KirikiriRuntimeConfig } from "./kirikiri/contract.js";
+import { validateOnsRuntimeConfig, type OnsRuntimeConfig } from "./ons/contract.js";
+import {
+  rpgMakerRuntimeCatalog,
+  validateRpgMakerRuntimeConfig,
+} from "./rpgmaker/catalog.js";
+import type { RpgMakerRuntimeConfig } from "./rpgmaker/contract.js";
 
-export const runtimeCatalog = [
-  { runtimeId: "easyrpg", generations: ["RPG2000", "RPG2003"], adapterKind: "EASYRPG_WEB", adapterId: "easyrpg-web", adapterAbi: "easyrpg-save" },
-  { runtimeId: "mkxp", generations: ["RPGXP", "RPGVX", "RPGVXACE"], adapterKind: "MKXP_LIBRETRO_WEB", adapterId: "mkxp-libretro-web", adapterAbi: "mkxp-state-compact" },
-  { runtimeId: "native", generations: ["RPGMV", "RPGMZ"], adapterKind: "NATIVE_WEB", adapterId: "native-web", adapterAbi: "native-save" },
-] as const;
+export type RuntimeConfig = RpgMakerRuntimeConfig | OnsRuntimeConfig | KirikiriRuntimeConfig;
 
-export function validateRuntimeConfig(config: RpgRuntimeConfig): void {
-  if (!config || typeof config !== "object" || !boundedText(config.sessionId, 200) ||
-    !validGeneration(config.generation) || typeof config.validationPurpose !== "boolean" ||
-    config.expectedRestorePosition !== null && !validPosition(config.expectedRestorePosition)) {
-    throw new Error("RPG_RUNTIME_CONFIG_INVALID");
-  }
-  validateAdapter(config.generation, config.adapter);
+type RuntimeAdapterDescriptor = {
+  adapterAbi: string;
+  adapterId: string;
+  adapterKind: RuntimeConfig["adapter"]["adapterKind"];
+  capabilities: RuntimeCapabilities;
+  checkpointFormat: string;
+};
+
+const rpgCapabilities: RuntimeCapabilities = {
+  checkpoint: true,
+  frameCounter: true,
+  pause: true,
+  screenshot: true,
+  standardGamepad: true,
+  validationProbes: ["rpgmaker.position.v1"],
+  volume: false,
+};
+
+const nativeCapabilities: RuntimeCapabilities = { ...rpgCapabilities, volume: true };
+
+const standardCapabilities: RuntimeCapabilities = {
+  checkpoint: true,
+  frameCounter: false,
+  pause: true,
+  screenshot: true,
+  standardGamepad: true,
+  validationProbes: [],
+  volume: false,
+};
+
+export const runtimeAdapters = [
+  descriptor("EASYRPG_WEB", "easyrpg-web", "easyrpg-save", "easyrpg-save-bundle-v1", rpgCapabilities),
+  descriptor("MKXP_LIBRETRO_WEB", "mkxp-libretro-web", "mkxp-state-compact", "mkxp-state-compact-v1", rpgCapabilities),
+  descriptor("NATIVE_WEB", "native-web", "native-save", "native-save-bundle-v1", nativeCapabilities),
+  descriptor("ONS_YURI_WEB", "ons-yuri-web", "ons-save", "ons-save-bundle-v1", standardCapabilities),
+  descriptor(
+    "KIRIKIRI2_WEB", "kirikiri2-web", "kirikiri-kag-bookmark", "kirikiri-save-bundle-v1", standardCapabilities,
+  ),
+] as const satisfies readonly RuntimeAdapterDescriptor[];
+
+export { rpgMakerRuntimeCatalog };
+
+export function validateRuntimeConfig(config: RuntimeConfig): void {
+  const adapterKind = config?.adapter?.adapterKind;
+  if (adapterKind === "ONS_YURI_WEB") {validateOnsRuntimeConfig(config as OnsRuntimeConfig); return;}
+  if (adapterKind === "KIRIKIRI2_WEB") {validateKirikiriRuntimeConfig(config as KirikiriRuntimeConfig); return;}
+  validateRpgMakerRuntimeConfig(config as RpgMakerRuntimeConfig);
 }
 
-function validateAdapter(generation: RpgGeneration, adapter: RpgAdapterConfig) {
-  const valid = adapter.adapterKind === "EASYRPG_WEB"
-    ? validEasyAdapter(generation, adapter)
-    : adapter.adapterKind === "MKXP_LIBRETRO_WEB"
-      ? validMkxpAdapter(generation, adapter)
-      : validNativeAdapter(generation, adapter);
-  if (!valid) {throw new Error("RPG_RUNTIME_CONFIG_INVALID");}
+export function runtimeAdapterDescriptor(adapterKind: RuntimeConfig["adapter"]["adapterKind"]) {
+  const descriptor = runtimeAdapters.find((entry) => entry.adapterKind === adapterKind);
+  if (!descriptor) {throw new Error("RUNTIME_CONFIG_INVALID");}
+  return descriptor;
 }
 
-function validEasyAdapter(
-  generation: RpgGeneration,
-  adapter: Extract<RpgAdapterConfig, { adapterKind: "EASYRPG_WEB" }>,
+function descriptor<Kind extends RuntimeAdapterDescriptor["adapterKind"]>(
+  adapterKind: Kind,
+  adapterId: string,
+  adapterAbi: string,
+  checkpointFormat: string,
+  capabilities: RuntimeCapabilities,
 ) {
-  return (generation === "RPG2000" || generation === "RPG2003") &&
-    adapter.adapterId === "easyrpg-web" && adapter.checkpointSlot === 100 &&
-    adapter.engineMode === (generation === "RPG2000" ? "rpg2k" : "rpg2k3") &&
-    validUrl(adapter.runtimeBaseUrl) && validUrl(adapter.projectRootUrl) &&
-    validUrl(adapter.projectIndexUrl) &&
-    (adapter.rtpArchive === null || validDigest(adapter.rtpArchive.sha256));
-}
-
-function validMkxpAdapter(
-  generation: RpgGeneration,
-  adapter: Extract<RpgAdapterConfig, { adapterKind: "MKXP_LIBRETRO_WEB" }>,
-) {
-  const rgss = generation === "RPGXP" ? 1 : generation === "RPGVX" ? 2 : generation === "RPGVXACE" ? 3 : 0;
-  return rgss !== 0 && adapter.adapterId === "mkxp-libretro-web" && adapter.rgssVersion === rgss &&
-    adapter.stateBufferBytes === 268435456 && validUrl(adapter.runtimeBaseUrl) &&
-    validArchive(adapter.projectArchive) && validCore(adapter.core) &&
-    adapter.rtpArchives.every((archive) => boundedText(archive.declaredName, 255) && validArchive(archive));
-}
-
-function validNativeAdapter(
-  generation: RpgGeneration,
-  adapter: Extract<RpgAdapterConfig, { adapterKind: "NATIVE_WEB" }>,
-) {
-  return (generation === "RPGMV" || generation === "RPGMZ") &&
-    adapter.adapterId === "native-web" && adapter.bridgeProfile === generation &&
-    validUrl(adapter.uniqueOrigin) && validUrl(adapter.bootstrapUrl) &&
-    (adapter.cleanupUrl === null || sameOrigin(adapter.cleanupUrl, adapter.uniqueOrigin)) &&
-    /^[A-Za-z0-9_-]{43,128}$/u.test(adapter.bootstrapTicket);
-}
-
-function sameOrigin(left: string, right: string) {
-  try {return new URL(left).origin === new URL(right).origin;}
-  catch {return false;}
-}
-
-function validCore(core: Extract<RpgAdapterConfig, { adapterKind: "MKXP_LIBRETRO_WEB" }>["core"]) {
-  return validUrl(core.jsUrl) && validUrl(core.wasmUrl) && positiveInteger(core.jsSizeBytes) &&
-    positiveInteger(core.wasmSizeBytes) && validDigest(core.jsSha256) && validDigest(core.wasmSha256) &&
-    validDigest(core.artifactSetSha256);
-}
-
-function validArchive(archive: { url: string; sha256: string; sizeBytes: number }) {
-  return validUrl(archive.url) && validDigest(archive.sha256) && positiveInteger(archive.sizeBytes);
-}
-
-function validPosition(position: RpgPosition) {
-  return [position.mapId, position.playerX, position.playerY, position.fixtureState]
-    .every((value) => Number.isSafeInteger(value) && value >= -2147483648 && value <= 2147483647);
-}
-
-function validGeneration(value: unknown): value is RpgGeneration {
-  return value === "RPG2000" || value === "RPG2003" || value === "RPGXP" || value === "RPGVX" ||
-    value === "RPGVXACE" || value === "RPGMV" || value === "RPGMZ";
-}
-
-function validUrl(value: string) {
-  try {return new URL(value, globalThis.location?.origin ?? "https://runtime.invalid").protocol.startsWith("http");}
-  catch {return false;}
-}
-
-function validDigest(value: string) {return /^[0-9a-f]{64}$/u.test(value);}
-function positiveInteger(value: number) {return Number.isSafeInteger(value) && value > 0;}
-function boundedText(value: unknown, maximum: number): value is string {
-  return typeof value === "string" && value.length > 0 && value.length <= maximum;
+  return { adapterAbi, adapterId, adapterKind, capabilities, checkpointFormat };
 }

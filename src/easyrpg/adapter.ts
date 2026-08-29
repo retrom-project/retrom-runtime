@@ -1,16 +1,22 @@
 import { unzip } from "fflate";
-import type { RpgPlayerInstance } from "../internal-adapter.js";
 import { decodeRpgCheckpoint, encodeRpgCheckpoint } from "../checkpoint.js";
-import type { RpgPosition, RpgRuntimeConfig } from "../contract.js";
+import type { MountedRuntimeAdapter } from "../internal-adapter.js";
+import {
+  rpgMakerPositionProbeKind,
+  type RpgMakerPositionV1,
+  type RpgMakerRuntimeConfig,
+} from "../rpgmaker/contract.js";
 
-type EasyConfig = RpgRuntimeConfig & { adapter: Extract<RpgRuntimeConfig["adapter"], { adapterKind: "EASYRPG_WEB" }> };
+type EasyConfig = RpgMakerRuntimeConfig & {
+  adapter: Extract<RpgMakerRuntimeConfig["adapter"], { adapterKind: "EASYRPG_WEB" }>;
+};
 
 type EasyFileSystem = {
   analyzePath(path: string): { exists: boolean };
   readFile(path: string): Uint8Array;
 };
 
-type EasyState = RpgPosition & {
+type EasyState = RpgMakerPositionV1 & {
   engine: "RPG2000" | "RPG2003";
   ready: boolean;
   canCheckpoint: boolean;
@@ -106,55 +112,37 @@ async function mountEasyRpgUnchecked(
   const expectedEngine = config.generation === "RPG2000" ? "RPG2000" : "RPG2003";
   await waitForReady(playerModule, expectedEngine);
 
-  const listeners = new Map<string, Set<(...args: unknown[]) => void>>();
-  const instance: RpgPlayerInstance = {
-    canvas: playerModule.canvas,
-    paused: false,
-    volume: 1,
-    muted: false,
-    on(event, callback) {
-      const current = listeners.get(event) ?? new Set();
-      current.add(callback);
-      listeners.set(event, current);
-    },
-    takeScreenshot: async () => ({ blob: await canvasBlob(playerModule.canvas), format: "png" }),
-    gameManager: {
-      savePayloadKind: "NATIVE_SAVE_BUNDLE_V1",
-      validationPurpose: config.validationPurpose,
-      getRpgPosition: () => position(readState(playerModule)),
-      getCheckpointAvailability: () => {
-        const available = readState(playerModule).canCheckpoint;
-        return { available, reason: available ? null : "BUSY" };
-      },
-      getStateAsync: async () => {
-        if (!playerModule.api.createRuntimeCheckpoint()) {throw new Error("RPG_CHECKPOINT_UNAVAILABLE");}
-        const bytes = readCheckpoint(playerModule.FS);
-        return encodeRpgCheckpoint({
+  return {
+    checkpoint: async () => {
+      if (!playerModule.api.createRuntimeCheckpoint()) {throw new Error("RPG_CHECKPOINT_UNAVAILABLE");}
+      const bytes = readCheckpoint(playerModule.FS);
+      return {
+        bytes: await encodeRpgCheckpoint({
           engine: expectedEngine,
           resumeSlot: config.adapter.checkpointSlot,
           entries: [{ store: "FILESYSTEM", key: savePath, mediaType: "application/octet-stream", data: bytes }],
-        });
-      },
-      getFrameNum: () => readState(playerModule).frameCount,
-      getVideoDimensions: (dimension) => dimension === "aspect" ? playerModule.canvas.width / playerModule.canvas.height :
-        dimension === "width" ? playerModule.canvas.width : playerModule.canvas.height,
-      toggleMainLoop: (running) => {
-        if (running) {playerModule.resumeMainLoop(); instance.paused = false;}
-        else {playerModule.pauseMainLoop(); instance.paused = true;}
-      },
+        }),
+        format: "easyrpg-save-bundle-v1",
+      };
     },
-  };
-  return {
-    instance,
-    position: () => position(readState(playerModule)),
-    checkpointAvailable: () => readState(playerModule).canCheckpoint,
-    cleanup: () => {
+    exit: async () => {
       playerModule.pauseMainLoop();
       script.remove();
       target.replaceChildren();
-      listeners.clear();
     },
-  };
+    getCanvas: () => playerModule.canvas,
+    getCheckpointAvailability: () => readState(playerModule).canCheckpoint
+      ? { available: true, blocker: null }
+      : { available: false, blocker: "BUSY" },
+    getFrameCount: () => readState(playerModule).frameCount,
+    getValidationProbe: (kind) => kind === rpgMakerPositionProbeKind
+      ? { kind, schemaVersion: 1, value: position(readState(playerModule)) }
+      : null,
+    pause: async () => {playerModule.pauseMainLoop();},
+    resume: async () => {playerModule.resumeMainLoop();},
+    screenshot: () => canvasBlob(playerModule.canvas),
+    setVolume: null,
+  } satisfies MountedRuntimeAdapter;
 }
 
 function readState(module: EasyModule): EasyState {
@@ -170,7 +158,7 @@ function readState(module: EasyModule): EasyState {
   return state as EasyState;
 }
 
-function validPosition(value: Partial<RpgPosition>) {
+function validPosition(value: Partial<RpgMakerPositionV1>) {
   return validInteger(value.mapId, 0) && validInteger(value.playerX) && validInteger(value.playerY) &&
     validInteger(value.fixtureState);
 }
@@ -179,7 +167,7 @@ function validInteger(value: unknown, minimum = -2_147_483_648) {
   return Number.isSafeInteger(value) && Number(value) >= minimum && Number(value) <= 2_147_483_647;
 }
 
-function position(state: EasyState): RpgPosition {
+function position(state: EasyState): RpgMakerPositionV1 {
   return { mapId: state.mapId, playerX: state.playerX, playerY: state.playerY, fixtureState: state.fixtureState };
 }
 

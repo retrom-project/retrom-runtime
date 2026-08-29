@@ -1,131 +1,148 @@
-import { validateRuntimeConfig } from "./catalog.js";
-import { RpgRuntimeController } from "./controller.js";
+import {
+  runtimeAdapterDescriptor,
+  validateRuntimeConfig,
+  type RuntimeConfig,
+} from "./catalog.js";
+import { GameRuntimeController } from "./controller.js";
 import { mountEasyRpg } from "./easyrpg/adapter.js";
-import { adaptMountedRpgAdapter, type RpgPlayerInstance } from "./internal-adapter.js";
+import { mountKirikiri2 } from "./kirikiri/adapter.js";
 import { mountMkxp } from "./mkxp/adapter.js";
 import { mountNativeRpg } from "./native-web/adapter.js";
-import type { RpgAdapterConfig, RpgRuntime, RpgRuntimeConfig } from "./contract.js";
+import { mountOnsYuri } from "./ons/adapter.js";
+import type { GameRuntime } from "./contract.js";
+import type { KirikiriRuntimeConfig } from "./kirikiri/contract.js";
+import type { OnsRuntimeConfig } from "./ons/contract.js";
+import type { RpgMakerAdapterConfig, RpgMakerRuntimeConfig } from "./rpgmaker/contract.js";
 
 export type {
   CheckpointAvailability,
-  CheckpointPayload,
-  CheckpointPayloadKind,
-  CheckpointUnavailableReason,
+  CheckpointBlocker,
+  GameRuntime,
+  GameRuntimeEvent,
+  RuntimeCapabilities,
+  RuntimeCheckpoint,
+  RuntimeLoadPhase,
+  RuntimeLoadProgress,
+  RuntimeState,
+  RuntimeValidationProbe,
+} from "./contract.js";
+export type { RuntimeConfig } from "./catalog.js";
+export { runtimeAdapters, validateRuntimeConfig } from "./catalog.js";
+export type {
   EasyRpgAdapterConfig,
   MkxpAdapterConfig,
   NativeWebAdapterConfig,
-  RpgAdapterConfig,
-  RpgGeneration,
-  RpgPosition,
-  RpgRuntime,
-  RpgRuntimeConfig,
-  RuntimeEvent,
-  RuntimeState,
-} from "./contract.js";
-export { runtimeCatalog, validateRuntimeConfig } from "./catalog.js";
+  RpgMakerAdapterConfig,
+  RpgMakerPositionV1,
+  RpgMakerRuntimeConfig,
+  RuntimeArchive,
+} from "./rpgmaker/contract.js";
+export { rpgMakerPositionProbeKind } from "./rpgmaker/contract.js";
+export type { OnsAdapterConfig, OnsRuntimeConfig, OnsScriptEncoding } from "./ons/contract.js";
+export type { KirikiriAdapterConfig, KirikiriRuntimeConfig } from "./kirikiri/contract.js";
 export { decodeRpgCheckpoint, encodeRpgCheckpoint, rpgCheckpointMagic } from "./checkpoint.js";
 export { decodeMkxpRastate, encodeMkxpRastate, mkxpRastateEnvelopeBytes } from "./mkxp/state.js";
+export { decodeOnsCheckpoint, encodeOnsCheckpoint, onsCheckpointMagic } from "./ons/checkpoint.js";
 export {
-  createKirikiriRuntime,
   decodeKirikiriCheckpoint,
   encodeKirikiriCheckpoint,
   kirikiriCheckpointMagic,
-  type KirikiriAdapterConfig,
-  type KirikiriCheckpointPayload,
-  type KirikiriRuntime,
-  type KirikiriRuntimeConfig,
-  type KirikiriRuntimeEvent,
-  type KirikiriRuntimeOptions,
-} from "./kirikiri/index.js";
-export {
-  createOnsRuntime,
-  decodeOnsCheckpoint,
-  encodeOnsCheckpoint,
-  onsCheckpointMagic,
-  type OnsAdapterConfig,
-  type OnsCheckpointPayload,
-  type OnsRuntime,
-  type OnsRuntimeConfig,
-  type OnsRuntimeEvent,
-  type OnsRuntimeOptions,
-  type OnsScriptEncoding,
-} from "./ons/index.js";
+} from "./kirikiri/checkpoint.js";
 
 export type RuntimeDiagnostic = { runtime: string; message: string };
 
-export type RpgRuntimeOptions = {
-  frame: HTMLIFrameElement;
+export type RuntimeOptions = {
+  frame?: HTMLIFrameElement;
   frameWindow: Window;
   restorePayload: Uint8Array | null;
   signal?: AbortSignal;
   onDiagnostic?: (diagnostic: RuntimeDiagnostic) => void;
 };
 
-export type RpgRuntimeDescription = {
+export type RuntimeDescription = {
   crossOriginFrame: boolean;
   requiresThreads: boolean;
   runtimeBaseUrl: string;
 };
 
-export function describeRpgRuntime(config: RpgRuntimeConfig): RpgRuntimeDescription {
+export function describeRuntime(config: RuntimeConfig): RuntimeDescription {
   validateRuntimeConfig(config);
-  if (config.adapter.adapterKind === "NATIVE_WEB") {
-    return { crossOriginFrame: true, requiresThreads: false, runtimeBaseUrl: config.adapter.uniqueOrigin };
+  const adapter = config.adapter;
+  if (adapter.adapterKind === "NATIVE_WEB") {
+    return { crossOriginFrame: true, requiresThreads: false, runtimeBaseUrl: adapter.uniqueOrigin };
   }
   return {
     crossOriginFrame: false,
-    requiresThreads: config.adapter.adapterKind === "MKXP_LIBRETRO_WEB",
-    runtimeBaseUrl: config.adapter.runtimeBaseUrl,
+    requiresThreads: adapter.adapterKind === "MKXP_LIBRETRO_WEB",
+    runtimeBaseUrl: adapter.runtimeBaseUrl,
   };
 }
 
-export function createRpgRuntime(config: RpgRuntimeConfig, options: RpgRuntimeOptions): RpgRuntime {
+export function createRuntime(config: RuntimeConfig, options: RuntimeOptions): GameRuntime {
   validateRuntimeConfig(config);
-  return createController(config, options);
-}
-
-export async function mountRpgRuntime(
-  config: RpgRuntimeConfig,
-  target: HTMLElement,
-  options: RpgRuntimeOptions,
-): Promise<{ runtime: RpgRuntime; playerInstance: RpgPlayerInstance }> {
-  const controller = createRpgRuntime(config, options) as RpgRuntimeController;
-  await controller.mount(target);
-  return { runtime: controller, playerInstance: controller.getPlayerInstance() };
-}
-
-function createController(config: RpgRuntimeConfig, options: RpgRuntimeOptions) {
-  const mountAdapter = adapterMount(config, options);
-  return new RpgRuntimeController(
-    async (target) => {
-      const mounted = await mountAdapter(target);
-      try {return adaptMountedRpgAdapter(mounted);}
-      catch (error) {await mounted.cleanup(); throw error;}
-    },
+  const descriptor = runtimeAdapterDescriptor(config.adapter.adapterKind);
+  return new GameRuntimeController(
+    adapterMount(config, options),
+    descriptor.capabilities,
     options.signal ?? null,
-    config.validationPurpose,
   );
 }
 
-function adapterMount(config: RpgRuntimeConfig, options: RpgRuntimeOptions) {
+export async function mountRuntime(config: RuntimeConfig, target: HTMLElement, options: RuntimeOptions) {
+  const runtime = createRuntime(config, options);
+  await runtime.mount(target);
+  return runtime;
+}
+
+function adapterMount(config: RuntimeConfig, options: RuntimeOptions) {
   const adapter = config.adapter;
   switch (adapter.adapterKind) {
   case "EASYRPG_WEB":
     return (target: HTMLElement) => mountEasyRpg(
-      withAdapter(config, adapter), target, options.frameWindow, options.restorePayload,
+      withRpgAdapter(config as RpgMakerRuntimeConfig, adapter),
+      target,
+      options.frameWindow,
+      options.restorePayload,
     );
   case "MKXP_LIBRETRO_WEB":
     return (target: HTMLElement) => mountMkxp(
-      withAdapter(config, adapter), target, options.restorePayload, undefined, options.onDiagnostic,
+      withRpgAdapter(config as RpgMakerRuntimeConfig, adapter),
+      target,
+      options.restorePayload,
+      undefined,
+      options.onDiagnostic,
     );
   case "NATIVE_WEB":
-    return () => mountNativeRpg(withAdapter(config, adapter), options.frame, options.restorePayload);
+    return () => mountNativeRpg(
+      withRpgAdapter(config as RpgMakerRuntimeConfig, adapter),
+      requireFrame(options.frame),
+      options.restorePayload,
+    );
+  case "ONS_YURI_WEB":
+    return (target: HTMLElement) => mountOnsYuri(
+      config as OnsRuntimeConfig,
+      target,
+      options.frameWindow,
+      options.restorePayload,
+    );
+  case "KIRIKIRI2_WEB":
+    return (target: HTMLElement) => mountKirikiri2(
+      config as KirikiriRuntimeConfig,
+      target,
+      options.frameWindow,
+      options.restorePayload,
+    );
   }
 }
 
-function withAdapter<T extends RpgAdapterConfig>(
-  config: RpgRuntimeConfig,
+function withRpgAdapter<T extends RpgMakerAdapterConfig>(
+  config: RpgMakerRuntimeConfig,
   adapter: T,
-): Omit<RpgRuntimeConfig, "adapter"> & { adapter: T } {
+): Omit<RpgMakerRuntimeConfig, "adapter"> & { adapter: T } {
   return { ...config, adapter };
+}
+
+function requireFrame(frame: HTMLIFrameElement | undefined) {
+  if (!frame) {throw new Error("RUNTIME_CONFIG_INVALID");}
+  return frame;
 }

@@ -8,10 +8,12 @@ export async function loadManifest(root) {
 }
 
 export function validateManifest(manifest) {
-  if (manifest?.schemaVersion !== 3 || manifest.packageName !== "@xxxsen/retrom-runtime" ||
+  if (manifest?.schemaVersion !== 4 || manifest.publicApiVersion !== 2 ||
+    manifest.packageName !== "@xxxsen/retrom-runtime" ||
     !/^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?$/u.test(manifest.packageVersion) ||
     Object.hasOwn(manifest, "sourceBuilds") || !Array.isArray(manifest.upstreamReleases) ||
-    !Array.isArray(manifest.localAssets) || !Array.isArray(manifest.cores) || manifest.cores.length !== 9) {
+    !Array.isArray(manifest.localAssets) || !Array.isArray(manifest.adapters) || manifest.adapters.length !== 5 ||
+    !Array.isArray(manifest.cores) || manifest.cores.length !== 9) {
     throw new Error("RUNTIME_MANIFEST_INVALID");
   }
   const releases = new Map();
@@ -39,10 +41,21 @@ export function validateManifest(manifest) {
     if (!safePath(asset.source) || !safePath(asset.output)) {throw new Error("RUNTIME_MANIFEST_INVALID");}
     assetPaths.add(asset.output);
   }
+  const adapters = new Map();
+  for (const adapter of manifest.adapters) {
+    if (!adapter?.adapterKind || adapters.has(adapter.adapterKind) || !adapter.adapterId || !adapter.adapterAbi ||
+      !/^[a-z0-9][a-z0-9.-]{0,63}$/u.test(adapter.checkpointFormat) ||
+      !validCapabilities(adapter.capabilities)) {
+      throw new Error("RUNTIME_MANIFEST_INVALID");
+    }
+    adapters.set(adapter.adapterKind, adapter);
+  }
   const generations = new Set();
   for (const core of manifest.cores) {
+    const adapter = adapters.get(core?.adapterKind);
     if (!core?.id || generations.has(core.generation) || !["RPG_MAKER", "ONS", "KIRIKIRI"].includes(core.family) ||
-      !core.adapterId || !core.adapterAbi || !versionedIdentity(core.gameCompatibilityLine) ||
+      !adapter || core.adapterId !== adapter.adapterId || core.adapterAbi !== adapter.adapterAbi ||
+      !versionedIdentity(core.gameCompatibilityLine) ||
       !versionedIdentity(core.saveAbi) || !validReadableSaveAbis(core.saveAbi, core.readableSaveAbis) ||
       core.runtimeId !== "native" && !releases.has(core.runtimeId) || !Array.isArray(core.assetPaths) ||
       !core.assetPaths.length || !core.assetPaths.every((path) => assetPaths.has(path))) {
@@ -50,6 +63,15 @@ export function validateManifest(manifest) {
     }
     generations.add(core.generation);
   }
+}
+
+function validCapabilities(value) {
+  return value && typeof value === "object" &&
+    ["pause", "screenshot", "checkpoint", "standardGamepad", "frameCounter", "volume"]
+      .every((key) => typeof value[key] === "boolean") &&
+    value.checkpoint && value.standardGamepad && Array.isArray(value.validationProbes) &&
+    value.validationProbes.length <= 16 && new Set(value.validationProbes).size === value.validationProbes.length &&
+    value.validationProbes.every((probe) => /^[a-z0-9]+(?:[.-][a-z0-9]+)*\.v[1-9][0-9]*$/u.test(probe));
 }
 
 function versionedIdentity(value) {

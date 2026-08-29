@@ -1,5 +1,3 @@
-import type { CheckpointAvailability, RuntimeState } from "../contract.js";
-
 export type KirikiriAdapterConfig = {
   adapterKind: "KIRIKIRI2_WEB";
   adapterId: "kirikiri2-web";
@@ -13,28 +11,6 @@ export type KirikiriRuntimeConfig = {
   sessionId: string;
   adapter: KirikiriAdapterConfig;
 };
-
-export type KirikiriCheckpointPayload = {
-  bytes: Uint8Array;
-  payloadKind: "KIRIKIRI_SAVE_BUNDLE_V1";
-};
-
-export type KirikiriRuntimeEvent =
-  | { type: "READY" }
-  | { type: "STATE_CHANGED"; previous: RuntimeState; state: RuntimeState }
-  | { type: "FATAL_ERROR"; code: string };
-
-export interface KirikiriRuntime {
-  mount(target: HTMLElement): Promise<void>;
-  pause(): Promise<void>;
-  resume(): Promise<void>;
-  checkpoint(): Promise<KirikiriCheckpointPayload>;
-  screenshot(): Promise<Blob>;
-  exit(): Promise<void>;
-  getState(): RuntimeState;
-  getCheckpointAvailability(): CheckpointAvailability;
-  subscribe(listener: (event: KirikiriRuntimeEvent) => void): () => void;
-}
 
 export function validateKirikiriRuntimeConfig(config: KirikiriRuntimeConfig): void {
   const adapter = config?.adapter;

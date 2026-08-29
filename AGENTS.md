@@ -38,6 +38,9 @@ npm run package:check
 - PR 到 `master` 必须通过 `.github/workflows/quality.yml`。
 - `v*` tag 由 `.github/workflows/release.yml` 构建 GitHub Release；tag 不移动、不覆盖。
 - 发布产物是兼容边界。破坏公共类型、checkpoint 格式或 adapter ABI 时必须升级相应版本并在 CHANGELOG 说明。
+- 已登记 core 的 `gameCompatibilityLine` 不得原地改变；无法继续读取既有游戏输入时建立新 core identity。
+  checkpoint 格式变化时更新 `saveAbi`，并只在真实验证后把旧值保留在 `readableSaveAbis`。宿主按当前
+  runtime 向前运行，旧存档不兼容时禁用；本仓库不以保留旧 bundle 或 runtime 回滚作为兼容方案。
 
 ## 与 Retrom 的本地联调
 

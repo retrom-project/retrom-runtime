@@ -1,7 +1,7 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "packageName": "@xxxsen/retrom-runtime",
-  "packageVersion": "0.4.1",
+  "packageVersion": "0.4.2",
   "publicApiVersion": 1,
   "upstreamReleases": [
     {
@@ -99,6 +99,9 @@
       "adapterKind": "EASYRPG_WEB",
       "adapterId": "easyrpg-web",
       "adapterAbi": "easyrpg-save",
+      "gameCompatibilityLine": "rpgmaker-2000-v1",
+      "saveAbi": "easyrpg-save-v1",
+      "readableSaveAbis": ["easyrpg-save-v1"],
       "assetPaths": ["runtime/easyrpg/easyrpg-player.js", "runtime/easyrpg/easyrpg-player.wasm"]
     },
     {
@@ -109,6 +112,9 @@
       "adapterKind": "EASYRPG_WEB",
       "adapterId": "easyrpg-web",
       "adapterAbi": "easyrpg-save",
+      "gameCompatibilityLine": "rpgmaker-2003-v1",
+      "saveAbi": "easyrpg-save-v1",
+      "readableSaveAbis": ["easyrpg-save-v1"],
       "assetPaths": ["runtime/easyrpg/easyrpg-player.js", "runtime/easyrpg/easyrpg-player.wasm"]
     },
     {
@@ -119,6 +125,9 @@
       "adapterKind": "MKXP_LIBRETRO_WEB",
       "adapterId": "mkxp-libretro-web",
       "adapterAbi": "mkxp-state-compact",
+      "gameCompatibilityLine": "rpgmaker-xp-v1",
+      "saveAbi": "mkxp-state-compact-v1",
+      "readableSaveAbis": ["mkxp-state-compact-v1"],
       "assetPaths": ["runtime/mkxp/mkxp-z_libretro.js", "runtime/mkxp/mkxp-z_libretro.wasm", "runtime/mkxp/position_bridge.rb"]
     },
     {
@@ -129,6 +138,9 @@
       "adapterKind": "MKXP_LIBRETRO_WEB",
       "adapterId": "mkxp-libretro-web",
       "adapterAbi": "mkxp-state-compact",
+      "gameCompatibilityLine": "rpgmaker-vx-v1",
+      "saveAbi": "mkxp-state-compact-v1",
+      "readableSaveAbis": ["mkxp-state-compact-v1"],
       "assetPaths": ["runtime/mkxp/mkxp-z_libretro.js", "runtime/mkxp/mkxp-z_libretro.wasm", "runtime/mkxp/position_bridge.rb"]
     },
     {
@@ -139,6 +151,9 @@
       "adapterKind": "MKXP_LIBRETRO_WEB",
       "adapterId": "mkxp-libretro-web",
       "adapterAbi": "mkxp-state-compact",
+      "gameCompatibilityLine": "rpgmaker-vx-ace-v1",
+      "saveAbi": "mkxp-state-compact-v1",
+      "readableSaveAbis": ["mkxp-state-compact-v1"],
       "assetPaths": ["runtime/mkxp/mkxp-z_libretro.js", "runtime/mkxp/mkxp-z_libretro.wasm", "runtime/mkxp/position_bridge.rb"]
     },
     {
@@ -149,6 +164,9 @@
       "adapterKind": "NATIVE_WEB",
       "adapterId": "native-web",
       "adapterAbi": "native-save",
+      "gameCompatibilityLine": "rpgmaker-mv-v1",
+      "saveAbi": "rpgmaker-mv-save-v1",
+      "readableSaveAbis": ["rpgmaker-mv-save-v1"],
       "assetPaths": ["runtime/native/bridge.js"]
     },
     {
@@ -159,6 +177,9 @@
       "adapterKind": "NATIVE_WEB",
       "adapterId": "native-web",
       "adapterAbi": "native-save",
+      "gameCompatibilityLine": "rpgmaker-mz-v1",
+      "saveAbi": "rpgmaker-mz-save-v1",
+      "readableSaveAbis": ["rpgmaker-mz-save-v1"],
       "assetPaths": ["runtime/native/bridge.js"]
     },
     {
@@ -169,6 +190,9 @@
       "adapterKind": "ONS_YURI_WEB",
       "adapterId": "ons-yuri-web",
       "adapterAbi": "ons-save",
+      "gameCompatibilityLine": "onscripter-yuri-v1",
+      "saveAbi": "ons-save-v1",
+      "readableSaveAbis": ["ons-save-v1"],
       "assetPaths": ["runtime/ons/onsyuri.js", "runtime/ons/onsyuri.wasm"]
     }
   ]

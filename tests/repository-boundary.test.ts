@@ -80,6 +80,13 @@ describe("independent package boundary", () => {
     expect(patch).toContain("onsyuriHostReady");
     expect(patch).not.toMatch(/retrom|database|review|upload/iu);
   });
+
+  it("updates ONS button selection directly for Web keyboard navigation", async () => {
+    const patch = await readFile(join(root, "assets/runtime/ons/host-api.patch"), "utf8");
+    expect(patch).toMatch(
+      /shift_over_button = button->no;\n\+#if defined\(WEB\)\n\+ {8}mouseOverCheck\(x, y\);\n\+#else[\s\S]*?warpMouse\(x, y\);\n\+#endif/u,
+    );
+  });
 });
 
 async function sourceFiles(directory: string): Promise<string[]> {

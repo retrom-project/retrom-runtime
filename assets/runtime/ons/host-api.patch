@@ -109,6 +109,22 @@ diff --git a/src/onsyuri/ONScripter_event.cpp b/src/onsyuri/ONScripter_event.cpp
 index 9b78fc2..cc05ccb 100644
 --- a/src/onsyuri/ONScripter_event.cpp
 +++ b/src/onsyuri/ONScripter_event.cpp
+@@ -685,10 +685,12 @@ void ONScripter::shiftCursorOnButton( int diff )
+         if      (y < 0)              y = 0;
+         else if (y >= screen_height) y = screen_height-1;
+-
++        shift_over_button = button->no;
++#if defined(WEB)
++        mouseOverCheck(x, y);
++#else
+         x = x * screen_device_width / screen_width + render_view_rect.x;
+         y = y * screen_device_height / screen_height + render_view_rect.y;
+-
+-        shift_over_button = button->no;
+         warpMouse(x, y);
++#endif
+     }
+ }
 @@ -1157,6 +1157,9 @@ void ONScripter::runEventLoop()
      SDL_Event event, tmp_event;
  

@@ -193,6 +193,43 @@ describe("ONS Yuri runtime", () => {
     await rejected;
   });
 
+  it("streams a requested video from its host URL without materializing it in the core file system", async () => {
+    const module = fakeModule();
+    (window as HostWindow).onsyuri = vi.fn(async (options: Record<string, unknown>) => {
+      Object.assign(options, module);
+      const configured = options as FakeModule;
+      configured.preRun?.();
+      return configured;
+    });
+    const body = JSON.stringify({
+      schemaVersion: 1,
+      title: "fixture",
+      fontPath: "default.ttf",
+      files: [
+        { path: "0.txt", sizeBytes: 1, url: "https://content.example/0.txt" },
+        { path: "default.ttf", sizeBytes: 1, url: "https://content.example/default.ttf" },
+        { path: "movie/intro.mp4", sizeBytes: 50_000_000, url: "https://content.example/movie/intro.mp4" },
+      ],
+    });
+    const fetchMock = vi.fn(async () => new Response(body, { status: 200 }));
+    vi.stubGlobal("fetch", fetchMock);
+    vi.spyOn(HTMLMediaElement.prototype, "play").mockResolvedValue();
+    const target = document.createElement("div");
+    const runtime = createRuntime(config(), { frameWindow: window, restorePayload: null });
+    const mounting = runtime.mount(target);
+    await loadRuntimeScript();
+    await mounting;
+
+    const playVideo = (window as HostWindow & { playVideo?: (path: string, click: boolean, loop: boolean) => void }).playVideo;
+    if (!playVideo) {throw new Error("test video bridge missing");}
+    playVideo("/game/movie/intro.mp4", false, false);
+
+    expect(target.querySelector("video")?.src).toBe("https://content.example/movie/intro.mp4");
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(() => module.FS.readFile("/game/movie/intro.mp4")).toThrow();
+    await runtime.exit();
+  });
+
   it("accepts same-origin root-relative project content URLs", async () => {
     const module = fakeModule();
     (window as HostWindow).onsyuri = vi.fn(async (options: Record<string, unknown>) => {
@@ -206,8 +243,8 @@ describe("ONS Yuri runtime", () => {
       title: "fixture",
       fontPath: "default.ttf",
       files: [
-        { path: "0.txt", url: "/runtime/projects/preview/0.txt" },
-        { path: "default.ttf", url: "/runtime/projects/preview/default.ttf" },
+        { path: "0.txt", sizeBytes: 1, url: "/runtime/projects/preview/0.txt" },
+        { path: "default.ttf", sizeBytes: 1, url: "/runtime/projects/preview/default.ttf" },
       ],
     });
     vi.stubGlobal("fetch", vi.fn(async () => new Response(body, { status: 200 })));
@@ -244,9 +281,9 @@ describe("ONS Yuri runtime", () => {
       title: "fixture",
       fontPath: "default.ttf",
       files: [
-        { path: "0.txt", url: "https://content.example/0.txt" },
-        { path: "0.TXT", url: "https://content.example/0.TXT" },
-        { path: "default.ttf", url: "https://content.example/default.ttf" },
+        { path: "0.txt", sizeBytes: 1, url: "https://content.example/0.txt" },
+        { path: "0.TXT", sizeBytes: 1, url: "https://content.example/0.TXT" },
+        { path: "default.ttf", sizeBytes: 1, url: "https://content.example/default.ttf" },
       ],
     });
     vi.stubGlobal("fetch", vi.fn(async () => new Response(body, { status: 200 })));
@@ -280,8 +317,8 @@ function mockIndex() {
     title: "fixture",
     fontPath: "default.ttf",
     files: [
-      { path: "0.txt", url: "https://content.example/0.txt" },
-      { path: "default.ttf", url: "https://content.example/default.ttf" },
+      { path: "0.txt", sizeBytes: 1, url: "https://content.example/0.txt" },
+      { path: "default.ttf", sizeBytes: 1, url: "https://content.example/default.ttf" },
     ],
   });
   vi.stubGlobal("fetch", vi.fn(async () => new Response(body, { status: 200 })));

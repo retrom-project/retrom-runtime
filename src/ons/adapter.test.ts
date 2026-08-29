@@ -243,8 +243,8 @@ describe("ONS Yuri runtime", () => {
       title: "fixture",
       fontPath: "default.ttf",
       files: [
-        { path: "0.txt", sizeBytes: 1, url: "/runtime/projects/preview/0.txt" },
-        { path: "default.ttf", sizeBytes: 1, url: "/runtime/projects/preview/default.ttf" },
+        { path: "0.txt", sizeBytes: 1, url: `/runtime/content/project/${"a".repeat(64)}/0.txt` },
+        { path: "default.ttf", sizeBytes: 1, url: `/runtime/content/project/${"a".repeat(64)}/default.ttf` },
       ],
     });
     vi.stubGlobal("fetch", vi.fn(async () => new Response(body, { status: 200 })));

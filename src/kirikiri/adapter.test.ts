@@ -218,9 +218,13 @@ function mockDownloads(xp3Paths = ["/data.xp3"]) {
     if (url.endsWith("project/index.json") && !init?.method) {
       return Response.json({ schemaVersion: 1, files: [
         ...xp3Paths.map((path) => ({
-          path: path.replace(/^\//u, ""), sizeBytes: 1234, url: `/runtime/projects/launch${path}`,
+          path: path.replace(/^\//u, ""), sizeBytes: 1234,
+          url: `/runtime/content/project/${"a".repeat(64)}${path}`,
         })),
-        { path: "startup.tjs", sizeBytes: 40, url: "/runtime/projects/launch/startup.tjs" },
+        {
+          path: "startup.tjs", sizeBytes: 40,
+          url: `/runtime/content/project/${"a".repeat(64)}/startup.tjs`,
+        },
       ] });
     }
     throw new Error(`unexpected request: ${url}`);

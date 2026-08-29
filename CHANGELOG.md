@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+## 0.7.1
+
+- Fix the mkxp FetchFS manifest reader so Range-backed project startup does not write past the URL buffer.
+- Preserve mkxp startup diagnostics and report missing position evidence with a precise failure code.
+
 ## 0.7.0
 
 - Replace the RPG-shaped root API with one engine-neutral `createRuntime` / `GameRuntime` contract shared by

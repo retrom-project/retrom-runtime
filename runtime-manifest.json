@@ -1,7 +1,7 @@
 {
   "schemaVersion": 4,
   "packageName": "@xxxsen/retrom-runtime",
-  "packageVersion": "0.7.0",
+  "packageVersion": "0.7.1",
   "publicApiVersion": 2,
   "upstreamReleases": [
     {
@@ -29,20 +29,20 @@
     {
       "id": "mkxp",
       "repository": "https://github.com/xxxsen/mkxp-z-libretro-emscripten",
-      "tag": "rpg-runtime-f2efc98-r2",
-      "commit": "2300de928d71ae24e874688e1fd11374cc19568c",
+      "tag": "rpg-runtime-f2efc98-r4",
+      "commit": "7f7a30d90f15848a795f627c1efb0f655cdbdb35",
       "adapterAbi": "mkxp-state",
-      "metadataUrl": "https://github.com/xxxsen/mkxp-z-libretro-emscripten/releases/download/rpg-runtime-f2efc98-r2/rpg-runtime-release.json",
+      "metadataUrl": "https://github.com/xxxsen/mkxp-z-libretro-emscripten/releases/download/rpg-runtime-f2efc98-r4/rpg-runtime-release.json",
       "assets": [
         {
           "filename": "mkxp-z_libretro.js",
-          "url": "https://github.com/xxxsen/mkxp-z-libretro-emscripten/releases/download/rpg-runtime-f2efc98-r2/mkxp-z_libretro.js",
+          "url": "https://github.com/xxxsen/mkxp-z-libretro-emscripten/releases/download/rpg-runtime-f2efc98-r4/mkxp-z_libretro.js",
           "output": "runtime/mkxp/mkxp-z_libretro.js",
           "maxSizeBytes": 1048576
         },
         {
           "filename": "mkxp-z_libretro.wasm",
-          "url": "https://github.com/xxxsen/mkxp-z-libretro-emscripten/releases/download/rpg-runtime-f2efc98-r2/mkxp-z_libretro.wasm",
+          "url": "https://github.com/xxxsen/mkxp-z-libretro-emscripten/releases/download/rpg-runtime-f2efc98-r4/mkxp-z_libretro.wasm",
           "output": "runtime/mkxp/mkxp-z_libretro.wasm",
           "maxSizeBytes": 67108864
         }

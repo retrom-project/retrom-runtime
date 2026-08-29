@@ -1,0 +1,118 @@
+diff --git a/cpp/core/environ/CMakeLists.txt b/cpp/core/environ/CMakeLists.txt
+index df7c575..2ce9355 100644
+--- a/cpp/core/environ/CMakeLists.txt
++++ b/cpp/core/environ/CMakeLists.txt
+@@ -24,6 +24,7 @@ set(ENVIRON_SOURCE_FILES
+     $<$<BOOL:${WEB}>:${ENVIRON_PATH}/web/Platform.cpp>
+     $<$<BOOL:${WEB}>:${ENVIRON_PATH}/web/stubs.cpp>
+     $<$<BOOL:${WEB}>:${ENVIRON_PATH}/web/LayerFrameDumper.cpp>
++    $<$<BOOL:${WEB}>:${ENVIRON_PATH}/web/HostBookmarkBridge.cpp>
+     $<$<BOOL:${WEB}>:${ENVIRON_PATH}/web/VirtualLazyFS.cpp>
+ 
+     ${ENVIRON_PATH}/cocos2d/AppDelegate.cpp
+diff --git a/cpp/core/environ/web/HostBookmarkBridge.cpp b/cpp/core/environ/web/HostBookmarkBridge.cpp
+new file mode 100644
+index 0000000..cd59696
+--- /dev/null
++++ b/cpp/core/environ/web/HostBookmarkBridge.cpp
+@@ -0,0 +1,88 @@
++// Host checkpoint bridge for the Web platform.
++//
++// This file is intentionally isolated from the reconstructed engine paths. It
++// exposes the KAG bookmark API already provided by a loaded game so a browser
++// host can request a semantic checkpoint without snapshotting Wasm memory.
++#include "ScriptMgnIntf.h"
++#include "tjsCommHead.h"
++
++#include <emscripten.h>
++
++namespace {
++constexpr int kBookmarkSucceeded = 0;
++constexpr int kScriptUnavailable = -1;
++constexpr int kKagUnavailable = -2;
++constexpr int kMethodUnavailable = -3;
++constexpr int kBookmarkRejected = -4;
++constexpr int kScriptException = -5;
++
++bool findKagMethod(const tjs_char *name, tTJSVariant &kag_value,
++                   tTJSVariant &method_value) {
++    iTJSDispatch2 *global = TVPGetScriptDispatch();
++    if(!global ||
++       global->PropGet(0, TJS_W("kag"), nullptr, &kag_value, global) !=
++           TJS_S_OK ||
++       kag_value.Type() != tvtObject) {
++        return false;
++    }
++    iTJSDispatch2 *kag = kag_value.AsObjectNoAddRef();
++    return kag && kag->PropGet(0, name, nullptr, &method_value, kag) ==
++                      TJS_S_OK &&
++           method_value.Type() == tvtObject &&
++           method_value.AsObjectNoAddRef()->IsInstanceOf(
++               0, nullptr, nullptr, TJS_W("Function"),
++               method_value.AsObjectNoAddRef());
++}
++
++int callKagBookmark(const tjs_char *name, tjs_int32 slot) noexcept {
++    try {
++        if(!TVPGetScriptDispatch()) return kScriptUnavailable;
++        tTJSVariant kag_value;
++        tTJSVariant method_value;
++        if(!findKagMethod(name, kag_value, method_value)) {
++            return kag_value.Type() == tvtObject ? kMethodUnavailable
++                                                 : kKagUnavailable;
++        }
++        iTJSDispatch2 *kag = kag_value.AsObjectNoAddRef();
++        iTJSDispatch2 *method = method_value.AsObjectNoAddRef();
++        tTJSVariant result;
++        tTJSVariant slot_value(slot);
++        tTJSVariant *arguments = &slot_value;
++        if(method->FuncCall(0, nullptr, nullptr, &result, 1, &arguments, kag) !=
++           TJS_S_OK) {
++            return kMethodUnavailable;
++        }
++        return result.operator bool() ? kBookmarkSucceeded
++                                      : kBookmarkRejected;
++    } catch(...) {
++        return kScriptException;
++    }
++}
++} // namespace
++
++extern "C" EMSCRIPTEN_KEEPALIVE int krkr2_host_bookmark_is_ready() {
++    try {
++        tTJSVariant kag_value;
++        tTJSVariant save_method;
++        if(!findKagMethod(TJS_W("saveBookMark"), kag_value, save_method)) {
++            return 0;
++        }
++        tTJSVariant load_kag;
++        tTJSVariant load_method;
++        return findKagMethod(TJS_W("loadBookMark"), load_kag, load_method)
++                   ? 1
++                   : 0;
++    } catch(...) {
++        return 0;
++    }
++}
++
++extern "C" EMSCRIPTEN_KEEPALIVE int
++krkr2_host_save_bookmark(int slot) {
++    return callKagBookmark(TJS_W("saveBookMark"), slot);
++}
++
++extern "C" EMSCRIPTEN_KEEPALIVE int
++krkr2_host_load_bookmark(int slot) {
++    return callKagBookmark(TJS_W("loadBookMark"), slot);
++}
+diff --git a/vcpkg/triplets/wasm32-emscripten.cmake b/vcpkg/triplets/wasm32-emscripten.cmake
+index 8c87e90..2a1fc04 100644
+--- a/vcpkg/triplets/wasm32-emscripten.cmake
++++ b/vcpkg/triplets/wasm32-emscripten.cmake
+@@ -4,6 +4,7 @@ set(VCPKG_TARGET_ARCHITECTURE wasm32)
+ set(VCPKG_CRT_LINKAGE dynamic)
+ set(VCPKG_LIBRARY_LINKAGE static)
+ set(VCPKG_CMAKE_SYSTEM_NAME Emscripten)
++set(VCPKG_MAKE_BUILD_TRIPLET "--host=wasm32-unknown-emscripten")
+ set(VCPKG_BUILD_TYPE release)
+ 
+ list(APPEND VCPKG_CMAKE_CONFIGURE_OPTIONS

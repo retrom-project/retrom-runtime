@@ -11,7 +11,7 @@ export function validateManifest(manifest) {
   if (manifest?.schemaVersion !== 2 || manifest.packageName !== "@xxxsen/retrom-runtime" ||
     !/^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?$/u.test(manifest.packageVersion) ||
     !Array.isArray(manifest.upstreamReleases) || !Array.isArray(manifest.sourceBuilds) ||
-    !Array.isArray(manifest.localAssets) || !Array.isArray(manifest.cores) || manifest.cores.length !== 8) {
+    !Array.isArray(manifest.localAssets) || !Array.isArray(manifest.cores) || manifest.cores.length !== 9) {
     throw new Error("RUNTIME_MANIFEST_INVALID");
   }
   const releases = new Map();
@@ -55,7 +55,7 @@ export function validateManifest(manifest) {
   }
   const generations = new Set();
   for (const core of manifest.cores) {
-    if (!core?.id || generations.has(core.generation) || !["RPG_MAKER", "ONS"].includes(core.family) ||
+    if (!core?.id || generations.has(core.generation) || !["RPG_MAKER", "ONS", "KIRIKIRI"].includes(core.family) ||
       !core.adapterId || !core.adapterAbi || !versionedIdentity(core.gameCompatibilityLine) ||
       !versionedIdentity(core.saveAbi) || !validReadableSaveAbis(core.saveAbi, core.readableSaveAbis) ||
       core.runtimeId !== "native" && !releases.has(core.runtimeId) || !Array.isArray(core.assetPaths) ||

@@ -15,7 +15,7 @@ describe("independent package boundary", () => {
     }
   });
 
-  it("publishes seven RPG Maker generations plus one independent ONS core", async () => {
+  it("publishes seven RPG Maker generations plus independent ONS and KiriKiri cores", async () => {
     const manifest = JSON.parse(await readFile(join(root, "runtime-manifest.json"), "utf8"));
     expect(manifest.packageName).toBe("@xxxsen/retrom-runtime");
     expect(manifest.cores.filter((core: { family: string }) => core.family === "RPG_MAKER")
@@ -24,6 +24,8 @@ describe("independent package boundary", () => {
     ]);
     expect(manifest.cores.filter((core: { family: string }) => core.family === "ONS")
       .map((core: { id: string }) => core.id)).toEqual(["onscripter-yuri"]);
+    expect(manifest.cores.filter((core: { family: string }) => core.family === "KIRIKIRI")
+      .map((core: { id: string }) => core.id)).toEqual(["kirikiri2-kag"]);
     expect(manifest.cores.every((core: object) => !("routeKey" in core))).toBe(true);
     expect(manifest.localAssets.map((asset: { output: string }) => asset.output).sort()).toEqual([
       "runtime/mkxp/position_bridge.rb",
@@ -37,15 +39,15 @@ describe("independent package boundary", () => {
       cores: Array<{ adapterAbi: string; adapterId: string; runtimeId: string }>;
     };
     expect([...new Set(manifest.cores.map((core) => core.runtimeId))].sort()).toEqual([
-      "easyrpg", "mkxp", "native", "onsyuri",
+      "easyrpg", "kirikiri2", "mkxp", "native", "onsyuri",
     ]);
     expect([...new Set(manifest.cores.map((core) => core.adapterId))].sort()).toEqual([
-      "easyrpg-web", "mkxp-libretro-web", "native-web", "ons-yuri-web",
+      "easyrpg-web", "kirikiri2-web", "mkxp-libretro-web", "native-web", "ons-yuri-web",
     ]);
     expect([...new Set(manifest.cores.map((core) => core.adapterAbi))].sort()).toEqual([
-      "easyrpg-save", "mkxp-state-compact", "native-save", "ons-save",
+      "easyrpg-save", "kirikiri-kag-bookmark", "mkxp-state-compact", "native-save", "ons-save",
     ]);
-    expect((await readdir(join(root, "assets/runtime"))).sort()).toEqual(["mkxp", "native", "ons"]);
+    expect((await readdir(join(root, "assets/runtime"))).sort()).toEqual(["kirikiri", "mkxp", "native", "ons"]);
     for (const asset of ["assets/runtime/mkxp/position_bridge.rb", "assets/runtime/native/bridge.js"]) {
       expect(await readFile(join(root, asset), "utf8"), asset).not.toMatch(/RETROM|__retrom|-[vr][1-9]/u);
     }
@@ -58,16 +60,22 @@ describe("independent package boundary", () => {
     expect(script).toContain("value.sourceBuilds.flatMap");
   });
 
-  it("builds ONS from one fixed upstream commit with only the host checkpoint patch", async () => {
+  it("builds ONS and KiriKiri from fixed upstream commits with host-only checkpoint patches", async () => {
     const manifest = JSON.parse(await readFile(join(root, "runtime-manifest.json"), "utf8"));
-    expect(manifest.sourceBuilds).toEqual([expect.objectContaining({
+    expect(manifest.sourceBuilds).toEqual(expect.arrayContaining([expect.objectContaining({
       adapterAbi: "ons-save",
       commit: "08f744b31cc1907b66a15f0402e62321a131ed81",
       id: "onsyuri",
       patch: "assets/runtime/ons/host-api.patch",
       repository: "https://github.com/YuriSizuku/OnscripterYuri",
       tag: "v0.7.7beta",
-    })]);
+    }), expect.objectContaining({
+      adapterAbi: "kirikiri-kag-bookmark",
+      commit: "338d2029f16969b84becfd163c67f99740e28296",
+      id: "kirikiri2",
+      patch: "assets/runtime/kirikiri/host-api.patch",
+      repository: "https://github.com/fenghengzhi/kirikiroid2-web",
+    })]));
     const patch = await readFile(join(root, "assets/runtime/ons/host-api.patch"), "utf8");
     expect(patch).toContain("onsyuri_host_save");
     expect(patch).toContain("onsyuri_host_load");
@@ -79,6 +87,15 @@ describe("independent package boundary", () => {
     expect(patch).toContain("onsyuri_host_did_restore_fail");
     expect(patch).toContain("onsyuriHostReady");
     expect(patch).not.toMatch(/retrom|database|review|upload/iu);
+    const kirikiriPatch = await readFile(join(root, "assets/runtime/kirikiri/host-api.patch"), "utf8");
+    expect(kirikiriPatch).toContain("krkr2_host_bookmark_is_ready");
+    expect(kirikiriPatch).toContain("krkr2_host_save_bookmark");
+    expect(kirikiriPatch).toContain("krkr2_host_load_bookmark");
+    expect(kirikiriPatch).toContain(
+      'VCPKG_MAKE_BUILD_TRIPLET "--host=wasm32-unknown-emscripten"',
+    );
+    expect(kirikiriPatch).toContain("HostBookmarkBridge.cpp");
+    expect(kirikiriPatch).not.toMatch(/retrom|database|review|upload/iu);
   });
 
   it("updates ONS button selection directly for Web keyboard navigation", async () => {

@@ -26,6 +26,18 @@ export { runtimeCatalog, validateRuntimeConfig } from "./catalog.js";
 export { decodeRpgCheckpoint, encodeRpgCheckpoint, rpgCheckpointMagic } from "./checkpoint.js";
 export { decodeMkxpRastate, encodeMkxpRastate, mkxpRastateEnvelopeBytes } from "./mkxp/state.js";
 export {
+  createKirikiriRuntime,
+  decodeKirikiriCheckpoint,
+  encodeKirikiriCheckpoint,
+  kirikiriCheckpointMagic,
+  type KirikiriAdapterConfig,
+  type KirikiriCheckpointPayload,
+  type KirikiriRuntime,
+  type KirikiriRuntimeConfig,
+  type KirikiriRuntimeEvent,
+  type KirikiriRuntimeOptions,
+} from "./kirikiri/index.js";
+export {
   createOnsRuntime,
   decodeOnsCheckpoint,
   encodeOnsCheckpoint,

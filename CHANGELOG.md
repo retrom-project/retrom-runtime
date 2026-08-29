@@ -1,5 +1,14 @@
 # Changelog
 
+## Unreleased
+
+## 0.6.1
+
+- Add a visible standard-gamepad virtual pointer to the shared KiriKiri adapter, with D-pad/left-stick movement,
+  A/B mouse confirmation and cancellation, and complete held-button release on runtime exit.
+- Define gamepad control, immediate checkpoint and different-instance restore as minimum capabilities for every
+  core published by the aggregate runtime.
+
 ## 0.6.0
 
 - Move ONScripterYuri and KiriKiri source changes, Web builds and core Release workflows into their maintained forks.

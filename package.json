@@ -1,6 +1,6 @@
 {
   "name": "@xxxsen/retrom-runtime",
-  "version": "0.6.0",
+  "version": "0.6.1",
   "description": "Host-independent browser runtimes for RPG Maker, ONS and KiriKiri projects",
   "type": "module",
   "license": "MIT",

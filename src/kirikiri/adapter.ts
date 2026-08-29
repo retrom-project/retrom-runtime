@@ -1,5 +1,6 @@
 import { decodeKirikiriCheckpoint, encodeKirikiriCheckpoint, type KirikiriCheckpointEntry } from "./checkpoint.js";
 import type { KirikiriRuntimeConfig } from "./contract.js";
+import { installKirikiriStandardGamepad } from "./gamepad-input.js";
 import type { MountedKirikiriAdapter } from "./internal-adapter.js";
 
 type KirikiriConfig = KirikiriRuntimeConfig & { adapter: KirikiriRuntimeConfig["adapter"] };
@@ -70,6 +71,7 @@ export async function mountKirikiri2(
   sizeCanvas(frameWindow, surface, canvas);
   const focusCanvas = () => {canvas.focus({ preventScroll: true });};
   canvas.addEventListener("pointerdown", focusCanvas, true);
+  const gamepadCleanup = installKirikiriStandardGamepad(frameWindow, surface, canvas);
 
   const previousModule = host.Module;
   const previousVlfs = host.VLFS;
@@ -123,7 +125,7 @@ export async function mountKirikiri2(
     }
     focusCanvas();
   } catch (error) {
-    cleanup(host, previousModule, previousVlfs, target, canvas, focusCanvas, scripts);
+    cleanup(host, previousModule, previousVlfs, target, canvas, focusCanvas, gamepadCleanup, scripts);
     throw stableMountError(error);
   }
 
@@ -166,7 +168,7 @@ export async function mountKirikiri2(
       if (exited) {return;}
       exited = true;
       activeModule.pauseMainLoop();
-      cleanup(host, previousModule, previousVlfs, target, canvas, focusCanvas, scripts);
+      cleanup(host, previousModule, previousVlfs, target, canvas, focusCanvas, gamepadCleanup, scripts);
     },
     pause: async () => {activeModule.pauseMainLoop(); paused = true;},
     resume: async () => {activeModule.resumeMainLoop(); paused = false;},
@@ -315,11 +317,13 @@ function cleanup(
   target: HTMLElement,
   canvas: HTMLCanvasElement,
   focusCanvas: () => void,
+  gamepadCleanup: () => void,
   scripts: HTMLScriptElement[],
 ) {
   if (host.VLFS) {host.VLFS.onWriteClose = null;}
   for (const script of scripts) {script.remove();}
   canvas.removeEventListener("pointerdown", focusCanvas, true);
+  gamepadCleanup();
   target.replaceChildren();
   if (previousModule === undefined) {delete host.Module;} else {host.Module = previousModule;}
   if (previousVlfs === undefined) {delete host.VLFS;} else {host.VLFS = previousVlfs;}

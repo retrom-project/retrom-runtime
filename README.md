@@ -79,6 +79,17 @@ repository release tag; the source tree and each release contain one implementat
 SHA-256 values in release metadata detect corrupt downloads; compatibility identity is the immutable
 `retrom-runtime` tag and its recorded upstream repository, tag and commit.
 
+Each core also declares three forward-upgrade fields in `runtime-manifest.json`:
+
+- `gameCompatibilityLine` is the stable logical game-input contract. A release must keep the same line for an
+  existing core; an incompatible game loader is a new core rather than an in-place upgrade.
+- `saveAbi` is the checkpoint format written by the release.
+- `readableSaveAbis` is the exact, non-empty set the release can restore and always includes `saveAbi`.
+
+Hosts should resolve an imported game through its logical core to the current release. A checkpoint whose
+`saveAbi` is absent from the current core's `readableSaveAbis` remains visible but must not be loaded. Releases
+are fixed forward; this repository does not require hosts to retain or roll back to an older runtime bundle.
+
 The mkxp core still serializes into its fixed 256 MiB memory buffer. The adapter does not upload that zero-padded
 buffer directly: it trims the unused zero tail in bounded asynchronous chunks, compresses the meaningful prefix in a worker and stores a compact
 `mkxp-state-compact` checkpoint. Restore expands the checkpoint back to the exact 256 MiB core buffer before the

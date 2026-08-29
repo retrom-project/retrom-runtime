@@ -8,7 +8,7 @@ export async function loadManifest(root) {
 }
 
 export function validateManifest(manifest) {
-  if (manifest?.schemaVersion !== 1 || manifest.packageName !== "@xxxsen/retrom-runtime" ||
+  if (manifest?.schemaVersion !== 2 || manifest.packageName !== "@xxxsen/retrom-runtime" ||
     !/^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?$/u.test(manifest.packageVersion) ||
     !Array.isArray(manifest.upstreamReleases) || !Array.isArray(manifest.sourceBuilds) ||
     !Array.isArray(manifest.localAssets) || !Array.isArray(manifest.cores) || manifest.cores.length !== 8) {
@@ -56,13 +56,23 @@ export function validateManifest(manifest) {
   const generations = new Set();
   for (const core of manifest.cores) {
     if (!core?.id || generations.has(core.generation) || !["RPG_MAKER", "ONS"].includes(core.family) ||
-      !core.adapterId || !core.adapterAbi ||
+      !core.adapterId || !core.adapterAbi || !versionedIdentity(core.gameCompatibilityLine) ||
+      !versionedIdentity(core.saveAbi) || !validReadableSaveAbis(core.saveAbi, core.readableSaveAbis) ||
       core.runtimeId !== "native" && !releases.has(core.runtimeId) || !Array.isArray(core.assetPaths) ||
       !core.assetPaths.length || !core.assetPaths.every((path) => assetPaths.has(path))) {
       throw new Error("RUNTIME_MANIFEST_INVALID");
     }
     generations.add(core.generation);
   }
+}
+
+function versionedIdentity(value) {
+  return typeof value === "string" && /^[a-z0-9]+(?:-[a-z0-9]+)*-v[1-9][0-9]*$/u.test(value);
+}
+
+function validReadableSaveAbis(saveAbi, values) {
+  return Array.isArray(values) && values.length > 0 && values.length <= 16 &&
+    values.every(versionedIdentity) && new Set(values).size === values.length && values.includes(saveAbi);
 }
 
 export function safePath(value) {

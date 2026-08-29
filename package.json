@@ -1,6 +1,6 @@
 {
   "name": "@xxxsen/retrom-runtime",
-  "version": "0.4.1",
+  "version": "0.4.2",
   "description": "Host-independent browser runtimes for RPG Maker and ONS projects",
   "type": "module",
   "license": "MIT",

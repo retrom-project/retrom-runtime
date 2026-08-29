@@ -1,16 +1,21 @@
-import { unzip } from "fflate";
-import type { RpgPlayerInstance } from "../internal-adapter.js";
 import { decodeRpgCheckpoint, encodeRpgCheckpoint } from "../checkpoint.js";
-import type { RpgPosition, RpgRuntimeConfig } from "../contract.js";
+import type { MountedRuntimeAdapter } from "../internal-adapter.js";
+import {
+  rpgMakerPositionProbeKind,
+  type RpgMakerPositionV1,
+  type RpgMakerRuntimeConfig,
+} from "../rpgmaker/contract.js";
 
-type EasyConfig = RpgRuntimeConfig & { adapter: Extract<RpgRuntimeConfig["adapter"], { adapterKind: "EASYRPG_WEB" }> };
+type EasyConfig = RpgMakerRuntimeConfig & {
+  adapter: Extract<RpgMakerRuntimeConfig["adapter"], { adapterKind: "EASYRPG_WEB" }>;
+};
 
 type EasyFileSystem = {
   analyzePath(path: string): { exists: boolean };
   readFile(path: string): Uint8Array;
 };
 
-type EasyState = RpgPosition & {
+type EasyState = RpgMakerPositionV1 & {
   engine: "RPG2000" | "RPG2003";
   ready: boolean;
   canCheckpoint: boolean;
@@ -37,8 +42,7 @@ type EasyModuleOptions = {
   locateFile(path: string): string;
   runtimeEngineMode: string;
   runtimeProjectRootUrl: string;
-  runtimeRtpMountPath?: string;
-  runtimeRtpFiles: Array<{ path: string; bytes: Uint8Array }>;
+  runtimeRtpRemoteFiles: Array<{ lookupPath: string; path: string; url: string }>;
   runtimeRestoreSlot?: number;
   runtimeRestoreFiles: Array<{ path: string; bytes: Uint8Array }>;
 };
@@ -47,7 +51,12 @@ type EasyWindow = Window & {
   createEasyRpgPlayer?: (options: EasyModuleOptions) => Promise<EasyModule>;
 };
 
-const maximumArchiveBytes = 512 * 1024 * 1024;
+type RuntimeFileTreeIndex = {
+  files: Array<{ path: string; sizeBytes: number; url: string }>;
+  schemaVersion: 1;
+};
+
+const maximumRtpFiles = 20_000;
 const savePath = "Save/Save100.lsd";
 
 export async function mountEasyRpg(
@@ -97,8 +106,7 @@ async function mountEasyRpgUnchecked(
     locateFile: (path) => `${config.adapter.runtimeBaseUrl}${path}`,
     runtimeEngineMode: config.adapter.engineMode,
     runtimeProjectRootUrl: config.adapter.projectRootUrl,
-    ...(config.adapter.rtpArchive ? { runtimeRtpMountPath: config.adapter.rtpArchive.mountPath } : {}),
-    runtimeRtpFiles: rtpFiles,
+    runtimeRtpRemoteFiles: rtpFiles,
     ...(restoreFiles.length ? { runtimeRestoreSlot: config.adapter.checkpointSlot } : {}),
     runtimeRestoreFiles: restoreFiles,
   });
@@ -106,55 +114,37 @@ async function mountEasyRpgUnchecked(
   const expectedEngine = config.generation === "RPG2000" ? "RPG2000" : "RPG2003";
   await waitForReady(playerModule, expectedEngine);
 
-  const listeners = new Map<string, Set<(...args: unknown[]) => void>>();
-  const instance: RpgPlayerInstance = {
-    canvas: playerModule.canvas,
-    paused: false,
-    volume: 1,
-    muted: false,
-    on(event, callback) {
-      const current = listeners.get(event) ?? new Set();
-      current.add(callback);
-      listeners.set(event, current);
-    },
-    takeScreenshot: async () => ({ blob: await canvasBlob(playerModule.canvas), format: "png" }),
-    gameManager: {
-      savePayloadKind: "NATIVE_SAVE_BUNDLE_V1",
-      validationPurpose: config.validationPurpose,
-      getRpgPosition: () => position(readState(playerModule)),
-      getCheckpointAvailability: () => {
-        const available = readState(playerModule).canCheckpoint;
-        return { available, reason: available ? null : "BUSY" };
-      },
-      getStateAsync: async () => {
-        if (!playerModule.api.createRuntimeCheckpoint()) {throw new Error("RPG_CHECKPOINT_UNAVAILABLE");}
-        const bytes = readCheckpoint(playerModule.FS);
-        return encodeRpgCheckpoint({
+  return {
+    checkpoint: async () => {
+      if (!playerModule.api.createRuntimeCheckpoint()) {throw new Error("RPG_CHECKPOINT_UNAVAILABLE");}
+      const bytes = readCheckpoint(playerModule.FS);
+      return {
+        bytes: await encodeRpgCheckpoint({
           engine: expectedEngine,
           resumeSlot: config.adapter.checkpointSlot,
           entries: [{ store: "FILESYSTEM", key: savePath, mediaType: "application/octet-stream", data: bytes }],
-        });
-      },
-      getFrameNum: () => readState(playerModule).frameCount,
-      getVideoDimensions: (dimension) => dimension === "aspect" ? playerModule.canvas.width / playerModule.canvas.height :
-        dimension === "width" ? playerModule.canvas.width : playerModule.canvas.height,
-      toggleMainLoop: (running) => {
-        if (running) {playerModule.resumeMainLoop(); instance.paused = false;}
-        else {playerModule.pauseMainLoop(); instance.paused = true;}
-      },
+        }),
+        format: "easyrpg-save-bundle-v1",
+      };
     },
-  };
-  return {
-    instance,
-    position: () => position(readState(playerModule)),
-    checkpointAvailable: () => readState(playerModule).canCheckpoint,
-    cleanup: () => {
+    exit: async () => {
       playerModule.pauseMainLoop();
       script.remove();
       target.replaceChildren();
-      listeners.clear();
     },
-  };
+    getCanvas: () => playerModule.canvas,
+    getCheckpointAvailability: () => readState(playerModule).canCheckpoint
+      ? { available: true, blocker: null }
+      : { available: false, blocker: "BUSY" },
+    getFrameCount: () => readState(playerModule).frameCount,
+    getValidationProbe: (kind) => kind === rpgMakerPositionProbeKind
+      ? { kind, schemaVersion: 1, value: position(readState(playerModule)) }
+      : null,
+    pause: async () => {playerModule.pauseMainLoop();},
+    resume: async () => {playerModule.resumeMainLoop();},
+    screenshot: () => canvasBlob(playerModule.canvas),
+    setVolume: null,
+  } satisfies MountedRuntimeAdapter;
 }
 
 function readState(module: EasyModule): EasyState {
@@ -170,7 +160,7 @@ function readState(module: EasyModule): EasyState {
   return state as EasyState;
 }
 
-function validPosition(value: Partial<RpgPosition>) {
+function validPosition(value: Partial<RpgMakerPositionV1>) {
   return validInteger(value.mapId, 0) && validInteger(value.playerX) && validInteger(value.playerY) &&
     validInteger(value.fixtureState);
 }
@@ -179,7 +169,7 @@ function validInteger(value: unknown, minimum = -2_147_483_648) {
   return Number.isSafeInteger(value) && Number(value) >= minimum && Number(value) <= 2_147_483_647;
 }
 
-function position(state: EasyState): RpgPosition {
+function position(state: EasyState): RpgMakerPositionV1 {
   return { mapId: state.mapId, playerX: state.playerX, playerY: state.playerY, fixtureState: state.fixtureState };
 }
 
@@ -233,48 +223,78 @@ function readCheckpoint(fileSystem: EasyFileSystem) {
 }
 
 async function loadRtp(config: EasyConfig) {
-  const archive = config.adapter.rtpArchive;
-  if (!archive) {return [];}
-  const bytes = await fetchBytes(archive.url, maximumArchiveBytes);
-  if (await digest(bytes) !== archive.sha256) {throw new Error("RPG_RUNTIME_PACK_DIGEST_MISMATCH");}
-  const files = await unzipBytes(bytes);
-  let total = 0;
-  const result: Array<{ path: string; bytes: Uint8Array }> = [];
-  const names = Object.keys(files).sort();
-  if (names.length > 10_000) {throw new Error("RPG_RUNTIME_PACK_INVALID");}
-  for (const name of names) {
-    if (!safeArchivePath(name) || name.endsWith("/")) {continue;}
-    const contents = files[name];
-    total += contents.byteLength;
-    if (total > maximumArchiveBytes) {throw new Error("RPG_RUNTIME_PACK_INVALID");}
-    result.push({ path: `${archive.mountPath}/${name}`, bytes: contents });
-  }
-  if (!result.length) {throw new Error("RPG_RUNTIME_PACK_INVALID");}
-  return result;
-}
-
-function safeArchivePath(value: string) {
-  return Boolean(value) && value.length <= 512 && !value.startsWith("/") && !value.includes("\\") &&
-    value.split("/").every((part) => part !== "" && part !== "." && part !== "..");
-}
-
-function unzipBytes(bytes: Uint8Array) {
-  return new Promise<Record<string, Uint8Array>>((resolve, reject) => {
-    unzip(bytes, (error, files) => error ? reject(new Error("RPG_RUNTIME_PACK_INVALID")) : resolve(files));
+  const source = config.adapter.rtpSource;
+  if (!source) {return [];}
+  const index = await fetchRtpIndex(source.indexUrl);
+  const base = new URL(source.indexUrl, window.location.href);
+  const seen = new Set<string>();
+  return index.files.map((file) => {
+    const lookupPath = easyRpgLookupPath(file.path);
+    if (seen.has(lookupPath)) {throw new Error("RPG_RUNTIME_PACK_INVALID");}
+    seen.add(lookupPath);
+    return { lookupPath, path: file.path, url: new URL(file.url, base).href };
   });
 }
 
-async function fetchBytes(url: string, maximum: number) {
-  const response = await fetch(url, { credentials: "same-origin", cache: "no-store", redirect: "error" });
-  if (!response.ok || response.url !== new URL(url, window.location.href).href) {throw new Error("RPG_RUNTIME_CONTENT_UNAVAILABLE");}
-  const bytes = new Uint8Array(await response.arrayBuffer());
-  if (!bytes.byteLength || bytes.byteLength > maximum) {throw new Error("RPG_RUNTIME_CONTENT_UNAVAILABLE");}
-  return bytes;
+async function fetchRtpIndex(url: string): Promise<RuntimeFileTreeIndex> {
+  let value: unknown;
+  try {
+    const response = await fetch(url, { credentials: "same-origin", cache: "default", redirect: "error" });
+    if (!response.ok || response.url !== new URL(url, window.location.href).href) {throw new Error("response");}
+    value = await response.json();
+  } catch {throw new Error("RPG_RUNTIME_PACK_UNAVAILABLE");}
+  if (!validRtpIndex(value)) {throw new Error("RPG_RUNTIME_PACK_INVALID");}
+  return value;
 }
 
-async function digest(bytes: Uint8Array) {
-  const value = new Uint8Array(await crypto.subtle.digest("SHA-256", bytes.slice().buffer));
-  return [...value].map((item) => item.toString(16).padStart(2, "0")).join("");
+function validRtpIndex(value: unknown): value is RuntimeFileTreeIndex {
+  if (!isRecord(value) || !exactKeys(value, ["files", "schemaVersion"]) || value.schemaVersion !== 1 ||
+    !Array.isArray(value.files) || value.files.length < 1 || value.files.length > maximumRtpFiles) {return false;}
+  const paths = new Set<string>();
+  for (const file of value.files) {
+    if (!isRecord(file) || !exactKeys(file, ["path", "sizeBytes", "url"]) || !safePath(file.path) ||
+      !validUrl(file.url) || !Number.isSafeInteger(file.sizeBytes) || Number(file.sizeBytes) < 1) {return false;}
+    const identity = file.path.normalize("NFKC").toLowerCase();
+    if (paths.has(identity)) {return false;}
+    paths.add(identity);
+  }
+  return true;
+}
+
+function easyRpgLookupPath(path: string) {
+  const segments = path.split("/").map((part) => part.normalize("NFKC").toLowerCase());
+  const filename = segments.at(-1) ?? "";
+  const extension = filename.lastIndexOf(".");
+  const stem = extension > 0 ? filename.slice(0, extension) : filename;
+  if (segments.length === 1) {
+    segments[0] = stem === "exfont" ? stem : filename;
+  } else if (!filename.endsWith(".ini") && !filename.endsWith(".po")) {
+    segments[segments.length - 1] = stem;
+  }
+  return segments.join("/");
+}
+
+function safePath(value: unknown): value is string {
+  return typeof value === "string" && value.length > 0 && value.length <= 512 && !value.startsWith("/") &&
+    !value.includes("\\") && value.split("/").every((part) => part !== "" && part !== "." && part !== "..");
+}
+
+function validUrl(value: unknown): value is string {
+  if (typeof value !== "string" || value.length < 1 || value.length > 2048) {return false;}
+  try {
+    const parsed = new URL(value, window.location.href);
+    return parsed.origin === window.location.origin && (parsed.protocol === "http:" || parsed.protocol === "https:");
+  } catch {return false;}
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function exactKeys(value: Record<string, unknown>, keys: string[]) {
+  const actual = Object.keys(value).sort();
+  const expected = [...keys].sort();
+  return actual.length === expected.length && actual.every((key, index) => key === expected[index]);
 }
 
 function loadScript(document: Document, url: string) {

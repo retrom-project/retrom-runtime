@@ -2,7 +2,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 import type { OnsRuntimeConfig } from "./contract.js";
 import { decodeOnsCheckpoint, encodeOnsCheckpoint } from "./checkpoint.js";
-import { createOnsRuntime } from "./index.js";
+import { createRuntime } from "../index.js";
 
 type HostWindow = Window & {
   onsyuri?: (options: Record<string, unknown>) => Promise<FakeModule>;
@@ -43,7 +43,7 @@ describe("ONS Yuri runtime", () => {
     });
     const target = document.createElement("div");
     document.body.append(target);
-    const runtime = createOnsRuntime(config(), { frameWindow: window, restorePayload: null });
+    const runtime = createRuntime(config(), { frameWindow: window, restorePayload: null });
     const mounting = runtime.mount(target);
     await loadRuntimeScript();
     await mounting;
@@ -78,7 +78,7 @@ describe("ONS Yuri runtime", () => {
     mockIndex();
     const target = document.createElement("div");
     document.body.append(target);
-    const runtime = createOnsRuntime(config(), { frameWindow: window, restorePayload: null });
+    const runtime = createRuntime(config(), { frameWindow: window, restorePayload: null });
     const mounting = runtime.mount(target);
     await loadRuntimeScript();
     await mounting;
@@ -111,7 +111,7 @@ describe("ONS Yuri runtime", () => {
     mockIndex();
     const target = document.createElement("div");
     document.body.append(target);
-    const runtime = createOnsRuntime(config(), { frameWindow: window, restorePayload: null });
+    const runtime = createRuntime(config(), { frameWindow: window, restorePayload: null });
     const mounting = runtime.mount(target);
     await loadRuntimeScript();
     await mounting;
@@ -119,7 +119,7 @@ describe("ONS Yuri runtime", () => {
     expect(module.callMain).toHaveBeenCalledWith([
       "--root", "/game", "--font", "/game/default.ttf", "--save-dir", "/save", "--enc:utf8",
     ]);
-    expect(runtime.getCheckpointAvailability()).toEqual({ available: true, reason: null });
+    expect(runtime.getCheckpointAvailability()).toEqual({ available: true, blocker: null });
     expect(errorSpy).not.toHaveBeenCalled();
     expect(target.firstElementChild?.getAttribute("data-ons-runtime-surface")).toBe("");
     expect((target.firstElementChild as HTMLElement).style.display).toBe("grid");
@@ -129,7 +129,7 @@ describe("ONS Yuri runtime", () => {
     expect(document.activeElement).toBe(target.querySelector("canvas"));
 
     const checkpoint = await runtime.checkpoint();
-    expect(checkpoint.payloadKind).toBe("ONS_SAVE_BUNDLE_V1");
+    expect(checkpoint.format).toBe("ons-save-bundle-v1");
     const decoded = await decodeOnsCheckpoint(checkpoint.bytes);
     expect(decoded.resumeSlot).toBe(999);
     expect(decoded.entries.map((entry) => entry.path)).toContain("save999.dat");
@@ -162,7 +162,7 @@ describe("ONS Yuri runtime", () => {
     mockIndex();
     const target = document.createElement("div");
     document.body.append(target);
-    const runtime = createOnsRuntime(config(), { frameWindow: window, restorePayload: restore });
+    const runtime = createRuntime(config(), { frameWindow: window, restorePayload: restore });
     const mounting = runtime.mount(target);
     await loadRuntimeScript();
     await mounting;
@@ -186,11 +186,48 @@ describe("ONS Yuri runtime", () => {
       return configured;
     });
     mockIndex();
-    const runtime = createOnsRuntime(config(), { frameWindow: window, restorePayload: restore });
+    const runtime = createRuntime(config(), { frameWindow: window, restorePayload: restore });
     const mounting = runtime.mount(document.createElement("div"));
     const rejected = expect(mounting).rejects.toThrow("ONS_CHECKPOINT_RESTORE_FAILED");
     await loadRuntimeScript();
     await rejected;
+  });
+
+  it("streams a requested video from its host URL without materializing it in the core file system", async () => {
+    const module = fakeModule();
+    (window as HostWindow).onsyuri = vi.fn(async (options: Record<string, unknown>) => {
+      Object.assign(options, module);
+      const configured = options as FakeModule;
+      configured.preRun?.();
+      return configured;
+    });
+    const body = JSON.stringify({
+      schemaVersion: 1,
+      title: "fixture",
+      fontPath: "default.ttf",
+      files: [
+        { path: "0.txt", sizeBytes: 1, url: "https://content.example/0.txt" },
+        { path: "default.ttf", sizeBytes: 1, url: "https://content.example/default.ttf" },
+        { path: "movie/intro.mp4", sizeBytes: 50_000_000, url: "https://content.example/movie/intro.mp4" },
+      ],
+    });
+    const fetchMock = vi.fn(async () => new Response(body, { status: 200 }));
+    vi.stubGlobal("fetch", fetchMock);
+    vi.spyOn(HTMLMediaElement.prototype, "play").mockResolvedValue();
+    const target = document.createElement("div");
+    const runtime = createRuntime(config(), { frameWindow: window, restorePayload: null });
+    const mounting = runtime.mount(target);
+    await loadRuntimeScript();
+    await mounting;
+
+    const playVideo = (window as HostWindow & { playVideo?: (path: string, click: boolean, loop: boolean) => void }).playVideo;
+    if (!playVideo) {throw new Error("test video bridge missing");}
+    playVideo("/game/movie/intro.mp4", false, false);
+
+    expect(target.querySelector("video")?.src).toBe("https://content.example/movie/intro.mp4");
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(() => module.FS.readFile("/game/movie/intro.mp4")).toThrow();
+    await runtime.exit();
   });
 
   it("accepts same-origin root-relative project content URLs", async () => {
@@ -206,12 +243,12 @@ describe("ONS Yuri runtime", () => {
       title: "fixture",
       fontPath: "default.ttf",
       files: [
-        { path: "0.txt", url: "/runtime/projects/preview/0.txt" },
-        { path: "default.ttf", url: "/runtime/projects/preview/default.ttf" },
+        { path: "0.txt", sizeBytes: 1, url: `/runtime/content/project/${"a".repeat(64)}/0.txt` },
+        { path: "default.ttf", sizeBytes: 1, url: `/runtime/content/project/${"a".repeat(64)}/default.ttf` },
       ],
     });
     vi.stubGlobal("fetch", vi.fn(async () => new Response(body, { status: 200 })));
-    const runtime = createOnsRuntime(config(), { frameWindow: window, restorePayload: null });
+    const runtime = createRuntime(config(), { frameWindow: window, restorePayload: null });
     const mounting = runtime.mount(document.createElement("div"));
     await loadRuntimeScript();
     await mounting;
@@ -229,7 +266,7 @@ describe("ONS Yuri runtime", () => {
     mockIndex();
     const runtimeConfig = config();
     runtimeConfig.adapter.runtimeBaseUrl = "/runtime/retrom-runtime/test/";
-    const runtime = createOnsRuntime(runtimeConfig, { frameWindow: window, restorePayload: null });
+    const runtime = createRuntime(runtimeConfig, { frameWindow: window, restorePayload: null });
     const mounting = runtime.mount(document.createElement("div"));
     await loadRuntimeScript();
     expect(document.head.querySelector<HTMLScriptElement>("script[data-runtime=ons-yuri]")?.src)
@@ -244,13 +281,13 @@ describe("ONS Yuri runtime", () => {
       title: "fixture",
       fontPath: "default.ttf",
       files: [
-        { path: "0.txt", url: "https://content.example/0.txt" },
-        { path: "0.TXT", url: "https://content.example/0.TXT" },
-        { path: "default.ttf", url: "https://content.example/default.ttf" },
+        { path: "0.txt", sizeBytes: 1, url: "https://content.example/0.txt" },
+        { path: "0.TXT", sizeBytes: 1, url: "https://content.example/0.TXT" },
+        { path: "default.ttf", sizeBytes: 1, url: "https://content.example/default.ttf" },
       ],
     });
     vi.stubGlobal("fetch", vi.fn(async () => new Response(body, { status: 200 })));
-    const runtime = createOnsRuntime(config(), { frameWindow: window, restorePayload: null });
+    const runtime = createRuntime(config(), { frameWindow: window, restorePayload: null });
     await expect(runtime.mount(document.createElement("div"))).rejects.toThrow("ONS_PROJECT_INDEX_INVALID");
   });
 });
@@ -280,8 +317,8 @@ function mockIndex() {
     title: "fixture",
     fontPath: "default.ttf",
     files: [
-      { path: "0.txt", url: "https://content.example/0.txt" },
-      { path: "default.ttf", url: "https://content.example/default.ttf" },
+      { path: "0.txt", sizeBytes: 1, url: "https://content.example/0.txt" },
+      { path: "default.ttf", sizeBytes: 1, url: "https://content.example/default.ttf" },
     ],
   });
   vi.stubGlobal("fetch", vi.fn(async () => new Response(body, { status: 200 })));

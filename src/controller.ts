@@ -1,39 +1,37 @@
 import type {
   CheckpointAvailability,
-  CheckpointPayload,
-  RpgRuntime,
-  RuntimeEvent,
+  GameRuntime,
+  GameRuntimeEvent,
+  RuntimeCapabilities,
+  RuntimeCheckpoint,
+  RuntimeLoadProgress,
   RuntimeState,
+  RuntimeValidationProbe,
 } from "./contract.js";
-import type { RpgPlayerInstance, RpgRuntimeAdapter } from "./internal-adapter.js";
+import type { MountedRuntimeAdapter, RuntimeAdapterMount } from "./internal-adapter.js";
 
-type AdapterMount = (target: HTMLElement) => Promise<RpgRuntimeAdapter>;
+const unavailable: CheckpointAvailability = { available: false, blocker: "NOT_READY" };
 
-const unavailable: CheckpointAvailability = { available: false, reason: "RUNTIME_NOT_READY" };
-
-export class RpgRuntimeController implements RpgRuntime {
-  private readonly mountAdapter: AdapterMount;
-  private readonly listeners = new Set<(event: RuntimeEvent) => void>();
-  private readonly abortSignal: AbortSignal | null;
-  private adapter: RpgRuntimeAdapter | null = null;
+export class GameRuntimeController implements GameRuntime {
+  private readonly listeners = new Set<(event: GameRuntimeEvent) => void>();
+  private adapter: MountedRuntimeAdapter | null = null;
   private state: RuntimeState = "CREATED";
   private mountCalled = false;
   private exitPromise: Promise<void> | null = null;
-  private playerInstance: RpgPlayerInstance | null = null;
+  private operationTail: Promise<void> = Promise.resolve();
   private lastAvailability: CheckpointAvailability = unavailable;
   private availabilityTimer: number | null = null;
 
-  private readonly validationPurpose: boolean;
-
-  constructor(mountAdapter: AdapterMount, abortSignal: AbortSignal | null = null, validationPurpose = false) {
-    this.mountAdapter = mountAdapter;
-    this.abortSignal = abortSignal;
-    this.validationPurpose = validationPurpose;
+  constructor(
+    private readonly mountAdapter: RuntimeAdapterMount,
+    private readonly capabilities: RuntimeCapabilities,
+    private readonly abortSignal: AbortSignal | null,
+  ) {
     abortSignal?.addEventListener("abort", this.abort, { once: true });
   }
 
   async mount(target: HTMLElement) {
-    if (this.mountCalled || this.state !== "CREATED") {throw new Error("RPG_RUNTIME_INVALID_STATE");}
+    if (this.mountCalled || this.state !== "CREATED") {throw new Error("RUNTIME_INVALID_STATE");}
     this.mountCalled = true;
     if (this.abortSignal?.aborted) {
       await this.exit();
@@ -41,13 +39,12 @@ export class RpgRuntimeController implements RpgRuntime {
     }
     this.transition("LOADING");
     try {
-      const adapter = await this.mountAdapter(target);
+      const adapter = await this.mountAdapter(target, this.reportProgress);
       if (this.abortSignal?.aborted || exitHasStarted(this.state)) {
         await adapter.exit();
         throw new DOMException("Aborted", "AbortError");
       }
       this.adapter = adapter;
-      this.playerInstance = this.createPlayerInstance(adapter);
       this.transition("RUNNING");
       this.refreshAvailability();
       this.startAvailabilityPolling();
@@ -58,42 +55,40 @@ export class RpgRuntimeController implements RpgRuntime {
     }
   }
 
-  async pause() {
+  pause() {return this.enqueue(() => this.performPause());}
+
+  resume() {return this.enqueue(() => this.performResume());}
+
+  checkpoint() {return this.enqueue(() => this.performCheckpoint());}
+
+  private async performPause() {
+    this.requireCapability("pause");
     this.requireState("RUNNING");
-    try {
-      await this.requireAdapter().pause();
-      this.assertOperationActive("RUNNING");
-      this.transition("PAUSED");
-    } catch (error) {
-      if (!exitHasStarted(this.state)) {await this.fail(error);}
-      throw stableError(error);
-    }
+    await this.perform("RUNNING", "PAUSED", () => this.requireAdapter().pause());
   }
 
-  async resume() {
+  private async performResume() {
+    this.requireCapability("pause");
     this.requireState("PAUSED");
-    try {
-      await this.requireAdapter().resume();
-      this.assertOperationActive("PAUSED");
-      this.transition("RUNNING");
-    } catch (error) {
-      if (!exitHasStarted(this.state)) {await this.fail(error);}
-      throw stableError(error);
-    }
+    await this.perform("PAUSED", "RUNNING", () => this.requireAdapter().resume());
   }
 
-  async checkpoint(): Promise<CheckpointPayload> {
-    if (this.state !== "RUNNING" && this.state !== "PAUSED") {throw new Error("RPG_RUNTIME_INVALID_STATE");}
-    if (!this.getCheckpointAvailability().available) {throw new Error("RPG_CHECKPOINT_UNAVAILABLE");}
+  private async performCheckpoint(): Promise<RuntimeCheckpoint> {
+    this.requireCapability("checkpoint");
+    if (exitHasStarted(this.state)) {throw new DOMException("Aborted", "AbortError");}
+    if (this.state !== "RUNNING" && this.state !== "PAUSED") {throw new Error("RUNTIME_INVALID_STATE");}
+    if (!this.getCheckpointAvailability().available) {throw new Error("CHECKPOINT_UNAVAILABLE");}
     const previous = this.state;
     this.transition("CHECKPOINTING");
     try {
       const payload = await this.requireAdapter().checkpoint();
-      if (!payload.bytes.byteLength) {throw new Error("RPG_CHECKPOINT_CREATE_FAILED");}
+      if (!payload.bytes.byteLength || !validCheckpointFormat(payload.format)) {
+        throw new Error("CHECKPOINT_CREATE_FAILED");
+      }
       this.assertOperationActive("CHECKPOINTING");
       this.transition(previous);
       this.refreshAvailability();
-      return { bytes: payload.bytes.slice(), payloadKind: payload.payloadKind };
+      return { bytes: payload.bytes.slice(), format: payload.format };
     } catch (error) {
       if (isCheckpointing(this.state)) {
         this.transition(previous);
@@ -104,37 +99,76 @@ export class RpgRuntimeController implements RpgRuntime {
   }
 
   async screenshot() {
-    if (this.state !== "RUNNING" && this.state !== "PAUSED") {throw new Error("RPG_RUNTIME_INVALID_STATE");}
+    this.requireCapability("screenshot");
+    if (this.state !== "RUNNING" && this.state !== "PAUSED") {throw new Error("RUNTIME_INVALID_STATE");}
     const screenshot = await this.requireAdapter().screenshot();
     if (!screenshot.size) {throw new Error("PLAYER_SCREENSHOT_UNAVAILABLE");}
     return screenshot;
   }
 
   async exit() {
-    if (this.exitPromise) {return this.exitPromise;}
-    this.exitPromise = this.performExit();
+    this.exitPromise ??= this.performExit();
     return this.exitPromise;
   }
 
   getState() {return this.state;}
+  getCapabilities() {return this.capabilities;}
 
-  getCheckpointAvailability() {
-    if (this.state === "FAILED") {return { available: false, reason: "RUNTIME_FAILED" } as const;}
+  getCheckpointAvailability(): CheckpointAvailability {
+    if (this.state === "FAILED") {return { available: false, blocker: "FAILED" };}
     if ((this.state !== "RUNNING" && this.state !== "PAUSED") || !this.adapter) {return unavailable;}
     return this.refreshAvailability();
   }
 
-  subscribe(listener: (event: RuntimeEvent) => void) {
+  getCanvas() {return this.adapter?.getCanvas() ?? null;}
+
+  getFrameCount() {
+    if (!this.capabilities.frameCounter || !this.adapter) {return null;}
+    const value = this.adapter.getFrameCount();
+    return value !== null && Number.isSafeInteger(value) && value >= 0 ? value : null;
+  }
+
+  getValidationProbe(kind: string): RuntimeValidationProbe | null {
+    if (!this.capabilities.validationProbes.includes(kind) || !this.adapter) {return null;}
+    const probe = this.adapter.getValidationProbe(kind);
+    return probe?.kind === kind && Number.isSafeInteger(probe.schemaVersion) && probe.schemaVersion > 0
+      ? structuredClone(probe)
+      : null;
+  }
+
+  setVolume(value: number) {
+    if (!this.capabilities.volume || !this.adapter?.setVolume) {throw new Error("RUNTIME_OPERATION_UNSUPPORTED");}
+    if (!Number.isFinite(value) || value < 0 || value > 1) {throw new Error("RUNTIME_VOLUME_INVALID");}
+    this.adapter.setVolume(value);
+  }
+
+  subscribe(listener: (event: GameRuntimeEvent) => void) {
     this.listeners.add(listener);
     return () => {this.listeners.delete(listener);};
   }
 
-  getPlayerInstance() {
-    if (!this.playerInstance) {throw new Error("RPG_RUNTIME_INVALID_STATE");}
-    return this.playerInstance;
+  private readonly abort = () => {void this.exit();};
+  private readonly reportProgress = (progress: RuntimeLoadProgress) => {
+    if (this.state !== "LOADING" || !validProgress(progress)) {return;}
+    this.emit({ type: "LOAD_PROGRESS", ...progress });
+  };
+
+  private enqueue<T>(operation: () => Promise<T>) {
+    const pending = this.operationTail.then(operation);
+    this.operationTail = pending.then(() => undefined, () => undefined);
+    return pending;
   }
 
-  private readonly abort = () => {void this.exit();};
+  private async perform(expected: RuntimeState, next: RuntimeState, operation: () => Promise<void>) {
+    try {
+      await operation();
+      this.assertOperationActive(expected);
+      this.transition(next);
+    } catch (error) {
+      if (!exitHasStarted(this.state)) {await this.fail(error);}
+      throw stableError(error);
+    }
+  }
 
   private async performExit() {
     if (this.state === "EXITED") {return;}
@@ -142,10 +176,8 @@ export class RpgRuntimeController implements RpgRuntime {
     if (!failed) {this.transition("EXITING");}
     let exitError: unknown;
     this.stopAvailabilityPolling();
-    try {await this.adapter?.exit();}
-    catch (error) {exitError = error;}
+    try {await this.adapter?.exit();} catch (error) {exitError = error;}
     this.adapter = null;
-    this.playerInstance = null;
     this.abortSignal?.removeEventListener("abort", this.abort);
     if (!failed) {this.transition("EXITED");}
     this.listeners.clear();
@@ -156,45 +188,14 @@ export class RpgRuntimeController implements RpgRuntime {
     this.stopAvailabilityPolling();
     const adapter = this.adapter;
     this.adapter = null;
-    this.playerInstance = null;
     if (this.state !== "FAILED" && this.state !== "EXITED") {this.transition("FAILED");}
-    try {await adapter?.exit();}
-    catch { /* The original runtime failure remains authoritative. */ }
+    try {await adapter?.exit();} catch { /* Preserve the original runtime failure. */ }
     this.emit({ type: "FATAL_ERROR", code: stableError(error).message });
-  }
-
-  private createPlayerInstance(adapter: RpgRuntimeAdapter): RpgPlayerInstance {
-    let mainLoopTransition: Promise<void> = Promise.resolve();
-    const instance: RpgPlayerInstance = {
-      canvas: adapter.getCanvas(), paused: false, volume: 1, muted: false,
-      on: () => undefined,
-      setVolume: (value) => adapter.setVolume(value),
-      takeScreenshot: async () => ({ blob: await this.screenshot(), format: "png" }),
-      gameManager: {
-        savePayloadKind: adapter.getPayloadKind(),
-        validationPurpose: this.validationPurpose,
-        getRpgPosition: () => adapter.getPosition(),
-        getCheckpointAvailability: () => this.getCheckpointAvailability(),
-        getStateAsync: async () => {
-          await mainLoopTransition;
-          const payload = await this.checkpoint();
-          return payload.bytes;
-        },
-        getFrameNum: () => adapter.getFrameCount(),
-        getVideoDimensions: (dimension) => videoDimension(adapter.getCanvas(), dimension),
-        toggleMainLoop: (running) => {
-          instance.paused = !running;
-          mainLoopTransition = mainLoopTransition.then(() => running ? this.resume() : this.pause());
-          void mainLoopTransition.catch(() => undefined);
-        },
-      },
-    };
-    return instance;
   }
 
   private refreshAvailability() {
     const next = normalizedAvailability(this.requireAdapter().getCheckpointAvailability());
-    if (next.available !== this.lastAvailability.available || next.reason !== this.lastAvailability.reason) {
+    if (next.available !== this.lastAvailability.available || next.blocker !== this.lastAvailability.blocker) {
       this.lastAvailability = next;
       this.emit({ type: "CHECKPOINT_AVAILABILITY_CHANGED", availability: next });
     }
@@ -205,9 +206,7 @@ export class RpgRuntimeController implements RpgRuntime {
     this.availabilityTimer = window.setInterval(() => {
       if (this.state !== "RUNNING" && this.state !== "PAUSED") {return;}
       try {this.refreshAvailability();}
-      catch (error) {
-        if (!exitHasStarted(this.state)) {void this.fail(error);}
-      }
+      catch (error) {if (!exitHasStarted(this.state)) {void this.fail(error);}}
     }, 250);
   }
 
@@ -217,12 +216,16 @@ export class RpgRuntimeController implements RpgRuntime {
   }
 
   private requireAdapter() {
-    if (!this.adapter) {throw new Error("RPG_RUNTIME_INVALID_STATE");}
+    if (!this.adapter) {throw new Error("RUNTIME_INVALID_STATE");}
     return this.adapter;
   }
 
   private requireState(expected: RuntimeState) {
-    if (this.state !== expected) {throw new Error("RPG_RUNTIME_INVALID_STATE");}
+    if (this.state !== expected) {throw new Error("RUNTIME_INVALID_STATE");}
+  }
+
+  private requireCapability(capability: "checkpoint" | "pause" | "screenshot") {
+    if (!this.capabilities[capability]) {throw new Error("RUNTIME_OPERATION_UNSUPPORTED");}
   }
 
   private assertOperationActive(expected: RuntimeState) {
@@ -230,56 +233,40 @@ export class RpgRuntimeController implements RpgRuntime {
   }
 
   private transition(next: RuntimeState) {
-    if (!validTransition(this.state, next)) {throw new Error("RPG_RUNTIME_INVALID_STATE");}
+    if (!validTransition(this.state, next)) {throw new Error("RUNTIME_INVALID_STATE");}
     const previous = this.state;
     this.state = next;
     this.emit({ type: "STATE_CHANGED", previous, state: next });
   }
 
-  private emit(event: RuntimeEvent) {
-    for (const listener of this.listeners) {listener(event);}
-  }
-}
-
-function validTransition(previous: RuntimeState, next: RuntimeState) {
-  if (next === "FAILED") {return previous !== "FAILED" && previous !== "EXITED";}
-  return transitions[previous].includes(next);
+  private emit(event: GameRuntimeEvent) {for (const listener of this.listeners) {listener(event);}}
 }
 
 const transitions: Record<RuntimeState, readonly RuntimeState[]> = {
-  CREATED: ["LOADING", "EXITING"],
-  LOADING: ["RUNNING", "EXITING"],
-  RUNNING: ["PAUSED", "CHECKPOINTING", "EXITING"],
-  PAUSED: ["RUNNING", "CHECKPOINTING", "EXITING"],
-  CHECKPOINTING: ["RUNNING", "PAUSED", "EXITING"],
-  EXITING: ["EXITED"],
-  EXITED: [],
-  FAILED: [],
+  CREATED: ["LOADING", "EXITING"], LOADING: ["RUNNING", "EXITING"],
+  RUNNING: ["PAUSED", "CHECKPOINTING", "EXITING"], PAUSED: ["RUNNING", "CHECKPOINTING", "EXITING"],
+  CHECKPOINTING: ["RUNNING", "PAUSED", "EXITING"], EXITING: ["EXITED"], EXITED: [], FAILED: [],
 };
 
-function exitHasStarted(state: RuntimeState) {
-  return state === "EXITING" || state === "EXITED";
+function validTransition(previous: RuntimeState, next: RuntimeState) {
+  return next === "FAILED" ? previous !== "FAILED" && previous !== "EXITED" : transitions[previous].includes(next);
 }
-
-function isCheckpointing(state: RuntimeState) {
-  return state === "CHECKPOINTING";
+function exitHasStarted(state: RuntimeState) {return state === "EXITING" || state === "EXITED";}
+function isCheckpointing(state: RuntimeState) {return state === "CHECKPOINTING";}
+function validCheckpointFormat(value: string) {return /^[a-z0-9][a-z0-9.-]{0,63}$/u.test(value);}
+function validProgress(value: RuntimeLoadProgress) {
+  return Number.isSafeInteger(value.loadedBytes) && value.loadedBytes >= 0 &&
+    (value.totalBytes === null || Number.isSafeInteger(value.totalBytes) && value.totalBytes >= value.loadedBytes);
 }
-
 function normalizedAvailability(value: CheckpointAvailability): CheckpointAvailability {
-  if (value.available === true && value.reason === null) {return { available: true, reason: null };}
-  if (value.available === false && value.reason !== null) {return { available: false, reason: value.reason };}
-  return { available: false, reason: "RUNTIME_FAILED" };
+  if (value.available === true && value.blocker === null) {return value;}
+  if (value.available === false && value.blocker !== null) {return value;}
+  return { available: false, blocker: "FAILED" };
 }
-
-function videoDimension(canvas: HTMLCanvasElement | undefined, dimension: "aspect" | "width" | "height") {
-  if (!canvas) {return undefined;}
-  if (dimension === "width") {return canvas.width;}
-  if (dimension === "height") {return canvas.height;}
-  return canvas.height > 0 ? canvas.width / canvas.height : undefined;
-}
-
 function stableError(error: unknown) {
   if (error instanceof DOMException && error.name === "AbortError") {return error;}
-  if (error instanceof Error && /^(?:PLAYER|RPG)_[A-Z0-9_]+$/u.test(error.message)) {return error;}
-  return new Error("RPG_RUNTIME_FAILED");
+  if (error instanceof Error && /^(?:RUNTIME|CHECKPOINT|PLAYER|RPG|ONS|KIRIKIRI)_[A-Z0-9_]+$/u.test(error.message)) {
+    return error;
+  }
+  return new Error("RUNTIME_FAILED");
 }

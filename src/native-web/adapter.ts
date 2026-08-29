@@ -1,14 +1,18 @@
-import type { RpgPlayerInstance } from "../internal-adapter.js";
 import {
   decodeRpgCheckpoint,
   encodeRpgCheckpoint,
   type RpgCheckpointBundle,
   type RpgCheckpointStore,
 } from "../checkpoint.js";
-import type { RpgPosition, RpgRuntimeConfig } from "../contract.js";
+import type { MountedRuntimeAdapter } from "../internal-adapter.js";
+import {
+  rpgMakerPositionProbeKind,
+  type RpgMakerPositionV1,
+  type RpgMakerRuntimeConfig,
+} from "../rpgmaker/contract.js";
 
-type NativeConfig = RpgRuntimeConfig & {
-  adapter: Extract<RpgRuntimeConfig["adapter"], { adapterKind: "NATIVE_WEB" }>;
+type NativeConfig = RpgMakerRuntimeConfig & {
+  adapter: Extract<RpgMakerRuntimeConfig["adapter"], { adapterKind: "NATIVE_WEB" }>;
 };
 
 type Reply = {
@@ -63,45 +67,27 @@ export async function mountNativeRpg(
     throw error;
   }
 
-  const listeners = new Map<string, Set<(...args: unknown[]) => void>>();
-  const instance: RpgPlayerInstance = {
-    paused: false,
-    volume: 1,
-    muted: false,
-    on(event, callback) {
-      const current = listeners.get(event) ?? new Set();
-      current.add(callback);
-      listeners.set(event, current);
-    },
-    setVolume(value) {
-      instance.volume = value;
-      instance.muted = value === 0;
-      void channel.request("SET_VOLUME", { value });
-    },
-    takeScreenshot: async () => ({ blob: await channel.screenshot(), format: "png" }),
-    gameManager: {
-      savePayloadKind: "NATIVE_SAVE_BUNDLE_V1",
-      validationPurpose: config.validationPurpose,
-      getRpgPosition: () => channel.position(),
-      getCheckpointAvailability: () => ({ available: channel.checkpointAvailable(), reason: channel.checkpointAvailable() ? null : "BUSY" }),
-      getStateAsync: () => channel.save(expectedEngine),
-      getFrameNum: () => channel.frames(),
-      toggleMainLoop: async (running) => {
-        instance.paused = !running;
-        await channel.request(running ? "RESUME" : "PAUSE", {}, 5_000);
-      },
-    },
-  };
   return {
-    instance,
-    cleanup: async () => {
+    checkpoint: async () => ({ bytes: await channel.save(expectedEngine), format: "native-save-bundle-v1" }),
+    exit: async () => {
       channel.stopProbeLoop();
       await channel.request("CLEANUP", {}, 10_000).catch(() => undefined);
       channel.close();
       frame.src = "about:blank";
-      listeners.clear();
     },
-  };
+    getCanvas: () => null,
+    getCheckpointAvailability: () => channel.checkpointAvailable()
+      ? { available: true, blocker: null }
+      : { available: false, blocker: "BUSY" },
+    getFrameCount: () => channel.frames(),
+    getValidationProbe: (kind) => kind === rpgMakerPositionProbeKind
+      ? { kind, schemaVersion: 1, value: channel.position() }
+      : null,
+    pause: async () => {await channel.request("PAUSE", {}, 5_000);},
+    resume: async () => {await channel.request("RESUME", {}, 5_000);},
+    screenshot: () => channel.screenshot(),
+    setVolume: (value) => {void channel.request("SET_VOLUME", { value });},
+  } satisfies MountedRuntimeAdapter;
 }
 
 class NativeChannel {
@@ -113,9 +99,9 @@ class NativeChannel {
   private lastRequestId = 0;
   private pending: Pending | null = null;
   private requestTail: Promise<void> = Promise.resolve();
-  private readyValue: { engine: string; engineProfile: string; position: RpgPosition } | null = null;
+  private readyValue: { engine: string; engineProfile: string; position: RpgMakerPositionV1 } | null = null;
   private readyWaiter: Pending | null = null;
-  private lastPosition: RpgPosition | null = null;
+  private lastPosition: RpgMakerPositionV1 | null = null;
   private frameCount = 0;
   private available = false;
   private probeTimer: number | null = null;
@@ -139,7 +125,7 @@ class NativeChannel {
 
   ready() {
     if (this.readyValue) {return Promise.resolve(this.readyValue);}
-    return new Promise<{ engine: string; engineProfile: string; position: RpgPosition }>((resolve, reject) => {
+    return new Promise<{ engine: string; engineProfile: string; position: RpgMakerPositionV1 }>((resolve, reject) => {
       const timer = window.setTimeout(() => {
         this.readyWaiter = null;
         reject(new Error("RPG_RUNTIME_TIMEOUT"));
@@ -358,13 +344,13 @@ function readReady(body: Record<string, unknown>) {
   return { engine: body.engine, engineProfile: body.engineProfile, position: readPosition(body.position) };
 }
 
-function readPosition(value: unknown): RpgPosition {
+function readPosition(value: unknown): RpgMakerPositionV1 {
   if (!value || typeof value !== "object" || Array.isArray(value)) {throw new Error("RPG_RUNTIME_POSITION_UNAVAILABLE");}
-  const position = value as Partial<RpgPosition>;
+  const position = value as Partial<RpgMakerPositionV1>;
   const valid = [position.mapId, position.playerX, position.playerY, position.fixtureState].every((item) =>
     Number.isSafeInteger(item) && Number(item) >= -2147483648 && Number(item) <= 2147483647);
   if (!valid || Number(position.mapId) < 0) {throw new Error("RPG_RUNTIME_POSITION_UNAVAILABLE");}
-  return position as RpgPosition;
+  return position as RpgMakerPositionV1;
 }
 
 function readBundle(value: unknown, engine: string): RpgCheckpointBundle {

@@ -13,4 +13,8 @@ await Promise.all([
     if (!contents.length || sha256(contents).length !== 64) {throw new Error("LOCAL_ASSET_INVALID");}
   }),
 ]);
+const declarations = await readFile(new URL("dist/index.d.ts", root), "utf8");
+if (/\b(?:RpgRuntime|RpgGeneration|RpgPosition)\b|create(?:Rpg|Ons|Kirikiri)Runtime/u.test(declarations)) {
+  throw new Error("LEGACY_PUBLIC_RUNTIME_API_PRESENT");
+}
 console.log(`package-check: ok (${manifest.cores.length} cores)`);

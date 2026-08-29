@@ -1,7 +1,7 @@
 import { decodeKirikiriCheckpoint, encodeKirikiriCheckpoint, type KirikiriCheckpointEntry } from "./checkpoint.js";
+import type { MountedRuntimeAdapter } from "../internal-adapter.js";
 import type { KirikiriRuntimeConfig } from "./contract.js";
 import { installKirikiriStandardGamepad } from "./gamepad-input.js";
-import type { MountedKirikiriAdapter } from "./internal-adapter.js";
 
 type KirikiriConfig = KirikiriRuntimeConfig & { adapter: KirikiriRuntimeConfig["adapter"] };
 type ProjectFile = { path: string; url: string; sizeBytes: number };
@@ -48,7 +48,7 @@ export async function mountKirikiri2(
   target: HTMLElement,
   frameWindow: Window,
   restorePayload: Uint8Array | null,
-): Promise<MountedKirikiriAdapter> {
+): Promise<MountedRuntimeAdapter> {
   if (target.ownerDocument !== frameWindow.document) {throw new Error("KIRIKIRI_RUNTIME_TARGET_INVALID");}
   requireBrowserFeatures(frameWindow);
   const host = frameWindow as KirikiriHostWindow;
@@ -156,7 +156,10 @@ export async function mountKirikiri2(
           writeTimeoutMs,
         );
         const entries: KirikiriCheckpointEntry[] = [...writes].map(([path, data]) => ({ path, data: data.slice() }));
-        return await encodeKirikiriCheckpoint({ entries, resumeSlot: config.adapter.checkpointSlot });
+        return {
+          bytes: await encodeKirikiriCheckpoint({ entries, resumeSlot: config.adapter.checkpointSlot }),
+          format: "kirikiri-save-bundle-v1",
+        };
       } catch (error) {
         if (error instanceof Error && error.message === "KIRIKIRI_CHECKPOINT_CREATE_FAILED") {throw error;}
         throw new Error("KIRIKIRI_CHECKPOINT_CREATE_FAILED");
@@ -170,9 +173,14 @@ export async function mountKirikiri2(
       activeModule.pauseMainLoop();
       cleanup(host, previousModule, previousVlfs, target, canvas, focusCanvas, gamepadCleanup, scripts);
     },
+    getCanvas: () => canvas,
+    getCheckpointAvailability: () => ({ available: true, blocker: null }),
+    getFrameCount: () => null,
+    getValidationProbe: () => null,
     pause: async () => {activeModule.pauseMainLoop(); paused = true;},
     resume: async () => {activeModule.resumeMainLoop(); paused = false;},
     screenshot: () => canvasScreenshot(canvas),
+    setVolume: null,
   };
 }
 

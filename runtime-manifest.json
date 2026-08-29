@@ -1,26 +1,26 @@
 {
-  "schemaVersion": 3,
+  "schemaVersion": 4,
   "packageName": "@xxxsen/retrom-runtime",
-  "packageVersion": "0.6.1",
-  "publicApiVersion": 1,
+  "packageVersion": "0.7.0",
+  "publicApiVersion": 2,
   "upstreamReleases": [
     {
       "id": "easyrpg",
       "repository": "https://github.com/xxxsen/Player",
-      "tag": "rpg-runtime-0.8.1.1-r5",
-      "commit": "ba170be3b39ae1026609efab9273d0b92da95217",
+      "tag": "rpg-runtime-0.8.1.1-r6",
+      "commit": "b705da4d82efabac5335815a4148e4f0bfa93b77",
       "adapterAbi": "easyrpg-save",
-      "metadataUrl": "https://github.com/xxxsen/Player/releases/download/rpg-runtime-0.8.1.1-r5/rpg-runtime-release.json",
+      "metadataUrl": "https://github.com/xxxsen/Player/releases/download/rpg-runtime-0.8.1.1-r6/rpg-runtime-release.json",
       "assets": [
         {
           "filename": "easyrpg-player.js",
-          "url": "https://github.com/xxxsen/Player/releases/download/rpg-runtime-0.8.1.1-r5/easyrpg-player.js",
+          "url": "https://github.com/xxxsen/Player/releases/download/rpg-runtime-0.8.1.1-r6/easyrpg-player.js",
           "output": "runtime/easyrpg/easyrpg-player.js",
           "maxSizeBytes": 1048576
         },
         {
           "filename": "easyrpg-player.wasm",
-          "url": "https://github.com/xxxsen/Player/releases/download/rpg-runtime-0.8.1.1-r5/easyrpg-player.wasm",
+          "url": "https://github.com/xxxsen/Player/releases/download/rpg-runtime-0.8.1.1-r6/easyrpg-player.wasm",
           "output": "runtime/easyrpg/easyrpg-player.wasm",
           "maxSizeBytes": 16777216
         }
@@ -29,20 +29,20 @@
     {
       "id": "mkxp",
       "repository": "https://github.com/xxxsen/mkxp-z-libretro-emscripten",
-      "tag": "rpg-runtime-f2efc98-r1",
-      "commit": "149f2d8c0c2317185eb71d11ff6d08fbd812e67e",
+      "tag": "rpg-runtime-f2efc98-r2",
+      "commit": "2300de928d71ae24e874688e1fd11374cc19568c",
       "adapterAbi": "mkxp-state",
-      "metadataUrl": "https://github.com/xxxsen/mkxp-z-libretro-emscripten/releases/download/rpg-runtime-f2efc98-r1/rpg-runtime-release.json",
+      "metadataUrl": "https://github.com/xxxsen/mkxp-z-libretro-emscripten/releases/download/rpg-runtime-f2efc98-r2/rpg-runtime-release.json",
       "assets": [
         {
           "filename": "mkxp-z_libretro.js",
-          "url": "https://github.com/xxxsen/mkxp-z-libretro-emscripten/releases/download/rpg-runtime-f2efc98-r1/mkxp-z_libretro.js",
+          "url": "https://github.com/xxxsen/mkxp-z-libretro-emscripten/releases/download/rpg-runtime-f2efc98-r2/mkxp-z_libretro.js",
           "output": "runtime/mkxp/mkxp-z_libretro.js",
           "maxSizeBytes": 1048576
         },
         {
           "filename": "mkxp-z_libretro.wasm",
-          "url": "https://github.com/xxxsen/mkxp-z-libretro-emscripten/releases/download/rpg-runtime-f2efc98-r1/mkxp-z_libretro.wasm",
+          "url": "https://github.com/xxxsen/mkxp-z-libretro-emscripten/releases/download/rpg-runtime-f2efc98-r2/mkxp-z_libretro.wasm",
           "output": "runtime/mkxp/mkxp-z_libretro.wasm",
           "maxSizeBytes": 67108864
         }
@@ -51,26 +51,26 @@
     {
       "id": "onsyuri",
       "repository": "https://github.com/xxxsen/OnscripterYuri",
-      "tag": "rpg-runtime-0.7.7beta-r2",
-      "commit": "a88a53cdecbcf87826e4f88bd05e3b79709abfb4",
+      "tag": "rpg-runtime-0.7.7beta-r3",
+      "commit": "ca27805e8bf25ba3fc89d29cd60f65c578db14fc",
       "adapterAbi": "ons-save",
-      "metadataUrl": "https://github.com/xxxsen/OnscripterYuri/releases/download/rpg-runtime-0.7.7beta-r2/rpg-runtime-release.json",
+      "metadataUrl": "https://github.com/xxxsen/OnscripterYuri/releases/download/rpg-runtime-0.7.7beta-r3/rpg-runtime-release.json",
       "assets": [
         {
           "filename": "onsyuri.js",
-          "url": "https://github.com/xxxsen/OnscripterYuri/releases/download/rpg-runtime-0.7.7beta-r2/onsyuri.js",
+          "url": "https://github.com/xxxsen/OnscripterYuri/releases/download/rpg-runtime-0.7.7beta-r3/onsyuri.js",
           "output": "runtime/ons/onsyuri.js",
           "maxSizeBytes": 1048576
         },
         {
           "filename": "onsyuri.wasm",
-          "url": "https://github.com/xxxsen/OnscripterYuri/releases/download/rpg-runtime-0.7.7beta-r2/onsyuri.wasm",
+          "url": "https://github.com/xxxsen/OnscripterYuri/releases/download/rpg-runtime-0.7.7beta-r3/onsyuri.wasm",
           "output": "runtime/ons/onsyuri.wasm",
           "maxSizeBytes": 16777216
         },
         {
           "filename": "COPYING",
-          "url": "https://github.com/xxxsen/OnscripterYuri/releases/download/rpg-runtime-0.7.7beta-r2/COPYING",
+          "url": "https://github.com/xxxsen/OnscripterYuri/releases/download/rpg-runtime-0.7.7beta-r3/COPYING",
           "output": "licenses/onsyuri/COPYING",
           "maxSizeBytes": 65536
         }
@@ -79,38 +79,38 @@
     {
       "id": "kirikiri2",
       "repository": "https://github.com/xxxsen/kirikiroid2-web",
-      "tag": "rpg-runtime-g338d2029f169-r1",
-      "commit": "750323ea84b4c8b6617b55fac5ddba685aa4f8c0",
+      "tag": "rpg-runtime-g338d2029f169-r2",
+      "commit": "0dff768be8e1a2a5fbe1b6d7a456fb7f19fbe109",
       "adapterAbi": "kirikiri-kag-bookmark",
-      "metadataUrl": "https://github.com/xxxsen/kirikiroid2-web/releases/download/rpg-runtime-g338d2029f169-r1/rpg-runtime-release.json",
+      "metadataUrl": "https://github.com/xxxsen/kirikiroid2-web/releases/download/rpg-runtime-g338d2029f169-r2/rpg-runtime-release.json",
       "assets": [
         {
           "filename": "index.js",
-          "url": "https://github.com/xxxsen/kirikiroid2-web/releases/download/rpg-runtime-g338d2029f169-r1/index.js",
+          "url": "https://github.com/xxxsen/kirikiroid2-web/releases/download/rpg-runtime-g338d2029f169-r2/index.js",
           "output": "runtime/kirikiri/index.js",
           "maxSizeBytes": 1048576
         },
         {
           "filename": "index.wasm",
-          "url": "https://github.com/xxxsen/kirikiroid2-web/releases/download/rpg-runtime-g338d2029f169-r1/index.wasm",
+          "url": "https://github.com/xxxsen/kirikiroid2-web/releases/download/rpg-runtime-g338d2029f169-r2/index.wasm",
           "output": "runtime/kirikiri/index.wasm",
           "maxSizeBytes": 67108864
         },
         {
           "filename": "vlfs.js",
-          "url": "https://github.com/xxxsen/kirikiroid2-web/releases/download/rpg-runtime-g338d2029f169-r1/vlfs.js",
+          "url": "https://github.com/xxxsen/kirikiroid2-web/releases/download/rpg-runtime-g338d2029f169-r2/vlfs.js",
           "output": "runtime/kirikiri/vlfs.js",
           "maxSizeBytes": 262144
         },
         {
           "filename": "assets.zip",
-          "url": "https://github.com/xxxsen/kirikiroid2-web/releases/download/rpg-runtime-g338d2029f169-r1/assets.zip",
+          "url": "https://github.com/xxxsen/kirikiroid2-web/releases/download/rpg-runtime-g338d2029f169-r2/assets.zip",
           "output": "runtime/kirikiri/assets.zip",
           "maxSizeBytes": 16777216
         },
         {
           "filename": "LICENSE",
-          "url": "https://github.com/xxxsen/kirikiroid2-web/releases/download/rpg-runtime-g338d2029f169-r1/LICENSE",
+          "url": "https://github.com/xxxsen/kirikiroid2-web/releases/download/rpg-runtime-g338d2029f169-r2/LICENSE",
           "output": "licenses/kirikiri2/LICENSE",
           "maxSizeBytes": 65536
         }
@@ -125,6 +125,88 @@
     {
       "source": "assets/runtime/native/bridge.js",
       "output": "runtime/native/bridge.js"
+    }
+  ],
+  "adapters": [
+    {
+      "adapterKind": "EASYRPG_WEB",
+      "adapterId": "easyrpg-web",
+      "adapterAbi": "easyrpg-save",
+      "checkpointFormat": "easyrpg-save-bundle-v1",
+      "capabilities": {
+        "pause": true,
+        "screenshot": true,
+        "checkpoint": true,
+        "contentSources": ["FILE_TREE_V1"],
+        "standardGamepad": true,
+        "frameCounter": true,
+        "validationProbes": ["rpgmaker.position.v1"],
+        "volume": false
+      }
+    },
+    {
+      "adapterKind": "MKXP_LIBRETRO_WEB",
+      "adapterId": "mkxp-libretro-web",
+      "adapterAbi": "mkxp-state-compact",
+      "checkpointFormat": "mkxp-state-compact-v1",
+      "capabilities": {
+        "pause": true,
+        "screenshot": true,
+        "checkpoint": true,
+        "contentSources": ["SEEKABLE_BLOB_V1"],
+        "standardGamepad": true,
+        "frameCounter": true,
+        "validationProbes": ["rpgmaker.position.v1"],
+        "volume": false
+      }
+    },
+    {
+      "adapterKind": "NATIVE_WEB",
+      "adapterId": "native-web",
+      "adapterAbi": "native-save",
+      "checkpointFormat": "native-save-bundle-v1",
+      "capabilities": {
+        "pause": true,
+        "screenshot": true,
+        "checkpoint": true,
+        "contentSources": ["NATIVE_WEB_V1"],
+        "standardGamepad": true,
+        "frameCounter": true,
+        "validationProbes": ["rpgmaker.position.v1"],
+        "volume": true
+      }
+    },
+    {
+      "adapterKind": "ONS_YURI_WEB",
+      "adapterId": "ons-yuri-web",
+      "adapterAbi": "ons-save",
+      "checkpointFormat": "ons-save-bundle-v1",
+      "capabilities": {
+        "pause": true,
+        "screenshot": true,
+        "checkpoint": true,
+        "contentSources": ["FILE_TREE_V1"],
+        "standardGamepad": true,
+        "frameCounter": false,
+        "validationProbes": [],
+        "volume": false
+      }
+    },
+    {
+      "adapterKind": "KIRIKIRI2_WEB",
+      "adapterId": "kirikiri2-web",
+      "adapterAbi": "kirikiri-kag-bookmark",
+      "checkpointFormat": "kirikiri-save-bundle-v1",
+      "capabilities": {
+        "pause": true,
+        "screenshot": true,
+        "checkpoint": true,
+        "contentSources": ["FILE_TREE_V1"],
+        "standardGamepad": true,
+        "frameCounter": false,
+        "validationProbes": [],
+        "volume": false
+      }
     }
   ],
   "cores": [

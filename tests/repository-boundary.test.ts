@@ -68,12 +68,12 @@ describe("independent package boundary", () => {
       adapterAbi: "ons-save",
       id: "onsyuri",
       repository: "https://github.com/xxxsen/OnscripterYuri",
-      tag: "rpg-runtime-0.7.7beta-r2",
+      tag: "rpg-runtime-0.7.7beta-r3",
     }), expect.objectContaining({
       adapterAbi: "kirikiri-kag-bookmark",
       id: "kirikiri2",
       repository: "https://github.com/xxxsen/kirikiroid2-web",
-      tag: "rpg-runtime-g338d2029f169-r1",
+      tag: "rpg-runtime-g338d2029f169-r2",
     })]));
     const releaseIds = manifest.upstreamReleases.map((release: { id: string }) => release.id).sort();
     const externalRuntimeIds = [...new Set(manifest.cores

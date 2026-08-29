@@ -1,5 +1,3 @@
-import type { CheckpointAvailability, RuntimeState } from "../contract.js";
-
 export type OnsScriptEncoding = "gbk" | "sjis" | "utf8";
 
 export type OnsAdapterConfig = {
@@ -15,28 +13,6 @@ export type OnsRuntimeConfig = {
   sessionId: string;
   adapter: OnsAdapterConfig;
 };
-
-export type OnsCheckpointPayload = {
-  bytes: Uint8Array;
-  payloadKind: "ONS_SAVE_BUNDLE_V1";
-};
-
-export type OnsRuntimeEvent =
-  | { type: "READY" }
-  | { type: "STATE_CHANGED"; previous: RuntimeState; state: RuntimeState }
-  | { type: "FATAL_ERROR"; code: string };
-
-export interface OnsRuntime {
-  mount(target: HTMLElement): Promise<void>;
-  pause(): Promise<void>;
-  resume(): Promise<void>;
-  checkpoint(): Promise<OnsCheckpointPayload>;
-  screenshot(): Promise<Blob>;
-  exit(): Promise<void>;
-  getState(): RuntimeState;
-  getCheckpointAvailability(): CheckpointAvailability;
-  subscribe(listener: (event: OnsRuntimeEvent) => void): () => void;
-}
 
 export function validateOnsRuntimeConfig(config: OnsRuntimeConfig): void {
   if (!config || typeof config !== "object" || !boundedText(config.sessionId, 200) ||

@@ -7,9 +7,10 @@ Release inputs. It does not know about a host application's users, database, rev
 ## Public API
 
 ```ts
-import { createRpgRuntime, type RpgRuntimeConfig } from "@xxxsen/retrom-runtime";
+import { createRuntime, type RuntimeConfig } from "@xxxsen/retrom-runtime";
 
-const runtime = createRpgRuntime(config, {
+const config: RuntimeConfig = launchConfig;
+const runtime = createRuntime(config, {
   frame,
   frameWindow,
   restorePayload,
@@ -23,12 +24,35 @@ configuration. The library never calls a host review, upload, save-state or auth
 For EasyRPG, `adapter.projectRootUrl` is passed to the core as the complete
 project directory URL; neither the adapter nor the core assumes a host route.
 
+Every adapter uses the same engine-neutral `GameRuntime` lifecycle. Capabilities and checkpoint formats are
+declared in `runtime-manifest.json`; hosts do not infer them from a generation name. Core-specific validation is
+an extension probe. RPG Maker exposes `rpgmaker.position.v1`, while ONS and KiriKiri do not fabricate map IDs or
+player coordinates.
+
+Content sources are also host-independent. Directory-oriented adapters consume
+`FILE_TREE_V1`; mkxp consumes `SEEKABLE_BLOB_V1`; native Web projects retain
+their isolated entry model. A seekable blob supplies a URL, size, diagnostic
+digest and `rangeRequired: true`. The mkxp adapter registers that URL in
+WasmFS and passes only a virtual path to the core—it does not turn the project
+or RTP archives into JavaScript `Blob`s or download them before the first
+frame. Its pinned fork rejects a missing Range contract, a non-206 response,
+an inexact `Content-Range`, and response-length drift instead of silently
+falling back to a whole-file request. Core JS/Wasm and bridge assets still use
+full-byte validation, while their immutable URLs use the browser cache.
+
+EasyRPG receives both the project and optional RTP as `FILE_TREE_V1` roots. The project wins when it contains a
+resource; only a missing resource that the game actually opens is fetched from the RTP root. ONS keeps ordinary
+scripts and images on the same file-on-first-open path, while large videos are handed to the browser media
+pipeline by URL so it can issue Range requests instead of copying the complete movie into the Emscripten file
+system. KiriKiri keeps its VLFS Range reader and refuses a large response that ignores a requested range rather
+than silently buffering the whole file.
+
 ONS is a separate public runtime rather than an RPG Maker generation:
 
 ```ts
-import { createOnsRuntime, type OnsRuntimeConfig } from "@xxxsen/retrom-runtime";
+import { createRuntime, type OnsRuntimeConfig } from "@xxxsen/retrom-runtime";
 
-const runtime = createOnsRuntime(config, { frameWindow, restorePayload });
+const runtime = createRuntime(config, { frameWindow, restorePayload });
 await runtime.mount(container);
 const checkpoint = await runtime.checkpoint();
 ```
@@ -50,9 +74,9 @@ then discards that frame to release Emscripten's document-level input hooks.
 KiriKiri is also an independent runtime:
 
 ```ts
-import { createKirikiriRuntime, type KirikiriRuntimeConfig } from "@xxxsen/retrom-runtime";
+import { createRuntime, type KirikiriRuntimeConfig } from "@xxxsen/retrom-runtime";
 
-const runtime = createKirikiriRuntime(config, { frameWindow, restorePayload });
+const runtime = createRuntime(config, { frameWindow, restorePayload });
 await runtime.mount(container);
 const checkpoint = await runtime.checkpoint();
 ```

@@ -1,10 +1,10 @@
 import { decodeOnsCheckpoint, encodeOnsCheckpoint, type OnsCheckpointBundle } from "./checkpoint.js";
+import type { MountedRuntimeAdapter } from "../internal-adapter.js";
 import type { OnsRuntimeConfig } from "./contract.js";
 import { installOnsAnalogGamepad } from "./gamepad-input.js";
-import type { MountedOnsAdapter } from "./internal-adapter.js";
 
 type OnsConfig = OnsRuntimeConfig & { adapter: OnsRuntimeConfig["adapter"] };
-type ProjectFile = { path: string; url: string };
+type ProjectFile = { path: string; sizeBytes: number; url: string };
 type ProjectIndex = { schemaVersion: 1; title: string; fontPath: string; files: ProjectFile[] };
 type FileNode = ProjectFile & { loaded: boolean; loading?: Promise<void> };
 
@@ -51,7 +51,7 @@ export async function mountOnsYuri(
   target: HTMLElement,
   frameWindow: Window,
   restorePayload: Uint8Array | null,
-): Promise<MountedOnsAdapter> {
+): Promise<MountedRuntimeAdapter> {
   if (target.ownerDocument !== frameWindow.document) {throw new Error("ONS_RUNTIME_TARGET_INVALID");}
   const index = await loadProjectIndex(config.adapter.projectIndexUrl);
   const restore = await readRestore(restorePayload);
@@ -112,7 +112,7 @@ export async function mountOnsYuri(
     if (typeof host.onsyuri !== "function") {throw new Error("ONS_RUNTIME_ARTIFACT_INVALID");}
     module = await host.onsyuri(moduleOptions);
     host.g_onsyuri_module = module;
-    videoCleanup = installVideo(host, module, video, canvas);
+    videoCleanup = installVideo(host, module, video, canvas, fileMap);
     module._onsyuri_host_set_restore_slot(restore?.resumeSlot ?? -1);
     const started = module.callMain(runtimeArgs(config, index));
     if (started instanceof Promise) {void started.catch(() => ready.reject(new Error("ONS_RUNTIME_START_FAILED")));}
@@ -143,7 +143,10 @@ export async function mountOnsYuri(
         if (!entries.some((entry) => entry.path === `save${config.adapter.checkpointSlot}.dat`)) {
           throw new Error("ONS_CHECKPOINT_CREATE_FAILED");
         }
-        return await encodeOnsCheckpoint({ entries, resumeSlot: config.adapter.checkpointSlot });
+        return {
+          bytes: await encodeOnsCheckpoint({ entries, resumeSlot: config.adapter.checkpointSlot }),
+          format: "ons-save-bundle-v1",
+        };
       } catch (error) {
         if (error instanceof Error && error.message === "ONS_CHECKPOINT_CREATE_FAILED") {throw error;}
         throw new Error("ONS_CHECKPOINT_CREATE_FAILED");
@@ -162,9 +165,14 @@ export async function mountOnsYuri(
       target.replaceChildren();
       restoreGlobals(host, globals);
     },
+    getCanvas: () => canvas,
+    getCheckpointAvailability: () => ({ available: true, blocker: null }),
+    getFrameCount: () => null,
+    getValidationProbe: () => null,
     pause: async () => {activeModule._onsyuri_host_set_paused(1); paused = true;},
     resume: async () => {activeModule._onsyuri_host_set_paused(0); paused = false;},
     screenshot: () => canvasScreenshot(canvas),
+    setVolume: null,
   };
 }
 
@@ -186,7 +194,8 @@ function validIndex(value: unknown): value is ProjectIndex {
   const seen = new Set<string>();
   let fontFound = false;
   for (const item of value.files) {
-    if (!isRecord(item) || !exactKeys(item, ["path", "url"]) || !validPath(item.path) || !validProjectUrl(item.url)) {return false;}
+    if (!isRecord(item) || !exactKeys(item, ["path", "sizeBytes", "url"]) || !validPath(item.path) ||
+      !validProjectUrl(item.url) || !Number.isSafeInteger(item.sizeBytes) || Number(item.sizeBytes) < 1) {return false;}
     const identity = item.path.toLowerCase();
     if (seen.has(identity)) {return false;}
     seen.add(identity);
@@ -249,23 +258,28 @@ function createFileFetcher(fileMap: Record<string, FileNode>) {
   };
 }
 
-function installVideo(host: OnsHostWindow, module: OnsModule, video: HTMLVideoElement, canvas: HTMLCanvasElement) {
-  let objectUrl: string | null = null;
+function installVideo(
+  host: OnsHostWindow,
+  module: OnsModule,
+  video: HTMLVideoElement,
+  canvas: HTMLCanvasElement,
+  fileMap: Record<string, FileNode>,
+) {
   const finish = () => {
     module.wait_video = false;
     video.pause();
     video.hidden = true;
     canvas.hidden = false;
-    if (objectUrl) {URL.revokeObjectURL(objectUrl); objectUrl = null;}
     video.removeAttribute("src");
   };
   video.addEventListener("ended", finish);
   video.addEventListener("error", finish);
   host.playVideo = (path: string, click: boolean, loop: boolean) => {
     finish();
+    const node = fileMap[path.toLowerCase()];
+    if (!node) {return;}
     module.wait_video = true;
-    objectUrl = URL.createObjectURL(new Blob([module.FS.readFile(path).slice().buffer], { type: "video/mp4" }));
-    video.src = objectUrl;
+    video.src = node.url;
     video.loop = loop;
     video.onclick = click ? finish : null;
     video.hidden = false;

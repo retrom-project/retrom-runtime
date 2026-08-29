@@ -2,7 +2,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { decodeKirikiriCheckpoint, encodeKirikiriCheckpoint } from "./checkpoint.js";
 import type { KirikiriRuntimeConfig } from "./contract.js";
-import { createKirikiriRuntime } from "./index.js";
+import { createRuntime } from "../index.js";
 
 type FakeModule = {
   postRun: Array<() => void>;
@@ -47,7 +47,7 @@ describe("KiriKiri2 KAG runtime", () => {
     mockDownloads();
     const target = document.createElement("div");
     document.body.append(target);
-    const runtime = createKirikiriRuntime(config(), { frameWindow: window, restorePayload: null });
+    const runtime = createRuntime(config(), { frameWindow: window, restorePayload: null });
     const mounting = runtime.mount(target);
     await loadVlfs(vlfs);
     await loadCore(vlfs);
@@ -97,7 +97,7 @@ describe("KiriKiri2 KAG runtime", () => {
     mockDownloads();
     const target = document.createElement("div");
     document.body.append(target);
-    const runtime = createKirikiriRuntime(config(), { frameWindow: window, restorePayload: null });
+    const runtime = createRuntime(config(), { frameWindow: window, restorePayload: null });
     const mounting = runtime.mount(target);
     await loadVlfs(vlfs);
     const module = await loadCore(vlfs);
@@ -113,7 +113,7 @@ describe("KiriKiri2 KAG runtime", () => {
     expect(module._krkr2_host_save_bookmark).not.toHaveBeenCalled();
     module._krkr2_host_bookmark_is_ready.mockReturnValue(1);
     const checkpoint = await checkpointPromise;
-    expect(checkpoint.payloadKind).toBe("KIRIKIRI_SAVE_BUNDLE_V1");
+    expect(checkpoint.format).toBe("kirikiri-save-bundle-v1");
     expect(checkpoint.bytes.byteLength).toBeLessThan(1024);
     expect(module._krkr2_host_save_bookmark).toHaveBeenCalledWith(1999);
     expect(module.pauseMainLoop).toHaveBeenCalledBefore(module._krkr2_host_save_bookmark);
@@ -126,7 +126,7 @@ describe("KiriKiri2 KAG runtime", () => {
     expect(document.head.querySelector("script[data-runtime=kirikiri2]")).toBeNull();
 
     const restoredVlfs = fakeVlfs();
-    const restored = createKirikiriRuntime(config(), { frameWindow: window, restorePayload: checkpoint.bytes });
+    const restored = createRuntime(config(), { frameWindow: window, restorePayload: checkpoint.bytes });
     const restoredTarget = document.createElement("div");
     const restoredMount = restored.mount(restoredTarget);
     await loadVlfs(restoredVlfs);
@@ -160,7 +160,7 @@ describe("KiriKiri2 KAG runtime", () => {
     });
     const vlfs = fakeVlfs();
     mockDownloads();
-    const runtime = createKirikiriRuntime(config(), { frameWindow: window, restorePayload: restore });
+    const runtime = createRuntime(config(), { frameWindow: window, restorePayload: restore });
     const mounting = runtime.mount(document.createElement("div"));
     await loadVlfs(vlfs);
     const rejected = expect(mounting).rejects.toThrow("KIRIKIRI_CHECKPOINT_RESTORE_FAILED");
@@ -172,7 +172,7 @@ describe("KiriKiri2 KAG runtime", () => {
     enableRuntimeFeatures();
     const vlfs = fakeVlfs();
     mockDownloads(["/data.xp3", "/patch.xp3"]);
-    const runtime = createKirikiriRuntime(config(), { frameWindow: window, restorePayload: null });
+    const runtime = createRuntime(config(), { frameWindow: window, restorePayload: null });
     const mounting = runtime.mount(document.createElement("div"));
     await loadVlfs(vlfs);
     await expect(mounting).rejects.toThrow("KIRIKIRI_PROJECT_ENTRY_AMBIGUOUS");
@@ -218,9 +218,13 @@ function mockDownloads(xp3Paths = ["/data.xp3"]) {
     if (url.endsWith("project/index.json") && !init?.method) {
       return Response.json({ schemaVersion: 1, files: [
         ...xp3Paths.map((path) => ({
-          path: path.replace(/^\//u, ""), sizeBytes: 1234, url: `/runtime/projects/launch${path}`,
+          path: path.replace(/^\//u, ""), sizeBytes: 1234,
+          url: `/runtime/content/project/${"a".repeat(64)}${path}`,
         })),
-        { path: "startup.tjs", sizeBytes: 40, url: "/runtime/projects/launch/startup.tjs" },
+        {
+          path: "startup.tjs", sizeBytes: 40,
+          url: `/runtime/content/project/${"a".repeat(64)}/startup.tjs`,
+        },
       ] });
     }
     throw new Error(`unexpected request: ${url}`);

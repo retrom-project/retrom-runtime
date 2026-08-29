@@ -1,6 +1,11 @@
 import { Nostalgist } from "nostalgist";
-import type { RpgPlayerInstance } from "../internal-adapter.js";
-import type { RpgPosition, RpgRuntimeConfig } from "../contract.js";
+import type { MountedRuntimeAdapter } from "../internal-adapter.js";
+import type { RuntimeProgressReporter } from "../internal-adapter.js";
+import {
+  rpgMakerPositionProbeKind,
+  type RpgMakerPositionV1,
+  type RpgMakerRuntimeConfig,
+} from "../rpgmaker/contract.js";
 import {
   decodeMkxpCheckpoint,
   decodeMkxpRastate,
@@ -9,7 +14,9 @@ import {
   mkxpRastateEnvelopeBytes,
 } from "./state.js";
 
-type MkxpConfig = RpgRuntimeConfig & { adapter: Extract<RpgRuntimeConfig["adapter"], { adapterKind: "MKXP_LIBRETRO_WEB" }> };
+type MkxpConfig = RpgMakerRuntimeConfig & {
+  adapter: Extract<RpgMakerRuntimeConfig["adapter"], { adapterKind: "MKXP_LIBRETRO_WEB" }>;
+};
 
 type MkxpFileSystem = {
   analyzePath(path: string): { exists: boolean };
@@ -26,11 +33,17 @@ type MkxpRuntime = Pick<Nostalgist,
   "exit" | "getEmscriptenFS" | "start"
 >;
 
+type MkxpPrepareOptions = Parameters<typeof Nostalgist.prepare>[0] & {
+  emscriptenModule: NonNullable<Parameters<typeof Nostalgist.prepare>[0]["emscriptenModule"]> & {
+    preRun: Array<(module: { ENV: Record<string, string> }) => void>;
+  };
+};
+
 type MkxpMountDependencies = {
   decodeCheckpoint: typeof decodeMkxpCheckpoint;
   encodeCheckpoint: typeof encodeMkxpCheckpoint;
   fetchVerified: (url: string, expectedSize: number, expectedDigest: string) => Promise<Uint8Array>;
-  prepare: (options: Parameters<typeof Nostalgist.prepare>[0]) => Promise<MkxpRuntime>;
+  prepare: (options: MkxpPrepareOptions) => Promise<MkxpRuntime>;
 };
 
 const positionBridge = { size: 1504, sha256: "097dac75b3394cae471ea1a21af65d64035bb87a9d1d8781d555446693c200c2" };
@@ -42,6 +55,10 @@ const statePath = `${coreStateRoot}/game.state`;
 const bridgePath = `${systemRoot}/mkxp-z/Scripts/Preload/position_bridge.rb`;
 const evidenceName = "rpg-runtime-position";
 const bridgeOption = "mkxp-z_preload-706f736974696f6e5f6272696467652e7262";
+const remoteGamePath = "/retrom-content/game.mkxpz";
+const fetchManifestPath = `${systemRoot}/mkxp-z/fetch.manifest`;
+const fetchBaseDirectory = "/retrom-fetch";
+const fetchChunkSizeBytes = 256 * 1024;
 const saveStateHotkey = { code: "F2", keyCode: 113 } as const;
 const loadStateHotkey = { code: "F4", keyCode: 115 } as const;
 const pauseToggleHotkey = { code: "F6", keyCode: 117 } as const;
@@ -67,8 +84,13 @@ export async function mountMkxp(
   restorePayload: Uint8Array | null,
   dependencies: MkxpMountDependencies = browserDependencies,
   onDiagnostic: (diagnostic: { runtime: string; message: string }) => void = defaultMkxpDiagnostic,
+  reportProgress: RuntimeProgressReporter = () => undefined,
 ) {
-  try {return await mountMkxpUnchecked(config, target, restorePayload, dependencies, onDiagnostic);}
+  try {
+    return await mountMkxpUnchecked(
+      config, target, restorePayload, dependencies, onDiagnostic, reportProgress,
+    );
+  }
   catch (error) {target.replaceChildren(); throw error;}
 }
 
@@ -78,6 +100,7 @@ async function mountMkxpUnchecked(
   restorePayload: Uint8Array | null,
   dependencies: MkxpMountDependencies,
   onDiagnostic: (diagnostic: { runtime: string; message: string }) => void,
+  reportProgress: RuntimeProgressReporter,
 ) {
   if (!window.crossOriginIsolated || typeof SharedArrayBuffer === "undefined") {
     throw new Error("RPG_RUNTIME_THREADS_REQUIRED");
@@ -93,30 +116,33 @@ async function mountMkxpUnchecked(
   canvas.id = "canvas";
   canvas.tabIndex = 0;
   target.append(canvas);
-  const [jsBytes, wasmBytes, gameBytes, bridgeBytes, ...rtpBytes] = await Promise.all([
+  const runtimeAssetBytes = config.adapter.core.jsSizeBytes + config.adapter.core.wasmSizeBytes + positionBridge.size;
+  reportProgress({ phase: "RUNTIME_ASSET", loadedBytes: 0, totalBytes: runtimeAssetBytes });
+  const [jsBytes, wasmBytes, bridgeBytes] = await Promise.all([
     dependencies.fetchVerified(
       config.adapter.core.jsUrl, config.adapter.core.jsSizeBytes, config.adapter.core.jsSha256,
     ),
     dependencies.fetchVerified(
       config.adapter.core.wasmUrl, config.adapter.core.wasmSizeBytes, config.adapter.core.wasmSha256,
     ),
-    dependencies.fetchVerified(config.adapter.projectArchive.url, config.adapter.projectArchive.sizeBytes, config.adapter.projectArchive.sha256),
     dependencies.fetchVerified(`${config.adapter.runtimeBaseUrl}position_bridge.rb`, positionBridge.size, positionBridge.sha256),
-    ...config.adapter.rtpArchives.map((archive) => dependencies.fetchVerified(archive.url, archive.sizeBytes, archive.sha256)),
   ]);
+  reportProgress({ phase: "RUNTIME_ASSET", loadedBytes: runtimeAssetBytes, totalBytes: runtimeAssetBytes });
+  const remoteContent = remoteContentManifest(config);
+  reportProgress({ phase: "PROJECT_INDEX", loadedBytes: 0, totalBytes: remoteContent.manifest.byteLength });
   const nostalgist = await dependencies.prepare({
     core: {
       name: "mkxp-z",
       js: new Blob([jsBytes.slice().buffer], { type: "text/javascript" }),
       wasm: new Blob([wasmBytes.slice().buffer], { type: "application/wasm" }),
     },
-    rom: { fileName: "game.mkxpz", fileContent: new Blob([gameBytes.slice().buffer]) },
-    bios: config.adapter.rtpArchives.map((archive, index) => ({
-      fileName: runtimePackFileName(index, archive.declaredName),
-      fileContent: new Blob([rtpBytes[index].slice().buffer]),
-    })),
     element: canvas,
     emscriptenModule: {
+      arguments: [remoteGamePath],
+      // Emscripten creates its ENV object after applying Module overrides and
+      // overwrites a caller-provided Module.ENV. Populate the final object at
+      // preRun instead, before RetroArch calls into the core and libc getenv().
+      preRun: [(module) => {Object.assign(module.ENV, fetchEnvironment());}],
       printErr: (...args: unknown[]) => onDiagnostic({ runtime: "mkxp-z", message: args.map(String).join(" ") }),
     },
     retroarchConfig: {
@@ -146,12 +172,18 @@ async function mountMkxpUnchecked(
   });
   const fileSystem = nostalgist.getEmscriptenFS() as MkxpFileSystem;
   try {
-    installRuntimeFiles(fileSystem, config, bridgeBytes, rtpBytes);
+    installRuntimeFiles(fileSystem, bridgeBytes, remoteContent.manifest);
     if (restorePayload) {
       const rawState = await dependencies.decodeCheckpoint(restorePayload, config.adapter.stateBufferBytes);
       installRestoreState(fileSystem, rawState, config.adapter.stateBufferBytes);
     }
     await nostalgist.start();
+    reportProgress({
+      phase: "PROJECT_INDEX",
+      loadedBytes: remoteContent.manifest.byteLength,
+      totalBytes: remoteContent.manifest.byteLength,
+    });
+    reportProgress({ phase: "PROJECT_CONTENT", loadedBytes: 0, totalBytes: remoteContent.totalBytes });
   } catch (error) {
     await nostalgist.exit();
     throw error;
@@ -165,62 +197,36 @@ async function mountMkxpUnchecked(
     await nostalgist.exit();
     throw error;
   }
-  const expectedProfile = `rgss${config.adapter.rgssVersion}`;
-
-  const listeners = new Map<string, Set<(...args: unknown[]) => void>>();
-  const instance: RpgPlayerInstance = {
-    canvas,
-    paused: false,
-    volume: 1,
-    muted: false,
-    on(event, callback) {
-      const current = listeners.get(event) ?? new Set();
-      current.add(callback);
-      listeners.set(event, current);
+  return {
+    checkpoint: async () => ({
+      bytes: await saveStateBytes(canvas, fileSystem, config.adapter.stateBufferBytes, dependencies.encodeCheckpoint),
+      format: "mkxp-state-compact-v1",
+    }),
+    exit: async () => {
+      await nostalgist.exit();
+      target.replaceChildren();
     },
+    getCanvas: () => canvas,
+    getCheckpointAvailability: () => ({ available: true, blocker: null }),
+    getFrameCount: () => readCurrentPosition(fileSystem).frameCount,
+    getValidationProbe: (kind) => kind === rpgMakerPositionProbeKind
+      ? { kind, schemaVersion: 1, value: readCurrentPosition(fileSystem).position }
+      : null,
+    pause: async () => {await pressPrivateHotkey(canvas, pauseToggleHotkey);},
+    resume: async () => {await pressPrivateHotkey(canvas, pauseToggleHotkey);},
     // Nostalgist's screenshot command calls RetroArch's exported GL function
     // from the browser main thread. The mkxp core owns its WebGL context on a
     // pthread, so that call has no GLctx and crashes in useProgram. Capturing
     // the displayed canvas stays on the browser side of that thread boundary.
-    takeScreenshot: async () => ({ blob: await canvasBlob(canvas), format: "png" }),
-    gameManager: {
-      savePayloadKind: "RUNTIME_STATE",
-      validationPurpose: config.validationPurpose,
-      getRpgPosition: () => readCurrentPosition(fileSystem).position,
-      getCheckpointAvailability: () => ({ available: true, reason: null }),
-      getStateAsync: () => saveStateBytes(
-        canvas, fileSystem, config.adapter.stateBufferBytes, dependencies.encodeCheckpoint,
-      ),
-      getFrameNum: () => readCurrentPosition(fileSystem).frameCount,
-      getVideoDimensions: (dimension) => dimension === "aspect" ? canvas.width / canvas.height :
-        dimension === "width" ? canvas.width : canvas.height,
-      toggleMainLoop: async (running) => {
-        // Nostalgist pause/resume calls RetroArch's exported command from the
-        // browser main thread. The mkxp WebGL context belongs to a pthread, so
-        // that path crashes in glUseProgram. Keep the command in RetroArch's
-        // normal input/render loop, as for save and restore.
-        await pressPrivateHotkey(canvas, pauseToggleHotkey);
-        instance.paused = !running;
-      },
-    },
-  };
-  return {
-    instance,
-    engineProfile: expectedProfile,
-    position: () => readCurrentPosition(fileSystem).position,
-    cleanup: async () => {
-      await nostalgist.exit();
-      target.replaceChildren();
-      listeners.clear();
-    },
-  };
+    screenshot: () => canvasBlob(canvas),
+    setVolume: null,
+  } satisfies MountedRuntimeAdapter;
 }
 
 function installRuntimeFiles(
   fileSystem: MkxpFileSystem,
-  config: MkxpConfig,
   bridgeBytes: Uint8Array,
-  rtpBytes: Uint8Array[],
+  fetchManifest: Uint8Array,
 ) {
   fileSystem.mkdirTree(`${systemRoot}/mkxp-z/Scripts/Preload`);
   fileSystem.mkdirTree(saveRoot);
@@ -230,17 +236,44 @@ function installRuntimeFiles(
   fileSystem.mkdirTree(coreStateRoot);
   fileSystem.writeFile(bridgePath, bridgeBytes);
   if (!fileSystem.analyzePath(bridgePath).exists) {throw new Error("RPG_RUNTIME_BRIDGE_UNAVAILABLE");}
-  const rtpRoot = `${systemRoot}/mkxp-z/RTP`;
-  fileSystem.mkdirTree(rtpRoot);
-  for (const [index, archive] of config.adapter.rtpArchives.entries()) {
-    const name = runtimePackFileName(index, archive.declaredName);
-    const source = `${systemRoot}/${name}`;
-    const destination = `${rtpRoot}/${name}`;
-    if (!fileSystem.analyzePath(source).exists || rtpBytes[index].byteLength !== archive.sizeBytes) {
-      throw new Error("RPG_RUNTIME_PACK_INVALID");
-    }
-    fileSystem.rename(source, destination);
+  fileSystem.writeFile(fetchManifestPath, fetchManifest);
+  if (!fileSystem.analyzePath(fetchManifestPath).exists) {throw new Error("RPG_RUNTIME_CONTENT_UNAVAILABLE");}
+}
+
+function fetchEnvironment() {
+  return {
+    FETCH_BASE_DIR: fetchBaseDirectory,
+    FETCH_CHUNK_SIZE_BYTES: String(fetchChunkSizeBytes),
+    FETCH_MANIFEST: fetchManifestPath,
+  };
+}
+
+function remoteContentManifest(config: MkxpConfig) {
+  const entries = [
+    { localPath: remoteGamePath, source: config.adapter.projectArchive },
+    ...config.adapter.rtpArchives.map((archive, index) => ({
+      localPath: `${systemRoot}/mkxp-z/RTP/${runtimePackFileName(index, archive.declaredName)}`,
+      source: archive,
+    })),
+  ];
+  const urls = entries.map((entry) => new URL(entry.source.url, document.baseURI));
+  const origin = urls[0]?.origin;
+  if (!origin || urls.some((url) => url.origin !== origin || url.username || url.password || url.hash)) {
+    throw new Error("RPG_RUNTIME_CONTENT_UNAVAILABLE");
   }
+  const baseUrl = `${origin}/`;
+  const lines = entries.map((entry, index) => {
+    const url = urls[index];
+    const fetchPath = `${url.pathname.replace(/^\/+/, "")}${url.search}`;
+    if (!fetchPath || /[\r\n ]/u.test(fetchPath) || /[\r\n]/u.test(entry.localPath)) {
+      throw new Error("RPG_RUNTIME_CONTENT_UNAVAILABLE");
+    }
+    return `${fetchPath} ${entry.localPath}`;
+  });
+  return {
+    manifest: new TextEncoder().encode([baseUrl, ...lines, ""].join("\n")),
+    totalBytes: entries.reduce((total, entry) => total + entry.source.sizeBytes, 0),
+  };
 }
 
 async function prepareEvidencePath(fileSystem: MkxpFileSystem) {
@@ -305,13 +338,13 @@ function readPosition(fileSystem: MkxpFileSystem, evidencePath: string) {
     throw new Error("RPG_RUNTIME_POSITION_UNAVAILABLE");
   }
   return {
-    position: { mapId: values[0], playerX: values[1], playerY: values[2], fixtureState: values[3] } satisfies RpgPosition,
+    position: { mapId: values[0], playerX: values[1], playerY: values[2], fixtureState: values[3] } satisfies RpgMakerPositionV1,
     frameCount: values[4],
   };
 }
 
-async function fetchVerified(url: string, expectedSize: number, expectedDigest: string) {
-  const response = await fetch(url, { credentials: "same-origin", cache: "no-store", redirect: "error" });
+export async function fetchVerified(url: string, expectedSize: number, expectedDigest: string) {
+  const response = await fetch(url, { credentials: "same-origin", cache: "default", redirect: "error" });
   if (!response.ok || response.url !== new URL(url, window.location.href).href) {throw new Error("RPG_RUNTIME_CONTENT_UNAVAILABLE");}
   const bytes = new Uint8Array(await response.arrayBuffer());
   if (bytes.byteLength !== expectedSize || await digest(bytes) !== expectedDigest) {
@@ -369,7 +402,7 @@ function installRestoreState(fileSystem: MkxpFileSystem, state: Uint8Array, expe
 async function restoreStateAndWait(
   canvas: HTMLCanvasElement,
   fileSystem: MkxpFileSystem,
-  expected: RpgPosition | null,
+  expected: RpgMakerPositionV1 | null,
 ) {
   const before = tryReadCurrentPosition(fileSystem);
   await pressPrivateHotkey(canvas, loadStateHotkey);
@@ -385,7 +418,7 @@ async function restoreStateAndWait(
   throw new Error("RPG_CHECKPOINT_RESTORE_FAILED");
 }
 
-function expectedRestorePosition(config: MkxpConfig): RpgPosition | null {
+function expectedRestorePosition(config: MkxpConfig): RpgMakerPositionV1 | null {
   if (!config.validationPurpose) {return null;}
   const evidence = config.expectedRestorePosition;
   if (!evidence) {
@@ -402,7 +435,7 @@ function tryReadCurrentPosition(fileSystem: MkxpFileSystem) {
   }
 }
 
-function samePosition(left: RpgPosition, right: RpgPosition) {
+function samePosition(left: RpgMakerPositionV1, right: RpgMakerPositionV1) {
   return left.mapId === right.mapId && left.playerX === right.playerX &&
     left.playerY === right.playerY && left.fixtureState === right.fixtureState;
 }

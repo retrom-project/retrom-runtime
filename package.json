@@ -1,6 +1,6 @@
 {
   "name": "@xxxsen/retrom-runtime",
-  "version": "0.5.0",
+  "version": "0.6.0",
   "description": "Host-independent browser runtimes for RPG Maker, ONS and KiriKiri projects",
   "type": "module",
   "license": "MIT",
@@ -27,9 +27,6 @@
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "vitest run",
     "build": "npm run clean && tsc -p tsconfig.build.json",
-    "core:kirikiri:build": "bash scripts/build-kirikiri-core.sh",
-    "core:kirikiri:check": "KIRIKIRI_PATCH_CHECK_ONLY=true bash scripts/build-kirikiri-core.sh",
-    "core:ons:build": "bash scripts/build-ons-core.sh",
     "package:check": "node scripts/package-check.mjs",
     "release:build": "npm run build && node scripts/build-release.mjs"
   },

@@ -13,21 +13,29 @@ jobs:
     timeout-minutes: 180
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - uses: actions/setup-node@v4
         with:
           node-version: 24
           cache: npm
       - run: npm ci
+      - name: Validate release identity
+        run: |
+          set -euo pipefail
+          package_version=$(node -p "require('./package.json').version")
+          test "$GITHUB_REF_NAME" = "v${package_version}"
+          git fetch --force origin \
+            "refs/tags/$GITHUB_REF_NAME:refs/tags/$GITHUB_REF_NAME"
+          test "$(git cat-file -t "refs/tags/$GITHUB_REF_NAME")" = tag
+          test "$(git rev-list -n 1 "refs/tags/$GITHUB_REF_NAME")" = "$GITHUB_SHA"
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          git fetch --no-tags origin '+refs/heads/master:refs/remotes/origin/master'
+          git merge-base --is-ancestor "$GITHUB_SHA" origin/master
       - run: npm run lint
       - run: npm run typecheck
       - run: npm test
-      - run: npm run core:kirikiri:build
-      - run: npm run core:ons:build
       - run: npm run release:build
-      - name: Verify tag matches package version
-        run: |
-          package_version=$(node -p "require('./package.json').version")
-          test "${GITHUB_REF_NAME}" = "v${package_version}"
       - name: Publish GitHub Release
         env:
           GH_TOKEN: ${{ github.token }}

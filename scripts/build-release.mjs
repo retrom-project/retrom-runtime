@@ -1,13 +1,19 @@
 import { spawnSync } from "node:child_process";
-import { mkdir, readFile, cp, writeFile } from "node:fs/promises";
-import { basename } from "node:path";
+import { mkdir, readFile, cp, rm, writeFile } from "node:fs/promises";
+import { basename, join } from "node:path";
+import { parseDevReleaseOverrides } from "./dev-release-overrides.mjs";
 import { loadManifest, sha256 } from "./manifest.mjs";
 
 const root = new URL("../", import.meta.url);
 const manifest = await loadManifest(root);
+const devReleaseOverrides = parseDevReleaseOverrides(
+  process.env.RETROM_RUNTIME_DEV_RELEASE_OVERRIDES,
+  manifest.upstreamReleases,
+);
 const commit = releaseCommit();
 const stage = new URL("../release/stage/", import.meta.url);
 const output = new URL("../release/", import.meta.url);
+await rm(stage, { recursive: true, force: true });
 await mkdir(stage, { recursive: true });
 await cp(new URL("../dist", import.meta.url), new URL("library", stage), { recursive: true });
 for (const document of ["CHANGELOG.md", "LICENSE", "THIRD_PARTY_NOTICES.md"]) {
@@ -17,18 +23,15 @@ for (const asset of manifest.localAssets) {
   await publish(await readFile(new URL(asset.source, root)), new URL(asset.output, stage));
 }
 for (const release of manifest.upstreamReleases) {
-  const metadata = await download(release.metadataUrl, 65536);
-  validateUpstreamMetadata(release, JSON.parse(new TextDecoder().decode(metadata)));
-  for (const asset of release.assets) {
-    await publish(await download(asset.url, asset.maxSizeBytes), new URL(asset.output, stage));
+  const devRoot = devReleaseOverrides.get(release.id);
+  if (!devRoot) {
+    const metadata = await download(release.metadataUrl, 65536);
+    validateUpstreamMetadata(release, JSON.parse(new TextDecoder().decode(metadata)));
   }
-}
-for (const build of manifest.sourceBuilds) {
-  for (const asset of build.assets) {
-    const contents = await readFile(new URL(asset.source, root));
-    if (!contents.length || contents.length > asset.maxSizeBytes) {
-      throw new Error(`BUILT_ASSET_SIZE_INVALID:${build.id}/${asset.filename}`);
-    }
+  for (const asset of release.assets) {
+    const contents = devRoot
+      ? await readDevAsset(join(devRoot, asset.filename), asset.maxSizeBytes)
+      : await download(asset.url, asset.maxSizeBytes);
     await publish(contents, new URL(asset.output, stage));
   }
 }
@@ -85,6 +88,12 @@ async function download(url, maximum) {
   return contents;
 }
 
+async function readDevAsset(path, maximum) {
+  const contents = await readFile(path);
+  if (!contents.length || contents.length > maximum) {throw new Error(`DEV_ASSET_SIZE_INVALID:${path}`);}
+  return contents;
+}
+
 function validateUpstreamMetadata(release, metadata) {
   if (metadata?.repository !== release.repository || metadata.tag !== release.tag ||
     metadata.commit !== release.commit || metadata.adapterAbi !== release.adapterAbi) {
@@ -100,7 +109,6 @@ async function publish(contents, target) {
 async function collectRecords(value, directory) {
   const paths = ["CHANGELOG.md", "LICENSE", "THIRD_PARTY_NOTICES.md", "library/index.js", "library/index.d.ts",
     ...value.localAssets.map((asset) => asset.output),
-    ...value.sourceBuilds.flatMap((build) => build.assets.map((asset) => asset.output)),
     ...value.upstreamReleases.flatMap((release) => release.assets.map((asset) => asset.output))].sort();
   return Promise.all(paths.map(async (path) => {
     const contents = await readFile(new URL(path, directory));

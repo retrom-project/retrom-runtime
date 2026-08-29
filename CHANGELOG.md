@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.6.0
+
+- Move ONScripterYuri and KiriKiri source changes, Web builds and core Release workflows into their maintained forks.
+- Make the aggregate runtime download all third-party core assets from fixed fork tags; ordinary quality and Release
+  workflows no longer compile any core.
+- Add explicit local fork-asset overrides so core candidates can be tested through Retrom before publishing a fork tag.
+
 ## 0.5.0
 
 - Add a KiriKiri2 Web runtime for KAG-compatible games, with a host-provided project index and explicit XP3 selection, browser controls,

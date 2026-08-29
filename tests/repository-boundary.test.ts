@@ -47,7 +47,7 @@ describe("independent package boundary", () => {
     expect([...new Set(manifest.cores.map((core) => core.adapterAbi))].sort()).toEqual([
       "easyrpg-save", "kirikiri-kag-bookmark", "mkxp-state-compact", "native-save", "ons-save",
     ]);
-    expect((await readdir(join(root, "assets/runtime"))).sort()).toEqual(["kirikiri", "mkxp", "native", "ons"]);
+    expect((await readdir(join(root, "assets/runtime"))).sort()).toEqual(["mkxp", "native"]);
     for (const asset of ["assets/runtime/mkxp/position_bridge.rb", "assets/runtime/native/bridge.js"]) {
       expect(await readFile(join(root, asset), "utf8"), asset).not.toMatch(/RETROM|__retrom|-[vr][1-9]/u);
     }
@@ -57,67 +57,47 @@ describe("independent package boundary", () => {
     const script = await readFile(join(root, "scripts/build-release.mjs"), "utf8");
     expect(script).toContain('["CHANGELOG.md", "LICENSE", "THIRD_PARTY_NOTICES.md"]');
     expect(script).toContain('"CHANGELOG.md", "LICENSE", "THIRD_PARTY_NOTICES.md", "library/index.js"');
-    expect(script).toContain("value.sourceBuilds.flatMap");
+    expect(script).toContain("await rm(stage, { recursive: true, force: true })");
+    expect(script).not.toContain("sourceBuilds");
   });
 
-  it("builds ONS and KiriKiri from fixed upstream commits with host-only checkpoint patches", async () => {
+  it("aggregates every external core from a pinned fork release", async () => {
     const manifest = JSON.parse(await readFile(join(root, "runtime-manifest.json"), "utf8"));
-    expect(manifest.sourceBuilds).toEqual(expect.arrayContaining([expect.objectContaining({
+    expect(manifest).not.toHaveProperty("sourceBuilds");
+    expect(manifest.upstreamReleases).toEqual(expect.arrayContaining([expect.objectContaining({
       adapterAbi: "ons-save",
-      commit: "08f744b31cc1907b66a15f0402e62321a131ed81",
       id: "onsyuri",
-      patch: "assets/runtime/ons/host-api.patch",
-      repository: "https://github.com/YuriSizuku/OnscripterYuri",
-      tag: "v0.7.7beta",
+      repository: "https://github.com/xxxsen/OnscripterYuri",
+      tag: "rpg-runtime-0.7.7beta-r2",
     }), expect.objectContaining({
       adapterAbi: "kirikiri-kag-bookmark",
-      commit: "338d2029f16969b84becfd163c67f99740e28296",
       id: "kirikiri2",
-      patch: "assets/runtime/kirikiri/host-api.patch",
-      repository: "https://github.com/fenghengzhi/kirikiroid2-web",
+      repository: "https://github.com/xxxsen/kirikiroid2-web",
+      tag: "rpg-runtime-g338d2029f169-r1",
     })]));
-    const patch = await readFile(join(root, "assets/runtime/ons/host-api.patch"), "utf8");
-    expect(patch).toContain("onsyuri_host_save");
-    expect(patch).toContain("onsyuri_host_load");
-    expect(patch).toContain("onsyuri_host_set_paused");
-    expect(patch).toContain("onsyuri_host_set_restore_slot");
-    expect(patch).toContain("host_restore_status = loadGameForHost(slot) == 0 ? 0 : -1;");
-    expect(patch).toContain("applyHostRestore();");
-    expect(patch).toContain("onsyuri_host_is_ready");
-    expect(patch).toContain("onsyuri_host_did_restore_fail");
-    expect(patch).toContain("onsyuriHostReady");
-    expect(patch).not.toMatch(/retrom|database|review|upload/iu);
-    const kirikiriPatch = await readFile(join(root, "assets/runtime/kirikiri/host-api.patch"), "utf8");
-    expect(kirikiriPatch).toContain("krkr2_host_bookmark_is_ready");
-    expect(kirikiriPatch).toContain("krkr2_host_save_bookmark");
-    expect(kirikiriPatch).toContain("krkr2_host_load_bookmark");
-    expect(kirikiriPatch).toContain(
-      "EXPORTED_FUNCTIONS=['_main','_krkr2_host_bookmark_is_ready','_krkr2_host_save_bookmark','_krkr2_host_load_bookmark','_krkr2_host_load_bookmark_state']",
-    );
-    expect(kirikiriPatch).toContain("krkr2_host_load_bookmark_state");
-    expect(kirikiriPatch).toContain("performFunctionInCocosThread");
-    expect(kirikiriPatch).toContain('TJS_W("currentLabel")');
-    expect(kirikiriPatch).toContain('TJS_W("inStable")');
-    const bridgeHunk = kirikiriPatch.match(
-      /@@ -0,0 \+1,(\d+) @@\n([\s\S]*?)\ndiff --git a\/vcpkg\/ports\/libgdiplus/u,
-    );
-    expect(bridgeHunk).not.toBeNull();
-    const declaredBridgeLines = Number(bridgeHunk?.[1]);
-    const actualBridgeLines = bridgeHunk?.[2]?.split("\n").filter((line) => line.startsWith("+")).length;
-    expect(actualBridgeLines).toBe(declaredBridgeLines);
-    expect(kirikiriPatch).toContain(
-      'VCPKG_MAKE_BUILD_TRIPLET "--host=wasm32-unknown-emscripten"',
-    );
-    expect(kirikiriPatch).toContain("HostBookmarkBridge.cpp");
-    expect(kirikiriPatch).toContain("vcpkg_cmake_config_fixup(CONFIG_PATH share/libgdiplus)");
-    expect(kirikiriPatch).not.toMatch(/retrom|database|review|upload/iu);
-  });
-
-  it("updates ONS button selection directly for Web keyboard navigation", async () => {
-    const patch = await readFile(join(root, "assets/runtime/ons/host-api.patch"), "utf8");
-    expect(patch).toMatch(
-      /shift_over_button = button->no;\n\+#if defined\(WEB\)\n\+ {8}mouseOverCheck\(x, y\);\n\+#else[\s\S]*?warpMouse\(x, y\);\n\+#endif/u,
-    );
+    const releaseIds = manifest.upstreamReleases.map((release: { id: string }) => release.id).sort();
+    const externalRuntimeIds = [...new Set(manifest.cores
+      .map((core: { runtimeId: string }) => core.runtimeId)
+      .filter((runtimeId: string) => runtimeId !== "native"))].sort();
+    expect(releaseIds).toEqual(externalRuntimeIds);
+    expect(await readdir(join(root, "scripts"))).not.toEqual(expect.arrayContaining([
+      "build-kirikiri-core.sh", "build-ons-core.sh",
+    ]));
+    const packageJson = JSON.parse(await readFile(join(root, "package.json"), "utf8"));
+    expect(Object.keys(packageJson.scripts)).not.toEqual(expect.arrayContaining([
+      "core:kirikiri:build", "core:ons:build",
+    ]));
+    for (const workflow of ["quality.yml", "release.yml"]) {
+      const contents = await readFile(join(root, ".github/workflows", workflow), "utf8");
+      expect(contents).not.toMatch(/core:(?:ons|kirikiri)|build-(?:ons|kirikiri)-core/u);
+    }
+    const quality = await readFile(join(root, ".github/workflows/quality.yml"), "utf8");
+    expect(quality).toContain("npm run release:build");
+    const releaseWorkflow = await readFile(join(root, ".github/workflows/release.yml"), "utf8");
+    expect(releaseWorkflow).toContain('git cat-file -t "refs/tags/$GITHUB_REF_NAME"');
+    const instructions = await readFile(join(root, "AGENTS.md"), "utf8");
+    expect(instructions).toContain("不得编译第三方核心");
+    expect(instructions).toContain("只聚合");
   });
 });
 

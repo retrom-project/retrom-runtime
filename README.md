@@ -81,11 +81,9 @@ npm run build
 npm run package:check
 ```
 
-修改 KiriKiri host patch 后先运行 `npm run core:kirikiri:build`；该命令从固定 commit 构建
-`build/kirikiri/`，供 Release 和宿主的本地候选 stage 使用。它不会发布 tag 或 GitHub Release。
-
-Runtime JS/Wasm is not committed. The tag workflow downloads the fixed upstream releases and builds the fixed
-ONScripterYuri and KiriKiri2 source commits with small host save/load patches. It then produces:
+Runtime JS/Wasm is not committed or built here. EasyRPG, mkxp, ONScripterYuri and KiriKiri are maintained in
+separate forks; each fork owns its source changes, quality checks, Web build and immutable core Release. This
+repository downloads those fixed releases, adds its own small bridge assets and produces:
 
 - `release/retrom-runtime-<version>.tar.gz`
 - `release/xxxsen-retrom-runtime-<version>.tgz` (installable npm package)
@@ -99,6 +97,17 @@ Adapter IDs and asset paths describe roles, not migration revisions. Version sel
 repository release tag; the source tree and each release contain one implementation per runtime role.
 SHA-256 values in release metadata detect corrupt downloads; compatibility identity is the immutable
 `retrom-runtime` tag and each upstream repository plus its tag, when one exists, and exact commit.
+
+Core changes can be integrated before a formal fork Release. Build and validate the candidate in the fork, then
+point `RETROM_RUNTIME_DEV_RELEASE_OVERRIDES` at the absolute output directory while running `release:build`:
+
+```bash
+RETROM_RUNTIME_DEV_RELEASE_OVERRIDES='{"onsyuri":"/work/OnscripterYuri/output"}' npm run release:build
+```
+
+Use key `kirikiri2` for the KiriKiri fork. The same environment is inherited by Retrom's
+`RETROM_RUNTIME_DEV_ROOT`/`RETROM_RUNTIME_DEV_INCLUDE_ASSETS=true` local-link flow. This affects only ignored local
+staging output; the committed manifest and formal Release inputs remain pinned to published fork tags.
 
 Each core also declares three forward-upgrade fields in `runtime-manifest.json`:
 
@@ -119,22 +128,21 @@ its raw serializer ABI and does not need a host-specific patch for compression.
 
 ## Adding and integrating a core
 
-1. Add the runtime entry and adapter implementation without aliases or fallback implementations.
-2. Add adapter unit tests and a small owned or redistributable compatibility fixture. Private operator games may
+1. Put third-party source changes and the Web build in a dedicated maintained fork; produce one fixed candidate asset set.
+2. Add the runtime entry and adapter implementation without aliases or fallback implementations.
+3. Add adapter unit tests and a small owned or redistributable compatibility fixture. Private operator games may
    be used for an ignored local smoke but never enter Git or ordinary automated tests.
-3. Open a PR to `master`; the quality workflow runs lint, types, unit tests and the package build.
-4. Publish a prerelease tag such as `v0.3.0-rc.1`.
-5. A host application changes its runtime pin on a short-lived integration branch; production keeps its stable pin.
-6. Run the host's real import/launch/save/restore product test for the new core.
-7. Publish the stable tag and merge the host's single pinned runtime tag change after the candidate passes.
+4. Open a PR to `master`; the quality workflow runs lint, types, unit tests and the package build without compiling cores.
+5. Use local fork-asset overrides for the host's real import/launch/save/restore product test.
+6. Publish the stable fork tag, pin it here, then publish the aggregate runtime tag.
 
 This keeps core development independent: a new core can be tested without replacing the stable runtime used by
 other games or requiring unrelated host changes.
 
 ## Maintaining upstream forks
 
-The Player `master` and mkxp-z Web `main` branches are unmodified,
-fast-forward-only upstream mirrors. Retrom changes live on one active
+The Player `master`, mkxp-z Web `main`, ONScripterYuri `master`, and KiriKiri
+Web `web` branches are unmodified, fast-forward-only upstream mirrors. Retrom changes live on one active
 `retrom/<baseline>` branch per fork, which is also that fork's default branch.
 Each fork records its exact tagged or commit-only upstream baseline in a root
 `retrom-fork.json`. Work starts from the active baseline on short-lived

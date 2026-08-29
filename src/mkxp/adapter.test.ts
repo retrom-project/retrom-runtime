@@ -59,7 +59,7 @@ describe("mkxp runtime mount", () => {
     });
   });
 
-  it("keeps native stderr diagnostics out of the Next development error channel", async () => {
+  it("forwards native stdout and stderr without using the Next development error channel", async () => {
     const harness = createHarness();
     const consoleError = vi.spyOn(console, "error").mockImplementation(() => undefined);
     const diagnostics: unknown[] = [];
@@ -67,12 +67,18 @@ describe("mkxp runtime mount", () => {
     const mounted = await mountMkxp(
       mkxpConfig(false), harness.target, null, harness.dependencies, (diagnostic) => diagnostics.push(diagnostic),
     );
+    const print = harness.prepareOptions?.emscriptenModule?.print;
     const printErr = harness.prepareOptions?.emscriptenModule?.printErr;
+    expect(print).toBeTypeOf("function");
     expect(printErr).toBeTypeOf("function");
+    print?.("[INFO] mkxp startup");
     printErr?.("[INFO] RetroArch startup");
 
     expect(consoleError).not.toHaveBeenCalled();
-    expect(diagnostics).toEqual([{ runtime: "mkxp-z", message: "[INFO] RetroArch startup" }]);
+    expect(diagnostics).toEqual([
+      { runtime: "mkxp-z", message: "[INFO] mkxp startup" },
+      { runtime: "mkxp-z", message: "[INFO] RetroArch startup" },
+    ]);
     await mounted.exit();
     harness.frame.remove();
   });

@@ -130,6 +130,9 @@ async function mountMkxpUnchecked(
   reportProgress({ phase: "RUNTIME_ASSET", loadedBytes: runtimeAssetBytes, totalBytes: runtimeAssetBytes });
   const remoteContent = remoteContentManifest(config);
   reportProgress({ phase: "PROJECT_INDEX", loadedBytes: 0, totalBytes: remoteContent.manifest.byteLength });
+  const printDiagnostic = (...args: unknown[]) => {
+    onDiagnostic({ runtime: "mkxp-z", message: args.map(String).join(" ") });
+  };
   const nostalgist = await dependencies.prepare({
     core: {
       name: "mkxp-z",
@@ -143,7 +146,8 @@ async function mountMkxpUnchecked(
       // overwrites a caller-provided Module.ENV. Populate the final object at
       // preRun instead, before RetroArch calls into the core and libc getenv().
       preRun: [(module) => {Object.assign(module.ENV, fetchEnvironment());}],
-      printErr: (...args: unknown[]) => onDiagnostic({ runtime: "mkxp-z", message: args.map(String).join(" ") }),
+      print: printDiagnostic,
+      printErr: printDiagnostic,
     },
     retroarchConfig: {
       savefile_directory: "/home/web_user/retroarch/userdata/saves",

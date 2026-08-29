@@ -92,9 +92,13 @@ describe("independent package boundary", () => {
     expect(kirikiriPatch).toContain("krkr2_host_save_bookmark");
     expect(kirikiriPatch).toContain("krkr2_host_load_bookmark");
     expect(kirikiriPatch).toContain(
+      "EXPORTED_FUNCTIONS=['_main','_krkr2_host_bookmark_is_ready','_krkr2_host_save_bookmark','_krkr2_host_load_bookmark']",
+    );
+    expect(kirikiriPatch).toContain(
       'VCPKG_MAKE_BUILD_TRIPLET "--host=wasm32-unknown-emscripten"',
     );
     expect(kirikiriPatch).toContain("HostBookmarkBridge.cpp");
+    expect(kirikiriPatch).toContain("vcpkg_cmake_config_fixup(CONFIG_PATH share/libgdiplus)");
     expect(kirikiriPatch).not.toMatch(/retrom|database|review|upload/iu);
   });
 

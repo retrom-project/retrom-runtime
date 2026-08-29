@@ -1,3 +1,15 @@
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 23017d8..34132fe 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -127,6 +127,7 @@ if(WEB)
+         "$<$<CONFIG:Debug>:SHELL:-s ASSERTIONS=2>"
+         "SHELL:-s FORCE_FILESYSTEM=1"
+         "SHELL:-s EXPORTED_RUNTIME_METHODS=['ccall','cwrap']"
++        "SHELL:-s EXPORTED_FUNCTIONS=['_main','_krkr2_host_bookmark_is_ready','_krkr2_host_save_bookmark','_krkr2_host_load_bookmark']"
+         "SHELL:-s PTHREAD_POOL_SIZE=${KRKR2_WEB_PTHREAD_POOL_SIZE}"
+         "SHELL:-s DEFAULT_PTHREAD_STACK_SIZE=1048576"
+         # VirtualLazyFS: 主线程文件读经 JSPI 挂起等待 JS 异步供数
 diff --git a/cpp/core/environ/CMakeLists.txt b/cpp/core/environ/CMakeLists.txt
 index df7c575..2ce9355 100644
 --- a/cpp/core/environ/CMakeLists.txt
@@ -8,7 +20,7 @@ index df7c575..2ce9355 100644
      $<$<BOOL:${WEB}>:${ENVIRON_PATH}/web/LayerFrameDumper.cpp>
 +    $<$<BOOL:${WEB}>:${ENVIRON_PATH}/web/HostBookmarkBridge.cpp>
      $<$<BOOL:${WEB}>:${ENVIRON_PATH}/web/VirtualLazyFS.cpp>
- 
+
      ${ENVIRON_PATH}/cocos2d/AppDelegate.cpp
 diff --git a/cpp/core/environ/web/HostBookmarkBridge.cpp b/cpp/core/environ/web/HostBookmarkBridge.cpp
 new file mode 100644
@@ -104,6 +116,18 @@ index 0000000..cd59696
 +krkr2_host_load_bookmark(int slot) {
 +    return callKagBookmark(TJS_W("loadBookMark"), slot);
 +}
+diff --git a/vcpkg/ports/libgdiplus/portfile.cmake b/vcpkg/ports/libgdiplus/portfile.cmake
+index 1f39441..571d2cd 100644
+--- a/vcpkg/ports/libgdiplus/portfile.cmake
++++ b/vcpkg/ports/libgdiplus/portfile.cmake
+@@ -27,6 +27,7 @@ endif()
+ vcpkg_cmake_configure(SOURCE_PATH "${SOURCE_PATH}" OPTIONS ${OPTIONS})
+
+ vcpkg_cmake_install()
++vcpkg_cmake_config_fixup(CONFIG_PATH share/libgdiplus)
+ vcpkg_fixup_pkgconfig()
+ vcpkg_copy_pdbs()
+
 diff --git a/vcpkg/triplets/wasm32-emscripten.cmake b/vcpkg/triplets/wasm32-emscripten.cmake
 index 8c87e90..2a1fc04 100644
 --- a/vcpkg/triplets/wasm32-emscripten.cmake

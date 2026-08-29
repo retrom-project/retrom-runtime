@@ -1,4 +1,4 @@
-import type { SeekableBlobSource } from "../contract.js";
+import type { FileTreeSource, SeekableBlobSource } from "../contract.js";
 
 export type RpgMakerGeneration =
   | "RPG2000"
@@ -25,7 +25,7 @@ export type EasyRpgAdapterConfig = {
   runtimeBaseUrl: string;
   projectRootUrl: string;
   projectIndexUrl: string;
-  rtpArchive: { url: string; sha256: string; mountPath: "/data/rtp/2000" | "/data/rtp/2003" } | null;
+  rtpSource: FileTreeSource | null;
   checkpointSlot: 100;
 };
 

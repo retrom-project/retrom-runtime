@@ -95,7 +95,7 @@ function easyConfig(): RpgMakerRuntimeConfig {
       runtimeBaseUrl: "https://runtime.example/easyrpg/",
       projectRootUrl: "https://runtime.example/project/",
       projectIndexUrl: "https://runtime.example/project/index.json",
-      rtpArchive: null,
+      rtpSource: null,
       checkpointSlot: 100,
     },
   };

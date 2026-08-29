@@ -37,7 +37,7 @@ function validEasyAdapter(
     adapter.adapterId === "easyrpg-web" && adapter.checkpointSlot === 100 &&
     adapter.engineMode === (generation === "RPG2000" ? "rpg2k" : "rpg2k3") &&
     validUrl(adapter.runtimeBaseUrl) && validUrl(adapter.projectRootUrl) && validUrl(adapter.projectIndexUrl) &&
-    (adapter.rtpArchive === null || validDigest(adapter.rtpArchive.sha256));
+    (adapter.rtpSource === null || adapter.rtpSource.kind === "FILE_TREE_V1" && validUrl(adapter.rtpSource.indexUrl));
 }
 
 function validMkxpAdapter(

@@ -17,14 +17,17 @@ import type { RpgMakerAdapterConfig, RpgMakerRuntimeConfig } from "./rpgmaker/co
 export type {
   CheckpointAvailability,
   CheckpointBlocker,
+  FileTreeSource,
   GameRuntime,
   GameRuntimeEvent,
   RuntimeCapabilities,
   RuntimeCheckpoint,
+  RuntimeContentSourceKind,
   RuntimeLoadPhase,
   RuntimeLoadProgress,
   RuntimeState,
   RuntimeValidationProbe,
+  SeekableBlobSource,
 } from "./contract.js";
 export type { RuntimeConfig } from "./catalog.js";
 export { runtimeAdapters, validateRuntimeConfig } from "./catalog.js";
@@ -35,7 +38,6 @@ export type {
   RpgMakerAdapterConfig,
   RpgMakerPositionV1,
   RpgMakerRuntimeConfig,
-  RuntimeArchive,
 } from "./rpgmaker/contract.js";
 export { rpgMakerPositionProbeKind } from "./rpgmaker/contract.js";
 export type { OnsAdapterConfig, OnsRuntimeConfig, OnsScriptEncoding } from "./ons/contract.js";
@@ -105,12 +107,13 @@ function adapterMount(config: RuntimeConfig, options: RuntimeOptions) {
       options.restorePayload,
     );
   case "MKXP_LIBRETRO_WEB":
-    return (target: HTMLElement) => mountMkxp(
+    return (target: HTMLElement, reportProgress: Parameters<typeof mountMkxp>[5]) => mountMkxp(
       withRpgAdapter(config as RpgMakerRuntimeConfig, adapter),
       target,
       options.restorePayload,
       undefined,
       options.onDiagnostic,
+      reportProgress,
     );
   case "NATIVE_WEB":
     return () => mountNativeRpg(

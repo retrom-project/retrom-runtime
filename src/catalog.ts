@@ -19,6 +19,7 @@ type RuntimeAdapterDescriptor = {
 
 const rpgCapabilities: RuntimeCapabilities = {
   checkpoint: true,
+  contentSources: ["FILE_TREE_V1"],
   frameCounter: true,
   pause: true,
   screenshot: true,
@@ -27,10 +28,17 @@ const rpgCapabilities: RuntimeCapabilities = {
   volume: false,
 };
 
-const nativeCapabilities: RuntimeCapabilities = { ...rpgCapabilities, volume: true };
+const nativeCapabilities: RuntimeCapabilities = {
+  ...rpgCapabilities, contentSources: ["NATIVE_WEB_V1"], volume: true,
+};
+
+const mkxpCapabilities: RuntimeCapabilities = {
+  ...rpgCapabilities, contentSources: ["SEEKABLE_BLOB_V1"],
+};
 
 const standardCapabilities: RuntimeCapabilities = {
   checkpoint: true,
+  contentSources: ["FILE_TREE_V1"],
   frameCounter: false,
   pause: true,
   screenshot: true,
@@ -41,7 +49,9 @@ const standardCapabilities: RuntimeCapabilities = {
 
 export const runtimeAdapters = [
   descriptor("EASYRPG_WEB", "easyrpg-web", "easyrpg-save", "easyrpg-save-bundle-v1", rpgCapabilities),
-  descriptor("MKXP_LIBRETRO_WEB", "mkxp-libretro-web", "mkxp-state-compact", "mkxp-state-compact-v1", rpgCapabilities),
+  descriptor(
+    "MKXP_LIBRETRO_WEB", "mkxp-libretro-web", "mkxp-state-compact", "mkxp-state-compact-v1", mkxpCapabilities,
+  ),
   descriptor("NATIVE_WEB", "native-web", "native-save", "native-save-bundle-v1", nativeCapabilities),
   descriptor("ONS_YURI_WEB", "ons-yuri-web", "ons-save", "ons-save-bundle-v1", standardCapabilities),
   descriptor(

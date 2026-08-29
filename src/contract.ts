@@ -32,6 +32,21 @@ export type RuntimeValidationProbe = {
   value: unknown;
 };
 
+export type FileTreeSource = {
+  kind: "FILE_TREE_V1";
+  indexUrl: string;
+};
+
+export type SeekableBlobSource = {
+  kind: "SEEKABLE_BLOB_V1";
+  rangeRequired: true;
+  sha256: string;
+  sizeBytes: number;
+  url: string;
+};
+
+export type RuntimeContentSourceKind = FileTreeSource["kind"] | SeekableBlobSource["kind"] | "NATIVE_WEB_V1";
+
 export type RuntimeLoadPhase = "RUNTIME_ASSET" | "PROJECT_INDEX" | "PROJECT_CONTENT" | "RESTORE";
 
 export type RuntimeLoadProgress = {
@@ -42,6 +57,7 @@ export type RuntimeLoadProgress = {
 
 export type RuntimeCapabilities = {
   checkpoint: boolean;
+  contentSources: readonly RuntimeContentSourceKind[];
   frameCounter: boolean;
   pause: boolean;
   screenshot: boolean;

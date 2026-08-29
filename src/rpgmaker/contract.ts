@@ -1,3 +1,5 @@
+import type { SeekableBlobSource } from "../contract.js";
+
 export type RpgMakerGeneration =
   | "RPG2000"
   | "RPG2003"
@@ -15,12 +17,6 @@ export type RpgMakerPositionV1 = {
 };
 
 export const rpgMakerPositionProbeKind = "rpgmaker.position.v1";
-
-export type RuntimeArchive = {
-  url: string;
-  sha256: string;
-  sizeBytes: number;
-};
 
 export type EasyRpgAdapterConfig = {
   adapterKind: "EASYRPG_WEB";
@@ -46,8 +42,8 @@ export type MkxpAdapterConfig = {
     artifactSetSha256: string;
   };
   runtimeBaseUrl: string;
-  projectArchive: RuntimeArchive;
-  rtpArchives: Array<RuntimeArchive & { declaredName: string }>;
+  projectArchive: SeekableBlobSource;
+  rtpArchives: Array<SeekableBlobSource & { declaredName: string }>;
   rgssVersion: 1 | 2 | 3;
   stateBufferBytes: 268435456;
 };

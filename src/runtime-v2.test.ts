@@ -12,6 +12,7 @@ import type { MountedRuntimeAdapter } from "./internal-adapter.js";
 
 const capabilities: RuntimeCapabilities = {
   checkpoint: true,
+  contentSources: ["FILE_TREE_V1"],
   frameCounter: false,
   pause: true,
   screenshot: true,
@@ -83,6 +84,7 @@ describe("engine-neutral runtime contract", () => {
     for (const entry of runtimeAdapters) {
       expect(entry.capabilities.standardGamepad).toBe(true);
       expect(entry.capabilities.checkpoint).toBe(true);
+      expect(entry.capabilities.contentSources.length).toBeGreaterThan(0);
       expect(entry.checkpointFormat).toMatch(/^[a-z0-9][a-z0-9.-]{0,63}$/u);
     }
   });

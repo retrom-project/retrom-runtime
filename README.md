@@ -29,6 +29,17 @@ declared in `runtime-manifest.json`; hosts do not infer them from a generation n
 an extension probe. RPG Maker exposes `rpgmaker.position.v1`, while ONS and KiriKiri do not fabricate map IDs or
 player coordinates.
 
+Content sources are also host-independent. Directory-oriented adapters consume
+`FILE_TREE_V1`; mkxp consumes `SEEKABLE_BLOB_V1`; native Web projects retain
+their isolated entry model. A seekable blob supplies a URL, size, diagnostic
+digest and `rangeRequired: true`. The mkxp adapter registers that URL in
+WasmFS and passes only a virtual path to the core—it does not turn the project
+or RTP archives into JavaScript `Blob`s or download them before the first
+frame. Its pinned fork rejects a missing Range contract, a non-206 response,
+an inexact `Content-Range`, and response-length drift instead of silently
+falling back to a whole-file request. Core JS/Wasm and bridge assets still use
+full-byte validation, while their immutable URLs use the browser cache.
+
 ONS is a separate public runtime rather than an RPG Maker generation:
 
 ```ts

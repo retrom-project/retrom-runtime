@@ -69,8 +69,15 @@ function validCore(core: Extract<RpgMakerAdapterConfig, { adapterKind: "MKXP_LIB
     positiveInteger(core.wasmSizeBytes) && validDigest(core.jsSha256) && validDigest(core.wasmSha256) &&
     validDigest(core.artifactSetSha256);
 }
-function validArchive(archive: { url: string; sha256: string; sizeBytes: number }) {
-  return validUrl(archive.url) && validDigest(archive.sha256) && positiveInteger(archive.sizeBytes);
+function validArchive(archive: {
+  kind: string;
+  rangeRequired: boolean;
+  url: string;
+  sha256: string;
+  sizeBytes: number;
+}) {
+  return archive.kind === "SEEKABLE_BLOB_V1" && archive.rangeRequired === true &&
+    validUrl(archive.url) && validDigest(archive.sha256) && positiveInteger(archive.sizeBytes);
 }
 function validPosition(position: RpgMakerPositionV1) {
   return [position.mapId, position.playerX, position.playerY, position.fixtureState]

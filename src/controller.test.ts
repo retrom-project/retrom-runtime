@@ -12,6 +12,7 @@ afterEach(() => vi.useRealTimers());
 
 const capabilities: RuntimeCapabilities = {
   checkpoint: true,
+  contentSources: ["FILE_TREE_V1"],
   frameCounter: true,
   pause: true,
   screenshot: true,

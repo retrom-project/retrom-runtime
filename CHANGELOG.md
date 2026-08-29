@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Add the engine-neutral `SEEKABLE_BLOB_V1` content source and advertise content-source capabilities per adapter.
+- Mount mkxp project and RTP archives through strict WasmFS Range files instead of downloading every archive before
+  startup; fixed core and bridge assets now use the browser's normal immutable cache.
+
 ## 0.7.0
 
 - Replace the RPG-shaped root API with one engine-neutral `createRuntime` / `GameRuntime` contract shared by

@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import type { Nostalgist } from "nostalgist";
 import { rpgMakerPositionProbeKind, type RpgMakerRuntimeConfig } from "../rpgmaker/contract";
-import { mountMkxp } from "./adapter";
+import { fetchVerified, mountMkxp } from "./adapter";
 import { encodeMkxpRastate } from "./state";
 
 type MkxpConfig = RpgMakerRuntimeConfig & {
@@ -32,6 +32,7 @@ const originalCrossOriginIsolated = Object.getOwnPropertyDescriptor(window, "cro
 afterEach(() => {
   vi.useRealTimers();
   vi.restoreAllMocks();
+  vi.unstubAllGlobals();
   if (originalCrossOriginIsolated) {
     Object.defineProperty(window, "crossOriginIsolated", originalCrossOriginIsolated);
   } else {
@@ -40,6 +41,25 @@ afterEach(() => {
 });
 
 describe("mkxp runtime mount", () => {
+  it("lets immutable runtime assets use the browser cache", async () => {
+    const url = new URL("/runtime/mkxp/core.js", window.location.href).href;
+    const fetchMock = vi.fn(async () => ({
+      arrayBuffer: async () => Uint8Array.of(1).buffer,
+      ok: true,
+      url,
+    }));
+    vi.stubGlobal("fetch", fetchMock);
+
+    await expect(fetchVerified(
+      "/runtime/mkxp/core.js",
+      1,
+      "4bf5122f344554c53bde2ebb8cd2b7e3d1600ad631c385a5d7cce23c7785459a",
+    )).resolves.toEqual(Uint8Array.of(1));
+    expect(fetchMock).toHaveBeenCalledWith("/runtime/mkxp/core.js", {
+      cache: "default", credentials: "same-origin", redirect: "error",
+    });
+  });
+
   it("keeps native stderr diagnostics out of the Next development error channel", async () => {
     const harness = createHarness();
     const consoleError = vi.spyOn(console, "error").mockImplementation(() => undefined);
@@ -54,6 +74,68 @@ describe("mkxp runtime mount", () => {
 
     expect(consoleError).not.toHaveBeenCalled();
     expect(diagnostics).toEqual([{ runtime: "mkxp-z", message: "[INFO] RetroArch startup" }]);
+    await mounted.exit();
+    harness.frame.remove();
+  });
+
+  it("registers project and RTP archives as strict remote files without downloading them", async () => {
+    const harness = createHarness();
+    const config = mkxpConfig(false);
+    config.adapter.projectArchive.sizeBytes = 8_388_608;
+    config.adapter.rtpArchives = [{
+      declaredName: "Standard",
+      kind: "SEEKABLE_BLOB_V1",
+      rangeRequired: true,
+      sha256: "e".repeat(64),
+      sizeBytes: 16_777_216,
+      url: `/projects/${config.sessionId}/rtp/standard.mkxpz`,
+    }];
+    const progress: unknown[] = [];
+
+    const mounted = await mountMkxp(
+      config,
+      harness.target,
+      null,
+      harness.dependencies,
+      () => undefined,
+      (event) => progress.push(event),
+    );
+
+    expect(harness.fetchedUrls).toEqual([
+      "/runtime/mkxp/mkxp-z_libretro.js",
+      "/runtime/mkxp/mkxp-z_libretro.wasm",
+      "/runtime/mkxp/position_bridge.rb",
+    ]);
+    expect(harness.prepareOptions).not.toHaveProperty("rom");
+    expect(harness.prepareOptions).not.toHaveProperty("bios");
+    expect(harness.prepareOptions?.emscriptenModule?.arguments).toEqual(["/retrom-content/game.mkxpz"]);
+    expect(harness.emscriptenEnvironment).toEqual({
+      FETCH_BASE_DIR: "/retrom-fetch",
+      FETCH_CHUNK_SIZE_BYTES: "262144",
+      FETCH_MANIFEST: "/home/web_user/retroarch/userdata/system/mkxp-z/fetch.manifest",
+    });
+    const manifestBytes = harness.files.get(
+      "/home/web_user/retroarch/userdata/system/mkxp-z/fetch.manifest",
+    );
+    if (!manifestBytes) {throw new Error("missing fetch manifest");}
+    const manifest = new TextDecoder().decode(manifestBytes);
+    expect(manifest).toBe([
+      window.location.origin + "/",
+      `projects/${config.sessionId}/game.mkxpz /retrom-content/game.mkxpz`,
+      `projects/${config.sessionId}/rtp/standard.mkxpz /home/web_user/retroarch/userdata/system/mkxp-z/RTP/Standard.mkxpz`,
+      "",
+    ].join("\n"));
+    expect(progress).toEqual([
+      { phase: "RUNTIME_ASSET", loadedBytes: 0, totalBytes: 42_746_925 },
+      { phase: "RUNTIME_ASSET", loadedBytes: 42_746_925, totalBytes: 42_746_925 },
+      { phase: "PROJECT_INDEX", loadedBytes: 0, totalBytes: manifestBytes.byteLength },
+      {
+        phase: "PROJECT_INDEX",
+        loadedBytes: manifestBytes.byteLength,
+        totalBytes: manifestBytes.byteLength,
+      },
+      { phase: "PROJECT_CONTENT", loadedBytes: 0, totalBytes: 25_165_824 },
+    ]);
     await mounted.exit();
     harness.frame.remove();
   });
@@ -301,6 +383,8 @@ function createHarness() {
     actions,
     directories,
     files,
+    fetchedUrls: [] as string[],
+    emscriptenEnvironment: {} as Record<string, string>,
     setSaveDirectoryName: (name: string) => {saveDirectoryName = name;},
     writeRuntimeState: (contents: Uint8Array) => fileSystem.writeFile(statePath, contents),
     onKeyDown: (code: string) => {void code;},
@@ -318,6 +402,7 @@ function createHarness() {
     actions.push("start");
   });
   harness.runtime = runtime;
+  harness.emscriptenEnvironment = runtime.environment;
   document.body.append(harness.frame);
   const target = harness.frame.contentDocument?.createElement("div");
   if (!target || !harness.frame.contentDocument) {throw new Error("test frame unavailable");}
@@ -337,7 +422,10 @@ function createHarness() {
       expect(expectedSize).toBe(stateSize);
       return checkpointFixture;
     },
-    fetchVerified: async () => Uint8Array.of(1),
+    fetchVerified: async (url) => {
+      harness.fetchedUrls.push(url);
+      return Uint8Array.of(1);
+    },
     prepare: async (options) => {
       harness.prepareOptions = options;
       if (!(options.element instanceof HTMLCanvasElement)) {throw new TypeError("invalid element");}
@@ -351,12 +439,15 @@ function createHarness() {
 }
 
 function runtimeFixture(fileSystem: TestFileSystem, onStart: () => void) {
+  const environment: Record<string, string> = {};
   return {
     exit: vi.fn(async () => undefined),
+    getEmscripten: () => ({ Module: { ENV: environment } }),
     getEmscriptenFS: () => fileSystem,
     pause: vi.fn(),
     resume: vi.fn(),
     start: vi.fn(async () => {onStart();}),
+    environment,
   };
 }
 
@@ -385,6 +476,8 @@ function mkxpConfig(restore: boolean): MkxpConfig {
         artifactSetSha256: "a".repeat(64),
       },
       projectArchive: {
+        kind: "SEEKABLE_BLOB_V1",
+        rangeRequired: true,
         url: `/projects/${sessionId}/game.mkxpz`,
         sha256: "b".repeat(64),
         sizeBytes: 1,

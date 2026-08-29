@@ -2,10 +2,6 @@
 
 ## Unreleased
 
-- Add the engine-neutral `SEEKABLE_BLOB_V1` content source and advertise content-source capabilities per adapter.
-- Mount mkxp project and RTP archives through strict WasmFS Range files instead of downloading every archive before
-  startup; fixed core and bridge assets now use the browser's normal immutable cache.
-
 ## 0.7.0
 
 - Replace the RPG-shaped root API with one engine-neutral `createRuntime` / `GameRuntime` contract shared by
@@ -14,6 +10,13 @@
   generic checkpoint availability no longer exposes map, message or event semantics.
 - Consolidate the duplicated RPG, ONS and KiriKiri lifecycle state machines into one controller and declare
   adapter capabilities plus checkpoint formats in the runtime manifest.
+- Add the engine-neutral `SEEKABLE_BLOB_V1` content source and advertise content-source capabilities per adapter.
+- Mount mkxp project and RTP archives through strict WasmFS Range files instead of downloading every archive before
+  startup; fixed core and bridge assets now use the browser's normal immutable cache.
+- Load EasyRPG RTP files through the host file tree only when the game asks for a missing resource.
+- Pass ONS video URLs to the browser media pipeline so large movies can use HTTP Range instead of being copied into
+  the Emscripten file system first.
+- Reject large KiriKiri file responses that ignore Range requests instead of silently downloading the complete file.
 
 ## 0.6.1
 

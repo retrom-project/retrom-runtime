@@ -40,6 +40,13 @@ an inexact `Content-Range`, and response-length drift instead of silently
 falling back to a whole-file request. Core JS/Wasm and bridge assets still use
 full-byte validation, while their immutable URLs use the browser cache.
 
+EasyRPG receives both the project and optional RTP as `FILE_TREE_V1` roots. The project wins when it contains a
+resource; only a missing resource that the game actually opens is fetched from the RTP root. ONS keeps ordinary
+scripts and images on the same file-on-first-open path, while large videos are handed to the browser media
+pipeline by URL so it can issue Range requests instead of copying the complete movie into the Emscripten file
+system. KiriKiri keeps its VLFS Range reader and refuses a large response that ignores a requested range rather
+than silently buffering the whole file.
+
 ONS is a separate public runtime rather than an RPG Maker generation:
 
 ```ts

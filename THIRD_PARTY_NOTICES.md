@@ -10,6 +10,7 @@ Release archives aggregate the following independently licensed components:
 - fflate — MIT — <https://github.com/101arrowz/fflate>
 - ONScripterYuri — GPL-2.0-or-later — <https://github.com/xxxsen/OnscripterYuri>
 - Kirikiroid2 Web — GPL-3.0-only — <https://github.com/xxxsen/kirikiroid2-web>
+- Butterscotch — AGPL-3.0-only — <https://github.com/xxxsen/Butterscotch>
 
 The exact repository, release tag, commit and adapter ABI used by a release are recorded in
 `runtime-manifest.json`. GitHub source archives for those immutable commits and the build workflows in the

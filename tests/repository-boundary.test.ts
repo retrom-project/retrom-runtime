@@ -15,7 +15,7 @@ describe("independent package boundary", () => {
     }
   });
 
-  it("publishes seven RPG Maker generations plus independent ONS and KiriKiri cores", async () => {
+  it("publishes seven RPG Maker generations plus independent ONS, KiriKiri and Butterscotch cores", async () => {
     const manifest = JSON.parse(await readFile(join(root, "runtime-manifest.json"), "utf8"));
     expect(manifest.packageName).toBe("@xxxsen/retrom-runtime");
     expect(manifest.cores.filter((core: { family: string }) => core.family === "RPG_MAKER")
@@ -26,8 +26,11 @@ describe("independent package boundary", () => {
       .map((core: { id: string }) => core.id)).toEqual(["onscripter-yuri"]);
     expect(manifest.cores.filter((core: { family: string }) => core.family === "KIRIKIRI")
       .map((core: { id: string }) => core.id)).toEqual(["kirikiri2-kag"]);
+    expect(manifest.cores.filter((core: { family: string }) => core.family === "BUTTERSCOTCH")
+      .map((core: { id: string }) => core.id)).toEqual(["butterscotch-gamemaker"]);
     expect(manifest.cores.every((core: object) => !("routeKey" in core))).toBe(true);
     expect(manifest.localAssets.map((asset: { output: string }) => asset.output).sort()).toEqual([
+      "runtime/butterscotch/worker.mjs",
       "runtime/mkxp/position_bridge.rb",
       "runtime/native/bridge.js",
     ]);
@@ -39,16 +42,20 @@ describe("independent package boundary", () => {
       cores: Array<{ adapterAbi: string; adapterId: string; runtimeId: string }>;
     };
     expect([...new Set(manifest.cores.map((core) => core.runtimeId))].sort()).toEqual([
-      "easyrpg", "kirikiri2", "mkxp", "native", "onsyuri",
+      "butterscotch", "easyrpg", "kirikiri2", "mkxp", "native", "onsyuri",
     ]);
     expect([...new Set(manifest.cores.map((core) => core.adapterId))].sort()).toEqual([
-      "easyrpg-web", "kirikiri2-web", "mkxp-libretro-web", "native-web", "ons-yuri-web",
+      "butterscotch-web", "easyrpg-web", "kirikiri2-web", "mkxp-libretro-web", "native-web", "ons-yuri-web",
     ]);
     expect([...new Set(manifest.cores.map((core) => core.adapterAbi))].sort()).toEqual([
-      "easyrpg-save", "kirikiri-kag-bookmark", "mkxp-state-compact", "native-save", "ons-save",
+      "butterscotch-checkpoint-v1", "easyrpg-save", "kirikiri-kag-bookmark", "mkxp-state-compact",
+      "native-save", "ons-save",
     ]);
-    expect((await readdir(join(root, "assets/runtime"))).sort()).toEqual(["mkxp", "native"]);
-    for (const asset of ["assets/runtime/mkxp/position_bridge.rb", "assets/runtime/native/bridge.js"]) {
+    expect((await readdir(join(root, "assets/runtime"))).sort()).toEqual(["butterscotch", "mkxp", "native"]);
+    for (const asset of [
+      "assets/runtime/butterscotch/worker.mjs", "assets/runtime/mkxp/position_bridge.rb",
+      "assets/runtime/native/bridge.js",
+    ]) {
       expect(await readFile(join(root, asset), "utf8"), asset).not.toMatch(/RETROM|__retrom|-[vr][1-9]/u);
     }
   });
@@ -74,6 +81,11 @@ describe("independent package boundary", () => {
       id: "kirikiri2",
       repository: "https://github.com/xxxsen/kirikiroid2-web",
       tag: "rpg-runtime-g338d2029f169-r2",
+    }), expect.objectContaining({
+      adapterAbi: "butterscotch-checkpoint-v1",
+      id: "butterscotch",
+      repository: "https://github.com/xxxsen/Butterscotch",
+      tag: "rpg-runtime-gae2602f1f83c-r1",
     })]));
     const releaseIds = manifest.upstreamReleases.map((release: { id: string }) => release.id).sort();
     const externalRuntimeIds = [...new Set(manifest.cores

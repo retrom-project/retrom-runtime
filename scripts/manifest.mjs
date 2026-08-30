@@ -12,8 +12,8 @@ export function validateManifest(manifest) {
     manifest.packageName !== "@xxxsen/retrom-runtime" ||
     !/^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?$/u.test(manifest.packageVersion) ||
     Object.hasOwn(manifest, "sourceBuilds") || !Array.isArray(manifest.upstreamReleases) ||
-    !Array.isArray(manifest.localAssets) || !Array.isArray(manifest.adapters) || manifest.adapters.length !== 5 ||
-    !Array.isArray(manifest.cores) || manifest.cores.length !== 9) {
+    !Array.isArray(manifest.localAssets) || !Array.isArray(manifest.adapters) || manifest.adapters.length !== 6 ||
+    !Array.isArray(manifest.cores) || manifest.cores.length !== 10) {
     throw new Error("RUNTIME_MANIFEST_INVALID");
   }
   const releases = new Map();
@@ -53,7 +53,8 @@ export function validateManifest(manifest) {
   const generations = new Set();
   for (const core of manifest.cores) {
     const adapter = adapters.get(core?.adapterKind);
-    if (!core?.id || generations.has(core.generation) || !["RPG_MAKER", "ONS", "KIRIKIRI"].includes(core.family) ||
+    if (!core?.id || generations.has(core.generation) ||
+      !["RPG_MAKER", "ONS", "KIRIKIRI", "BUTTERSCOTCH"].includes(core.family) ||
       !adapter || core.adapterId !== adapter.adapterId || core.adapterAbi !== adapter.adapterAbi ||
       !versionedIdentity(core.gameCompatibilityLine) ||
       !versionedIdentity(core.saveAbi) || !validReadableSaveAbis(core.saveAbi, core.readableSaveAbis) ||

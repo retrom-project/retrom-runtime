@@ -144,17 +144,13 @@ export async function mountKirikiri2(
   return {
     checkpoint: async () => {
       if (exited) {throw new Error("KIRIKIRI_RUNTIME_INVALID_STATE");}
-      try {
-        await waitFor(() => activeModule._krkr2_host_bookmark_is_ready() === 1, readyTimeoutMs);
-      } catch {
-        throw new Error("KIRIKIRI_CHECKPOINT_CREATE_FAILED");
-      }
-      if (exited) {throw new Error("KIRIKIRI_RUNTIME_INVALID_STATE");}
       const wasPaused = paused;
-      const checkpointWriteSequence = writeSequence;
       let pausedForCapture = false;
       if (wasPaused) {activeModule.resumeMainLoop();}
       try {
+        await waitFor(() => activeModule._krkr2_host_bookmark_is_ready() === 1, readyTimeoutMs);
+        if (exited) {throw new Error("KIRIKIRI_RUNTIME_INVALID_STATE");}
+        const checkpointWriteSequence = writeSequence;
         if (activeModule._krkr2_host_save_bookmark(config.adapter.checkpointSlot) !== 0) {
           throw new Error("KIRIKIRI_CHECKPOINT_CREATE_FAILED");
         }
@@ -171,7 +167,8 @@ export async function mountKirikiri2(
           format: "kirikiri-save-bundle-v1",
         };
       } catch (error) {
-        if (error instanceof Error && error.message === "KIRIKIRI_CHECKPOINT_CREATE_FAILED") {throw error;}
+        if (error instanceof Error && ["KIRIKIRI_CHECKPOINT_CREATE_FAILED", "KIRIKIRI_RUNTIME_INVALID_STATE"]
+          .includes(error.message)) {throw error;}
         throw new Error("KIRIKIRI_CHECKPOINT_CREATE_FAILED");
       } finally {
         if (wasPaused && !pausedForCapture) {activeModule.pauseMainLoop();}
@@ -268,14 +265,8 @@ function selectStartupXp3(paths: string[], configured: string | null) {
 function isSavePath(path: string) {return saveRoots.some((root) => path.toLowerCase().startsWith(root));}
 function normalizeSavePath(path: string) {return path.replace(/^\/+/, "").normalize("NFC");}
 function hasCausalBookmarkWrite(sequences: Map<string, number>, checkpointWriteSequence: number) {
-  for (const [path, sequence] of sequences) {
-    if (sequence > checkpointWriteSequence && !isBookmarkBookkeepingPath(path)) {return true;}
-  }
+  for (const sequence of sequences.values()) {if (sequence > checkpointWriteSequence) {return true;}}
   return false;
-}
-function isBookmarkBookkeepingPath(path: string) {
-  const name = path.slice(path.lastIndexOf("/") + 1);
-  return /^datas[cu](?:[_~])?\.ksd$/iu.test(name);
 }
 function validPath(value: unknown): value is string {
   return typeof value === "string" && value.length > 0 && value.length <= 1024 && value.normalize("NFC") === value &&

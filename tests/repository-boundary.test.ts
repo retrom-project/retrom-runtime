@@ -93,7 +93,7 @@ describe("independent package boundary", () => {
       adapterAbi: "tyranoscript-snapshot-v1",
       id: "tyranoscript",
       repository: "https://github.com/xxxsen/tyranoscript",
-      tag: "rpg-runtime-gc8dbfd492afd-r1",
+      tag: "rpg-runtime-gc8dbfd492afd-r2",
     })]));
     const releaseIds = manifest.upstreamReleases.map((release: { id: string }) => release.id).sort();
     const externalRuntimeIds = [...new Set(manifest.cores

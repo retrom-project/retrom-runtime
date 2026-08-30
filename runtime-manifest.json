@@ -159,20 +159,20 @@
     {
       "id": "tyranoscript",
       "repository": "https://github.com/xxxsen/tyranoscript",
-      "tag": "rpg-runtime-gc8dbfd492afd-r1",
-      "commit": "6a8662548ff6b380b36e9d29a121989d6383790d",
+      "tag": "rpg-runtime-gc8dbfd492afd-r2",
+      "commit": "b2082757c2486d38ffe7b9532748e1f5ab4aeb36",
       "adapterAbi": "tyranoscript-snapshot-v1",
-      "metadataUrl": "https://github.com/xxxsen/tyranoscript/releases/download/rpg-runtime-gc8dbfd492afd-r1/rpg-runtime-release.json",
+      "metadataUrl": "https://github.com/xxxsen/tyranoscript/releases/download/rpg-runtime-gc8dbfd492afd-r2/rpg-runtime-release.json",
       "assets": [
         {
           "filename": "retrom-tyranoscript-bridge.js",
-          "url": "https://github.com/xxxsen/tyranoscript/releases/download/rpg-runtime-gc8dbfd492afd-r1/retrom-tyranoscript-bridge.js",
+          "url": "https://github.com/xxxsen/tyranoscript/releases/download/rpg-runtime-gc8dbfd492afd-r2/retrom-tyranoscript-bridge.js",
           "output": "runtime/tyranoscript/bridge.js",
           "maxSizeBytes": 65536
         },
         {
           "filename": "RETROM-BRIDGE-LICENSE",
-          "url": "https://github.com/xxxsen/tyranoscript/releases/download/rpg-runtime-gc8dbfd492afd-r1/RETROM-BRIDGE-LICENSE",
+          "url": "https://github.com/xxxsen/tyranoscript/releases/download/rpg-runtime-gc8dbfd492afd-r2/RETROM-BRIDGE-LICENSE",
           "output": "licenses/tyranoscript/RETROM-BRIDGE-LICENSE",
           "maxSizeBytes": 65536
         }

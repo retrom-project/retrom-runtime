@@ -48,7 +48,7 @@ describe("independent package boundary", () => {
       "butterscotch-web", "easyrpg-web", "kirikiri2-web", "mkxp-libretro-web", "native-web", "ons-yuri-web",
     ]);
     expect([...new Set(manifest.cores.map((core) => core.adapterAbi))].sort()).toEqual([
-      "butterscotch-checkpoint-v1", "easyrpg-save", "kirikiri-kag-bookmark", "mkxp-state-compact",
+      "butterscotch-checkpoint-v2", "easyrpg-save", "kirikiri-kag-bookmark", "mkxp-state-compact",
       "native-save", "ons-save",
     ]);
     expect((await readdir(join(root, "assets/runtime"))).sort()).toEqual(["butterscotch", "mkxp", "native"]);
@@ -82,10 +82,10 @@ describe("independent package boundary", () => {
       repository: "https://github.com/xxxsen/kirikiroid2-web",
       tag: "rpg-runtime-g338d2029f169-r2",
     }), expect.objectContaining({
-      adapterAbi: "butterscotch-checkpoint-v1",
+      adapterAbi: "butterscotch-checkpoint-v2",
       id: "butterscotch",
       repository: "https://github.com/xxxsen/Butterscotch",
-      tag: "rpg-runtime-gae2602f1f83c-r2",
+      tag: "rpg-runtime-gae2602f1f83c-r3",
     })]));
     const releaseIds = manifest.upstreamReleases.map((release: { id: string }) => release.id).sort();
     const externalRuntimeIds = [...new Set(manifest.cores

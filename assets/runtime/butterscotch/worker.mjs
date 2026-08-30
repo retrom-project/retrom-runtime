@@ -51,9 +51,11 @@ function registerCanvas(module, canvas) {
 async function command(data) {
   try {
     switch (data.command) {
-    case "STATUS":
-      respond(data, { available: runtime._isRunnerCheckpointAvailable() === 1 });
+    case "STATUS": {
+      const status = runtime._getRunnerCheckpointStatus();
+      respond(data, { available: status === 0 && runtime._isRunnerCheckpointAvailable() === 1, status });
       return;
+    }
     case "PAUSE":
       runtime._setRunnerPaused(1);
       paused = true;
@@ -171,7 +173,10 @@ function setGamepads(gamepads) {
 }
 
 function reportAvailability() {
-  if (runtime) {postMessage({ available: runtime._isRunnerCheckpointAvailable() === 1, type: "checkpointAvailability" });}
+  if (runtime) {
+    const status = runtime._getRunnerCheckpointStatus();
+    postMessage({ available: status === 0 && runtime._isRunnerCheckpointAvailable() === 1, status, type: "checkpointAvailability" });
+  }
 }
 
 function respond(request, fields = {}) {

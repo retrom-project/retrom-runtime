@@ -72,7 +72,8 @@ export async function mountKirikiri2(
   sizeCanvas(frameWindow, surface, canvas);
   const focusCanvas = () => {canvas.focus({ preventScroll: true });};
   canvas.addEventListener("pointerdown", focusCanvas, true);
-  const gamepadCleanup = installKirikiriStandardGamepad(frameWindow, surface, canvas);
+  const startupKeyboardCleanup = blockStartupKeyboardInput(frameWindow);
+  let gamepadCleanup: () => void = () => undefined;
 
   const previousModule = host.Module;
   const previousVlfs = host.VLFS;
@@ -132,8 +133,11 @@ export async function mountKirikiri2(
     if (restore) {
       await restoreBookmark(module, config.adapter.checkpointSlot);
     }
+    startupKeyboardCleanup();
+    gamepadCleanup = installKirikiriStandardGamepad(frameWindow, surface, canvas);
     focusCanvas();
   } catch (error) {
+    startupKeyboardCleanup();
     cleanup(host, previousModule, previousVlfs, target, canvas, focusCanvas, gamepadCleanup, scripts);
     throw stableMountError(error);
   }
@@ -310,6 +314,18 @@ function sizeCanvas(frameWindow: Window, surface: HTMLElement, canvas: HTMLCanva
     canvas.height = Math.max(1, Math.round((surface.clientHeight || 720) * ratio));
   };
   resize();
+}
+
+function blockStartupKeyboardInput(frameWindow: Window) {
+  const eventTypes = ["keydown", "keypress", "keyup"] as const;
+  const block = (event: KeyboardEvent) => {
+    event.preventDefault();
+    event.stopImmediatePropagation();
+  };
+  for (const eventType of eventTypes) {frameWindow.addEventListener(eventType, block, true);}
+  return () => {
+    for (const eventType of eventTypes) {frameWindow.removeEventListener(eventType, block, true);}
+  };
 }
 
 function retainDisplayedWebGLFrame(canvas: HTMLCanvasElement) {

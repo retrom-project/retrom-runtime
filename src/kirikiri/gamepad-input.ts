@@ -18,6 +18,7 @@ export function installKirikiriStandardGamepad(
   let previousTimestamp: number | null = null;
   let position = { x: 0.5, y: 0.5 };
   let buttons: ButtonState = { primary: false, secondary: false };
+  let neutralReady = false;
   const poll = (timestamp: number) => {
     const gamepad = standardGamepad(frameWindow.navigator);
     const elapsed = previousTimestamp === null ? 0 : Math.min(maximumFrameDurationMs, Math.max(0, timestamp - previousTimestamp));
@@ -25,7 +26,10 @@ export function installKirikiriStandardGamepad(
     if (!gamepad) {
       releaseButtons(frameWindow, canvas, position, buttons);
       buttons = { primary: false, secondary: false };
+      neutralReady = false;
       cursor.hidden = true;
+    } else if (!neutralReady) {
+      neutralReady = gamepadNeutral(gamepad);
     } else {
       const vector = directionVector(gamepad);
       if (vector.x !== 0 || vector.y !== 0) {
@@ -46,6 +50,12 @@ export function installKirikiriStandardGamepad(
     releaseButtons(frameWindow, canvas, position, buttons);
     cursor.remove();
   };
+}
+
+function gamepadNeutral(gamepad: Gamepad) {
+  const vector = directionVector(gamepad);
+  const buttons = readButtons(gamepad);
+  return vector.x === 0 && vector.y === 0 && !buttons.primary && !buttons.secondary;
 }
 
 function createCursor(document: Document) {

@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Hold KiriKiri keyboard and gamepad input until the runtime is ready, then require one neutral gamepad frame so
+  buttons held through loading cannot activate a partially initialized game menu.
+
 ## 0.7.3
 
 - Resume a host-paused KiriKiri core before waiting for the next stable KAG bookmark point so immersive and

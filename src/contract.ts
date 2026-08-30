@@ -45,7 +45,8 @@ export type SeekableBlobSource = {
   url: string;
 };
 
-export type RuntimeContentSourceKind = FileTreeSource["kind"] | SeekableBlobSource["kind"] | "NATIVE_WEB_V1";
+export type RuntimeContentSourceKind = FileTreeSource["kind"] | SeekableBlobSource["kind"] |
+  "ISOLATED_WEB_V1" | "NATIVE_WEB_V1";
 
 export type RuntimeLoadPhase = "RUNTIME_ASSET" | "PROJECT_INDEX" | "PROJECT_CONTENT" | "RESTORE";
 

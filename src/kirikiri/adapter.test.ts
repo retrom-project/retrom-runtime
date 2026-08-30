@@ -29,6 +29,53 @@ afterEach(() => {
 });
 
 describe("KiriKiri2 KAG runtime", () => {
+  it("does not carry startup input into the ready runtime", async () => {
+    enableRuntimeFeatures();
+    const animationFrames: FrameRequestCallback[] = [];
+    vi.spyOn(window, "requestAnimationFrame").mockImplementation((callback) => {
+      animationFrames.push(callback);
+      return animationFrames.length;
+    });
+    vi.spyOn(window, "cancelAnimationFrame").mockImplementation(() => undefined);
+    const buttons = Array.from({ length: 16 }, () => gamepadButton());
+    buttons[0] = gamepadButton(true);
+    Object.defineProperty(window.navigator, "getGamepads", {
+      configurable: true,
+      value: vi.fn(() => [{ axes: [0, 0], buttons, connected: true, mapping: "standard" }]),
+    });
+    const vlfs = fakeVlfs();
+    mockDownloads();
+    const target = document.createElement("div");
+    document.body.append(target);
+    const runtime = createRuntime(config(), { frameWindow: window, restorePayload: null });
+    const mounting = runtime.mount(target);
+    const canvas = target.querySelector("canvas");
+    if (!canvas) {throw new Error("test canvas missing");}
+    const inputs: string[] = [];
+    canvas.addEventListener("mousedown", () => inputs.push("mousedown"));
+    canvas.addEventListener("click", () => inputs.push("click"));
+    canvas.addEventListener("keydown", () => inputs.push("keydown"));
+
+    animationFrames.shift()?.(0);
+    canvas.dispatchEvent(new KeyboardEvent("keydown", { bubbles: true, cancelable: true }));
+
+    expect(inputs).toEqual([]);
+    await loadVlfs(vlfs);
+    await loadCore(vlfs);
+    await mounting;
+    animationFrames.shift()?.(16);
+    buttons[0] = gamepadButton();
+    animationFrames.shift()?.(32);
+    expect(inputs).toEqual([]);
+    canvas.dispatchEvent(new KeyboardEvent("keydown", { bubbles: true, cancelable: true }));
+    buttons[0] = gamepadButton(true);
+    animationFrames.shift()?.(48);
+    buttons[0] = gamepadButton();
+    animationFrames.shift()?.(64);
+    expect(inputs).toEqual(["keydown", "mousedown", "click"]);
+    await runtime.exit();
+  });
+
   it("maps standard gamepad directions and face buttons to KiriKiri mouse input", async () => {
     enableRuntimeFeatures();
     const animationFrames: FrameRequestCallback[] = [];

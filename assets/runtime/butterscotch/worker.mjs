@@ -2,6 +2,7 @@ let runtime = null;
 let paused = false;
 let availabilityTimer = null;
 let audioTimer = null;
+let runtimeCanvas = null;
 const audioFramesPerPull = 2048;
 
 self.addEventListener("message", ({ data }) => {
@@ -14,6 +15,7 @@ self.addEventListener("message", ({ data }) => {
 
 async function start(data) {
   try {
+    runtimeCanvas = data.canvas;
     const factory = (await import(data.moduleUrl)).default;
     runtime = await factory({
       canvas: data.canvas,
@@ -58,6 +60,9 @@ async function command(data) {
     case "CHECKPOINT":
       await createCheckpoint(data);
       return;
+    case "SCREENSHOT":
+      await createScreenshot(data);
+      return;
     case "RESTORE":
       restoreCheckpoint(data);
       return;
@@ -75,6 +80,14 @@ async function command(data) {
   } catch {
     respond(data, { code: "BUTTERSCOTCH_RUNTIME_COMMAND_FAILED", ok: false });
   }
+}
+
+async function createScreenshot(data) {
+  if (!runtimeCanvas) {throw new Error("screenshot");}
+  const blob = await runtimeCanvas.convertToBlob({ type: "image/png" });
+  const bytes = new Uint8Array(await blob.arrayBuffer());
+  postMessage({ bytes, command: data.command, ok: true, requestId: data.requestId, type: "HOST_RESPONSE" },
+    [bytes.buffer]);
 }
 
 function pullAudio() {

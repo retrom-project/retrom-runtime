@@ -13,7 +13,7 @@ type HostMessage = {
   type?: string;
   samples?: Float32Array;
 };
-type HostCommand = "CHECKPOINT" | "PAUSE" | "RESTORE" | "RESUME" | "STATUS" | "STOP";
+type HostCommand = "CHECKPOINT" | "PAUSE" | "RESTORE" | "RESUME" | "SCREENSHOT" | "STATUS" | "STOP";
 type WorkerWindow = Window & { SharedArrayBuffer?: typeof SharedArrayBuffer; Worker: typeof Worker };
 
 const checkpointFormat = "butterscotch-checkpoint-v1";
@@ -171,7 +171,12 @@ export async function mountButterscotch(
     getValidationProbe: () => null,
     pause: async () => {if (exited) {throw new Error("BUTTERSCOTCH_RUNTIME_INVALID_STATE");} await command("PAUSE"); await audio?.pause();},
     resume: async () => {if (exited) {throw new Error("BUTTERSCOTCH_RUNTIME_INVALID_STATE");} await command("RESUME"); await audio?.resume();},
-    screenshot: () => canvasScreenshot(canvas),
+    screenshot: async () => {
+      if (exited) {throw new Error("BUTTERSCOTCH_RUNTIME_INVALID_STATE");}
+      const bytes = copyBytes((await command("SCREENSHOT")).bytes);
+      if (!bytes?.byteLength) {throw new Error("PLAYER_SCREENSHOT_UNAVAILABLE");}
+      return new Blob([bytes], {type: "image/png"});
+    },
     setVolume: audio ? (volume) => audio.setVolume(volume) : null,
   };
 }
@@ -205,12 +210,6 @@ function sendGamepads(frameWindow: Window, worker: Worker) {
       }))
     : [];
   worker.postMessage({ gamepads, type: "GAMEPAD" });
-}
-
-function canvasScreenshot(canvas: HTMLCanvasElement) {
-  return new Promise<Blob>((resolve, reject) => {
-    canvas.toBlob((blob) => blob?.size ? resolve(blob) : reject(new Error("PLAYER_SCREENSHOT_UNAVAILABLE")), "image/png");
-  });
 }
 
 function browserSupported(frameWindow: Window) {

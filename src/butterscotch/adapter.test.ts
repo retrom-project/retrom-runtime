@@ -44,6 +44,7 @@ describe("Butterscotch Web adapter", () => {
     canvas.dispatchEvent(new KeyboardEvent("keydown", { bubbles: true, code: "ArrowUp" }));
     animationFrames.shift()?.(16);
     const checkpoint = await adapter.checkpoint();
+    await expect(adapter.screenshot()).resolves.toEqual(expect.objectContaining({type: "image/png"}));
 
     expect(checkpoint).toEqual({
       bytes: Uint8Array.of(66, 83, 67, 80, 1, 0, 0, 0, 4, 0, 0, 0, 1, 2, 3, 4),
@@ -113,6 +114,7 @@ class FakeWorker extends EventTarget {
     if (command === "CHECKPOINT") {
       response.bytes = Uint8Array.of(66, 83, 67, 80, 1, 0, 0, 0, 4, 0, 0, 0, 1, 2, 3, 4);
     }
+    if (command === "SCREENSHOT") {response.bytes = Uint8Array.of(137, 80, 78, 71);}
     queueMicrotask(() => this.emit(response));
   }
   terminate() {this.terminated = true;}

@@ -10,6 +10,7 @@ type HostMessage = {
   code?: string;
   ok?: boolean;
   requestId?: string;
+  status?: number;
   type?: string;
   samples?: Float32Array;
 };
@@ -59,6 +60,7 @@ export async function mountButterscotch(
   const ready = deferred<void>();
   const pressedKeys = new Set<number>();
   let checkpointAvailable = false;
+  let checkpointStatus = 1;
   let exited = false;
   let exitReported = false;
   let gamepadFrame = 0;
@@ -80,6 +82,7 @@ export async function mountButterscotch(
     }
     if (message.type === "checkpointAvailability") {
       checkpointAvailable = message.available === true && !exited;
+      checkpointStatus = normalizedCheckpointStatus(message.status, checkpointAvailable);
       return;
     }
     if (message.type === "FATAL") {ready.reject(new Error(message.code ?? "BUTTERSCOTCH_RUNTIME_FAILED")); return;}
@@ -122,6 +125,7 @@ export async function mountButterscotch(
     }
     const status = await command("STATUS");
     checkpointAvailable = status.available === true;
+    checkpointStatus = normalizedCheckpointStatus(status.status, checkpointAvailable);
     gamepadFrame = frameWindow.requestAnimationFrame(pollGamepadFrame);
     focusCanvas();
   } catch (error) {
@@ -167,7 +171,7 @@ export async function mountButterscotch(
     getCanvas: () => canvas,
     getCheckpointAvailability: (): CheckpointAvailability => exited
       ? { available: false, blocker: "NOT_READY" }
-      : checkpointAvailable ? { available: true, blocker: null } : { available: false, blocker: "BUSY" },
+      : checkpointAvailability(checkpointAvailable, checkpointStatus),
     getFrameCount: () => null,
     getValidationProbe: () => null,
     pause: async () => {if (exited) {throw new Error("BUTTERSCOTCH_RUNTIME_INVALID_STATE");} await command("PAUSE"); await audio?.pause();},
@@ -223,6 +227,14 @@ function browserSupported(frameWindow: Window) {
 function stableMountError(error: unknown) {
   if (error instanceof Error && /^BUTTERSCOTCH_[A-Z0-9_]+$/u.test(error.message)) {return error;}
   return new Error("BUTTERSCOTCH_RUNTIME_FAILED");
+}
+function checkpointAvailability(available: boolean, status: number): CheckpointAvailability {
+  if (available) {return { available: true, blocker: null };}
+  return { available: false, blocker: status >= 5 && status <= 7 ? "UNSUPPORTED" : "BUSY" };
+}
+function normalizedCheckpointStatus(value: unknown, available: boolean) {
+  if (available) {return 0;}
+  return Number.isSafeInteger(value) && Number(value) >= 1 && Number(value) <= 7 ? Number(value) : 1;
 }
 function copyBytes(value: unknown) {
   if (!ArrayBuffer.isView(value)) {return null;}

@@ -90,19 +90,45 @@ describe("Butterscotch Web adapter", () => {
     await expect(adapter.checkpoint()).rejects.toThrow("BUTTERSCOTCH_RUNTIME_INVALID_STATE");
     await adapter.exit();
   });
+
+  it("distinguishes transient startup work from an unsupported core checkpoint shape", async () => {
+    installIsolatedBrowserGlobals();
+    const workers: FakeWorker[] = [];
+    Object.defineProperty(window, "Worker", {
+      configurable: true,
+      value: class extends FakeWorker {constructor(url: URL) {super(url, 1); workers.push(this);}},
+    });
+    Object.defineProperty(HTMLCanvasElement.prototype, "transferControlToOffscreen", {
+      configurable: true, value: () => ({ height: 480, width: 640 }),
+    });
+    Object.defineProperty(window.navigator, "storage", {
+      configurable: true, value: { getDirectory: async () => new MemoryDirectory() },
+    });
+    mockProject();
+    const adapter = await mountButterscotch(
+      config(), document.createElement("div"), window, null, () => undefined, () => undefined,
+    );
+
+    expect(adapter.getCheckpointAvailability()).toEqual({ available: false, blocker: "BUSY" });
+    workers[0]?.emit({ available: false, status: 5, type: "checkpointAvailability" });
+    expect(adapter.getCheckpointAvailability()).toEqual({ available: false, blocker: "UNSUPPORTED" });
+    workers[0]?.emit({ available: true, status: 0, type: "checkpointAvailability" });
+    expect(adapter.getCheckpointAvailability()).toEqual({ available: true, blocker: null });
+    await adapter.exit();
+  });
 });
 
 class FakeWorker extends EventTarget {
   readonly messages: Array<Record<string, unknown>> = [];
   readonly commands: string[] = [];
   terminated = false;
-  constructor(readonly url: URL) {super();}
+  constructor(readonly url: URL, private readonly initialStatus = 0) {super();}
   postMessage(message: Record<string, unknown>) {
     this.messages.push(message);
     if (message.type === "START") {
       queueMicrotask(() => {
         this.emit({ type: "runnerReady" });
-        this.emit({ available: true, type: "checkpointAvailability" });
+        this.emit({ available: this.initialStatus === 0, status: this.initialStatus, type: "checkpointAvailability" });
       });
       return;
     }
@@ -112,6 +138,10 @@ class FakeWorker extends EventTarget {
     const response: Record<string, unknown> = {
       command, ok: true, requestId: message.requestId, type: "HOST_RESPONSE",
     };
+    if (command === "STATUS") {
+      response.available = this.initialStatus === 0;
+      response.status = this.initialStatus;
+    }
     if (command === "CHECKPOINT") {
       response.bytes = Uint8Array.of(66, 83, 67, 80, 1, 0, 0, 0, 4, 0, 0, 0, 1, 2, 3, 4);
     }

@@ -160,7 +160,7 @@
       "id": "tyranoscript",
       "repository": "https://github.com/xxxsen/tyranoscript",
       "tag": "rpg-runtime-gc8dbfd492afd-r1",
-      "commit": "b08112c9251b5101c0d3546fbc478a411fc625c5",
+      "commit": "6a8662548ff6b380b36e9d29a121989d6383790d",
       "adapterAbi": "tyranoscript-snapshot-v1",
       "metadataUrl": "https://github.com/xxxsen/tyranoscript/releases/download/rpg-runtime-gc8dbfd492afd-r1/rpg-runtime-release.json",
       "assets": [

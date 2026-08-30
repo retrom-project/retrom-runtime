@@ -211,42 +211,6 @@ describe("KiriKiri2 KAG runtime", () => {
     }
   });
 
-  it("accepts a custom KAG save transaction that only rewrites bookkeeping files", async () => {
-    enableRuntimeFeatures();
-    const vlfs = fakeVlfs();
-    mockDownloads();
-    const runtime = createRuntime(config(), { frameWindow: window, restorePayload: null });
-    const mounting = runtime.mount(document.createElement("div"));
-    await loadVlfs(vlfs);
-    const module = await loadCore(vlfs);
-    await mounting;
-    await runtime.pause();
-    module._krkr2_host_save_bookmark.mockImplementation(() => {
-      queueMicrotask(() => {
-        vlfs.onWriteClose?.("/savedata/datasc_.ksd", Uint8Array.of(1, 6));
-        vlfs.onWriteClose?.("/savedata/datasc~.ksd", Uint8Array.of(1, 7));
-        vlfs.onWriteClose?.("/savedata/datasc.ksd", Uint8Array.of(1, 8));
-        vlfs.onWriteClose?.("/savedata/datasu_.ksd", Uint8Array.of(2, 6));
-        vlfs.onWriteClose?.("/savedata/datasu~.ksd", Uint8Array.of(2, 7));
-        vlfs.onWriteClose?.("/savedata/datasu.ksd", Uint8Array.of(2, 8));
-      });
-      return 0;
-    });
-    vi.useFakeTimers();
-    try {
-      const checkpointPromise = runtime.checkpoint();
-      await vi.advanceTimersByTimeAsync(10_100);
-      const checkpoint = await checkpointPromise;
-      expect((await decodeKirikiriCheckpoint(checkpoint.bytes)).entries.map((entry) => entry.path)).toEqual([
-        "savedata/datasc.ksd", "savedata/datasc_.ksd", "savedata/datasc~.ksd",
-        "savedata/datasu.ksd", "savedata/datasu_.ksd", "savedata/datasu~.ksd",
-      ]);
-    } finally {
-      vi.useRealTimers();
-      await runtime.exit();
-    }
-  });
-
   it("rejects a restore when the KAG bookmark API rejects the slot", async () => {
     enableRuntimeFeatures();
     const restore = await encodeKirikiriCheckpoint({

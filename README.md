@@ -87,7 +87,7 @@ The first compatibility line is deliberately limited to games exposing the stand
 methods fails closed as unsupported instead of producing a checkpoint that cannot be restored. The host supplies
 a project file index and, only when that project contains multiple XP3 archives, the explicit project-relative XP3
 entry selected during import. Runtime slot `1999` is outside the normal KAG save menu. The adapter keeps the core
-running until the successful slot request causes a save-root write, then captures the complete quiescent save-file
+running until the successful slot request causes a non-bookkeeping save write, then captures the complete quiescent save-file
 set. This also supports KAG games that override the default `data1999.ksd` filename while retaining the standard
 bookmark API. If the host paused the runtime before asking for a checkpoint, the adapter resumes it before waiting
 for the next stable KAG save point and restores the paused state after capture.

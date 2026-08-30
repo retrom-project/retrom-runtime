@@ -265,8 +265,14 @@ function selectStartupXp3(paths: string[], configured: string | null) {
 function isSavePath(path: string) {return saveRoots.some((root) => path.toLowerCase().startsWith(root));}
 function normalizeSavePath(path: string) {return path.replace(/^\/+/, "").normalize("NFC");}
 function hasCausalBookmarkWrite(sequences: Map<string, number>, checkpointWriteSequence: number) {
-  for (const sequence of sequences.values()) {if (sequence > checkpointWriteSequence) {return true;}}
+  for (const [path, sequence] of sequences) {
+    if (sequence > checkpointWriteSequence && !isBookmarkBookkeepingPath(path)) {return true;}
+  }
   return false;
+}
+function isBookmarkBookkeepingPath(path: string) {
+  const name = path.slice(path.lastIndexOf("/") + 1);
+  return /^datas[cu](?:[_~])?\.ksd$/iu.test(name);
 }
 function validPath(value: unknown): value is string {
   return typeof value === "string" && value.length > 0 && value.length <= 1024 && value.normalize("NFC") === value &&

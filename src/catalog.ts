@@ -1,4 +1,5 @@
 import type { RuntimeCapabilities } from "./contract.js";
+import { validateButterscotchRuntimeConfig, type ButterscotchRuntimeConfig } from "./butterscotch/contract.js";
 import { validateKirikiriRuntimeConfig, type KirikiriRuntimeConfig } from "./kirikiri/contract.js";
 import { validateOnsRuntimeConfig, type OnsRuntimeConfig } from "./ons/contract.js";
 import {
@@ -7,7 +8,7 @@ import {
 } from "./rpgmaker/catalog.js";
 import type { RpgMakerRuntimeConfig } from "./rpgmaker/contract.js";
 
-export type RuntimeConfig = RpgMakerRuntimeConfig | OnsRuntimeConfig | KirikiriRuntimeConfig;
+export type RuntimeConfig = RpgMakerRuntimeConfig | OnsRuntimeConfig | KirikiriRuntimeConfig | ButterscotchRuntimeConfig;
 
 type RuntimeAdapterDescriptor = {
   adapterAbi: string;
@@ -57,6 +58,10 @@ export const runtimeAdapters = [
   descriptor(
     "KIRIKIRI2_WEB", "kirikiri2-web", "kirikiri-kag-bookmark", "kirikiri-save-bundle-v1", standardCapabilities,
   ),
+  descriptor(
+    "BUTTERSCOTCH_WEB", "butterscotch-web", "butterscotch-checkpoint-v1",
+    "butterscotch-checkpoint-v1", standardCapabilities,
+  ),
 ] as const satisfies readonly RuntimeAdapterDescriptor[];
 
 export { rpgMakerRuntimeCatalog };
@@ -65,6 +70,10 @@ export function validateRuntimeConfig(config: RuntimeConfig): void {
   const adapterKind = config?.adapter?.adapterKind;
   if (adapterKind === "ONS_YURI_WEB") {validateOnsRuntimeConfig(config as OnsRuntimeConfig); return;}
   if (adapterKind === "KIRIKIRI2_WEB") {validateKirikiriRuntimeConfig(config as KirikiriRuntimeConfig); return;}
+  if (adapterKind === "BUTTERSCOTCH_WEB") {
+    validateButterscotchRuntimeConfig(config as ButterscotchRuntimeConfig);
+    return;
+  }
   validateRpgMakerRuntimeConfig(config as RpgMakerRuntimeConfig);
 }
 

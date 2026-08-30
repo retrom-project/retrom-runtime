@@ -80,6 +80,20 @@ describe("runtime catalog", () => {
     expect(rpgMakerRuntimeCatalog.flatMap((entry) => entry.generations)).not.toContain("ONS");
     expect(runtimeAdapters.map((entry) => entry.adapterKind)).toContain("ONS_YURI_WEB");
   });
+
+  it("accepts the standalone Butterscotch adapter without RPG-specific fields", () => {
+    expect(() => validateRuntimeConfig({
+      sessionId: "runtime-session",
+      contentDigest: "d".repeat(64),
+      adapter: {
+        adapterKind: "BUTTERSCOTCH_WEB",
+        adapterId: "butterscotch-web",
+        projectIndexUrl: "https://content.example/butterscotch/index.json",
+        runtimeBaseUrl: "https://runtime.example/butterscotch/",
+      },
+    })).not.toThrow();
+    expect(rpgMakerRuntimeCatalog.flatMap((entry) => entry.generations)).not.toContain("BUTTERSCOTCH");
+  });
 });
 
 function easyConfig(): RpgMakerRuntimeConfig {

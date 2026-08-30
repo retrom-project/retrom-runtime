@@ -19,7 +19,7 @@ describe("upstream fork release policy", () => {
   it("declares one generic capability and checkpoint descriptor for every adapter", async () => {
     const manifest = JSON.parse(await readFile("runtime-manifest.json", "utf8"));
 
-    expect(manifest.adapters).toHaveLength(5);
+    expect(manifest.adapters).toHaveLength(6);
     for (const adapter of manifest.adapters) {
       expect(adapter.checkpointFormat).toMatch(/^[a-z0-9][a-z0-9.-]{0,63}$/u);
       expect(adapter.capabilities).toMatchObject({checkpoint: true, standardGamepad: true});

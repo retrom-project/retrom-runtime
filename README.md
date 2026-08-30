@@ -1,7 +1,8 @@
 # retrom-runtime
 
 `retrom-runtime` is a host-independent browser library and release bundle for RPG Maker 2000, 2003, XP,
-VX, VX Ace, MV and MZ, ONS games powered by ONScripterYuri, and KAG-based KiriKiri2 games. It owns runtime lifecycle, adapters, checkpoint codecs, bridge assets and pinned core
+VX, VX Ace, MV and MZ, ONS games powered by ONScripterYuri, KAG-based KiriKiri2 games and supported GameMaker
+projects powered by Butterscotch. It owns runtime lifecycle, adapters, checkpoint codecs, bridge assets and pinned core
 Release inputs. It does not know about a host application's users, database, review flow, storage or HTTP API.
 
 ## Public API
@@ -56,6 +57,14 @@ also executes the standard `$gameSystem.onBeforeSave()` and `onAfterLoad()` hook
 as the engine save/load scenes. This preserves engine- and plugin-owned resume state such as the current BGM/BGS
 without inventing host-specific playback behavior. EasyRPG, mkxp, ONS and KiriKiri restore through their core state
 or native save APIs and do not use these RPG Maker Web hooks.
+
+Butterscotch is an independent GameMaker runtime. Its host config points to an exact project index containing one
+root `data.win`. Files stream into an OPFS directory keyed by the host content digest, so later runtime instances
+reuse exact-sized bytes without another network transfer. The adapter renders on a centered 640×480
+`OffscreenCanvas`, forwards keyboard and standard gamepad state, emits load progress, captures bounded direct
+checkpoints, restores them in a new Worker instance and reports a core-initiated exit through the common lifecycle.
+The first compatibility line is intentionally limited to GameMaker data versions accepted by the pinned
+Butterscotch core and to runtime states its checkpoint status reports as supported.
 
 ONS is a separate public runtime rather than an RPG Maker generation:
 
@@ -140,7 +149,7 @@ npm run build
 npm run package:check
 ```
 
-Runtime JS/Wasm is not committed or built here. EasyRPG, mkxp, ONScripterYuri and KiriKiri are maintained in
+Runtime JS/Wasm is not committed or built here. EasyRPG, mkxp, ONScripterYuri, KiriKiri and Butterscotch are maintained in
 separate forks; each fork owns its source changes, quality checks, Web build and immutable core Release. This
 repository downloads those fixed releases, adds its own small bridge assets and produces:
 
@@ -164,7 +173,7 @@ point `RETROM_RUNTIME_DEV_RELEASE_OVERRIDES` at the absolute output directory wh
 RETROM_RUNTIME_DEV_RELEASE_OVERRIDES='{"onsyuri":"/work/OnscripterYuri/output"}' npm run release:build
 ```
 
-Use key `kirikiri2` for the KiriKiri fork. The same environment is inherited by Retrom's
+Use key `kirikiri2` for the KiriKiri fork and `butterscotch` for the Butterscotch fork. The same environment is inherited by Retrom's
 `RETROM_RUNTIME_DEV_ROOT`/`RETROM_RUNTIME_DEV_INCLUDE_ASSETS=true` local-link flow. This affects only ignored local
 staging output; the committed manifest and formal Release inputs remain pinned to published fork tags.
 
@@ -200,8 +209,8 @@ other games or requiring unrelated host changes.
 
 ## Maintaining upstream forks
 
-The Player `master`, mkxp-z Web `main`, ONScripterYuri `master`, and KiriKiri
-Web `web` branches are unmodified, fast-forward-only upstream mirrors. Retrom changes live on one active
+The Player `master`, mkxp-z Web `main`, ONScripterYuri `master`, KiriKiri Web `web`, and Butterscotch `main`
+branches are unmodified, fast-forward-only upstream mirrors. Retrom changes live on one active
 `retrom/<baseline>` branch per fork, which is also that fork's default branch.
 Each fork records its exact tagged or commit-only upstream baseline in a root
 `retrom-fork.json`. Work starts from the active baseline on short-lived

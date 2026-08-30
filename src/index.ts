@@ -4,12 +4,14 @@ import {
   type RuntimeConfig,
 } from "./catalog.js";
 import { GameRuntimeController } from "./controller.js";
+import { mountButterscotch } from "./butterscotch/adapter.js";
 import { mountEasyRpg } from "./easyrpg/adapter.js";
 import { mountKirikiri2 } from "./kirikiri/adapter.js";
 import { mountMkxp } from "./mkxp/adapter.js";
 import { mountNativeRpg } from "./native-web/adapter.js";
 import { mountOnsYuri } from "./ons/adapter.js";
 import type { GameRuntime } from "./contract.js";
+import type { ButterscotchRuntimeConfig } from "./butterscotch/contract.js";
 import type { RuntimeExitReporter, RuntimeProgressReporter } from "./internal-adapter.js";
 import type { KirikiriRuntimeConfig } from "./kirikiri/contract.js";
 import type { OnsRuntimeConfig } from "./ons/contract.js";
@@ -31,6 +33,7 @@ export type {
   SeekableBlobSource,
 } from "./contract.js";
 export type { RuntimeConfig } from "./catalog.js";
+export type { ButterscotchAdapterConfig, ButterscotchRuntimeConfig } from "./butterscotch/contract.js";
 export { runtimeAdapters, validateRuntimeConfig } from "./catalog.js";
 export type {
   EasyRpgAdapterConfig,
@@ -76,7 +79,7 @@ export function describeRuntime(config: RuntimeConfig): RuntimeDescription {
   }
   return {
     crossOriginFrame: false,
-    requiresThreads: adapter.adapterKind === "MKXP_LIBRETRO_WEB",
+    requiresThreads: adapter.adapterKind === "MKXP_LIBRETRO_WEB" || adapter.adapterKind === "BUTTERSCOTCH_WEB",
     runtimeBaseUrl: adapter.runtimeBaseUrl,
   };
 }
@@ -140,6 +143,15 @@ function adapterMount(config: RuntimeConfig, options: RuntimeOptions) {
       target,
       options.frameWindow,
       options.restorePayload,
+      reportExitRequested,
+    );
+  case "BUTTERSCOTCH_WEB":
+    return (target: HTMLElement, reportProgress: RuntimeProgressReporter, reportExitRequested: RuntimeExitReporter) => mountButterscotch(
+      config as ButterscotchRuntimeConfig,
+      target,
+      options.frameWindow,
+      options.restorePayload,
+      reportProgress,
       reportExitRequested,
     );
   }

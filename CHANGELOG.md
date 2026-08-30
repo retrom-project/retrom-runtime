@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Persist exact-size ONS project files one at a time in OPFS (with Cache Storage fallback) so large NSA archives survive across runtime instances,
+  while streaming aggregate project byte progress through the shared `LOAD_PROGRESS` contract.
+
 ## 0.7.4
 
 - Hold KiriKiri keyboard and gamepad input until the runtime is ready, then require one neutral gamepad frame so

@@ -122,11 +122,12 @@ function adapterMount(config: RuntimeConfig, options: RuntimeOptions) {
       options.restorePayload,
     );
   case "ONS_YURI_WEB":
-    return (target: HTMLElement) => mountOnsYuri(
+    return (target: HTMLElement, reportProgress: Parameters<typeof mountOnsYuri>[4]) => mountOnsYuri(
       config as OnsRuntimeConfig,
       target,
       options.frameWindow,
       options.restorePayload,
+      reportProgress,
     );
   case "KIRIKIRI2_WEB":
     return (target: HTMLElement) => mountKirikiri2(

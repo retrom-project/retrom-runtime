@@ -5,6 +5,7 @@ import { decodeOnsCheckpoint, encodeOnsCheckpoint } from "./checkpoint.js";
 import { createRuntime } from "../index.js";
 
 type HostWindow = Window & {
+  fetch_file?: (fileSystem: FakeFs, path: string) => Promise<number>;
   onsyuri?: (options: Record<string, unknown>) => Promise<FakeModule>;
   onsyuriHostReady?: () => void;
   scale_full?: (element: HTMLElement, ratio: number) => void;
@@ -16,6 +17,7 @@ afterEach(() => {
   Reflect.deleteProperty(window.navigator, "getGamepads");
   delete (window as HostWindow).onsyuri;
   delete (window as HostWindow).onsyuriHostReady;
+  delete (window as HostWindow).fetch_file;
   document.head.querySelectorAll("script[data-runtime=ons-yuri]").forEach((script) => script.remove());
   document.body.replaceChildren();
 });
@@ -61,6 +63,64 @@ describe("ONS Yuri runtime", () => {
     expect(inputs).toEqual(["down:ArrowRight", "up:ArrowRight"]);
     await runtime.exit();
     expect(cancelAnimationFrame).toHaveBeenCalled();
+  });
+
+  it("persists immutable project files across runtime instances and reports aggregate loading progress", async () => {
+    const projectFiles = [
+      { path: "0.txt", bytes: Uint8Array.of(1) },
+      { path: "default.ttf", bytes: Uint8Array.of(2, 3) },
+      { path: "arc.nsa", bytes: Uint8Array.of(4, 5, 6, 7) },
+    ];
+    const indexBody = JSON.stringify({
+      schemaVersion: 1,
+      title: "fixture",
+      fontPath: "default.ttf",
+      files: projectFiles.map(({ path, bytes }) => ({
+        path,
+        sizeBytes: bytes.byteLength,
+        url: `https://content.example/${path}`,
+      })),
+    });
+    const fetchMock = vi.fn(async (input: string | URL | Request) => {
+      const url = requestUrl(input);
+      if (url.endsWith("/index.json")) {return new Response(indexBody, { status: 200 });}
+      const file = projectFiles.find(({ path }) => url.endsWith(`/${path}`));
+      if (!file) {return new Response(null, { status: 404 });}
+      return new Response(file.bytes.slice(), {
+        headers: { "content-length": String(file.bytes.byteLength) },
+        status: 200,
+      });
+    });
+    vi.stubGlobal("fetch", fetchMock);
+    vi.stubGlobal("caches", new MemoryCacheStorage());
+
+    for (let run = 0; run < 2; run += 1) {
+      const module = fakeModule();
+      (window as HostWindow).onsyuri = vi.fn(async (options: Record<string, unknown>) => {
+        Object.assign(options, module);
+        const configured = options as FakeModule;
+        configured.preRun?.();
+        for (const file of projectFiles) {
+          expect(await (window as HostWindow).fetch_file?.(configured.FS, `/game/${file.path}`)).toBe(1);
+        }
+        return configured;
+      });
+      const progress: Array<{ loadedBytes: number; totalBytes: number | null; type: "LOAD_PROGRESS" }> = [];
+      const runtime = createRuntime(config(), { frameWindow: window, restorePayload: null });
+      runtime.subscribe((event) => {
+        if (event.type === "LOAD_PROGRESS" && event.phase === "PROJECT_CONTENT") {progress.push(event);}
+      });
+      const mounting = runtime.mount(document.createElement("div"));
+      await loadRuntimeScript();
+      await mounting;
+      expect(progress.at(-1)).toEqual({
+        loadedBytes: 7, phase: "PROJECT_CONTENT", totalBytes: 7, type: "LOAD_PROGRESS",
+      });
+      await runtime.exit();
+    }
+
+    expect(fetchMock.mock.calls.map(([input]) => requestUrl(input)).filter((url) => !url.endsWith("/index.json")))
+      .toEqual(projectFiles.map(({ path }) => `https://content.example/${path}`));
   });
 
   it("retains the WebGL drawing buffer used by review and save screenshots", async () => {
@@ -398,4 +458,24 @@ class FakeFs {
 
   isDir(mode: number) {return mode === 16384;}
   unlink(path: string) {this.files.delete(path);}
+}
+
+class MemoryCacheStorage {
+  private readonly cache = new MemoryCache();
+
+  async open() {return this.cache;}
+}
+
+class MemoryCache {
+  private readonly responses = new Map<string, Response>();
+
+  async delete(request: RequestInfo | URL) {return this.responses.delete(requestUrl(request));}
+  async match(request: RequestInfo | URL) {return this.responses.get(requestUrl(request))?.clone();}
+  async put(request: RequestInfo | URL, response: Response) {
+    this.responses.set(requestUrl(request), response.clone());
+  }
+}
+
+function requestUrl(input: RequestInfo | URL) {
+  return input instanceof Request ? input.url : String(input);
 }

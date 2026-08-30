@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+## 0.7.3
+
+- Resume a host-paused KiriKiri core before waiting for the next stable KAG bookmark point so immersive and
+  standard-menu checkpoints do not time out during an in-progress scene transition.
+
 ## 0.7.2
 
 - Keep KiriKiri running while KAG writes a semantic checkpoint, then capture the quiescent save-file set.

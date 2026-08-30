@@ -58,7 +58,11 @@ export function createButterscotchAudio(frameWindow: Window): ButterscotchAudio 
       queuedSamples = 0;
       processor.disconnect();
       gain.disconnect();
-      await context.close();
+      if (context.state === "closed") {return;}
+      try {await context.close();}
+      catch (error) {
+        if (typeof error !== "object" || error === null || !("name" in error) || error.name !== "InvalidStateError") {throw error;}
+      }
     },
     enqueue: (samples) => {
       if (closed || samples.length === 0 || samples.length % 2 !== 0) {return;}

@@ -83,6 +83,7 @@ describe("native-web RPG Maker bridge", () => {
     const animationFrames: Array<() => void> = [];
     let databaseLoaded = false;
     let loadedSave = "";
+    const afterLoad = vi.fn();
     class SceneMap {}
     const storage = {
       exists: (slot: number) => slot < 0,
@@ -111,6 +112,7 @@ describe("native-web RPG Maker bridge", () => {
       $gameMap: { isEventRunning: () => false, mapId: () => 1 },
       $gameMessage: { isBusy: () => false },
       $gamePlayer: { x: 11, y: 8 },
+      $gameSystem: { onAfterLoad: afterLoad },
       $gameVariables: { value: () => 1 },
       DataManager: dataManager,
       Scene_Map: SceneMap,
@@ -176,6 +178,7 @@ describe("native-web RPG Maker bridge", () => {
       type: "RESTORE_RESULT",
     }));
     expect(loadedSave).toBe("saved-at-b");
+    expect(afterLoad).toHaveBeenCalledOnce();
   });
 
   it("round-trips MZ saves through JsonEx so restored game objects keep their semantics", async () => {
@@ -188,6 +191,8 @@ describe("native-web RPG Maker bridge", () => {
     const animationFrames: Array<() => void> = [];
     let restoredMarker = "";
     let mapSceneStarted = true;
+    const beforeSave = vi.fn();
+    const afterLoad = vi.fn();
     class SceneMap {
       isStarted() {return mapSceneStarted;}
     }
@@ -209,7 +214,9 @@ describe("native-web RPG Maker bridge", () => {
       isDatabaseLoaded: () => true,
       maxSavefiles: () => 20,
       async saveGame(slot: number) {
-        await storage.saveObject(`file${slot}`, { marker: "save-point-b" });
+        await storage.saveObject(`file${slot}`, {
+          marker: beforeSave.mock.calls.length ? "save-point-b" : "missing-before-save",
+        });
         await storage.saveObject("global", [{ slot }]);
         return true;
       },
@@ -231,6 +238,7 @@ describe("native-web RPG Maker bridge", () => {
       $gameMap: { isEventRunning: () => false, mapId: () => 3 },
       $gameMessage: { isBusy: () => false },
       $gamePlayer: { x: 9, y: 13 },
+      $gameSystem: { onAfterLoad: afterLoad, onBeforeSave: beforeSave },
       $gameVariables: { value: () => 0 },
       DataManager: dataManager,
       ColorManager: {_windowskin: null as {getPixel: () => string} | null},
@@ -273,6 +281,8 @@ describe("native-web RPG Maker bridge", () => {
     };
     const fileEntry = saveReply.body.bundle.entries.find((entry) => entry.key === "file21");
     expect(fileEntry && new TextDecoder().decode(fileEntry.data)).toContain('"encodedByJsonEx":true');
+    expect(fileEntry && new TextDecoder().decode(fileEntry.data)).toContain('"marker":"save-point-b"');
+    expect(beforeSave).toHaveBeenCalledOnce();
     const restoredBundle = {
       ...saveReply.body.bundle,
       entries: saveReply.body.bundle.entries.map((entry) => {
@@ -306,6 +316,7 @@ describe("native-web RPG Maker bridge", () => {
     await vi.waitFor(() => expect(replies.length).toBeGreaterThan(1));
     expect(replies).toContainEqual(expect.objectContaining({type: "RESTORE_RESULT"}));
     expect(restoredMarker).toBe("save-point-b");
+    expect(afterLoad).toHaveBeenCalledOnce();
   });
 
 });

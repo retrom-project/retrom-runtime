@@ -110,6 +110,11 @@
     return true;
   }
 
+  function runGameSystemHook(name) {
+    const gameSystem = global.$gameSystem;
+    if (gameSystem && typeof gameSystem[name] === "function") gameSystem[name]();
+  }
+
   async function captureNativeSave() {
     if (!readyForCheckpoint()) throw new Error("RPG_CHECKPOINT_UNAVAILABLE");
     const slot = Number(global.DataManager.maxSavefiles()) + 1;
@@ -146,6 +151,7 @@
     }
     if (!supported) throw new Error("RPG_CHECKPOINT_STORAGE_UNSUPPORTED");
     try {
+      runGameSystemHook("onBeforeSave");
       const saved = await global.DataManager.saveGame(slot);
       if (saved === false || !captured.has(storageNames(slot)[1])) throw new Error("RPG_CHECKPOINT_CREATE_FAILED");
     } finally {
@@ -215,6 +221,7 @@
       const loaded = await global.DataManager.loadGame(validated.slot);
       if (loaded === false) throw new Error("RPG_CHECKPOINT_RESTORE_FAILED");
       if (global.SceneManager && global.Scene_Map) global.SceneManager.goto(global.Scene_Map);
+      runGameSystemHook("onAfterLoad");
       await waitForMap();
     } finally {
       restorers.reverse().forEach((restore) => restore());

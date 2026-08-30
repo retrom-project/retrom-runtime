@@ -1,12 +1,16 @@
 import { decodeOnsCheckpoint, encodeOnsCheckpoint, type OnsCheckpointBundle } from "./checkpoint.js";
 import type { MountedRuntimeAdapter } from "../internal-adapter.js";
+import type { RuntimeProgressReporter } from "../internal-adapter.js";
 import type { OnsRuntimeConfig } from "./contract.js";
 import { installOnsAnalogGamepad } from "./gamepad-input.js";
+import {
+  createOnsProjectFileMap,
+  type OnsProjectFile,
+  type OnsProjectFileNode,
+} from "./project-files.js";
 
 type OnsConfig = OnsRuntimeConfig & { adapter: OnsRuntimeConfig["adapter"] };
-type ProjectFile = { path: string; sizeBytes: number; url: string };
-type ProjectIndex = { schemaVersion: 1; title: string; fontPath: string; files: ProjectFile[] };
-type FileNode = ProjectFile & { loaded: boolean; loading?: Promise<void> };
+type ProjectIndex = { schemaVersion: 1; title: string; fontPath: string; files: OnsProjectFile[] };
 
 type OnsFileSystem = {
   isDir(mode: number): boolean;
@@ -51,9 +55,12 @@ export async function mountOnsYuri(
   target: HTMLElement,
   frameWindow: Window,
   restorePayload: Uint8Array | null,
+  reportProgress: RuntimeProgressReporter = () => undefined,
 ): Promise<MountedRuntimeAdapter> {
   if (target.ownerDocument !== frameWindow.document) {throw new Error("ONS_RUNTIME_TARGET_INVALID");}
+  reportProgress({ phase: "PROJECT_INDEX", loadedBytes: 0, totalBytes: null });
   const index = await loadProjectIndex(config.adapter.projectIndexUrl);
+  reportProgress({ phase: "PROJECT_INDEX", loadedBytes: 1, totalBytes: 1 });
   const restore = await readRestore(restorePayload);
   const host = frameWindow as OnsHostWindow;
   const document = frameWindow.document;
@@ -80,7 +87,8 @@ export async function mountOnsYuri(
   const gamepadCleanup = installOnsAnalogGamepad(frameWindow, canvas);
 
   const globals = captureGlobals(host);
-  const fileMap = createFileMap(index.files);
+  const projectFiles = createOnsProjectFileMap(index.files, frameWindow, reportProgress);
+  const fileMap = projectFiles.fileMap;
   let module: OnsModule | null = null;
   let paused = false;
   let exited = false;
@@ -101,7 +109,7 @@ export async function mountOnsYuri(
   host.g_onsyuri_module = moduleOptions;
   host.g_onsyuri_index = { gamedir: gameRoot, savedir: saveRoot };
   host.g_onsyuri_filemap = fileMap;
-  host.fetch_file = createFileFetcher(fileMap);
+  host.fetch_file = projectFiles.fetchFile;
   host.flush_save = () => undefined;
   host.onsyuriHostReady = () => ready.resolve();
   host.scale_full = (element: HTMLElement, ratio = 0) => scaleToFrame(frameWindow, element, ratio);
@@ -193,18 +201,25 @@ function validIndex(value: unknown): value is ProjectIndex {
     !Array.isArray(value.files) || value.files.length < 2 || value.files.length > maximumProjectFiles) {return false;}
   const seen = new Set<string>();
   let fontFound = false;
+  let totalBytes = 0;
   for (const item of value.files) {
-    if (!isRecord(item) || !exactKeys(item, ["path", "sizeBytes", "url"]) || !validPath(item.path) ||
-      !validProjectUrl(item.url) || !Number.isSafeInteger(item.sizeBytes) || Number(item.sizeBytes) < 1) {return false;}
+    if (!validProjectFile(item)) {return false;}
     const identity = item.path.toLowerCase();
     if (seen.has(identity)) {return false;}
     seen.add(identity);
+    totalBytes += Number(item.sizeBytes);
+    if (!Number.isSafeInteger(totalBytes)) {return false;}
     fontFound ||= item.path === value.fontPath;
   }
   return fontFound;
 }
 
-function prepareFileSystem(fs: OnsFileSystem, files: ProjectFile[], restore: OnsCheckpointBundle | null) {
+function validProjectFile(value: unknown): value is OnsProjectFile {
+  return isRecord(value) && exactKeys(value, ["path", "sizeBytes", "url"]) && validPath(value.path) &&
+    validProjectUrl(value.url) && Number.isSafeInteger(value.sizeBytes) && Number(value.sizeBytes) >= 1;
+}
+
+function prepareFileSystem(fs: OnsFileSystem, files: OnsProjectFile[], restore: OnsCheckpointBundle | null) {
   fs.mkdirTree(gameRoot);
   fs.mkdirTree(saveRoot);
   for (const file of files) {fs.mkdirTree(parentPath(`${gameRoot}/${file.path}`));}
@@ -234,36 +249,12 @@ function collectFiles(fs: OnsFileSystem, root: string) {
   return entries;
 }
 
-function createFileMap(files: ProjectFile[]) {
-  const map: Record<string, FileNode> = {};
-  for (const file of files) {
-    const path = `${gameRoot}/${file.path}`;
-    map[path.toLowerCase()] = { ...file, path, loaded: false };
-  }
-  return map;
-}
-
-function createFileFetcher(fileMap: Record<string, FileNode>) {
-  return async (fs: OnsFileSystem, key: string) => {
-    const node = fileMap[key.toLowerCase()];
-    if (!node) {return 0;}
-    if (node.loaded) {return 1;}
-    node.loading ??= fetch(node.url, { credentials: "same-origin" })
-      .then(async (response) => {
-        if (!response.ok) {throw new Error("download");}
-        fs.writeFile(node.path, new Uint8Array(await response.arrayBuffer()));
-      })
-      .finally(() => {node.loaded = true;});
-    try {await node.loading; return 1;} catch {return -1;}
-  };
-}
-
 function installVideo(
   host: OnsHostWindow,
   module: OnsModule,
   video: HTMLVideoElement,
   canvas: HTMLCanvasElement,
-  fileMap: Record<string, FileNode>,
+  fileMap: Record<string, OnsProjectFileNode>,
 ) {
   const finish = () => {
     module.wait_video = false;

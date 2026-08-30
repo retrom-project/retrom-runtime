@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Persist exact-size ONS project files one at a time in OPFS (with Cache Storage fallback) so large NSA archives survive across runtime instances,
+  while streaming aggregate project byte progress through the shared `LOAD_PROGRESS` contract.
+- Run RPG Maker MV/MZ's standard `$gameSystem.onBeforeSave()` and `onAfterLoad()` lifecycle around native checkpoints so engine-owned BGM/BGS state is captured and replayed after restore.
+
 ## 0.7.4
 
 - Hold KiriKiri keyboard and gamepad input until the runtime is ready, then require one neutral gamepad frame so

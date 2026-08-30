@@ -151,6 +151,18 @@ describe("KiriKiri2 KAG runtime", () => {
     await mounting;
 
     expect(module._startupXp3Path).toBe("/data.xp3");
+    expect(vlfs.registerRemote).toHaveBeenCalledWith(
+      "/data.xp3",
+      `https://content.example/runtime/content/project/${"a".repeat(64)}/data.xp3`,
+      1234,
+      true,
+    );
+    expect(vlfs.registerRemote).toHaveBeenCalledWith(
+      "/startup.tjs",
+      `https://content.example/runtime/content/project/${"a".repeat(64)}/startup.tjs`,
+      40,
+      true,
+    );
     expect(document.activeElement).toBe(target.querySelector("canvas"));
     expect(target.firstElementChild?.getAttribute("data-kirikiri-runtime-surface")).toBe("");
     module._krkr2_host_bookmark_is_ready.mockReturnValue(0);

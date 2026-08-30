@@ -42,10 +42,20 @@ full-byte validation, while their immutable URLs use the browser cache.
 
 EasyRPG receives both the project and optional RTP as `FILE_TREE_V1` roots. The project wins when it contains a
 resource; only a missing resource that the game actually opens is fetched from the RTP root. ONS keeps ordinary
-scripts and images on the same file-on-first-open path, while large videos are handed to the browser media
-pipeline by URL so it can issue Range requests instead of copying the complete movie into the Emscripten file
-system. KiriKiri keeps its VLFS Range reader and refuses a large response that ignores a requested range rather
-than silently buffering the whole file.
+scripts and images on the same file-on-first-open path. Exact-size immutable responses are streamed into the
+Emscripten file system and an origin-private file one at a time, so concurrent multi-hundred-megabyte writes cannot
+evict or drop one another and archives larger than Chromium's ordinary HTTP or Cache Storage entry limits are still
+reused by a later runtime instance. Cache Storage is only the fallback when OPFS is unavailable. Aggregate project
+bytes are reported through `LOAD_PROGRESS`; persistent storage being unavailable or full falls back to the normal fetch without
+blocking the game. Large videos are handed to the browser media pipeline by URL so it can issue Range requests
+instead of copying the complete movie into the Emscripten file system. KiriKiri keeps its 256 KiB-block VLFS Range
+reader and refuses a large response that ignores a requested range rather than silently buffering the whole file.
+
+Native RPG Maker MV/MZ checkpoints use the engine's `DataManager` and a temporary private storage slot. The bridge
+also executes the standard `$gameSystem.onBeforeSave()` and `onAfterLoad()` hooks at the same lifecycle boundaries
+as the engine save/load scenes. This preserves engine- and plugin-owned resume state such as the current BGM/BGS
+without inventing host-specific playback behavior. EasyRPG, mkxp, ONS and KiriKiri restore through their core state
+or native save APIs and do not use these RPG Maker Web hooks.
 
 ONS is a separate public runtime rather than an RPG Maker generation:
 
@@ -66,6 +76,17 @@ An ONS project index has the stable shape below. Paths are project-relative and 
   "fontPath": "default.ttf",
   "files": [{ "path": "0.txt", "url": "https://content.example/0.txt" }]
 }
+```
+
+Hosts can subscribe before `mount()` to render first-load progress. A later instance still emits progress while
+reading persisted bytes into the core, but it does not transfer a cached project file over the network:
+
+```ts
+runtime.subscribe((event) => {
+  if (event.type === "LOAD_PROGRESS" && event.phase === "PROJECT_CONTENT") {
+    renderProgress(event.loadedBytes, event.totalBytes);
+  }
+});
 ```
 
 Each session must use its own frame. `exit()` pauses the core and removes library-owned DOM and globals; the host

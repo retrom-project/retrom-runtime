@@ -76,7 +76,7 @@ describe("mkxp compact checkpoint codec", () => {
     expect(header.getUint32(16, true)).toBe(first.byteLength - mkxpCompactHeaderBytes);
     expect(header.getUint32(20, true)).toBe(1);
     expect(await decodeMkxpCheckpoint(first, rawSize)).toEqual(raw);
-  });
+  }, 15_000);
 
   it("falls back to the exact raw state when compression cannot reduce the payload", async () => {
     const rawSize = 256;

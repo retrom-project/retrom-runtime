@@ -16,6 +16,7 @@ self.addEventListener("message", ({ data }) => {
 async function start(data) {
   try {
     runtimeCanvas = data.canvas;
+    runtimeCanvas.id = "canvas";
     const factory = (await import(data.moduleUrl)).default;
     runtime = await factory({
       canvas: data.canvas,

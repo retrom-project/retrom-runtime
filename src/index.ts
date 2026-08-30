@@ -10,6 +10,7 @@ import { mountMkxp } from "./mkxp/adapter.js";
 import { mountNativeRpg } from "./native-web/adapter.js";
 import { mountOnsYuri } from "./ons/adapter.js";
 import type { GameRuntime } from "./contract.js";
+import type { RuntimeExitReporter, RuntimeProgressReporter } from "./internal-adapter.js";
 import type { KirikiriRuntimeConfig } from "./kirikiri/contract.js";
 import type { OnsRuntimeConfig } from "./ons/contract.js";
 import type { RpgMakerAdapterConfig, RpgMakerRuntimeConfig } from "./rpgmaker/contract.js";
@@ -100,41 +101,46 @@ function adapterMount(config: RuntimeConfig, options: RuntimeOptions) {
   const adapter = config.adapter;
   switch (adapter.adapterKind) {
   case "EASYRPG_WEB":
-    return (target: HTMLElement) => mountEasyRpg(
+    return (target: HTMLElement, _reportProgress: RuntimeProgressReporter, reportExitRequested: RuntimeExitReporter) => mountEasyRpg(
       withRpgAdapter(config as RpgMakerRuntimeConfig, adapter),
       target,
       options.frameWindow,
       options.restorePayload,
+      reportExitRequested,
     );
   case "MKXP_LIBRETRO_WEB":
-    return (target: HTMLElement, reportProgress: Parameters<typeof mountMkxp>[5]) => mountMkxp(
+    return (target: HTMLElement, reportProgress: RuntimeProgressReporter, reportExitRequested: RuntimeExitReporter) => mountMkxp(
       withRpgAdapter(config as RpgMakerRuntimeConfig, adapter),
       target,
       options.restorePayload,
       undefined,
       options.onDiagnostic,
       reportProgress,
+      reportExitRequested,
     );
   case "NATIVE_WEB":
-    return () => mountNativeRpg(
+    return (_target: HTMLElement, _reportProgress: RuntimeProgressReporter, reportExitRequested: RuntimeExitReporter) => mountNativeRpg(
       withRpgAdapter(config as RpgMakerRuntimeConfig, adapter),
       requireFrame(options.frame),
       options.restorePayload,
+      reportExitRequested,
     );
   case "ONS_YURI_WEB":
-    return (target: HTMLElement, reportProgress: Parameters<typeof mountOnsYuri>[4]) => mountOnsYuri(
+    return (target: HTMLElement, reportProgress: RuntimeProgressReporter, reportExitRequested: RuntimeExitReporter) => mountOnsYuri(
       config as OnsRuntimeConfig,
       target,
       options.frameWindow,
       options.restorePayload,
       reportProgress,
+      reportExitRequested,
     );
   case "KIRIKIRI2_WEB":
-    return (target: HTMLElement) => mountKirikiri2(
+    return (target: HTMLElement, _reportProgress: RuntimeProgressReporter, reportExitRequested: RuntimeExitReporter) => mountKirikiri2(
       config as KirikiriRuntimeConfig,
       target,
       options.frameWindow,
       options.restorePayload,
+      reportExitRequested,
     );
   }
 }

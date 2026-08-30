@@ -92,6 +92,12 @@ runtime.subscribe((event) => {
 Each session must use its own frame. `exit()` pauses the core and removes library-owned DOM and globals; the host
 then discards that frame to release Emscripten's document-level input hooks.
 
+Games may also terminate through their own title/menu UI. Every adapter translates that engine/process boundary
+into one `EXIT_REQUESTED` event. The shared controller immediately leaves the running state, makes checkpoint
+capture unavailable and releases the adapter. A host should subscribe before `mount()`, finish its play session
+and leave or close the Player when it receives this event; it must not keep a black canvas or offer saving after
+the core has ended.
+
 KiriKiri is also an independent runtime:
 
 ```ts

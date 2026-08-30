@@ -1,6 +1,5 @@
 import { decodeOnsCheckpoint, encodeOnsCheckpoint, type OnsCheckpointBundle } from "./checkpoint.js";
-import type { MountedRuntimeAdapter } from "../internal-adapter.js";
-import type { RuntimeProgressReporter } from "../internal-adapter.js";
+import type { MountedRuntimeAdapter, RuntimeExitReporter, RuntimeProgressReporter } from "../internal-adapter.js";
 import type { OnsRuntimeConfig } from "./contract.js";
 import { installOnsAnalogGamepad } from "./gamepad-input.js";
 import {
@@ -26,6 +25,7 @@ type OnsModule = {
   callMain(args: string[]): void | Promise<void>;
   canvas: HTMLCanvasElement;
   locateFile(path: string): string;
+  onExit?(status: number): void;
   onAbort?(reason: unknown): void;
   preRun?(): void;
   printErr?(message: string): void;
@@ -56,6 +56,7 @@ export async function mountOnsYuri(
   frameWindow: Window,
   restorePayload: Uint8Array | null,
   reportProgress: RuntimeProgressReporter = () => undefined,
+  reportExitRequested: RuntimeExitReporter = () => undefined,
 ): Promise<MountedRuntimeAdapter> {
   if (target.ownerDocument !== frameWindow.document) {throw new Error("ONS_RUNTIME_TARGET_INVALID");}
   reportProgress({ phase: "PROJECT_INDEX", loadedBytes: 0, totalBytes: null });
@@ -98,6 +99,7 @@ export async function mountOnsYuri(
   const moduleOptions: Partial<OnsModule> = {
     canvas,
     locateFile: (path) => new URL(path, base).href,
+    onExit: () => reportExitRequested(),
     onAbort: () => ready.reject(new Error("ONS_RUNTIME_ABORTED")),
     preRun: () => {
       const current = host.g_onsyuri_module as OnsModule | undefined;

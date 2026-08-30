@@ -24,7 +24,8 @@ describe("native-web RPG Maker bridge", () => {
     );
     const listeners = new Map<string, Array<(event: BridgeEvent) => void>>();
     const replies: unknown[] = [];
-    const sceneManager = { _scene: null, updateMain: () => undefined };
+    const nativeExit = vi.fn();
+    const sceneManager = { _scene: null, exit: nativeExit, updateMain: () => undefined };
     const runtime = {
       DataManager: {},
       SceneManager: sceneManager,
@@ -71,6 +72,18 @@ describe("native-web RPG Maker bridge", () => {
       requestId: 0,
       type: "READY",
     });
+
+    sceneManager.exit();
+    sceneManager.exit();
+    expect(nativeExit).toHaveBeenCalledTimes(2);
+    expect(replies.filter((reply) => (reply as {type?: string}).type === "EXIT_REQUESTED")).toEqual([{
+      body: {},
+      launchId: "01980000-0000-7000-8000-000000000001",
+      nonce: "test-nonce",
+      protocolVersion: 1,
+      requestId: 0,
+      type: "EXIT_REQUESTED",
+    }]);
   });
 
   it("waits for the engine database before restoring an MV save", async () => {

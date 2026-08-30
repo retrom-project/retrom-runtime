@@ -1,6 +1,5 @@
 import { Nostalgist } from "nostalgist";
-import type { MountedRuntimeAdapter } from "../internal-adapter.js";
-import type { RuntimeProgressReporter } from "../internal-adapter.js";
+import type { MountedRuntimeAdapter, RuntimeExitReporter, RuntimeProgressReporter } from "../internal-adapter.js";
 import {
   rpgMakerPositionProbeKind,
   type RpgMakerPositionV1,
@@ -35,6 +34,7 @@ type MkxpRuntime = Pick<Nostalgist,
 
 type MkxpPrepareOptions = Parameters<typeof Nostalgist.prepare>[0] & {
   emscriptenModule: NonNullable<Parameters<typeof Nostalgist.prepare>[0]["emscriptenModule"]> & {
+    onExit: (status: number) => void;
     preRun: Array<(module: { ENV: Record<string, string> }) => void>;
   };
 };
@@ -85,10 +85,11 @@ export async function mountMkxp(
   dependencies: MkxpMountDependencies = browserDependencies,
   onDiagnostic: (diagnostic: { runtime: string; message: string }) => void = defaultMkxpDiagnostic,
   reportProgress: RuntimeProgressReporter = () => undefined,
+  reportExitRequested: RuntimeExitReporter = () => undefined,
 ) {
   try {
     return await mountMkxpUnchecked(
-      config, target, restorePayload, dependencies, onDiagnostic, reportProgress,
+      config, target, restorePayload, dependencies, onDiagnostic, reportProgress, reportExitRequested,
     );
   }
   catch (error) {target.replaceChildren(); throw error;}
@@ -101,6 +102,7 @@ async function mountMkxpUnchecked(
   dependencies: MkxpMountDependencies,
   onDiagnostic: (diagnostic: { runtime: string; message: string }) => void,
   reportProgress: RuntimeProgressReporter,
+  reportExitRequested: RuntimeExitReporter,
 ) {
   if (!window.crossOriginIsolated || typeof SharedArrayBuffer === "undefined") {
     throw new Error("RPG_RUNTIME_THREADS_REQUIRED");
@@ -142,6 +144,7 @@ async function mountMkxpUnchecked(
     element: canvas,
     emscriptenModule: {
       arguments: [remoteGamePath],
+      onExit: () => reportExitRequested(),
       // Emscripten creates its ENV object after applying Module overrides and
       // overwrites a caller-provided Module.ENV. Populate the final object at
       // preRun instead, before RetroArch calls into the core and libc getenv().

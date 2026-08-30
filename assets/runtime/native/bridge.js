@@ -20,6 +20,7 @@
   let inputObserved = false;
   let audioObserved = false;
   let sceneManagerHooked = false;
+  let exitRequested = false;
 
   function ownKeys(value, expected) {
     if (!value || typeof value !== "object" || Array.isArray(value)) return false;
@@ -408,15 +409,28 @@
     if (frameCount === 300) event("FRAMES", { continuousFrames: frameCount });
   }
 
+  function requestExit() {
+    if (exitRequested) return;
+    exitRequested = true;
+    event("EXIT_REQUESTED", {});
+  }
+
   function installSceneManagerHook() {
     const manager = global.SceneManager;
     if (sceneManagerHooked || !manager || typeof manager.updateMain !== "function") return;
     const original = manager.updateMain;
+    const originalExit = manager.exit;
     manager.updateMain = function runtimeUpdateMain() {
       const result = original.apply(this, arguments);
       observeFrame();
       return result;
     };
+    if (typeof originalExit === "function") {
+      manager.exit = function runtimeExit() {
+        requestExit();
+        return originalExit.apply(this, arguments);
+      };
+    }
     sceneManagerHooked = true;
   }
 

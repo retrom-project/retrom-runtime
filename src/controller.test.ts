@@ -77,6 +77,31 @@ describe("GameRuntimeController", () => {
     expect(adapter.exit).toHaveBeenCalledOnce();
   });
 
+  it("turns a core-initiated exit into one host event and disables checkpoints immediately", async () => {
+    const adapter = adapterFixture();
+    const events: GameRuntimeEvent[] = [];
+    let requestCoreExit: (() => void) | undefined;
+    const runtime = new GameRuntimeController(
+      async (_target, _progress, reportExitRequested?: () => void) => {
+        requestCoreExit = reportExitRequested;
+        return adapter;
+      },
+      capabilities,
+      null,
+    );
+    runtime.subscribe((event) => events.push(event));
+    await runtime.mount(document.createElement("div"));
+
+    requestCoreExit?.();
+    requestCoreExit?.();
+
+    await vi.waitFor(() => expect(runtime.getState()).toBe("EXITED"));
+    expect(events.filter((event) => event.type === "EXIT_REQUESTED")).toHaveLength(1);
+    expect(runtime.getCheckpointAvailability()).toEqual({ available: false, blocker: "NOT_READY" });
+    await expect(runtime.checkpoint()).rejects.toMatchObject({ name: "AbortError" });
+    expect(adapter.exit).toHaveBeenCalledOnce();
+  });
+
   it("rejects unavailable checkpoints without calling the adapter or failing the runtime", async () => {
     const checkpoint = vi.fn(async (): Promise<RuntimeCheckpoint> => ({
       bytes: Uint8Array.of(1), format: "test-state-v1",

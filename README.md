@@ -51,6 +51,12 @@ blocking the game. Large videos are handed to the browser media pipeline by URL 
 instead of copying the complete movie into the Emscripten file system. KiriKiri keeps its 256 KiB-block VLFS Range
 reader and refuses a large response that ignores a requested range rather than silently buffering the whole file.
 
+Native RPG Maker MV/MZ checkpoints use the engine's `DataManager` and a temporary private storage slot. The bridge
+also executes the standard `$gameSystem.onBeforeSave()` and `onAfterLoad()` hooks at the same lifecycle boundaries
+as the engine save/load scenes. This preserves engine- and plugin-owned resume state such as the current BGM/BGS
+without inventing host-specific playback behavior. EasyRPG, mkxp, ONS and KiriKiri restore through their core state
+or native save APIs and do not use these RPG Maker Web hooks.
+
 ONS is a separate public runtime rather than an RPG Maker generation:
 
 ```ts

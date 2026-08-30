@@ -85,7 +85,7 @@ describe("independent package boundary", () => {
       adapterAbi: "butterscotch-checkpoint-v2",
       id: "butterscotch",
       repository: "https://github.com/xxxsen/Butterscotch",
-      tag: "rpg-runtime-gae2602f1f83c-r3-rc.1",
+      tag: "rpg-runtime-gae2602f1f83c-r3",
     })]));
     const releaseIds = manifest.upstreamReleases.map((release: { id: string }) => release.id).sort();
     const externalRuntimeIds = [...new Set(manifest.cores

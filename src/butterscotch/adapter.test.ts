@@ -51,6 +51,7 @@ describe("Butterscotch Web adapter", () => {
       format: "butterscotch-checkpoint-v1",
     });
     expect(workers[0]?.commands).toContain("RESTORE");
+    expect(workers[0]?.url.pathname).toBe("/runtime/retrom-runtime/v0.8.0/worker.mjs");
     expect(workers[0]?.messages).toContainEqual(expect.objectContaining({ keyCode: 38, pressed: true, type: "KEY" }));
     expect(workers[0]?.messages).toContainEqual(expect.objectContaining({ type: "GAMEPAD" }));
     expect(adapter.getCheckpointAvailability()).toEqual({ available: true, blocker: null });
@@ -154,7 +155,7 @@ function config(): ButterscotchRuntimeConfig {
       adapterKind: "BUTTERSCOTCH_WEB",
       adapterId: "butterscotch-web",
       projectIndexUrl: "https://content.example/index.json",
-      runtimeBaseUrl: "https://runtime.example/butterscotch/",
+      runtimeBaseUrl: "/runtime/retrom-runtime/v0.8.0/",
     },
   };
 }

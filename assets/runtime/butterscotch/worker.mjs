@@ -14,23 +14,29 @@ self.addEventListener("message", ({ data }) => {
 });
 
 async function start(data) {
+  let stage = "CANVAS";
   try {
     runtimeCanvas = data.canvas;
     runtimeCanvas.id = "canvas";
+    stage = "MODULE";
     const factory = (await import(data.moduleUrl)).default;
     runtime = await factory({
       canvas: data.canvas,
       locateFile: (path) => path.endsWith(".wasm") ? data.wasmUrl : new URL(path, data.moduleUrl).href,
     });
+    stage = "CANVAS";
     registerCanvas(runtime, data.canvas);
+    stage = "PROJECT_STORE";
     if (runtime._mountOpfs() !== 0) {throw new Error("BUTTERSCOTCH_PROJECT_STORE_FAILED");}
+    stage = "AUDIO";
     runtime._setAudioSampleRate(data.audioSampleRate);
     if (data.restore) {runtime._setRunnerPaused(1); paused = true;}
+    stage = "RUNNER";
     runtime.ccall("startRunner", null, ["string", "string"], [data.gamePath, data.savePath]);
     availabilityTimer = setInterval(reportAvailability, 250);
     if (data.audioEnabled) {audioTimer = setInterval(pullAudio, audioFramesPerPull / data.audioSampleRate * 1000);}
   } catch {
-    postMessage({ code: "BUTTERSCOTCH_RUNTIME_START_FAILED", type: "FATAL" });
+    postMessage({ code: `BUTTERSCOTCH_RUNTIME_${stage}_FAILED`, type: "FATAL" });
   }
 }
 

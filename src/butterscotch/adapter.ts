@@ -51,7 +51,8 @@ export async function mountButterscotch(
   });
   surface.append(canvas);
   target.replaceChildren(surface);
-  const workerUrl = new URL("worker.mjs", normalizedBase(config.adapter.runtimeBaseUrl));
+  const runtimeBase = new URL(normalizedBase(config.adapter.runtimeBaseUrl), frameWindow.document.baseURI);
+  const workerUrl = new URL("worker.mjs", runtimeBase);
   const worker = new (frameWindow as WorkerWindow).Worker(workerUrl, { type: "module" });
   const audio = createButterscotchAudio(frameWindow);
   const pending = new Map<string, { reject: (error: Error) => void; resolve: (message: HostMessage) => void }>();
@@ -107,11 +108,11 @@ export async function mountButterscotch(
       audioEnabled: audio !== null,
       audioSampleRate: audio?.sampleRate ?? 48_000,
       gamePath: project.gamePath,
-      moduleUrl: new URL("butterscotch.mjs", normalizedBase(config.adapter.runtimeBaseUrl)).href,
+      moduleUrl: new URL("butterscotch.mjs", runtimeBase).href,
       restore: restorePayload !== null,
       savePath: project.savePath,
       type: "START",
-      wasmUrl: new URL("butterscotch.wasm", normalizedBase(config.adapter.runtimeBaseUrl)).href,
+      wasmUrl: new URL("butterscotch.wasm", runtimeBase).href,
     }, [offscreen]);
     await withTimeout(ready.promise, commandTimeoutMs, "BUTTERSCOTCH_RUNTIME_TIMEOUT");
     if (restorePayload) {

@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+## 0.7.2
+
+- Keep KiriKiri running while KAG writes a semantic checkpoint, then capture the quiescent save-file set.
+- Support KAG games that retain the bookmark API but override the default `data1999.ksd` filename.
+
 ## 0.7.1
 
 - Fix the mkxp FetchFS manifest reader so Range-backed project startup does not write past the URL buffer.

@@ -27,6 +27,29 @@ describe("Butterscotch browser audio", () => {
     expect(context.suspend).toHaveBeenCalledOnce();
     expect(context.close).toHaveBeenCalledOnce();
   });
+
+  it("treats a browser-closed context as already cleaned up", async () => {
+    const context = new FakeAudioContext(new Float32Array(1), new Float32Array(1));
+    context.state = "closed";
+    context.close.mockRejectedValueOnce(new DOMException("Cannot close a closed AudioContext.", "InvalidStateError"));
+    const frameWindow = { AudioContext: class {constructor() {return context;}} } as unknown as Window;
+    const audio = createButterscotchAudio(frameWindow);
+    if (!audio) {throw new Error("audio unavailable");}
+
+    await expect(audio.close()).resolves.toBeUndefined();
+    expect(context.close).not.toHaveBeenCalled();
+  });
+
+  it("tolerates the context closing while cleanup is in progress", async () => {
+    const context = new FakeAudioContext(new Float32Array(1), new Float32Array(1));
+    context.close.mockRejectedValueOnce(Object.assign(Object.create(null), {name: "InvalidStateError"}));
+    const frameWindow = { AudioContext: class {constructor() {return context;}} } as unknown as Window;
+    const audio = createButterscotchAudio(frameWindow);
+    if (!audio) {throw new Error("audio unavailable");}
+
+    await expect(audio.close()).resolves.toBeUndefined();
+    expect(context.close).toHaveBeenCalledOnce();
+  });
 });
 
 class FakeAudioContext {

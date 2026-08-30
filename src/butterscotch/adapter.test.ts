@@ -36,7 +36,7 @@ describe("Butterscotch Web adapter", () => {
     mockProject();
     const target = document.createElement("div");
     document.body.append(target);
-    const restore = Uint8Array.of(66, 83, 67, 80, 1, 0, 0, 0, 0, 0, 0, 0);
+    const restore = Uint8Array.of(66, 83, 67, 80, 2, 0, 0, 0, 0, 0, 0, 0);
 
     const adapter = await mountButterscotch(config(), target, window, restore, () => undefined, () => undefined);
     const canvas = adapter.getCanvas();
@@ -47,8 +47,8 @@ describe("Butterscotch Web adapter", () => {
     await expect(adapter.screenshot()).resolves.toEqual(expect.objectContaining({type: "image/png"}));
 
     expect(checkpoint).toEqual({
-      bytes: Uint8Array.of(66, 83, 67, 80, 1, 0, 0, 0, 4, 0, 0, 0, 1, 2, 3, 4),
-      format: "butterscotch-checkpoint-v1",
+      bytes: Uint8Array.of(66, 83, 67, 80, 2, 0, 0, 0, 4, 0, 0, 0, 1, 2, 3, 4),
+      format: "butterscotch-checkpoint-v2",
     });
     expect(workers[0]?.commands).toContain("RESTORE");
     expect(workers[0]?.url.pathname).toBe("/runtime/retrom-runtime/v0.8.0/butterscotch-worker.mjs");
@@ -143,7 +143,7 @@ class FakeWorker extends EventTarget {
       response.status = this.initialStatus;
     }
     if (command === "CHECKPOINT") {
-      response.bytes = Uint8Array.of(66, 83, 67, 80, 1, 0, 0, 0, 4, 0, 0, 0, 1, 2, 3, 4);
+      response.bytes = Uint8Array.of(66, 83, 67, 80, 2, 0, 0, 0, 4, 0, 0, 0, 1, 2, 3, 4);
     }
     if (command === "SCREENSHOT") {response.bytes = Uint8Array.of(137, 80, 78, 71);}
     queueMicrotask(() => this.emit(response));

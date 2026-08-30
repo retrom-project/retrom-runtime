@@ -17,7 +17,7 @@ type HostMessage = {
 type HostCommand = "CHECKPOINT" | "PAUSE" | "RESTORE" | "RESUME" | "SCREENSHOT" | "STATUS" | "STOP";
 type WorkerWindow = Window & { SharedArrayBuffer?: typeof SharedArrayBuffer; Worker: typeof Worker };
 
-const checkpointFormat = "butterscotch-checkpoint-v1";
+const checkpointFormat = "butterscotch-checkpoint-v2";
 const commandTimeoutMs = 30_000;
 const keyCodes = new Map([
   ["ArrowLeft", 37], ["ArrowUp", 38], ["ArrowRight", 39], ["ArrowDown", 40],

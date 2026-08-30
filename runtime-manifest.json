@@ -1,7 +1,7 @@
 {
   "schemaVersion": 4,
   "packageName": "@xxxsen/retrom-runtime",
-  "packageVersion": "0.8.1",
+  "packageVersion": "0.8.2",
   "publicApiVersion": 2,
   "upstreamReleases": [
     {
@@ -119,38 +119,38 @@
     {
       "id": "butterscotch",
       "repository": "https://github.com/xxxsen/Butterscotch",
-      "tag": "rpg-runtime-gae2602f1f83c-r2",
-      "commit": "13ebaad3819532169ddfdda5054b0cf83f44ff70",
-      "adapterAbi": "butterscotch-checkpoint-v1",
-      "metadataUrl": "https://github.com/xxxsen/Butterscotch/releases/download/rpg-runtime-gae2602f1f83c-r2/rpg-runtime-release.json",
+      "tag": "rpg-runtime-gae2602f1f83c-r3-rc.1",
+      "commit": "dd77dffc6b9139999745e891340301fe4441a2dc",
+      "adapterAbi": "butterscotch-checkpoint-v2",
+      "metadataUrl": "https://github.com/xxxsen/Butterscotch/releases/download/rpg-runtime-gae2602f1f83c-r3-rc.1/rpg-runtime-release.json",
       "assets": [
         {
           "filename": "butterscotch.mjs",
-          "url": "https://github.com/xxxsen/Butterscotch/releases/download/rpg-runtime-gae2602f1f83c-r2/butterscotch.mjs",
+          "url": "https://github.com/xxxsen/Butterscotch/releases/download/rpg-runtime-gae2602f1f83c-r3-rc.1/butterscotch.mjs",
           "output": "runtime/butterscotch/butterscotch.mjs",
           "maxSizeBytes": 1048576
         },
         {
           "filename": "butterscotch.wasm",
-          "url": "https://github.com/xxxsen/Butterscotch/releases/download/rpg-runtime-gae2602f1f83c-r2/butterscotch.wasm",
+          "url": "https://github.com/xxxsen/Butterscotch/releases/download/rpg-runtime-gae2602f1f83c-r3-rc.1/butterscotch.wasm",
           "output": "runtime/butterscotch/butterscotch.wasm",
           "maxSizeBytes": 4194304
         },
         {
           "filename": "butterscotch-meta.mjs",
-          "url": "https://github.com/xxxsen/Butterscotch/releases/download/rpg-runtime-gae2602f1f83c-r2/butterscotch-meta.mjs",
+          "url": "https://github.com/xxxsen/Butterscotch/releases/download/rpg-runtime-gae2602f1f83c-r3-rc.1/butterscotch-meta.mjs",
           "output": "runtime/butterscotch/butterscotch-meta.mjs",
           "maxSizeBytes": 262144
         },
         {
           "filename": "butterscotch-meta.wasm",
-          "url": "https://github.com/xxxsen/Butterscotch/releases/download/rpg-runtime-gae2602f1f83c-r2/butterscotch-meta.wasm",
+          "url": "https://github.com/xxxsen/Butterscotch/releases/download/rpg-runtime-gae2602f1f83c-r3-rc.1/butterscotch-meta.wasm",
           "output": "runtime/butterscotch/butterscotch-meta.wasm",
           "maxSizeBytes": 262144
         },
         {
           "filename": "LICENSE",
-          "url": "https://github.com/xxxsen/Butterscotch/releases/download/rpg-runtime-gae2602f1f83c-r2/LICENSE",
+          "url": "https://github.com/xxxsen/Butterscotch/releases/download/rpg-runtime-gae2602f1f83c-r3-rc.1/LICENSE",
           "output": "licenses/butterscotch/LICENSE",
           "maxSizeBytes": 65536
         }
@@ -255,8 +255,8 @@
     {
       "adapterKind": "BUTTERSCOTCH_WEB",
       "adapterId": "butterscotch-web",
-      "adapterAbi": "butterscotch-checkpoint-v1",
-      "checkpointFormat": "butterscotch-checkpoint-v1",
+      "adapterAbi": "butterscotch-checkpoint-v2",
+      "checkpointFormat": "butterscotch-checkpoint-v2",
       "capabilities": {
         "pause": true,
         "screenshot": true,
@@ -399,10 +399,10 @@
       "runtimeId": "butterscotch",
       "adapterKind": "BUTTERSCOTCH_WEB",
       "adapterId": "butterscotch-web",
-      "adapterAbi": "butterscotch-checkpoint-v1",
+      "adapterAbi": "butterscotch-checkpoint-v2",
       "gameCompatibilityLine": "butterscotch-gamemaker-v1",
-      "saveAbi": "butterscotch-checkpoint-v1",
-      "readableSaveAbis": ["butterscotch-checkpoint-v1"],
+      "saveAbi": "butterscotch-checkpoint-v2",
+      "readableSaveAbis": ["butterscotch-checkpoint-v2"],
       "assetPaths": [
         "runtime/butterscotch/butterscotch.mjs",
         "runtime/butterscotch/butterscotch.wasm",

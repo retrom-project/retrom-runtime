@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+## 0.8.2
+
+- Update Butterscotch to the `r3-rc.1` integration candidate and checkpoint ABI v2 so bounded GameMaker
+  map/list/queue/stack/priority/grid pools survive direct checkpoint restore while unsupported runtime resources
+  remain fail-closed.
+- Preserve the core checkpoint blocker status so hosts distinguish temporary busy scenes from unsupported state.
+
 ## 0.8.1
 
 - Make Butterscotch audio teardown idempotent so exiting a game cannot surface a closed `AudioContext` error.

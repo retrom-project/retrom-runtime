@@ -59,8 +59,8 @@ export const runtimeAdapters = [
     "KIRIKIRI2_WEB", "kirikiri2-web", "kirikiri-kag-bookmark", "kirikiri-save-bundle-v1", standardCapabilities,
   ),
   descriptor(
-    "BUTTERSCOTCH_WEB", "butterscotch-web", "butterscotch-checkpoint-v1",
-    "butterscotch-checkpoint-v1", standardCapabilities,
+    "BUTTERSCOTCH_WEB", "butterscotch-web", "butterscotch-checkpoint-v2",
+    "butterscotch-checkpoint-v2", standardCapabilities,
   ),
 ] as const satisfies readonly RuntimeAdapterDescriptor[];
 

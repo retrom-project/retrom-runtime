@@ -80,6 +80,7 @@ describe("engine-neutral runtime contract", () => {
   it("registers every adapter through one engine-neutral catalog", () => {
     expect(runtimeAdapters.map((entry) => entry.adapterKind).sort()).toEqual([
       "BUTTERSCOTCH_WEB", "EASYRPG_WEB", "KIRIKIRI2_WEB", "MKXP_LIBRETRO_WEB", "NATIVE_WEB", "ONS_YURI_WEB",
+      "TYRANOSCRIPT_WEB",
     ]);
     for (const entry of runtimeAdapters) {
       expect(entry.capabilities.standardGamepad).toBe(true);

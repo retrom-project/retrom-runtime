@@ -1,7 +1,7 @@
 {
   "schemaVersion": 4,
   "packageName": "@xxxsen/retrom-runtime",
-  "packageVersion": "0.8.2",
+  "packageVersion": "0.9.0",
   "publicApiVersion": 2,
   "upstreamReleases": [
     {
@@ -155,6 +155,28 @@
           "maxSizeBytes": 65536
         }
       ]
+    },
+    {
+      "id": "tyranoscript",
+      "repository": "https://github.com/xxxsen/tyranoscript",
+      "tag": "rpg-runtime-gc8dbfd492afd-r2",
+      "commit": "b2082757c2486d38ffe7b9532748e1f5ab4aeb36",
+      "adapterAbi": "tyranoscript-snapshot-v1",
+      "metadataUrl": "https://github.com/xxxsen/tyranoscript/releases/download/rpg-runtime-gc8dbfd492afd-r2/rpg-runtime-release.json",
+      "assets": [
+        {
+          "filename": "retrom-tyranoscript-bridge.js",
+          "url": "https://github.com/xxxsen/tyranoscript/releases/download/rpg-runtime-gc8dbfd492afd-r2/retrom-tyranoscript-bridge.js",
+          "output": "runtime/tyranoscript/bridge.js",
+          "maxSizeBytes": 65536
+        },
+        {
+          "filename": "RETROM-BRIDGE-LICENSE",
+          "url": "https://github.com/xxxsen/tyranoscript/releases/download/rpg-runtime-gc8dbfd492afd-r2/RETROM-BRIDGE-LICENSE",
+          "output": "licenses/tyranoscript/RETROM-BRIDGE-LICENSE",
+          "maxSizeBytes": 65536
+        }
+      ]
     }
   ],
   "localAssets": [
@@ -266,6 +288,22 @@
         "frameCounter": false,
         "validationProbes": [],
         "volume": false
+      }
+    },
+    {
+      "adapterKind": "TYRANOSCRIPT_WEB",
+      "adapterId": "tyranoscript-web",
+      "adapterAbi": "tyranoscript-snapshot-v1",
+      "checkpointFormat": "tyranoscript-snapshot-v1",
+      "capabilities": {
+        "pause": true,
+        "screenshot": true,
+        "checkpoint": true,
+        "contentSources": ["ISOLATED_WEB_V1"],
+        "standardGamepad": true,
+        "frameCounter": true,
+        "validationProbes": [],
+        "volume": true
       }
     }
   ],
@@ -408,6 +446,19 @@
         "runtime/butterscotch/butterscotch.wasm",
         "runtime/butterscotch/worker.mjs"
       ]
+    },
+    {
+      "id": "tyranoscript",
+      "family": "TYRANOSCRIPT",
+      "generation": "TYRANOSCRIPT",
+      "runtimeId": "tyranoscript",
+      "adapterKind": "TYRANOSCRIPT_WEB",
+      "adapterId": "tyranoscript-web",
+      "adapterAbi": "tyranoscript-snapshot-v1",
+      "gameCompatibilityLine": "tyranoscript-v1",
+      "saveAbi": "tyranoscript-snapshot-v1",
+      "readableSaveAbis": ["tyranoscript-snapshot-v1"],
+      "assetPaths": ["runtime/tyranoscript/bridge.js"]
     }
   ]
 }

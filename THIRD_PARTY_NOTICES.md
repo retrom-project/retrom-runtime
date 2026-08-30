@@ -11,6 +11,10 @@ Release archives aggregate the following independently licensed components:
 - ONScripterYuri — GPL-2.0-or-later — <https://github.com/xxxsen/OnscripterYuri>
 - Kirikiroid2 Web — GPL-3.0-only — <https://github.com/xxxsen/kirikiroid2-web>
 - Butterscotch — AGPL-3.0-only — <https://github.com/xxxsen/Butterscotch>
+- Retrom TyranoScript host bridge — MIT — <https://github.com/xxxsen/tyranoscript>
+
+The TyranoScript engine itself is supplied by each game project and is not included in this aggregate release.
+Only the independently authored Retrom host bridge and its MIT license are aggregated from the maintained fork.
 
 The exact repository, release tag, commit and adapter ABI used by a release are recorded in
 `runtime-manifest.json`. GitHub source archives for those immutable commits and the build workflows in the

@@ -3,12 +3,17 @@ import { validateButterscotchRuntimeConfig, type ButterscotchRuntimeConfig } fro
 import { validateKirikiriRuntimeConfig, type KirikiriRuntimeConfig } from "./kirikiri/contract.js";
 import { validateOnsRuntimeConfig, type OnsRuntimeConfig } from "./ons/contract.js";
 import {
+  validateTyranoScriptRuntimeConfig,
+  type TyranoScriptRuntimeConfig,
+} from "./tyranoscript/contract.js";
+import {
   rpgMakerRuntimeCatalog,
   validateRpgMakerRuntimeConfig,
 } from "./rpgmaker/catalog.js";
 import type { RpgMakerRuntimeConfig } from "./rpgmaker/contract.js";
 
-export type RuntimeConfig = RpgMakerRuntimeConfig | OnsRuntimeConfig | KirikiriRuntimeConfig | ButterscotchRuntimeConfig;
+export type RuntimeConfig = RpgMakerRuntimeConfig | OnsRuntimeConfig | KirikiriRuntimeConfig |
+  ButterscotchRuntimeConfig | TyranoScriptRuntimeConfig;
 
 type RuntimeAdapterDescriptor = {
   adapterAbi: string;
@@ -48,6 +53,13 @@ const standardCapabilities: RuntimeCapabilities = {
   volume: false,
 };
 
+const isolatedWebCapabilities: RuntimeCapabilities = {
+  ...standardCapabilities,
+  contentSources: ["ISOLATED_WEB_V1"],
+  frameCounter: true,
+  volume: true,
+};
+
 export const runtimeAdapters = [
   descriptor("EASYRPG_WEB", "easyrpg-web", "easyrpg-save", "easyrpg-save-bundle-v1", rpgCapabilities),
   descriptor(
@@ -62,6 +74,10 @@ export const runtimeAdapters = [
     "BUTTERSCOTCH_WEB", "butterscotch-web", "butterscotch-checkpoint-v2",
     "butterscotch-checkpoint-v2", standardCapabilities,
   ),
+  descriptor(
+    "TYRANOSCRIPT_WEB", "tyranoscript-web", "tyranoscript-snapshot-v1",
+    "tyranoscript-snapshot-v1", isolatedWebCapabilities,
+  ),
 ] as const satisfies readonly RuntimeAdapterDescriptor[];
 
 export { rpgMakerRuntimeCatalog };
@@ -72,6 +88,10 @@ export function validateRuntimeConfig(config: RuntimeConfig): void {
   if (adapterKind === "KIRIKIRI2_WEB") {validateKirikiriRuntimeConfig(config as KirikiriRuntimeConfig); return;}
   if (adapterKind === "BUTTERSCOTCH_WEB") {
     validateButterscotchRuntimeConfig(config as ButterscotchRuntimeConfig);
+    return;
+  }
+  if (adapterKind === "TYRANOSCRIPT_WEB") {
+    validateTyranoScriptRuntimeConfig(config as TyranoScriptRuntimeConfig);
     return;
   }
   validateRpgMakerRuntimeConfig(config as RpgMakerRuntimeConfig);

@@ -10,11 +10,13 @@ import { mountKirikiri2 } from "./kirikiri/adapter.js";
 import { mountMkxp } from "./mkxp/adapter.js";
 import { mountNativeRpg } from "./native-web/adapter.js";
 import { mountOnsYuri } from "./ons/adapter.js";
+import { mountTyranoScript } from "./tyranoscript/adapter.js";
 import type { GameRuntime } from "./contract.js";
 import type { ButterscotchRuntimeConfig } from "./butterscotch/contract.js";
 import type { RuntimeExitReporter, RuntimeProgressReporter } from "./internal-adapter.js";
 import type { KirikiriRuntimeConfig } from "./kirikiri/contract.js";
 import type { OnsRuntimeConfig } from "./ons/contract.js";
+import type { TyranoScriptRuntimeConfig } from "./tyranoscript/contract.js";
 import type { RpgMakerAdapterConfig, RpgMakerRuntimeConfig } from "./rpgmaker/contract.js";
 
 export type {
@@ -46,6 +48,7 @@ export type {
 export { rpgMakerPositionProbeKind } from "./rpgmaker/contract.js";
 export type { OnsAdapterConfig, OnsRuntimeConfig, OnsScriptEncoding } from "./ons/contract.js";
 export type { KirikiriAdapterConfig, KirikiriRuntimeConfig } from "./kirikiri/contract.js";
+export type { TyranoScriptAdapterConfig, TyranoScriptRuntimeConfig } from "./tyranoscript/contract.js";
 export { decodeRpgCheckpoint, encodeRpgCheckpoint, rpgCheckpointMagic } from "./checkpoint.js";
 export { decodeMkxpRastate, encodeMkxpRastate, mkxpRastateEnvelopeBytes } from "./mkxp/state.js";
 export { decodeOnsCheckpoint, encodeOnsCheckpoint, onsCheckpointMagic } from "./ons/checkpoint.js";
@@ -75,6 +78,9 @@ export function describeRuntime(config: RuntimeConfig): RuntimeDescription {
   validateRuntimeConfig(config);
   const adapter = config.adapter;
   if (adapter.adapterKind === "NATIVE_WEB") {
+    return { crossOriginFrame: true, requiresThreads: false, runtimeBaseUrl: adapter.uniqueOrigin };
+  }
+  if (adapter.adapterKind === "TYRANOSCRIPT_WEB") {
     return { crossOriginFrame: true, requiresThreads: false, runtimeBaseUrl: adapter.uniqueOrigin };
   }
   return {
@@ -152,6 +158,13 @@ function adapterMount(config: RuntimeConfig, options: RuntimeOptions) {
       options.frameWindow,
       options.restorePayload,
       reportProgress,
+      reportExitRequested,
+    );
+  case "TYRANOSCRIPT_WEB":
+    return (_target: HTMLElement, _reportProgress: RuntimeProgressReporter, reportExitRequested: RuntimeExitReporter) => mountTyranoScript(
+      config as TyranoScriptRuntimeConfig,
+      requireFrame(options.frame),
+      options.restorePayload,
       reportExitRequested,
     );
   }

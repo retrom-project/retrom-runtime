@@ -167,6 +167,16 @@ describe("GameRuntimeController", () => {
     expect(adapter.exit).toHaveBeenCalledOnce();
   });
 
+  it("preserves a stable TyranoScript adapter error for host diagnostics", async () => {
+    const adapter = adapterFixture({pause: vi.fn(async () => {throw new Error("TYRANOSCRIPT_RUNTIME_TIMEOUT");})});
+    const runtime = runtimeFixture(adapter);
+    await runtime.mount(document.createElement("div"));
+
+    await expect(runtime.pause()).rejects.toThrow("TYRANOSCRIPT_RUNTIME_TIMEOUT");
+    expect(runtime.getState()).toBe("FAILED");
+    expect(adapter.exit).toHaveBeenCalledOnce();
+  });
+
   it("cleans an adapter that completes mounting after cancellation", async () => {
     const abort = new AbortController();
     const adapter = adapterFixture();

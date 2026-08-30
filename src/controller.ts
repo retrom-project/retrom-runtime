@@ -272,7 +272,7 @@ function normalizedAvailability(value: CheckpointAvailability): CheckpointAvaila
 }
 function stableError(error: unknown) {
   if (error instanceof DOMException && error.name === "AbortError") {return error;}
-  if (error instanceof Error && /^(?:RUNTIME|CHECKPOINT|PLAYER|RPG|ONS|KIRIKIRI|BUTTERSCOTCH)_[A-Z0-9_]+$/u.test(error.message)) {
+  if (error instanceof Error && /^(?:RUNTIME|CHECKPOINT|PLAYER|RPG|ONS|KIRIKIRI|BUTTERSCOTCH|TYRANOSCRIPT)_[A-Z0-9_]+$/u.test(error.message)) {
     return error;
   }
   return new Error("RUNTIME_FAILED");

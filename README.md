@@ -1,8 +1,8 @@
 # retrom-runtime
 
 `retrom-runtime` is a host-independent browser library and release bundle for RPG Maker 2000, 2003, XP,
-VX, VX Ace, MV and MZ, ONS games powered by ONScripterYuri, KAG-based KiriKiri2 games and supported GameMaker
-projects powered by Butterscotch. It owns runtime lifecycle, adapters, checkpoint codecs, bridge assets and pinned core
+VX, VX Ace, MV and MZ, ONS games powered by ONScripterYuri, KAG-based KiriKiri2 games, supported GameMaker
+projects powered by Butterscotch and browser TyranoScript projects. It owns runtime lifecycle, adapters, checkpoint codecs, bridge assets and pinned core
 Release inputs. It does not know about a host application's users, database, review flow, storage or HTTP API.
 
 ## Public API
@@ -65,6 +65,14 @@ reuse exact-sized bytes without another network transfer. The adapter renders on
 checkpoints, restores them in a new Worker instance and reports a core-initiated exit through the common lifecycle.
 The first compatibility line is intentionally limited to GameMaker data versions accepted by the pinned
 Butterscotch core and to runtime states its checkpoint status reports as supported.
+
+TyranoScript projects use the engine already present in the imported game and run in a per-Launch isolated origin.
+The host injects the small, independently licensed bridge aggregated from the maintained fork; the aggregate runtime
+does not redistribute TyranoScript itself. The adapter connects over a strict `MessageChannel`, delegates standard
+gamepad input to TyranoScript's browser input layer, captures a bounded semantic snapshot without a thumbnail and
+restores it in a fresh frame without opening the game's load menu. Restore uses TyranoScript's normal load lifecycle,
+including its current BGM replay, and waits for `load-complete` before reporting ready. A game `[close]` command is
+translated into the common `EXIT_REQUESTED` event instead of leaving the host on a closed or black frame.
 
 ONS is a separate public runtime rather than an RPG Maker generation:
 
@@ -149,7 +157,8 @@ npm run build
 npm run package:check
 ```
 
-Runtime JS/Wasm is not committed or built here. EasyRPG, mkxp, ONScripterYuri, KiriKiri and Butterscotch are maintained in
+Runtime JS/Wasm is not committed or built here. EasyRPG, mkxp, ONScripterYuri, KiriKiri, Butterscotch and the
+TyranoScript host bridge are maintained in
 separate forks; each fork owns its source changes, quality checks, Web build and immutable core Release. This
 repository downloads those fixed releases, adds its own small bridge assets and produces:
 
@@ -173,7 +182,8 @@ point `RETROM_RUNTIME_DEV_RELEASE_OVERRIDES` at the absolute output directory wh
 RETROM_RUNTIME_DEV_RELEASE_OVERRIDES='{"onsyuri":"/work/OnscripterYuri/output"}' npm run release:build
 ```
 
-Use key `kirikiri2` for the KiriKiri fork and `butterscotch` for the Butterscotch fork. The same environment is inherited by Retrom's
+Use key `kirikiri2` for the KiriKiri fork, `butterscotch` for the Butterscotch fork and `tyranoscript` for the
+TyranoScript bridge fork. The same environment is inherited by Retrom's
 `RETROM_RUNTIME_DEV_ROOT`/`RETROM_RUNTIME_DEV_INCLUDE_ASSETS=true` local-link flow. This affects only ignored local
 staging output; the committed manifest and formal Release inputs remain pinned to published fork tags.
 
@@ -209,7 +219,8 @@ other games or requiring unrelated host changes.
 
 ## Maintaining upstream forks
 
-The Player `master`, mkxp-z Web `main`, ONScripterYuri `master`, KiriKiri Web `web`, and Butterscotch `main`
+The Player `master`, mkxp-z Web `main`, ONScripterYuri `master`, KiriKiri Web `web`, Butterscotch `main` and
+TyranoScript `master`
 branches are unmodified, fast-forward-only upstream mirrors. Retrom changes live on one active
 `retrom/<baseline>` branch per fork, which is also that fork's default branch.
 Each fork records its exact tagged or commit-only upstream baseline in a root

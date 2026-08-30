@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 0.7.5
+
 - Persist exact-size ONS project files one at a time in OPFS (with Cache Storage fallback) so large NSA archives survive across runtime instances,
   while streaming aggregate project byte progress through the shared `LOAD_PROGRESS` contract.
 - Run RPG Maker MV/MZ's standard `$gameSystem.onBeforeSave()` and `onAfterLoad()` lifecycle around native checkpoints so engine-owned BGM/BGS state is captured and replayed after restore.

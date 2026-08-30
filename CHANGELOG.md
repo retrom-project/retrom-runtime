@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 0.7.4
+
 - Hold KiriKiri keyboard and gamepad input until the runtime is ready, then require one neutral gamepad frame so
   buttons held through loading cannot activate a partially initialized game menu.
 

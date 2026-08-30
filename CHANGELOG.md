@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+## 0.9.0
+
+- Add a host-independent TyranoScript isolated-Web adapter with the shared lifecycle, standard browser gamepad
+  support, bounded JPEG screenshots, semantic checkpoints, fresh-instance restore, BGM resume and core-owned exit
+  reporting.
+- Aggregate only the independently authored host bridge from the maintained TyranoScript fork. Game projects keep
+  supplying their own TyranoScript engine files, so the aggregate Release does not redistribute the upstream engine.
+
 ## 0.8.2
 
 - Update Butterscotch to `rpg-runtime-gae2602f1f83c-r3` and checkpoint ABI v2 so bounded GameMaker

@@ -15,7 +15,7 @@ describe("independent package boundary", () => {
     }
   });
 
-  it("publishes seven RPG Maker generations plus independent ONS, KiriKiri and Butterscotch cores", async () => {
+  it("publishes seven RPG Maker generations plus independent ONS, KiriKiri, Butterscotch and TyranoScript cores", async () => {
     const manifest = JSON.parse(await readFile(join(root, "runtime-manifest.json"), "utf8"));
     expect(manifest.packageName).toBe("@xxxsen/retrom-runtime");
     expect(manifest.cores.filter((core: { family: string }) => core.family === "RPG_MAKER")
@@ -28,6 +28,8 @@ describe("independent package boundary", () => {
       .map((core: { id: string }) => core.id)).toEqual(["kirikiri2-kag"]);
     expect(manifest.cores.filter((core: { family: string }) => core.family === "BUTTERSCOTCH")
       .map((core: { id: string }) => core.id)).toEqual(["butterscotch-gamemaker"]);
+    expect(manifest.cores.filter((core: { family: string }) => core.family === "TYRANOSCRIPT")
+      .map((core: { id: string }) => core.id)).toEqual(["tyranoscript"]);
     expect(manifest.cores.every((core: object) => !("routeKey" in core))).toBe(true);
     expect(manifest.localAssets.map((asset: { output: string }) => asset.output).sort()).toEqual([
       "runtime/butterscotch/worker.mjs",
@@ -42,14 +44,15 @@ describe("independent package boundary", () => {
       cores: Array<{ adapterAbi: string; adapterId: string; runtimeId: string }>;
     };
     expect([...new Set(manifest.cores.map((core) => core.runtimeId))].sort()).toEqual([
-      "butterscotch", "easyrpg", "kirikiri2", "mkxp", "native", "onsyuri",
+      "butterscotch", "easyrpg", "kirikiri2", "mkxp", "native", "onsyuri", "tyranoscript",
     ]);
     expect([...new Set(manifest.cores.map((core) => core.adapterId))].sort()).toEqual([
       "butterscotch-web", "easyrpg-web", "kirikiri2-web", "mkxp-libretro-web", "native-web", "ons-yuri-web",
+      "tyranoscript-web",
     ]);
     expect([...new Set(manifest.cores.map((core) => core.adapterAbi))].sort()).toEqual([
       "butterscotch-checkpoint-v2", "easyrpg-save", "kirikiri-kag-bookmark", "mkxp-state-compact",
-      "native-save", "ons-save",
+      "native-save", "ons-save", "tyranoscript-snapshot-v1",
     ]);
     expect((await readdir(join(root, "assets/runtime"))).sort()).toEqual(["butterscotch", "mkxp", "native"]);
     for (const asset of [
@@ -86,6 +89,11 @@ describe("independent package boundary", () => {
       id: "butterscotch",
       repository: "https://github.com/xxxsen/Butterscotch",
       tag: "rpg-runtime-gae2602f1f83c-r3",
+    }), expect.objectContaining({
+      adapterAbi: "tyranoscript-snapshot-v1",
+      id: "tyranoscript",
+      repository: "https://github.com/xxxsen/tyranoscript",
+      tag: "rpg-runtime-gc8dbfd492afd-r1",
     })]));
     const releaseIds = manifest.upstreamReleases.map((release: { id: string }) => release.id).sort();
     const externalRuntimeIds = [...new Set(manifest.cores

@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+## 0.8.1
+
+- Make Butterscotch audio teardown idempotent so exiting a game cannot surface a closed `AudioContext` error.
+- Update Butterscotch to `rpg-runtime-gae2602f1f83c-r2`, which clears the transient checkpoint blocker after a
+  game closes its native INI save and keeps runtime warnings out of the browser error stream.
+
 ## 0.8.0
 
 - Add the independent Butterscotch GameMaker runtime with OPFS-backed project streaming, keyboard and standard

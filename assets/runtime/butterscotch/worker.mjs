@@ -1,6 +1,8 @@
 let runtime = null;
 let paused = false;
 let availabilityTimer = null;
+let audioTimer = null;
+const audioFramesPerPull = 2048;
 
 self.addEventListener("message", ({ data }) => {
   if (data?.type === "START") {void start(data); return;}
@@ -19,9 +21,11 @@ async function start(data) {
     });
     registerCanvas(runtime, data.canvas);
     if (runtime._mountOpfs() !== 0) {throw new Error("BUTTERSCOTCH_PROJECT_STORE_FAILED");}
+    runtime._setAudioSampleRate(data.audioSampleRate);
     if (data.restore) {runtime._setRunnerPaused(1); paused = true;}
     runtime.ccall("startRunner", null, ["string", "string"], [data.gamePath, data.savePath]);
     availabilityTimer = setInterval(reportAvailability, 250);
+    if (data.audioEnabled) {audioTimer = setInterval(pullAudio, audioFramesPerPull / data.audioSampleRate * 1000);}
   } catch {
     postMessage({ code: "BUTTERSCOTCH_RUNTIME_START_FAILED", type: "FATAL" });
   }
@@ -59,7 +63,9 @@ async function command(data) {
       return;
     case "STOP":
       clearInterval(availabilityTimer);
+      clearInterval(audioTimer);
       availabilityTimer = null;
+      audioTimer = null;
       runtime._stopRunner();
       respond(data);
       return;
@@ -68,6 +74,19 @@ async function command(data) {
     }
   } catch {
     respond(data, { code: "BUTTERSCOTCH_RUNTIME_COMMAND_FAILED", ok: false });
+  }
+}
+
+function pullAudio() {
+  if (!runtime || paused) {return;}
+  const sampleCount = audioFramesPerPull * 2;
+  const pointer = runtime._malloc(sampleCount * 4);
+  try {
+    runtime._pullAudioFrames(pointer, audioFramesPerPull);
+    const samples = runtime.HEAPF32.slice(pointer / 4, pointer / 4 + sampleCount);
+    postMessage({ samples, type: "AUDIO" }, [samples.buffer]);
+  } finally {
+    runtime._free(pointer);
   }
 }
 

@@ -2,6 +2,7 @@ import type { MountedRuntimeAdapter, RuntimeExitReporter, RuntimeProgressReporte
 import type { CheckpointAvailability } from "../contract.js";
 import type { ButterscotchRuntimeConfig } from "./contract.js";
 import { prepareButterscotchProject } from "./project-store.js";
+import { createButterscotchAudio } from "./audio.js";
 
 type HostMessage = {
   available?: boolean;
@@ -10,6 +11,7 @@ type HostMessage = {
   ok?: boolean;
   requestId?: string;
   type?: string;
+  samples?: Float32Array;
 };
 type HostCommand = "CHECKPOINT" | "PAUSE" | "RESTORE" | "RESUME" | "STATUS" | "STOP";
 type WorkerWindow = Window & { SharedArrayBuffer?: typeof SharedArrayBuffer; Worker: typeof Worker };
@@ -51,6 +53,7 @@ export async function mountButterscotch(
   target.replaceChildren(surface);
   const workerUrl = new URL("worker.mjs", normalizedBase(config.adapter.runtimeBaseUrl));
   const worker = new (frameWindow as WorkerWindow).Worker(workerUrl, { type: "module" });
+  const audio = createButterscotchAudio(frameWindow);
   const pending = new Map<string, { reject: (error: Error) => void; resolve: (message: HostMessage) => void }>();
   const ready = deferred<void>();
   const pressedKeys = new Set<number>();
@@ -66,6 +69,7 @@ export async function mountButterscotch(
 
   const onMessage = (event: MessageEvent<HostMessage>) => {
     const message = event.data;
+    if (message.type === "AUDIO") {if (message.samples) {audio?.enqueue(message.samples);} return;}
     if (message.type === "runnerReady") {ready.resolve(); return;}
     if (message.type === "runnerExit") {
       checkpointAvailable = false;
@@ -89,8 +93,8 @@ export async function mountButterscotch(
   worker.addEventListener("message", onMessage as EventListener);
   worker.addEventListener("error", onError);
   const command = createCommandSender(worker, pending);
-  const focusCanvas = () => {canvas.focus({ preventScroll: true });};
-  const onKeyDown = (event: KeyboardEvent) => {sendKey(worker, pressedKeys, event, true);};
+  const focusCanvas = () => {canvas.focus({ preventScroll: true }); void audio?.resume();};
+  const onKeyDown = (event: KeyboardEvent) => {void audio?.resume(); sendKey(worker, pressedKeys, event, true);};
   const onKeyUp = (event: KeyboardEvent) => {sendKey(worker, pressedKeys, event, false);};
   canvas.addEventListener("pointerdown", focusCanvas, true);
   canvas.addEventListener("keydown", onKeyDown);
@@ -100,6 +104,8 @@ export async function mountButterscotch(
     const offscreen = canvas.transferControlToOffscreen();
     worker.postMessage({
       canvas: offscreen,
+      audioEnabled: audio !== null,
+      audioSampleRate: audio?.sampleRate ?? 48_000,
       gamePath: project.gamePath,
       moduleUrl: new URL("butterscotch.mjs", normalizedBase(config.adapter.runtimeBaseUrl)).href,
       restore: restorePayload !== null,
@@ -130,6 +136,7 @@ export async function mountButterscotch(
     worker.removeEventListener("message", onMessage as EventListener);
     worker.removeEventListener("error", onError);
     worker.terminate();
+    void audio?.close();
     for (const waiter of pending.values()) {waiter.reject(new DOMException("Aborted", "AbortError") as unknown as Error);}
     pending.clear();
     canvas.removeEventListener("pointerdown", focusCanvas, true);
@@ -162,10 +169,10 @@ export async function mountButterscotch(
       : checkpointAvailable ? { available: true, blocker: null } : { available: false, blocker: "BUSY" },
     getFrameCount: () => null,
     getValidationProbe: () => null,
-    pause: async () => {if (exited) {throw new Error("BUTTERSCOTCH_RUNTIME_INVALID_STATE");} await command("PAUSE");},
-    resume: async () => {if (exited) {throw new Error("BUTTERSCOTCH_RUNTIME_INVALID_STATE");} await command("RESUME");},
+    pause: async () => {if (exited) {throw new Error("BUTTERSCOTCH_RUNTIME_INVALID_STATE");} await command("PAUSE"); await audio?.pause();},
+    resume: async () => {if (exited) {throw new Error("BUTTERSCOTCH_RUNTIME_INVALID_STATE");} await command("RESUME"); await audio?.resume();},
     screenshot: () => canvasScreenshot(canvas),
-    setVolume: null,
+    setVolume: audio ? (volume) => audio.setVolume(volume) : null,
   };
 }
 

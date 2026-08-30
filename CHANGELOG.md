@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Report game-initiated exits from EasyRPG, mkxp, native RPG Maker, ONS and KiriKiri through the shared
+  `EXIT_REQUESTED` event, immediately leave the running lifecycle and disable checkpoint capture instead of
+  leaving hosts on a saveable black canvas.
+
 ## 0.7.5
 
 - Persist exact-size ONS project files one at a time in OPFS (with Cache Storage fallback) so large NSA archives survive across runtime instances,

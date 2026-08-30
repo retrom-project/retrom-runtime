@@ -21,6 +21,7 @@ export class GameRuntimeController implements GameRuntime {
   private operationTail: Promise<void> = Promise.resolve();
   private lastAvailability: CheckpointAvailability = unavailable;
   private availabilityTimer: number | null = null;
+  private exitRequested = false;
 
   constructor(
     private readonly mountAdapter: RuntimeAdapterMount,
@@ -39,7 +40,7 @@ export class GameRuntimeController implements GameRuntime {
     }
     this.transition("LOADING");
     try {
-      const adapter = await this.mountAdapter(target, this.reportProgress);
+      const adapter = await this.mountAdapter(target, this.reportProgress, this.reportExitRequested);
       if (this.abortSignal?.aborted || exitHasStarted(this.state)) {
         await adapter.exit();
         throw new DOMException("Aborted", "AbortError");
@@ -151,6 +152,12 @@ export class GameRuntimeController implements GameRuntime {
   private readonly reportProgress = (progress: RuntimeLoadProgress) => {
     if (this.state !== "LOADING" || !validProgress(progress)) {return;}
     this.emit({ type: "LOAD_PROGRESS", ...progress });
+  };
+  private readonly reportExitRequested = () => {
+    if (this.exitRequested || exitHasStarted(this.state) || this.state === "FAILED") {return;}
+    this.exitRequested = true;
+    this.emit({ type: "EXIT_REQUESTED" });
+    void this.exit();
   };
 
   private enqueue<T>(operation: () => Promise<T>) {

@@ -73,16 +73,21 @@ describe("EasyRPG adapter cleanup", () => {
       value: createPlayer,
     });
     const config = easyConfig();
-    const mounting = mountEasyRpg(config, target, window, null);
+    const reportExitRequested = vi.fn();
+    const mounting = mountEasyRpg(config, target, window, null, reportExitRequested);
     await vi.waitFor(() => expect(document.head.querySelector("script[data-rpg-runtime=easyrpg]")).not.toBeNull());
     document.head.querySelector<HTMLScriptElement>("script[data-rpg-runtime=easyrpg]")
       ?.dispatchEvent(new Event("load"));
 
     const mounted = await mounting;
     expect(createPlayer).toHaveBeenCalledWith(expect.objectContaining({
-      noExitRuntime: true,
+      noExitRuntime: false,
+      onExit: expect.any(Function),
       runtimeProjectRootUrl: config.adapter.projectRootUrl,
     }));
+    const options = createPlayer.mock.calls[0]?.[0] as {onExit?: (status: number) => void};
+    options.onExit?.(0);
+    expect(reportExitRequested).toHaveBeenCalledOnce();
     expect(mounted.getValidationProbe(rpgMakerPositionProbeKind)?.value)
       .toEqual({ mapId: 1, playerX: 8, playerY: 6, fixtureState: 0 });
     await mounted.exit();

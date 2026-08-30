@@ -19,8 +19,10 @@ export type MountedRuntimeAdapter = {
 };
 
 export type RuntimeProgressReporter = (progress: RuntimeLoadProgress) => void;
+export type RuntimeExitReporter = () => void;
 
 export type RuntimeAdapterMount = (
   target: HTMLElement,
   reportProgress: RuntimeProgressReporter,
+  reportExitRequested: RuntimeExitReporter,
 ) => Promise<MountedRuntimeAdapter>;

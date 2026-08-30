@@ -63,12 +63,15 @@ describe("mkxp runtime mount", () => {
     const harness = createHarness();
     const consoleError = vi.spyOn(console, "error").mockImplementation(() => undefined);
     const diagnostics: unknown[] = [];
+    const reportExitRequested = vi.fn();
 
     const mounted = await mountMkxp(
       mkxpConfig(false), harness.target, null, harness.dependencies, (diagnostic) => diagnostics.push(diagnostic),
+      () => undefined, reportExitRequested,
     );
     const print = harness.prepareOptions?.emscriptenModule?.print;
     const printErr = harness.prepareOptions?.emscriptenModule?.printErr;
+    const onExit = harness.prepareOptions?.emscriptenModule?.onExit;
     expect(print).toBeTypeOf("function");
     expect(printErr).toBeTypeOf("function");
     print?.("[INFO] mkxp startup");
@@ -79,6 +82,8 @@ describe("mkxp runtime mount", () => {
       { runtime: "mkxp-z", message: "[INFO] mkxp startup" },
       { runtime: "mkxp-z", message: "[INFO] RetroArch startup" },
     ]);
+    onExit?.(0);
+    expect(reportExitRequested).toHaveBeenCalledOnce();
     await mounted.exit();
     harness.frame.remove();
   });

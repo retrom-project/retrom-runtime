@@ -1,5 +1,5 @@
 import { decodeKirikiriCheckpoint, encodeKirikiriCheckpoint, type KirikiriCheckpointEntry } from "./checkpoint.js";
-import type { MountedRuntimeAdapter } from "../internal-adapter.js";
+import type { MountedRuntimeAdapter, RuntimeExitReporter } from "../internal-adapter.js";
 import type { KirikiriRuntimeConfig } from "./contract.js";
 import { installKirikiriStandardGamepad } from "./gamepad-input.js";
 
@@ -20,6 +20,7 @@ type KirikiriModule = {
   locateFile(path: string): string;
   mainScriptUrlOrBlob: string;
   onAbort(reason: unknown): void;
+  onExit(status: number): void;
   onRuntimeInitialized(): void;
   postRun: Array<() => void>;
   preRun: Array<() => void>;
@@ -49,6 +50,7 @@ export async function mountKirikiri2(
   target: HTMLElement,
   frameWindow: Window,
   restorePayload: Uint8Array | null,
+  reportExitRequested: RuntimeExitReporter = () => undefined,
 ): Promise<MountedRuntimeAdapter> {
   if (target.ownerDocument !== frameWindow.document) {throw new Error("KIRIKIRI_RUNTIME_TARGET_INVALID");}
   requireBrowserFeatures(frameWindow);
@@ -117,6 +119,7 @@ export async function mountKirikiri2(
       locateFile: (path) => new URL(path, base).href,
       mainScriptUrlOrBlob: runtimeUrl,
       onAbort: () => {ready.reject(new Error("KIRIKIRI_RUNTIME_ABORTED"));},
+      onExit: () => reportExitRequested(),
       onRuntimeInitialized: () => undefined,
       postRun: [() => {ready.resolve();}],
       preRun: [],

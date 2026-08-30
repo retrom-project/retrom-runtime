@@ -5,6 +5,7 @@ import type { KirikiriRuntimeConfig } from "./contract.js";
 import { createRuntime } from "../index.js";
 
 type FakeModule = {
+  onExit?: (status: number) => void;
   postRun: Array<() => void>;
   pauseMainLoop: ReturnType<typeof vi.fn>;
   resumeMainLoop: ReturnType<typeof vi.fn>;
@@ -29,6 +30,25 @@ afterEach(() => {
 });
 
 describe("KiriKiri2 KAG runtime", () => {
+  it("reports the engine process exit and makes checkpointing unavailable", async () => {
+    enableRuntimeFeatures();
+    const vlfs = fakeVlfs();
+    mockDownloads();
+    const runtime = createRuntime(config(), { frameWindow: window, restorePayload: null });
+    const events: string[] = [];
+    runtime.subscribe((event) => events.push(event.type));
+    const mounting = runtime.mount(document.createElement("div"));
+    await loadVlfs(vlfs);
+    const module = await loadCore(vlfs);
+    await mounting;
+
+    module.onExit?.(0);
+
+    await vi.waitFor(() => expect(runtime.getState()).toBe("EXITED"));
+    expect(events.filter((type) => type === "EXIT_REQUESTED")).toHaveLength(1);
+    expect(runtime.getCheckpointAvailability()).toEqual({ available: false, blocker: "NOT_READY" });
+  });
+
   it("does not carry startup input into the ready runtime", async () => {
     enableRuntimeFeatures();
     const animationFrames: FrameRequestCallback[] = [];

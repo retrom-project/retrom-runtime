@@ -1,5 +1,5 @@
 import { decodeRpgCheckpoint, encodeRpgCheckpoint } from "../checkpoint.js";
-import type { MountedRuntimeAdapter } from "../internal-adapter.js";
+import type { MountedRuntimeAdapter, RuntimeExitReporter } from "../internal-adapter.js";
 import {
   rpgMakerPositionProbeKind,
   type RpgMakerPositionV1,
@@ -37,7 +37,8 @@ type EasyModule = {
 
 type EasyModuleOptions = {
   game: string;
-  noExitRuntime: true;
+  noExitRuntime: false;
+  onExit(status: number): void;
   saveFs: undefined;
   locateFile(path: string): string;
   runtimeEngineMode: string;
@@ -64,8 +65,9 @@ export async function mountEasyRpg(
   target: HTMLElement,
   frameWindow: Window,
   restorePayload: Uint8Array | null,
+  reportExitRequested: RuntimeExitReporter = () => undefined,
 ) {
-  try {return await mountEasyRpgUnchecked(config, target, frameWindow, restorePayload);}
+  try {return await mountEasyRpgUnchecked(config, target, frameWindow, restorePayload, reportExitRequested);}
   catch (error) {
     target.replaceChildren();
     frameWindow.document.querySelectorAll("script[data-rpg-runtime]").forEach((script) => script.remove());
@@ -78,6 +80,7 @@ async function mountEasyRpgUnchecked(
   target: HTMLElement,
   frameWindow: Window,
   restorePayload: Uint8Array | null,
+  reportExitRequested: RuntimeExitReporter,
 ) {
   const runtimeWindow = frameWindow as EasyWindow;
   const document = frameWindow.document;
@@ -101,7 +104,8 @@ async function mountEasyRpgUnchecked(
   }
   const playerModule = await createPlayer({
     game: config.sessionId,
-    noExitRuntime: true,
+    noExitRuntime: false,
+    onExit: () => reportExitRequested(),
     saveFs: undefined,
     locateFile: (path) => `${config.adapter.runtimeBaseUrl}${path}`,
     runtimeEngineMode: config.adapter.engineMode,

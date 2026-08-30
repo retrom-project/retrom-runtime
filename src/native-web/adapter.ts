@@ -4,7 +4,7 @@ import {
   type RpgCheckpointBundle,
   type RpgCheckpointStore,
 } from "../checkpoint.js";
-import type { MountedRuntimeAdapter } from "../internal-adapter.js";
+import type { MountedRuntimeAdapter, RuntimeExitReporter } from "../internal-adapter.js";
 import {
   rpgMakerPositionProbeKind,
   type RpgMakerPositionV1,
@@ -44,8 +44,9 @@ export async function mountNativeRpg(
   config: NativeConfig,
   frame: HTMLIFrameElement,
   restorePayload: Uint8Array | null,
+  reportExitRequested: RuntimeExitReporter = () => undefined,
 ) {
-  const channel = new NativeChannel(config);
+  const channel = new NativeChannel(config, reportExitRequested);
   frame.setAttribute("sandbox", "allow-scripts allow-same-origin allow-pointer-lock");
   frame.referrerPolicy = "no-referrer";
   let expectedEngine: "RPGMV" | "RPGMZ";
@@ -107,7 +108,7 @@ class NativeChannel {
   private probeTimer: number | null = null;
   private probeActive = false;
 
-  constructor(config: NativeConfig) {
+  constructor(config: NativeConfig, private readonly reportExitRequested: RuntimeExitReporter) {
     this.config = config;
     this.port.port1.onmessage = (event) => this.receive(event.data);
     this.port.port1.start();
@@ -272,6 +273,9 @@ class NativeChannel {
       }
     } else if (reply.type === "FRAMES") {
       this.updateFrames(reply.body.continuousFrames);
+    } else if (reply.type === "EXIT_REQUESTED" && Object.keys(reply.body).length === 0) {
+      this.available = false;
+      this.reportExitRequested();
     }
   }
 

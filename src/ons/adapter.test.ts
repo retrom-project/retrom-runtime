@@ -23,6 +23,30 @@ afterEach(() => {
 });
 
 describe("ONS Yuri runtime", () => {
+  it("reports the engine process exit and makes checkpointing unavailable", async () => {
+    const module = fakeModule();
+    let configured: FakeModule | undefined;
+    (window as HostWindow).onsyuri = vi.fn(async (options: Record<string, unknown>) => {
+      Object.assign(options, module);
+      configured = options as FakeModule;
+      configured.preRun?.();
+      return configured;
+    });
+    mockIndex();
+    const events: string[] = [];
+    const runtime = createRuntime(config(), { frameWindow: window, restorePayload: null });
+    runtime.subscribe((event) => events.push(event.type));
+    const mounting = runtime.mount(document.createElement("div"));
+    await loadRuntimeScript();
+    await mounting;
+
+    configured?.onExit?.(0);
+
+    await vi.waitFor(() => expect(runtime.getState()).toBe("EXITED"));
+    expect(events.filter((type) => type === "EXIT_REQUESTED")).toHaveLength(1);
+    expect(runtime.getCheckpointAvailability()).toEqual({ available: false, blocker: "NOT_READY" });
+  });
+
   it("maps the standard gamepad left stick to directional keyboard input", async () => {
     const module = fakeModule();
     (window as HostWindow).onsyuri = vi.fn(async (options: Record<string, unknown>) => {
@@ -406,6 +430,7 @@ function fakeModule(): FakeModule {
 type FakeModule = {
   FS: FakeFs;
   callMain: ReturnType<typeof vi.fn>;
+  onExit?: (status: number) => void;
   preRun?: () => void;
   printErr?: (message: string) => void;
   _onsyuri_host_load: ReturnType<typeof vi.fn>;

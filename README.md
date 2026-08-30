@@ -86,8 +86,10 @@ The first compatibility line is deliberately limited to games exposing the stand
 `/savedata` or `/save`; it is not a raw Wasm memory snapshot. A pure TJS/custom-engine title without these KAG
 methods fails closed as unsupported instead of producing a checkpoint that cannot be restored. The host supplies
 a project file index and, only when that project contains multiple XP3 archives, the explicit project-relative XP3
-entry selected during import. Runtime slot `1999` is outside the normal KAG save menu and produces the special
-`data1999.ksd` bookmark used by the host checkpoint bundle.
+entry selected during import. Runtime slot `1999` is outside the normal KAG save menu. The adapter keeps the core
+running until the slot request causes a non-bookkeeping save write, then captures the complete quiescent save-file
+set. This also supports KAG games that override the default `data1999.ksd` filename while retaining the standard
+bookmark API.
 
 The KiriKiri Web core does not expose its native pad-key conversion in Emscripten builds. The adapter therefore
 provides a visible virtual pointer: a standard gamepad's D-pad and left stick move it, A performs a left click and

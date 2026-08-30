@@ -40,6 +40,7 @@ type KirikiriHostWindow = Window & Record<string, unknown> & {
 
 const readyTimeoutMs = 60_000;
 const writeTimeoutMs = 10_000;
+const writeQuiescenceMs = 250;
 const maximumProjectFiles = 10_000;
 const saveRoots = ["/save/", "/savedata/"] as const;
 
@@ -77,6 +78,9 @@ export async function mountKirikiri2(
   const previousVlfs = host.VLFS;
   const scripts: HTMLScriptElement[] = [];
   const writes = new Map<string, Uint8Array>();
+  const writeSequences = new Map<string, number>();
+  let writeSequence = 0;
+  let lastWriteAt = 0;
   let module: KirikiriModule | null = null;
   let paused = false;
   let exited = false;
@@ -89,7 +93,12 @@ export async function mountKirikiri2(
     vlfs.mkdir("/save");
     vlfs.mkdir("/savedata");
     vlfs.onWriteClose = (path, data) => {
-      if (isSavePath(path)) {writes.set(normalizeSavePath(path), data.slice());}
+      if (!isSavePath(path)) {return;}
+      const normalized = normalizeSavePath(path);
+      writes.set(normalized, data.slice());
+      writeSequence += 1;
+      writeSequences.set(normalized, writeSequence);
+      lastWriteAt = Date.now();
     };
     await registerRuntimeAssets(vlfs, new URL("assets.zip", base));
     const project = await registerProject(vlfs, config.adapter.projectIndexUrl, document.baseURI);
@@ -141,20 +150,21 @@ export async function mountKirikiri2(
         throw new Error("KIRIKIRI_CHECKPOINT_CREATE_FAILED");
       }
       if (exited) {throw new Error("KIRIKIRI_RUNTIME_INVALID_STATE");}
-      const shouldResume = !paused;
-      if (shouldResume) {activeModule.pauseMainLoop();}
-      const bookmarkName = `data${config.adapter.checkpointSlot}.ksd`;
-      for (const path of writes.keys()) {
-        if (path === bookmarkName || path.endsWith(`/${bookmarkName}`)) {writes.delete(path);}
-      }
+      const wasPaused = paused;
+      const checkpointWriteSequence = writeSequence;
+      let pausedForCapture = false;
+      if (wasPaused) {activeModule.resumeMainLoop();}
       try {
         if (activeModule._krkr2_host_save_bookmark(config.adapter.checkpointSlot) !== 0) {
           throw new Error("KIRIKIRI_CHECKPOINT_CREATE_FAILED");
         }
         await waitFor(
-          () => [...writes.keys()].some((path) => path === bookmarkName || path.endsWith(`/${bookmarkName}`)),
+          () => hasCausalBookmarkWrite(writeSequences, checkpointWriteSequence) &&
+            Date.now() - lastWriteAt >= writeQuiescenceMs,
           writeTimeoutMs,
         );
+        activeModule.pauseMainLoop();
+        pausedForCapture = true;
         const entries: KirikiriCheckpointEntry[] = [...writes].map(([path, data]) => ({ path, data: data.slice() }));
         return {
           bytes: await encodeKirikiriCheckpoint({ entries, resumeSlot: config.adapter.checkpointSlot }),
@@ -164,7 +174,8 @@ export async function mountKirikiri2(
         if (error instanceof Error && error.message === "KIRIKIRI_CHECKPOINT_CREATE_FAILED") {throw error;}
         throw new Error("KIRIKIRI_CHECKPOINT_CREATE_FAILED");
       } finally {
-        if (shouldResume) {activeModule.resumeMainLoop();}
+        if (wasPaused && !pausedForCapture) {activeModule.pauseMainLoop();}
+        if (!wasPaused && pausedForCapture) {activeModule.resumeMainLoop();}
       }
     },
     exit: async () => {
@@ -256,6 +267,16 @@ function selectStartupXp3(paths: string[], configured: string | null) {
 
 function isSavePath(path: string) {return saveRoots.some((root) => path.toLowerCase().startsWith(root));}
 function normalizeSavePath(path: string) {return path.replace(/^\/+/, "").normalize("NFC");}
+function hasCausalBookmarkWrite(sequences: Map<string, number>, checkpointWriteSequence: number) {
+  for (const [path, sequence] of sequences) {
+    if (sequence > checkpointWriteSequence && !isBookmarkBookkeepingPath(path)) {return true;}
+  }
+  return false;
+}
+function isBookmarkBookkeepingPath(path: string) {
+  const name = path.slice(path.lastIndexOf("/") + 1);
+  return /^datas[cu](?:[_~])?\.ksd$/iu.test(name);
+}
 function validPath(value: unknown): value is string {
   return typeof value === "string" && value.length > 0 && value.length <= 1024 && value.normalize("NFC") === value &&
     !value.startsWith("/") && !value.includes("\\") && !value.includes("//") &&

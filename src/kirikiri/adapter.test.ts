@@ -116,7 +116,7 @@ describe("KiriKiri2 KAG runtime", () => {
     expect(checkpoint.format).toBe("kirikiri-save-bundle-v1");
     expect(checkpoint.bytes.byteLength).toBeLessThan(1024);
     expect(module._krkr2_host_save_bookmark).toHaveBeenCalledWith(1999);
-    expect(module.pauseMainLoop).toHaveBeenCalledBefore(module._krkr2_host_save_bookmark);
+    expect(module._krkr2_host_save_bookmark).toHaveBeenCalledBefore(module.pauseMainLoop);
     expect(module.resumeMainLoop).toHaveBeenCalledAfter(module._krkr2_host_save_bookmark);
     expect((await decodeKirikiriCheckpoint(checkpoint.bytes)).entries.map((entry) => entry.path)).toEqual([
       "savedata/data1999.ksd", "savedata/datasu.ksd",
@@ -150,6 +150,35 @@ describe("KiriKiri2 KAG runtime", () => {
     );
     expect(restoredModule._krkr2_host_load_bookmark).toHaveBeenCalledWith(1999);
     await restored.exit();
+  });
+
+  it("temporarily resumes a paused core until a custom bookmark file is written", async () => {
+    enableRuntimeFeatures();
+    const vlfs = fakeVlfs();
+    mockDownloads();
+    const runtime = createRuntime(config(), { frameWindow: window, restorePayload: null });
+    const mounting = runtime.mount(document.createElement("div"));
+    await loadVlfs(vlfs);
+    const module = await loadCore(vlfs);
+    await mounting;
+    await runtime.pause();
+    module.pauseMainLoop.mockClear();
+    module.resumeMainLoop.mockClear();
+    module._krkr2_host_save_bookmark.mockImplementation(() => {
+      queueMicrotask(() => {
+        vlfs.onWriteClose?.("/savedata/custom-host-bookmark.bmp", Uint8Array.of(4, 2));
+      });
+      return 0;
+    });
+
+    const checkpoint = await runtime.checkpoint();
+
+    expect(module.resumeMainLoop).toHaveBeenCalledBefore(module._krkr2_host_save_bookmark);
+    expect(module.pauseMainLoop).toHaveBeenCalledAfter(module._krkr2_host_save_bookmark);
+    expect((await decodeKirikiriCheckpoint(checkpoint.bytes)).entries).toContainEqual({
+      path: "savedata/custom-host-bookmark.bmp", data: Uint8Array.of(4, 2),
+    });
+    await runtime.exit();
   });
 
   it("rejects a restore when the KAG bookmark API rejects the slot", async () => {

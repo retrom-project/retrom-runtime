@@ -144,17 +144,13 @@ export async function mountKirikiri2(
   return {
     checkpoint: async () => {
       if (exited) {throw new Error("KIRIKIRI_RUNTIME_INVALID_STATE");}
-      try {
-        await waitFor(() => activeModule._krkr2_host_bookmark_is_ready() === 1, readyTimeoutMs);
-      } catch {
-        throw new Error("KIRIKIRI_CHECKPOINT_CREATE_FAILED");
-      }
-      if (exited) {throw new Error("KIRIKIRI_RUNTIME_INVALID_STATE");}
       const wasPaused = paused;
-      const checkpointWriteSequence = writeSequence;
       let pausedForCapture = false;
       if (wasPaused) {activeModule.resumeMainLoop();}
       try {
+        await waitFor(() => activeModule._krkr2_host_bookmark_is_ready() === 1, readyTimeoutMs);
+        if (exited) {throw new Error("KIRIKIRI_RUNTIME_INVALID_STATE");}
+        const checkpointWriteSequence = writeSequence;
         if (activeModule._krkr2_host_save_bookmark(config.adapter.checkpointSlot) !== 0) {
           throw new Error("KIRIKIRI_CHECKPOINT_CREATE_FAILED");
         }
@@ -171,7 +167,8 @@ export async function mountKirikiri2(
           format: "kirikiri-save-bundle-v1",
         };
       } catch (error) {
-        if (error instanceof Error && error.message === "KIRIKIRI_CHECKPOINT_CREATE_FAILED") {throw error;}
+        if (error instanceof Error && ["KIRIKIRI_CHECKPOINT_CREATE_FAILED", "KIRIKIRI_RUNTIME_INVALID_STATE"]
+          .includes(error.message)) {throw error;}
         throw new Error("KIRIKIRI_CHECKPOINT_CREATE_FAILED");
       } finally {
         if (wasPaused && !pausedForCapture) {activeModule.pauseMainLoop();}

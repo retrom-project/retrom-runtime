@@ -181,6 +181,36 @@ describe("KiriKiri2 KAG runtime", () => {
     await runtime.exit();
   });
 
+  it("resumes a paused core before waiting for the next stable KAG save point", async () => {
+    enableRuntimeFeatures();
+    const vlfs = fakeVlfs();
+    mockDownloads();
+    const runtime = createRuntime(config(), { frameWindow: window, restorePayload: null });
+    const mounting = runtime.mount(document.createElement("div"));
+    await loadVlfs(vlfs);
+    const module = await loadCore(vlfs);
+    await mounting;
+    await runtime.pause();
+    let ready = false;
+    module._krkr2_host_bookmark_is_ready.mockImplementation(() => ready ? 1 : 0);
+    module.resumeMainLoop.mockImplementation(() => {ready = true;});
+    module._krkr2_host_bookmark_is_ready.mockClear();
+    module.pauseMainLoop.mockClear();
+    module.resumeMainLoop.mockClear();
+    vi.useFakeTimers();
+    try {
+      const checkpointPromise = runtime.checkpoint();
+      await vi.advanceTimersByTimeAsync(60_100);
+      await checkpointPromise;
+      expect(module.resumeMainLoop).toHaveBeenCalledBefore(module._krkr2_host_bookmark_is_ready);
+      expect(module._krkr2_host_save_bookmark).toHaveBeenCalledWith(1999);
+      expect(module.pauseMainLoop).toHaveBeenCalledAfter(module._krkr2_host_save_bookmark);
+    } finally {
+      vi.useRealTimers();
+      await runtime.exit();
+    }
+  });
+
   it("rejects a restore when the KAG bookmark API rejects the slot", async () => {
     enableRuntimeFeatures();
     const restore = await encodeKirikiriCheckpoint({

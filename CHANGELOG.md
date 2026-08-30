@@ -2,9 +2,13 @@
 
 ## Unreleased
 
+## 0.7.6
+
 - Report game-initiated exits from EasyRPG, mkxp, native RPG Maker, ONS and KiriKiri through the shared
   `EXIT_REQUESTED` event, immediately leave the running lifecycle and disable checkpoint capture instead of
   leaving hosts on a saveable black canvas.
+- Update ONScripterYuri to `rpg-runtime-0.7.7beta-r4`, where horizontal confirmation buttons follow D-pad
+  selection, controller A activates the selected button, and a confirmed in-game exit terminates the Web core.
 
 ## 0.7.5
 

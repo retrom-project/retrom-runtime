@@ -68,7 +68,7 @@ describe("independent package boundary", () => {
       adapterAbi: "ons-save",
       id: "onsyuri",
       repository: "https://github.com/xxxsen/OnscripterYuri",
-      tag: "rpg-runtime-0.7.7beta-r3",
+      tag: "rpg-runtime-0.7.7beta-r4",
     }), expect.objectContaining({
       adapterAbi: "kirikiri-kag-bookmark",
       id: "kirikiri2",

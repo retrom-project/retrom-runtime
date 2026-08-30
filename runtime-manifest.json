@@ -1,7 +1,7 @@
 {
   "schemaVersion": 4,
   "packageName": "@xxxsen/retrom-runtime",
-  "packageVersion": "0.7.5",
+  "packageVersion": "0.7.6",
   "publicApiVersion": 2,
   "upstreamReleases": [
     {
@@ -51,26 +51,26 @@
     {
       "id": "onsyuri",
       "repository": "https://github.com/xxxsen/OnscripterYuri",
-      "tag": "rpg-runtime-0.7.7beta-r3",
-      "commit": "ca27805e8bf25ba3fc89d29cd60f65c578db14fc",
+      "tag": "rpg-runtime-0.7.7beta-r4",
+      "commit": "dd1712120308d59ebd72aa66e4827aefe15f0fbe",
       "adapterAbi": "ons-save",
-      "metadataUrl": "https://github.com/xxxsen/OnscripterYuri/releases/download/rpg-runtime-0.7.7beta-r3/rpg-runtime-release.json",
+      "metadataUrl": "https://github.com/xxxsen/OnscripterYuri/releases/download/rpg-runtime-0.7.7beta-r4/rpg-runtime-release.json",
       "assets": [
         {
           "filename": "onsyuri.js",
-          "url": "https://github.com/xxxsen/OnscripterYuri/releases/download/rpg-runtime-0.7.7beta-r3/onsyuri.js",
+          "url": "https://github.com/xxxsen/OnscripterYuri/releases/download/rpg-runtime-0.7.7beta-r4/onsyuri.js",
           "output": "runtime/ons/onsyuri.js",
           "maxSizeBytes": 1048576
         },
         {
           "filename": "onsyuri.wasm",
-          "url": "https://github.com/xxxsen/OnscripterYuri/releases/download/rpg-runtime-0.7.7beta-r3/onsyuri.wasm",
+          "url": "https://github.com/xxxsen/OnscripterYuri/releases/download/rpg-runtime-0.7.7beta-r4/onsyuri.wasm",
           "output": "runtime/ons/onsyuri.wasm",
           "maxSizeBytes": 16777216
         },
         {
           "filename": "COPYING",
-          "url": "https://github.com/xxxsen/OnscripterYuri/releases/download/rpg-runtime-0.7.7beta-r3/COPYING",
+          "url": "https://github.com/xxxsen/OnscripterYuri/releases/download/rpg-runtime-0.7.7beta-r4/COPYING",
           "output": "licenses/onsyuri/COPYING",
           "maxSizeBytes": 65536
         }

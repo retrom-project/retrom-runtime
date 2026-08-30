@@ -2,11 +2,11 @@
 
 ## Unreleased
 
-## 0.8.0-rc.1
+## 0.8.0
 
 - Add the independent Butterscotch GameMaker runtime with OPFS-backed project streaming, keyboard and standard
   gamepad input, bounded direct checkpoints, new-instance restore, screenshots and core-initiated exit reporting.
-- Aggregate the fixed `xxxsen/Butterscotch` integration-candidate Release while keeping all core builds in the
+- Aggregate the fixed `xxxsen/Butterscotch` stable Release while keeping all core builds in the
   maintained fork.
 
 ## 0.7.6

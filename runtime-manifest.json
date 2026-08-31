@@ -1,26 +1,26 @@
 {
   "schemaVersion": 4,
   "packageName": "@xxxsen/retrom-runtime",
-  "packageVersion": "0.9.0",
+  "packageVersion": "0.10.0",
   "publicApiVersion": 2,
   "upstreamReleases": [
     {
       "id": "easyrpg",
-      "repository": "https://github.com/xxxsen/Player",
-      "tag": "rpg-runtime-0.8.1.1-r6",
-      "commit": "b705da4d82efabac5335815a4148e4f0bfa93b77",
+      "repository": "https://github.com/retrom-project/Player",
+      "tag": "retrom-core-0.8.1.1-r6",
+      "commit": "64cb57e2e513d750accc47f7975342225e98af98",
       "adapterAbi": "easyrpg-save",
-      "metadataUrl": "https://github.com/xxxsen/Player/releases/download/rpg-runtime-0.8.1.1-r6/rpg-runtime-release.json",
+      "metadataUrl": "https://github.com/retrom-project/Player/releases/download/retrom-core-0.8.1.1-r6/rpg-runtime-release.json",
       "assets": [
         {
           "filename": "easyrpg-player.js",
-          "url": "https://github.com/xxxsen/Player/releases/download/rpg-runtime-0.8.1.1-r6/easyrpg-player.js",
+          "url": "https://github.com/retrom-project/Player/releases/download/retrom-core-0.8.1.1-r6/easyrpg-player.js",
           "output": "runtime/easyrpg/easyrpg-player.js",
           "maxSizeBytes": 1048576
         },
         {
           "filename": "easyrpg-player.wasm",
-          "url": "https://github.com/xxxsen/Player/releases/download/rpg-runtime-0.8.1.1-r6/easyrpg-player.wasm",
+          "url": "https://github.com/retrom-project/Player/releases/download/retrom-core-0.8.1.1-r6/easyrpg-player.wasm",
           "output": "runtime/easyrpg/easyrpg-player.wasm",
           "maxSizeBytes": 16777216
         }
@@ -28,21 +28,21 @@
     },
     {
       "id": "mkxp",
-      "repository": "https://github.com/xxxsen/mkxp-z-libretro-emscripten",
-      "tag": "rpg-runtime-f2efc98-r4",
-      "commit": "7f7a30d90f15848a795f627c1efb0f655cdbdb35",
+      "repository": "https://github.com/retrom-project/mkxp-z-libretro-emscripten",
+      "tag": "retrom-core-f2efc98-r4",
+      "commit": "05d3e53e9e947eebd9129d5324b689d693ca4910",
       "adapterAbi": "mkxp-state",
-      "metadataUrl": "https://github.com/xxxsen/mkxp-z-libretro-emscripten/releases/download/rpg-runtime-f2efc98-r4/rpg-runtime-release.json",
+      "metadataUrl": "https://github.com/retrom-project/mkxp-z-libretro-emscripten/releases/download/retrom-core-f2efc98-r4/rpg-runtime-release.json",
       "assets": [
         {
           "filename": "mkxp-z_libretro.js",
-          "url": "https://github.com/xxxsen/mkxp-z-libretro-emscripten/releases/download/rpg-runtime-f2efc98-r4/mkxp-z_libretro.js",
+          "url": "https://github.com/retrom-project/mkxp-z-libretro-emscripten/releases/download/retrom-core-f2efc98-r4/mkxp-z_libretro.js",
           "output": "runtime/mkxp/mkxp-z_libretro.js",
           "maxSizeBytes": 1048576
         },
         {
           "filename": "mkxp-z_libretro.wasm",
-          "url": "https://github.com/xxxsen/mkxp-z-libretro-emscripten/releases/download/rpg-runtime-f2efc98-r4/mkxp-z_libretro.wasm",
+          "url": "https://github.com/retrom-project/mkxp-z-libretro-emscripten/releases/download/retrom-core-f2efc98-r4/mkxp-z_libretro.wasm",
           "output": "runtime/mkxp/mkxp-z_libretro.wasm",
           "maxSizeBytes": 67108864
         }
@@ -50,27 +50,27 @@
     },
     {
       "id": "onsyuri",
-      "repository": "https://github.com/xxxsen/OnscripterYuri",
-      "tag": "rpg-runtime-0.7.7beta-r4",
-      "commit": "dd1712120308d59ebd72aa66e4827aefe15f0fbe",
+      "repository": "https://github.com/retrom-project/OnscripterYuri",
+      "tag": "retrom-core-0.7.7beta-r4",
+      "commit": "10e049a7db21edd49644d8280c365c6b9835a4f6",
       "adapterAbi": "ons-save",
-      "metadataUrl": "https://github.com/xxxsen/OnscripterYuri/releases/download/rpg-runtime-0.7.7beta-r4/rpg-runtime-release.json",
+      "metadataUrl": "https://github.com/retrom-project/OnscripterYuri/releases/download/retrom-core-0.7.7beta-r4/rpg-runtime-release.json",
       "assets": [
         {
           "filename": "onsyuri.js",
-          "url": "https://github.com/xxxsen/OnscripterYuri/releases/download/rpg-runtime-0.7.7beta-r4/onsyuri.js",
+          "url": "https://github.com/retrom-project/OnscripterYuri/releases/download/retrom-core-0.7.7beta-r4/onsyuri.js",
           "output": "runtime/ons/onsyuri.js",
           "maxSizeBytes": 1048576
         },
         {
           "filename": "onsyuri.wasm",
-          "url": "https://github.com/xxxsen/OnscripterYuri/releases/download/rpg-runtime-0.7.7beta-r4/onsyuri.wasm",
+          "url": "https://github.com/retrom-project/OnscripterYuri/releases/download/retrom-core-0.7.7beta-r4/onsyuri.wasm",
           "output": "runtime/ons/onsyuri.wasm",
           "maxSizeBytes": 16777216
         },
         {
           "filename": "COPYING",
-          "url": "https://github.com/xxxsen/OnscripterYuri/releases/download/rpg-runtime-0.7.7beta-r4/COPYING",
+          "url": "https://github.com/retrom-project/OnscripterYuri/releases/download/retrom-core-0.7.7beta-r4/COPYING",
           "output": "licenses/onsyuri/COPYING",
           "maxSizeBytes": 65536
         }
@@ -78,39 +78,39 @@
     },
     {
       "id": "kirikiri2",
-      "repository": "https://github.com/xxxsen/kirikiroid2-web",
-      "tag": "rpg-runtime-g338d2029f169-r2",
-      "commit": "0dff768be8e1a2a5fbe1b6d7a456fb7f19fbe109",
+      "repository": "https://github.com/retrom-project/kirikiroid2-web",
+      "tag": "retrom-core-g338d2029f169-r2",
+      "commit": "f1386d1ff3e4ae83faf079f40b167fd099a20f30",
       "adapterAbi": "kirikiri-kag-bookmark",
-      "metadataUrl": "https://github.com/xxxsen/kirikiroid2-web/releases/download/rpg-runtime-g338d2029f169-r2/rpg-runtime-release.json",
+      "metadataUrl": "https://github.com/retrom-project/kirikiroid2-web/releases/download/retrom-core-g338d2029f169-r2/rpg-runtime-release.json",
       "assets": [
         {
           "filename": "index.js",
-          "url": "https://github.com/xxxsen/kirikiroid2-web/releases/download/rpg-runtime-g338d2029f169-r2/index.js",
+          "url": "https://github.com/retrom-project/kirikiroid2-web/releases/download/retrom-core-g338d2029f169-r2/index.js",
           "output": "runtime/kirikiri/index.js",
           "maxSizeBytes": 1048576
         },
         {
           "filename": "index.wasm",
-          "url": "https://github.com/xxxsen/kirikiroid2-web/releases/download/rpg-runtime-g338d2029f169-r2/index.wasm",
+          "url": "https://github.com/retrom-project/kirikiroid2-web/releases/download/retrom-core-g338d2029f169-r2/index.wasm",
           "output": "runtime/kirikiri/index.wasm",
           "maxSizeBytes": 67108864
         },
         {
           "filename": "vlfs.js",
-          "url": "https://github.com/xxxsen/kirikiroid2-web/releases/download/rpg-runtime-g338d2029f169-r2/vlfs.js",
+          "url": "https://github.com/retrom-project/kirikiroid2-web/releases/download/retrom-core-g338d2029f169-r2/vlfs.js",
           "output": "runtime/kirikiri/vlfs.js",
           "maxSizeBytes": 262144
         },
         {
           "filename": "assets.zip",
-          "url": "https://github.com/xxxsen/kirikiroid2-web/releases/download/rpg-runtime-g338d2029f169-r2/assets.zip",
+          "url": "https://github.com/retrom-project/kirikiroid2-web/releases/download/retrom-core-g338d2029f169-r2/assets.zip",
           "output": "runtime/kirikiri/assets.zip",
           "maxSizeBytes": 16777216
         },
         {
           "filename": "LICENSE",
-          "url": "https://github.com/xxxsen/kirikiroid2-web/releases/download/rpg-runtime-g338d2029f169-r2/LICENSE",
+          "url": "https://github.com/retrom-project/kirikiroid2-web/releases/download/retrom-core-g338d2029f169-r2/LICENSE",
           "output": "licenses/kirikiri2/LICENSE",
           "maxSizeBytes": 65536
         }
@@ -118,39 +118,39 @@
     },
     {
       "id": "butterscotch",
-      "repository": "https://github.com/xxxsen/Butterscotch",
-      "tag": "rpg-runtime-gae2602f1f83c-r3",
-      "commit": "dd77dffc6b9139999745e891340301fe4441a2dc",
+      "repository": "https://github.com/retrom-project/Butterscotch",
+      "tag": "retrom-core-gae2602f1f83c-r3",
+      "commit": "283a2857aa20efefd7a9f9ca39004ed879d51346",
       "adapterAbi": "butterscotch-checkpoint-v2",
-      "metadataUrl": "https://github.com/xxxsen/Butterscotch/releases/download/rpg-runtime-gae2602f1f83c-r3/rpg-runtime-release.json",
+      "metadataUrl": "https://github.com/retrom-project/Butterscotch/releases/download/retrom-core-gae2602f1f83c-r3/rpg-runtime-release.json",
       "assets": [
         {
           "filename": "butterscotch.mjs",
-          "url": "https://github.com/xxxsen/Butterscotch/releases/download/rpg-runtime-gae2602f1f83c-r3/butterscotch.mjs",
+          "url": "https://github.com/retrom-project/Butterscotch/releases/download/retrom-core-gae2602f1f83c-r3/butterscotch.mjs",
           "output": "runtime/butterscotch/butterscotch.mjs",
           "maxSizeBytes": 1048576
         },
         {
           "filename": "butterscotch.wasm",
-          "url": "https://github.com/xxxsen/Butterscotch/releases/download/rpg-runtime-gae2602f1f83c-r3/butterscotch.wasm",
+          "url": "https://github.com/retrom-project/Butterscotch/releases/download/retrom-core-gae2602f1f83c-r3/butterscotch.wasm",
           "output": "runtime/butterscotch/butterscotch.wasm",
           "maxSizeBytes": 4194304
         },
         {
           "filename": "butterscotch-meta.mjs",
-          "url": "https://github.com/xxxsen/Butterscotch/releases/download/rpg-runtime-gae2602f1f83c-r3/butterscotch-meta.mjs",
+          "url": "https://github.com/retrom-project/Butterscotch/releases/download/retrom-core-gae2602f1f83c-r3/butterscotch-meta.mjs",
           "output": "runtime/butterscotch/butterscotch-meta.mjs",
           "maxSizeBytes": 262144
         },
         {
           "filename": "butterscotch-meta.wasm",
-          "url": "https://github.com/xxxsen/Butterscotch/releases/download/rpg-runtime-gae2602f1f83c-r3/butterscotch-meta.wasm",
+          "url": "https://github.com/retrom-project/Butterscotch/releases/download/retrom-core-gae2602f1f83c-r3/butterscotch-meta.wasm",
           "output": "runtime/butterscotch/butterscotch-meta.wasm",
           "maxSizeBytes": 262144
         },
         {
           "filename": "LICENSE",
-          "url": "https://github.com/xxxsen/Butterscotch/releases/download/rpg-runtime-gae2602f1f83c-r3/LICENSE",
+          "url": "https://github.com/retrom-project/Butterscotch/releases/download/retrom-core-gae2602f1f83c-r3/LICENSE",
           "output": "licenses/butterscotch/LICENSE",
           "maxSizeBytes": 65536
         }
@@ -158,21 +158,21 @@
     },
     {
       "id": "tyranoscript",
-      "repository": "https://github.com/xxxsen/tyranoscript",
-      "tag": "rpg-runtime-gc8dbfd492afd-r2",
-      "commit": "b2082757c2486d38ffe7b9532748e1f5ab4aeb36",
+      "repository": "https://github.com/retrom-project/tyranoscript",
+      "tag": "retrom-core-gc8dbfd492afd-r2",
+      "commit": "76cb3bb7aefbda6295fcfe42d2027a19f2794095",
       "adapterAbi": "tyranoscript-snapshot-v1",
-      "metadataUrl": "https://github.com/xxxsen/tyranoscript/releases/download/rpg-runtime-gc8dbfd492afd-r2/rpg-runtime-release.json",
+      "metadataUrl": "https://github.com/retrom-project/tyranoscript/releases/download/retrom-core-gc8dbfd492afd-r2/rpg-runtime-release.json",
       "assets": [
         {
           "filename": "retrom-tyranoscript-bridge.js",
-          "url": "https://github.com/xxxsen/tyranoscript/releases/download/rpg-runtime-gc8dbfd492afd-r2/retrom-tyranoscript-bridge.js",
+          "url": "https://github.com/retrom-project/tyranoscript/releases/download/retrom-core-gc8dbfd492afd-r2/retrom-tyranoscript-bridge.js",
           "output": "runtime/tyranoscript/bridge.js",
           "maxSizeBytes": 65536
         },
         {
           "filename": "RETROM-BRIDGE-LICENSE",
-          "url": "https://github.com/xxxsen/tyranoscript/releases/download/rpg-runtime-gc8dbfd492afd-r2/RETROM-BRIDGE-LICENSE",
+          "url": "https://github.com/retrom-project/tyranoscript/releases/download/retrom-core-gc8dbfd492afd-r2/RETROM-BRIDGE-LICENSE",
           "output": "licenses/tyranoscript/RETROM-BRIDGE-LICENSE",
           "maxSizeBytes": 65536
         }

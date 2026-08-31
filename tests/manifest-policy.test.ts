@@ -66,10 +66,34 @@ describe("upstream fork release policy", () => {
     expect(() => validateManifest(manifest)).toThrowError("RUNTIME_MANIFEST_INVALID");
   });
 
+  it("rejects the retired rpg-runtime tag namespace", async () => {
+    const manifest = JSON.parse(await readFile("runtime-manifest.json", "utf8"));
+    const release = manifest.upstreamReleases[0];
+    release.tag = "rpg-runtime-0.8.1.1-r9";
+    release.metadataUrl = `${release.repository}/releases/download/${release.tag}/rpg-runtime-release.json`;
+    for (const asset of release.assets) {
+      asset.url = `${release.repository}/releases/download/${release.tag}/${asset.filename}`;
+    }
+
+    expect(() => validateManifest(manifest)).toThrowError("RUNTIME_MANIFEST_INVALID");
+  });
+
+  it("rejects a fork outside the Retrom organization", async () => {
+    const manifest = JSON.parse(await readFile("runtime-manifest.json", "utf8"));
+    const release = manifest.upstreamReleases[0];
+    release.repository = "https://github.com/another-owner/Player";
+    release.metadataUrl = `${release.repository}/releases/download/${release.tag}/rpg-runtime-release.json`;
+    for (const asset of release.assets) {
+      asset.url = `${release.repository}/releases/download/${release.tag}/${asset.filename}`;
+    }
+
+    expect(() => validateManifest(manifest)).toThrowError("RUNTIME_MANIFEST_INVALID");
+  });
+
   it("rejects metadata outside the pinned fork release", async () => {
     const manifest = JSON.parse(await readFile("runtime-manifest.json", "utf8"));
     manifest.upstreamReleases[0].metadataUrl =
-      "https://github.com/xxxsen/Player/releases/download/latest/rpg-runtime-release.json";
+      "https://github.com/retrom-project/Player/releases/download/latest/rpg-runtime-release.json";
 
     expect(() => validateManifest(manifest)).toThrowError("RUNTIME_MANIFEST_INVALID");
   });

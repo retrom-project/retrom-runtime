@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+## 0.10.0
+
+- Move all maintained fork and aggregate Release identities to the `retrom-project` GitHub organization.
+- Adopt the `retrom-core-<baseline>-rN` tag namespace for new core releases; existing `rpg-runtime-*` tags remain
+  immutable historical records and are no longer accepted as current manifest inputs.
+
 ## 0.9.0
 
 - Add a host-independent TyranoScript isolated-Web adapter with the shared lifecycle, standard browser gamepad

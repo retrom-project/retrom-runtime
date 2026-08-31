@@ -229,9 +229,9 @@ Each fork records its exact tagged or commit-only upstream baseline in a root
 before a release tag is created. A moving upstream mirror is never merged into
 a fixed release baseline.
 
-Fork releases use only `rpg-runtime-<upstream-baseline>-rN` tags. For a new
+Fork releases use only `retrom-core-<upstream-baseline>-rN` tags. For a new
 upstream without a tag, the baseline token is `g` plus 12 hexadecimal commit
 characters; the release metadata still records the full commit. Tags and
 assets are immutable, and aliases such as `latest`, `stable`, and the retired
-`retrom-web-*` namespace are not supported. This aggregate repository pins the
+`rpg-runtime-*` and `retrom-web-*` namespaces are not supported. This aggregate repository pins the
 fork repository, stable tag, tag commit, filenames, and adapter ABI.

@@ -86,9 +86,9 @@ npm run package:check
 
 ## 上游 fork 维护
 
-- `xxxsen/Player` 的 `master`、`xxxsen/mkxp-z-libretro-emscripten` 的 `main`、
-  `xxxsen/OnscripterYuri` 的 `master`、`xxxsen/kirikiroid2-web` 的 `web`、`xxxsen/Butterscotch` 的 `main` 与
-  `xxxsen/tyranoscript` 的 `master`
+- `retrom-project/Player` 的 `master`、`retrom-project/mkxp-z-libretro-emscripten` 的 `main`、
+  `retrom-project/OnscripterYuri` 的 `master`、`retrom-project/kirikiroid2-web` 的 `web`、
+  `retrom-project/Butterscotch` 的 `main` 与 `retrom-project/tyranoscript` 的 `master`
   只做上游 fast-forward 镜像，不含 Retrom 修改；当前维护与默认分支分别是
   `retrom/0.8.1.1`、`retrom/f2efc98`、`retrom/0.7.7beta`、
   `retrom/g338d2029f169`、`retrom/gae2602f1f83c` 与 `retrom/gc8dbfd492afd`。各 fork 根目录
@@ -98,9 +98,10 @@ npm run package:check
   `sync/upstream-*`，并从当前 `retrom/<baseline>` 创建、合并后删除；
   不得把补丁并入移动的上游镜像，不得创建 `runtime-clean`、平行版本
   长分支或以 Agent 名命名的分支。
-- fork Release 只使用 `rpg-runtime-<upstream-baseline>-rN`；上游没有
+- fork Release 只使用 `retrom-core-<upstream-baseline>-rN`；上游没有
   tag 时以 `g<12-hex-commit>` 表示新基线。不得再创建
-  `retrom-web-*`、`latest`、`stable` 或其他别名 tag。
+  `rpg-runtime-*`、`retrom-web-*`、`latest`、`stable` 或其他别名 tag；已有旧前缀 tag
+  仅作为不可移动的历史记录保留。
 - `retrom-runtime` 的 prerelease 可以固定 fork 的 `-rc.N` 候选；稳定
   tag 只能固定已发布的稳定 fork tag。任何 fork tag、tag commit、资产名
   或 adapter ABI 变化都必须作为独立 manifest 变更验证。

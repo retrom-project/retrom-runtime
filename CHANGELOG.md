@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+## 0.10.1
+
+- Update Butterscotch to `retrom-core-gae2602f1f83c-r4` so checkpoint v2 restores GameMaker variables whose
+  source metadata uses an empty name, preserving existing save compatibility.
+
 ## 0.10.0
 
 - Move all maintained fork and aggregate Release identities to the `retrom-project` GitHub organization.

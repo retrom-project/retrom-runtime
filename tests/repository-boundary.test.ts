@@ -88,7 +88,7 @@ describe("independent package boundary", () => {
       adapterAbi: "butterscotch-checkpoint-v2",
       id: "butterscotch",
       repository: "https://github.com/retrom-project/Butterscotch",
-      tag: "retrom-core-gae2602f1f83c-r3",
+      tag: "retrom-core-gae2602f1f83c-r4",
     }), expect.objectContaining({
       adapterAbi: "tyranoscript-snapshot-v1",
       id: "tyranoscript",

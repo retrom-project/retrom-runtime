@@ -77,23 +77,23 @@ describe("independent package boundary", () => {
     expect(manifest.upstreamReleases).toEqual(expect.arrayContaining([expect.objectContaining({
       adapterAbi: "ons-save",
       id: "onsyuri",
-      repository: "https://github.com/xxxsen/OnscripterYuri",
-      tag: "rpg-runtime-0.7.7beta-r4",
+      repository: "https://github.com/retrom-project/OnscripterYuri",
+      tag: "retrom-core-0.7.7beta-r4",
     }), expect.objectContaining({
       adapterAbi: "kirikiri-kag-bookmark",
       id: "kirikiri2",
-      repository: "https://github.com/xxxsen/kirikiroid2-web",
-      tag: "rpg-runtime-g338d2029f169-r2",
+      repository: "https://github.com/retrom-project/kirikiroid2-web",
+      tag: "retrom-core-g338d2029f169-r2",
     }), expect.objectContaining({
       adapterAbi: "butterscotch-checkpoint-v2",
       id: "butterscotch",
-      repository: "https://github.com/xxxsen/Butterscotch",
-      tag: "rpg-runtime-gae2602f1f83c-r3",
+      repository: "https://github.com/retrom-project/Butterscotch",
+      tag: "retrom-core-gae2602f1f83c-r3",
     }), expect.objectContaining({
       adapterAbi: "tyranoscript-snapshot-v1",
       id: "tyranoscript",
-      repository: "https://github.com/xxxsen/tyranoscript",
-      tag: "rpg-runtime-gc8dbfd492afd-r2",
+      repository: "https://github.com/retrom-project/tyranoscript",
+      tag: "retrom-core-gc8dbfd492afd-r2",
     })]));
     const releaseIds = manifest.upstreamReleases.map((release: { id: string }) => release.id).sort();
     const externalRuntimeIds = [...new Set(manifest.cores

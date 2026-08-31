@@ -38,7 +38,7 @@ for (const release of manifest.upstreamReleases) {
 const records = await collectRecords(manifest, stage);
 const metadata = {
   schemaVersion: 1,
-  repository: "https://github.com/xxxsen/retrom-runtime",
+  repository: "https://github.com/retrom-project/retrom-runtime",
   tag: `v${manifest.packageVersion}`,
   commit,
   version: manifest.packageVersion,

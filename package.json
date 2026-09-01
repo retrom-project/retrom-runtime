@@ -1,6 +1,6 @@
 {
   "name": "@xxxsen/retrom-runtime",
-  "version": "0.10.1",
+  "version": "0.10.2",
   "description": "Host-independent browser game runtimes with a shared lifecycle and checkpoint contract",
   "type": "module",
   "license": "MIT",
@@ -27,6 +27,8 @@
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "vitest run",
     "build": "npm run clean && tsc -p tsconfig.build.json",
+    "dev:watch": "node scripts/dev-watch.mjs",
+    "candidate:build": "node scripts/build-candidate.mjs",
     "package:check": "node scripts/package-check.mjs",
     "release:build": "npm run build && node scripts/build-release.mjs"
   },

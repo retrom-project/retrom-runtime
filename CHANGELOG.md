@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+## 0.10.2
+
+- Add a PFB candidate build path that assembles the aggregate runtime directly from sibling core worktrees,
+  validates their candidate descriptors, and supports watch-mode rebuilds without changing published manifests.
+
 ## 0.10.1
 
 - Update Butterscotch to `retrom-core-gae2602f1f83c-r4` so checkpoint v2 restores GameMaker variables whose

@@ -1,10 +1,11 @@
 import { spawnSync } from "node:child_process";
-import { mkdir, readFile, cp, rm, writeFile } from "node:fs/promises";
+import { access, mkdir, readFile, cp, rm, writeFile } from "node:fs/promises";
 import { basename, join } from "node:path";
 import { parseDevReleaseOverrides } from "./dev-release-overrides.mjs";
 import { loadManifest, sha256 } from "./manifest.mjs";
 
 const root = new URL("../", import.meta.url);
+await rejectCandidateDeclaration(root);
 const manifest = await loadManifest(root);
 const devReleaseOverrides = parseDevReleaseOverrides(
   process.env.RETROM_RUNTIME_DEV_RELEASE_OVERRIDES,
@@ -114,4 +115,16 @@ async function collectRecords(value, directory) {
     const contents = await readFile(new URL(path, directory));
     return { path, filename: basename(path), sizeBytes: contents.length, sha256: sha256(contents) };
   }));
+}
+
+async function rejectCandidateDeclaration(base) {
+  try {
+    await access(new URL("candidate/runtime-candidate.json", base));
+  } catch (error) {
+    if (error?.code === "ENOENT") {return;}
+    throw error;
+  }
+  if (process.env.RETROM_PFB_CANDIDATE_BUILD !== "1") {
+    throw new Error("PFB_CANDIDATE_FORBIDDEN");
+  }
 }

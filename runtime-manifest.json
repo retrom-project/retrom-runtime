@@ -1,7 +1,7 @@
 {
   "schemaVersion": 4,
   "packageName": "@xxxsen/retrom-runtime",
-  "packageVersion": "0.11.0",
+  "packageVersion": "0.11.1",
   "publicApiVersion": 2,
   "upstreamReleases": [
     {
@@ -159,20 +159,20 @@
     {
       "id": "tyranoscript",
       "repository": "https://github.com/retrom-project/tyranoscript",
-      "tag": "retrom-core-gc8dbfd492afd-r2",
-      "commit": "76cb3bb7aefbda6295fcfe42d2027a19f2794095",
+      "tag": "retrom-core-gc8dbfd492afd-r4",
+      "commit": "4bcbfc3c6bb3d833531407174037fdc2b3607641",
       "adapterAbi": "tyranoscript-snapshot-v1",
-      "metadataUrl": "https://github.com/retrom-project/tyranoscript/releases/download/retrom-core-gc8dbfd492afd-r2/rpg-runtime-release.json",
+      "metadataUrl": "https://github.com/retrom-project/tyranoscript/releases/download/retrom-core-gc8dbfd492afd-r4/rpg-runtime-release.json",
       "assets": [
         {
           "filename": "retrom-tyranoscript-bridge.js",
-          "url": "https://github.com/retrom-project/tyranoscript/releases/download/retrom-core-gc8dbfd492afd-r2/retrom-tyranoscript-bridge.js",
+          "url": "https://github.com/retrom-project/tyranoscript/releases/download/retrom-core-gc8dbfd492afd-r4/retrom-tyranoscript-bridge.js",
           "output": "runtime/tyranoscript/bridge.js",
           "maxSizeBytes": 65536
         },
         {
           "filename": "RETROM-BRIDGE-LICENSE",
-          "url": "https://github.com/retrom-project/tyranoscript/releases/download/retrom-core-gc8dbfd492afd-r2/RETROM-BRIDGE-LICENSE",
+          "url": "https://github.com/retrom-project/tyranoscript/releases/download/retrom-core-gc8dbfd492afd-r4/RETROM-BRIDGE-LICENSE",
           "output": "licenses/tyranoscript/RETROM-BRIDGE-LICENSE",
           "maxSizeBytes": 65536
         }

@@ -60,6 +60,7 @@ run("node", ["scripts/build-release.mjs"], candidateEnvironment);
 run("npm", ["run", "package:check"], { RETROM_PFB_CANDIDATE_BUILD: "1" });
 if (declaration) {await publishNewCoreFiles(declaration, branchInputs.get(declaration.branchCoreId));}
 await cp(join(root, "release", "stage"), join(args.output, "stage"), { recursive: true });
+await cp(join(root, "release", "providers"), join(args.output, "providers"), { recursive: true });
 const packageFile = `xxxsen-retrom-runtime-${JSON.parse(await readFile(join(root, "package.json"), "utf8")).version}.tgz`;
 await mkdir(join(args.output, "package"));
 await cp(join(root, "release", packageFile), join(args.output, "package", packageFile));

@@ -39,4 +39,4 @@ jobs:
       - name: Publish GitHub Release
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh release create "$GITHUB_REF_NAME" release/retrom-runtime-*.tar.gz release/xxxsen-retrom-runtime-*.tgz release/retrom-runtime-release.json --generate-notes --verify-tag
+        run: gh release create "$GITHUB_REF_NAME" release/retrom-runtime-*.tar.gz release/xxxsen-retrom-runtime-*.tgz release/retrom-runtime-release.json release/providers/*/*-provider-*.tar.gz release/providers/provider-release.json --generate-notes --verify-tag

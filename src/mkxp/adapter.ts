@@ -372,7 +372,7 @@ export async function fetchVerified(url: string, expectedSize: number, expectedD
 }
 
 async function digest(bytes: Uint8Array) {
-  const result = new Uint8Array(await crypto.subtle.digest("SHA-256", bytes.slice().buffer));
+  const result = new Uint8Array(await crypto.subtle.digest("SHA-256", bytes.slice()));
   return [...result].map((value) => value.toString(16).padStart(2, "0")).join("");
 }
 

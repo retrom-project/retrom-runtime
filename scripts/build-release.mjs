@@ -1,8 +1,10 @@
 import { spawnSync } from "node:child_process";
 import { access, mkdir, readFile, cp, rm, writeFile } from "node:fs/promises";
 import { basename, join } from "node:path";
+import {fileURLToPath} from "node:url";
 import { parseDevReleaseOverrides } from "./dev-release-overrides.mjs";
 import { loadManifest, sha256 } from "./manifest.mjs";
+import { buildCurrentProviderRelease } from "./provider-release.mjs";
 
 const root = new URL("../", import.meta.url);
 await rejectCandidateDeclaration(root);
@@ -48,6 +50,12 @@ const metadata = {
 };
 await writeFile(new URL("retrom-runtime-release.json", output), `${JSON.stringify(metadata, null, 2)}\n`);
 await writeFile(new URL("runtime-manifest.json", stage), `${JSON.stringify(manifest, null, 2)}\n`);
+const provider = await buildCurrentProviderRelease({
+  commit,
+  stageRoot: fileURLToPath(stage),
+  tag: `v${manifest.packageVersion}`,
+});
+await verifyBuiltProvider(provider);
 const archive = `retrom-runtime-${manifest.packageVersion}.tar.gz`;
 const tar = spawnSync("tar", ["--sort=name", "--mtime=UTC 2020-01-01", "--owner=0", "--group=0", "--numeric-owner", "-czf", archive, "-C", "stage", "."], {
   cwd: new URL("../release", import.meta.url),
@@ -56,6 +64,14 @@ const tar = spawnSync("tar", ["--sort=name", "--mtime=UTC 2020-01-01", "--owner=
 if (tar.status !== 0) {throw new Error("RELEASE_ARCHIVE_FAILED");}
 const npmPackage = createNpmPackage(manifest.packageVersion);
 console.log(`release: ${archive}, ${npmPackage}`);
+
+async function verifyBuiltProvider(provider) {
+  const retrom = provider.metadata.providers.find((entry) => entry.providerId === "retrom-runtime");
+  const emulatorjs = provider.metadata.providers.find((entry) => entry.providerId === "emulatorjs");
+  if (retrom?.providerVersion !== manifest.packageVersion || emulatorjs?.providerVersion !== "1.0.0") {
+    throw new Error("PROVIDER_RELEASE_INVALID");
+  }
+}
 
 function releaseCommit() {
   const configured = process.env.GITHUB_SHA ?? process.env.RPG_RUNTIME_RELEASE_COMMIT;

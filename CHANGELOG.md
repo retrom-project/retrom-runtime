@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Introduce the Runtime Provider V1 declaration model while preserving all eight adapters and twelve targets from
+  `0.11.2`, including WASM-4, as the single source for generated public manifests and internal dispatch.
+
 ## 0.11.2
 
 - Update TyranoScript to `retrom-core-gc8dbfd492afd-r5` so dynamically inserted autoplay videos recover from

@@ -73,6 +73,24 @@ describe("independent package boundary", () => {
     expect(script).not.toContain("sourceBuilds");
   });
 
+  it("builds and verifies the Provider bundle from the already materialized release stage", async () => {
+    const release = await readFile(join(root, "scripts/build-release.mjs"), "utf8");
+    const candidate = await readFile(join(root, "scripts/build-candidate.mjs"), "utf8");
+    const packageJson = JSON.parse(await readFile(join(root, "package.json"), "utf8"));
+    expect(release).toContain("buildCurrentProviderRelease");
+    expect(release.lastIndexOf("buildCurrentProviderRelease"))
+      .toBeGreaterThan(release.lastIndexOf("for (const release of manifest.upstreamReleases)"));
+    expect(packageJson.scripts["provider:build"].split(" && ")).toEqual([
+      "npm run provider:input:prepare",
+      "node scripts/provider-release.mjs build",
+    ]);
+    expect(packageJson.scripts["provider:check"].split(" && ")).toEqual([
+      "npm run provider:input:check",
+      "node scripts/provider-release.mjs check",
+    ]);
+    expect(candidate).toContain('join(root, "release", "providers")');
+  });
+
   it("aggregates every external core from a pinned fork release", async () => {
     const manifest = JSON.parse(await readFile(join(root, "runtime-manifest.json"), "utf8"));
     expect(manifest).not.toHaveProperty("sourceBuilds");

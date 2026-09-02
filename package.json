@@ -1,6 +1,6 @@
 {
   "name": "@xxxsen/retrom-runtime",
-  "version": "0.11.2",
+  "version": "0.12.0",
   "description": "Host-independent browser game runtimes with a shared lifecycle and checkpoint contract",
   "type": "module",
   "license": "MIT",
@@ -30,7 +30,11 @@
     "dev:watch": "node scripts/dev-watch.mjs",
     "candidate:build": "node scripts/build-candidate.mjs",
     "package:check": "node scripts/package-check.mjs",
-    "release:build": "npm run build && node scripts/build-release.mjs"
+    "provider:input:prepare": "node scripts/emulatorjs-provider-input.mjs prepare",
+    "provider:input:check": "node scripts/emulatorjs-provider-input.mjs check",
+    "provider:build": "npm run provider:input:prepare && node scripts/provider-release.mjs build",
+    "provider:check": "npm run provider:input:check && node scripts/provider-release.mjs check",
+    "release:build": "npm run build && npm run provider:input:prepare && node scripts/build-release.mjs"
   },
   "dependencies": {
     "fflate": "0.8.2",
@@ -39,6 +43,7 @@
   "devDependencies": {
     "@eslint/js": "9.39.0",
     "@types/node": "24.13.3",
+    "esbuild": "0.27.0",
     "eslint": "9.39.0",
     "jsdom": "29.1.1",
     "typescript": "5.9.3",

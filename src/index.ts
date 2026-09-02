@@ -11,6 +11,7 @@ import { mountMkxp } from "./mkxp/adapter.js";
 import { mountNativeRpg } from "./native-web/adapter.js";
 import { mountOnsYuri } from "./ons/adapter.js";
 import { mountTyranoScript } from "./tyranoscript/adapter.js";
+import { mountWasm4 } from "./wasm4/adapter.js";
 import type { GameRuntime } from "./contract.js";
 import type { ButterscotchRuntimeConfig } from "./butterscotch/contract.js";
 import type { RuntimeExitReporter, RuntimeProgressReporter } from "./internal-adapter.js";
@@ -18,6 +19,7 @@ import type { KirikiriRuntimeConfig } from "./kirikiri/contract.js";
 import type { OnsRuntimeConfig } from "./ons/contract.js";
 import type { TyranoScriptRuntimeConfig } from "./tyranoscript/contract.js";
 import type { RpgMakerAdapterConfig, RpgMakerRuntimeConfig } from "./rpgmaker/contract.js";
+import type { Wasm4RuntimeConfig } from "./wasm4/contract.js";
 
 export type {
   CheckpointAvailability,
@@ -49,6 +51,7 @@ export { rpgMakerPositionProbeKind } from "./rpgmaker/contract.js";
 export type { OnsAdapterConfig, OnsRuntimeConfig, OnsScriptEncoding } from "./ons/contract.js";
 export type { KirikiriAdapterConfig, KirikiriRuntimeConfig } from "./kirikiri/contract.js";
 export type { TyranoScriptAdapterConfig, TyranoScriptRuntimeConfig } from "./tyranoscript/contract.js";
+export type { Wasm4AdapterConfig, Wasm4RuntimeConfig } from "./wasm4/contract.js";
 export { decodeRpgCheckpoint, encodeRpgCheckpoint, rpgCheckpointMagic } from "./checkpoint.js";
 export { decodeMkxpRastate, encodeMkxpRastate, mkxpRastateEnvelopeBytes } from "./mkxp/state.js";
 export { decodeOnsCheckpoint, encodeOnsCheckpoint, onsCheckpointMagic } from "./ons/checkpoint.js";
@@ -166,6 +169,14 @@ function adapterMount(config: RuntimeConfig, options: RuntimeOptions) {
       requireFrame(options.frame),
       options.restorePayload,
       reportExitRequested,
+    );
+  case "WASM4_WEB":
+    return (target: HTMLElement, reportProgress: RuntimeProgressReporter) => mountWasm4(
+      config as Wasm4RuntimeConfig,
+      target,
+      options.frameWindow,
+      options.restorePayload,
+      reportProgress,
     );
   }
 }

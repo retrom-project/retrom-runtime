@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+## 0.11.0
+
+- Add the WASM-4 browser runtime with verified single-cart loading, standard keyboard/gamepad input, screenshots,
+  bounded instant checkpoints and fresh-instance restore through the shared lifecycle.
+- Pin the maintained WASM-4 fork at `retrom-core-gca2600db8de4-r1` and aggregate its immutable Web runtime and MIT
+  license assets.
+
 ## 0.10.2
 
 - Add a PFB candidate build path that assembles the aggregate runtime directly from sibling core worktrees,

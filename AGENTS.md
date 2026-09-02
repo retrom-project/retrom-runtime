@@ -1,6 +1,6 @@
 # retrom-runtime Agent 实施规范
 
-本仓库维护可被任意 Web 项目引用的浏览器游戏运行时，目前包含 RPG Maker、ONS、KiriKiri、Butterscotch 与 TyranoScript，不包含宿主应用的上传、审核、权限、数据库、HTTP 路由或产品验收逻辑。
+本仓库维护可被任意 Web 项目引用的浏览器游戏运行时，目前包含 RPG Maker、ONS、KiriKiri、Butterscotch、TyranoScript 与 WASM-4，不包含宿主应用的上传、审核、权限、数据库、HTTP 路由或产品验收逻辑。
 
 ## 边界
 
@@ -76,7 +76,7 @@ npm run package:check
   `.github/rpg-runtime/build-web.sh <absolute-output-directory>` 与
   `.github/rpg-runtime/verify-release.py`。联调阶段不提前打 tag：在本仓库设置
   `RETROM_RUNTIME_DEV_RELEASE_OVERRIDES='{"onsyuri":"/absolute/output"}'`（EasyRPG、mkxp、KiriKiri 与
-  Butterscotch 与 TyranoScript 分别使用 `easyrpg`、`mkxp`、`kirikiri2`、`butterscotch`、`tyranoscript`）运行
+  Butterscotch、TyranoScript 与 WASM-4 分别使用 `easyrpg`、`mkxp`、`kirikiri2`、`butterscotch`、`tyranoscript`、`wasm4`）运行
   `npm run release:build`；再把同一变量与 `RETROM_RUNTIME_DEV_ROOT`、`RETROM_RUNTIME_DEV_INCLUDE_ASSETS=true`
   一并传给 fresh Retrom dev 实例。该 override 只替换被忽略的本地 stage，不修改正式 manifest、package lock 或 Release identity。
 - 必须先用本地 fork 资产完成真实 Retrom 产品链，再在 fork 打不可移动 tag；随后本仓库才把 manifest 固定到该
@@ -88,10 +88,11 @@ npm run package:check
 
 - `retrom-project/Player` 的 `master`、`retrom-project/mkxp-z-libretro-emscripten` 的 `main`、
   `retrom-project/OnscripterYuri` 的 `master`、`retrom-project/kirikiroid2-web` 的 `web`、
-  `retrom-project/Butterscotch` 的 `main` 与 `retrom-project/tyranoscript` 的 `master`
+  `retrom-project/Butterscotch` 的 `main`、`retrom-project/tyranoscript` 的 `master` 与 `retrom-project/wasm4` 的 `main`
   只做上游 fast-forward 镜像，不含 Retrom 修改；当前维护与默认分支分别是
   `retrom/0.8.1.1`、`retrom/f2efc98`、`retrom/0.7.7beta`、
-  `retrom/g338d2029f169`、`retrom/gae2602f1f83c` 与 `retrom/gc8dbfd492afd`。各 fork 根目录
+  `retrom/g338d2029f169`、`retrom/gae2602f1f83c`、`retrom/gc8dbfd492afd` 与
+  `retrom/gca2600db8de4`。各 fork 根目录
   `AGENTS.md` 和 `retrom-fork.json` 是镜像、维护基线与 Release 资产的
   事实源。
 - fork 工作分支只允许 `fix/*`、`feat/*`、`build/*` 与

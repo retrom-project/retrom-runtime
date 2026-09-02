@@ -1,7 +1,7 @@
 {
   "schemaVersion": 4,
   "packageName": "@xxxsen/retrom-runtime",
-  "packageVersion": "0.10.2",
+  "packageVersion": "0.11.0",
   "publicApiVersion": 2,
   "upstreamReleases": [
     {
@@ -177,6 +177,28 @@
           "maxSizeBytes": 65536
         }
       ]
+    },
+    {
+      "id": "wasm4",
+      "repository": "https://github.com/retrom-project/wasm4",
+      "tag": "retrom-core-gca2600db8de4-r1",
+      "commit": "0d3efc1de526799844458a12bd2f825d9bc6923f",
+      "adapterAbi": "wasm4-state-v1",
+      "metadataUrl": "https://github.com/retrom-project/wasm4/releases/download/retrom-core-gca2600db8de4-r1/rpg-runtime-release.json",
+      "assets": [
+        {
+          "filename": "wasm4-retrom.mjs",
+          "url": "https://github.com/retrom-project/wasm4/releases/download/retrom-core-gca2600db8de4-r1/wasm4-retrom.mjs",
+          "output": "runtime/wasm4/wasm4-retrom.mjs",
+          "maxSizeBytes": 2097152
+        },
+        {
+          "filename": "LICENSE.txt",
+          "url": "https://github.com/retrom-project/wasm4/releases/download/retrom-core-gca2600db8de4-r1/LICENSE.txt",
+          "output": "licenses/wasm4/LICENSE.txt",
+          "maxSizeBytes": 65536
+        }
+      ]
     }
   ],
   "localAssets": [
@@ -304,6 +326,22 @@
         "frameCounter": true,
         "validationProbes": [],
         "volume": true
+      }
+    },
+    {
+      "adapterKind": "WASM4_WEB",
+      "adapterId": "wasm4-web",
+      "adapterAbi": "wasm4-state-v1",
+      "checkpointFormat": "wasm4-state-v1",
+      "capabilities": {
+        "pause": true,
+        "screenshot": true,
+        "checkpoint": true,
+        "contentSources": ["WASM4_CART_V1"],
+        "standardGamepad": true,
+        "frameCounter": true,
+        "validationProbes": [],
+        "volume": false
       }
     }
   ],
@@ -459,6 +497,19 @@
       "saveAbi": "tyranoscript-snapshot-v1",
       "readableSaveAbis": ["tyranoscript-snapshot-v1"],
       "assetPaths": ["runtime/tyranoscript/bridge.js"]
+    },
+    {
+      "id": "wasm4",
+      "family": "WASM4",
+      "generation": "WASM4",
+      "runtimeId": "wasm4",
+      "adapterKind": "WASM4_WEB",
+      "adapterId": "wasm4-web",
+      "adapterAbi": "wasm4-state-v1",
+      "gameCompatibilityLine": "wasm4-v1",
+      "saveAbi": "wasm4-state-v1",
+      "readableSaveAbis": ["wasm4-state-v1"],
+      "assetPaths": ["runtime/wasm4/wasm4-retrom.mjs"]
     }
   ]
 }

@@ -11,9 +11,10 @@ import {
   validateRpgMakerRuntimeConfig,
 } from "./rpgmaker/catalog.js";
 import type { RpgMakerRuntimeConfig } from "./rpgmaker/contract.js";
+import { validateWasm4RuntimeConfig, type Wasm4RuntimeConfig } from "./wasm4/contract.js";
 
 export type RuntimeConfig = RpgMakerRuntimeConfig | OnsRuntimeConfig | KirikiriRuntimeConfig |
-  ButterscotchRuntimeConfig | TyranoScriptRuntimeConfig;
+  ButterscotchRuntimeConfig | TyranoScriptRuntimeConfig | Wasm4RuntimeConfig;
 
 type RuntimeAdapterDescriptor = {
   adapterAbi: string;
@@ -60,6 +61,12 @@ const isolatedWebCapabilities: RuntimeCapabilities = {
   volume: true,
 };
 
+const wasm4Capabilities: RuntimeCapabilities = {
+  ...standardCapabilities,
+  contentSources: ["WASM4_CART_V1"],
+  frameCounter: true,
+};
+
 export const runtimeAdapters = [
   descriptor("EASYRPG_WEB", "easyrpg-web", "easyrpg-save", "easyrpg-save-bundle-v1", rpgCapabilities),
   descriptor(
@@ -78,6 +85,7 @@ export const runtimeAdapters = [
     "TYRANOSCRIPT_WEB", "tyranoscript-web", "tyranoscript-snapshot-v1",
     "tyranoscript-snapshot-v1", isolatedWebCapabilities,
   ),
+  descriptor("WASM4_WEB", "wasm4-web", "wasm4-state-v1", "wasm4-state-v1", wasm4Capabilities),
 ] as const satisfies readonly RuntimeAdapterDescriptor[];
 
 export { rpgMakerRuntimeCatalog };
@@ -94,6 +102,7 @@ export function validateRuntimeConfig(config: RuntimeConfig): void {
     validateTyranoScriptRuntimeConfig(config as TyranoScriptRuntimeConfig);
     return;
   }
+  if (adapterKind === "WASM4_WEB") {validateWasm4RuntimeConfig(config as Wasm4RuntimeConfig); return;}
   validateRpgMakerRuntimeConfig(config as RpgMakerRuntimeConfig);
 }
 

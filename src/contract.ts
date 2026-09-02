@@ -46,7 +46,7 @@ export type SeekableBlobSource = {
 };
 
 export type RuntimeContentSourceKind = FileTreeSource["kind"] | SeekableBlobSource["kind"] |
-  "ISOLATED_WEB_V1" | "NATIVE_WEB_V1";
+  "ISOLATED_WEB_V1" | "NATIVE_WEB_V1" | "WASM4_CART_V1";
 
 export type RuntimeLoadPhase = "RUNTIME_ASSET" | "PROJECT_INDEX" | "PROJECT_CONTENT" | "RESTORE";
 

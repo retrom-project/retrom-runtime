@@ -12,6 +12,7 @@ Release archives aggregate the following independently licensed components:
 - Kirikiroid2 Web — GPL-3.0-only — <https://github.com/retrom-project/kirikiroid2-web>
 - Butterscotch — AGPL-3.0-only — <https://github.com/retrom-project/Butterscotch>
 - Retrom TyranoScript host bridge — MIT — <https://github.com/retrom-project/tyranoscript>
+- WASM-4 — ISC — <https://github.com/retrom-project/wasm4>
 
 The TyranoScript engine itself is supplied by each game project and is not included in this aggregate release.
 Only the independently authored Retrom host bridge and its MIT license are aggregated from the maintained fork.

@@ -95,7 +95,7 @@ describe("independent package boundary", () => {
       adapterAbi: "tyranoscript-snapshot-v1",
       id: "tyranoscript",
       repository: "https://github.com/retrom-project/tyranoscript",
-      tag: "retrom-core-gc8dbfd492afd-r5",
+      tag: "retrom-core-gc8dbfd492afd-r6",
     }), expect.objectContaining({
       adapterAbi: "wasm4-state-v1",
       id: "wasm4",

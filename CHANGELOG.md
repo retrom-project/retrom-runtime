@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+## 0.11.1
+
+- Accept the bounded JPEG or PNG screenshot media type reported by the TyranoScript bridge.
+- Update TyranoScript to `retrom-core-gc8dbfd492afd-r4` for legacy 4.x lifecycle, input, media, checkpoint and
+  composed screenshot compatibility while preserving the existing save ABI and game compatibility line.
+
 ## 0.11.0
 
 - Add the WASM-4 browser runtime with verified single-cart loading, standard keyboard/gamepad input, screenshots,

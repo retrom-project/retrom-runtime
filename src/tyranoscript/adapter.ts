@@ -145,11 +145,12 @@ class TyranoScriptChannel {
 
   async screenshot() {
     const reply = await this.request("SCREENSHOT", {});
-    if (reply.type !== "SCREENSHOT_RESULT" || reply.body.mediaType !== "image/jpeg") {
+    const mediaType = reply.body.mediaType;
+    if (reply.type !== "SCREENSHOT_RESULT" || (mediaType !== "image/jpeg" && mediaType !== "image/png")) {
       throw new Error("PLAYER_SCREENSHOT_UNAVAILABLE");
     }
     const bytes = readBytes(reply.body.data, maximumScreenshotBytes, "PLAYER_SCREENSHOT_UNAVAILABLE");
-    return new Blob([bytes], {type: "image/jpeg"});
+    return new Blob([bytes], {type: mediaType});
   }
 
   checkpointAvailable() {return this.available && !this.closed;}

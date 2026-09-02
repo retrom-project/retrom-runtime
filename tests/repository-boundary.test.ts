@@ -15,7 +15,7 @@ describe("independent package boundary", () => {
     }
   });
 
-  it("publishes seven RPG Maker generations plus independent ONS, KiriKiri, Butterscotch and TyranoScript cores", async () => {
+  it("publishes seven RPG Maker generations plus independent ONS, KiriKiri, Butterscotch, TyranoScript and WASM-4 cores", async () => {
     const manifest = JSON.parse(await readFile(join(root, "runtime-manifest.json"), "utf8"));
     expect(manifest.packageName).toBe("@xxxsen/retrom-runtime");
     expect(manifest.cores.filter((core: { family: string }) => core.family === "RPG_MAKER")
@@ -30,6 +30,8 @@ describe("independent package boundary", () => {
       .map((core: { id: string }) => core.id)).toEqual(["butterscotch-gamemaker"]);
     expect(manifest.cores.filter((core: { family: string }) => core.family === "TYRANOSCRIPT")
       .map((core: { id: string }) => core.id)).toEqual(["tyranoscript"]);
+    expect(manifest.cores.filter((core: { family: string }) => core.family === "WASM4")
+      .map((core: { id: string }) => core.id)).toEqual(["wasm4"]);
     expect(manifest.cores.every((core: object) => !("routeKey" in core))).toBe(true);
     expect(manifest.localAssets.map((asset: { output: string }) => asset.output).sort()).toEqual([
       "runtime/butterscotch/worker.mjs",
@@ -44,15 +46,15 @@ describe("independent package boundary", () => {
       cores: Array<{ adapterAbi: string; adapterId: string; runtimeId: string }>;
     };
     expect([...new Set(manifest.cores.map((core) => core.runtimeId))].sort()).toEqual([
-      "butterscotch", "easyrpg", "kirikiri2", "mkxp", "native", "onsyuri", "tyranoscript",
+      "butterscotch", "easyrpg", "kirikiri2", "mkxp", "native", "onsyuri", "tyranoscript", "wasm4",
     ]);
     expect([...new Set(manifest.cores.map((core) => core.adapterId))].sort()).toEqual([
       "butterscotch-web", "easyrpg-web", "kirikiri2-web", "mkxp-libretro-web", "native-web", "ons-yuri-web",
-      "tyranoscript-web",
+      "tyranoscript-web", "wasm4-web",
     ]);
     expect([...new Set(manifest.cores.map((core) => core.adapterAbi))].sort()).toEqual([
       "butterscotch-checkpoint-v2", "easyrpg-save", "kirikiri-kag-bookmark", "mkxp-state-compact",
-      "native-save", "ons-save", "tyranoscript-snapshot-v1",
+      "native-save", "ons-save", "tyranoscript-snapshot-v1", "wasm4-state-v1",
     ]);
     expect((await readdir(join(root, "assets/runtime"))).sort()).toEqual(["butterscotch", "mkxp", "native"]);
     for (const asset of [
@@ -94,6 +96,11 @@ describe("independent package boundary", () => {
       id: "tyranoscript",
       repository: "https://github.com/retrom-project/tyranoscript",
       tag: "retrom-core-gc8dbfd492afd-r2",
+    }), expect.objectContaining({
+      adapterAbi: "wasm4-state-v1",
+      id: "wasm4",
+      repository: "https://github.com/retrom-project/wasm4",
+      tag: "retrom-core-gca2600db8de4-r1",
     })]));
     const releaseIds = manifest.upstreamReleases.map((release: { id: string }) => release.id).sort();
     const externalRuntimeIds = [...new Set(manifest.cores

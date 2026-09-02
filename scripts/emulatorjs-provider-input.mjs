@@ -1,4 +1,4 @@
-import {createHash} from "node:crypto";
+import {createHash, randomUUID} from "node:crypto";
 import {spawnSync} from "node:child_process";
 import {
   lstat, mkdir, mkdtemp, readFile, readdir, rename, rm, writeFile,
@@ -44,9 +44,14 @@ export async function materializeEmulatorJsProviderInput(input) {
       await rename(staging, input.outputRoot);
     } catch (error) {
       if (error?.code !== "EEXIST" && error?.code !== "ENOTEMPTY") {throw error;}
-      if (!await verifyExisting(input.outputRoot, expectedCatalogDigest, input.definition, true)) {
-        throw new Error("EMULATORJS_PROVIDER_INPUT_INVALID");
-      }
+      try {
+        if (await verifyExisting(input.outputRoot, expectedCatalogDigest, input.definition, true)) {return input.outputRoot;}
+      } catch { /* A stale materialization is replaced below after the new staging tree is complete. */ }
+      const stale = `${input.outputRoot}.stale-${process.pid}-${randomUUID()}`;
+      await rename(input.outputRoot, stale);
+      try {await rename(staging, input.outputRoot);}
+      catch (replacementError) {await rename(stale, input.outputRoot); throw replacementError;}
+      await rm(stale, {force: true, recursive: true});
     }
     return input.outputRoot;
   } finally {

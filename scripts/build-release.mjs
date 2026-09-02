@@ -4,9 +4,13 @@ import { basename, join } from "node:path";
 import {fileURLToPath} from "node:url";
 import { parseDevReleaseOverrides } from "./dev-release-overrides.mjs";
 import { loadManifest, sha256 } from "./manifest.mjs";
-import { buildCurrentProviderRelease } from "./provider-release.mjs";
+import { buildCurrentProviderBuild, pinCurrentProviderRelease } from "./provider-release.mjs";
 
 const root = new URL("../", import.meta.url);
+const candidateBuild = process.env.RETROM_PFB_CANDIDATE_BUILD === "1" ||
+  process.env.RETROM_PROVIDER_BUILD_MODE === "candidate";
+const formalBuild = process.env.RETROM_PROVIDER_BUILD_MODE === "release";
+if (candidateBuild === formalBuild) {throw new Error("PROVIDER_BUILD_MODE_REQUIRED");}
 await rejectCandidateDeclaration(root);
 const manifest = await loadManifest(root);
 const devReleaseOverrides = parseDevReleaseOverrides(
@@ -50,12 +54,21 @@ const metadata = {
 };
 await writeFile(new URL("retrom-runtime-release.json", output), `${JSON.stringify(metadata, null, 2)}\n`);
 await writeFile(new URL("runtime-manifest.json", stage), `${JSON.stringify(manifest, null, 2)}\n`);
-const provider = await buildCurrentProviderRelease({
-  commit,
+const provider = await buildCurrentProviderBuild({
   stageRoot: fileURLToPath(stage),
-  tag: `v${manifest.packageVersion}`,
 });
 await verifyBuiltProvider(provider);
+if (formalBuild) {
+  assertFormalReleaseEnvironment(commit, manifest.packageVersion);
+  await pinCurrentProviderRelease({release: {
+    commit, repository: "https://github.com/retrom-project/retrom-runtime", tag: `v${manifest.packageVersion}`,
+  }});
+}
+
+function assertFormalReleaseEnvironment(commit, packageVersion) {
+  if (process.env.GITHUB_REF_TYPE !== "tag" || process.env.GITHUB_REF_NAME !== `v${packageVersion}` ||
+    process.env.GITHUB_SHA !== commit) {throw new Error("PROVIDER_FORMAL_RELEASE_IDENTITY_INVALID");}
+}
 const archive = `retrom-runtime-${manifest.packageVersion}.tar.gz`;
 const tar = spawnSync("tar", ["--sort=name", "--mtime=UTC 2020-01-01", "--owner=0", "--group=0", "--numeric-owner", "-czf", archive, "-C", "stage", "."], {
   cwd: new URL("../release", import.meta.url),

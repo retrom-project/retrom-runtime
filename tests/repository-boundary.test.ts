@@ -77,9 +77,10 @@ describe("independent package boundary", () => {
     const release = await readFile(join(root, "scripts/build-release.mjs"), "utf8");
     const candidate = await readFile(join(root, "scripts/build-candidate.mjs"), "utf8");
     const packageJson = JSON.parse(await readFile(join(root, "package.json"), "utf8"));
-    expect(release).toContain("buildCurrentProviderRelease");
-    expect(release.lastIndexOf("buildCurrentProviderRelease"))
+    expect(release).toContain("buildCurrentProviderBuild");
+    expect(release.lastIndexOf("buildCurrentProviderBuild"))
       .toBeGreaterThan(release.lastIndexOf("for (const release of manifest.upstreamReleases)"));
+    expect(release).toContain("pinCurrentProviderRelease");
     expect(packageJson.scripts["provider:build"].split(" && ")).toEqual([
       "npm run provider:input:prepare",
       "node scripts/provider-release.mjs build",
@@ -89,6 +90,7 @@ describe("independent package boundary", () => {
       "node scripts/provider-release.mjs check",
     ]);
     expect(candidate).toContain('join(root, "release", "providers")');
+    expect(candidate).not.toContain("provider-release.json");
   });
 
   it("aggregates every external core from a pinned fork release", async () => {
@@ -138,8 +140,10 @@ describe("independent package boundary", () => {
     }
     const quality = await readFile(join(root, ".github/workflows/quality.yml"), "utf8");
     expect(quality).toContain("npm run release:build");
+    expect(quality).toContain("RETROM_PROVIDER_BUILD_MODE: candidate");
     const releaseWorkflow = await readFile(join(root, ".github/workflows/release.yml"), "utf8");
     expect(releaseWorkflow).toContain('git cat-file -t "refs/tags/$GITHUB_REF_NAME"');
+    expect(releaseWorkflow).toContain("RETROM_PROVIDER_BUILD_MODE: release");
     const instructions = await readFile(join(root, "AGENTS.md"), "utf8");
     expect(instructions).toContain("不得编译第三方核心");
     expect(instructions).toContain("只聚合");

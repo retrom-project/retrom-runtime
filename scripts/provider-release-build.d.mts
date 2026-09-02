@@ -3,7 +3,6 @@ import type {ProviderManifest} from "../src/provider/manifest.js";
 import type {ProviderBundleResult} from "./provider-bundle.mjs";
 
 export type RetromRuntimeProviderBuildInput = {
-  commit: string;
   definition: ProviderDefinition;
   entryPoint: string;
   manifest: ProviderManifest;

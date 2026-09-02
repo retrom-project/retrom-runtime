@@ -48,7 +48,6 @@ describe("retrom-runtime Provider release build", () => {
     await write(join(stageRoot, "licenses/wasm4/LICENSE.txt"), "core license\n");
 
     const first = await buildRetromRuntimeProviderBundle({
-      commit: "a".repeat(40),
       definition: retromRuntimeProviderDefinition,
       entryPoint: join(process.cwd(), "src/providers/retrom-runtime/module.ts"),
       manifest,
@@ -56,7 +55,6 @@ describe("retrom-runtime Provider release build", () => {
       stageRoot,
     });
     const second = await buildRetromRuntimeProviderBundle({
-      commit: "a".repeat(40),
       definition: retromRuntimeProviderDefinition,
       entryPoint: join(process.cwd(), "src/providers/retrom-runtime/module.ts"),
       manifest,

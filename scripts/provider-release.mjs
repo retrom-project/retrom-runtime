@@ -1,5 +1,6 @@
 import {createHash} from "node:crypto";
 import {spawnSync} from "node:child_process";
+import {lstatSync, readFileSync, readlinkSync} from "node:fs";
 import {readFile, rm, writeFile} from "node:fs/promises";
 import {dirname, join, relative, resolve} from "node:path";
 import {fileURLToPath, pathToFileURL} from "node:url";
@@ -11,16 +12,15 @@ import {
 } from "./provider-release-build.mjs";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
-const metadataName = "provider-release.json";
+const buildMetadataName = "provider-build.json";
+const releaseMetadataName = "provider-release.json";
 const repository = "https://github.com/retrom-project/retrom-runtime";
 
-export async function buildCurrentProviderRelease(input = {}) {
+export async function buildCurrentProviderBuild(input = {}) {
   const stageRoot = input.stageRoot ?? join(root, "release", "stage");
   const outputRoot = input.outputRoot ?? join(root, "release", "providers");
   const emulatorJsSourceRoot = input.emulatorJsSourceRoot ?? process.env.RETROM_EMULATORJS_PROVIDER_INPUT_ROOT ??
     join(root, ".cache", "provider-inputs", "emulatorjs-v1");
-  const commit = input.commit ?? releaseCommit();
-  const tag = input.tag ?? `v${JSON.parse(await readFile(join(root, "package.json"), "utf8")).version}`;
   const [{retromRuntimeProviderDefinition}, {emulatorJsProviderDefinition}, {emulatorJsSourceCatalog},
     {projectProviderManifest}, {validateProviderManifest}] = await Promise.all([
     import("../dist/providers/retrom-runtime/catalog.js"),
@@ -35,7 +35,6 @@ export async function buildCurrentProviderRelease(input = {}) {
   validateProviderManifest(retromManifest);
   validateProviderManifest(emulatorManifest);
   const retrom = await buildRetromRuntimeProviderBundle({
-    commit,
     definition: retromRuntimeProviderDefinition,
     entryPoint: join(root, "src", "providers", "retrom-runtime", "module.ts"),
     manifest: retromManifest,
@@ -43,7 +42,6 @@ export async function buildCurrentProviderRelease(input = {}) {
     stageRoot,
   });
   const emulatorjs = await buildEmulatorJsProviderBundle({
-    commit,
     definition: emulatorJsProviderDefinition,
     entryPoint: join(root, "src", "providers", "emulatorjs", "module.ts"),
     manifest: emulatorManifest,
@@ -54,17 +52,17 @@ export async function buildCurrentProviderRelease(input = {}) {
   const providers = [releaseMetadata(outputRoot, retromManifest, retrom),
     releaseMetadata(outputRoot, emulatorManifest, emulatorjs)]
     .sort((left, right) => Buffer.from(left.providerId).compare(Buffer.from(right.providerId)));
-  const metadata = {providers, release: {commit, repository, tag}, schemaVersion: 1};
-  await writeFile(join(outputRoot, metadataName), `${JSON.stringify(metadata, null, 2)}\n`);
+  const metadata = createProviderBuildMetadata(providers, input.sourceTreeSha256 ?? sourceTreeSha256());
+  await writeFile(join(outputRoot, buildMetadataName), `${JSON.stringify(metadata, null, 2)}\n`);
   return {archivePath: retrom.archivePath, metadata, outputRoot, providers: {emulatorjs, retromRuntime: retrom}};
 }
 
-export async function checkCurrentProviderRelease(input = {}) {
+export async function checkCurrentProviderBuild(input = {}) {
   const outputRoot = input.outputRoot ?? join(root, "release", "providers");
-  const metadata = JSON.parse(await readFile(join(outputRoot, metadataName), "utf8"));
+  const metadata = JSON.parse(await readFile(join(outputRoot, buildMetadataName), "utf8"));
   const {validateProviderManifest} = await import("../dist/provider/contract.js");
-  if (!exactKeys(metadata, ["providers", "release", "schemaVersion"]) || metadata.schemaVersion !== 1 ||
-    !validRelease(metadata.release) ||
+  if (!exactKeys(metadata, ["providers", "schemaVersion", "sourceTreeSha256"]) || metadata.schemaVersion !== 1 ||
+    !/^[0-9a-f]{64}$/u.test(metadata.sourceTreeSha256) ||
     !Array.isArray(metadata.providers) || metadata.providers.length !== 2 ||
     metadata.providers.map((provider) => provider.providerId).join("\0") !== `emulatorjs${"\0"}retrom-runtime`) {
     invalid();
@@ -86,6 +84,33 @@ export async function checkCurrentProviderRelease(input = {}) {
   }
   return {archivePath: results.find((result) => result.metadata.providerId === "retrom-runtime")?.archivePath,
     metadata, outputRoot, providers: results};
+}
+
+export function createProviderBuildMetadata(providers, sourceTreeSha256) {
+  if (!Array.isArray(providers) || providers.length !== 2 || !/^[0-9a-f]{64}$/u.test(sourceTreeSha256)) {invalid();}
+  for (const provider of providers) {validateMetadata(provider);}
+  const sortedProviders = [...providers].sort((left, right) => Buffer.from(left.providerId).compare(Buffer.from(right.providerId)));
+  if (sortedProviders.map((provider) => provider.providerId).join("\0") !== `emulatorjs${"\0"}retrom-runtime`) {invalid();}
+  return {providers: sortedProviders, schemaVersion: 1, sourceTreeSha256};
+}
+
+export function pinProviderReleaseMetadata(build, release, packageVersion) {
+  if (!exactKeys(build, ["providers", "schemaVersion", "sourceTreeSha256"]) || build.schemaVersion !== 1 ||
+    !/^[0-9a-f]{64}$/u.test(build.sourceTreeSha256) || !validRelease(release) ||
+    release.tag !== `v${packageVersion}` || !build.providers.some((provider) =>
+      provider.providerId === "retrom-runtime" && provider.providerVersion === packageVersion)) {invalid();}
+  const verified = createProviderBuildMetadata(build.providers, build.sourceTreeSha256);
+  return {providers: verified.providers, release: {...release}, schemaVersion: 1};
+}
+
+export async function pinCurrentProviderRelease(input = {}) {
+  const outputRoot = input.outputRoot ?? join(root, "release", "providers");
+  const build = (await checkCurrentProviderBuild({outputRoot})).metadata;
+  const packageVersion = JSON.parse(await readFile(join(root, "package.json"), "utf8").catch(invalid)).version;
+  const release = input.release ?? {commit: releaseCommit(), repository, tag: `v${packageVersion}`};
+  const metadata = pinProviderReleaseMetadata(build, release, packageVersion);
+  await writeFile(join(outputRoot, releaseMetadataName), `${JSON.stringify(metadata, null, 2)}\n`);
+  return metadata;
 }
 
 function validRelease(value) {
@@ -134,6 +159,26 @@ function releaseCommit() {
   return value;
 }
 
+function sourceTreeSha256() {
+  const paths = spawnSync("git", ["ls-files", "--cached", "--others", "--exclude-standard", "-z"], {
+    cwd: root, encoding: "buffer",
+  });
+  const stages = spawnSync("git", ["ls-files", "--stage", "-z"], {cwd: root, encoding: "buffer"});
+  if (paths.status !== 0 || stages.status !== 0) {throw new Error("PROVIDER_SOURCE_TREE_UNAVAILABLE");}
+  const modes = new Map(stages.stdout.toString("utf8").split("\0").filter(Boolean).map((line) => {
+    const [prefix, path] = line.split("\t");
+    return [path, prefix.split(" ", 1)[0]];
+  }));
+  const records = paths.stdout.toString("utf8").split("\0").filter(Boolean)
+    .sort((left, right) => Buffer.from(left).compare(Buffer.from(right))).map((path) => {
+      const info = lstatSync(join(root, path));
+      const mode = info.isSymbolicLink() ? "120000" : modes.get(path) ?? ((info.mode & 0o100) ? "100755" : "100644");
+      const contents = mode === "120000" ? Buffer.from(readlinkSync(join(root, path))) : readFileSync(join(root, path));
+      return {mode, path, sha256: sha256(contents)};
+    });
+  return sha256(Buffer.from(canonicalJson(records)));
+}
+
 function safeRelative(value) {
   return typeof value === "string" && value.length > 0 && !value.startsWith("/") && !value.includes("\\") &&
     !value.includes("?") && !value.includes("#") && value.split("/").every((part) => part && part !== "." && part !== "..");
@@ -144,12 +189,20 @@ function exactKeys(value, expected) {
 }
 function positiveInteger(value) {return Number.isSafeInteger(value) && value > 0;}
 function sha256(value) {return createHash("sha256").update(value).digest("hex");}
+function canonicalJson(value) {
+  if (value === null || typeof value === "boolean" || typeof value === "string") {return JSON.stringify(value);}
+  if (typeof value === "number" && Number.isSafeInteger(value)) {return String(value);}
+  if (Array.isArray(value)) {return `[${value.map(canonicalJson).join(",")}]`;}
+  if (!value || typeof value !== "object") {invalid();}
+  return `{${Object.keys(value).sort().map((key) => `${JSON.stringify(key)}:${canonicalJson(value[key])}`).join(",")}}`;
+}
 function invalid() {throw new Error("PROVIDER_RELEASE_INVALID");}
 
 if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1])).href) {
   const command = process.argv[2];
-  if (process.argv.length !== 3 || command !== "build" && command !== "check") {invalid();}
-  const result = command === "build" ? await buildCurrentProviderRelease() : await checkCurrentProviderRelease();
+  if (process.argv.length !== 3 || command !== "build" && command !== "check" && command !== "pin-release") {invalid();}
+  if (command === "pin-release") {await pinCurrentProviderRelease(); process.stdout.write("pin-release: provider-release.json\n"); process.exit(0);}
+  const result = command === "build" ? await buildCurrentProviderBuild() : await checkCurrentProviderBuild();
   for (const provider of command === "build"
     ? Object.values(result.providers)
     : result.providers) {

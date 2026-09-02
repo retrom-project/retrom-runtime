@@ -27,7 +27,7 @@ describe("EmulatorJS Provider release build", () => {
       }
 
       await expect(buildEmulatorJsProviderBundle({
-        commit: "a".repeat(40), definition: emulatorJsProviderDefinition,
+        definition: emulatorJsProviderDefinition,
         entryPoint: join(process.cwd(), "src/providers/emulatorjs/module.ts"), manifest,
         outputRoot: join(root, "mismatched"), sourceCatalog: emulatorJsSourceCatalog, sourceRoot,
       })).rejects.toThrow("PROVIDER_RELEASE_BUILD_ASSET_MISMATCH");
@@ -44,7 +44,7 @@ describe("EmulatorJS Provider release build", () => {
         }),
       };
       const result = await buildEmulatorJsProviderBundle({
-        commit: "a".repeat(40), definition,
+        definition,
         entryPoint: join(process.cwd(), "src/providers/emulatorjs/module.ts"), manifest,
         outputRoot: join(root, "output"), sourceCatalog: emulatorJsSourceCatalog, sourceRoot,
       });

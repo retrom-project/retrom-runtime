@@ -80,8 +80,8 @@ export async function buildEmulatorJsProviderBundle(input) {
           abi: adapter.abi, id: adapter.id, kind: adapter.kind,
         })).sort((left, right) => compareUtf8(left.id, right.id)),
         build: {tool: "retrom-runtime-provider-build", version: "1"},
+        declarationSha256: sha256(canonicalJsonBytes(input.manifest)),
         schemaVersion: 1,
-        source: {commit: input.commit, repository: sourceRepository, tag: "v0.12.0"},
         overrides: input.sourceCatalog.overrides,
         upstreamReleases: input.sourceCatalog.releases,
       },
@@ -133,11 +133,11 @@ function provenance(input) {
       kind: adapter.kind,
     })).sort((left, right) => compareUtf8(left.id, right.id)),
     build: {tool: "retrom-runtime-provider-build", version: "1"},
+    declarationSha256: sha256(canonicalJsonBytes(input.manifest)),
     schemaVersion: 1,
     source: {
-      commit: input.commit,
       repository: sourceRepository,
-      tag: `v${input.manifest.providerVersion}`,
+      version: input.manifest.providerVersion,
     },
   };
 }
@@ -177,25 +177,28 @@ async function collectEmulatorJsLicenses(sourceRoot, sourceCatalog) {
   const result = new Map();
   for (const release of sourceCatalog.releases) {
     const releaseRoot = join(sourceRoot, release.id);
-    for (const name of ["LICENSE", "THIRD_PARTY_NOTICES"]) {
-      const source = join(releaseRoot, name);
-      await readRegularFile(source);
-      result.set(`licenses/emulatorjs/${release.id}/${name}`, source);
+    for (const licenseRoot of release.licenseRoots) {
+      const source = join(releaseRoot, licenseRoot);
+      const info = await lstat(source);
+      if (info.isSymbolicLink()) {unsafe();}
+      if (info.isFile()) {
+        await readRegularFile(source);
+        result.set(`licenses/emulatorjs/${release.id}/${licenseRoot}`, source);
+      } else if (info.isDirectory()) {await visit(source, licenseRoot);}
+      else {unsafe();}
     }
-    const licensesRoot = join(releaseRoot, "licenses");
-    await visit(licensesRoot);
-    async function visit(directory) {
+    async function visit(directory, rootName) {
       const info = await lstat(directory);
       if (!info.isDirectory() || info.isSymbolicLink()) {unsafe();}
       for (const entry of await readdir(directory, {withFileTypes: true})) {
         const source = join(directory, entry.name);
         const child = await lstat(source);
         if (child.isSymbolicLink()) {unsafe();}
-        if (child.isDirectory()) {await visit(source); continue;}
+        if (child.isDirectory()) {await visit(source, rootName); continue;}
         if (!child.isFile()) {unsafe();}
-        const path = relative(licensesRoot, source).replaceAll("\\", "/");
+        const path = relative(join(releaseRoot, rootName), source).replaceAll("\\", "/");
         if (!safeRelative(path)) {unsafe();}
-        result.set(`licenses/emulatorjs/${release.id}/licenses/${path}`, source);
+        result.set(`licenses/emulatorjs/${release.id}/${rootName}/${path}`, source);
       }
     }
   }
@@ -253,7 +256,7 @@ async function createEmptyDirectory(path) {
 function validateInput(input) {
   const materializedRoot = input?.stageRoot ?? input?.sourceRoot;
   if (!input || !isAbsolute(input.entryPoint) || !isAbsolute(input.outputRoot) ||
-    !isAbsolute(materializedRoot) || !/^[0-9a-f]{40}$/u.test(input.commit) ||
+    !isAbsolute(materializedRoot) ||
     input.definition.providerId !== input.manifest.providerId ||
     input.definition.providerVersion !== input.manifest.providerVersion) {
     unsafe();

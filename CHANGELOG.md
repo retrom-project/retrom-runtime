@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+## 0.11.2
+
+- Update TyranoScript to `retrom-core-gc8dbfd492afd-r5` so dynamically inserted autoplay videos recover from
+  browser autoplay blocking instead of leaving the game on a black frame, while preserving the existing save ABI.
+
 ## 0.11.1
 
 - Accept the bounded JPEG or PNG screenshot media type reported by the TyranoScript bridge.

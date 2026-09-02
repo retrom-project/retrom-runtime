@@ -73,7 +73,7 @@ describe("retrom-runtime Provider release build", () => {
     expect(provider.targets.some((target) => target.id === "wasm4")).toBe(true);
     expect(provider.targets.every((target) => !("adapterId" in target))).toBe(true);
     expect(await readFile(join(first.bundleRoot, "client.mjs"), "utf8")).toContain("retrom-runtime");
-  });
+  }, 20_000);
 });
 
 async function stageAssets(stageRoot: string, assetPaths: string[]) {

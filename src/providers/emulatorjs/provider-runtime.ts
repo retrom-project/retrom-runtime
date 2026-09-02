@@ -6,18 +6,43 @@ import type {
   RuntimeEventV1,
   RuntimeHostV1,
   RuntimeInputFilterPolicyV1,
+  RuntimeMultiDiscResourceV1,
   RuntimeNetplayPortV1,
-  RuntimeResourceV1,
   RuntimeStateV1,
   RuntimeValidationResultV1,
   RuntimeVideoModeV1,
 } from "../../provider/module-api.js";
+import {PlayerRuntimeError} from "../../provider/errors.js";
 import {emulatorJsProviderDefinition} from "./catalog.js";
 import {installArchiveWorkerCompatibility} from "./archive-worker.js";
 import {installDOSBoxPureStateCompatibility} from "./dosbox-state.js";
 import {installExternalFileCompatibility} from "./external-files.js";
+import {RuntimeGamepadFilter, installRuntimeGamepadFilter} from "../../provider/gamepad-filter.js";
+import {installEmulatorJs423NetplayCompatibility} from "./netplay-compatibility.js";
+import {EmulatorJsNetplayPort, type EmulatorNetplayInstance} from "./netplay-port.js";
+import {
+  type EmulatorJsNetplayProfileDeclaration,
+  type ValidatedEmulatorJsNetplayProfile,
+  validateEmulatorJsNetplayProfile,
+} from "./netplay-profile.js";
+import {
+  type EmulatorDiscInstance,
+  initializeEmulatorJsDiscs,
+  readEmulatorJsDiscState,
+  switchEmulatorJsDisc,
+} from "./discs.js";
 import {captureEmulatorJsScreenshot} from "./screenshot.js";
+import {createStartBarrier, startWhenAvailable, type StartBarrier} from "./lifecycle.js";
 import {installEmulatorJs423StateRestoreCompatibility} from "./state-restore.js";
+import {createRetromDefaultControls, type EmulatorDefaultControls} from "./default-controls.js";
+import {
+  closeEmulatorJsNativeSettings,
+  type EmulatorNativeSettingsInstance,
+  openEmulatorJsNativeSettings,
+} from "./native-settings.js";
+import {retromShaders} from "./shaders.js";
+import {applyEmulatorJsVideoMode} from "./video-mode.js";
+import {biosFile, externalFiles, fileName, optionalResource, resource, runtimeBase} from "./resources.js";
 
 type EjsManager = {
   Module?: {
@@ -44,14 +69,19 @@ type EjsManager = {
   toggleMainLoop?: (running: boolean) => void;
 };
 
-type EjsInstance = {
+type EjsInstance = EmulatorDiscInstance & EmulatorNativeSettingsInstance & EmulatorNetplayInstance & {
   canvas?: HTMLCanvasElement;
   capture?: {photo?: {source?: string; format?: string; upscale?: number}};
   gameManager?: EjsManager;
   paused?: boolean;
+  muted?: boolean;
+  volume?: number;
   setVolume?: (value: number) => void;
+  changeSettingOption?: (name: string, value: string) => void;
+  enableShader?: (name: string) => void;
   takeScreenshot?: (source: string, format: string, upscale: number) => Promise<{blob: Blob; format: string}>;
   downloadType?: {rom?: {dontExtractIfCore?: string[]}};
+  on?: (event: string, callback: (...args: unknown[]) => void) => void;
 };
 
 type EjsWindow = Window & {
@@ -76,7 +106,9 @@ type EjsWindow = Window & {
   EJS_disableLocalStorage?: boolean;
   EJS_CacheLimit?: number;
   EJS_Buttons?: Record<string, boolean>;
+  EJS_defaultControls?: EmulatorDefaultControls;
   EJS_defaultOptions?: Record<string, string>;
+  EJS_shaders?: typeof retromShaders;
   EJS_paths?: Record<string, string>;
   EJS_externalFiles?: Record<string, string>;
   EJS_ready?: () => void;
@@ -90,6 +122,7 @@ type EmulatorImplementation = {
   coreSha256: string;
   coreSizeBytes: number;
   defaultOptions: Readonly<Record<string, string>>;
+  netplayProfile: EmulatorJsNetplayProfileDeclaration | null;
   release: "4.2.3" | "4.3.0-pre";
   runtimeCore: string;
   startupActions: ReadonlyArray<{
@@ -105,7 +138,8 @@ const configuredGlobals = [
   "EJS_biosUrl", "EJS_gameParentUrl", "EJS_startOnLoaded", "EJS_dontExtractRom",
   "EJS_disableBatchBootup", "EJS_language", "EJS_disableAutoLang", "EJS_DEBUG_XX",
   "EJS_EXPERIMENTAL_NETPLAY", "EJS_threads", "EJS_fullscreenOnLoaded", "EJS_disableDatabases",
-  "EJS_disableLocalStorage", "EJS_CacheLimit", "EJS_Buttons", "EJS_defaultOptions", "EJS_paths",
+  "EJS_disableLocalStorage", "EJS_CacheLimit", "EJS_Buttons", "EJS_defaultControls",
+  "EJS_defaultOptions", "EJS_shaders", "EJS_paths",
   "EJS_externalFiles", "EJS_ready", "EJS_onGameStart",
 ] as const;
 
@@ -129,9 +163,21 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
   private cleanupArchiveWorker: (() => void) | null = null;
   private cleanupStateRestore: (() => void) | null = null;
   private cleanupExternalFiles: (() => void) | null = null;
+  private cleanupInputFilter: (() => void) | null = null;
+  private inputFilter: RuntimeGamepadFilter | null = null;
+  private cleanupNetplayCompatibility: (() => void) | null = null;
+  private netplayPort: EmulatorJsNetplayPort | null = null;
   private dosboxCompatibility: ReturnType<typeof installDOSBoxPureStateCompatibility> | null = null;
   private cleanupDeferredStart: (() => void) | null = null;
+  private startBarrier: StartBarrier | null = null;
+  private startTimeout: number | null = null;
+  private readonly startupTimers = new Set<number>();
+  private startObserved = false;
+  private exitRequestedEmitted = false;
+  private checkpointAvailability = {available: false, reason: "NOT_READY" as string | null};
   private readonly implementation: EmulatorImplementation;
+  private readonly netplayProfile: ValidatedEmulatorJsNetplayProfile | null;
+  private readonly hostAbort = () => {void this.exit();};
 
   constructor(
     private readonly envelope: LaunchEnvelopeV1,
@@ -146,6 +192,8 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
       core.sizeBytes !== this.implementation.coreSizeBytes) {
       invalid();
     }
+    try {this.netplayProfile = validateEmulatorJsNetplayProfile(envelope, this.implementation);}
+    catch {invalid();}
   }
 
   mount(target: HTMLElement) {
@@ -155,6 +203,9 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
   }
 
   async pause() {
+    if (!this.envelope.runtime.capabilities.pause) {throw capabilityError();}
+    if (this.state === "PAUSED") {return;}
+    if (this.state !== "RUNNING") {throw contractError();}
     const instance = this.requireInstance();
     const toggle = instance.gameManager?.toggleMainLoop;
     if (!toggle) {throw contractError();}
@@ -164,6 +215,9 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
   }
 
   async resume() {
+    if (!this.envelope.runtime.capabilities.pause) {throw capabilityError();}
+    if (this.state === "RUNNING") {return;}
+    if (this.state !== "PAUSED") {throw contractError();}
     const instance = this.requireInstance();
     const toggle = instance.gameManager?.toggleMainLoop;
     if (!toggle) {throw contractError();}
@@ -193,29 +247,82 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
 
   getState() {return this.state;}
   getCapabilities() {return this.envelope.runtime.capabilities;}
-  getCheckpointAvailability() {
-    if (!this.instance?.gameManager || this.envelope.runtime.targetId === "dosbox-pure" &&
-      this.envelope.targetOptions.kind === "EMULATORJS_V1" && !this.envelope.targetOptions.dosEntryPath) {
-      return {available: false, reason: "NOT_READY"};
-    }
-    return {available: true, reason: null};
-  }
+  getCheckpointAvailability() {return {...this.checkpointAvailability};}
   getCanvas() {return this.instance?.canvas ?? null;}
   getFrameCount() {return this.instance?.gameManager?.getFrameNum?.() ?? null;}
 
   async setVolume(value: number) {
+    if (!this.envelope.runtime.capabilities.volume) {throw capabilityError();}
     const instance = this.requireInstance();
     if (!Number.isFinite(value) || value < 0 || value > 1 || !instance.setVolume) {throw contractError();}
     instance.setVolume(value);
   }
 
-  async setVideoMode(_mode: RuntimeVideoModeV1) {throw capabilityError();}
-  async openNativeSettings(_panel: "controls" | "display" | "core") {throw capabilityError();}
-  async closeNativeSettings() {throw capabilityError();}
-  getDiscState(): Promise<RuntimeDiscStateV1> {return Promise.reject(capabilityError());}
-  switchDisc(_index: number): Promise<RuntimeDiscStateV1> {return Promise.reject(capabilityError());}
-  async setInputFilter(_policy: RuntimeInputFilterPolicyV1 | null) {throw capabilityError();}
-  getNetplayPort(): Promise<RuntimeNetplayPortV1> {return Promise.reject(capabilityError());}
+  async setVideoMode(mode: RuntimeVideoModeV1) {
+    if (!this.envelope.runtime.capabilities.videoModes.includes(mode)) {throw capabilityError();}
+    if (!applyEmulatorJsVideoMode(this.requireInstance(), mode)) {throw contractError();}
+  }
+  async openNativeSettings(panel: "controls" | "display" | "core") {
+    if (!this.envelope.runtime.capabilities.nativeSettings) {throw capabilityError();}
+    if (!openEmulatorJsNativeSettings(this.requireInstance(), panel)) {throw contractError();}
+  }
+  async closeNativeSettings() {
+    if (!this.envelope.runtime.capabilities.nativeSettings) {throw capabilityError();}
+    closeEmulatorJsNativeSettings(this.requireInstance());
+  }
+  async getDiscState(): Promise<RuntimeDiscStateV1> {
+    if (!this.envelope.runtime.capabilities.discSwitch) {throw capabilityError();}
+    return readEmulatorJsDiscState(this.requireInstance(), this.requireDiscResource());
+  }
+  async switchDisc(index: number): Promise<RuntimeDiscStateV1> {
+    if (!this.envelope.runtime.capabilities.discSwitch) {throw capabilityError();}
+    const instance = this.requireInstance();
+    const resourceValue = this.requireDiscResource();
+    let result: ReturnType<typeof switchEmulatorJsDisc>;
+    try {
+      const before = readEmulatorJsDiscState(instance, resourceValue);
+      if (before.currentIndex === index) {return before;}
+      const manager = instance.gameManager;
+      if (!manager?.toggleMainLoop) {throw new Error("PLAYER_DISC_RUNTIME_INVALID");}
+      const wasPaused = this.state === "PAUSED";
+      manager.toggleMainLoop(false);
+      try {result = switchEmulatorJsDisc(instance, resourceValue, index);}
+      finally {
+        manager.toggleMainLoop(!wasPaused);
+        instance.paused = wasPaused;
+      }
+    } catch (error) {throw contractError(error);}
+    if (result.changed) {this.emit({type: "DISC_CHANGED", state: result.state});}
+    return result.state;
+  }
+  async setInputFilter(policy: RuntimeInputFilterPolicyV1 | null) {
+    if (!this.envelope.runtime.capabilities.inputFilter) {throw capabilityError();}
+    if (this.envelope.session.mode === "NETPLAY") {throw contractError();}
+    if (this.state === "FAILED" || this.state === "EXITED" || !validInputFilterPolicy(policy)) {
+      throw contractError();
+    }
+    if (policy === null) {
+      this.cleanupInputFilter?.();
+      this.cleanupInputFilter = null;
+      this.inputFilter = null;
+      return;
+    }
+    if (this.inputFilter) {this.inputFilter.setPolicy(policy);}
+    else {this.inputFilter = new RuntimeGamepadFilter(policy);}
+    if (this.runtimeWindow && !this.cleanupInputFilter) {
+      try {this.cleanupInputFilter = installRuntimeGamepadFilter(this.runtimeWindow, this.inputFilter);}
+      catch (error) {throw contractError(error);}
+    }
+  }
+  async getNetplayPort(): Promise<RuntimeNetplayPortV1> {
+    if (!this.envelope.runtime.capabilities.netplayPort) {throw capabilityError();}
+    if (!this.netplayProfile) {throw contractError();}
+    const instance = this.requireInstance();
+    try {
+      this.netplayPort ??= new EmulatorJsNetplayPort(instance, this.netplayProfile.maxStateBytes);
+      return this.netplayPort;
+    } catch (error) {throw contractError(error);}
+  }
   runValidationProbe(_id: string, _input: Record<string, unknown>): Promise<RuntimeValidationResultV1> {
     return Promise.reject(capabilityError());
   }
@@ -232,7 +339,11 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
       const frame = await this.host.mountFrame(target, {resourceRole: null});
       const runtimeWindow = frame.contentWindow as EjsWindow;
       this.runtimeWindow = runtimeWindow;
+      this.startBarrier = createStartBarrier();
       this.configure(runtimeWindow);
+      if (this.netplayProfile) {
+        this.cleanupNetplayCompatibility = installEmulatorJs423NetplayCompatibility(runtimeWindow);
+      }
       this.cleanupArchiveWorker = installArchiveWorkerCompatibility(
         runtimeWindow,
         this.implementation.release,
@@ -247,17 +358,24 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
       if (this.implementation.release === "4.3.0-pre" && this.implementation.runtimeCore === "dosbox_pure") {
         this.dosboxCompatibility = installDOSBoxPureStateCompatibility(runtimeWindow);
       }
+      if (this.inputFilter) {
+        this.cleanupInputFilter = installRuntimeGamepadFilter(runtimeWindow, this.inputFilter);
+      }
       const loader = runtimeWindow.document.createElement("script");
       loader.async = true;
       loader.dataset.retromLoader = "true";
       loader.src = `${runtimeBase(this.envelope, this.implementation.release)}loader.js`;
       runtimeWindow.document.head.append(loader);
       this.loader = loader;
-      this.host.signal.addEventListener("abort", () => {void this.exit();}, {once: true});
+      loader.addEventListener("error", () => this.fail("PLAYER_RUNTIME_LOADER_FAILED"), {once: true});
+      this.startTimeout = runtimeWindow.setTimeout(() => this.fail("PLAYER_RUNTIME_START_TIMEOUT"), 30_000);
+      this.host.signal.addEventListener("abort", this.hostAbort, {once: true});
+      await this.startBarrier.promise;
+      this.clearStartBarrier();
       this.transition("RUNNING");
     } catch (error) {
-      this.transition("FAILED");
-      await this.performExit();
+      if (this.state !== "FAILED" && this.state !== "EXITED") {this.transition("FAILED");}
+      await (this.exitPromise ??= this.performExit());
       throw error;
     }
   }
@@ -290,13 +408,24 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
     runtimeWindow.EJS_disableLocalStorage = true;
     runtimeWindow.EJS_CacheLimit = 0;
     runtimeWindow.EJS_Buttons = {exitEmulation: false};
-    runtimeWindow.EJS_defaultOptions = {...this.implementation.defaultOptions};
+    runtimeWindow.EJS_defaultControls = createRetromDefaultControls();
+    runtimeWindow.EJS_defaultOptions = this.netplayProfile ? {
+      ...this.netplayProfile.defaultCoreOptions,
+      ...(this.implementation.runtimeCore === "fbneo" ? {"fbneo-hiscores": "disabled"} : {}),
+    } : {...this.implementation.defaultOptions};
+    runtimeWindow.EJS_shaders = retromShaders;
     runtimeWindow.EJS_paths = {[fileName(this.implementation.coreAssetPath)]:
       `${this.envelope.runtime.runtimeBaseUrl}${this.implementation.coreAssetPath}`};
     runtimeWindow.EJS_externalFiles = externalFiles(this.envelope);
     runtimeWindow.EJS_ready = () => {
       this.instance = runtimeWindow.EJS_emulator ?? null;
       if (!this.instance) {this.fail("PLAYER_RUNTIME_UNAVAILABLE");}
+      this.instance?.on?.("exit", () => this.requestExit());
+      const discs = optionalResource(this.envelope, "discs", "MULTI_DISC_V1");
+      if (discs && this.instance) {
+        try {initializeEmulatorJsDiscs(this.instance);}
+        catch (error) {this.fail("PLAYER_DISC_RUNTIME_INVALID", error); return;}
+      }
       if (deferredDOSStart && this.instance) {
         const excluded = this.instance.downloadType?.rom?.dontExtractIfCore;
         if (!Array.isArray(excluded)) {this.fail("PLAYER_DOS_ARCHIVE_MODE_UNAVAILABLE"); return;}
@@ -308,11 +437,29 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
           this.fail("PLAYER_DOS_STATE_COMPATIBILITY_UNAVAILABLE", error);
         }
       }
+      if (this.instance) {this.updateCheckpointAvailability(this.currentCheckpointAvailability());}
     };
     runtimeWindow.EJS_onGameStart = () => {
-      this.scheduleStartupActions(runtimeWindow);
-      if (this.restorePayload) {void this.restore(this.restorePayload);}
+      void this.completeStart(runtimeWindow);
     };
+  }
+
+  private async completeStart(runtimeWindow: Window) {
+    if (this.startObserved || this.state !== "MOUNTING") {return;}
+    this.startObserved = true;
+    try {
+      if (!this.instance) {throw new Error("PLAYER_RUNTIME_UNAVAILABLE");}
+      const discs = optionalResource(this.envelope, "discs", "MULTI_DISC_V1");
+      if (discs) {await this.prepareInitialDisc(discs);}
+      else if (this.restorePayload) {await this.restore(this.restorePayload);}
+      this.scheduleStartupActions(runtimeWindow);
+      this.startBarrier?.resolve();
+    } catch (error) {
+      const code = error instanceof Error && error.message.startsWith("PLAYER_")
+        ? error.message
+        : "PLAYER_STATE_RESTORE_FAILED";
+      this.fail(code, error);
+    }
   }
 
   private scheduleStartupActions(runtimeWindow: Window) {
@@ -320,29 +467,57 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
       simulateInput?: (player: number, control: number, value: number) => void;
     } | undefined)?.simulateInput;
     if (!this.implementation.startupActions.length) {return;}
-    if (!simulate) {this.fail("PLAYER_STARTUP_ACTION_UNAVAILABLE"); return;}
+    if (!simulate) {throw new Error("PLAYER_STARTUP_ACTION_UNAVAILABLE");}
     for (const action of this.implementation.startupActions) {
-      runtimeWindow.setTimeout(() => {
+      const pressTimer = runtimeWindow.setTimeout(() => {
+        this.startupTimers.delete(pressTimer);
         simulate(action.player, action.control, 1);
-        runtimeWindow.setTimeout(() => simulate(action.player, action.control, 0), action.durationMs);
+        const releaseTimer = runtimeWindow.setTimeout(() => {
+          this.startupTimers.delete(releaseTimer);
+          simulate(action.player, action.control, 0);
+        }, action.durationMs);
+        this.startupTimers.add(releaseTimer);
       }, action.delayMs);
+      this.startupTimers.add(pressTimer);
     }
   }
 
   private async restore(bytes: Uint8Array) {
-    try {
-      const manager = this.requireInstance().gameManager;
-      if (manager?.loadExplicitStateAndWait) {await manager.loadExplicitStateAndWait(bytes);}
-      else if (manager?.loadStateAndWait) {await manager.loadStateAndWait(bytes);}
-      else if (manager?.loadState) {manager.loadState(bytes);}
-      else {throw contractError();}
-      this.restorePayload = null;
-    } catch (error) {
-      this.fail("PLAYER_STATE_RESTORE_FAILED", error);
-    }
+    const manager = this.instance?.gameManager;
+    if (manager?.loadExplicitStateAndWait) {await manager.loadExplicitStateAndWait(bytes);}
+    else if (manager?.loadStateAndWait) {await manager.loadStateAndWait(bytes);}
+    else if (manager?.loadState) {manager.loadState(bytes);}
+    else {throw new Error("PLAYER_STATE_RESTORE_FAILED");}
+    this.restorePayload = null;
+  }
+
+  private async prepareInitialDisc(resourceValue: RuntimeMultiDiscResourceV1) {
+    const instance = this.instance;
+    if (!instance) {throw new Error("PLAYER_RUNTIME_UNAVAILABLE");}
+    const manager = instance.gameManager;
+    if (!manager?.toggleMainLoop) {throw new Error("PLAYER_DISC_RUNTIME_INVALID");}
+    manager.toggleMainLoop(false);
+    switchEmulatorJsDisc(instance, resourceValue, resourceValue.initialDiscIndex);
+    if (this.restorePayload) {await this.restore(this.restorePayload);}
+    manager.toggleMainLoop(true);
+    instance.paused = false;
+  }
+
+  private requireDiscResource() {
+    const resourceValue = optionalResource(this.envelope, "discs", "MULTI_DISC_V1");
+    if (!resourceValue) {throw contractError();}
+    return resourceValue;
   }
 
   private async performExit() {
+    const preserveFailure = this.state === "FAILED";
+    if (this.state === "MOUNTING") {this.startBarrier?.reject(contractError());}
+    this.clearStartBarrier();
+    this.host.signal.removeEventListener("abort", this.hostAbort);
+    if (this.runtimeWindow) {
+      for (const timer of this.startupTimers) {this.runtimeWindow.clearTimeout(timer);}
+    }
+    this.startupTimers.clear();
     this.loader?.remove();
     this.loader = null;
     this.cleanupStateRestore?.();
@@ -353,6 +528,13 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
     this.dosboxCompatibility = null;
     this.cleanupExternalFiles?.();
     this.cleanupExternalFiles = null;
+    await this.netplayPort?.close();
+    this.netplayPort = null;
+    this.cleanupNetplayCompatibility?.();
+    this.cleanupNetplayCompatibility = null;
+    this.cleanupInputFilter?.();
+    this.cleanupInputFilter = null;
+    this.inputFilter = null;
     this.cleanupArchiveWorker?.();
     this.cleanupArchiveWorker = null;
     if (this.runtimeWindow) {
@@ -360,7 +542,7 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
     }
     this.instance = null;
     this.runtimeWindow = null;
-    this.transition("EXITED");
+    if (!preserveFailure) {this.transition("EXITED");}
     this.listeners.clear();
   }
 
@@ -371,9 +553,18 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
   }
 
   private fail(code: string, error?: unknown) {
+    if (this.state === "FAILED" || this.state === "EXITED") {return;}
     this.transition("FAILED");
+    this.updateCheckpointAvailability({available: false, reason: "FAILED"});
     this.host.reportDiagnostic({code, message: error instanceof Error ? error.message : code});
     this.emit({type: "FATAL_ERROR", code});
+    this.startBarrier?.reject(new PlayerRuntimeError(code, {cause: error}));
+  }
+
+  private clearStartBarrier() {
+    if (this.startTimeout !== null && this.runtimeWindow) {this.runtimeWindow.clearTimeout(this.startTimeout);}
+    this.startTimeout = null;
+    this.startBarrier = null;
   }
 
   private transition(next: RuntimeStateV1) {
@@ -383,77 +574,36 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
     this.emit({type: "STATE_CHANGED", previous, state: next});
   }
 
+  private currentCheckpointAvailability() {
+    if (!this.envelope.runtime.capabilities.checkpoint) {return {available: false, reason: "UNSUPPORTED"};}
+    if (!this.instance?.gameManager || this.envelope.runtime.targetId === "dosbox-pure" &&
+      this.envelope.targetOptions.kind === "EMULATORJS_V1" && !this.envelope.targetOptions.dosEntryPath) {
+      return {available: false, reason: "NOT_READY"};
+    }
+    return {available: true, reason: null};
+  }
+
+  private updateCheckpointAvailability(availability: {available: boolean; reason: string | null}) {
+    if (availability.available === this.checkpointAvailability.available &&
+      availability.reason === this.checkpointAvailability.reason) {return;}
+    this.checkpointAvailability = availability;
+    this.emit({type: "CHECKPOINT_AVAILABILITY_CHANGED", availability});
+  }
+
+  private requestExit() {
+    if (this.exitRequestedEmitted || this.state === "FAILED" || this.state === "EXITED") {return;}
+    this.exitRequestedEmitted = true;
+    this.emit({type: "EXIT_REQUESTED"});
+  }
+
   private emit(event: RuntimeEventV1) {for (const listener of this.listeners) {listener(event);}}
 }
 
-function externalFiles(envelope: LaunchEnvelopeV1) {
-  const files = optionalResource(envelope, "external", "EXTERNAL_FILE_SET_V1")?.files ?? [];
-  const result: Record<string, string> = {};
-  for (const file of files) {result[file.virtualPath] = file.url;}
-  const discs = optionalResource(envelope, "discs", "MULTI_DISC_V1");
-  for (const entry of discs?.entries ?? []) {
-    result[`/disc-${String(entry.index + 1).padStart(3, "0")}.chd`] = entry.url;
-  }
-  return result;
-}
-
-type RuntimeResourceOfKind<Kind extends RuntimeResourceV1["kind"]> = RuntimeResourceV1 & {kind: Kind};
-
-function biosFile(resourceValue: RuntimeResourceOfKind<"BIOS_BUNDLE_V1"> | null) {
-  if (!resourceValue) {return undefined;}
-  const bundle = resourceValue.files.find((entry) => entry.logicalName === "bundle.zip") ?? resourceValue.files[0];
-  if (!bundle) {invalid();}
-  return bundle.url;
-}
-
-function runtimeBase(envelope: LaunchEnvelopeV1, release: string) {
-  return `${envelope.runtime.runtimeBaseUrl}assets/${release}/data/`;
-}
-
-function resource<Role extends string, Kind extends RuntimeResourceV1["kind"]>(
-  envelope: LaunchEnvelopeV1,
-  role: Role,
-  kind: Kind,
-): RuntimeResourceOfKind<Kind> {
-  const value = optionalResource(envelope, role, kind);
-  if (!value) {invalid();}
-  return value;
-}
-
-function optionalResource<Role extends string, Kind extends RuntimeResourceV1["kind"]>(
-  envelope: LaunchEnvelopeV1,
-  role: Role,
-  kind: Kind,
-): RuntimeResourceOfKind<Kind> | null {
-  const value = envelope.resources.find((entry) => entry.role === role);
-  if (!value) {return null;}
-  if (value.kind !== kind) {invalid();}
-  return value as RuntimeResourceOfKind<Kind>;
-}
-
-function fileName(path: string) {return path.slice(path.lastIndexOf("/") + 1);}
-function startWhenAvailable(runtimeWindow: Window) {
-  const click = () => {
-    const button = runtimeWindow.document.querySelector<HTMLElement>(".ejs_start_button");
-    button?.click();
-    return Boolean(button);
-  };
-  if (click()) {return () => undefined;}
-  const Observer = runtimeWindow.document.defaultView?.MutationObserver;
-  if (!Observer) {throw new Error("PLAYER_DOS_START_UNAVAILABLE");}
-  let timeout = 0;
-  const observer = new Observer(() => {
-    if (!click()) {return;}
-    observer.disconnect();
-    runtimeWindow.clearTimeout(timeout);
-  });
-  observer.observe(runtimeWindow.document.documentElement, {childList: true, subtree: true});
-  timeout = runtimeWindow.setTimeout(() => {
-    observer.disconnect();
-    runtimeWindow.dispatchEvent(new ErrorEvent("error", {error: new Error("PLAYER_DOS_START_UNAVAILABLE")}));
-  }, 30_000);
-  return () => {observer.disconnect(); runtimeWindow.clearTimeout(timeout);};
+function validInputFilterPolicy(value: RuntimeInputFilterPolicyV1 | null) {
+  return value === null || typeof value.suppressInput === "boolean" &&
+    (value.activeGamepadIndex === null || Number.isSafeInteger(value.activeGamepadIndex) &&
+      value.activeGamepadIndex >= 0 && value.activeGamepadIndex <= 255);
 }
 function invalid(): never {throw new Error("PROVIDER_LAUNCH_REQUEST_INVALID");}
-function contractError() {return new Error("PLAYER_RUNTIME_CONTRACT_INVALID");}
-function capabilityError() {return new Error("PLAYER_RUNTIME_CAPABILITY_UNSUPPORTED");}
+function contractError(cause?: unknown) {return new PlayerRuntimeError("PLAYER_RUNTIME_CONTRACT_INVALID", {cause});}
+function capabilityError() {return new PlayerRuntimeError("PLAYER_RUNTIME_CAPABILITY_UNSUPPORTED");}

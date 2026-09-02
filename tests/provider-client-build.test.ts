@@ -37,6 +37,30 @@ describe("Provider client module build", () => {
     expect(first.externalImports).toEqual([]);
     expect(firstBytes.toString("utf8")).toContain("providerApiVersion");
   });
+
+  it.each([
+    ["emulatorjs", "src/providers/emulatorjs/module.ts"],
+    ["retrom-runtime", "src/providers/retrom-runtime/module.ts"],
+  ] as const)("imports the built %s client as a closed browser module", async (providerId, entry) => {
+    const root = await temporaryRoot();
+    const result = await buildProviderClient({
+      assetIndex: {},
+      entryPoint: join(process.cwd(), entry),
+      outfile: join(root, "client.mjs"),
+      targetDigests: {},
+    });
+    const bytes = await readFile(result.outfile);
+    const source = bytes.toString("utf8");
+    expect(source).not.toMatch(/\b(?:Buffer|process|require)\b/u);
+    const module = await import(`data:text/javascript;base64,${bytes.toString("base64")}`) as Record<string, unknown>;
+    expect(Object.keys(module).sort()).toEqual([
+      "createRuntime", "providerApiVersion", "providerId", "providerVersion", "validateLaunchRequest",
+    ]);
+    expect(module.providerId).toBe(providerId);
+    expect(module.providerApiVersion).toBe(1);
+    expect(module.createRuntime).toBeTypeOf("function");
+    expect(module.validateLaunchRequest).toBeTypeOf("function");
+  });
 });
 
 async function temporaryRoot() {

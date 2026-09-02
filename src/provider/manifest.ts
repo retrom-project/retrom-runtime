@@ -59,5 +59,13 @@ function sorted<Value extends string>(values: readonly Value[]): Value[] {
 }
 
 function compareUtf8(left: string, right: string) {
-  return Buffer.from(left).compare(Buffer.from(right));
+  const encoder = new TextEncoder();
+  const leftBytes = encoder.encode(left);
+  const rightBytes = encoder.encode(right);
+  const sharedLength = Math.min(leftBytes.length, rightBytes.length);
+  for (let index = 0; index < sharedLength; index += 1) {
+    const difference = leftBytes[index] - rightBytes[index];
+    if (difference !== 0) return difference;
+  }
+  return leftBytes.length - rightBytes.length;
 }

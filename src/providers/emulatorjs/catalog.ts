@@ -1,4 +1,5 @@
 import {defineAdapter, defineProvider, defineTarget, type TargetInputDeclaration} from "../../provider/declarations.js";
+import {emulatorJsNetplayProfiles} from "./netplay-profile.js";
 
 const capabilities = {
   checkpoint: true,
@@ -97,12 +98,9 @@ const cores: readonly CoreSource[] = [
   core("yabause", "4.2.3", "yabause-wasm.data", 991166, "ab253ac263bd98e3124e2ca45ff581e97673426ed06ecec0025333060cd8127c", "1fc177e7be4923208b92755bcfae66ac35ba6e395c3b7ea48df581806ebdf6a6", {contentKinds: ["SINGLE_FILE", "MULTI_DISC_M3U_V1"]}),
 ] as const;
 
-const netplayTargets = new Set([
-  "fceumm", "fbneo", "snes9x", "mame2003", "mame2003_plus", "fbalpha2012_cps1",
-  "fbalpha2012_cps2", "nestopia",
-]);
-
-const targets = cores.map((entry) => defineTarget({
+const targets = cores.map((entry) => {
+  const netplayProfile = emulatorJsNetplayProfiles[entry.id] ?? null;
+  return defineTarget({
   adapterId: entry.release === "4.3.0-pre" ? "emulatorjs-4.3.0-pre" : "emulatorjs-4.2.3",
   assetPaths: [...commonAssets(entry.release), entry.asset].sort(compareUtf8),
   checkpointMaxBytes: 256 * 1024 * 1024,
@@ -122,6 +120,7 @@ const targets = cores.map((entry) => defineTarget({
     coreSizeBytes: entry.sizeBytes,
     defaultOptions: entry.defaultOptions,
     inputMode: entry.inputMode,
+    netplayProfile,
     release: entry.release,
     runtimeCore: entry.id,
     startupActions: entry.startupActions,
@@ -129,12 +128,13 @@ const targets = cores.map((entry) => defineTarget({
   inputs,
   inputFilter: true,
   nativeSettings: true,
-  netplayPort: netplayTargets.has(entry.id),
-  netplayCompatibilityLine: netplayTargets.has(entry.id) ? "emulatorjs-netplay-v2" : null,
+  netplayPort: netplayProfile !== null,
+  netplayCompatibilityLine: netplayProfile ? "emulatorjs-netplay-v2" : null,
   optionsKind: "EMULATORJS_V1",
   requiresThreads: entry.requiresThreads,
   videoModes: ["adaptive-sharpen", "original", "pixel", "sharp-bilinear", "smooth"],
-}));
+  });
+});
 
 export const emulatorJsProviderDefinition = defineProvider({
   adapters,
@@ -203,4 +203,14 @@ function displayName(value: string) {
 
 function providerTargetId(runtimeCore: string) {return runtimeCore.replaceAll("_", "-");}
 
-function compareUtf8(left: string, right: string) {return Buffer.from(left).compare(Buffer.from(right));}
+function compareUtf8(left: string, right: string) {
+  const encoder = new TextEncoder();
+  const leftBytes = encoder.encode(left);
+  const rightBytes = encoder.encode(right);
+  const sharedLength = Math.min(leftBytes.length, rightBytes.length);
+  for (let index = 0; index < sharedLength; index += 1) {
+    const difference = leftBytes[index] - rightBytes[index];
+    if (difference !== 0) return difference;
+  }
+  return leftBytes.length - rightBytes.length;
+}

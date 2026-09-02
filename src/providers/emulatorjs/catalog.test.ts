@@ -3,6 +3,7 @@ import {describe, expect, it} from "vitest";
 import {projectProviderManifest} from "../../provider/manifest.js";
 import {validateProviderManifest} from "../../provider/contract.js";
 import {emulatorJsProviderDefinition} from "./catalog.js";
+import {emulatorJsNetplayProfiles} from "./netplay-profile.js";
 
 describe("EmulatorJS Provider declarations", () => {
   it("uses last declaration wins for exactly thirty-five current core targets", () => {
@@ -43,5 +44,23 @@ describe("EmulatorJS Provider declarations", () => {
     ]);
     expect(yabause?.discSwitch).toBe(true);
     expect(fceumm?.netplayPort).toBe(true);
+  });
+
+  it("freezes the exact eight-profile netplay policy in target declarations", () => {
+    expect(emulatorJsNetplayProfiles).toEqual({
+      fbalpha2012_cps1: {id: "fbalpha2012-cps1-423-v1", maxPlayers: 2, maxPredictionFrames: 0},
+      fbalpha2012_cps2: {id: "fbalpha2012-cps2-423-v1", maxPlayers: 2, maxPredictionFrames: 0},
+      fbneo: {id: "fbneo-423-v1", maxPlayers: 2, maxPredictionFrames: 0},
+      fceumm: {id: "fceumm-423-v1", maxPlayers: 2, maxPredictionFrames: 8},
+      mame2003: {id: "mame2003-423-override-v1", maxPlayers: 2, maxPredictionFrames: 0},
+      mame2003_plus: {id: "mame2003-plus-423-v1", maxPlayers: 2, maxPredictionFrames: 0},
+      nestopia: {id: "nestopia-423-v1", maxPlayers: 2, maxPredictionFrames: 0},
+      snes9x: {id: "snes9x-423-v1", maxPlayers: 2, maxPredictionFrames: 0},
+    });
+    expect(Object.isFrozen(emulatorJsNetplayProfiles)).toBe(true);
+    const declared = emulatorJsProviderDefinition.targets
+      .filter((target) => target.netplayPort)
+      .map((target) => [target.implementation.runtimeCore, target.implementation.netplayProfile?.id]);
+    expect(declared).toEqual(Object.entries(emulatorJsNetplayProfiles).map(([core, profile]) => [core, profile.id]));
   });
 });

@@ -177,7 +177,9 @@ class RetromRuntimePlayer implements PlayerRuntimeV1 {
       const runtime = this.factory(config, {
         frame: frame?.element,
         frameWindow: runtimeWindow,
-        onDiagnostic: (diagnostic) => this.host.reportDiagnostic({code: diagnostic.runtime, message: diagnostic.message}),
+        onDiagnostic: (diagnostic) => this.host.reportDiagnostic({
+          code: providerDiagnosticCode(diagnostic.runtime), message: diagnostic.message,
+        }),
         restorePayload,
         signal: this.host.signal,
       });
@@ -254,6 +256,12 @@ class RetromRuntimePlayer implements PlayerRuntimeV1 {
   }
 
   private emit(event: RuntimeEventV1) {for (const listener of this.listeners) {listener(event);}}
+}
+
+function providerDiagnosticCode(runtime: string) {
+  const suffix = runtime.toUpperCase().replace(/[^A-Z0-9]+/gu, "_")
+    .replace(/^_+|_+$/gu, "").slice(0, 96);
+  return suffix ? `RETROM_RUNTIME_${suffix}` : "RETROM_RUNTIME_DIAGNOSTIC";
 }
 
 function mapState(state: RuntimeState): RuntimeStateV1 | null {

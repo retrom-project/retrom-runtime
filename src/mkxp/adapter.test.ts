@@ -84,7 +84,25 @@ describe("mkxp runtime mount", () => {
     ]);
     onExit?.(0);
     expect(reportExitRequested).toHaveBeenCalledOnce();
+    expect(diagnostics.at(-1)).toEqual({ runtime: "mkxp-z", message: "RPG_RUNTIME_CORE_EXIT:0" });
     await mounted.exit();
+    harness.frame.remove();
+  });
+
+  it("preserves the bounded setup failure before removing the runtime canvas", async () => {
+    const harness = createHarness();
+    const diagnostics: Array<{ runtime: string; message: string }> = [];
+    harness.dependencies.prepare = async () => {throw new Error("browser prepare failed");};
+
+    await expect(mountMkxp(
+      mkxpConfig(false), harness.target, null, harness.dependencies,
+      (diagnostic) => diagnostics.push(diagnostic),
+    )).rejects.toThrow("browser prepare failed");
+
+    expect(diagnostics).toEqual([
+      { runtime: "mkxp-z", message: "RPG_RUNTIME_MOUNT_FAILED:browser prepare failed" },
+    ]);
+    expect(harness.target.childElementCount).toBe(0);
     harness.frame.remove();
   });
 
@@ -228,6 +246,8 @@ describe("mkxp runtime mount", () => {
     expect(mounted.getCanvas()?.ownerDocument).toBe(harness.frame.contentDocument);
     expect(harness.prepareOptions?.element).toBe(mounted.getCanvas());
     expect(mounted.getCanvas()?.id).toBe("canvas");
+    expect(mounted.getCanvas()?.style.width).toBe("640px");
+    expect(mounted.getCanvas()?.style.height).toBe("480px");
 
     const screenshot = new Blob([Uint8Array.of(1)], { type: "image/png" });
     Object.defineProperty(mounted.getCanvas(), "toBlob", {

@@ -84,6 +84,13 @@ describe("retrom-runtime Provider Module V1", () => {
     }), expect.objectContaining({restorePayload: restore}));
     expect(legacy.mount).toHaveBeenCalledWith(target);
     expect(player.getState()).toBe("RUNNING");
+    const [, runtimeOptions] = factory.mock.calls[0] as unknown as [
+      unknown, {onDiagnostic(diagnostic: {runtime: string; message: string}): void},
+    ];
+    runtimeOptions.onDiagnostic({runtime: "mkxp-z", message: "startup"});
+    expect(host.reportDiagnostic).toHaveBeenCalledWith({
+      code: "RETROM_RUNTIME_MKXP_Z", message: "startup",
+    });
 
     events.push({type: "EXIT_REQUESTED"});
     legacy.emit();

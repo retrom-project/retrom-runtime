@@ -92,7 +92,16 @@ export async function mountMkxp(
       config, target, restorePayload, dependencies, onDiagnostic, reportProgress, reportExitRequested,
     );
   }
-  catch (error) {target.replaceChildren(); throw error;}
+  catch (error) {
+    onDiagnostic({ runtime: "mkxp-z", message: `RPG_RUNTIME_MOUNT_FAILED:${mountFailureMessage(error)}` });
+    target.replaceChildren();
+    throw error;
+  }
+}
+
+function mountFailureMessage(error: unknown) {
+  const value = error instanceof Error ? error.message : "unknown";
+  return value.replace(/[\u0000-\u001f\u007f]/gu, " ").trim().slice(0, 600) || "unknown";
 }
 
 async function mountMkxpUnchecked(
@@ -117,6 +126,8 @@ async function mountMkxpUnchecked(
   // insertion so the Player never exposes a transient selector identity.
   canvas.id = "canvas";
   canvas.tabIndex = 0;
+  const dimensions = config.adapter.rgssVersion === 1 ? [640, 480] : [544, 416];
+  [canvas.style.width, canvas.style.height] = dimensions.map((value) => `${value}px`);
   target.append(canvas);
   const runtimeAssetBytes = config.adapter.core.jsSizeBytes + config.adapter.core.wasmSizeBytes + positionBridge.size;
   reportProgress({ phase: "RUNTIME_ASSET", loadedBytes: 0, totalBytes: runtimeAssetBytes });
@@ -144,7 +155,10 @@ async function mountMkxpUnchecked(
     element: canvas,
     emscriptenModule: {
       arguments: [remoteGamePath],
-      onExit: () => reportExitRequested(),
+      onExit: (status) => {
+        onDiagnostic({ runtime: "mkxp-z", message: `RPG_RUNTIME_CORE_EXIT:${status}` });
+        reportExitRequested();
+      },
       // Emscripten creates its ENV object after applying Module overrides and
       // overwrites a caller-provided Module.ENV. Populate the final object at
       // preRun instead, before RetroArch calls into the core and libc getenv().

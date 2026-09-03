@@ -84,15 +84,9 @@ starting the core. The maintained fork exposes a host-independent Web module wit
 input, screenshots, bounded `wasm4-state-v1` checkpoints and direct restore in a fresh instance. Checkpoints bind
 WASM memory, exported mutable globals and the bounded WASM-4 disk to the exact cart digest.
 
-ONS is a separate public runtime rather than an RPG Maker generation:
-
-```ts
-import { createRuntime, type OnsRuntimeConfig } from "@xxxsen/retrom-runtime";
-
-const runtime = createRuntime(config, { frameWindow, restorePayload });
-await runtime.mount(container);
-const checkpoint = await runtime.checkpoint();
-```
+ONS is a separate Provider Target rather than an RPG Maker generation. A Host launches target
+`onscripter-yuri` through Provider Module V1 and only interacts with the returned `PlayerRuntimeV1`;
+the ONS adapter config and constructor are private implementation details of the Provider.
 
 An ONS project index has the stable shape below. Paths are project-relative and URLs remain supplied by the host:
 
@@ -105,7 +99,8 @@ An ONS project index has the stable shape below. Paths are project-relative and 
 }
 ```
 
-Hosts can subscribe before `mount()` to render first-load progress. A later instance still emits progress while
+Hosts can subscribe to the Provider-returned runtime before `mount()` to render first-load progress. A later
+instance still emits progress while
 reading persisted bytes into the core, but it does not transfer a cached project file over the network:
 
 ```ts
@@ -125,15 +120,8 @@ capture unavailable and releases the adapter. A host should subscribe before `mo
 and leave or close the Player when it receives this event; it must not keep a black canvas or offer saving after
 the core has ended.
 
-KiriKiri is also an independent runtime:
-
-```ts
-import { createRuntime, type KirikiriRuntimeConfig } from "@xxxsen/retrom-runtime";
-
-const runtime = createRuntime(config, { frameWindow, restorePayload });
-await runtime.mount(container);
-const checkpoint = await runtime.checkpoint();
-```
+KiriKiri is also an independent Provider Target. A Host launches target `kirikiri2-kag` through
+Provider Module V1 and never imports the KiriKiri adapter config or constructor.
 
 The first compatibility line is deliberately limited to games exposing the standard KAG
 `saveBookMark`/`loadBookMark` API. Its checkpoint contains the small native KAG save files written under

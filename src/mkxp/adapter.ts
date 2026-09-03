@@ -101,7 +101,10 @@ export async function mountMkxp(
 
 function mountFailureMessage(error: unknown) {
   const value = error instanceof Error ? error.message : "unknown";
-  return value.replace(/[\u0000-\u001f\u007f]/gu, " ").trim().slice(0, 600) || "unknown";
+  return [...value].map((character) => {
+    const codePoint = character.codePointAt(0) ?? 0;
+    return codePoint <= 0x1f || codePoint === 0x7f ? " " : character;
+  }).join("").trim().slice(0, 600) || "unknown";
 }
 
 async function mountMkxpUnchecked(

@@ -2,6 +2,7 @@ import type {
   CheckpointAvailability,
   RuntimeCheckpoint,
   RuntimeLoadProgress,
+  RuntimeVideoMode,
   RuntimeValidationProbe,
 } from "./contract.js";
 
@@ -15,6 +16,7 @@ export type MountedRuntimeAdapter = {
   pause(): Promise<void>;
   resume(): Promise<void>;
   screenshot(): Promise<Blob>;
+  setVideoMode?: (mode: RuntimeVideoMode) => Promise<void>;
   setVolume: ((value: number) => void) | null;
 };
 

@@ -200,17 +200,17 @@ describe("retrom-runtime Provider Module V1", () => {
     Object.defineProperty(runtimeWindow.navigator, "getGamepads", {
       configurable: true, value: nativeGetGamepads, writable: true,
     });
-    const canvas = runtimeWindow.document.createElement("canvas");
     const pause = vi.fn(async () => undefined);
     const resume = vi.fn(async () => undefined);
     const setVolume = vi.fn();
+    const setVideoMode = vi.fn(async () => undefined);
     Object.assign(legacy.runtime, {
-      getCanvas: () => canvas,
+      getCanvas: () => null,
       getFrameCount: () => 88,
       getValidationProbe: (kind: string) => kind === "rpgmaker.position.v1" ? {
         kind, schemaVersion: 1, value: {fixtureState: 4, mapId: 2, playerX: 8, playerY: 9},
       } : null,
-      pause, resume, setVolume,
+      pause, resume, setVideoMode, setVolume,
     });
     const host: RuntimeHostV1 = {
       loadRestore: vi.fn(async () => null),
@@ -238,9 +238,9 @@ describe("retrom-runtime Provider Module V1", () => {
     expect(setVolume).toHaveBeenCalledWith(0.4);
     await expect(player.setVolume(2)).rejects.toMatchObject({code: "PLAYER_RUNTIME_CONTRACT_INVALID"});
     await player.setVideoMode("pixel");
-    expect(canvas.style.getPropertyValue("image-rendering")).toBe("pixelated");
+    expect(setVideoMode).toHaveBeenCalledWith("pixel");
     await player.setVideoMode("smooth");
-    expect(canvas.style.getPropertyValue("image-rendering")).toBe("auto");
+    expect(setVideoMode).toHaveBeenCalledWith("smooth");
     await expect(player.runValidationProbe("rpgmaker.position.v1", {
       fixtureState: 4, mapId: 2, playerX: 8, playerY: 9,
     })).resolves.toEqual({

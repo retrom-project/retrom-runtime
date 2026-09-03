@@ -7,6 +7,7 @@ import type {
   RuntimeLoadProgress,
   RuntimeState,
   RuntimeValidationProbe,
+  RuntimeVideoMode,
 } from "./contract.js";
 import type { MountedRuntimeAdapter, RuntimeAdapterMount } from "./internal-adapter.js";
 
@@ -141,6 +142,11 @@ export class GameRuntimeController implements GameRuntime {
     if (!this.capabilities.volume || !this.adapter?.setVolume) {throw new Error("RUNTIME_OPERATION_UNSUPPORTED");}
     if (!Number.isFinite(value) || value < 0 || value > 1) {throw new Error("RUNTIME_VOLUME_INVALID");}
     this.adapter.setVolume(value);
+  }
+
+  async setVideoMode(mode: RuntimeVideoMode) {
+    if (!this.adapter?.setVideoMode) {throw new Error("RUNTIME_OPERATION_UNSUPPORTED");}
+    await this.adapter.setVideoMode(mode);
   }
 
   subscribe(listener: (event: GameRuntimeEvent) => void) {

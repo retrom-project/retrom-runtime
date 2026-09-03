@@ -359,6 +359,21 @@
     global.WebAudio.setMasterVolume(value);
   }
 
+  function setVideoMode(mode) {
+    if (mode !== "original" && mode !== "pixel" && mode !== "smooth") {
+      throw new Error("RPG_RUNTIME_CONTROL_UNAVAILABLE");
+    }
+    const canvases = global.document && global.document.querySelectorAll("canvas");
+    if (!canvases || !canvases.length) throw new Error("RPG_RUNTIME_CONTROL_UNAVAILABLE");
+    const rendering = mode === "pixel" ? "pixelated" : "auto";
+    for (const canvas of canvases) {
+      if (!canvas || !canvas.style || typeof canvas.style.setProperty !== "function") {
+        throw new Error("RPG_RUNTIME_CONTROL_UNAVAILABLE");
+      }
+      canvas.style.setProperty("image-rendering", rendering, "important");
+    }
+  }
+
   async function dispatch(message) {
     switch (message.type) {
     case "PROBE": return { type: "PROBE_RESULT", body: { ready: readyForCheckpoint(), frameCount, position: position() } };
@@ -367,6 +382,7 @@
     case "SCREENSHOT": return { type: "SCREENSHOT_RESULT", body: await screenshot() };
     case "PAUSE": setPaused(true); return { type: "PAUSE_RESULT", body: {} };
     case "RESUME": setPaused(false); return { type: "RESUME_RESULT", body: {} };
+    case "SET_VIDEO_MODE": setVideoMode(message.body.mode); return { type: "SET_VIDEO_MODE_RESULT", body: {} };
     case "SET_VOLUME": setVolume(message.body.value); return { type: "SET_VOLUME_RESULT", body: {} };
     case "CLEANUP":
       if (cleanupUrl) {

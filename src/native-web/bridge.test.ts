@@ -17,7 +17,7 @@ type FakePort = {
 };
 
 describe("native-web RPG Maker bridge", () => {
-  it("reports the engine ready on the title screen before a map is available", () => {
+  it("reports readiness and applies video modes inside the isolated frame", async () => {
     const source = readFileSync(
       resolve(process.cwd(), "assets/runtime/native/bridge.js"),
       "utf8",
@@ -25,9 +25,11 @@ describe("native-web RPG Maker bridge", () => {
     const listeners = new Map<string, Array<(event: BridgeEvent) => void>>();
     const replies: unknown[] = [];
     const nativeExit = vi.fn();
+    const setImageRendering = vi.fn();
     const sceneManager = { _scene: null, exit: nativeExit, updateMain: () => undefined };
     const runtime = {
       DataManager: {},
+      document: {querySelectorAll: () => [{style: {setProperty: setImageRendering}}]},
       SceneManager: sceneManager,
       StorageManager: {},
       Utils: { RPGMAKER_NAME: "MV" },
@@ -72,6 +74,19 @@ describe("native-web RPG Maker bridge", () => {
       requestId: 0,
       type: "READY",
     });
+
+    port.onmessage?.({data: {
+      body: {mode: "pixel"},
+      launchId: "01980000-0000-7000-8000-000000000001",
+      nonce: "test-nonce",
+      protocolVersion: 1,
+      requestId: 1,
+      type: "SET_VIDEO_MODE",
+    }});
+    await vi.waitFor(() => expect(replies).toContainEqual(expect.objectContaining({
+      requestId: 1, type: "SET_VIDEO_MODE_RESULT",
+    })));
+    expect(setImageRendering).toHaveBeenCalledWith("image-rendering", "pixelated", "important");
 
     sceneManager.exit();
     sceneManager.exit();

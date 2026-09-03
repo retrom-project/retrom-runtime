@@ -56,6 +56,8 @@ export type RuntimeLoadProgress = {
   totalBytes: number | null;
 };
 
+export type RuntimeVideoMode = "original" | "pixel" | "smooth" | "sharp-bilinear" | "adaptive-sharpen";
+
 export type RuntimeCapabilities = {
   checkpoint: boolean;
   contentSources: readonly RuntimeContentSourceKind[];
@@ -88,6 +90,7 @@ export interface GameRuntime {
   getCanvas(): HTMLCanvasElement | null;
   getFrameCount(): number | null;
   getValidationProbe(kind: string): RuntimeValidationProbe | null;
+  setVideoMode?(mode: RuntimeVideoMode): Promise<void>;
   setVolume(value: number): void;
   subscribe(listener: (event: GameRuntimeEvent) => void): () => void;
 }

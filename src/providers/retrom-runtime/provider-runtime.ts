@@ -116,9 +116,14 @@ class RetromRuntimePlayer implements PlayerRuntimeV1 {
 
   async setVideoMode(mode: RuntimeVideoModeV1) {
     if (!this.envelope.runtime.capabilities.videoModes.includes(mode)) {throw capabilityError();}
-    const canvas = this.requireRuntime().getCanvas();
-    if (!canvas) {throw contractError();}
-    canvas.style.setProperty("image-rendering", mode === "pixel" ? "pixelated" : "auto", "important");
+    const runtime = this.requireRuntime();
+    const canvas = runtime.getCanvas();
+    if (canvas) {
+      canvas.style.setProperty("image-rendering", mode === "pixel" ? "pixelated" : "auto", "important");
+      return;
+    }
+    if (!runtime.setVideoMode) {throw contractError();}
+    await runtime.setVideoMode(mode);
   }
   async openNativeSettings(_panel: "controls" | "display" | "core") {throw capabilityError();}
   async closeNativeSettings() {throw capabilityError();}

@@ -87,6 +87,10 @@ export async function mountNativeRpg(
     pause: async () => {await channel.request("PAUSE", {}, 5_000);},
     resume: async () => {await channel.request("RESUME", {}, 5_000);},
     screenshot: () => channel.screenshot(),
+    setVideoMode: async (mode) => {
+      const reply = await channel.request("SET_VIDEO_MODE", {mode}, 5_000);
+      if (reply.type !== "SET_VIDEO_MODE_RESULT") {throw new Error("RPG_RUNTIME_CONTROL_UNAVAILABLE");}
+    },
     setVolume: (value) => {void channel.request("SET_VOLUME", { value });},
   } satisfies MountedRuntimeAdapter;
 }

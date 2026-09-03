@@ -81,12 +81,12 @@ describe("EasyRPG adapter cleanup", () => {
 
     const mounted = await mounting;
     expect(createPlayer).toHaveBeenCalledWith(expect.objectContaining({
-      noExitRuntime: false,
-      onExit: expect.any(Function),
+      noExitRuntime: true,
+      onRuntimeExitRequested: expect.any(Function),
       runtimeProjectRootUrl: config.adapter.projectRootUrl,
     }));
-    const options = createPlayer.mock.calls[0]?.[0] as {onExit?: (status: number) => void};
-    options.onExit?.(0);
+    const options = createPlayer.mock.calls[0]?.[0] as {onRuntimeExitRequested?: () => void};
+    options.onRuntimeExitRequested?.();
     expect(reportExitRequested).toHaveBeenCalledOnce();
     expect(mounted.getValidationProbe(rpgMakerPositionProbeKind)?.value)
       .toEqual({ mapId: 1, playerX: 8, playerY: 6, fixtureState: 0 });

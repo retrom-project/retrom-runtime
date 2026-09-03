@@ -37,8 +37,8 @@ type EasyModule = {
 
 type EasyModuleOptions = {
   game: string;
-  noExitRuntime: false;
-  onExit(status: number): void;
+  noExitRuntime: true;
+  onRuntimeExitRequested(): void;
   saveFs: undefined;
   locateFile(path: string): string;
   runtimeEngineMode: string;
@@ -104,8 +104,8 @@ async function mountEasyRpgUnchecked(
   }
   const playerModule = await createPlayer({
     game: config.sessionId,
-    noExitRuntime: false,
-    onExit: () => reportExitRequested(),
+    noExitRuntime: true,
+    onRuntimeExitRequested: () => reportExitRequested(),
     saveFs: undefined,
     locateFile: (path) => `${config.adapter.runtimeBaseUrl}${path}`,
     runtimeEngineMode: config.adapter.engineMode,

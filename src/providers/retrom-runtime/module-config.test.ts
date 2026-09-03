@@ -176,6 +176,7 @@ function envelope(
     },
     schemaVersion: 1,
     session: {
+      coreName: "Fixture Core",
       id: sessionId,
       mode: "SINGLE",
       platformName: "Fixture",

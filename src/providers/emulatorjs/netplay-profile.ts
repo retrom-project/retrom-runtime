@@ -21,6 +21,7 @@ export const emulatorJsNetplayProfiles: Readonly<Record<string, EmulatorJsNetpla
 export type ValidatedEmulatorJsNetplayProfile = {
   defaultCoreOptions: Record<string, string>;
   maxStateBytes: number;
+  profileId: string;
 };
 
 export function validateEmulatorJsNetplayProfile(
@@ -44,6 +45,7 @@ export function validateEmulatorJsNetplayProfile(
   return {
     defaultCoreOptions: {...implementation.defaultOptions},
     maxStateBytes: value.maxStateBytes as number,
+    profileId: declaration.id,
   };
 }
 

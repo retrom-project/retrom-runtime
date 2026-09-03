@@ -54,11 +54,18 @@ describe("EmulatorJS Provider input materializer", () => {
     await materializeEmulatorJsProviderInput(input);
     await materializeEmulatorJsProviderInput({
       ...input,
+      definition: {targets: [{
+        ...input.definition.targets[0],
+        implementation: {...input.definition.targets[0]!.implementation, runtimeCore: "renamed-core"},
+      }]},
+    });
+    await materializeEmulatorJsProviderInput({
+      ...input,
       catalog: {...input.catalog, releases: [{...input.catalog.releases[0], commit: "b".repeat(40)}]},
     });
 
     expect(fetchBytes).toHaveBeenCalledTimes(2);
-    expect(extractArchive).toHaveBeenCalledTimes(2);
+    expect(extractArchive).toHaveBeenCalledTimes(3);
   });
 });
 

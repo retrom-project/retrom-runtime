@@ -1,4 +1,7 @@
+import {copyByteView} from "./bytes.js";
+
 type ScreenshotInstance = {
+  paused?: boolean;
   capture?: {photo?: {source?: string; format?: string; upscale?: number}};
   gameManager?: {
     FS?: {
@@ -8,20 +11,28 @@ type ScreenshotInstance = {
     };
     functions?: {screenshot?: () => void};
     getVideoDimensions?: (dimension: "aspect") => number | undefined;
+    toggleMainLoop?: (running: boolean) => void;
   };
   takeScreenshot?: (source: string, format: string, upscale: number) =>
-    Promise<{blob: Blob; format: string}>;
+    Promise<{blob?: Blob; screenshot?: unknown; format: string}>;
 };
 
 const coreScreenshotTimeoutMs = 2_000;
 const sampleSide = 64;
 
 export async function captureEmulatorJsScreenshot(instance: ScreenshotInstance): Promise<Blob> {
-  try {
-    const core = await captureCoreFramebuffer(instance);
-    if (await screenshotHasVisibleContent(core)) {return core;}
-  } catch {
-    // Displayed output is the bounded fallback for missing, blank, or incorrectly oriented core output.
+  const manager = instance.gameManager;
+  const resumeForCapture = instance.paused === true ? manager?.toggleMainLoop : undefined;
+  if (!instance.paused || resumeForCapture) {
+    try {
+      resumeForCapture?.call(manager, true);
+      const core = await captureCoreFramebuffer(instance);
+      if (await screenshotHasVisibleContent(core)) {return core;}
+    } catch {
+      // Displayed output is the bounded fallback for missing, blank, or incorrectly oriented core output.
+    } finally {
+      resumeForCapture?.call(manager, false);
+    }
   }
   return captureDisplayedOutput(instance);
 }
@@ -55,12 +66,17 @@ async function captureDisplayedOutput(instance: ScreenshotInstance) {
   if (!instance.takeScreenshot) {throw new Error("PLAYER_SCREENSHOT_UNAVAILABLE");}
   const photo = instance.capture?.photo;
   const result = await instance.takeScreenshot(
-    photo?.source ?? "canvas", photo?.format ?? "png", photo?.upscale ?? 1,
+    "canvas", photo?.format ?? "png", photo?.upscale ?? 1,
   );
-  if (!result.blob || typeof result.blob.size !== "number" || result.blob.size < 1) {
-    throw new Error("PLAYER_SCREENSHOT_EMPTY");
+  if (result.blob && typeof result.blob.size === "number" && result.blob.size > 0 &&
+    typeof result.blob.arrayBuffer === "function") {
+    return new Blob([await result.blob.arrayBuffer()], {
+      type: result.blob.type || `image/${result.format}`,
+    });
   }
-  return result.blob;
+  const bytes = copyByteView(result.screenshot);
+  if (!bytes?.byteLength) {throw new Error("PLAYER_SCREENSHOT_EMPTY");}
+  return new Blob([bytes], {type: `image/${result.format}`});
 }
 
 async function captureCoreFramebuffer(instance: ScreenshotInstance) {

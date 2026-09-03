@@ -1,5 +1,7 @@
 import type {RuntimeNetplayPortV1} from "../../provider/module-api.js";
 import {PlayerRuntimeError} from "../../provider/errors.js";
+import {copyByteView} from "./bytes.js";
+import {canonicalizeEmulatorJsNetplayState, coreStateBytes} from "./netplay-state.js";
 
 export type EmulatorNetplayInstance = {
   canvas?: HTMLCanvasElement;
@@ -36,7 +38,11 @@ export class EmulatorJsNetplayPort implements RuntimeNetplayPortV1 {
   private readonly localControls = new Int16Array(24);
   private closed = false;
 
-  constructor(private readonly runtime: EmulatorNetplayInstance, private readonly maxStateBytes: number) {
+  constructor(
+    private readonly runtime: EmulatorNetplayInstance,
+    private readonly maxStateBytes: number,
+    private readonly profileId: string,
+  ) {
     const manager = runtime.gameManager;
     const rawInput = manager?.functions?.simulateInput;
     if (!manager?.getState || !manager.getFrameNum || !manager.simulateInput || !manager.toggleMainLoop ||
@@ -73,12 +79,10 @@ export class EmulatorJsNetplayPort implements RuntimeNetplayPortV1 {
     if (!(state instanceof Uint8Array) || state.byteLength < 8 || state.byteLength > this.maxStateBytes) {
       throw contractError();
     }
-    const expectedCore = coreStateBytes(state);
-    const recaptured = await this.withSuppressedOutput(async () => {
+    coreStateBytes(state);
+    await this.withSuppressedOutput(async () => {
       await this.manager.loadStateAndWait(new Uint8Array(state));
-      return this.readState();
     });
-    if (!equalBytes(coreStateBytes(recaptured), expectedCore)) {throw contractError();}
     this.runtime.paused = true;
   }
 
@@ -113,11 +117,11 @@ export class EmulatorJsNetplayPort implements RuntimeNetplayPortV1 {
 
   private readState() {
     this.requireOpen();
-    const value = this.manager.getState();
-    if (!(value instanceof Uint8Array) || value.byteLength < 8 || value.byteLength > this.maxStateBytes) {
+    const value = copyByteView(this.manager.getState());
+    if (!value || value.byteLength < 8 || value.byteLength > this.maxStateBytes) {
       throw contractError();
     }
-    return new Uint8Array(value);
+    return canonicalizeEmulatorJsNetplayState(value, this.profileId);
   }
 
   private requireFrame(frame: number) {
@@ -146,25 +150,6 @@ export class EmulatorJsNetplayPort implements RuntimeNetplayPortV1 {
   }
 }
 
-export function coreStateBytes(value: Uint8Array) {
-  if (new TextDecoder().decode(value.subarray(0, 7)) !== "RASTATE" || value[7] !== 1) {throw contractError();}
-  const view = new DataView(value.buffer, value.byteOffset, value.byteLength);
-  for (let offset = 8; offset + 8 <= value.byteLength;) {
-    const marker = new TextDecoder().decode(value.subarray(offset, offset + 4));
-    const size = view.getUint32(offset + 4, true);
-    const start = offset + 8;
-    const end = start + size;
-    if (end > value.byteLength) {throw contractError();}
-    if (marker === "MEM ") {return value.subarray(start, end);}
-    if (marker === "END ") {break;}
-    offset = start + ((size + 7) & ~7);
-  }
-  throw contractError();
-}
-
-function equalBytes(left: Uint8Array, right: Uint8Array) {
-  return left.byteLength === right.byteLength && left.every((byte, index) => byte === right[index]);
-}
 function contractError(cause?: unknown) {
   return new PlayerRuntimeError("PLAYER_RUNTIME_CONTRACT_INVALID", {cause});
 }

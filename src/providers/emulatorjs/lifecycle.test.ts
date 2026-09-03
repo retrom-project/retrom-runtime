@@ -40,9 +40,10 @@ describe("EmulatorJS provider lifecycle boundaries", () => {
     expect(runtimeWindow.document.querySelector("#retrom-emulator")?.tagName).toBe("DIV");
     let finishRestore: (() => void) | undefined;
     const loadExplicitStateAndWait = vi.fn(() => new Promise<void>((resolve) => {finishRestore = resolve;}));
+    const toggleMainLoop = vi.fn();
     let onExit: (() => void) | undefined;
     runtimeWindow.EJS_emulator = {
-      gameManager: {loadExplicitStateAndWait},
+      gameManager: {loadExplicitStateAndWait, toggleMainLoop},
       on: (event: string, callback: () => void) => {if (event === "exit") {onExit = callback;}},
     };
     (runtimeWindow.EJS_ready as () => void)();
@@ -54,6 +55,7 @@ describe("EmulatorJS provider lifecycle boundaries", () => {
     });
     finishRestore?.();
     await mounting;
+    expect(toggleMainLoop).toHaveBeenCalledWith(true);
     onExit?.();
     onExit?.();
     expect(received.filter((event) => event.type === "EXIT_REQUESTED")).toHaveLength(1);
@@ -79,6 +81,33 @@ describe("EmulatorJS provider lifecycle boundaries", () => {
     expect(player.getState()).toBe("FAILED");
     expect(vi.getTimerCount()).toBe(0);
     expect(runtimeWindow.document.querySelector("script[data-retrom-loader]")).toBeNull();
+  });
+
+  it("publishes checkpoint readiness when the manager appears only at game start", async () => {
+    const frame = document.createElement("iframe");
+    document.body.append(frame);
+    const runtimeWindow = frame.contentWindow as Window & Record<string, unknown>;
+    const host: RuntimeHostV1 = {
+      loadRestore: vi.fn(async () => null),
+      mountFrame: vi.fn(async () => ({contentWindow: runtimeWindow, element: frame, origin: location.origin})),
+      reportDiagnostic: vi.fn(), signal: new AbortController().signal,
+    };
+    const player = await createEmulatorJsPlayer(launchEnvelope(), host, assetIndex);
+    const events: RuntimeEventV1[] = [];
+    player.subscribe((event) => events.push(event));
+    const mounting = player.mount(document.createElement("div"));
+    await vi.waitFor(() => expect(runtimeWindow.document.querySelector("script[data-retrom-loader]")).not.toBeNull());
+    const instance: {gameManager?: {getState: () => Uint8Array}} = {};
+    runtimeWindow.EJS_emulator = instance;
+    (runtimeWindow.EJS_ready as () => void)();
+    expect(player.getCheckpointAvailability()).toEqual({available: false, reason: "NOT_READY"});
+    instance.gameManager = {getState: () => new Uint8Array([1])};
+    (runtimeWindow.EJS_onGameStart as () => void)();
+    await mounting;
+    expect(player.getCheckpointAvailability()).toEqual({available: true, reason: null});
+    expect(events).toContainEqual({
+      type: "CHECKPOINT_AVAILABILITY_CHANGED", availability: {available: true, reason: null},
+    });
   });
 
   it("clears delayed startup controls when the host aborts", async () => {

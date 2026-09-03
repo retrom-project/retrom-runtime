@@ -37,9 +37,9 @@ type DOSWindow = Window & {
 type Signal = {reject: (error: Error) => void; resolve: () => void; timer: number};
 
 export function patchDOSBoxPureStateStack(source: BufferSource) {
-  const view = source instanceof ArrayBuffer
-    ? new Uint8Array(source)
-    : new Uint8Array(source.buffer, source.byteOffset, source.byteLength);
+  const view = ArrayBuffer.isView(source)
+    ? new Uint8Array(source.buffer, source.byteOffset, source.byteLength)
+    : new Uint8Array(source);
   const markers = matchingOffsets(view, stackMarker);
   if (!markers.length) {return null;}
   const highOffsets = matchingOffsets(view, linkedStackHigh);

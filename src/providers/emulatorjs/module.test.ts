@@ -62,6 +62,43 @@ describe("EmulatorJS Provider Module V1", () => {
     expect(player.getState()).toBe("RUNNING");
   });
 
+  it("resumes the main loop after an initial checkpoint restore", async () => {
+    const frame = document.createElement("iframe");
+    document.body.append(frame);
+    const runtimeWindow = frame.contentWindow as Window & Record<string, unknown>;
+    runtimeWindow.fetch = vi.fn(async () => new Response("ok"));
+    const envelope = launchEnvelope();
+    envelope.restore = {
+      format: "emulatorjs-state-v1", sha256: digest, sizeBytes: 3, url: "/runtime/session/restore",
+    };
+    const host: RuntimeHostV1 = {
+      loadRestore: vi.fn(async () => Uint8Array.of(1, 2, 3)),
+      mountFrame: vi.fn(async () => ({contentWindow: runtimeWindow, element: frame, origin: location.origin})),
+      reportDiagnostic: vi.fn(),
+      signal: new AbortController().signal,
+    };
+    const player = await createEmulatorJsPlayer(envelope, host, {
+      "assets/4.2.3/data/cores/fceumm-wasm.data": {
+        sha256: "8c449fd5c36646fb0769423ed6ffa9efbdfc21fbfdc9bac7952b559d34d5b493",
+        sizeBytes: 1054015,
+      },
+    });
+    const toggleMainLoop = vi.fn();
+    const loadExplicitStateAndWait = vi.fn(async () => undefined);
+    const mounting = player.mount(document.createElement("div"));
+    await vi.waitFor(() => expect(runtimeWindow.document.querySelector("script[data-retrom-loader]")).not.toBeNull());
+    runtimeWindow.EJS_emulator = {
+      gameManager: {loadExplicitStateAndWait, toggleMainLoop}, paused: true,
+    };
+    (runtimeWindow.EJS_ready as () => void)();
+    (runtimeWindow.EJS_onGameStart as () => void)();
+    await mounting;
+
+    expect(loadExplicitStateAndWait).toHaveBeenCalledWith(new Uint8Array([1, 2, 3]));
+    expect(toggleMainLoop).toHaveBeenLastCalledWith(true);
+    expect(player.getState()).toBe("RUNNING");
+  });
+
   it("rejects unsupported operations with the stable capability error code", async () => {
     const player = await createEmulatorJsPlayer(launchEnvelope(), {
       loadRestore: vi.fn(async () => null),
@@ -167,9 +204,11 @@ describe("EmulatorJS Provider Module V1", () => {
       .toContain(`/runtime/providers/emulatorjs/${bundleDigest}/assets/4.2.3/data/loader.js`);
 
     const toggleMainLoop = vi.fn();
+    const RuntimeUint8Array = runtimeWindow.Uint8Array as Uint8ArrayConstructor;
+    const crossRealmState = new RuntimeUint8Array([1, 2]);
     runtimeWindow.EJS_emulator = {
       canvas: document.createElement("canvas"),
-      gameManager: {getFrameNum: () => 42, getState: () => new Uint8Array([1, 2]), toggleMainLoop},
+      gameManager: {getFrameNum: () => 42, getState: () => crossRealmState, toggleMainLoop},
       on: vi.fn(),
       paused: false,
       setVolume: vi.fn(),
@@ -179,11 +218,13 @@ describe("EmulatorJS Provider Module V1", () => {
     await mounting;
     expect(player.getFrameCount()).toBe(42);
     await player.pause();
-    await player.resume();
-    expect(toggleMainLoop.mock.calls).toEqual([[false], [true]]);
     await expect(player.checkpoint()).resolves.toEqual({
       bytes: new Uint8Array([1, 2]), format: "emulatorjs-state-v1", metadata: null,
     });
+    expect(player.getState()).toBe("PAUSED");
+    expect(toggleMainLoop.mock.calls).toEqual([[false]]);
+    await player.resume();
+    expect(toggleMainLoop).toHaveBeenLastCalledWith(true);
     await player.exit();
     expect(player.getState()).toBe("EXITED");
   });
@@ -206,6 +247,8 @@ describe("EmulatorJS Provider Module V1", () => {
     });
     const mounting = player.mount(document.createElement("div"));
     await vi.waitFor(() => expect(runtimeWindow.document.querySelector("script[data-retrom-loader]")).not.toBeNull());
+    expect(runtimeWindow.document.documentElement.classList.contains("retrom-native-menu-locked")).toBe(true);
+    expect(runtimeWindow.document.querySelector("style[data-retrom-player-frame]")).not.toBeNull();
     const displayed = new Blob(["displayed"], {type: "image/png"});
     const takeScreenshot = vi.fn(async () => ({blob: displayed, format: "png"}));
     runtimeWindow.EJS_emulator = {
@@ -218,7 +261,11 @@ describe("EmulatorJS Provider Module V1", () => {
     (runtimeWindow.EJS_onGameStart as () => void)();
     await mounting;
 
-    await expect(player.screenshot()).resolves.toBe(displayed);
+    const screenshot = await player.screenshot();
+    expect(screenshot).not.toBe(displayed);
+    expect(screenshot).toMatchObject({size: displayed.size, type: "image/png"});
+    expect(new Uint8Array(await screenshot.arrayBuffer()))
+      .toEqual(new Uint8Array(await displayed.arrayBuffer()));
     expect(takeScreenshot).toHaveBeenCalledWith("canvas", "png", 2);
   });
 
@@ -256,6 +303,7 @@ describe("EmulatorJS Provider Module V1", () => {
     const menu = {close: vi.fn(), open: vi.fn()};
     const setVolume = vi.fn();
     const toggleMainLoop = vi.fn();
+    displayButton.addEventListener("click", () => toggleMainLoop(true));
     runtimeWindow.EJS_emulator = {
       canvas, changeSettingOption, closeSettingsMenu, controlMenu,
       gameManager: {getFrameNum: () => 314, toggleMainLoop}, menu,
@@ -290,8 +338,11 @@ describe("EmulatorJS Provider Module V1", () => {
 
     await player.openNativeSettings("controls");
     expect(controlMenu.style.display).toBe("");
+    await player.pause();
     await player.openNativeSettings("display");
     expect(menu.open).toHaveBeenLastCalledWith(true);
+    expect(toggleMainLoop).toHaveBeenLastCalledWith(false);
+    expect(player.getState()).toBe("PAUSED");
     expect(runtimeWindow.document.documentElement.classList.contains("retrom-native-settings-open")).toBe(true);
     await player.openNativeSettings("core");
     await player.closeNativeSettings();
@@ -431,7 +482,7 @@ describe("EmulatorJS Provider Module V1", () => {
     const manager = {
       functions: {simulateInput: nativeInput},
       getFrameNum: () => currentFrame,
-      getState: () => new Uint8Array(currentState),
+      getState: () => new (runtimeWindow.Uint8Array as Uint8ArrayConstructor)(currentState),
       loadStateAndWait: vi.fn(async (state: Uint8Array) => {
         currentState = new Uint8Array(state);
         return {byteExact: true};

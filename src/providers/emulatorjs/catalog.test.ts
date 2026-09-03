@@ -46,6 +46,13 @@ describe("EmulatorJS Provider declarations", () => {
     expect(fceumm?.netplayPort).toBe(true);
   });
 
+  it("declares the core compatibility report that EmulatorJS loads at runtime", () => {
+    for (const target of emulatorJsProviderDefinition.targets) {
+      const {release, runtimeCore} = target.implementation;
+      expect(target.assetPaths).toContain(`assets/${release}/data/cores/reports/${runtimeCore}.json`);
+    }
+  });
+
   it("freezes the exact eight-profile netplay policy in target declarations", () => {
     expect(emulatorJsNetplayProfiles).toEqual({
       fbalpha2012_cps1: {id: "fbalpha2012-cps1-423-v1", maxPlayers: 2, maxPredictionFrames: 0},

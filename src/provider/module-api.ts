@@ -88,10 +88,11 @@ function validBundleURLs(runtime: LaunchEnvelopeV1["runtime"]) {
 
 function validSession(value: unknown) {
   if (!isRecord(value) || !exactKeys(value, [
-    "id", "mode", "platformName", "purpose", "returnTo", "title", "warnings",
+    "coreName", "id", "mode", "platformName", "purpose", "returnTo", "title", "warnings",
   ]) || !uuid(value.id) || !["PRODUCT", "REVIEW_PREVIEW", "RUNTIME_VALIDATION"].includes(String(value.purpose)) ||
     !["SINGLE", "NETPLAY"].includes(String(value.mode)) || !boundedText(value.title, 1, 500) ||
-    !boundedText(value.platformName, 1, 200) || !relativeURL(value.returnTo) || !Array.isArray(value.warnings) ||
+    !boundedText(value.platformName, 1, 200) || !boundedText(value.coreName, 1, 200) ||
+    !relativeURL(value.returnTo) || !Array.isArray(value.warnings) ||
     value.warnings.length > 16 || !value.warnings.every((warning) => boundedText(warning, 1, 200))) {return false;}
   return true;
 }

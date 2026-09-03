@@ -37,6 +37,7 @@ export function launchEnvelope(): LaunchEnvelopeV1 {
     },
     schemaVersion: 1,
     session: {
+      coreName: "FCEUmm",
       id: "018f0f31-26fe-7a31-9d61-4ec92f16d4c3", mode: "SINGLE", platformName: "NES",
       purpose: "PRODUCT", returnTo: "/games/fixture", title: "Fixture", warnings: [],
     },

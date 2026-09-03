@@ -1,9 +1,11 @@
 export type EmulatorNativeSettingsInstance = {
+  gameManager?: {toggleMainLoop?: (running: boolean) => void};
   menu?: {close?: () => void; open?: (force?: boolean) => void};
   controlMenu?: HTMLElement;
   settingsMenu?: HTMLElement;
   settingsMenuOpen?: boolean;
   closeSettingsMenu?: () => void;
+  paused?: boolean;
 };
 
 type NativeSettingsPanel = "controls" | "display" | "core";
@@ -38,6 +40,7 @@ function resetNativeSettingsNavigation(instance: EmulatorNativeSettingsInstance)
 export function openEmulatorJsNativeSettings(
   instance: EmulatorNativeSettingsInstance,
   panel: NativeSettingsPanel,
+  preservePause = false,
 ) {
   if (panel === "controls") {
     setNativeSettingsVisibility(instance, false);
@@ -45,6 +48,7 @@ export function openEmulatorJsNativeSettings(
     instance.menu?.close?.();
     if (!instance.controlMenu) {return false;}
     instance.controlMenu.style.display = "";
+    preserveNativePause(instance, preservePause);
     return true;
   }
 
@@ -59,7 +63,14 @@ export function openEmulatorJsNativeSettings(
     .find((entry) => panelMatchers[panel].test(entry.textContent ?? ""));
   if (!target) {return false;}
   target.click();
+  preserveNativePause(instance, preservePause);
   return true;
+}
+
+function preserveNativePause(instance: EmulatorNativeSettingsInstance, preservePause: boolean) {
+  if (!preservePause) {return;}
+  instance.gameManager?.toggleMainLoop?.(false);
+  instance.paused = true;
 }
 
 export function closeEmulatorJsNativeSettings(instance: EmulatorNativeSettingsInstance) {

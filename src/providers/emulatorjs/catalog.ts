@@ -102,7 +102,11 @@ const targets = cores.map((entry) => {
   const netplayProfile = emulatorJsNetplayProfiles[entry.id] ?? null;
   return defineTarget({
   adapterId: entry.release === "4.3.0-pre" ? "emulatorjs-4.3.0-pre" : "emulatorjs-4.2.3",
-  assetPaths: [...commonAssets(entry.release), entry.asset].sort(compareUtf8),
+  assetPaths: [
+    ...commonAssets(entry.release),
+    entry.asset,
+    `assets/${entry.release}/data/cores/reports/${entry.id}.json`,
+  ].sort(compareUtf8),
   checkpointMaxBytes: 256 * 1024 * 1024,
   discSwitch: entry.id === "yabause",
   displayName: displayName(entry.id),

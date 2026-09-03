@@ -363,6 +363,7 @@ function wasmEnvelope(): LaunchEnvelopeV1 {
     },
     schemaVersion: 1 as const,
     session: {
+      coreName: "WASM-4 Core",
       id: "018f0f31-26fe-7a31-9d61-4ec92f16d4c3",
       mode: "SINGLE" as const,
       platformName: "WASM-4",
@@ -410,6 +411,7 @@ function rpgMvEnvelope(): LaunchEnvelopeV1 {
     },
     schemaVersion: 1,
     session: {
+      coreName: "RPG Maker Core",
       id: "018f0f31-26fe-7a31-9d61-4ec92f16d4c3",
       mode: "SINGLE",
       platformName: "RPG Maker MV",
@@ -486,6 +488,7 @@ function targetEnvelope(targetId: string): LaunchEnvelopeV1 {
     },
     schemaVersion: 1,
     session: {
+      coreName: "Fixture Core",
       id: "018f0f31-26fe-7a31-9d61-4ec92f16d4c3", mode: "SINGLE",
       platformName: "Fixture", purpose: "PRODUCT", returnTo: "/games/fixture", title: "Fixture", warnings: [],
     },

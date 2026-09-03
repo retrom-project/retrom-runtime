@@ -12,7 +12,10 @@ const proofName = ".materialization.json";
 export async function materializeEmulatorJsProviderInput(input) {
   validateInput(input);
   const expectedCatalogDigest = sha256(Buffer.from(canonicalJson(input.catalog)));
-  if (await verifyExisting(input.outputRoot, expectedCatalogDigest, input.definition, false)) {
+  const expectedDefinitionDigest = sha256(Buffer.from(canonicalJson(input.definition)));
+  if (await verifyExisting(
+    input.outputRoot, expectedCatalogDigest, expectedDefinitionDigest, input.definition, false,
+  )) {
     return input.outputRoot;
   }
   await mkdir(dirname(input.outputRoot), {recursive: true});
@@ -37,15 +40,18 @@ export async function materializeEmulatorJsProviderInput(input) {
     const files = await collectSelectedFiles(staging, input.catalog, input.definition);
     await writeFile(join(staging, proofName), `${JSON.stringify({
       catalogSha256: expectedCatalogDigest,
+      definitionSha256: expectedDefinitionDigest,
       files,
-      schemaVersion: 1,
+      schemaVersion: 2,
     }, null, 2)}\n`, {flag: "wx"});
     try {
       await rename(staging, input.outputRoot);
     } catch (error) {
       if (error?.code !== "EEXIST" && error?.code !== "ENOTEMPTY") {throw error;}
       try {
-        if (await verifyExisting(input.outputRoot, expectedCatalogDigest, input.definition, true)) {return input.outputRoot;}
+        if (await verifyExisting(
+          input.outputRoot, expectedCatalogDigest, expectedDefinitionDigest, input.definition, true,
+        )) {return input.outputRoot;}
       } catch { /* A stale materialization is replaced below after the new staging tree is complete. */ }
       const stale = `${input.outputRoot}.stale-${process.pid}-${randomUUID()}`;
       await rename(input.outputRoot, stale);
@@ -61,18 +67,20 @@ export async function materializeEmulatorJsProviderInput(input) {
 
 export async function checkEmulatorJsProviderInput(input) {
   validateInput(input);
-  const digest = sha256(Buffer.from(canonicalJson(input.catalog)));
-  if (!await verifyExisting(input.outputRoot, digest, input.definition, true)) {
+  const catalogDigest = sha256(Buffer.from(canonicalJson(input.catalog)));
+  const definitionDigest = sha256(Buffer.from(canonicalJson(input.definition)));
+  if (!await verifyExisting(input.outputRoot, catalogDigest, definitionDigest, input.definition, true)) {
     throw new Error("EMULATORJS_PROVIDER_INPUT_INVALID");
   }
   return input.outputRoot;
 }
 
-async function verifyExisting(outputRoot, catalogSha256, definition, strict) {
+async function verifyExisting(outputRoot, catalogSha256, definitionSha256, definition, strict) {
   try {
     const proof = JSON.parse(await readFile(join(outputRoot, proofName), "utf8"));
-    if (!exactKeys(proof, ["catalogSha256", "files", "schemaVersion"]) || proof.schemaVersion !== 1 ||
-      proof.catalogSha256 !== catalogSha256 || !Array.isArray(proof.files) || !proof.files.length) {
+    if (!exactKeys(proof, ["catalogSha256", "definitionSha256", "files", "schemaVersion"]) ||
+      proof.schemaVersion !== 2 || proof.catalogSha256 !== catalogSha256 ||
+      proof.definitionSha256 !== definitionSha256 || !Array.isArray(proof.files) || !proof.files.length) {
       throw new Error("invalid proof");
     }
     const actual = await collectRegularFiles(outputRoot, true);

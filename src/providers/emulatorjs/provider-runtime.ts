@@ -43,6 +43,8 @@ import {
 import {retromShaders} from "./shaders.js";
 import {applyEmulatorJsVideoMode} from "./video-mode.js";
 import {biosFile, externalFiles, fileName, optionalResource, resource, runtimeBase} from "./resources.js";
+import {readEmulatorJsCheckpoint} from "./bytes.js";
+import {installEmulatorJsFrameStyle} from "./frame-style.js";
 
 type EjsManager = {
   Module?: {
@@ -79,7 +81,7 @@ type EjsInstance = EmulatorDiscInstance & EmulatorNativeSettingsInstance & Emula
   setVolume?: (value: number) => void;
   changeSettingOption?: (name: string, value: string) => void;
   enableShader?: (name: string) => void;
-  takeScreenshot?: (source: string, format: string, upscale: number) => Promise<{blob: Blob; format: string}>;
+  takeScreenshot?: (source: string, format: string, upscale: number) => Promise<{blob?: Blob; screenshot?: unknown; format: string}>;
   downloadType?: {rom?: {dontExtractIfCore?: string[]}};
   on?: (event: string, callback: (...args: unknown[]) => void) => void;
 };
@@ -161,6 +163,7 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
   private mountPromise: Promise<void> | null = null;
   private exitPromise: Promise<void> | null = null;
   private cleanupArchiveWorker: (() => void) | null = null;
+  private cleanupFrameStyle: (() => void) | null = null;
   private cleanupStateRestore: (() => void) | null = null;
   private cleanupExternalFiles: (() => void) | null = null;
   private cleanupInputFilter: (() => void) | null = null;
@@ -227,13 +230,12 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
   }
 
   async checkpoint() {
-    const manager = this.requireInstance().gameManager;
-    const bytes = manager?.getStateAsync ? await manager.getStateAsync() : manager?.getState?.();
+    const bytes = await readEmulatorJsCheckpoint(this.requireInstance().gameManager, this.state === "PAUSED");
     const maximum = this.envelope.runtime.checkpoint?.maxBytes ?? 0;
-    if (!(bytes instanceof Uint8Array) || bytes.byteLength < 1 || bytes.byteLength > maximum) {
+    if (!bytes || bytes.byteLength < 1 || bytes.byteLength > maximum) {
       throw contractError();
     }
-    return {bytes: new Uint8Array(bytes), format: "emulatorjs-state-v1", metadata: null};
+    return {bytes, format: "emulatorjs-state-v1", metadata: null};
   }
 
   async screenshot() {
@@ -264,7 +266,7 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
   }
   async openNativeSettings(panel: "controls" | "display" | "core") {
     if (!this.envelope.runtime.capabilities.nativeSettings) {throw capabilityError();}
-    if (!openEmulatorJsNativeSettings(this.requireInstance(), panel)) {throw contractError();}
+    if (!openEmulatorJsNativeSettings(this.requireInstance(), panel, this.state === "PAUSED")) {throw contractError();}
   }
   async closeNativeSettings() {
     if (!this.envelope.runtime.capabilities.nativeSettings) {throw capabilityError();}
@@ -319,7 +321,7 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
     if (!this.netplayProfile) {throw contractError();}
     const instance = this.requireInstance();
     try {
-      this.netplayPort ??= new EmulatorJsNetplayPort(instance, this.netplayProfile.maxStateBytes);
+      this.netplayPort ??= new EmulatorJsNetplayPort(instance, this.netplayProfile.maxStateBytes, this.netplayProfile.profileId);
       return this.netplayPort;
     } catch (error) {throw contractError(error);}
   }
@@ -393,6 +395,7 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
     body.style.width = "100vw";
     body.style.height = "100vh";
     body.style.overflow = "hidden";
+    this.cleanupFrameStyle = installEmulatorJsFrameStyle(runtimeWindow.document);
   }
 
   private configure(runtimeWindow: EjsWindow) {
@@ -466,8 +469,14 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
       if (!this.instance) {throw new Error("PLAYER_RUNTIME_UNAVAILABLE");}
       const discs = optionalResource(this.envelope, "discs", "MULTI_DISC_V1");
       if (discs) {await this.prepareInitialDisc(discs);}
-      else if (this.restorePayload) {await this.restore(this.restorePayload);}
+      else if (this.restorePayload) {
+        await this.restore(this.restorePayload);
+        if (!this.instance.gameManager?.toggleMainLoop) {throw new Error("PLAYER_STATE_RESTORE_FAILED");}
+        this.instance.gameManager.toggleMainLoop(true);
+        this.instance.paused = false;
+      }
       this.scheduleStartupActions(runtimeWindow);
+      this.updateCheckpointAvailability(this.currentCheckpointAvailability());
       this.startBarrier?.resolve();
     } catch (error) {
       const code = error instanceof Error && error.message.startsWith("PLAYER_")
@@ -535,6 +544,8 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
     this.startupTimers.clear();
     this.loader?.remove();
     this.loader = null;
+    this.cleanupFrameStyle?.();
+    this.cleanupFrameStyle = null;
     this.cleanupStateRestore?.();
     this.cleanupStateRestore = null;
     this.cleanupDeferredStart?.();

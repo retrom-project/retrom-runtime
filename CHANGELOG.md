@@ -9,6 +9,11 @@
 - Add deterministic EmulatorJS and retrom-runtime Provider Bundle builds, closed integrity/provenance records,
   candidate/production isolation and the Provider Module V1 Launch Envelope boundary.
 
+## 0.11.4
+
+- Update TyranoScript to `retrom-core-gc8dbfd492afd-r7` so checkpoint restoration preserves the engine system
+  variables required to resume choices and scenario progression, while preserving the existing save ABI.
+
 ## 0.11.3
 
 - Update TyranoScript to `retrom-core-gc8dbfd492afd-r6` so rapidly skipped videos abort their unfinished network

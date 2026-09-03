@@ -26,7 +26,7 @@ describe("retrom-runtime Provider Module V1", () => {
     expect({providerApiVersion, providerId, providerVersion}).toEqual({
       providerApiVersion: 1,
       providerId: "retrom-runtime",
-      providerVersion: "0.12.0",
+      providerVersion: "0.13.0",
     });
     const envelope = wasmEnvelope();
     expect(validateLaunchRequest(envelope)).toBe(envelope);
@@ -363,7 +363,7 @@ function wasmEnvelope(): LaunchEnvelopeV1 {
       moduleUrl: `/runtime/providers/retrom-runtime/${bundleDigest}/client.mjs`,
       providerApiVersion: 1 as const,
       providerId: "retrom-runtime",
-      providerVersion: "0.12.0",
+      providerVersion: "0.13.0",
       runtimeBaseUrl: `/runtime/providers/retrom-runtime/${bundleDigest}/`,
       targetContractSha256: wasmTargetDigest,
       targetId: "wasm4",
@@ -411,7 +411,7 @@ function rpgMvEnvelope(): LaunchEnvelopeV1 {
       moduleUrl: `/runtime/providers/retrom-runtime/${bundleDigest}/client.mjs`,
       providerApiVersion: 1,
       providerId: "retrom-runtime",
-      providerVersion: "0.12.0",
+      providerVersion: "0.13.0",
       runtimeBaseUrl: `/runtime/providers/retrom-runtime/${bundleDigest}/`,
       targetContractSha256: digestTarget("rpgmaker-mv"),
       targetId: "rpgmaker-mv",
@@ -488,7 +488,7 @@ function targetEnvelope(targetId: string): LaunchEnvelopeV1 {
       moduleUrl: `/runtime/providers/retrom-runtime/${bundleDigest}/client.mjs`,
       providerApiVersion: 1,
       providerId: "retrom-runtime",
-      providerVersion: "0.12.0",
+      providerVersion: "0.13.0",
       runtimeBaseUrl: `/runtime/providers/retrom-runtime/${bundleDigest}/`,
       targetContractSha256: digestTarget(targetId),
       targetId,

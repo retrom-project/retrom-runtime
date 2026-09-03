@@ -37,6 +37,7 @@ describe("EmulatorJS provider lifecycle boundaries", () => {
     player.subscribe((event) => received.push(event));
     const mounting = player.mount(document.createElement("div"));
     await vi.waitFor(() => expect(runtimeWindow.document.querySelector("script[data-retrom-loader]")).not.toBeNull());
+    expect(runtimeWindow.document.querySelector("#retrom-emulator")?.tagName).toBe("DIV");
     let finishRestore: (() => void) | undefined;
     const loadExplicitStateAndWait = vi.fn(() => new Promise<void>((resolve) => {finishRestore = resolve;}));
     let onExit: (() => void) | undefined;

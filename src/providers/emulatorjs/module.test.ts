@@ -141,6 +141,7 @@ describe("EmulatorJS Provider Module V1", () => {
     expect(runtimeWindow.EJS_paths).toEqual({
       "fceumm-wasm.data": `/runtime/providers/emulatorjs/${bundleDigest}/assets/4.2.3/data/cores/fceumm-wasm.data`,
     });
+    expect(runtimeWindow.EJS_defaultOptions).toMatchObject({webgl2Enabled: "enabled"});
     const defaultControls = runtimeWindow.EJS_defaultControls as Record<
       number, Record<number, {value: string; value2?: string}>
     >;
@@ -504,14 +505,13 @@ function netplayEnvelope(targetId: "fceumm"): LaunchEnvelopeV1 {
     netplay: {
       profile: {
         canonicalHistoryFrames: 600, checkpointEveryFrames: 120, controlCount: 24,
-        coreArtifactId: "01980000-0000-7000-8000-000000000003",
-        coreArtifactSha256: "8c449fd5c36646fb0769423ed6ffa9efbdfc21fbfdc9bac7952b559d34d5b493",
-        defaultCoreOptions: {}, dependencySnapshotDigest: "e".repeat(64), emulatorjsVersion: "4.2.3",
+        coreId: "fceumm", dependencySnapshotDigest: "e".repeat(64),
         gameVariantRevisionId: "01980000-0000-7000-8000-000000000006", maxPlayers: 2,
         maxPredictionFrames: 8, maxRollbackFrames: 120, maxStateBytes: 1_048_576,
-        netplayAdapterId: "ejs-netplay-4.2.3-v1", platformIds: ["nes"],
-        playerAdapterId: "ejs-4.2.3-v2", profileId: "fceumm-423-v1",
-        protocolVersion: "retrom-netplay-v2", schemaVersion: 1, sourceManifestDigest: "f".repeat(64),
+        netplayCompatibilityLine: "emulatorjs-netplay-v2", platformIds: ["nes"],
+        profileId: "fceumm-423-v1", protocolVersion: "retrom-netplay-v2",
+        providerId: "emulatorjs", schemaVersion: 2, sourceManifestDigest: "f".repeat(64),
+        targetContractSha256: digestTarget(targetId), targetId,
       },
       roomId: "fixture-room", sessionId: "018f0f31-26fe-7a31-9d61-4ec92f16d4c4",
       socketUrl: "wss://runtime.example.test/netplay", playerNo: 1,

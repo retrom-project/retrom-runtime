@@ -4,6 +4,10 @@
 
 - Introduce the Runtime Provider V1 declaration model while preserving all eight adapters and twelve targets from
   `0.11.2`, including WASM-4, as the single source for generated public manifests and internal dispatch.
+- Replace the duplicated runtime manifest with `provider-sources.json`; upstream source inputs and Provider Target
+  declarations now have separate, non-overlapping authority.
+- Add deterministic EmulatorJS and retrom-runtime Provider Bundle builds, closed integrity/provenance records,
+  candidate/production isolation and the Provider Module V1 Launch Envelope boundary.
 
 ## 0.11.2
 

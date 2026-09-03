@@ -8,7 +8,6 @@
   "files": [
     "dist",
     "assets",
-    "runtime-manifest.json",
     "CHANGELOG.md",
     "README.md",
     "LICENSE",
@@ -18,8 +17,7 @@
     ".": {
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
-    },
-    "./runtime-manifest.json": "./runtime-manifest.json"
+    }
   },
   "scripts": {
     "clean": "node scripts/clean.mjs",
@@ -32,7 +30,7 @@
     "package:check": "node scripts/package-check.mjs",
     "provider:input:prepare": "node scripts/emulatorjs-provider-input.mjs prepare",
     "provider:input:check": "node scripts/emulatorjs-provider-input.mjs check",
-    "provider:build": "npm run provider:input:prepare && node scripts/provider-release.mjs build",
+    "provider:build": "npm run build && npm run provider:input:prepare && RETROM_PROVIDER_BUILD_ONLY=1 node scripts/build-release.mjs",
     "provider:check": "npm run provider:input:check && node scripts/provider-release.mjs check",
     "release:build": "npm run build && npm run provider:input:prepare && node scripts/build-release.mjs"
   },

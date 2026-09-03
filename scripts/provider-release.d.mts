@@ -29,3 +29,4 @@ export function createProviderBuildMetadata(
 export function pinProviderReleaseMetadata(
   build: ProviderBuildMetadata, release: ProviderReleaseIdentity, packageVersion: string,
 ): ProviderReleaseMetadata;
+export function sourceTreeSha256(repositoryRoot?: string): string;

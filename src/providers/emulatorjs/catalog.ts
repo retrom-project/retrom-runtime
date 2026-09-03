@@ -161,7 +161,6 @@ function core(
     canvasResizePolicy: "NONE",
     contentKinds: ["SINGLE_FILE"],
     coreBundleVersion: release,
-    defaultOptions: {},
     id,
     inputMode: "STANDARD",
     release,
@@ -170,6 +169,7 @@ function core(
     sizeBytes,
     startupActions: [],
     ...overrides,
+    defaultOptions: {webgl2Enabled: "enabled", ...overrides.defaultOptions},
   };
 }
 

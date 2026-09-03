@@ -1,8 +1,17 @@
 // @vitest-environment node
 
+import {execFileSync} from "node:child_process";
+import {mkdtemp, rm, unlink, writeFile} from "node:fs/promises";
+import {tmpdir} from "node:os";
+import {join} from "node:path";
+
 import {describe, expect, it} from "vitest";
 
-import {createProviderBuildMetadata, pinProviderReleaseMetadata} from "../scripts/provider-release.mjs";
+import {
+  createProviderBuildMetadata,
+  pinProviderReleaseMetadata,
+  sourceTreeSha256,
+} from "../scripts/provider-release.mjs";
 
 const providers = [provider("emulatorjs", "1.0.0"), provider("retrom-runtime", "0.12.0")];
 
@@ -29,6 +38,20 @@ describe("Provider candidate and formal release identity", () => {
     expect(() => pinProviderReleaseMetadata(build, {
       commit: "HEAD", repository: "https://github.com/retrom-project/retrom-runtime", tag: "v0.12.0",
     }, "0.12.0")).toThrow("PROVIDER_RELEASE_INVALID");
+  });
+
+  it("hashes the working source tree while excluding tracked files deleted by the change", async () => {
+    const repository = await mkdtemp(join(tmpdir(), "provider-source-tree-"));
+    try {
+      execFileSync("git", ["init", "--quiet"], {cwd: repository});
+      await writeFile(join(repository, "kept.txt"), "kept\n");
+      await writeFile(join(repository, "retired.txt"), "retired\n");
+      execFileSync("git", ["add", "kept.txt", "retired.txt"], {cwd: repository});
+      await unlink(join(repository, "retired.txt"));
+      expect(sourceTreeSha256(repository)).toMatch(/^[0-9a-f]{64}$/u);
+    } finally {
+      await rm(repository, {force: true, recursive: true});
+    }
   });
 });
 

@@ -1,58 +1,22 @@
-import { readFile } from "node:fs/promises";
 import { describe, expect, it } from "vitest";
 
-import { rpgMakerRuntimeCatalog, runtimeAdapters, validateRuntimeConfig } from "./catalog.js";
+import {runtimeAdapters, validateRuntimeConfig} from "./catalog.js";
 import { validateOnsRuntimeConfig } from "./ons/contract.js";
 import type { RpgMakerRuntimeConfig } from "./rpgmaker/contract.js";
+import {retromRuntimeProviderDefinition} from "./providers/retrom-runtime/catalog.js";
 
 describe("runtime catalog", () => {
-  it("covers all seven supported RPG Maker generations", () => {
-    const generations = new Set(rpgMakerRuntimeCatalog.flatMap((entry) => entry.generations));
-    expect([...generations].sort()).toEqual([
-      "RPG2000", "RPG2003", "RPGMV", "RPGMZ", "RPGVX", "RPGVXACE", "RPGXP",
+  it("covers all seven supported RPG Maker targets", () => {
+    expect(retromRuntimeProviderDefinition.targets.filter((target) => target.id.startsWith("rpgmaker-"))
+      .map((target) => target.id)).toEqual([
+      "rpgmaker-2000", "rpgmaker-2003", "rpgmaker-mv", "rpgmaker-mz", "rpgmaker-vx",
+      "rpgmaker-vx-ace", "rpgmaker-xp",
     ]);
   });
 
-  it("matches the RPG Maker entries in the release manifest", async () => {
-    const manifest = JSON.parse(await readFile("runtime-manifest.json", "utf8")) as {
-      cores: Array<{
-        adapterAbi: string;
-        adapterId: string;
-        adapterKind: string;
-        generation: string;
-        runtimeId: string;
-      }>;
-    };
-    const catalogByGeneration = new Map<string, {
-      adapterAbi: string;
-      adapterId: string;
-      adapterKind: string;
-      runtimeId: string;
-    }>(rpgMakerRuntimeCatalog.flatMap((entry) => entry.generations.map((generation) => [
-      generation,
-      {
-        adapterAbi: entry.adapterAbi,
-        adapterId: entry.adapterId,
-        adapterKind: entry.adapterKind,
-        runtimeId: entry.runtimeId,
-      },
-    ])));
-
-    for (const core of manifest.cores.filter((entry) => entry.generation.startsWith("RPG"))) {
-      expect(catalogByGeneration.get(core.generation)).toEqual({
-        adapterAbi: core.adapterAbi,
-        adapterId: core.adapterId,
-        adapterKind: core.adapterKind,
-        runtimeId: core.runtimeId,
-      });
-    }
-  });
-
-  it("matches every public adapter descriptor in the release manifest", async () => {
-    const manifest = JSON.parse(await readFile("runtime-manifest.json", "utf8")) as {
-      adapters: typeof runtimeAdapters;
-    };
-    expect(manifest.adapters).toEqual(runtimeAdapters);
+  it("derives every legacy execution descriptor from the Provider declaration", () => {
+    expect(runtimeAdapters.map((adapter) => [adapter.adapterId, adapter.adapterKind, adapter.adapterAbi]))
+      .toEqual(retromRuntimeProviderDefinition.adapters.map((adapter) => [adapter.id, adapter.kind, adapter.abi]));
   });
 
   it("accepts a host-independent EasyRPG session", () => {
@@ -77,7 +41,8 @@ describe("runtime catalog", () => {
         scriptEncoding: "gbk",
       },
     })).not.toThrow();
-    expect(rpgMakerRuntimeCatalog.flatMap((entry) => entry.generations)).not.toContain("ONS");
+    expect(retromRuntimeProviderDefinition.targets.filter((target) => target.id.startsWith("rpgmaker-"))
+      .map((target) => target.id)).not.toContain("onscripter-yuri");
     expect(runtimeAdapters.map((entry) => entry.adapterKind)).toContain("ONS_YURI_WEB");
   });
 
@@ -92,7 +57,8 @@ describe("runtime catalog", () => {
         runtimeBaseUrl: "https://runtime.example/butterscotch/",
       },
     })).not.toThrow();
-    expect(rpgMakerRuntimeCatalog.flatMap((entry) => entry.generations)).not.toContain("BUTTERSCOTCH");
+    expect(retromRuntimeProviderDefinition.targets.filter((target) => target.id.startsWith("rpgmaker-"))
+      .map((target) => target.id)).not.toContain("butterscotch-gamemaker");
   });
 });
 

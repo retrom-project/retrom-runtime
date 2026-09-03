@@ -4,9 +4,9 @@
 
 ## 边界
 
-- `src/` 只实现运行时生命周期、adapter、checkpoint codec 与宿主无关的配置校验。
+- `src/` 实现 Provider declaration、Provider Module V1、运行时生命周期、Target 私有实现、checkpoint codec 与宿主无关的 Envelope 校验。
 - `assets/` 只保存项目自有 bridge 与小型文本资产；不得保存第三方核心源码、源码补丁或构建产物。
-- `runtime-manifest.json` 是支持核心、上游 Release、adapter ABI 与发布资产的唯一机器事实源。
+- `src/providers/*/catalog.ts` 生成的 Provider declaration 是 Target、能力、checkpoint contract 与运行文件的唯一机器事实源；`provider-sources.json` 只记录第三方上游/本地构建来源，不能声明 Target 或宿主路由。
 - 本仓库不得编译第三方核心。第三方核心的源码修改、构建脚本、质量门禁和 Release 全部由对应 fork 的
   `retrom/<baseline>` 分支维护；本仓库只聚合固定 fork tag/commit 的 Release 资产并提供统一接口。
 - `tests/` 和与源码同目录的 `*.test.ts` 覆盖运行时行为；宿主产品的导入、发布和权限测试留在宿主仓库。
@@ -15,15 +15,14 @@
 ## 工作方式
 
 1. 修改行为前先补能在旧行为失败的回归测试。
-2. 新增第三方核心时先在独立 fork 完成源码、构建和 Release，再作为未改变既有核心行为的独立
-   manifest 项和 adapter 接入；不得在本仓库临时加入源码构建，也不得使用默认 fallback。
+2. 新增第三方核心时先在独立 fork 完成源码、构建和 Release，再更新 `provider-sources.json` 并在 Provider declaration 增加独立 Target；不得在本仓库临时加入源码构建、向 candidate 注入 Target 或使用默认 fallback。
 3. 保持配置显式、错误码稳定、生命周期可清理；不为推测风险增加复杂框架。
 4. 第三方版本必须固定 repository、tag/commit、asset 文件名和 adapter ABI；不得使用 `latest` 或浮动分支。
 5. 不提交第三方游戏、RTP、运行时二进制、凭据或本机缓存。
 
 ## 核心最低能力准入
 
-- 每个登记在 `runtime-manifest.json` 的核心都必须在 Chrome 中支持标准手柄完成至少方向移动、确认和取消；
+- 每个登记在 Provider declaration 的 Target 都必须在 Chrome 中支持标准手柄完成至少方向移动、确认和取消；
   上游 Web 核心缺少某个浏览器手柄边界时，由本仓库 adapter 补齐最小映射并在 `exit()` 时释放全部按键，不能把
   “可用键盘或鼠标操作”当作手柄能力。
 - 每个核心都必须提供非空、格式明确且有大小上限的即时存档，并能在新的 runtime 实例中直接恢复到该存档状态；
@@ -41,7 +40,7 @@
   runtime 实例的网络请求次数回归，以及整包下载/Range 策略的聚焦测试。
 - 新核心或改变输入、checkpoint、恢复、核心自身退出行为的版本，必须先在本仓库留下旧行为必红的控制与存档单元回归，再通过
   宿主产品的真实审核预览、Product Launch、即时存档、不同 Launch 恢复和恢复后输入验证。缺少任一能力的候选
-  不得加入 manifest、合并到 `master` 或发布稳定 tag。
+  不得加入 Provider declaration、合并到 `master` 或发布稳定 tag。
 - 核心差异只能体现在各自 adapter、checkpoint codec 和显式 ABI 中；不得通过降低上述最低能力、要求宿主写
   核心专用旁路或跳过产品验证来完成接入。
 
@@ -56,33 +55,23 @@ npm run build
 npm run package:check
 ```
 
-发布 tag 前还必须运行 `npm run release:build`，确认固定 fork Release 可下载、metadata 匹配且聚合包可由干净目录验证。
+发布 tag 前还必须运行 `npm run provider:input:check`、`npm run provider:build`、`npm run provider:check` 与 `npm run release:build`，确认固定 fork Release、Provider Bundle、许可和聚合包可由干净目录确定性验证。
 
 ## 提交与发布
 
 - 完成一个功能或 bug 修复后单独提交；不要混入无关格式化。
 - PR 到 `master` 必须通过 `.github/workflows/quality.yml`；该门禁会聚合并验证固定 fork Release，但不得编译核心。
 - `v*` tag 由 `.github/workflows/release.yml` 构建 GitHub Release；tag 不移动、不覆盖。
-- 发布产物是兼容边界。破坏公共类型、checkpoint 格式或 adapter ABI 时必须升级相应版本并在 CHANGELOG 说明。
-- 已登记 core 的 `gameCompatibilityLine` 不得原地改变；无法继续读取既有游戏输入时建立新 core identity。
-  checkpoint 格式变化时更新 `saveAbi`，并只在真实验证后把旧值保留在 `readableSaveAbis`。宿主按当前
-  runtime 向前运行，旧存档不兼容时禁用；本仓库不以保留旧 bundle 或 runtime 回滚作为兼容方案。
+- Provider Bundle 与 Target contract 是兼容边界。破坏 Provider Module、Launch Envelope 消费、checkpoint 格式或 Target 行为时必须升级相应版本并在 CHANGELOG 说明。
+- 已登记 Target 的 `gameCompatibilityLine` 不得原地改变。checkpoint 格式变化时更新 `writeFormat`，并只在真实验证后把旧值保留在 `readFormats`。宿主只向前激活更高 Provider 版本；旧存档不兼容时禁用恢复，不保留旧 Bundle 或设计运行时回滚。
 
 ## 与 Retrom 的本地联调
 
 - 功能分支完成旧行为必红的回归和聚焦门禁后，先保留在分支，不要为了让 Retrom 取得候选 bytes 而提前合并、打 tag 或创建 Release。
-- 相邻 Retrom checkout 使用 `RETROM_RUNTIME_DEV_ROOT=/absolute/path/to/this/checkout make dev`。该入口默认只链接本仓库已构建的 `dist`，不会改变 Retrom 的正式 manifest/package lock 或 core bytes；宿主必须以显式 transpile/watch 和独立的被忽略 distDir 编译该链接，不能复用正式包的持久前端 bundle 缓存。普通 adapter 改动只需 `npm run build`，该步骤由 Retrom link target 自动执行。
-- 修改第三方核心时，进入对应 fork，按其根 `AGENTS.md` 运行
-  `.github/rpg-runtime/build-web.sh <absolute-output-directory>` 与
-  `.github/rpg-runtime/verify-release.py`。联调阶段不提前打 tag：在本仓库设置
-  `RETROM_RUNTIME_DEV_RELEASE_OVERRIDES='{"onsyuri":"/absolute/output"}'`（EasyRPG、mkxp、KiriKiri 与
-  Butterscotch、TyranoScript 与 WASM-4 分别使用 `easyrpg`、`mkxp`、`kirikiri2`、`butterscotch`、`tyranoscript`、`wasm4`）运行
-  `npm run release:build`；再把同一变量与 `RETROM_RUNTIME_DEV_ROOT`、`RETROM_RUNTIME_DEV_INCLUDE_ASSETS=true`
-  一并传给 fresh Retrom dev 实例。该 override 只替换被忽略的本地 stage，不修改正式 manifest、package lock 或 Release identity。
-- 必须先用本地 fork 资产完成真实 Retrom 产品链，再在 fork 打不可移动 tag；随后本仓库才把 manifest 固定到该
-  fork Release。不得把本地 observed digest、工作树路径或未发布版本写进正式 manifest、证据或文档。
-- 必须用本地链接完成受影响 core 的真实 Retrom 导入、审核预览、Product Launch、控制、checkpoint 与不同 Launch 恢复验证。确认通过后才合并 PR，按 package version 创建一个新的不可移动 `v*` tag，并等待 Release workflow 成功。
-- Release 完成后，Retrom 先运行 `make retrom-runtime-dev-unlink`，再以独立提交固定新 tag、tag commit、package asset 与 aggregate runtime assets，重新运行正式依赖门禁和同一产品 Case。不得把本地 observed digest、工作树路径或未发布版本写进正式 manifest、证据或文档。
+- 使用 Retrom PFB 流程，在同一 `.worktree/<pfb>/project/` 下放置 Retrom、本仓库和涉及的 core worktree。PFB spec 必须固定每个 checkout 的 commit、dirty/source tree digest；`RUNTIME_ROOT` 与 `CORE_ROOTS` 只能指向该 PFB 树。
+- `npm run candidate:build -- --spec <pfb-spec> --output <candidate-root>` 生成完整 Provider Bundle V1。core candidate 只能覆盖 `provider-sources.json` 已声明的来源，不能新增 Target、改写宿主 binding 或污染 production lock。
+- PFB 必须用 candidate Bundle 完成真实 Retrom 导入、Review Preview、Product Launch、共享 dispatcher、输入、checkpoint、不同 Launch 恢复和退出清理。确认通过后才合并 PR、发布 core tag，再发布本仓库新的不可移动 `v*` tag。
+- Release 完成后，Retrom 以独立提交固定正式 Provider descriptor/archive 并重跑同一产品 Case。candidate digest、工作树路径或未发布版本不得写入 production lock 或正式证据。
 
 ## 上游 fork 维护
 

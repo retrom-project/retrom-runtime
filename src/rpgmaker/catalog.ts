@@ -5,12 +5,6 @@ import type {
   RpgMakerRuntimeConfig,
 } from "./contract.js";
 
-export const rpgMakerRuntimeCatalog = [
-  { runtimeId: "easyrpg", generations: ["RPG2000", "RPG2003"], adapterKind: "EASYRPG_WEB", adapterId: "easyrpg-web", adapterAbi: "easyrpg-save" },
-  { runtimeId: "mkxp", generations: ["RPGXP", "RPGVX", "RPGVXACE"], adapterKind: "MKXP_LIBRETRO_WEB", adapterId: "mkxp-libretro-web", adapterAbi: "mkxp-state-compact" },
-  { runtimeId: "native", generations: ["RPGMV", "RPGMZ"], adapterKind: "NATIVE_WEB", adapterId: "native-web", adapterAbi: "native-save" },
-] as const;
-
 export function validateRpgMakerRuntimeConfig(config: RpgMakerRuntimeConfig): void {
   if (!config || typeof config !== "object" || !boundedText(config.sessionId, 200) ||
     !validGeneration(config.generation) || typeof config.validationPurpose !== "boolean" ||

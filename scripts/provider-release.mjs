@@ -159,22 +159,29 @@ function releaseCommit() {
   return value;
 }
 
-function sourceTreeSha256() {
+export function sourceTreeSha256(repositoryRoot = root) {
   const paths = spawnSync("git", ["ls-files", "--cached", "--others", "--exclude-standard", "-z"], {
-    cwd: root, encoding: "buffer",
+    cwd: repositoryRoot, encoding: "buffer",
   });
-  const stages = spawnSync("git", ["ls-files", "--stage", "-z"], {cwd: root, encoding: "buffer"});
+  const stages = spawnSync("git", ["ls-files", "--stage", "-z"], {cwd: repositoryRoot, encoding: "buffer"});
   if (paths.status !== 0 || stages.status !== 0) {throw new Error("PROVIDER_SOURCE_TREE_UNAVAILABLE");}
   const modes = new Map(stages.stdout.toString("utf8").split("\0").filter(Boolean).map((line) => {
     const [prefix, path] = line.split("\t");
     return [path, prefix.split(" ", 1)[0]];
   }));
   const records = paths.stdout.toString("utf8").split("\0").filter(Boolean)
-    .sort((left, right) => Buffer.from(left).compare(Buffer.from(right))).map((path) => {
-      const info = lstatSync(join(root, path));
+    .sort((left, right) => Buffer.from(left).compare(Buffer.from(right))).flatMap((path) => {
+      let info;
+      try {info = lstatSync(join(repositoryRoot, path));}
+      catch (error) {
+        if (error?.code === "ENOENT") {return [];}
+        throw error;
+      }
       const mode = info.isSymbolicLink() ? "120000" : modes.get(path) ?? ((info.mode & 0o100) ? "100755" : "100644");
-      const contents = mode === "120000" ? Buffer.from(readlinkSync(join(root, path))) : readFileSync(join(root, path));
-      return {mode, path, sha256: sha256(contents)};
+      const contents = mode === "120000"
+        ? Buffer.from(readlinkSync(join(repositoryRoot, path)))
+        : readFileSync(join(repositoryRoot, path));
+      return [{mode, path, sha256: sha256(contents)}];
     });
   return sha256(Buffer.from(canonicalJson(records)));
 }

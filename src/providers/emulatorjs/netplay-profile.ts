@@ -39,13 +39,12 @@ export function validateEmulatorJsNetplayProfile(
   const declaration = implementation.netplayProfile;
   const value = envelope.netplay.profile;
   if (!declaration || !validEnvelopeMode(envelope, declaration) || !isRecord(value) || !exactProfileKeys(value) ||
-    !validIdentity(value, implementation, declaration) || !validLimits(value, declaration) ||
-    !validPlatformIds(value.platformIds) || !validOptions(value.defaultCoreOptions)) {throw invalid();}
-  const options = value.defaultCoreOptions as Record<string, string>;
-  if (!Object.entries(implementation.defaultOptions).every(([key, option]) => options[key] === option)) {
-    throw invalid();
-  }
-  return {defaultCoreOptions: {...options}, maxStateBytes: value.maxStateBytes as number};
+    !validIdentity(value, envelope, implementation, declaration) || !validLimits(value, declaration) ||
+    !validPlatformIds(value.platformIds)) {throw invalid();}
+  return {
+    defaultCoreOptions: {...implementation.defaultOptions},
+    maxStateBytes: value.maxStateBytes as number,
+  };
 }
 
 function validEnvelopeMode(envelope: LaunchEnvelopeV1, declaration: EmulatorJsNetplayProfileDeclaration) {
@@ -54,23 +53,24 @@ function validEnvelopeMode(envelope: LaunchEnvelopeV1, declaration: EmulatorJsNe
 }
 function exactProfileKeys(value: Record<string, unknown>) {
   return exactKeys(value, [
-    "canonicalHistoryFrames", "checkpointEveryFrames", "controlCount", "coreArtifactId",
-    "coreArtifactSha256", "defaultCoreOptions", "dependencySnapshotDigest", "emulatorjsVersion",
+    "canonicalHistoryFrames", "checkpointEveryFrames", "controlCount", "coreId", "dependencySnapshotDigest",
     "gameVariantRevisionId", "maxPlayers", "maxPredictionFrames", "maxRollbackFrames", "maxStateBytes",
-    "netplayAdapterId", "platformIds", "playerAdapterId", "profileId", "protocolVersion", "schemaVersion",
-    "sourceManifestDigest",
+    "netplayCompatibilityLine", "platformIds", "profileId", "protocolVersion", "providerId", "schemaVersion",
+    "sourceManifestDigest", "targetContractSha256", "targetId",
   ]);
 }
 function validIdentity(
   value: Record<string, unknown>,
-  implementation: {coreSha256: string; release: string},
+  envelope: LaunchEnvelopeV1,
+  implementation: {release: string},
   declaration: EmulatorJsNetplayProfileDeclaration,
 ) {
-  return implementation.release === "4.2.3" && value.schemaVersion === 1 &&
+  return implementation.release === "4.2.3" && value.schemaVersion === 2 &&
     value.protocolVersion === "retrom-netplay-v2" && value.profileId === declaration.id &&
-    value.emulatorjsVersion === implementation.release && value.playerAdapterId === "ejs-4.2.3-v2" &&
-    value.netplayAdapterId === "ejs-netplay-4.2.3-v1" && value.coreArtifactSha256 === implementation.coreSha256 &&
-    nonEmpty(value.coreArtifactId) && nonEmpty(value.gameVariantRevisionId) && digest(value.sourceManifestDigest) &&
+    value.providerId === envelope.runtime.providerId && value.targetId === envelope.runtime.targetId &&
+    value.targetContractSha256 === envelope.runtime.targetContractSha256 &&
+    value.netplayCompatibilityLine === "emulatorjs-netplay-v2" && nonEmpty(value.coreId) &&
+    nonEmpty(value.gameVariantRevisionId) && digest(value.sourceManifestDigest) &&
     digest(value.dependencySnapshotDigest);
 }
 function validLimits(value: Record<string, unknown>, declaration: EmulatorJsNetplayProfileDeclaration) {
@@ -95,9 +95,4 @@ function exactKeys(value: Record<string, unknown>, keys: readonly string[]) {
 }
 function nonEmpty(value: unknown): value is string {return typeof value === "string" && value.length > 0 && value.length <= 256;}
 function digest(value: unknown): value is string {return typeof value === "string" && /^[0-9a-f]{64}$/u.test(value);}
-function validOptions(value: unknown) {
-  return isRecord(value) && Object.keys(value).length <= 32 && Object.entries(value).every(([key, option]) =>
-    !["__proto__", "constructor", "prototype"].includes(key) && /^[\x20-\x7E]{1,128}$/u.test(key) &&
-    typeof option === "string" && /^[\x20-\x7E]{0,128}$/u.test(option));
-}
 function invalid() {return new Error("PLAYER_NETPLAY_PROFILE_INVALID");}

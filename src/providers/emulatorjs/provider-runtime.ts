@@ -339,6 +339,7 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
       const frame = await this.host.mountFrame(target, {resourceRole: null});
       const runtimeWindow = frame.contentWindow as EjsWindow;
       this.runtimeWindow = runtimeWindow;
+      this.createMountPoint(runtimeWindow);
       this.startBarrier = createStartBarrier();
       this.configure(runtimeWindow);
       if (this.netplayProfile) {
@@ -378,6 +379,20 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
       await (this.exitPromise ??= this.performExit());
       throw error;
     }
+  }
+
+  private createMountPoint(runtimeWindow: Window) {
+    const body = runtimeWindow.document.body;
+    if (!body) {throw contractError();}
+    const mountPoint = runtimeWindow.document.createElement("div");
+    mountPoint.id = "retrom-emulator";
+    mountPoint.style.width = "100%";
+    mountPoint.style.height = "100%";
+    body.replaceChildren(mountPoint);
+    body.style.margin = "0";
+    body.style.width = "100vw";
+    body.style.height = "100vh";
+    body.style.overflow = "hidden";
   }
 
   private configure(runtimeWindow: EjsWindow) {

@@ -1,25 +1,7 @@
-import { readFile } from "node:fs/promises";
 import { describe, expect, it } from "vitest";
 
 import { projectProviderManifest } from "./manifest.js";
 import { retromRuntimeProviderDefinition } from "../providers/retrom-runtime/catalog.js";
-
-type LegacyManifest = {
-  packageVersion: string;
-  adapters: Array<{
-    adapterKind: string;
-    adapterId: string;
-    adapterAbi: string;
-    checkpointFormat: string;
-  }>;
-  cores: Array<{
-    id: string;
-    adapterKind: string;
-    adapterId: string;
-    adapterAbi: string;
-    gameCompatibilityLine: string;
-  }>;
-};
 
 const targetIds = [
   "butterscotch-gamemaker",
@@ -37,28 +19,10 @@ const targetIds = [
 ];
 
 describe("retrom-runtime provider declarations", () => {
-  it("preserves every adapter and target shipped by v0.11.1", async () => {
-    const legacy = JSON.parse(await readFile("runtime-manifest.json", "utf8")) as LegacyManifest;
+  it("declares the complete 0.12.0 target closure in one source", () => {
     expect(retromRuntimeProviderDefinition.providerVersion).toBe("0.12.0");
-    expect(legacy.packageVersion).toBe(retromRuntimeProviderDefinition.providerVersion);
     expect(retromRuntimeProviderDefinition.targets.map((target) => target.id)).toEqual(targetIds);
-    expect(retromRuntimeProviderDefinition.adapters).toHaveLength(legacy.adapters.length);
-    expect(retromRuntimeProviderDefinition.targets).toHaveLength(legacy.cores.length);
-
-    for (const core of legacy.cores) {
-      const target = retromRuntimeProviderDefinition.targets.find((entry) => entry.id === core.id);
-      const adapter = retromRuntimeProviderDefinition.adapters.find((entry) => entry.id === target?.adapterId);
-      expect(target, core.id).toMatchObject({
-        adapterId: core.adapterId,
-        gameCompatibilityLine: core.gameCompatibilityLine,
-        id: core.id,
-      });
-      expect(adapter, core.adapterId).toMatchObject({
-        abi: core.adapterAbi,
-        id: core.adapterId,
-        kind: core.adapterKind,
-      });
-    }
+    expect(retromRuntimeProviderDefinition.adapters).toHaveLength(8);
   });
 
   it("projects a public manifest without internal adapter identities", () => {

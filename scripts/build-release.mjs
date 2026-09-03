@@ -3,19 +3,20 @@ import { access, mkdir, readFile, cp, rm, writeFile } from "node:fs/promises";
 import { basename, join } from "node:path";
 import {fileURLToPath} from "node:url";
 import { parseDevReleaseOverrides } from "./dev-release-overrides.mjs";
-import { loadManifest, sha256 } from "./manifest.mjs";
+import { loadProviderSources, sha256 } from "./provider-sources.mjs";
 import { buildCurrentProviderBuild, pinCurrentProviderRelease } from "./provider-release.mjs";
 
 const root = new URL("../", import.meta.url);
-const candidateBuild = process.env.RETROM_PFB_CANDIDATE_BUILD === "1" ||
-  process.env.RETROM_PROVIDER_BUILD_MODE === "candidate";
-const formalBuild = process.env.RETROM_PROVIDER_BUILD_MODE === "release";
+const requestedBuildMode = process.env.RETROM_PROVIDER_BUILD_MODE ?? "candidate";
+const candidateBuild = process.env.RETROM_PFB_CANDIDATE_BUILD === "1" || requestedBuildMode === "candidate";
+const formalBuild = requestedBuildMode === "release";
+const providerOnly = process.env.RETROM_PROVIDER_BUILD_ONLY === "1";
 if (candidateBuild === formalBuild) {throw new Error("PROVIDER_BUILD_MODE_REQUIRED");}
-await rejectCandidateDeclaration(root);
-const manifest = await loadManifest(root);
+await rejectRetiredCandidateDeclaration(root);
+const sources = await loadProviderSources(root);
 const devReleaseOverrides = parseDevReleaseOverrides(
   process.env.RETROM_RUNTIME_DEV_RELEASE_OVERRIDES,
-  manifest.upstreamReleases,
+  sources.upstreamReleases,
 );
 const commit = releaseCommit();
 const stage = new URL("../release/stage/", import.meta.url);
@@ -26,10 +27,10 @@ await cp(new URL("../dist", import.meta.url), new URL("library", stage), { recur
 for (const document of ["CHANGELOG.md", "LICENSE", "THIRD_PARTY_NOTICES.md"]) {
   await publish(await readFile(new URL(`../${document}`, import.meta.url)), new URL(document, stage));
 }
-for (const asset of manifest.localAssets) {
+for (const asset of sources.localAssets) {
   await publish(await readFile(new URL(asset.source, root)), new URL(asset.output, stage));
 }
-for (const release of manifest.upstreamReleases) {
+for (const release of sources.upstreamReleases) {
   const devRoot = devReleaseOverrides.get(release.id);
   if (!devRoot) {
     const metadata = await download(release.metadataUrl, 65536);
@@ -42,26 +43,25 @@ for (const release of manifest.upstreamReleases) {
     await publish(contents, new URL(asset.output, stage));
   }
 }
-const records = await collectRecords(manifest, stage);
+const records = await collectRecords(sources, stage);
 const metadata = {
   schemaVersion: 1,
   repository: "https://github.com/retrom-project/retrom-runtime",
-  tag: `v${manifest.packageVersion}`,
+  tag: `v${sources.packageVersion}`,
   commit,
-  version: manifest.packageVersion,
-  publicApiVersion: manifest.publicApiVersion,
+  version: sources.packageVersion,
+  publicApiVersion: sources.publicApiVersion,
   files: records,
 };
 await writeFile(new URL("retrom-runtime-release.json", output), `${JSON.stringify(metadata, null, 2)}\n`);
-await writeFile(new URL("runtime-manifest.json", stage), `${JSON.stringify(manifest, null, 2)}\n`);
 const provider = await buildCurrentProviderBuild({
   stageRoot: fileURLToPath(stage),
 });
 await verifyBuiltProvider(provider);
 if (formalBuild) {
-  assertFormalReleaseEnvironment(commit, manifest.packageVersion);
+  assertFormalReleaseEnvironment(commit, sources.packageVersion);
   await pinCurrentProviderRelease({release: {
-    commit, repository: "https://github.com/retrom-project/retrom-runtime", tag: `v${manifest.packageVersion}`,
+    commit, repository: "https://github.com/retrom-project/retrom-runtime", tag: `v${sources.packageVersion}`,
   }});
 }
 
@@ -69,19 +69,21 @@ function assertFormalReleaseEnvironment(commit, packageVersion) {
   if (process.env.GITHUB_REF_TYPE !== "tag" || process.env.GITHUB_REF_NAME !== `v${packageVersion}` ||
     process.env.GITHUB_SHA !== commit) {throw new Error("PROVIDER_FORMAL_RELEASE_IDENTITY_INVALID");}
 }
-const archive = `retrom-runtime-${manifest.packageVersion}.tar.gz`;
-const tar = spawnSync("tar", ["--sort=name", "--mtime=UTC 2020-01-01", "--owner=0", "--group=0", "--numeric-owner", "-czf", archive, "-C", "stage", "."], {
-  cwd: new URL("../release", import.meta.url),
-  stdio: "inherit",
-});
-if (tar.status !== 0) {throw new Error("RELEASE_ARCHIVE_FAILED");}
-const npmPackage = createNpmPackage(manifest.packageVersion);
-console.log(`release: ${archive}, ${npmPackage}`);
+if (!providerOnly) {
+  const archive = `retrom-runtime-${sources.packageVersion}.tar.gz`;
+  const tar = spawnSync("tar", ["--sort=name", "--mtime=UTC 2020-01-01", "--owner=0", "--group=0", "--numeric-owner", "-czf", archive, "-C", "stage", "."], {
+    cwd: new URL("../release", import.meta.url),
+    stdio: "inherit",
+  });
+  if (tar.status !== 0) {throw new Error("RELEASE_ARCHIVE_FAILED");}
+  const npmPackage = createNpmPackage(sources.packageVersion);
+  console.log(`release: ${archive}, ${npmPackage}`);
+}
 
 async function verifyBuiltProvider(provider) {
   const retrom = provider.metadata.providers.find((entry) => entry.providerId === "retrom-runtime");
   const emulatorjs = provider.metadata.providers.find((entry) => entry.providerId === "emulatorjs");
-  if (retrom?.providerVersion !== manifest.packageVersion || emulatorjs?.providerVersion !== "1.0.0") {
+  if (retrom?.providerVersion !== sources.packageVersion || emulatorjs?.providerVersion !== "1.0.0") {
     throw new Error("PROVIDER_RELEASE_INVALID");
   }
 }
@@ -146,14 +148,12 @@ async function collectRecords(value, directory) {
   }));
 }
 
-async function rejectCandidateDeclaration(base) {
+async function rejectRetiredCandidateDeclaration(base) {
   try {
     await access(new URL("candidate/runtime-candidate.json", base));
   } catch (error) {
     if (error?.code === "ENOENT") {return;}
     throw error;
   }
-  if (process.env.RETROM_PFB_CANDIDATE_BUILD !== "1") {
-    throw new Error("PFB_CANDIDATE_FORBIDDEN");
-  }
+  throw new Error("PROVIDER_TARGET_DECLARATION_REQUIRED");
 }

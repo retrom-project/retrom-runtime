@@ -56,6 +56,8 @@ describe("Butterscotch Web adapter", () => {
     expect(workers[0]?.messages).toContainEqual(expect.objectContaining({ type: "GAMEPAD" }));
     expect(adapter.getCheckpointAvailability()).toEqual({ available: true, blocker: null });
     expect(document.activeElement).toBe(canvas);
+    expect(Number.parseFloat(canvas.style.width)).toBeCloseTo(1_333.333, 2);
+    expect(Number.parseFloat(canvas.style.height)).toBeCloseTo(1_000, 2);
 
     await adapter.exit();
     expect(workers[0]?.terminated).toBe(true);
@@ -206,4 +208,14 @@ function mockProject() {
 function installIsolatedBrowserGlobals() {
   Object.defineProperty(window, "crossOriginIsolated", { configurable: true, value: true });
   Object.defineProperty(window, "SharedArrayBuffer", { configurable: true, value: globalThis.SharedArrayBuffer });
+  vi.stubGlobal("ResizeObserver", class {
+    constructor(private readonly callback: ResizeObserverCallback) {}
+    disconnect() {}
+    observe(target: Element) {
+      this.callback([{
+        contentRect: { height: 1_000, width: 1_440 }, target,
+      } as ResizeObserverEntry], this as unknown as ResizeObserver);
+    }
+    unobserve() {}
+  });
 }

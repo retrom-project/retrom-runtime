@@ -15,7 +15,11 @@ type HostMessage = {
   samples?: Float32Array;
 };
 type HostCommand = "CHECKPOINT" | "PAUSE" | "RESTORE" | "RESUME" | "SCREENSHOT" | "STATUS" | "STOP";
-type WorkerWindow = Window & { SharedArrayBuffer?: typeof SharedArrayBuffer; Worker: typeof Worker };
+type WorkerWindow = Window & {
+  ResizeObserver?: typeof ResizeObserver;
+  SharedArrayBuffer?: typeof SharedArrayBuffer;
+  Worker: typeof Worker;
+};
 
 const checkpointFormat = "butterscotch-checkpoint-v2";
 const commandTimeoutMs = 30_000;
@@ -48,10 +52,30 @@ export async function mountButterscotch(
     alignItems: "center", display: "flex", height: "100%", justifyContent: "center", overflow: "hidden", width: "100%",
   });
   Object.assign(canvas.style, {
-    background: "#000", display: "block", maxHeight: "100%", maxWidth: "100%", outline: "none", touchAction: "none",
+    background: "#000", display: "block", outline: "none", touchAction: "none",
   });
   surface.append(canvas);
   target.replaceChildren(surface);
+  const fitCanvas = (surfaceWidth: number, surfaceHeight: number) => {
+    if (surfaceWidth <= 0 || surfaceHeight <= 0) {return;}
+    const scale = Math.min(surfaceWidth / canvas.width, surfaceHeight / canvas.height);
+    canvas.style.width = `${canvas.width * scale}px`;
+    canvas.style.height = `${canvas.height * scale}px`;
+  };
+  const fitCanvasToSurface = () => {
+    const bounds = surface.getBoundingClientRect();
+    fitCanvas(bounds.width, bounds.height);
+  };
+  const ResizeObserverConstructor = (frameWindow as WorkerWindow).ResizeObserver;
+  const resizeObserver = ResizeObserverConstructor
+    ? new ResizeObserverConstructor((entries) => {
+      const entry = entries.find((value) => value.target === surface);
+      if (entry) {fitCanvas(entry.contentRect.width, entry.contentRect.height);}
+    })
+    : null;
+  fitCanvasToSurface();
+  resizeObserver?.observe(surface);
+  frameWindow.addEventListener("resize", fitCanvasToSurface);
   const runtimeBase = new URL(normalizedBase(config.adapter.runtimeBaseUrl), frameWindow.document.baseURI);
   const workerUrl = new URL("worker.mjs", runtimeBase);
   const worker = new (frameWindow as WorkerWindow).Worker(workerUrl, { type: "module" });
@@ -134,6 +158,8 @@ export async function mountButterscotch(
   }
 
   function cleanup() {
+    resizeObserver?.disconnect();
+    frameWindow.removeEventListener("resize", fitCanvasToSurface);
     frameWindow.cancelAnimationFrame(gamepadFrame);
     for (const keyCode of pressedKeys) {worker.postMessage({ keyCode, pressed: false, type: "KEY" });}
     pressedKeys.clear();

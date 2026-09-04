@@ -26,7 +26,7 @@ describe("retrom-runtime Provider Module V1", () => {
     expect({providerApiVersion, providerId, providerVersion}).toEqual({
       providerApiVersion: 1,
       providerId: "retrom-runtime",
-      providerVersion: "0.13.0",
+      providerVersion: "0.14.0",
     });
     const envelope = wasmEnvelope();
     expect(validateLaunchRequest(envelope)).toBe(envelope);
@@ -309,7 +309,7 @@ function fakeRuntime(events: GameRuntimeEvent[]) {
     exit,
     getCanvas: () => null,
     getCapabilities: () => ({
-      checkpoint: true, contentSources: ["WASM4_CART_V1"], frameCounter: true, pause: true,
+      checkpoint: true, contentSources: ["WASM4_CART"], frameCounter: true, pause: true,
       screenshot: true, standardGamepad: true, validationProbes: [], volume: false,
     }),
     getCheckpointAvailability: () => ({available: true, blocker: null}),
@@ -330,7 +330,7 @@ function wasmEnvelope(): LaunchEnvelopeV1 {
   return {
     netplay: null,
     resources: [{
-      kind: "WASM4_CART_V1" as const,
+      kind: "WASM4_CART" as const,
       ordinal: 0,
       rangeRequired: false,
       role: "game",
@@ -363,7 +363,7 @@ function wasmEnvelope(): LaunchEnvelopeV1 {
       moduleUrl: `/runtime/providers/retrom-runtime/${bundleDigest}/client.mjs`,
       providerApiVersion: 1 as const,
       providerId: "retrom-runtime",
-      providerVersion: "0.13.0",
+      providerVersion: "0.14.0",
       runtimeBaseUrl: `/runtime/providers/retrom-runtime/${bundleDigest}/`,
       targetContractSha256: wasmTargetDigest,
       targetId: "wasm4",
@@ -379,7 +379,7 @@ function wasmEnvelope(): LaunchEnvelopeV1 {
       title: "Fixture",
       warnings: [],
     },
-    targetOptions: {kind: "NONE_V1" as const},
+    targetOptions: {},
     validation: null,
   };
 }
@@ -396,7 +396,7 @@ function rpgMvEnvelope(): LaunchEnvelopeV1 {
       cleanupUrl: "https://runtime.test/__retrom/cleanup",
       contentDigest: digest,
       entryUrl: "https://runtime.test/__retrom/bootstrap",
-      kind: "NATIVE_WEB_V1",
+      kind: "NATIVE_WEB",
       ordinal: 0,
       origin: "https://runtime.test",
       role: "game",
@@ -411,7 +411,7 @@ function rpgMvEnvelope(): LaunchEnvelopeV1 {
       moduleUrl: `/runtime/providers/retrom-runtime/${bundleDigest}/client.mjs`,
       providerApiVersion: 1,
       providerId: "retrom-runtime",
-      providerVersion: "0.13.0",
+      providerVersion: "0.14.0",
       runtimeBaseUrl: `/runtime/providers/retrom-runtime/${bundleDigest}/`,
       targetContractSha256: digestTarget("rpgmaker-mv"),
       targetId: "rpgmaker-mv",
@@ -427,7 +427,7 @@ function rpgMvEnvelope(): LaunchEnvelopeV1 {
       title: "Fixture",
       warnings: [],
     },
-    targetOptions: {kind: "RPGMAKER_V1", expectedRestorePosition: null},
+    targetOptions: {expectedRestorePosition: null},
     validation: {
       input: {fixtureState: 4, mapId: 2, playerX: 8, playerY: 9},
       probeId: "rpgmaker.position.v1",
@@ -442,39 +442,39 @@ function targetEnvelope(targetId: string): LaunchEnvelopeV1 {
   let resource: LaunchEnvelopeV1["resources"][number];
   if (["rpgmaker-xp", "rpgmaker-vx", "rpgmaker-vx-ace"].includes(targetId)) {
     resource = {
-      kind: "SEEKABLE_BLOB_V1", ordinal: 0, rangeRequired: true, role: "game",
+      kind: "SEEKABLE_BLOB", ordinal: 0, rangeRequired: true, role: "game",
       sha256: digest, sizeBytes: 4096, url: `/runtime/content/project/${digest}/game.mkxpz`,
     };
   } else if (["rpgmaker-mv", "rpgmaker-mz"].includes(targetId)) {
     resource = {
       bootstrapTicket: "t".repeat(48), cleanupUrl: "https://runtime.test/__retrom/cleanup",
       contentDigest: digest, entryUrl: "https://runtime.test/__retrom/bootstrap",
-      kind: "NATIVE_WEB_V1", ordinal: 0, origin: "https://runtime.test", role: "game",
+      kind: "NATIVE_WEB", ordinal: 0, origin: "https://runtime.test", role: "game",
     };
   } else if (targetId === "tyranoscript") {
     resource = {
       bootstrapTicket: "t".repeat(48), cleanupUrl: "https://runtime.test/__retrom/cleanup",
       contentDigest: digest, entryUrl: "https://runtime.test/__retrom/bootstrap",
-      kind: "ISOLATED_WEB_V1", ordinal: 0, origin: "https://runtime.test", role: "game",
+      kind: "ISOLATED_WEB", ordinal: 0, origin: "https://runtime.test", role: "game",
     };
   } else if (targetId === "wasm4") {
     resource = {
-      kind: "WASM4_CART_V1", ordinal: 0, rangeRequired: false, role: "game",
+      kind: "WASM4_CART", ordinal: 0, rangeRequired: false, role: "game",
       sha256: digest, sizeBytes: 128, url: "/runtime/content/game/cart.wasm",
     };
   } else {
     resource = {
       contentDigest: digest, indexUrl: `/runtime/content/project/${digest}/index.json`,
-      kind: "FILE_TREE_V1", ordinal: 0, role: "game",
+      kind: "FILE_TREE", ordinal: 0, role: "game",
     };
   }
   const targetOptions: LaunchEnvelopeV1["targetOptions"] = isRpg
-    ? {kind: "RPGMAKER_V1", expectedRestorePosition: null}
+    ? {expectedRestorePosition: null}
     : targetId === "onscripter-yuri"
-      ? {kind: "ONS_PROJECT_V1", scriptEncoding: "utf8"}
+      ? {scriptEncoding: "utf8"}
       : targetId === "kirikiri2-kag"
-        ? {kind: "KIRIKIRI_PROJECT_V1", startupXp3Path: null}
-        : {kind: "NONE_V1"};
+        ? {startupXp3Path: null}
+        : {};
   return {
     netplay: null,
     resources: [resource],
@@ -488,7 +488,7 @@ function targetEnvelope(targetId: string): LaunchEnvelopeV1 {
       moduleUrl: `/runtime/providers/retrom-runtime/${bundleDigest}/client.mjs`,
       providerApiVersion: 1,
       providerId: "retrom-runtime",
-      providerVersion: "0.13.0",
+      providerVersion: "0.14.0",
       runtimeBaseUrl: `/runtime/providers/retrom-runtime/${bundleDigest}/`,
       targetContractSha256: digestTarget(targetId),
       targetId,

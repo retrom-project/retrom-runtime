@@ -10,7 +10,7 @@ describe("EmulatorJS Provider declarations", () => {
     const manifest = projectProviderManifest(emulatorJsProviderDefinition);
     expect(validateProviderManifest(manifest)).toBe(manifest);
     expect(manifest.providerId).toBe("emulatorjs");
-    expect(manifest.providerVersion).toBe("1.0.0");
+    expect(manifest.providerVersion).toBe("2.0.0");
     expect(manifest.targets).toHaveLength(35);
     expect(new Set(manifest.targets.map((target) => target.id)).size).toBe(35);
     for (const targetId of ["dosbox-pure", "genesis-plus-gx-wide", "azahar"]) {
@@ -37,10 +37,10 @@ describe("EmulatorJS Provider declarations", () => {
     const yabause = emulatorJsProviderDefinition.targets.find((target) => target.id === "yabause");
     const fceumm = emulatorJsProviderDefinition.targets.find((target) => target.id === "fceumm");
     expect(ppsspp?.implementation.startupActions).toHaveLength(2);
-    expect(yabause?.implementation.contentKinds).toEqual(["SINGLE_FILE", "MULTI_DISC_M3U_V1"]);
+    expect(yabause?.implementation.contentKinds).toEqual(["SINGLE_FILE", "MULTI_DISC"]);
     expect(yabause?.inputs.map((input) => input.kind)).toEqual([
-      "ROM_BLOB_V1", "BIOS_BUNDLE_V1", "PARENT_ARCHIVE_V1", "MULTI_DISC_V1",
-      "EXTERNAL_FILE_SET_V1",
+      "ROM_BLOB", "BIOS_BUNDLE", "PARENT_ARCHIVE", "MULTI_DISC",
+      "EXTERNAL_FILE_SET",
     ]);
     expect(yabause?.discSwitch).toBe(true);
     expect(fceumm?.netplayPort).toBe(true);

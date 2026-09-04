@@ -9,7 +9,7 @@ const manifestKeys = [
 ];
 const targetKeys = [
   "assetPaths", "capabilities", "checkpoint", "displayName", "gameCompatibilityLine", "id", "inputs",
-  "netplayCompatibilityLine", "optionsKind",
+  "netplayCompatibilityLine", "targetOptionsSchema",
 ];
 const capabilityKeys = [
   "checkpoint", "discSwitch", "frameCounter", "frameMode", "inputFilter", "nativeSettings", "netplayPort",
@@ -21,19 +21,17 @@ const frameModes = new Set([
   "NONE", "SAME_ORIGIN_BLANK", "SAME_ORIGIN_RESOURCE", "ISOLATED_ORIGIN_RESOURCE",
 ]);
 const resourceKinds = new Set([
-  "ROM_BLOB_V1", "FILE_TREE_V1", "SEEKABLE_BLOB_V1", "NATIVE_WEB_V1", "ISOLATED_WEB_V1",
-  "BIOS_BUNDLE_V1", "PARENT_ARCHIVE_V1", "MULTI_DISC_V1", "EXTERNAL_FILE_SET_V1",
-  "WASM4_CART_V1",
+  "ROM_BLOB", "FILE_TREE", "SEEKABLE_BLOB", "NATIVE_WEB", "ISOLATED_WEB",
+  "BIOS_BUNDLE", "PARENT_ARCHIVE", "MULTI_DISC", "EXTERNAL_FILE_SET",
+  "WASM4_CART",
 ]);
 const videoModes = new Set(["original", "pixel", "smooth", "sharp-bilinear", "adaptive-sharpen"]);
-const optionsKinds = new Set([
-  "NONE_V1", "EMULATORJS_V1", "RPGMAKER_V1", "ONS_PROJECT_V1", "KIRIKIRI_PROJECT_V1",
-]);
+const schemaPropertyName = /^[A-Za-z][A-Za-z0-9]{0,63}$/u;
 
 export function validateProviderManifest(value: unknown): ProviderManifest {
   const manifest = record(value);
   if (!manifest || !exactKeys(manifest, manifestKeys) || manifest.schemaVersion !== 1 ||
-    manifest.providerApiVersion !== 1 || manifest.clientModulePath !== "client.mjs" ||
+    !positiveSafeInteger(manifest.providerApiVersion) || manifest.clientModulePath !== "client.mjs" ||
     !validIdentity(manifest.providerId) || !validSemver(manifest.providerVersion) ||
     !Array.isArray(manifest.targets) || manifest.targets.length === 0) {
     invalidManifest();
@@ -54,10 +52,10 @@ function validateTarget(value: unknown): string {
   const target = record(value);
   if (!target || !exactKeys(target, targetKeys) || !validIdentity(target.id) ||
     !boundedText(target.displayName, 1, 120) || !validToken(target.gameCompatibilityLine) ||
-    target.netplayCompatibilityLine !== null && !validToken(target.netplayCompatibilityLine) ||
-    typeof target.optionsKind !== "string" || !optionsKinds.has(target.optionsKind)) {
+    target.netplayCompatibilityLine !== null && !validToken(target.netplayCompatibilityLine)) {
     invalidManifest();
   }
+  validateTargetOptionsSchema(target.targetOptionsSchema, 0, true);
   validateCapabilities(target.capabilities);
   validateInputs(target.inputs);
   const capabilities = record(target.capabilities);
@@ -70,6 +68,77 @@ function validateTarget(value: unknown): string {
   const assetPaths = stringArray(target.assetPaths, false);
   if (!assetPaths || !isSortedUnique(assetPaths) || !assetPaths.every(validPath)) {invalidManifest();}
   return target.id;
+}
+
+function validateTargetOptionsSchema(value: unknown, depth: number, root: boolean): void {
+  const schema = record(value);
+  if (!schema || depth > 8) {invalidManifest();}
+  const baseType = schemaBaseType(schema.type);
+  if (!baseType || root && (baseType !== "object" || schema.type !== "object")) {invalidManifest();}
+  const allowed = schemaKeys(baseType);
+  if (!Object.keys(schema).every((key) => allowed.has(key)) || !Object.hasOwn(schema, "type")) {invalidManifest();}
+  switch (baseType) {
+  case "object": return validateObjectOptionsSchema(schema, depth);
+  case "array": return validateArrayOptionsSchema(schema, depth);
+  case "string": return validateStringOptionsSchema(schema);
+  case "integer": return validateIntegerOptionsSchema(schema);
+  case "boolean":
+    return;
+  }
+}
+
+function validateObjectOptionsSchema(schema: Record<string, unknown>, depth: number): void {
+  if (!exactKeys(schema, ["additionalProperties", "properties", "required", "type"]) ||
+    schema.additionalProperties !== false) {invalidManifest();}
+  const properties = record(schema.properties);
+  const required = stringArray(schema.required);
+  if (!properties || Object.keys(properties).length > 64 || !required || !isSortedUnique(required) ||
+    !Object.keys(properties).every((key) => schemaPropertyName.test(key)) ||
+    !required.every((key) => Object.hasOwn(properties, key))) {invalidManifest();}
+  for (const property of Object.values(properties)) {validateTargetOptionsSchema(property, depth + 1, false);}
+}
+
+function validateArrayOptionsSchema(schema: Record<string, unknown>, depth: number): void {
+  if (!Object.hasOwn(schema, "items") || !positiveOrZeroInteger(schema.maxItems) ||
+    Number(schema.maxItems) > 256 || Object.hasOwn(schema, "minItems") &&
+    (!positiveOrZeroInteger(schema.minItems) || Number(schema.minItems) > Number(schema.maxItems))) {
+    invalidManifest();
+  }
+  validateTargetOptionsSchema(schema.items, depth + 1, false);
+}
+
+function validateStringOptionsSchema(schema: Record<string, unknown>): void {
+  if (Object.hasOwn(schema, "format") && schema.format !== "safe-path" ||
+    Object.hasOwn(schema, "minLength") && !positiveOrZeroInteger(schema.minLength) ||
+    Object.hasOwn(schema, "maxLength") && (!positiveOrZeroInteger(schema.maxLength) || Number(schema.maxLength) > 4096) ||
+    Object.hasOwn(schema, "minLength") && Object.hasOwn(schema, "maxLength") &&
+    Number(schema.minLength) > Number(schema.maxLength)) {invalidManifest();}
+  if (Object.hasOwn(schema, "enum")) {
+    const values = stringArray(schema.enum, false);
+    if (!values || !isSortedUnique(values) || values.length > 64) {invalidManifest();}
+  }
+}
+
+function validateIntegerOptionsSchema(schema: Record<string, unknown>): void {
+  if (Object.hasOwn(schema, "minimum") && !safeInteger(schema.minimum) ||
+    Object.hasOwn(schema, "maximum") && !safeInteger(schema.maximum) ||
+    Object.hasOwn(schema, "minimum") && Object.hasOwn(schema, "maximum") &&
+    Number(schema.minimum) > Number(schema.maximum)) {invalidManifest();}
+}
+
+function schemaBaseType(value: unknown): string | null {
+  if (["array", "boolean", "integer", "object", "string"].includes(String(value))) {return String(value);}
+  if (!Array.isArray(value) || value.length !== 2 || value[1] !== "null" ||
+    !["array", "boolean", "integer", "object", "string"].includes(String(value[0]))) {return null;}
+  return String(value[0]);
+}
+
+function schemaKeys(type: string): Set<string> {
+  if (type === "object") {return new Set(["additionalProperties", "properties", "required", "type"]);}
+  if (type === "array") {return new Set(["items", "maxItems", "minItems", "type"]);}
+  if (type === "string") {return new Set(["enum", "format", "maxLength", "minLength", "type"]);}
+  if (type === "integer") {return new Set(["maximum", "minimum", "type"]);}
+  return new Set(["type"]);
 }
 
 function validateCapabilities(value: unknown): void {
@@ -183,6 +252,14 @@ function boundedText(value: unknown, minimum: number, maximum: number): value is
 
 function positiveSafeInteger(value: unknown): value is number {
   return typeof value === "number" && Number.isSafeInteger(value) && value > 0;
+}
+
+function positiveOrZeroInteger(value: unknown): value is number {
+  return typeof value === "number" && Number.isSafeInteger(value) && value >= 0;
+}
+
+function safeInteger(value: unknown): value is number {
+  return typeof value === "number" && Number.isSafeInteger(value);
 }
 
 function validPath(value: string) {

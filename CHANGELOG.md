@@ -8,6 +8,10 @@
   declarations now have separate, non-overlapping authority.
 - Add deterministic EmulatorJS and retrom-runtime Provider Bundle builds, closed integrity/provenance records,
   candidate/production isolation and the Provider Module V1 Launch Envelope boundary.
+- Move exact Target options into each Provider declaration as a constrained closed schema, include that schema in
+  the Target contract digest, and remove the duplicated Host-facing options discriminator.
+- Use stable suffixless semantic IDs for resource and content kinds while retaining explicit versions only for
+  serialized documents, checkpoint formats and hash domains.
 
 ## 0.11.4
 
@@ -123,7 +127,7 @@
   generic checkpoint availability no longer exposes map, message or event semantics.
 - Consolidate the duplicated RPG, ONS and KiriKiri lifecycle state machines into one controller and declare
   adapter capabilities plus checkpoint formats in the runtime manifest.
-- Add the engine-neutral `SEEKABLE_BLOB_V1` content source and advertise content-source capabilities per adapter.
+- Add the engine-neutral `SEEKABLE_BLOB` content source and advertise content-source capabilities per adapter.
 - Mount mkxp project and RTP archives through strict WasmFS Range files instead of downloading every archive before
   startup; fixed core and bridge assets now use the browser's normal immutable cache.
 - Load EasyRPG RTP files through the host file tree only when the game asks for a missing resource.

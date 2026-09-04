@@ -131,7 +131,7 @@ describe("mkxp runtime mount", () => {
     config.adapter.projectArchive.sizeBytes = 8_388_608;
     config.adapter.rtpArchives = [{
       declaredName: "Standard",
-      kind: "SEEKABLE_BLOB_V1",
+      kind: "SEEKABLE_BLOB",
       rangeRequired: true,
       sha256: "e".repeat(64),
       sizeBytes: 16_777_216,
@@ -529,7 +529,7 @@ function mkxpConfig(restore: boolean): MkxpConfig {
         artifactSetSha256: "a".repeat(64),
       },
       projectArchive: {
-        kind: "SEEKABLE_BLOB_V1",
+        kind: "SEEKABLE_BLOB",
         rangeRequired: true,
         url: `/projects/${sessionId}/game.mkxpz`,
         sha256: "b".repeat(64),

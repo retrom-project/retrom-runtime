@@ -12,7 +12,7 @@ import type { MountedRuntimeAdapter } from "./internal-adapter.js";
 
 const capabilities: RuntimeCapabilities = {
   checkpoint: true,
-  contentSources: ["FILE_TREE_V1"],
+  contentSources: ["FILE_TREE"],
   frameCounter: false,
   pause: true,
   screenshot: true,

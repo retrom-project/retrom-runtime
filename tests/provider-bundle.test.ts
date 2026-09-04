@@ -121,9 +121,11 @@ function fixtureManifest() {
       displayName: "Fixture",
       gameCompatibilityLine: "fixture-v1",
       id: "fixture",
-      inputs: [{cardinality: "ONE", kind: "ROM_BLOB_V1", optional: false, role: "game"}],
+      inputs: [{cardinality: "ONE", kind: "ROM_BLOB", optional: false, role: "game"}],
       netplayCompatibilityLine: null,
-      optionsKind: "NONE_V1",
+      targetOptionsSchema: {
+        additionalProperties: false as const, properties: {}, required: [], type: "object" as const,
+      },
     }],
   };
 }

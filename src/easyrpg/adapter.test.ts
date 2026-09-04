@@ -123,7 +123,7 @@ describe("EasyRPG adapter cleanup", () => {
     });
     Object.defineProperty(window, "createEasyRpgPlayer", { configurable: true, value: createPlayer });
     const config = easyConfig();
-    config.adapter.rtpSource = { kind: "FILE_TREE_V1", indexUrl };
+    config.adapter.rtpSource = { kind: "FILE_TREE", indexUrl };
     const mounting = mountEasyRpg(config, target, window, null);
     await vi.waitFor(() => expect(document.head.querySelector("script[data-rpg-runtime=easyrpg]")).not.toBeNull());
     document.head.querySelector<HTMLScriptElement>("script[data-rpg-runtime=easyrpg]")

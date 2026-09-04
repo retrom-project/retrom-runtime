@@ -399,9 +399,9 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
   }
 
   private configure(runtimeWindow: EjsWindow) {
-    const game = resource(this.envelope, "game", "ROM_BLOB_V1");
-    const bios = optionalResource(this.envelope, "bios", "BIOS_BUNDLE_V1");
-    const parent = optionalResource(this.envelope, "parent", "PARENT_ARCHIVE_V1");
+    const game = resource(this.envelope, "game", "ROM_BLOB");
+    const bios = optionalResource(this.envelope, "bios", "BIOS_BUNDLE");
+    const parent = optionalResource(this.envelope, "parent", "PARENT_ARCHIVE");
     const releaseBase = runtimeBase(this.envelope, this.implementation.release);
     const deferredDOSStart = this.implementation.release === "4.3.0-pre" &&
       this.implementation.runtimeCore === "dosbox_pure";
@@ -439,7 +439,7 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
       this.instance = runtimeWindow.EJS_emulator ?? null;
       if (!this.instance) {this.fail("PLAYER_RUNTIME_UNAVAILABLE");}
       this.instance?.on?.("exit", () => this.requestExit());
-      const discs = optionalResource(this.envelope, "discs", "MULTI_DISC_V1");
+      const discs = optionalResource(this.envelope, "discs", "MULTI_DISC");
       if (discs && this.instance) {
         try {initializeEmulatorJsDiscs(this.instance);}
         catch (error) {this.fail("PLAYER_DISC_RUNTIME_INVALID", error); return;}
@@ -467,7 +467,7 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
     this.startObserved = true;
     try {
       if (!this.instance) {throw new Error("PLAYER_RUNTIME_UNAVAILABLE");}
-      const discs = optionalResource(this.envelope, "discs", "MULTI_DISC_V1");
+      const discs = optionalResource(this.envelope, "discs", "MULTI_DISC");
       if (discs) {await this.prepareInitialDisc(discs);}
       else if (this.restorePayload) {
         await this.restore(this.restorePayload);
@@ -528,7 +528,7 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
   }
 
   private requireDiscResource() {
-    const resourceValue = optionalResource(this.envelope, "discs", "MULTI_DISC_V1");
+    const resourceValue = optionalResource(this.envelope, "discs", "MULTI_DISC");
     if (!resourceValue) {throw contractError();}
     return resourceValue;
   }
@@ -603,7 +603,7 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
   private currentCheckpointAvailability() {
     if (!this.envelope.runtime.capabilities.checkpoint) {return {available: false, reason: "UNSUPPORTED"};}
     if (!this.instance?.gameManager || this.envelope.runtime.targetId === "dosbox-pure" &&
-      this.envelope.targetOptions.kind === "EMULATORJS_V1" && !this.envelope.targetOptions.dosEntryPath) {
+      !this.envelope.targetOptions.dosEntryPath) {
       return {available: false, reason: "NOT_READY"};
     }
     return {available: true, reason: null};

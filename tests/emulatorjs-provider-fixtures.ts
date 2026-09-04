@@ -12,7 +12,7 @@ export function launchEnvelope(): LaunchEnvelopeV1 {
   return {
     netplay: null,
     resources: [{
-      kind: "ROM_BLOB_V1", ordinal: 0, rangeRequired: false, role: "game",
+      kind: "ROM_BLOB", ordinal: 0, rangeRequired: false, role: "game",
       sha256: digest, sizeBytes: 128, url: "/runtime/content/game/game.nes",
     }],
     restore: null,
@@ -30,7 +30,7 @@ export function launchEnvelope(): LaunchEnvelopeV1 {
       moduleUrl: `/runtime/providers/emulatorjs/${bundleDigest}/client.mjs`,
       providerApiVersion: 1,
       providerId: "emulatorjs",
-      providerVersion: "1.0.0",
+      providerVersion: "2.0.0",
       runtimeBaseUrl: `/runtime/providers/emulatorjs/${bundleDigest}/`,
       targetContractSha256: digestTarget("fceumm"),
       targetId: "fceumm",
@@ -41,7 +41,7 @@ export function launchEnvelope(): LaunchEnvelopeV1 {
       id: "018f0f31-26fe-7a31-9d61-4ec92f16d4c3", mode: "SINGLE", platformName: "NES",
       purpose: "PRODUCT", returnTo: "/games/fixture", title: "Fixture", warnings: [],
     },
-    targetOptions: {dosEntryPath: null, initialDiscIndex: null, kind: "EMULATORJS_V1"},
+    targetOptions: {dosEntryPath: null, initialDiscIndex: null},
     validation: null,
   };
 }

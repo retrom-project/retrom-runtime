@@ -1,4 +1,4 @@
-import type { ProviderDefinition } from "./declarations.js";
+import type { ProviderDefinition, TargetOptionsPropertySchema, TargetOptionsSchema } from "./declarations.js";
 import { parseCanonicalJSON } from "./canonical-json.js";
 import type {
   LaunchEnvelopeV1,
@@ -50,6 +50,14 @@ export function validateProviderLaunchRequest(
   return envelope;
 }
 
+export function validateTargetOptionsAgainstSchema(
+  value: unknown,
+  schema: TargetOptionsSchema,
+): LaunchEnvelopeV1["targetOptions"] {
+  if (!validTargetOptions(value, schema)) {invalidRequest();}
+  return value as LaunchEnvelopeV1["targetOptions"];
+}
+
 function validEnvelopeContract(
   value: LaunchEnvelopeV1,
   runtime: LaunchEnvelopeV1["runtime"],
@@ -63,7 +71,7 @@ function validEnvelopeContract(
     runtime.targetContractSha256 === targetDigests[target.id] && validBundleURLs(runtime) &&
     sameCapabilities(runtime.capabilities, target.capabilities) &&
     sameCheckpoint(runtime.checkpoint, target.checkpoint) && validSession(value.session) &&
-    validTargetOptions(value.targetOptions, target.optionsKind) && validResources(value.resources, target.inputs) &&
+    validTargetOptions(value.targetOptions, target.targetOptionsSchema) && validResources(value.resources, target.inputs) &&
     validRestore(value.restore, target.checkpoint) && validValidation(value.validation, target.capabilities.validationProbes) &&
     validNetplay(value.netplay, target.capabilities.netplayPort, value.session);
 }
@@ -175,11 +183,11 @@ function validResourceSetShape(value: unknown): value is RuntimeResourceV1[] {
 }
 
 function validResourceShape(resource: RuntimeResourceV1) {
-  if (resource.kind === "FILE_TREE_V1") {return validFileTreeResource(resource);}
-  if (resource.kind === "NATIVE_WEB_V1" || resource.kind === "ISOLATED_WEB_V1") {return validWebResource(resource);}
+  if (resource.kind === "FILE_TREE") {return validFileTreeResource(resource);}
+  if (resource.kind === "NATIVE_WEB" || resource.kind === "ISOLATED_WEB") {return validWebResource(resource);}
   if (isBlobResource(resource)) {return validBlobResource(resource);}
-  if (resource.kind === "BIOS_BUNDLE_V1" || resource.kind === "EXTERNAL_FILE_SET_V1") {return validFileSetResource(resource);}
-  if (resource.kind === "MULTI_DISC_V1") {return validMultiDiscResource(resource);}
+  if (resource.kind === "BIOS_BUNDLE" || resource.kind === "EXTERNAL_FILE_SET") {return validFileSetResource(resource);}
+  if (resource.kind === "MULTI_DISC") {return validMultiDiscResource(resource);}
   return false;
 }
 
@@ -197,7 +205,7 @@ function validWebResource(resource: RuntimeWebResourceV1) {
 function validBlobResource(resource: RuntimeBlobResourceV1) {
   return exactKeys(resource, ["kind", "ordinal", "rangeRequired", "role", "sha256", "sizeBytes", "url"]) &&
     validDigest(resource.sha256) && positiveInteger(resource.sizeBytes) && relativeURL(resource.url) &&
-    resource.rangeRequired === (resource.kind === "SEEKABLE_BLOB_V1" || resource.kind === "PARENT_ARCHIVE_V1");
+    resource.rangeRequired === (resource.kind === "SEEKABLE_BLOB" || resource.kind === "PARENT_ARCHIVE");
 }
 function validFileSetResource(resource: RuntimeFileSetResourceV1) {
   return exactKeys(resource, ["files", "kind", "ordinal", "role"]) && Array.isArray(resource.files) &&
@@ -223,37 +231,61 @@ function validDiscEntry(value: RuntimeMultiDiscResourceV1["entries"][number], in
     validDigest(value.sha256) && positiveInteger(value.sizeBytes);
 }
 
-function validTargetOptions(value: unknown, expectedKind: string) {
-  if (!isRecord(value) || value.kind !== expectedKind) {return false;}
-  if (value.kind === "NONE_V1") {return exactKeys(value, ["kind"]);}
-  if (value.kind === "EMULATORJS_V1") {return validEmulatorJsOptions(value);}
-  if (value.kind === "RPGMAKER_V1") {return validRpgMakerOptions(value);}
-  if (value.kind === "ONS_PROJECT_V1") {return validOnsOptions(value);}
-  return validKirikiriOptions(value);
+function validTargetOptions(value: unknown, schema: TargetOptionsSchema) {
+  return validTargetOptionsShape(value) && validTargetOptionsSchemaValue(value, schema, 0);
 }
 
-function validTargetOptionsShape(value: unknown) {
-  return isRecord(value) && typeof value.kind === "string" && validTargetOptions(value, value.kind) &&
-    ["NONE_V1", "EMULATORJS_V1", "RPGMAKER_V1", "ONS_PROJECT_V1", "KIRIKIRI_PROJECT_V1"].includes(value.kind);
+function validTargetOptionsShape(value: unknown): value is Record<string, unknown> {
+  if (!jsonRecord(value)) {return false;}
+  try {return new TextEncoder().encode(JSON.stringify(value)).byteLength <= 16 * 1024;}
+  catch {return false;}
 }
 
-function validEmulatorJsOptions(value: Record<string, unknown>) {
-  return exactKeys(value, ["dosEntryPath", "initialDiscIndex", "kind"]) &&
-    (value.dosEntryPath === null || safePath(value.dosEntryPath)) &&
-    (value.initialDiscIndex === null || nonNegativeInteger(value.initialDiscIndex));
+function validTargetOptionsSchemaValue(
+  value: unknown,
+  schema: TargetOptionsPropertySchema,
+  depth: number,
+): boolean {
+  if (depth > 8) {return false;}
+  const shape = schema as unknown as Record<string, unknown>;
+  const nullable = Array.isArray(shape.type);
+  if (value === null) {return nullable;}
+  const type = nullable ? String((shape.type as unknown[])[0]) : String(shape.type);
+  if (type === "object") {return validObjectTargetOptions(value, shape, depth);}
+  if (type === "array") {return validArrayTargetOptions(value, shape, depth);}
+  if (type === "string") {return validStringTargetOption(value, shape);}
+  if (type === "integer") {return validIntegerTargetOption(value, shape);}
+  return type === "boolean" && typeof value === "boolean";
 }
-function validRpgMakerOptions(value: Record<string, unknown>) {
-  if (!exactKeys(value, ["expectedRestorePosition", "kind"])) {return false;}
-  const position = value.expectedRestorePosition;
-  return position === null || isRecord(position) && exactKeys(position, ["fixtureState", "mapId", "playerX", "playerY"]) &&
-    [position.fixtureState, position.mapId, position.playerX, position.playerY].every(nonNegativeInteger);
+
+function validObjectTargetOptions(value: unknown, shape: Record<string, unknown>, depth: number): boolean {
+  if (!isRecord(value)) {return false;}
+  const properties = shape.properties as Readonly<Record<string, TargetOptionsPropertySchema>>;
+  const required = shape.required as readonly string[];
+  if (!Object.keys(value).every((key) => Object.hasOwn(properties, key)) ||
+    !required.every((key) => Object.hasOwn(value, key))) {return false;}
+  return Object.entries(value).every(([key, item]) =>
+    validTargetOptionsSchemaValue(item, properties[key] as TargetOptionsPropertySchema, depth + 1));
 }
-function validOnsOptions(value: Record<string, unknown>) {
-  return exactKeys(value, ["kind", "scriptEncoding"]) && ["gbk", "sjis", "utf8"].includes(String(value.scriptEncoding));
+
+function validArrayTargetOptions(value: unknown, shape: Record<string, unknown>, depth: number): boolean {
+  return Array.isArray(value) && value.length >= Number(shape.minItems ?? 0) &&
+    value.length <= Number(shape.maxItems) && value.every((item) =>
+      validTargetOptionsSchemaValue(item, shape.items as TargetOptionsPropertySchema, depth + 1));
 }
-function validKirikiriOptions(value: Record<string, unknown>) {
-  return value.kind === "KIRIKIRI_PROJECT_V1" && exactKeys(value, ["kind", "startupXp3Path"]) &&
-    (value.startupXp3Path === null || safePath(value.startupXp3Path));
+
+function validStringTargetOption(value: unknown, shape: Record<string, unknown>): boolean {
+  if (typeof value !== "string") {return false;}
+  const length = [...value].length;
+  return wellFormed(value) && length >= Number(shape.minLength ?? 0) &&
+    length <= Number(shape.maxLength ?? 4096) &&
+    (!Array.isArray(shape.enum) || shape.enum.includes(value)) &&
+    (shape.format !== "safe-path" || safePath(value));
+}
+
+function validIntegerTargetOption(value: unknown, shape: Record<string, unknown>): boolean {
+  return Number.isSafeInteger(value) && Number(value) >= Number(shape.minimum ?? Number.MIN_SAFE_INTEGER) &&
+    Number(value) <= Number(shape.maximum ?? Number.MAX_SAFE_INTEGER);
 }
 
 function validRestore(
@@ -282,15 +314,12 @@ function validNetplay(value: unknown, supported: boolean, session: unknown) {
 }
 
 function isBlobResource(resource: RuntimeResourceV1): resource is RuntimeBlobResourceV1 {
-  return resource.kind === "ROM_BLOB_V1" || resource.kind === "SEEKABLE_BLOB_V1" ||
-    resource.kind === "PARENT_ARCHIVE_V1" || resource.kind === "WASM4_CART_V1";
+  return resource.kind === "ROM_BLOB" || resource.kind === "SEEKABLE_BLOB" ||
+    resource.kind === "PARENT_ARCHIVE" || resource.kind === "WASM4_CART";
 }
 
 function validDigest(value: unknown): value is string {return typeof value === "string" && /^[0-9a-f]{64}$/u.test(value);}
 function positiveInteger(value: unknown): value is number {return typeof value === "number" && Number.isSafeInteger(value) && value > 0;}
-function nonNegativeInteger(value: unknown): value is number {
-  return typeof value === "number" && Number.isSafeInteger(value) && value >= 0;
-}
 function validOrigin(value: unknown): value is string {
   if (typeof value !== "string") {return false;}
   try {const parsed = new URL(value); return ["http:", "https:"].includes(parsed.protocol) && parsed.origin === value;}

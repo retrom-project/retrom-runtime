@@ -41,7 +41,7 @@ export function projectProviderManifest(definition: ProviderDefinition) {
       id: target.id,
       inputs: target.inputs.map((input) => ({...input})),
       netplayCompatibilityLine: target.netplayCompatibilityLine,
-      optionsKind: target.optionsKind,
+      targetOptionsSchema: target.targetOptionsSchema,
     };
   }).sort((left, right) => compareUtf8(left.id, right.id));
   return {

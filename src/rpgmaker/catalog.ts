@@ -31,7 +31,7 @@ function validEasyAdapter(
     adapter.adapterId === "easyrpg-web" && adapter.checkpointSlot === 100 &&
     adapter.engineMode === (generation === "RPG2000" ? "rpg2k" : "rpg2k3") &&
     validUrl(adapter.runtimeBaseUrl) && validUrl(adapter.projectRootUrl) && validUrl(adapter.projectIndexUrl) &&
-    (adapter.rtpSource === null || adapter.rtpSource.kind === "FILE_TREE_V1" && validUrl(adapter.rtpSource.indexUrl));
+    (adapter.rtpSource === null || adapter.rtpSource.kind === "FILE_TREE" && validUrl(adapter.rtpSource.indexUrl));
 }
 
 function validMkxpAdapter(
@@ -70,7 +70,7 @@ function validArchive(archive: {
   sha256: string;
   sizeBytes: number;
 }) {
-  return archive.kind === "SEEKABLE_BLOB_V1" && archive.rangeRequired === true &&
+  return archive.kind === "SEEKABLE_BLOB" && archive.rangeRequired === true &&
     validUrl(archive.url) && validDigest(archive.sha256) && positiveInteger(archive.sizeBytes);
 }
 function validPosition(position: RpgMakerPositionV1) {

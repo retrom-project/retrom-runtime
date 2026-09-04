@@ -1,5 +1,6 @@
 import {validateRuntimeConfig, type RuntimeConfig} from "../../catalog.js";
 import type {FileTreeSource, SeekableBlobSource} from "../../contract.js";
+import type {RpgMakerPositionV1} from "../../rpgmaker/contract.js";
 import {
   validateProviderLaunchRequest,
   type AssetIndexV1,
@@ -35,8 +36,8 @@ export function projectLegacyRuntimeConfig(
 }
 
 function easyRpgConfig(envelope: LaunchEnvelopeV1, implementation: Readonly<Record<string, unknown>>): RuntimeConfig {
-  const game = resource(envelope, "game", "FILE_TREE_V1");
-  const rtp = optionalResource(envelope, "rtp", "FILE_TREE_V1");
+  const game = resource(envelope, "game", "FILE_TREE");
+  const rtp = optionalResource(envelope, "rtp", "FILE_TREE");
   if (implementation.engineMode !== "rpg2k" && implementation.engineMode !== "rpg2k3") {invalidRequest();}
   return {
     adapter: {
@@ -61,7 +62,7 @@ function mkxpConfig(
   implementation: Readonly<Record<string, unknown>>,
   assetIndex: AssetIndexV1,
 ): RuntimeConfig {
-  const game = resource(envelope, "game", "SEEKABLE_BLOB_V1");
+  const game = resource(envelope, "game", "SEEKABLE_BLOB");
   const jsPath = "assets/mkxp/mkxp-z_libretro.js";
   const wasmPath = "assets/mkxp/mkxp-z_libretro.wasm";
   const js = assetIndex[jsPath];
@@ -83,7 +84,7 @@ function mkxpConfig(
       },
       projectArchive: seekableSource(game),
       rgssVersion,
-      rtpArchives: resources(envelope, "rtp", "SEEKABLE_BLOB_V1").map((entry) => ({
+      rtpArchives: resources(envelope, "rtp", "SEEKABLE_BLOB").map((entry) => ({
         ...seekableSource(entry), declaredName: `rtp-${entry.ordinal}`,
       })),
       runtimeBaseUrl: assetBase(envelope, "mkxp"),
@@ -100,7 +101,7 @@ function nativeRpgConfig(
   envelope: LaunchEnvelopeV1,
   implementation: Readonly<Record<string, unknown>>,
 ): RuntimeConfig {
-  const game = resource(envelope, "game", "NATIVE_WEB_V1");
+  const game = resource(envelope, "game", "NATIVE_WEB");
   if (implementation.bridgeProfile !== "RPGMV" && implementation.bridgeProfile !== "RPGMZ") {invalidRequest();}
   return {
     adapter: {
@@ -120,35 +121,35 @@ function nativeRpgConfig(
 }
 
 function onsConfig(envelope: LaunchEnvelopeV1): RuntimeConfig {
-  const game = resource(envelope, "game", "FILE_TREE_V1");
-  const options = envelope.targetOptions;
-  if (options.kind !== "ONS_PROJECT_V1") {invalidRequest();}
+  const game = resource(envelope, "game", "FILE_TREE");
+  const encoding = envelope.targetOptions.scriptEncoding;
+  if (encoding !== "gbk" && encoding !== "sjis" && encoding !== "utf8") {invalidRequest();}
   return {
     adapter: {
       adapterId: "ons-yuri-web", adapterKind: "ONS_YURI_WEB", checkpointSlot: 999,
       projectIndexUrl: game.indexUrl, runtimeBaseUrl: assetBase(envelope, "ons"),
-      scriptEncoding: options.scriptEncoding,
+      scriptEncoding: encoding,
     },
     sessionId: envelope.session.id,
   };
 }
 
 function kirikiriConfig(envelope: LaunchEnvelopeV1): RuntimeConfig {
-  const game = resource(envelope, "game", "FILE_TREE_V1");
-  const options = envelope.targetOptions;
-  if (options.kind !== "KIRIKIRI_PROJECT_V1") {invalidRequest();}
+  const game = resource(envelope, "game", "FILE_TREE");
+  const startupXp3Path = envelope.targetOptions.startupXp3Path;
+  if (startupXp3Path !== null && typeof startupXp3Path !== "string") {invalidRequest();}
   return {
     adapter: {
       adapterId: "kirikiri2-web", adapterKind: "KIRIKIRI2_WEB", checkpointSlot: 1999,
       projectIndexUrl: game.indexUrl, runtimeBaseUrl: assetBase(envelope, "kirikiri"),
-      startupXp3Path: options.startupXp3Path,
+      startupXp3Path,
     },
     sessionId: envelope.session.id,
   };
 }
 
 function butterscotchConfig(envelope: LaunchEnvelopeV1): RuntimeConfig {
-  const game = resource(envelope, "game", "FILE_TREE_V1");
+  const game = resource(envelope, "game", "FILE_TREE");
   return {
     adapter: {
       adapterId: "butterscotch-web", adapterKind: "BUTTERSCOTCH_WEB",
@@ -160,7 +161,7 @@ function butterscotchConfig(envelope: LaunchEnvelopeV1): RuntimeConfig {
 }
 
 function tyranoScriptConfig(envelope: LaunchEnvelopeV1): RuntimeConfig {
-  const game = resource(envelope, "game", "ISOLATED_WEB_V1");
+  const game = resource(envelope, "game", "ISOLATED_WEB");
   return {
     adapter: {
       adapterId: "tyranoscript-web", adapterKind: "TYRANOSCRIPT_WEB",
@@ -173,7 +174,7 @@ function tyranoScriptConfig(envelope: LaunchEnvelopeV1): RuntimeConfig {
 }
 
 function wasm4Config(envelope: LaunchEnvelopeV1): RuntimeConfig {
-  const game = resource(envelope, "game", "WASM4_CART_V1");
+  const game = resource(envelope, "game", "WASM4_CART");
   return {
     adapter: {
       adapterId: "wasm4-web", adapterKind: "WASM4_WEB", cartUrl: game.url,
@@ -217,9 +218,15 @@ function resources<Kind extends RuntimeResourceV1["kind"]>(
 
 type RuntimeResourceOfKind<Kind extends RuntimeResourceV1["kind"]> = RuntimeResourceV1 & {kind: Kind};
 
-function rpgOptions(envelope: LaunchEnvelopeV1) {
-  if (envelope.targetOptions.kind !== "RPGMAKER_V1") {invalidRequest();}
-  return envelope.targetOptions;
+function rpgOptions(envelope: LaunchEnvelopeV1): {expectedRestorePosition: RpgMakerPositionV1 | null} {
+  const position = envelope.targetOptions.expectedRestorePosition;
+  if (position === null) {return {expectedRestorePosition: null};}
+  if (!position || typeof position !== "object" || Array.isArray(position)) {invalidRequest();}
+  const value = position as Record<string, unknown>;
+  if (![value.fixtureState, value.mapId, value.playerX, value.playerY].every(
+    (item) => typeof item === "number" && Number.isSafeInteger(item) && item >= 0,
+  )) {invalidRequest();}
+  return {expectedRestorePosition: position as RpgMakerPositionV1};
 }
 
 function rootFromIndex(indexUrl: string) {
@@ -227,13 +234,13 @@ function rootFromIndex(indexUrl: string) {
   return indexUrl.slice(0, -"index.json".length);
 }
 
-function fileTreeSource(resourceValue: RuntimeResourceOfKind<"FILE_TREE_V1">): FileTreeSource {
-  return {kind: "FILE_TREE_V1", indexUrl: resourceValue.indexUrl};
+function fileTreeSource(resourceValue: RuntimeResourceOfKind<"FILE_TREE">): FileTreeSource {
+  return {kind: "FILE_TREE", indexUrl: resourceValue.indexUrl};
 }
 
-function seekableSource(resourceValue: RuntimeResourceOfKind<"SEEKABLE_BLOB_V1">): SeekableBlobSource {
+function seekableSource(resourceValue: RuntimeResourceOfKind<"SEEKABLE_BLOB">): SeekableBlobSource {
   return {
-    kind: "SEEKABLE_BLOB_V1", rangeRequired: true, sha256: resourceValue.sha256,
+    kind: "SEEKABLE_BLOB", rangeRequired: true, sha256: resourceValue.sha256,
     sizeBytes: resourceValue.sizeBytes, url: resourceValue.url,
   };
 }

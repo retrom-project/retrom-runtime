@@ -12,7 +12,7 @@ one `client.mjs` with this closed interface:
 
 ```ts
 export const providerId = "retrom-runtime";
-export const providerVersion = "0.13.0";
+export const providerVersion = "0.14.0";
 export const providerApiVersion = 1;
 export function validateLaunchRequest(value: unknown): LaunchEnvelopeV1;
 export async function createRuntime(
@@ -28,7 +28,10 @@ resources, private Target options, optional restore, validation and netplay inpu
 
 `src/providers/retrom-runtime/catalog.ts` is the single Target declaration for the 12 targets in this Provider.
 The generated declaration fixes capabilities, checkpoint `writeFormat/readFormats/maxBytes`, resource kinds,
-runtime files and compatibility lines. `provider-sources.json` records only pinned upstream Release/build sources;
+runtime files, compatibility lines and a constrained closed `targetOptionsSchema`. That schema is included in the
+Target contract digest and is used by the Provider Module to exact-validate options before mounting; it has no
+`optionsKind` discriminator. A Host dispatcher only needs generic JSON safety, depth and size limits and must not
+copy these Target-specific properties. `provider-sources.json` records only pinned upstream Release/build sources;
 it cannot declare a Target or host binding. Core-specific validation remains an extension probe: RPG Maker exposes
 `rpgmaker.position.v1`, while ONS and KiriKiri do not fabricate map IDs or player coordinates.
 
@@ -36,7 +39,7 @@ The older package-level runtime constructors remain internal implementation buil
 New hosts must use Provider Module V1 and must not build a parallel adapter registry from those exports.
 
 Content sources are also host-independent. Directory-oriented adapters consume
-`FILE_TREE_V1`; mkxp consumes `SEEKABLE_BLOB_V1`; native Web projects retain
+`FILE_TREE`; mkxp consumes `SEEKABLE_BLOB`; native Web projects retain
 their isolated entry model. A seekable blob supplies a URL, size, diagnostic
 digest and `rangeRequired: true`. The mkxp adapter registers that URL in
 WasmFS and passes only a virtual path to the core—it does not turn the project
@@ -46,7 +49,7 @@ an inexact `Content-Range`, and response-length drift instead of silently
 falling back to a whole-file request. Core JS/Wasm and bridge assets still use
 full-byte validation, while their immutable URLs use the browser cache.
 
-EasyRPG receives both the project and optional RTP as `FILE_TREE_V1` roots. The project wins when it contains a
+EasyRPG receives both the project and optional RTP as `FILE_TREE` roots. The project wins when it contains a
 resource; only a missing resource that the game actually opens is fetched from the RTP root. ONS keeps ordinary
 scripts and images on the same file-on-first-open path. Exact-size immutable responses are streamed into the
 Emscripten file system and an origin-private file one at a time, so concurrent multi-hundred-megabyte writes cannot

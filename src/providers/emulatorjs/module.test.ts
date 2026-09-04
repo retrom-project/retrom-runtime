@@ -21,7 +21,7 @@ describe("EmulatorJS Provider Module V1", () => {
     expect({providerApiVersion, providerId, providerVersion}).toEqual({
       providerApiVersion: 1,
       providerId: "emulatorjs",
-      providerVersion: "1.0.0",
+      providerVersion: "2.0.0",
     });
     const envelope = launchEnvelope();
     expect(validateLaunchRequest(envelope)).toBe(envelope);
@@ -528,14 +528,14 @@ function yabauseEnvelope(): LaunchEnvelopeV1 {
   return {
     ...envelope,
     resources: [{
-      kind: "ROM_BLOB_V1", ordinal: 0, rangeRequired: false, role: "game",
+      kind: "ROM_BLOB", ordinal: 0, rangeRequired: false, role: "game",
       sha256: digest, sizeBytes: 128, url: "/runtime/content/game/playlist.m3u",
     }, {
       entries: [
         {index: 0, label: "Disc A", sha256: "c".repeat(64), sizeBytes: 128, url: "/runtime/content/discs/a.chd"},
         {index: 1, label: "Disc B", sha256: "d".repeat(64), sizeBytes: 256, url: "/runtime/content/discs/b.chd"},
       ],
-      initialDiscIndex: 1, kind: "MULTI_DISC_V1", ordinal: 0, role: "discs",
+      initialDiscIndex: 1, kind: "MULTI_DISC", ordinal: 0, role: "discs",
     }],
     runtime: {
       ...envelope.runtime,
@@ -545,7 +545,7 @@ function yabauseEnvelope(): LaunchEnvelopeV1 {
       targetContractSha256: digestTarget("yabause"),
       targetId: "yabause",
     },
-    targetOptions: {dosEntryPath: null, initialDiscIndex: 1, kind: "EMULATORJS_V1"},
+    targetOptions: {dosEntryPath: null, initialDiscIndex: 1},
   };
 }
 

@@ -48,7 +48,7 @@ describe("retrom-runtime Provider config projection", () => {
 
   it("preserves standalone project adapter options", () => {
     expect(projectLegacyRuntimeConfig(
-      envelope("onscripter-yuri", fileTree(), {kind: "ONS_PROJECT_V1", scriptEncoding: "sjis"}), assetIndex,
+      envelope("onscripter-yuri", fileTree(), {scriptEncoding: "sjis"}), assetIndex,
     )).toMatchObject({
       adapter: {
         adapterId: "ons-yuri-web",
@@ -59,7 +59,7 @@ describe("retrom-runtime Provider config projection", () => {
       },
     });
     expect(projectLegacyRuntimeConfig(
-      envelope("kirikiri2-kag", fileTree(), {kind: "KIRIKIRI_PROJECT_V1", startupXp3Path: "data.xp3"}),
+      envelope("kirikiri2-kag", fileTree(), {startupXp3Path: "data.xp3"}),
       assetIndex,
     )).toMatchObject({
       adapter: {
@@ -70,7 +70,7 @@ describe("retrom-runtime Provider config projection", () => {
       },
     });
     expect(projectLegacyRuntimeConfig(
-      envelope("butterscotch-gamemaker", fileTree(), {kind: "NONE_V1"}), assetIndex,
+      envelope("butterscotch-gamemaker", fileTree(), {}), assetIndex,
     )).toMatchObject({
       adapter: {adapterId: "butterscotch-web", adapterKind: "BUTTERSCOTCH_WEB"},
       contentDigest: digest,
@@ -83,13 +83,13 @@ describe("retrom-runtime Provider config projection", () => {
       cleanupUrl: "https://runtime.example/__retrom/cleanup",
       contentDigest: digest,
       entryUrl: "https://runtime.example/__retrom/bootstrap",
-      kind: "ISOLATED_WEB_V1",
+      kind: "ISOLATED_WEB",
       ordinal: 0,
       origin: "https://runtime.example",
       role: "game",
     };
     expect(projectLegacyRuntimeConfig(
-      envelope("tyranoscript", isolated, {kind: "NONE_V1"}), assetIndex,
+      envelope("tyranoscript", isolated, {}), assetIndex,
     )).toMatchObject({
       adapter: {
         adapterId: "tyranoscript-web",
@@ -103,7 +103,7 @@ describe("retrom-runtime Provider config projection", () => {
     });
 
     const cart: RuntimeResourceV1 = {
-      kind: "WASM4_CART_V1",
+      kind: "WASM4_CART",
       ordinal: 0,
       rangeRequired: false,
       role: "game",
@@ -111,7 +111,7 @@ describe("retrom-runtime Provider config projection", () => {
       sizeBytes: 65536,
       url: "/runtime/content/game/cart.wasm",
     };
-    expect(projectLegacyRuntimeConfig(envelope("wasm4", cart, {kind: "NONE_V1"}), assetIndex)).toEqual({
+    expect(projectLegacyRuntimeConfig(envelope("wasm4", cart, {}), assetIndex)).toEqual({
       adapter: {
         adapterId: "wasm4-web",
         adapterKind: "WASM4_WEB",
@@ -125,7 +125,7 @@ describe("retrom-runtime Provider config projection", () => {
   });
 
   it("rejects a resource or target contract mismatch", () => {
-    const wrong = envelope("wasm4", fileTree(), {kind: "NONE_V1"});
+    const wrong = envelope("wasm4", fileTree(), {});
     expect(() => projectLegacyRuntimeConfig(wrong, assetIndex)).toThrow("PROVIDER_LAUNCH_REQUEST_INVALID");
     const unknown = structuredClone(wrong);
     unknown.runtime.targetId = "unknown";
@@ -139,7 +139,7 @@ function rpgEnvelope(targetId: string) {
     : targetId === "rpgmaker-mv" || targetId === "rpgmaker-mz"
       ? nativeWeb()
       : fileTree();
-  return envelope(targetId, resource, {kind: "RPGMAKER_V1", expectedRestorePosition: null});
+  return envelope(targetId, resource, {expectedRestorePosition: null});
 }
 
 function envelope(
@@ -169,7 +169,7 @@ function envelope(
       moduleUrl: `/runtime/providers/retrom-runtime/${otherDigest}/client.mjs`,
       providerApiVersion: 1,
       providerId: "retrom-runtime",
-      providerVersion: "0.13.0",
+      providerVersion: "0.14.0",
       runtimeBaseUrl: `/runtime/providers/retrom-runtime/${otherDigest}/`,
       targetContractSha256: digest,
       targetId,
@@ -194,7 +194,7 @@ function fileTree(): RuntimeResourceV1 {
   return {
     contentDigest: digest,
     indexUrl: `/runtime/content/project/${digest}/index.json`,
-    kind: "FILE_TREE_V1",
+    kind: "FILE_TREE",
     ordinal: 0,
     role: "game",
   };
@@ -202,7 +202,7 @@ function fileTree(): RuntimeResourceV1 {
 
 function seekable(): RuntimeResourceV1 {
   return {
-    kind: "SEEKABLE_BLOB_V1",
+    kind: "SEEKABLE_BLOB",
     ordinal: 0,
     rangeRequired: true,
     role: "game",
@@ -218,7 +218,7 @@ function nativeWeb(): RuntimeResourceV1 {
     cleanupUrl: "https://runtime.example/__retrom/cleanup",
     contentDigest: digest,
     entryUrl: "https://runtime.example/__retrom/bootstrap",
-    kind: "NATIVE_WEB_V1",
+    kind: "NATIVE_WEB",
     ordinal: 0,
     origin: "https://runtime.example",
     role: "game",

@@ -1,21 +1,60 @@
 export type ResourceKind =
-  | "ROM_BLOB_V1"
-  | "FILE_TREE_V1"
-  | "SEEKABLE_BLOB_V1"
-  | "NATIVE_WEB_V1"
-  | "ISOLATED_WEB_V1"
-  | "BIOS_BUNDLE_V1"
-  | "PARENT_ARCHIVE_V1"
-  | "MULTI_DISC_V1"
-  | "EXTERNAL_FILE_SET_V1"
-  | "WASM4_CART_V1";
+  | "ROM_BLOB"
+  | "FILE_TREE"
+  | "SEEKABLE_BLOB"
+  | "NATIVE_WEB"
+  | "ISOLATED_WEB"
+  | "BIOS_BUNDLE"
+  | "PARENT_ARCHIVE"
+  | "MULTI_DISC"
+  | "EXTERNAL_FILE_SET"
+  | "WASM4_CART";
 
-export type OptionsKind =
-  | "NONE_V1"
-  | "EMULATORJS_V1"
-  | "RPGMAKER_V1"
-  | "ONS_PROJECT_V1"
-  | "KIRIKIRI_PROJECT_V1";
+export type TargetOptionsType = "array" | "boolean" | "integer" | "object" | "string";
+export type TargetOptionsTypeDeclaration<Type extends TargetOptionsType> =
+  | Type
+  | readonly [Type, "null"];
+
+export type TargetOptionsStringSchema = Readonly<{
+  type: TargetOptionsTypeDeclaration<"string">;
+  enum?: readonly string[];
+  format?: "safe-path";
+  minLength?: number;
+  maxLength?: number;
+}>;
+
+export type TargetOptionsIntegerSchema = Readonly<{
+  type: TargetOptionsTypeDeclaration<"integer">;
+  minimum?: number;
+  maximum?: number;
+}>;
+
+export type TargetOptionsBooleanSchema = Readonly<{
+  type: TargetOptionsTypeDeclaration<"boolean">;
+}>;
+
+export type TargetOptionsArraySchema = Readonly<{
+  type: TargetOptionsTypeDeclaration<"array">;
+  items: TargetOptionsPropertySchema;
+  minItems?: number;
+  maxItems: number;
+}>;
+
+export type TargetOptionsObjectSchema = Readonly<{
+  type: TargetOptionsTypeDeclaration<"object">;
+  additionalProperties: false;
+  properties: Readonly<Record<string, TargetOptionsPropertySchema>>;
+  required: readonly string[];
+}>;
+
+export type TargetOptionsPropertySchema =
+  | TargetOptionsStringSchema
+  | TargetOptionsIntegerSchema
+  | TargetOptionsBooleanSchema
+  | TargetOptionsArraySchema
+  | TargetOptionsObjectSchema;
+
+export type TargetOptionsSchema = TargetOptionsObjectSchema & Readonly<{type: "object"}>;
 
 export type FrameMode =
   | "NONE"
@@ -59,7 +98,7 @@ export type TargetDeclaration = {
   gameCompatibilityLine: string;
   netplayCompatibilityLine: string | null;
   adapterId: string;
-  optionsKind: OptionsKind;
+  targetOptionsSchema: TargetOptionsSchema;
   requiresThreads: boolean;
   frameMode: FrameMode;
   discSwitch: boolean;

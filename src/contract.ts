@@ -33,12 +33,12 @@ export type RuntimeValidationProbe = {
 };
 
 export type FileTreeSource = {
-  kind: "FILE_TREE_V1";
+  kind: "FILE_TREE";
   indexUrl: string;
 };
 
 export type SeekableBlobSource = {
-  kind: "SEEKABLE_BLOB_V1";
+  kind: "SEEKABLE_BLOB";
   rangeRequired: true;
   sha256: string;
   sizeBytes: number;
@@ -46,7 +46,7 @@ export type SeekableBlobSource = {
 };
 
 export type RuntimeContentSourceKind = FileTreeSource["kind"] | SeekableBlobSource["kind"] |
-  "ISOLATED_WEB_V1" | "NATIVE_WEB_V1" | "WASM4_CART_V1";
+  "ISOLATED_WEB" | "NATIVE_WEB" | "WASM4_CART";
 
 export type RuntimeLoadPhase = "RUNTIME_ASSET" | "PROJECT_INDEX" | "PROJECT_CONTENT" | "RESTORE";
 

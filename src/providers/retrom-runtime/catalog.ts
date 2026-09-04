@@ -4,10 +4,44 @@ import {
   defineTarget,
   type AdapterDeclaration,
   type FrameMode,
-  type OptionsKind,
   type ProviderCapabilities,
   type ResourceKind,
+  type TargetOptionsSchema,
 } from "../../provider/declarations.js";
+
+const noOptionsSchema = {
+  additionalProperties: false, properties: {}, required: [], type: "object",
+} as const satisfies TargetOptionsSchema;
+const rpgMakerOptionsSchema = {
+  additionalProperties: false,
+  properties: {
+    expectedRestorePosition: {
+      additionalProperties: false,
+      properties: {
+        fixtureState: {minimum: 0, type: "integer"},
+        mapId: {minimum: 0, type: "integer"},
+        playerX: {minimum: 0, type: "integer"},
+        playerY: {minimum: 0, type: "integer"},
+      },
+      required: ["fixtureState", "mapId", "playerX", "playerY"],
+      type: ["object", "null"],
+    },
+  },
+  required: ["expectedRestorePosition"],
+  type: "object",
+} as const satisfies TargetOptionsSchema;
+const onsOptionsSchema = {
+  additionalProperties: false,
+  properties: {scriptEncoding: {enum: ["gbk", "sjis", "utf8"], type: "string"}},
+  required: ["scriptEncoding"],
+  type: "object",
+} as const satisfies TargetOptionsSchema;
+const kirikiriOptionsSchema = {
+  additionalProperties: false,
+  properties: {startupXp3Path: {format: "safe-path", maxLength: 240, type: ["string", "null"]}},
+  required: ["startupXp3Path"],
+  type: "object",
+} as const satisfies TargetOptionsSchema;
 
 const rpgCapabilities = capabilities(true, true, false, ["rpgmaker.position.v1"]);
 const nativeCapabilities = capabilities(true, true, true, ["rpgmaker.position.v1"]);
@@ -33,19 +67,19 @@ const adapters = [
 const targets = [
   target(
     "butterscotch-gamemaker", "GameMaker (Butterscotch)", "butterscotch-gamemaker-v1",
-    "butterscotch-web", "NONE_V1", true, "NONE", "FILE_TREE_V1", 16 * 1024 * 1024,
+    "butterscotch-web", noOptionsSchema, true, "NONE", "FILE_TREE", 16 * 1024 * 1024,
     ["assets/butterscotch/butterscotch.mjs", "assets/butterscotch/butterscotch.wasm",
       "assets/butterscotch/worker.mjs"],
   ),
   target(
-    "kirikiri2-kag", "KiriKiri2 KAG", "kirikiri2-kag-v1", "kirikiri2-web", "KIRIKIRI_PROJECT_V1",
-    true, "NONE", "FILE_TREE_V1", 64 * 1024 * 1024,
+    "kirikiri2-kag", "KiriKiri2 KAG", "kirikiri2-kag-v1", "kirikiri2-web", kirikiriOptionsSchema,
+    true, "NONE", "FILE_TREE", 64 * 1024 * 1024,
     ["assets/kirikiri/assets.zip", "assets/kirikiri/index.js", "assets/kirikiri/index.wasm",
       "assets/kirikiri/vlfs.js"],
   ),
   target(
-    "onscripter-yuri", "ONScripter Yuri", "onscripter-yuri-v1", "ons-yuri-web", "ONS_PROJECT_V1",
-    false, "NONE", "FILE_TREE_V1", 64 * 1024 * 1024,
+    "onscripter-yuri", "ONScripter Yuri", "onscripter-yuri-v1", "ons-yuri-web", onsOptionsSchema,
+    false, "NONE", "FILE_TREE", 64 * 1024 * 1024,
     ["assets/ons/onsyuri.js", "assets/ons/onsyuri.wasm"],
   ),
   easyRpgTarget("rpgmaker-2000", "RPG Maker 2000", "rpgmaker-2000-v1", "rpg2k"),
@@ -56,12 +90,12 @@ const targets = [
   mkxpTarget("rpgmaker-vx-ace", "RPG Maker VX Ace", "rpgmaker-vx-ace-v1", 3),
   mkxpTarget("rpgmaker-xp", "RPG Maker XP", "rpgmaker-xp-v1", 1),
   target(
-    "tyranoscript", "TyranoScript", "tyranoscript-v1", "tyranoscript-web", "NONE_V1", false,
-    "ISOLATED_ORIGIN_RESOURCE", "ISOLATED_WEB_V1", 32 * 1024 * 1024,
+    "tyranoscript", "TyranoScript", "tyranoscript-v1", "tyranoscript-web", noOptionsSchema, false,
+    "ISOLATED_ORIGIN_RESOURCE", "ISOLATED_WEB", 32 * 1024 * 1024,
     ["assets/tyranoscript/bridge.js"],
   ),
   target(
-    "wasm4", "WASM-4", "wasm4-v1", "wasm4-web", "NONE_V1", false, "NONE", "WASM4_CART_V1",
+    "wasm4", "WASM-4", "wasm4-v1", "wasm4-web", noOptionsSchema, false, "NONE", "WASM4_CART",
     132144, ["assets/wasm4/wasm4-retrom.mjs"],
   ),
 ] as const;
@@ -70,7 +104,7 @@ export const retromRuntimeProviderDefinition = defineProvider({
   adapters,
   providerApiVersion: 1,
   providerId: "retrom-runtime",
-  providerVersion: "0.13.0",
+  providerVersion: "0.14.0",
   targets,
 });
 
@@ -112,7 +146,7 @@ function target(
   displayName: string,
   gameCompatibilityLine: string,
   adapterId: string,
-  optionsKind: OptionsKind,
+  targetOptionsSchema: TargetOptionsSchema,
   requiresThreads: boolean,
   frameMode: FrameMode,
   resourceKind: ResourceKind,
@@ -135,7 +169,7 @@ function target(
     netplayCompatibilityLine: null,
     nativeSettings: false,
     netplayPort: false,
-    optionsKind,
+    targetOptionsSchema,
     requiresThreads,
     videoModes: ["original", "pixel", "smooth"],
   });
@@ -143,7 +177,7 @@ function target(
 
 function mkxpTarget(id: string, displayName: string, line: string, rgssVersion: 1 | 2 | 3) {
   const result = target(
-    id, displayName, line, "mkxp-libretro-web", "RPGMAKER_V1", true, "NONE", "SEEKABLE_BLOB_V1",
+    id, displayName, line, "mkxp-libretro-web", rpgMakerOptionsSchema, true, "NONE", "SEEKABLE_BLOB",
     256 * 1024 * 1024,
     ["assets/mkxp/mkxp-z_libretro.js", "assets/mkxp/mkxp-z_libretro.wasm",
       "assets/mkxp/position_bridge.rb"], {rgssVersion},
@@ -152,7 +186,7 @@ function mkxpTarget(id: string, displayName: string, line: string, rgssVersion: 
     ...result,
     inputs: [
       result.inputs[0],
-      {cardinality: "MANY", kind: "SEEKABLE_BLOB_V1", optional: true, role: "rtp"},
+      {cardinality: "MANY", kind: "SEEKABLE_BLOB", optional: true, role: "rtp"},
     ],
   });
 }
@@ -164,7 +198,7 @@ function easyRpgTarget(
   engineMode: "rpg2k" | "rpg2k3",
 ) {
   const result = target(
-    id, displayName, line, "easyrpg-web", "RPGMAKER_V1", false, "NONE", "FILE_TREE_V1",
+    id, displayName, line, "easyrpg-web", rpgMakerOptionsSchema, false, "NONE", "FILE_TREE",
     64 * 1024 * 1024,
     ["assets/easyrpg/easyrpg-player.js", "assets/easyrpg/easyrpg-player.wasm"], {engineMode},
   );
@@ -172,14 +206,14 @@ function easyRpgTarget(
     ...result,
     inputs: [
       result.inputs[0],
-      {cardinality: "ONE", kind: "FILE_TREE_V1", optional: true, role: "rtp"},
+      {cardinality: "ONE", kind: "FILE_TREE", optional: true, role: "rtp"},
     ],
   });
 }
 
 function nativeRpgTarget(id: string, displayName: string, line: string, bridgeProfile: "RPGMV" | "RPGMZ") {
   return target(
-    id, displayName, line, "native-web", "RPGMAKER_V1", false, "ISOLATED_ORIGIN_RESOURCE",
-    "NATIVE_WEB_V1", 64 * 1024 * 1024, ["assets/native/bridge.js"], {bridgeProfile},
+    id, displayName, line, "native-web", rpgMakerOptionsSchema, false, "ISOLATED_ORIGIN_RESOURCE",
+    "NATIVE_WEB", 64 * 1024 * 1024, ["assets/native/bridge.js"], {bridgeProfile},
   );
 }

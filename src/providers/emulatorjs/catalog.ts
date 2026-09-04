@@ -1,5 +1,17 @@
-import {defineAdapter, defineProvider, defineTarget, type TargetInputDeclaration} from "../../provider/declarations.js";
+import {
+  defineAdapter, defineProvider, defineTarget, type TargetInputDeclaration, type TargetOptionsSchema,
+} from "../../provider/declarations.js";
 import {emulatorJsNetplayProfiles} from "./netplay-profile.js";
+
+const emulatorJsOptionsSchema = {
+  additionalProperties: false,
+  properties: {
+    dosEntryPath: {format: "safe-path", maxLength: 240, type: ["string", "null"]},
+    initialDiscIndex: {minimum: 0, type: ["integer", "null"]},
+  },
+  required: ["dosEntryPath", "initialDiscIndex"],
+  type: "object",
+} as const satisfies TargetOptionsSchema;
 
 const capabilities = {
   checkpoint: true,
@@ -25,11 +37,11 @@ const adapters = [
 ] as const;
 
 const inputs = [
-  {cardinality: "ONE", kind: "ROM_BLOB_V1", optional: false, role: "game"},
-  {cardinality: "ONE", kind: "BIOS_BUNDLE_V1", optional: true, role: "bios"},
-  {cardinality: "ONE", kind: "PARENT_ARCHIVE_V1", optional: true, role: "parent"},
-  {cardinality: "ONE", kind: "MULTI_DISC_V1", optional: true, role: "discs"},
-  {cardinality: "ONE", kind: "EXTERNAL_FILE_SET_V1", optional: true, role: "external"},
+  {cardinality: "ONE", kind: "ROM_BLOB", optional: false, role: "game"},
+  {cardinality: "ONE", kind: "BIOS_BUNDLE", optional: true, role: "bios"},
+  {cardinality: "ONE", kind: "PARENT_ARCHIVE", optional: true, role: "parent"},
+  {cardinality: "ONE", kind: "MULTI_DISC", optional: true, role: "discs"},
+  {cardinality: "ONE", kind: "EXTERNAL_FILE_SET", optional: true, role: "external"},
 ] as const satisfies readonly TargetInputDeclaration[];
 
 type RuntimeRelease = "4.2.3" | "4.3.0-pre";
@@ -57,7 +69,7 @@ type CoreSource = {
   defaultOptions: Readonly<Record<string, string>>;
   inputMode: InputMode;
   startupActions: readonly StartupAction[];
-  contentKinds: readonly ("SINGLE_FILE" | "DOS_BUNDLE" | "MULTI_DISC_M3U_V1")[];
+  contentKinds: readonly ("SINGLE_FILE" | "DOS_BUNDLE" | "MULTI_DISC")[];
 };
 
 const cores: readonly CoreSource[] = [
@@ -95,7 +107,7 @@ const cores: readonly CoreSource[] = [
   core("smsplus", "4.2.3", "smsplus-wasm.data", 855876, "0f197c5e0000f17b2d072122a72b3f8fc1693514c4014fcd9694eec78584aa08", "a09612f1d088bffe8d9c107caf196b023710ed4aaeaa24f05caee7eec8591ff0"),
   core("snes9x", "4.2.3", "snes9x-wasm.data", 1093765, "eaa0bcfce67673809886e50387a80a616b719502175db64c090d04c9d75958ee", "f2ecf64d84dc3845ccd9828daf48436667f6aa79e6a5d6c41f0965f0151f1f34"),
   core("stella2014", "4.2.3", "stella2014-wasm.data", 1051659, "6c96c6b1746f3f05ca599066abe131a36c77ca61fc20a9e2a7560540457c487d", "f5244febaf876003e9acf97e09b8785f1f51563c3f96527232652c1d9ec40e68"),
-  core("yabause", "4.2.3", "yabause-wasm.data", 991166, "ab253ac263bd98e3124e2ca45ff581e97673426ed06ecec0025333060cd8127c", "1fc177e7be4923208b92755bcfae66ac35ba6e395c3b7ea48df581806ebdf6a6", {contentKinds: ["SINGLE_FILE", "MULTI_DISC_M3U_V1"]}),
+  core("yabause", "4.2.3", "yabause-wasm.data", 991166, "ab253ac263bd98e3124e2ca45ff581e97673426ed06ecec0025333060cd8127c", "1fc177e7be4923208b92755bcfae66ac35ba6e395c3b7ea48df581806ebdf6a6", {contentKinds: ["SINGLE_FILE", "MULTI_DISC"]}),
 ] as const;
 
 const targets = cores.map((entry) => {
@@ -134,7 +146,7 @@ const targets = cores.map((entry) => {
   nativeSettings: true,
   netplayPort: netplayProfile !== null,
   netplayCompatibilityLine: netplayProfile ? "emulatorjs-netplay-v2" : null,
-  optionsKind: "EMULATORJS_V1",
+  targetOptionsSchema: emulatorJsOptionsSchema,
   requiresThreads: entry.requiresThreads,
   videoModes: ["adaptive-sharpen", "original", "pixel", "sharp-bilinear", "smooth"],
   });
@@ -144,7 +156,7 @@ export const emulatorJsProviderDefinition = defineProvider({
   adapters,
   providerApiVersion: 1,
   providerId: "emulatorjs",
-  providerVersion: "1.0.0",
+  providerVersion: "2.0.0",
   targets,
 });
 

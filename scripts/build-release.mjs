@@ -83,7 +83,7 @@ if (!providerOnly) {
 async function verifyBuiltProvider(provider) {
   const retrom = provider.metadata.providers.find((entry) => entry.providerId === "retrom-runtime");
   const emulatorjs = provider.metadata.providers.find((entry) => entry.providerId === "emulatorjs");
-  if (retrom?.providerVersion !== sources.packageVersion || emulatorjs?.providerVersion !== "2.0.0") {
+  if (retrom?.providerVersion !== sources.packageVersion || emulatorjs?.providerVersion !== "2.1.0") {
     throw new Error("PROVIDER_RELEASE_INVALID");
   }
 }

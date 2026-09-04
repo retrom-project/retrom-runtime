@@ -95,6 +95,38 @@ describe("EasyRPG adapter cleanup", () => {
     target.remove();
   });
 
+  it("mounts on an interactive title scene without exposing map position evidence", async () => {
+    const target = document.createElement("div");
+    document.body.append(target);
+    const canvas = document.createElement("canvas");
+    Object.defineProperty(window, "createEasyRpgPlayer", {
+      configurable: true,
+      value: vi.fn().mockResolvedValue({
+        FS: {},
+        api: {
+          createRuntimeCheckpoint: vi.fn(),
+          runtimeState: () => JSON.stringify({
+            engine: "RPG2003", ready: false, canCheckpoint: false,
+            frameCount: 120, mapId: 0, playerX: 0, playerY: 0, fixtureState: 0,
+          }),
+        },
+        canvas, runtimeFileSystemReady: true,
+        initApi: vi.fn(), pauseMainLoop: vi.fn(), resumeMainLoop: vi.fn(),
+      }),
+    });
+    const mounting = mountEasyRpg(easyConfig("RPG2003"), target, window, null);
+    await vi.waitFor(() => expect(document.head.querySelector("script[data-rpg-runtime=easyrpg]")).not.toBeNull());
+    document.head.querySelector<HTMLScriptElement>("script[data-rpg-runtime=easyrpg]")
+      ?.dispatchEvent(new Event("load"));
+
+    const mounted = await mounting;
+    expect(mounted.getFrameCount()).toBe(120);
+    expect(mounted.getValidationProbe(rpgMakerPositionProbeKind)).toBeNull();
+    expect(mounted.getCheckpointAvailability()).toEqual({available: false, blocker: "BUSY"});
+    await mounted.exit();
+    target.remove();
+  });
+
   it("passes an RTP file tree to the core without downloading RTP payload files", async () => {
     const target = document.createElement("div");
     document.body.append(target);

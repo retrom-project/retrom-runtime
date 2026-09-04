@@ -141,9 +141,12 @@ async function mountEasyRpgUnchecked(
       ? { available: true, blocker: null }
       : { available: false, blocker: "BUSY" },
     getFrameCount: () => readState(playerModule).frameCount,
-    getValidationProbe: (kind) => kind === rpgMakerPositionProbeKind
-      ? { kind, schemaVersion: 1, value: position(readState(playerModule)) }
-      : null,
+    getValidationProbe: (kind) => {
+      const state = readState(playerModule);
+      return kind === rpgMakerPositionProbeKind && state.ready
+        ? { kind, schemaVersion: 1, value: position(state) }
+        : null;
+    },
     pause: async () => {playerModule.pauseMainLoop();},
     resume: async () => {playerModule.resumeMainLoop();},
     screenshot: () => canvasBlob(playerModule.canvas),
@@ -187,7 +190,7 @@ async function waitForReady(
   const deadline = performance.now() + 30_000;
   while (performance.now() < deadline) {
     const state = startupState(module);
-    if (state?.ready) {
+    if (state && (state.ready || state.frameCount > 0)) {
       if (state.engine !== expectedEngine) {throw new Error("RPG_ENGINE_PROFILE_MISMATCH");}
       return;
     }

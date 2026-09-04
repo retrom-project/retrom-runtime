@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.15.0
 
 - Introduce the Runtime Provider V1 declaration model while preserving all eight adapters and twelve targets from
   `0.11.3`, including WASM-4, as the single source for generated public manifests and internal dispatch.

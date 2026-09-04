@@ -28,6 +28,7 @@ type Pending = {
   reject: (reason: Error) => void;
   resolve: (reply: Reply) => void;
   timer: number;
+  type?: string;
 };
 
 type NativeBootstrapStage = "BOOTSTRAP" | "BRIDGE";
@@ -39,6 +40,7 @@ const maximumCheckpointBytes = 64 * 1024 * 1024;
 const maximumScreenshotBytes = 10 * 1024 * 1024;
 const bootstrapTimeoutMs = 10_000;
 const channelReadyTimeoutMs = 10_000;
+const cleanupTimeoutMs = 2_000;
 
 export async function mountNativeRpg(
   config: NativeConfig,
@@ -71,8 +73,8 @@ export async function mountNativeRpg(
   return {
     checkpoint: async () => ({ bytes: await channel.save(expectedEngine), format: "native-save-bundle-v1" }),
     exit: async () => {
-      channel.stopProbeLoop();
-      await channel.request("CLEANUP", {}, 10_000).catch(() => undefined);
+      channel.prepareCleanup();
+      await channel.request("CLEANUP", {}, cleanupTimeoutMs).catch(() => undefined);
       channel.close();
       frame.src = "about:blank";
     },
@@ -95,7 +97,7 @@ export async function mountNativeRpg(
   } satisfies MountedRuntimeAdapter;
 }
 
-class NativeChannel {
+export class NativeChannel {
   private readonly config: NativeConfig;
   private readonly nonce = randomNonce();
   private readonly port = new MessageChannel();
@@ -111,6 +113,7 @@ class NativeChannel {
   private available = false;
   private probeTimer: number | null = null;
   private probeActive = false;
+  private exiting = false;
 
   constructor(config: NativeConfig, private readonly reportExitRequested: RuntimeExitReporter) {
     this.config = config;
@@ -147,7 +150,9 @@ class NativeChannel {
   }
 
   private sendRequest(type: string, body: Record<string, unknown>, timeout: number): Promise<Reply> {
-    if (this.closed) {return Promise.reject(new Error("RPG_NATIVE_CHANNEL_CLOSED"));}
+    if (this.closed || this.exiting && type !== "CLEANUP") {
+      return Promise.reject(new Error("RPG_NATIVE_CHANNEL_CLOSED"));
+    }
     if (this.pending) {return Promise.reject(new Error("RPG_NATIVE_PROTOCOL_INVALID"));}
     const requestId = ++this.lastRequestId;
     const message = this.envelope(requestId, type, body);
@@ -159,7 +164,7 @@ class NativeChannel {
         this.pending = null;
         reject(new Error("RPG_NATIVE_REQUEST_TIMEOUT"));
       }, timeout);
-      this.pending = { resolve, reject, timer };
+      this.pending = { resolve, reject, timer, type };
       this.port.port1.postMessage(message, transferables(body));
     });
   }
@@ -229,6 +234,16 @@ class NativeChannel {
     this.probeActive = false;
     if (this.probeTimer !== null) {window.clearTimeout(this.probeTimer);}
     this.probeTimer = null;
+  }
+
+  prepareCleanup() {
+    this.exiting = true;
+    this.stopProbeLoop();
+    if (this.pending?.type !== "PROBE") {return;}
+    const pending = this.pending;
+    this.pending = null;
+    window.clearTimeout(pending.timer);
+    pending.reject(new Error("RPG_NATIVE_CHANNEL_CLOSED"));
   }
 
   close() {

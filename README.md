@@ -12,7 +12,7 @@ one `client.mjs` with this closed interface:
 
 ```ts
 export const providerId = "retrom-runtime";
-export const providerVersion = "0.14.5";
+export const providerVersion = "0.15.0";
 export const providerApiVersion = 1;
 export function validateLaunchRequest(value: unknown): LaunchEnvelopeV1;
 export async function createRuntime(

@@ -17,7 +17,7 @@ describe("EmulatorJS Provider Module V1", () => {
     expect({providerApiVersion, providerId, providerVersion}).toEqual({
       providerApiVersion: 1,
       providerId: "emulatorjs",
-      providerVersion: "2.0.0",
+      providerVersion: "2.1.0",
     });
     const envelope = launchEnvelope();
     expect(validateLaunchRequest(envelope)).toBe(envelope);

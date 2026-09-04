@@ -45,7 +45,7 @@ describe("retrom-runtime provider declarations", () => {
         "id",
         "inputs",
         "netplayCompatibilityLine",
-        "optionsKind",
+        "targetOptionsSchema",
       ]);
       expect(target).not.toHaveProperty("adapterId");
       expect(target).not.toHaveProperty("adapterKind");
@@ -62,7 +62,13 @@ describe("retrom-runtime provider declarations", () => {
         readFormats: ["wasm4-state-v1"],
         writeFormat: "wasm4-state-v1",
       },
-      inputs: [{ cardinality: "ONE", kind: "WASM4_CART_V1", optional: false, role: "game" }],
+      inputs: [{ cardinality: "ONE", kind: "WASM4_CART", optional: false, role: "game" }],
+      targetOptionsSchema: {
+        additionalProperties: false,
+        properties: {},
+        required: [],
+        type: "object",
+      },
     });
   });
 
@@ -70,9 +76,19 @@ describe("retrom-runtime provider declarations", () => {
     const manifest = projectProviderManifest(retromRuntimeProviderDefinition);
     for (const id of ["rpgmaker-2000", "rpgmaker-2003"]) {
       expect(manifest.targets.find((target) => target.id === id)?.inputs).toEqual([
-        {cardinality: "ONE", kind: "FILE_TREE_V1", optional: false, role: "game"},
-        {cardinality: "ONE", kind: "FILE_TREE_V1", optional: true, role: "rtp"},
+        {cardinality: "ONE", kind: "FILE_TREE", optional: false, role: "game"},
+        {cardinality: "ONE", kind: "FILE_TREE", optional: true, role: "rtp"},
       ]);
+    }
+  });
+
+  it("keeps semantic kinds and profiles free of structural version suffixes", () => {
+    const manifest = projectProviderManifest(retromRuntimeProviderDefinition);
+    for (const target of manifest.targets) {
+      expect(target).not.toHaveProperty("optionsKind");
+      for (const input of target.inputs) {
+        expect(input.kind).not.toMatch(/_V[0-9]+$/u);
+      }
     }
   });
 });

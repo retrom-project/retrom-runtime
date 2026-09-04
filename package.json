@@ -26,6 +26,7 @@
     "test": "vitest run",
     "build": "npm run clean && tsc -p tsconfig.build.json",
     "dev:watch": "node scripts/dev-watch.mjs",
+    "dev:provider:watch": "node scripts/pfb-provider-watch.mjs",
     "candidate:build": "node scripts/build-candidate.mjs",
     "package:check": "node scripts/package-check.mjs",
     "provider:input:prepare": "node scripts/emulatorjs-provider-input.mjs prepare",

@@ -51,7 +51,7 @@ describe("Butterscotch Web adapter", () => {
       format: "butterscotch-checkpoint-v2",
     });
     expect(workers[0]?.commands).toContain("RESTORE");
-    expect(workers[0]?.url.pathname).toBe("/runtime/retrom-runtime/v0.8.0/butterscotch-worker.mjs");
+    expect(workers[0]?.url.pathname).toBe("/runtime/retrom-runtime/v0.8.0/worker.mjs");
     expect(workers[0]?.messages).toContainEqual(expect.objectContaining({ keyCode: 38, pressed: true, type: "KEY" }));
     expect(workers[0]?.messages).toContainEqual(expect.objectContaining({ type: "GAMEPAD" }));
     expect(adapter.getCheckpointAvailability()).toEqual({ available: true, blocker: null });

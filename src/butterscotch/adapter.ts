@@ -53,7 +53,7 @@ export async function mountButterscotch(
   surface.append(canvas);
   target.replaceChildren(surface);
   const runtimeBase = new URL(normalizedBase(config.adapter.runtimeBaseUrl), frameWindow.document.baseURI);
-  const workerUrl = new URL("butterscotch-worker.mjs", runtimeBase);
+  const workerUrl = new URL("worker.mjs", runtimeBase);
   const worker = new (frameWindow as WorkerWindow).Worker(workerUrl, { type: "module" });
   const audio = createButterscotchAudio(frameWindow);
   const pending = new Map<string, { reject: (error: Error) => void; resolve: (message: HostMessage) => void }>();

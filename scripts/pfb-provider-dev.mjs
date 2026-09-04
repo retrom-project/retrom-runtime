@@ -25,12 +25,9 @@ export async function buildPFBProviderDev(input) {
     .filter((file) => file?.path?.startsWith("assets/") && digest(file.sha256) &&
       Number.isSafeInteger(file.sizeBytes) && file.sizeBytes > 0)
     .map((file) => [file.path, {sha256: file.sha256, sizeBytes: file.sizeBytes}]));
-  const targetDigests = Object.fromEntries(provider.targets.map((target) => {
-    if (typeof target?.id !== "string" || !digest(target.targetContractSha256)) {
-      throw new Error("PFB_PROVIDER_BASE_INVALID");
-    }
-    return [target.id, target.targetContractSha256];
-  }));
+  if (provider.targets.some((target) => !validActiveTarget(target))) {
+    throw new Error("PFB_PROVIDER_BASE_INVALID");
+  }
   const parent = dirname(input.outputRoot);
   await mkdir(parent, {recursive: true});
   const staging = await mkdtemp(join(parent, ".provider-dev-"));
@@ -40,7 +37,6 @@ export async function buildPFBProviderDev(input) {
       assetIndex,
       entryPoint: input.entryPoint,
       outfile: clientPath,
-      targetDigests,
     });
     const files = [];
     for (const local of input.localAssets) {
@@ -148,6 +144,26 @@ function safeRelative(value) {
 
 function digest(value) {
   return typeof value === "string" && /^[0-9a-f]{64}$/u.test(value);
+}
+
+function validActiveTarget(value) {
+  if (!value || typeof value !== "object" || Array.isArray(value) ||
+    Object.keys(value).sort().join("\0") !== "checkpoint\0id" ||
+    typeof value.id !== "string" || !/^[a-z0-9](?:[a-z0-9-]{0,62}[a-z0-9])?$/u.test(value.id)) {
+    return false;
+  }
+  const checkpoint = value.checkpoint;
+  if (checkpoint === null) {return true;}
+  if (!checkpoint || typeof checkpoint !== "object" || Array.isArray(checkpoint) ||
+    Object.keys(checkpoint).sort().join("\0") !== "maxBytes\0readFormats\0writeFormat" ||
+    !Number.isSafeInteger(checkpoint.maxBytes) || checkpoint.maxBytes < 1 ||
+    typeof checkpoint.writeFormat !== "string" || !Array.isArray(checkpoint.readFormats)) {
+    return false;
+  }
+  const formats = checkpoint.readFormats;
+  return formats.length > 0 && formats.includes(checkpoint.writeFormat) &&
+    formats.every((format) => typeof format === "string" && /^[a-z0-9](?:[a-z0-9.-]{0,62}[a-z0-9])?$/u.test(format)) &&
+    formats.every((format, index) => index === 0 || formats[index - 1] < format);
 }
 
 function sha256(value) {

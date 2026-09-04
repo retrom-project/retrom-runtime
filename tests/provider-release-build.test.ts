@@ -8,7 +8,7 @@ import { afterEach, describe, expect, it } from "vitest";
 import { projectProviderManifest } from "../src/provider/manifest.js";
 import { retromRuntimeProviderDefinition } from "../src/providers/retrom-runtime/catalog.js";
 import {
-  buildRetromRuntimeProviderBundle, canonicalJsonBytes, targetContractDigests,
+  buildRetromRuntimeProviderBundle, canonicalJsonBytes,
 } from "../scripts/provider-release-build.mjs";
 
 const temporaryRoots: string[] = [];
@@ -21,21 +21,6 @@ describe("retrom-runtime Provider release build", () => {
   it("canonicalizes object keys by UTF-16 code units", () => {
     expect(canonicalJsonBytes({"\ue000": 1, "𐀀": 2}).toString())
       .toBe('{"𐀀":2,"":1}');
-  });
-
-  it("changes a Target contract digest when any declared asset digest changes", () => {
-    const manifest = projectProviderManifest(retromRuntimeProviderDefinition);
-    const assetIndex = Object.fromEntries([...new Set(manifest.targets.flatMap((target) => target.assetPaths))]
-      .map((path) => [path, {sha256: "a".repeat(64), sizeBytes: 1}]));
-    const first = targetContractDigests(manifest, assetIndex);
-    const target = manifest.targets[0];
-    const changedPath = target?.assetPaths[0];
-    if (!target || !changedPath) {throw new Error("missing target fixture");}
-    const second = targetContractDigests(manifest, {
-      ...assetIndex,
-      [changedPath]: {sha256: "b".repeat(64), sizeBytes: 1},
-    });
-    expect(second[target.id]).not.toBe(first[target.id]);
   });
 
   it("builds all twelve targets from one staged release without downloading cores", async () => {

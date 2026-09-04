@@ -386,7 +386,8 @@
     case "SET_VOLUME": setVolume(message.body.value); return { type: "SET_VOLUME_RESULT", body: {} };
     case "CLEANUP":
       if (cleanupUrl) {
-        await global.fetch(cleanupUrl, { method: "POST", credentials: "same-origin", keepalive: true });
+        void global.fetch(cleanupUrl, { method: "POST", credentials: "same-origin", keepalive: true })
+          .catch(() => undefined);
       }
       return { type: "CLEANUP_RESULT", body: {} };
     default: throw new Error("RPG_NATIVE_MESSAGE_INVALID");
@@ -465,9 +466,26 @@
     };
   }
 
+  function installCanvasTextAlignCompatibility() {
+    const prototype = global.CanvasRenderingContext2D && global.CanvasRenderingContext2D.prototype;
+    if (!prototype) return;
+    const descriptor = Object.getOwnPropertyDescriptor(prototype, "textAlign");
+    if (!descriptor || !descriptor.configurable || typeof descriptor.get !== "function" ||
+      typeof descriptor.set !== "function") return;
+    const valid = new Set(["start", "end", "left", "right", "center"]);
+    Object.defineProperty(prototype, "textAlign", {
+      ...descriptor,
+      set: function runtimeTextAlign(value) {
+        if (valid.has(value)) descriptor.set.call(this, value);
+      },
+    });
+  }
+
   global.addEventListener("keydown", () => {
     if (!inputObserved) { inputObserved = true; event("INPUT", { observed: true }); }
   }, true);
+
+  installCanvasTextAlignCompatibility();
 
   global.addEventListener("message", function connect(eventMessage) {
     const message = eventMessage.data;

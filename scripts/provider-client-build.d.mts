@@ -2,7 +2,6 @@ import type {AssetIndexV1} from "../src/provider/module-api.js";
 
 export type ProviderClientBuildInput = {
   assetIndex: AssetIndexV1;
-  targetDigests: Readonly<Record<string, string>>;
   entryPoint: string;
   outfile: string;
 };

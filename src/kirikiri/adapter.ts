@@ -44,6 +44,12 @@ const writeTimeoutMs = 10_000;
 const writeQuiescenceMs = 250;
 const maximumProjectFiles = 10_000;
 const saveRoots = ["/save/", "/savedata/"] as const;
+const runtimeTerminationTraps = new Set([
+  "null function",
+  "function signature mismatch",
+  "null function or function signature mismatch",
+  "table index is out of bounds",
+]);
 
 export async function mountKirikiri2(
   config: KirikiriConfig,
@@ -87,8 +93,20 @@ export async function mountKirikiri2(
   let module: KirikiriModule | null = null;
   let paused = false;
   let exited = false;
+  let exitReported = false;
+  let runtimeTerminationCleanup: () => void = () => undefined;
+  const reportRuntimeExit = () => {
+    if (exitReported) {return;}
+    exitReported = true;
+    reportExitRequested();
+  };
   try {
     const base = new URL(normalizedBase(config.adapter.runtimeBaseUrl), document.baseURI);
+    runtimeTerminationCleanup = installKirikiriRuntimeTermination(
+      frameWindow,
+      new URL("index.wasm", base).href,
+      reportRuntimeExit,
+    );
     scripts.push(await loadClassicScript(document, new URL("vlfs.js", base).href));
     const vlfs = host.VLFS;
     if (!vlfs) {throw new Error("KIRIKIRI_RUNTIME_ARTIFACT_INVALID");}
@@ -119,7 +137,7 @@ export async function mountKirikiri2(
       locateFile: (path) => new URL(path, base).href,
       mainScriptUrlOrBlob: runtimeUrl,
       onAbort: () => {ready.reject(new Error("KIRIKIRI_RUNTIME_ABORTED"));},
-      onExit: () => reportExitRequested(),
+      onExit: reportRuntimeExit,
       onRuntimeInitialized: () => undefined,
       postRun: [() => {ready.resolve();}],
       preRun: [],
@@ -132,8 +150,8 @@ export async function mountKirikiri2(
     scripts.push(await loadClassicScript(document, runtimeUrl));
     module = host.Module as KirikiriModule;
     await withTimeout(ready.promise, readyTimeoutMs, "KIRIKIRI_RUNTIME_TIMEOUT");
-    await waitFor(() => module?._krkr2_host_bookmark_is_ready?.() === 1, readyTimeoutMs);
     if (restore) {
+      await waitFor(() => module?._krkr2_host_bookmark_is_ready?.() === 1, readyTimeoutMs);
       await restoreBookmark(module, config.adapter.checkpointSlot);
     }
     startupKeyboardCleanup();
@@ -141,7 +159,10 @@ export async function mountKirikiri2(
     focusCanvas();
   } catch (error) {
     startupKeyboardCleanup();
-    cleanup(host, previousModule, previousVlfs, target, canvas, focusCanvas, gamepadCleanup, scripts);
+    cleanup(
+      host, previousModule, previousVlfs, target, canvas, focusCanvas,
+      gamepadCleanup, runtimeTerminationCleanup, scripts,
+    );
     throw stableMountError(error);
   }
 
@@ -186,10 +207,15 @@ export async function mountKirikiri2(
       if (exited) {return;}
       exited = true;
       activeModule.pauseMainLoop();
-      cleanup(host, previousModule, previousVlfs, target, canvas, focusCanvas, gamepadCleanup, scripts);
+      cleanup(
+        host, previousModule, previousVlfs, target, canvas, focusCanvas,
+        gamepadCleanup, runtimeTerminationCleanup, scripts,
+      );
     },
     getCanvas: () => canvas,
-    getCheckpointAvailability: () => ({ available: true, blocker: null }),
+    getCheckpointAvailability: () => activeModule._krkr2_host_bookmark_is_ready() === 1
+      ? { available: true, blocker: null }
+      : { available: false, blocker: "NOT_READY" },
     getFrameCount: () => null,
     getValidationProbe: () => null,
     pause: async () => {activeModule.pauseMainLoop(); paused = true;},
@@ -363,15 +389,40 @@ function cleanup(
   canvas: HTMLCanvasElement,
   focusCanvas: () => void,
   gamepadCleanup: () => void,
+  runtimeTerminationCleanup: () => void,
   scripts: HTMLScriptElement[],
 ) {
   if (host.VLFS) {host.VLFS.onWriteClose = null;}
   for (const script of scripts) {script.remove();}
   canvas.removeEventListener("pointerdown", focusCanvas, true);
   gamepadCleanup();
+  runtimeTerminationCleanup();
   target.replaceChildren();
   if (previousModule === undefined) {delete host.Module;} else {host.Module = previousModule;}
   if (previousVlfs === undefined) {delete host.VLFS;} else {host.VLFS = previousVlfs;}
+}
+
+function installKirikiriRuntimeTermination(
+  frameWindow: Window,
+  wasmUrl: string,
+  reportRuntimeExit: () => void,
+) {
+  const runtimeGlobals = frameWindow as Window & typeof globalThis;
+  const handleRuntimeFailure = (event: Event, error: unknown) => {
+    if (!(error instanceof runtimeGlobals.WebAssembly.RuntimeError) || !runtimeTerminationTraps.has(error.message) ||
+      typeof error.stack !== "string" || !error.stack.includes(`${wasmUrl}:wasm-function[`)) {return;}
+    event.preventDefault();
+    event.stopImmediatePropagation();
+    reportRuntimeExit();
+  };
+  const onError = (event: ErrorEvent) => handleRuntimeFailure(event, event.error);
+  const onUnhandledRejection = (event: PromiseRejectionEvent) => handleRuntimeFailure(event, event.reason);
+  frameWindow.addEventListener("error", onError, true);
+  frameWindow.addEventListener("unhandledrejection", onUnhandledRejection, true);
+  return () => {
+    frameWindow.removeEventListener("error", onError, true);
+    frameWindow.removeEventListener("unhandledrejection", onUnhandledRejection, true);
+  };
 }
 
 function canvasScreenshot(canvas: HTMLCanvasElement) {

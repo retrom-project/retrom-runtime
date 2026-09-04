@@ -1,13 +1,12 @@
-import {createHash} from "node:crypto";
-import {afterEach, beforeEach, describe, expect, it, vi} from "vitest";
+import {describe, expect, it, vi} from "vitest";
 
 import type { GameRuntime, GameRuntimeEvent } from "../../contract.js";
 import type {LaunchEnvelopeV1, RuntimeEventV1, RuntimeHostV1} from "../../provider/module-api.js";
-import {canonicalJsonBytes} from "../../provider/contract.js";
 import {projectProviderManifest} from "../../provider/manifest.js";
 import {retromRuntimeProviderDefinition} from "./catalog.js";
 import { createRetromRuntimePlayer } from "./provider-runtime.js";
 import {
+  createRuntime,
   providerApiVersion,
   providerId,
   providerVersion,
@@ -16,23 +15,27 @@ import {
 
 const digest = "a".repeat(64);
 const bundleDigest = "b".repeat(64);
-const wasmTargetDigest = digestTarget("wasm4");
-
-beforeEach(() => {vi.stubGlobal("__RETROM_PROVIDER_TARGET_DIGESTS__", {wasm4: wasmTargetDigest});});
-afterEach(() => {vi.unstubAllGlobals();});
 
 describe("retrom-runtime Provider Module V1", () => {
   it("exports the exact provider identity and validates its own request", () => {
     expect({providerApiVersion, providerId, providerVersion}).toEqual({
       providerApiVersion: 1,
       providerId: "retrom-runtime",
-      providerVersion: "0.14.0",
+      providerVersion: "0.14.5",
     });
     const envelope = wasmEnvelope();
     expect(validateLaunchRequest(envelope)).toBe(envelope);
     expect(() => validateLaunchRequest({...envelope, providerId: "leaked"})).toThrow(
       "PROVIDER_LAUNCH_REQUEST_INVALID",
     );
+  });
+
+  it("rejects a Host that does not implement the closed Provider Module ABI", async () => {
+    await expect(createRuntime(wasmEnvelope(), {
+      loadRestore: async () => null,
+      mountFrame: async () => blankFrame(),
+      reportDiagnostic: () => undefined,
+    } as unknown as RuntimeHostV1)).rejects.toThrow("PROVIDER_HOST_INVALID");
   });
 
   it("rejects unknown nested fields and declaration mismatches", () => {
@@ -48,7 +51,9 @@ describe("retrom-runtime Provider Module V1", () => {
       (value: ReturnType<typeof wasmEnvelope>) => {value.runtime.checkpoint!.maxBytes += 1;},
       (value: ReturnType<typeof wasmEnvelope>) => Object.assign(value.resources[0], {rangeRequired: true}),
       (value: ReturnType<typeof wasmEnvelope>) => Object.assign(value.resources[0], {url: "https://evil.example/cart.wasm"}),
-      (value: ReturnType<typeof wasmEnvelope>) => {value.runtime.targetContractSha256 = "d".repeat(64);},
+      (value: ReturnType<typeof wasmEnvelope>) => Object.assign(value.runtime, {
+        targetContractSha256: "d".repeat(64),
+      }),
     ]) {
       const candidate = structuredClone(wasmEnvelope());
       mutate(candidate);
@@ -66,7 +71,7 @@ describe("retrom-runtime Provider Module V1", () => {
     const restore = new Uint8Array([1, 2, 3]);
     const host: RuntimeHostV1 = {
       loadRestore: vi.fn(async () => restore),
-      mountFrame: vi.fn(async () => {throw new Error("frame not expected");}),
+      mountFrame: vi.fn(async () => blankFrame()),
       reportDiagnostic: vi.fn(),
       signal: new AbortController().signal,
     };
@@ -82,7 +87,7 @@ describe("retrom-runtime Provider Module V1", () => {
     expect(factory).toHaveBeenCalledWith(expect.objectContaining({
       adapter: expect.objectContaining({adapterKind: "WASM4_WEB"}),
     }), expect.objectContaining({restorePayload: restore}));
-    expect(legacy.mount).toHaveBeenCalledWith(target);
+    expect(legacy.mount).toHaveBeenCalledWith(expect.objectContaining({id: "game"}));
     expect(player.getState()).toBe("RUNNING");
     const [, runtimeOptions] = factory.mock.calls[0] as unknown as [
       unknown, {onDiagnostic(diagnostic: {runtime: string; message: string}): void},
@@ -108,7 +113,7 @@ describe("retrom-runtime Provider Module V1", () => {
   it("rejects unsupported operations with the stable capability error code", async () => {
     const host: RuntimeHostV1 = {
       loadRestore: vi.fn(async () => null),
-      mountFrame: vi.fn(async () => {throw new Error("unused");}),
+      mountFrame: vi.fn(async () => blankFrame()),
       reportDiagnostic: vi.fn(),
       signal: new AbortController().signal,
     };
@@ -123,7 +128,7 @@ describe("retrom-runtime Provider Module V1", () => {
     legacy.mount.mockRejectedValueOnce(new Error("mount failed"));
     const host: RuntimeHostV1 = {
       loadRestore: vi.fn(async () => null),
-      mountFrame: vi.fn(async () => {throw new Error("unused");}),
+      mountFrame: vi.fn(async () => blankFrame()),
       reportDiagnostic: vi.fn(),
       signal: new AbortController().signal,
     };
@@ -142,7 +147,7 @@ describe("retrom-runtime Provider Module V1", () => {
     const legacy = fakeRuntime(legacyEvents);
     const host: RuntimeHostV1 = {
       loadRestore: vi.fn(async () => null),
-      mountFrame: vi.fn(async () => {throw new Error("unused");}),
+      mountFrame: vi.fn(async () => blankFrame()),
       reportDiagnostic: vi.fn(),
       signal: new AbortController().signal,
     };
@@ -173,7 +178,7 @@ describe("retrom-runtime Provider Module V1", () => {
     }));
     const host: RuntimeHostV1 = {
       loadRestore: vi.fn(async () => null),
-      mountFrame: vi.fn(async () => {throw new Error("unused");}),
+      mountFrame: vi.fn(async () => blankFrame()),
       reportDiagnostic: vi.fn(),
       signal: new AbortController().signal,
     };
@@ -187,6 +192,66 @@ describe("retrom-runtime Provider Module V1", () => {
     completeMount?.();
     await mounting;
     expect(player.getState()).toBe("RUNNING");
+  });
+
+  it.each([
+    "butterscotch-gamemaker",
+    "kirikiri2-kag",
+    "onscripter-yuri",
+    "rpgmaker-2000",
+    "rpgmaker-2003",
+    "rpgmaker-vx",
+    "rpgmaker-vx-ace",
+    "rpgmaker-xp",
+    "wasm4",
+  ])("mounts the %s DOM runtime in an isolated full-viewport surface", async (targetId) => {
+    const legacy = fakeRuntime([]);
+    const frame = document.createElement("iframe");
+    document.body.append(frame);
+    const runtimeWindow = frame.contentWindow!;
+    Object.defineProperties(runtimeWindow, {
+      innerHeight: {configurable: true, value: 820},
+      innerWidth: {configurable: true, value: 1280},
+    });
+    let canvas: HTMLCanvasElement | null = null;
+    legacy.mount.mockImplementationOnce(async (mountTarget: HTMLElement) => {
+      canvas = mountTarget.ownerDocument.createElement("canvas");
+      canvas.width = 320;
+      canvas.height = 240;
+      mountTarget.append(canvas);
+    });
+    Object.assign(legacy.runtime, {getCanvas: () => canvas});
+    const host: RuntimeHostV1 = {
+      loadRestore: vi.fn(async () => null),
+      mountFrame: vi.fn(async () => ({
+        contentWindow: runtimeWindow, element: frame, origin: location.origin,
+      })),
+      reportDiagnostic: vi.fn(),
+      signal: new AbortController().signal,
+    };
+    const assetIndex = {
+      "assets/mkxp/mkxp-z_libretro.js": {sha256: "c".repeat(64), sizeBytes: 1000},
+      "assets/mkxp/mkxp-z_libretro.wasm": {sha256: "d".repeat(64), sizeBytes: 2000},
+    };
+    const player = await createRetromRuntimePlayer(
+      targetEnvelope(targetId), host, assetIndex, () => legacy.runtime,
+    );
+    const outerTarget = document.createElement("div");
+    document.body.append(outerTarget);
+
+    await player.mount(outerTarget);
+
+    expect(host.mountFrame).toHaveBeenCalledWith(outerTarget, {resourceRole: null});
+    const mountTarget = legacy.mount.mock.calls[0]?.[0] as HTMLElement | undefined;
+    expect(mountTarget?.id).toBe("game");
+    expect(mountTarget?.ownerDocument).toBe(frame.contentDocument);
+    expect(frame.contentDocument?.querySelector("style[data-retrom-runtime-frame]")).not.toBeNull();
+    expect(canvas).not.toBeNull();
+    expect((canvas as HTMLCanvasElement | null)?.style.width).toBe("1093px");
+    expect((canvas as HTMLCanvasElement | null)?.style.height).toBe("820px");
+    expect((canvas as HTMLCanvasElement | null)?.style.left).toBe("93px");
+    expect((canvas as HTMLCanvasElement | null)?.style.top).toBe("0px");
+    await player.exit();
   });
 
   it("owns wrapped controls, checkpoint availability, filtering and RPG validation probes", async () => {
@@ -287,8 +352,7 @@ describe("retrom-runtime Provider Module V1", () => {
       };
       const player = await createRetromRuntimePlayer(envelope, host, assetIndex, () => legacy.runtime);
       await player.mount(document.createElement("div"));
-      const uniqueOrigin = ["rpgmaker-mv", "rpgmaker-mz", "tyranoscript"].includes(targetId);
-      expect(host.mountFrame).toHaveBeenCalledTimes(uniqueOrigin ? 1 : 0);
+      expect(host.mountFrame).toHaveBeenCalledOnce();
       await expect(player.checkpoint()).resolves.toEqual({
         bytes: new Uint8Array([1, 2, 3]), format: checkpoint.writeFormat, metadata: null,
       });
@@ -301,7 +365,7 @@ describe("retrom-runtime Provider Module V1", () => {
 
 function fakeRuntime(events: GameRuntimeEvent[]) {
   let listener: ((event: GameRuntimeEvent) => void) | undefined;
-  const mount = vi.fn(async () => undefined);
+  const mount = vi.fn(async (_target: HTMLElement) => undefined);
   const exit = vi.fn(async () => undefined);
   const unsubscribe = vi.fn(() => {listener = undefined;});
   const runtime: GameRuntime = {
@@ -345,7 +409,7 @@ function wasmEnvelope(): LaunchEnvelopeV1 {
         checkpoint: true,
         discSwitch: false,
         frameCounter: true,
-        frameMode: "NONE" as const,
+        frameMode: "SAME_ORIGIN_BLANK" as const,
         inputFilter: true,
         nativeSettings: false,
         netplayPort: false,
@@ -358,14 +422,12 @@ function wasmEnvelope(): LaunchEnvelopeV1 {
         volume: false,
       },
       checkpoint: {maxBytes: 132144, readFormats: ["wasm4-state-v1"], writeFormat: "wasm4-state-v1"},
-      gameCompatibilityLine: "wasm4-v1",
       moduleSha256: digest,
       moduleUrl: `/runtime/providers/retrom-runtime/${bundleDigest}/client.mjs`,
       providerApiVersion: 1 as const,
       providerId: "retrom-runtime",
-      providerVersion: "0.14.0",
+      providerVersion: "0.14.5",
       runtimeBaseUrl: `/runtime/providers/retrom-runtime/${bundleDigest}/`,
-      targetContractSha256: wasmTargetDigest,
       targetId: "wasm4",
     },
     schemaVersion: 1 as const,
@@ -406,14 +468,12 @@ function rpgMvEnvelope(): LaunchEnvelopeV1 {
       bundleSha256: bundleDigest,
       capabilities: target.capabilities,
       checkpoint: target.checkpoint,
-      gameCompatibilityLine: target.gameCompatibilityLine,
       moduleSha256: digest,
       moduleUrl: `/runtime/providers/retrom-runtime/${bundleDigest}/client.mjs`,
       providerApiVersion: 1,
       providerId: "retrom-runtime",
-      providerVersion: "0.14.0",
+      providerVersion: "0.14.5",
       runtimeBaseUrl: `/runtime/providers/retrom-runtime/${bundleDigest}/`,
-      targetContractSha256: digestTarget("rpgmaker-mv"),
       targetId: "rpgmaker-mv",
     },
     schemaVersion: 1,
@@ -483,14 +543,12 @@ function targetEnvelope(targetId: string): LaunchEnvelopeV1 {
       bundleSha256: bundleDigest,
       capabilities: target.capabilities,
       checkpoint: target.checkpoint,
-      gameCompatibilityLine: target.gameCompatibilityLine,
       moduleSha256: digest,
       moduleUrl: `/runtime/providers/retrom-runtime/${bundleDigest}/client.mjs`,
       providerApiVersion: 1,
       providerId: "retrom-runtime",
-      providerVersion: "0.14.0",
+      providerVersion: "0.14.5",
       runtimeBaseUrl: `/runtime/providers/retrom-runtime/${bundleDigest}/`,
-      targetContractSha256: digestTarget(targetId),
       targetId,
     },
     schemaVersion: 1,
@@ -502,12 +560,6 @@ function targetEnvelope(targetId: string): LaunchEnvelopeV1 {
     targetOptions,
     validation: null,
   };
-}
-
-function digestTarget(id: string) {
-  const target = projectProviderManifest(retromRuntimeProviderDefinition).targets.find((entry) => entry.id === id);
-  if (!target) {throw new Error("target fixture missing");}
-  return createHash("sha256").update(canonicalJsonBytes(target)).digest("hex");
 }
 
 function gamepad() {
@@ -522,4 +574,10 @@ function gamepad() {
     mapping: "standard" as const,
     timestamp: 1,
   };
+}
+
+function blankFrame() {
+  const frame = document.createElement("iframe");
+  document.body.append(frame);
+  return {contentWindow: frame.contentWindow!, element: frame, origin: location.origin};
 }

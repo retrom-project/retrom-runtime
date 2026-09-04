@@ -7,6 +7,7 @@ import type {
   RuntimeFileEntryV1,
   RuntimeFileSetResourceV1,
   RuntimeFileTreeResourceV1,
+  RuntimeHostV1,
   RuntimeMultiDiscResourceV1,
   RuntimeResourceV1,
   RuntimeWebResourceV1,
@@ -38,13 +39,12 @@ export function validateLaunchEnvelopeBoundary(value: unknown): LaunchEnvelopeV1
 export function validateProviderLaunchRequest(
   value: unknown,
   definition: ProviderDefinition,
-  targetDigests: Readonly<Record<string, string>>,
 ): LaunchEnvelopeV1 {
   const envelope = validateLaunchEnvelopeBoundary(value);
   const runtime = envelope.runtime;
   const manifest = projectProviderManifest(definition);
   const target = manifest.targets.find((entry) => entry.id === runtime.targetId);
-  if (!target || !validEnvelopeContract(envelope, runtime, manifest, target, targetDigests)) {
+  if (!target || !validEnvelopeContract(envelope, runtime, manifest, target)) {
     invalidRequest();
   }
   return envelope;
@@ -58,17 +58,25 @@ export function validateTargetOptionsAgainstSchema(
   return value as LaunchEnvelopeV1["targetOptions"];
 }
 
+export function validateRuntimeHost(value: unknown): RuntimeHostV1 {
+  const host = isRecord(value) ? value : null;
+  const signal = host && isRecord(host.signal) ? host.signal : null;
+  if (!host || typeof host.mountFrame !== "function" || typeof host.loadRestore !== "function" ||
+    typeof host.reportDiagnostic !== "function" || !signal || typeof signal.aborted !== "boolean" ||
+    typeof signal.addEventListener !== "function" || typeof signal.removeEventListener !== "function") {
+    throw new Error("PROVIDER_HOST_INVALID");
+  }
+  return value as RuntimeHostV1;
+}
+
 function validEnvelopeContract(
   value: LaunchEnvelopeV1,
   runtime: LaunchEnvelopeV1["runtime"],
   manifest: ProviderManifest,
   target: ProviderManifest["targets"][number],
-  targetDigests: Readonly<Record<string, string>>,
 ) {
   return runtime.providerId === manifest.providerId && runtime.providerVersion === manifest.providerVersion &&
-    runtime.providerApiVersion === manifest.providerApiVersion &&
-    runtime.gameCompatibilityLine === target.gameCompatibilityLine &&
-    runtime.targetContractSha256 === targetDigests[target.id] && validBundleURLs(runtime) &&
+    runtime.providerApiVersion === manifest.providerApiVersion && validBundleURLs(runtime) &&
     sameCapabilities(runtime.capabilities, target.capabilities) &&
     sameCheckpoint(runtime.checkpoint, target.checkpoint) && validSession(value.session) &&
     validTargetOptions(value.targetOptions, target.targetOptionsSchema) && validResources(value.resources, target.inputs) &&
@@ -79,12 +87,11 @@ function validEnvelopeContract(
 function validateRuntime(value: unknown) {
   const runtime = isRecord(value) ? value : null;
   if (!runtime || !exactKeys(runtime, [
-    "bundleSha256", "capabilities", "checkpoint", "gameCompatibilityLine", "moduleSha256", "moduleUrl",
-    "providerApiVersion", "providerId", "providerVersion", "runtimeBaseUrl", "targetContractSha256", "targetId",
+    "bundleSha256", "capabilities", "checkpoint", "moduleSha256", "moduleUrl", "providerApiVersion",
+    "providerId", "providerVersion", "runtimeBaseUrl", "targetId",
   ]) || !validIdentity(runtime.providerId) || !validSemver(runtime.providerVersion) ||
     runtime.providerApiVersion !== 1 || !validIdentity(runtime.targetId) ||
-    !validToken(runtime.gameCompatibilityLine) || !validDigest(runtime.bundleSha256) ||
-    !validDigest(runtime.moduleSha256) || !validDigest(runtime.targetContractSha256) ||
+    !validDigest(runtime.bundleSha256) || !validDigest(runtime.moduleSha256) ||
     !validCapabilities(runtime.capabilities) || !validCheckpointShape(runtime.checkpoint)) {invalidRequest();}
   return runtime as unknown as LaunchEnvelopeV1["runtime"];
 }

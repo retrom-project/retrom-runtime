@@ -85,8 +85,7 @@
       "additionalProperties": false,
       "required": [
         "providerId", "providerVersion", "providerApiVersion", "bundleSha256", "targetId",
-        "gameCompatibilityLine", "targetContractSha256", "capabilities", "checkpoint",
-        "moduleUrl", "moduleSha256", "runtimeBaseUrl"
+        "capabilities", "checkpoint", "moduleUrl", "moduleSha256", "runtimeBaseUrl"
       ],
       "properties": {
         "providerId": { "$ref": "common.schema.json#/$defs/identity" },
@@ -94,8 +93,6 @@
         "providerApiVersion": { "const": 1 },
         "bundleSha256": { "$ref": "common.schema.json#/$defs/digest" },
         "targetId": { "$ref": "common.schema.json#/$defs/identity" },
-        "gameCompatibilityLine": { "$ref": "common.schema.json#/$defs/token" },
-        "targetContractSha256": { "$ref": "common.schema.json#/$defs/digest" },
         "capabilities": { "$ref": "provider-manifest.schema.json#/$defs/capabilities" },
         "checkpoint": { "oneOf": [{ "type": "null" }, { "$ref": "provider-manifest.schema.json#/$defs/checkpoint" }] },
         "moduleUrl": { "$ref": "common.schema.json#/$defs/relativeUrl" },

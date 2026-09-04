@@ -17,6 +17,7 @@ import type {
 import {PlayerRuntimeError} from "../../provider/errors.js";
 import {RuntimeGamepadFilter, installRuntimeGamepadFilter} from "../../provider/gamepad-filter.js";
 import {projectLegacyRuntimeConfig} from "./module-config.js";
+import {installRuntimeFrameSurface, type RuntimeFrameSurface} from "./frame-surface.js";
 
 type LegacyRuntimeFactory = (config: RuntimeConfig, options: RuntimeOptions) => GameRuntime;
 
@@ -41,6 +42,7 @@ class RetromRuntimePlayer implements PlayerRuntimeV1 {
   private runtimeWindow: Window | null = null;
   private inputFilter: RuntimeGamepadFilter | null = null;
   private cleanupInputFilter: (() => void) | null = null;
+  private frameSurface: RuntimeFrameSurface | null = null;
 
   constructor(
     private readonly envelope: LaunchEnvelopeV1,
@@ -172,11 +174,20 @@ class RetromRuntimePlayer implements PlayerRuntimeV1 {
     this.transition("MOUNTING");
     try {
       const restorePayload = await this.host.loadRestore(this.envelope.restore);
-      const frame = this.envelope.runtime.capabilities.frameMode === "NONE"
+      const frameMode = this.envelope.runtime.capabilities.frameMode;
+      const frame = frameMode === "NONE"
         ? null
-        : await this.host.mountFrame(target, {resourceRole: "game"});
+        : await this.host.mountFrame(target, {
+          resourceRole: frameMode === "SAME_ORIGIN_BLANK" ? null : "game",
+        });
       const runtimeWindow = frame?.contentWindow as Window | undefined ?? window;
       this.runtimeWindow = runtimeWindow;
+      const runtimeTarget = frameMode === "SAME_ORIGIN_BLANK"
+        ? (this.frameSurface = installRuntimeFrameSurface(
+          runtimeWindow,
+          () => this.runtime?.getCanvas() ?? null,
+        )).target
+        : target;
       if (this.inputFilter) {this.cleanupInputFilter = installRuntimeGamepadFilter(runtimeWindow, this.inputFilter);}
       const config = projectLegacyRuntimeConfig(this.envelope, this.assetIndex);
       const runtime = this.factory(config, {
@@ -190,7 +201,8 @@ class RetromRuntimePlayer implements PlayerRuntimeV1 {
       });
       this.runtime = runtime;
       this.unsubscribe = runtime.subscribe((event) => this.receive(event));
-      await runtime.mount(target);
+      await runtime.mount(runtimeTarget);
+      this.frameSurface?.refresh();
       if (this.state !== "FAILED" && this.state !== "EXITED") {this.transition("RUNNING");}
     } catch (error) {
       if (this.state !== "FAILED" && this.state !== "EXITED") {this.transition("FAILED");}
@@ -211,6 +223,8 @@ class RetromRuntimePlayer implements PlayerRuntimeV1 {
       this.cleanupInputFilter?.();
       this.cleanupInputFilter = null;
       this.inputFilter = null;
+      this.frameSurface?.cleanup();
+      this.frameSurface = null;
       this.runtime = null;
       this.runtimeWindow = null;
       if (!preserveFailure) {this.transition("EXITED");}

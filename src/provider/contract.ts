@@ -8,8 +8,7 @@ const manifestKeys = [
   "clientModulePath", "providerApiVersion", "providerId", "providerVersion", "schemaVersion", "targets",
 ];
 const targetKeys = [
-  "assetPaths", "capabilities", "checkpoint", "displayName", "gameCompatibilityLine", "id", "inputs",
-  "netplayCompatibilityLine", "targetOptionsSchema",
+  "assetPaths", "capabilities", "checkpoint", "displayName", "id", "inputs", "targetOptionsSchema",
 ];
 const capabilityKeys = [
   "checkpoint", "discSwitch", "frameCounter", "frameMode", "inputFilter", "nativeSettings", "netplayPort",
@@ -51,8 +50,7 @@ export function canonicalJsonBytes(value: unknown): Uint8Array {
 function validateTarget(value: unknown): string {
   const target = record(value);
   if (!target || !exactKeys(target, targetKeys) || !validIdentity(target.id) ||
-    !boundedText(target.displayName, 1, 120) || !validToken(target.gameCompatibilityLine) ||
-    target.netplayCompatibilityLine !== null && !validToken(target.netplayCompatibilityLine)) {
+    !boundedText(target.displayName, 1, 120)) {
     invalidManifest();
   }
   validateTargetOptionsSchema(target.targetOptionsSchema, 0, true);

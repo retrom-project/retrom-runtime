@@ -22,13 +22,11 @@ describe("Provider client module build", () => {
       assetIndex: {},
       entryPoint,
       outfile: join(firstRoot, "client.mjs"),
-      targetDigests: {fixture: "d".repeat(64)},
     });
     const second = await buildProviderClient({
       assetIndex: {},
       entryPoint,
       outfile: join(secondRoot, "client.mjs"),
-      targetDigests: {fixture: "d".repeat(64)},
     });
     const firstBytes = await readFile(first.outfile);
     const secondBytes = await readFile(second.outfile);
@@ -47,7 +45,6 @@ describe("Provider client module build", () => {
       assetIndex: {},
       entryPoint: join(process.cwd(), entry),
       outfile: join(root, "client.mjs"),
-      targetDigests: {},
     });
     const bytes = await readFile(result.outfile);
     const source = bytes.toString("utf8");

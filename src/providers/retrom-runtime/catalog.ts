@@ -66,36 +66,36 @@ const adapters = [
 
 const targets = [
   target(
-    "butterscotch-gamemaker", "GameMaker (Butterscotch)", "butterscotch-gamemaker-v1",
-    "butterscotch-web", noOptionsSchema, true, "NONE", "FILE_TREE", 16 * 1024 * 1024,
+    "butterscotch-gamemaker", "GameMaker (Butterscotch)", "butterscotch-web", noOptionsSchema,
+    true, "SAME_ORIGIN_BLANK", "FILE_TREE", 16 * 1024 * 1024,
     ["assets/butterscotch/butterscotch.mjs", "assets/butterscotch/butterscotch.wasm",
       "assets/butterscotch/worker.mjs"],
   ),
   target(
-    "kirikiri2-kag", "KiriKiri2 KAG", "kirikiri2-kag-v1", "kirikiri2-web", kirikiriOptionsSchema,
-    true, "NONE", "FILE_TREE", 64 * 1024 * 1024,
+    "kirikiri2-kag", "KiriKiri2 KAG", "kirikiri2-web", kirikiriOptionsSchema,
+    true, "SAME_ORIGIN_BLANK", "FILE_TREE", 64 * 1024 * 1024,
     ["assets/kirikiri/assets.zip", "assets/kirikiri/index.js", "assets/kirikiri/index.wasm",
       "assets/kirikiri/vlfs.js"],
   ),
   target(
-    "onscripter-yuri", "ONScripter Yuri", "onscripter-yuri-v1", "ons-yuri-web", onsOptionsSchema,
-    false, "NONE", "FILE_TREE", 64 * 1024 * 1024,
+    "onscripter-yuri", "ONScripter Yuri", "ons-yuri-web", onsOptionsSchema,
+    false, "SAME_ORIGIN_BLANK", "FILE_TREE", 64 * 1024 * 1024,
     ["assets/ons/onsyuri.js", "assets/ons/onsyuri.wasm"],
   ),
-  easyRpgTarget("rpgmaker-2000", "RPG Maker 2000", "rpgmaker-2000-v1", "rpg2k"),
-  easyRpgTarget("rpgmaker-2003", "RPG Maker 2003", "rpgmaker-2003-v1", "rpg2k3"),
-  nativeRpgTarget("rpgmaker-mv", "RPG Maker MV", "rpgmaker-mv-v1", "RPGMV"),
-  nativeRpgTarget("rpgmaker-mz", "RPG Maker MZ", "rpgmaker-mz-v1", "RPGMZ"),
-  mkxpTarget("rpgmaker-vx", "RPG Maker VX", "rpgmaker-vx-v1", 2),
-  mkxpTarget("rpgmaker-vx-ace", "RPG Maker VX Ace", "rpgmaker-vx-ace-v1", 3),
-  mkxpTarget("rpgmaker-xp", "RPG Maker XP", "rpgmaker-xp-v1", 1),
+  easyRpgTarget("rpgmaker-2000", "RPG Maker 2000", "rpg2k"),
+  easyRpgTarget("rpgmaker-2003", "RPG Maker 2003", "rpg2k3"),
+  nativeRpgTarget("rpgmaker-mv", "RPG Maker MV", "RPGMV"),
+  nativeRpgTarget("rpgmaker-mz", "RPG Maker MZ", "RPGMZ"),
+  mkxpTarget("rpgmaker-vx", "RPG Maker VX", 2),
+  mkxpTarget("rpgmaker-vx-ace", "RPG Maker VX Ace", 3),
+  mkxpTarget("rpgmaker-xp", "RPG Maker XP", 1),
   target(
-    "tyranoscript", "TyranoScript", "tyranoscript-v1", "tyranoscript-web", noOptionsSchema, false,
+    "tyranoscript", "TyranoScript", "tyranoscript-web", noOptionsSchema, false,
     "ISOLATED_ORIGIN_RESOURCE", "ISOLATED_WEB", 32 * 1024 * 1024,
     ["assets/tyranoscript/bridge.js"],
   ),
   target(
-    "wasm4", "WASM-4", "wasm4-v1", "wasm4-web", noOptionsSchema, false, "NONE", "WASM4_CART",
+    "wasm4", "WASM-4", "wasm4-web", noOptionsSchema, false, "SAME_ORIGIN_BLANK", "WASM4_CART",
     132144, ["assets/wasm4/wasm4-retrom.mjs"],
   ),
 ] as const;
@@ -104,7 +104,7 @@ export const retromRuntimeProviderDefinition = defineProvider({
   adapters,
   providerApiVersion: 1,
   providerId: "retrom-runtime",
-  providerVersion: "0.14.0",
+  providerVersion: "0.14.5",
   targets,
 });
 
@@ -144,7 +144,6 @@ function adapter(
 function target(
   id: string,
   displayName: string,
-  gameCompatibilityLine: string,
   adapterId: string,
   targetOptionsSchema: TargetOptionsSchema,
   requiresThreads: boolean,
@@ -161,12 +160,10 @@ function target(
     discSwitch: false,
     displayName,
     frameMode,
-    gameCompatibilityLine,
     id,
     implementation,
     inputFilter: true,
     inputs: [{cardinality: "ONE", kind: resourceKind, optional: false, role: "game"}],
-    netplayCompatibilityLine: null,
     nativeSettings: false,
     netplayPort: false,
     targetOptionsSchema,
@@ -175,9 +172,9 @@ function target(
   });
 }
 
-function mkxpTarget(id: string, displayName: string, line: string, rgssVersion: 1 | 2 | 3) {
+function mkxpTarget(id: string, displayName: string, rgssVersion: 1 | 2 | 3) {
   const result = target(
-    id, displayName, line, "mkxp-libretro-web", rpgMakerOptionsSchema, true, "NONE", "SEEKABLE_BLOB",
+    id, displayName, "mkxp-libretro-web", rpgMakerOptionsSchema, true, "SAME_ORIGIN_BLANK", "SEEKABLE_BLOB",
     256 * 1024 * 1024,
     ["assets/mkxp/mkxp-z_libretro.js", "assets/mkxp/mkxp-z_libretro.wasm",
       "assets/mkxp/position_bridge.rb"], {rgssVersion},
@@ -194,11 +191,10 @@ function mkxpTarget(id: string, displayName: string, line: string, rgssVersion: 
 function easyRpgTarget(
   id: string,
   displayName: string,
-  line: string,
   engineMode: "rpg2k" | "rpg2k3",
 ) {
   const result = target(
-    id, displayName, line, "easyrpg-web", rpgMakerOptionsSchema, false, "NONE", "FILE_TREE",
+    id, displayName, "easyrpg-web", rpgMakerOptionsSchema, false, "SAME_ORIGIN_BLANK", "FILE_TREE",
     64 * 1024 * 1024,
     ["assets/easyrpg/easyrpg-player.js", "assets/easyrpg/easyrpg-player.wasm"], {engineMode},
   );
@@ -211,9 +207,9 @@ function easyRpgTarget(
   });
 }
 
-function nativeRpgTarget(id: string, displayName: string, line: string, bridgeProfile: "RPGMV" | "RPGMZ") {
+function nativeRpgTarget(id: string, displayName: string, bridgeProfile: "RPGMV" | "RPGMZ") {
   return target(
-    id, displayName, line, "native-web", rpgMakerOptionsSchema, false, "ISOLATED_ORIGIN_RESOURCE",
+    id, displayName, "native-web", rpgMakerOptionsSchema, false, "ISOLATED_ORIGIN_RESOURCE",
     "NATIVE_WEB", 64 * 1024 * 1024, ["assets/native/bridge.js"], {bridgeProfile},
   );
 }

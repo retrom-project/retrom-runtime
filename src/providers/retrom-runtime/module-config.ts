@@ -13,9 +13,7 @@ export function projectLegacyRuntimeConfig(
   envelope: LaunchEnvelopeV1,
   assetIndex: AssetIndexV1,
 ): RuntimeConfig {
-  validateProviderLaunchRequest(envelope, retromRuntimeProviderDefinition, {
-    [envelope.runtime.targetId]: envelope.runtime.targetContractSha256,
-  });
+  validateProviderLaunchRequest(envelope, retromRuntimeProviderDefinition);
   const target = retromRuntimeProviderDefinition.targets.find((entry) => entry.id === envelope.runtime.targetId);
   const adapter = retromRuntimeProviderDefinition.adapters.find((entry) => entry.id === target?.adapterId);
   if (!target || !adapter) {invalidRequest();}
@@ -74,7 +72,7 @@ function mkxpConfig(
       adapterId: "mkxp-libretro-web",
       adapterKind: "MKXP_LIBRETRO_WEB",
       core: {
-        artifactSetSha256: envelope.runtime.targetContractSha256,
+        artifactSetSha256: envelope.runtime.bundleSha256,
         jsSha256: js.sha256,
         jsSizeBytes: js.sizeBytes,
         jsUrl: `${envelope.runtime.runtimeBaseUrl}${jsPath}`,

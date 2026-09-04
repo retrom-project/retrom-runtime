@@ -23,9 +23,4 @@ export function buildEmulatorJsProviderBundle(
   input: EmulatorJsProviderBuildInput,
 ): Promise<ProviderBundleResult>;
 
-export function targetContractDigests(
-  manifest: ProviderManifest,
-  assetIndex: Readonly<Record<string, {sha256: string; sizeBytes: number}>>,
-): Record<string, string>;
-
 export function canonicalJsonBytes(value: unknown): Buffer;

@@ -8,10 +8,19 @@
   declarations now have separate, non-overlapping authority.
 - Add deterministic EmulatorJS and retrom-runtime Provider Bundle builds, closed integrity/provenance records,
   candidate/production isolation and the Provider Module V1 Launch Envelope boundary.
-- Move exact Target options into each Provider declaration as a constrained closed schema, include that schema in
-  the Target contract digest, and remove the duplicated Host-facing options discriminator.
+- Move exact Target options into each Provider declaration as a constrained closed schema and remove the duplicated
+  Host-facing options discriminator.
+- Make `providerId` plus `targetId` the sole stable Target identity; remove generated per-Target identity fields
+  from declarations, manifests, Launch Envelopes, Provider Modules and EmulatorJS netplay profiles.
 - Use stable suffixless semantic IDs for resource and content kinds while retaining explicit versions only for
   serialized documents, checkpoint formats and hash domains.
+- Restore a provider-owned, same-origin frame surface for every DOM runtime, keeping core diagnostics out of the
+  host framework console and fitting native-resolution canvases to the full viewport without changing save ABIs.
+- Decouple fresh KiriKiri mount readiness from the first stable KAG bookmark point, expose checkpoint availability
+  independently, and convert only the pinned core's exact Wasm indirect-call termination from either browser error
+  channel into the shared exit lifecycle.
+- Preserve the native Canvas2D `textAlign` invalid-value semantics for RPG Maker MV/MZ projects and acknowledge
+  native runtime cleanup before the keepalive revocation request settles, so Player exit is prompt and warning-free.
 
 ## 0.11.4
 
@@ -32,7 +41,7 @@
 
 - Accept the bounded JPEG or PNG screenshot media type reported by the TyranoScript bridge.
 - Update TyranoScript to `retrom-core-gc8dbfd492afd-r4` for legacy 4.x lifecycle, input, media, checkpoint and
-  composed screenshot compatibility while preserving the existing save ABI and game compatibility line.
+  composed screenshot support while preserving the existing save ABI.
 
 ## 0.11.0
 
@@ -159,9 +168,9 @@
 
 ## 0.4.2
 
-- Declare a stable game compatibility line, the save ABI written by each core, and the exact save ABIs each
-  core can read. Host applications can move games to the current runtime while disabling only incompatible
-  checkpoints; runtime rollback is not part of this contract.
+- Declare the checkpoint format written by each core and the exact checkpoint formats each core can read. Host
+  applications can move games to the current runtime while disabling only unreadable checkpoints; runtime rollback
+  is not part of this contract.
 
 ## 0.4.1
 

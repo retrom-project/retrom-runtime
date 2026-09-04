@@ -55,10 +55,9 @@ function validEnvelopeMode(envelope: LaunchEnvelopeV1, declaration: EmulatorJsNe
 }
 function exactProfileKeys(value: Record<string, unknown>) {
   return exactKeys(value, [
-    "canonicalHistoryFrames", "checkpointEveryFrames", "controlCount", "coreId", "dependencySnapshotDigest",
-    "gameVariantRevisionId", "maxPlayers", "maxPredictionFrames", "maxRollbackFrames", "maxStateBytes",
-    "netplayCompatibilityLine", "platformIds", "profileId", "protocolVersion", "providerId", "schemaVersion",
-    "sourceManifestDigest", "targetContractSha256", "targetId",
+    "bundleSha256", "canonicalHistoryFrames", "checkpointEveryFrames", "controlCount", "coreId",
+    "dependencySnapshotDigest", "maxPlayers", "maxPredictionFrames", "maxRollbackFrames", "maxStateBytes",
+    "platformIds", "profileId", "protocolVersion", "providerId", "schemaVersion", "sourceManifestDigest", "targetId",
   ]);
 }
 function validIdentity(
@@ -70,9 +69,8 @@ function validIdentity(
   return implementation.release === "4.2.3" && value.schemaVersion === 2 &&
     value.protocolVersion === "retrom-netplay-v2" && value.profileId === declaration.id &&
     value.providerId === envelope.runtime.providerId && value.targetId === envelope.runtime.targetId &&
-    value.targetContractSha256 === envelope.runtime.targetContractSha256 &&
-    value.netplayCompatibilityLine === "emulatorjs-netplay-v2" && nonEmpty(value.coreId) &&
-    nonEmpty(value.gameVariantRevisionId) && digest(value.sourceManifestDigest) &&
+    value.bundleSha256 === envelope.runtime.bundleSha256 && nonEmpty(value.coreId) &&
+    digest(value.sourceManifestDigest) &&
     digest(value.dependencySnapshotDigest);
 }
 function validLimits(value: Record<string, unknown>, declaration: EmulatorJsNetplayProfileDeclaration) {

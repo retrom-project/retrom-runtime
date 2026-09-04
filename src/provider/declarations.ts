@@ -95,8 +95,6 @@ export type TargetInputDeclaration = {
 export type TargetDeclaration = {
   id: string;
   displayName: string;
-  gameCompatibilityLine: string;
-  netplayCompatibilityLine: string | null;
   adapterId: string;
   targetOptionsSchema: TargetOptionsSchema;
   requiresThreads: boolean;

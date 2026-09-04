@@ -1,9 +1,4 @@
-import {createHash} from "node:crypto";
-
 import type {LaunchEnvelopeV1} from "../src/provider/module-api.js";
-import {canonicalJsonBytes} from "../src/provider/contract.js";
-import {projectProviderManifest} from "../src/provider/manifest.js";
-import {emulatorJsProviderDefinition} from "../src/providers/emulatorjs/catalog.js";
 
 const digest = "a".repeat(64);
 const bundleDigest = "b".repeat(64);
@@ -25,14 +20,12 @@ export function launchEnvelope(): LaunchEnvelopeV1 {
         videoModes: ["adaptive-sharpen", "original", "pixel", "sharp-bilinear", "smooth"], volume: true,
       },
       checkpoint: {maxBytes: 268435456, readFormats: ["emulatorjs-state-v1"], writeFormat: "emulatorjs-state-v1"},
-      gameCompatibilityLine: "fceumm-v1",
       moduleSha256: digest,
       moduleUrl: `/runtime/providers/emulatorjs/${bundleDigest}/client.mjs`,
       providerApiVersion: 1,
       providerId: "emulatorjs",
       providerVersion: "2.0.0",
       runtimeBaseUrl: `/runtime/providers/emulatorjs/${bundleDigest}/`,
-      targetContractSha256: digestTarget("fceumm"),
       targetId: "fceumm",
     },
     schemaVersion: 1,
@@ -44,10 +37,4 @@ export function launchEnvelope(): LaunchEnvelopeV1 {
     targetOptions: {dosEntryPath: null, initialDiscIndex: null},
     validation: null,
   };
-}
-
-function digestTarget(id: string) {
-  const target = projectProviderManifest(emulatorJsProviderDefinition).targets.find((entry) => entry.id === id);
-  if (!target) {throw new Error("target fixture missing");}
-  return createHash("sha256").update(canonicalJsonBytes(target)).digest("hex");
 }

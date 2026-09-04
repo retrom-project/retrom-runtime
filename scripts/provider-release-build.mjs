@@ -28,7 +28,6 @@ export async function buildRetromRuntimeProviderBundle(input) {
       assetIndex,
       entryPoint: input.entryPoint,
       outfile: clientPath,
-      targetDigests: targetContractDigests(input.manifest, assetIndex),
     });
     return await buildProviderBundle({
       archiveRoot: input.outputRoot,
@@ -66,7 +65,6 @@ export async function buildEmulatorJsProviderBundle(input) {
       assetIndex,
       entryPoint: input.entryPoint,
       outfile: clientPath,
-      targetDigests: targetContractDigests(input.manifest, assetIndex),
     });
     return await buildProviderBundle({
       archiveRoot: input.outputRoot,
@@ -89,29 +87,6 @@ export async function buildEmulatorJsProviderBundle(input) {
   } finally {
     await rm(temporaryRoot, {force: true, recursive: true});
   }
-}
-
-export function targetContractDigests(manifest, assetIndex) {
-  if (!manifest || !Array.isArray(manifest.targets) || !assetIndex || typeof assetIndex !== "object") {
-    unsafe();
-  }
-  return Object.fromEntries(manifest.targets.map((target) => {
-    if (!target || typeof target.id !== "string" || !Array.isArray(target.assetPaths)) {unsafe();}
-    const assetPaths = [...target.assetPaths].sort(compareUtf8);
-    if (assetPaths.length !== target.assetPaths.length ||
-      assetPaths.some((path, index) => path !== target.assetPaths[index] || index > 0 && path === assetPaths[index - 1])) {
-      unsafe();
-    }
-    const assets = assetPaths.map((path) => {
-      const asset = assetIndex[path];
-      if (!asset || Object.keys(asset).sort().join("\0") !== "sha256\0sizeBytes" ||
-        !/^[0-9a-f]{64}$/u.test(asset.sha256) || !Number.isSafeInteger(asset.sizeBytes) || asset.sizeBytes < 1) {
-        unsafe();
-      }
-      return {path, sizeBytes: asset.sizeBytes, sha256: asset.sha256};
-    });
-    return [target.id, sha256(canonicalJsonBytes({schemaVersion: 1, target, assets}))];
-  }));
 }
 
 function verifyEmulatorJsImplementationAssets(definition, assetIndex) {

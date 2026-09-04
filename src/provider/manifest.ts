@@ -37,10 +37,8 @@ export function projectProviderManifest(definition: ProviderDefinition) {
       },
       checkpoint,
       displayName: target.displayName,
-      gameCompatibilityLine: target.gameCompatibilityLine,
       id: target.id,
       inputs: target.inputs.map((input) => ({...input})),
-      netplayCompatibilityLine: target.netplayCompatibilityLine,
       targetOptionsSchema: target.targetOptionsSchema,
     };
   }).sort((left, right) => compareUtf8(left.id, right.id));

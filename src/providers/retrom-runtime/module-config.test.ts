@@ -31,7 +31,7 @@ describe("retrom-runtime Provider config projection", () => {
     if (config.adapter.adapterKind === "MKXP_LIBRETRO_WEB") {
       expect(config.adapter).toMatchObject({
         core: {
-          artifactSetSha256: expect.stringMatching(/^[0-9a-f]{64}$/u),
+          artifactSetSha256: otherDigest,
           jsSha256: digest,
           jsSizeBytes: 1000,
           jsUrl: `/runtime/providers/retrom-runtime/${otherDigest}/assets/mkxp/mkxp-z_libretro.js`,
@@ -124,7 +124,7 @@ describe("retrom-runtime Provider config projection", () => {
     });
   });
 
-  it("rejects a resource or target contract mismatch", () => {
+  it("rejects a resource or unknown target mismatch", () => {
     const wrong = envelope("wasm4", fileTree(), {});
     expect(() => projectLegacyRuntimeConfig(wrong, assetIndex)).toThrow("PROVIDER_LAUNCH_REQUEST_INVALID");
     const unknown = structuredClone(wrong);
@@ -164,14 +164,12 @@ function envelope(
         readFormats: [...manifestTarget.checkpoint.readFormats],
         writeFormat: manifestTarget.checkpoint.writeFormat,
       },
-      gameCompatibilityLine: target.gameCompatibilityLine,
       moduleSha256: digest,
       moduleUrl: `/runtime/providers/retrom-runtime/${otherDigest}/client.mjs`,
       providerApiVersion: 1,
       providerId: "retrom-runtime",
-      providerVersion: "0.14.0",
+      providerVersion: "0.14.5",
       runtimeBaseUrl: `/runtime/providers/retrom-runtime/${otherDigest}/`,
-      targetContractSha256: digest,
       targetId,
     },
     schemaVersion: 1,

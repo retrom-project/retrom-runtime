@@ -62,8 +62,8 @@ npm run package:check
 - 完成一个功能或 bug 修复后单独提交；不要混入无关格式化。
 - PR 到 `master` 必须通过 `.github/workflows/quality.yml`；该门禁会聚合并验证固定 fork Release，但不得编译核心。
 - `v*` tag 由 `.github/workflows/release.yml` 构建 GitHub Release；tag 不移动、不覆盖。
-- Provider Bundle 与 Target contract 是兼容边界。破坏 Provider Module、Launch Envelope 消费、checkpoint 格式或 Target 行为时必须升级相应版本并在 CHANGELOG 说明。
-- 已登记 Target 的 `gameCompatibilityLine` 不得原地改变。checkpoint 格式变化时更新 `writeFormat`，并只在真实验证后把旧值保留在 `readFormats`。宿主只向前激活更高 Provider 版本；旧存档不兼容时禁用恢复，不保留旧 Bundle 或设计运行时回滚。
+- `providerId + targetId` 是长期稳定的 Target 身份。Provider Bundle 是单次部署与 Launch 的不可变产物，不能成为 Game、Review 或 Save 的兼容身份。破坏 Provider Module、Launch Envelope 消费、checkpoint 格式或 Target 行为时必须升级相应版本并在 CHANGELOG 说明。
+- checkpoint 格式变化时更新 `writeFormat`，并只在真实验证后把旧值保留在 `readFormats`。宿主只向前激活更高 Provider 版本；旧存档格式不可读时禁用恢复，不保留旧 Bundle 或设计运行时回滚。
 
 ## 与 Retrom 的本地联调
 

@@ -177,8 +177,6 @@ export type LaunchEnvelopeV1 = {
     providerApiVersion: 1;
     bundleSha256: string;
     targetId: string;
-    gameCompatibilityLine: string;
-    targetContractSha256: string;
     capabilities: RuntimeCapabilitiesV1;
     checkpoint: { writeFormat: string; readFormats: string[]; maxBytes: number } | null;
     moduleUrl: string;

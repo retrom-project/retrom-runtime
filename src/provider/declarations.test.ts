@@ -17,10 +17,21 @@ const targetIds = [
   "tyranoscript",
   "wasm4",
 ];
+const sameOriginFrameTargetIds = [
+  "butterscotch-gamemaker",
+  "kirikiri2-kag",
+  "onscripter-yuri",
+  "rpgmaker-2000",
+  "rpgmaker-2003",
+  "rpgmaker-vx",
+  "rpgmaker-vx-ace",
+  "rpgmaker-xp",
+  "wasm4",
+];
 
 describe("retrom-runtime provider declarations", () => {
-  it("declares the complete 0.14.0 target closure in one source", () => {
-    expect(retromRuntimeProviderDefinition.providerVersion).toBe("0.14.0");
+  it("declares the complete 0.14.5 target closure in one source", () => {
+    expect(retromRuntimeProviderDefinition.providerVersion).toBe("0.14.5");
     expect(retromRuntimeProviderDefinition.targets.map((target) => target.id)).toEqual(targetIds);
     expect(retromRuntimeProviderDefinition.adapters).toHaveLength(8);
   });
@@ -31,7 +42,7 @@ describe("retrom-runtime provider declarations", () => {
       clientModulePath: "client.mjs",
       providerApiVersion: 1,
       providerId: "retrom-runtime",
-      providerVersion: "0.14.0",
+      providerVersion: "0.14.5",
       schemaVersion: 1,
     });
     expect(manifest.targets.map((target) => target.id)).toEqual(targetIds);
@@ -41,10 +52,8 @@ describe("retrom-runtime provider declarations", () => {
         "capabilities",
         "checkpoint",
         "displayName",
-        "gameCompatibilityLine",
         "id",
         "inputs",
-        "netplayCompatibilityLine",
         "targetOptionsSchema",
       ]);
       expect(target).not.toHaveProperty("adapterId");
@@ -79,6 +88,18 @@ describe("retrom-runtime provider declarations", () => {
         {cardinality: "ONE", kind: "FILE_TREE", optional: false, role: "game"},
         {cardinality: "ONE", kind: "FILE_TREE", optional: true, role: "rtp"},
       ]);
+    }
+  });
+
+  it("isolates every provider-owned DOM runtime in a same-origin frame", () => {
+    const manifest = projectProviderManifest(retromRuntimeProviderDefinition);
+    for (const id of sameOriginFrameTargetIds) {
+      expect(manifest.targets.find((target) => target.id === id)?.capabilities.frameMode, id)
+        .toBe("SAME_ORIGIN_BLANK");
+    }
+    for (const id of ["rpgmaker-mv", "rpgmaker-mz", "tyranoscript"]) {
+      expect(manifest.targets.find((target) => target.id === id)?.capabilities.frameMode, id)
+        .toBe("ISOLATED_ORIGIN_RESOURCE");
     }
   });
 

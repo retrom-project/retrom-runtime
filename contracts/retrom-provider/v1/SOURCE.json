@@ -1,7 +1,7 @@
 {
   "authorityPath": "api/runtime-provider/v1",
   "authorityRepository": "https://github.com/retrom-project/retrom",
-  "contractSha256": "f3db54aebc2d269ce5ebd9861a4d14ed0f70e79927e1527274747076640a2e7a",
+  "contractSha256": "48c2a3b000997ce4564dd9efe85d5ef05d1261eeac6fef25a27602d42eb79317",
   "contractVersion": "runtime-provider-v1",
   "files": [
     {
@@ -10,7 +10,7 @@
     },
     {
       "path": "api/runtime-provider/v1/launch-envelope.schema.json",
-      "sha256": "48239392f174c37e7d9dee4d3792c6053af5b4658e6409db54fa1196af2fe645"
+      "sha256": "4bd5e294de61e1400e9f4ed796df53e907f075a29efcef8c9554f0a51e815871"
     },
     {
       "path": "api/runtime-provider/v1/provider-integrity.schema.json",
@@ -22,11 +22,11 @@
     },
     {
       "path": "api/runtime-provider/v1/provider-manifest.schema.json",
-      "sha256": "15077ee3e435ec98f9496ab6cef2651820bf6a25aaa66b857020901d5d6b6c93"
+      "sha256": "85b6bd4f1a28aa18335335da1d5b9a0243399f989d0a16f7472da06095e4a681"
     },
     {
       "path": "api/runtime-provider/v1/provider-module-v1.d.ts",
-      "sha256": "55d8352ba8ca5c0b9e7ee391868f205b9fe1a368f7dbdc02f51254a4f702033b"
+      "sha256": "a4041b063f909c44ff19b2f611057d038a205a77ae302385088cf317e70771a8"
     },
     {
       "path": "api/runtime-provider/v1/runtime-resource.schema.json",
@@ -34,43 +34,43 @@
     },
     {
       "path": "api/runtime-provider/v1/fixtures/invalid/checkpoint-missing-read-formats.json",
-      "sha256": "ea11a72ff701c31cae8ce47e9a668ff01f07047f4bf1db71b1b9ea16049f2da1"
+      "sha256": "2d954a5ba81acaf318196df34516ee4323fd97ab39195da893d86f6637e73202"
     },
     {
       "path": "api/runtime-provider/v1/fixtures/invalid/duplicate-field.json",
-      "sha256": "54a4bb71b47155478138772ea364f84fd5c062464c09e404e47b2f46a67afeee"
+      "sha256": "65e3f42521f62c72ade7c63587694de607a41f25dc3982f67cd62ff623e3d111"
     },
     {
       "path": "api/runtime-provider/v1/fixtures/invalid/exponent-json-input.json",
-      "sha256": "7a0bd2e97c34f7fde5db2488e980ff96623b91e54a674fc812668e3e95fb2444"
+      "sha256": "50d29c590ea4791a5896f6fafd8a389b53ddc8c24cedae11e0d63a9dc1ee4dd9"
     },
     {
       "path": "api/runtime-provider/v1/fixtures/invalid/float-json-input.json",
-      "sha256": "ccb0560b508d897eb8be6138ffd7be7a16145a28f10ef5aabfd70629b9b7447d"
+      "sha256": "f0190435d34574840e147b4101d34144ce786cddfe7602c04401c7b2eb116f31"
     },
     {
       "path": "api/runtime-provider/v1/fixtures/invalid/invalid-unicode.json",
-      "sha256": "cc4127002fe1895633047a969a71680b507d592bc94e13624f1e58e3d2e1fa1a"
+      "sha256": "21871f0b37c0d0b0dc1996ac7cced4db0eb52c5a767d2eeacabf9b7dd466e856"
     },
     {
       "path": "api/runtime-provider/v1/fixtures/invalid/missing-capability.json",
-      "sha256": "afa84d26217edfd0823d8e67b363e181a1ae0e7c959ecb3ccbdd3768a3a0ff99"
+      "sha256": "83a4d721236fefac6d202272092c38d6d8f7345357550f42ad8776df11c623de"
     },
     {
       "path": "api/runtime-provider/v1/fixtures/invalid/netplay-mode-mismatch.json",
-      "sha256": "83849831c8f5d1a5bcaa92bf6fa3aa8f4cd1a98d51ccb5c6b58431516d590100"
+      "sha256": "9193c785648a4175ab309d4d72f35ae882427ca85e8d2ffeb5f83b52fdd92168"
     },
     {
       "path": "api/runtime-provider/v1/fixtures/invalid/netplay-resource.json",
-      "sha256": "d18fd06494e97eb1a2f685cfb95a50e5320861f6d6ddea038e661edd0b4dbec1"
+      "sha256": "3f61215a251b83ed5a7becfa429d06e622258550d3d0e7f81135c131c0570d8b"
     },
     {
       "path": "api/runtime-provider/v1/fixtures/invalid/unknown-top-level.json",
-      "sha256": "7bfbae7c952d7e37372a046e2b9a6e12bcb4c776d06af8055449846621cc6f40"
+      "sha256": "4ff3760c5f47b1c9b14b8322e4d593c3708cda70ef2b654030995289e217b2cb"
     },
     {
       "path": "api/runtime-provider/v1/fixtures/invalid/unsafe-integer-json-input.json",
-      "sha256": "d70e0701f65f2d28aed252f300f1d5f396159e16ac02f0bf15419ff00b394c35"
+      "sha256": "e60e422fa357c8056a8338fda11a16780eafe708ed554bad2e89b624535fbe35"
     },
     {
       "path": "api/runtime-provider/v1/fixtures/target-options/schema-validation.json",
@@ -78,15 +78,15 @@
     },
     {
       "path": "api/runtime-provider/v1/fixtures/valid/checkpoint-validation.json",
-      "sha256": "6c59601c79d30b8ab5aa4801b3f45a48a3261b68c5e6f85c466f990873963719"
+      "sha256": "fcb438927034091f7b2d22d42b12b01eb4eafc41b0d73d15a663d1a1cc572b21"
     },
     {
       "path": "api/runtime-provider/v1/fixtures/valid/netplay.json",
-      "sha256": "a9b202a3e0af5e4cfd937b47deb045c3c04c1ee2e545092912b90681fd8fd273"
+      "sha256": "bd868bff48a7eb5f6446b4738fc6566a32b8e8667fe03bb9255eaacc9e1fdd91"
     },
     {
       "path": "api/runtime-provider/v1/fixtures/valid/single-minimal.json",
-      "sha256": "82060385f87312899641d63eb2c5ade31491ae27ab0e8de676f886e5f2bb5e20"
+      "sha256": "5170b3ddbad8598c44655e01eaf0ec8c0bd2a479add86344b16d482fd8ffcf2c"
     }
   ],
   "schemaVersion": 1

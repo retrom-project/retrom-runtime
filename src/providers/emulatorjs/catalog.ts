@@ -123,7 +123,6 @@ const targets = cores.map((entry) => {
   discSwitch: entry.id === "yabause",
   displayName: displayName(entry.id),
   frameMode: "SAME_ORIGIN_BLANK",
-  gameCompatibilityLine: `${providerTargetId(entry.id)}-v1`,
   id: providerTargetId(entry.id),
   implementation: {
     artifactFlavor: entry.artifactFlavor,
@@ -145,7 +144,6 @@ const targets = cores.map((entry) => {
   inputFilter: true,
   nativeSettings: true,
   netplayPort: netplayProfile !== null,
-  netplayCompatibilityLine: netplayProfile ? "emulatorjs-netplay-v2" : null,
   targetOptionsSchema: emulatorJsOptionsSchema,
   requiresThreads: entry.requiresThreads,
   videoModes: ["adaptive-sharpen", "original", "pixel", "sharp-bilinear", "smooth"],

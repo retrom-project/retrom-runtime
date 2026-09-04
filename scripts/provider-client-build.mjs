@@ -13,7 +13,6 @@ export async function buildProviderClient(input) {
     bundle: true,
     define: {
       __RETROM_PROVIDER_ASSET_INDEX__: JSON.stringify(input.assetIndex),
-      __RETROM_PROVIDER_TARGET_DIGESTS__: JSON.stringify(input.targetDigests),
       process: "{}",
       "process.cwd": "String",
       "process.platform": '"browser"',

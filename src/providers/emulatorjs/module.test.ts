@@ -1,19 +1,15 @@
-import {createHash} from "node:crypto";
-import {afterEach, beforeEach, describe, expect, it, vi} from "vitest";
+import {afterEach, describe, expect, it, vi} from "vitest";
 
 import type {LaunchEnvelopeV1, RuntimeHostV1} from "../../provider/module-api.js";
-import {canonicalJsonBytes} from "../../provider/contract.js";
 import {projectProviderManifest} from "../../provider/manifest.js";
 import {emulatorJsProviderDefinition} from "./catalog.js";
+import {validateEmulatorJsNetplayProfile} from "./netplay-profile.js";
 import {createEmulatorJsPlayer} from "./provider-runtime.js";
 import {launchEnvelope} from "../../../tests/emulatorjs-provider-fixtures.js";
 import {providerApiVersion, providerId, providerVersion, validateLaunchRequest} from "./module.js";
 
 const digest = "a".repeat(64);
 const bundleDigest = "b".repeat(64);
-const fceummTargetDigest = digestTarget("fceumm");
-
-beforeEach(() => {vi.stubGlobal("__RETROM_PROVIDER_TARGET_DIGESTS__", {fceumm: fceummTargetDigest});});
 afterEach(() => {vi.useRealTimers(); vi.unstubAllGlobals();});
 
 describe("EmulatorJS Provider Module V1", () => {
@@ -519,6 +515,28 @@ describe("EmulatorJS Provider Module V1", () => {
     expect(Object.getOwnPropertyDescriptor(runtimeWindow, "EJS_GameManager")).toBeUndefined();
   });
 
+  it("binds netplay only to the current session bundle and rejects removed identity fields", () => {
+    const target = emulatorJsProviderDefinition.targets.find((entry) => entry.id === "fceumm");
+    if (!target) {throw new Error("fceumm target fixture missing");}
+    const implementation = target.implementation as Parameters<typeof validateEmulatorJsNetplayProfile>[1];
+    const current = netplayEnvelope("fceumm");
+    expect(validateEmulatorJsNetplayProfile(current, implementation)).toMatchObject({
+      profileId: "fceumm-423-v1",
+    });
+
+    const differentBundle = structuredClone(current);
+    if (!differentBundle.netplay) {throw new Error("netplay fixture missing");}
+    differentBundle.netplay.profile.bundleSha256 = "c".repeat(64);
+    expect(() => validateEmulatorJsNetplayProfile(differentBundle, implementation))
+      .toThrow("PLAYER_NETPLAY_PROFILE_INVALID");
+
+    const legacy = structuredClone(current);
+    if (!legacy.netplay) {throw new Error("netplay fixture missing");}
+    legacy.netplay.profile.gameVariantRevisionId = "01980000-0000-7000-8000-000000000006";
+    expect(() => validateEmulatorJsNetplayProfile(legacy, implementation))
+      .toThrow("PLAYER_NETPLAY_PROFILE_INVALID");
+  });
+
 });
 
 function yabauseEnvelope(): LaunchEnvelopeV1 {
@@ -541,8 +559,6 @@ function yabauseEnvelope(): LaunchEnvelopeV1 {
       ...envelope.runtime,
       capabilities: target.capabilities,
       checkpoint: target.checkpoint,
-      gameCompatibilityLine: target.gameCompatibilityLine,
-      targetContractSha256: digestTarget("yabause"),
       targetId: "yabause",
     },
     targetOptions: {dosEntryPath: null, initialDiscIndex: 1},
@@ -555,14 +571,14 @@ function netplayEnvelope(targetId: "fceumm"): LaunchEnvelopeV1 {
     ...envelope,
     netplay: {
       profile: {
+        bundleSha256: envelope.runtime.bundleSha256,
         canonicalHistoryFrames: 600, checkpointEveryFrames: 120, controlCount: 24,
         coreId: "fceumm", dependencySnapshotDigest: "e".repeat(64),
-        gameVariantRevisionId: "01980000-0000-7000-8000-000000000006", maxPlayers: 2,
-        maxPredictionFrames: 8, maxRollbackFrames: 120, maxStateBytes: 1_048_576,
-        netplayCompatibilityLine: "emulatorjs-netplay-v2", platformIds: ["nes"],
+        maxPlayers: 2, maxPredictionFrames: 8, maxRollbackFrames: 120, maxStateBytes: 1_048_576,
+        platformIds: ["nes"],
         profileId: "fceumm-423-v1", protocolVersion: "retrom-netplay-v2",
         providerId: "emulatorjs", schemaVersion: 2, sourceManifestDigest: "f".repeat(64),
-        targetContractSha256: digestTarget(targetId), targetId,
+        targetId,
       },
       roomId: "fixture-room", sessionId: "018f0f31-26fe-7a31-9d61-4ec92f16d4c4",
       socketUrl: "wss://runtime.example.test/netplay", playerNo: 1,
@@ -570,12 +586,6 @@ function netplayEnvelope(targetId: "fceumm"): LaunchEnvelopeV1 {
     runtime: {...envelope.runtime, targetId},
     session: {...envelope.session, mode: "NETPLAY"},
   };
-}
-
-function digestTarget(id: string) {
-  const target = projectProviderManifest(emulatorJsProviderDefinition).targets.find((entry) => entry.id === id);
-  if (!target) {throw new Error("target fixture missing");}
-  return createHash("sha256").update(canonicalJsonBytes(target)).digest("hex");
 }
 
 function gamepad(index: number, select: boolean, start: boolean) {

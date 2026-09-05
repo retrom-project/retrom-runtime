@@ -9,6 +9,7 @@ function coreStatus() {
   const status = mkxpStatus({
     _runtime_get_frame_count: () => value.frames,
     _runtime_get_restore_result: () => value.restore,
+    _runtime_request_exit: () => undefined,
   });
   return {value, status};
 }

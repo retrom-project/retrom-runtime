@@ -1,9 +1,13 @@
 # Changelog
 
-## Unreleased
+## 0.16.3
 
 - Initialize MKXP canvases with RGSS-native backing dimensions before mounting, so the shared frame
   surface and Nostalgist do not capture the HTML default 2:1 aspect ratio and double-letterbox gameplay.
+- Request threaded MKXP shutdown on its owning core loop and await native completion before removing
+  the canvas. This requires the core's private `_runtime_request_exit` ABI; it prevents live worker
+  access during C++ global destruction and releases core-owned browser observers on normal exit.
+  Checkpoint formats and the EmulatorJS Provider remain unchanged.
 
 ## 0.16.2
 

@@ -1,6 +1,6 @@
 import { Nostalgist } from "nostalgist";
 import type { MountedRuntimeAdapter, RuntimeExitReporter, RuntimeProgressReporter } from "../internal-adapter.js";
-import {mkxpStatus, waitForMkxpFrame, waitForMkxpRestore} from "./status.js";
+import {mkxpStatus, waitForMkxpExit, waitForMkxpFrame, waitForMkxpRestore} from "./status.js";
 import {
   decodeMkxpCheckpoint,
   decodeMkxpRastate,
@@ -140,6 +140,12 @@ async function mountMkxpUnchecked(
     onDiagnostic({ runtime: "mkxp-z", message: args.map(String).join(" ") });
   };
   let hostCleanup = false;
+  let started = false;
+  let nativeExited = false;
+  let exitPromise: Promise<void> | undefined;
+  let status: ReturnType<typeof mkxpStatus> | undefined;
+  let resolveNativeExit!: () => void;
+  const nativeExit = new Promise<void>((resolve) => {resolveNativeExit = resolve;});
   const nostalgist = await dependencies.prepare({
     core: {
       name: "mkxp-z",
@@ -150,6 +156,9 @@ async function mountMkxpUnchecked(
     emscriptenModule: {
       arguments: [remoteGamePath],
       onExit: (status) => {
+        if (nativeExited) {return;}
+        nativeExited = true;
+        resolveNativeExit();
         if (hostCleanup) {return;}
         onDiagnostic({ runtime: "mkxp-z", message: `RPG_RUNTIME_CORE_EXIT:${status}` });
         reportExitRequested();
@@ -183,9 +192,17 @@ async function mountMkxpUnchecked(
       "mkxp-z_saveStateSize": String(config.stateBufferBytes / (1024 * 1024)),
     },
   });
-  const exitCore = async () => {hostCleanup = true; await nostalgist.exit();};
+  const exitCore = () => exitPromise ??= Promise.resolve().then(async () => {
+    hostCleanup = true;
+    if (started && !nativeExited) {
+      // Force-exit executes C++ global destructors before terminating workers.
+      // Let the owning core loop unload game/audio/browser observers first.
+      status!.requestExit();
+      await waitForMkxpExit(nativeExit);
+    }
+    await nostalgist.exit();
+  });
   const fileSystem = nostalgist.getEmscriptenFS() as MkxpFileSystem;
-  let status;
   try {
     status = mkxpStatus(nostalgist.getEmscriptenModule());
     installRuntimeFiles(fileSystem, remoteContent.manifest);
@@ -193,6 +210,7 @@ async function mountMkxpUnchecked(
       const rawState = await dependencies.decodeCheckpoint(restorePayload, config.stateBufferBytes);
       installRestoreState(fileSystem, rawState, config.stateBufferBytes);
     }
+    started = true;
     await nostalgist.start();
     reportProgress({
       phase: "PROJECT_INDEX",

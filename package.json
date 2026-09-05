@@ -1,6 +1,6 @@
 {
   "name": "@xxxsen/retrom-runtime",
-  "version": "0.16.2",
+  "version": "0.16.3",
   "description": "Host-independent browser game runtimes with a shared lifecycle and checkpoint contract",
   "type": "module",
   "license": "MIT",

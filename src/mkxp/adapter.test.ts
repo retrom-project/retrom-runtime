@@ -33,6 +33,36 @@ afterEach(() => {
 });
 
 describe("mkxp runtime mount", () => {
+  it("waits for core-owned teardown before forcing worker cleanup or removing the canvas", async () => {
+    const harness = createHarness();
+    harness.autoExit = false;
+    const reportExit = vi.fn();
+    const mounted = await mountMkxp(mkxpConfig(), harness.target, null, harness.dependencies,
+      () => undefined, () => undefined, reportExit);
+    const exiting = mounted.exit();
+    await vi.advanceTimersByTimeAsync(100);
+    expect(harness.runtime.requestExit).toHaveBeenCalledOnce();
+    expect(harness.runtime.exit).not.toHaveBeenCalled();
+    expect(mounted.getCanvas()?.isConnected).toBe(true);
+    harness.prepareOptions?.emscriptenModule.onExit(0);
+    await exiting;
+    expect(harness.runtime.exit).toHaveBeenCalledOnce();
+    expect(harness.target.childElementCount).toBe(0);
+    expect(reportExit).not.toHaveBeenCalled();
+    harness.frame.remove();
+  });
+
+  it("reports a bounded shutdown failure without destroying live core globals", async () => {
+    const harness = createHarness();
+    harness.autoExit = false;
+    const mounted = await mountMkxp(mkxpConfig(), harness.target, null, harness.dependencies);
+    const result = mounted.exit().catch((error: unknown) => error);
+    await vi.advanceTimersByTimeAsync(5_000);
+    expect(await result).toEqual(new Error("RPG_RUNTIME_EXIT_TIMEOUT"));
+    expect(harness.runtime.exit).not.toHaveBeenCalled();
+    harness.frame.remove();
+  });
+
   it.each([1, 2, 3] as const)("starts RGSS %i with native backing dimensions before the frame fitter observes it", async (rgssVersion) => {
     const harness = createHarness();
     const mounted = await mountMkxp({...mkxpConfig(), rgssVersion}, harness.target, null, harness.dependencies);
@@ -441,6 +471,7 @@ function createHarness() {
     emscriptenEnvironment: {} as Record<string, string>,
     writeRuntimeState: (contents: Uint8Array) => fileSystem.writeFile(statePath, contents),
     onKeyDown: (code: string) => {void code;},
+    autoExit: true,
     canvasIdAtPrepare: null as string | null,
     prepareOptions: null as Parameters<NonNullable<Parameters<typeof mountMkxp>[3]>["prepare"]>[0] | null,
     stateAtStart: undefined as Uint8Array | undefined,
@@ -455,6 +486,9 @@ function createHarness() {
     actions.push("start");
   });
   harness.runtime = runtime;
+  runtime.requestExit.mockImplementation(() => {
+    if (harness.autoExit) {harness.prepareOptions?.emscriptenModule.onExit(0);}
+  });
   harness.emscriptenEnvironment = runtime.environment;
   document.body.append(harness.frame);
   const target = harness.frame.contentDocument?.createElement("div");
@@ -497,11 +531,14 @@ function createHarness() {
 function runtimeFixture(fileSystem: TestFileSystem, onStart: () => void) {
   const environment: Record<string, string> = {};
   const observation = {frames: 0, restore: 0};
+  const requestExit = vi.fn(() => undefined);
   return {
     observation,
+    requestExit,
     getEmscriptenModule: () => ({
       _runtime_get_frame_count: () => observation.frames,
       _runtime_get_restore_result: () => observation.restore,
+      _runtime_request_exit: requestExit,
     }),
     finishRestore: () => {
       observation.restore = 1;

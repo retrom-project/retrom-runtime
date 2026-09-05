@@ -218,18 +218,16 @@ async function mountMkxpUnchecked(
       totalBytes: remoteContent.manifest.byteLength,
     });
     reportProgress({ phase: "PROJECT_CONTENT", loadedBytes: 0, totalBytes: remoteContent.totalBytes });
-  } catch (error) {
-    await exitCore();
-    throw error;
-  }
-  try {
     await waitForMkxpFrame(status);
     if (restorePayload) {
       await pressPrivateHotkey(canvas, loadStateHotkey);
       await waitForMkxpRestore(status);
     }
   } catch (error) {
-    await exitCore();
+    try {await exitCore();}
+    catch (cleanupError) {
+      onDiagnostic({runtime: "mkxp-z", message: `RPG_RUNTIME_CLEANUP_FAILED:${mountFailureMessage(cleanupError)}`});
+    }
     throw error;
   }
   return {

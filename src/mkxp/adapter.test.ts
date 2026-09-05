@@ -33,6 +33,20 @@ afterEach(() => {
 });
 
 describe("mkxp runtime mount", () => {
+  it("preserves initialization errors when the failed core cannot acknowledge shutdown", async () => {
+    const harness = createHarness();
+    harness.autoExit = false;
+    harness.runtime.start.mockRejectedValue(new Error("native startup failed"));
+    const diagnostics: Array<{runtime: string; message: string}> = [];
+    const result = mountMkxp(mkxpConfig(), harness.target, null, harness.dependencies,
+      (diagnostic) => diagnostics.push(diagnostic)).catch((error: unknown) => error);
+    await vi.advanceTimersByTimeAsync(5_000);
+    expect(await result).toEqual(new Error("native startup failed"));
+    expect(diagnostics).toContainEqual({runtime: "mkxp-z", message: "RPG_RUNTIME_CLEANUP_FAILED:RPG_RUNTIME_EXIT_TIMEOUT"});
+    expect(harness.runtime.exit).not.toHaveBeenCalled();
+    harness.frame.remove();
+  });
+
   it("waits for core-owned teardown before forcing worker cleanup or removing the canvas", async () => {
     const harness = createHarness();
     harness.autoExit = false;

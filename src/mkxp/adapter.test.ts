@@ -33,6 +33,15 @@ afterEach(() => {
 });
 
 describe("mkxp runtime mount", () => {
+  it.each([1, 2, 3] as const)("starts RGSS %i with native backing dimensions before the frame fitter observes it", async (rgssVersion) => {
+    const harness = createHarness();
+    const mounted = await mountMkxp({...mkxpConfig(), rgssVersion}, harness.target, null, harness.dependencies);
+    const canvas = mounted.getCanvas();
+    expect([canvas?.width, canvas?.height]).toEqual(rgssVersion === 1 ? [640, 480] : [544, 416]);
+    await mounted.exit();
+    harness.frame.remove();
+  });
+
   it.each([1, 2, 3] as const)("creates the real fetch manifest parent independently of removed probes for RGSS %i", async (rgssVersion) => {
     const harness = createHarness();
     const adapter = await mountMkxp({...mkxpConfig(), rgssVersion}, harness.target, null, harness.dependencies);

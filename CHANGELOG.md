@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+- Initialize MKXP canvases with RGSS-native backing dimensions before mounting, so the shared frame
+  surface and Nostalgist do not capture the HTML default 2:1 aspect ratio and double-letterbox gameplay.
+
 ## 0.16.2
 
 - Return keyboard focus to the game canvas (or isolated runtime window) after a successful resume in

@@ -117,6 +117,10 @@ async function mountMkxpUnchecked(
   canvas.id = "canvas";
   canvas.tabIndex = 0;
   const dimensions = config.rgssVersion === 1 ? [640, 480] : [544, 416];
+  // The shared frame fitter observes backing dimensions as soon as we append.
+  // Leaving the HTML default (300 x 150) would freeze a 2:1 initial viewport
+  // in Nostalgist and letterbox the actual 4:3 / RGSS game a second time.
+  [canvas.width, canvas.height] = dimensions;
   [canvas.style.width, canvas.style.height] = dimensions.map((value) => `${value}px`);
   target.append(canvas);
   const runtimeAssetBytes = config.core.jsSizeBytes + config.core.wasmSizeBytes;

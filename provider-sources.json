@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "packageName": "@xxxsen/retrom-runtime",
-  "packageVersion": "0.16.3",
+  "packageVersion": "0.16.4",
   "publicApiVersion": 2,
   "upstreamReleases": [
     {

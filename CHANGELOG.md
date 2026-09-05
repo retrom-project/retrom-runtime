@@ -10,6 +10,8 @@
 - Fix the compression dependency at fflate 0.8.3 (CVE-2026-45820). A bounded
   malformed-ZIP64 regression prevents reintroducing the parser's infinite loop;
   MKXP continues to use the same gzip checkpoint format and compatibility rules.
+- Pin the formally published EasyRPG core r9, including ordinary game readiness
+  and remote directory setup, with the calling-user release build verified.
 - Known limitation: an intermittent RPG Maker XP first-frame timeout during
   sequential launches remains under investigation. A successful diagnostic
   repeat does not resolve that observation. It is explicitly accepted as a

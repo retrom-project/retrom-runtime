@@ -2,9 +2,18 @@
 
 ## Unreleased
 
+## 0.16.5
+
+- Advance the immutable Retrom Provider beyond the verified 0.16.4 development
+  base. Provider targets and checkpoint formats remain unchanged; EmulatorJS
+  remains at 2.2.2 with its independently fixed assets.
 - Fix the compression dependency at fflate 0.8.3 (CVE-2026-45820). A bounded
   malformed-ZIP64 regression prevents reintroducing the parser's infinite loop;
   MKXP continues to use the same gzip checkpoint format and compatibility rules.
+- Known limitation: an intermittent RPG Maker XP first-frame timeout during
+  sequential launches remains under investigation. A successful diagnostic
+  repeat does not resolve that observation. It is explicitly accepted as a
+  follow-up for this release, independently of the fixed VX Ace state-I/O crash.
 
 ## 0.16.4
 

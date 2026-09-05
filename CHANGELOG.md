@@ -1,9 +1,11 @@
 # Changelog
 
-## Unreleased
+## 0.16.2
 
 - Return keyboard focus to the game canvas (or isolated runtime window) after a successful resume in
   both Providers. Failed or cancelled Retrom runtime resumes do not reclaim input from Host controls.
+- Advance the EmulatorJS Provider to 2.2.2 for the shared focus correction. Candidate validation keeps
+  strict forward-only Provider activation and leaves fixed Release dependencies unchanged.
 
 ## 0.16.1
 

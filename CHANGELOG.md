@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Fix the compression dependency at fflate 0.8.3 (CVE-2026-45820). A bounded
+  malformed-ZIP64 regression prevents reintroducing the parser's infinite loop;
+  MKXP continues to use the same gzip checkpoint format and compatibility rules.
+
 ## 0.16.4
 
 - Request MKXP save/restore through its owning core loop and await an explicit completed I/O receipt.

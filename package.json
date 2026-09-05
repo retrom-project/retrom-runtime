@@ -36,7 +36,7 @@
     "release:build": "npm run build && npm run provider:input:prepare && node scripts/build-release.mjs"
   },
   "dependencies": {
-    "fflate": "0.8.2",
+    "fflate": "0.8.3",
     "nostalgist": "0.20.2"
   },
   "devDependencies": {

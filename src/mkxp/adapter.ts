@@ -1,6 +1,6 @@
 import { Nostalgist } from "nostalgist";
 import type { MountedRuntimeAdapter, RuntimeExitReporter, RuntimeProgressReporter } from "../internal-adapter.js";
-import {mkxpStatus, waitForMkxpExit, waitForMkxpFrame, waitForMkxpRestore} from "./status.js";
+import {type MkxpStatus, mkxpStatus, waitForMkxpExit, waitForMkxpFrame, waitForMkxpRestore, waitForMkxpSave} from "./status.js";
 import {
   decodeMkxpCheckpoint,
   decodeMkxpRastate,
@@ -46,8 +46,6 @@ const remoteGamePath = "/retrom-content/game.mkxpz";
 const fetchManifestPath = `${systemRoot}/mkxp-z/fetch.manifest`;
 const fetchBaseDirectory = "/retrom-fetch";
 const fetchChunkSizeBytes = 256 * 1024;
-const saveStateHotkey = { code: "F2", keyCode: 113 } as const;
-const loadStateHotkey = { code: "F4", keyCode: 115 } as const;
 const pauseToggleHotkey = { code: "F6", keyCode: 117 } as const;
 const browserDependencies: MkxpMountDependencies = {
   decodeCheckpoint: decodeMkxpCheckpoint,
@@ -175,8 +173,8 @@ async function mountMkxpUnchecked(
       savestate_directory: "/home/web_user/retroarch/userdata/states",
       system_directory: systemRoot,
       input_menu_toggle: "nul",
-      input_save_state: "f2",
-      input_load_state: "f4",
+      input_save_state: "nul",
+      input_load_state: "nul",
       input_pause_toggle: "f6",
       // RGSS Input::C maps to RetroPad A; make its browser binding explicit.
       input_player1_a: "x",
@@ -229,8 +227,9 @@ async function mountMkxpUnchecked(
     reportProgress({ phase: "PROJECT_CONTENT", loadedBytes: 0, totalBytes: remoteContent.totalBytes });
     await waitForMkxpFrame(status);
     if (restorePayload) {
-      await pressPrivateHotkey(canvas, loadStateHotkey);
+      status.requestRestore();
       await waitForMkxpRestore(status);
+      fileSystem.unlink(statePath);
     }
   } catch (error) {
     try {await exitCore();}
@@ -241,7 +240,7 @@ async function mountMkxpUnchecked(
   }
   return {
     checkpoint: async () => ({
-      bytes: await saveStateBytes(canvas, fileSystem, config.stateBufferBytes, dependencies.encodeCheckpoint),
+      bytes: await saveStateBytes(status!, fileSystem, config.stateBufferBytes, dependencies.encodeCheckpoint),
       format: "mkxp-state-compact-v1",
     }),
     exit: async () => {
@@ -351,33 +350,23 @@ function canvasBlob(canvas: HTMLCanvasElement) {
 }
 
 async function saveStateBytes(
-  canvas: HTMLCanvasElement,
+  status: MkxpStatus,
   fileSystem: MkxpFileSystem,
   expectedSize: number,
   encodeCheckpoint: typeof encodeMkxpCheckpoint,
 ) {
-  try {fileSystem.unlink(statePath);} catch { /* A previous state file is optional. */ }
-  await pressPrivateHotkey(canvas, saveStateHotkey);
+  status.requestSave();
+  // Native preallocation exposes the full file length before any payload is
+  // written. Only the owning core's close/free receipt authorizes reading it.
+  await waitForMkxpSave(status);
   const expectedPayloadSize = expectedSize + mkxpRastateEnvelopeBytes;
-  const deadline = performance.now() + 120_000;
-  while (performance.now() < deadline) {
-    try {
-      const size = fileSystem.stat(statePath).size;
-      if (size > expectedPayloadSize) {throw new Error("RPG_CHECKPOINT_CREATE_FAILED");}
-      if (size === expectedPayloadSize) {
-        const state = fileSystem.readFile(statePath);
-        const core = decodeMkxpRastate(state, expectedSize);
-        try {fileSystem.unlink(statePath);} catch { /* The in-memory copy is authoritative. */ }
-        try {return await encodeCheckpoint(core, expectedSize);}
-        catch {throw new Error("RPG_CHECKPOINT_CREATE_FAILED");}
-      }
-    } catch (error) {
-      if (error instanceof Error && error.message === "RPG_CHECKPOINT_CREATE_FAILED") {throw error;}
-      // RetroArch creates the file asynchronously after completing core serialization.
-    }
-    await new Promise((resolve) => setTimeout(resolve, 50));
-  }
-  throw new Error("RPG_CHECKPOINT_CREATE_TIMEOUT");
+  try {
+    if (fileSystem.stat(statePath).size !== expectedPayloadSize) {throw new Error("RPG_CHECKPOINT_CREATE_FAILED");}
+    const state = fileSystem.readFile(statePath);
+    const core = decodeMkxpRastate(state, expectedSize);
+    fileSystem.unlink(statePath);
+    return await encodeCheckpoint(core, expectedSize);
+  } catch {throw new Error("RPG_CHECKPOINT_CREATE_FAILED");}
 }
 
 function installRestoreState(fileSystem: MkxpFileSystem, state: Uint8Array, expectedSize: number) {
@@ -386,7 +375,7 @@ function installRestoreState(fileSystem: MkxpFileSystem, state: Uint8Array, expe
 
 async function pressPrivateHotkey(
   canvas: HTMLCanvasElement,
-  hotkey: typeof saveStateHotkey | typeof loadStateHotkey | typeof pauseToggleHotkey,
+  hotkey: typeof pauseToggleHotkey,
 ) {
   const KeyboardEventConstructor = canvas.ownerDocument.defaultView?.KeyboardEvent;
   if (!KeyboardEventConstructor) {throw new Error("RPG_RUNTIME_FAILED");}

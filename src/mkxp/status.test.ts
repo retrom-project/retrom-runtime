@@ -1,20 +1,41 @@
 import {afterEach, describe, expect, it, vi} from "vitest";
-import {mkxpStatus, waitForMkxpFrame, waitForMkxpRestore} from "./status.js";
+import {mkxpStatus, waitForMkxpFrame, waitForMkxpRestore, waitForMkxpSave} from "./status.js";
 
 afterEach(() => {vi.useRealTimers();});
 
 function coreStatus() {
   vi.useFakeTimers();
-  const value = {frames: 0, restore: 0};
+  const value = {frames: 0, restore: 0, acceptsRequest: 1};
+  const requests: number[] = [];
   const status = mkxpStatus({
     _runtime_get_frame_count: () => value.frames,
-    _runtime_get_restore_result: () => value.restore,
+    _runtime_get_state_result: () => value.restore,
+    _runtime_request_state: (operation: number) => {
+      requests.push(operation);
+      return value.acceptsRequest;
+    },
     _runtime_request_exit: () => undefined,
   });
-  return {value, status};
+  return {value, status, requests};
 }
 
 describe("mkxp threaded-core status", () => {
+  it("uses acknowledged state requests and rejects an overlapping native operation", () => {
+    const {value, status, requests} = coreStatus();
+    status.requestSave();
+    status.requestRestore();
+    expect(requests).toEqual([1, 2]);
+    value.acceptsRequest = 0;
+    expect(() => status.requestSave()).toThrow("RPG_CHECKPOINT_CREATE_FAILED");
+    expect(() => status.requestRestore()).toThrow("RPG_CHECKPOINT_RESTORE_FAILED");
+  });
+
+  it("fails save immediately on a native I/O failure, never on a file-length guess", async () => {
+    const {value, status} = coreStatus();
+    value.restore = -1;
+    await expect(waitForMkxpSave(status)).rejects.toThrow("RPG_CHECKPOINT_CREATE_FAILED");
+  });
+
   it("requires the core status ABI rather than falling back to fixture evidence", () => {
     for (const module of [null, {}, {_runtime_get_frame_count: () => 1}]) {
       expect(() => mkxpStatus(module)).toThrow("RPG_RUNTIME_ARTIFACT_INVALID");
@@ -75,6 +96,6 @@ describe("mkxp threaded-core status", () => {
     value.frames = NaN;
     expect(() => status.frames()).toThrow("RPG_RUNTIME_STATE_UNAVAILABLE");
     value.restore = 2;
-    expect(() => status.restoreResult()).toThrow("RPG_RUNTIME_STATE_UNAVAILABLE");
+    expect(() => status.stateResult()).toThrow("RPG_RUNTIME_STATE_UNAVAILABLE");
   });
 });

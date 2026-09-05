@@ -191,9 +191,12 @@ retain, restore or fall back to an older Bundle.
 
 The mkxp core still serializes into its fixed 256 MiB memory buffer. The adapter does not upload that zero-padded
 buffer directly: it trims the unused zero tail in bounded asynchronous chunks, compresses the meaningful prefix in a worker and stores a compact
-`mkxp-state-compact` checkpoint. Restore expands the checkpoint back to the exact 256 MiB core buffer before the
-private load hotkey is sent. This is an aggregate-runtime ABI; the pinned upstream core Release continues to expose
-its raw serializer ABI and does not need a host-specific patch for compression.
+`mkxp-state-compact-v1` checkpoint. Restore expands it back to the exact core buffer before publishing an atomic
+native load request. The core loop owns save/restore execution and exposes an explicit completion result. Saving
+preallocates the exact memory-file size and acknowledges only after writing, closing and freeing its temporary
+buffer; a full-length file is never proof of completion. Restoring requires successful native deserialization and
+a subsequent presented frame. The adapter releases temporary state files after consuming them. This private
+request/result ABI replaces synthetic save/load hotkeys without changing the raw serializer or compact format.
 
 ## Adding and integrating a core
 

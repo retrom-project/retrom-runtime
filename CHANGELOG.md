@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+## 0.16.4
+
+- Request MKXP save/restore through its owning core loop and await an explicit completed I/O receipt.
+  Short-lived synthetic save/load hotkeys and file-length completion guesses are removed. The core
+  preallocates exact raw state files to prevent WasmFS vector doubling at the RASTATE envelope boundary;
+  the adapter releases temporary restore/save files after completion. This fixes native allocation
+  aborts during restored VX Ace sessions and applies equally to XP/VX. Existing checkpoint formats
+  are unchanged; the new private state-request/result core ABI is required without a legacy fallback.
 - Keep Nostalgist's JavaScript cleanup after native MKXP exit without executing C++ global destruction
   a second time. Re-entering force-exit after its supporting pthreads terminated could hang Player exit,
   including after a successful checkpoint. Native exit remains acknowledged before host disposal.

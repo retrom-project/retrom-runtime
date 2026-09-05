@@ -116,7 +116,7 @@ async function mountEasyRpgUnchecked(
   });
   playerModule.initApi();
   const expectedEngine = config.generation === "RPG2000" ? "RPG2000" : "RPG2003";
-  await waitForReady(playerModule, expectedEngine);
+  await waitForReady(playerModule, expectedEngine, restoreFiles.length > 0);
 
   return {
     checkpoint: async () => {
@@ -183,6 +183,7 @@ function position(state: EasyState): RpgMakerPositionV1 {
 async function waitForReady(
   module: EasyModule,
   expectedEngine: EasyState["engine"],
+  restoring: boolean,
 ) {
   if (module.runtimeFileSystemReady !== true) {
     throw new Error("RPG_RUNTIME_FILESYSTEM_NOT_READY");
@@ -193,7 +194,7 @@ async function waitForReady(
     const state = startupState(module);
     if (state && (state.ready || state.frameCount > 0)) {
       engineMismatch = state.engine !== expectedEngine;
-      if (!engineMismatch) {return;}
+      if (!engineMismatch && (!restoring || state.ready)) {return;}
       if (state.ready) {throw new Error("RPG_ENGINE_PROFILE_MISMATCH");}
     }
     await new Promise<void>((resolve) => window.setTimeout(resolve, 50));

@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { rpgMakerPositionProbeKind, type RpgMakerRuntimeConfig } from "../rpgmaker/contract";
 import { mountEasyRpg } from "./adapter";
+import { encodeRpgCheckpoint } from "../checkpoint";
 
 type EasyConfig = RpgMakerRuntimeConfig & {
   adapter: Extract<RpgMakerRuntimeConfig["adapter"], { adapterKind: "EASYRPG_WEB" }>;
@@ -16,6 +17,35 @@ afterEach(() => {
 });
 
 describe("EasyRPG adapter cleanup", () => {
+  it("waits for the restored map before exposing a mounted runtime or position probe", async () => {
+    const payload = await encodeRpgCheckpoint({
+      engine: "RPG2003", resumeSlot: 100,
+      entries: [{store: "FILESYSTEM", key: "Save/Save100.lsd", mediaType: "application/octet-stream", data: new Uint8Array([1])}],
+    });
+    const target = document.createElement("div");
+    document.body.append(target);
+    const readRuntimeState = vi.fn()
+      .mockReturnValueOnce(JSON.stringify({engine: "RPG2003", ready: false, canCheckpoint: false,
+        frameCount: 10, mapId: 0, playerX: 0, playerY: 0, fixtureState: 0}))
+      .mockReturnValue(JSON.stringify({engine: "RPG2003", ready: true, canCheckpoint: true,
+        frameCount: 20, mapId: 7, playerX: 4, playerY: 6, fixtureState: 9}));
+    const createPlayer = vi.fn().mockResolvedValue({
+      FS: {}, canvas: document.createElement("canvas"), runtimeFileSystemReady: true,
+      initApi: vi.fn(), pauseMainLoop: vi.fn(), resumeMainLoop: vi.fn(),
+      api: {runtimeState: readRuntimeState},
+    });
+    Object.defineProperty(window, "createEasyRpgPlayer", {configurable: true, value: createPlayer});
+    const mounting = mountEasyRpg(easyConfig("RPG2003"), target, window, payload);
+    await vi.waitFor(() => expect(document.head.querySelector("script[data-rpg-runtime=easyrpg]")).not.toBeNull());
+    document.head.querySelector("script[data-rpg-runtime=easyrpg]")?.dispatchEvent(new Event("load"));
+    const mounted = await mounting;
+    expect(createPlayer).toHaveBeenCalledWith(expect.objectContaining({runtimeRestoreSlot: 100}));
+    expect(readRuntimeState).toHaveBeenCalledTimes(2);
+    expect(mounted.getValidationProbe(rpgMakerPositionProbeKind)?.value)
+      .toEqual({mapId: 7, playerX: 4, playerY: 6, fixtureState: 9});
+    await mounted.exit();
+  });
+
   it.each([false, true])("does not treat loading frames as a final engine identity (persistent mismatch: %s)", async (persistent) => {
     vi.useFakeTimers();
     const target = document.createElement("div");

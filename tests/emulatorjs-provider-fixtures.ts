@@ -16,7 +16,7 @@ export function launchEnvelope(): LaunchEnvelopeV1 {
       capabilities: {
         checkpoint: true, discSwitch: false, frameCounter: true, frameMode: "SAME_ORIGIN_BLANK",
         inputFilter: true, nativeSettings: true, netplayPort: true, pause: true, requiresThreads: false,
-        screenshot: true, standardGamepad: true, validationProbes: [],
+        screenshot: true, standardGamepad: true,
         videoModes: ["adaptive-sharpen", "original", "pixel", "sharp-bilinear", "smooth"], volume: true,
       },
       checkpoint: {maxBytes: 268435456, readFormats: ["emulatorjs-state-v1"], writeFormat: "emulatorjs-state-v1"},
@@ -24,7 +24,7 @@ export function launchEnvelope(): LaunchEnvelopeV1 {
       moduleUrl: `/runtime/providers/emulatorjs/${bundleDigest}/client.mjs`,
       providerApiVersion: 1,
       providerId: "emulatorjs",
-      providerVersion: "2.1.0",
+      providerVersion: "2.2.0",
       runtimeBaseUrl: `/runtime/providers/emulatorjs/${bundleDigest}/`,
       targetId: "fceumm",
     },
@@ -35,6 +35,5 @@ export function launchEnvelope(): LaunchEnvelopeV1 {
       purpose: "PRODUCT", returnTo: "/games/fixture", title: "Fixture", warnings: [],
     },
     targetOptions: {dosEntryPath: null, initialDiscIndex: null},
-    validation: null,
   };
 }

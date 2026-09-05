@@ -12,7 +12,7 @@ one `client.mjs` with this closed interface:
 
 ```ts
 export const providerId = "retrom-runtime";
-export const providerVersion = "0.15.0";
+export const providerVersion = "0.16.0";
 export const providerApiVersion = 1;
 export async function createRuntime(
   value: unknown,
@@ -23,7 +23,7 @@ export async function createRuntime(
 The host validates a Launch Envelope V1, verifies the module URL and SHA-256 against the active Bundle, imports
 the module, checks the exported identity and calls `createRuntime`. It only consumes `PlayerRuntimeV1`; it never
 chooses EasyRPG, mkxp, native Web or another implementation. The Provider validates the stable `providerId` plus
-`targetId`, current resources, private Target options, optional restore, validation and netplay inputs before mounting.
+`targetId`, current resources, private Target options, optional restore and netplay inputs before mounting.
 
 `src/providers/retrom-runtime/catalog.ts` is the single Target declaration for the 12 targets in this Provider.
 The generated declaration provides current capabilities, checkpoint `writeFormat/readFormats/maxBytes`, resource
@@ -31,8 +31,9 @@ kinds, runtime files and a constrained closed `targetOptionsSchema`. The Provide
 exact-validate options before mounting; it has no
 `optionsKind` discriminator. A Host dispatcher only needs generic JSON safety, depth and size limits and must not
 copy these Target-specific properties. `provider-sources.json` records only pinned upstream Release/build sources;
-it cannot declare a Target or host binding. Core-specific validation remains an extension probe: RPG Maker exposes
-`rpgmaker.position.v1`, while ONS and KiriKiri do not fabricate map IDs or player coordinates.
+it cannot declare a Target or host binding. Product play and review previews use the same ordinary controls.
+There are no production proof gates, fixture variables, validation probes, or expected-position Target options.
+Strict input, visual and restored-position assertions belong to development acceptance through real game fixtures.
 
 The package root exports the same Provider entry and public ABI types. There is no separate runtime constructor,
 generic adapter config, config conversion layer or inner controller. The Provider creates minimal, typed parameters

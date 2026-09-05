@@ -71,7 +71,6 @@ export type ProviderCapabilities = {
   standardGamepad: boolean;
   frameCounter: boolean;
   volume: boolean;
-  validationProbes: readonly string[];
 };
 
 export type AdapterDeclaration = {

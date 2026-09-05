@@ -113,7 +113,6 @@ function fixtureManifest() {
         requiresThreads: false,
         screenshot: false,
         standardGamepad: false,
-        validationProbes: [],
         volume: false,
       },
       checkpoint: null,

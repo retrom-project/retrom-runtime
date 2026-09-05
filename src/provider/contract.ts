@@ -12,7 +12,7 @@ const targetKeys = [
 ];
 const capabilityKeys = [
   "checkpoint", "discSwitch", "frameCounter", "frameMode", "inputFilter", "nativeSettings", "netplayPort",
-  "pause", "requiresThreads", "screenshot", "standardGamepad", "validationProbes", "videoModes", "volume",
+  "pause", "requiresThreads", "screenshot", "standardGamepad", "videoModes", "volume",
 ];
 const inputKeys = ["cardinality", "kind", "optional", "role"];
 const checkpointKeys = ["maxBytes", "readFormats", "writeFormat"];
@@ -151,8 +151,6 @@ function validateCapabilities(value: unknown): void {
   if (typeof capabilities.frameMode !== "string" || !frameModes.has(capabilities.frameMode)) {
     invalidManifest();
   }
-  const probes = stringArray(capabilities.validationProbes);
-  if (!probes || !isSortedUnique(probes) || !probes.every(validToken)) {invalidManifest();}
   const modes = stringArray(capabilities.videoModes);
   if (!modes || !isSortedUnique(modes) || !modes.every((mode) => videoModes.has(mode))) {invalidManifest();}
 }

@@ -12,9 +12,21 @@ beforeEach(() => {vi.mocked(mountTargetAdapter).mockReset();});
 afterEach(() => {document.body.replaceChildren(); vi.useRealTimers();});
 
 describe("retrom-runtime Provider Module V1", () => {
+  it("exposes ordinary play controls without a production proof interface", async () => {
+    const player = await provider.createRuntime(wasmEnvelope(), hostFixture());
+    expect(player).not.toHaveProperty("runValidationProbe");
+    expect(player.getCapabilities()).not.toHaveProperty("validationProbes");
+    for (const target of retromRuntimeProviderDefinition.targets.filter((entry) => entry.id.startsWith("rpgmaker-"))) {
+      expect(target.targetOptionsSchema).toEqual({
+        additionalProperties: false, properties: {}, required: [], type: "object",
+      });
+    }
+    await player.exit();
+  });
+
   it("exports only the current provider entry and exact identity", async () => {
     expect(Object.keys(provider).sort()).toEqual(["createRuntime", "providerApiVersion", "providerId", "providerVersion"]);
-    expect(provider).toMatchObject({providerApiVersion: 1, providerId: "retrom-runtime", providerVersion: "0.15.0"});
+    expect(provider).toMatchObject({providerApiVersion: 1, providerId: "retrom-runtime", providerVersion: "0.16.0"});
     expect((await provider.createRuntime(wasmEnvelope(), hostFixture())).getState()).toBe("CREATED");
     await expect(provider.createRuntime({...wasmEnvelope(), providerId: "leaked"}, hostFixture()))
       .rejects.toThrow("PROVIDER_LAUNCH_REQUEST_INVALID");
@@ -31,6 +43,9 @@ describe("retrom-runtime Provider Module V1", () => {
       (v: ReturnType<typeof wasmEnvelope>) => Object.assign(v.session, {adapterId: "leaked"}),
       (v: ReturnType<typeof wasmEnvelope>) => Object.assign(v.runtime, {routeKey: "leaked"}),
       (v: ReturnType<typeof wasmEnvelope>) => Object.assign(v.runtime.capabilities, {extra: true}),
+      (v: ReturnType<typeof wasmEnvelope>) => Object.assign(v.runtime.capabilities, {validationProbes: []}),
+      (v: ReturnType<typeof wasmEnvelope>) => Object.assign(v, {validation: null}),
+      (v: ReturnType<typeof wasmEnvelope>) => Object.assign(v.session, {purpose: "RUNTIME_VALIDATION"}),
       (v: ReturnType<typeof wasmEnvelope>) => Object.assign(v.resources[0], {mountPath: "/game"}),
       (v: ReturnType<typeof wasmEnvelope>) => Object.assign(v.targetOptions, {core: "leaked"}),
       (v: ReturnType<typeof wasmEnvelope>) => Object.assign(v.restore!, {payloadKind: "leaked"}),
@@ -120,7 +135,7 @@ describe("retrom-runtime Provider Module V1", () => {
     },
   );
 
-  it("owns idempotent controls, input filtering, video and RPG probes", async () => {
+  it("owns idempotent controls, input filtering and video", async () => {
     const frame = document.createElement("iframe");
     document.body.append(frame);
     const runtimeWindow = frame.contentWindow!;
@@ -130,9 +145,6 @@ describe("retrom-runtime Provider Module V1", () => {
     });
     const adapter = adapterFixture({
       getFrameCount: () => 88, setVideoMode: vi.fn(async () => undefined),
-      getValidationProbe: (kind) => kind === "rpgmaker.position.v1" ? {
-        kind, schemaVersion: 1, value: {fixtureState: 4, mapId: 2, playerX: 8, playerY: 9},
-      } : null,
     });
     vi.mocked(mountTargetAdapter).mockResolvedValue(adapter);
     const player = createRetromRuntimePlayer(rpgMvEnvelope(), hostFixture({mountFrame: async () => ({
@@ -158,11 +170,6 @@ describe("retrom-runtime Provider Module V1", () => {
     expect(adapter.setVideoMode).toHaveBeenNthCalledWith(1, "pixel");
     expect(adapter.setVideoMode).toHaveBeenNthCalledWith(2, "smooth");
     expect(player.getFrameCount()).toBe(88);
-    await expect(player.runValidationProbe("rpgmaker.position.v1", {
-      fixtureState: 4, mapId: 2, playerX: 8, playerY: 9,
-    })).resolves.toEqual({
-      evidence: {fixtureState: 4, mapId: 2, playerX: 8, playerY: 9}, passed: true, probeId: "rpgmaker.position.v1",
-    });
     await player.exit();
     expect(runtimeWindow.navigator.getGamepads).toBe(nativeGetGamepads);
   });

@@ -1,5 +1,4 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { rpgMakerPositionProbeKind } from "../rpgmaker/contract";
 import { mountEasyRpg } from "./adapter";
 import { encodeRpgCheckpoint } from "../checkpoint";
 
@@ -15,7 +14,7 @@ afterEach(() => {
 });
 
 describe("EasyRPG adapter cleanup", () => {
-  it("waits for the restored map before exposing a mounted runtime or position probe", async () => {
+  it("waits for the restored map without requiring fixture variables or a position proof", async () => {
     const payload = await encodeRpgCheckpoint({
       engine: "RPG2003", resumeSlot: 100,
       entries: [{store: "FILESYSTEM", key: "Save/Save100.lsd", mediaType: "application/octet-stream", data: new Uint8Array([1])}],
@@ -24,9 +23,9 @@ describe("EasyRPG adapter cleanup", () => {
     document.body.append(target);
     const readRuntimeState = vi.fn()
       .mockReturnValueOnce(JSON.stringify({engine: "RPG2003", ready: false, canCheckpoint: false,
-        frameCount: 10, mapId: 0, playerX: 0, playerY: 0, fixtureState: 0}))
+        frameCount: 10}))
       .mockReturnValue(JSON.stringify({engine: "RPG2003", ready: true, canCheckpoint: true,
-        frameCount: 20, mapId: 7, playerX: 4, playerY: 6, fixtureState: 9}));
+        frameCount: 20}));
     const createPlayer = vi.fn().mockResolvedValue({
       FS: {}, canvas: document.createElement("canvas"), runtimeFileSystemReady: true,
       initApi: vi.fn(), pauseMainLoop: vi.fn(), resumeMainLoop: vi.fn(),
@@ -39,8 +38,8 @@ describe("EasyRPG adapter cleanup", () => {
     const mounted = await mounting;
     expect(createPlayer).toHaveBeenCalledWith(expect.objectContaining({runtimeRestoreSlot: 100}));
     expect(readRuntimeState).toHaveBeenCalledTimes(2);
-    expect(mounted.getValidationProbe(rpgMakerPositionProbeKind)?.value)
-      .toEqual({mapId: 7, playerX: 4, playerY: 6, fixtureState: 9});
+    expect(mounted.getCheckpointAvailability()).toEqual({available: true, blocker: null});
+    expect(mounted.getFrameCount()).toBe(20);
     await mounted.exit();
   });
 
@@ -153,14 +152,13 @@ describe("EasyRPG adapter cleanup", () => {
     const options = createPlayer.mock.calls[0]?.[0] as {onRuntimeExitRequested?: () => void};
     options.onRuntimeExitRequested?.();
     expect(reportExitRequested).toHaveBeenCalledOnce();
-    expect(mounted.getValidationProbe(rpgMakerPositionProbeKind)?.value)
-      .toEqual({ mapId: 1, playerX: 8, playerY: 6, fixtureState: 0 });
+    expect(mounted.getCheckpointAvailability()).toEqual({available: true, blocker: null});
     await mounted.exit();
     delete (window as Window & { createEasyRpgPlayer?: unknown }).createEasyRpgPlayer;
     target.remove();
   });
 
-  it("mounts on an interactive title scene without exposing map position evidence", async () => {
+  it("mounts on an interactive title scene while checkpoints remain unavailable", async () => {
     const target = document.createElement("div");
     document.body.append(target);
     const canvas = document.createElement("canvas");
@@ -186,7 +184,6 @@ describe("EasyRPG adapter cleanup", () => {
 
     const mounted = await mounting;
     expect(mounted.getFrameCount()).toBe(120);
-    expect(mounted.getValidationProbe(rpgMakerPositionProbeKind)).toBeNull();
     expect(mounted.getCheckpointAvailability()).toEqual({available: false, blocker: "BUSY"});
     await mounted.exit();
     target.remove();
@@ -368,8 +365,7 @@ describe("EasyRPG adapter cleanup", () => {
 
     const mounted = await mounting;
     expect(runtimeState).toHaveBeenCalledTimes(2);
-    expect(mounted.getValidationProbe(rpgMakerPositionProbeKind)?.value)
-      .toEqual({ mapId: 1, playerX: 10, playerY: 8, fixtureState: 0 });
+    expect(mounted.getCheckpointAvailability()).toEqual({available: true, blocker: null});
     await mounted.exit();
     delete (window as Window & { createEasyRpgPlayer?: unknown }).createEasyRpgPlayer;
     target.remove();

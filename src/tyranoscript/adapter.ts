@@ -59,7 +59,6 @@ export async function mountTyranoScript(
       ? { available: true, blocker: null }
       : { available: false, blocker: "BUSY" },
     getFrameCount: () => channel.frames(),
-    getValidationProbe: () => null,
     pause: async () => {await channel.request("PAUSE", {});},
     resume: async () => {await channel.request("RESUME", {});},
     screenshot: () => channel.screenshot(),

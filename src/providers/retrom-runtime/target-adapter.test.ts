@@ -59,7 +59,6 @@ describe("Provider to core-private parameters", () => {
           wasmSha256: "d".repeat(64), wasmSizeBytes: 2000,
           wasmUrl: request.runtime.runtimeBaseUrl + "assets/mkxp/mkxp-z_libretro.wasm",
         },
-        expectedRestorePosition: null,
         projectArchive: {
           kind: "SEEKABLE_BLOB", rangeRequired: true, sha256: "a".repeat(64), sizeBytes: 4096,
           url: `/runtime/content/project/${"a".repeat(64)}/game.mkxpz`,

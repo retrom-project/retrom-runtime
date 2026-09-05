@@ -1,5 +1,4 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { rpgMakerPositionProbeKind } from "../rpgmaker/contract";
 import { fetchVerified, mountMkxp } from "./adapter";
 import { encodeMkxpRastate } from "./state";
 
@@ -8,18 +7,14 @@ import type {MkxpParameters} from "./parameters.js";
 type TestFileSystem = {
   analyzePath(path: string): { exists: boolean };
   mkdirTree(path: string): void;
-  readdir(path: string): string[];
   readFile(path: string): Uint8Array<ArrayBufferLike>;
   stat(path: string): { size: number };
   unlink(path: string): void;
-  rename(from: string, to: string): void;
   writeFile(path: string, contents: Uint8Array): void;
 };
 
 const statePath = "/home/web_user/retroarch/userdata/states/mkxp-z/game.state";
 const coreStateRoot = "/home/web_user/retroarch/userdata/states/mkxp-z";
-const evidencePath = "/home/web_user/retroarch/userdata/saves/mkxp-z/mkxp-z/Saves/RPG RUNTIME XP-/rpg-runtime-position";
-const movedEvidencePath = "/home/web_user/retroarch/userdata/saves/mkxp-z/mkxp-z/Saves/RPG RUNTIME VX-/rpg-runtime-position";
 const stateSize = 268435456;
 const stateFixture = new Uint8Array(stateSize);
 stateFixture.set([0x6d, 0x6b, 0x78, 0x70, 1, 0, 0, 0]);
@@ -38,6 +33,20 @@ afterEach(() => {
 });
 
 describe("mkxp runtime mount", () => {
+  it("restores an ordinary checkpoint without host-provided position evidence", async () => {
+    const harness = createHarness();
+    harness.onKeyDown = (code) => {
+      if (code === "F4") {
+        harness.runtime.finishRestore();
+      }
+    };
+    const mounting = mountMkxp(mkxpConfig(), harness.target, checkpointFixture, harness.dependencies);
+    const result = mounting.then((value) => value, (error: unknown) => error);
+    await vi.advanceTimersByTimeAsync(1_000);
+    expect(await result).toHaveProperty("checkpoint");
+    harness.frame.remove();
+  });
+
   it("lets immutable runtime assets use the browser cache", async () => {
     const url = new URL("/runtime/mkxp/core.js", window.location.href).href;
     const fetchMock = vi.fn(async () => ({
@@ -64,7 +73,7 @@ describe("mkxp runtime mount", () => {
     const reportExitRequested = vi.fn();
 
     const mounted = await mountMkxp(
-      mkxpConfig(false), harness.target, null, harness.dependencies, (diagnostic) => diagnostics.push(diagnostic),
+      mkxpConfig(), harness.target, null, harness.dependencies, (diagnostic) => diagnostics.push(diagnostic),
       () => undefined, reportExitRequested,
     );
     const print = harness.prepareOptions?.emscriptenModule?.print;
@@ -93,7 +102,7 @@ describe("mkxp runtime mount", () => {
     harness.dependencies.prepare = async () => {throw new Error("browser prepare failed");};
 
     await expect(mountMkxp(
-      mkxpConfig(false), harness.target, null, harness.dependencies,
+      mkxpConfig(), harness.target, null, harness.dependencies,
       (diagnostic) => diagnostics.push(diagnostic),
     )).rejects.toThrow("browser prepare failed");
 
@@ -104,28 +113,28 @@ describe("mkxp runtime mount", () => {
     harness.frame.remove();
   });
 
-  it("reports bounded filesystem state when position evidence never appears", async () => {
+  it("fails startup if the core never presents a frame", async () => {
     const harness = createHarness();
     const diagnostics: Array<{ runtime: string; message: string }> = [];
     harness.runtime.start.mockImplementation(async () => {harness.actions.push("start");});
     const result = mountMkxp(
-      mkxpConfig(false), harness.target, null, harness.dependencies,
+      mkxpConfig(), harness.target, null, harness.dependencies,
       (diagnostic) => diagnostics.push(diagnostic),
     ).then(() => null, (error: unknown) => error);
 
     await vi.advanceTimersByTimeAsync(31_000);
 
-    await expect(result).resolves.toMatchObject({ message: "RPG_RUNTIME_BRIDGE_UNAVAILABLE" });
+    await expect(result).resolves.toMatchObject({ message: "RPG_RUNTIME_TIMEOUT" });
     expect(diagnostics).toContainEqual({
       runtime: "mkxp-z",
-      message: "RPG_RUNTIME_BRIDGE_TRACE:saveDirectories=1,evidence=false",
+      message: "RPG_RUNTIME_MOUNT_FAILED:RPG_RUNTIME_TIMEOUT",
     });
     harness.frame.remove();
   });
 
   it("registers project and RTP archives as strict remote files without downloading them", async () => {
     const harness = createHarness();
-    const config = mkxpConfig(false);
+    const config = mkxpConfig();
     config.projectArchive.sizeBytes = 8_388_608;
     config.rtpArchives = [{
       declaredName: "Standard",
@@ -149,7 +158,6 @@ describe("mkxp runtime mount", () => {
     expect(harness.fetchedUrls).toEqual([
       "/runtime/mkxp/mkxp-z_libretro.js",
       "/runtime/mkxp/mkxp-z_libretro.wasm",
-      "/runtime/mkxp/position_bridge.rb",
     ]);
     expect(harness.prepareOptions).not.toHaveProperty("rom");
     expect(harness.prepareOptions).not.toHaveProperty("bios");
@@ -172,8 +180,8 @@ describe("mkxp runtime mount", () => {
       "",
     ].join("\n"));
     expect(progress).toEqual([
-      { phase: "RUNTIME_ASSET", loadedBytes: 0, totalBytes: 42_746_925 },
-      { phase: "RUNTIME_ASSET", loadedBytes: 42_746_925, totalBytes: 42_746_925 },
+      { phase: "RUNTIME_ASSET", loadedBytes: 0, totalBytes: 42_745_421 },
+      { phase: "RUNTIME_ASSET", loadedBytes: 42_745_421, totalBytes: 42_745_421 },
       { phase: "PROJECT_INDEX", loadedBytes: 0, totalBytes: manifestBytes.byteLength },
       {
         phase: "PROJECT_INDEX",
@@ -186,20 +194,20 @@ describe("mkxp runtime mount", () => {
     harness.frame.remove();
   });
 
-  it("does not send the restore hotkey until the position bridge has produced evidence", async () => {
+  it("does not send the restore hotkey before the core has presented a frame", async () => {
     const harness = createHarness();
     harness.runtime.start.mockImplementation(async () => {
       harness.actions.push("start");
       setTimeout(() => {
-        harness.files.set(evidencePath, positionBytes(7, 3, 6, 9, 599));
+        harness.runtime.observation.frames = 599;
       }, 500);
     });
     harness.onKeyDown = (code) => {
       harness.actions.push(code);
-      if (code === "F4") {harness.files.set(evidencePath, positionBytes(7, 4, 6, 9, 600));}
+      if (code === "F4") {harness.runtime.finishRestore();}
     };
 
-    const mountPromise = mountMkxp(mkxpConfig(true), harness.target, checkpointFixture, harness.dependencies);
+    const mountPromise = mountMkxp(mkxpConfig(), harness.target, checkpointFixture, harness.dependencies);
     await vi.advanceTimersByTimeAsync(499);
 
     expect(harness.actions).toEqual([`mkdir:${coreStateRoot}`, `write:${statePath}`, "start"]);
@@ -214,10 +222,10 @@ describe("mkxp runtime mount", () => {
     const harness = createHarness();
     harness.onKeyDown = (code) => {
       harness.actions.push(code);
-      if (code === "F4") {harness.files.set(evidencePath, positionBytes(7, 4, 6, 9, 600));}
+      if (code === "F4") {harness.runtime.finishRestore();}
       if (code === "F2") {harness.writeRuntimeState(encodeMkxpRastate(stateFixture, stateSize));}
     };
-    const mountPromise = mountMkxp(mkxpConfig(true), harness.target, checkpointFixture, harness.dependencies);
+    const mountPromise = mountMkxp(mkxpConfig(), harness.target, checkpointFixture, harness.dependencies);
 
     await vi.advanceTimersByTimeAsync(1_000);
 
@@ -229,8 +237,7 @@ describe("mkxp runtime mount", () => {
       0x4d, 0x45, 0x4d, 0x20, 0, 0, 0, 16,
       0x6d, 0x6b, 0x78, 0x70, 1, 0, 0, 0,
     ));
-    expect(mounted.getValidationProbe(rpgMakerPositionProbeKind)?.value)
-      .toEqual({ mapId: 7, playerX: 4, playerY: 6, fixtureState: 9 });
+    expect(mounted.getFrameCount()).toBe(600);
     expect(harness.prepareOptions?.retroarchConfig).toMatchObject({
       input_save_state: "f2",
       input_load_state: "f4",
@@ -270,35 +277,13 @@ describe("mkxp runtime mount", () => {
     harness.frame.remove();
   });
 
-  it("follows the current PhysFS evidence directory after restore changes it", async () => {
+  it("does not declare a restore ready merely because frames continue advancing", async () => {
     const harness = createHarness();
     harness.onKeyDown = (code) => {
       harness.actions.push(code);
-      if (code === "F4") {
-        harness.files.delete(evidencePath);
-        harness.setSaveDirectoryName("RPG RUNTIME VX-");
-        harness.files.set(movedEvidencePath, positionBytes(7, 4, 6, 9, 600));
-      }
+      if (code === "F4") {harness.runtime.observation.frames = 601;}
     };
-
-    const mountPromise = mountMkxp(mkxpConfig(true), harness.target, checkpointFixture, harness.dependencies);
-    await vi.advanceTimersByTimeAsync(1_000);
-
-    const mounted = await mountPromise;
-    expect(mounted.getValidationProbe(rpgMakerPositionProbeKind)?.value)
-      .toEqual({ mapId: 7, playerX: 4, playerY: 6, fixtureState: 9 });
-    expect(mounted.getFrameCount()).toBe(600);
-    await mounted.exit();
-    harness.frame.remove();
-  });
-
-  it("does not declare a restore ready when the bridge never reaches saved position B", async () => {
-    const harness = createHarness();
-    harness.onKeyDown = (code) => {
-      harness.actions.push(code);
-      if (code === "F4") {harness.files.set(evidencePath, positionBytes(7, 8, 6, 10, 601));}
-    };
-    const result = mountMkxp(mkxpConfig(true), harness.target, checkpointFixture, harness.dependencies)
+    const result = mountMkxp(mkxpConfig(), harness.target, checkpointFixture, harness.dependencies)
       .then(() => null, (error: unknown) => error);
 
     await vi.advanceTimersByTimeAsync(31_000);
@@ -314,7 +299,7 @@ describe("mkxp runtime mount", () => {
     const harness = createHarness();
     const invalidState = new Uint8Array(stateSize);
 
-    await expect(mountMkxp(mkxpConfig(true), harness.target, invalidState, harness.dependencies))
+    await expect(mountMkxp(mkxpConfig(), harness.target, invalidState, harness.dependencies))
       .rejects.toThrow("RPG_CHECKPOINT_RESTORE_FAILED");
 
     expect(harness.runtime.start).not.toHaveBeenCalled();
@@ -326,7 +311,7 @@ describe("mkxp runtime mount", () => {
   it("times out checkpoint creation without calling a direct RetroArch command", async () => {
     const harness = createHarness();
     harness.onKeyDown = (code) => {harness.actions.push(code);};
-    const mountPromise = mountMkxp(mkxpConfig(false), harness.target, null, harness.dependencies);
+    const mountPromise = mountMkxp(mkxpConfig(), harness.target, null, harness.dependencies);
     await vi.advanceTimersByTimeAsync(1_000);
     const mounted = await mountPromise;
     const result = mounted.checkpoint().then(() => null, (error: unknown) => error);
@@ -347,7 +332,7 @@ describe("mkxp runtime mount", () => {
       if (code === "F2") {harness.writeRuntimeState(encodeMkxpRastate(stateFixture, stateSize));}
     };
     harness.dependencies.encodeCheckpoint = async () => {throw new Error("worker failed");};
-    const mountPromise = mountMkxp(mkxpConfig(false), harness.target, null, harness.dependencies);
+    const mountPromise = mountMkxp(mkxpConfig(), harness.target, null, harness.dependencies);
     await vi.advanceTimersByTimeAsync(1_000);
     const mounted = await mountPromise;
 
@@ -367,7 +352,7 @@ describe("mkxp runtime mount", () => {
     harness.runtime.pause.mockImplementation(() => {throw new Error("useProgram");});
     harness.runtime.resume.mockImplementation(() => {throw new Error("useProgram");});
     harness.onKeyDown = (code) => {harness.actions.push(code);};
-    const mountPromise = mountMkxp(mkxpConfig(false), harness.target, null, harness.dependencies);
+    const mountPromise = mountMkxp(mkxpConfig(), harness.target, null, harness.dependencies);
     await vi.advanceTimersByTimeAsync(1_000);
     const mounted = await mountPromise;
     const pause = mounted.pause();
@@ -391,18 +376,11 @@ function createHarness() {
   const files = new Map<string, Uint8Array>();
   const actions: string[] = [];
   const directories: string[] = [];
-  let saveDirectoryName = "RPG RUNTIME XP-";
   const fileSystem = {
     analyzePath: (path: string) => ({ exists: files.has(path) }),
     mkdirTree: (path: string) => {
       directories.push(path);
       if (path === coreStateRoot) {actions.push(`mkdir:${path}`);}
-    },
-    readdir: (path: string) => {
-      if (path === "/home/web_user/retroarch/userdata/saves/mkxp-z/mkxp-z/Saves") {
-        return [".", "..", saveDirectoryName];
-      }
-      throw new Error("ENOENT");
     },
     readFile: (path: string) => {
       const contents = files.get(path);
@@ -415,12 +393,6 @@ function createHarness() {
       return { size: contents.byteLength };
     },
     unlink: (path: string) => {files.delete(path);},
-    rename: (from: string, to: string) => {
-      const contents = files.get(from);
-      if (!contents) {throw new Error("ENOENT");}
-      files.set(to, contents);
-      files.delete(from);
-    },
     writeFile: (path: string, contents: Uint8Array) => {
       if (path === statePath && !directories.includes(coreStateRoot)) {throw new Error("ENOENT");}
       files.set(path, contents);
@@ -433,7 +405,6 @@ function createHarness() {
     files,
     fetchedUrls: [] as string[],
     emscriptenEnvironment: {} as Record<string, string>,
-    setSaveDirectoryName: (name: string) => {saveDirectoryName = name;},
     writeRuntimeState: (contents: Uint8Array) => fileSystem.writeFile(statePath, contents),
     onKeyDown: (code: string) => {void code;},
     canvasIdAtPrepare: null as string | null,
@@ -446,7 +417,7 @@ function createHarness() {
   };
   const runtime = runtimeFixture(fileSystem, () => {
     harness.stateAtStart = files.get(statePath);
-    files.set(evidencePath, positionBytes(7, 3, 6, 9, 599));
+    harness.runtime.observation.frames = 599;
     actions.push("start");
   });
   harness.runtime = runtime;
@@ -491,7 +462,17 @@ function createHarness() {
 
 function runtimeFixture(fileSystem: TestFileSystem, onStart: () => void) {
   const environment: Record<string, string> = {};
+  const observation = {frames: 0, restore: 0};
   return {
+    observation,
+    getEmscriptenModule: () => ({
+      _runtime_get_frame_count: () => observation.frames,
+      _runtime_get_restore_result: () => observation.restore,
+    }),
+    finishRestore: () => {
+      observation.restore = 1;
+      setTimeout(() => {observation.frames = 600;}, 200);
+    },
     exit: vi.fn(async () => undefined),
     getEmscripten: () => ({ Module: { ENV: environment } }),
     getEmscriptenFS: () => fileSystem,
@@ -502,14 +483,9 @@ function runtimeFixture(fileSystem: TestFileSystem, onStart: () => void) {
   };
 }
 
-function positionBytes(mapId: number, playerX: number, playerY: number, fixtureState: number, frameCount: number) {
-  return new TextEncoder().encode(`1,${mapId},${playerX},${playerY},${fixtureState},${frameCount}`);
-}
-
-function mkxpConfig(restore: boolean): MkxpParameters {
+function mkxpConfig(): MkxpParameters {
   const sessionId = "01980000-0000-7000-8000-000000000001";
   return {
-    expectedRestorePosition: restore ? { mapId: 7, playerX: 4, playerY: 6, fixtureState: 9 } : null,
     runtimeBaseUrl: "/runtime/mkxp/",
     core: {
         jsUrl: "/runtime/mkxp/mkxp-z_libretro.js",

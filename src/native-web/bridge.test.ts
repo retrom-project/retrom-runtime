@@ -17,7 +17,7 @@ type FakePort = {
 };
 
 describe("native-web RPG Maker bridge", () => {
-  it("reports readiness and applies video modes inside the isolated frame", async () => {
+  it("reports readiness without fixture-variable proofs and applies video modes inside the isolated frame", async () => {
     const source = readFileSync(
       resolve(process.cwd(), "assets/runtime/native/bridge.js"),
       "utf8",
@@ -66,7 +66,6 @@ describe("native-web RPG Maker bridge", () => {
       body: {
         engine: "RPGMV",
         engineProfile: "RPGMV",
-        position: { fixtureState: 0, mapId: 0, playerX: 0, playerY: 0 },
       },
       launchId: "01980000-0000-7000-8000-000000000001",
       nonce: "test-nonce",
@@ -266,7 +265,7 @@ describe("native-web RPG Maker bridge", () => {
     databaseLoaded = true;
     animationFrames.shift()?.();
     await vi.waitFor(() => expect(replies).toContainEqual({
-      body: {position: {fixtureState: 1, mapId: 1, playerX: 11, playerY: 8}},
+      body: {},
       launchId,
       nonce,
       protocolVersion: 1,

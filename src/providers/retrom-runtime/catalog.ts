@@ -12,24 +12,6 @@ import {
 const noOptionsSchema = {
   additionalProperties: false, properties: {}, required: [], type: "object",
 } as const satisfies TargetOptionsSchema;
-const rpgMakerOptionsSchema = {
-  additionalProperties: false,
-  properties: {
-    expectedRestorePosition: {
-      additionalProperties: false,
-      properties: {
-        fixtureState: {minimum: 0, type: "integer"},
-        mapId: {minimum: 0, type: "integer"},
-        playerX: {minimum: 0, type: "integer"},
-        playerY: {minimum: 0, type: "integer"},
-      },
-      required: ["fixtureState", "mapId", "playerX", "playerY"],
-      type: ["object", "null"],
-    },
-  },
-  required: ["expectedRestorePosition"],
-  type: "object",
-} as const satisfies TargetOptionsSchema;
 const onsOptionsSchema = {
   additionalProperties: false,
   properties: {scriptEncoding: {enum: ["gbk", "sjis", "utf8"], type: "string"}},
@@ -43,11 +25,11 @@ const kirikiriOptionsSchema = {
   type: "object",
 } as const satisfies TargetOptionsSchema;
 
-const rpgCapabilities = capabilities(true, true, false, ["rpgmaker.position.v1"]);
-const nativeCapabilities = capabilities(true, true, true, ["rpgmaker.position.v1"]);
-const standardCapabilities = capabilities(true, false, false, []);
-const isolatedCapabilities = capabilities(true, true, true, []);
-const wasm4Capabilities = capabilities(true, true, false, []);
+const rpgCapabilities = capabilities(true, true, false);
+const nativeCapabilities = capabilities(true, true, true);
+const standardCapabilities = capabilities(true, false, false);
+const isolatedCapabilities = capabilities(true, true, true);
+const wasm4Capabilities = capabilities(true, true, false);
 
 const adapters = [
   adapter("butterscotch-web", "BUTTERSCOTCH_WEB", "butterscotch-checkpoint-v2",
@@ -104,7 +86,7 @@ export const retromRuntimeProviderDefinition = defineProvider({
   adapters,
   providerApiVersion: 1,
   providerId: "retrom-runtime",
-  providerVersion: "0.15.0",
+  providerVersion: "0.16.0",
   targets,
 });
 
@@ -112,7 +94,6 @@ function capabilities(
   checkpoint: boolean,
   frameCounter: boolean,
   volume: boolean,
-  validationProbes: readonly string[],
 ): ProviderCapabilities {
   return {
     checkpoint,
@@ -120,7 +101,6 @@ function capabilities(
     pause: true,
     screenshot: true,
     standardGamepad: true,
-    validationProbes,
     volume,
   };
 }
@@ -174,10 +154,9 @@ function target(
 
 function mkxpTarget(id: string, displayName: string, rgssVersion: 1 | 2 | 3) {
   const result = target(
-    id, displayName, "mkxp-libretro-web", rpgMakerOptionsSchema, true, "SAME_ORIGIN_BLANK", "SEEKABLE_BLOB",
+    id, displayName, "mkxp-libretro-web", noOptionsSchema, true, "SAME_ORIGIN_BLANK", "SEEKABLE_BLOB",
     256 * 1024 * 1024,
-    ["assets/mkxp/mkxp-z_libretro.js", "assets/mkxp/mkxp-z_libretro.wasm",
-      "assets/mkxp/position_bridge.rb"], {rgssVersion},
+    ["assets/mkxp/mkxp-z_libretro.js", "assets/mkxp/mkxp-z_libretro.wasm"], {rgssVersion},
   );
   return defineTarget({
     ...result,
@@ -194,7 +173,7 @@ function easyRpgTarget(
   engineMode: "rpg2k" | "rpg2k3",
 ) {
   const result = target(
-    id, displayName, "easyrpg-web", rpgMakerOptionsSchema, false, "SAME_ORIGIN_BLANK", "FILE_TREE",
+    id, displayName, "easyrpg-web", noOptionsSchema, false, "SAME_ORIGIN_BLANK", "FILE_TREE",
     64 * 1024 * 1024,
     ["assets/easyrpg/easyrpg-player.js", "assets/easyrpg/easyrpg-player.wasm"], {engineMode},
   );
@@ -209,7 +188,7 @@ function easyRpgTarget(
 
 function nativeRpgTarget(id: string, displayName: string, bridgeProfile: "RPGMV" | "RPGMZ") {
   return target(
-    id, displayName, "native-web", rpgMakerOptionsSchema, false, "ISOLATED_ORIGIN_RESOURCE",
+    id, displayName, "native-web", noOptionsSchema, false, "ISOLATED_ORIGIN_RESOURCE",
     "NATIVE_WEB", 64 * 1024 * 1024, ["assets/native/bridge.js"], {bridgeProfile},
   );
 }

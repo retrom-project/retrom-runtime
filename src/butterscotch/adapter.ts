@@ -199,7 +199,6 @@ export async function mountButterscotch(
       ? { available: false, blocker: "NOT_READY" }
       : checkpointAvailability(checkpointAvailable, checkpointStatus),
     getFrameCount: () => null,
-    getValidationProbe: () => null,
     pause: async () => {if (exited) {throw new Error("BUTTERSCOTCH_RUNTIME_INVALID_STATE");} await command("PAUSE"); await audio?.pause();},
     resume: async () => {if (exited) {throw new Error("BUTTERSCOTCH_RUNTIME_INVALID_STATE");} await command("RESUME"); await audio?.resume();},
     screenshot: async () => {

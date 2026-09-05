@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "packageName": "@xxxsen/retrom-runtime",
-  "packageVersion": "0.15.0",
+  "packageVersion": "0.16.0",
   "publicApiVersion": 2,
   "upstreamReleases": [
     {
@@ -202,10 +202,6 @@
     }
   ],
   "localAssets": [
-    {
-      "source": "assets/runtime/mkxp/position_bridge.rb",
-      "output": "runtime/mkxp/position_bridge.rb"
-    },
     {
       "source": "assets/runtime/native/bridge.js",
       "output": "runtime/native/bridge.js"

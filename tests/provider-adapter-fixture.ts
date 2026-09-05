@@ -10,7 +10,6 @@ export function adapterFixture(overrides: Partial<MountedRuntimeAdapter> = {}) {
     getCanvas: vi.fn(() => null),
     getCheckpointAvailability: vi.fn(() => ({available: true, blocker: null} as const)),
     getFrameCount: vi.fn(() => 300),
-    getValidationProbe: vi.fn(() => null),
     pause: vi.fn(async () => undefined),
     resume: vi.fn(async () => undefined),
     screenshot: vi.fn(async () => new Blob([Uint8Array.of(1)], {type: "image/png"})),

@@ -1,9 +1,6 @@
 import { Nostalgist } from "nostalgist";
 import type { MountedRuntimeAdapter, RuntimeExitReporter, RuntimeProgressReporter } from "../internal-adapter.js";
-import {
-  rpgMakerPositionProbeKind,
-  type RpgMakerPositionV1,
-} from "../rpgmaker/contract.js";
+import {mkxpStatus, waitForMkxpFrame, waitForMkxpRestore} from "./status.js";
 import {
   decodeMkxpCheckpoint,
   decodeMkxpRastate,
@@ -17,9 +14,7 @@ import type {MkxpParameters} from "./parameters.js";
 type MkxpFileSystem = {
   analyzePath(path: string): { exists: boolean };
   mkdirTree(path: string): void;
-  readdir(path: string): string[];
   readFile(path: string): Uint8Array;
-  rename(from: string, to: string): void;
   stat(path: string): { size: number };
   unlink(path: string): void;
   writeFile(path: string, contents: Uint8Array): void;
@@ -27,7 +22,7 @@ type MkxpFileSystem = {
 
 type MkxpRuntime = Pick<Nostalgist,
   "exit" | "getEmscriptenFS" | "start"
->;
+> & { getEmscriptenModule(): unknown };
 
 type MkxpPrepareOptions = Parameters<typeof Nostalgist.prepare>[0] & {
   emscriptenModule: NonNullable<Parameters<typeof Nostalgist.prepare>[0]["emscriptenModule"]> & {
@@ -43,15 +38,10 @@ type MkxpMountDependencies = {
   prepare: (options: MkxpPrepareOptions) => Promise<MkxpRuntime>;
 };
 
-const positionBridge = { size: 1504, sha256: "097dac75b3394cae471ea1a21af65d64035bb87a9d1d8781d555446693c200c2" };
 const systemRoot = "/home/web_user/retroarch/userdata/system";
-const saveRoot = "/home/web_user/retroarch/userdata/saves";
 const stateRoot = "/home/web_user/retroarch/userdata/states";
 const coreStateRoot = `${stateRoot}/mkxp-z`;
 const statePath = `${coreStateRoot}/game.state`;
-const bridgePath = `${systemRoot}/mkxp-z/Scripts/Preload/position_bridge.rb`;
-const evidenceName = "rpg-runtime-position";
-const bridgeOption = "mkxp-z_preload-706f736974696f6e5f6272696467652e7262";
 const remoteGamePath = "/retrom-content/game.mkxpz";
 const fetchManifestPath = `${systemRoot}/mkxp-z/fetch.manifest`;
 const fetchBaseDirectory = "/retrom-fetch";
@@ -129,16 +119,15 @@ async function mountMkxpUnchecked(
   const dimensions = config.rgssVersion === 1 ? [640, 480] : [544, 416];
   [canvas.style.width, canvas.style.height] = dimensions.map((value) => `${value}px`);
   target.append(canvas);
-  const runtimeAssetBytes = config.core.jsSizeBytes + config.core.wasmSizeBytes + positionBridge.size;
+  const runtimeAssetBytes = config.core.jsSizeBytes + config.core.wasmSizeBytes;
   reportProgress({ phase: "RUNTIME_ASSET", loadedBytes: 0, totalBytes: runtimeAssetBytes });
-  const [jsBytes, wasmBytes, bridgeBytes] = await Promise.all([
+  const [jsBytes, wasmBytes] = await Promise.all([
     dependencies.fetchVerified(
       config.core.jsUrl, config.core.jsSizeBytes, config.core.jsSha256,
     ),
     dependencies.fetchVerified(
       config.core.wasmUrl, config.core.wasmSizeBytes, config.core.wasmSha256,
     ),
-    dependencies.fetchVerified(`${config.runtimeBaseUrl}position_bridge.rb`, positionBridge.size, positionBridge.sha256),
   ]);
   reportProgress({ phase: "RUNTIME_ASSET", loadedBytes: runtimeAssetBytes, totalBytes: runtimeAssetBytes });
   const remoteContent = remoteContentManifest(config);
@@ -174,9 +163,7 @@ async function mountMkxpUnchecked(
       input_save_state: "f2",
       input_load_state: "f4",
       input_pause_toggle: "f6",
-      // The validation fixture changes its state through RGSS Input::C. mkxp-z
-      // maps that action to RetroPad A, so bind its browser key explicitly
-      // instead of inheriting a RetroArch/Nostalgist default that may drift.
+      // RGSS Input::C maps to RetroPad A; make its browser binding explicit.
       input_player1_a: "x",
       // The host persists the exact raw core payload and validates an exact
       // RASTATE1 runtime envelope. RetroArch otherwise defaults to rzip for
@@ -188,12 +175,13 @@ async function mountMkxpUnchecked(
     retroarchCoreConfig: {
       "mkxp-z_rgssVersion": String(config.rgssVersion),
       "mkxp-z_saveStateSize": String(config.stateBufferBytes / (1024 * 1024)),
-      [bridgeOption]: "enabled",
     },
   });
   const fileSystem = nostalgist.getEmscriptenFS() as MkxpFileSystem;
+  let status;
   try {
-    installRuntimeFiles(fileSystem, bridgeBytes, remoteContent.manifest);
+    status = mkxpStatus(nostalgist.getEmscriptenModule());
+    installRuntimeFiles(fileSystem, remoteContent.manifest);
     if (restorePayload) {
       const rawState = await dependencies.decodeCheckpoint(restorePayload, config.stateBufferBytes);
       installRestoreState(fileSystem, rawState, config.stateBufferBytes);
@@ -210,9 +198,10 @@ async function mountMkxpUnchecked(
     throw error;
   }
   try {
-    await prepareEvidencePath(fileSystem, onDiagnostic);
+    await waitForMkxpFrame(status);
     if (restorePayload) {
-      await restoreStateAndWait(canvas, fileSystem, expectedRestorePosition(config));
+      await pressPrivateHotkey(canvas, loadStateHotkey);
+      await waitForMkxpRestore(status);
     }
   } catch (error) {
     await nostalgist.exit();
@@ -229,10 +218,7 @@ async function mountMkxpUnchecked(
     },
     getCanvas: () => canvas,
     getCheckpointAvailability: () => ({ available: true, blocker: null }),
-    getFrameCount: () => readCurrentPosition(fileSystem).frameCount,
-    getValidationProbe: (kind) => kind === rpgMakerPositionProbeKind
-      ? { kind, schemaVersion: 1, value: readCurrentPosition(fileSystem).position }
-      : null,
+    getFrameCount: () => status.frames(),
     pause: async () => {await pressPrivateHotkey(canvas, pauseToggleHotkey);},
     resume: async () => {await pressPrivateHotkey(canvas, pauseToggleHotkey);},
     // Nostalgist's screenshot command calls RetroArch's exported GL function
@@ -246,17 +232,12 @@ async function mountMkxpUnchecked(
 
 function installRuntimeFiles(
   fileSystem: MkxpFileSystem,
-  bridgeBytes: Uint8Array,
   fetchManifest: Uint8Array,
 ) {
-  fileSystem.mkdirTree(`${systemRoot}/mkxp-z/Scripts/Preload`);
-  fileSystem.mkdirTree(saveRoot);
   // Nostalgist only creates the per-core state directory when its `state`
   // option is present. This adapter cannot use that option because custom mkxp-z is
   // absent from Nostalgist's core map, so own the exact directory here.
   fileSystem.mkdirTree(coreStateRoot);
-  fileSystem.writeFile(bridgePath, bridgeBytes);
-  if (!fileSystem.analyzePath(bridgePath).exists) {throw new Error("RPG_RUNTIME_BRIDGE_UNAVAILABLE");}
   fileSystem.writeFile(fetchManifestPath, fetchManifest);
   if (!fileSystem.analyzePath(fetchManifestPath).exists) {throw new Error("RPG_RUNTIME_CONTENT_UNAVAILABLE");}
 }
@@ -297,52 +278,6 @@ function remoteContentManifest(config: MkxpParameters) {
   };
 }
 
-async function prepareEvidencePath(
-  fileSystem: MkxpFileSystem,
-  onDiagnostic: (diagnostic: { runtime: string; message: string }) => void,
-) {
-  // RetroArch first scopes savefile_directory by the core name and mkxp-z then
-  // mounts its own mkxp-z/Saves directory below that effective save root.
-  const deadline = performance.now() + 30_000;
-  while (performance.now() < deadline) {
-    const evidencePath = currentEvidencePath(fileSystem);
-    if (evidencePath) {return evidencePath;}
-    await new Promise((resolve) => setTimeout(resolve, 50));
-  }
-  const gameSaveRoot = `${saveRoot}/mkxp-z/mkxp-z/Saves`;
-  const names = readDirectory(fileSystem, gameSaveRoot);
-  const evidencePresent = names.length === 1 &&
-    fileSystem.analyzePath(`${gameSaveRoot}/${names[0]}/${evidenceName}`).exists;
-  onDiagnostic({
-    runtime: "mkxp-z",
-    message: `RPG_RUNTIME_BRIDGE_TRACE:saveDirectories=${names.length},evidence=${String(evidencePresent)}`,
-  });
-  throw new Error("RPG_RUNTIME_BRIDGE_UNAVAILABLE");
-}
-
-function currentEvidencePath(fileSystem: MkxpFileSystem) {
-  const gameSaveRoot = `${saveRoot}/mkxp-z/mkxp-z/Saves`;
-  const names = readDirectory(fileSystem, gameSaveRoot);
-  if (names.length > 1) {throw new Error("RPG_RUNTIME_BRIDGE_UNAVAILABLE");}
-  if (names.length !== 1) {return null;}
-  const evidencePath = `${gameSaveRoot}/${names[0]}/${evidenceName}`;
-  return fileSystem.analyzePath(evidencePath).exists ? evidencePath : null;
-}
-
-function readCurrentPosition(fileSystem: MkxpFileSystem) {
-  const evidencePath = currentEvidencePath(fileSystem);
-  if (!evidencePath) {throw new Error("RPG_RUNTIME_POSITION_UNAVAILABLE");}
-  return readPosition(fileSystem, evidencePath);
-}
-
-function readDirectory(fileSystem: MkxpFileSystem, path: string) {
-  try {
-    return fileSystem.readdir(path).filter((name) => name !== "." && name !== "..");
-  } catch {
-    return [];
-  }
-}
-
 function runtimePackFileName(index: number, declaredName: string) {
   if (index < 0 || index > 2 || !declaredName || declaredName.length > 240 ||
     declaredName.includes("/") || declaredName.includes("\\") || hasControlCharacter(declaredName) ||
@@ -358,21 +293,6 @@ function hasControlCharacter(value: string) {
     const codePoint = character.codePointAt(0) ?? 0;
     return codePoint <= 31 || codePoint === 127;
   });
-}
-
-function readPosition(fileSystem: MkxpFileSystem, evidencePath: string) {
-  if (!fileSystem.analyzePath(evidencePath).exists) {throw new Error("RPG_RUNTIME_POSITION_UNAVAILABLE");}
-  const text = new TextDecoder("utf-8", { fatal: true }).decode(fileSystem.readFile(evidencePath));
-  const parts = text.split(",");
-  if (parts.length !== 6 || parts[0] !== "1") {throw new Error("RPG_RUNTIME_POSITION_UNAVAILABLE");}
-  const values = parts.slice(1).map((value) => Number(value));
-  if (values.some((value) => !Number.isSafeInteger(value) || value < -2_147_483_648 || value > 2_147_483_647) || values[0] < 0 || values[4] < 0) {
-    throw new Error("RPG_RUNTIME_POSITION_UNAVAILABLE");
-  }
-  return {
-    position: { mapId: values[0], playerX: values[1], playerY: values[2], fixtureState: values[3] } satisfies RpgMakerPositionV1,
-    frameCount: values[4],
-  };
 }
 
 export async function fetchVerified(url: string, expectedSize: number, expectedDigest: string) {
@@ -429,46 +349,6 @@ async function saveStateBytes(
 
 function installRestoreState(fileSystem: MkxpFileSystem, state: Uint8Array, expectedSize: number) {
   writeState(fileSystem, statePath, state, expectedSize);
-}
-
-async function restoreStateAndWait(
-  canvas: HTMLCanvasElement,
-  fileSystem: MkxpFileSystem,
-  expected: RpgMakerPositionV1 | null,
-) {
-  const before = tryReadCurrentPosition(fileSystem);
-  await pressPrivateHotkey(canvas, loadStateHotkey);
-  const deadline = performance.now() + 30_000;
-  while (performance.now() < deadline) {
-    const restored = tryReadCurrentPosition(fileSystem);
-    if (restored && restored.frameCount !== before?.frameCount &&
-      (!expected || samePosition(restored.position, expected))) {
-      return;
-    }
-    await new Promise((resolve) => setTimeout(resolve, 50));
-  }
-  throw new Error("RPG_CHECKPOINT_RESTORE_FAILED");
-}
-
-function expectedRestorePosition(config: MkxpParameters): RpgMakerPositionV1 | null {
-  const evidence = config.expectedRestorePosition;
-  if (!evidence) {
-    throw new Error("RPG_RUNTIME_PROTOCOL_VIOLATION");
-  }
-  return { ...evidence };
-}
-
-function tryReadCurrentPosition(fileSystem: MkxpFileSystem) {
-  try {return readCurrentPosition(fileSystem);}
-  catch (error) {
-    if (error instanceof Error && error.message === "RPG_RUNTIME_POSITION_UNAVAILABLE") {return null;}
-    throw error;
-  }
-}
-
-function samePosition(left: RpgMakerPositionV1, right: RpgMakerPositionV1) {
-  return left.mapId === right.mapId && left.playerX === right.playerX &&
-    left.playerY === right.playerY && left.fixtureState === right.fixtureState;
 }
 
 async function pressPrivateHotkey(

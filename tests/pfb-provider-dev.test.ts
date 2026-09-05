@@ -27,7 +27,7 @@ describe("PFB loose provider", () => {
     await writeFile(join(installation, "provider.json"), JSON.stringify({
       schemaVersion: 1,
       providerId: "retrom-runtime",
-      providerVersion: "0.15.0",
+      providerVersion: "0.16.0",
       providerApiVersion: 1,
       clientModulePath: "client.mjs",
       targets: [{id: "butterscotch", assetPaths: ["assets/butterscotch/worker.mjs"]}],

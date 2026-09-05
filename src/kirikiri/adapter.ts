@@ -216,7 +216,6 @@ export async function mountKirikiri2(
       ? { available: true, blocker: null }
       : { available: false, blocker: "NOT_READY" },
     getFrameCount: () => null,
-    getValidationProbe: () => null,
     pause: async () => {activeModule.pauseMainLoop(); paused = true;},
     resume: async () => {activeModule.resumeMainLoop(); paused = false;},
     screenshot: () => canvasScreenshot(canvas),

@@ -31,7 +31,6 @@ export function wasmEnvelope(): LaunchEnvelopeV1 {
         requiresThreads: false,
         screenshot: true,
         standardGamepad: true,
-        validationProbes: [],
         videoModes: ["original", "pixel", "smooth"],
         volume: false,
       },
@@ -40,7 +39,7 @@ export function wasmEnvelope(): LaunchEnvelopeV1 {
       moduleUrl: `/runtime/providers/retrom-runtime/${bundleDigest}/client.mjs`,
       providerApiVersion: 1 as const,
       providerId: "retrom-runtime",
-      providerVersion: "0.15.0",
+      providerVersion: "0.16.0",
       runtimeBaseUrl: `/runtime/providers/retrom-runtime/${bundleDigest}/`,
       targetId: "wasm4",
     },
@@ -56,7 +55,6 @@ export function wasmEnvelope(): LaunchEnvelopeV1 {
       warnings: [],
     },
     targetOptions: {},
-    validation: null,
   };
 }
 
@@ -86,7 +84,7 @@ export function rpgMvEnvelope(): LaunchEnvelopeV1 {
       moduleUrl: `/runtime/providers/retrom-runtime/${bundleDigest}/client.mjs`,
       providerApiVersion: 1,
       providerId: "retrom-runtime",
-      providerVersion: "0.15.0",
+      providerVersion: "0.16.0",
       runtimeBaseUrl: `/runtime/providers/retrom-runtime/${bundleDigest}/`,
       targetId: "rpgmaker-mv",
     },
@@ -96,23 +94,18 @@ export function rpgMvEnvelope(): LaunchEnvelopeV1 {
       id: "018f0f31-26fe-7a31-9d61-4ec92f16d4c3",
       mode: "SINGLE",
       platformName: "RPG Maker MV",
-      purpose: "RUNTIME_VALIDATION",
+      purpose: "REVIEW_PREVIEW",
       returnTo: "/review/fixture",
       title: "Fixture",
       warnings: [],
     },
-    targetOptions: {expectedRestorePosition: null},
-    validation: {
-      input: {fixtureState: 4, mapId: 2, playerX: 8, playerY: 9},
-      probeId: "rpgmaker.position.v1",
-    },
+    targetOptions: {},
   };
 }
 
 export function targetEnvelope(targetId: string): LaunchEnvelopeV1 {
   const target = projectProviderManifest(retromRuntimeProviderDefinition).targets.find((entry) => entry.id === targetId);
   if (!target) {throw new Error(`target fixture missing: ${targetId}`);}
-  const isRpg = targetId.startsWith("rpgmaker-");
   let resource: LaunchEnvelopeV1["resources"][number];
   if (["rpgmaker-xp", "rpgmaker-vx", "rpgmaker-vx-ace"].includes(targetId)) {
     resource = {
@@ -142,9 +135,7 @@ export function targetEnvelope(targetId: string): LaunchEnvelopeV1 {
       kind: "FILE_TREE", ordinal: 0, role: "game",
     };
   }
-  const targetOptions: LaunchEnvelopeV1["targetOptions"] = isRpg
-    ? {expectedRestorePosition: null}
-    : targetId === "onscripter-yuri"
+  const targetOptions: LaunchEnvelopeV1["targetOptions"] = targetId === "onscripter-yuri"
       ? {scriptEncoding: "utf8"}
       : targetId === "kirikiri2-kag"
         ? {startupXp3Path: null}
@@ -161,7 +152,7 @@ export function targetEnvelope(targetId: string): LaunchEnvelopeV1 {
       moduleUrl: `/runtime/providers/retrom-runtime/${bundleDigest}/client.mjs`,
       providerApiVersion: 1,
       providerId: "retrom-runtime",
-      providerVersion: "0.15.0",
+      providerVersion: "0.16.0",
       runtimeBaseUrl: `/runtime/providers/retrom-runtime/${bundleDigest}/`,
       targetId,
     },
@@ -172,7 +163,6 @@ export function targetEnvelope(targetId: string): LaunchEnvelopeV1 {
       platformName: "Fixture", purpose: "PRODUCT", returnTo: "/games/fixture", title: "Fixture", warnings: [],
     },
     targetOptions,
-    validation: null,
   };
 }
 

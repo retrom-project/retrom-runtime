@@ -17,8 +17,6 @@
   let requestPending = false;
   let frameCount = 0;
   let engineReadySent = false;
-  let inputObserved = false;
-  let audioObserved = false;
   let sceneManagerHooked = false;
   let exitRequested = false;
 
@@ -62,24 +60,6 @@
     send(0, type, body);
   }
 
-  function position() {
-    const map = global.$gameMap;
-    const player = global.$gamePlayer;
-    const variables = global.$gameVariables;
-    const result = {
-      mapId: map && typeof map.mapId === "function" ? map.mapId() : 0,
-      playerX: player && Number.isInteger(player.x) ? player.x : 0,
-      playerY: player && Number.isInteger(player.y) ? player.y : 0,
-      fixtureState: variables && typeof variables.value === "function" ? variables.value(1) : 0,
-    };
-    if (!Number.isSafeInteger(result.mapId) || result.mapId < 0 ||
-      !Number.isSafeInteger(result.playerX) || !Number.isSafeInteger(result.playerY) ||
-      !Number.isSafeInteger(result.fixtureState)) {
-      throw new Error("RPG_RUNTIME_POSITION_UNAVAILABLE");
-    }
-    return result;
-  }
-
   function readyForCheckpoint() {
     const scene = global.SceneManager && global.SceneManager._scene;
     const sceneMap = global.Scene_Map;
@@ -88,7 +68,8 @@
     const eventBusy = global.$gameMap && typeof global.$gameMap.isEventRunning === "function" &&
       global.$gameMap.isEventRunning();
     return Boolean(scene && sceneMap && scene instanceof sceneMap && !messageBusy && !eventBusy &&
-      global.DataManager && global.StorageManager && position().mapId > 0);
+      global.DataManager && global.StorageManager && global.$gameMap &&
+      typeof global.$gameMap.mapId === "function" && global.$gameMap.mapId() > 0);
   }
 
   function engineRuntimeReady() {
@@ -164,7 +145,7 @@
       mediaType: "application/octet-stream",
       data: bytes.slice().buffer,
     }));
-    return { bundle: { engine: engine(), resumeSlot: slot, entries }, position: position() };
+    return { bundle: { engine: engine(), resumeSlot: slot, entries } };
   }
 
   function validateRestoreBundle(bundle) {
@@ -227,7 +208,7 @@
     } finally {
       restorers.reverse().forEach((restore) => restore());
     }
-    return { position: position() };
+    return {};
   }
 
   function waitForDatabase() {
@@ -376,7 +357,7 @@
 
   async function dispatch(message) {
     switch (message.type) {
-    case "PROBE": return { type: "PROBE_RESULT", body: { ready: readyForCheckpoint(), frameCount, position: position() } };
+    case "STATUS": return { type: "STATUS_RESULT", body: { ready: readyForCheckpoint(), frameCount } };
     case "SAVE": return { type: "SAVE_RESULT", body: await captureNativeSave() };
     case "RESTORE": return { type: "RESTORE_RESULT", body: await restoreNativeSave(message.body.bundle) };
     case "SCREENSHOT": return { type: "SCREENSHOT_RESULT", body: await screenshot() };
@@ -421,9 +402,8 @@
     frameCount += 1;
     if (!engineReadySent && engineRuntimeReady()) {
       engineReadySent = true;
-      event("READY", { engine: engine(), engineProfile: profile, position: position() });
+      event("READY", { engine: engine(), engineProfile: profile });
     }
-    if (frameCount === 300) event("FRAMES", { continuousFrames: frameCount });
   }
 
   function requestExit() {
@@ -456,16 +436,6 @@
     if (!sceneManagerHooked) global.requestAnimationFrame(pollForEngine);
   }
 
-  function installAudioObserver() {
-    const prototype = global.AudioBufferSourceNode && global.AudioBufferSourceNode.prototype;
-    if (!prototype || typeof prototype.start !== "function") return;
-    const original = prototype.start;
-    prototype.start = function runtimeAudioStart() {
-      if (!audioObserved) { audioObserved = true; event("AUDIO", { observed: true }); }
-      return original.apply(this, arguments);
-    };
-  }
-
   function installCanvasTextAlignCompatibility() {
     const prototype = global.CanvasRenderingContext2D && global.CanvasRenderingContext2D.prototype;
     if (!prototype) return;
@@ -480,10 +450,6 @@
       },
     });
   }
-
-  global.addEventListener("keydown", () => {
-    if (!inputObserved) { inputObserved = true; event("INPUT", { observed: true }); }
-  }, true);
 
   installCanvasTextAlignCompatibility();
 
@@ -508,7 +474,6 @@
     port.onmessage = (portEvent) => { void receive(portEvent.data); };
     port.start();
     pollForEngine();
-    installAudioObserver();
   }, true);
 
   global.parent.postMessage({ type: "RPG_RUNTIME_NATIVE_BRIDGE_READY", protocolVersion: PROTOCOL_VERSION }, "*");

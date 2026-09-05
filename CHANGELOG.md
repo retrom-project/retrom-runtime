@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.16.0
+
+- Advance the EmulatorJS Provider to 2.2.0 for the same unreleased V1 proof-contract removal, preserving
+  its core assets and checkpoint format. Provider activation remains upgrade-only; no same-version bundle replacement.
+- Remove the unreleased production validation workflow from Provider V1: no validation purpose, probe method,
+  proof capability or expected-position option. Product play and review previews share ordinary controls.
+- Keep actual engine, filesystem, checkpoint and restored-map readiness checks while removing EasyRPG and
+  native Web dependencies on fixture variables. Native Web reports ordinary status without input/audio proofs.
+- Remove the MKXP Ruby position preload. The adapter requires the threaded core's read-only presentation and
+  restore-result exports, waits for successful deserialization and a subsequent frame, and restores ordinary
+  checkpoints without host-provided evidence. Existing checkpoint formats remain unchanged.
+
 ## 0.15.0
 
 - Remove the package-level RuntimeConfig/GameRuntime API, descriptor registry, conversion factory and inner

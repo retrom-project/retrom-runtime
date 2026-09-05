@@ -1,9 +1,5 @@
 import { decodeRpgCheckpoint, encodeRpgCheckpoint } from "../checkpoint.js";
 import type { MountedRuntimeAdapter, RuntimeExitReporter } from "../internal-adapter.js";
-import {
-  rpgMakerPositionProbeKind,
-  type RpgMakerPositionV1,
-} from "../rpgmaker/contract.js";
 
 import type {EasyRpgParameters} from "./parameters.js";
 
@@ -12,7 +8,7 @@ type EasyFileSystem = {
   readFile(path: string): Uint8Array;
 };
 
-type EasyState = RpgMakerPositionV1 & {
+type EasyState = {
   engine: "RPG2000" | "RPG2003";
   ready: boolean;
   canCheckpoint: boolean;
@@ -138,12 +134,6 @@ async function mountEasyRpgUnchecked(
       ? { available: true, blocker: null }
       : { available: false, blocker: "BUSY" },
     getFrameCount: () => readState(playerModule).frameCount,
-    getValidationProbe: (kind) => {
-      const state = readState(playerModule);
-      return kind === rpgMakerPositionProbeKind && state.ready
-        ? { kind, schemaVersion: 1, value: position(state) }
-        : null;
-    },
     pause: async () => {playerModule.pauseMainLoop();},
     resume: async () => {playerModule.resumeMainLoop();},
     screenshot: () => canvasBlob(playerModule.canvas),
@@ -154,27 +144,18 @@ async function mountEasyRpgUnchecked(
 function readState(module: EasyModule): EasyState {
   let parsed: unknown;
   try {parsed = JSON.parse(module.api.runtimeState());}
-  catch {throw new Error("RPG_RUNTIME_POSITION_UNAVAILABLE");}
-  if (!parsed || typeof parsed !== "object") {throw new Error("RPG_RUNTIME_POSITION_UNAVAILABLE");}
+  catch {throw new Error("RPG_RUNTIME_STATE_UNAVAILABLE");}
+  if (!parsed || typeof parsed !== "object") {throw new Error("RPG_RUNTIME_STATE_UNAVAILABLE");}
   const state = parsed as Partial<EasyState>;
   if ((state.engine !== "RPG2000" && state.engine !== "RPG2003") || typeof state.ready !== "boolean" ||
-    typeof state.canCheckpoint !== "boolean" || !validInteger(state.frameCount, 0) || !validPosition(state)) {
-    throw new Error("RPG_RUNTIME_POSITION_UNAVAILABLE");
+    typeof state.canCheckpoint !== "boolean" || !validInteger(state.frameCount, 0)) {
+    throw new Error("RPG_RUNTIME_STATE_UNAVAILABLE");
   }
   return state as EasyState;
 }
 
-function validPosition(value: Partial<RpgMakerPositionV1>) {
-  return validInteger(value.mapId, 0) && validInteger(value.playerX) && validInteger(value.playerY) &&
-    validInteger(value.fixtureState);
-}
-
 function validInteger(value: unknown, minimum = -2_147_483_648) {
   return Number.isSafeInteger(value) && Number(value) >= minimum && Number(value) <= 2_147_483_647;
-}
-
-function position(state: EasyState): RpgMakerPositionV1 {
-  return { mapId: state.mapId, playerX: state.playerX, playerY: state.playerY, fixtureState: state.fixtureState };
 }
 
 async function waitForReady(
@@ -202,7 +183,7 @@ async function waitForReady(
 function startupState(module: EasyModule) {
   try {return readState(module);}
   catch (error) {
-    if (error instanceof Error && error.message === "RPG_RUNTIME_POSITION_UNAVAILABLE") {return null;}
+    if (error instanceof Error && error.message === "RPG_RUNTIME_STATE_UNAVAILABLE") {return null;}
     throw error;
   }
 }

@@ -31,7 +31,6 @@ export function projectProviderManifest(definition: ProviderDefinition) {
         requiresThreads: target.requiresThreads,
         screenshot: adapter.capabilities.screenshot,
         standardGamepad: adapter.capabilities.standardGamepad,
-        validationProbes: sorted(adapter.capabilities.validationProbes),
         videoModes: sorted(target.videoModes),
         volume: adapter.capabilities.volume,
       },

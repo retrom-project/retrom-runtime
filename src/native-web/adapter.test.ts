@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 import { NativeChannel, nativeBootstrapAction } from "./adapter";
 
 describe("native RPG exit", () => {
-  it("preempts an in-flight background probe so cleanup is sent immediately", async () => {
+  it("preempts an in-flight background status request so cleanup is sent immediately", async () => {
     let runtimePort: MessagePort | null = null;
     const channel = new NativeChannel({
       sessionId: "018f0f31-26fe-7a31-9d61-4ec92f16d4c3",
@@ -22,8 +22,8 @@ describe("native RPG exit", () => {
     port.onmessage = (event) => {sent.push(event.data as Record<string, unknown>);};
     port.start();
 
-    channel.startProbeLoop();
-    await vi.waitFor(() => expect(sent.some((message) => message.type === "PROBE")).toBe(true));
+    channel.startStatusLoop();
+    await vi.waitFor(() => expect(sent.some((message) => message.type === "STATUS")).toBe(true));
 
     channel.prepareCleanup();
     const cleanup = channel.request("CLEANUP", {}, 1_000);

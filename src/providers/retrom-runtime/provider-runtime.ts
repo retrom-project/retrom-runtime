@@ -2,7 +2,7 @@ import type {MountedRuntimeAdapter, RuntimeProgressReporter} from "../../interna
 import type {
   AssetIndexV1, LaunchEnvelopeV1, PlayerRuntimeV1, RuntimeCheckpointAvailabilityV1,
   RuntimeDiscStateV1, RuntimeEventV1, RuntimeHostV1, RuntimeInputFilterPolicyV1,
-  RuntimeNetplayPortV1, RuntimeStateV1, RuntimeValidationResultV1, RuntimeVideoModeV1,
+  RuntimeNetplayPortV1, RuntimeStateV1, RuntimeVideoModeV1,
 } from "../../provider/module-api.js";
 import {PlayerRuntimeError} from "../../provider/errors.js";
 import {RuntimeGamepadFilter, installRuntimeGamepadFilter} from "../../provider/gamepad-filter.js";
@@ -189,21 +189,6 @@ class RetromRuntimePlayer implements PlayerRuntimeV1 {
     }
   }
 
-  async runValidationProbe(id: string, input: Record<string, unknown>): Promise<RuntimeValidationResultV1> {
-    if (!this.envelope.runtime.capabilities.validationProbes.includes(id)) {throw capabilityError();}
-    if (id !== "rpgmaker.position.v1" || !validRpgPosition(input)) {throw contractError();}
-    const probe = this.requireAdapter().getValidationProbe(id);
-    if (!probe || probe.kind !== id || probe.schemaVersion !== 1 || !validRpgPosition(probe.value)) {
-      throw contractError();
-    }
-    const evidence = {...probe.value};
-    return {
-      evidence,
-      passed: (Object.keys(evidence) as Array<keyof typeof evidence>).every((key) => evidence[key] === input[key]),
-      probeId: id,
-    };
-  }
-
   subscribe(listener: (event: RuntimeEventV1) => void) {
     this.listeners.add(listener);
     return () => this.listeners.delete(listener);
@@ -338,15 +323,6 @@ function validInputFilterPolicy(value: RuntimeInputFilterPolicyV1 | null) {
   return value === null || typeof value.suppressInput === "boolean" &&
     (value.activeGamepadIndex === null || Number.isSafeInteger(value.activeGamepadIndex) &&
       value.activeGamepadIndex >= 0 && value.activeGamepadIndex <= 255);
-}
-function validRpgPosition(value: unknown): value is {
-  fixtureState: number; mapId: number; playerX: number; playerY: number;
-} {
-  if (typeof value !== "object" || value === null || Array.isArray(value) ||
-    Object.keys(value).sort().join(",") !== "fixtureState,mapId,playerX,playerY") {return false;}
-  const position = value as Record<string, unknown>;
-  return Number.isSafeInteger(position.fixtureState) && Number.isSafeInteger(position.mapId) &&
-    Number.isSafeInteger(position.playerX) && Number.isSafeInteger(position.playerY);
 }
 function validProgress(value: {loadedBytes: number; totalBytes: number | null}) {
   return Number.isSafeInteger(value.loadedBytes) && value.loadedBytes >= 0 &&

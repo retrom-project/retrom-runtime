@@ -1,5 +1,4 @@
 import type {SeekableBlobSource} from "../contract.js";
-import type {RpgMakerPositionV1} from "../rpgmaker/contract.js";
 
 export type MkxpParameters = {
   core: {
@@ -15,5 +14,4 @@ export type MkxpParameters = {
   rtpArchives: Array<SeekableBlobSource & {declaredName: string}>;
   rgssVersion: 1 | 2 | 3;
   stateBufferBytes: 268435456;
-  expectedRestorePosition: RpgMakerPositionV1 | null;
 };

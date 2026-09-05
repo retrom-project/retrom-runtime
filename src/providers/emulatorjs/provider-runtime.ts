@@ -9,7 +9,6 @@ import type {
   RuntimeMultiDiscResourceV1,
   RuntimeNetplayPortV1,
   RuntimeStateV1,
-  RuntimeValidationResultV1,
   RuntimeVideoModeV1,
 } from "../../provider/module-api.js";
 import {PlayerRuntimeError} from "../../provider/errors.js";
@@ -325,10 +324,6 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
       return this.netplayPort;
     } catch (error) {throw contractError(error);}
   }
-  runValidationProbe(_id: string, _input: Record<string, unknown>): Promise<RuntimeValidationResultV1> {
-    return Promise.reject(capabilityError());
-  }
-
   subscribe(listener: (event: RuntimeEventV1) => void) {
     this.listeners.add(listener);
     return () => this.listeners.delete(listener);

@@ -177,7 +177,6 @@ export async function mountOnsYuri(
     getCanvas: () => canvas,
     getCheckpointAvailability: () => ({ available: true, blocker: null }),
     getFrameCount: () => null,
-    getValidationProbe: () => null,
     pause: async () => {activeModule._onsyuri_host_set_paused(1); paused = true;},
     resume: async () => {activeModule._onsyuri_host_set_paused(0); paused = false;},
     screenshot: () => canvasScreenshot(canvas),

@@ -25,7 +25,6 @@ describe("independent package boundary", () => {
     ]);
     expect(sources.localAssets.map((asset: { output: string }) => asset.output).sort()).toEqual([
       "runtime/butterscotch/worker.mjs",
-      "runtime/mkxp/position_bridge.rb",
       "runtime/native/bridge.js",
     ]);
     expect(JSON.stringify(sources)).not.toMatch(/runtime\/(?:v\d+|[^/]+-v\d+)\//u);
@@ -40,9 +39,9 @@ describe("independent package boundary", () => {
       "butterscotch-checkpoint-v2", "easyrpg-save", "kirikiri-kag-bookmark", "mkxp-state-compact",
       "native-save", "ons-save", "tyranoscript-snapshot-v1", "wasm4-state-v1",
     ]);
-    expect((await readdir(join(root, "assets/runtime"))).sort()).toEqual(["butterscotch", "mkxp", "native"]);
+    expect((await readdir(join(root, "assets/runtime"))).sort()).toEqual(["butterscotch", "native"]);
     for (const asset of [
-      "assets/runtime/butterscotch/worker.mjs", "assets/runtime/mkxp/position_bridge.rb",
+      "assets/runtime/butterscotch/worker.mjs",
       "assets/runtime/native/bridge.js",
     ]) {
       expect(await readFile(join(root, asset), "utf8"), asset).not.toMatch(/RETROM|__retrom|-[vr][1-9]/u);

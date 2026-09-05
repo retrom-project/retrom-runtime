@@ -1,7 +1,7 @@
 // @vitest-environment node
 
 import {execFileSync} from "node:child_process";
-import {mkdtemp, rm, unlink, writeFile} from "node:fs/promises";
+import {mkdtemp, readFile, rm, unlink, writeFile} from "node:fs/promises";
 import {tmpdir} from "node:os";
 import {join} from "node:path";
 
@@ -16,6 +16,13 @@ import {
 const providers = [provider("emulatorjs", "1.0.0"), provider("retrom-runtime", "0.12.0")];
 
 describe("Provider candidate and formal release identity", () => {
+  it("uses the same working-tree identity implementation for the PFB candidate", async () => {
+    const candidate = await readFile(new URL("../scripts/build-candidate.mjs", import.meta.url), "utf8");
+    expect(candidate).toContain('import {sourceTreeSha256} from "./provider-release.mjs";');
+    expect(candidate).toContain("sourceTreeSha256: sourceTreeSha256(root)");
+    expect(candidate).not.toContain("function sourceTree()");
+  });
+
   it("keeps candidate metadata free of invented release identity", () => {
     const metadata = createProviderBuildMetadata(providers, "a".repeat(64));
     expect(Object.keys(metadata).sort()).toEqual(["providers", "schemaVersion", "sourceTreeSha256"]);
@@ -48,7 +55,12 @@ describe("Provider candidate and formal release identity", () => {
       await writeFile(join(repository, "retired.txt"), "retired\n");
       execFileSync("git", ["add", "kept.txt", "retired.txt"], {cwd: repository});
       await unlink(join(repository, "retired.txt"));
-      expect(sourceTreeSha256(repository)).toMatch(/^[0-9a-f]{64}$/u);
+      const deletedTree = sourceTreeSha256(repository);
+      expect(deletedTree).toMatch(/^[0-9a-f]{64}$/u);
+      execFileSync("git", ["rm", "--cached", "retired.txt"], {cwd: repository});
+      expect(sourceTreeSha256(repository)).toEqual(deletedTree);
+      await writeFile(join(repository, "added.txt"), "new source\n");
+      expect(sourceTreeSha256(repository)).not.toEqual(deletedTree);
     } finally {
       await rm(repository, {force: true, recursive: true});
     }

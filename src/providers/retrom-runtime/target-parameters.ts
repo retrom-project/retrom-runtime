@@ -1,5 +1,4 @@
 import type {FileTreeSource, SeekableBlobSource} from "../../contract.js";
-import type {RpgMakerPositionV1} from "../../rpgmaker/contract.js";
 import type {AssetIndexV1, LaunchEnvelopeV1, RuntimeResourceV1} from "../../provider/module-api.js";
 import type {EasyRpgParameters} from "../../easyrpg/parameters.js";
 import type {MkxpParameters} from "../../mkxp/parameters.js";
@@ -37,7 +36,6 @@ export function mkxp(
   if (!js || !wasm || ![1, 2, 3].includes(Number(implementation.rgssVersion))) {invalidRequest();}
   const rgssVersion = implementation.rgssVersion as 1 | 2 | 3;
   return {
-    expectedRestorePosition: rpgOptions(envelope).expectedRestorePosition,
     core: {
         jsSha256: js.sha256,
         jsSizeBytes: js.sizeBytes,
@@ -158,17 +156,6 @@ function resources<Kind extends RuntimeResourceV1["kind"]>(
 }
 
 type RuntimeResourceOfKind<Kind extends RuntimeResourceV1["kind"]> = RuntimeResourceV1 & {kind: Kind};
-
-function rpgOptions(envelope: LaunchEnvelopeV1): {expectedRestorePosition: RpgMakerPositionV1 | null} {
-  const position = envelope.targetOptions.expectedRestorePosition;
-  if (position === null) {return {expectedRestorePosition: null};}
-  if (!position || typeof position !== "object" || Array.isArray(position)) {invalidRequest();}
-  const value = position as Record<string, unknown>;
-  if (![value.fixtureState, value.mapId, value.playerX, value.playerY].every(
-    (item) => typeof item === "number" && Number.isSafeInteger(item) && item >= 0,
-  )) {invalidRequest();}
-  return {expectedRestorePosition: position as RpgMakerPositionV1};
-}
 
 function rootFromIndex(indexUrl: string) {
   if (!indexUrl.endsWith("/index.json")) {invalidRequest();}

@@ -19,7 +19,6 @@ const capabilities = {
   pause: true,
   screenshot: true,
   standardGamepad: true,
-  validationProbes: [] as const,
   volume: true,
 };
 
@@ -154,7 +153,7 @@ export const emulatorJsProviderDefinition = defineProvider({
   adapters,
   providerApiVersion: 1,
   providerId: "emulatorjs",
-  providerVersion: "2.1.0",
+  providerVersion: "2.2.0",
   targets,
 });
 

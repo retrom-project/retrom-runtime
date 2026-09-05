@@ -1,9 +1,10 @@
 import { createHash } from "node:crypto";
 import { spawnSync } from "node:child_process";
-import { lstatSync, readFileSync, readlinkSync } from "node:fs";
 import {cp, lstat, readFile, readdir, realpath, writeFile} from "node:fs/promises";
 import { basename, dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+
+import {sourceTreeSha256} from "./provider-release.mjs";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const args = parseArgs(process.argv.slice(2));
@@ -131,25 +132,8 @@ function gitIdentity() {
     branch: value(["symbolic-ref", "--quiet", "--short", "HEAD"]),
     commit: value(["rev-parse", "HEAD"]),
     dirty: Boolean(value(["status", "--porcelain=v1"])),
-    sourceTreeSha256: sourceTree(),
+    sourceTreeSha256: sourceTreeSha256(root),
   };
-}
-
-function sourceTree() {
-  const raw = spawnSync("git", ["ls-files", "--cached", "--others", "--exclude-standard", "-z"], { cwd: root }).stdout;
-  const rawModes = spawnSync("git", ["ls-files", "--stage", "-z"], { cwd: root }).stdout;
-  const modes = new Map(rawModes.toString("utf8").split("\0").filter(Boolean).map((item) => {
-    const [prefix, path] = item.split("\t");
-    return [path, prefix.split(" ", 1)[0]];
-  }));
-  const entries = [];
-  for (const path of raw.toString("utf8").split("\0").filter(Boolean).sort((a, b) => Buffer.from(a).compare(Buffer.from(b)))) {
-    const info = lstatSync(join(root, path));
-    const mode = info.isSymbolicLink() ? "120000" : (modes.get(path) ?? ((info.mode & 0o100) ? "100755" : "100644"));
-    const contents = mode === "120000" ? Buffer.from(readlinkSync(join(root, path))) : readFileSync(join(root, path));
-    entries.push({ path, mode, sha256: sha(contents) });
-  }
-  return sha(canonical(entries));
 }
 
 async function collectFiles(directory) {

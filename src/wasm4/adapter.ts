@@ -98,7 +98,6 @@ export async function mountWasm4(
       const value = instance.frameCount();
       return Number.isSafeInteger(value) && value >= 0 ? value : null;
     },
-    getValidationProbe: () => null,
     pause: async () => {
       if (exited) {throw new Error("WASM4_RUNTIME_INVALID_STATE");}
       await instance.pause();

@@ -26,12 +26,11 @@ export function parseLaunchEnvelopeJSON(source: string): LaunchEnvelopeV1 {
 
 export function validateLaunchEnvelopeBoundary(value: unknown): LaunchEnvelopeV1 {
   if (!isRecord(value) || !exactKeys(value, [
-    "netplay", "resources", "restore", "runtime", "schemaVersion", "session", "targetOptions", "validation",
+    "netplay", "resources", "restore", "runtime", "schemaVersion", "session", "targetOptions",
   ]) || value.schemaVersion !== 1) {invalidRequest();}
   const runtime = validateRuntime(value.runtime);
   if (!validSession(value.session) || !validTargetOptionsShape(value.targetOptions) ||
     !validResourceSetShape(value.resources) || !validRestore(value.restore, runtime.checkpoint) ||
-    !validValidation(value.validation, runtime.capabilities.validationProbes) ||
     !validNetplay(value.netplay, runtime.capabilities.netplayPort, value.session)) {invalidRequest();}
   return value as LaunchEnvelopeV1;
 }
@@ -80,7 +79,7 @@ function validEnvelopeContract(
     sameCapabilities(runtime.capabilities, target.capabilities) &&
     sameCheckpoint(runtime.checkpoint, target.checkpoint) && validSession(value.session) &&
     validTargetOptions(value.targetOptions, target.targetOptionsSchema) && validResources(value.resources, target.inputs) &&
-    validRestore(value.restore, target.checkpoint) && validValidation(value.validation, target.capabilities.validationProbes) &&
+    validRestore(value.restore, target.checkpoint) &&
     validNetplay(value.netplay, target.capabilities.netplayPort, value.session);
 }
 
@@ -104,7 +103,7 @@ function validBundleURLs(runtime: LaunchEnvelopeV1["runtime"]) {
 function validSession(value: unknown) {
   if (!isRecord(value) || !exactKeys(value, [
     "coreName", "id", "mode", "platformName", "purpose", "returnTo", "title", "warnings",
-  ]) || !uuid(value.id) || !["PRODUCT", "REVIEW_PREVIEW", "RUNTIME_VALIDATION"].includes(String(value.purpose)) ||
+  ]) || !uuid(value.id) || !["PRODUCT", "REVIEW_PREVIEW"].includes(String(value.purpose)) ||
     !["SINGLE", "NETPLAY"].includes(String(value.mode)) || !boundedText(value.title, 1, 500) ||
     !boundedText(value.platformName, 1, 200) || !boundedText(value.coreName, 1, 200) ||
     !relativeURL(value.returnTo) || !Array.isArray(value.warnings) ||
@@ -115,15 +114,14 @@ function validSession(value: unknown) {
 function validCapabilities(value: unknown): value is RuntimeCapabilitiesV1 {
   if (!isRecord(value) || !exactKeys(value, [
     "checkpoint", "discSwitch", "frameCounter", "frameMode", "inputFilter", "nativeSettings", "netplayPort",
-    "pause", "requiresThreads", "screenshot", "standardGamepad", "validationProbes", "videoModes", "volume",
+    "pause", "requiresThreads", "screenshot", "standardGamepad", "videoModes", "volume",
   ])) {return false;}
   for (const key of [
     "checkpoint", "discSwitch", "frameCounter", "inputFilter", "nativeSettings", "netplayPort", "pause",
     "requiresThreads", "screenshot", "standardGamepad", "volume",
   ]) {if (typeof value[key] !== "boolean") {return false;}}
   return ["NONE", "SAME_ORIGIN_BLANK", "SAME_ORIGIN_RESOURCE", "ISOLATED_ORIGIN_RESOURCE"]
-    .includes(String(value.frameMode)) && Array.isArray(value.validationProbes) &&
-    sortedUnique(value.validationProbes) && value.validationProbes.every(validToken) &&
+    .includes(String(value.frameMode)) &&
     Array.isArray(value.videoModes) && sortedUnique(value.videoModes) &&
     value.videoModes.every((mode) => ["original", "pixel", "smooth", "sharp-bilinear", "adaptive-sharpen"].includes(mode));
 }
@@ -141,8 +139,6 @@ function sameCapabilities(actual: RuntimeCapabilitiesV1, expected: RuntimeCapabi
     actual.netplayPort === expected.netplayPort && actual.pause === expected.pause &&
     actual.requiresThreads === expected.requiresThreads && actual.screenshot === expected.screenshot &&
     actual.standardGamepad === expected.standardGamepad && actual.volume === expected.volume &&
-    actual.validationProbes.length === expected.validationProbes.length &&
-    actual.validationProbes.every((probe, index) => probe === expected.validationProbes[index]) &&
     actual.videoModes.length === expected.videoModes.length &&
     actual.videoModes.every((mode, index) => mode === expected.videoModes[index]);
 }
@@ -307,11 +303,6 @@ function validRestore(
     relativeURL(value.url);
 }
 
-function validValidation(value: unknown, probes: readonly string[]) {
-  if (value === null) {return true;}
-  return isRecord(value) && exactKeys(value, ["input", "probeId"]) &&
-    typeof value.probeId === "string" && probes.includes(value.probeId) && jsonRecord(value.input);
-}
 
 function validNetplay(value: unknown, supported: boolean, session: unknown) {
   if (value === null) {return isRecord(session) && session.mode !== "NETPLAY";}

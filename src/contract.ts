@@ -16,12 +16,6 @@ export type RuntimeCheckpoint = {
   format: string;
 };
 
-export type RuntimeValidationProbe = {
-  kind: string;
-  schemaVersion: number;
-  value: unknown;
-};
-
 export type FileTreeSource = {
   kind: "FILE_TREE";
   indexUrl: string;

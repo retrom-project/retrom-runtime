@@ -1,6 +1,6 @@
 import type { MountedRuntimeAdapter, RuntimeExitReporter, RuntimeProgressReporter } from "../internal-adapter.js";
 import type { CheckpointAvailability } from "../contract.js";
-import type { ButterscotchRuntimeConfig } from "./contract.js";
+import type {ButterscotchParameters} from "./parameters.js";
 import { prepareButterscotchProject } from "./project-store.js";
 import { createButterscotchAudio } from "./audio.js";
 
@@ -30,7 +30,7 @@ const keyCodes = new Map([
 ]);
 
 export async function mountButterscotch(
-  config: ButterscotchRuntimeConfig,
+  config: ButterscotchParameters,
   target: HTMLElement,
   frameWindow: Window,
   restorePayload: Uint8Array | null,
@@ -76,7 +76,7 @@ export async function mountButterscotch(
   fitCanvasToSurface();
   resizeObserver?.observe(surface);
   frameWindow.addEventListener("resize", fitCanvasToSurface);
-  const runtimeBase = new URL(normalizedBase(config.adapter.runtimeBaseUrl), frameWindow.document.baseURI);
+  const runtimeBase = new URL(normalizedBase(config.runtimeBaseUrl), frameWindow.document.baseURI);
   const workerUrl = new URL("worker.mjs", runtimeBase);
   const worker = new (frameWindow as WorkerWindow).Worker(workerUrl, { type: "module" });
   const audio = createButterscotchAudio(frameWindow);

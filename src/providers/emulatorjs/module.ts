@@ -13,12 +13,10 @@ export const providerId = emulatorJsProviderDefinition.providerId;
 export const providerVersion = emulatorJsProviderDefinition.providerVersion;
 export const providerApiVersion = 1 as const;
 
-export function validateLaunchRequest(value: unknown) {
-  return validateProviderLaunchRequest(value, emulatorJsProviderDefinition);
-}
-
 export async function createRuntime(value: unknown, host: RuntimeHostV1) {
-  return createEmulatorJsPlayer(validateLaunchRequest(value), validateRuntimeHost(host), embeddedAssetIndex());
+  return createEmulatorJsPlayer(
+    validateProviderLaunchRequest(value, emulatorJsProviderDefinition), validateRuntimeHost(host), embeddedAssetIndex(),
+  );
 }
 
 function embeddedAssetIndex(): AssetIndexV1 {

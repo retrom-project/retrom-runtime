@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { mountTyranoScript } from "./adapter.js";
-import type { TyranoScriptRuntimeConfig } from "./contract.js";
+import type {TyranoScriptParameters} from "./parameters.js";
 
 afterEach(() => {
   vi.restoreAllMocks();
@@ -54,7 +54,7 @@ describe("TyranoScript isolated Web adapter", () => {
     });
     const adapter = await mounting;
 
-    expect(config.adapter.bootstrapTicket).toBe("");
+    expect(config.bootstrapTicket).toBe("");
     expect(commands).toContain("RESTORE");
     expect(adapter.getCheckpointAvailability()).toEqual({available: true, blocker: null});
     await expect(adapter.checkpoint()).resolves.toEqual({
@@ -158,18 +158,13 @@ function dispatchRuntimeMessage(source: Window, data: Record<string, unknown>) {
   }));
 }
 
-function runtimeConfig(): TyranoScriptRuntimeConfig {
+function runtimeConfig(): TyranoScriptParameters {
   return {
-    adapter: {
-      adapterId: "tyranoscript-web",
-      adapterKind: "TYRANOSCRIPT_WEB",
-      bootstrapTicket: "one-time-ticket",
-      cleanupUrl: "https://runtime.example/runtime/cleanup",
-      entryUrl: "https://runtime.example/runtime/entry",
-      uniqueOrigin: "https://runtime.example",
-    },
-    contentDigest: "a".repeat(64),
     sessionId: "01990000-0000-7000-8000-000000000001",
+    bootstrapTicket: "one-time-ticket",
+    cleanupUrl: "https://runtime.example/runtime/cleanup",
+    entryUrl: "https://runtime.example/runtime/entry",
+    uniqueOrigin: "https://runtime.example",
   };
 }
 

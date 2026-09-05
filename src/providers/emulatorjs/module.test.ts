@@ -6,21 +6,28 @@ import {emulatorJsProviderDefinition} from "./catalog.js";
 import {validateEmulatorJsNetplayProfile} from "./netplay-profile.js";
 import {createEmulatorJsPlayer} from "./provider-runtime.js";
 import {launchEnvelope} from "../../../tests/emulatorjs-provider-fixtures.js";
-import {providerApiVersion, providerId, providerVersion, validateLaunchRequest} from "./module.js";
+import {createRuntime, providerApiVersion, providerId, providerVersion} from "./module.js";
+import {hostFixture} from "../../../tests/provider-adapter-fixture.js";
 
 const digest = "a".repeat(64);
 const bundleDigest = "b".repeat(64);
 afterEach(() => {vi.useRealTimers(); vi.unstubAllGlobals();});
 
 describe("EmulatorJS Provider Module V1", () => {
-  it("exports one stable Provider identity for both embedded EmulatorJS releases", () => {
+  it("exports one stable Provider identity for both embedded EmulatorJS releases", async () => {
     expect({providerApiVersion, providerId, providerVersion}).toEqual({
       providerApiVersion: 1,
       providerId: "emulatorjs",
       providerVersion: "2.1.0",
     });
     const envelope = launchEnvelope();
-    expect(validateLaunchRequest(envelope)).toBe(envelope);
+    vi.stubGlobal("__RETROM_PROVIDER_ASSET_INDEX__", {
+      "assets/4.2.3/data/cores/fceumm-wasm.data": {
+        sha256: "8c449fd5c36646fb0769423ed6ffa9efbdfc21fbfdc9bac7952b559d34d5b493",
+        sizeBytes: 1054015,
+      },
+    });
+    expect((await createRuntime(envelope, hostFixture())).getState()).toBe("CREATED");
   });
 
   it("keeps mount pending until the real EmulatorJS game-start barrier", async () => {
@@ -532,7 +539,7 @@ describe("EmulatorJS Provider Module V1", () => {
 
     const legacy = structuredClone(current);
     if (!legacy.netplay) {throw new Error("netplay fixture missing");}
-    legacy.netplay.profile.gameVariantRevisionId = "01980000-0000-7000-8000-000000000006";
+    Object.assign(legacy.netplay.profile, {gameVariantRevisionId: "01980000-0000-7000-8000-000000000006"});
     expect(() => validateEmulatorJsNetplayProfile(legacy, implementation))
       .toThrow("PLAYER_NETPLAY_PROFILE_INVALID");
   });

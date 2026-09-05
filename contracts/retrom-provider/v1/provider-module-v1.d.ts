@@ -2,7 +2,8 @@ export type ProviderApiVersionV1 = 1;
 
 export type RuntimePurposeV1 = "PRODUCT" | "REVIEW_PREVIEW" | "RUNTIME_VALIDATION";
 export type RuntimeModeV1 = "SINGLE" | "NETPLAY";
-export type RuntimeStateV1 = "CREATED" | "MOUNTING" | "RUNNING" | "PAUSED" | "EXITED" | "FAILED";
+export type RuntimeStateV1 = "CREATED" | "MOUNTING" | "RUNNING" | "PAUSED" |
+  "CHECKPOINTING" | "EXITING" | "EXITED" | "FAILED";
 export type RuntimeFrameModeV1 =
   | "NONE"
   | "SAME_ORIGIN_BLANK"
@@ -151,12 +152,31 @@ export type RuntimeJSONValueV1 = null | boolean | string | number |
 export type TargetOptionsV1 = { [key: string]: RuntimeJSONValueV1 };
 
 export type RuntimeValidationV1 = { probeId: string; input: Record<string, unknown> };
+export type NetplayProfileV2 = {
+  bundleSha256: string;
+  canonicalHistoryFrames: 600;
+  checkpointEveryFrames: 120;
+  controlCount: 24;
+  coreId: string;
+  dependencySnapshotDigest: string;
+  maxPlayers: number;
+  maxPredictionFrames: number;
+  maxRollbackFrames: 120;
+  maxStateBytes: 1048576;
+  platformIds: string[];
+  profileId: string;
+  protocolVersion: "retrom-netplay-v2";
+  providerId: string;
+  schemaVersion: 2;
+  sourceManifestDigest: string;
+  targetId: string;
+};
 export type RuntimeNetplayV1 = {
   roomId: string;
   sessionId: string;
   playerNo: number;
   socketUrl: string;
-  profile: Record<string, unknown>;
+  profile: NetplayProfileV2;
 };
 
 export type LaunchEnvelopeV1 = {
@@ -196,6 +216,5 @@ export interface ProviderModuleV1 {
   providerId: string;
   providerVersion: string;
   providerApiVersion: 1;
-  validateLaunchRequest(value: unknown): ProviderLaunchRequestV1;
-  createRuntime(request: ProviderLaunchRequestV1, host: RuntimeHostV1): Promise<PlayerRuntimeV1>;
+  createRuntime(request: unknown, host: RuntimeHostV1): Promise<PlayerRuntimeV1>;
 }

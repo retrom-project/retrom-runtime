@@ -82,7 +82,6 @@ async function build(root: string, name: string, asset: string, license: string)
       'export const providerId = "fixture";',
       'export const providerVersion = "1.0.0";',
       "export const providerApiVersion = 1;",
-      "export function validateLaunchRequest(value) { return value; }",
       "export async function createRuntime() { throw new Error('fixture'); }",
       "",
     ].join("\n")),

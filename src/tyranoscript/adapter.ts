@@ -1,6 +1,6 @@
 import type { CheckpointAvailability } from "../contract.js";
 import type { MountedRuntimeAdapter, RuntimeExitReporter } from "../internal-adapter.js";
-import type { TyranoScriptRuntimeConfig } from "./contract.js";
+import type {TyranoScriptParameters} from "./parameters.js";
 
 type Reply = {
   body: Record<string, unknown>;
@@ -25,7 +25,7 @@ const maximumCheckpointBytes = 32 * 1024 * 1024;
 const maximumScreenshotBytes = 2 * 1024 * 1024;
 
 export async function mountTyranoScript(
-  config: TyranoScriptRuntimeConfig,
+  config: TyranoScriptParameters,
   frame: HTMLIFrameElement,
   restorePayload: Uint8Array | null,
   reportExitRequested: RuntimeExitReporter = () => undefined,
@@ -50,7 +50,7 @@ export async function mountTyranoScript(
     exit: async () => {
       channel.stopProbeLoop();
       await channel.request("CLEANUP", {}, 5_000).catch(() => undefined);
-      await cleanup(config.adapter.cleanupUrl).catch(() => undefined);
+      await cleanup(config.cleanupUrl).catch(() => undefined);
       channel.close();
       frame.src = "about:blank";
     },
@@ -83,7 +83,7 @@ class TyranoScriptChannel {
   private probeTimer: number | null = null;
 
   constructor(
-    private readonly config: TyranoScriptRuntimeConfig,
+    private readonly config: TyranoScriptParameters,
     private readonly reportExitRequested: RuntimeExitReporter,
   ) {
     this.messageChannel.port1.onmessage = (event) => this.receive(event.data);
@@ -99,7 +99,7 @@ class TyranoScriptChannel {
       protocolVersion,
       sessionId: this.config.sessionId,
       type: "GAME_RUNTIME_TYRANOSCRIPT_CONNECT",
-    }, this.config.adapter.uniqueOrigin, [this.messageChannel.port2]);
+    }, this.config.uniqueOrigin, [this.messageChannel.port2]);
   }
 
   ready() {
@@ -250,15 +250,15 @@ class TyranoScriptChannel {
 }
 
 async function bootstrapFrame(
-  config: TyranoScriptRuntimeConfig,
+  config: TyranoScriptParameters,
   frame: HTMLIFrameElement,
   channel: TyranoScriptChannel,
 ) {
   const contentWindow = frame.contentWindow;
   if (!contentWindow) {throw new Error("PLAYER_FRAME_UNAVAILABLE");}
   const runtimeWindow: Window = contentWindow;
-  let bootstrapTicket = config.adapter.bootstrapTicket;
-  config.adapter.bootstrapTicket = "";
+  let bootstrapTicket = config.bootstrapTicket;
+  config.bootstrapTicket = "";
   await new Promise<void>((resolve, reject) => {
     const timer = window.setTimeout(() => finish(new Error("TYRANOSCRIPT_BOOTSTRAP_TIMEOUT")), bootstrapTimeoutMs);
     function finish(error?: Error) {
@@ -268,13 +268,13 @@ async function bootstrapFrame(
       if (error) {reject(error);} else {resolve();}
     }
     function receive(event: MessageEvent) {
-      if (event.source !== runtimeWindow || event.origin !== config.adapter.uniqueOrigin ||
+      if (event.source !== runtimeWindow || event.origin !== config.uniqueOrigin ||
         !event.data || typeof event.data !== "object") {return;}
       if (bootstrapRequired(event.data)) {
         if (!bootstrapTicket) {finish(new Error("TYRANOSCRIPT_BOOTSTRAP_TIMEOUT")); return;}
         runtimeWindow.postMessage({
           protocolVersion, ticket: bootstrapTicket, type: "GAME_RUNTIME_TYRANOSCRIPT_BOOTSTRAP",
-        }, config.adapter.uniqueOrigin);
+        }, config.uniqueOrigin);
         bootstrapTicket = "";
       } else if (bridgeReady(event.data)) {
         channel.connect(runtimeWindow);
@@ -282,7 +282,7 @@ async function bootstrapFrame(
       }
     }
     window.addEventListener("message", receive, true);
-    frame.src = config.adapter.entryUrl;
+    frame.src = config.entryUrl;
   });
 }
 

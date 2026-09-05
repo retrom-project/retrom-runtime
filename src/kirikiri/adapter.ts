@@ -1,9 +1,8 @@
 import { decodeKirikiriCheckpoint, encodeKirikiriCheckpoint, type KirikiriCheckpointEntry } from "./checkpoint.js";
 import type { MountedRuntimeAdapter, RuntimeExitReporter } from "../internal-adapter.js";
-import type { KirikiriRuntimeConfig } from "./contract.js";
+import type {KirikiriParameters} from "./parameters.js";
 import { installKirikiriStandardGamepad } from "./gamepad-input.js";
 
-type KirikiriConfig = KirikiriRuntimeConfig & { adapter: KirikiriRuntimeConfig["adapter"] };
 type ProjectFile = { path: string; url: string; sizeBytes: number };
 type ProjectIndex = { schemaVersion: 1; files: ProjectFile[] };
 type KirikiriVlfs = {
@@ -52,7 +51,7 @@ const runtimeTerminationTraps = new Set([
 ]);
 
 export async function mountKirikiri2(
-  config: KirikiriConfig,
+  config: KirikiriParameters,
   target: HTMLElement,
   frameWindow: Window,
   restorePayload: Uint8Array | null,
@@ -101,7 +100,7 @@ export async function mountKirikiri2(
     reportExitRequested();
   };
   try {
-    const base = new URL(normalizedBase(config.adapter.runtimeBaseUrl), document.baseURI);
+    const base = new URL(normalizedBase(config.runtimeBaseUrl), document.baseURI);
     runtimeTerminationCleanup = installKirikiriRuntimeTermination(
       frameWindow,
       new URL("index.wasm", base).href,
@@ -122,7 +121,7 @@ export async function mountKirikiri2(
       lastWriteAt = Date.now();
     };
     await registerRuntimeAssets(vlfs, new URL("assets.zip", base));
-    const project = await registerProject(vlfs, config.adapter.projectIndexUrl, document.baseURI);
+    const project = await registerProject(vlfs, config.projectIndexUrl, document.baseURI);
     const restore = restorePayload ? await decodeKirikiriCheckpoint(restorePayload) : null;
     for (const entry of restore?.entries ?? []) {
       const path = `/${entry.path}`;
@@ -144,7 +143,7 @@ export async function mountKirikiri2(
       print: (message) => {if (message) {console.debug(`[kirikiri2] ${message}`);}},
       printErr: (message) => {if (message) {console.debug(`[kirikiri2] ${message}`);}},
     };
-    const startupPath = selectStartupXp3(project.xp3Paths, config.adapter.startupXp3Path);
+    const startupPath = selectStartupXp3(project.xp3Paths, config.startupXp3Path);
     if (startupPath) {options._startupXp3Path = startupPath;}
     host.Module = options;
     scripts.push(await loadClassicScript(document, runtimeUrl));
@@ -152,7 +151,7 @@ export async function mountKirikiri2(
     await withTimeout(ready.promise, readyTimeoutMs, "KIRIKIRI_RUNTIME_TIMEOUT");
     if (restore) {
       await waitFor(() => module?._krkr2_host_bookmark_is_ready?.() === 1, readyTimeoutMs);
-      await restoreBookmark(module, config.adapter.checkpointSlot);
+      await restoreBookmark(module, config.checkpointSlot);
     }
     startupKeyboardCleanup();
     gamepadCleanup = installKirikiriStandardGamepad(frameWindow, surface, canvas);
@@ -179,7 +178,7 @@ export async function mountKirikiri2(
         await waitFor(() => activeModule._krkr2_host_bookmark_is_ready() === 1, readyTimeoutMs);
         if (exited) {throw new Error("KIRIKIRI_RUNTIME_INVALID_STATE");}
         const checkpointWriteSequence = writeSequence;
-        if (activeModule._krkr2_host_save_bookmark(config.adapter.checkpointSlot) !== 0) {
+        if (activeModule._krkr2_host_save_bookmark(config.checkpointSlot) !== 0) {
           throw new Error("KIRIKIRI_CHECKPOINT_CREATE_FAILED");
         }
         await waitFor(
@@ -191,7 +190,7 @@ export async function mountKirikiri2(
         pausedForCapture = true;
         const entries: KirikiriCheckpointEntry[] = [...writes].map(([path, data]) => ({ path, data: data.slice() }));
         return {
-          bytes: await encodeKirikiriCheckpoint({ entries, resumeSlot: config.adapter.checkpointSlot }),
+          bytes: await encodeKirikiriCheckpoint({ entries, resumeSlot: config.checkpointSlot }),
           format: "kirikiri-save-bundle-v1",
         };
       } catch (error) {

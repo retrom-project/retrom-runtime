@@ -2,7 +2,7 @@ import { createHash } from "node:crypto";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { mountWasm4, type Wasm4CoreModule } from "./adapter.js";
-import type { Wasm4RuntimeConfig } from "./contract.js";
+import type {Wasm4Parameters} from "./parameters.js";
 
 afterEach(() => {
   vi.restoreAllMocks();
@@ -22,7 +22,7 @@ describe("WASM-4 Web adapter", () => {
     const core = fakeCore(canvas, checkpoint);
     const loader = vi.fn(async () => core.module);
     const runtimeConfig = config(digest, cart.byteLength);
-    runtimeConfig.adapter.runtimeBaseUrl = "/runtime/wasm4/";
+    runtimeConfig.runtimeBaseUrl = "/runtime/wasm4/";
     vi.stubGlobal("fetch", vi.fn(async () => new Response(cart.slice(), {
       headers: {"content-length": String(cart.byteLength)}, status: 200,
     })));
@@ -128,17 +128,12 @@ function fakeCore(canvas: HTMLCanvasElement, checkpoint: Uint8Array) {
   return {create, module, stop};
 }
 
-function config(contentDigest: string, cartSizeBytes: number): Wasm4RuntimeConfig {
+function config(contentDigest: string, cartSizeBytes: number): Wasm4Parameters {
   return {
-    sessionId: "wasm4-session",
     contentDigest,
     cartSizeBytes,
-    adapter: {
-      adapterKind: "WASM4_WEB",
-      adapterId: "wasm4-web",
-      cartUrl: "https://content.example/cart.wasm",
-      runtimeBaseUrl: "https://runtime.example/wasm4/",
-    },
+    cartUrl: "https://content.example/cart.wasm",
+    runtimeBaseUrl: "https://runtime.example/wasm4/",
   };
 }
 

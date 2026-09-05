@@ -1,4 +1,3 @@
-import {createRuntime as createLegacyRuntime} from "../../index.js";
 import {
   validateProviderLaunchRequest,
   validateRuntimeHost,
@@ -14,13 +13,9 @@ export const providerId = retromRuntimeProviderDefinition.providerId;
 export const providerVersion = retromRuntimeProviderDefinition.providerVersion;
 export const providerApiVersion = 1 as const;
 
-export function validateLaunchRequest(value: unknown) {
-  return validateProviderLaunchRequest(value, retromRuntimeProviderDefinition);
-}
-
 export async function createRuntime(value: unknown, host: RuntimeHostV1) {
-  const request = validateLaunchRequest(value);
-  return createRetromRuntimePlayer(request, validateRuntimeHost(host), embeddedAssetIndex(), createLegacyRuntime);
+  const request = validateProviderLaunchRequest(value, retromRuntimeProviderDefinition);
+  return createRetromRuntimePlayer(request, validateRuntimeHost(host), embeddedAssetIndex());
 }
 
 function embeddedAssetIndex(): AssetIndexV1 {

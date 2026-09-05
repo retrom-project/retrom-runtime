@@ -8,12 +8,9 @@ import type { MountedRuntimeAdapter, RuntimeExitReporter } from "../internal-ada
 import {
   rpgMakerPositionProbeKind,
   type RpgMakerPositionV1,
-  type RpgMakerRuntimeConfig,
 } from "../rpgmaker/contract.js";
 
-type NativeConfig = RpgMakerRuntimeConfig & {
-  adapter: Extract<RpgMakerRuntimeConfig["adapter"], { adapterKind: "NATIVE_WEB" }>;
-};
+import type {NativeRpgParameters} from "./parameters.js";
 
 type Reply = {
   body: Record<string, unknown>;
@@ -43,7 +40,7 @@ const channelReadyTimeoutMs = 10_000;
 const cleanupTimeoutMs = 2_000;
 
 export async function mountNativeRpg(
-  config: NativeConfig,
+  config: NativeRpgParameters,
   frame: HTMLIFrameElement,
   restorePayload: Uint8Array | null,
   reportExitRequested: RuntimeExitReporter = () => undefined,
@@ -55,8 +52,8 @@ export async function mountNativeRpg(
   try {
     await bootstrapNativeFrame(config, frame, channel);
     const ready = await channel.ready();
-    expectedEngine = config.generation === "RPGMV" ? "RPGMV" : "RPGMZ";
-    if (ready.engine !== expectedEngine || ready.engineProfile !== config.adapter.bridgeProfile) {
+    expectedEngine = config.bridgeProfile;
+    if (ready.engine !== expectedEngine || ready.engineProfile !== config.bridgeProfile) {
       throw new Error("RPG_ENGINE_PROFILE_MISMATCH");
     }
     if (restorePayload) {
@@ -98,7 +95,7 @@ export async function mountNativeRpg(
 }
 
 export class NativeChannel {
-  private readonly config: NativeConfig;
+  private readonly config: NativeRpgParameters;
   private readonly nonce = randomNonce();
   private readonly port = new MessageChannel();
   private connected = false;
@@ -115,7 +112,7 @@ export class NativeChannel {
   private probeActive = false;
   private exiting = false;
 
-  constructor(config: NativeConfig, private readonly reportExitRequested: RuntimeExitReporter) {
+  constructor(config: NativeRpgParameters, private readonly reportExitRequested: RuntimeExitReporter) {
     this.config = config;
     this.port.port1.onmessage = (event) => this.receive(event.data);
     this.port.port1.start();
@@ -127,8 +124,8 @@ export class NativeChannel {
     target.postMessage({
       type: "RPG_RUNTIME_NATIVE_CONNECT", protocolVersion,
       launchId: this.config.sessionId, nonce: this.nonce, parentOrigin: window.location.origin,
-      profile: this.config.adapter.bridgeProfile, cleanupUrl: this.config.adapter.cleanupUrl,
-    }, this.config.adapter.uniqueOrigin, [this.port.port2]);
+      profile: this.config.bridgeProfile, cleanupUrl: this.config.cleanupUrl,
+    }, this.config.uniqueOrigin, [this.port.port2]);
   }
 
   ready() {
@@ -307,12 +304,12 @@ export class NativeChannel {
   }
 }
 
-async function bootstrapNativeFrame(config: NativeConfig, frame: HTMLIFrameElement, channel: NativeChannel) {
+async function bootstrapNativeFrame(config: NativeRpgParameters, frame: HTMLIFrameElement, channel: NativeChannel) {
   const target = frame.contentWindow;
   if (!target) {throw new Error("PLAYER_FRAME_UNAVAILABLE");}
   const runtimeWindow: Window = target;
-  let bootstrapTicket = config.adapter.bootstrapTicket;
-  config.adapter.bootstrapTicket = "";
+  let bootstrapTicket = config.bootstrapTicket;
+  config.bootstrapTicket = "";
   await new Promise<void>((resolve, reject) => {
     const timer = window.setTimeout(() => finish(new Error("RPG_NATIVE_BOOTSTRAP_TIMEOUT")), bootstrapTimeoutMs);
     const ticketTimer = window.setTimeout(() => {bootstrapTicket = "";}, 60_000);
@@ -325,12 +322,12 @@ async function bootstrapNativeFrame(config: NativeConfig, frame: HTMLIFrameEleme
       if (error) {reject(error);} else {resolve();}
     }
     function receive(event: MessageEvent) {
-      if (event.source !== runtimeWindow || event.origin !== config.adapter.uniqueOrigin || !event.data || typeof event.data !== "object") {return;}
+      if (event.source !== runtimeWindow || event.origin !== config.uniqueOrigin || !event.data || typeof event.data !== "object") {return;}
       const action = nativeBootstrapAction(stage, event.data);
       if (action === "SEND_TICKET") {
         stage = "BRIDGE";
         if (!bootstrapTicket) {finish(new Error("RPG_NATIVE_BOOTSTRAP_TIMEOUT")); return;}
-        runtimeWindow.postMessage({ type: "RPG_RUNTIME_NATIVE_BOOTSTRAP", protocolVersion, ticket: bootstrapTicket }, config.adapter.uniqueOrigin);
+        runtimeWindow.postMessage({ type: "RPG_RUNTIME_NATIVE_BOOTSTRAP", protocolVersion, ticket: bootstrapTicket }, config.uniqueOrigin);
         bootstrapTicket = "";
       } else if (action === "CONNECT") {
         channel.connect(runtimeWindow);
@@ -338,7 +335,7 @@ async function bootstrapNativeFrame(config: NativeConfig, frame: HTMLIFrameEleme
       }
     }
     window.addEventListener("message", receive, true);
-    frame.src = config.adapter.bootstrapUrl;
+    frame.src = config.bootstrapUrl;
   });
 }
 

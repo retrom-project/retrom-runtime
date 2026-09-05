@@ -1,7 +1,7 @@
 {
   "authorityPath": "api/runtime-provider/v1",
   "authorityRepository": "https://github.com/retrom-project/retrom",
-  "contractSha256": "48c2a3b000997ce4564dd9efe85d5ef05d1261eeac6fef25a27602d42eb79317",
+  "contractSha256": "781e468081dee687bc564f0f1fef5248764384b5060b5545019a87bcd1bf8ffc",
   "contractVersion": "runtime-provider-v1",
   "files": [
     {
@@ -10,7 +10,7 @@
     },
     {
       "path": "api/runtime-provider/v1/launch-envelope.schema.json",
-      "sha256": "4bd5e294de61e1400e9f4ed796df53e907f075a29efcef8c9554f0a51e815871"
+      "sha256": "9627e4781bc89861972b40dad2cdbb90253c7d36d595dde42f8019c1f6ad793f"
     },
     {
       "path": "api/runtime-provider/v1/provider-integrity.schema.json",
@@ -26,7 +26,7 @@
     },
     {
       "path": "api/runtime-provider/v1/provider-module-v1.d.ts",
-      "sha256": "a4041b063f909c44ff19b2f611057d038a205a77ae302385088cf317e70771a8"
+      "sha256": "29bdc3921b96ef44004e64c60b3eeeb79bba7b4757db0f92243f8a3a874f110b"
     },
     {
       "path": "api/runtime-provider/v1/runtime-resource.schema.json",
@@ -82,7 +82,7 @@
     },
     {
       "path": "api/runtime-provider/v1/fixtures/valid/netplay.json",
-      "sha256": "bd868bff48a7eb5f6446b4738fc6566a32b8e8667fe03bb9255eaacc9e1fdd91"
+      "sha256": "001462eaa9c0c4c4a4dba2b3b557552247ee3f68b72ea8787e97b0ee67367a4d"
     },
     {
       "path": "api/runtime-provider/v1/fixtures/valid/single-minimal.json",

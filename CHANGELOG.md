@@ -2,6 +2,11 @@
 
 ## 0.15.0
 
+- Remove the package-level RuntimeConfig/GameRuntime API, descriptor registry, conversion factory and inner
+  controller. Provider creation directly constructs core-private parameters and owns a single lifecycle,
+  serialized operation queue and cleanup path, including cancellation before restore/frame/core readiness.
+- Remove the separate Provider precheck export. The current unreleased V1 creation boundary validates the external
+  request once; expose CHECKPOINTING and EXITING directly instead of mapping a second controller's state.
 - Wait for EasyRPG's configured engine identity while loading frames are already advancing; preserve bounded
   rejection of genuinely mismatched projects instead of rejecting RPG2003 during the core's initial RPG2000 state.
 - Finish an EasyRPG restore mount only after the saved map is ready, so position validation cannot mistake the

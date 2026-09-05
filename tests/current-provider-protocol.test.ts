@@ -29,7 +29,7 @@ describe("current Provider protocol", () => {
       "src/providers/emulatorjs/module.ts",
       "src/providers/emulatorjs/netplay-profile.ts",
       "src/providers/retrom-runtime/catalog.ts",
-      "src/providers/retrom-runtime/module-config.ts",
+      "src/providers/retrom-runtime/target-parameters.ts",
       "src/providers/retrom-runtime/module.ts",
     ];
     const fixtureRoot = "contracts/retrom-provider/v1/fixtures";

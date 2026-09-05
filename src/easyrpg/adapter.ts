@@ -3,12 +3,9 @@ import type { MountedRuntimeAdapter, RuntimeExitReporter } from "../internal-ada
 import {
   rpgMakerPositionProbeKind,
   type RpgMakerPositionV1,
-  type RpgMakerRuntimeConfig,
 } from "../rpgmaker/contract.js";
 
-type EasyConfig = RpgMakerRuntimeConfig & {
-  adapter: Extract<RpgMakerRuntimeConfig["adapter"], { adapterKind: "EASYRPG_WEB" }>;
-};
+import type {EasyRpgParameters} from "./parameters.js";
 
 type EasyFileSystem = {
   analyzePath(path: string): { exists: boolean };
@@ -61,7 +58,7 @@ const maximumRtpFiles = 20_000;
 const savePath = "Save/Save100.lsd";
 
 export async function mountEasyRpg(
-  config: EasyConfig,
+  config: EasyRpgParameters,
   target: HTMLElement,
   frameWindow: Window,
   restorePayload: Uint8Array | null,
@@ -76,7 +73,7 @@ export async function mountEasyRpg(
 }
 
 async function mountEasyRpgUnchecked(
-  config: EasyConfig,
+  config: EasyRpgParameters,
   target: HTMLElement,
   frameWindow: Window,
   restorePayload: Uint8Array | null,
@@ -96,7 +93,7 @@ async function mountEasyRpgUnchecked(
     loadRtp(config),
     decodeRestore(config, restorePayload),
   ]);
-  const script = await loadScript(document, `${config.adapter.runtimeBaseUrl}easyrpg-player.js`);
+  const script = await loadScript(document, `${config.runtimeBaseUrl}easyrpg-player.js`);
   const createPlayer = runtimeWindow.createEasyRpgPlayer;
   if (typeof createPlayer !== "function") {
     script.remove();
@@ -107,15 +104,15 @@ async function mountEasyRpgUnchecked(
     noExitRuntime: true,
     onRuntimeExitRequested: () => reportExitRequested(),
     saveFs: undefined,
-    locateFile: (path) => `${config.adapter.runtimeBaseUrl}${path}`,
-    runtimeEngineMode: config.adapter.engineMode,
-    runtimeProjectRootUrl: config.adapter.projectRootUrl,
+    locateFile: (path) => `${config.runtimeBaseUrl}${path}`,
+    runtimeEngineMode: config.engineMode,
+    runtimeProjectRootUrl: config.projectRootUrl,
     runtimeRtpRemoteFiles: rtpFiles,
-    ...(restoreFiles.length ? { runtimeRestoreSlot: config.adapter.checkpointSlot } : {}),
+    ...(restoreFiles.length ? { runtimeRestoreSlot: config.checkpointSlot } : {}),
     runtimeRestoreFiles: restoreFiles,
   });
   playerModule.initApi();
-  const expectedEngine = config.generation === "RPG2000" ? "RPG2000" : "RPG2003";
+  const expectedEngine = config.engineMode === "rpg2k" ? "RPG2000" : "RPG2003";
   await waitForReady(playerModule, expectedEngine, restoreFiles.length > 0);
 
   return {
@@ -125,7 +122,7 @@ async function mountEasyRpgUnchecked(
       return {
         bytes: await encodeRpgCheckpoint({
           engine: expectedEngine,
-          resumeSlot: config.adapter.checkpointSlot,
+          resumeSlot: config.checkpointSlot,
           entries: [{ store: "FILESYSTEM", key: savePath, mediaType: "application/octet-stream", data: bytes }],
         }),
         format: "easyrpg-save-bundle-v1",
@@ -210,11 +207,11 @@ function startupState(module: EasyModule) {
   }
 }
 
-async function decodeRestore(config: EasyConfig, payload: Uint8Array | null) {
+async function decodeRestore(config: EasyRpgParameters, payload: Uint8Array | null) {
   if (!payload) {return [];}
-  const expectedEngine = config.generation === "RPG2000" ? "RPG2000" : "RPG2003";
+  const expectedEngine = config.engineMode === "rpg2k" ? "RPG2000" : "RPG2003";
   const bundle = await decodeRpgCheckpoint(payload, expectedEngine);
-  if (bundle.resumeSlot !== config.adapter.checkpointSlot || bundle.entries.length !== 1) {
+  if (bundle.resumeSlot !== config.checkpointSlot || bundle.entries.length !== 1) {
     throw new Error("RPG_CHECKPOINT_RESTORE_INVALID");
   }
   const entry = bundle.entries[0];
@@ -232,8 +229,8 @@ function readCheckpoint(fileSystem: EasyFileSystem) {
   throw new Error("RPG_CHECKPOINT_CREATE_FAILED");
 }
 
-async function loadRtp(config: EasyConfig) {
-  const source = config.adapter.rtpSource;
+async function loadRtp(config: EasyRpgParameters) {
+  const source = config.rtpSource;
   if (!source) {return [];}
   const index = await fetchRtpIndex(source.indexUrl);
   const base = new URL(source.indexUrl, window.location.href);

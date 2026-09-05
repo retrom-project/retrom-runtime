@@ -68,9 +68,10 @@ npm run package:check
 ## 与 Retrom 的本地联调
 
 - 功能分支完成旧行为必红的回归和聚焦门禁后，先保留在分支，不要为了让 Retrom 取得候选 bytes 而提前合并、打 tag 或创建 Release。
-- 使用 Retrom PFB 流程，在同一 `.worktree/<pfb>/project/` 下放置 Retrom、本仓库和涉及的 core worktree。PFB spec 必须固定每个 checkout 的 commit、dirty/source tree digest；`RUNTIME_ROOT` 与 `CORE_ROOTS` 只能指向该 PFB 树。
-- `npm run candidate:build -- --spec <pfb-spec> --output <candidate-root>` 生成完整 Provider Bundle V1。core candidate 只能覆盖 `provider-sources.json` 已声明的来源，不能新增 Target、改写宿主 binding 或污染 production lock。
-- PFB 必须用 candidate Bundle 完成真实 Retrom 导入、Review Preview、Product Launch、共享 dispatcher、输入、checkpoint、不同 Launch 恢复和退出清理。确认通过后才合并 PR、发布 core tag，再发布本仓库新的不可移动 `v*` tag。
+- 使用 Retrom PFB 流程，在同一 `.worktree/<pfb>/project/` 下放置 Retrom、本仓库和涉及的 core worktree；`RUNTIME_ROOT` 与 `CORE_ROOTS` 只能指向该 PFB 树。源码与持久 workspace bind mount 到轻量开发容器，日常不构建 Provider archive 或 core。
+- 新 PFB 显式导入已验证的 Provider 基座；运行中的 watcher 原子生成当前 loose module，adapter 修改后确认模块 SHA 改变并轻量 restart。工具链、锁文件或 API 生成输入改变时才 down/build/up；不为源码变更创建 revision 目录、切换数据库或反复 checkout 大仓库。
+- 显式 candidate/release 构建仍生成完整 Provider Bundle V1；core candidate 只能覆盖 `provider-sources.json` 已声明的来源，不能新增 Target、改写宿主 binding 或污染 production lock。core 字节变化须按 Retrom 的 `pfb-core-build` 显式构建。
+- PFB 必须经真实 Retrom 导入、Review Preview、Product Launch、共享 dispatcher、输入、checkpoint、不同 Launch 恢复和退出清理验证当前开发模块与基座。源码/依赖构建与实时浏览器验收分开执行，避免热更新干扰活动会话；确认通过且取得用户授权后才合并 PR、发布 core tag，再发布本仓库新的不可移动 `v*` tag。
 - Release 完成后，Retrom 以独立提交固定正式 Provider descriptor/archive 并重跑同一产品 Case。candidate digest、工作树路径或未发布版本不得写入 production lock 或正式证据。
 
 ## 上游 fork 维护

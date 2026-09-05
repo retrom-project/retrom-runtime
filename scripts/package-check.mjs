@@ -15,7 +15,7 @@ await Promise.all([
   }),
 ]);
 const declarations = await readFile(new URL("dist/index.d.ts", root), "utf8");
-if (/\b(?:RpgRuntime|RpgGeneration|RpgPosition)\b|create(?:Rpg|Ons|Kirikiri)Runtime/u.test(declarations)) {
+if (/\b(?:GameRuntime|RuntimeConfig|RpgRuntime|RpgGeneration|RpgPosition)\b|(?:create(?:Rpg|Ons|Kirikiri)|mount|describe)Runtime|runtimeAdapters|validateRuntimeConfig/u.test(declarations)) {
   throw new Error("LEGACY_PUBLIC_RUNTIME_API_PRESENT");
 }
 console.log(`package-check: ok (${sources.upstreamReleases.length} upstream inputs)`);

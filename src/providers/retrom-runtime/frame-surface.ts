@@ -52,6 +52,8 @@ export function installRuntimeFrameSurface(
       mutationObserver.disconnect();
       resizeObserver?.disconnect();
       frameWindow.removeEventListener("resize", refresh);
+      style.remove();
+      target.remove();
     },
     refresh,
     target,

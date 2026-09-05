@@ -28,10 +28,10 @@ describe("Butterscotch project store", () => {
     } as unknown as Window;
     const progress: Array<{ loadedBytes: number; totalBytes: number | null }> = [];
     const config = {
-      sessionId: "launch-1",
-      contentDigest: "b".repeat(64),
-      adapter: { projectIndexUrl: "https://content.example/index.json" },
-    };
+    sessionId: "launch-1",
+    contentDigest: "b".repeat(64),
+    projectIndexUrl: "https://content.example/index.json",
+  };
 
     const first = await prepareButterscotchProject(config, frameWindow, (event) => progress.push(event));
     const second = await prepareButterscotchProject({ ...config, sessionId: "launch-2" }, frameWindow, () => undefined);

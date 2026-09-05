@@ -51,12 +51,11 @@ describe("Provider client module build", () => {
     expect(source).not.toMatch(/\b(?:Buffer|process|require)\b/u);
     const module = await import(`data:text/javascript;base64,${bytes.toString("base64")}`) as Record<string, unknown>;
     expect(Object.keys(module).sort()).toEqual([
-      "createRuntime", "providerApiVersion", "providerId", "providerVersion", "validateLaunchRequest",
+      "createRuntime", "providerApiVersion", "providerId", "providerVersion",
     ]);
     expect(module.providerId).toBe(providerId);
     expect(module.providerApiVersion).toBe(1);
     expect(module.createRuntime).toBeTypeOf("function");
-    expect(module.validateLaunchRequest).toBeTypeOf("function");
   });
 });
 

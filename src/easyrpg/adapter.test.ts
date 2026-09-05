@@ -1,11 +1,9 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { rpgMakerPositionProbeKind, type RpgMakerRuntimeConfig } from "../rpgmaker/contract";
+import { rpgMakerPositionProbeKind } from "../rpgmaker/contract";
 import { mountEasyRpg } from "./adapter";
 import { encodeRpgCheckpoint } from "../checkpoint";
 
-type EasyConfig = RpgMakerRuntimeConfig & {
-  adapter: Extract<RpgMakerRuntimeConfig["adapter"], { adapterKind: "EASYRPG_WEB" }>;
-};
+import type {EasyRpgParameters} from "./parameters.js";
 
 afterEach(() => {
   vi.useRealTimers();
@@ -150,7 +148,7 @@ describe("EasyRPG adapter cleanup", () => {
     expect(createPlayer).toHaveBeenCalledWith(expect.objectContaining({
       noExitRuntime: true,
       onRuntimeExitRequested: expect.any(Function),
-      runtimeProjectRootUrl: config.adapter.projectRootUrl,
+      runtimeProjectRootUrl: config.projectRootUrl,
     }));
     const options = createPlayer.mock.calls[0]?.[0] as {onRuntimeExitRequested?: () => void};
     options.onRuntimeExitRequested?.();
@@ -222,7 +220,7 @@ describe("EasyRPG adapter cleanup", () => {
     });
     Object.defineProperty(window, "createEasyRpgPlayer", { configurable: true, value: createPlayer });
     const config = easyConfig();
-    config.adapter.rtpSource = { kind: "FILE_TREE", indexUrl };
+    config.rtpSource = { kind: "FILE_TREE", indexUrl };
     const mounting = mountEasyRpg(config, target, window, null);
     await vi.waitFor(() => expect(document.head.querySelector("script[data-rpg-runtime=easyrpg]")).not.toBeNull());
     document.head.querySelector<HTMLScriptElement>("script[data-rpg-runtime=easyrpg]")
@@ -378,19 +376,16 @@ describe("EasyRPG adapter cleanup", () => {
   });
 });
 
-function easyConfig(generation: "RPG2000" | "RPG2003" = "RPG2000"): EasyConfig {
+function easyConfig(generation: "RPG2000" | "RPG2003" = "RPG2000"): EasyRpgParameters {
   const sessionId = "01980000-0000-7000-8000-000000000001";
   const root = `https://games.example/projects/${sessionId}/`;
   const rpg2003 = generation === "RPG2003";
   return {
     sessionId,
-    generation,
-    validationPurpose: true,
-    expectedRestorePosition: null,
-    adapter: {
-      adapterKind: "EASYRPG_WEB", adapterId: "easyrpg-web", engineMode: rpg2003 ? "rpg2k3" : "rpg2k",
-      runtimeBaseUrl: "/runtime/easyrpg/", projectRootUrl: root,
-      projectIndexUrl: `${root}index.json`, rtpSource: null, checkpointSlot: 100,
-    },
+    engineMode: rpg2003 ? "rpg2k3" : "rpg2k",
+    runtimeBaseUrl: "/runtime/easyrpg/",
+    projectRootUrl: root,
+    rtpSource: null,
+    checkpointSlot: 100,
   };
 }

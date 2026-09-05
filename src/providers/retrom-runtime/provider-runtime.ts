@@ -1,44 +1,28 @@
-import type {RuntimeConfig} from "../../catalog.js";
-import type {GameRuntime, GameRuntimeEvent, RuntimeState} from "../../contract.js";
-import type {RuntimeOptions} from "../../index.js";
+import type {MountedRuntimeAdapter, RuntimeProgressReporter} from "../../internal-adapter.js";
 import type {
-  AssetIndexV1,
-  LaunchEnvelopeV1,
-  PlayerRuntimeV1,
-  RuntimeDiscStateV1,
-  RuntimeEventV1,
-  RuntimeHostV1,
-  RuntimeInputFilterPolicyV1,
-  RuntimeNetplayPortV1,
-  RuntimeStateV1,
-  RuntimeValidationResultV1,
-  RuntimeVideoModeV1,
+  AssetIndexV1, LaunchEnvelopeV1, PlayerRuntimeV1, RuntimeCheckpointAvailabilityV1,
+  RuntimeDiscStateV1, RuntimeEventV1, RuntimeHostV1, RuntimeInputFilterPolicyV1,
+  RuntimeNetplayPortV1, RuntimeStateV1, RuntimeValidationResultV1, RuntimeVideoModeV1,
 } from "../../provider/module-api.js";
 import {PlayerRuntimeError} from "../../provider/errors.js";
 import {RuntimeGamepadFilter, installRuntimeGamepadFilter} from "../../provider/gamepad-filter.js";
-import {projectLegacyRuntimeConfig} from "./module-config.js";
 import {installRuntimeFrameSurface, type RuntimeFrameSurface} from "./frame-surface.js";
+import {mountTargetAdapter} from "./target-adapter.js";
 
-type LegacyRuntimeFactory = (config: RuntimeConfig, options: RuntimeOptions) => GameRuntime;
-
-export async function createRetromRuntimePlayer(
-  envelope: LaunchEnvelopeV1,
-  host: RuntimeHostV1,
-  assetIndex: AssetIndexV1,
-  factory: LegacyRuntimeFactory,
-): Promise<PlayerRuntimeV1> {
-  return new RetromRuntimePlayer(envelope, host, assetIndex, factory);
+export function createRetromRuntimePlayer(
+  envelope: LaunchEnvelopeV1, host: RuntimeHostV1, assetIndex: AssetIndexV1,
+): PlayerRuntimeV1 {
+  return new RetromRuntimePlayer(envelope, host, assetIndex);
 }
 
 class RetromRuntimePlayer implements PlayerRuntimeV1 {
   private readonly listeners = new Set<(event: RuntimeEventV1) => void>();
   private state: RuntimeStateV1 = "CREATED";
-  private runtime: GameRuntime | null = null;
-  private unsubscribe: (() => void) | null = null;
-  private mountPromise: Promise<void> | null = null;
+  private adapter: MountedRuntimeAdapter | null = null;
   private exitPromise: Promise<void> | null = null;
-  private exitRequestedEmitted = false;
-  private fatalEmitted = false;
+  private operationTail: Promise<void> = Promise.resolve();
+  private availabilityTimer: number | null = null;
+  private lastAvailability: RuntimeCheckpointAvailabilityV1 = {available: false, reason: "NOT_READY"};
   private runtimeWindow: Window | null = null;
   private inputFilter: RuntimeGamepadFilter | null = null;
   private cleanupInputFilter: (() => void) | null = null;
@@ -48,94 +32,149 @@ class RetromRuntimePlayer implements PlayerRuntimeV1 {
     private readonly envelope: LaunchEnvelopeV1,
     private readonly host: RuntimeHostV1,
     private readonly assetIndex: AssetIndexV1,
-    private readonly factory: LegacyRuntimeFactory,
-  ) {}
-
-  mount(target: HTMLElement) {
-    if (this.mountPromise || this.state !== "CREATED") {return Promise.reject(contractError());}
-    this.mountPromise = this.performMount(target);
-    return this.mountPromise;
+  ) {
+    host.signal.addEventListener("abort", this.abort, {once: true});
   }
 
-  async pause() {
-    if (!this.envelope.runtime.capabilities.pause) {throw capabilityError();}
-    if (this.state === "PAUSED") {return;}
-    if (this.state !== "RUNNING") {throw contractError();}
-    const runtime = this.requireRuntime();
-    await runtime.pause();
-    this.transition("PAUSED");
-  }
-
-  async resume() {
-    if (!this.envelope.runtime.capabilities.pause) {throw capabilityError();}
-    if (this.state === "RUNNING") {return;}
-    if (this.state !== "PAUSED") {throw contractError();}
-    const runtime = this.requireRuntime();
-    await runtime.resume();
-    this.transition("RUNNING");
-  }
-
-  async checkpoint() {
-    if (!this.envelope.runtime.capabilities.checkpoint) {throw capabilityError();}
-    const contract = this.envelope.runtime.checkpoint;
-    if (!contract || !this.getCheckpointAvailability().available) {throw contractError();}
-    const checkpoint = await this.requireRuntime().checkpoint();
-    if (!isUint8Array(checkpoint.bytes) || checkpoint.bytes.byteLength < 1 ||
-      checkpoint.bytes.byteLength > contract.maxBytes || checkpoint.format !== contract.writeFormat) {
-      throw contractError();
+  async mount(target: HTMLElement) {
+    if (this.state !== "CREATED") {throw contractError();}
+    try {
+      this.assertActive();
+      this.transition("MOUNTING");
+      const restorePayload = await this.host.loadRestore(this.envelope.restore);
+      this.assertActive();
+      const frameMode = this.envelope.runtime.capabilities.frameMode;
+      const frame = frameMode === "NONE"
+        ? null
+        : await this.host.mountFrame(target, {resourceRole: frameMode === "SAME_ORIGIN_BLANK" ? null : "game"});
+      this.assertActive();
+      const runtimeWindow = frame?.contentWindow as Window | undefined ?? window;
+      this.runtimeWindow = runtimeWindow;
+      const runtimeTarget = frameMode === "SAME_ORIGIN_BLANK"
+        ? (this.frameSurface = installRuntimeFrameSurface(runtimeWindow, () => this.adapter?.getCanvas() ?? null)).target
+        : target;
+      if (this.inputFilter) {this.cleanupInputFilter = installRuntimeGamepadFilter(runtimeWindow, this.inputFilter);}
+      const adapter = await mountTargetAdapter(this.envelope, runtimeTarget, {
+        assetIndex: this.assetIndex,
+        frame: frame?.element,
+        frameWindow: runtimeWindow,
+        restorePayload,
+        onDiagnostic: (diagnostic) => this.host.reportDiagnostic({
+          code: providerDiagnosticCode(diagnostic.runtime), message: diagnostic.message,
+        }),
+        reportProgress: this.reportProgress,
+        reportExitRequested: this.reportExitRequested,
+      });
+      if (this.stopping() || this.host.signal.aborted) {
+        try {await adapter.exit();} catch (error) {this.reportCleanupFailure(error);}
+        this.assertActive();
+      }
+      this.adapter = adapter;
+      this.frameSurface?.refresh();
+      this.transition("RUNNING");
+      this.refreshAvailability();
+      this.availabilityTimer = window.setInterval(this.pollAvailability, 250);
+    } catch (error) {
+      if (isAbort(error)) {await this.exit();} else {await this.fail(error);}
+      throw stableError(error);
     }
-    return {bytes: copyBytes(checkpoint.bytes), format: checkpoint.format, metadata: null};
+  }
+
+  pause() {return this.enqueue(() => this.changePause("PAUSED"));}
+  resume() {return this.enqueue(() => this.changePause("RUNNING"));}
+
+  checkpoint() {
+    return this.enqueue(async () => {
+      this.requireCapability("checkpoint");
+      const contract = this.envelope.runtime.checkpoint;
+      const adapter = this.requireAdapter();
+      if (!contract || !this.getCheckpointAvailability().available) {throw contractError();}
+      const previous = this.state;
+      this.transition("CHECKPOINTING");
+      this.refreshAvailability();
+      try {
+        const checkpoint = await adapter.checkpoint();
+        this.assertActive();
+        if (!isUint8Array(checkpoint.bytes) || checkpoint.bytes.byteLength < 1 ||
+          checkpoint.bytes.byteLength > contract.maxBytes || checkpoint.format !== contract.writeFormat) {
+          throw contractError();
+        }
+        return {bytes: Uint8Array.from(checkpoint.bytes), format: checkpoint.format, metadata: null};
+      } finally {
+        if (this.state === "CHECKPOINTING") {
+          this.transition(previous);
+          this.refreshAvailability();
+        }
+      }
+    });
   }
 
   screenshot() {
-    if (!this.envelope.runtime.capabilities.screenshot) {return Promise.reject(capabilityError());}
-    return this.requireRuntime().screenshot();
+    return this.enqueue(async () => {
+      this.requireCapability("screenshot");
+      const screenshot = await this.requireAdapter().screenshot();
+      this.assertActive();
+      if (!screenshot.size) {throw new Error("PLAYER_SCREENSHOT_UNAVAILABLE");}
+      return screenshot;
+    });
   }
 
   exit() {
-    this.exitPromise ??= this.performExit();
+    if (this.exitPromise) {return this.exitPromise;}
+    const failed = this.state === "FAILED";
+    // Store the shared promise before publishing a state event: a Host listener may reenter exit.
+    this.exitPromise = Promise.resolve().then(() => this.performExit(failed));
+    if (!failed) {this.transition("EXITING");}
+    this.refreshAvailability();
     return this.exitPromise;
   }
 
   getState() {return this.state;}
   getCapabilities() {return this.envelope.runtime.capabilities;}
-
-  getCheckpointAvailability() {
-    if (!this.envelope.runtime.capabilities.checkpoint) {return {available: false, reason: "UNSUPPORTED"};}
-    if (!this.runtime) {return {available: false, reason: "NOT_READY"};}
-    const availability = this.runtime.getCheckpointAvailability();
-    return {available: availability.available, reason: availability.blocker};
+  getCheckpointAvailability() {return this.refreshAvailability();}
+  getCanvas() {return this.adapter?.getCanvas() ?? null;}
+  getFrameCount() {
+    if (!this.envelope.runtime.capabilities.frameCounter) {return null;}
+    const value = this.adapter?.getFrameCount() ?? null;
+    return value !== null && Number.isSafeInteger(value) && value >= 0 ? value : null;
   }
 
-  getCanvas() {return this.runtime?.getCanvas() ?? null;}
-  getFrameCount() {return this.runtime?.getFrameCount() ?? null;}
-
-  async setVolume(value: number) {
-    if (!this.envelope.runtime.capabilities.volume) {throw capabilityError();}
-    if (!Number.isFinite(value) || value < 0 || value > 1) {throw contractError();}
-    await this.requireRuntime().setVolume(value);
+  setVolume(value: number) {
+    return this.enqueue(async () => {
+      this.requireCapability("volume");
+      if (!Number.isFinite(value) || value < 0 || value > 1) {throw contractError();}
+      const adapter = this.requireAdapter();
+      if (!adapter.setVolume) {throw capabilityError();}
+      await adapter.setVolume(value);
+      this.assertActive();
+    });
   }
 
-  async setVideoMode(mode: RuntimeVideoModeV1) {
-    if (!this.envelope.runtime.capabilities.videoModes.includes(mode)) {throw capabilityError();}
-    const runtime = this.requireRuntime();
-    const canvas = runtime.getCanvas();
-    if (canvas) {
-      canvas.style.setProperty("image-rendering", mode === "pixel" ? "pixelated" : "auto", "important");
-      return;
-    }
-    if (!runtime.setVideoMode) {throw contractError();}
-    await runtime.setVideoMode(mode);
+  setVideoMode(mode: RuntimeVideoModeV1) {
+    return this.enqueue(async () => {
+      if (!this.envelope.runtime.capabilities.videoModes.includes(mode)) {throw capabilityError();}
+      const adapter = this.requireAdapter();
+      const canvas = adapter.getCanvas();
+      if (canvas) {
+        canvas.style.setProperty("image-rendering", mode === "pixel" ? "pixelated" : "auto", "important");
+      } else {
+        if (!adapter.setVideoMode) {throw capabilityError();}
+        await adapter.setVideoMode(mode);
+        this.assertActive();
+      }
+    });
   }
+
   async openNativeSettings(_panel: "controls" | "display" | "core") {throw capabilityError();}
   async closeNativeSettings() {throw capabilityError();}
   getDiscState(): Promise<RuntimeDiscStateV1> {return Promise.reject(capabilityError());}
   switchDisc(_index: number): Promise<RuntimeDiscStateV1> {return Promise.reject(capabilityError());}
+  getNetplayPort(): Promise<RuntimeNetplayPortV1> {return Promise.reject(capabilityError());}
+
   async setInputFilter(policy: RuntimeInputFilterPolicyV1 | null) {
-    if (!this.envelope.runtime.capabilities.inputFilter) {throw capabilityError();}
-    if (this.state === "FAILED" || this.state === "EXITED" || !validInputFilterPolicy(policy)) {
-      throw contractError();
-    }
+    this.requireCapability("inputFilter");
+    this.assertActive();
+    if (!validInputFilterPolicy(policy)) {throw contractError();}
     if (policy === null) {
       this.cleanupInputFilter?.();
       this.cleanupInputFilter = null;
@@ -149,11 +188,11 @@ class RetromRuntimePlayer implements PlayerRuntimeV1 {
       catch (error) {throw contractError(error);}
     }
   }
-  getNetplayPort(): Promise<RuntimeNetplayPortV1> {return Promise.reject(capabilityError());}
+
   async runValidationProbe(id: string, input: Record<string, unknown>): Promise<RuntimeValidationResultV1> {
     if (!this.envelope.runtime.capabilities.validationProbes.includes(id)) {throw capabilityError();}
     if (id !== "rpgmaker.position.v1" || !validRpgPosition(input)) {throw contractError();}
-    const probe = this.requireRuntime().getValidationProbe(id);
+    const probe = this.requireAdapter().getValidationProbe(id);
     if (!probe || probe.kind !== id || probe.schemaVersion !== 1 || !validRpgPosition(probe.value)) {
       throw contractError();
     }
@@ -170,101 +209,111 @@ class RetromRuntimePlayer implements PlayerRuntimeV1 {
     return () => this.listeners.delete(listener);
   }
 
-  private async performMount(target: HTMLElement) {
-    this.transition("MOUNTING");
+  private readonly abort = () => {void this.exit().catch((error) => this.reportCleanupFailure(error));};
+  private readonly reportProgress: RuntimeProgressReporter = (progress) => {
+    if (this.state !== "MOUNTING" || !validProgress(progress)) {return;}
+    this.emit({type: "LOAD_PROGRESS", loadedBytes: progress.loadedBytes, totalBytes: progress.totalBytes});
+  };
+  private readonly reportExitRequested = () => {
+    if (this.stopping()) {return;}
+    const exiting = this.exit();
+    this.emit({type: "EXIT_REQUESTED"});
+    void exiting.catch((error) => this.reportCleanupFailure(error));
+  };
+  private readonly pollAvailability = () => {
+    if (this.state !== "RUNNING" && this.state !== "PAUSED") {return;}
+    try {this.refreshAvailability();} catch (error) {void this.fail(error);}
+  };
+
+  private async changePause(next: "PAUSED" | "RUNNING") {
+    this.requireCapability("pause");
+    const adapter = this.requireAdapter();
+    if (this.state === next) {return;}
     try {
-      const restorePayload = await this.host.loadRestore(this.envelope.restore);
-      const frameMode = this.envelope.runtime.capabilities.frameMode;
-      const frame = frameMode === "NONE"
-        ? null
-        : await this.host.mountFrame(target, {
-          resourceRole: frameMode === "SAME_ORIGIN_BLANK" ? null : "game",
-        });
-      const runtimeWindow = frame?.contentWindow as Window | undefined ?? window;
-      this.runtimeWindow = runtimeWindow;
-      const runtimeTarget = frameMode === "SAME_ORIGIN_BLANK"
-        ? (this.frameSurface = installRuntimeFrameSurface(
-          runtimeWindow,
-          () => this.runtime?.getCanvas() ?? null,
-        )).target
-        : target;
-      if (this.inputFilter) {this.cleanupInputFilter = installRuntimeGamepadFilter(runtimeWindow, this.inputFilter);}
-      const config = projectLegacyRuntimeConfig(this.envelope, this.assetIndex);
-      const runtime = this.factory(config, {
-        frame: frame?.element,
-        frameWindow: runtimeWindow,
-        onDiagnostic: (diagnostic) => this.host.reportDiagnostic({
-          code: providerDiagnosticCode(diagnostic.runtime), message: diagnostic.message,
-        }),
-        restorePayload,
-        signal: this.host.signal,
-      });
-      this.runtime = runtime;
-      this.unsubscribe = runtime.subscribe((event) => this.receive(event));
-      await runtime.mount(runtimeTarget);
-      this.frameSurface?.refresh();
-      if (this.state !== "FAILED" && this.state !== "EXITED") {this.transition("RUNNING");}
+      await (next === "PAUSED" ? adapter.pause() : adapter.resume());
+      this.assertActive();
+      this.transition(next);
     } catch (error) {
-      if (this.state !== "FAILED" && this.state !== "EXITED") {this.transition("FAILED");}
-      await (this.exitPromise ??= this.performExit()).catch(() => undefined);
-      throw error;
+      if (!this.stopping()) {await this.fail(error);}
+      throw stableError(error);
     }
   }
 
-  private async performExit() {
-    const preserveFailure = this.state === "FAILED";
-    const runtime = this.runtime;
-    this.unsubscribe?.();
-    this.unsubscribe = null;
+  private enqueue<T>(operation: () => Promise<T>) {
+    const pending = this.operationTail.then(() => {this.assertActive(); return operation();});
+    this.operationTail = pending.then(() => undefined, () => undefined);
+    return pending;
+  }
+
+  private async performExit(failed: boolean) {
+    if (this.availabilityTimer !== null) {window.clearInterval(this.availabilityTimer);}
+    this.availabilityTimer = null;
+    const adapter = this.adapter;
+    this.adapter = null;
     let failure: unknown;
-    try {if (runtime) {await runtime.exit();}}
-    catch (error) {failure = error;}
+    try {await adapter?.exit();} catch (error) {failure = error;}
     finally {
+      this.host.signal.removeEventListener("abort", this.abort);
       this.cleanupInputFilter?.();
       this.cleanupInputFilter = null;
       this.inputFilter = null;
       this.frameSurface?.cleanup();
       this.frameSurface = null;
-      this.runtime = null;
       this.runtimeWindow = null;
-      if (!preserveFailure) {this.transition("EXITED");}
+      if (!failed) {this.transition("EXITED");}
       this.listeners.clear();
     }
-    if (failure) {throw failure;}
+    if (failure) {throw stableError(failure);}
   }
 
-  private requireRuntime() {
-    if (!this.runtime || this.state === "CREATED" || this.state === "MOUNTING" ||
-      this.state === "EXITED" || this.state === "FAILED") {
-      throw contractError();
-    }
-    return this.runtime;
+  private async fail(error: unknown) {
+    if (this.stopping()) {return;}
+    this.transition("FAILED");
+    this.emit({type: "FATAL_ERROR", code: stableError(error).message});
+    try {await this.exit();} catch (cleanupError) {this.reportCleanupFailure(cleanupError);}
   }
 
-  private receive(event: GameRuntimeEvent) {
-    if (this.state === "FAILED" || this.state === "EXITED") {return;}
-    if (event.type === "LOAD_PROGRESS") {
-      this.emit({type: "LOAD_PROGRESS", loadedBytes: event.loadedBytes, totalBytes: event.totalBytes});
-    } else if (event.type === "CHECKPOINT_AVAILABILITY_CHANGED") {
-      this.emit({
-        type: "CHECKPOINT_AVAILABILITY_CHANGED",
-        availability: {available: event.availability.available, reason: event.availability.blocker},
-      });
-    } else if (event.type === "EXIT_REQUESTED") {
-      if (!this.exitRequestedEmitted) {
-        this.exitRequestedEmitted = true;
-        this.emit({type: "EXIT_REQUESTED"});
-      }
-    } else if (event.type === "FATAL_ERROR") {
-      if (!this.fatalEmitted) {
-        this.fatalEmitted = true;
-        this.transition("FAILED");
-        this.emit({type: "FATAL_ERROR", code: event.code});
-      }
-    } else if (event.type === "STATE_CHANGED") {
-      const mapped = mapState(event.state);
-      if (mapped) {this.transition(mapped);}
+  private reportCleanupFailure(error: unknown) {
+    this.host.reportDiagnostic({code: "RETROM_RUNTIME_CLEANUP_FAILED", message: stableError(error).message});
+  }
+
+  private requireAdapter() {
+    this.assertActive();
+    if (!this.adapter || this.state !== "RUNNING" && this.state !== "PAUSED") {throw contractError();}
+    return this.adapter;
+  }
+
+  private requireCapability(capability: "pause" | "checkpoint" | "screenshot" | "volume" | "inputFilter") {
+    if (!this.envelope.runtime.capabilities[capability]) {throw capabilityError();}
+  }
+
+  private assertActive() {
+    if (this.host.signal.aborted || this.stopping()) {throw new DOMException("Aborted", "AbortError");}
+  }
+
+  private stopping() {return this.state === "EXITING" || this.state === "EXITED" || this.state === "FAILED";}
+
+  private refreshAvailability(): RuntimeCheckpointAvailabilityV1 {
+    const next = this.currentAvailability();
+    if (next.available !== this.lastAvailability.available || next.reason !== this.lastAvailability.reason) {
+      this.lastAvailability = next;
+      this.emit({type: "CHECKPOINT_AVAILABILITY_CHANGED", availability: next});
     }
+    return next;
+  }
+
+  private currentAvailability(): RuntimeCheckpointAvailabilityV1 {
+    if (!this.envelope.runtime.capabilities.checkpoint) {return {available: false, reason: "UNSUPPORTED"};}
+    if (this.state === "FAILED") {return {available: false, reason: "FAILED"};}
+    if (this.state === "CHECKPOINTING") {return {available: false, reason: "BUSY"};}
+    if (!this.adapter || this.state !== "RUNNING" && this.state !== "PAUSED") {
+      return {available: false, reason: "NOT_READY"};
+    }
+    const value = this.adapter.getCheckpointAvailability();
+    if (value.available === true && value.blocker === null || value.available === false && value.blocker !== null) {
+      return {available: value.available, reason: value.blocker};
+    }
+    return {available: false, reason: "FAILED"};
   }
 
   private transition(next: RuntimeStateV1) {
@@ -282,19 +331,8 @@ function providerDiagnosticCode(runtime: string) {
     .replace(/^_+|_+$/gu, "").slice(0, 96);
   return suffix ? `RETROM_RUNTIME_${suffix}` : "RETROM_RUNTIME_DIAGNOSTIC";
 }
-
-function mapState(state: RuntimeState): RuntimeStateV1 | null {
-  if (state === "CREATED") {return "CREATED";}
-  if (state === "LOADING") {return "MOUNTING";}
-  if (state === "RUNNING" || state === "PAUSED" || state === "EXITED" || state === "FAILED") {return state;}
-  return null;
-}
-
 function isUint8Array(value: unknown): value is Uint8Array {
   return ArrayBuffer.isView(value) && Object.prototype.toString.call(value) === "[object Uint8Array]";
-}
-function copyBytes(value: Uint8Array) {
-  return new Uint8Array(value.buffer.slice(value.byteOffset, value.byteOffset + value.byteLength));
 }
 function validInputFilterPolicy(value: RuntimeInputFilterPolicyV1 | null) {
   return value === null || typeof value.suppressInput === "boolean" &&
@@ -309,6 +347,18 @@ function validRpgPosition(value: unknown): value is {
   const position = value as Record<string, unknown>;
   return Number.isSafeInteger(position.fixtureState) && Number.isSafeInteger(position.mapId) &&
     Number.isSafeInteger(position.playerX) && Number.isSafeInteger(position.playerY);
+}
+function validProgress(value: {loadedBytes: number; totalBytes: number | null}) {
+  return Number.isSafeInteger(value.loadedBytes) && value.loadedBytes >= 0 &&
+    (value.totalBytes === null || Number.isSafeInteger(value.totalBytes) && value.totalBytes >= value.loadedBytes);
+}
+function isAbort(error: unknown) {return error instanceof DOMException && error.name === "AbortError";}
+function stableError(error: unknown) {
+  if (isAbort(error)) {return error as DOMException;}
+  if (error instanceof Error && /^(?:RUNTIME|CHECKPOINT|PLAYER|PROVIDER|RPG|ONS|KIRIKIRI|BUTTERSCOTCH|TYRANOSCRIPT|WASM4)_[A-Z0-9_]+$/u.test(error.message)) {
+    return error;
+  }
+  return new Error("RUNTIME_FAILED");
 }
 function contractError(cause?: unknown) {return new PlayerRuntimeError("PLAYER_RUNTIME_CONTRACT_INVALID", {cause});}
 function capabilityError() {return new PlayerRuntimeError("PLAYER_RUNTIME_CAPABILITY_UNSUPPORTED");}

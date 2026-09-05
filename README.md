@@ -14,7 +14,6 @@ one `client.mjs` with this closed interface:
 export const providerId = "retrom-runtime";
 export const providerVersion = "0.15.0";
 export const providerApiVersion = 1;
-export function validateLaunchRequest(value: unknown): LaunchEnvelopeV1;
 export async function createRuntime(
   value: unknown,
   host: RuntimeHostV1,
@@ -35,8 +34,16 @@ copy these Target-specific properties. `provider-sources.json` records only pinn
 it cannot declare a Target or host binding. Core-specific validation remains an extension probe: RPG Maker exposes
 `rpgmaker.position.v1`, while ONS and KiriKiri do not fabricate map IDs or player coordinates.
 
-The older package-level runtime constructors remain internal implementation building blocks for this Provider.
-New hosts must use Provider Module V1 and must not build a parallel adapter registry from those exports.
+The package root exports the same Provider entry and public ABI types. There is no separate runtime constructor,
+generic adapter config, config conversion layer or inner controller. The Provider creates minimal, typed parameters
+for the selected core directly. One controller owns state, progress, serialized operations, cancellation and cleanup;
+the Host separately owns the page, frame and authorization session. The public state is CREATED, MOUNTING, RUNNING,
+PAUSED, CHECKPOINTING, EXITING, EXITED or FAILED. Exit preempts pending controls and checkpoints; cancellation is
+checked after each asynchronous startup boundary and a late core is cleaned without returning to RUNNING.
+
+Only Provider creation validates the external Envelope and Host against the Provider declaration. There is no
+public precheck call or repeated internal Envelope/config validation. File downloads, decoded checkpoints and
+cross-origin messages retain their own trust-boundary validation.
 
 Content sources are also host-independent. Directory-oriented adapters consume
 `FILE_TREE`; mkxp consumes `SEEKABLE_BLOB`; native Web projects retain
@@ -108,7 +115,7 @@ reading persisted bytes into the core, but it does not transfer a cached project
 
 ```ts
 runtime.subscribe((event) => {
-  if (event.type === "LOAD_PROGRESS" && event.phase === "PROJECT_CONTENT") {
+  if (event.type === "LOAD_PROGRESS") {
     renderProgress(event.loadedBytes, event.totalBytes);
   }
 });

@@ -212,6 +212,7 @@ function validWebResource(resource: RuntimeWebResourceV1) {
 function validBlobResource(resource: RuntimeBlobResourceV1) {
   return exactKeys(resource, ["kind", "ordinal", "rangeRequired", "role", "sha256", "sizeBytes", "url"]) &&
     validDigest(resource.sha256) && positiveInteger(resource.sizeBytes) && relativeURL(resource.url) &&
+    (resource.kind !== "WASM4_CART" || resource.sizeBytes <= 65536) &&
     resource.rangeRequired === (resource.kind === "SEEKABLE_BLOB" || resource.kind === "PARENT_ARCHIVE");
 }
 function validFileSetResource(resource: RuntimeFileSetResourceV1) {

@@ -6,8 +6,12 @@ describe("native RPG exit", () => {
     let runtimePort: MessagePort | null = null;
     const channel = new NativeChannel({
       sessionId: "018f0f31-26fe-7a31-9d61-4ec92f16d4c3",
-      adapter: {uniqueOrigin: "http://runtime.example"},
-    } as never, () => undefined);
+      uniqueOrigin: "http://runtime.example",
+      bootstrapUrl: "http://runtime.example/bootstrap",
+      bootstrapTicket: "fixture-ticket",
+      bridgeProfile: "RPGMV",
+      cleanupUrl: "http://runtime.example/cleanup",
+    }, () => undefined);
     channel.connect({
       postMessage: (_message: unknown, _origin: string, transfer: Transferable[]) => {
         runtimePort = transfer[0] as MessagePort;

@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { mountButterscotch } from "./adapter.js";
-import type { ButterscotchRuntimeConfig } from "./contract.js";
+import type {ButterscotchParameters} from "./parameters.js";
 
 afterEach(() => {
   vi.restoreAllMocks();
@@ -179,16 +179,12 @@ class MemoryDirectory {
   async removeEntry(name: string) {this.files.delete(name);}
 }
 
-function config(): ButterscotchRuntimeConfig {
+function config(): ButterscotchParameters {
   return {
     sessionId: "launch-1",
     contentDigest: "c".repeat(64),
-    adapter: {
-      adapterKind: "BUTTERSCOTCH_WEB",
-      adapterId: "butterscotch-web",
-      projectIndexUrl: "https://content.example/index.json",
-      runtimeBaseUrl: "/runtime/retrom-runtime/v0.8.0/",
-    },
+    projectIndexUrl: "https://content.example/index.json",
+    runtimeBaseUrl: "/runtime/retrom-runtime/v0.8.0/",
   };
 }
 

@@ -1,11 +1,9 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { rpgMakerPositionProbeKind, type RpgMakerRuntimeConfig } from "../rpgmaker/contract";
+import { rpgMakerPositionProbeKind } from "../rpgmaker/contract";
 import { fetchVerified, mountMkxp } from "./adapter";
 import { encodeMkxpRastate } from "./state";
 
-type MkxpConfig = RpgMakerRuntimeConfig & {
-  adapter: Extract<RpgMakerRuntimeConfig["adapter"], { adapterKind: "MKXP_LIBRETRO_WEB" }>;
-};
+import type {MkxpParameters} from "./parameters.js";
 
 type TestFileSystem = {
   analyzePath(path: string): { exists: boolean };
@@ -128,14 +126,14 @@ describe("mkxp runtime mount", () => {
   it("registers project and RTP archives as strict remote files without downloading them", async () => {
     const harness = createHarness();
     const config = mkxpConfig(false);
-    config.adapter.projectArchive.sizeBytes = 8_388_608;
-    config.adapter.rtpArchives = [{
+    config.projectArchive.sizeBytes = 8_388_608;
+    config.rtpArchives = [{
       declaredName: "Standard",
       kind: "SEEKABLE_BLOB",
       rangeRequired: true,
       sha256: "e".repeat(64),
       sizeBytes: 16_777_216,
-      url: `/projects/${config.sessionId}/rtp/standard.mkxpz`,
+      url: "/projects/01980000-0000-7000-8000-000000000001/rtp/standard.mkxpz",
     }];
     const progress: unknown[] = [];
 
@@ -169,8 +167,8 @@ describe("mkxp runtime mount", () => {
     const manifest = new TextDecoder().decode(manifestBytes);
     expect(manifest).toBe([
       window.location.origin + "/",
-      `projects/${config.sessionId}/game.mkxpz /retrom-content/game.mkxpz`,
-      `projects/${config.sessionId}/rtp/standard.mkxpz /home/web_user/retroarch/userdata/system/mkxp-z/RTP/Standard.mkxpz`,
+      "projects/01980000-0000-7000-8000-000000000001/game.mkxpz /retrom-content/game.mkxpz",
+      "projects/01980000-0000-7000-8000-000000000001/rtp/standard.mkxpz /home/web_user/retroarch/userdata/system/mkxp-z/RTP/Standard.mkxpz",
       "",
     ].join("\n"));
     expect(progress).toEqual([
@@ -508,36 +506,28 @@ function positionBytes(mapId: number, playerX: number, playerY: number, fixtureS
   return new TextEncoder().encode(`1,${mapId},${playerX},${playerY},${fixtureState},${frameCount}`);
 }
 
-function mkxpConfig(restore: boolean): MkxpConfig {
+function mkxpConfig(restore: boolean): MkxpParameters {
   const sessionId = "01980000-0000-7000-8000-000000000001";
   return {
-    sessionId,
-    generation: "RPGXP",
-    validationPurpose: restore,
     expectedRestorePosition: restore ? { mapId: 7, playerX: 4, playerY: 6, fixtureState: 9 } : null,
-    adapter: {
-      adapterKind: "MKXP_LIBRETRO_WEB",
-      adapterId: "mkxp-libretro-web",
-      runtimeBaseUrl: "/runtime/mkxp/",
-      core: {
+    runtimeBaseUrl: "/runtime/mkxp/",
+    core: {
         jsUrl: "/runtime/mkxp/mkxp-z_libretro.js",
         jsSizeBytes: 258192,
         jsSha256: "c".repeat(64),
         wasmUrl: "/runtime/mkxp/mkxp-z_libretro.wasm",
         wasmSizeBytes: 42487229,
         wasmSha256: "d".repeat(64),
-        artifactSetSha256: "a".repeat(64),
       },
-      projectArchive: {
+    projectArchive: {
         kind: "SEEKABLE_BLOB",
         rangeRequired: true,
         url: `/projects/${sessionId}/game.mkxpz`,
         sha256: "b".repeat(64),
         sizeBytes: 1,
       },
-      rtpArchives: [],
-      rgssVersion: 1,
-      stateBufferBytes: stateSize,
-    },
+    rtpArchives: [],
+    rgssVersion: 1,
+    stateBufferBytes: stateSize,
   };
 }

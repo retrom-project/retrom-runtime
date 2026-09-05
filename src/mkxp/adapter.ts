@@ -3,7 +3,6 @@ import type { MountedRuntimeAdapter, RuntimeExitReporter, RuntimeProgressReporte
 import {
   rpgMakerPositionProbeKind,
   type RpgMakerPositionV1,
-  type RpgMakerRuntimeConfig,
 } from "../rpgmaker/contract.js";
 import {
   decodeMkxpCheckpoint,
@@ -13,9 +12,7 @@ import {
   mkxpRastateEnvelopeBytes,
 } from "./state.js";
 
-type MkxpConfig = RpgMakerRuntimeConfig & {
-  adapter: Extract<RpgMakerRuntimeConfig["adapter"], { adapterKind: "MKXP_LIBRETRO_WEB" }>;
-};
+import type {MkxpParameters} from "./parameters.js";
 
 type MkxpFileSystem = {
   analyzePath(path: string): { exists: boolean };
@@ -79,7 +76,7 @@ function defaultMkxpDiagnostic(diagnostic: { runtime: string; message: string })
 }
 
 export async function mountMkxp(
-  config: MkxpConfig,
+  config: MkxpParameters,
   target: HTMLElement,
   restorePayload: Uint8Array | null,
   dependencies: MkxpMountDependencies = browserDependencies,
@@ -108,7 +105,7 @@ function mountFailureMessage(error: unknown) {
 }
 
 async function mountMkxpUnchecked(
-  config: MkxpConfig,
+  config: MkxpParameters,
   target: HTMLElement,
   restorePayload: Uint8Array | null,
   dependencies: MkxpMountDependencies,
@@ -129,19 +126,19 @@ async function mountMkxpUnchecked(
   // insertion so the Player never exposes a transient selector identity.
   canvas.id = "canvas";
   canvas.tabIndex = 0;
-  const dimensions = config.adapter.rgssVersion === 1 ? [640, 480] : [544, 416];
+  const dimensions = config.rgssVersion === 1 ? [640, 480] : [544, 416];
   [canvas.style.width, canvas.style.height] = dimensions.map((value) => `${value}px`);
   target.append(canvas);
-  const runtimeAssetBytes = config.adapter.core.jsSizeBytes + config.adapter.core.wasmSizeBytes + positionBridge.size;
+  const runtimeAssetBytes = config.core.jsSizeBytes + config.core.wasmSizeBytes + positionBridge.size;
   reportProgress({ phase: "RUNTIME_ASSET", loadedBytes: 0, totalBytes: runtimeAssetBytes });
   const [jsBytes, wasmBytes, bridgeBytes] = await Promise.all([
     dependencies.fetchVerified(
-      config.adapter.core.jsUrl, config.adapter.core.jsSizeBytes, config.adapter.core.jsSha256,
+      config.core.jsUrl, config.core.jsSizeBytes, config.core.jsSha256,
     ),
     dependencies.fetchVerified(
-      config.adapter.core.wasmUrl, config.adapter.core.wasmSizeBytes, config.adapter.core.wasmSha256,
+      config.core.wasmUrl, config.core.wasmSizeBytes, config.core.wasmSha256,
     ),
-    dependencies.fetchVerified(`${config.adapter.runtimeBaseUrl}position_bridge.rb`, positionBridge.size, positionBridge.sha256),
+    dependencies.fetchVerified(`${config.runtimeBaseUrl}position_bridge.rb`, positionBridge.size, positionBridge.sha256),
   ]);
   reportProgress({ phase: "RUNTIME_ASSET", loadedBytes: runtimeAssetBytes, totalBytes: runtimeAssetBytes });
   const remoteContent = remoteContentManifest(config);
@@ -189,8 +186,8 @@ async function mountMkxpUnchecked(
       log_verbosity: true,
     },
     retroarchCoreConfig: {
-      "mkxp-z_rgssVersion": String(config.adapter.rgssVersion),
-      "mkxp-z_saveStateSize": String(config.adapter.stateBufferBytes / (1024 * 1024)),
+      "mkxp-z_rgssVersion": String(config.rgssVersion),
+      "mkxp-z_saveStateSize": String(config.stateBufferBytes / (1024 * 1024)),
       [bridgeOption]: "enabled",
     },
   });
@@ -198,8 +195,8 @@ async function mountMkxpUnchecked(
   try {
     installRuntimeFiles(fileSystem, bridgeBytes, remoteContent.manifest);
     if (restorePayload) {
-      const rawState = await dependencies.decodeCheckpoint(restorePayload, config.adapter.stateBufferBytes);
-      installRestoreState(fileSystem, rawState, config.adapter.stateBufferBytes);
+      const rawState = await dependencies.decodeCheckpoint(restorePayload, config.stateBufferBytes);
+      installRestoreState(fileSystem, rawState, config.stateBufferBytes);
     }
     await nostalgist.start();
     reportProgress({
@@ -223,7 +220,7 @@ async function mountMkxpUnchecked(
   }
   return {
     checkpoint: async () => ({
-      bytes: await saveStateBytes(canvas, fileSystem, config.adapter.stateBufferBytes, dependencies.encodeCheckpoint),
+      bytes: await saveStateBytes(canvas, fileSystem, config.stateBufferBytes, dependencies.encodeCheckpoint),
       format: "mkxp-state-compact-v1",
     }),
     exit: async () => {
@@ -272,10 +269,10 @@ function fetchEnvironment() {
   };
 }
 
-function remoteContentManifest(config: MkxpConfig) {
+function remoteContentManifest(config: MkxpParameters) {
   const entries = [
-    { localPath: remoteGamePath, source: config.adapter.projectArchive },
-    ...config.adapter.rtpArchives.map((archive, index) => ({
+    { localPath: remoteGamePath, source: config.projectArchive },
+    ...config.rtpArchives.map((archive, index) => ({
       localPath: `${systemRoot}/mkxp-z/RTP/${runtimePackFileName(index, archive.declaredName)}`,
       source: archive,
     })),
@@ -453,8 +450,7 @@ async function restoreStateAndWait(
   throw new Error("RPG_CHECKPOINT_RESTORE_FAILED");
 }
 
-function expectedRestorePosition(config: MkxpConfig): RpgMakerPositionV1 | null {
-  if (!config.validationPurpose) {return null;}
+function expectedRestorePosition(config: MkxpParameters): RpgMakerPositionV1 | null {
   const evidence = config.expectedRestorePosition;
   if (!evidence) {
     throw new Error("RPG_RUNTIME_PROTOCOL_VIOLATION");

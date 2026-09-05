@@ -2,6 +2,9 @@
 
 ## 0.16.0
 
+- Preserve native getter-backed GamepadButton attributes in the shared immersive input filter used by both
+  Providers. Copy pressed/touched/value explicitly so confirm, cancel, triggers and D-pad survive filtering.
+
 - Advance the EmulatorJS Provider to 2.2.0 for the same unreleased V1 proof-contract removal, preserving
   its core assets and checkpoint format. Provider activation remains upgrade-only; no same-version bundle replacement.
 - Remove the unreleased production validation workflow from Provider V1: no validation purpose, probe method,

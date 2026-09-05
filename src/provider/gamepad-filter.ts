@@ -159,7 +159,9 @@ function filteredButton(source: GamepadButton | undefined, isPressed: boolean): 
 }
 function cloneGamepad(gamepad: GamepadSnapshot, buttons: readonly GamepadButton[], axes: readonly number[]) {
   return {
-    axes: [...axes], buttons: buttons.map((button) => ({...button})), connected: gamepad.connected,
+    axes: [...axes],
+    buttons: buttons.map(({pressed, touched, value}) => ({pressed, touched, value})),
+    connected: gamepad.connected,
     id: gamepad.id, index: gamepad.index, mapping: gamepad.mapping, timestamp: gamepad.timestamp,
   } as unknown as Gamepad;
 }

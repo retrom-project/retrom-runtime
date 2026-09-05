@@ -5,6 +5,7 @@ import type {
   RuntimeNetplayPortV1, RuntimeStateV1, RuntimeVideoModeV1,
 } from "../../provider/module-api.js";
 import {PlayerRuntimeError} from "../../provider/errors.js";
+import {focusRuntimeInput} from "../../provider/input-focus.js";
 import {RuntimeGamepadFilter, installRuntimeGamepadFilter} from "../../provider/gamepad-filter.js";
 import {installRuntimeFrameSurface, type RuntimeFrameSurface} from "./frame-surface.js";
 import {mountTargetAdapter} from "./target-adapter.js";
@@ -217,6 +218,7 @@ class RetromRuntimePlayer implements PlayerRuntimeV1 {
     try {
       await (next === "PAUSED" ? adapter.pause() : adapter.resume());
       this.assertActive();
+      if (next === "RUNNING") {focusRuntimeInput(adapter.getCanvas(), this.runtimeWindow);}
       this.transition(next);
     } catch (error) {
       if (!this.stopping()) {await this.fail(error);}

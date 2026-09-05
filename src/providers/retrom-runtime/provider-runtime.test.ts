@@ -11,6 +11,30 @@ beforeEach(() => {vi.mocked(mountTargetAdapter).mockReset();});
 afterEach(() => {document.body.replaceChildren(); vi.useRealTimers();});
 
 describe("Provider-owned lifecycle", () => {
+  it.each(["success", "failure", "exit"] as const)("restores input focus only after a successful active resume: %s", async (outcome) => {
+    const resume = deferred<void>();
+    const canvas = document.createElement("canvas");
+    const focus = vi.spyOn(canvas, "focus");
+    const adapter = adapterFixture({getCanvas: () => canvas, resume: vi.fn(() => resume.promise)});
+    vi.mocked(mountTargetAdapter).mockResolvedValue(adapter);
+    const player = await createRuntime(wasmEnvelope(), hostFixture());
+    await player.mount(document.createElement("div"));
+    await player.pause();
+    expect(focus).not.toHaveBeenCalled();
+    const resuming = player.resume();
+    const rejected = outcome === "success" ? null : expect(resuming).rejects.toThrow();
+    await vi.waitFor(() => expect(adapter.resume).toHaveBeenCalledOnce());
+    expect(focus).not.toHaveBeenCalled();
+    if (outcome === "exit") {await player.exit();}
+    if (outcome === "failure") {resume.reject(new Error("resume failed"));}
+    else {resume.resolve();}
+    if (rejected) {await rejected;}
+    else {await resuming;}
+    expect(focus).toHaveBeenCalledTimes(outcome === "success" ? 1 : 0);
+    if (outcome === "success") {expect(focus).toHaveBeenCalledWith({preventScroll: true});}
+    await player.exit();
+  });
+
   it("never creates a frame or core after exit while restore loading is pending", async () => {
     const restore = deferred<Uint8Array | null>();
     const host = hostFixture({loadRestore: vi.fn(() => restore.promise)});

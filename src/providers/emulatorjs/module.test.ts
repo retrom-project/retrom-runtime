@@ -220,14 +220,17 @@ describe("EmulatorJS Provider Module V1", () => {
     (runtimeWindow.EJS_onGameStart as () => void)();
     await mounting;
     expect(player.getFrameCount()).toBe(42);
+    const focus = vi.spyOn(player.getCanvas()!, "focus");
     await player.pause();
     await expect(player.checkpoint()).resolves.toEqual({
       bytes: new Uint8Array([1, 2]), format: "emulatorjs-state-v1", metadata: null,
     });
     expect(player.getState()).toBe("PAUSED");
     expect(toggleMainLoop.mock.calls).toEqual([[false]]);
+    expect(focus).not.toHaveBeenCalled();
     await player.resume();
     expect(toggleMainLoop).toHaveBeenLastCalledWith(true);
+    expect(focus).toHaveBeenCalledWith({preventScroll: true});
     await player.exit();
     expect(player.getState()).toBe("EXITED");
   });

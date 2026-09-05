@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+- Return keyboard focus to the game canvas (or isolated runtime window) after a successful resume in
+  both Providers. Failed or cancelled Retrom runtime resumes do not reclaim input from Host controls.
+
 ## 0.16.1
 
 - Correct standard GamepadButton copying for browser prototype accessors, shared by both Providers.

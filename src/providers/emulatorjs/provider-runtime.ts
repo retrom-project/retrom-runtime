@@ -12,6 +12,7 @@ import type {
   RuntimeVideoModeV1,
 } from "../../provider/module-api.js";
 import {PlayerRuntimeError} from "../../provider/errors.js";
+import {focusRuntimeInput} from "../../provider/input-focus.js";
 import {emulatorJsProviderDefinition} from "./catalog.js";
 import {installArchiveWorkerCompatibility} from "./archive-worker.js";
 import {installDOSBoxPureStateCompatibility} from "./dosbox-state.js";
@@ -225,6 +226,7 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
     if (!toggle) {throw contractError();}
     toggle.call(instance.gameManager, true);
     instance.paused = false;
+    focusRuntimeInput(this.getCanvas(), this.runtimeWindow);
     this.transition("RUNNING");
   }
 

@@ -139,6 +139,7 @@ describe("retrom-runtime Provider Module V1", () => {
     const frame = document.createElement("iframe");
     document.body.append(frame);
     const runtimeWindow = frame.contentWindow!;
+    const focus = vi.spyOn(runtimeWindow, "focus").mockImplementation(() => undefined);
     const nativeGetGamepads = vi.fn(() => [gamepad()]);
     Object.defineProperty(runtimeWindow.navigator, "getGamepads", {
       configurable: true, value: nativeGetGamepads, writable: true,
@@ -158,8 +159,10 @@ describe("retrom-runtime Provider Module V1", () => {
     expect(runtimeWindow.navigator.getGamepads()[0]?.buttons.every((button) => !button.pressed && !button.value)).toBe(true);
     await player.pause();
     await player.pause();
+    expect(focus).not.toHaveBeenCalled();
     await player.resume();
     await player.resume();
+    expect(focus).toHaveBeenCalledOnce();
     expect(adapter.pause).toHaveBeenCalledOnce();
     expect(adapter.resume).toHaveBeenCalledOnce();
     await player.setVolume(0.4);

@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.16.1
+
+- Correct standard GamepadButton copying for browser prototype accessors, shared by both Providers.
+- Restore the MKXP FetchFS manifest parent and preserve initialization errors during cleanup.
+- Advance the EmulatorJS Provider to 2.2.1 for the shared input correction. Core candidates for local
+  validation remain explicit inputs; they never replace the fixed Release dependencies.
+
 ## 0.16.0
 
 - Create MKXP's fetch-manifest parent independently of the removed Ruby probe directories. Preserve initialization

@@ -2,6 +2,9 @@
 
 ## 0.16.0
 
+- Create MKXP's fetch-manifest parent independently of the removed Ruby probe directories. Preserve initialization
+  errors when cleaning up the core instead of misreporting cleanup as a game-owned exit.
+
 - Preserve native getter-backed GamepadButton attributes in the shared immersive input filter used by both
   Providers. Copy pressed/touched/value explicitly so confirm, cancel, triggers and D-pad survive filtering.
 

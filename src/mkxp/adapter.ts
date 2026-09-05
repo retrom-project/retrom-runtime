@@ -135,6 +135,7 @@ async function mountMkxpUnchecked(
   const printDiagnostic = (...args: unknown[]) => {
     onDiagnostic({ runtime: "mkxp-z", message: args.map(String).join(" ") });
   };
+  let hostCleanup = false;
   const nostalgist = await dependencies.prepare({
     core: {
       name: "mkxp-z",
@@ -145,6 +146,7 @@ async function mountMkxpUnchecked(
     emscriptenModule: {
       arguments: [remoteGamePath],
       onExit: (status) => {
+        if (hostCleanup) {return;}
         onDiagnostic({ runtime: "mkxp-z", message: `RPG_RUNTIME_CORE_EXIT:${status}` });
         reportExitRequested();
       },
@@ -177,6 +179,7 @@ async function mountMkxpUnchecked(
       "mkxp-z_saveStateSize": String(config.stateBufferBytes / (1024 * 1024)),
     },
   });
+  const exitCore = async () => {hostCleanup = true; await nostalgist.exit();};
   const fileSystem = nostalgist.getEmscriptenFS() as MkxpFileSystem;
   let status;
   try {
@@ -194,7 +197,7 @@ async function mountMkxpUnchecked(
     });
     reportProgress({ phase: "PROJECT_CONTENT", loadedBytes: 0, totalBytes: remoteContent.totalBytes });
   } catch (error) {
-    await nostalgist.exit();
+    await exitCore();
     throw error;
   }
   try {
@@ -204,7 +207,7 @@ async function mountMkxpUnchecked(
       await waitForMkxpRestore(status);
     }
   } catch (error) {
-    await nostalgist.exit();
+    await exitCore();
     throw error;
   }
   return {
@@ -213,7 +216,7 @@ async function mountMkxpUnchecked(
       format: "mkxp-state-compact-v1",
     }),
     exit: async () => {
-      await nostalgist.exit();
+      await exitCore();
       target.replaceChildren();
     },
     getCanvas: () => canvas,
@@ -234,6 +237,7 @@ function installRuntimeFiles(
   fileSystem: MkxpFileSystem,
   fetchManifest: Uint8Array,
 ) {
+  fileSystem.mkdirTree(`${systemRoot}/mkxp-z`);
   // Nostalgist only creates the per-core state directory when its `state`
   // option is present. This adapter cannot use that option because custom mkxp-z is
   // absent from Nostalgist's core map, so own the exact directory here.

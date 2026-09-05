@@ -33,6 +33,27 @@ afterEach(() => {
 });
 
 describe("mkxp runtime mount", () => {
+  it.each([1, 2, 3] as const)("creates the real fetch manifest parent independently of removed probes for RGSS %i", async (rgssVersion) => {
+    const harness = createHarness();
+    const adapter = await mountMkxp({...mkxpConfig(), rgssVersion}, harness.target, null, harness.dependencies);
+    expect(harness.files.has("/home/web_user/retroarch/userdata/system/mkxp-z/fetch.manifest")).toBe(true);
+    expect(harness.directories).toContain("/home/web_user/retroarch/userdata/system/mkxp-z");
+    await adapter.exit();
+    harness.frame.remove();
+  });
+
+  it("preserves mount failures instead of reporting its own cleanup as a game-owned exit", async () => {
+    const harness = createHarness();
+    vi.spyOn(harness.runtime.getEmscriptenFS(), "writeFile").mockImplementation(() => undefined);
+    harness.runtime.exit.mockImplementation(async () => {harness.prepareOptions?.emscriptenModule?.onExit(0);});
+    const reportExit = vi.fn();
+    await expect(mountMkxp(mkxpConfig(), harness.target, null, harness.dependencies,
+      () => undefined, () => undefined, reportExit)).rejects.toThrow("RPG_RUNTIME_CONTENT_UNAVAILABLE");
+    expect(reportExit).not.toHaveBeenCalled();
+    expect(harness.runtime.exit).toHaveBeenCalledOnce();
+    harness.frame.remove();
+  });
+
   it("restores an ordinary checkpoint without host-provided position evidence", async () => {
     const harness = createHarness();
     harness.onKeyDown = (code) => {
@@ -394,6 +415,10 @@ function createHarness() {
     },
     unlink: (path: string) => {files.delete(path);},
     writeFile: (path: string, contents: Uint8Array) => {
+      // WasmFS writeFile returns an errno without creating a file when its
+      // parent is absent. mkdirTree creates every ancestor, not unrelated paths.
+      const parent = path.slice(0, path.lastIndexOf("/"));
+      if (!directories.some((directory) => directory === parent || directory.startsWith(parent + "/"))) {return;}
       if (path === statePath && !directories.includes(coreStateRoot)) {throw new Error("ENOENT");}
       files.set(path, contents);
       if (path === statePath) {actions.push(`write:${path}`);}

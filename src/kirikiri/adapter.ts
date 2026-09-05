@@ -1,9 +1,8 @@
 import { decodeKirikiriCheckpoint, encodeKirikiriCheckpoint, type KirikiriCheckpointEntry } from "./checkpoint.js";
 import type { MountedRuntimeAdapter, RuntimeExitReporter } from "../internal-adapter.js";
-import type { KirikiriRuntimeConfig } from "./contract.js";
+import type {KirikiriParameters} from "./parameters.js";
 import { installKirikiriStandardGamepad } from "./gamepad-input.js";
 
-type KirikiriConfig = KirikiriRuntimeConfig & { adapter: KirikiriRuntimeConfig["adapter"] };
 type ProjectFile = { path: string; url: string; sizeBytes: number };
 type ProjectIndex = { schemaVersion: 1; files: ProjectFile[] };
 type KirikiriVlfs = {
@@ -44,9 +43,15 @@ const writeTimeoutMs = 10_000;
 const writeQuiescenceMs = 250;
 const maximumProjectFiles = 10_000;
 const saveRoots = ["/save/", "/savedata/"] as const;
+const runtimeTerminationTraps = new Set([
+  "null function",
+  "function signature mismatch",
+  "null function or function signature mismatch",
+  "table index is out of bounds",
+]);
 
 export async function mountKirikiri2(
-  config: KirikiriConfig,
+  config: KirikiriParameters,
   target: HTMLElement,
   frameWindow: Window,
   restorePayload: Uint8Array | null,
@@ -87,8 +92,20 @@ export async function mountKirikiri2(
   let module: KirikiriModule | null = null;
   let paused = false;
   let exited = false;
+  let exitReported = false;
+  let runtimeTerminationCleanup: () => void = () => undefined;
+  const reportRuntimeExit = () => {
+    if (exitReported) {return;}
+    exitReported = true;
+    reportExitRequested();
+  };
   try {
-    const base = new URL(normalizedBase(config.adapter.runtimeBaseUrl), document.baseURI);
+    const base = new URL(normalizedBase(config.runtimeBaseUrl), document.baseURI);
+    runtimeTerminationCleanup = installKirikiriRuntimeTermination(
+      frameWindow,
+      new URL("index.wasm", base).href,
+      reportRuntimeExit,
+    );
     scripts.push(await loadClassicScript(document, new URL("vlfs.js", base).href));
     const vlfs = host.VLFS;
     if (!vlfs) {throw new Error("KIRIKIRI_RUNTIME_ARTIFACT_INVALID");}
@@ -104,7 +121,7 @@ export async function mountKirikiri2(
       lastWriteAt = Date.now();
     };
     await registerRuntimeAssets(vlfs, new URL("assets.zip", base));
-    const project = await registerProject(vlfs, config.adapter.projectIndexUrl, document.baseURI);
+    const project = await registerProject(vlfs, config.projectIndexUrl, document.baseURI);
     const restore = restorePayload ? await decodeKirikiriCheckpoint(restorePayload) : null;
     for (const entry of restore?.entries ?? []) {
       const path = `/${entry.path}`;
@@ -119,29 +136,32 @@ export async function mountKirikiri2(
       locateFile: (path) => new URL(path, base).href,
       mainScriptUrlOrBlob: runtimeUrl,
       onAbort: () => {ready.reject(new Error("KIRIKIRI_RUNTIME_ABORTED"));},
-      onExit: () => reportExitRequested(),
+      onExit: reportRuntimeExit,
       onRuntimeInitialized: () => undefined,
       postRun: [() => {ready.resolve();}],
       preRun: [],
       print: (message) => {if (message) {console.debug(`[kirikiri2] ${message}`);}},
       printErr: (message) => {if (message) {console.debug(`[kirikiri2] ${message}`);}},
     };
-    const startupPath = selectStartupXp3(project.xp3Paths, config.adapter.startupXp3Path);
+    const startupPath = selectStartupXp3(project.xp3Paths, config.startupXp3Path);
     if (startupPath) {options._startupXp3Path = startupPath;}
     host.Module = options;
     scripts.push(await loadClassicScript(document, runtimeUrl));
     module = host.Module as KirikiriModule;
     await withTimeout(ready.promise, readyTimeoutMs, "KIRIKIRI_RUNTIME_TIMEOUT");
-    await waitFor(() => module?._krkr2_host_bookmark_is_ready?.() === 1, readyTimeoutMs);
     if (restore) {
-      await restoreBookmark(module, config.adapter.checkpointSlot);
+      await waitFor(() => module?._krkr2_host_bookmark_is_ready?.() === 1, readyTimeoutMs);
+      await restoreBookmark(module, config.checkpointSlot);
     }
     startupKeyboardCleanup();
     gamepadCleanup = installKirikiriStandardGamepad(frameWindow, surface, canvas);
     focusCanvas();
   } catch (error) {
     startupKeyboardCleanup();
-    cleanup(host, previousModule, previousVlfs, target, canvas, focusCanvas, gamepadCleanup, scripts);
+    cleanup(
+      host, previousModule, previousVlfs, target, canvas, focusCanvas,
+      gamepadCleanup, runtimeTerminationCleanup, scripts,
+    );
     throw stableMountError(error);
   }
 
@@ -158,7 +178,7 @@ export async function mountKirikiri2(
         await waitFor(() => activeModule._krkr2_host_bookmark_is_ready() === 1, readyTimeoutMs);
         if (exited) {throw new Error("KIRIKIRI_RUNTIME_INVALID_STATE");}
         const checkpointWriteSequence = writeSequence;
-        if (activeModule._krkr2_host_save_bookmark(config.adapter.checkpointSlot) !== 0) {
+        if (activeModule._krkr2_host_save_bookmark(config.checkpointSlot) !== 0) {
           throw new Error("KIRIKIRI_CHECKPOINT_CREATE_FAILED");
         }
         await waitFor(
@@ -170,7 +190,7 @@ export async function mountKirikiri2(
         pausedForCapture = true;
         const entries: KirikiriCheckpointEntry[] = [...writes].map(([path, data]) => ({ path, data: data.slice() }));
         return {
-          bytes: await encodeKirikiriCheckpoint({ entries, resumeSlot: config.adapter.checkpointSlot }),
+          bytes: await encodeKirikiriCheckpoint({ entries, resumeSlot: config.checkpointSlot }),
           format: "kirikiri-save-bundle-v1",
         };
       } catch (error) {
@@ -186,12 +206,16 @@ export async function mountKirikiri2(
       if (exited) {return;}
       exited = true;
       activeModule.pauseMainLoop();
-      cleanup(host, previousModule, previousVlfs, target, canvas, focusCanvas, gamepadCleanup, scripts);
+      cleanup(
+        host, previousModule, previousVlfs, target, canvas, focusCanvas,
+        gamepadCleanup, runtimeTerminationCleanup, scripts,
+      );
     },
     getCanvas: () => canvas,
-    getCheckpointAvailability: () => ({ available: true, blocker: null }),
+    getCheckpointAvailability: () => activeModule._krkr2_host_bookmark_is_ready() === 1
+      ? { available: true, blocker: null }
+      : { available: false, blocker: "NOT_READY" },
     getFrameCount: () => null,
-    getValidationProbe: () => null,
     pause: async () => {activeModule.pauseMainLoop(); paused = true;},
     resume: async () => {activeModule.resumeMainLoop(); paused = false;},
     screenshot: () => canvasScreenshot(canvas),
@@ -363,15 +387,40 @@ function cleanup(
   canvas: HTMLCanvasElement,
   focusCanvas: () => void,
   gamepadCleanup: () => void,
+  runtimeTerminationCleanup: () => void,
   scripts: HTMLScriptElement[],
 ) {
   if (host.VLFS) {host.VLFS.onWriteClose = null;}
   for (const script of scripts) {script.remove();}
   canvas.removeEventListener("pointerdown", focusCanvas, true);
   gamepadCleanup();
+  runtimeTerminationCleanup();
   target.replaceChildren();
   if (previousModule === undefined) {delete host.Module;} else {host.Module = previousModule;}
   if (previousVlfs === undefined) {delete host.VLFS;} else {host.VLFS = previousVlfs;}
+}
+
+function installKirikiriRuntimeTermination(
+  frameWindow: Window,
+  wasmUrl: string,
+  reportRuntimeExit: () => void,
+) {
+  const runtimeGlobals = frameWindow as Window & typeof globalThis;
+  const handleRuntimeFailure = (event: Event, error: unknown) => {
+    if (!(error instanceof runtimeGlobals.WebAssembly.RuntimeError) || !runtimeTerminationTraps.has(error.message) ||
+      typeof error.stack !== "string" || !error.stack.includes(`${wasmUrl}:wasm-function[`)) {return;}
+    event.preventDefault();
+    event.stopImmediatePropagation();
+    reportRuntimeExit();
+  };
+  const onError = (event: ErrorEvent) => handleRuntimeFailure(event, event.error);
+  const onUnhandledRejection = (event: PromiseRejectionEvent) => handleRuntimeFailure(event, event.reason);
+  frameWindow.addEventListener("error", onError, true);
+  frameWindow.addEventListener("unhandledrejection", onUnhandledRejection, true);
+  return () => {
+    frameWindow.removeEventListener("error", onError, true);
+    frameWindow.removeEventListener("unhandledrejection", onUnhandledRejection, true);
+  };
 }
 
 function canvasScreenshot(canvas: HTMLCanvasElement) {

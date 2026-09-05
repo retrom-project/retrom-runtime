@@ -1,13 +1,3 @@
-export type RuntimeState =
-  | "CREATED"
-  | "LOADING"
-  | "RUNNING"
-  | "PAUSED"
-  | "CHECKPOINTING"
-  | "EXITING"
-  | "EXITED"
-  | "FAILED";
-
 export type CheckpointBlocker =
   | "NOT_READY"
   | "BUSY"
@@ -26,27 +16,18 @@ export type RuntimeCheckpoint = {
   format: string;
 };
 
-export type RuntimeValidationProbe = {
-  kind: string;
-  schemaVersion: number;
-  value: unknown;
-};
-
 export type FileTreeSource = {
-  kind: "FILE_TREE_V1";
+  kind: "FILE_TREE";
   indexUrl: string;
 };
 
 export type SeekableBlobSource = {
-  kind: "SEEKABLE_BLOB_V1";
+  kind: "SEEKABLE_BLOB";
   rangeRequired: true;
   sha256: string;
   sizeBytes: number;
   url: string;
 };
-
-export type RuntimeContentSourceKind = FileTreeSource["kind"] | SeekableBlobSource["kind"] |
-  "ISOLATED_WEB_V1" | "NATIVE_WEB_V1" | "WASM4_CART_V1";
 
 export type RuntimeLoadPhase = "RUNTIME_ASSET" | "PROJECT_INDEX" | "PROJECT_CONTENT" | "RESTORE";
 
@@ -55,39 +36,3 @@ export type RuntimeLoadProgress = {
   loadedBytes: number;
   totalBytes: number | null;
 };
-
-export type RuntimeCapabilities = {
-  checkpoint: boolean;
-  contentSources: readonly RuntimeContentSourceKind[];
-  frameCounter: boolean;
-  pause: boolean;
-  screenshot: boolean;
-  standardGamepad: boolean;
-  validationProbes: readonly string[];
-  volume: boolean;
-};
-
-export type GameRuntimeEvent =
-  | { type: "READY" }
-  | ({ type: "LOAD_PROGRESS" } & RuntimeLoadProgress)
-  | { type: "STATE_CHANGED"; previous: RuntimeState; state: RuntimeState }
-  | { type: "CHECKPOINT_AVAILABILITY_CHANGED"; availability: CheckpointAvailability }
-  | { type: "FATAL_ERROR"; code: string }
-  | { type: "EXIT_REQUESTED" };
-
-export interface GameRuntime {
-  mount(target: HTMLElement): Promise<void>;
-  pause(): Promise<void>;
-  resume(): Promise<void>;
-  checkpoint(): Promise<RuntimeCheckpoint>;
-  screenshot(): Promise<Blob>;
-  exit(): Promise<void>;
-  getState(): RuntimeState;
-  getCapabilities(): RuntimeCapabilities;
-  getCheckpointAvailability(): CheckpointAvailability;
-  getCanvas(): HTMLCanvasElement | null;
-  getFrameCount(): number | null;
-  getValidationProbe(kind: string): RuntimeValidationProbe | null;
-  setVolume(value: number): void;
-  subscribe(listener: (event: GameRuntimeEvent) => void): () => void;
-}

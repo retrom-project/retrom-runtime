@@ -38,7 +38,7 @@ function hex(bytes: Uint8Array) {
 }
 
 async function digest(bytes: Uint8Array) {
-  const value = await crypto.subtle.digest("SHA-256", bytes.slice().buffer);
+  const value = await crypto.subtle.digest("SHA-256", bytes.slice());
   return hex(new Uint8Array(value));
 }
 

@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { mountButterscotch } from "./adapter.js";
-import type { ButterscotchRuntimeConfig } from "./contract.js";
+import type {ButterscotchParameters} from "./parameters.js";
 
 afterEach(() => {
   vi.restoreAllMocks();
@@ -51,11 +51,13 @@ describe("Butterscotch Web adapter", () => {
       format: "butterscotch-checkpoint-v2",
     });
     expect(workers[0]?.commands).toContain("RESTORE");
-    expect(workers[0]?.url.pathname).toBe("/runtime/retrom-runtime/v0.8.0/butterscotch-worker.mjs");
+    expect(workers[0]?.url.pathname).toBe("/runtime/retrom-runtime/v0.8.0/worker.mjs");
     expect(workers[0]?.messages).toContainEqual(expect.objectContaining({ keyCode: 38, pressed: true, type: "KEY" }));
     expect(workers[0]?.messages).toContainEqual(expect.objectContaining({ type: "GAMEPAD" }));
     expect(adapter.getCheckpointAvailability()).toEqual({ available: true, blocker: null });
     expect(document.activeElement).toBe(canvas);
+    expect(Number.parseFloat(canvas.style.width)).toBeCloseTo(1_333.333, 2);
+    expect(Number.parseFloat(canvas.style.height)).toBeCloseTo(1_000, 2);
 
     await adapter.exit();
     expect(workers[0]?.terminated).toBe(true);
@@ -177,16 +179,12 @@ class MemoryDirectory {
   async removeEntry(name: string) {this.files.delete(name);}
 }
 
-function config(): ButterscotchRuntimeConfig {
+function config(): ButterscotchParameters {
   return {
     sessionId: "launch-1",
     contentDigest: "c".repeat(64),
-    adapter: {
-      adapterKind: "BUTTERSCOTCH_WEB",
-      adapterId: "butterscotch-web",
-      projectIndexUrl: "https://content.example/index.json",
-      runtimeBaseUrl: "/runtime/retrom-runtime/v0.8.0/",
-    },
+    projectIndexUrl: "https://content.example/index.json",
+    runtimeBaseUrl: "/runtime/retrom-runtime/v0.8.0/",
   };
 }
 
@@ -206,4 +204,14 @@ function mockProject() {
 function installIsolatedBrowserGlobals() {
   Object.defineProperty(window, "crossOriginIsolated", { configurable: true, value: true });
   Object.defineProperty(window, "SharedArrayBuffer", { configurable: true, value: globalThis.SharedArrayBuffer });
+  vi.stubGlobal("ResizeObserver", class {
+    constructor(private readonly callback: ResizeObserverCallback) {}
+    disconnect() {}
+    observe(target: Element) {
+      this.callback([{
+        contentRect: { height: 1_000, width: 1_440 }, target,
+      } as ResizeObserverEntry], this as unknown as ResizeObserver);
+    }
+    unobserve() {}
+  });
 }

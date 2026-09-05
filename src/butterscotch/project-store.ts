@@ -1,11 +1,9 @@
 import type { RuntimeProgressReporter } from "../internal-adapter.js";
-import type { ButterscotchRuntimeConfig } from "./contract.js";
+import type {ButterscotchParameters} from "./parameters.js";
 
 type ProjectFile = { path: string; sizeBytes: number; url: string };
 type ProjectIndex = { files: ProjectFile[]; schemaVersion: 1 };
-type ProjectConfig = Pick<ButterscotchRuntimeConfig, "contentDigest" | "sessionId"> & {
-  adapter: Pick<ButterscotchRuntimeConfig["adapter"], "projectIndexUrl">;
-};
+type ProjectConfig = Pick<ButterscotchParameters, "contentDigest" | "sessionId" | "projectIndexUrl">;
 
 const maximumProjectFiles = 10_000;
 const progressStepBytes = 1024 * 1024;
@@ -17,7 +15,7 @@ export async function prepareButterscotchProject(
   reportProgress: RuntimeProgressReporter,
 ) {
   reportProgress({ phase: "PROJECT_INDEX", loadedBytes: 0, totalBytes: null });
-  const index = await loadProjectIndex(config.adapter.projectIndexUrl, frameWindow.document.baseURI);
+  const index = await loadProjectIndex(config.projectIndexUrl, frameWindow.document.baseURI);
   reportProgress({ phase: "PROJECT_INDEX", loadedBytes: 1, totalBytes: 1 });
   const storage = frameWindow.navigator.storage;
   if (typeof storage?.getDirectory !== "function") {throw new Error("BUTTERSCOTCH_RUNTIME_UNAVAILABLE");}

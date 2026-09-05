@@ -1,6 +1,6 @@
 import type { CheckpointAvailability } from "../contract.js";
 import type { MountedRuntimeAdapter, RuntimeProgressReporter } from "../internal-adapter.js";
-import { validateWasm4RuntimeConfig, type Wasm4RuntimeConfig } from "./contract.js";
+import type {Wasm4Parameters} from "./parameters.js";
 
 type Wasm4CoreInstance = {
   canvas: HTMLCanvasElement;
@@ -32,7 +32,7 @@ const maximumCheckpointBytes = 132144;
 const frameModuleRegistration = "__RETROM_WASM4_CORE_MODULE_V1__";
 
 export async function mountWasm4(
-  config: Wasm4RuntimeConfig,
+  config: Wasm4Parameters,
   target: HTMLElement,
   frameWindow: Window,
   restorePayload: Uint8Array | null,
@@ -40,13 +40,12 @@ export async function mountWasm4(
   loadModule: Wasm4ModuleLoader = defaultModuleLoader,
   hashCart: Wasm4CartHasher = sha256,
 ): Promise<MountedRuntimeAdapter> {
-  validateWasm4RuntimeConfig(config);
   if (target.ownerDocument !== frameWindow.document || restorePayload &&
     (restorePayload.byteLength < 1 || restorePayload.byteLength > maximumCheckpointBytes)) {
     throw new Error("WASM4_RUNTIME_CONFIG_INVALID");
   }
   const cartBytes = await fetchCart(config, reportProgress, hashCart);
-  const runtimeBaseUrl = new URL(normalizedBase(config.adapter.runtimeBaseUrl), window.location.href);
+  const runtimeBaseUrl = new URL(normalizedBase(config.runtimeBaseUrl), window.location.href);
   const moduleUrl = new URL("wasm4-retrom.mjs", runtimeBaseUrl).href;
   let module: unknown;
   try {
@@ -99,7 +98,6 @@ export async function mountWasm4(
       const value = instance.frameCount();
       return Number.isSafeInteger(value) && value >= 0 ? value : null;
     },
-    getValidationProbe: () => null,
     pause: async () => {
       if (exited) {throw new Error("WASM4_RUNTIME_INVALID_STATE");}
       await instance.pause();
@@ -119,11 +117,11 @@ export async function mountWasm4(
 }
 
 async function fetchCart(
-  config: Wasm4RuntimeConfig,
+  config: Wasm4Parameters,
   reportProgress: RuntimeProgressReporter,
   hashCart: Wasm4CartHasher,
 ) {
-  const response = await fetch(config.adapter.cartUrl, {credentials: "same-origin"});
+  const response = await fetch(config.cartUrl, {credentials: "same-origin"});
   if (!response.ok) {throw new Error("WASM4_CART_FETCH_FAILED");}
   const declaredLength = response.headers.get("content-length");
   if (declaredLength !== null && Number(declaredLength) !== config.cartSizeBytes) {

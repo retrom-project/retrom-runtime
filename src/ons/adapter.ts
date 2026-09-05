@@ -1,6 +1,6 @@
 import { decodeOnsCheckpoint, encodeOnsCheckpoint, type OnsCheckpointBundle } from "./checkpoint.js";
 import type { MountedRuntimeAdapter, RuntimeExitReporter, RuntimeProgressReporter } from "../internal-adapter.js";
-import type { OnsRuntimeConfig } from "./contract.js";
+import type {OnsParameters} from "./parameters.js";
 import { installOnsAnalogGamepad } from "./gamepad-input.js";
 import {
   createOnsProjectFileMap,
@@ -8,7 +8,6 @@ import {
   type OnsProjectFileNode,
 } from "./project-files.js";
 
-type OnsConfig = OnsRuntimeConfig & { adapter: OnsRuntimeConfig["adapter"] };
 type ProjectIndex = { schemaVersion: 1; title: string; fontPath: string; files: OnsProjectFile[] };
 
 type OnsFileSystem = {
@@ -51,7 +50,7 @@ const maximumProjectFiles = 100_000;
 const readyTimeoutMs = 30_000;
 
 export async function mountOnsYuri(
-  config: OnsConfig,
+  config: OnsParameters,
   target: HTMLElement,
   frameWindow: Window,
   restorePayload: Uint8Array | null,
@@ -60,7 +59,7 @@ export async function mountOnsYuri(
 ): Promise<MountedRuntimeAdapter> {
   if (target.ownerDocument !== frameWindow.document) {throw new Error("ONS_RUNTIME_TARGET_INVALID");}
   reportProgress({ phase: "PROJECT_INDEX", loadedBytes: 0, totalBytes: null });
-  const index = await loadProjectIndex(config.adapter.projectIndexUrl);
+  const index = await loadProjectIndex(config.projectIndexUrl);
   reportProgress({ phase: "PROJECT_INDEX", loadedBytes: 1, totalBytes: 1 });
   const restore = await readRestore(restorePayload);
   const host = frameWindow as OnsHostWindow;
@@ -95,7 +94,7 @@ export async function mountOnsYuri(
   let exited = false;
   let videoCleanup: () => void = () => undefined;
   const ready = deferred<void>();
-  const base = new URL(normalizedBase(config.adapter.runtimeBaseUrl), document.baseURI).href;
+  const base = new URL(normalizedBase(config.runtimeBaseUrl), document.baseURI).href;
   const moduleOptions: Partial<OnsModule> = {
     canvas,
     locateFile: (path) => new URL(path, base).href,
@@ -146,15 +145,15 @@ export async function mountOnsYuri(
       const resume = !paused;
       if (resume) {activeModule._onsyuri_host_set_paused(1);}
       try {
-        if (activeModule._onsyuri_host_save(config.adapter.checkpointSlot) !== 0) {
+        if (activeModule._onsyuri_host_save(config.checkpointSlot) !== 0) {
           throw new Error("ONS_CHECKPOINT_CREATE_FAILED");
         }
         const entries = collectFiles(activeModule.FS, saveRoot);
-        if (!entries.some((entry) => entry.path === `save${config.adapter.checkpointSlot}.dat`)) {
+        if (!entries.some((entry) => entry.path === `save${config.checkpointSlot}.dat`)) {
           throw new Error("ONS_CHECKPOINT_CREATE_FAILED");
         }
         return {
-          bytes: await encodeOnsCheckpoint({ entries, resumeSlot: config.adapter.checkpointSlot }),
+          bytes: await encodeOnsCheckpoint({ entries, resumeSlot: config.checkpointSlot }),
           format: "ons-save-bundle-v1",
         };
       } catch (error) {
@@ -178,7 +177,6 @@ export async function mountOnsYuri(
     getCanvas: () => canvas,
     getCheckpointAvailability: () => ({ available: true, blocker: null }),
     getFrameCount: () => null,
-    getValidationProbe: () => null,
     pause: async () => {activeModule._onsyuri_host_set_paused(1); paused = true;},
     resume: async () => {activeModule._onsyuri_host_set_paused(0); paused = false;},
     screenshot: () => canvasScreenshot(canvas),
@@ -287,12 +285,12 @@ function installVideo(
   };
 }
 
-function runtimeArgs(config: OnsConfig, index: ProjectIndex) {
+function runtimeArgs(config: OnsParameters, index: ProjectIndex) {
   return [
     "--root", gameRoot,
     "--font", `${gameRoot}/${index.fontPath}`,
     "--save-dir", saveRoot,
-    `--enc:${config.adapter.scriptEncoding}`,
+    `--enc:${config.scriptEncoding}`,
   ];
 }
 

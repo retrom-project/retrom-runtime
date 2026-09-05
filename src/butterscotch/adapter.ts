@@ -1,6 +1,6 @@
 import type { MountedRuntimeAdapter, RuntimeExitReporter, RuntimeProgressReporter } from "../internal-adapter.js";
 import type { CheckpointAvailability } from "../contract.js";
-import type { ButterscotchRuntimeConfig } from "./contract.js";
+import type {ButterscotchParameters} from "./parameters.js";
 import { prepareButterscotchProject } from "./project-store.js";
 import { createButterscotchAudio } from "./audio.js";
 
@@ -15,7 +15,11 @@ type HostMessage = {
   samples?: Float32Array;
 };
 type HostCommand = "CHECKPOINT" | "PAUSE" | "RESTORE" | "RESUME" | "SCREENSHOT" | "STATUS" | "STOP";
-type WorkerWindow = Window & { SharedArrayBuffer?: typeof SharedArrayBuffer; Worker: typeof Worker };
+type WorkerWindow = Window & {
+  ResizeObserver?: typeof ResizeObserver;
+  SharedArrayBuffer?: typeof SharedArrayBuffer;
+  Worker: typeof Worker;
+};
 
 const checkpointFormat = "butterscotch-checkpoint-v2";
 const commandTimeoutMs = 30_000;
@@ -26,7 +30,7 @@ const keyCodes = new Map([
 ]);
 
 export async function mountButterscotch(
-  config: ButterscotchRuntimeConfig,
+  config: ButterscotchParameters,
   target: HTMLElement,
   frameWindow: Window,
   restorePayload: Uint8Array | null,
@@ -48,12 +52,32 @@ export async function mountButterscotch(
     alignItems: "center", display: "flex", height: "100%", justifyContent: "center", overflow: "hidden", width: "100%",
   });
   Object.assign(canvas.style, {
-    background: "#000", display: "block", maxHeight: "100%", maxWidth: "100%", outline: "none", touchAction: "none",
+    background: "#000", display: "block", outline: "none", touchAction: "none",
   });
   surface.append(canvas);
   target.replaceChildren(surface);
-  const runtimeBase = new URL(normalizedBase(config.adapter.runtimeBaseUrl), frameWindow.document.baseURI);
-  const workerUrl = new URL("butterscotch-worker.mjs", runtimeBase);
+  const fitCanvas = (surfaceWidth: number, surfaceHeight: number) => {
+    if (surfaceWidth <= 0 || surfaceHeight <= 0) {return;}
+    const scale = Math.min(surfaceWidth / canvas.width, surfaceHeight / canvas.height);
+    canvas.style.width = `${canvas.width * scale}px`;
+    canvas.style.height = `${canvas.height * scale}px`;
+  };
+  const fitCanvasToSurface = () => {
+    const bounds = surface.getBoundingClientRect();
+    fitCanvas(bounds.width, bounds.height);
+  };
+  const ResizeObserverConstructor = (frameWindow as WorkerWindow).ResizeObserver;
+  const resizeObserver = ResizeObserverConstructor
+    ? new ResizeObserverConstructor((entries) => {
+      const entry = entries.find((value) => value.target === surface);
+      if (entry) {fitCanvas(entry.contentRect.width, entry.contentRect.height);}
+    })
+    : null;
+  fitCanvasToSurface();
+  resizeObserver?.observe(surface);
+  frameWindow.addEventListener("resize", fitCanvasToSurface);
+  const runtimeBase = new URL(normalizedBase(config.runtimeBaseUrl), frameWindow.document.baseURI);
+  const workerUrl = new URL("worker.mjs", runtimeBase);
   const worker = new (frameWindow as WorkerWindow).Worker(workerUrl, { type: "module" });
   const audio = createButterscotchAudio(frameWindow);
   const pending = new Map<string, { reject: (error: Error) => void; resolve: (message: HostMessage) => void }>();
@@ -134,6 +158,8 @@ export async function mountButterscotch(
   }
 
   function cleanup() {
+    resizeObserver?.disconnect();
+    frameWindow.removeEventListener("resize", fitCanvasToSurface);
     frameWindow.cancelAnimationFrame(gamepadFrame);
     for (const keyCode of pressedKeys) {worker.postMessage({ keyCode, pressed: false, type: "KEY" });}
     pressedKeys.clear();
@@ -173,7 +199,6 @@ export async function mountButterscotch(
       ? { available: false, blocker: "NOT_READY" }
       : checkpointAvailability(checkpointAvailable, checkpointStatus),
     getFrameCount: () => null,
-    getValidationProbe: () => null,
     pause: async () => {if (exited) {throw new Error("BUTTERSCOTCH_RUNTIME_INVALID_STATE");} await command("PAUSE"); await audio?.pause();},
     resume: async () => {if (exited) {throw new Error("BUTTERSCOTCH_RUNTIME_INVALID_STATE");} await command("RESUME"); await audio?.resume();},
     screenshot: async () => {

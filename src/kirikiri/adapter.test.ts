@@ -1,7 +1,8 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { decodeKirikiriCheckpoint, encodeKirikiriCheckpoint } from "./checkpoint.js";
-import type { KirikiriRuntimeConfig } from "./contract.js";
+import {targetEnvelope} from "../../tests/provider-fixtures.js";
+import {currentWindowHost} from "../../tests/provider-adapter-fixture.js";
 import { createRuntime } from "../index.js";
 
 type FakeModule = {
@@ -30,11 +31,80 @@ afterEach(() => {
 });
 
 describe("KiriKiri2 KAG runtime", () => {
+  const runtimeTerminationCases: ReadonlyArray<readonly [string, "error" | "unhandledrejection"]> = [
+    "null function",
+    "function signature mismatch",
+    "null function or function signature mismatch",
+    "table index is out of bounds",
+  ].flatMap((message) => (["error", "unhandledrejection"] as const)
+    .map((transport) => [message, transport] as const));
+
+  it.each(runtimeTerminationCases)(
+    "turns the KiriKiri wasm %s termination from %s into one runtime exit",
+    async (terminationMessage, transport) => {
+    enableRuntimeFeatures();
+    const vlfs = fakeVlfs();
+    mockDownloads();
+    const runtime = await createRuntime(config(), currentWindowHost(null));
+    const events: string[] = [];
+    runtime.subscribe((event) => events.push(event.type));
+    const mounting = runtime.mount(document.createElement("div"));
+    await loadVlfs(vlfs);
+    await loadCore(vlfs);
+    await mounting;
+    const unrelated = new WebAssembly.RuntimeError("null function");
+    Object.defineProperty(unrelated, "stack", { value: "RuntimeError: null function\n at app.ts:1:1" });
+
+    expect(window.dispatchEvent(runtimeFailureEvent(transport, unrelated))).toBe(true);
+    expect(runtime.getState()).toBe("RUNNING");
+
+    const actualCrash = new WebAssembly.RuntimeError("unreachable");
+    Object.defineProperty(actualCrash, "stack", {
+      value: "RuntimeError: unreachable\n" +
+        " at http://localhost:3000/runtime/providers/retrom-runtime/bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb/assets/kirikiri/index.wasm:wasm-function[3000]:0x1334f5",
+    });
+    expect(window.dispatchEvent(runtimeFailureEvent(transport, actualCrash))).toBe(true);
+    expect(runtime.getState()).toBe("RUNNING");
+
+    const termination = new WebAssembly.RuntimeError(terminationMessage);
+    Object.defineProperty(termination, "stack", {
+      value: `RuntimeError: ${terminationMessage}\n` +
+        " at http://localhost:3000/runtime/providers/retrom-runtime/bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb/assets/kirikiri/index.wasm:wasm-function[1852]:0x90236",
+    });
+    expect(window.dispatchEvent(runtimeFailureEvent(transport, termination))).toBe(false);
+
+    await vi.waitFor(() => expect(runtime.getState()).toBe("EXITED"));
+    expect(events.filter((type) => type === "EXIT_REQUESTED")).toHaveLength(1);
+    },
+  );
+
+  it("finishes a fresh mount at core postRun before the first stable KAG save point", async () => {
+    enableRuntimeFeatures();
+    const vlfs = fakeVlfs();
+    mockDownloads();
+    const runtime = await createRuntime(config(), currentWindowHost(null));
+    const mounting = runtime.mount(document.createElement("div"));
+    await loadVlfs(vlfs);
+    const module = await loadCore(vlfs, { bookmarkReady: 0 });
+
+    const outcome = await Promise.race([
+      mounting.then(() => "mounted"),
+      new Promise<string>((resolve) => setTimeout(() => resolve("still-waiting"), 25)),
+    ]);
+    expect(runtime.getCheckpointAvailability()).toEqual({ available: false, reason: "NOT_READY" });
+    module._krkr2_host_bookmark_is_ready.mockReturnValue(1);
+    await mounting;
+
+    expect(outcome).toBe("mounted");
+    expect(runtime.getCheckpointAvailability()).toEqual({ available: true, reason: null });
+    await runtime.exit();
+  });
+
   it("reports the engine process exit and makes checkpointing unavailable", async () => {
     enableRuntimeFeatures();
     const vlfs = fakeVlfs();
     mockDownloads();
-    const runtime = createRuntime(config(), { frameWindow: window, restorePayload: null });
+    const runtime = await createRuntime(config(), currentWindowHost(null));
     const events: string[] = [];
     runtime.subscribe((event) => events.push(event.type));
     const mounting = runtime.mount(document.createElement("div"));
@@ -46,7 +116,7 @@ describe("KiriKiri2 KAG runtime", () => {
 
     await vi.waitFor(() => expect(runtime.getState()).toBe("EXITED"));
     expect(events.filter((type) => type === "EXIT_REQUESTED")).toHaveLength(1);
-    expect(runtime.getCheckpointAvailability()).toEqual({ available: false, blocker: "NOT_READY" });
+    expect(runtime.getCheckpointAvailability()).toEqual({ available: false, reason: "NOT_READY" });
   });
 
   it("does not carry startup input into the ready runtime", async () => {
@@ -67,9 +137,10 @@ describe("KiriKiri2 KAG runtime", () => {
     mockDownloads();
     const target = document.createElement("div");
     document.body.append(target);
-    const runtime = createRuntime(config(), { frameWindow: window, restorePayload: null });
+    const runtime = await createRuntime(config(), currentWindowHost(null));
     const mounting = runtime.mount(target);
-    const canvas = target.querySelector("canvas");
+    await vi.waitFor(() => expect(document.querySelector("#game canvas")).not.toBeNull());
+    const canvas = document.querySelector("#game")!.querySelector("canvas");
     if (!canvas) {throw new Error("test canvas missing");}
     const inputs: string[] = [];
     canvas.addEventListener("mousedown", () => inputs.push("mousedown"));
@@ -114,12 +185,12 @@ describe("KiriKiri2 KAG runtime", () => {
     mockDownloads();
     const target = document.createElement("div");
     document.body.append(target);
-    const runtime = createRuntime(config(), { frameWindow: window, restorePayload: null });
+    const runtime = await createRuntime(config(), currentWindowHost(null));
     const mounting = runtime.mount(target);
     await loadVlfs(vlfs);
     await loadCore(vlfs);
     await mounting;
-    const canvas = target.querySelector("canvas");
+    const canvas = document.querySelector("#game")!.querySelector("canvas");
     if (!canvas) {throw new Error("test canvas missing");}
     vi.spyOn(canvas, "getBoundingClientRect").mockReturnValue(domRect(100, 50, 800, 600));
     const inputs: string[] = [];
@@ -151,7 +222,7 @@ describe("KiriKiri2 KAG runtime", () => {
     expect(inputs.some((value) => value.startsWith("mousedown:2:"))).toBe(true);
     expect(inputs.some((value) => value.startsWith("mouseup:2:"))).toBe(true);
     expect(inputs.some((value) => value.startsWith("contextmenu:2:"))).toBe(true);
-    const cursor = target.querySelector<HTMLElement>("[data-kirikiri-gamepad-cursor]");
+    const cursor = document.querySelector("#game")!.querySelector<HTMLElement>("[data-kirikiri-gamepad-cursor]");
     expect(cursor?.hidden).toBe(false);
     expect(cursor?.style.transform).toContain("translate");
     await runtime.exit();
@@ -164,7 +235,7 @@ describe("KiriKiri2 KAG runtime", () => {
     mockDownloads();
     const target = document.createElement("div");
     document.body.append(target);
-    const runtime = createRuntime(config(), { frameWindow: window, restorePayload: null });
+    const runtime = await createRuntime(config(), currentWindowHost(null));
     const mounting = runtime.mount(target);
     await loadVlfs(vlfs);
     const module = await loadCore(vlfs);
@@ -173,25 +244,25 @@ describe("KiriKiri2 KAG runtime", () => {
     expect(module._startupXp3Path).toBe("/data.xp3");
     expect(vlfs.registerRemote).toHaveBeenCalledWith(
       "/data.xp3",
-      `https://content.example/runtime/content/project/${"a".repeat(64)}/data.xp3`,
+      `${location.origin}/runtime/content/project/${"a".repeat(64)}/data.xp3`,
       1234,
       true,
     );
     expect(vlfs.registerRemote).toHaveBeenCalledWith(
       "/startup.tjs",
-      `https://content.example/runtime/content/project/${"a".repeat(64)}/startup.tjs`,
+      `${location.origin}/runtime/content/project/${"a".repeat(64)}/startup.tjs`,
       40,
       true,
     );
-    expect(document.activeElement).toBe(target.querySelector("canvas"));
-    expect(target.firstElementChild?.getAttribute("data-kirikiri-runtime-surface")).toBe("");
+    expect(document.activeElement).toBe(document.querySelector("#game")!.querySelector("canvas"));
+    expect(document.querySelector("#game")!.firstElementChild?.getAttribute("data-kirikiri-runtime-surface")).toBe("");
     module._krkr2_host_bookmark_is_ready.mockReturnValue(0);
-    const checkpointPromise = runtime.checkpoint();
-    await Promise.resolve();
+    expect(runtime.getCheckpointAvailability()).toEqual({ available: false, reason: "NOT_READY" });
+    await expect(runtime.checkpoint()).rejects.toThrow("PLAYER_RUNTIME_CONTRACT_INVALID");
     expect(module.pauseMainLoop).not.toHaveBeenCalled();
     expect(module._krkr2_host_save_bookmark).not.toHaveBeenCalled();
     module._krkr2_host_bookmark_is_ready.mockReturnValue(1);
-    const checkpoint = await checkpointPromise;
+    const checkpoint = await runtime.checkpoint();
     expect(checkpoint.format).toBe("kirikiri-save-bundle-v1");
     expect(checkpoint.bytes.byteLength).toBeLessThan(1024);
     expect(module._krkr2_host_save_bookmark).toHaveBeenCalledWith(1999);
@@ -201,11 +272,11 @@ describe("KiriKiri2 KAG runtime", () => {
       "savedata/data1999.ksd", "savedata/datasu.ksd",
     ]);
     await runtime.exit();
-    expect(target.childElementCount).toBe(0);
+    expect(document.querySelector("#game")).toBeNull();
     expect(document.head.querySelector("script[data-runtime=kirikiri2]")).toBeNull();
 
     const restoredVlfs = fakeVlfs();
-    const restored = createRuntime(config(), { frameWindow: window, restorePayload: checkpoint.bytes });
+    const restored = await createRuntime(config(), currentWindowHost(checkpoint.bytes));
     const restoredTarget = document.createElement("div");
     const restoredMount = restored.mount(restoredTarget);
     await loadVlfs(restoredVlfs);
@@ -235,7 +306,7 @@ describe("KiriKiri2 KAG runtime", () => {
     enableRuntimeFeatures();
     const vlfs = fakeVlfs();
     mockDownloads();
-    const runtime = createRuntime(config(), { frameWindow: window, restorePayload: null });
+    const runtime = await createRuntime(config(), currentWindowHost(null));
     const mounting = runtime.mount(document.createElement("div"));
     await loadVlfs(vlfs);
     const module = await loadCore(vlfs);
@@ -264,14 +335,18 @@ describe("KiriKiri2 KAG runtime", () => {
     enableRuntimeFeatures();
     const vlfs = fakeVlfs();
     mockDownloads();
-    const runtime = createRuntime(config(), { frameWindow: window, restorePayload: null });
+    const runtime = await createRuntime(config(), currentWindowHost(null));
     const mounting = runtime.mount(document.createElement("div"));
     await loadVlfs(vlfs);
     const module = await loadCore(vlfs);
     await mounting;
     await runtime.pause();
     let ready = false;
-    module._krkr2_host_bookmark_is_ready.mockImplementation(() => ready ? 1 : 0);
+    let availabilityRead = false;
+    module._krkr2_host_bookmark_is_ready.mockImplementation(() => {
+      if (!availabilityRead) {availabilityRead = true; return 1;}
+      return ready ? 1 : 0;
+    });
     module.resumeMainLoop.mockImplementation(() => {ready = true;});
     module._krkr2_host_bookmark_is_ready.mockClear();
     module.pauseMainLoop.mockClear();
@@ -281,7 +356,9 @@ describe("KiriKiri2 KAG runtime", () => {
       const checkpointPromise = runtime.checkpoint();
       await vi.advanceTimersByTimeAsync(60_100);
       await checkpointPromise;
-      expect(module.resumeMainLoop).toHaveBeenCalledBefore(module._krkr2_host_bookmark_is_ready);
+      expect(module.resumeMainLoop.mock.invocationCallOrder[0]).toBeLessThan(
+        module._krkr2_host_bookmark_is_ready.mock.invocationCallOrder[1]!,
+      );
       expect(module._krkr2_host_save_bookmark).toHaveBeenCalledWith(1999);
       expect(module.pauseMainLoop).toHaveBeenCalledAfter(module._krkr2_host_save_bookmark);
     } finally {
@@ -298,7 +375,7 @@ describe("KiriKiri2 KAG runtime", () => {
     });
     const vlfs = fakeVlfs();
     mockDownloads();
-    const runtime = createRuntime(config(), { frameWindow: window, restorePayload: restore });
+    const runtime = await createRuntime(config(), currentWindowHost(restore));
     const mounting = runtime.mount(document.createElement("div"));
     await loadVlfs(vlfs);
     const rejected = expect(mounting).rejects.toThrow("KIRIKIRI_CHECKPOINT_RESTORE_FAILED");
@@ -310,12 +387,21 @@ describe("KiriKiri2 KAG runtime", () => {
     enableRuntimeFeatures();
     const vlfs = fakeVlfs();
     mockDownloads(["/data.xp3", "/patch.xp3"]);
-    const runtime = createRuntime(config(), { frameWindow: window, restorePayload: null });
+    const runtime = await createRuntime(config(), currentWindowHost(null));
     const mounting = runtime.mount(document.createElement("div"));
     await loadVlfs(vlfs);
     await expect(mounting).rejects.toThrow("KIRIKIRI_PROJECT_ENTRY_AMBIGUOUS");
   });
 });
+
+function runtimeFailureEvent(transport: "error" | "unhandledrejection", error: WebAssembly.RuntimeError) {
+  if (transport === "error") {
+    return new ErrorEvent("error", { cancelable: true, error, message: error.message });
+  }
+  const event = new Event("unhandledrejection", { cancelable: true });
+  Object.defineProperty(event, "reason", { value: error });
+  return event;
+}
 
 function gamepadButton(pressed = false): GamepadButton {
   return { pressed, touched: pressed, value: pressed ? 1 : 0 };
@@ -328,19 +414,7 @@ function domRect(left: number, top: number, width: number, height: number): DOMR
   };
 }
 
-function config(): KirikiriRuntimeConfig {
-  return {
-    sessionId: "kirikiri-session",
-    adapter: {
-      adapterKind: "KIRIKIRI2_WEB",
-      adapterId: "kirikiri2-web",
-      checkpointSlot: 1999,
-      projectIndexUrl: "https://content.example/project/index.json",
-      runtimeBaseUrl: "https://runtime.example/kirikiri/",
-      startupXp3Path: null,
-    },
-  };
-}
+function config() {return targetEnvelope("kirikiri2-kag");}
 
 function enableRuntimeFeatures() {
   Object.defineProperty(window, "crossOriginIsolated", { configurable: true, value: true });
@@ -353,7 +427,7 @@ function mockDownloads(xp3Paths = ["/data.xp3"]) {
   vi.stubGlobal("fetch", vi.fn(async (input: string | URL | Request, init?: RequestInit) => {
     const url = String(input);
     if (url.endsWith("assets.zip")) {return new Response(Uint8Array.of(1), { status: 200 });}
-    if (url.endsWith("project/index.json") && !init?.method) {
+    if (url.endsWith("/index.json") && !init?.method) {
       return Response.json({ schemaVersion: 1, files: [
         ...xp3Paths.map((path) => ({
           path: path.replace(/^\//u, ""), sizeBytes: 1234,
@@ -387,13 +461,16 @@ async function loadVlfs(vlfs: FakeVlfs) {
   runtimeScripts()[0]!.dispatchEvent(new Event("load"));
 }
 
-async function loadCore(vlfs: FakeVlfs, options: { restoreResult?: number; restoreState?: number } = {}) {
+async function loadCore(
+  vlfs: FakeVlfs,
+  options: { bookmarkReady?: number; restoreResult?: number; restoreState?: number } = {},
+) {
   await vi.waitFor(() => expect(runtimeScripts()).toHaveLength(2));
   const configured = (window as HostWindow).Module ?? {};
   const module = Object.assign(configured, {
     pauseMainLoop: vi.fn(),
     resumeMainLoop: vi.fn(),
-    _krkr2_host_bookmark_is_ready: vi.fn(() => 1),
+    _krkr2_host_bookmark_is_ready: vi.fn(() => options.bookmarkReady ?? 1),
     _krkr2_host_load_bookmark: vi.fn(() => options.restoreResult ?? 0),
     _krkr2_host_load_bookmark_state: vi.fn(() => options.restoreState ?? 2),
     _krkr2_host_save_bookmark: vi.fn((slot: number) => {

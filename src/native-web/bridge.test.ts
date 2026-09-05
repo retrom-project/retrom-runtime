@@ -17,7 +17,7 @@ type FakePort = {
 };
 
 describe("native-web RPG Maker bridge", () => {
-  it("reports the engine ready on the title screen before a map is available", () => {
+  it("reports readiness without fixture-variable proofs and applies video modes inside the isolated frame", async () => {
     const source = readFileSync(
       resolve(process.cwd(), "assets/runtime/native/bridge.js"),
       "utf8",
@@ -25,9 +25,11 @@ describe("native-web RPG Maker bridge", () => {
     const listeners = new Map<string, Array<(event: BridgeEvent) => void>>();
     const replies: unknown[] = [];
     const nativeExit = vi.fn();
+    const setImageRendering = vi.fn();
     const sceneManager = { _scene: null, exit: nativeExit, updateMain: () => undefined };
     const runtime = {
       DataManager: {},
+      document: {querySelectorAll: () => [{style: {setProperty: setImageRendering}}]},
       SceneManager: sceneManager,
       StorageManager: {},
       Utils: { RPGMAKER_NAME: "MV" },
@@ -64,7 +66,6 @@ describe("native-web RPG Maker bridge", () => {
       body: {
         engine: "RPGMV",
         engineProfile: "RPGMV",
-        position: { fixtureState: 0, mapId: 0, playerX: 0, playerY: 0 },
       },
       launchId: "01980000-0000-7000-8000-000000000001",
       nonce: "test-nonce",
@@ -72,6 +73,19 @@ describe("native-web RPG Maker bridge", () => {
       requestId: 0,
       type: "READY",
     });
+
+    port.onmessage?.({data: {
+      body: {mode: "pixel"},
+      launchId: "01980000-0000-7000-8000-000000000001",
+      nonce: "test-nonce",
+      protocolVersion: 1,
+      requestId: 1,
+      type: "SET_VIDEO_MODE",
+    }});
+    await vi.waitFor(() => expect(replies).toContainEqual(expect.objectContaining({
+      requestId: 1, type: "SET_VIDEO_MODE_RESULT",
+    })));
+    expect(setImageRendering).toHaveBeenCalledWith("image-rendering", "pixelated", "important");
 
     sceneManager.exit();
     sceneManager.exit();
@@ -84,6 +98,74 @@ describe("native-web RPG Maker bridge", () => {
       requestId: 0,
       type: "EXIT_REQUESTED",
     }]);
+  });
+
+  it("preserves CanvasTextAlign semantics and does not wait for keepalive cleanup", async () => {
+    const source = readFileSync(
+      resolve(process.cwd(), "assets/runtime/native/bridge.js"),
+      "utf8",
+    );
+    const listeners = new Map<string, Array<(event: BridgeEvent) => void>>();
+    const replies: unknown[] = [];
+    const alignments = new WeakMap<object, string>();
+    const nativeTextAlignSetter = vi.fn(function setTextAlign(this: object, value: string) {
+      alignments.set(this, value);
+    });
+    class FakeCanvasRenderingContext2D {}
+    Object.defineProperty(FakeCanvasRenderingContext2D.prototype, "textAlign", {
+      configurable: true,
+      get(this: object) {return alignments.get(this) ?? "start";},
+      set: nativeTextAlignSetter,
+    });
+    let resolveCleanup!: (response: Response) => void;
+    const fetcher = vi.fn(() => new Promise<Response>((resolvePromise) => {resolveCleanup = resolvePromise;}));
+    const runtime = {
+      CanvasRenderingContext2D: FakeCanvasRenderingContext2D,
+      addEventListener: (name: string, callback: (event: BridgeEvent) => void) => {
+        listeners.set(name, [...(listeners.get(name) ?? []), callback]);
+      },
+      fetch: fetcher,
+      location: {href: "https://runtime.example/game/index.html", origin: "https://runtime.example"},
+      parent: {postMessage: () => undefined},
+      requestAnimationFrame: () => 1,
+    };
+    runInNewContext(source, {TextDecoder, TextEncoder, URL, window: runtime});
+    const port: FakePort = {
+      onmessage: null,
+      postMessage: (message) => replies.push(message),
+      start: () => undefined,
+    };
+    const launchId = "01980000-0000-7000-8000-000000000001";
+    const nonce = "test-nonce";
+    listeners.get("message")?.[0]?.({
+      data: {
+        cleanupUrl: "https://runtime.example/__retrom/cleanup",
+        launchId, nonce, parentOrigin: "https://host.example", profile: "RPGMV",
+        protocolVersion: 1, type: "RPG_RUNTIME_NATIVE_CONNECT",
+      },
+      origin: "https://host.example",
+      ports: [port],
+      stopImmediatePropagation: () => undefined,
+    });
+
+    const context = new FakeCanvasRenderingContext2D() as FakeCanvasRenderingContext2D & {textAlign: string};
+    context.textAlign = "center";
+    context.textAlign = undefined as unknown as string;
+    expect(context.textAlign).toBe("center");
+    expect(nativeTextAlignSetter).toHaveBeenCalledTimes(1);
+    expect(nativeTextAlignSetter).toHaveBeenCalledWith("center");
+
+    port.onmessage?.({data: {
+      body: {}, launchId, nonce, protocolVersion: 1, requestId: 1, type: "CLEANUP",
+    }});
+    await vi.waitFor(() => expect(fetcher).toHaveBeenCalledWith(
+      "https://runtime.example/__retrom/cleanup",
+      {method: "POST", credentials: "same-origin", keepalive: true},
+    ));
+    await vi.waitFor(() => expect(replies).toContainEqual(expect.objectContaining({
+      requestId: 1, type: "CLEANUP_RESULT",
+    })));
+    resolveCleanup(new Response(null, {status: 204}));
   });
 
   it("waits for the engine database before restoring an MV save", async () => {
@@ -183,7 +265,7 @@ describe("native-web RPG Maker bridge", () => {
     databaseLoaded = true;
     animationFrames.shift()?.();
     await vi.waitFor(() => expect(replies).toContainEqual({
-      body: {position: {fixtureState: 1, mapId: 1, playerX: 11, playerY: 8}},
+      body: {},
       launchId,
       nonce,
       protocolVersion: 1,

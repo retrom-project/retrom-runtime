@@ -1,12 +1,11 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { rpgMakerPositionProbeKind, type RpgMakerRuntimeConfig } from "../rpgmaker/contract";
 import { mountEasyRpg } from "./adapter";
+import { encodeRpgCheckpoint } from "../checkpoint";
 
-type EasyConfig = RpgMakerRuntimeConfig & {
-  adapter: Extract<RpgMakerRuntimeConfig["adapter"], { adapterKind: "EASYRPG_WEB" }>;
-};
+import type {EasyRpgParameters} from "./parameters.js";
 
 afterEach(() => {
+  vi.useRealTimers();
   vi.restoreAllMocks();
   delete (window as Window & { createEasyRpgPlayer?: unknown }).createEasyRpgPlayer;
   Object.defineProperty(window, "createImageBitmap", { configurable: true, value: undefined });
@@ -15,6 +14,71 @@ afterEach(() => {
 });
 
 describe("EasyRPG adapter cleanup", () => {
+  it("waits for the restored map without requiring fixture variables or a position proof", async () => {
+    const payload = await encodeRpgCheckpoint({
+      engine: "RPG2003", resumeSlot: 100,
+      entries: [{store: "FILESYSTEM", key: "Save/Save100.lsd", mediaType: "application/octet-stream", data: new Uint8Array([1])}],
+    });
+    const target = document.createElement("div");
+    document.body.append(target);
+    const readRuntimeState = vi.fn()
+      .mockReturnValueOnce(JSON.stringify({engine: "RPG2003", ready: false, canCheckpoint: false,
+        frameCount: 10}))
+      .mockReturnValue(JSON.stringify({engine: "RPG2003", ready: true, canCheckpoint: true,
+        frameCount: 20}));
+    const createPlayer = vi.fn().mockResolvedValue({
+      FS: {}, canvas: document.createElement("canvas"), runtimeFileSystemReady: true,
+      initApi: vi.fn(), pauseMainLoop: vi.fn(), resumeMainLoop: vi.fn(),
+      api: {runtimeState: readRuntimeState},
+    });
+    Object.defineProperty(window, "createEasyRpgPlayer", {configurable: true, value: createPlayer});
+    const mounting = mountEasyRpg(easyConfig("RPG2003"), target, window, payload);
+    await vi.waitFor(() => expect(document.head.querySelector("script[data-rpg-runtime=easyrpg]")).not.toBeNull());
+    document.head.querySelector("script[data-rpg-runtime=easyrpg]")?.dispatchEvent(new Event("load"));
+    const mounted = await mounting;
+    expect(createPlayer).toHaveBeenCalledWith(expect.objectContaining({runtimeRestoreSlot: 100}));
+    expect(readRuntimeState).toHaveBeenCalledTimes(2);
+    expect(mounted.getCheckpointAvailability()).toEqual({available: true, blocker: null});
+    expect(mounted.getFrameCount()).toBe(20);
+    await mounted.exit();
+  });
+
+  it.each([false, true])("does not treat loading frames as a final engine identity (persistent mismatch: %s)", async (persistent) => {
+    vi.useFakeTimers();
+    const target = document.createElement("div");
+    document.body.append(target);
+    let initialized = false;
+    Object.defineProperty(window, "createEasyRpgPlayer", {
+      configurable: true,
+      value: vi.fn().mockResolvedValue({
+        FS: {}, canvas: document.createElement("canvas"), runtimeFileSystemReady: true,
+        initApi: vi.fn(), pauseMainLoop: vi.fn(), resumeMainLoop: vi.fn(),
+        api: {runtimeState: () => JSON.stringify({
+          engine: initialized ? "RPG2003" : "RPG2000", ready: false, canCheckpoint: false,
+          frameCount: 10, mapId: 0, playerX: 0, playerY: 0, fixtureState: 0,
+        })},
+      }),
+    });
+    let settled = false;
+    const mounting = mountEasyRpg(easyConfig("RPG2003"), target, window, null)
+      .then((value) => {settled = true; return value;}, (error: unknown) => {settled = true; return error;});
+    await vi.advanceTimersByTimeAsync(0);
+    const script = document.head.querySelector("script[data-rpg-runtime=easyrpg]");
+    expect(script).not.toBeNull();
+    script?.dispatchEvent(new Event("load"));
+    await vi.advanceTimersByTimeAsync(100);
+    expect(settled).toBe(false);
+    initialized = !persistent;
+    await vi.advanceTimersByTimeAsync(persistent ? 30_000 : 50);
+    const result = await mounting;
+    if (persistent) {
+      expect(result).toEqual(new Error("RPG_ENGINE_PROFILE_MISMATCH"));
+      expect(target.childElementCount).toBe(0);
+    } else {
+      expect(result).toHaveProperty("getFrameCount");
+    }
+  });
+
   it("removes the mount DOM and failed loader before rejecting", async () => {
     const target = document.createElement("div");
     document.body.append(target);
@@ -81,17 +145,47 @@ describe("EasyRPG adapter cleanup", () => {
 
     const mounted = await mounting;
     expect(createPlayer).toHaveBeenCalledWith(expect.objectContaining({
-      noExitRuntime: false,
-      onExit: expect.any(Function),
-      runtimeProjectRootUrl: config.adapter.projectRootUrl,
+      noExitRuntime: true,
+      onRuntimeExitRequested: expect.any(Function),
+      runtimeProjectRootUrl: config.projectRootUrl,
     }));
-    const options = createPlayer.mock.calls[0]?.[0] as {onExit?: (status: number) => void};
-    options.onExit?.(0);
+    const options = createPlayer.mock.calls[0]?.[0] as {onRuntimeExitRequested?: () => void};
+    options.onRuntimeExitRequested?.();
     expect(reportExitRequested).toHaveBeenCalledOnce();
-    expect(mounted.getValidationProbe(rpgMakerPositionProbeKind)?.value)
-      .toEqual({ mapId: 1, playerX: 8, playerY: 6, fixtureState: 0 });
+    expect(mounted.getCheckpointAvailability()).toEqual({available: true, blocker: null});
     await mounted.exit();
     delete (window as Window & { createEasyRpgPlayer?: unknown }).createEasyRpgPlayer;
+    target.remove();
+  });
+
+  it("mounts on an interactive title scene while checkpoints remain unavailable", async () => {
+    const target = document.createElement("div");
+    document.body.append(target);
+    const canvas = document.createElement("canvas");
+    Object.defineProperty(window, "createEasyRpgPlayer", {
+      configurable: true,
+      value: vi.fn().mockResolvedValue({
+        FS: {},
+        api: {
+          createRuntimeCheckpoint: vi.fn(),
+          runtimeState: () => JSON.stringify({
+            engine: "RPG2003", ready: false, canCheckpoint: false,
+            frameCount: 120, mapId: 0, playerX: 0, playerY: 0, fixtureState: 0,
+          }),
+        },
+        canvas, runtimeFileSystemReady: true,
+        initApi: vi.fn(), pauseMainLoop: vi.fn(), resumeMainLoop: vi.fn(),
+      }),
+    });
+    const mounting = mountEasyRpg(easyConfig("RPG2003"), target, window, null);
+    await vi.waitFor(() => expect(document.head.querySelector("script[data-rpg-runtime=easyrpg]")).not.toBeNull());
+    document.head.querySelector<HTMLScriptElement>("script[data-rpg-runtime=easyrpg]")
+      ?.dispatchEvent(new Event("load"));
+
+    const mounted = await mounting;
+    expect(mounted.getFrameCount()).toBe(120);
+    expect(mounted.getCheckpointAvailability()).toEqual({available: false, blocker: "BUSY"});
+    await mounted.exit();
     target.remove();
   });
 
@@ -123,7 +217,7 @@ describe("EasyRPG adapter cleanup", () => {
     });
     Object.defineProperty(window, "createEasyRpgPlayer", { configurable: true, value: createPlayer });
     const config = easyConfig();
-    config.adapter.rtpSource = { kind: "FILE_TREE_V1", indexUrl };
+    config.rtpSource = { kind: "FILE_TREE", indexUrl };
     const mounting = mountEasyRpg(config, target, window, null);
     await vi.waitFor(() => expect(document.head.querySelector("script[data-rpg-runtime=easyrpg]")).not.toBeNull());
     document.head.querySelector<HTMLScriptElement>("script[data-rpg-runtime=easyrpg]")
@@ -271,27 +365,23 @@ describe("EasyRPG adapter cleanup", () => {
 
     const mounted = await mounting;
     expect(runtimeState).toHaveBeenCalledTimes(2);
-    expect(mounted.getValidationProbe(rpgMakerPositionProbeKind)?.value)
-      .toEqual({ mapId: 1, playerX: 10, playerY: 8, fixtureState: 0 });
+    expect(mounted.getCheckpointAvailability()).toEqual({available: true, blocker: null});
     await mounted.exit();
     delete (window as Window & { createEasyRpgPlayer?: unknown }).createEasyRpgPlayer;
     target.remove();
   });
 });
 
-function easyConfig(generation: "RPG2000" | "RPG2003" = "RPG2000"): EasyConfig {
+function easyConfig(generation: "RPG2000" | "RPG2003" = "RPG2000"): EasyRpgParameters {
   const sessionId = "01980000-0000-7000-8000-000000000001";
   const root = `https://games.example/projects/${sessionId}/`;
   const rpg2003 = generation === "RPG2003";
   return {
     sessionId,
-    generation,
-    validationPurpose: true,
-    expectedRestorePosition: null,
-    adapter: {
-      adapterKind: "EASYRPG_WEB", adapterId: "easyrpg-web", engineMode: rpg2003 ? "rpg2k3" : "rpg2k",
-      runtimeBaseUrl: "/runtime/easyrpg/", projectRootUrl: root,
-      projectIndexUrl: `${root}index.json`, rtpSource: null, checkpointSlot: 100,
-    },
+    engineMode: rpg2003 ? "rpg2k3" : "rpg2k",
+    runtimeBaseUrl: "/runtime/easyrpg/",
+    projectRootUrl: root,
+    rtpSource: null,
+    checkpointSlot: 100,
   };
 }

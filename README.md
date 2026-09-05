@@ -5,33 +5,49 @@ VX, VX Ace, MV and MZ, ONS games powered by ONScripterYuri, KAG-based KiriKiri2 
 projects powered by Butterscotch, browser TyranoScript projects and WASM-4 carts. It owns runtime lifecycle, adapters, checkpoint codecs, bridge assets and pinned core
 Release inputs. It does not know about a host application's users, database, review flow, storage or HTTP API.
 
-## Public API
+## Provider Module V1
+
+Hosts integrate the generated Provider Bundle, not an engine registry or the legacy adapter API. A Bundle exports
+one `client.mjs` with this closed interface:
 
 ```ts
-import { createRuntime, type RuntimeConfig } from "@xxxsen/retrom-runtime";
-
-const config: RuntimeConfig = launchConfig;
-const runtime = createRuntime(config, {
-  frame,
-  frameWindow,
-  restorePayload,
-  onDiagnostic: ({ runtime, message }) => console.info(`[${runtime}] ${message}`),
-});
-await runtime.mount(container);
+export const providerId = "retrom-runtime";
+export const providerVersion = "0.16.0";
+export const providerApiVersion = 1;
+export async function createRuntime(
+  value: unknown,
+  host: RuntimeHostV1,
+): Promise<PlayerRuntimeV1>;
 ```
 
-The host supplies URLs, an isolated frame where required, an optional restore payload and an explicit adapter
-configuration. The library never calls a host review, upload, save-state or authentication endpoint.
-For EasyRPG, `adapter.projectRootUrl` is passed to the core as the complete
-project directory URL; neither the adapter nor the core assumes a host route.
+The host validates a Launch Envelope V1, verifies the module URL and SHA-256 against the active Bundle, imports
+the module, checks the exported identity and calls `createRuntime`. It only consumes `PlayerRuntimeV1`; it never
+chooses EasyRPG, mkxp, native Web or another implementation. The Provider validates the stable `providerId` plus
+`targetId`, current resources, private Target options, optional restore and netplay inputs before mounting.
 
-Every adapter uses the same engine-neutral `GameRuntime` lifecycle. Capabilities and checkpoint formats are
-declared in `runtime-manifest.json`; hosts do not infer them from a generation name. Core-specific validation is
-an extension probe. RPG Maker exposes `rpgmaker.position.v1`, while ONS and KiriKiri do not fabricate map IDs or
-player coordinates.
+`src/providers/retrom-runtime/catalog.ts` is the single Target declaration for the 12 targets in this Provider.
+The generated declaration provides current capabilities, checkpoint `writeFormat/readFormats/maxBytes`, resource
+kinds, runtime files and a constrained closed `targetOptionsSchema`. The Provider Module uses that schema to
+exact-validate options before mounting; it has no
+`optionsKind` discriminator. A Host dispatcher only needs generic JSON safety, depth and size limits and must not
+copy these Target-specific properties. `provider-sources.json` records only pinned upstream Release/build sources;
+it cannot declare a Target or host binding. Product play and review previews use the same ordinary controls.
+There are no production proof gates, fixture variables, validation probes, or expected-position Target options.
+Strict input, visual and restored-position assertions belong to development acceptance through real game fixtures.
+
+The package root exports the same Provider entry and public ABI types. There is no separate runtime constructor,
+generic adapter config, config conversion layer or inner controller. The Provider creates minimal, typed parameters
+for the selected core directly. One controller owns state, progress, serialized operations, cancellation and cleanup;
+the Host separately owns the page, frame and authorization session. The public state is CREATED, MOUNTING, RUNNING,
+PAUSED, CHECKPOINTING, EXITING, EXITED or FAILED. Exit preempts pending controls and checkpoints; cancellation is
+checked after each asynchronous startup boundary and a late core is cleaned without returning to RUNNING.
+
+Only Provider creation validates the external Envelope and Host against the Provider declaration. There is no
+public precheck call or repeated internal Envelope/config validation. File downloads, decoded checkpoints and
+cross-origin messages retain their own trust-boundary validation.
 
 Content sources are also host-independent. Directory-oriented adapters consume
-`FILE_TREE_V1`; mkxp consumes `SEEKABLE_BLOB_V1`; native Web projects retain
+`FILE_TREE`; mkxp consumes `SEEKABLE_BLOB`; native Web projects retain
 their isolated entry model. A seekable blob supplies a URL, size, diagnostic
 digest and `rangeRequired: true`. The mkxp adapter registers that URL in
 WasmFS and passes only a virtual path to the core—it does not turn the project
@@ -41,7 +57,7 @@ an inexact `Content-Range`, and response-length drift instead of silently
 falling back to a whole-file request. Core JS/Wasm and bridge assets still use
 full-byte validation, while their immutable URLs use the browser cache.
 
-EasyRPG receives both the project and optional RTP as `FILE_TREE_V1` roots. The project wins when it contains a
+EasyRPG receives both the project and optional RTP as `FILE_TREE` roots. The project wins when it contains a
 resource; only a missing resource that the game actually opens is fetched from the RTP root. ONS keeps ordinary
 scripts and images on the same file-on-first-open path. Exact-size immutable responses are streamed into the
 Emscripten file system and an origin-private file one at a time, so concurrent multi-hundred-megabyte writes cannot
@@ -63,8 +79,8 @@ root `data.win`. Files stream into an OPFS directory keyed by the host content d
 reuse exact-sized bytes without another network transfer. The adapter renders on a centered 640×480
 `OffscreenCanvas`, forwards keyboard and standard gamepad state, emits load progress, captures bounded direct
 checkpoints, restores them in a new Worker instance and reports a core-initiated exit through the common lifecycle.
-The first compatibility line is intentionally limited to GameMaker data versions accepted by the pinned
-Butterscotch core and to runtime states its checkpoint status reports as supported.
+The Target accepts only GameMaker data versions supported by the pinned Butterscotch core and runtime states its
+checkpoint status reports as supported.
 
 TyranoScript projects use the engine already present in the imported game and run in a per-Launch isolated origin.
 The host injects the small, independently licensed bridge aggregated from the maintained fork; the aggregate runtime
@@ -79,15 +95,9 @@ starting the core. The maintained fork exposes a host-independent Web module wit
 input, screenshots, bounded `wasm4-state-v1` checkpoints and direct restore in a fresh instance. Checkpoints bind
 WASM memory, exported mutable globals and the bounded WASM-4 disk to the exact cart digest.
 
-ONS is a separate public runtime rather than an RPG Maker generation:
-
-```ts
-import { createRuntime, type OnsRuntimeConfig } from "@xxxsen/retrom-runtime";
-
-const runtime = createRuntime(config, { frameWindow, restorePayload });
-await runtime.mount(container);
-const checkpoint = await runtime.checkpoint();
-```
+ONS is a separate Provider Target rather than an RPG Maker generation. A Host launches target
+`onscripter-yuri` through Provider Module V1 and only interacts with the returned `PlayerRuntimeV1`;
+the ONS adapter config and constructor are private implementation details of the Provider.
 
 An ONS project index has the stable shape below. Paths are project-relative and URLs remain supplied by the host:
 
@@ -100,12 +110,13 @@ An ONS project index has the stable shape below. Paths are project-relative and 
 }
 ```
 
-Hosts can subscribe before `mount()` to render first-load progress. A later instance still emits progress while
+Hosts can subscribe to the Provider-returned runtime before `mount()` to render first-load progress. A later
+instance still emits progress while
 reading persisted bytes into the core, but it does not transfer a cached project file over the network:
 
 ```ts
 runtime.subscribe((event) => {
-  if (event.type === "LOAD_PROGRESS" && event.phase === "PROJECT_CONTENT") {
+  if (event.type === "LOAD_PROGRESS") {
     renderProgress(event.loadedBytes, event.totalBytes);
   }
 });
@@ -120,18 +131,11 @@ capture unavailable and releases the adapter. A host should subscribe before `mo
 and leave or close the Player when it receives this event; it must not keep a black canvas or offer saving after
 the core has ended.
 
-KiriKiri is also an independent runtime:
+KiriKiri is also an independent Provider Target. A Host launches target `kirikiri2-kag` through
+Provider Module V1 and never imports the KiriKiri adapter config or constructor.
 
-```ts
-import { createRuntime, type KirikiriRuntimeConfig } from "@xxxsen/retrom-runtime";
-
-const runtime = createRuntime(config, { frameWindow, restorePayload });
-await runtime.mount(container);
-const checkpoint = await runtime.checkpoint();
-```
-
-The first compatibility line is deliberately limited to games exposing the standard KAG
-`saveBookMark`/`loadBookMark` API. Its checkpoint contains the small native KAG save files written under
+The KiriKiri Target accepts games exposing the standard KAG `saveBookMark`/`loadBookMark` API. Its checkpoint
+contains the small native KAG save files written under
 `/savedata` or `/save`; it is not a raw Wasm memory snapshot. A pure TJS/custom-engine title without these KAG
 methods fails closed as unsupported instead of producing a checkpoint that cannot be restored. The host supplies
 a project file index and, only when that project contains multiple XP3 archives, the explicit project-relative XP3
@@ -160,63 +164,48 @@ npm run typecheck
 npm test
 npm run build
 npm run package:check
+npm run provider:input:check
+npm run provider:build
+npm run provider:check
+npm run release:build
 ```
 
 Runtime JS/Wasm is not committed or built here. EasyRPG, mkxp, ONScripterYuri, KiriKiri, Butterscotch, WASM-4 and
 the TyranoScript host bridge are maintained in
 separate forks; each fork owns its source changes, quality checks, Web build and immutable core Release. This
-repository downloads those fixed releases, adds its own small bridge assets and produces:
+repository downloads those fixed releases, adds its own small bridge assets and produces two Provider Bundle V1
+archives (`emulatorjs` and `retrom-runtime`), their descriptors/integrity records, an installable npm package and
+release metadata. Every archive has a closed file allowlist, deterministic metadata, licenses, provenance,
+an immutable Bundle digest and a `client.mjs` digest. Two builds from identical input must produce identical bytes.
 
-- `release/retrom-runtime-<version>.tar.gz`
-- `release/xxxsen-retrom-runtime-<version>.tgz` (installable npm package)
-- `release/retrom-runtime-release.json`
+PFB candidate integration uses a spec generated by Retrom. The spec points at this checkout and optional core
+worktrees, with commit and source-tree digests. `candidate:build -- --spec ... --output ...` may override only a
+source already declared in `provider-sources.json`; it cannot inject a Target. Candidate output is rejected by
+formal package/release commands and never modifies production locks.
 
-The repository keeps one current asset for each runtime role and never creates parallel versioned asset
-directories. The `retrom-runtime` Git tag versions the complete set; older sets remain available only from their
-immutable release tags.
-
-Adapter IDs and asset paths describe roles, not migration revisions. Version selection happens only at the
-repository release tag; the source tree and each release contain one implementation per runtime role.
-SHA-256 values in release metadata detect corrupt downloads; compatibility identity is the immutable
-`retrom-runtime` tag and each upstream repository plus its tag, when one exists, and exact commit.
-
-Core changes can be integrated before a formal fork Release. Build and validate the candidate in the fork, then
-point `RETROM_RUNTIME_DEV_RELEASE_OVERRIDES` at the absolute output directory while running `release:build`:
-
-```bash
-RETROM_RUNTIME_DEV_RELEASE_OVERRIDES='{"onsyuri":"/work/OnscripterYuri/output"}' npm run release:build
-```
-
-Use key `kirikiri2` for the KiriKiri fork, `butterscotch` for the Butterscotch fork, `tyranoscript` for the
-TyranoScript bridge fork and `wasm4` for the WASM-4 fork. The same environment is inherited by Retrom's
-`RETROM_RUNTIME_DEV_ROOT`/`RETROM_RUNTIME_DEV_INCLUDE_ASSETS=true` local-link flow. This affects only ignored local
-staging output; the committed manifest and formal Release inputs remain pinned to published fork tags.
-
-Each core also declares three forward-upgrade fields in `runtime-manifest.json`:
-
-- `gameCompatibilityLine` is the stable logical game-input contract. A release must keep the same line for an
-  existing core; an incompatible game loader is a new core rather than an in-place upgrade.
-- `saveAbi` is the checkpoint format written by the release.
-- `readableSaveAbis` is the exact, non-empty set the release can restore and always includes `saveAbi`.
-
-Hosts should resolve an imported game through its logical core to the current release. A checkpoint whose
-`saveAbi` is absent from the current core's `readableSaveAbis` remains visible but must not be loaded. Releases
-are fixed forward; this repository does not require hosts to retain or roll back to an older runtime bundle.
+`providerId` plus `targetId` is the permanent Target identity. Provider upgrades switch the active Bundle without
+rewriting games, reviews or saves. Each Target declares the checkpoint format written by the current Provider and
+the exact non-empty `readFormats` set it can restore; `readFormats` includes `writeFormat`. A checkpoint whose format
+is absent from the current Target's `readFormats` remains visible but cannot be loaded. Hosts only upgrade and never
+retain, restore or fall back to an older Bundle.
 
 The mkxp core still serializes into its fixed 256 MiB memory buffer. The adapter does not upload that zero-padded
 buffer directly: it trims the unused zero tail in bounded asynchronous chunks, compresses the meaningful prefix in a worker and stores a compact
-`mkxp-state-compact` checkpoint. Restore expands the checkpoint back to the exact 256 MiB core buffer before the
-private load hotkey is sent. This is an aggregate-runtime ABI; the pinned upstream core Release continues to expose
-its raw serializer ABI and does not need a host-specific patch for compression.
+`mkxp-state-compact-v1` checkpoint. Restore expands it back to the exact core buffer before publishing an atomic
+native load request. The core loop owns save/restore execution and exposes an explicit completion result. Saving
+preallocates the exact memory-file size and acknowledges only after writing, closing and freeing its temporary
+buffer; a full-length file is never proof of completion. Restoring requires successful native deserialization and
+a subsequent presented frame. The adapter releases temporary state files after consuming them. This private
+request/result ABI replaces synthetic save/load hotkeys without changing the raw serializer or compact format.
 
 ## Adding and integrating a core
 
 1. Put third-party source changes and the Web build in a dedicated maintained fork; produce one fixed candidate asset set.
-2. Add the runtime entry and adapter implementation without aliases or fallback implementations.
+2. Add one Target to the Provider declaration and its private implementation without aliases or fallback implementations.
 3. Add adapter unit tests and a small owned or redistributable compatibility fixture. Private operator games may
    be used for an ignored local smoke but never enter Git or ordinary automated tests.
 4. Open a PR to `master`; the quality workflow runs lint, types, unit tests and the package build without compiling cores.
-5. Use local fork-asset overrides for the host's real import/launch/save/restore product test.
+5. Use a PFB candidate descriptor for the host's real import/launch/checkpoint/restore product test.
 6. Publish the stable fork tag, pin it here, then publish the aggregate runtime tag.
 
 This keeps core development independent: a new core can be tested without replacing the stable runtime used by

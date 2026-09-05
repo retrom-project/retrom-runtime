@@ -21,4 +21,6 @@ jobs:
       - run: npm run typecheck
       - run: npm test
       - run: npm run release:build
+        env:
+          RETROM_PROVIDER_BUILD_MODE: candidate
       - run: npm run package:check

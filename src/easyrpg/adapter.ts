@@ -1,21 +1,14 @@
 import { decodeRpgCheckpoint, encodeRpgCheckpoint } from "../checkpoint.js";
 import type { MountedRuntimeAdapter, RuntimeExitReporter } from "../internal-adapter.js";
-import {
-  rpgMakerPositionProbeKind,
-  type RpgMakerPositionV1,
-  type RpgMakerRuntimeConfig,
-} from "../rpgmaker/contract.js";
 
-type EasyConfig = RpgMakerRuntimeConfig & {
-  adapter: Extract<RpgMakerRuntimeConfig["adapter"], { adapterKind: "EASYRPG_WEB" }>;
-};
+import type {EasyRpgParameters} from "./parameters.js";
 
 type EasyFileSystem = {
   analyzePath(path: string): { exists: boolean };
   readFile(path: string): Uint8Array;
 };
 
-type EasyState = RpgMakerPositionV1 & {
+type EasyState = {
   engine: "RPG2000" | "RPG2003";
   ready: boolean;
   canCheckpoint: boolean;
@@ -37,8 +30,8 @@ type EasyModule = {
 
 type EasyModuleOptions = {
   game: string;
-  noExitRuntime: false;
-  onExit(status: number): void;
+  noExitRuntime: true;
+  onRuntimeExitRequested(): void;
   saveFs: undefined;
   locateFile(path: string): string;
   runtimeEngineMode: string;
@@ -61,7 +54,7 @@ const maximumRtpFiles = 20_000;
 const savePath = "Save/Save100.lsd";
 
 export async function mountEasyRpg(
-  config: EasyConfig,
+  config: EasyRpgParameters,
   target: HTMLElement,
   frameWindow: Window,
   restorePayload: Uint8Array | null,
@@ -76,7 +69,7 @@ export async function mountEasyRpg(
 }
 
 async function mountEasyRpgUnchecked(
-  config: EasyConfig,
+  config: EasyRpgParameters,
   target: HTMLElement,
   frameWindow: Window,
   restorePayload: Uint8Array | null,
@@ -96,7 +89,7 @@ async function mountEasyRpgUnchecked(
     loadRtp(config),
     decodeRestore(config, restorePayload),
   ]);
-  const script = await loadScript(document, `${config.adapter.runtimeBaseUrl}easyrpg-player.js`);
+  const script = await loadScript(document, `${config.runtimeBaseUrl}easyrpg-player.js`);
   const createPlayer = runtimeWindow.createEasyRpgPlayer;
   if (typeof createPlayer !== "function") {
     script.remove();
@@ -104,19 +97,19 @@ async function mountEasyRpgUnchecked(
   }
   const playerModule = await createPlayer({
     game: config.sessionId,
-    noExitRuntime: false,
-    onExit: () => reportExitRequested(),
+    noExitRuntime: true,
+    onRuntimeExitRequested: () => reportExitRequested(),
     saveFs: undefined,
-    locateFile: (path) => `${config.adapter.runtimeBaseUrl}${path}`,
-    runtimeEngineMode: config.adapter.engineMode,
-    runtimeProjectRootUrl: config.adapter.projectRootUrl,
+    locateFile: (path) => `${config.runtimeBaseUrl}${path}`,
+    runtimeEngineMode: config.engineMode,
+    runtimeProjectRootUrl: config.projectRootUrl,
     runtimeRtpRemoteFiles: rtpFiles,
-    ...(restoreFiles.length ? { runtimeRestoreSlot: config.adapter.checkpointSlot } : {}),
+    ...(restoreFiles.length ? { runtimeRestoreSlot: config.checkpointSlot } : {}),
     runtimeRestoreFiles: restoreFiles,
   });
   playerModule.initApi();
-  const expectedEngine = config.generation === "RPG2000" ? "RPG2000" : "RPG2003";
-  await waitForReady(playerModule, expectedEngine);
+  const expectedEngine = config.engineMode === "rpg2k" ? "RPG2000" : "RPG2003";
+  await waitForReady(playerModule, expectedEngine, restoreFiles.length > 0);
 
   return {
     checkpoint: async () => {
@@ -125,7 +118,7 @@ async function mountEasyRpgUnchecked(
       return {
         bytes: await encodeRpgCheckpoint({
           engine: expectedEngine,
-          resumeSlot: config.adapter.checkpointSlot,
+          resumeSlot: config.checkpointSlot,
           entries: [{ store: "FILESYSTEM", key: savePath, mediaType: "application/octet-stream", data: bytes }],
         }),
         format: "easyrpg-save-bundle-v1",
@@ -141,9 +134,6 @@ async function mountEasyRpgUnchecked(
       ? { available: true, blocker: null }
       : { available: false, blocker: "BUSY" },
     getFrameCount: () => readState(playerModule).frameCount,
-    getValidationProbe: (kind) => kind === rpgMakerPositionProbeKind
-      ? { kind, schemaVersion: 1, value: position(readState(playerModule)) }
-      : null,
     pause: async () => {playerModule.pauseMainLoop();},
     resume: async () => {playerModule.resumeMainLoop();},
     screenshot: () => canvasBlob(playerModule.canvas),
@@ -154,61 +144,55 @@ async function mountEasyRpgUnchecked(
 function readState(module: EasyModule): EasyState {
   let parsed: unknown;
   try {parsed = JSON.parse(module.api.runtimeState());}
-  catch {throw new Error("RPG_RUNTIME_POSITION_UNAVAILABLE");}
-  if (!parsed || typeof parsed !== "object") {throw new Error("RPG_RUNTIME_POSITION_UNAVAILABLE");}
+  catch {throw new Error("RPG_RUNTIME_STATE_UNAVAILABLE");}
+  if (!parsed || typeof parsed !== "object") {throw new Error("RPG_RUNTIME_STATE_UNAVAILABLE");}
   const state = parsed as Partial<EasyState>;
   if ((state.engine !== "RPG2000" && state.engine !== "RPG2003") || typeof state.ready !== "boolean" ||
-    typeof state.canCheckpoint !== "boolean" || !validInteger(state.frameCount, 0) || !validPosition(state)) {
-    throw new Error("RPG_RUNTIME_POSITION_UNAVAILABLE");
+    typeof state.canCheckpoint !== "boolean" || !validInteger(state.frameCount, 0)) {
+    throw new Error("RPG_RUNTIME_STATE_UNAVAILABLE");
   }
   return state as EasyState;
-}
-
-function validPosition(value: Partial<RpgMakerPositionV1>) {
-  return validInteger(value.mapId, 0) && validInteger(value.playerX) && validInteger(value.playerY) &&
-    validInteger(value.fixtureState);
 }
 
 function validInteger(value: unknown, minimum = -2_147_483_648) {
   return Number.isSafeInteger(value) && Number(value) >= minimum && Number(value) <= 2_147_483_647;
 }
 
-function position(state: EasyState): RpgMakerPositionV1 {
-  return { mapId: state.mapId, playerX: state.playerX, playerY: state.playerY, fixtureState: state.fixtureState };
-}
-
 async function waitForReady(
   module: EasyModule,
   expectedEngine: EasyState["engine"],
+  restoring: boolean,
 ) {
   if (module.runtimeFileSystemReady !== true) {
     throw new Error("RPG_RUNTIME_FILESYSTEM_NOT_READY");
   }
   const deadline = performance.now() + 30_000;
+  let engineMismatch = false;
   while (performance.now() < deadline) {
     const state = startupState(module);
-    if (state?.ready) {
-      if (state.engine !== expectedEngine) {throw new Error("RPG_ENGINE_PROFILE_MISMATCH");}
-      return;
+    if (state && (state.ready || state.frameCount > 0)) {
+      engineMismatch = state.engine !== expectedEngine;
+      if (!engineMismatch && (!restoring || state.ready)) {return;}
+      if (state.ready) {throw new Error("RPG_ENGINE_PROFILE_MISMATCH");}
     }
     await new Promise<void>((resolve) => window.setTimeout(resolve, 50));
   }
-  throw new Error("RPG_RUNTIME_TIMEOUT");
+  throw new Error(engineMismatch ? "RPG_ENGINE_PROFILE_MISMATCH" : "RPG_RUNTIME_TIMEOUT");
 }
 
 function startupState(module: EasyModule) {
   try {return readState(module);}
   catch (error) {
-    if (error instanceof Error && error.message === "RPG_RUNTIME_POSITION_UNAVAILABLE") {return null;}
+    if (error instanceof Error && error.message === "RPG_RUNTIME_STATE_UNAVAILABLE") {return null;}
     throw error;
   }
 }
 
-async function decodeRestore(config: EasyConfig, payload: Uint8Array | null) {
+async function decodeRestore(config: EasyRpgParameters, payload: Uint8Array | null) {
   if (!payload) {return [];}
-  const expectedEngine = config.generation === "RPG2000" ? "RPG2000" : "RPG2003";
+  const expectedEngine = config.engineMode === "rpg2k" ? "RPG2000" : "RPG2003";
   const bundle = await decodeRpgCheckpoint(payload, expectedEngine);
-  if (bundle.resumeSlot !== config.adapter.checkpointSlot || bundle.entries.length !== 1) {
+  if (bundle.resumeSlot !== config.checkpointSlot || bundle.entries.length !== 1) {
     throw new Error("RPG_CHECKPOINT_RESTORE_INVALID");
   }
   const entry = bundle.entries[0];
@@ -226,8 +210,8 @@ function readCheckpoint(fileSystem: EasyFileSystem) {
   throw new Error("RPG_CHECKPOINT_CREATE_FAILED");
 }
 
-async function loadRtp(config: EasyConfig) {
-  const source = config.adapter.rtpSource;
+async function loadRtp(config: EasyRpgParameters) {
+  const source = config.rtpSource;
   if (!source) {return [];}
   const index = await fetchRtpIndex(source.indexUrl);
   const base = new URL(source.indexUrl, window.location.href);

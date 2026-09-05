@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import type { OnsRuntimeConfig } from "./contract.js";
+import {targetEnvelope} from "../../tests/provider-fixtures.js";
+import {currentWindowHost} from "../../tests/provider-adapter-fixture.js";
 import { decodeOnsCheckpoint, encodeOnsCheckpoint } from "./checkpoint.js";
 import { createRuntime } from "../index.js";
 
@@ -34,7 +35,7 @@ describe("ONS Yuri runtime", () => {
     });
     mockIndex();
     const events: string[] = [];
-    const runtime = createRuntime(config(), { frameWindow: window, restorePayload: null });
+    const runtime = await createRuntime(config(), currentWindowHost(null));
     runtime.subscribe((event) => events.push(event.type));
     const mounting = runtime.mount(document.createElement("div"));
     await loadRuntimeScript();
@@ -44,7 +45,7 @@ describe("ONS Yuri runtime", () => {
 
     await vi.waitFor(() => expect(runtime.getState()).toBe("EXITED"));
     expect(events.filter((type) => type === "EXIT_REQUESTED")).toHaveLength(1);
-    expect(runtime.getCheckpointAvailability()).toEqual({ available: false, blocker: "NOT_READY" });
+    expect(runtime.getCheckpointAvailability()).toEqual({ available: false, reason: "NOT_READY" });
   });
 
   it("maps the standard gamepad left stick to directional keyboard input", async () => {
@@ -69,11 +70,11 @@ describe("ONS Yuri runtime", () => {
     });
     const target = document.createElement("div");
     document.body.append(target);
-    const runtime = createRuntime(config(), { frameWindow: window, restorePayload: null });
+    const runtime = await createRuntime(config(), currentWindowHost(null));
     const mounting = runtime.mount(target);
     await loadRuntimeScript();
     await mounting;
-    const canvas = target.querySelector("canvas");
+    const canvas = document.querySelector("#game")!.querySelector("canvas");
     if (!canvas) {throw new Error("test canvas missing");}
     const inputs: string[] = [];
     canvas.addEventListener("keydown", (event) => inputs.push(`down:${event.key}`));
@@ -130,15 +131,15 @@ describe("ONS Yuri runtime", () => {
         return configured;
       });
       const progress: Array<{ loadedBytes: number; totalBytes: number | null; type: "LOAD_PROGRESS" }> = [];
-      const runtime = createRuntime(config(), { frameWindow: window, restorePayload: null });
+      const runtime = await createRuntime(config(), currentWindowHost(null));
       runtime.subscribe((event) => {
-        if (event.type === "LOAD_PROGRESS" && event.phase === "PROJECT_CONTENT") {progress.push(event);}
+        if (event.type === "LOAD_PROGRESS") {progress.push(event);}
       });
       const mounting = runtime.mount(document.createElement("div"));
       await loadRuntimeScript();
       await mounting;
       expect(progress.at(-1)).toEqual({
-        loadedBytes: 7, phase: "PROJECT_CONTENT", totalBytes: 7, type: "LOAD_PROGRESS",
+        loadedBytes: 7, totalBytes: 7, type: "LOAD_PROGRESS",
       });
       await runtime.exit();
     }
@@ -162,7 +163,7 @@ describe("ONS Yuri runtime", () => {
     mockIndex();
     const target = document.createElement("div");
     document.body.append(target);
-    const runtime = createRuntime(config(), { frameWindow: window, restorePayload: null });
+    const runtime = await createRuntime(config(), currentWindowHost(null));
     const mounting = runtime.mount(target);
     await loadRuntimeScript();
     await mounting;
@@ -195,7 +196,7 @@ describe("ONS Yuri runtime", () => {
     mockIndex();
     const target = document.createElement("div");
     document.body.append(target);
-    const runtime = createRuntime(config(), { frameWindow: window, restorePayload: null });
+    const runtime = await createRuntime(config(), currentWindowHost(null));
     const mounting = runtime.mount(target);
     await loadRuntimeScript();
     await mounting;
@@ -203,14 +204,14 @@ describe("ONS Yuri runtime", () => {
     expect(module.callMain).toHaveBeenCalledWith([
       "--root", "/game", "--font", "/game/default.ttf", "--save-dir", "/save", "--enc:utf8",
     ]);
-    expect(runtime.getCheckpointAvailability()).toEqual({ available: true, blocker: null });
+    expect(runtime.getCheckpointAvailability()).toEqual({ available: true, reason: null });
     expect(errorSpy).not.toHaveBeenCalled();
-    expect(target.firstElementChild?.getAttribute("data-ons-runtime-surface")).toBe("");
-    expect((target.firstElementChild as HTMLElement).style.display).toBe("grid");
-    expect((target.firstElementChild as HTMLElement).style.placeItems).toBe("center");
-    expect(document.activeElement).toBe(target.querySelector("canvas"));
-    target.querySelector("canvas")?.dispatchEvent(new Event("pointerdown", { bubbles: true }));
-    expect(document.activeElement).toBe(target.querySelector("canvas"));
+    expect(document.querySelector("#game")!.firstElementChild?.getAttribute("data-ons-runtime-surface")).toBe("");
+    expect((document.querySelector("#game")!.firstElementChild as HTMLElement).style.display).toBe("grid");
+    expect((document.querySelector("#game")!.firstElementChild as HTMLElement).style.placeItems).toBe("center");
+    expect(document.activeElement).toBe(document.querySelector("#game")!.querySelector("canvas"));
+    document.querySelector("#game")!.querySelector("canvas")?.dispatchEvent(new Event("pointerdown", { bubbles: true }));
+    expect(document.activeElement).toBe(document.querySelector("#game")!.querySelector("canvas"));
 
     const checkpoint = await runtime.checkpoint();
     expect(checkpoint.format).toBe("ons-save-bundle-v1");
@@ -226,7 +227,7 @@ describe("ONS Yuri runtime", () => {
     expect(resumeOrder).toBeGreaterThan(saveOrder!);
 
     await runtime.exit();
-    expect(target.childElementCount).toBe(0);
+    expect(document.querySelector("#game")).toBeNull();
     expect(document.head.querySelector("script[data-runtime=ons-yuri]")).toBeNull();
   });
 
@@ -246,7 +247,7 @@ describe("ONS Yuri runtime", () => {
     mockIndex();
     const target = document.createElement("div");
     document.body.append(target);
-    const runtime = createRuntime(config(), { frameWindow: window, restorePayload: restore });
+    const runtime = await createRuntime(config(), currentWindowHost(restore));
     const mounting = runtime.mount(target);
     await loadRuntimeScript();
     await mounting;
@@ -270,7 +271,7 @@ describe("ONS Yuri runtime", () => {
       return configured;
     });
     mockIndex();
-    const runtime = createRuntime(config(), { frameWindow: window, restorePayload: restore });
+    const runtime = await createRuntime(config(), currentWindowHost(restore));
     const mounting = runtime.mount(document.createElement("div"));
     const rejected = expect(mounting).rejects.toThrow("ONS_CHECKPOINT_RESTORE_FAILED");
     await loadRuntimeScript();
@@ -299,7 +300,7 @@ describe("ONS Yuri runtime", () => {
     vi.stubGlobal("fetch", fetchMock);
     vi.spyOn(HTMLMediaElement.prototype, "play").mockResolvedValue();
     const target = document.createElement("div");
-    const runtime = createRuntime(config(), { frameWindow: window, restorePayload: null });
+    const runtime = await createRuntime(config(), currentWindowHost(null));
     const mounting = runtime.mount(target);
     await loadRuntimeScript();
     await mounting;
@@ -308,7 +309,7 @@ describe("ONS Yuri runtime", () => {
     if (!playVideo) {throw new Error("test video bridge missing");}
     playVideo("/game/movie/intro.mp4", false, false);
 
-    expect(target.querySelector("video")?.src).toBe("https://content.example/movie/intro.mp4");
+    expect(document.querySelector("#game")!.querySelector("video")?.src).toBe("https://content.example/movie/intro.mp4");
     expect(fetchMock).toHaveBeenCalledTimes(1);
     expect(() => module.FS.readFile("/game/movie/intro.mp4")).toThrow();
     await runtime.exit();
@@ -332,7 +333,7 @@ describe("ONS Yuri runtime", () => {
       ],
     });
     vi.stubGlobal("fetch", vi.fn(async () => new Response(body, { status: 200 })));
-    const runtime = createRuntime(config(), { frameWindow: window, restorePayload: null });
+    const runtime = await createRuntime(config(), currentWindowHost(null));
     const mounting = runtime.mount(document.createElement("div"));
     await loadRuntimeScript();
     await mounting;
@@ -349,12 +350,12 @@ describe("ONS Yuri runtime", () => {
     });
     mockIndex();
     const runtimeConfig = config();
-    runtimeConfig.adapter.runtimeBaseUrl = "/runtime/retrom-runtime/test/";
-    const runtime = createRuntime(runtimeConfig, { frameWindow: window, restorePayload: null });
+    runtimeConfig.runtime.runtimeBaseUrl = "/runtime/providers/retrom-runtime/" + "b".repeat(64) + "/";
+    const runtime = await createRuntime(runtimeConfig, currentWindowHost(null));
     const mounting = runtime.mount(document.createElement("div"));
     await loadRuntimeScript();
     expect(document.head.querySelector<HTMLScriptElement>("script[data-runtime=ons-yuri]")?.src)
-      .toBe(new URL("/runtime/retrom-runtime/test/onsyuri.js", document.baseURI).href);
+      .toBe(new URL(runtimeConfig.runtime.runtimeBaseUrl + "assets/ons/onsyuri.js", document.baseURI).href);
     await mounting;
     await runtime.exit();
   });
@@ -371,7 +372,7 @@ describe("ONS Yuri runtime", () => {
       ],
     });
     vi.stubGlobal("fetch", vi.fn(async () => new Response(body, { status: 200 })));
-    const runtime = createRuntime(config(), { frameWindow: window, restorePayload: null });
+    const runtime = await createRuntime(config(), currentWindowHost(null));
     await expect(runtime.mount(document.createElement("div"))).rejects.toThrow("ONS_PROJECT_INDEX_INVALID");
   });
 });
@@ -381,19 +382,7 @@ async function loadRuntimeScript() {
   document.head.querySelector<HTMLScriptElement>("script[data-runtime=ons-yuri]")?.dispatchEvent(new Event("load"));
 }
 
-function config(): OnsRuntimeConfig {
-  return {
-    sessionId: "runtime-session",
-    adapter: {
-      adapterKind: "ONS_YURI_WEB",
-      adapterId: "ons-yuri-web",
-      checkpointSlot: 999,
-      projectIndexUrl: "https://content.example/index.json",
-      runtimeBaseUrl: "https://runtime.example/ons/",
-      scriptEncoding: "utf8",
-    },
-  };
-}
+function config() {return targetEnvelope("onscripter-yuri");}
 
 function mockIndex() {
   const body = JSON.stringify({

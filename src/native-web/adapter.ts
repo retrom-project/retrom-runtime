@@ -5,15 +5,8 @@ import {
   type RpgCheckpointStore,
 } from "../checkpoint.js";
 import type { MountedRuntimeAdapter, RuntimeExitReporter } from "../internal-adapter.js";
-import {
-  rpgMakerPositionProbeKind,
-  type RpgMakerPositionV1,
-  type RpgMakerRuntimeConfig,
-} from "../rpgmaker/contract.js";
 
-type NativeConfig = RpgMakerRuntimeConfig & {
-  adapter: Extract<RpgMakerRuntimeConfig["adapter"], { adapterKind: "NATIVE_WEB" }>;
-};
+import type {NativeRpgParameters} from "./parameters.js";
 
 type Reply = {
   body: Record<string, unknown>;
@@ -28,6 +21,7 @@ type Pending = {
   reject: (reason: Error) => void;
   resolve: (reply: Reply) => void;
   timer: number;
+  type?: string;
 };
 
 type NativeBootstrapStage = "BOOTSTRAP" | "BRIDGE";
@@ -39,9 +33,10 @@ const maximumCheckpointBytes = 64 * 1024 * 1024;
 const maximumScreenshotBytes = 10 * 1024 * 1024;
 const bootstrapTimeoutMs = 10_000;
 const channelReadyTimeoutMs = 10_000;
+const cleanupTimeoutMs = 2_000;
 
 export async function mountNativeRpg(
-  config: NativeConfig,
+  config: NativeRpgParameters,
   frame: HTMLIFrameElement,
   restorePayload: Uint8Array | null,
   reportExitRequested: RuntimeExitReporter = () => undefined,
@@ -53,15 +48,15 @@ export async function mountNativeRpg(
   try {
     await bootstrapNativeFrame(config, frame, channel);
     const ready = await channel.ready();
-    expectedEngine = config.generation === "RPGMV" ? "RPGMV" : "RPGMZ";
-    if (ready.engine !== expectedEngine || ready.engineProfile !== config.adapter.bridgeProfile) {
+    expectedEngine = config.bridgeProfile;
+    if (ready.engine !== expectedEngine || ready.engineProfile !== config.bridgeProfile) {
       throw new Error("RPG_ENGINE_PROFILE_MISMATCH");
     }
     if (restorePayload) {
       const bundle = await decodeRpgCheckpoint(restorePayload, expectedEngine);
       await channel.restore(bundle);
     }
-    channel.startProbeLoop();
+    channel.startStatusLoop();
   } catch (error) {
     channel.close();
     frame.src = "about:blank";
@@ -71,8 +66,8 @@ export async function mountNativeRpg(
   return {
     checkpoint: async () => ({ bytes: await channel.save(expectedEngine), format: "native-save-bundle-v1" }),
     exit: async () => {
-      channel.stopProbeLoop();
-      await channel.request("CLEANUP", {}, 10_000).catch(() => undefined);
+      channel.prepareCleanup();
+      await channel.request("CLEANUP", {}, cleanupTimeoutMs).catch(() => undefined);
       channel.close();
       frame.src = "about:blank";
     },
@@ -81,18 +76,19 @@ export async function mountNativeRpg(
       ? { available: true, blocker: null }
       : { available: false, blocker: "BUSY" },
     getFrameCount: () => channel.frames(),
-    getValidationProbe: (kind) => kind === rpgMakerPositionProbeKind
-      ? { kind, schemaVersion: 1, value: channel.position() }
-      : null,
     pause: async () => {await channel.request("PAUSE", {}, 5_000);},
     resume: async () => {await channel.request("RESUME", {}, 5_000);},
     screenshot: () => channel.screenshot(),
+    setVideoMode: async (mode) => {
+      const reply = await channel.request("SET_VIDEO_MODE", {mode}, 5_000);
+      if (reply.type !== "SET_VIDEO_MODE_RESULT") {throw new Error("RPG_RUNTIME_CONTROL_UNAVAILABLE");}
+    },
     setVolume: (value) => {void channel.request("SET_VOLUME", { value });},
   } satisfies MountedRuntimeAdapter;
 }
 
-class NativeChannel {
-  private readonly config: NativeConfig;
+export class NativeChannel {
+  private readonly config: NativeRpgParameters;
   private readonly nonce = randomNonce();
   private readonly port = new MessageChannel();
   private connected = false;
@@ -100,15 +96,15 @@ class NativeChannel {
   private lastRequestId = 0;
   private pending: Pending | null = null;
   private requestTail: Promise<void> = Promise.resolve();
-  private readyValue: { engine: string; engineProfile: string; position: RpgMakerPositionV1 } | null = null;
+  private readyValue: { engine: string; engineProfile: string } | null = null;
   private readyWaiter: Pending | null = null;
-  private lastPosition: RpgMakerPositionV1 | null = null;
   private frameCount = 0;
   private available = false;
-  private probeTimer: number | null = null;
-  private probeActive = false;
+  private statusTimer: number | null = null;
+  private statusActive = false;
+  private exiting = false;
 
-  constructor(config: NativeConfig, private readonly reportExitRequested: RuntimeExitReporter) {
+  constructor(config: NativeRpgParameters, private readonly reportExitRequested: RuntimeExitReporter) {
     this.config = config;
     this.port.port1.onmessage = (event) => this.receive(event.data);
     this.port.port1.start();
@@ -120,13 +116,13 @@ class NativeChannel {
     target.postMessage({
       type: "RPG_RUNTIME_NATIVE_CONNECT", protocolVersion,
       launchId: this.config.sessionId, nonce: this.nonce, parentOrigin: window.location.origin,
-      profile: this.config.adapter.bridgeProfile, cleanupUrl: this.config.adapter.cleanupUrl,
-    }, this.config.adapter.uniqueOrigin, [this.port.port2]);
+      profile: this.config.bridgeProfile, cleanupUrl: this.config.cleanupUrl,
+    }, this.config.uniqueOrigin, [this.port.port2]);
   }
 
   ready() {
     if (this.readyValue) {return Promise.resolve(this.readyValue);}
-    return new Promise<{ engine: string; engineProfile: string; position: RpgMakerPositionV1 }>((resolve, reject) => {
+    return new Promise<{ engine: string; engineProfile: string }>((resolve, reject) => {
       const timer = window.setTimeout(() => {
         this.readyWaiter = null;
         reject(new Error("RPG_RUNTIME_TIMEOUT"));
@@ -143,7 +139,9 @@ class NativeChannel {
   }
 
   private sendRequest(type: string, body: Record<string, unknown>, timeout: number): Promise<Reply> {
-    if (this.closed) {return Promise.reject(new Error("RPG_NATIVE_CHANNEL_CLOSED"));}
+    if (this.closed || this.exiting && type !== "CLEANUP") {
+      return Promise.reject(new Error("RPG_NATIVE_CHANNEL_CLOSED"));
+    }
     if (this.pending) {return Promise.reject(new Error("RPG_NATIVE_PROTOCOL_INVALID"));}
     const requestId = ++this.lastRequestId;
     const message = this.envelope(requestId, type, body);
@@ -155,7 +153,7 @@ class NativeChannel {
         this.pending = null;
         reject(new Error("RPG_NATIVE_REQUEST_TIMEOUT"));
       }, timeout);
-      this.pending = { resolve, reject, timer };
+      this.pending = { resolve, reject, timer, type };
       this.port.port1.postMessage(message, transferables(body));
     });
   }
@@ -164,7 +162,6 @@ class NativeChannel {
     const reply = await this.request("SAVE", {});
     if (reply.type !== "SAVE_RESULT") {throw new Error("RPG_CHECKPOINT_CREATE_FAILED");}
     const bundle = readBundle(reply.body.bundle, expectedEngine);
-    this.updatePosition(reply.body.position);
     return encodeRpgCheckpoint(bundle);
   }
 
@@ -179,7 +176,6 @@ class NativeChannel {
     };
     const reply = await this.request("RESTORE", body, 30000);
     if (reply.type !== "RESTORE_RESULT") {throw new Error("RPG_CHECKPOINT_RESTORE_FAILED");}
-    this.updatePosition(reply.body.position);
   }
 
   async screenshot() {
@@ -193,43 +189,47 @@ class NativeChannel {
     return new Blob([data], { type: mediaType });
   }
 
-  position() {
-    if (!this.lastPosition) {throw new Error("RPG_RUNTIME_POSITION_UNAVAILABLE");}
-    return { ...this.lastPosition };
-  }
-
   frames() { return this.frameCount; }
   checkpointAvailable() { return this.available; }
 
-  startProbeLoop() {
-    this.probeActive = true;
-    const probe = async () => {
+  startStatusLoop() {
+    this.statusActive = true;
+    const poll = async () => {
       try {
-        const reply = await this.request("PROBE", {}, 5000);
-        if (reply.type === "PROBE_RESULT") {
+        const reply = await this.request("STATUS", {}, 5000);
+        if (reply.type === "STATUS_RESULT") {
           this.available = reply.body.ready === true;
           this.updateFrames(reply.body.frameCount);
-          this.updatePosition(reply.body.position);
         }
       } catch {
         this.available = false;
       }
-      if (this.probeActive) {
-        this.probeTimer = window.setTimeout(() => { void probe(); }, 500);
+      if (this.statusActive) {
+        this.statusTimer = window.setTimeout(() => { void poll(); }, 500);
       }
     };
-    void probe();
+    void poll();
   }
 
-  stopProbeLoop() {
-    this.probeActive = false;
-    if (this.probeTimer !== null) {window.clearTimeout(this.probeTimer);}
-    this.probeTimer = null;
+  stopStatusLoop() {
+    this.statusActive = false;
+    if (this.statusTimer !== null) {window.clearTimeout(this.statusTimer);}
+    this.statusTimer = null;
+  }
+
+  prepareCleanup() {
+    this.exiting = true;
+    this.stopStatusLoop();
+    if (this.pending?.type !== "STATUS") {return;}
+    const pending = this.pending;
+    this.pending = null;
+    window.clearTimeout(pending.timer);
+    pending.reject(new Error("RPG_NATIVE_CHANNEL_CLOSED"));
   }
 
   close() {
     this.closed = true;
-    this.stopProbeLoop();
+    this.stopStatusLoop();
     if (this.pending) {
       window.clearTimeout(this.pending.timer);
       this.pending.reject(new Error("RPG_NATIVE_CHANNEL_CLOSED"));
@@ -263,7 +263,6 @@ class NativeChannel {
     if (reply.type === "READY") {
       const ready = readReady(reply.body);
       this.readyValue = ready;
-      this.lastPosition = ready.position;
       this.available = true;
       if (this.readyWaiter) {
         const waiter = this.readyWaiter;
@@ -271,8 +270,7 @@ class NativeChannel {
         window.clearTimeout(waiter.timer);
         waiter.resolve(reply);
       }
-    } else if (reply.type === "FRAMES") {
-      this.updateFrames(reply.body.continuousFrames);
+
     } else if (reply.type === "EXIT_REQUESTED" && Object.keys(reply.body).length === 0) {
       this.available = false;
       this.reportExitRequested();
@@ -283,17 +281,14 @@ class NativeChannel {
     if (Number.isSafeInteger(value) && Number(value) >= 0) {this.frameCount = Number(value);}
   }
 
-  private updatePosition(value: unknown) {
-    this.lastPosition = readPosition(value);
-  }
 }
 
-async function bootstrapNativeFrame(config: NativeConfig, frame: HTMLIFrameElement, channel: NativeChannel) {
+async function bootstrapNativeFrame(config: NativeRpgParameters, frame: HTMLIFrameElement, channel: NativeChannel) {
   const target = frame.contentWindow;
   if (!target) {throw new Error("PLAYER_FRAME_UNAVAILABLE");}
   const runtimeWindow: Window = target;
-  let bootstrapTicket = config.adapter.bootstrapTicket;
-  config.adapter.bootstrapTicket = "";
+  let bootstrapTicket = config.bootstrapTicket;
+  config.bootstrapTicket = "";
   await new Promise<void>((resolve, reject) => {
     const timer = window.setTimeout(() => finish(new Error("RPG_NATIVE_BOOTSTRAP_TIMEOUT")), bootstrapTimeoutMs);
     const ticketTimer = window.setTimeout(() => {bootstrapTicket = "";}, 60_000);
@@ -306,12 +301,12 @@ async function bootstrapNativeFrame(config: NativeConfig, frame: HTMLIFrameEleme
       if (error) {reject(error);} else {resolve();}
     }
     function receive(event: MessageEvent) {
-      if (event.source !== runtimeWindow || event.origin !== config.adapter.uniqueOrigin || !event.data || typeof event.data !== "object") {return;}
+      if (event.source !== runtimeWindow || event.origin !== config.uniqueOrigin || !event.data || typeof event.data !== "object") {return;}
       const action = nativeBootstrapAction(stage, event.data);
       if (action === "SEND_TICKET") {
         stage = "BRIDGE";
         if (!bootstrapTicket) {finish(new Error("RPG_NATIVE_BOOTSTRAP_TIMEOUT")); return;}
-        runtimeWindow.postMessage({ type: "RPG_RUNTIME_NATIVE_BOOTSTRAP", protocolVersion, ticket: bootstrapTicket }, config.adapter.uniqueOrigin);
+        runtimeWindow.postMessage({ type: "RPG_RUNTIME_NATIVE_BOOTSTRAP", protocolVersion, ticket: bootstrapTicket }, config.uniqueOrigin);
         bootstrapTicket = "";
       } else if (action === "CONNECT") {
         channel.connect(runtimeWindow);
@@ -319,7 +314,7 @@ async function bootstrapNativeFrame(config: NativeConfig, frame: HTMLIFrameEleme
       }
     }
     window.addEventListener("message", receive, true);
-    frame.src = config.adapter.bootstrapUrl;
+    frame.src = config.bootstrapUrl;
   });
 }
 
@@ -345,16 +340,7 @@ function readReply(value: unknown, launchId: string, nonce: string): Reply | nul
 
 function readReady(body: Record<string, unknown>) {
   if (typeof body.engine !== "string" || typeof body.engineProfile !== "string") {throw new Error("RPG_NATIVE_PROTOCOL_INVALID");}
-  return { engine: body.engine, engineProfile: body.engineProfile, position: readPosition(body.position) };
-}
-
-function readPosition(value: unknown): RpgMakerPositionV1 {
-  if (!value || typeof value !== "object" || Array.isArray(value)) {throw new Error("RPG_RUNTIME_POSITION_UNAVAILABLE");}
-  const position = value as Partial<RpgMakerPositionV1>;
-  const valid = [position.mapId, position.playerX, position.playerY, position.fixtureState].every((item) =>
-    Number.isSafeInteger(item) && Number(item) >= -2147483648 && Number(item) <= 2147483647);
-  if (!valid || Number(position.mapId) < 0) {throw new Error("RPG_RUNTIME_POSITION_UNAVAILABLE");}
-  return position as RpgMakerPositionV1;
+  return { engine: body.engine, engineProfile: body.engineProfile };
 }
 
 function readBundle(value: unknown, engine: string): RpgCheckpointBundle {

@@ -1,5 +1,41 @@
-import { describe, expect, it } from "vitest";
-import { nativeBootstrapAction } from "./adapter";
+import { describe, expect, it, vi } from "vitest";
+import { NativeChannel, nativeBootstrapAction } from "./adapter";
+
+describe("native RPG exit", () => {
+  it("preempts an in-flight background status request so cleanup is sent immediately", async () => {
+    let runtimePort: MessagePort | null = null;
+    const channel = new NativeChannel({
+      sessionId: "018f0f31-26fe-7a31-9d61-4ec92f16d4c3",
+      uniqueOrigin: "http://runtime.example",
+      bootstrapUrl: "http://runtime.example/bootstrap",
+      bootstrapTicket: "fixture-ticket",
+      bridgeProfile: "RPGMV",
+      cleanupUrl: "http://runtime.example/cleanup",
+    }, () => undefined);
+    channel.connect({
+      postMessage: (_message: unknown, _origin: string, transfer: Transferable[]) => {
+        runtimePort = transfer[0] as MessagePort;
+      },
+    } as unknown as Window);
+    const sent: Array<Record<string, unknown>> = [];
+    const port = runtimePort as unknown as MessagePort;
+    port.onmessage = (event) => {sent.push(event.data as Record<string, unknown>);};
+    port.start();
+
+    channel.startStatusLoop();
+    await vi.waitFor(() => expect(sent.some((message) => message.type === "STATUS")).toBe(true));
+
+    channel.prepareCleanup();
+    const cleanup = channel.request("CLEANUP", {}, 1_000);
+    await vi.waitFor(() => expect(sent.some((message) => message.type === "CLEANUP")).toBe(true));
+    const request = sent.find((message) => message.type === "CLEANUP")!;
+    port.postMessage({...request, type: "CLEANUP_RESULT"});
+
+    await cleanup;
+    channel.close();
+    port.close();
+  });
+});
 
 describe("native RPG bootstrap reload", () => {
   it("connects when an authenticated bootstrap GET redirects directly to the bridge", () => {

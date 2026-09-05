@@ -1,6 +1,7 @@
 import { readFile, readdir } from "node:fs/promises";
 import { extname, join } from "node:path";
 import { describe, expect, it } from "vitest";
+import {retromRuntimeProviderDefinition} from "../src/providers/retrom-runtime/catalog.js";
 
 const root = process.cwd();
 
@@ -15,50 +16,32 @@ describe("independent package boundary", () => {
     }
   });
 
-  it("publishes seven RPG Maker generations plus independent ONS, KiriKiri, Butterscotch, TyranoScript and WASM-4 cores", async () => {
-    const manifest = JSON.parse(await readFile(join(root, "runtime-manifest.json"), "utf8"));
-    expect(manifest.packageName).toBe("@xxxsen/retrom-runtime");
-    expect(manifest.cores.filter((core: { family: string }) => core.family === "RPG_MAKER")
-      .map((core: { generation: string }) => core.generation).sort()).toEqual([
-      "RPG2000", "RPG2003", "RPGMV", "RPGMZ", "RPGVX", "RPGVXACE", "RPGXP",
+  it("publishes seven RPG Maker targets plus independent ONS, KiriKiri, Butterscotch, TyranoScript and WASM-4 targets", async () => {
+    const sources = JSON.parse(await readFile(join(root, "provider-sources.json"), "utf8"));
+    expect(retromRuntimeProviderDefinition.providerId).toBe("retrom-runtime");
+    expect(retromRuntimeProviderDefinition.targets.map((target) => target.id)).toEqual([
+      "butterscotch-gamemaker", "kirikiri2-kag", "onscripter-yuri", "rpgmaker-2000", "rpgmaker-2003",
+      "rpgmaker-mv", "rpgmaker-mz", "rpgmaker-vx", "rpgmaker-vx-ace", "rpgmaker-xp", "tyranoscript", "wasm4",
     ]);
-    expect(manifest.cores.filter((core: { family: string }) => core.family === "ONS")
-      .map((core: { id: string }) => core.id)).toEqual(["onscripter-yuri"]);
-    expect(manifest.cores.filter((core: { family: string }) => core.family === "KIRIKIRI")
-      .map((core: { id: string }) => core.id)).toEqual(["kirikiri2-kag"]);
-    expect(manifest.cores.filter((core: { family: string }) => core.family === "BUTTERSCOTCH")
-      .map((core: { id: string }) => core.id)).toEqual(["butterscotch-gamemaker"]);
-    expect(manifest.cores.filter((core: { family: string }) => core.family === "TYRANOSCRIPT")
-      .map((core: { id: string }) => core.id)).toEqual(["tyranoscript"]);
-    expect(manifest.cores.filter((core: { family: string }) => core.family === "WASM4")
-      .map((core: { id: string }) => core.id)).toEqual(["wasm4"]);
-    expect(manifest.cores.every((core: object) => !("routeKey" in core))).toBe(true);
-    expect(manifest.localAssets.map((asset: { output: string }) => asset.output).sort()).toEqual([
+    expect(sources.localAssets.map((asset: { output: string }) => asset.output).sort()).toEqual([
       "runtime/butterscotch/worker.mjs",
-      "runtime/mkxp/position_bridge.rb",
       "runtime/native/bridge.js",
     ]);
-    expect(JSON.stringify(manifest)).not.toMatch(/runtime\/(?:v\d+|[^/]+-v\d+)\//u);
+    expect(JSON.stringify(sources)).not.toMatch(/runtime\/(?:v\d+|[^/]+-v\d+)\//u);
   });
 
-  it("contains one clean runtime role without migration-era aliases", async () => {
-    const manifest = JSON.parse(await readFile(join(root, "runtime-manifest.json"), "utf8")) as {
-      cores: Array<{ adapterAbi: string; adapterId: string; runtimeId: string }>;
-    };
-    expect([...new Set(manifest.cores.map((core) => core.runtimeId))].sort()).toEqual([
-      "butterscotch", "easyrpg", "kirikiri2", "mkxp", "native", "onsyuri", "tyranoscript", "wasm4",
-    ]);
-    expect([...new Set(manifest.cores.map((core) => core.adapterId))].sort()).toEqual([
+  it("contains one clean Provider-private adapter role without migration-era aliases", async () => {
+    expect(retromRuntimeProviderDefinition.adapters.map((adapter) => adapter.id).sort()).toEqual([
       "butterscotch-web", "easyrpg-web", "kirikiri2-web", "mkxp-libretro-web", "native-web", "ons-yuri-web",
       "tyranoscript-web", "wasm4-web",
     ]);
-    expect([...new Set(manifest.cores.map((core) => core.adapterAbi))].sort()).toEqual([
+    expect(retromRuntimeProviderDefinition.adapters.map((adapter) => adapter.abi).sort()).toEqual([
       "butterscotch-checkpoint-v2", "easyrpg-save", "kirikiri-kag-bookmark", "mkxp-state-compact",
       "native-save", "ons-save", "tyranoscript-snapshot-v1", "wasm4-state-v1",
     ]);
-    expect((await readdir(join(root, "assets/runtime"))).sort()).toEqual(["butterscotch", "mkxp", "native"]);
+    expect((await readdir(join(root, "assets/runtime"))).sort()).toEqual(["butterscotch", "native"]);
     for (const asset of [
-      "assets/runtime/butterscotch/worker.mjs", "assets/runtime/mkxp/position_bridge.rb",
+      "assets/runtime/butterscotch/worker.mjs",
       "assets/runtime/native/bridge.js",
     ]) {
       expect(await readFile(join(root, asset), "utf8"), asset).not.toMatch(/RETROM|__retrom|-[vr][1-9]/u);
@@ -73,10 +56,35 @@ describe("independent package boundary", () => {
     expect(script).not.toContain("sourceBuilds");
   });
 
+  it("builds and verifies the Provider bundle from the already materialized release stage", async () => {
+    const release = await readFile(join(root, "scripts/build-release.mjs"), "utf8");
+    const candidate = await readFile(join(root, "scripts/build-candidate.mjs"), "utf8");
+    const packageJson = JSON.parse(await readFile(join(root, "package.json"), "utf8"));
+    expect(release).toContain("buildCurrentProviderBuild");
+    expect(release.lastIndexOf("buildCurrentProviderBuild"))
+      .toBeGreaterThan(release.lastIndexOf("for (const release of sources.upstreamReleases)"));
+    expect(release).toContain("pinCurrentProviderRelease");
+    expect(packageJson.scripts["provider:build"].split(" && ")).toEqual([
+      "npm run build",
+      "npm run provider:input:prepare",
+      "RETROM_PROVIDER_BUILD_ONLY=1 node scripts/build-release.mjs",
+    ]);
+    expect(release).toContain('const requestedBuildMode = process.env.RETROM_PROVIDER_BUILD_MODE ?? "candidate"');
+    expect(packageJson.scripts["provider:check"].split(" && ")).toEqual([
+      "npm run provider:input:check",
+      "node scripts/provider-release.mjs check",
+    ]);
+    expect(candidate).toContain('join(root, "release", "providers")');
+    expect(candidate).not.toContain("provider-release.json");
+    expect(candidate).not.toContain(".retrom-pfb-candidate.json");
+    expect(candidate).not.toContain('"data", "dat", "rpgmaker"');
+    expect(candidate).not.toContain('join(root, "release", "stage")');
+  });
+
   it("aggregates every external core from a pinned fork release", async () => {
-    const manifest = JSON.parse(await readFile(join(root, "runtime-manifest.json"), "utf8"));
-    expect(manifest).not.toHaveProperty("sourceBuilds");
-    expect(manifest.upstreamReleases).toEqual(expect.arrayContaining([expect.objectContaining({
+    const sources = JSON.parse(await readFile(join(root, "provider-sources.json"), "utf8"));
+    expect(sources).not.toHaveProperty("sourceBuilds");
+    expect(sources.upstreamReleases).toEqual(expect.arrayContaining([expect.objectContaining({
       adapterAbi: "ons-save",
       id: "onsyuri",
       repository: "https://github.com/retrom-project/OnscripterYuri",
@@ -102,11 +110,8 @@ describe("independent package boundary", () => {
       repository: "https://github.com/retrom-project/wasm4",
       tag: "retrom-core-gca2600db8de4-r1",
     })]));
-    const releaseIds = manifest.upstreamReleases.map((release: { id: string }) => release.id).sort();
-    const externalRuntimeIds = [...new Set(manifest.cores
-      .map((core: { runtimeId: string }) => core.runtimeId)
-      .filter((runtimeId: string) => runtimeId !== "native"))].sort();
-    expect(releaseIds).toEqual(externalRuntimeIds);
+    const releaseIds = sources.upstreamReleases.map((release: { id: string }) => release.id).sort();
+    expect(releaseIds).toEqual(["butterscotch", "easyrpg", "kirikiri2", "mkxp", "onsyuri", "tyranoscript", "wasm4"]);
     expect(await readdir(join(root, "scripts"))).not.toEqual(expect.arrayContaining([
       "build-kirikiri-core.sh", "build-ons-core.sh",
     ]));
@@ -120,8 +125,10 @@ describe("independent package boundary", () => {
     }
     const quality = await readFile(join(root, ".github/workflows/quality.yml"), "utf8");
     expect(quality).toContain("npm run release:build");
+    expect(quality).toContain("RETROM_PROVIDER_BUILD_MODE: candidate");
     const releaseWorkflow = await readFile(join(root, ".github/workflows/release.yml"), "utf8");
     expect(releaseWorkflow).toContain('git cat-file -t "refs/tags/$GITHUB_REF_NAME"');
+    expect(releaseWorkflow).toContain("RETROM_PROVIDER_BUILD_MODE: release");
     const instructions = await readFile(join(root, "AGENTS.md"), "utf8");
     expect(instructions).toContain("不得编译第三方核心");
     expect(instructions).toContain("只聚合");

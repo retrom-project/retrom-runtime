@@ -1,0 +1,93 @@
+{
+  "authorityPath": "api/runtime-provider/v1",
+  "authorityRepository": "https://github.com/retrom-project/retrom",
+  "contractSha256": "68adf3796940a1261b9a8ac5d238b358e1049674e283d4492b82e59708441339",
+  "contractVersion": "runtime-provider-v1",
+  "files": [
+    {
+      "path": "api/runtime-provider/v1/common.schema.json",
+      "sha256": "ffd73b2a67af50d513102a6deee22ce032661e7f3e9edc2ab5ce3e0e1efb36d7"
+    },
+    {
+      "path": "api/runtime-provider/v1/launch-envelope.schema.json",
+      "sha256": "6df9929dbe61da895fa00a349b664ece1c1ca8b111e6b4ea7d7795f7e7a08f3e"
+    },
+    {
+      "path": "api/runtime-provider/v1/provider-integrity.schema.json",
+      "sha256": "e8cc41a9de94a1209a56a0b38570e67da4fe3044c46fddd18b0347399810fa10"
+    },
+    {
+      "path": "api/runtime-provider/v1/provider-lock.schema.json",
+      "sha256": "0172c6fafad8414161a5be55fabfd81c56ea3d5000298efa0c6c9d5fc7b22982"
+    },
+    {
+      "path": "api/runtime-provider/v1/provider-manifest.schema.json",
+      "sha256": "7fff895e817999e3f2636974baed6aa2d8f9d361aa99fcc67c381476a6c616de"
+    },
+    {
+      "path": "api/runtime-provider/v1/provider-module-v1.d.ts",
+      "sha256": "1c9fe067e2504bd731aa722c415d30a427e7159ca57bc9336b776a4153f7879a"
+    },
+    {
+      "path": "api/runtime-provider/v1/runtime-resource.schema.json",
+      "sha256": "130a0d6cca5da95e1ee2d7030346d9170fcc568ea58a82357128ada19c4c4fbf"
+    },
+    {
+      "path": "api/runtime-provider/v1/fixtures/invalid/checkpoint-missing-read-formats.json",
+      "sha256": "86a7e98362b5d92258b54a83d394f672b662791d8d77913514dd57190077c921"
+    },
+    {
+      "path": "api/runtime-provider/v1/fixtures/invalid/duplicate-field.json",
+      "sha256": "961e43df90523624b8b2efc0e82b4346a6f7b9b2e27c121b7f590855c8673047"
+    },
+    {
+      "path": "api/runtime-provider/v1/fixtures/invalid/exponent-json-input.json",
+      "sha256": "9747ee03cac96e4479de1d722293a5a77263c408883832d8696549dcb3706836"
+    },
+    {
+      "path": "api/runtime-provider/v1/fixtures/invalid/float-json-input.json",
+      "sha256": "a7cb2a4ec96d4ad30610eec07144b2a55abf424890f8b1b1e95ffd725a2057b6"
+    },
+    {
+      "path": "api/runtime-provider/v1/fixtures/invalid/invalid-unicode.json",
+      "sha256": "7f7699fc0c54458d10c5bd764ddc691f18ca86e17b2682d16a1f869eebefc5ac"
+    },
+    {
+      "path": "api/runtime-provider/v1/fixtures/invalid/missing-capability.json",
+      "sha256": "761568510b617edfba6f0b56d49dde9ebe10a45dd9fd582a29e49e76059f0596"
+    },
+    {
+      "path": "api/runtime-provider/v1/fixtures/invalid/netplay-mode-mismatch.json",
+      "sha256": "3c92114bfa9ed8711ed09d91e0b2666a9d49702936ed0aaa7b1d313823b21c6a"
+    },
+    {
+      "path": "api/runtime-provider/v1/fixtures/invalid/netplay-resource.json",
+      "sha256": "3f7ddb4e3d4ab6b7f1277646efc9c33b83aa7601f01247af097bccb2e51dad6f"
+    },
+    {
+      "path": "api/runtime-provider/v1/fixtures/invalid/unknown-top-level.json",
+      "sha256": "79b26732271d1fa462cf9b0a7606f26fe41d833f11f0d6fd405f7d670ab50807"
+    },
+    {
+      "path": "api/runtime-provider/v1/fixtures/invalid/unsafe-integer-json-input.json",
+      "sha256": "9ca02fb6bde4fe853bb1458df6057ecc0dd937762a75cf4eaba46a2e2f7667f4"
+    },
+    {
+      "path": "api/runtime-provider/v1/fixtures/target-options/schema-validation.json",
+      "sha256": "9085fb3cdaaefc9fd6e7a6cdd9f0f10136e522a7421f1cdddf65f0ac4b1ff1a2"
+    },
+    {
+      "path": "api/runtime-provider/v1/fixtures/valid/checkpoint-restore.json",
+      "sha256": "ef5c1c3ac7ac7a92e717b380022d26c03670565a236bef179e7d3f5ebd9ce77b"
+    },
+    {
+      "path": "api/runtime-provider/v1/fixtures/valid/netplay.json",
+      "sha256": "23c9d1bd3b331f1f0618833d7835a913ab8d509a288864523eee944e483b9874"
+    },
+    {
+      "path": "api/runtime-provider/v1/fixtures/valid/single-minimal.json",
+      "sha256": "d8545796136fc091ca9bc7aa7034c5eacb9ab66b0e945811f61c03db31a478f4"
+    }
+  ],
+  "schemaVersion": 1
+}

@@ -22,7 +22,7 @@ type MkxpFileSystem = {
 
 type MkxpRuntime = Pick<Nostalgist,
   "exit" | "getEmscriptenFS" | "start"
-> & { getEmscriptenModule(): unknown };
+> & { getEmscriptenModule(): unknown; getEmscripten(): {exit(status: number): void} };
 
 type MkxpPrepareOptions = Parameters<typeof Nostalgist.prepare>[0] & {
   emscriptenModule: NonNullable<Parameters<typeof Nostalgist.prepare>[0]["emscriptenModule"]> & {
@@ -159,8 +159,8 @@ async function mountMkxpUnchecked(
         if (nativeExited) {return;}
         nativeExited = true;
         resolveNativeExit();
-        if (hostCleanup) {return;}
         onDiagnostic({ runtime: "mkxp-z", message: `RPG_RUNTIME_CORE_EXIT:${status}` });
+        if (hostCleanup) {return;}
         reportExitRequested();
       },
       // Emscripten creates its ENV object after applying Module overrides and
@@ -192,15 +192,24 @@ async function mountMkxpUnchecked(
       "mkxp-z_saveStateSize": String(config.stateBufferBytes / (1024 * 1024)),
     },
   });
+  // Nostalgist 0.20.2 combines native force-exit and JS listener/blob cleanup.
+  // Its public Emscripten facade must not re-enter global destruction after
+  // onExit: the first exit has already terminated the supporting pthreads.
+  const emscripten = nostalgist.getEmscripten();
+  const forceExit = emscripten.exit;
+  emscripten.exit = (status) => {if (!nativeExited) {forceExit.call(emscripten, status);}};
   const exitCore = () => exitPromise ??= Promise.resolve().then(async () => {
     hostCleanup = true;
     if (started && !nativeExited) {
       // Force-exit executes C++ global destructors before terminating workers.
       // Let the owning core loop unload game/audio/browser observers first.
       status!.requestExit();
+      onDiagnostic({runtime: "mkxp-z", message: "RPG_RUNTIME_EXIT_REQUESTED"});
       await waitForMkxpExit(nativeExit);
+      onDiagnostic({runtime: "mkxp-z", message: "RPG_RUNTIME_EXIT_ACKNOWLEDGED"});
     }
     await nostalgist.exit();
+    onDiagnostic({runtime: "mkxp-z", message: "RPG_RUNTIME_EXIT_DISPOSED"});
   });
   const fileSystem = nostalgist.getEmscriptenFS() as MkxpFileSystem;
   try {

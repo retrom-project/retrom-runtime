@@ -61,6 +61,7 @@ describe("mkxp runtime mount", () => {
     harness.prepareOptions?.emscriptenModule.onExit(0);
     await exiting;
     expect(harness.runtime.exit).toHaveBeenCalledOnce();
+    expect(harness.runtime.forceExit).not.toHaveBeenCalled();
     expect(harness.target.childElementCount).toBe(0);
     expect(reportExit).not.toHaveBeenCalled();
     harness.frame.remove();
@@ -546,9 +547,12 @@ function runtimeFixture(fileSystem: TestFileSystem, onStart: () => void) {
   const environment: Record<string, string> = {};
   const observation = {frames: 0, restore: 0};
   const requestExit = vi.fn(() => undefined);
+  const forceExit = vi.fn(() => undefined);
+  const emscripten = {Module: {ENV: environment}, exit: forceExit};
   return {
     observation,
     requestExit,
+    forceExit,
     getEmscriptenModule: () => ({
       _runtime_get_frame_count: () => observation.frames,
       _runtime_get_restore_result: () => observation.restore,
@@ -558,8 +562,8 @@ function runtimeFixture(fileSystem: TestFileSystem, onStart: () => void) {
       observation.restore = 1;
       setTimeout(() => {observation.frames = 600;}, 200);
     },
-    exit: vi.fn(async () => undefined),
-    getEmscripten: () => ({ Module: { ENV: environment } }),
+    exit: vi.fn(async () => {emscripten.exit();}),
+    getEmscripten: () => emscripten,
     getEmscriptenFS: () => fileSystem,
     pause: vi.fn(),
     resume: vi.fn(),

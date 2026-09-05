@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+- Keep Nostalgist's JavaScript cleanup after native MKXP exit without executing C++ global destruction
+  a second time. Re-entering force-exit after its supporting pthreads terminated could hang Player exit,
+  including after a successful checkpoint. Native exit remains acknowledged before host disposal.
+
 ## 0.16.3
 
 - Initialize MKXP canvases with RGSS-native backing dimensions before mounting, so the shared frame

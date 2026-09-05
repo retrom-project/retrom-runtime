@@ -1,6 +1,6 @@
 // @vitest-environment node
 
-import {mkdtemp, mkdir, readFile, rm, writeFile} from "node:fs/promises";
+import {mkdtemp, mkdir, readFile, readdir, rm, writeFile} from "node:fs/promises";
 import {createHash} from "node:crypto";
 import {tmpdir} from "node:os";
 import {join} from "node:path";
@@ -15,7 +15,7 @@ afterEach(async () => {
 });
 
 describe("PFB loose provider", () => {
-  it("rebuilds only the client and local assets with a content revision", async () => {
+  it("atomically replaces one complete dev provider without retaining history", async () => {
     const root = await temporaryRoot();
     const installedRoot = join(root, "installed");
     const outputRoot = join(root, "dev");
@@ -66,18 +66,31 @@ describe("PFB loose provider", () => {
       localAssets: [{source: localAsset, output: "runtime/butterscotch/worker.mjs"}],
       outputRoot,
     });
-    expect(second.revision).not.toBe(first.revision);
+    expect(second.moduleSha256).not.toBe(first.moduleSha256);
     const descriptor = JSON.parse(await readFile(join(outputRoot, "dev-provider.json"), "utf8"));
-    expect(descriptor.revision).toBe(second.revision);
+    expect(Object.keys(descriptor).sort()).toEqual(["baseBundleSha256", "files", "providerId", "schemaVersion"]);
+    expect(await readdir(outputRoot)).toEqual(["dev-provider.json"]);
     expect(descriptor.baseBundleSha256).toBe(bundle);
     expect(descriptor.files.map((file: {path: string}) => file.path)).toEqual([
       "assets/butterscotch/worker.mjs", "client.mjs",
     ]);
-    expect(await readFile(join(outputRoot, "revisions", second.revision,
-      "assets/butterscotch/worker.mjs"), "utf8"))
+    expect(Buffer.from(descriptor.files[0].contentBase64, "base64").toString("utf8"))
       .toBe("export const changed=1;\n");
-    expect(await readFile(join(outputRoot, "revisions", first.revision, "client.mjs"), "utf8"))
-      .toContain("providerApiVersion");
+    const client = Buffer.from(descriptor.files[1].contentBase64, "base64").toString("utf8");
+    expect(client).toMatch(/=2;/u);
+    expect(client).toContain("providerApiVersion");
+    expect(sha256(client)).toBe(second.moduleSha256);
+
+    // A failed rebuild cannot replace the complete, previously working payload.
+    const published = await readFile(join(outputRoot, "dev-provider.json"), "utf8");
+    await writeFile(entryPoint, "export const = ;\n");
+    await expect(buildPFBProviderDev({
+      activePath, entryPoint, installedRoot,
+      localAssets: [{source: localAsset, output: "runtime/butterscotch/worker.mjs"}],
+      outputRoot,
+    })).rejects.toThrow();
+    expect(await readFile(join(outputRoot, "dev-provider.json"), "utf8")).toBe(published);
+    expect(await readdir(outputRoot)).toEqual(["dev-provider.json"]);
 
     await writeFile(activePath, JSON.stringify({
       schemaVersion: 1,

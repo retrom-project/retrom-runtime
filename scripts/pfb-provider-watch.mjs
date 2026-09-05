@@ -32,7 +32,7 @@ async function rebuild() {
   try {
     const result = await buildPFBProviderDev(input);
     lastError = undefined;
-    process.stdout.write(`pfb provider dev revision ${result.revision}\n`);
+    process.stdout.write(`pfb provider dev module ${result.moduleSha256}\n`);
   } catch (error) {
     lastError = error;
     process.stderr.write(`${error?.stack ?? error}\n`);

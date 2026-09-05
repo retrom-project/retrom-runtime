@@ -8,7 +8,7 @@ export interface PFBProviderDevInput {
 
 export function buildPFBProviderDev(input: PFBProviderDevInput): Promise<{
   baseBundleSha256: string;
-  revision: string;
+  moduleSha256: string;
 }>;
 
 export const defaultPFBProviderDevInput: Pick<PFBProviderDevInput, "entryPoint">;

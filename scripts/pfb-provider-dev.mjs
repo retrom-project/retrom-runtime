@@ -45,43 +45,21 @@ export async function buildPFBProviderDev(input) {
       }
       const contents = await readRegular(local.source);
       const path = `assets/${local.output.replace(/^runtime\//u, "")}`;
-      const destination = join(staging, path);
-      await mkdir(dirname(destination), {recursive: true});
-      await writeFile(destination, contents, {mode: 0o644});
       files.push(fileDescriptor(path, contents));
     }
     files.push(fileDescriptor("client.mjs", await readRegular(clientPath)));
     files.sort((left, right) => Buffer.from(left.path).compare(Buffer.from(right.path)));
-    const revision = developmentRevision("retrom-runtime", provider.bundleSha256, files);
     const descriptor = {
       schemaVersion: 1,
       providerId: "retrom-runtime",
       baseBundleSha256: provider.bundleSha256,
-      revision,
       files,
     };
-    const revisions = join(input.outputRoot, "revisions");
-    await mkdir(revisions, {recursive: true});
-    await publishRevision(staging, join(revisions, revision), files);
+    await mkdir(input.outputRoot, {recursive: true});
     await atomicWrite(join(input.outputRoot, "dev-provider.json"), canonicalBytes(descriptor));
-    return {baseBundleSha256: provider.bundleSha256, revision};
+    return {baseBundleSha256: provider.bundleSha256, moduleSha256: files.find((file) => file.path === "client.mjs").sha256};
   } finally {
     await rm(staging, {recursive: true, force: true});
-  }
-}
-
-async function publishRevision(staging, destination, files) {
-  try {
-    await rename(staging, destination);
-    return;
-  } catch (error) {
-    if (!new Set(["EEXIST", "ENOTEMPTY"]).has(error?.code)) { throw error; }
-  }
-  for (const file of files) {
-    const contents = await readRegular(join(destination, file.path));
-    if (contents.byteLength !== file.sizeBytes || sha256(contents) !== file.sha256) {
-      throw new Error("PFB_PROVIDER_DEV_REVISION_CONFLICT");
-    }
   }
 }
 
@@ -121,6 +99,7 @@ function fileDescriptor(path, contents) {
     sizeBytes: contents.byteLength,
     sha256: sha256(contents),
     mediaType: path.endsWith(".rb") ? "text/plain; charset=utf-8" : "text/javascript; charset=utf-8",
+    contentBase64: contents.toString("base64"),
   };
 }
 
@@ -168,14 +147,6 @@ function validActiveTarget(value) {
 
 function sha256(value) {
   return createHash("sha256").update(value).digest("hex");
-}
-
-function developmentRevision(providerId, bundle, files) {
-  const lines = [providerId, bundle];
-  for (const file of [...files].sort((left, right) => Buffer.from(left.path).compare(Buffer.from(right.path)))) {
-    lines.push(file.path, String(file.sizeBytes), file.sha256, file.mediaType);
-  }
-  return sha256(`${lines.join("\n")}\n`);
 }
 
 export const defaultPFBProviderDevInput = {

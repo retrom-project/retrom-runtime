@@ -7,6 +7,7 @@ type EasyConfig = RpgMakerRuntimeConfig & {
 };
 
 afterEach(() => {
+  vi.useRealTimers();
   vi.restoreAllMocks();
   delete (window as Window & { createEasyRpgPlayer?: unknown }).createEasyRpgPlayer;
   Object.defineProperty(window, "createImageBitmap", { configurable: true, value: undefined });
@@ -15,6 +16,42 @@ afterEach(() => {
 });
 
 describe("EasyRPG adapter cleanup", () => {
+  it.each([false, true])("does not treat loading frames as a final engine identity (persistent mismatch: %s)", async (persistent) => {
+    vi.useFakeTimers();
+    const target = document.createElement("div");
+    document.body.append(target);
+    let initialized = false;
+    Object.defineProperty(window, "createEasyRpgPlayer", {
+      configurable: true,
+      value: vi.fn().mockResolvedValue({
+        FS: {}, canvas: document.createElement("canvas"), runtimeFileSystemReady: true,
+        initApi: vi.fn(), pauseMainLoop: vi.fn(), resumeMainLoop: vi.fn(),
+        api: {runtimeState: () => JSON.stringify({
+          engine: initialized ? "RPG2003" : "RPG2000", ready: false, canCheckpoint: false,
+          frameCount: 10, mapId: 0, playerX: 0, playerY: 0, fixtureState: 0,
+        })},
+      }),
+    });
+    let settled = false;
+    const mounting = mountEasyRpg(easyConfig("RPG2003"), target, window, null)
+      .then((value) => {settled = true; return value;}, (error: unknown) => {settled = true; return error;});
+    await vi.advanceTimersByTimeAsync(0);
+    const script = document.head.querySelector("script[data-rpg-runtime=easyrpg]");
+    expect(script).not.toBeNull();
+    script?.dispatchEvent(new Event("load"));
+    await vi.advanceTimersByTimeAsync(100);
+    expect(settled).toBe(false);
+    initialized = !persistent;
+    await vi.advanceTimersByTimeAsync(persistent ? 30_000 : 50);
+    const result = await mounting;
+    if (persistent) {
+      expect(result).toEqual(new Error("RPG_ENGINE_PROFILE_MISMATCH"));
+      expect(target.childElementCount).toBe(0);
+    } else {
+      expect(result).toHaveProperty("getFrameCount");
+    }
+  });
+
   it("removes the mount DOM and failed loader before rejecting", async () => {
     const target = document.createElement("div");
     document.body.append(target);

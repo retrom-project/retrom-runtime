@@ -188,15 +188,17 @@ async function waitForReady(
     throw new Error("RPG_RUNTIME_FILESYSTEM_NOT_READY");
   }
   const deadline = performance.now() + 30_000;
+  let engineMismatch = false;
   while (performance.now() < deadline) {
     const state = startupState(module);
     if (state && (state.ready || state.frameCount > 0)) {
-      if (state.engine !== expectedEngine) {throw new Error("RPG_ENGINE_PROFILE_MISMATCH");}
-      return;
+      engineMismatch = state.engine !== expectedEngine;
+      if (!engineMismatch) {return;}
+      if (state.ready) {throw new Error("RPG_ENGINE_PROFILE_MISMATCH");}
     }
     await new Promise<void>((resolve) => window.setTimeout(resolve, 50));
   }
-  throw new Error("RPG_RUNTIME_TIMEOUT");
+  throw new Error(engineMismatch ? "RPG_ENGINE_PROFILE_MISMATCH" : "RPG_RUNTIME_TIMEOUT");
 }
 
 function startupState(module: EasyModule) {

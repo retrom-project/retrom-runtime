@@ -2,6 +2,8 @@
 
 ## 0.15.0
 
+- Wait for EasyRPG's configured engine identity while loading frames are already advancing; preserve bounded
+  rejection of genuinely mismatched projects instead of rejecting RPG2003 during the core's initial RPG2000 state.
 - Introduce the Runtime Provider V1 declaration model while preserving all eight adapters and twelve targets from
   `0.11.3`, including WASM-4, as the single source for generated public manifests and internal dispatch.
 - Replace the duplicated runtime manifest with `provider-sources.json`; upstream source inputs and Provider Target

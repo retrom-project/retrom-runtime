@@ -12,6 +12,9 @@
   MKXP continues to use the same gzip checkpoint format and compatibility rules.
 - Pin the formally published EasyRPG core r9, including ordinary game readiness
   and remote directory setup, with the calling-user release build verified.
+- Pin the formally published MKXP core r8 with completed state-I/O receipts,
+  bounded state allocation and owning-thread shutdown. Its published assets
+  pass both pristine-source and compiled private-ABI release verification.
 - Known limitation: an intermittent RPG Maker XP first-frame timeout during
   sequential launches remains under investigation. A successful diagnostic
   repeat does not resolve that observation. It is explicitly accepted as a

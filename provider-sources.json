@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "packageName": "@xxxsen/retrom-runtime",
-  "packageVersion": "0.16.5",
+  "packageVersion": "0.16.7",
   "publicApiVersion": 2,
   "upstreamReleases": [
     {
@@ -29,20 +29,20 @@
     {
       "id": "mkxp",
       "repository": "https://github.com/retrom-project/mkxp-z-libretro-emscripten",
-      "tag": "retrom-core-f2efc98-r8",
-      "commit": "c18d7d56f517c995e3fa5e4b4ce936d6aff21902",
+      "tag": "retrom-core-f2efc98-r9",
+      "commit": "9e575e895a46bba6805636fa125b10d854103a21",
       "adapterAbi": "mkxp-state",
-      "metadataUrl": "https://github.com/retrom-project/mkxp-z-libretro-emscripten/releases/download/retrom-core-f2efc98-r8/rpg-runtime-release.json",
+      "metadataUrl": "https://github.com/retrom-project/mkxp-z-libretro-emscripten/releases/download/retrom-core-f2efc98-r9/rpg-runtime-release.json",
       "assets": [
         {
           "filename": "mkxp-z_libretro.js",
-          "url": "https://github.com/retrom-project/mkxp-z-libretro-emscripten/releases/download/retrom-core-f2efc98-r8/mkxp-z_libretro.js",
+          "url": "https://github.com/retrom-project/mkxp-z-libretro-emscripten/releases/download/retrom-core-f2efc98-r9/mkxp-z_libretro.js",
           "output": "runtime/mkxp/mkxp-z_libretro.js",
           "maxSizeBytes": 1048576
         },
         {
           "filename": "mkxp-z_libretro.wasm",
-          "url": "https://github.com/retrom-project/mkxp-z-libretro-emscripten/releases/download/retrom-core-f2efc98-r8/mkxp-z_libretro.wasm",
+          "url": "https://github.com/retrom-project/mkxp-z-libretro-emscripten/releases/download/retrom-core-f2efc98-r9/mkxp-z_libretro.wasm",
           "output": "runtime/mkxp/mkxp-z_libretro.wasm",
           "maxSizeBytes": 67108864
         }

@@ -1,6 +1,13 @@
 # Changelog
 
-## Unreleased
+## 0.16.7
+
+- Pin the maintained MKXP r9 core, which constructs FetchFS synchronization
+  before starting its worker. This fixes the intermittent first-frame stall
+  and subsequent exit timeout observed during sequential RPG Maker launches.
+- Preserve checkpoint formats, completed state-I/O receipts and owner-loop
+  shutdown. XP, VX and VX Ace pass sequential launch and cross-instance
+  checkpoint/restore regressions, including restoration of an existing VX save.
 
 ## 0.16.5
 

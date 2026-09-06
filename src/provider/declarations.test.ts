@@ -30,8 +30,8 @@ const sameOriginFrameTargetIds = [
 ];
 
 describe("retrom-runtime provider declarations", () => {
-  it("declares the complete 0.16.5 target closure in one source", () => {
-    expect(retromRuntimeProviderDefinition.providerVersion).toBe("0.16.5");
+  it("declares the complete 0.16.7 target closure in one source", () => {
+    expect(retromRuntimeProviderDefinition.providerVersion).toBe("0.16.7");
     expect(retromRuntimeProviderDefinition.targets.map((target) => target.id)).toEqual(targetIds);
     expect(retromRuntimeProviderDefinition.adapters).toHaveLength(8);
   });
@@ -42,7 +42,7 @@ describe("retrom-runtime provider declarations", () => {
       clientModulePath: "client.mjs",
       providerApiVersion: 1,
       providerId: "retrom-runtime",
-      providerVersion: "0.16.5",
+      providerVersion: "0.16.7",
       schemaVersion: 1,
     });
     expect(manifest.targets.map((target) => target.id)).toEqual(targetIds);

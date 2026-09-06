@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Select the Mega Drive controller layout explicitly for Genesis Plus GX, GX Wide and PicoDrive, preserving Start and the six face buttons instead of accepting EmulatorJS's automatic Master System layout. EmulatorJS 4.2.3 uses its equivalent `segaCD` input-layout alias; the core and content remain unchanged.
+- Assign gamepads already detected during EmulatorJS construction to free player slots when controls become ready, preserving existing assignments and leaving later connections to EmulatorJS. This repairs the initial connection event lost before its listener was registered.
 - Allow PFB to select the EmulatorJS development client with the persistent `providers/dev/provider-id` file, preserving the default retrom-runtime client.
 - Prepare DOSBox state compatibility after EmulatorJS creates its game manager, so review previews can start before checkpoint operations.
 - Use successful native serialization to gate EmulatorJS 4.2.3 restores without waiting on the diagnostic frame counter; native load completion remains required.

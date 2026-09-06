@@ -157,6 +157,8 @@ export const emulatorJsProviderDefinition = defineProvider({
   targets,
 });
 
+export type EmulatorImplementation = (typeof targets)[number]["implementation"];
+
 function core(
   id: string,
   release: RuntimeRelease,

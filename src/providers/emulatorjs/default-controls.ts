@@ -5,6 +5,14 @@ export type EmulatorControlBinding = {
 
 export type EmulatorDefaultControls = Record<number, Record<number, EmulatorControlBinding>>;
 
+export function emulatorControlScheme(core: string, release: "4.2.3" | "4.3.0-pre") {
+  if (!["genesis_plus_gx", "genesis_plus_gx_wide", "picodrive"].includes(core)) {return undefined;}
+  // Auto-detection picks Master System for these multi-system cores and removes
+  // Start/A/X/Y/Z. In 4.2.3 only the segaCD alias exposes the MD six-button layout
+  // in both native settings and touch controls; this does not change the core.
+  return release === "4.2.3" ? "segaCD" : "segaMD";
+}
+
 const controlCount = 30;
 
 const playerOneKeyboard: Readonly<Record<number, string>> = {

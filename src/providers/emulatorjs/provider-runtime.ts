@@ -13,7 +13,7 @@ import type {
 } from "../../provider/module-api.js";
 import {PlayerRuntimeError} from "../../provider/errors.js";
 import {focusRuntimeInput} from "../../provider/input-focus.js";
-import {emulatorJsProviderDefinition} from "./catalog.js";
+import {emulatorJsProviderDefinition, type EmulatorImplementation} from "./catalog.js";
 import {installArchiveWorkerCompatibility} from "./archive-worker.js";
 import {installDOSBoxPureStateCompatibility} from "./dosbox-state.js";
 import {installExternalFileCompatibility} from "./external-files.js";
@@ -21,7 +21,6 @@ import {RuntimeGamepadFilter, installRuntimeGamepadFilter} from "../../provider/
 import {installEmulatorJs423NetplayCompatibility} from "./netplay-compatibility.js";
 import {EmulatorJsNetplayPort, type EmulatorNetplayInstance} from "./netplay-port.js";
 import {
-  type EmulatorJsNetplayProfileDeclaration,
   type ValidatedEmulatorJsNetplayProfile,
   validateEmulatorJsNetplayProfile,
 } from "./netplay-profile.js";
@@ -34,7 +33,8 @@ import {
 import {captureEmulatorJsScreenshot} from "./screenshot.js";
 import {createStartBarrier, startWhenAvailable, type StartBarrier} from "./lifecycle.js";
 import {installEmulatorJs423StateRestoreCompatibility} from "./state-restore.js";
-import {createRetromDefaultControls, type EmulatorDefaultControls} from "./default-controls.js";
+import {createRetromDefaultControls, emulatorControlScheme, type EmulatorDefaultControls} from "./default-controls.js";
+import {initializeEmulatorJsGamepads, type EmulatorGamepadInstance} from "./startup-gamepads.js";
 import {
   closeEmulatorJsNativeSettings,
   type EmulatorNativeSettingsInstance,
@@ -68,10 +68,11 @@ type EjsManager = {
   loadStateAndWait?: (state: Uint8Array) => Promise<unknown>;
   loadState?: (state: Uint8Array) => void;
   getVideoDimensions?: (dimension: "aspect") => number | undefined;
+  simulateInput?: (player: number, control: number, value: number) => void;
   toggleMainLoop?: (running: boolean) => void;
 };
 
-type EjsInstance = EmulatorDiscInstance & EmulatorNativeSettingsInstance & EmulatorNetplayInstance & {
+type EjsInstance = EmulatorDiscInstance & EmulatorNativeSettingsInstance & EmulatorNetplayInstance & EmulatorGamepadInstance & {
   canvas?: HTMLCanvasElement;
   capture?: {photo?: {source?: string; format?: string; upscale?: number}};
   gameManager?: EjsManager;
@@ -89,6 +90,7 @@ type EjsInstance = EmulatorDiscInstance & EmulatorNativeSettingsInstance & Emula
 type EjsWindow = Window & {
   EJS_player?: string;
   EJS_core?: string;
+  EJS_controlScheme?: string;
   EJS_gameUrl?: string;
   EJS_gameName?: string;
   EJS_gameID?: number;
@@ -118,25 +120,8 @@ type EjsWindow = Window & {
   EJS_emulator?: EjsInstance;
 };
 
-type EmulatorImplementation = {
-  artifactFlavor: "WASM" | "THREAD_WASM" | "OVERRIDE";
-  coreAssetPath: string;
-  coreSha256: string;
-  coreSizeBytes: number;
-  defaultOptions: Readonly<Record<string, string>>;
-  netplayProfile: EmulatorJsNetplayProfileDeclaration | null;
-  release: "4.2.3" | "4.3.0-pre";
-  runtimeCore: string;
-  startupActions: ReadonlyArray<{
-    delayMs: number;
-    player: number;
-    control: number;
-    durationMs: number;
-  }>;
-};
-
 const configuredGlobals = [
-  "EJS_player", "EJS_core", "EJS_gameUrl", "EJS_gameName", "EJS_gameID", "EJS_pathtodata",
+  "EJS_player", "EJS_core", "EJS_controlScheme", "EJS_gameUrl", "EJS_gameName", "EJS_gameID", "EJS_pathtodata",
   "EJS_biosUrl", "EJS_gameParentUrl", "EJS_startOnLoaded", "EJS_dontExtractRom",
   "EJS_disableBatchBootup", "EJS_language", "EJS_disableAutoLang", "EJS_DEBUG_XX",
   "EJS_EXPERIMENTAL_NETPLAY", "EJS_threads", "EJS_fullscreenOnLoaded", "EJS_disableDatabases",
@@ -189,7 +174,7 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
   ) {
     const target = emulatorJsProviderDefinition.targets.find((entry) => entry.id === envelope.runtime.targetId);
     if (!target) {invalid();}
-    this.implementation = target.implementation as EmulatorImplementation;
+    this.implementation = target.implementation;
     const core = assetIndex[this.implementation.coreAssetPath];
     if (!core || core.sha256 !== this.implementation.coreSha256 ||
       core.sizeBytes !== this.implementation.coreSizeBytes) {
@@ -404,6 +389,7 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
       this.implementation.runtimeCore === "dosbox_pure";
     runtimeWindow.EJS_player = "#retrom-emulator";
     runtimeWindow.EJS_core = this.implementation.runtimeCore;
+    runtimeWindow.EJS_controlScheme = emulatorControlScheme(this.implementation.runtimeCore, this.implementation.release);
     runtimeWindow.EJS_gameUrl = game.url;
     runtimeWindow.EJS_gameName = this.envelope.session.title;
     runtimeWindow.EJS_gameID = 0;
@@ -434,6 +420,7 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
     runtimeWindow.EJS_externalFiles = externalFiles(this.envelope);
     runtimeWindow.EJS_ready = () => {
       this.instance = runtimeWindow.EJS_emulator ?? null;
+      if (this.instance) {initializeEmulatorJsGamepads(this.instance);}
       if (!this.instance) {this.fail("PLAYER_RUNTIME_UNAVAILABLE");}
       this.instance?.on?.("exit", () => this.requestExit());
       const discs = optionalResource(this.envelope, "discs", "MULTI_DISC");
@@ -446,7 +433,6 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
         if (!Array.isArray(excluded)) {this.fail("PLAYER_DOS_ARCHIVE_MODE_UNAVAILABLE"); return;}
         if (!excluded.includes(this.implementation.runtimeCore)) {excluded.push(this.implementation.runtimeCore);}
         try {
-          this.dosboxCompatibility?.prepare(this.instance);
           this.cleanupDeferredStart = startWhenAvailable(runtimeWindow);
         } catch (error) {
           this.fail("PLAYER_DOS_STATE_COMPATIBILITY_UNAVAILABLE", error);
@@ -464,6 +450,7 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
     this.startObserved = true;
     try {
       if (!this.instance) {throw new Error("PLAYER_RUNTIME_UNAVAILABLE");}
+      this.dosboxCompatibility?.prepare(this.instance);
       const discs = optionalResource(this.envelope, "discs", "MULTI_DISC");
       if (discs) {await this.prepareInitialDisc(discs);}
       else if (this.restorePayload) {
@@ -484,10 +471,9 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
   }
 
   private scheduleStartupActions(runtimeWindow: Window) {
-    const simulate = (this.instance?.gameManager as EjsManager & {
-      simulateInput?: (player: number, control: number, value: number) => void;
-    } | undefined)?.simulateInput;
     if (!this.implementation.startupActions.length) {return;}
+    const manager = this.instance?.gameManager;
+    const simulate = manager?.simulateInput?.bind(manager);
     if (!simulate) {throw new Error("PLAYER_STARTUP_ACTION_UNAVAILABLE");}
     for (const action of this.implementation.startupActions) {
       const pressTimer = runtimeWindow.setTimeout(() => {

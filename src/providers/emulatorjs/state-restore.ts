@@ -39,8 +39,9 @@ async function waitForSerializable(
     let serializable = false;
     try {
       const [size, , succeeded] = String(manager.functions?.saveStateInfo?.()).split("|");
-      const frameReady = typeof manager.getFrameNum !== "function" || manager.getFrameNum() > 0;
-      serializable = frameReady && succeeded === "1" && Number.isSafeInteger(Number(size)) && Number(size) > 0;
+      // The core's successful serialization is the readiness signal. The
+      // diagnostic frame counter can still be zero in a serializable core.
+      serializable = succeeded === "1" && Number.isSafeInteger(Number(size)) && Number(size) > 0;
     } catch { /* Some cores reject serialization until their GPU exists. */ }
     if (serializable) {return;}
     if (target.performance.now() >= deadline) {throw new Error("PLAYER_SAVE_STATE_RESTORE_TIMEOUT");}

@@ -153,9 +153,11 @@ export const emulatorJsProviderDefinition = defineProvider({
   adapters,
   providerApiVersion: 1,
   providerId: "emulatorjs",
-  providerVersion: "2.2.3-dev.1",
+  providerVersion: "2.2.4",
   targets,
 });
+
+export type EmulatorImplementation = (typeof targets)[number]["implementation"];
 
 function core(
   id: string,

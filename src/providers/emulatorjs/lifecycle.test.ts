@@ -14,6 +14,10 @@ const assetIndex = {
     sha256: "cb46c33a3a8444b707f7a03fe00414d916ab55a41e85fbf0c59611aa643252da",
     sizeBytes: 4581537,
   },
+  "assets/4.2.3/data/cores/beetle_vb-wasm.data": {
+    sha256: "3db727a78b6a6551a4024c273069eb39c8e8f33aa78ef16a073ed7460f6ce692",
+    sizeBytes: 858313,
+  },
 };
 
 afterEach(() => {vi.useRealTimers();});
@@ -108,6 +112,53 @@ describe("EmulatorJS provider lifecycle boundaries", () => {
     expect(events).toContainEqual({
       type: "CHECKPOINT_AVAILABILITY_CHANGED", availability: {available: true, reason: null},
     });
+  });
+
+  it.each([
+    {targetId: "ppsspp", presses: [[2000, 0], [5000, 0]]},
+    {targetId: "beetle-vb", presses: [[2000, 0], [4000, 3], [15000, 3], [25000, 3]]},
+  ])("preserves the $targetId manager receiver for every startup press and release", async ({targetId, presses}) => {
+    vi.useFakeTimers();
+    const frame = document.createElement("iframe");
+    document.body.append(frame);
+    const runtimeWindow = frame.contentWindow as Window & Record<string, unknown>;
+    const host: RuntimeHostV1 = {
+      loadRestore: vi.fn(async () => null),
+      mountFrame: vi.fn(async () => ({contentWindow: runtimeWindow, element: frame, origin: location.origin})),
+      reportDiagnostic: vi.fn(), signal: new AbortController().signal,
+    };
+    const envelope = launchEnvelope();
+    envelope.runtime.targetId = targetId;
+    const player = await createEmulatorJsPlayer(envelope, host, assetIndex);
+    const mounting = player.mount(document.createElement("div"));
+    await vi.advanceTimersByTimeAsync(0);
+    const nativeInput = vi.fn();
+    const manager = {
+      EJS: {isNetplay: false},
+      functions: {simulateInput: nativeInput},
+      simulateInput(player: number, control: number, value: number) {
+        if (!this.EJS.isNetplay) {this.functions.simulateInput(player, control, value);}
+      },
+    };
+    runtimeWindow.EJS_emulator = {gameManager: manager};
+    (runtimeWindow.EJS_ready as () => void)();
+    (runtimeWindow.EJS_onGameStart as () => void)();
+    await mounting;
+    expect(nativeInput).not.toHaveBeenCalled();
+    let elapsed = 0;
+    for (const [delay, control] of presses) {
+      await vi.advanceTimersByTimeAsync(delay - elapsed - 1);
+      const previousCalls = nativeInput.mock.calls.length;
+      await vi.advanceTimersByTimeAsync(1);
+      expect(nativeInput.mock.calls.slice(previousCalls)).toEqual([[0, control, 1]]);
+      await vi.advanceTimersByTimeAsync(120);
+      expect(nativeInput.mock.calls.slice(previousCalls)).toEqual([[0, control, 1], [0, control, 0]]);
+      elapsed = delay + 120;
+    }
+    expect(player.getState()).toBe("RUNNING");
+    expect(vi.getTimerCount()).toBe(0);
+    await player.exit();
+    frame.remove();
   });
 
   it("clears delayed startup controls when the host aborts", async () => {

@@ -1,41 +1,30 @@
 # Changelog
 
-## 0.17.0-dev.11
+## 0.17.0
 
-- J2ME 浏览器重绘请求合并为一次提交，显示复制跟随新帧，静止时停止中转；保留逻辑尺寸截图、暂停缩放、手柄轮询与游戏原生速度。
+- Add Java ME JAR execution with explicit GAME_SAVE semantics, stable RMS revisions, exact-payload acknowledgments and clean Host-managed launch storage. Native saves retain the RMS v1 format and require the game menu to restore progress.
+- Use the repaired J2ME v0.3.4 runtime with native pixel operations, correct alpha compositing, independent record-store handles and frame presentation only when the core changes its display.
+- Preserve every 0.16.8 startup, restore-readiness, Mega Drive control and delayed input fix, and the maintained MKXP r9 startup repair.
+- Advance the EmulatorJS Provider to 2.2.4 for the shared checkpoint contract changes; existing instant save formats and pinned EmulatorJS core assets remain unchanged.
 
-## 0.17.0-dev.10
+## 0.16.8
 
-- J2ME 开发候选使用批量 Wasm 图像复制、透明像素合成与 ARGB/RGBA 转换，降低战斗场景的逐像素解释执行开销，保留原有游戏时钟、按键和存档语义。
+- Advance the EmulatorJS Provider to 2.2.3 for the DOSBox startup, restore-readiness, Mega Drive input and delayed startup control fixes; existing checkpoint formats and pinned core releases remain unchanged.
+- Preserve the EmulatorJS game manager receiver for delayed PSP and Virtual Boy startup controls, preventing uncaught `EJS` property errors while retaining the configured press/release timing and exit cancellation.
+- Select the Mega Drive controller layout explicitly for Genesis Plus GX, GX Wide and PicoDrive, preserving Start and the six face buttons instead of accepting EmulatorJS's automatic Master System layout. EmulatorJS 4.2.3 uses its equivalent `segaCD` input-layout alias; the core and content remain unchanged.
+- Assign gamepads already detected during EmulatorJS construction to free player slots when controls become ready, preserving existing assignments and leaving later connections to EmulatorJS. This repairs the initial connection event lost before its listener was registered.
+- Allow PFB to select the EmulatorJS development client with the persistent `providers/dev/provider-id` file, preserving the default retrom-runtime client.
+- Prepare DOSBox state compatibility after EmulatorJS creates its game manager, so review previews can start before checkpoint operations.
+- Use successful native serialization to gate EmulatorJS 4.2.3 restores without waiting on the diagnostic frame counter; native load completion remains required.
 
-## 0.17.0-dev.9
+## 0.16.7
 
-- J2ME 开发候选修正 MIDP 与 AWT 的 straight ARGB 合成，消除透明对话框二次变暗和逐帧滚动残影，保留游戏原本的透明效果与既有手柄映射。
-
-## 0.17.0-dev.8
-
-- J2ME 开发候选优化 Canvas 呈现与整数平移图片复制，减少静止画面的重复转换和纹理上传；手柄保留原有按键方案。
-
-## 0.17.0-dev.6
-
-- J2ME synchronizes all RMS data changes, including settings, purchases, empty stores and deletions; no per-game progress filters. GAME_SAVE denotes native data, not an execution snapshot. Hosts may maintain one mutable slot per playthrough with idempotent retry and conflict protection.
-
-## 0.17.0-dev.5 (unreleased)
-
-- Track stable native RMS content revisions and forward exact-payload persistence acknowledgments.
-- Disable empty or unchanged native saves; preserve dirty progress across failed uploads and restore baselines.
-- Require the J2ME core acknowledgment API for GAME_SAVE synchronization; retain the existing RMS v1 payload format.
-
-## Unreleased
-
-- Add the Java ME `j2me` Target using an opaque JAR resource and the `j2me-rms-bundle-v1` native save tree.
-  It declares `GAME_SAVE`: save inside the game before uploading, and load from the game menu after restore.
-  Existing Targets keep their instant checkpoint semantics and formats.
-- Validate J2ME ZIP releases against pinned repository, tag, commit, archive size/digest and extracted runtime
-  asset digests. Include the upstream notices. The fixed v0.3.3 input predates the current RMS fixes;
-  local PFB validation must use the explicitly audited repaired core candidate until a repaired core is released.
-- Advance the Retrom Provider to 0.17.0-dev.4 and EmulatorJS to 2.2.3-dev.1 because both modules consume the
-  updated checkpoint contract validator. EmulatorJS core assets and checkpoint formats are unchanged.
+- Pin the maintained MKXP r9 core, which constructs FetchFS synchronization
+  before starting its worker. This fixes the intermittent first-frame stall
+  and subsequent exit timeout observed during sequential RPG Maker launches.
+- Preserve checkpoint formats, completed state-I/O receipts and owner-loop
+  shutdown. XP, VX and VX Ace pass sequential launch and cross-instance
+  checkpoint/restore regressions, including restoration of an existing VX save.
 
 ## 0.16.5
 

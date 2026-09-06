@@ -9,8 +9,9 @@ const runtimeRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 
 export async function buildPFBProviderDev(input) {
   validateInput(input);
+  const providerId = input.providerId ?? "retrom-runtime";
   const active = await readJSON(input.activePath);
-  const provider = active?.providers?.find((item) => item?.providerId === "retrom-runtime");
+  const provider = active?.providers?.find((item) => item?.providerId === providerId);
   if (!provider || !digest(provider.bundleSha256) || !safeRelative(provider.installationPath) ||
     !Array.isArray(provider.targets) || provider.targets.length === 0) {
     throw new Error("PFB_PROVIDER_BASE_INVALID");
@@ -18,7 +19,7 @@ export async function buildPFBProviderDev(input) {
   const installation = join(input.installedRoot, provider.installationPath);
   const manifest = await readJSON(join(installation, "provider.json"));
   const integrity = await readJSON(join(installation, "integrity.json"));
-  if (manifest?.providerId !== "retrom-runtime" || !Array.isArray(integrity?.files)) {
+  if (manifest?.providerId !== providerId || !Array.isArray(integrity?.files)) {
     throw new Error("PFB_PROVIDER_BASE_INVALID");
   }
   const assetIndex = Object.fromEntries(integrity.files
@@ -51,7 +52,7 @@ export async function buildPFBProviderDev(input) {
     files.sort((left, right) => Buffer.from(left.path).compare(Buffer.from(right.path)));
     const descriptor = {
       schemaVersion: 1,
-      providerId: "retrom-runtime",
+      providerId,
       baseBundleSha256: provider.bundleSha256,
       files,
     };
@@ -76,7 +77,7 @@ async function atomicWrite(path, contents) {
 function validateInput(input) {
   if (!input || !isAbsolute(input.activePath) || !isAbsolute(input.entryPoint) ||
     !isAbsolute(input.installedRoot) || !isAbsolute(input.outputRoot) ||
-    !Array.isArray(input.localAssets)) {
+    !Array.isArray(input.localAssets) || !["retrom-runtime", "emulatorjs"].includes(input.providerId ?? "retrom-runtime")) {
     throw new Error("PFB_PROVIDER_DEV_INPUT_INVALID");
   }
 }
@@ -153,5 +154,19 @@ function sha256(value) {
 }
 
 export const defaultPFBProviderDevInput = {
+  providerId: "retrom-runtime",
   entryPoint: join(runtimeRoot, "src/providers/retrom-runtime/module.ts"),
 };
+
+export async function selectedPFBProviderDevInput(outputRoot) {
+  let providerId = "retrom-runtime";
+  try {
+    providerId = (await readRegular(join(outputRoot, "provider-id"))).toString("utf8").trim();
+  } catch (error) {
+    if (error.code !== "ENOENT") {throw error;}
+  }
+  if (!["retrom-runtime", "emulatorjs"].includes(providerId)) {
+    throw new Error("PFB_PROVIDER_DEV_INPUT_INVALID:provider-id");
+  }
+  return {providerId, entryPoint: join(runtimeRoot, "src/providers", providerId, "module.ts")};
+}

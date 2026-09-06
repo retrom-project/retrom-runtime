@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- Allow PFB to select the EmulatorJS development client with the persistent `providers/dev/provider-id` file, preserving the default retrom-runtime client.
+
 ## 0.16.7
 
 - Pin the maintained MKXP r9 core, which constructs FetchFS synchronization

@@ -1,4 +1,5 @@
 export interface PFBProviderDevInput {
+  providerId?: "retrom-runtime" | "emulatorjs";
   activePath: string;
   entryPoint: string;
   installedRoot: string;
@@ -11,4 +12,8 @@ export function buildPFBProviderDev(input: PFBProviderDevInput): Promise<{
   moduleSha256: string;
 }>;
 
-export const defaultPFBProviderDevInput: Pick<PFBProviderDevInput, "entryPoint">;
+type PFBProviderSelection = Required<Pick<PFBProviderDevInput, "providerId" | "entryPoint">>;
+
+export const defaultPFBProviderDevInput: PFBProviderSelection;
+
+export function selectedPFBProviderDevInput(outputRoot: string): Promise<PFBProviderSelection>;

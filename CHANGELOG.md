@@ -4,6 +4,7 @@
 
 - Allow PFB to select the EmulatorJS development client with the persistent `providers/dev/provider-id` file, preserving the default retrom-runtime client.
 - Prepare DOSBox state compatibility after EmulatorJS creates its game manager, so review previews can start before checkpoint operations.
+- Use successful native serialization to gate EmulatorJS 4.2.3 restores without waiting on the diagnostic frame counter; native load completion remains required.
 
 ## 0.16.7
 

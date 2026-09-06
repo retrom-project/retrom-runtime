@@ -11,15 +11,14 @@ afterEach(() => {
 });
 
 describe("EmulatorJS 4.2.3 explicit restore", () => {
-  it("waits for serializable state and native load completion", async () => {
+  it.each([0, 1])("waits for serialization and native completion with frame counter %s", async (frame) => {
     vi.useFakeTimers();
     window.fetch = vi.fn(async () => new Response("ok"));
     const cleanup = installEmulatorJs423StateRestoreCompatibility(window);
     let runtimeConfig: {print?: (...args: unknown[]) => void} = {};
     const files = new Map<string, Uint8Array>();
-    let frame = 0;
     let probes = 0;
-    const loop = vi.fn((running: boolean) => {if (running) {frame = 1;}});
+    const loop = vi.fn();
     class Manager {
       functions = {
         saveStateInfo: () => ++probes < 2 ? "Error|0|0" : "1|0|1",
@@ -41,8 +40,9 @@ describe("EmulatorJS 4.2.3 explicit restore", () => {
     };
 
     const restore = manager.loadExplicitStateAndWait(Uint8Array.of(1, 2, 3));
+    const restored = expect(restore).resolves.toBeUndefined();
     await vi.runAllTimersAsync();
-    await expect(restore).resolves.toBeUndefined();
+    await restored;
     expect(probes).toBe(2);
     expect(loop.mock.calls.at(-1)).toEqual([false]);
     expect(files.size).toBe(0);

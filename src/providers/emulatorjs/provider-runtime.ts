@@ -446,10 +446,10 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
         if (!Array.isArray(excluded)) {this.fail("PLAYER_DOS_ARCHIVE_MODE_UNAVAILABLE"); return;}
         if (!excluded.includes(this.implementation.runtimeCore)) {excluded.push(this.implementation.runtimeCore);}
         try {
-          this.dosboxCompatibility?.prepare(this.instance);
           this.cleanupDeferredStart = startWhenAvailable(runtimeWindow);
         } catch (error) {
           this.fail("PLAYER_DOS_STATE_COMPATIBILITY_UNAVAILABLE", error);
+      this.dosboxCompatibility?.prepare(this.instance);
         }
       }
       if (this.instance) {this.updateCheckpointAvailability(this.currentCheckpointAvailability());}

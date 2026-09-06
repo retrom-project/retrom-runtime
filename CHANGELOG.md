@@ -3,6 +3,7 @@
 ## Unreleased
 
 - Allow PFB to select the EmulatorJS development client with the persistent `providers/dev/provider-id` file, preserving the default retrom-runtime client.
+- Prepare DOSBox state compatibility after EmulatorJS creates its game manager, so review previews can start before checkpoint operations.
 
 ## 0.16.7
 

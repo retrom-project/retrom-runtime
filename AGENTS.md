@@ -1,6 +1,6 @@
 # retrom-runtime Agent 实施规范
 
-本仓库维护可被任意 Web 项目引用的浏览器游戏运行时，目前包含 RPG Maker、ONS、KiriKiri、Butterscotch、TyranoScript 与 WASM-4，不包含宿主应用的上传、审核、权限、数据库、HTTP 路由或产品验收逻辑。
+本仓库维护可被任意 Web 项目引用的浏览器游戏运行时，目前包含 RPG Maker、ONS、KiriKiri、Butterscotch、TyranoScript、WASM-4 与 J2ME，不包含宿主应用的上传、审核、权限、数据库、HTTP 路由或产品验收逻辑。
 
 ## 边界
 
@@ -8,7 +8,7 @@
 - `assets/` 只保存项目自有 bridge 与小型文本资产；不得保存第三方核心源码、源码补丁或构建产物。
 - `src/providers/*/catalog.ts` 生成的 Provider declaration 是 Target、能力、checkpoint contract 与运行文件的唯一机器事实源；`provider-sources.json` 只记录第三方上游/本地构建来源，不能声明 Target 或宿主路由。
 - 本仓库不得编译第三方核心。第三方核心的源码修改、构建脚本、质量门禁和 Release 全部由对应 fork 的
-  `retrom/<baseline>` 分支维护；本仓库只聚合固定 fork tag/commit 的 Release 资产并提供统一接口。
+  `retrom/<baseline>` 分支维护（J2ME 原创集成层使用 `main`）；本仓库只聚合固定 fork tag/commit 的 Release 资产并提供统一接口。
 - `tests/` 和与源码同目录的 `*.test.ts` 覆盖运行时行为；宿主产品的导入、发布和权限测试留在宿主仓库。
 - 不引用任何宿主应用的源码、生成类型、API 路径、数据库模型或本机绝对路径。
 
@@ -25,8 +25,10 @@
 - 每个登记在 Provider declaration 的 Target 都必须在 Chrome 中支持标准手柄完成至少方向移动、确认和取消；
   上游 Web 核心缺少某个浏览器手柄边界时，由本仓库 adapter 补齐最小映射并在 `exit()` 时释放全部按键，不能把
   “可用键盘或鼠标操作”当作手柄能力。
-- 每个核心都必须提供非空、格式明确且有大小上限的即时存档，并能在新的 runtime 实例中直接恢复到该存档状态；
-  恢复后必须仍可继续接受手柄或键盘输入，不能要求用户再从游戏自己的存档菜单手动读档。
+- 每个核心都必须提供非空、格式明确且有大小上限的存档。checkpoint 未声明 `semantics` 时按 `INSTANT` 处理，
+  必须在新实例中直接恢复执行状态且继续接受输入。明确声明 `GAME_SAVE` 的 Target 保存游戏原生存档数据，
+  可以要求游戏内保存/读档；Host 必须根据该公共声明展示操作提示，并验证原生保存、整包传输、新实例启动前导入、
+  原生读档及继续输入。不得把 RMS 或原生存档声明为即时快照，也不得放宽现有即时快照断言。
 - 游戏通过自身菜单退出或核心进程自行结束时，adapter 必须一次性上报公共 `EXIT_REQUESTED` 事件，并立即让
   controller 进入退出流程、关闭 checkpoint 能力和释放核心资源；不得把已退出的黑色 canvas 留给宿主，也不得
   允许宿主继续对已结束的核心创建存档。新增核心必须用回归覆盖这一边界，不能要求宿主识别核心专用退出状态。
@@ -39,7 +41,7 @@
   边界时必须有跨两个
   runtime 实例的网络请求次数回归，以及整包下载/Range 策略的聚焦测试。
 - 新核心或改变输入、checkpoint、恢复、核心自身退出行为的版本，必须先在本仓库留下旧行为必红的控制与存档单元回归，再通过
-  宿主产品的真实审核预览、Product Launch、即时存档、不同 Launch 恢复和恢复后输入验证。缺少任一能力的候选
+  宿主产品的真实审核预览、Product Launch、所声明语义的存档、不同 Launch 恢复和恢复后输入验证。缺少任一能力的候选
   不得加入 Provider declaration、合并到 `master` 或发布稳定 tag。
 - 核心差异只能体现在各自 adapter、checkpoint codec 和显式 ABI 中；不得通过降低上述最低能力、要求宿主写
   核心专用旁路或跳过产品验证来完成接入。
@@ -75,6 +77,10 @@ npm run package:check
 - Release 完成后，Retrom 以独立提交固定正式 Provider descriptor/archive 并重跑同一产品 Case。candidate digest、工作树路径或未发布版本不得写入 production lock 或正式证据。
 
 ## 上游 fork 维护
+
+- J2ME 原创集成层 `retrom-project/j2me-web` 使用 `main` 与 annotated `vX.Y.Z`。其三个支持 fork
+  使用 `main` 与 `j2me-web-<upstream>-<revision>` annotated tag；固定输入、许可与发布顺序由该核心的
+  `docs/MAINTENANCE.md` 维护。以下 upstream 镜像与 `retrom/<baseline>` 规则适用于其余核心。
 
 - `retrom-project/Player` 的 `master`、`retrom-project/mkxp-z-libretro-emscripten` 的 `main`、
   `retrom-project/OnscripterYuri` 的 `master`、`retrom-project/kirikiroid2-web` 的 `web`、

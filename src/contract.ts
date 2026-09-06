@@ -2,13 +2,15 @@ export type CheckpointBlocker =
   | "NOT_READY"
   | "BUSY"
   | "SAVE_DISABLED"
+  | "NO_SAVE"
+  | "UNCHANGED"
   | "UNSUPPORTED"
   | "FAILED"
   | "ALREADY_CREATED"
   | "MODE_UNSUPPORTED";
 
 export type CheckpointAvailability =
-  | { available: true; blocker: null }
+  | { available: true; blocker: null; revision?: string }
   | { available: false; blocker: CheckpointBlocker };
 
 export type RuntimeCheckpoint = {

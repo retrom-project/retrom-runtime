@@ -1,3 +1,4 @@
+import { unpackJ2meRelease } from "./j2me-release.mjs";
 import { spawnSync } from "node:child_process";
 import { access, mkdir, readFile, cp, rm, writeFile } from "node:fs/promises";
 import { basename, join } from "node:path";
@@ -32,14 +33,20 @@ for (const asset of sources.localAssets) {
 }
 for (const release of sources.upstreamReleases) {
   const devRoot = devReleaseOverrides.get(release.id);
+  let archiveAssets;
   if (!devRoot) {
     const metadata = await download(release.metadataUrl, 65536);
-    validateUpstreamMetadata(release, JSON.parse(new TextDecoder().decode(metadata)));
+    const descriptor = JSON.parse(new TextDecoder().decode(metadata));
+    if (release.archive) {
+      const bytes = await download(`${release.repository}/releases/download/${release.tag}/${release.archive.filename}`,
+        release.archive.sizeBytes);
+      archiveAssets = unpackJ2meRelease(release, descriptor, bytes);
+    } else {validateUpstreamMetadata(release, descriptor);}
   }
   for (const asset of release.assets) {
     const contents = devRoot
       ? await readDevAsset(join(devRoot, asset.filename), asset.maxSizeBytes)
-      : await download(asset.url, asset.maxSizeBytes);
+      : archiveAssets?.get(asset.filename) ?? await download(asset.url, asset.maxSizeBytes);
     await publish(contents, new URL(asset.output, stage));
   }
 }

@@ -3,7 +3,7 @@ import {dirname, join, resolve} from "node:path";
 import {fileURLToPath} from "node:url";
 import {watch} from "node:fs";
 
-import {buildPFBProviderDev, defaultPFBProviderDevInput} from "./pfb-provider-dev.mjs";
+import {buildPFBProviderDev, selectedPFBProviderDevInput} from "./pfb-provider-dev.mjs";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const required = ["PFB_PROVIDER_ACTIVE_PATH", "PFB_PROVIDER_INSTALLED_ROOT", "PFB_PROVIDER_DEV_ROOT"];
@@ -13,12 +13,13 @@ for (const name of required) {
   }
 }
 const sources = JSON.parse(await readFile(join(root, "provider-sources.json"), "utf8"));
+const selected = await selectedPFBProviderDevInput(resolve(process.env.PFB_PROVIDER_DEV_ROOT));
 const input = {
-  ...defaultPFBProviderDevInput,
+  ...selected,
   activePath: resolve(process.env.PFB_PROVIDER_ACTIVE_PATH),
   installedRoot: resolve(process.env.PFB_PROVIDER_INSTALLED_ROOT),
   outputRoot: resolve(process.env.PFB_PROVIDER_DEV_ROOT),
-  localAssets: sources.localAssets.map((asset) => ({
+  localAssets: (selected.providerId === "retrom-runtime" ? sources.localAssets : []).map((asset) => ({
     source: join(root, asset.source), output: asset.output,
   })),
 };

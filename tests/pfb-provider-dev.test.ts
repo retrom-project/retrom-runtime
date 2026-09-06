@@ -6,7 +6,7 @@ import {tmpdir} from "node:os";
 import {join} from "node:path";
 import {afterEach, describe, expect, it} from "vitest";
 
-import {buildPFBProviderDev} from "../scripts/pfb-provider-dev.mjs";
+import {buildPFBProviderDev, selectedPFBProviderDevInput} from "../scripts/pfb-provider-dev.mjs";
 
 const temporaryRoots: string[] = [];
 
@@ -15,19 +15,29 @@ afterEach(async () => {
 });
 
 describe("PFB loose provider", () => {
-  it("atomically replaces one complete dev provider without retaining history", async () => {
+  it("defaults to retrom-runtime and validates an explicit persisted provider selection", async () => {
+    const root = await temporaryRoot();
+    expect((await selectedPFBProviderDevInput(root)).providerId).toBe("retrom-runtime");
+    await writeFile(join(root, "provider-id"), "emulatorjs\n");
+    expect(await selectedPFBProviderDevInput(root)).toMatchObject({
+      providerId: "emulatorjs", entryPoint: expect.stringMatching(/src\/providers\/emulatorjs\/module\.ts$/u),
+    });
+    await writeFile(join(root, "provider-id"), "../emulatorjs\n");
+    await expect(selectedPFBProviderDevInput(root)).rejects.toThrow("PFB_PROVIDER_DEV_INPUT_INVALID:provider-id");
+  });
+  it.each(["retrom-runtime", "emulatorjs"] as const)("atomically replaces the selected %s dev provider", async (providerId) => {
     const root = await temporaryRoot();
     const installedRoot = join(root, "installed");
     const outputRoot = join(root, "dev");
     const bundle = "a".repeat(64);
-    const installation = join(installedRoot, "retrom-runtime", bundle);
+    const installation = join(installedRoot, providerId, bundle);
     await mkdir(join(installation, "assets/butterscotch"), {recursive: true});
     const baseAsset = "export const base=true;\n";
     await writeFile(join(installation, "assets/butterscotch/worker.mjs"), baseAsset);
     await writeFile(join(installation, "provider.json"), JSON.stringify({
       schemaVersion: 1,
-      providerId: "retrom-runtime",
-      providerVersion: "0.16.7",
+      providerId,
+      providerVersion: "0.16.8",
       providerApiVersion: 1,
       clientModulePath: "client.mjs",
       targets: [{id: "butterscotch", assetPaths: ["assets/butterscotch/worker.mjs"]}],
@@ -45,9 +55,9 @@ describe("PFB loose provider", () => {
     await writeFile(activePath, JSON.stringify({
       schemaVersion: 1,
       providers: [{
-        providerId: "retrom-runtime",
+        providerId,
         bundleSha256: bundle,
-        installationPath: `retrom-runtime/${bundle}`,
+        installationPath: `${providerId}/${bundle}`,
         targets: [{id: "butterscotch", checkpoint: null}],
       }],
     }));
@@ -56,13 +66,13 @@ describe("PFB loose provider", () => {
     const entryPoint = join(root, "entry.ts");
     await writeFile(entryPoint, "export const providerApiVersion=1;\n");
     const first = await buildPFBProviderDev({
-      activePath, entryPoint, installedRoot,
+      activePath, entryPoint, installedRoot, providerId,
       localAssets: [{source: localAsset, output: "runtime/butterscotch/worker.mjs"}],
       outputRoot,
     });
     await writeFile(entryPoint, "export const providerApiVersion=2;\n");
     const second = await buildPFBProviderDev({
-      activePath, entryPoint, installedRoot,
+      activePath, entryPoint, installedRoot, providerId,
       localAssets: [{source: localAsset, output: "runtime/butterscotch/worker.mjs"}],
       outputRoot,
     });
@@ -71,6 +81,7 @@ describe("PFB loose provider", () => {
     expect(Object.keys(descriptor).sort()).toEqual(["baseBundleSha256", "files", "providerId", "schemaVersion"]);
     expect(await readdir(outputRoot)).toEqual(["dev-provider.json"]);
     expect(descriptor.baseBundleSha256).toBe(bundle);
+    expect(descriptor.providerId).toBe(providerId);
     expect(descriptor.files.map((file: {path: string}) => file.path)).toEqual([
       "assets/butterscotch/worker.mjs", "client.mjs",
     ]);
@@ -85,7 +96,7 @@ describe("PFB loose provider", () => {
     const published = await readFile(join(outputRoot, "dev-provider.json"), "utf8");
     await writeFile(entryPoint, "export const = ;\n");
     await expect(buildPFBProviderDev({
-      activePath, entryPoint, installedRoot,
+      activePath, entryPoint, installedRoot, providerId,
       localAssets: [{source: localAsset, output: "runtime/butterscotch/worker.mjs"}],
       outputRoot,
     })).rejects.toThrow();
@@ -95,16 +106,16 @@ describe("PFB loose provider", () => {
     await writeFile(activePath, JSON.stringify({
       schemaVersion: 1,
       providers: [{
-        providerId: "retrom-runtime",
+        providerId,
         bundleSha256: bundle,
-        installationPath: `retrom-runtime/${bundle}`,
+        installationPath: `${providerId}/${bundle}`,
         targets: [{
           id: "butterscotch", checkpoint: null, targetContractSha256: "b".repeat(64),
         }],
       }],
     }));
     await expect(buildPFBProviderDev({
-      activePath, entryPoint, installedRoot,
+      activePath, entryPoint, installedRoot, providerId,
       localAssets: [{source: localAsset, output: "runtime/butterscotch/worker.mjs"}],
       outputRoot,
     })).rejects.toThrow("PFB_PROVIDER_BASE_INVALID");

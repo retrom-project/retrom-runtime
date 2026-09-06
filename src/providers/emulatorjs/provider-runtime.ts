@@ -19,13 +19,12 @@ import {installDOSBoxPureStateCompatibility} from "./dosbox-state.js";
 import {installExternalFileCompatibility} from "./external-files.js";
 import {RuntimeGamepadFilter, installRuntimeGamepadFilter} from "../../provider/gamepad-filter.js";
 import {installEmulatorJs423NetplayCompatibility} from "./netplay-compatibility.js";
-import {EmulatorJsNetplayPort, type EmulatorNetplayInstance} from "./netplay-port.js";
+import {EmulatorJsNetplayPort} from "./netplay-port.js";
 import {
   type ValidatedEmulatorJsNetplayProfile,
   validateEmulatorJsNetplayProfile,
 } from "./netplay-profile.js";
 import {
-  type EmulatorDiscInstance,
   initializeEmulatorJsDiscs,
   readEmulatorJsDiscState,
   switchEmulatorJsDisc,
@@ -33,92 +32,23 @@ import {
 import {captureEmulatorJsScreenshot} from "./screenshot.js";
 import {createStartBarrier, startWhenAvailable, type StartBarrier} from "./lifecycle.js";
 import {installEmulatorJs423StateRestoreCompatibility} from "./state-restore.js";
-import {createRetromDefaultControls, emulatorControlScheme, type EmulatorDefaultControls} from "./default-controls.js";
-import {initializeEmulatorJsGamepads, type EmulatorGamepadInstance} from "./startup-gamepads.js";
+import {createRetromDefaultControls, emulatorControlScheme} from "./default-controls.js";
+import {initializeEmulatorJsGamepads} from "./startup-gamepads.js";
 import {
   closeEmulatorJsNativeSettings,
-  type EmulatorNativeSettingsInstance,
   openEmulatorJsNativeSettings,
 } from "./native-settings.js";
 import {retromShaders} from "./shaders.js";
 import {applyEmulatorJsVideoMode} from "./video-mode.js";
 import {biosFile, externalFiles, fileName, optionalResource, resource, runtimeBase} from "./resources.js";
 import {readEmulatorJsCheckpoint} from "./bytes.js";
+import {readPspCheckpoint, restorePspCheckpoint} from "./psp-state.js";
+import {installPspRestoreObserver} from "./psp-restore.js";
 import {installEmulatorJsFrameStyle} from "./frame-style.js";
+import {decodeEmulatorJsCheckpoint, encodeEmulatorJsCheckpoint} from "./checkpoint-codec.js";
+import {installEmulatorJsOutputViewport} from "./output-viewport.js";
 
-type EjsManager = {
-  Module?: {
-    HEAPU8?: Uint8Array;
-    UTF8ToString?: (pointer: number) => string;
-    _free?: (pointer: number) => void;
-    _save_state_info?: () => number;
-  };
-  FS?: {
-    readFile?: (path: string) => ArrayBufferView;
-    stat?: (path: string) => {size: number};
-    unlink?: (path: string) => void;
-    writeFile?: (path: string, bytes: Uint8Array) => void;
-  };
-  clearEJSResetTimer?: () => void;
-  functions?: {loadState?: (path: string, slot: number) => unknown; screenshot?: () => void};
-  getFrameNum?: () => number;
-  getState?: () => Uint8Array;
-  getStateAsync?: () => Promise<Uint8Array>;
-  loadExplicitStateAndWait?: (state: Uint8Array) => Promise<void>;
-  loadStateAndWait?: (state: Uint8Array) => Promise<unknown>;
-  loadState?: (state: Uint8Array) => void;
-  getVideoDimensions?: (dimension: "aspect") => number | undefined;
-  simulateInput?: (player: number, control: number, value: number) => void;
-  toggleMainLoop?: (running: boolean) => void;
-};
-
-type EjsInstance = EmulatorDiscInstance & EmulatorNativeSettingsInstance & EmulatorNetplayInstance & EmulatorGamepadInstance & {
-  canvas?: HTMLCanvasElement;
-  capture?: {photo?: {source?: string; format?: string; upscale?: number}};
-  gameManager?: EjsManager;
-  paused?: boolean;
-  muted?: boolean;
-  volume?: number;
-  setVolume?: (value: number) => void;
-  changeSettingOption?: (name: string, value: string) => void;
-  enableShader?: (name: string) => void;
-  takeScreenshot?: (source: string, format: string, upscale: number) => Promise<{blob?: Blob; screenshot?: unknown; format: string}>;
-  downloadType?: {rom?: {dontExtractIfCore?: string[]}};
-  on?: (event: string, callback: (...args: unknown[]) => void) => void;
-};
-
-type EjsWindow = Window & {
-  EJS_player?: string;
-  EJS_core?: string;
-  EJS_controlScheme?: string;
-  EJS_gameUrl?: string;
-  EJS_gameName?: string;
-  EJS_gameID?: number;
-  EJS_pathtodata?: string;
-  EJS_biosUrl?: string;
-  EJS_gameParentUrl?: string;
-  EJS_startOnLoaded?: boolean;
-  EJS_dontExtractRom?: boolean;
-  EJS_disableBatchBootup?: boolean;
-  EJS_language?: string;
-  EJS_disableAutoLang?: boolean;
-  EJS_DEBUG_XX?: boolean;
-  EJS_EXPERIMENTAL_NETPLAY?: boolean;
-  EJS_threads?: boolean;
-  EJS_fullscreenOnLoaded?: boolean;
-  EJS_disableDatabases?: boolean;
-  EJS_disableLocalStorage?: boolean;
-  EJS_CacheLimit?: number;
-  EJS_Buttons?: Record<string, boolean>;
-  EJS_defaultControls?: EmulatorDefaultControls;
-  EJS_defaultOptions?: Record<string, string>;
-  EJS_shaders?: typeof retromShaders;
-  EJS_paths?: Record<string, string>;
-  EJS_externalFiles?: Record<string, string>;
-  EJS_ready?: () => void;
-  EJS_onGameStart?: () => void;
-  EJS_emulator?: EjsInstance;
-};
+import type {EjsInstance, EjsWindow} from "./emulator-instance.js";
 
 const configuredGlobals = [
   "EJS_player", "EJS_core", "EJS_controlScheme", "EJS_gameUrl", "EJS_gameName", "EJS_gameID", "EJS_pathtodata",
@@ -147,8 +77,10 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
   private restorePayload: Uint8Array | null = null;
   private mountPromise: Promise<void> | null = null;
   private exitPromise: Promise<void> | null = null;
+  private pspRestore: ReturnType<typeof installPspRestoreObserver> | null = null;
   private cleanupArchiveWorker: (() => void) | null = null;
   private cleanupFrameStyle: (() => void) | null = null;
+  private outputViewport: ReturnType<typeof installEmulatorJsOutputViewport> | null = null;
   private cleanupStateRestore: (() => void) | null = null;
   private cleanupExternalFiles: (() => void) | null = null;
   private cleanupInputFilter: (() => void) | null = null;
@@ -216,12 +148,16 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
   }
 
   async checkpoint() {
-    const bytes = await readEmulatorJsCheckpoint(this.requireInstance().gameManager, this.state === "PAUSED");
+    const manager = this.requireInstance().gameManager;
     const maximum = this.envelope.runtime.checkpoint?.maxBytes ?? 0;
+    const bytes = this.implementation.runtimeCore === "ppsspp"
+      ? await readPspCheckpoint(manager, maximum, this.state === "PAUSED")
+      : await readEmulatorJsCheckpoint(manager, this.state === "PAUSED");
     if (!bytes || bytes.byteLength < 1 || bytes.byteLength > maximum) {
       throw contractError();
     }
-    return {bytes, format: "emulatorjs-state-v1", metadata: null};
+    const format = this.envelope.runtime.checkpoint!.writeFormat;
+    return {bytes: await encodeEmulatorJsCheckpoint(bytes, format, maximum, this.host.signal), format, metadata: null};
   }
 
   async screenshot() {
@@ -249,6 +185,7 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
   async setVideoMode(mode: RuntimeVideoModeV1) {
     if (!this.envelope.runtime.capabilities.videoModes.includes(mode)) {throw capabilityError();}
     if (!applyEmulatorJsVideoMode(this.requireInstance(), mode)) {throw contractError();}
+    this.outputViewport?.setVideoMode(mode);
   }
   async openNativeSettings(panel: "controls" | "display" | "core") {
     if (!this.envelope.runtime.capabilities.nativeSettings) {throw capabilityError();}
@@ -320,7 +257,14 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
     this.transition("MOUNTING");
     try {
       this.restorePayload = await this.host.loadRestore(this.envelope.restore);
+      if (this.restorePayload && this.envelope.restore) {
+        this.restorePayload = await decodeEmulatorJsCheckpoint(this.restorePayload, this.envelope.restore.format,
+          this.envelope.runtime.checkpoint?.maxBytes ?? 0, this.host.signal);
+      }
       const frame = await this.host.mountFrame(target, {resourceRole: null});
+      if (this.implementation.outputSizeLimit) {
+        this.outputViewport = installEmulatorJsOutputViewport(frame.element, target, this.implementation.outputSizeLimit);
+      }
       const runtimeWindow = frame.contentWindow as EjsWindow;
       this.runtimeWindow = runtimeWindow;
       this.createMountPoint(runtimeWindow);
@@ -333,6 +277,7 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
         runtimeWindow,
         this.implementation.release,
         runtimeBase(this.envelope, this.implementation.release),
+        this.implementation.runtimeCore,
       );
       if (this.implementation.release === "4.2.3" && Object.keys(externalFiles(this.envelope)).length) {
         this.cleanupExternalFiles = installExternalFileCompatibility(runtimeWindow);
@@ -381,6 +326,7 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
   }
 
   private configure(runtimeWindow: EjsWindow) {
+    if (this.implementation.runtimeCore === "ppsspp") {this.pspRestore = installPspRestoreObserver(runtimeWindow);}
     const game = resource(this.envelope, "game", "ROM_BLOB");
     const bios = optionalResource(this.envelope, "bios", "BIOS_BUNDLE");
     const parent = optionalResource(this.envelope, "parent", "PARENT_ARCHIVE");
@@ -459,7 +405,7 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
         this.instance.gameManager.toggleMainLoop(true);
         this.instance.paused = false;
       }
-      this.scheduleStartupActions(runtimeWindow);
+      if (this.implementation.runtimeCore !== "ppsspp" || !this.envelope.restore) {this.scheduleStartupActions(runtimeWindow);}
       this.updateCheckpointAvailability(this.currentCheckpointAvailability());
       this.startBarrier?.resolve();
     } catch (error) {
@@ -491,7 +437,10 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
 
   private async restore(bytes: Uint8Array) {
     const manager = this.instance?.gameManager;
-    if (manager?.loadExplicitStateAndWait) {await manager.loadExplicitStateAndWait(bytes);}
+    if (this.implementation.runtimeCore === "ppsspp") {
+      await restorePspCheckpoint(manager, bytes, this.envelope.runtime.checkpoint?.maxBytes ?? 0,
+        () => this.pspRestore!.wait(this.host.signal), this.host.signal);
+    } else if (manager?.loadExplicitStateAndWait) {await manager.loadExplicitStateAndWait(bytes);}
     else if (manager?.loadStateAndWait) {await manager.loadStateAndWait(bytes);}
     else if (manager?.loadState) {manager.loadState(bytes);}
     else {throw new Error("PLAYER_STATE_RESTORE_FAILED");}
@@ -527,8 +476,7 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
     this.startupTimers.clear();
     this.loader?.remove();
     this.loader = null;
-    this.cleanupFrameStyle?.();
-    this.cleanupFrameStyle = null;
+    this.cleanupSurface();
     this.cleanupStateRestore?.();
     this.cleanupStateRestore = null;
     this.cleanupDeferredStart?.();
@@ -544,6 +492,7 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
     this.cleanupInputFilter?.();
     this.cleanupInputFilter = null;
     this.inputFilter = null;
+    this.pspRestore?.cleanup(); this.pspRestore = null;
     this.cleanupArchiveWorker?.();
     this.cleanupArchiveWorker = null;
     if (this.runtimeWindow) {
@@ -559,6 +508,13 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
     if (!this.instance || this.state === "CREATED" || this.state === "MOUNTING" ||
       this.state === "FAILED" || this.state === "EXITED") {throw contractError();}
     return this.instance;
+  }
+
+  private cleanupSurface() {
+    this.cleanupFrameStyle?.();
+    this.cleanupFrameStyle = null;
+    this.outputViewport?.cleanup();
+    this.outputViewport = null;
   }
 
   private fail(code: string, error?: unknown) {

@@ -1,3 +1,5 @@
+import {installPspAssetCompatibility} from "./psp-assets.js";
+
 type EjsCompressionConstructor = {
   prototype?: {getWorkerFile?: (archiveType: string) => Promise<Blob>};
 };
@@ -30,10 +32,15 @@ export function installArchiveWorkerCompatibility(
   runtimeWindow: Window,
   emulatorJsVersion: string,
   runtimeBaseUrl: string,
+  core = "",
 ) {
   const target = runtimeWindow as CompressionWindow;
   if (emulatorJsVersion === "4.2.3") {return installBlobCompatibility(target);}
-  if (emulatorJsVersion === "4.3.0-pre") {return installResponseCompatibility(target, runtimeBaseUrl);}
+  if (emulatorJsVersion === "4.3.0-pre") {
+    const archive = installResponseCompatibility(target, runtimeBaseUrl);
+    const psp = core === "ppsspp" ? installPspAssetCompatibility(target, runtimeBaseUrl) : null;
+    return () => {psp?.(); archive();};
+  }
   throw unavailable();
 }
 

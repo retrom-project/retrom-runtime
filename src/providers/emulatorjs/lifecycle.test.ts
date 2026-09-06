@@ -1,4 +1,4 @@
-import {afterEach, describe, expect, it, vi} from "vitest";
+import {afterEach, beforeEach, describe, expect, it, vi} from "vitest";
 
 import type {RuntimeEventV1, RuntimeHostV1} from "../../provider/module-api.js";
 import {launchEnvelope} from "../../../tests/emulatorjs-provider-fixtures.js";
@@ -10,9 +10,9 @@ const assetIndex = {
     sha256: "8c449fd5c36646fb0769423ed6ffa9efbdfc21fbfdc9bac7952b559d34d5b493",
     sizeBytes: 1054015,
   },
-  "assets/4.2.3/data/cores/ppsspp-thread-wasm.data": {
-    sha256: "cb46c33a3a8444b707f7a03fe00414d916ab55a41e85fbf0c59611aa643252da",
-    sizeBytes: 4581537,
+  "assets/4.3.0-pre/data/cores/ppsspp-thread-wasm.data": {
+    sha256: "b75f51aa9c66bfb20c3b056b0dc5f9246516648786d0f0e73d636f224ff9080f",
+    sizeBytes: 4548468,
   },
   "assets/4.2.3/data/cores/beetle_vb-wasm.data": {
     sha256: "3db727a78b6a6551a4024c273069eb39c8e8f33aa78ef16a073ed7460f6ce692",
@@ -20,9 +20,40 @@ const assetIndex = {
   },
 };
 
-afterEach(() => {vi.useRealTimers();});
+beforeEach(() => {vi.stubGlobal("ResizeObserver", class {observe() {} disconnect() {}});});
+afterEach(() => {vi.useRealTimers(); vi.unstubAllGlobals();});
 
 describe("EmulatorJS provider lifecycle boundaries", () => {
+  it("does not press PSP boot-dialog controls after an explicit restore", async () => {
+    vi.useFakeTimers();
+    const frame = document.createElement("iframe"); document.body.append(frame);
+    const runtimeWindow = frame.contentWindow as Window & Record<string, unknown>;
+    runtimeWindow.fetch = vi.fn(async () => new Response("ok"));
+    const bytes = Uint8Array.of(1, 2, 3);
+    const host: RuntimeHostV1 = {
+      loadRestore: vi.fn(async () => bytes),
+      mountFrame: vi.fn(async () => ({contentWindow: runtimeWindow, element: frame, origin: location.origin})),
+      reportDiagnostic: vi.fn(), signal: new AbortController().signal,
+    };
+    const envelope = launchEnvelope(); envelope.runtime.targetId = "ppsspp";
+    envelope.restore = {format: "emulatorjs-state-v1", sha256: "a".repeat(64), sizeBytes: 3, url: "/restore"};
+    const player = await createEmulatorJsPlayer(envelope, host, assetIndex);
+    const mounting = player.mount(document.createElement("div")); await vi.advanceTimersByTimeAsync(0);
+    let native!: {print: (message: string) => void; postMainLoop: () => void};
+    runtimeWindow.EJS_Runtime = (config: typeof native) => {native = config;};
+    (runtimeWindow.EJS_Runtime as (config: object) => unknown)({});
+    const simulateInput = vi.fn();
+    runtimeWindow.EJS_emulator = {gameManager: {simulateInput, toggleMainLoop: vi.fn(),
+      Module: {HEAPU8: new Uint8Array(128), cwrap: (name: string) => async () => {
+        if (name === "load_state") {native.print('[State] Loading state "/game.state".'); native.postMainLoop(); native.postMainLoop();}
+        return 24;
+      }, UTF8ToString: () => "3|64|1", _free: vi.fn()},
+      FS: {writeFile: vi.fn(), unlink: vi.fn()},
+    }};
+    (runtimeWindow.EJS_ready as () => void)(); (runtimeWindow.EJS_onGameStart as () => void)();
+    await mounting; await vi.advanceTimersByTimeAsync(6000);
+    expect(simulateInput).not.toHaveBeenCalled(); await player.exit(); frame.remove();
+  });
   it("waits for restore, publishes checkpoint availability and forwards core exit once", async () => {
     const frame = document.createElement("iframe");
     document.body.append(frame);
@@ -70,6 +101,7 @@ describe("EmulatorJS provider lifecycle boundaries", () => {
     const frame = document.createElement("iframe");
     document.body.append(frame);
     const runtimeWindow = frame.contentWindow as Window & Record<string, unknown>;
+    runtimeWindow.fetch = vi.fn(async () => new Response("ok"));
     const host: RuntimeHostV1 = {
       loadRestore: vi.fn(async () => null),
       mountFrame: vi.fn(async () => ({contentWindow: runtimeWindow, element: frame, origin: location.origin})),
@@ -91,6 +123,7 @@ describe("EmulatorJS provider lifecycle boundaries", () => {
     const frame = document.createElement("iframe");
     document.body.append(frame);
     const runtimeWindow = frame.contentWindow as Window & Record<string, unknown>;
+    runtimeWindow.fetch = vi.fn(async () => new Response("ok"));
     const host: RuntimeHostV1 = {
       loadRestore: vi.fn(async () => null),
       mountFrame: vi.fn(async () => ({contentWindow: runtimeWindow, element: frame, origin: location.origin})),
@@ -122,6 +155,7 @@ describe("EmulatorJS provider lifecycle boundaries", () => {
     const frame = document.createElement("iframe");
     document.body.append(frame);
     const runtimeWindow = frame.contentWindow as Window & Record<string, unknown>;
+    runtimeWindow.fetch = vi.fn(async () => new Response("ok"));
     const host: RuntimeHostV1 = {
       loadRestore: vi.fn(async () => null),
       mountFrame: vi.fn(async () => ({contentWindow: runtimeWindow, element: frame, origin: location.origin})),
@@ -166,6 +200,7 @@ describe("EmulatorJS provider lifecycle boundaries", () => {
     const frame = document.createElement("iframe");
     document.body.append(frame);
     const runtimeWindow = frame.contentWindow as Window & Record<string, unknown>;
+    runtimeWindow.fetch = vi.fn(async () => new Response("ok"));
     const controller = new AbortController();
     const host: RuntimeHostV1 = {
       loadRestore: vi.fn(async () => null),

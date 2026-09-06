@@ -33,6 +33,11 @@ const adapters = [
     checkpoint: {readFormats: ["emulatorjs-state-v1"], writeFormat: "emulatorjs-state-v1"},
     id: "emulatorjs-4.3.0-pre", kind: "EMULATORJS_4_3_0_PRE",
   }),
+  defineAdapter({
+    abi: "emulatorjs-state-gzip-v1", capabilities,
+    checkpoint: {readFormats: ["emulatorjs-state-v1", "emulatorjs-state-gzip-v1"], writeFormat: "emulatorjs-state-gzip-v1"},
+    id: "emulatorjs-psp", kind: "EMULATORJS_PSP",
+  }),
 ] as const;
 
 const inputs = [
@@ -65,6 +70,7 @@ type CoreSource = {
   artifactSetSha256: string;
   requiresThreads: boolean;
   canvasResizePolicy: "NONE" | "ON_GAME_START_TO_CSS_PIXELS";
+  outputSizeLimit: {width: number; height: number} | null;
   defaultOptions: Readonly<Record<string, string>>;
   inputMode: InputMode;
   startupActions: readonly StartupAction[];
@@ -101,7 +107,7 @@ const cores: readonly CoreSource[] = [
   core("parallel_n64", "4.2.3", "parallel_n64-wasm.data", 1028134, "873755608d41a604f3eee11b631f1cbe7e4d8c4d10c92859c27941299c8ef6a6", "570e28f134062f8681992b5160b8c503f23e492e2a10d852cca86da3c926f07a"),
   core("pcsx_rearmed", "4.2.3", "pcsx_rearmed-wasm.data", 1039627, "fe5515f6c29f093f0e8c01824b213804f1f76eb9cb4c97c72fe2cc17606bfbc2", "14cafda8e2a977fe406ffe7f6b66eebe1b35981cafafefbfa7436f68e79a8520"),
   core("picodrive", "4.2.3", "picodrive-wasm.data", 1034483, "bb5d50b8b88111b583977d2f7a16d01a822b3deda9205048d99ecaad2c56d861", "043ab4ae01f3018243aaf1dce6d5eb1ce098c146154be8f8a50914a4e42edfb0"),
-  core("ppsspp", "4.2.3", "ppsspp-thread-wasm.data", 4581537, "cb46c33a3a8444b707f7a03fe00414d916ab55a41e85fbf0c59611aa643252da", "c7144f68b64b5ba826562049dccaae0586a48403a6bdc65dade0bfa06c0f8523", {startupActions: [press(2000, 0), press(5000, 0)]}),
+  core("ppsspp", "4.3.0-pre", "ppsspp-thread-wasm.data", 4548468, "b75f51aa9c66bfb20c3b056b0dc5f9246516648786d0f0e73d636f224ff9080f", "d3c58abe2b9a375044ea03ceca1cfd4bb035507e8c7eff5c52401a21c3bc130d", {outputSizeLimit: {width: 960, height: 544}, startupActions: [press(2000, 0), press(5000, 0)]}),
   core("prosystem", "4.2.3", "prosystem-wasm.data", 852864, "d3483e1c155c8d26e6b7b299c8ecc58c5abcfa0c5af5f03b75a55d219e71c3c8", "5ab7fa94d4cc9da68fff24911d76a32d3fba8ffbecd3fec740a1992670df809e"),
   core("smsplus", "4.2.3", "smsplus-wasm.data", 855876, "0f197c5e0000f17b2d072122a72b3f8fc1693514c4014fcd9694eec78584aa08", "a09612f1d088bffe8d9c107caf196b023710ed4aaeaa24f05caee7eec8591ff0"),
   core("snes9x", "4.2.3", "snes9x-wasm.data", 1093765, "eaa0bcfce67673809886e50387a80a616b719502175db64c090d04c9d75958ee", "f2ecf64d84dc3845ccd9828daf48436667f6aa79e6a5d6c41f0965f0151f1f34"),
@@ -112,10 +118,11 @@ const cores: readonly CoreSource[] = [
 const targets = cores.map((entry) => {
   const netplayProfile = emulatorJsNetplayProfiles[entry.id] ?? null;
   return defineTarget({
-  adapterId: entry.release === "4.3.0-pre" ? "emulatorjs-4.3.0-pre" : "emulatorjs-4.2.3",
+  adapterId: entry.id === "ppsspp" ? "emulatorjs-psp" : `emulatorjs-${entry.release}`,
   assetPaths: [
     ...commonAssets(entry.release),
     entry.asset,
+    ...(entry.id === "ppsspp" ? [`assets/${entry.release}/data/cores/ppsspp-assets.zip`, `assets/${entry.release}/data/compression/extractzip.js`] : []),
     `assets/${entry.release}/data/cores/reports/${entry.id}.json`,
   ].sort(compareUtf8),
   checkpointMaxBytes: 256 * 1024 * 1024,
@@ -127,6 +134,7 @@ const targets = cores.map((entry) => {
     artifactFlavor: entry.artifactFlavor,
     artifactSetSha256: entry.artifactSetSha256,
     canvasResizePolicy: entry.canvasResizePolicy,
+    outputSizeLimit: entry.outputSizeLimit,
     contentKinds: entry.contentKinds,
     coreAssetPath: entry.asset,
     coreBundleVersion: entry.coreBundleVersion,
@@ -153,7 +161,7 @@ export const emulatorJsProviderDefinition = defineProvider({
   adapters,
   providerApiVersion: 1,
   providerId: "emulatorjs",
-  providerVersion: "2.2.4",
+  providerVersion: "2.3.2",
   targets,
 });
 
@@ -174,6 +182,7 @@ function core(
     artifactSetSha256,
     asset: `assets/${release}/data/cores/${filename}`,
     canvasResizePolicy: "NONE",
+    outputSizeLimit: null,
     contentKinds: ["SINGLE_FILE"],
     coreBundleVersion: release,
     id,

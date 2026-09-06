@@ -6,11 +6,25 @@ import {emulatorJsProviderDefinition} from "./catalog.js";
 import {emulatorJsNetplayProfiles} from "./netplay-profile.js";
 
 describe("EmulatorJS Provider declarations", () => {
+  it("limits PSP output and writes compressed states while retaining raw saves", () => {
+    const manifest = projectProviderManifest(emulatorJsProviderDefinition);
+    expect(manifest.targets.find((target) => target.id === "ppsspp")?.checkpoint).toMatchObject({
+      writeFormat: "emulatorjs-state-gzip-v1", readFormats: ["emulatorjs-state-gzip-v1", "emulatorjs-state-v1"],
+    });
+    expect(emulatorJsProviderDefinition.targets.find((target) => target.id === "ppsspp")?.implementation)
+      .toMatchObject({outputSizeLimit: {width: 960, height: 544}});
+    const pspAssets = emulatorJsProviderDefinition.targets.find((target) => target.id === "ppsspp")!.assetPaths;
+    expect(pspAssets).toContain("assets/4.3.0-pre/data/cores/ppsspp-assets.zip");
+    expect(pspAssets).toContain("assets/4.3.0-pre/data/compression/extractzip.js");
+    for (const target of manifest.targets.filter((target) => target.id !== "ppsspp")) {
+      expect(target.checkpoint?.writeFormat).toBe("emulatorjs-state-v1");
+    }
+  });
   it("uses last declaration wins for exactly thirty-five current core targets", () => {
     const manifest = projectProviderManifest(emulatorJsProviderDefinition);
     expect(validateProviderManifest(manifest)).toBe(manifest);
     expect(manifest.providerId).toBe("emulatorjs");
-    expect(manifest.providerVersion).toBe("2.2.4");
+    expect(manifest.providerVersion).toBe("2.3.2");
     expect(manifest.targets).toHaveLength(35);
     expect(new Set(manifest.targets.map((target) => target.id)).size).toBe(35);
     for (const targetId of ["dosbox-pure", "genesis-plus-gx-wide", "azahar"]) {

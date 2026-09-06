@@ -5,6 +5,25 @@ VX, VX Ace, MV and MZ, ONS games powered by ONScripterYuri, KAG-based KiriKiri2 
 projects powered by Butterscotch, browser TyranoScript projects, Java ME JARs and WASM-4 carts. It owns runtime lifecycle, adapters, checkpoint codecs, bridge assets and pinned core
 Release inputs. It does not know about a host application's users, database, review flow, storage or HTTP API.
 
+## EmulatorJS PSP
+
+The separate `emulatorjs` Provider declares its targets in `src/providers/emulatorjs/catalog.ts`.
+PSP uses the threaded PPSSPP core from the pinned EmulatorJS 4.3.0-pre release, with the CPU
+execution mode and optimizations supplied by that core. Its private adapter resolves the upstream
+PSP resource archive and core report to immutable bundle assets without external update requests.
+
+For pixel and original video modes, PSP bounds the internal output viewport to 960×544 and scales
+it uniformly to the host surface. This preserves the full image and limits output work on high-DPI
+screens; it does not change the game's internal rendering resolution. Native settings keep that viewport so opening a menu does not clear a paused frame. Shader modes
+retain the full host viewport. Resize observation and styles are released on exit.
+
+PSP checkpoints use `emulatorjs-state-gzip-v1`: gzip of the complete native checkpoint, with no
+truncation. Encoding and decoding occur only at the save/restore boundary, using browser streams.
+Native PSP save/load calls await Asyncify with the main loop stopped; restored sessions skip boot-dialog input.
+Both encoded and decoded payloads must fit the declared checkpoint limit; invalid gzip or oversized
+output fails the contract. Raw `emulatorjs-state-v1` payloads are also decoded explicitly by format.
+Other EmulatorJS targets retain their existing raw checkpoint format and output policy.
+
 ## Provider Module V1
 
 Hosts integrate the generated Provider Bundle, not an engine registry or the legacy adapter API. A Bundle exports

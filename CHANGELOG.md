@@ -2,7 +2,8 @@
 
 ## 0.16.8
 
-- Advance the EmulatorJS Provider to 2.2.3 for the DOSBox startup, restore-readiness and Mega Drive input fixes; existing checkpoint formats and pinned core releases remain unchanged.
+- Advance the EmulatorJS Provider to 2.2.3 for the DOSBox startup, restore-readiness, Mega Drive input and delayed startup control fixes; existing checkpoint formats and pinned core releases remain unchanged.
+- Preserve the EmulatorJS game manager receiver for delayed PSP and Virtual Boy startup controls, preventing uncaught `EJS` property errors while retaining the configured press/release timing and exit cancellation.
 - Select the Mega Drive controller layout explicitly for Genesis Plus GX, GX Wide and PicoDrive, preserving Start and the six face buttons instead of accepting EmulatorJS's automatic Master System layout. EmulatorJS 4.2.3 uses its equivalent `segaCD` input-layout alias; the core and content remain unchanged.
 - Assign gamepads already detected during EmulatorJS construction to free player slots when controls become ready, preserving existing assignments and leaving later connections to EmulatorJS. This repairs the initial connection event lost before its listener was registered.
 - Allow PFB to select the EmulatorJS development client with the persistent `providers/dev/provider-id` file, preserving the default retrom-runtime client.

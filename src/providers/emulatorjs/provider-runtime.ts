@@ -68,6 +68,7 @@ type EjsManager = {
   loadStateAndWait?: (state: Uint8Array) => Promise<unknown>;
   loadState?: (state: Uint8Array) => void;
   getVideoDimensions?: (dimension: "aspect") => number | undefined;
+  simulateInput?: (player: number, control: number, value: number) => void;
   toggleMainLoop?: (running: boolean) => void;
 };
 
@@ -470,10 +471,9 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
   }
 
   private scheduleStartupActions(runtimeWindow: Window) {
-    const simulate = (this.instance?.gameManager as EjsManager & {
-      simulateInput?: (player: number, control: number, value: number) => void;
-    } | undefined)?.simulateInput;
     if (!this.implementation.startupActions.length) {return;}
+    const manager = this.instance?.gameManager;
+    const simulate = manager?.simulateInput?.bind(manager);
     if (!simulate) {throw new Error("PLAYER_STARTUP_ACTION_UNAVAILABLE");}
     for (const action of this.implementation.startupActions) {
       const pressTimer = runtimeWindow.setTimeout(() => {

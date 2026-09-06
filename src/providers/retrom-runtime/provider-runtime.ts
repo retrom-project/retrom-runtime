@@ -1,6 +1,6 @@
 import type {MountedRuntimeAdapter, RuntimeProgressReporter} from "../../internal-adapter.js";
 import type {
-  AssetIndexV1, LaunchEnvelopeV1, PlayerRuntimeV1, RuntimeCheckpointAvailabilityV1,
+  AssetIndexV1, LaunchEnvelopeV1, PlayerRuntimeV1, RuntimeCheckpointAvailabilityV1, RuntimeCheckpointV1,
   RuntimeDiscStateV1, RuntimeEventV1, RuntimeHostV1, RuntimeInputFilterPolicyV1,
   RuntimeNetplayPortV1, RuntimeStateV1, RuntimeVideoModeV1,
 } from "../../provider/module-api.js";
@@ -57,6 +57,8 @@ class RetromRuntimePlayer implements PlayerRuntimeV1 {
       if (this.inputFilter) {this.cleanupInputFilter = installRuntimeGamepadFilter(runtimeWindow, this.inputFilter);}
       const adapter = await mountTargetAdapter(this.envelope, runtimeTarget, {
         assetIndex: this.assetIndex,
+        signal: this.host.signal,
+        reportFailure: (error) => {void this.fail(error);},
         frame: frame?.element,
         frameWindow: runtimeWindow,
         restorePayload,
@@ -117,6 +119,18 @@ class RetromRuntimePlayer implements PlayerRuntimeV1 {
       this.assertActive();
       if (!screenshot.size) {throw new Error("PLAYER_SCREENSHOT_UNAVAILABLE");}
       return screenshot;
+    });
+  }
+
+  acknowledgeCheckpoint(checkpoint: RuntimeCheckpointV1) {
+    return this.enqueue(async () => {
+      const adapter = this.requireAdapter();
+      if (this.envelope.runtime.checkpoint?.semantics !== "GAME_SAVE" || !adapter.acknowledgeCheckpoint) {
+        throw capabilityError();
+      }
+      await adapter.acknowledgeCheckpoint(checkpoint);
+      this.assertActive();
+      this.refreshAvailability();
     });
   }
 
@@ -282,7 +296,8 @@ class RetromRuntimePlayer implements PlayerRuntimeV1 {
 
   private refreshAvailability(): RuntimeCheckpointAvailabilityV1 {
     const next = this.currentAvailability();
-    if (next.available !== this.lastAvailability.available || next.reason !== this.lastAvailability.reason) {
+    if (next.available !== this.lastAvailability.available || next.reason !== this.lastAvailability.reason ||
+      next.revision !== this.lastAvailability.revision) {
       this.lastAvailability = next;
       this.emit({type: "CHECKPOINT_AVAILABILITY_CHANGED", availability: next});
     }
@@ -298,7 +313,8 @@ class RetromRuntimePlayer implements PlayerRuntimeV1 {
     }
     const value = this.adapter.getCheckpointAvailability();
     if (value.available === true && value.blocker === null || value.available === false && value.blocker !== null) {
-      return {available: value.available, reason: value.blocker};
+      return {available: value.available, reason: value.blocker,
+        ...(value.available && value.revision ? {revision: value.revision} : {})};
     }
     return {available: false, reason: "FAILED"};
   }

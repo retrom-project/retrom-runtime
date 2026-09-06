@@ -35,6 +35,11 @@ const adapters = [
   adapter("butterscotch-web", "BUTTERSCOTCH_WEB", "butterscotch-checkpoint-v2",
     "butterscotch-checkpoint-v2", standardCapabilities),
   adapter("easyrpg-web", "EASYRPG_WEB", "easyrpg-save", "easyrpg-save-bundle-v1", rpgCapabilities),
+  defineAdapter({
+    id: "j2me-minijvm-web", kind: "J2ME_MINIJVM_WEB", abi: "j2me-rms",
+    capabilities: capabilities(true, true, true),
+    checkpoint: {writeFormat: "j2me-rms-bundle-v1", readFormats: ["j2me-rms-bundle-v1"], semantics: "GAME_SAVE"},
+  }),
   adapter("kirikiri2-web", "KIRIKIRI2_WEB", "kirikiri-kag-bookmark",
     "kirikiri-save-bundle-v1", standardCapabilities),
   adapter("mkxp-libretro-web", "MKXP_LIBRETRO_WEB", "mkxp-state-compact",
@@ -52,6 +57,13 @@ const targets = [
     true, "SAME_ORIGIN_BLANK", "FILE_TREE", 16 * 1024 * 1024,
     ["assets/butterscotch/butterscotch.mjs", "assets/butterscotch/butterscotch.wasm",
       "assets/butterscotch/worker.mjs"],
+  ),
+  target(
+    "j2me", "Java ME", "j2me-minijvm-web", noOptionsSchema,
+    true, "SAME_ORIGIN_BLANK", "ROM_BLOB", 2 * 1024 * 1024,
+    ["assets/j2me/j2me-runtime.js", "assets/j2me/runtime-loader.js", "assets/j2me/runtime.js",
+      "assets/j2me/runtime.wasm", "assets/j2me/runtime.data", "assets/j2me/runtime.worker.js",
+      "assets/j2me/audio-transcoder.wasm", "assets/j2me/audio-transcoder.worker.js"],
   ),
   target(
     "kirikiri2-kag", "KiriKiri2 KAG", "kirikiri2-web", kirikiriOptionsSchema,
@@ -86,7 +98,7 @@ export const retromRuntimeProviderDefinition = defineProvider({
   adapters,
   providerApiVersion: 1,
   providerId: "retrom-runtime",
-  providerVersion: "0.16.5",
+  providerVersion: "0.17.0-dev.6",
   targets,
 });
 

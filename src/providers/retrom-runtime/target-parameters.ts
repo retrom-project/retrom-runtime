@@ -1,3 +1,4 @@
+import type {J2meParameters} from "../../j2me/parameters.js";
 import type {FileTreeSource, SeekableBlobSource} from "../../contract.js";
 import type {AssetIndexV1, LaunchEnvelopeV1, RuntimeResourceV1} from "../../provider/module-api.js";
 import type {EasyRpgParameters} from "../../easyrpg/parameters.js";
@@ -113,6 +114,12 @@ export function tyranoScript(envelope: LaunchEnvelopeV1): TyranoScriptParameters
     entryUrl: game.entryUrl,
     uniqueOrigin: game.origin,
   };
+}
+
+export function j2me(envelope: LaunchEnvelopeV1): J2meParameters {
+  const game = resource(envelope, "game", "ROM_BLOB");
+  return {sessionId: envelope.session.id, contentDigest: game.sha256, jarSizeBytes: game.sizeBytes,
+    jarUrl: game.url, runtimeBaseUrl: assetBase(envelope, "j2me")};
 }
 
 export function wasm4(envelope: LaunchEnvelopeV1): Wasm4Parameters {

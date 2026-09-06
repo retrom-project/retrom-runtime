@@ -1,6 +1,25 @@
 # Changelog
 
+## 0.17.0-dev.6
+
+- J2ME synchronizes all RMS data changes, including settings, purchases, empty stores and deletions; no per-game progress filters. GAME_SAVE denotes native data, not an execution snapshot. Hosts may maintain one mutable slot per playthrough with idempotent retry and conflict protection.
+
+## 0.17.0-dev.5 (unreleased)
+
+- Track stable native RMS content revisions and forward exact-payload persistence acknowledgments.
+- Disable empty or unchanged native saves; preserve dirty progress across failed uploads and restore baselines.
+- Require the J2ME core acknowledgment API for GAME_SAVE synchronization; retain the existing RMS v1 payload format.
+
 ## Unreleased
+
+- Add the Java ME `j2me` Target using an opaque JAR resource and the `j2me-rms-bundle-v1` native save tree.
+  It declares `GAME_SAVE`: save inside the game before uploading, and load from the game menu after restore.
+  Existing Targets keep their instant checkpoint semantics and formats.
+- Validate J2ME ZIP releases against pinned repository, tag, commit, archive size/digest and extracted runtime
+  asset digests. Include the upstream notices. The fixed v0.3.3 input predates the current RMS fixes;
+  local PFB validation must use the explicitly audited repaired core candidate until a repaired core is released.
+- Advance the Retrom Provider to 0.17.0-dev.4 and EmulatorJS to 2.2.3-dev.1 because both modules consume the
+  updated checkpoint contract validator. EmulatorJS core assets and checkpoint formats are unchanged.
 
 ## 0.16.5
 

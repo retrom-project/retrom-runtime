@@ -16,11 +16,11 @@ describe("independent package boundary", () => {
     }
   });
 
-  it("publishes seven RPG Maker targets plus independent ONS, KiriKiri, Butterscotch, TyranoScript and WASM-4 targets", async () => {
+  it("publishes seven RPG Maker targets plus independent ONS, KiriKiri, Butterscotch, TyranoScript, Java ME and WASM-4 targets", async () => {
     const sources = JSON.parse(await readFile(join(root, "provider-sources.json"), "utf8"));
     expect(retromRuntimeProviderDefinition.providerId).toBe("retrom-runtime");
     expect(retromRuntimeProviderDefinition.targets.map((target) => target.id)).toEqual([
-      "butterscotch-gamemaker", "kirikiri2-kag", "onscripter-yuri", "rpgmaker-2000", "rpgmaker-2003",
+      "butterscotch-gamemaker", "j2me", "kirikiri2-kag", "onscripter-yuri", "rpgmaker-2000", "rpgmaker-2003",
       "rpgmaker-mv", "rpgmaker-mz", "rpgmaker-vx", "rpgmaker-vx-ace", "rpgmaker-xp", "tyranoscript", "wasm4",
     ]);
     expect(sources.localAssets.map((asset: { output: string }) => asset.output).sort()).toEqual([
@@ -32,11 +32,11 @@ describe("independent package boundary", () => {
 
   it("contains one clean Provider-private adapter role without migration-era aliases", async () => {
     expect(retromRuntimeProviderDefinition.adapters.map((adapter) => adapter.id).sort()).toEqual([
-      "butterscotch-web", "easyrpg-web", "kirikiri2-web", "mkxp-libretro-web", "native-web", "ons-yuri-web",
+      "butterscotch-web", "easyrpg-web", "j2me-minijvm-web", "kirikiri2-web", "mkxp-libretro-web", "native-web", "ons-yuri-web",
       "tyranoscript-web", "wasm4-web",
     ]);
     expect(retromRuntimeProviderDefinition.adapters.map((adapter) => adapter.abi).sort()).toEqual([
-      "butterscotch-checkpoint-v2", "easyrpg-save", "kirikiri-kag-bookmark", "mkxp-state-compact",
+      "butterscotch-checkpoint-v2", "easyrpg-save", "j2me-rms", "kirikiri-kag-bookmark", "mkxp-state-compact",
       "native-save", "ons-save", "tyranoscript-snapshot-v1", "wasm4-state-v1",
     ]);
     expect((await readdir(join(root, "assets/runtime"))).sort()).toEqual(["butterscotch", "native"]);
@@ -111,7 +111,7 @@ describe("independent package boundary", () => {
       tag: "retrom-core-gca2600db8de4-r1",
     })]));
     const releaseIds = sources.upstreamReleases.map((release: { id: string }) => release.id).sort();
-    expect(releaseIds).toEqual(["butterscotch", "easyrpg", "kirikiri2", "mkxp", "onsyuri", "tyranoscript", "wasm4"]);
+    expect(releaseIds).toEqual(["butterscotch", "easyrpg", "j2me", "kirikiri2", "mkxp", "onsyuri", "tyranoscript", "wasm4"]);
     expect(await readdir(join(root, "scripts"))).not.toEqual(expect.arrayContaining([
       "build-kirikiri-core.sh", "build-ons-core.sh",
     ]));

@@ -7,6 +7,7 @@ import type {RuntimeVideoModeV1} from "./provider/module-api.js";
 
 export type MountedRuntimeAdapter = {
   checkpoint(): Promise<RuntimeCheckpoint>;
+  acknowledgeCheckpoint?(checkpoint: RuntimeCheckpoint): Promise<void>;
   exit(): Promise<void>;
   getCanvas(): HTMLCanvasElement | null;
   getCheckpointAvailability(): CheckpointAvailability;

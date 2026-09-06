@@ -1,3 +1,4 @@
+import {mountJ2me} from "../../j2me/adapter.js";
 import {mountButterscotch} from "../../butterscotch/adapter.js";
 import {mountEasyRpg} from "../../easyrpg/adapter.js";
 import {mountKirikiri2} from "../../kirikiri/adapter.js";
@@ -12,6 +13,8 @@ import {retromRuntimeProviderDefinition} from "./catalog.js";
 import * as parameters from "./target-parameters.js";
 
 export type TargetMountContext = {
+  signal?: AbortSignal;
+  reportFailure?: (error: Error) => void;
   assetIndex: AssetIndexV1;
   frame: HTMLIFrameElement | undefined;
   frameWindow: Window;
@@ -49,6 +52,9 @@ export function mountTargetAdapter(
       reportProgress, reportExitRequested);
   case "TYRANOSCRIPT_WEB":
     return mountTyranoScript(parameters.tyranoScript(envelope), requireFrame(context), restorePayload, reportExitRequested);
+  case "J2ME_MINIJVM_WEB":
+    return mountJ2me(parameters.j2me(envelope), target, frameWindow, restorePayload, reportProgress,
+      reportExitRequested, context.reportFailure ?? (() => undefined), context.signal);
   case "WASM4_WEB":
     return mountWasm4(parameters.wasm4(envelope), target, frameWindow, restorePayload, reportProgress);
   default: throw new Error("PROVIDER_LAUNCH_REQUEST_INVALID");

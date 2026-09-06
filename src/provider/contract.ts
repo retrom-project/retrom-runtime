@@ -171,10 +171,14 @@ function validateInputs(value: unknown): void {
 
 function validateCheckpoint(value: unknown): void {
   const checkpoint = record(value);
-  if (!checkpoint || !exactKeys(checkpoint, checkpointKeys) || !validToken(checkpoint.writeFormat) ||
+  const keys = checkpoint && Object.hasOwn(checkpoint, "semantics")
+    ? [...checkpointKeys, "semantics"].sort() : checkpointKeys;
+  if (!checkpoint || !exactKeys(checkpoint, keys) || !validToken(checkpoint.writeFormat) ||
     !positiveSafeInteger(checkpoint.maxBytes)) {
     invalidManifest();
   }
+  if (Object.hasOwn(checkpoint, "semantics") &&
+    checkpoint.semantics !== "INSTANT" && checkpoint.semantics !== "GAME_SAVE") {invalidManifest();}
   const readFormats = stringArray(checkpoint.readFormats, false);
   if (!readFormats || !isSortedUnique(readFormats) || !readFormats.every(validToken) ||
     !readFormats.includes(checkpoint.writeFormat)) {

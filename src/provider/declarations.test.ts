@@ -5,6 +5,7 @@ import { retromRuntimeProviderDefinition } from "../providers/retrom-runtime/cat
 
 const targetIds = [
   "butterscotch-gamemaker",
+  "j2me",
   "kirikiri2-kag",
   "onscripter-yuri",
   "rpgmaker-2000",
@@ -19,6 +20,7 @@ const targetIds = [
 ];
 const sameOriginFrameTargetIds = [
   "butterscotch-gamemaker",
+  "j2me",
   "kirikiri2-kag",
   "onscripter-yuri",
   "rpgmaker-2000",
@@ -30,10 +32,10 @@ const sameOriginFrameTargetIds = [
 ];
 
 describe("retrom-runtime provider declarations", () => {
-  it("declares the complete 0.16.5 target closure in one source", () => {
-    expect(retromRuntimeProviderDefinition.providerVersion).toBe("0.16.5");
+  it("declares the complete 0.17.0-dev.6 target closure in one source", () => {
+    expect(retromRuntimeProviderDefinition.providerVersion).toBe("0.17.0-dev.6");
     expect(retromRuntimeProviderDefinition.targets.map((target) => target.id)).toEqual(targetIds);
-    expect(retromRuntimeProviderDefinition.adapters).toHaveLength(8);
+    expect(retromRuntimeProviderDefinition.adapters).toHaveLength(9);
   });
 
   it("projects a public manifest without internal adapter identities", () => {
@@ -42,7 +44,7 @@ describe("retrom-runtime provider declarations", () => {
       clientModulePath: "client.mjs",
       providerApiVersion: 1,
       providerId: "retrom-runtime",
-      providerVersion: "0.16.5",
+      providerVersion: "0.17.0-dev.6",
       schemaVersion: 1,
     });
     expect(manifest.targets.map((target) => target.id)).toEqual(targetIds);

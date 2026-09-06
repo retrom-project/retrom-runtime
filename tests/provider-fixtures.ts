@@ -39,7 +39,7 @@ export function wasmEnvelope(): LaunchEnvelopeV1 {
       moduleUrl: `/runtime/providers/retrom-runtime/${bundleDigest}/client.mjs`,
       providerApiVersion: 1 as const,
       providerId: "retrom-runtime",
-      providerVersion: "0.16.8",
+      providerVersion: retromRuntimeProviderDefinition.providerVersion,
       runtimeBaseUrl: `/runtime/providers/retrom-runtime/${bundleDigest}/`,
       targetId: "wasm4",
     },
@@ -84,7 +84,7 @@ export function rpgMvEnvelope(): LaunchEnvelopeV1 {
       moduleUrl: `/runtime/providers/retrom-runtime/${bundleDigest}/client.mjs`,
       providerApiVersion: 1,
       providerId: "retrom-runtime",
-      providerVersion: "0.16.8",
+      providerVersion: retromRuntimeProviderDefinition.providerVersion,
       runtimeBaseUrl: `/runtime/providers/retrom-runtime/${bundleDigest}/`,
       targetId: "rpgmaker-mv",
     },
@@ -124,6 +124,9 @@ export function targetEnvelope(targetId: string): LaunchEnvelopeV1 {
       contentDigest: digest, entryUrl: "https://runtime.test/__retrom/bootstrap",
       kind: "ISOLATED_WEB", ordinal: 0, origin: "https://runtime.test", role: "game",
     };
+  } else if (targetId === "j2me") {
+    resource = {kind: "ROM_BLOB", ordinal: 0, rangeRequired: false, role: "game",
+      sha256: digest, sizeBytes: 128, url: "/runtime/content/game/game.jar"};
   } else if (targetId === "wasm4") {
     resource = {
       kind: "WASM4_CART", ordinal: 0, rangeRequired: false, role: "game",
@@ -152,7 +155,7 @@ export function targetEnvelope(targetId: string): LaunchEnvelopeV1 {
       moduleUrl: `/runtime/providers/retrom-runtime/${bundleDigest}/client.mjs`,
       providerApiVersion: 1,
       providerId: "retrom-runtime",
-      providerVersion: "0.16.8",
+      providerVersion: retromRuntimeProviderDefinition.providerVersion,
       runtimeBaseUrl: `/runtime/providers/retrom-runtime/${bundleDigest}/`,
       targetId,
     },

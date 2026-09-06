@@ -2,7 +2,7 @@
 
 `retrom-runtime` is a host-independent browser library and release bundle for RPG Maker 2000, 2003, XP,
 VX, VX Ace, MV and MZ, ONS games powered by ONScripterYuri, KAG-based KiriKiri2 games, supported GameMaker
-projects powered by Butterscotch, browser TyranoScript projects and WASM-4 carts. It owns runtime lifecycle, adapters, checkpoint codecs, bridge assets and pinned core
+projects powered by Butterscotch, browser TyranoScript projects, Java ME JARs and WASM-4 carts. It owns runtime lifecycle, adapters, checkpoint codecs, bridge assets and pinned core
 Release inputs. It does not know about a host application's users, database, review flow, storage or HTTP API.
 
 ## Provider Module V1
@@ -25,8 +25,8 @@ the module, checks the exported identity and calls `createRuntime`. It only cons
 chooses EasyRPG, mkxp, native Web or another implementation. The Provider validates the stable `providerId` plus
 `targetId`, current resources, private Target options, optional restore and netplay inputs before mounting.
 
-`src/providers/retrom-runtime/catalog.ts` is the single Target declaration for the 12 targets in this Provider.
-The generated declaration provides current capabilities, checkpoint `writeFormat/readFormats/maxBytes`, resource
+`src/providers/retrom-runtime/catalog.ts` is the single Target declaration for the 13 targets in this Provider.
+The generated declaration provides current capabilities, checkpoint `writeFormat/readFormats/maxBytes/semantics`, resource
 kinds, runtime files and a constrained closed `targetOptionsSchema`. The Provider Module uses that schema to
 exact-validate options before mounting; it has no
 `optionsKind` discriminator. A Host dispatcher only needs generic JSON safety, depth and size limits and must not
@@ -229,3 +229,22 @@ characters; the release metadata still records the full commit. Tags and
 assets are immutable, and aliases such as `latest`, `stable`, and the retired
 `rpg-runtime-*` and `retrom-web-*` namespaces are not supported. This aggregate repository pins the
 fork repository, stable tag, tag commit, filenames, and adapter ABI.
+
+## Java ME native saves
+
+The `j2me` Target accepts one original JAR as `ROM_BLOB` and runs the public j2me-web API in a fresh,
+thread-enabled same-origin frame. The Provider uses HOST storage: only the explicit restore payload is
+imported before the MIDlet starts. A `GAME_SAVE` checkpoint contains the bounded RMS tree, not VM stacks,
+heap or execution position. Save in the game first, upload through the Host, then use the game menu to load
+in a new Launch. Other Targets default to `INSTANT`; their direct restore requirements are unchanged.
+
+The core verifies JAR size and SHA-256, reuses verified bytes from persistent content-addressed storage,
+reports loading progress and resolves known compatibility profiles. Core failures and game exits enter the
+common Provider lifecycle. The pinned v0.3.4 release includes verified RMS persistence, native alpha
+composition and demand-driven presentation. J2ME uses the `main` branch and immutable semantic version tags.
+
+GAME_SAVE runtimes expose a stable availability `revision` for changed native records and
+`acknowledgeCheckpoint(checkpoint)` for the exact payload durably stored by the Host. Exporting does not
+advance the baseline. Empty/unchanged content remains unavailable; failed uploads remain retryable, and
+changes during an upload retain a new revision. The Host owns automatic upload policy; the J2ME core owns
+RMS content comparison, stable-write detection and restore baselines. INSTANT targets retain manual capture.

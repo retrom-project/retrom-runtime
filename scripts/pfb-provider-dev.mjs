@@ -134,8 +134,11 @@ function validActiveTarget(value) {
   }
   const checkpoint = value.checkpoint;
   if (checkpoint === null) {return true;}
+  const hasSemantics = checkpoint && Object.hasOwn(checkpoint, "semantics");
+  if (hasSemantics && checkpoint.semantics !== "INSTANT" && checkpoint.semantics !== "GAME_SAVE") {return false;}
+  const keys = hasSemantics ? "maxBytes\0readFormats\0semantics\0writeFormat" : "maxBytes\0readFormats\0writeFormat";
   if (!checkpoint || typeof checkpoint !== "object" || Array.isArray(checkpoint) ||
-    Object.keys(checkpoint).sort().join("\0") !== "maxBytes\0readFormats\0writeFormat" ||
+    Object.keys(checkpoint).sort().join("\0") !== keys ||
     !Number.isSafeInteger(checkpoint.maxBytes) || checkpoint.maxBytes < 1 ||
     typeof checkpoint.writeFormat !== "string" || !Array.isArray(checkpoint.readFormats)) {
     return false;

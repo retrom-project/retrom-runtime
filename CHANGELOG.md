@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.17.0
+
+- Add Java ME JAR execution with explicit GAME_SAVE semantics, stable RMS revisions, exact-payload acknowledgments and clean Host-managed launch storage. Native saves retain the RMS v1 format and require the game menu to restore progress.
+- Use the repaired J2ME v0.3.4 runtime with native pixel operations, correct alpha compositing, independent record-store handles and frame presentation only when the core changes its display.
+- Preserve every 0.16.8 startup, restore-readiness, Mega Drive control and delayed input fix, and the maintained MKXP r9 startup repair.
+- Advance the EmulatorJS Provider to 2.2.4 for the shared checkpoint contract changes; existing instant save formats and pinned EmulatorJS core assets remain unchanged.
+
 ## 0.16.8
 
 - Advance the EmulatorJS Provider to 2.2.3 for the DOSBox startup, restore-readiness, Mega Drive input and delayed startup control fixes; existing checkpoint formats and pinned core releases remain unchanged.

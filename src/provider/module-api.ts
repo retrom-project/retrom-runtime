@@ -127,7 +127,13 @@ function validCapabilities(value: unknown): value is RuntimeCapabilitiesV1 {
 }
 
 function validCheckpointShape(value: unknown): value is RuntimeCheckpointContractV1 {
-  return value === null || isRecord(value) && exactKeys(value, ["maxBytes", "readFormats", "writeFormat"]) &&
+  if (value === null) {return true;}
+  if (!isRecord(value)) {return false;}
+  const hasSemantics = Object.hasOwn(value, "semantics");
+  if (hasSemantics && value.semantics !== "INSTANT" && value.semantics !== "GAME_SAVE") {return false;}
+  const keys = hasSemantics ? ["maxBytes", "readFormats", "semantics", "writeFormat"]
+    : ["maxBytes", "readFormats", "writeFormat"];
+  return exactKeys(value, keys) &&
     validToken(value.writeFormat) && positiveInteger(value.maxBytes) && Array.isArray(value.readFormats) &&
     sortedUnique(value.readFormats) && value.readFormats.every(validToken) && value.readFormats.includes(value.writeFormat);
 }
@@ -149,6 +155,7 @@ function sameCheckpoint(
 ) {
   return actual === null && expected === null || actual !== null && expected !== null &&
     actual.writeFormat === expected.writeFormat && actual.maxBytes === expected.maxBytes &&
+    (actual.semantics ?? "INSTANT") === (expected.semantics ?? "INSTANT") &&
     actual.readFormats.length === expected.readFormats.length &&
     actual.readFormats.every((format, index) => format === expected.readFormats[index]);
 }

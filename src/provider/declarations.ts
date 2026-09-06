@@ -80,6 +80,7 @@ export type AdapterDeclaration = {
   checkpoint: {
     writeFormat: string;
     readFormats: readonly string[];
+    semantics?: "INSTANT" | "GAME_SAVE";
   } | null;
   capabilities: ProviderCapabilities;
 };

@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.17.0-dev.8
+
+- J2ME 开发候选优化 Canvas 呈现与整数平移图片复制，减少静止画面的重复转换和纹理上传；手柄保留原有按键方案。
+
 ## 0.17.0-dev.6
 
 - J2ME synchronizes all RMS data changes, including settings, purchases, empty stores and deletions; no per-game progress filters. GAME_SAVE denotes native data, not an execution snapshot. Hosts may maintain one mutable slot per playthrough with idempotent retry and conflict protection.

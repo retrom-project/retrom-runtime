@@ -37,7 +37,7 @@ describe("PFB loose provider", () => {
     await writeFile(join(installation, "provider.json"), JSON.stringify({
       schemaVersion: 1,
       providerId,
-      providerVersion: "0.16.7",
+      providerVersion: "0.16.8",
       providerApiVersion: 1,
       clientModulePath: "client.mjs",
       targets: [{id: "butterscotch", assetPaths: ["assets/butterscotch/worker.mjs"]}],

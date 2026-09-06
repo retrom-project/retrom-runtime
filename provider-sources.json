@@ -69,17 +69,16 @@
     {
       "id": "j2me",
       "repository": "https://github.com/retrom-project/j2me-web",
-      "metadataRepository": "https://github.com/xxxsen/j2me-web",
-      "tag": "v0.3.3",
-      "commit": "7fa20380717d99551ccaa5932968385d6ef8d476",
+      "tag": "v0.3.4",
+      "commit": "9933a047a726e6d7986307961d2ca76e04146663",
       "adapterAbi": "j2me-rms",
-      "metadataUrl": "https://github.com/retrom-project/j2me-web/releases/download/v0.3.3/j2me-runtime-release.json",
+      "metadataUrl": "https://github.com/retrom-project/j2me-web/releases/download/v0.3.4/j2me-runtime-release.json",
       "archive": {
         "format": "zip",
-        "filename": "j2me-web-v0.3.3-runtime.zip",
-        "rootDirectory": "j2me-web-v0.3.3-runtime",
-        "sizeBytes": 20095439,
-        "sha256": "70af48d16c810a2ea7c5c048d52655fd1607c8021f234695730c6ef197d962ea"
+        "filename": "j2me-web-v0.3.4-runtime.zip",
+        "rootDirectory": "j2me-web-v0.3.4-runtime",
+        "sizeBytes": 19755002,
+        "sha256": "d3008b90402ddc10a71524bf0783c02494e9c3dc85871d1d94a502c73fcad3c8"
       },
       "assets": [
         {
@@ -127,7 +126,8 @@
           "output": "licenses/j2me/THIRD_PARTY_NOTICES.md",
           "maxSizeBytes": 1048576
         }
-      ]
+      ],
+      "metadataRepository": "https://github.com/retrom-project/j2me-web"
     },
     {
       "id": "kirikiri2",

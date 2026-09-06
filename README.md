@@ -240,8 +240,8 @@ in a new Launch. Other Targets default to `INSTANT`; their direct restore requir
 
 The core verifies JAR size and SHA-256, reuses verified bytes from persistent content-addressed storage,
 reports loading progress and resolves known compatibility profiles. Core failures and game exits enter the
-common Provider lifecycle. The pinned v0.3.3 ZIP remains an immutable historical input; repaired RMS behavior
-currently requires an explicit PFB core candidate. Do not describe that historical release as containing local fixes.
+common Provider lifecycle. The pinned v0.3.4 release includes verified RMS persistence, native alpha
+composition and demand-driven presentation. J2ME uses the `main` branch and immutable semantic version tags.
 
 GAME_SAVE runtimes expose a stable availability `revision` for changed native records and
 `acknowledgeCheckpoint(checkpoint)` for the exact payload durably stored by the Host. Exporting does not

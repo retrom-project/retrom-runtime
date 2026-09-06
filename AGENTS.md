@@ -1,6 +1,6 @@
 # retrom-runtime Agent 实施规范
 
-本仓库维护可被任意 Web 项目引用的浏览器游戏运行时，目前包含 RPG Maker、ONS、KiriKiri、Butterscotch、TyranoScript 与 WASM-4，不包含宿主应用的上传、审核、权限、数据库、HTTP 路由或产品验收逻辑。
+本仓库维护可被任意 Web 项目引用的浏览器游戏运行时，目前包含 RPG Maker、ONS、KiriKiri、Butterscotch、TyranoScript、WASM-4 与 J2ME，不包含宿主应用的上传、审核、权限、数据库、HTTP 路由或产品验收逻辑。
 
 ## 边界
 
@@ -8,7 +8,7 @@
 - `assets/` 只保存项目自有 bridge 与小型文本资产；不得保存第三方核心源码、源码补丁或构建产物。
 - `src/providers/*/catalog.ts` 生成的 Provider declaration 是 Target、能力、checkpoint contract 与运行文件的唯一机器事实源；`provider-sources.json` 只记录第三方上游/本地构建来源，不能声明 Target 或宿主路由。
 - 本仓库不得编译第三方核心。第三方核心的源码修改、构建脚本、质量门禁和 Release 全部由对应 fork 的
-  `retrom/<baseline>` 分支维护；本仓库只聚合固定 fork tag/commit 的 Release 资产并提供统一接口。
+  `retrom/<baseline>` 分支维护（J2ME 原创集成层使用 `main`）；本仓库只聚合固定 fork tag/commit 的 Release 资产并提供统一接口。
 - `tests/` 和与源码同目录的 `*.test.ts` 覆盖运行时行为；宿主产品的导入、发布和权限测试留在宿主仓库。
 - 不引用任何宿主应用的源码、生成类型、API 路径、数据库模型或本机绝对路径。
 
@@ -77,6 +77,10 @@ npm run package:check
 - Release 完成后，Retrom 以独立提交固定正式 Provider descriptor/archive 并重跑同一产品 Case。candidate digest、工作树路径或未发布版本不得写入 production lock 或正式证据。
 
 ## 上游 fork 维护
+
+- J2ME 原创集成层 `retrom-project/j2me-web` 使用 `main` 与 annotated `vX.Y.Z`。其三个支持 fork
+  使用 `main` 与 `j2me-web-<upstream>-<revision>` annotated tag；固定输入、许可与发布顺序由该核心的
+  `docs/MAINTENANCE.md` 维护。以下 upstream 镜像与 `retrom/<baseline>` 规则适用于其余核心。
 
 - `retrom-project/Player` 的 `master`、`retrom-project/mkxp-z-libretro-emscripten` 的 `main`、
   `retrom-project/OnscripterYuri` 的 `master`、`retrom-project/kirikiroid2-web` 的 `web`、

@@ -1,8 +1,8 @@
 # Changelog
 
-## Unreleased
+## 0.18.0
 
-- Advance the EmulatorJS Provider to 2.3.1 for PSP output and checkpoint optimization.
+- Advance the EmulatorJS Provider to 2.3.2 for PSP output and checkpoint optimization.
 - Select the pinned EmulatorJS 4.3.0-pre threaded PPSSPP core and include its resource archive and
   ZIP worker. Resolve the upstream PSP asset and report URLs within the immutable bundle.
 - Limit PSP pixel/original output to 960×544 before uniform display scaling; preserve full-size
@@ -11,6 +11,9 @@
   and decompression; continue decoding explicitly declared raw payloads. Wait for PSP Asyncify save/load with the main loop paused and skip boot-dialog input on restore. Copy native state bytes before freeing only
   their owned allocation, avoiding the pinned PSP helper’s invalid descriptor free. Other targets
   keep their checkpoint formats.
+
+- Known limitation: threaded PPSSPP can lose newly appended audio samples while submitting its shared
+  audio buffer, causing audible gaps. The core audio repair is deferred from this release.
 
 ## 0.17.0
 

@@ -23,6 +23,16 @@ function cache() {
 }
 
 describe("ScummVM seekable game files", () => {
+  it("calls a native fetch function without binding the file system as its receiver", async () => {
+    const response = network();
+    const fetcher: typeof fetch = async function (this: unknown, input, init) {
+      if (this !== undefined) {throw new TypeError("Illegal invocation");}
+      return response(input, init);
+    };
+    const files = new ScummvmFiles(index, digest, fetcher, null, undefined, "/data");
+    expect(files.list("/data")).toEqual(["Folder"]);
+    expect(await files.read("/data/Folder/Game.dat", 0, 1)).toEqual(new Uint8Array([1]));
+  });
   it("indexes directories without downloading content and reads bounded blocks across a seek", async () => {
     const fetcher = network();
     const files = new ScummvmFiles(index, digest, fetcher, null);

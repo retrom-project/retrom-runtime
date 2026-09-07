@@ -10,7 +10,7 @@ export type BlockCache = {
 /** A file index plus bounded, persistent HTTP blocks. Construction never fetches game data. */
 export class ScummvmFiles {
   private readonly entries = new Map<string, Entry>();
-  private readonly directories = new Map<string, Set<string>>([["/game", new Set()]]);
+  private readonly directories = new Map<string, Set<string>>();
   private readonly memory = new Map<string, Uint8Array>();
   private readonly pending = new Map<string, Promise<Uint8Array>>();
 
@@ -20,11 +20,13 @@ export class ScummvmFiles {
     private readonly fetcher: typeof fetch,
     private readonly cache: BlockCache | null,
     private readonly signal?: AbortSignal,
+    private readonly mountRoot: "/game" | "/data" = "/game",
   ) {
     if (!/^[0-9a-f]{64}$/u.test(contentDigest)) {throw indexError();}
+    this.directories.set(mountRoot, new Set());
     const seen = new Set<string>();
     for (const entry of parseIndex(index)) {
-      const path = `/game/${entry.path}`;
+      const path = `${this.mountRoot}/${entry.path}`;
       const folded = path.toLowerCase();
       if (seen.has(folded)) {throw indexError();}
       seen.add(folded);
@@ -93,7 +95,8 @@ export class ScummvmFiles {
     if (cached) {return cached;}
     this.signal?.throwIfAborted();
     const end = start + length - 1;
-    const response = await this.fetcher(entry.url, {headers: {Range: `bytes=${start}-${end}`}, signal: this.signal});
+    const fetcher = this.fetcher;
+    const response = await fetcher(entry.url, {headers: {Range: `bytes=${start}-${end}`}, signal: this.signal});
     const partial = response.status === 206 && response.headers.get("Content-Range") === `bytes ${start}-${end}/${entry.sizeBytes}`;
     const completeSmallFile = response.status === 200 && start === 0 && length === entry.sizeBytes;
     if (!partial && !completeSmallFile) {

@@ -1,6 +1,6 @@
-import type {MountedRuntimeAdapter, RuntimeProgressReporter} from "../../internal-adapter.js";
+import type {MountedRuntimeAdapter, RuntimeProgressReporter, RuntimeExitReporter} from "../../internal-adapter.js";
 import type {
-  AssetIndexV1, LaunchEnvelopeV1, PlayerRuntimeV1, RuntimeCheckpointAvailabilityV1, RuntimeCheckpointV1,
+  AssetIndexV1, LaunchEnvelopeV1, PlayerRuntimeV1, RuntimeCheckpointAvailabilityV1, RuntimeCheckpointV1, RuntimeCheckpointRequestV1, RuntimeFinalSnapshotV1, RuntimeNativeSaveCapabilitiesV1,
   RuntimeDiscStateV1, RuntimeEventV1, RuntimeHostV1, RuntimeInputFilterPolicyV1,
   RuntimeNetplayPortV1, RuntimeStateV1, RuntimeVideoModeV1,
 } from "../../provider/module-api.js";
@@ -86,23 +86,27 @@ class RetromRuntimePlayer implements PlayerRuntimeV1 {
   pause() {return this.enqueue(() => this.changePause("PAUSED"));}
   resume() {return this.enqueue(() => this.changePause("RUNNING"));}
 
-  checkpoint() {
+  checkpoint(request?: RuntimeCheckpointRequestV1) {
     return this.enqueue(async () => {
       this.requireCapability("checkpoint");
       const contract = this.envelope.runtime.checkpoint;
       const adapter = this.requireAdapter();
-      if (!contract || !this.getCheckpointAvailability().available) {throw contractError();}
+      if (!contract) {throw contractError();}
+      const native = contract.semantics === "GAME_SAVE";
+      const intent = request?.intent ?? (native ? "EXPORT" : "CAPTURE");
+      if (intent !== "CAPTURE" && intent !== "EXPORT" || !native && intent !== "CAPTURE") {throw contractError();}
+      const availability = this.getCheckpointAvailability();
+      const allowed = native && intent === "CAPTURE"
+        ? availability.save?.capture === "RUNTIME" && availability.save.captureAvailable
+        : availability.available;
+      if (!allowed) {throw contractError();}
       const previous = this.state;
       this.transition("CHECKPOINTING");
       this.refreshAvailability();
       try {
-        const checkpoint = await adapter.checkpoint();
+        const checkpoint = await adapter.checkpoint({intent});
         this.assertActive();
-        if (!isUint8Array(checkpoint.bytes) || checkpoint.bytes.byteLength < 1 ||
-          checkpoint.bytes.byteLength > contract.maxBytes || checkpoint.format !== contract.writeFormat) {
-          throw contractError();
-        }
-        return {bytes: Uint8Array.from(checkpoint.bytes), format: checkpoint.format, metadata: null};
+        return this.validateCheckpoint(checkpoint);
       } finally {
         if (this.state === "CHECKPOINTING") {
           this.transition(previous);
@@ -214,10 +218,23 @@ class RetromRuntimePlayer implements PlayerRuntimeV1 {
     if (this.state !== "MOUNTING" || !validProgress(progress)) {return;}
     this.emit({type: "LOAD_PROGRESS", loadedBytes: progress.loadedBytes, totalBytes: progress.totalBytes});
   };
-  private readonly reportExitRequested = () => {
+  private readonly reportExitRequested: RuntimeExitReporter = (snapshot) => {
     if (this.stopping()) {return;}
     const exiting = this.exit();
-    this.emit({type: "EXIT_REQUESTED"});
+    let finalSnapshot: RuntimeFinalSnapshotV1 | undefined;
+    if (snapshot) {
+      try {
+        if (this.envelope.runtime.checkpoint?.semantics !== "GAME_SAVE") {throw contractError();}
+        const checkpoint = this.validateCheckpoint(snapshot.checkpoint);
+        const screenshot = snapshot.screenshot;
+        if (screenshot !== null && (Object.prototype.toString.call(screenshot) !== "[object Blob]" ||
+          !screenshot.size || screenshot.size > 16 * 1024 * 1024 || screenshot.type !== "image/png")) {throw contractError();}
+        finalSnapshot = {checkpoint, screenshot};
+      } catch {
+        this.host.reportDiagnostic({code: "RETROM_RUNTIME_FINAL_SAVE_INVALID", message: "Final native save did not match the checkpoint contract"});
+      }
+    }
+    this.emit({type: "EXIT_REQUESTED", ...(finalSnapshot ? {finalSnapshot} : {})});
     void exiting.catch((error) => this.reportCleanupFailure(error));
   };
   private readonly pollAvailability = () => {
@@ -297,7 +314,8 @@ class RetromRuntimePlayer implements PlayerRuntimeV1 {
   private refreshAvailability(): RuntimeCheckpointAvailabilityV1 {
     const next = this.currentAvailability();
     if (next.available !== this.lastAvailability.available || next.reason !== this.lastAvailability.reason ||
-      next.revision !== this.lastAvailability.revision) {
+      next.revision !== this.lastAvailability.revision || next.save?.capture !== this.lastAvailability.save?.capture ||
+      next.save?.restore !== this.lastAvailability.save?.restore || next.save?.captureAvailable !== this.lastAvailability.save?.captureAvailable) {
       this.lastAvailability = next;
       this.emit({type: "CHECKPOINT_AVAILABILITY_CHANGED", availability: next});
     }
@@ -312,11 +330,21 @@ class RetromRuntimePlayer implements PlayerRuntimeV1 {
       return {available: false, reason: "NOT_READY"};
     }
     const value = this.adapter.getCheckpointAvailability();
+    if (!validNativeSave(value.save, this.envelope.runtime.checkpoint?.semantics === "GAME_SAVE")) {
+      return {available: false, reason: "FAILED"};
+    }
     if (value.available === true && value.blocker === null || value.available === false && value.blocker !== null) {
       return {available: value.available, reason: value.blocker,
-        ...(value.available && value.revision ? {revision: value.revision} : {})};
+        ...(value.available && value.revision ? {revision: value.revision} : {}), ...(value.save ? {save: {...value.save}} : {})};
     }
     return {available: false, reason: "FAILED"};
+  }
+
+  private validateCheckpoint(checkpoint: {bytes: Uint8Array; format: string}): RuntimeCheckpointV1 {
+    const contract = this.envelope.runtime.checkpoint;
+    if (!contract || !isUint8Array(checkpoint.bytes) || checkpoint.bytes.byteLength < 1 ||
+      checkpoint.bytes.byteLength > contract.maxBytes || checkpoint.format !== contract.writeFormat) {throw contractError();}
+    return {bytes: Uint8Array.from(checkpoint.bytes), format: checkpoint.format, metadata: null};
   }
 
   private transition(next: RuntimeStateV1) {
@@ -329,6 +357,11 @@ class RetromRuntimePlayer implements PlayerRuntimeV1 {
   private emit(event: RuntimeEventV1) {for (const listener of this.listeners) {listener(event);}}
 }
 
+function validNativeSave(value: RuntimeNativeSaveCapabilitiesV1 | undefined, native: boolean) {
+  return value === undefined || native && ["RUNTIME", "IN_GAME"].includes(value.capture) &&
+    ["AUTOMATIC", "IN_GAME"].includes(value.restore) && typeof value.captureAvailable === "boolean" &&
+    (value.capture === "RUNTIME" || !value.captureAvailable);
+}
 function providerDiagnosticCode(runtime: string) {
   const suffix = runtime.toUpperCase().replace(/[^A-Z0-9]+/gu, "_")
     .replace(/^_+|_+$/gu, "").slice(0, 96);
@@ -349,7 +382,7 @@ function validProgress(value: {loadedBytes: number; totalBytes: number | null}) 
 function isAbort(error: unknown) {return error instanceof DOMException && error.name === "AbortError";}
 function stableError(error: unknown) {
   if (isAbort(error)) {return error as DOMException;}
-  if (error instanceof Error && /^(?:RUNTIME|CHECKPOINT|PLAYER|PROVIDER|RPG|ONS|KIRIKIRI|BUTTERSCOTCH|TYRANOSCRIPT|WASM4)_[A-Z0-9_]+$/u.test(error.message)) {
+  if (error instanceof Error && /^(?:RUNTIME|CHECKPOINT|PLAYER|PROVIDER|RPG|ONS|KIRIKIRI|BUTTERSCOTCH|TYRANOSCRIPT|WASM4|J2ME|SCUMMVM)_[A-Z0-9_]+$/u.test(error.message)) {
     return error;
   }
   return new Error("RUNTIME_FAILED");

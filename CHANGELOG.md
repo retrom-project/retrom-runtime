@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+- Extend native-save capabilities with explicit capture/export intent and exact-startup-restore support. Native synchronization defaults to exporting existing files, while explicit capture can be available before the first save exists.
+- Deliver validated final native saves with the common exit event, close live checkpoint operations immediately, and keep final payload bytes independent of engine cleanup.
+
 ## 0.18.0
 
 - Advance the EmulatorJS Provider to 2.3.2 for PSP output and checkpoint optimization.

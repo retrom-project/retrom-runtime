@@ -2,7 +2,7 @@
 
 `retrom-runtime` is a host-independent browser library and release bundle for RPG Maker 2000, 2003, XP,
 VX, VX Ace, MV and MZ, ONS games powered by ONScripterYuri, KAG-based KiriKiri2 games, supported GameMaker
-projects powered by Butterscotch, browser TyranoScript projects, Java ME JARs and WASM-4 carts. It owns runtime lifecycle, adapters, checkpoint codecs, bridge assets and pinned core
+projects powered by Butterscotch, browser TyranoScript projects, Java ME JARs, ScummVM game projects and WASM-4 carts. It owns runtime lifecycle, adapters, checkpoint codecs, bridge assets and pinned core
 Release inputs. It does not know about a host application's users, database, review flow, storage or HTTP API.
 
 ## EmulatorJS PSP
@@ -44,7 +44,7 @@ the module, checks the exported identity and calls `createRuntime`. It only cons
 chooses EasyRPG, mkxp, native Web or another implementation. The Provider validates the stable `providerId` plus
 `targetId`, current resources, private Target options, optional restore and netplay inputs before mounting.
 
-`src/providers/retrom-runtime/catalog.ts` is the single Target declaration for the 13 targets in this Provider.
+`src/providers/retrom-runtime/catalog.ts` is the single Target declaration for the 14 targets in this Provider.
 The generated declaration provides current capabilities, checkpoint `writeFormat/readFormats/maxBytes/semantics`, resource
 kinds, runtime files and a constrained closed `targetOptionsSchema`. The Provider Module uses that schema to
 exact-validate options before mounting; it has no
@@ -284,3 +284,38 @@ bytes directly and must not call live checkpoint/screenshot APIs to obtain them.
 represented by `null`. The final checkpoint obeys the same declared format and byte limit. Live save
 acknowledgments still occur only after durable Host persistence; a final snapshot is detached from the closed
 runtime and needs no acknowledgment. Identical native content retains its revision across repeated writes.
+
+## ScummVM projects
+
+The `scummvm` Target uses the fork's `scummvm-host-v1` Emscripten backend, pinned to
+ScummVM `v2026.3.0` (`fed42f2068dcafc6aafa1c28c77e4c88def74b66`). The declared layout contains
+105 stable parent-engine plugins. A fresh instance fetches the shared module and only its selected
+engine plugin. Support data and game files use 256 KiB range blocks, a 16 MiB memory cache and
+persistent Cache Storage; a later instance reuses verified immutable blocks. Game identification
+and candidate selection happen in the consuming Host using the fork's matching native detector.
+The adapter receives the selected engine/game, relative root and unchanged upstream launch hints.
+
+Native checkpoint format `scummvm-save-bundle-v1` has a 64 MiB bound and preserves the complete
+native save directory. It binds files to the game content and deterministic launch configuration.
+`CAPTURE` asks the game to create a new native save only when its current state permits saving;
+`EXPORT` merely collects completed writes. A known exact slot enables automatic startup recovery
+when the game supports it. Saves collected from an in-game menu without an exact slot require
+in-game recovery; the adapter never guesses from modification time or a highest slot number.
+Core shutdown closes live capture before disposal, then exports any final destructor writes through
+the public final-snapshot event. New frames start with empty save storage unless given a restore payload.
+
+The ScummVM source currently lives in `provider-sources.json` under `developmentInputs`. This is an
+explicit unpublished input, accepted only by a full PFB candidate build with a verified fork-owned
+core candidate directory. It cannot be used by a normal or formal release build, and carries no
+invented release tag. After product acceptance and explicit release authorization, publish the fork
+first and replace the development input with a pinned release source before publishing this Provider.
+The native detector in this candidate supports Linux x86-64. The consuming Host must reject other
+server architectures until the fork supplies matching verified tool assets.
+
+ScummVM automatic restoration waits for an explicit native deserialization result
+for the exact slot. The current fork provides this observation for Sky, SCUMM,
+SCI, Queen and Drascula; other engines retain in-game restoration even when upstream
+advertises startup loading. A missing, rejected or mismatched completion fails
+mounting within 60 seconds. A bundle without an exact slot always reports in-game
+restoration; feature flags alone never turn an arbitrary file collection into an
+automatic restore target.

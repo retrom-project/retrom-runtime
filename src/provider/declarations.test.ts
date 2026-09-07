@@ -15,6 +15,7 @@ const targetIds = [
   "rpgmaker-vx",
   "rpgmaker-vx-ace",
   "rpgmaker-xp",
+  "scummvm",
   "tyranoscript",
   "wasm4",
 ];
@@ -32,10 +33,10 @@ const sameOriginFrameTargetIds = [
 ];
 
 describe("retrom-runtime provider declarations", () => {
-  it("declares the complete 0.18.0 target closure in one source", () => {
-    expect(retromRuntimeProviderDefinition.providerVersion).toBe("0.18.0");
+  it("declares the complete 0.19.0-dev.2 target closure in one source", () => {
+    expect(retromRuntimeProviderDefinition.providerVersion).toBe("0.19.0-dev.2");
     expect(retromRuntimeProviderDefinition.targets.map((target) => target.id)).toEqual(targetIds);
-    expect(retromRuntimeProviderDefinition.adapters).toHaveLength(9);
+    expect(retromRuntimeProviderDefinition.adapters).toHaveLength(10);
   });
 
   it("projects a public manifest without internal adapter identities", () => {
@@ -44,7 +45,7 @@ describe("retrom-runtime provider declarations", () => {
       clientModulePath: "client.mjs",
       providerApiVersion: 1,
       providerId: "retrom-runtime",
-      providerVersion: "0.18.0",
+      providerVersion: "0.19.0-dev.2",
       schemaVersion: 1,
     });
     expect(manifest.targets.map((target) => target.id)).toEqual(targetIds);

@@ -1,0 +1,1408 @@
+{
+  "schemaVersion": 1,
+  "engines": [
+    "access",
+    "adl",
+    "agi",
+    "agos",
+    "ags",
+    "alcachofa",
+    "alg",
+    "asylum",
+    "awe",
+    "bagel",
+    "bbvs",
+    "bladerunner",
+    "bolt",
+    "buried",
+    "cge",
+    "cge2",
+    "chewy",
+    "cine",
+    "composer",
+    "crab",
+    "cruise",
+    "cryomni3d",
+    "darkseed",
+    "dgds",
+    "director",
+    "draci",
+    "dragons",
+    "drascula",
+    "dreamweb",
+    "efh",
+    "freescape",
+    "gamos",
+    "glk",
+    "gnap",
+    "gob",
+    "got",
+    "griffon",
+    "grim",
+    "groovie",
+    "hadesch",
+    "hdb",
+    "hopkins",
+    "hpl1",
+    "hugo",
+    "hypno",
+    "illusions",
+    "kingdom",
+    "kyra",
+    "lab",
+    "lastexpress",
+    "lure",
+    "m4",
+    "made",
+    "mads",
+    "mm",
+    "mohawk",
+    "mortevielle",
+    "mtropolis",
+    "myst3",
+    "nancy",
+    "neverhood",
+    "ngi",
+    "parallaction",
+    "pegasus",
+    "pelrock",
+    "petka",
+    "phoenixvr",
+    "pink",
+    "plumbers",
+    "prince",
+    "private",
+    "qdengine",
+    "queen",
+    "saga",
+    "saga2",
+    "sci",
+    "scumm",
+    "sherlock",
+    "sky",
+    "sludge",
+    "stark",
+    "supernova",
+    "sword1",
+    "sword2",
+    "sword25",
+    "teenagent",
+    "tetraedge",
+    "tinsel",
+    "titanic",
+    "toltecs",
+    "tony",
+    "toon",
+    "tot",
+    "touche",
+    "trecision",
+    "tsage",
+    "tucker",
+    "twine",
+    "twp",
+    "ultima",
+    "vcruise",
+    "voyeur",
+    "wage",
+    "wintermute",
+    "zvision"
+  ],
+  "files": [
+    {
+      "path": "data/access.dat",
+      "maxSizeBytes": 524288
+    },
+    {
+      "path": "data/achievements.dat",
+      "maxSizeBytes": 262144
+    },
+    {
+      "path": "data/bagel.dat",
+      "maxSizeBytes": 65536
+    },
+    {
+      "path": "data/classicmacfonts.dat",
+      "maxSizeBytes": 1048576
+    },
+    {
+      "path": "data/cryomni3d.dat",
+      "maxSizeBytes": 131072
+    },
+    {
+      "path": "data/darkseed.dat",
+      "maxSizeBytes": 65536
+    },
+    {
+      "path": "data/drascula.dat",
+      "maxSizeBytes": 262144
+    },
+    {
+      "path": "data/encoding.dat",
+      "maxSizeBytes": 262144
+    },
+    {
+      "path": "data/fonts-cjk.dat",
+      "maxSizeBytes": 67108864
+    },
+    {
+      "path": "data/fonts-imgui.dat",
+      "maxSizeBytes": 4194304
+    },
+    {
+      "path": "data/fonts.dat",
+      "maxSizeBytes": 8388608
+    },
+    {
+      "path": "data/freescape.dat",
+      "maxSizeBytes": 65536
+    },
+    {
+      "path": "data/got.aud",
+      "maxSizeBytes": 65536
+    },
+    {
+      "path": "data/got.gfx",
+      "maxSizeBytes": 524288
+    },
+    {
+      "path": "data/grim-patch.lab",
+      "maxSizeBytes": 65536
+    },
+    {
+      "path": "data/gui-icons.dat",
+      "maxSizeBytes": 4194304
+    },
+    {
+      "path": "data/hadesch_translations.dat",
+      "maxSizeBytes": 65536
+    },
+    {
+      "path": "data/helpdialog.zip",
+      "maxSizeBytes": 262144
+    },
+    {
+      "path": "data/hugo.dat",
+      "maxSizeBytes": 262144
+    },
+    {
+      "path": "data/kyra.dat",
+      "maxSizeBytes": 2097152
+    },
+    {
+      "path": "data/lure.dat",
+      "maxSizeBytes": 1048576
+    },
+    {
+      "path": "data/macgui.dat",
+      "maxSizeBytes": 131072
+    },
+    {
+      "path": "data/mm.dat",
+      "maxSizeBytes": 524288
+    },
+    {
+      "path": "data/mort.dat",
+      "maxSizeBytes": 131072
+    },
+    {
+      "path": "data/myst3.dat",
+      "maxSizeBytes": 524288
+    },
+    {
+      "path": "data/nancy.dat",
+      "maxSizeBytes": 262144
+    },
+    {
+      "path": "data/neverhood.dat",
+      "maxSizeBytes": 65536
+    },
+    {
+      "path": "data/pred.dic",
+      "maxSizeBytes": 131072
+    },
+    {
+      "path": "data/prince_translation.dat",
+      "maxSizeBytes": 262144
+    },
+    {
+      "path": "data/queen.tbl",
+      "maxSizeBytes": 2097152
+    },
+    {
+      "path": "data/residualvm.zip",
+      "maxSizeBytes": 131072
+    },
+    {
+      "path": "data/scummclassic.zip",
+      "maxSizeBytes": 65536
+    },
+    {
+      "path": "data/scummmodern.zip",
+      "maxSizeBytes": 131072
+    },
+    {
+      "path": "data/scummremastered.zip",
+      "maxSizeBytes": 131072
+    },
+    {
+      "path": "data/shaders.dat",
+      "maxSizeBytes": 1048576
+    },
+    {
+      "path": "data/shaders/emi_actor.fragment",
+      "maxSizeBytes": 65536
+    },
+    {
+      "path": "data/shaders/emi_actor.vertex",
+      "maxSizeBytes": 65536
+    },
+    {
+      "path": "data/shaders/emi_actorlights.fragment",
+      "maxSizeBytes": 65536
+    },
+    {
+      "path": "data/shaders/emi_actorlights.vertex",
+      "maxSizeBytes": 65536
+    },
+    {
+      "path": "data/shaders/emi_background.fragment",
+      "maxSizeBytes": 65536
+    },
+    {
+      "path": "data/shaders/emi_background.vertex",
+      "maxSizeBytes": 65536
+    },
+    {
+      "path": "data/shaders/emi_dimplane.fragment",
+      "maxSizeBytes": 65536
+    },
+    {
+      "path": "data/shaders/emi_dimplane.vertex",
+      "maxSizeBytes": 65536
+    },
+    {
+      "path": "data/shaders/emi_sprite.fragment",
+      "maxSizeBytes": 65536
+    },
+    {
+      "path": "data/shaders/emi_sprite.vertex",
+      "maxSizeBytes": 65536
+    },
+    {
+      "path": "data/shaders/freescape_bitmap.fragment",
+      "maxSizeBytes": 65536
+    },
+    {
+      "path": "data/shaders/freescape_bitmap.vertex",
+      "maxSizeBytes": 65536
+    },
+    {
+      "path": "data/shaders/freescape_cubemap.fragment",
+      "maxSizeBytes": 65536
+    },
+    {
+      "path": "data/shaders/freescape_cubemap.vertex",
+      "maxSizeBytes": 65536
+    },
+    {
+      "path": "data/shaders/freescape_triangle.fragment",
+      "maxSizeBytes": 65536
+    },
+    {
+      "path": "data/shaders/freescape_triangle.vertex",
+      "maxSizeBytes": 65536
+    },
+    {
+      "path": "data/shaders/grim_actor.fragment",
+      "maxSizeBytes": 65536
+    },
+    {
+      "path": "data/shaders/grim_actor.vertex",
+      "maxSizeBytes": 65536
+    },
+    {
+      "path": "data/shaders/grim_actorlights.fragment",
+      "maxSizeBytes": 65536
+    },
+    {
+      "path": "data/shaders/grim_actorlights.vertex",
+      "maxSizeBytes": 65536
+    },
+    {
+      "path": "data/shaders/grim_background.fragment",
+      "maxSizeBytes": 65536
+    },
+    {
+      "path": "data/shaders/grim_background.vertex",
+      "maxSizeBytes": 65536
+    },
+    {
+      "path": "data/shaders/grim_dim.fragment",
+      "maxSizeBytes": 65536
+    },
+    {
+      "path": "data/shaders/grim_dim.vertex",
+      "maxSizeBytes": 65536
+    },
+    {
+      "path": "data/shaders/grim_emerg.fragment",
+      "maxSizeBytes": 65536
+    },
+    {
+      "path": "data/shaders/grim_emerg.vertex",
+      "maxSizeBytes": 65536
+    },
+    {
+      "path": "data/shaders/grim_primitive.fragment",
+      "maxSizeBytes": 65536
+    },
+    {
+      "path": "data/shaders/grim_primitive.vertex",
+      "maxSizeBytes": 65536
+    },
+    {
+      "path": "data/shaders/grim_shadowplane.fragment",
+      "maxSizeBytes": 65536
+    },
+    {
+      "path": "data/shaders/grim_shadowplane.vertex",
+      "maxSizeBytes": 65536
+    },
+    {
+      "path": "data/shaders/grim_smush.fragment",
+      "maxSizeBytes": 65536
+    },
+    {
+      "path": "data/shaders/grim_smush.vertex",
+      "maxSizeBytes": 65536
+    },
+    {
+      "path": "data/shaders/grim_text.fragment",
+      "maxSizeBytes": 65536
+    },
+    {
+      "path": "data/shaders/grim_text.vertex",
+      "maxSizeBytes": 65536
+    },
+    {
+      "path": "data/shaders/hpl1_Ambient_Color.fragment",
+      "maxSizeBytes": 65536
+    },
+    {
+      "path": "data/shaders/hpl1_Bump2D_Light.fragment",
+      "maxSizeBytes": 65536
+    },
+    {
+      "path": "data/shaders/hpl1_Bump2D_Light.vertex",
+      "maxSizeBytes": 65536
+    },
+    {
+      "path": "data/shaders/hpl1_BumpColorSpec_Light.fragment",
+      "maxSizeBytes": 65536
+    },
+    {
+      "path": "data/shaders/hpl1_BumpColorSpec_Light_Spot.fragment",
+      "maxSizeBytes": 65536
+    },
+    {
+      "path": "data/shaders/hpl1_BumpSpec2D_Light.fragment",
+      "maxSizeBytes": 65536
+    },
+    {
+      "path": "data/shaders/hpl1_BumpSpec2D_Light.vertex",
+      "maxSizeBytes": 65536
+    },
+    {
+      "path": "data/shaders/hpl1_BumpSpec_Light.fragment",
+      "maxSizeBytes": 65536
+    },
+    {
+      "path": "data/shaders/hpl1_BumpSpec_Light_Spot.fragment",
+      "maxSizeBytes": 65536
+    },
+    {
+      "path": "data/shaders/hpl1_BumpSpec_Light_Spot_pass2.fragment",
+      "maxSizeBytes": 65536
+    },
+    {
+      "path": "data/shaders/hpl1_Bump_Light.fragment",
+      "maxSizeBytes": 65536
+    },
+    {
+      "path": "data/shaders/hpl1_Bump_Light_Spot.fragment",
+      "maxSizeBytes": 65536
+    },
+    {
+      "path": "data/shaders/hpl1_Bump_Light_Spot_pass2.fragment",
+      "maxSizeBytes": 65536
+    },
+    {
+      "path": "data/shaders/hpl1_DiffuseSpec_Light.fragment",
+      "maxSizeBytes": 65536
+    },
+    {
+      "path": "data/shaders/hpl1_DiffuseSpec_Light.vertex",
+      "maxSizeBytes": 65536
+    },
+    {
+      "path": "data/shaders/hpl1_DiffuseSpec_Light_Spot.fragment",
+      "maxSizeBytes": 65536
+    },
+    {
+      "path": "data/shaders/hpl1_DiffuseSpec_Light_Spot.vertex",
+      "maxSizeBytes": 65536
+    },
+    {
+      "path": "data/shaders/hpl1_DiffuseSpec_Light_Spot_pass2.fragment",
+      "maxSizeBytes": 65536
+    },
+    {
+      "path": "data/shaders/hpl1_Diffuse_Color.fragment",
+      "maxSizeBytes": 65536
+    },
+    {
+      "path": "data/shaders/hpl1_Diffuse_Color.vertex",
+      "maxSizeBytes": 65536
+    },
+    {
+      "path": "data/shaders/hpl1_Diffuse_ColorMul.vertex",
+      "maxSizeBytes": 65536
+    },
+    {
+      "path": "data/shaders/hpl1_Diffuse_EnvMap_Reflect.fragment",
+      "maxSizeBytes": 65536
+    },
+    {
+      "path": "data/shaders/hpl1_Diffuse_EnvMap_Reflect.vertex",
+      "maxSizeBytes": 65536
+    },
+    {
+      "path": "data/shaders/hpl1_Diffuse_Light.fragment",
+      "maxSizeBytes": 65536
+    },
+    {
+      "path": "data/shaders/hpl1_Diffuse_Light.vertex",
+      "maxSizeBytes": 65536
+    },
+    {
+      "path": "data/shaders/hpl1_Diffuse_Light_Spot.fragment",
+      "maxSizeBytes": 65536
+    },
+    {
+      "path": "data/shaders/hpl1_Diffuse_Light_Spot.vertex",
+      "maxSizeBytes": 65536
+    },
+    {
+      "path": "data/shaders/hpl1_Diffuse_Light_Spot_pass1.fragment",
+      "maxSizeBytes": 65536
+    },
+    {
+      "path": "data/shaders/hpl1_Diffuse_Light_Spot_pass2.fragment",
+      "maxSizeBytes": 65536
+    },
+    {
+      "path": "data/shaders/hpl1_Fallback01_Bump_Light.fragment",
+      "maxSizeBytes": 65536
+    },
+    {
+      "path": "data/shaders/hpl1_Fallback01_Diffuse_Light_Spot.fragment",
+      "maxSizeBytes": 65536
+    },
+    {
+      "path": "data/shaders/hpl1_Fallback01_Diffuse_Light_Spot_p2.vertex",
+      "maxSizeBytes": 65536
+    },
+    {
+      "path": "data/shaders/hpl1_Fallback01_Diffuse_Light_p1.fragment",
+      "maxSizeBytes": 65536
+    },
+    {
+      "path": "data/shaders/hpl1_Fallback01_Diffuse_Light_p1.vertex",
+      "maxSizeBytes": 65536
+    },
+    {
+      "path": "data/shaders/hpl1_Fallback01_Diffuse_Light_p2.fragment",
+      "maxSizeBytes": 65536
+    },
+    {
+      "path": "data/shaders/hpl1_Fallback01_Diffuse_Light_p2.vertex",
+      "maxSizeBytes": 65536
+    },
+    {
+      "path": "data/shaders/hpl1_Fallback02_DIffuse_Light_Spot_p2.fragment",
+      "maxSizeBytes": 65536
+    },
+    {
+      "path": "data/shaders/hpl1_Fallback02_DIffuse_Light_Spot_p3.fragment",
+      "maxSizeBytes": 65536
+    },
+    {
+      "path": "data/shaders/hpl1_Fallback02_Diffuse_Light_Spot_p2.vertex",
+      "maxSizeBytes": 65536
+    },
+    {
+      "path": "data/shaders/hpl1_Fallback02_Diffuse_Light_Spot_p3.vertex",
+      "maxSizeBytes": 65536
+    },
+    {
+      "path": "data/shaders/hpl1_Fallback02_Diffuse_Light_p1.fragment",
+      "maxSizeBytes": 65536
+    },
+    {
+      "path": "data/shaders/hpl1_Fallback02_Diffuse_Light_p1.vertex",
+      "maxSizeBytes": 65536
+    },
+    {
+      "path": "data/shaders/hpl1_Fallback02_Diffuse_Light_p2.vertex",
+      "maxSizeBytes": 65536
+    },
+    {
+      "path": "data/shaders/hpl1_Fog_Solid.fragment",
+      "maxSizeBytes": 65536
+    },
+    {
+      "path": "data/shaders/hpl1_Fog_Solid.vertex",
+      "maxSizeBytes": 65536
+    },
+    {
+      "path": "data/shaders/hpl1_Fog_Trans.vertex",
+      "maxSizeBytes": 65536
+    },
+    {
+      "path": "data/shaders/hpl1_Fog_Trans_Alpha.fragment",
+      "maxSizeBytes": 65536
+    },
+    {
+      "path": "data/shaders/hpl1_Fog_Trans_Mod.fragment",
+      "maxSizeBytes": 65536
+    },
+    {
+      "path": "data/shaders/hpl1_Fog_Trans_ModX2.fragment",
+      "maxSizeBytes": 65536
+    },
+    {
+      "path": "data/shaders/hpl1_PostEffect_Bloom.fragment",
+      "maxSizeBytes": 65536
+    },
+    {
+      "path": "data/shaders/hpl1_PostEffect_Bloom.vertex",
+      "maxSizeBytes": 65536
+    },
+    {
+      "path": "data/shaders/hpl1_PostEffect_Blur.vertex",
+      "maxSizeBytes": 65536
+    },
+    {
+      "path": "data/shaders/hpl1_PostEffect_Blur_2D.fragment",
+      "maxSizeBytes": 65536
+    },
+    {
+      "path": "data/shaders/hpl1_PostEffect_Blur_Rect.fragment",
+      "maxSizeBytes": 65536
+    },
+    {
+      "path": "data/shaders/hpl1_PostEffect_DoF.fragment",
+      "maxSizeBytes": 65536
+    },
+    {
+      "path": "data/shaders/hpl1_PostEffect_DoF.vertex",
+      "maxSizeBytes": 65536
+    },
+    {
+      "path": "data/shaders/hpl1_PostEffect_Fallback01_Blur_2D.fragment",
+      "maxSizeBytes": 65536
+    },
+    {
+      "path": "data/shaders/hpl1_PostEffect_Fallback01_Blur_Rect.fragment",
+      "maxSizeBytes": 65536
+    },
+    {
+      "path": "data/shaders/hpl1_PostEffect_Motion.fragment",
+      "maxSizeBytes": 65536
+    },
+    {
+      "path": "data/shaders/hpl1_PostEffect_Motion.vertex",
+      "maxSizeBytes": 65536
+    },
+    {
+      "path": "data/shaders/hpl1_PostEffect_Motion_staticloop.fragment",
+      "maxSizeBytes": 65536
+    },
+    {
+      "path": "data/shaders/hpl1_PostEffect_Offset.fragment",
+      "maxSizeBytes": 65536
+    },
+    {
+      "path": "data/shaders/hpl1_PostEffect_Offset.vertex",
+      "maxSizeBytes": 65536
+    },
+    {
+      "path": "data/shaders/hpl1_ShadowExtrude.fragment",
+      "maxSizeBytes": 65536
+    },
+    {
+      "path": "data/shaders/hpl1_ShadowExtrude.vertex",
+      "maxSizeBytes": 65536
+    },
+    {
+      "path": "data/shaders/hpl1_Water_Diffuse.fragment",
+      "maxSizeBytes": 65536
+    },
+    {
+      "path": "data/shaders/hpl1_Water_Diffuse.vertex",
+      "maxSizeBytes": 65536
+    },
+    {
+      "path": "data/shaders/hpl1_Water_Fog.fragment",
+      "maxSizeBytes": 65536
+    },
+    {
+      "path": "data/shaders/hpl1_Water_Fog.vertex",
+      "maxSizeBytes": 65536
+    },
+    {
+      "path": "data/shaders/hpl1_gamma_correction.fragment",
+      "maxSizeBytes": 65536
+    },
+    {
+      "path": "data/shaders/hpl1_gamma_correction.vertex",
+      "maxSizeBytes": 65536
+    },
+    {
+      "path": "data/shaders/hpl1_refract.fragment",
+      "maxSizeBytes": 65536
+    },
+    {
+      "path": "data/shaders/hpl1_refract.vertex",
+      "maxSizeBytes": 65536
+    },
+    {
+      "path": "data/shaders/hpl1_refract_special.fragment",
+      "maxSizeBytes": 65536
+    },
+    {
+      "path": "data/shaders/hpl1_refract_water.fragment",
+      "maxSizeBytes": 65536
+    },
+    {
+      "path": "data/shaders/hpl1_refract_water.vertex",
+      "maxSizeBytes": 65536
+    },
+    {
+      "path": "data/shaders/myst3_box.fragment",
+      "maxSizeBytes": 65536
+    },
+    {
+      "path": "data/shaders/myst3_box.vertex",
+      "maxSizeBytes": 65536
+    },
+    {
+      "path": "data/shaders/myst3_cube.fragment",
+      "maxSizeBytes": 65536
+    },
+    {
+      "path": "data/shaders/myst3_cube.vertex",
+      "maxSizeBytes": 65536
+    },
+    {
+      "path": "data/shaders/myst3_text.fragment",
+      "maxSizeBytes": 65536
+    },
+    {
+      "path": "data/shaders/myst3_text.vertex",
+      "maxSizeBytes": 65536
+    },
+    {
+      "path": "data/shaders/stark_actor.fragment",
+      "maxSizeBytes": 65536
+    },
+    {
+      "path": "data/shaders/stark_actor.vertex",
+      "maxSizeBytes": 65536
+    },
+    {
+      "path": "data/shaders/stark_fade.fragment",
+      "maxSizeBytes": 65536
+    },
+    {
+      "path": "data/shaders/stark_fade.vertex",
+      "maxSizeBytes": 65536
+    },
+    {
+      "path": "data/shaders/stark_prop.fragment",
+      "maxSizeBytes": 65536
+    },
+    {
+      "path": "data/shaders/stark_prop.vertex",
+      "maxSizeBytes": 65536
+    },
+    {
+      "path": "data/shaders/stark_shadow.fragment",
+      "maxSizeBytes": 65536
+    },
+    {
+      "path": "data/shaders/stark_shadow.vertex",
+      "maxSizeBytes": 65536
+    },
+    {
+      "path": "data/shaders/stark_surface.fragment",
+      "maxSizeBytes": 65536
+    },
+    {
+      "path": "data/shaders/stark_surface.vertex",
+      "maxSizeBytes": 65536
+    },
+    {
+      "path": "data/shaders/stark_surface_fill.fragment",
+      "maxSizeBytes": 65536
+    },
+    {
+      "path": "data/shaders/stark_surface_fill.vertex",
+      "maxSizeBytes": 65536
+    },
+    {
+      "path": "data/shaders/wme_fade.fragment",
+      "maxSizeBytes": 65536
+    },
+    {
+      "path": "data/shaders/wme_fade.vertex",
+      "maxSizeBytes": 65536
+    },
+    {
+      "path": "data/shaders/wme_flat_shadow_modelx.fragment",
+      "maxSizeBytes": 65536
+    },
+    {
+      "path": "data/shaders/wme_flat_shadow_modelx.vertex",
+      "maxSizeBytes": 65536
+    },
+    {
+      "path": "data/shaders/wme_geometry.fragment",
+      "maxSizeBytes": 65536
+    },
+    {
+      "path": "data/shaders/wme_geometry.vertex",
+      "maxSizeBytes": 65536
+    },
+    {
+      "path": "data/shaders/wme_line.fragment",
+      "maxSizeBytes": 65536
+    },
+    {
+      "path": "data/shaders/wme_line.vertex",
+      "maxSizeBytes": 65536
+    },
+    {
+      "path": "data/shaders/wme_modelx.fragment",
+      "maxSizeBytes": 65536
+    },
+    {
+      "path": "data/shaders/wme_modelx.vertex",
+      "maxSizeBytes": 65536
+    },
+    {
+      "path": "data/shaders/wme_postfilter.fragment",
+      "maxSizeBytes": 65536
+    },
+    {
+      "path": "data/shaders/wme_postfilter.vertex",
+      "maxSizeBytes": 65536
+    },
+    {
+      "path": "data/shaders/wme_shadow_mask.fragment",
+      "maxSizeBytes": 65536
+    },
+    {
+      "path": "data/shaders/wme_shadow_mask.vertex",
+      "maxSizeBytes": 65536
+    },
+    {
+      "path": "data/shaders/wme_shadow_volume.fragment",
+      "maxSizeBytes": 65536
+    },
+    {
+      "path": "data/shaders/wme_shadow_volume.vertex",
+      "maxSizeBytes": 65536
+    },
+    {
+      "path": "data/shaders/wme_simple_shadow.fragment",
+      "maxSizeBytes": 65536
+    },
+    {
+      "path": "data/shaders/wme_simple_shadow.vertex",
+      "maxSizeBytes": 65536
+    },
+    {
+      "path": "data/shaders/wme_sprite.fragment",
+      "maxSizeBytes": 65536
+    },
+    {
+      "path": "data/shaders/wme_sprite.vertex",
+      "maxSizeBytes": 65536
+    },
+    {
+      "path": "data/sky.cpt",
+      "maxSizeBytes": 524288
+    },
+    {
+      "path": "data/supernova.dat",
+      "maxSizeBytes": 524288
+    },
+    {
+      "path": "data/teenagent.dat",
+      "maxSizeBytes": 524288
+    },
+    {
+      "path": "data/titanic.dat",
+      "maxSizeBytes": 4194304
+    },
+    {
+      "path": "data/tony.dat",
+      "maxSizeBytes": 65536
+    },
+    {
+      "path": "data/toon.dat",
+      "maxSizeBytes": 65536
+    },
+    {
+      "path": "data/translations.dat",
+      "maxSizeBytes": 4194304
+    },
+    {
+      "path": "data/ultima.dat",
+      "maxSizeBytes": 16777216
+    },
+    {
+      "path": "data/ultima8.dat",
+      "maxSizeBytes": 262144
+    },
+    {
+      "path": "data/wintermute.zip",
+      "maxSizeBytes": 65536
+    },
+    {
+      "path": "licenses/AUTHORS",
+      "maxSizeBytes": 65536
+    },
+    {
+      "path": "licenses/COPYING",
+      "maxSizeBytes": 65536
+    },
+    {
+      "path": "licenses/COPYING.Apache",
+      "maxSizeBytes": 65536
+    },
+    {
+      "path": "licenses/COPYING.BSD",
+      "maxSizeBytes": 65536
+    },
+    {
+      "path": "licenses/COPYING.BSL",
+      "maxSizeBytes": 65536
+    },
+    {
+      "path": "licenses/COPYING.GLAD",
+      "maxSizeBytes": 65536
+    },
+    {
+      "path": "licenses/COPYING.ISC",
+      "maxSizeBytes": 65536
+    },
+    {
+      "path": "licenses/COPYING.LGPL",
+      "maxSizeBytes": 65536
+    },
+    {
+      "path": "licenses/COPYING.LUA",
+      "maxSizeBytes": 65536
+    },
+    {
+      "path": "licenses/COPYING.MIT",
+      "maxSizeBytes": 65536
+    },
+    {
+      "path": "licenses/COPYING.MKV",
+      "maxSizeBytes": 65536
+    },
+    {
+      "path": "licenses/COPYING.MPL",
+      "maxSizeBytes": 65536
+    },
+    {
+      "path": "licenses/COPYING.OFL",
+      "maxSizeBytes": 65536
+    },
+    {
+      "path": "licenses/COPYING.TINYGL",
+      "maxSizeBytes": 65536
+    },
+    {
+      "path": "licenses/COPYRIGHT",
+      "maxSizeBytes": 65536
+    },
+    {
+      "path": "licenses/CatharonLicense.txt",
+      "maxSizeBytes": 65536
+    },
+    {
+      "path": "licenses/SDL3-LICENSE.txt",
+      "maxSizeBytes": 1048576
+    },
+    {
+      "path": "licenses/build-inputs.json",
+      "maxSizeBytes": 65536
+    },
+    {
+      "path": "licenses/libmad-COPYING",
+      "maxSizeBytes": 65536
+    },
+    {
+      "path": "licenses/libmpeg2-COPYING",
+      "maxSizeBytes": 65536
+    },
+    {
+      "path": "licenses/libtheora-COPYING",
+      "maxSizeBytes": 65536
+    },
+    {
+      "path": "manifest.json",
+      "maxSizeBytes": 65536
+    },
+    {
+      "path": "native/linux-x86_64/scummvm-detector",
+      "maxSizeBytes": 33554432
+    },
+    {
+      "path": "plugins/libaccess.so",
+      "maxSizeBytes": 2097152
+    },
+    {
+      "path": "plugins/libadl.so",
+      "maxSizeBytes": 2097152
+    },
+    {
+      "path": "plugins/libagi.so",
+      "maxSizeBytes": 2097152
+    },
+    {
+      "path": "plugins/libagos.so",
+      "maxSizeBytes": 4194304
+    },
+    {
+      "path": "plugins/libags.so",
+      "maxSizeBytes": 16777216
+    },
+    {
+      "path": "plugins/libalcachofa.so",
+      "maxSizeBytes": 2097152
+    },
+    {
+      "path": "plugins/libalg.so",
+      "maxSizeBytes": 4194304
+    },
+    {
+      "path": "plugins/libasylum.so",
+      "maxSizeBytes": 4194304
+    },
+    {
+      "path": "plugins/libawe.so",
+      "maxSizeBytes": 524288
+    },
+    {
+      "path": "plugins/libbagel.so",
+      "maxSizeBytes": 8388608
+    },
+    {
+      "path": "plugins/libbbvs.so",
+      "maxSizeBytes": 1048576
+    },
+    {
+      "path": "plugins/libbladerunner.so",
+      "maxSizeBytes": 8388608
+    },
+    {
+      "path": "plugins/libbolt.so",
+      "maxSizeBytes": 1048576
+    },
+    {
+      "path": "plugins/libburied.so",
+      "maxSizeBytes": 4194304
+    },
+    {
+      "path": "plugins/libcge.so",
+      "maxSizeBytes": 524288
+    },
+    {
+      "path": "plugins/libcge2.so",
+      "maxSizeBytes": 524288
+    },
+    {
+      "path": "plugins/libchewy.so",
+      "maxSizeBytes": 2097152
+    },
+    {
+      "path": "plugins/libcine.so",
+      "maxSizeBytes": 2097152
+    },
+    {
+      "path": "plugins/libcomposer.so",
+      "maxSizeBytes": 524288
+    },
+    {
+      "path": "plugins/libcrab.so",
+      "maxSizeBytes": 4194304
+    },
+    {
+      "path": "plugins/libcruise.so",
+      "maxSizeBytes": 1048576
+    },
+    {
+      "path": "plugins/libcryomni3d.so",
+      "maxSizeBytes": 2097152
+    },
+    {
+      "path": "plugins/libdarkseed.so",
+      "maxSizeBytes": 2097152
+    },
+    {
+      "path": "plugins/libdgds.so",
+      "maxSizeBytes": 4194304
+    },
+    {
+      "path": "plugins/libdirector.so",
+      "maxSizeBytes": 16777216
+    },
+    {
+      "path": "plugins/libdraci.so",
+      "maxSizeBytes": 1048576
+    },
+    {
+      "path": "plugins/libdragons.so",
+      "maxSizeBytes": 1048576
+    },
+    {
+      "path": "plugins/libdrascula.so",
+      "maxSizeBytes": 1048576
+    },
+    {
+      "path": "plugins/libdreamweb.so",
+      "maxSizeBytes": 1048576
+    },
+    {
+      "path": "plugins/libefh.so",
+      "maxSizeBytes": 1048576
+    },
+    {
+      "path": "plugins/libfreescape.so",
+      "maxSizeBytes": 8388608
+    },
+    {
+      "path": "plugins/libgamos.so",
+      "maxSizeBytes": 1048576
+    },
+    {
+      "path": "plugins/libglk.so",
+      "maxSizeBytes": 16777216
+    },
+    {
+      "path": "plugins/libgnap.so",
+      "maxSizeBytes": 2097152
+    },
+    {
+      "path": "plugins/libgob.so",
+      "maxSizeBytes": 8388608
+    },
+    {
+      "path": "plugins/libgot.so",
+      "maxSizeBytes": 1048576
+    },
+    {
+      "path": "plugins/libgriffon.so",
+      "maxSizeBytes": 1048576
+    },
+    {
+      "path": "plugins/libgrim.so",
+      "maxSizeBytes": 8388608
+    },
+    {
+      "path": "plugins/libgroovie.so",
+      "maxSizeBytes": 1048576
+    },
+    {
+      "path": "plugins/libhadesch.so",
+      "maxSizeBytes": 4194304
+    },
+    {
+      "path": "plugins/libhdb.so",
+      "maxSizeBytes": 2097152
+    },
+    {
+      "path": "plugins/libhopkins.so",
+      "maxSizeBytes": 2097152
+    },
+    {
+      "path": "plugins/libhpl1.so",
+      "maxSizeBytes": 33554432
+    },
+    {
+      "path": "plugins/libhugo.so",
+      "maxSizeBytes": 1048576
+    },
+    {
+      "path": "plugins/libhypno.so",
+      "maxSizeBytes": 4194304
+    },
+    {
+      "path": "plugins/libillusions.so",
+      "maxSizeBytes": 2097152
+    },
+    {
+      "path": "plugins/libkingdom.so",
+      "maxSizeBytes": 1048576
+    },
+    {
+      "path": "plugins/libkyra.so",
+      "maxSizeBytes": 16777216
+    },
+    {
+      "path": "plugins/liblab.so",
+      "maxSizeBytes": 1048576
+    },
+    {
+      "path": "plugins/liblastexpress.so",
+      "maxSizeBytes": 8388608
+    },
+    {
+      "path": "plugins/liblure.so",
+      "maxSizeBytes": 2097152
+    },
+    {
+      "path": "plugins/libm4.so",
+      "maxSizeBytes": 8388608
+    },
+    {
+      "path": "plugins/libmade.so",
+      "maxSizeBytes": 1048576
+    },
+    {
+      "path": "plugins/libmads.so",
+      "maxSizeBytes": 8388608
+    },
+    {
+      "path": "plugins/libmm.so",
+      "maxSizeBytes": 8388608
+    },
+    {
+      "path": "plugins/libmohawk.so",
+      "maxSizeBytes": 4194304
+    },
+    {
+      "path": "plugins/libmortevielle.so",
+      "maxSizeBytes": 1048576
+    },
+    {
+      "path": "plugins/libmtropolis.so",
+      "maxSizeBytes": 8388608
+    },
+    {
+      "path": "plugins/libmyst3.so",
+      "maxSizeBytes": 4194304
+    },
+    {
+      "path": "plugins/libnancy.so",
+      "maxSizeBytes": 8388608
+    },
+    {
+      "path": "plugins/libneverhood.so",
+      "maxSizeBytes": 4194304
+    },
+    {
+      "path": "plugins/libngi.so",
+      "maxSizeBytes": 4194304
+    },
+    {
+      "path": "plugins/libparallaction.so",
+      "maxSizeBytes": 2097152
+    },
+    {
+      "path": "plugins/libpegasus.so",
+      "maxSizeBytes": 4194304
+    },
+    {
+      "path": "plugins/libpelrock.so",
+      "maxSizeBytes": 2097152
+    },
+    {
+      "path": "plugins/libpetka.so",
+      "maxSizeBytes": 1048576
+    },
+    {
+      "path": "plugins/libphoenixvr.so",
+      "maxSizeBytes": 1048576
+    },
+    {
+      "path": "plugins/libpink.so",
+      "maxSizeBytes": 1048576
+    },
+    {
+      "path": "plugins/libplumbers.so",
+      "maxSizeBytes": 262144
+    },
+    {
+      "path": "plugins/libprince.so",
+      "maxSizeBytes": 1048576
+    },
+    {
+      "path": "plugins/libprivate.so",
+      "maxSizeBytes": 1048576
+    },
+    {
+      "path": "plugins/libqdengine.so",
+      "maxSizeBytes": 8388608
+    },
+    {
+      "path": "plugins/libqueen.so",
+      "maxSizeBytes": 1048576
+    },
+    {
+      "path": "plugins/libsaga.so",
+      "maxSizeBytes": 2097152
+    },
+    {
+      "path": "plugins/libsaga2.so",
+      "maxSizeBytes": 4194304
+    },
+    {
+      "path": "plugins/libsci.so",
+      "maxSizeBytes": 8388608
+    },
+    {
+      "path": "plugins/libscumm.so",
+      "maxSizeBytes": 16777216
+    },
+    {
+      "path": "plugins/libsherlock.so",
+      "maxSizeBytes": 4194304
+    },
+    {
+      "path": "plugins/libsky.so",
+      "maxSizeBytes": 1048576
+    },
+    {
+      "path": "plugins/libsludge.so",
+      "maxSizeBytes": 2097152
+    },
+    {
+      "path": "plugins/libstark.so",
+      "maxSizeBytes": 4194304
+    },
+    {
+      "path": "plugins/libsupernova.so",
+      "maxSizeBytes": 2097152
+    },
+    {
+      "path": "plugins/libsword1.so",
+      "maxSizeBytes": 1048576
+    },
+    {
+      "path": "plugins/libsword2.so",
+      "maxSizeBytes": 2097152
+    },
+    {
+      "path": "plugins/libsword25.so",
+      "maxSizeBytes": 2097152
+    },
+    {
+      "path": "plugins/libteenagent.so",
+      "maxSizeBytes": 1048576
+    },
+    {
+      "path": "plugins/libtetraedge.so",
+      "maxSizeBytes": 8388608
+    },
+    {
+      "path": "plugins/libtinsel.so",
+      "maxSizeBytes": 4194304
+    },
+    {
+      "path": "plugins/libtitanic.so",
+      "maxSizeBytes": 16777216
+    },
+    {
+      "path": "plugins/libtoltecs.so",
+      "maxSizeBytes": 1048576
+    },
+    {
+      "path": "plugins/libtony.so",
+      "maxSizeBytes": 2097152
+    },
+    {
+      "path": "plugins/libtoon.so",
+      "maxSizeBytes": 1048576
+    },
+    {
+      "path": "plugins/libtot.so",
+      "maxSizeBytes": 2097152
+    },
+    {
+      "path": "plugins/libtouche.so",
+      "maxSizeBytes": 1048576
+    },
+    {
+      "path": "plugins/libtrecision.so",
+      "maxSizeBytes": 1048576
+    },
+    {
+      "path": "plugins/libtsage.so",
+      "maxSizeBytes": 16777216
+    },
+    {
+      "path": "plugins/libtucker.so",
+      "maxSizeBytes": 1048576
+    },
+    {
+      "path": "plugins/libtwine.so",
+      "maxSizeBytes": 2097152
+    },
+    {
+      "path": "plugins/libtwp.so",
+      "maxSizeBytes": 8388608
+    },
+    {
+      "path": "plugins/libultima.so",
+      "maxSizeBytes": 16777216
+    },
+    {
+      "path": "plugins/libvcruise.so",
+      "maxSizeBytes": 2097152
+    },
+    {
+      "path": "plugins/libvoyeur.so",
+      "maxSizeBytes": 1048576
+    },
+    {
+      "path": "plugins/libwage.so",
+      "maxSizeBytes": 1048576
+    },
+    {
+      "path": "plugins/libwintermute.so",
+      "maxSizeBytes": 8388608
+    },
+    {
+      "path": "plugins/libzvision.so",
+      "maxSizeBytes": 2097152
+    },
+    {
+      "path": "scummvm-retrom.mjs",
+      "maxSizeBytes": 65536
+    },
+    {
+      "path": "scummvm.mjs",
+      "maxSizeBytes": 8388608
+    },
+    {
+      "path": "scummvm.wasm",
+      "maxSizeBytes": 33554432
+    }
+  ]
+}

@@ -1,3 +1,4 @@
+import {validScummvmSource} from "./scummvm-release.mjs";
 import { validJ2meRelease } from "./j2me-release.mjs";
 import { createHash } from "node:crypto";
 import { readFile } from "node:fs/promises";
@@ -12,8 +13,9 @@ export function validateProviderSources(sources) {
   if (sources?.schemaVersion !== 1 || sources.publicApiVersion !== 2 ||
     sources.packageName !== "@xxxsen/retrom-runtime" ||
     !/^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?$/u.test(sources.packageVersion) ||
-    Object.keys(sources).sort().join(",") !==
-      "localAssets,packageName,packageVersion,publicApiVersion,schemaVersion,upstreamReleases" ||
+    !["localAssets,packageName,packageVersion,publicApiVersion,schemaVersion,upstreamReleases",
+      "developmentInputs,localAssets,packageName,packageVersion,publicApiVersion,schemaVersion,upstreamReleases"]
+      .includes(Object.keys(sources).sort().join(",")) ||
     !Array.isArray(sources.upstreamReleases) || !Array.isArray(sources.localAssets)) {
     throw new Error("PROVIDER_SOURCES_INVALID");
   }
@@ -35,6 +37,12 @@ export function validateProviderSources(sources) {
       }
       assetPaths.add(asset.output);
     }
+  }
+  const development = sources.developmentInputs ?? [];
+  if (!Array.isArray(development) || development.length > 1) {throw new Error("PROVIDER_SOURCES_INVALID");}
+  for (const input of development) {
+    if (!validScummvmSource(input) || releases.has(input.id)) {throw new Error("PROVIDER_SOURCES_INVALID");}
+    releases.set(input.id, input);
   }
   for (const asset of sources.localAssets) {
     if (!safePath(asset.source) || !safePath(asset.output)) {throw new Error("PROVIDER_SOURCES_INVALID");}

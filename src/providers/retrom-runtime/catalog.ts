@@ -1,3 +1,4 @@
+import {scummvmAdapter, scummvmTarget} from "./scummvm-declaration.js";
 import {
   defineAdapter,
   defineProvider,
@@ -32,6 +33,7 @@ const isolatedCapabilities = capabilities(true, true, true);
 const wasm4Capabilities = capabilities(true, true, false);
 
 const adapters = [
+  scummvmAdapter,
   adapter("butterscotch-web", "BUTTERSCOTCH_WEB", "butterscotch-checkpoint-v2",
     "butterscotch-checkpoint-v2", standardCapabilities),
   adapter("easyrpg-web", "EASYRPG_WEB", "easyrpg-save", "easyrpg-save-bundle-v1", rpgCapabilities),
@@ -83,6 +85,7 @@ const targets = [
   mkxpTarget("rpgmaker-vx", "RPG Maker VX", 2),
   mkxpTarget("rpgmaker-vx-ace", "RPG Maker VX Ace", 3),
   mkxpTarget("rpgmaker-xp", "RPG Maker XP", 1),
+  scummvmTarget,
   target(
     "tyranoscript", "TyranoScript", "tyranoscript-web", noOptionsSchema, false,
     "ISOLATED_ORIGIN_RESOURCE", "ISOLATED_WEB", 32 * 1024 * 1024,
@@ -98,7 +101,7 @@ export const retromRuntimeProviderDefinition = defineProvider({
   adapters,
   providerApiVersion: 1,
   providerId: "retrom-runtime",
-  providerVersion: "0.18.0",
+  providerVersion: "0.19.0-dev.2",
   targets,
 });
 

@@ -57,7 +57,7 @@ describe("current Provider launch boundary", () => {
     ]);
     expect(retromRuntimeProviderDefinition.adapters.map((entry) => entry.kind).sort()).toEqual([
       "BUTTERSCOTCH_WEB", "EASYRPG_WEB", "J2ME_MINIJVM_WEB", "KIRIKIRI2_WEB", "MKXP_LIBRETRO_WEB", "NATIVE_WEB", "ONS_YURI_WEB",
-      "TYRANOSCRIPT_WEB", "WASM4_WEB",
+      "SCUMMVM_WEB", "TYRANOSCRIPT_WEB", "WASM4_WEB",
     ]);
     for (const entry of targets) {
       expect(entry.capabilities.standardGamepad).toBe(true);

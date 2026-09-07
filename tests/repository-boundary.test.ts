@@ -21,7 +21,7 @@ describe("independent package boundary", () => {
     expect(retromRuntimeProviderDefinition.providerId).toBe("retrom-runtime");
     expect(retromRuntimeProviderDefinition.targets.map((target) => target.id)).toEqual([
       "butterscotch-gamemaker", "j2me", "kirikiri2-kag", "onscripter-yuri", "rpgmaker-2000", "rpgmaker-2003",
-      "rpgmaker-mv", "rpgmaker-mz", "rpgmaker-vx", "rpgmaker-vx-ace", "rpgmaker-xp", "tyranoscript", "wasm4",
+      "rpgmaker-mv", "rpgmaker-mz", "rpgmaker-vx", "rpgmaker-vx-ace", "rpgmaker-xp", "scummvm", "tyranoscript", "wasm4",
     ]);
     expect(sources.localAssets.map((asset: { output: string }) => asset.output).sort()).toEqual([
       "runtime/butterscotch/worker.mjs",
@@ -33,11 +33,11 @@ describe("independent package boundary", () => {
   it("contains one clean Provider-private adapter role without migration-era aliases", async () => {
     expect(retromRuntimeProviderDefinition.adapters.map((adapter) => adapter.id).sort()).toEqual([
       "butterscotch-web", "easyrpg-web", "j2me-minijvm-web", "kirikiri2-web", "mkxp-libretro-web", "native-web", "ons-yuri-web",
-      "tyranoscript-web", "wasm4-web",
+      "scummvm-web", "tyranoscript-web", "wasm4-web",
     ]);
     expect(retromRuntimeProviderDefinition.adapters.map((adapter) => adapter.abi).sort()).toEqual([
       "butterscotch-checkpoint-v2", "easyrpg-save", "j2me-rms", "kirikiri-kag-bookmark", "mkxp-state-compact",
-      "native-save", "ons-save", "tyranoscript-snapshot-v1", "wasm4-state-v1",
+      "native-save", "ons-save", "scummvm-host-v1", "tyranoscript-snapshot-v1", "wasm4-state-v1",
     ]);
     expect((await readdir(join(root, "assets/runtime"))).sort()).toEqual(["butterscotch", "native"]);
     for (const asset of [

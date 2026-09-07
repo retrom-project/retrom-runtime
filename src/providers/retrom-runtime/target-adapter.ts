@@ -1,3 +1,4 @@
+import {mountScummvm} from "../../scummvm/adapter.js";
 import {mountJ2me} from "../../j2me/adapter.js";
 import {mountButterscotch} from "../../butterscotch/adapter.js";
 import {mountEasyRpg} from "../../easyrpg/adapter.js";
@@ -54,6 +55,9 @@ export function mountTargetAdapter(
     return mountTyranoScript(parameters.tyranoScript(envelope), requireFrame(context), restorePayload, reportExitRequested);
   case "J2ME_MINIJVM_WEB":
     return mountJ2me(parameters.j2me(envelope), target, frameWindow, restorePayload, reportProgress,
+      reportExitRequested, context.reportFailure ?? (() => undefined), context.signal);
+  case "SCUMMVM_WEB":
+    return mountScummvm(parameters.scummvm(envelope), target, frameWindow, restorePayload, reportProgress,
       reportExitRequested, context.reportFailure ?? (() => undefined), context.signal);
   case "WASM4_WEB":
     return mountWasm4(parameters.wasm4(envelope), target, frameWindow, restorePayload, reportProgress);

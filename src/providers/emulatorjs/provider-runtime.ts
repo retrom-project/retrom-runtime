@@ -347,7 +347,7 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
     runtimeWindow.EJS_disableBatchBootup = deferredDOSStart;
     runtimeWindow.EJS_language = "zh-CN";
     runtimeWindow.EJS_disableAutoLang = false;
-    runtimeWindow.EJS_DEBUG_XX = this.restorePayload !== null || this.envelope.session.mode === "NETPLAY";
+    runtimeWindow.EJS_DEBUG_XX = this.envelope.session.mode === "NETPLAY";
     runtimeWindow.EJS_EXPERIMENTAL_NETPLAY = false;
     runtimeWindow.EJS_threads = this.envelope.runtime.capabilities.requiresThreads;
     runtimeWindow.EJS_fullscreenOnLoaded = false;

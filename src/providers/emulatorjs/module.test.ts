@@ -90,6 +90,7 @@ describe("EmulatorJS Provider Module V1", () => {
     const loadExplicitStateAndWait = vi.fn(async () => undefined);
     const mounting = player.mount(document.createElement("div"));
     await vi.waitFor(() => expect(runtimeWindow.document.querySelector("script[data-retrom-loader]")).not.toBeNull());
+    expect(runtimeWindow.EJS_DEBUG_XX).toBe(false);
     runtimeWindow.EJS_emulator = {
       gameManager: {loadExplicitStateAndWait, toggleMainLoop}, paused: true,
     };
@@ -479,6 +480,7 @@ describe("EmulatorJS Provider Module V1", () => {
     });
     const mounting = player.mount(document.createElement("div"));
     await vi.waitFor(() => expect(runtimeWindow.document.querySelector("script[data-retrom-loader]")).not.toBeNull());
+    expect(runtimeWindow.EJS_DEBUG_XX).toBe(true);
     expect(Object.getOwnPropertyDescriptor(runtimeWindow, "EJS_GameManager")?.set).toBeTypeOf("function");
     const publicInput = vi.fn();
     const nativeInput = vi.fn();

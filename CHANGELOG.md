@@ -4,7 +4,9 @@
 
 - Advance the EmulatorJS Provider to 2.4.0 and add Fuse, Gearcoleco, PrBoom, PUAE,
   VICE x128, VICE x64sc, VICE xvic and Virtual Jaguar as single-file targets. Multi-disc
-  switching stays disabled for these targets.
+  switching stays disabled for these targets. Checkpoint restore keeps the minified 4.2.3
+  runtime while the scoped native-load observer confirms completion, avoiding debug-build
+  startup delays for large VICE and PUAE states.
 - Advance the EmulatorJS Provider to 2.3.2 for PSP output and checkpoint optimization.
 - Select the pinned EmulatorJS 4.3.0-pre threaded PPSSPP core and include its resource archive and
   ZIP worker. Resolve the upstream PSP asset and report URLs within the immutable bundle.

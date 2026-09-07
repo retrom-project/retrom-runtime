@@ -144,11 +144,12 @@ runtime.subscribe((event) => {
 Each session must use its own frame. `exit()` pauses the core and removes library-owned DOM and globals; the host
 then discards that frame to release Emscripten's document-level input hooks.
 
-Games may also terminate through their own title/menu UI. Every adapter translates that engine/process boundary
-into one `EXIT_REQUESTED` event. The shared controller immediately leaves the running state, makes checkpoint
-capture unavailable and releases the adapter. A host should subscribe before `mount()`, finish its play session
-and leave or close the Player when it receives this event; it must not keep a black canvas or offer saving after
-the core has ended.
+`EXIT_REQUESTED` is an optional lifecycle event rather than a Target admission requirement. An adapter that can
+reliably observe a game ending through its title/menu UI or process boundary may translate it into one
+`EXIT_REQUESTED` event. The shared controller then immediately leaves the running state, makes checkpoint capture
+unavailable and releases the adapter. A host should subscribe before `mount()`, finish its play session and leave
+or close the Player when it receives this event. Targets that cannot observe their own termination remain valid;
+the host ends those sessions through `exit()`.
 
 KiriKiri is also an independent Provider Target. A Host launches target `kirikiri2-kag` through
 Provider Module V1 and never imports the KiriKiri adapter config or constructor.

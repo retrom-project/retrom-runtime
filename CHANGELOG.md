@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.18.1
+
+- Make `EXIT_REQUESTED` an optional lifecycle event instead of a core admission requirement. Existing adapters
+  that report observable core-initiated exits keep their current cleanup behavior.
+
 ## 0.18.0
 
 - Advance the EmulatorJS Provider to 2.3.2 for PSP output and checkpoint optimization.

@@ -2,6 +2,9 @@
 
 ## 0.18.0
 
+- Advance the EmulatorJS Provider to 2.4.0 and add Fuse, Gearcoleco, PrBoom, PUAE,
+  VICE x128, VICE x64sc, VICE xvic and Virtual Jaguar as single-file targets. Multi-disc
+  switching stays disabled for these targets.
 - Advance the EmulatorJS Provider to 2.3.2 for PSP output and checkpoint optimization.
 - Select the pinned EmulatorJS 4.3.0-pre threaded PPSSPP core and include its resource archive and
   ZIP worker. Resolve the upstream PSP asset and report URLs within the immutable bundle.

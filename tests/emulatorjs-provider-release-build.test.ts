@@ -12,7 +12,7 @@ import {emulatorJsSourceCatalog} from "../src/providers/emulatorjs/source-catalo
 import {buildEmulatorJsProviderBundle} from "../scripts/provider-release-build.mjs";
 
 describe("EmulatorJS Provider release build", () => {
-  it("builds all 35 targets from one verified materialized input without downloads", {timeout: 30_000}, async () => {
+  it("builds all 43 targets from one verified materialized input without downloads", {timeout: 30_000}, async () => {
     const root = await temporaryRoot();
     try {
       const sourceRoot = join(root, "source");
@@ -53,7 +53,7 @@ describe("EmulatorJS Provider release build", () => {
         providerId: string; targets: unknown[];
       };
       expect(provider.providerId).toBe("emulatorjs");
-      expect(provider.targets).toHaveLength(35);
+      expect(provider.targets).toHaveLength(43);
       expect(await readFile(result.archivePath)).toHaveLength(result.bundleSizeBytes);
       expect(await readFile(join(result.bundleRoot, "licenses/emulatorjs/4.2.3/LICENSE"), "utf8"))
         .toBe("4.2.3 license\n");

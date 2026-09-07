@@ -20,19 +20,35 @@ describe("EmulatorJS Provider declarations", () => {
       expect(target.checkpoint?.writeFormat).toBe("emulatorjs-state-v1");
     }
   });
-  it("uses last declaration wins for exactly thirty-five current core targets", () => {
+  it("uses last declaration wins for exactly forty-three current core targets", () => {
     const manifest = projectProviderManifest(emulatorJsProviderDefinition);
     expect(validateProviderManifest(manifest)).toBe(manifest);
     expect(manifest.providerId).toBe("emulatorjs");
-    expect(manifest.providerVersion).toBe("2.3.2");
-    expect(manifest.targets).toHaveLength(35);
-    expect(new Set(manifest.targets.map((target) => target.id)).size).toBe(35);
+    expect(manifest.providerVersion).toBe("2.4.0");
+    expect(manifest.targets).toHaveLength(43);
+    expect(new Set(manifest.targets.map((target) => target.id)).size).toBe(43);
     for (const targetId of ["dosbox-pure", "genesis-plus-gx-wide", "azahar"]) {
       const target = emulatorJsProviderDefinition.targets.find((entry) => entry.id === targetId);
       expect(target?.implementation.release).toBe("4.3.0-pre");
     }
     expect(emulatorJsProviderDefinition.targets.find((entry) => entry.id === "dosbox-pure")?.implementation)
       .toMatchObject({artifactFlavor: "THREAD_WASM", runtimeCore: "dosbox_pure"});
+  });
+
+  it("adds the eight EmulatorJS 4.2.3 cores as single-file targets", () => {
+    const targetIds = [
+      "fuse", "gearcoleco", "prboom", "puae", "vice-x128", "vice-x64sc", "vice-xvic", "virtualjaguar",
+    ];
+    for (const targetId of targetIds) {
+      const target = emulatorJsProviderDefinition.targets.find((entry) => entry.id === targetId);
+      expect(target, targetId).toBeDefined();
+      expect(target?.implementation).toMatchObject({
+        artifactFlavor: "WASM", contentKinds: ["SINGLE_FILE"], release: "4.2.3",
+      });
+      expect(target?.discSwitch, targetId).toBe(false);
+      expect(target?.netplayPort, targetId).toBe(false);
+      expect(target?.requiresThreads, targetId).toBe(false);
+    }
   });
 
   it("keeps runtime selection private while publishing exact frame and thread contracts", () => {

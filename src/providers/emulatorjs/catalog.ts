@@ -88,7 +88,9 @@ const cores: readonly CoreSource[] = [
   core("fbalpha2012_cps2", "4.2.3", "fbalpha2012_cps2-wasm.data", 992866, "432c2dd513603b04ccbf4e81f282f012763d2435311805443e2bd0cc9021d8d1", "73ac6fc4b1a2030701471b630e658118486e99c6c7349663dadcde4abeab6e5d"),
   core("fbneo", "4.2.3", "fbneo-wasm.data", 8273551, "315a25e0bcd61d58ee0d9e8b1dbf3740b9e0ca4b7d0726f848ce1068de73437c", "cbd006664ec1c76f6bdad7747d487ee137ae70d15390ec479e11f8e17f01bc84"),
   core("fceumm", "4.2.3", "fceumm-wasm.data", 1054015, "8c449fd5c36646fb0769423ed6ffa9efbdfc21fbfdc9bac7952b559d34d5b493", "d1a20a10b27908b6f199ed8d10f7ccf4376065b8a733492aee53b4d4a2c2f26d"),
+  core("fuse", "4.2.3", "fuse-wasm.data", 1218229, "791fe40dfba9ac236c5c14d629d555133c5fe3c36d1dbdc2a48ced487da51373", "0f2dee6ecd4bd57fe793239ec42bd6efa4b4b8696aae4f62a2a469cad2a22f32"),
   core("gambatte", "4.2.3", "gambatte-wasm.data", 967156, "ad67c7bf57f8f8b62606048e6ea498afac5b5abc76ad8de5f9dfc2a6719374bb", "c1d7561f109647715f8795c8fa977318dc78bfc847cd8879bb029d62c55fa605"),
+  core("gearcoleco", "4.2.3", "gearcoleco-wasm.data", 891907, "164e213e4d5f2c14a0f2b55da973ed5a54ef7601cb352e64c9a73ace1a7ba606", "1c377b55d252fc7133bb99b845c1bc1931a3f9989fd1410659c50bd3b2a78a4d"),
   core("genesis_plus_gx", "4.2.3", "genesis_plus_gx-wasm.data", 1203661, "190297a6f86757405090f1a2266f67dfe1a570a528c583434ed3641a5664f768", "a102b02756ca10a97e87bddc85228ca466ab75ba4b1fa6f6938e59e8343c4b4b"),
   core("genesis_plus_gx_wide", "4.3.0-pre", "genesis_plus_gx_wide-wasm.data", 1007775, "653b59f5b4c3147c6786313ecd60c6657b1bc0d465814919d363728afa93b2e0", "76fc52778209b88d6e7c22aa921d735c9bb8dbf53fea08e74ec08ce3c26b6d60"),
   core("handy", "4.2.3", "handy-wasm.data", 862304, "ab49f61338fcc3b79a945b02005815066c4d9aadb8de6ab59c408dc158aaeeff", "7fdd80119886994285f34905a38b7159d6c807539d0533bbd786ec442023a810"),
@@ -108,10 +110,16 @@ const cores: readonly CoreSource[] = [
   core("pcsx_rearmed", "4.2.3", "pcsx_rearmed-wasm.data", 1039627, "fe5515f6c29f093f0e8c01824b213804f1f76eb9cb4c97c72fe2cc17606bfbc2", "14cafda8e2a977fe406ffe7f6b66eebe1b35981cafafefbfa7436f68e79a8520"),
   core("picodrive", "4.2.3", "picodrive-wasm.data", 1034483, "bb5d50b8b88111b583977d2f7a16d01a822b3deda9205048d99ecaad2c56d861", "043ab4ae01f3018243aaf1dce6d5eb1ce098c146154be8f8a50914a4e42edfb0"),
   core("ppsspp", "4.3.0-pre", "ppsspp-thread-wasm.data", 4548468, "b75f51aa9c66bfb20c3b056b0dc5f9246516648786d0f0e73d636f224ff9080f", "d3c58abe2b9a375044ea03ceca1cfd4bb035507e8c7eff5c52401a21c3bc130d", {outputSizeLimit: {width: 960, height: 544}, startupActions: [press(2000, 0), press(5000, 0)]}),
+  core("prboom", "4.2.3", "prboom-wasm.data", 1091036, "830686c3b5176de25de45846f8cad9153803478718e6a487dda938437ecd0c0e", "5468d3146d11438aed17c6e7b93357912cf7638a6352edd9386ef4c2c4b8b38c"),
   core("prosystem", "4.2.3", "prosystem-wasm.data", 852864, "d3483e1c155c8d26e6b7b299c8ecc58c5abcfa0c5af5f03b75a55d219e71c3c8", "5ab7fa94d4cc9da68fff24911d76a32d3fba8ffbecd3fec740a1992670df809e"),
+  core("puae", "4.2.3", "puae-wasm.data", 4140232, "8b58d776244c650c872dcaaf8693a2d75fd92a5219c7250cf5be5f517b11f1b5", "e833cb9a0d942770a2bd841dfe92decd069dd5a5bad817270d113f66ab239485", {inputMode: "POINTER"}),
   core("smsplus", "4.2.3", "smsplus-wasm.data", 855876, "0f197c5e0000f17b2d072122a72b3f8fc1693514c4014fcd9694eec78584aa08", "a09612f1d088bffe8d9c107caf196b023710ed4aaeaa24f05caee7eec8591ff0"),
   core("snes9x", "4.2.3", "snes9x-wasm.data", 1093765, "eaa0bcfce67673809886e50387a80a616b719502175db64c090d04c9d75958ee", "f2ecf64d84dc3845ccd9828daf48436667f6aa79e6a5d6c41f0965f0151f1f34"),
   core("stella2014", "4.2.3", "stella2014-wasm.data", 1051659, "6c96c6b1746f3f05ca599066abe131a36c77ca61fc20a9e2a7560540457c487d", "f5244febaf876003e9acf97e09b8785f1f51563c3f96527232652c1d9ec40e68"),
+  core("vice_x128", "4.2.3", "vice_x128-wasm.data", 1595414, "dbac85e530b006c2d17e200c445de582c7ea272bacf333e4b4f8c1e391ed8506", "e8ef53ec0bc53244319e87a8f6b75396f077a982dd4438743a52e82f0c136126", {inputMode: "POINTER"}),
+  core("vice_x64sc", "4.2.3", "vice_x64sc-wasm.data", 1523457, "77f58884c81b58721cbc4754ffc5574838219258e9390630c352a494a3f335ab", "4b788799ef1225e48610b99bdf746425ba6e2bda27fa105fd1238dfbb9fb47cb", {inputMode: "POINTER"}),
+  core("vice_xvic", "4.2.3", "vice_xvic-wasm.data", 1396793, "4c7de6f858e100e9aea93085d5aef01bdfe87399c21c0fde4e1b6c7f1da56316", "06a3c3786de226ccad23593bdbc5d64a26a9db05431d7d22db0718b8304bf2e8"),
+  core("virtualjaguar", "4.2.3", "virtualjaguar-wasm.data", 942590, "584bcd9d0e051ec3cfe690d32e516cf677a9ff7e207118f4a8cc147a6e123de9", "3438eea5d94789d7a87ba102733640091c104d4f8427aeb6e5021c975ef18857"),
   core("yabause", "4.2.3", "yabause-wasm.data", 991166, "ab253ac263bd98e3124e2ca45ff581e97673426ed06ecec0025333060cd8127c", "1fc177e7be4923208b92755bcfae66ac35ba6e395c3b7ea48df581806ebdf6a6", {contentKinds: ["SINGLE_FILE", "MULTI_DISC"]}),
 ] as const;
 
@@ -161,7 +169,7 @@ export const emulatorJsProviderDefinition = defineProvider({
   adapters,
   providerApiVersion: 1,
   providerId: "emulatorjs",
-  providerVersion: "2.3.2",
+  providerVersion: "2.4.0",
   targets,
 });
 

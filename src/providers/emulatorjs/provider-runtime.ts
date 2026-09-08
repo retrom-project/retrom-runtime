@@ -291,7 +291,9 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
         this.cleanupExternalFiles = installExternalFileCompatibility(runtimeWindow);
       }
       if (this.restorePayload && this.implementation.release === "4.2.3") {
-        this.cleanupStateRestore = installEmulatorJs423StateRestoreCompatibility(runtimeWindow);
+        this.cleanupStateRestore = installEmulatorJs423StateRestoreCompatibility(
+          runtimeWindow, this.implementation.runtimeCore === "mame2003_plus",
+        );
       }
       if (this.implementation.release === "4.3.0-pre" && this.implementation.runtimeCore === "dosbox_pure") {
         this.dosboxCompatibility = installDOSBoxPureStateCompatibility(runtimeWindow);

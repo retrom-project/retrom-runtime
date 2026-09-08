@@ -34,6 +34,7 @@ async function waitForSerializable(
   target: RestoreWindow,
   isActive: () => boolean,
   delay: (milliseconds: number) => Promise<void>,
+  requiresInitialFrame: boolean,
 ) {
   while (isActive()) {
     let serializable = false;
@@ -43,7 +44,9 @@ async function waitForSerializable(
       // diagnostic frame counter can still be zero in a serializable core.
       serializable = succeeded === "1" && Number.isSafeInteger(Number(size)) && Number(size) > 0;
     } catch { /* Some cores reject serialization until their GPU exists. */ }
-    if (serializable) {return;}
+    // MAME 2003 Plus can serialize at frame zero, but its native unserialize
+    // explicitly rejects automatic loading until a CPU frame has completed.
+    if (serializable && (!requiresInitialFrame || (manager.getFrameNum?.() ?? 0) > 0)) {return;}
     if (target.performance.now() >= deadline) {throw new Error("PLAYER_SAVE_STATE_RESTORE_TIMEOUT");}
     manager.toggleMainLoop?.(true);
     await delay(Math.min(50, Math.max(1, deadline - target.performance.now())));
@@ -56,6 +59,7 @@ function createStateLoader(dependencies: {
   isActive: () => boolean;
   delay: (milliseconds: number) => Promise<void>;
   registerLoad: (milliseconds: number) => {cancel: () => void; promise: Promise<void>};
+  requiresInitialFrame: boolean;
 }) {
   return async function loadExplicitStateAndWait(
     this: StateManager,
@@ -69,7 +73,8 @@ function createStateLoader(dependencies: {
       throw new Error("PLAYER_STATE_RESTORE_COMPATIBILITY_UNAVAILABLE");
     }
     const deadline = dependencies.target.performance.now() + timeoutMs;
-    await waitForSerializable(this, deadline, dependencies.target, dependencies.isActive, dependencies.delay);
+    await waitForSerializable(this, deadline, dependencies.target, dependencies.isActive, dependencies.delay,
+      dependencies.requiresInitialFrame);
     this.toggleMainLoop(false);
     const completion = dependencies.registerLoad(Math.max(1, deadline - dependencies.target.performance.now()));
     try {
@@ -87,7 +92,7 @@ function createStateLoader(dependencies: {
   };
 }
 
-export function installEmulatorJs423StateRestoreCompatibility(playerWindow: Window = window) {
+export function installEmulatorJs423StateRestoreCompatibility(playerWindow: Window = window, requiresInitialFrame = false) {
   const target = playerWindow as RestoreWindow;
   const pendingLoads = new Set<PendingLoad>();
   const pendingDelays = new Set<PendingDelay>();
@@ -135,6 +140,7 @@ export function installEmulatorJs423StateRestoreCompatibility(playerWindow: Wind
       delay,
       isActive: () => active,
       registerLoad,
+      requiresInitialFrame,
       target,
     });
     restorePrototypes.push(() => Reflect.deleteProperty(prototype, "loadExplicitStateAndWait"));

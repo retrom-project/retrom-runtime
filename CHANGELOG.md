@@ -1,17 +1,23 @@
 # Changelog
 
-## 0.18.0
+## 0.19.0-rc.2
 
-- Advance the EmulatorJS Provider to 2.4.1-rc.3 and add Fuse, Gearcoleco, PrBoom, PUAE,
+- Wait for MAME 2003 Plus to execute its first emulation frame before restoring. The core
+  can serialize at frame zero but rejects automatic state loading at that point. Other
+  cores retain serialization readiness, including cores with a zero diagnostic counter.
+- Advance the EmulatorJS Provider to 2.4.1-rc.4 and add Fuse, Gearcoleco, PrBoom, PUAE,
   VICE x128, VICE x64sc, VICE xvic and Virtual Jaguar as single-file targets. Multi-disc
   switching stays disabled for these targets. VICE xvic and Virtual Jaguar pin independently
-  verified Retrom fork rc.2 assets; the other six retain the official 4.2.3 artifacts. Checkpoint restore keeps the 4.2.3 native-load
+  verified Retrom fork assets (VICE rc.4 and Virtual Jaguar rc.2); the other six retain the official 4.2.3 artifacts. Checkpoint restore keeps the 4.2.3 native-load
   observer active while intercepting its verbose native output before it reaches the browser
   console, and waits for the native load callback instead of counting frames. This avoids
   premature completion for large VICE and PUAE states. Fuse enables direct keyboard input
   and selects a Kempston joystick for the first controller port. Host exit also dispatches EmulatorJS's
   native exit lifecycle and waits for its bounded Wasm teardown, so a previous core cannot
   keep running while a saved session starts in a new instance.
+
+## 0.18.0
+
 - Advance the EmulatorJS Provider to 2.3.2 for PSP output and checkpoint optimization.
 - Select the pinned EmulatorJS 4.3.0-pre threaded PPSSPP core and include its resource archive and
   ZIP worker. Resolve the upstream PSP asset and report URLs within the immutable bundle.

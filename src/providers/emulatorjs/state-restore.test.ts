@@ -12,6 +12,40 @@ afterEach(() => {
 });
 
 describe("EmulatorJS 4.2.3 explicit restore", () => {
+  it("does not autoload a MAME 2003 Plus state before its first emulated frame", async () => {
+    vi.useFakeTimers();
+    const cleanup = installEmulatorJs423StateRestoreCompatibility(window, true);
+    let frame = 0;
+    let native: {print?: (message: string) => void; postMainLoop?: () => void} = {};
+    const loadedAt: number[] = [];
+    class Manager {
+      functions = {
+        saveStateInfo: () => "1|0|1",
+        loadState: () => {
+          loadedAt.push(frame);
+          window.setTimeout(() => {
+            native.print?.('[State] Loading state "game.state".');
+            native.postMainLoop?.();
+          }, 0);
+        },
+      };
+      FS = {unlink: () => undefined, writeFile: () => undefined};
+      getFrameNum() {return frame;}
+      toggleMainLoop(running: boolean) {
+        if (running && frame === 0) {window.setTimeout(() => {frame = 1;}, 10);}
+      }
+    }
+    Reflect.set(window, "EJS_GameManager", Manager);
+    Reflect.set(window, "EJS_Runtime", (config: typeof native) => {native = config;});
+    Reflect.get(window, "EJS_Runtime")({});
+    const manager = new Manager() as Manager & {loadExplicitStateAndWait: (state: Uint8Array) => Promise<void>};
+    const restored = manager.loadExplicitStateAndWait(Uint8Array.of(1));
+    await vi.runAllTimersAsync();
+    await restored;
+    expect(loadedAt).toEqual([1]);
+    cleanup();
+  });
+
   it("preserves configuration hooks installed before the deferred GameManager appears", () => {
     const cleanupConfig = installEmulatorJsRetroArchConfig(window, "fuse", true);
     const cleanupState = installEmulatorJs423StateRestoreCompatibility(window);

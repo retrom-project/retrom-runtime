@@ -1,20 +1,49 @@
 # Changelog
 
-## 0.19.0-rc.2
+## 0.21.0
 
 - Wait for MAME 2003 Plus to execute its first emulation frame before restoring. The core
   can serialize at frame zero but rejects automatic state loading at that point. Other
   cores retain serialization readiness, including cores with a zero diagnostic counter.
-- Advance the EmulatorJS Provider to 2.4.1-rc.4 and add Fuse, Gearcoleco, PrBoom, PUAE,
+- Advance the EmulatorJS Provider to 2.4.1 and add Fuse, Gearcoleco, PrBoom, PUAE,
   VICE x128, VICE x64sc, VICE xvic and Virtual Jaguar as single-file targets. Multi-disc
   switching stays disabled for these targets. VICE xvic and Virtual Jaguar pin independently
-  verified Retrom fork assets (VICE rc.4 and Virtual Jaguar rc.2); the other six retain the official 4.2.3 artifacts. Checkpoint restore keeps the 4.2.3 native-load
+  verified Retrom fork assets (VICE r1 and Virtual Jaguar r1); the other six retain the official 4.2.3 artifacts. Checkpoint restore keeps the 4.2.3 native-load
   observer active while intercepting its verbose native output before it reaches the browser
   console, and waits for the native load callback instead of counting frames. This avoids
   premature completion for large VICE and PUAE states. Fuse enables direct keyboard input
   and selects a Kempston joystick for the first controller port. Host exit also dispatches EmulatorJS's
   native exit lifecycle and waits for its bounded Wasm teardown, so a previous core cannot
   keep running while a saved session starts in a new instance.
+
+## 0.20.0
+
+- Add a ScummVM Target with selected-engine downloads, bounded persistent range files, native
+  capture/export, exact-slot restoration and final save handoff.
+- Pin the maintained ScummVM core release, including 105 engine plugins and the matching native detector.
+  Verify fixed release metadata, archive size/digest and the complete internal layout; reject local core
+  overrides in formal release builds.
+- Reject mounting immediately if the native engine exits before initialization completes.
+- Discover SDL3 controllers connected after startup or reconnected during play, including the native
+  Y/Escape and stick-to-mouse mappings.
+- Synchronize drawing dimensions during resize and pause, retaining WebGL pixels for readable save screenshots.
+
+- Extend native-save capabilities with explicit capture/export intent and exact-startup-restore support. Native synchronization defaults to exporting existing files, while explicit capture can be available before the first save exists.
+- Deliver validated final native saves with the common exit event, close live checkpoint operations immediately, and keep final payload bytes independent of engine cleanup.
+
+## 0.19.0
+
+- Add independent TIC-80 and FAKE-08 targets from current upstream mainline snapshots.
+- Provide verified cartridge/assets, standard controls, Canvas/WebAudio, lifecycle cleanup and bounded checkpoints.
+- Expose TIC-80 native pmem as GAME_SAVE with revision/acknowledgment; restore FAKE-08 execution and input-repeat state.
+- Pin immutable TIC-80 r1 and FAKE-08 r2 core releases with exact source commits and asset identities.
+- Restore FAKE-08 Lua sandbox bindings and suspend Eris collection until the restored object graph is complete; preserve resumed input and cartdata.
+
+
+## 0.18.1
+
+- Make `EXIT_REQUESTED` an optional lifecycle event instead of a core admission requirement. Existing adapters
+  that report observable core-initiated exits keep their current cleanup behavior.
 
 ## 0.18.0
 

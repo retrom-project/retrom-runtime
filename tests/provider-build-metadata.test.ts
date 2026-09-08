@@ -23,6 +23,15 @@ describe("Provider candidate and formal release identity", () => {
     expect(candidate).not.toContain("function sourceTree()");
   });
 
+  it("writes aggregate release identity only inside the authenticated formal release branch", async () => {
+    const script = await readFile(new URL("../scripts/build-release.mjs", import.meta.url), "utf8");
+    const formal = script.slice(script.indexOf("if (formalBuild) {"), script.indexOf("function assertFormalReleaseEnvironment"));
+    const write = 'await writeFile(new URL("retrom-runtime-release.json", output)';
+    expect(formal).toContain(write);
+    expect(formal.indexOf(write)).toBeGreaterThan(formal.indexOf("assertFormalReleaseEnvironment(commit"));
+    expect(script.split(write)).toHaveLength(2);
+  });
+
   it("keeps candidate metadata free of invented release identity", () => {
     const metadata = createProviderBuildMetadata(providers, "a".repeat(64));
     expect(Object.keys(metadata).sort()).toEqual(["providers", "schemaVersion", "sourceTreeSha256"]);

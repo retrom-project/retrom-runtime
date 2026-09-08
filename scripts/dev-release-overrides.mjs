@@ -1,6 +1,6 @@
 import { isAbsolute } from "node:path";
 
-export function parseDevReleaseOverrides(raw, releases) {
+export function parseDevReleaseOverrides(raw, releases, formal = false) {
   if (raw === undefined || raw === "") {return new Map();}
   let value;
   try {value = JSON.parse(raw);}
@@ -16,5 +16,6 @@ export function parseDevReleaseOverrides(raw, releases) {
     }
     overrides.set(id, directory);
   }
+  if (formal && overrides.size) {throw new Error("DEV_RELEASE_OVERRIDES_FORBIDDEN");}
   return overrides;
 }

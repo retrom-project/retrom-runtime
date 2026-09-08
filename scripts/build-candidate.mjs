@@ -4,6 +4,7 @@ import {cp, lstat, readFile, readdir, realpath, writeFile} from "node:fs/promise
 import { basename, dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
+import {loadProviderSources} from "./provider-sources.mjs";
 import {sourceTreeSha256} from "./provider-release.mjs";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
@@ -34,17 +35,29 @@ for (const core of spec.cores) {
     descriptorSha256: sha(await readFile(descriptorPath)), files: descriptor.files,
   });
 }
-const providerSources = JSON.parse(await readFile(join(root, "provider-sources.json"), "utf8"));
-const formalReleaseIds = new Set(providerSources.upstreamReleases.map((release) => release.id));
+const providerSources = await loadProviderSources(new URL("../", import.meta.url));
+const declaredSources = [...providerSources.upstreamReleases, ...providerSources.developmentInputs ?? []];
+const declaredIds = new Set(declaredSources.map((release) => release.id));
 const coreInputs = providerSources.upstreamReleases.map((release) => branchInputs.get(release.id) ?? ({
   id: release.id, mode: "formal", repository: release.repository, tag: release.tag,
   commit: release.commit, adapterAbi: release.adapterAbi,
   assets: release.assets.map((asset) => ({ filename: asset.filename, output: asset.output })),
 }));
 for (const identifier of branchInputs.keys()) {
-  if (!formalReleaseIds.has(identifier)) {
+  if (!declaredIds.has(identifier)) {
     throw new Error(`PFB_CANDIDATE_OUTPUT_INVALID:${identifier}`);
   }
+}
+for (const source of declaredSources) {
+  const branch = branchInputs.get(source.id);
+  if (branch && (branch.repository !== source.repository || branch.adapterAbi !== source.adapterAbi)) {
+    throw new Error(`PFB_CANDIDATE_OUTPUT_INVALID:${source.id}`);
+  }
+}
+for (const source of providerSources.developmentInputs ?? []) {
+  const branch = branchInputs.get(source.id);
+  if (!branch) {throw new Error(`UNPUBLISHED_CORE_INPUT:${source.id}`);}
+  coreInputs.push(branch);
 }
 run("npm", ["run", "build"]);
 const candidateEnvironment = {

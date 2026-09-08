@@ -115,7 +115,7 @@ export async function pinCurrentProviderRelease(input = {}) {
 
 function validRelease(value) {
   return exactKeys(value, ["commit", "repository", "tag"]) && value.repository === repository &&
-    /^[0-9a-f]{40}$/u.test(value.commit) && /^v(?:0|[1-9][0-9]*)\.(?:0|[1-9][0-9]*)\.(?:0|[1-9][0-9]*)$/u.test(value.tag);
+    /^[0-9a-f]{40}$/u.test(value.commit) && /^v(?:0|[1-9][0-9]*)\.(?:0|[1-9][0-9]*)\.(?:0|[1-9][0-9]*)(?:-rc\.[1-9][0-9]*)?$/u.test(value.tag);
 }
 
 function releaseMetadata(outputRoot, manifest, result) {

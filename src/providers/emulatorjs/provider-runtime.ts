@@ -34,6 +34,7 @@ import {
 } from "./discs.js";
 import {captureEmulatorJsScreenshot} from "./screenshot.js";
 import {createStartBarrier, startWhenAvailable, type StartBarrier} from "./lifecycle.js";
+import {installEmulatorJsRetroArchConfig} from "./retroarch-config.js";
 import {installEmulatorJs423StateRestoreCompatibility} from "./state-restore.js";
 import {createRetromDefaultControls, emulatorControlScheme} from "./default-controls.js";
 import {initializeEmulatorJsGamepads} from "./startup-gamepads.js";
@@ -89,6 +90,7 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
   private cleanupExternalFiles: (() => void) | null = null;
   private cleanupInputFilter: (() => void) | null = null;
   private inputFilter: RuntimeGamepadFilter | null = null;
+  private cleanupRetroArchConfig: () => void = () => undefined;
   private cleanupNetplayCompatibility: (() => void) | null = null;
   private netplayPort: EmulatorJsNetplayPort | null = null;
   private dosboxCompatibility: ReturnType<typeof installDOSBoxPureStateCompatibility> | null = null;
@@ -267,6 +269,11 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
     return () => this.listeners.delete(listener);
   }
 
+  private prepareRetroArchConfig(runtimeWindow: Window) {
+    this.cleanupRetroArchConfig = installEmulatorJsRetroArchConfig(runtimeWindow,
+      this.implementation.runtimeCore, Boolean(this.restorePayload) && this.implementation.release === "4.2.3");
+  }
+
   private async performMount(target: HTMLElement) {
     this.transition("MOUNTING");
     try {
@@ -284,6 +291,7 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
       this.createMountPoint(runtimeWindow);
       this.startBarrier = createStartBarrier();
       this.configure(runtimeWindow);
+      this.prepareRetroArchConfig(runtimeWindow);
       if (this.netplayProfile) {
         this.cleanupNetplayCompatibility = installEmulatorJs423NetplayCompatibility(runtimeWindow);
       }
@@ -297,7 +305,9 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
         this.cleanupExternalFiles = installExternalFileCompatibility(runtimeWindow);
       }
       if (this.restorePayload && this.implementation.release === "4.2.3") {
-        this.cleanupStateRestore = installEmulatorJs423StateRestoreCompatibility(runtimeWindow);
+        this.cleanupStateRestore = installEmulatorJs423StateRestoreCompatibility(
+          runtimeWindow, this.implementation.runtimeCore === "mame2003_plus",
+        );
       }
       if (this.implementation.release === "4.3.0-pre" && this.implementation.runtimeCore === "dosbox_pure") {
         this.dosboxCompatibility = installDOSBoxPureStateCompatibility(runtimeWindow);
@@ -361,7 +371,7 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
     runtimeWindow.EJS_disableBatchBootup = deferredDOSStart;
     runtimeWindow.EJS_language = "zh-CN";
     runtimeWindow.EJS_disableAutoLang = false;
-    runtimeWindow.EJS_DEBUG_XX = this.restorePayload !== null || this.envelope.session.mode === "NETPLAY";
+    runtimeWindow.EJS_DEBUG_XX = this.envelope.session.mode === "NETPLAY";
     runtimeWindow.EJS_EXPERIMENTAL_NETPLAY = false;
     runtimeWindow.EJS_threads = this.envelope.runtime.capabilities.requiresThreads;
     runtimeWindow.EJS_fullscreenOnLoaded = false;
@@ -479,11 +489,24 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
     return resourceValue;
   }
 
+  private async stopNativeInstance() {
+    const runtimeWindow = this.runtimeWindow;
+    const instance = this.instance;
+    if (!runtimeWindow || !instance?.callEvent) {return;}
+    const nativeExitAlreadyRequested = this.exitRequestedEmitted;
+    this.exitRequestedEmitted = true;
+    if (!nativeExitAlreadyRequested) {
+      try {instance.callEvent("exit");} catch { /* Continue bounded host cleanup after a native exit error. */ }
+    }
+    await new Promise<void>((resolve) => runtimeWindow.setTimeout(resolve, 1_100));
+  }
+
   private async performExit() {
     const preserveFailure = this.state === "FAILED";
     if (this.state === "MOUNTING") {this.startBarrier?.reject(contractError());}
     this.clearStartBarrier();
     this.host.signal.removeEventListener("abort", this.hostAbort);
+    await this.stopNativeInstance();
     if (this.runtimeWindow) {
       for (const timer of this.startupTimers) {this.runtimeWindow.clearTimeout(timer);}
     }
@@ -504,6 +527,8 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
     this.cleanupNetplayCompatibility?.();
     this.cleanupNetplayCompatibility = null;
     this.stopInputDiagnostics();
+    this.cleanupRetroArchConfig();
+    this.cleanupRetroArchConfig = () => undefined;
     this.cleanupInputFilter?.();
     this.cleanupInputFilter = null;
     this.inputFilter = null;

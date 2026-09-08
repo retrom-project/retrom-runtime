@@ -18,7 +18,7 @@ describe("EmulatorJS Provider Module V1", () => {
     expect({providerApiVersion, providerId, providerVersion}).toEqual({
       providerApiVersion: 1,
       providerId: "emulatorjs",
-      providerVersion: "2.3.2",
+      providerVersion: "2.4.1",
     });
     const envelope = launchEnvelope();
     vi.stubGlobal("__RETROM_PROVIDER_ASSET_INDEX__", {
@@ -90,6 +90,7 @@ describe("EmulatorJS Provider Module V1", () => {
     const loadExplicitStateAndWait = vi.fn(async () => undefined);
     const mounting = player.mount(document.createElement("div"));
     await vi.waitFor(() => expect(runtimeWindow.document.querySelector("script[data-retrom-loader]")).not.toBeNull());
+    expect(runtimeWindow.EJS_DEBUG_XX).toBe(false);
     runtimeWindow.EJS_emulator = {
       gameManager: {loadExplicitStateAndWait, toggleMainLoop}, paused: true,
     };
@@ -207,11 +208,13 @@ describe("EmulatorJS Provider Module V1", () => {
       .toContain(`/runtime/providers/emulatorjs/${bundleDigest}/assets/4.2.3/data/loader.js`);
 
     const toggleMainLoop = vi.fn();
+    const callEvent = vi.fn();
     const RuntimeUint8Array = runtimeWindow.Uint8Array as Uint8ArrayConstructor;
     const crossRealmState = new RuntimeUint8Array([1, 2]);
     runtimeWindow.EJS_emulator = {
       canvas: document.createElement("canvas"),
       gameManager: {getFrameNum: () => 42, getState: () => crossRealmState, toggleMainLoop},
+      callEvent,
       on: vi.fn(),
       paused: false,
       setVolume: vi.fn(),
@@ -231,7 +234,12 @@ describe("EmulatorJS Provider Module V1", () => {
     await player.resume();
     expect(toggleMainLoop).toHaveBeenLastCalledWith(true);
     expect(focus).toHaveBeenCalledWith({preventScroll: true});
-    await player.exit();
+    vi.useFakeTimers();
+    const exiting = player.exit();
+    await vi.advanceTimersByTimeAsync(1_100);
+    await exiting;
+    expect(callEvent).toHaveBeenCalledTimes(1);
+    expect(callEvent).toHaveBeenCalledWith("exit");
     expect(player.getState()).toBe("EXITED");
   });
 
@@ -479,6 +487,7 @@ describe("EmulatorJS Provider Module V1", () => {
     });
     const mounting = player.mount(document.createElement("div"));
     await vi.waitFor(() => expect(runtimeWindow.document.querySelector("script[data-retrom-loader]")).not.toBeNull());
+    expect(runtimeWindow.EJS_DEBUG_XX).toBe(true);
     expect(Object.getOwnPropertyDescriptor(runtimeWindow, "EJS_GameManager")?.set).toBeTypeOf("function");
     const publicInput = vi.fn();
     const nativeInput = vi.fn();

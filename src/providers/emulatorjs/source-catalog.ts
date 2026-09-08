@@ -1,5 +1,61 @@
 export const emulatorJsSourceCatalog = {
   schemaVersion: 1,
+  forks: [
+    {
+      "repository": "https://github.com/retrom-project/vice-libretro",
+      "tag": "retrom-core-g1b4309f4d56d-r1",
+      "commit": "515d625643e4b0fbc30f3ab185daab0e43331dd9",
+      "adapterAbi": "emulatorjs-state-v1",
+      "runtimeCore": "vice_xvic",
+      "assets": [
+        {
+          "filename": "vice_xvic-wasm.data",
+          "sha256": "8d77779568ff9ac2fe46f11ad6f37e39cc6be44dae337e0fb8cda4f29f283a49",
+          "sizeBytes": 1400563,
+          "url": "https://github.com/retrom-project/vice-libretro/releases/download/retrom-core-g1b4309f4d56d-r1/vice_xvic-wasm.data"
+        },
+        {
+          "filename": "rpg-runtime-release.json",
+          "sha256": "dc63426f1804edb9ca95a8417c68ec792c0ef52ec860ff1c0e99717415aeb8d9",
+          "sizeBytes": 629,
+          "url": "https://github.com/retrom-project/vice-libretro/releases/download/retrom-core-g1b4309f4d56d-r1/rpg-runtime-release.json"
+        },
+        {
+          "filename": "COPYING",
+          "sha256": "b8a2f73f743dc1a51aff23f1aacbca4b868564db52496fa3c0caba755bfd1eaf",
+          "sizeBytes": 17989,
+          "url": "https://github.com/retrom-project/vice-libretro/releases/download/retrom-core-g1b4309f4d56d-r1/COPYING"
+        }
+      ]
+    },
+    {
+      "repository": "https://github.com/retrom-project/virtualjaguar-libretro",
+      "tag": "retrom-core-3.6.1-r1",
+      "commit": "b86e2f0887968298695e3ad30cc1b9e83f108d00",
+      "adapterAbi": "emulatorjs-state-v1",
+      "runtimeCore": "virtualjaguar",
+      "assets": [
+        {
+          "filename": "virtualjaguar-wasm.data",
+          "sha256": "16b62c38e6921fb5b410ab507ba6bc77edcaccbba532ae4711b9521a4256ba6d",
+          "sizeBytes": 1199923,
+          "url": "https://github.com/retrom-project/virtualjaguar-libretro/releases/download/retrom-core-3.6.1-r1/virtualjaguar-wasm.data"
+        },
+        {
+          "filename": "rpg-runtime-release.json",
+          "sha256": "b9443f7fc635a091b9460773bb0261bd5c4a9b5cb5ed3162286553e173e6c742",
+          "sizeBytes": 634,
+          "url": "https://github.com/retrom-project/virtualjaguar-libretro/releases/download/retrom-core-3.6.1-r1/rpg-runtime-release.json"
+        },
+        {
+          "filename": "LICENSE",
+          "sha256": "8ceb4b9ee5adedde47b31e975c1d90c73ad27b6b165a1dcd80c7c545eb65b903",
+          "sizeBytes": 35147,
+          "url": "https://github.com/retrom-project/virtualjaguar-libretro/releases/download/retrom-core-3.6.1-r1/LICENSE"
+        }
+      ]
+    }
+  ],
   overrides: [
     {
       destination: "4.2.3/data/cores/mame2003-wasm.data",

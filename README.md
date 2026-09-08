@@ -5,6 +5,25 @@ VX, VX Ace, MV and MZ, ONS games powered by ONScripterYuri, KAG-based KiriKiri2 
 projects powered by Butterscotch, browser TyranoScript projects, Java ME JARs, ScummVM game projects and WASM-4 carts. It owns runtime lifecycle, adapters, checkpoint codecs, bridge assets and pinned core
 Release inputs. It does not know about a host application's users, database, review flow, storage or HTTP API.
 
+## EmulatorJS single-file cores
+
+The EmulatorJS Provider adds Fuse, Gearcoleco, PrBoom, PUAE, VICE x128/x64sc/xvic and
+Virtual Jaguar as separate single-file targets. These targets have no multi-disc or netplay
+capability. Their fixed input sources are declared in `src/providers/emulatorjs/source-catalog.ts`:
+six use the official 4.2.3 assets; only VICE xvic and Virtual Jaguar use Retrom fork releases.
+The fork records pin repository, annotated tag, commit, adapter ABI, archive, metadata and license.
+The downloaded metadata must agree with every pinned asset hash and size. `artifactSetSha256`
+for a fork target identifies that pinned metadata file. Hashes establish cache integrity;
+the release workflow and commit identify the build source.
+
+Fuse enables direct keyboard input and configures controller one as Kempston, with controller two
+disabled to avoid competing joystick ports. Its standard pad uses the libretro controls, including
+Space/Return shoulder buttons for keyboard-oriented title menus. Instant restore retains the
+minified 4.2.3 loader, enables native state diagnostics internally, and waits for the asynchronous
+native load callback and its error result. Exit runs EmulatorJS's native cleanup before disposal.
+New core admission still requires a real host import, preview, product launch, visible input
+response and checkpoint restore into a fresh instance; passing serialization alone is insufficient.
+
 ## EmulatorJS PSP
 
 The separate `emulatorjs` Provider declares its targets in `src/providers/emulatorjs/catalog.ts`.

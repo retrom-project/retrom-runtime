@@ -2,7 +2,7 @@
 
 ## 0.18.0
 
-- Advance the EmulatorJS Provider to 2.4.1-rc.2 and add Fuse, Gearcoleco, PrBoom, PUAE,
+- Advance the EmulatorJS Provider to 2.4.1-rc.3 and add Fuse, Gearcoleco, PrBoom, PUAE,
   VICE x128, VICE x64sc, VICE xvic and Virtual Jaguar as single-file targets. Multi-disc
   switching stays disabled for these targets. VICE xvic and Virtual Jaguar pin independently
   verified Retrom fork rc.2 assets; the other six retain the official 4.2.3 artifacts. Checkpoint restore keeps the 4.2.3 native-load

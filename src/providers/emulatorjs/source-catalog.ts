@@ -3,28 +3,28 @@ export const emulatorJsSourceCatalog = {
   forks: [
     {
       "repository": "https://github.com/retrom-project/vice-libretro",
-      "tag": "retrom-core-g1b4309f4d56d-r1-rc.2",
-      "commit": "9bb2d8a9aab99b80b66a666bc24b0880170c4bc5",
+      "tag": "retrom-core-g1b4309f4d56d-r1-rc.4",
+      "commit": "515d625643e4b0fbc30f3ab185daab0e43331dd9",
       "adapterAbi": "emulatorjs-state-v1",
       "runtimeCore": "vice_xvic",
       "assets": [
         {
           "filename": "vice_xvic-wasm.data",
-          "sha256": "beca7386b99240e7f74a16e5cba9f4578eefc58ac560a5c7dd5b0b9b145e1d7b",
-          "sizeBytes": 1400115,
-          "url": "https://github.com/retrom-project/vice-libretro/releases/download/retrom-core-g1b4309f4d56d-r1-rc.2/vice_xvic-wasm.data"
+          "sha256": "0829fe9e5cadd4692535809f2e5d02d751b28cf6a622b206413630180e1e256e",
+          "sizeBytes": 1400297,
+          "url": "https://github.com/retrom-project/vice-libretro/releases/download/retrom-core-g1b4309f4d56d-r1-rc.4/vice_xvic-wasm.data"
         },
         {
           "filename": "rpg-runtime-release.json",
-          "sha256": "545b58275f9b26c0000521d3e835da0f0d83811db1207bb518b24d97b8a22f0d",
+          "sha256": "416b4490d217995902c75f421f0a50cb32ed8785fb34376c2b648734239df9e4",
           "sizeBytes": 634,
-          "url": "https://github.com/retrom-project/vice-libretro/releases/download/retrom-core-g1b4309f4d56d-r1-rc.2/rpg-runtime-release.json"
+          "url": "https://github.com/retrom-project/vice-libretro/releases/download/retrom-core-g1b4309f4d56d-r1-rc.4/rpg-runtime-release.json"
         },
         {
           "filename": "COPYING",
           "sha256": "b8a2f73f743dc1a51aff23f1aacbca4b868564db52496fa3c0caba755bfd1eaf",
           "sizeBytes": 17989,
-          "url": "https://github.com/retrom-project/vice-libretro/releases/download/retrom-core-g1b4309f4d56d-r1-rc.2/COPYING"
+          "url": "https://github.com/retrom-project/vice-libretro/releases/download/retrom-core-g1b4309f4d56d-r1-rc.4/COPYING"
         }
       ]
     },

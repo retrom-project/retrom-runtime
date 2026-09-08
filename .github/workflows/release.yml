@@ -25,13 +25,17 @@ jobs:
           set -euo pipefail
           package_version=$(node -p "require('./package.json').version")
           test "$GITHUB_REF_NAME" = "v${package_version}"
-          git fetch --force origin \
-            "refs/tags/$GITHUB_REF_NAME:refs/tags/$GITHUB_REF_NAME"
-          test "$(git cat-file -t "refs/tags/$GITHUB_REF_NAME")" = tag
-          test "$(git rev-list -n 1 "refs/tags/$GITHUB_REF_NAME")" = "$GITHUB_SHA"
+          remote_tag_ref="refs/retrom-release/$GITHUB_REF_NAME"
+          git fetch origin "refs/tags/$GITHUB_REF_NAME:$remote_tag_ref"
+          test "$(git cat-file -t "$remote_tag_ref")" = tag
+          test "$(git rev-list -n 1 "$remote_tag_ref")" = "$GITHUB_SHA"
           test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
           git fetch --no-tags origin '+refs/heads/master:refs/remotes/origin/master'
-          git merge-base --is-ancestor "$GITHUB_SHA" origin/master
+          if [[ "$package_version" =~ -rc\.[1-9][0-9]*$ ]]; then
+            echo "Publishing an immutable release candidate; stable branch promotion remains separate."
+          else
+            git merge-base --is-ancestor "$GITHUB_SHA" origin/master
+          fi
       - run: npm run lint
       - run: npm run typecheck
       - run: npm test
@@ -41,4 +45,8 @@ jobs:
       - name: Publish GitHub Release
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh release create "$GITHUB_REF_NAME" release/retrom-runtime-*.tar.gz release/xxxsen-retrom-runtime-*.tgz release/retrom-runtime-release.json release/providers/*/*-provider-*.tar.gz release/providers/provider-build.json release/providers/provider-release.json --generate-notes --verify-tag
+        run: |
+          set -euo pipefail
+          flags=()
+          if [[ "$GITHUB_REF_NAME" =~ -rc\.[1-9][0-9]*$ ]]; then flags+=(--prerelease); fi
+          gh release create "$GITHUB_REF_NAME" release/retrom-runtime-*.tar.gz release/xxxsen-retrom-runtime-*.tgz release/retrom-runtime-release.json release/providers/*/*-provider-*.tar.gz release/providers/provider-build.json release/providers/provider-release.json --generate-notes --verify-tag "${flags[@]}"

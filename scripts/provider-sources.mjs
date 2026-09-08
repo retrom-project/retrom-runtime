@@ -1,4 +1,5 @@
 import {validScummvmSource} from "./scummvm-release.mjs";
+import {validScummvmRelease} from "./scummvm-published-release.mjs";
 import { validJ2meRelease } from "./j2me-release.mjs";
 import { createHash } from "node:crypto";
 import { readFile } from "node:fs/promises";
@@ -25,7 +26,7 @@ export function validateProviderSources(sources) {
     if (!release?.id || releases.has(release.id) ||
       !/^https:\/\/github\.com\/retrom-project\/[A-Za-z0-9._-]+$/u.test(release.repository) ||
       !/^[0-9a-f]{40}$/u.test(release.commit) ||
-      !(release.archive ? validJ2meRelease(release) : validCoreRelease(release))) {
+      !(release.id === "scummvm" ? validScummvmRelease(release) : release.archive ? validJ2meRelease(release) : validCoreRelease(release))) {
       throw new Error("PROVIDER_SOURCES_INVALID");
     }
     releases.set(release.id, release);

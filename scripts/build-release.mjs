@@ -1,5 +1,6 @@
 import {assertScummvmCandidateMode} from "./scummvm-release.mjs";
 import {stageScummvmCandidate} from "./scummvm-candidate-stage.mjs";
+import {asScummvmCandidateSource, unpackScummvmRelease} from "./scummvm-published-release.mjs";
 import { unpackJ2meRelease } from "./j2me-release.mjs";
 import { spawnSync } from "node:child_process";
 import { access, mkdir, readFile, cp, rm, writeFile } from "node:fs/promises";
@@ -22,6 +23,7 @@ assertScummvmCandidateMode(developmentInputs, process.env.RETROM_PFB_CANDIDATE_B
 const devReleaseOverrides = parseDevReleaseOverrides(
   process.env.RETROM_RUNTIME_DEV_RELEASE_OVERRIDES,
   [...sources.upstreamReleases, ...developmentInputs],
+  formalBuild,
 );
 const commit = releaseCommit();
 const stage = new URL("../release/stage/", import.meta.url);
@@ -38,6 +40,11 @@ for (const asset of sources.localAssets) {
 }
 for (const release of sources.upstreamReleases) {
   const devRoot = devReleaseOverrides.get(release.id);
+  if (release.id === "scummvm" && devRoot) {
+    assertScummvmCandidateMode([release], process.env.RETROM_PFB_CANDIDATE_BUILD === "1", formalBuild);
+    await stageScummvmCandidate(asScummvmCandidateSource(release), devRoot, root, stage);
+    continue;
+  }
   let archiveAssets;
   if (!devRoot) {
     const metadata = await download(release.metadataUrl, 65536);
@@ -45,7 +52,9 @@ for (const release of sources.upstreamReleases) {
     if (release.archive) {
       const bytes = await download(`${release.repository}/releases/download/${release.tag}/${release.archive.filename}`,
         release.archive.sizeBytes);
-      archiveAssets = unpackJ2meRelease(release, descriptor, bytes);
+      archiveAssets = release.id === "scummvm"
+        ? unpackScummvmRelease(release, descriptor, bytes, JSON.parse(await readFile(new URL(release.archive.layout, root), "utf8")))
+        : unpackJ2meRelease(release, descriptor, bytes);
     } else {validateUpstreamMetadata(release, descriptor);}
   }
   for (const asset of release.assets) {

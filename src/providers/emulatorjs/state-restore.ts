@@ -16,15 +16,15 @@ type StateManager = {
 type ManagerConstructor = {prototype?: StateManager};
 type RuntimeConfig = {
   print?: (...args: unknown[]) => void;
+  postMainLoop?: (...args: unknown[]) => void;
   printErr?: (...args: unknown[]) => void;
   [name: string]: unknown;
 };
 type RuntimeFactory = ((config: RuntimeConfig) => unknown) & {retromStateRestoreHook?: boolean};
 type RestoreWindow = Window & {EJS_GameManager?: ManagerConstructor; EJS_Runtime?: RuntimeFactory};
 type PendingLoad = {
-  reject: (error: Error) => void;
-  resolve: () => void;
-  timer: number;
+  finish: (error?: Error) => void;
+  observed: boolean;
 };
 type PendingDelay = {reject: (error: Error) => void; timer: number};
 
@@ -70,6 +70,7 @@ function createStateLoader(dependencies: {
     }
     const deadline = dependencies.target.performance.now() + timeoutMs;
     await waitForSerializable(this, deadline, dependencies.target, dependencies.isActive, dependencies.delay);
+    this.toggleMainLoop(false);
     const completion = dependencies.registerLoad(Math.max(1, deadline - dependencies.target.performance.now()));
     try {
       try {fileSystem.unlink(statePath);} catch { /* absent before the first load */ }
@@ -88,7 +89,7 @@ function createStateLoader(dependencies: {
 
 export function installEmulatorJs423StateRestoreCompatibility(playerWindow: Window = window) {
   const target = playerWindow as RestoreWindow;
-  const pendingLoads: PendingLoad[] = [];
+  const pendingLoads = new Set<PendingLoad>();
   const pendingDelays = new Set<PendingDelay>();
   const restorePrototypes: Array<() => void> = [];
   let active = true;
@@ -103,32 +104,26 @@ export function installEmulatorJs423StateRestoreCompatibility(playerWindow: Wind
   const registerLoad = (milliseconds: number) => {
     let pending!: PendingLoad;
     const promise = new Promise<void>((resolve, reject) => {
+      const timer = target.setTimeout(() => pending.finish(
+        new Error("PLAYER_SAVE_STATE_RESTORE_TIMEOUT")), milliseconds);
       pending = {
-        reject,
-        resolve,
-        timer: target.setTimeout(() => finishLoad(pending,
-          new Error("PLAYER_SAVE_STATE_RESTORE_TIMEOUT")), milliseconds),
+        observed: false,
+        finish(error) {
+          if (!pendingLoads.delete(pending)) {return;}
+          target.clearTimeout(timer);
+          if (error) {reject(error);} else {resolve();}
+        },
       };
-      pendingLoads.push(pending);
+      pendingLoads.add(pending);
     });
-    return {cancel: () => finishLoad(pending), promise};
-  };
-  const finishLoad = (pending: PendingLoad, error?: Error) => {
-    const index = pendingLoads.indexOf(pending);
-    if (index < 0) {return;}
-    pendingLoads.splice(index, 1);
-    target.clearTimeout(pending.timer);
-    if (error) {pending.reject(error);} else {pending.resolve();}
+    return {cancel: () => pending.finish(), promise};
   };
   const observeNativeLog = (args: unknown[]) => {
     const message = args.map(String).join(" ");
     if (!message.includes("[State]") || !message.includes("game.state")) {return;}
-    const pending = pendingLoads[0];
-    if (!pending) {return;}
-    if (/failed/iu.test(message)) {
-      target.queueMicrotask(() => finishLoad(pending, new Error("PLAYER_SAVE_STATE_RESTORE_FAILED")));
-    } else if (/loading state/iu.test(message)) {
-      target.queueMicrotask(() => finishLoad(pending));
+    for (const pending of pendingLoads) {
+      if (/failed/iu.test(message)) {pending.finish(new Error("PLAYER_SAVE_STATE_RESTORE_FAILED"));}
+      else if (/loading state/iu.test(message)) {pending.observed = true;}
     }
   };
   const patchManager = (constructor: ManagerConstructor | undefined) => {
@@ -164,8 +159,15 @@ export function installEmulatorJs423StateRestoreCompatibility(playerWindow: Wind
     const wrapped = function (this: unknown, config: RuntimeConfig) {
       return Reflect.apply(factory, this, [{
         ...config,
-        print: (...args: unknown[]) => {config?.print?.(...args); observeNativeLog(args);},
-        printErr: (...args: unknown[]) => {config?.printErr?.(...args); observeNativeLog(args);},
+        print: (...args: unknown[]) => {observeNativeLog(args);},
+        printErr: (...args: unknown[]) => {observeNativeLog(args);},
+        postMainLoop: (...args: unknown[]) => {
+          config?.postMainLoop?.(...args);
+          // The native task reads large states over multiple loops. Its loading
+          // message precedes unserialize; only finish after that callback returns,
+          // allowing a subsequent native failure message to reject the restore.
+          for (const pending of pendingLoads) {if (pending.observed) {pending.finish();}}
+        },
       }]);
     } as RuntimeFactory;
     Object.defineProperty(wrapped, "retromStateRestoreHook", {value: true});
@@ -208,9 +210,6 @@ export function installEmulatorJs423StateRestoreCompatibility(playerWindow: Wind
       pending.reject(new Error("PLAYER_SESSION_ENDED"));
     }
     pendingDelays.clear();
-    for (const pending of pendingLoads.splice(0)) {
-      target.clearTimeout(pending.timer);
-      pending.reject(new Error("PLAYER_SESSION_ENDED"));
-    }
+    for (const pending of pendingLoads) {pending.finish(new Error("PLAYER_SESSION_ENDED"));}
   };
 }

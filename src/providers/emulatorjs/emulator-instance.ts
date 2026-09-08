@@ -45,6 +45,7 @@ export type EjsInstance = EmulatorDiscInstance & EmulatorNativeSettingsInstance 
   takeScreenshot?: (source: string, format: string, upscale: number) => Promise<{blob?: Blob; screenshot?: unknown; format: string}>;
   downloadType?: {rom?: {dontExtractIfCore?: string[]}};
   on?: (event: string, callback: (...args: unknown[]) => void) => void;
+  callEvent?: (event: string, data?: unknown) => number;
 };
 
 export type EjsWindow = Window & {

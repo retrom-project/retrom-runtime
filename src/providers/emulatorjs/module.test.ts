@@ -208,11 +208,13 @@ describe("EmulatorJS Provider Module V1", () => {
       .toContain(`/runtime/providers/emulatorjs/${bundleDigest}/assets/4.2.3/data/loader.js`);
 
     const toggleMainLoop = vi.fn();
+    const callEvent = vi.fn();
     const RuntimeUint8Array = runtimeWindow.Uint8Array as Uint8ArrayConstructor;
     const crossRealmState = new RuntimeUint8Array([1, 2]);
     runtimeWindow.EJS_emulator = {
       canvas: document.createElement("canvas"),
       gameManager: {getFrameNum: () => 42, getState: () => crossRealmState, toggleMainLoop},
+      callEvent,
       on: vi.fn(),
       paused: false,
       setVolume: vi.fn(),
@@ -232,7 +234,12 @@ describe("EmulatorJS Provider Module V1", () => {
     await player.resume();
     expect(toggleMainLoop).toHaveBeenLastCalledWith(true);
     expect(focus).toHaveBeenCalledWith({preventScroll: true});
-    await player.exit();
+    vi.useFakeTimers();
+    const exiting = player.exit();
+    await vi.advanceTimersByTimeAsync(1_100);
+    await exiting;
+    expect(callEvent).toHaveBeenCalledTimes(1);
+    expect(callEvent).toHaveBeenCalledWith("exit");
     expect(player.getState()).toBe("EXITED");
   });
 

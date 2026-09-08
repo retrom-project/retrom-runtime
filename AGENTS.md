@@ -6,7 +6,7 @@
 
 - `src/` 实现 Provider declaration、Provider Module V1、运行时生命周期、Target 私有实现、checkpoint codec 与宿主无关的 Envelope 校验。
 - `assets/` 只保存项目自有 bridge 与小型文本资产；不得保存第三方核心源码、源码补丁或构建产物。
-- `src/providers/*/catalog.ts` 生成的 Provider declaration 是 Target、能力、checkpoint contract 与运行文件的唯一机器事实源；`provider-sources.json` 只记录第三方上游/本地构建来源，不能声明 Target 或宿主路由。
+- `src/providers/*/catalog.ts` 生成的 Provider declaration 是 Target、能力、checkpoint contract 与运行文件的唯一机器事实源；`provider-sources.json`（retrom-runtime）和 `src/providers/emulatorjs/source-catalog.ts`（EmulatorJS）只记录第三方上游/本地构建来源，不能声明 Target 或宿主路由。
 - 本仓库不得编译第三方核心。第三方核心的源码修改、构建脚本、质量门禁和 Release 全部由对应 fork 的
   `retrom/<baseline>` 分支维护（J2ME 原创集成层使用 `main`）；本仓库只聚合固定 fork tag/commit 的 Release 资产并提供统一接口。
 - `tests/` 和与源码同目录的 `*.test.ts` 覆盖运行时行为；宿主产品的导入、发布和权限测试留在宿主仓库。
@@ -15,7 +15,7 @@
 ## 工作方式
 
 1. 修改行为前先补能在旧行为失败的回归测试。
-2. 新增第三方核心时先在独立 fork 完成源码、构建和 Release，再更新 `provider-sources.json` 并在 Provider declaration 增加独立 Target；不得在本仓库临时加入源码构建、向 candidate 注入 Target 或使用默认 fallback。
+2. 新增第三方核心时先在独立 fork 完成源码、构建和 Release，再更新所属 Provider 的来源清单并在 Provider declaration 增加独立 Target；不得在本仓库临时加入源码构建、向 candidate 注入 Target 或使用默认 fallback。
 3. 保持配置显式、错误码稳定、生命周期可清理；不为推测风险增加复杂框架。
 4. 第三方版本必须固定 repository、tag/commit、asset 文件名和 adapter ABI；不得使用 `latest` 或浮动分支。
 5. 不提交第三方游戏、RTP、运行时二进制、凭据或本机缓存。

@@ -127,7 +127,9 @@ describe("independent package boundary", () => {
     expect(quality).toContain("npm run release:build");
     expect(quality).toContain("RETROM_PROVIDER_BUILD_MODE: candidate");
     const releaseWorkflow = await readFile(join(root, ".github/workflows/release.yml"), "utf8");
-    expect(releaseWorkflow).toContain('git cat-file -t "refs/tags/$GITHUB_REF_NAME"');
+    expect(releaseWorkflow).toContain('git fetch origin "refs/tags/$GITHUB_REF_NAME:$remote_tag_ref"');
+    expect(releaseWorkflow).toContain('git cat-file -t "$remote_tag_ref"');
+    expect(releaseWorkflow).toContain('git rev-list -n 1 "$remote_tag_ref"');
     expect(releaseWorkflow).toContain("RETROM_PROVIDER_BUILD_MODE: release");
     const instructions = await readFile(join(root, "AGENTS.md"), "utf8");
     expect(instructions).toContain("不得编译第三方核心");

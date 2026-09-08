@@ -355,3 +355,13 @@ The provider pins immutable core releases from the maintained upstream snapshots
 TIC-80 `retrom-core-g4aba09c98f1e-r1` and FAKE-08 `retrom-core-g814991a2571a-r2`.
 `provider-sources.json` records each release's exact repository, tag commit, asset filenames and ABI.
 Core builds remain owned by the forks; runtime builds download and verify the published release identities.
+
+### Optional input diagnostics
+
+Provider Module V1 exposes optional `startInputDiagnostics()` with bounded `read`, `clear` and idempotent `stop`.
+It observes existing input events, gamepad reads and adapter delivery boundaries only while enabled. It never polls
+extra gamepad frames, synthesizes inputs or pauses/resumes a game. The Host may refresh snapshots at up to 10 Hz.
+The history retains 64 transitions; gamepad values are quantized for diagnostics only. Unsupported observation points
+remain unavailable and `coreRead` is always false: an input API call is not evidence that a game acted on it.
+EmulatorJS delivery observation applies to single-player; MV/MZ use the existing isolated bridge STATUS cadence.
+Other inaccessible isolated frames explicitly remain unavailable. Sessions are cleaned up on disable and exit.

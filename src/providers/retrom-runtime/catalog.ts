@@ -32,6 +32,10 @@ const isolatedCapabilities = capabilities(true, true, true);
 const wasm4Capabilities = capabilities(true, true, false);
 
 const adapters = [
+  defineAdapter({id: "tic80-web", kind: "TIC80_WEB", abi: "tic80-pmem-v1",
+    capabilities: capabilities(true, true, true),
+    checkpoint: {writeFormat: "tic80-pmem-v1", readFormats: ["tic80-pmem-v1"], semantics: "GAME_SAVE"}}),
+  adapter("fake08-web", "FAKE08_WEB", "fake08-state-v1", "fake08-state-v1", capabilities(true, true, true)),
   adapter("butterscotch-web", "BUTTERSCOTCH_WEB", "butterscotch-checkpoint-v2",
     "butterscotch-checkpoint-v2", standardCapabilities),
   adapter("easyrpg-web", "EASYRPG_WEB", "easyrpg-save", "easyrpg-save-bundle-v1", rpgCapabilities),
@@ -58,6 +62,8 @@ const targets = [
     ["assets/butterscotch/butterscotch.mjs", "assets/butterscotch/butterscotch.wasm",
       "assets/butterscotch/worker.mjs"],
   ),
+  target("fake08", "PICO-8 (FAKE-08)", "fake08-web", noOptionsSchema, false, "SAME_ORIGIN_BLANK", "ROM_BLOB",
+    4194380, ["assets/fake08/fake08-retrom.mjs", "assets/fake08/fake08-retrom.wasm"]),
   target(
     "j2me", "Java ME", "j2me-minijvm-web", noOptionsSchema,
     true, "SAME_ORIGIN_BLANK", "ROM_BLOB", 2 * 1024 * 1024,
@@ -83,6 +89,8 @@ const targets = [
   mkxpTarget("rpgmaker-vx", "RPG Maker VX", 2),
   mkxpTarget("rpgmaker-vx-ace", "RPG Maker VX Ace", 3),
   mkxpTarget("rpgmaker-xp", "RPG Maker XP", 1),
+  target("tic80", "TIC-80", "tic80-web", noOptionsSchema, false, "SAME_ORIGIN_BLANK", "ROM_BLOB",
+    1100, ["assets/tic80/tic80-retrom.mjs", "assets/tic80/tic80-retrom.wasm"]),
   target(
     "tyranoscript", "TyranoScript", "tyranoscript-web", noOptionsSchema, false,
     "ISOLATED_ORIGIN_RESOURCE", "ISOLATED_WEB", 32 * 1024 * 1024,
@@ -98,7 +106,7 @@ export const retromRuntimeProviderDefinition = defineProvider({
   adapters,
   providerApiVersion: 1,
   providerId: "retrom-runtime",
-  providerVersion: "0.18.1",
+  providerVersion: "0.19.0",
   targets,
 });
 

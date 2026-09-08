@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.19.0
+
+- Add independent TIC-80 and FAKE-08 targets from current upstream mainline snapshots.
+- Provide verified cartridge/assets, standard controls, Canvas/WebAudio, lifecycle cleanup and bounded checkpoints.
+- Expose TIC-80 native pmem as GAME_SAVE with revision/acknowledgment; restore FAKE-08 execution and input-repeat state.
+- Pin immutable TIC-80 r1 and FAKE-08 r2 core releases with exact source commits and asset identities.
+- Restore FAKE-08 Lua sandbox bindings and suspend Eris collection until the restored object graph is complete; preserve resumed input and cartdata.
+
+
 ## 0.18.1
 
 - Make `EXIT_REQUESTED` an optional lifecycle event instead of a core admission requirement. Existing adapters

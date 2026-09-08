@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "packageName": "@xxxsen/retrom-runtime",
-  "packageVersion": "0.18.1",
+  "packageVersion": "0.19.0",
   "publicApiVersion": 2,
   "upstreamReleases": [
     {
@@ -262,6 +262,62 @@
           "maxSizeBytes": 65536
         }
       ]
+    },
+    {
+      "id": "tic80",
+      "repository": "https://github.com/retrom-project/TIC-80",
+      "commit": "f5ffc9efd32ccd3a91bcaf1037b542241f79a7d6",
+      "adapterAbi": "tic80-pmem-v1",
+      "assets": [
+        {
+          "filename": "tic80-retrom.mjs",
+          "output": "runtime/tic80/tic80-retrom.mjs",
+          "maxSizeBytes": 1048576,
+          "url": "https://github.com/retrom-project/TIC-80/releases/download/retrom-core-g4aba09c98f1e-r1/tic80-retrom.mjs"
+        },
+        {
+          "filename": "tic80-retrom.wasm",
+          "output": "runtime/tic80/tic80-retrom.wasm",
+          "maxSizeBytes": 8388608,
+          "url": "https://github.com/retrom-project/TIC-80/releases/download/retrom-core-g4aba09c98f1e-r1/tic80-retrom.wasm"
+        },
+        {
+          "filename": "LICENSES.txt",
+          "output": "licenses/tic80/LICENSES.txt",
+          "maxSizeBytes": 2097152,
+          "url": "https://github.com/retrom-project/TIC-80/releases/download/retrom-core-g4aba09c98f1e-r1/LICENSES.txt"
+        }
+      ],
+      "tag": "retrom-core-g4aba09c98f1e-r1",
+      "metadataUrl": "https://github.com/retrom-project/TIC-80/releases/download/retrom-core-g4aba09c98f1e-r1/rpg-runtime-release.json"
+    },
+    {
+      "id": "fake08",
+      "repository": "https://github.com/retrom-project/fake-08",
+      "commit": "e59b87a737e705f1bb880134bbe74253c90eeb7a",
+      "adapterAbi": "fake08-state-v1",
+      "assets": [
+        {
+          "filename": "fake08-retrom.mjs",
+          "output": "runtime/fake08/fake08-retrom.mjs",
+          "maxSizeBytes": 1048576,
+          "url": "https://github.com/retrom-project/fake-08/releases/download/retrom-core-g814991a2571a-r2/fake08-retrom.mjs"
+        },
+        {
+          "filename": "fake08-retrom.wasm",
+          "output": "runtime/fake08/fake08-retrom.wasm",
+          "maxSizeBytes": 8388608,
+          "url": "https://github.com/retrom-project/fake-08/releases/download/retrom-core-g814991a2571a-r2/fake08-retrom.wasm"
+        },
+        {
+          "filename": "LICENSES.txt",
+          "output": "licenses/fake08/LICENSES.txt",
+          "maxSizeBytes": 2097152,
+          "url": "https://github.com/retrom-project/fake-08/releases/download/retrom-core-g814991a2571a-r2/LICENSES.txt"
+        }
+      ],
+      "tag": "retrom-core-g814991a2571a-r2",
+      "metadataUrl": "https://github.com/retrom-project/fake-08/releases/download/retrom-core-g814991a2571a-r2/rpg-runtime-release.json"
     }
   ],
   "localAssets": [

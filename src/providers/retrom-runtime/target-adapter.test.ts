@@ -1,3 +1,4 @@
+import {mountFantasyConsole} from "../../fantasy-console/adapter.js";
 import {beforeEach, describe, expect, it, vi} from "vitest";
 import {mountEasyRpg} from "../../easyrpg/adapter.js";
 import {mountMkxp} from "../../mkxp/adapter.js";
@@ -18,6 +19,7 @@ vi.mock("../../kirikiri/adapter.js", () => ({mountKirikiri2: vi.fn()}));
 vi.mock("../../butterscotch/adapter.js", () => ({mountButterscotch: vi.fn()}));
 vi.mock("../../tyranoscript/adapter.js", () => ({mountTyranoScript: vi.fn()}));
 vi.mock("../../wasm4/adapter.js", () => ({mountWasm4: vi.fn()}));
+vi.mock("../../fantasy-console/adapter.js", () => ({mountFantasyConsole: vi.fn()}));
 beforeEach(() => {vi.clearAllMocks();});
 
 const assetIndex = {
@@ -33,6 +35,14 @@ function context(): TargetMountContext {
 }
 
 describe("Provider to core-private parameters", () => {
+  it.each(["tic80", "fake08"])("passes verified cartridge identity and cancellation for %s", async (id) => {
+    const request = targetEnvelope(id), options = {...context(), signal: new AbortController().signal, reportFailure: vi.fn()};
+    const target = document.createElement("div");
+    await mountTargetAdapter(request, target, options);
+    expect(mountFantasyConsole).toHaveBeenCalledWith({core: id, contentDigest: "a".repeat(64),
+      cartSizeBytes: 128, cartUrl: "/runtime/content/game/game.jar", runtimeBaseUrl: request.runtime.runtimeBaseUrl,
+      assetIndex}, target, window, null, options.reportProgress, options.reportFailure, options.signal);
+  });
   it.each([["rpgmaker-2000", "rpg2k"], ["rpgmaker-2003", "rpg2k3"]])(
     "constructs only the EasyRPG parameters for %s", async (id, engineMode) => {
       const request = targetEnvelope(id);

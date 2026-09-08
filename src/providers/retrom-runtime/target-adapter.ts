@@ -1,3 +1,4 @@
+import {mountFantasyConsole} from "../../fantasy-console/adapter.js";
 import {mountJ2me} from "../../j2me/adapter.js";
 import {mountButterscotch} from "../../butterscotch/adapter.js";
 import {mountEasyRpg} from "../../easyrpg/adapter.js";
@@ -55,6 +56,10 @@ export function mountTargetAdapter(
   case "J2ME_MINIJVM_WEB":
     return mountJ2me(parameters.j2me(envelope), target, frameWindow, restorePayload, reportProgress,
       reportExitRequested, context.reportFailure ?? (() => undefined), context.signal);
+  case "TIC80_WEB":
+  case "FAKE08_WEB":
+    return mountFantasyConsole(parameters.fantasy(envelope, context.assetIndex), target, frameWindow,
+      restorePayload, reportProgress, context.reportFailure ?? (() => undefined), context.signal);
   case "WASM4_WEB":
     return mountWasm4(parameters.wasm4(envelope), target, frameWindow, restorePayload, reportProgress);
   default: throw new Error("PROVIDER_LAUNCH_REQUEST_INVALID");

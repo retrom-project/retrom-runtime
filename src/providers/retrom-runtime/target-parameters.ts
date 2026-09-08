@@ -1,3 +1,4 @@
+import type {FantasyParameters} from "../../fantasy-console/core.js";
 import type {J2meParameters} from "../../j2me/parameters.js";
 import type {FileTreeSource, SeekableBlobSource} from "../../contract.js";
 import type {AssetIndexV1, LaunchEnvelopeV1, RuntimeResourceV1} from "../../provider/module-api.js";
@@ -120,6 +121,14 @@ export function j2me(envelope: LaunchEnvelopeV1): J2meParameters {
   const game = resource(envelope, "game", "ROM_BLOB");
   return {sessionId: envelope.session.id, contentDigest: game.sha256, jarSizeBytes: game.sizeBytes,
     jarUrl: game.url, runtimeBaseUrl: assetBase(envelope, "j2me")};
+}
+
+export function fantasy(envelope: LaunchEnvelopeV1, assetIndex: AssetIndexV1): FantasyParameters {
+  const core = envelope.runtime.targetId;
+  if (core !== "tic80" && core !== "fake08") {invalidRequest();}
+  const game = resource(envelope, "game", "ROM_BLOB");
+  return {core, cartSizeBytes: game.sizeBytes, contentDigest: game.sha256, cartUrl: game.url,
+    runtimeBaseUrl: envelope.runtime.runtimeBaseUrl, assetIndex};
 }
 
 export function wasm4(envelope: LaunchEnvelopeV1): Wasm4Parameters {

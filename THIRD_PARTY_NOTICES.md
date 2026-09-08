@@ -15,6 +15,8 @@ Release archives aggregate the following independently licensed components:
 - J2ME Web — includes miniJVM (MIT/GPL-2.0), FreeJ2ME Plus (GPL-3.0-or-later), FFmpeg (LGPL-2.1-or-later),
   and the components detailed in the bundled `licenses/j2me/THIRD_PARTY_NOTICES.md`. The FreeJ2ME miniJVM
   adapter has no explicit upstream license; the upstream notice retains that redistribution limitation.
+- TIC-80 — MIT — <https://github.com/retrom-project/TIC-80>; bundled `licenses/tic80/LICENSES.txt` contains upstream and dependency license texts.
+- FAKE-08 — MIT — <https://github.com/retrom-project/fake-08>; bundled `licenses/fake08/LICENSES.txt` includes z8lua/Eris and other dependency notices.
 - WASM-4 — ISC — <https://github.com/retrom-project/wasm4>
 
 The TyranoScript engine itself is supplied by each game project and is not included in this aggregate release.

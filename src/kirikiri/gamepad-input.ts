@@ -1,3 +1,4 @@
+import {inputObserver} from "../provider/input-observations.js";
 const axisDeadZone = 0.2;
 const buttonPressThreshold = 0.5;
 const cursorSpeedPixelsPerMs = 0.75;
@@ -192,4 +193,8 @@ function dispatchMouse(
     clientX: bounds.left + position.x * bounds.width,
     clientY: bounds.top + position.y * bounds.height,
   }));
+  if (type === "mousedown" || type === "mouseup") {
+    inputObserver(frameWindow)?.record({device: "gamepad", control: button === 0 ? "Button 0" : "Button 1",
+      value: type === "mousedown" ? 1 : 0, stage: "DELIVERED", target: button === 0 ? "MouseLeft" : "MouseRight", reason: null}, frameWindow.performance.now());
+  }
 }

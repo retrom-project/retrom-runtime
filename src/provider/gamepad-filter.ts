@@ -1,3 +1,4 @@
+import {inputObserver} from "./input-observations.js";
 import type {RuntimeInputFilterPolicyV1} from "./module-api.js";
 
 type ReservedButton = "select" | "start";
@@ -139,9 +140,26 @@ export function installRuntimeGamepadFilter(runtimeWindow: Window, filter: Runti
   if (ownDescriptor && !ownDescriptor.configurable) {throw new Error("PLAYER_INPUT_FILTER_UNAVAILABLE");}
   const nativeGetGamepads = gamepadNavigator.getGamepads;
   if (typeof nativeGetGamepads !== "function") {throw new Error("PLAYER_INPUT_FILTER_UNAVAILABLE");}
-  const filteredGetGamepads = () => filter.filter(
-    Array.from(nativeGetGamepads.call(gamepadNavigator)), runtimeWindow.performance.now(),
-  );
+  const filteredGetGamepads = () => {
+    const raw = Array.from(nativeGetGamepads.call(gamepadNavigator));
+    const filtered = filter.filter(raw, runtimeWindow.performance.now());
+    const observer = inputObserver(runtimeWindow);
+    try {
+      if (observer) {
+        for (const pad of raw.slice(0, 4)) {
+          if (!pad) {continue;}
+          const result = filtered.find((entry) => entry?.index === pad.index);
+          for (let index = 0; index < Math.min(32, pad.buttons.length); index++) {
+            const value = pressed(pad.buttons[index]) ? 1 : 0;
+            observer.record({device: `gamepad:${pad.index}`, control: `Button ${index}`, value,
+              stage: "BROWSER", target: null,
+              reason: value && !pressed(result?.buttons[index]) ? "INPUT_FILTER" : null}, runtimeWindow.performance.now());
+          }
+        }
+      }
+    } catch { /* Observation failure cannot change filter output. */ }
+    return filtered;
+  };
   Object.defineProperty(gamepadNavigator, "getGamepads", {
     configurable: true, enumerable: ownDescriptor?.enumerable ?? false,
     value: filteredGetGamepads, writable: true,

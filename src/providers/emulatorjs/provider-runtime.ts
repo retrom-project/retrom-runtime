@@ -1,3 +1,6 @@
+import {observeEmulatorInput} from "./input-diagnostics.js";
+import {startInputDiagnostics} from "../../provider/input-diagnostics.js";
+import type {RuntimeInputDiagnosticsV1} from "../../provider/module-api.js";
 import type {
   AssetIndexV1,
   LaunchEnvelopeV1,
@@ -71,6 +74,7 @@ export async function createEmulatorJsPlayer(
 class EmulatorJsPlayer implements PlayerRuntimeV1 {
   private readonly listeners = new Set<(event: RuntimeEventV1) => void>();
   private state: RuntimeStateV1 = "CREATED";
+  private inputDiagnostics: RuntimeInputDiagnosticsV1 | null = null;
   private runtimeWindow: EjsWindow | null = null;
   private instance: EjsInstance | null = null;
   private loader: HTMLScriptElement | null = null;
@@ -227,7 +231,8 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
       throw contractError();
     }
     if (policy === null) {
-      this.cleanupInputFilter?.();
+      this.stopInputDiagnostics();
+    this.cleanupInputFilter?.();
       this.cleanupInputFilter = null;
       this.inputFilter = null;
       return;
@@ -248,6 +253,15 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
       return this.netplayPort;
     } catch (error) {throw contractError(error);}
   }
+  startInputDiagnostics() {
+    this.inputDiagnostics?.stop();
+    this.inputDiagnostics = startInputDiagnostics(this.runtimeWindow ?? window, () => this.getCanvas());
+    if (this.runtimeWindow && this.envelope.session.mode === "SINGLE") {
+      this.inputDiagnostics = observeEmulatorInput(this.runtimeWindow, this.instance, this.inputDiagnostics);
+    }
+    return this.inputDiagnostics;
+  }
+
   subscribe(listener: (event: RuntimeEventV1) => void) {
     this.listeners.add(listener);
     return () => this.listeners.delete(listener);
@@ -489,6 +503,7 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
     this.netplayPort = null;
     this.cleanupNetplayCompatibility?.();
     this.cleanupNetplayCompatibility = null;
+    this.stopInputDiagnostics();
     this.cleanupInputFilter?.();
     this.cleanupInputFilter = null;
     this.inputFilter = null;
@@ -508,6 +523,11 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
     if (!this.instance || this.state === "CREATED" || this.state === "MOUNTING" ||
       this.state === "FAILED" || this.state === "EXITED") {throw contractError();}
     return this.instance;
+  }
+
+  private stopInputDiagnostics() {
+    this.inputDiagnostics?.stop();
+    this.inputDiagnostics = null;
   }
 
   private cleanupSurface() {

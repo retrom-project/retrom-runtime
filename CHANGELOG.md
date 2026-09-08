@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+- Add opt-in bounded input diagnostics without additional input polling, synthesis or changes to normal input values.
+- Observe existing browser/runtime and adapter delivery boundaries, with optional MV/MZ bridge diagnostics. Core-read confirmation remains unavailable.
+
 ## 0.20.0
 
 - Add a ScummVM Target with selected-engine downloads, bounded persistent range files, native

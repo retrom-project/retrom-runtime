@@ -144,11 +144,12 @@ runtime.subscribe((event) => {
 Each session must use its own frame. `exit()` pauses the core and removes library-owned DOM and globals; the host
 then discards that frame to release Emscripten's document-level input hooks.
 
-Games may also terminate through their own title/menu UI. Every adapter translates that engine/process boundary
-into one `EXIT_REQUESTED` event. The shared controller immediately leaves the running state, makes checkpoint
-capture unavailable and releases the adapter. A host should subscribe before `mount()`, finish its play session
-and leave or close the Player when it receives this event; it must not keep a black canvas or offer saving after
-the core has ended.
+`EXIT_REQUESTED` is an optional lifecycle event rather than a Target admission requirement. An adapter that can
+reliably observe a game ending through its title/menu UI or process boundary may translate it into one
+`EXIT_REQUESTED` event. The shared controller then immediately leaves the running state, makes checkpoint capture
+unavailable and releases the adapter. A host should subscribe before `mount()`, finish its play session and leave
+or close the Player when it receives this event. Targets that cannot observe their own termination remain valid;
+the host ends those sessions through `exit()`.
 
 KiriKiri is also an independent Provider Target. A Host launches target `kirikiri2-kag` through
 Provider Module V1 and never imports the KiriKiri adapter config or constructor.
@@ -319,3 +320,18 @@ advertises startup loading. A missing, rejected or mismatched completion fails
 mounting within 60 seconds. A bundle without an exact slot always reports in-game
 restoration; feature flags alone never turn an arbitrary file collection into an
 automatic restore target.
+
+### TIC-80 and FAKE-08
+
+The `tic80` and `fake08` targets consume independent Emscripten factories from the maintained
+`retrom-project/TIC-80` and `retrom-project/fake-08` forks. They accept one verified ROM_BLOB cartridge
+(up to 4 MiB), present Canvas/WebAudio, standard gamepad or directional/action keyboard input,
+and release their frame loop, heap instance, input listeners and audio on exit.
+TIC-80 saves 1024 bytes of pmem with GAME_SAVE semantics, pre-BOOT restoration, native change revisions
+and snapshot-specific acknowledgment. FAKE-08 uses an INSTANT execution checkpoint including input-repeat
+and cartdata state. Their envelopes bind the state to the core and cartridge SHA-256.
+
+The provider pins immutable core releases from the maintained upstream snapshots:
+TIC-80 `retrom-core-g4aba09c98f1e-r1` and FAKE-08 `retrom-core-g814991a2571a-r2`.
+`provider-sources.json` records each release's exact repository, tag commit, asset filenames and ABI.
+Core builds remain owned by the forks; runtime builds download and verify the published release identities.

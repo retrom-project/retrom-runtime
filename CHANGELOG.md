@@ -13,6 +13,20 @@
 - Extend native-save capabilities with explicit capture/export intent and exact-startup-restore support. Native synchronization defaults to exporting existing files, while explicit capture can be available before the first save exists.
 - Deliver validated final native saves with the common exit event, close live checkpoint operations immediately, and keep final payload bytes independent of engine cleanup.
 
+## 0.19.0
+
+- Add independent TIC-80 and FAKE-08 targets from current upstream mainline snapshots.
+- Provide verified cartridge/assets, standard controls, Canvas/WebAudio, lifecycle cleanup and bounded checkpoints.
+- Expose TIC-80 native pmem as GAME_SAVE with revision/acknowledgment; restore FAKE-08 execution and input-repeat state.
+- Pin immutable TIC-80 r1 and FAKE-08 r2 core releases with exact source commits and asset identities.
+- Restore FAKE-08 Lua sandbox bindings and suspend Eris collection until the restored object graph is complete; preserve resumed input and cartdata.
+
+
+## 0.18.1
+
+- Make `EXIT_REQUESTED` an optional lifecycle event instead of a core admission requirement. Existing adapters
+  that report observable core-initiated exits keep their current cleanup behavior.
+
 ## 0.18.0
 
 - Advance the EmulatorJS Provider to 2.3.2 for PSP output and checkpoint optimization.

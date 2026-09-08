@@ -1,5 +1,6 @@
 import scummvmLayout from "../../scummvm/core-layout.json" with {type: "json"};
 import type {ScummvmParameters} from "../../scummvm/parameters.js";
+import type {FantasyParameters} from "../../fantasy-console/core.js";
 import type {J2meParameters} from "../../j2me/parameters.js";
 import type {FileTreeSource, SeekableBlobSource} from "../../contract.js";
 import type {AssetIndexV1, LaunchEnvelopeV1, RuntimeResourceV1} from "../../provider/module-api.js";
@@ -134,6 +135,14 @@ export function scummvm(envelope: LaunchEnvelopeV1): ScummvmParameters {
   return {contentDigest: game.contentDigest, projectIndexUrl: game.indexUrl, runtimeBaseUrl: assetBase(envelope, "scummvm"),
     selection: {engineId: text("engineId"), gameId: text("gameId"), root: text("root"), language: text("language"),
       platform: text("platform"), extra: text("extra"), guiOptions: text("guiOptions"), filename}};
+}
+
+export function fantasy(envelope: LaunchEnvelopeV1, assetIndex: AssetIndexV1): FantasyParameters {
+  const core = envelope.runtime.targetId;
+  if (core !== "tic80" && core !== "fake08") {invalidRequest();}
+  const game = resource(envelope, "game", "ROM_BLOB");
+  return {core, cartSizeBytes: game.sizeBytes, contentDigest: game.sha256, cartUrl: game.url,
+    runtimeBaseUrl: envelope.runtime.runtimeBaseUrl, assetIndex};
 }
 
 export function wasm4(envelope: LaunchEnvelopeV1): Wasm4Parameters {

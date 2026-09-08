@@ -29,9 +29,6 @@
   必须在新实例中直接恢复执行状态且继续接受输入。明确声明 `GAME_SAVE` 的 Target 保存游戏原生存档数据，
   可以要求游戏内保存/读档；Host 必须根据该公共声明展示操作提示，并验证原生保存、整包传输、新实例启动前导入、
   原生读档及继续输入。不得把 RMS 或原生存档声明为即时快照，也不得放宽现有即时快照断言。
-- 游戏通过自身菜单退出或核心进程自行结束时，adapter 必须一次性上报公共 `EXIT_REQUESTED` 事件，并立即让
-  controller 进入退出流程、关闭 checkpoint 能力和释放核心资源；不得把已退出的黑色 canvas 留给宿主，也不得
-  允许宿主继续对已结束的核心创建存档。新增核心必须用回归覆盖这一边界，不能要求宿主识别核心专用退出状态。
 - 会读取大型游戏文件的核心不得把浏览器 HTTP 缓存当作唯一复用机制：完整物化的不可变文件必须按稳定内容 URL
   写入浏览器持久缓存、命中时复用，并校验索引声明的准确字节数；缓存后端必须覆盖该格式允许的最大单文件，超过
   Cache Storage 已验证单项边界时使用 OPFS 或有界分块，不能把写入失败当成可接受的常态。采用 Range/按需文件
@@ -40,11 +37,18 @@
   全游戏字节伪装成启动下载进度。缓存不可用或写入失败只能退回正常网络读取，不能让核心无法启动。新增或修改该
   边界时必须有跨两个
   runtime 实例的网络请求次数回归，以及整包下载/Range 策略的聚焦测试。
-- 新核心或改变输入、checkpoint、恢复、核心自身退出行为的版本，必须先在本仓库留下旧行为必红的控制与存档单元回归，再通过
-  宿主产品的真实审核预览、Product Launch、所声明语义的存档、不同 Launch 恢复和恢复后输入验证。缺少任一能力的候选
-  不得加入 Provider declaration、合并到 `master` 或发布稳定 tag。
+- 新核心或改变输入、checkpoint、恢复行为的版本，必须先在本仓库留下旧行为必红的控制与存档单元回归，再通过
+  宿主产品的真实审核预览、Product Launch、所声明语义的存档、不同 Launch 恢复和恢复后输入验证。缺少任一必需
+  或已声明能力的候选不得加入 Provider declaration、合并到 `master` 或发布稳定 tag。
 - 核心差异只能体现在各自 adapter、checkpoint codec 和显式 ABI 中；不得通过降低上述最低能力、要求宿主写
   核心专用旁路或跳过产品验证来完成接入。
+
+## 可选退出通知
+
+`EXIT_REQUESTED` 是可选的公共生命周期事件，不是核心准入条件。能够可靠观察游戏菜单退出或核心进程结束的 adapter
+可以用它通知 Host；一旦上报就必须只上报一次，并立即进入退出流程、关闭 checkpoint 能力和释放核心资源。无法观察
+该边界的核心仍可由 Host 调用 `exit()` 结束会话，不需要核心专用旁路。新增或修改该事件的上报时必须用回归覆盖退出
+清理。
 
 ## 必跑门禁
 
@@ -73,7 +77,9 @@ npm run package:check
 - 使用 Retrom PFB 流程，在同一 `.worktree/<pfb>/project/` 下放置 Retrom、本仓库和涉及的 core worktree；`RUNTIME_ROOT` 与 `CORE_ROOTS` 只能指向该 PFB 树。源码与持久 workspace bind mount 到轻量开发容器，日常不构建 Provider archive 或 core。
 - 新 PFB 显式导入已验证的 Provider 基座；运行中的 watcher 原子生成当前 loose module，adapter 修改后确认模块 SHA 改变并轻量 restart。工具链、锁文件或 API 生成输入改变时才 down/build/up；不为源码变更创建 revision 目录、切换数据库或反复 checkout 大仓库。
 - 显式 candidate/release 构建仍生成完整 Provider Bundle V1；core candidate 只能覆盖 `provider-sources.json` 已声明的来源，不能新增 Target、改写宿主 binding 或污染 production lock。core 字节变化须按 Retrom 的 `pfb-core-build` 显式构建。
-- PFB 必须经真实 Retrom 导入、Review Preview、Product Launch、共享 dispatcher、输入、checkpoint、不同 Launch 恢复和退出清理验证当前开发模块与基座。源码/依赖构建与实时浏览器验收分开执行，避免热更新干扰活动会话；确认通过且取得用户授权后才合并 PR、发布 core tag，再发布本仓库新的不可移动 `v*` tag。
+- PFB 必须经真实 Retrom 导入、Review Preview、Product Launch、共享 dispatcher、输入、checkpoint、不同 Launch 恢复，
+  并在 Target 实现 `EXIT_REQUESTED` 时验证退出清理。源码/依赖构建与实时浏览器验收分开执行，避免热更新干扰活动
+  会话；确认通过且取得用户授权后才合并 PR、发布 core tag，再发布本仓库新的不可移动 `v*` tag。
 - Release 完成后，Retrom 以独立提交固定正式 Provider descriptor/archive 并重跑同一产品 Case。candidate digest、工作树路径或未发布版本不得写入 production lock 或正式证据。
 
 ## 上游 fork 维护

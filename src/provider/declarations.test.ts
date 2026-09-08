@@ -5,6 +5,7 @@ import { retromRuntimeProviderDefinition } from "../providers/retrom-runtime/cat
 
 const targetIds = [
   "butterscotch-gamemaker",
+  "fake08",
   "j2me",
   "kirikiri2-kag",
   "onscripter-yuri",
@@ -16,11 +17,13 @@ const targetIds = [
   "rpgmaker-vx-ace",
   "rpgmaker-xp",
   "scummvm",
+  "tic80",
   "tyranoscript",
   "wasm4",
 ];
 const sameOriginFrameTargetIds = [
   "butterscotch-gamemaker",
+  "fake08",
   "j2me",
   "kirikiri2-kag",
   "onscripter-yuri",
@@ -29,14 +32,15 @@ const sameOriginFrameTargetIds = [
   "rpgmaker-vx",
   "rpgmaker-vx-ace",
   "rpgmaker-xp",
+  "tic80",
   "wasm4",
 ];
 
 describe("retrom-runtime provider declarations", () => {
-  it("declares the complete 0.19.0-dev.4 target closure in one source", () => {
-    expect(retromRuntimeProviderDefinition.providerVersion).toBe("0.19.0-dev.4");
+  it("declares the complete 0.20.0-rc.1 target closure in one source", () => {
+    expect(retromRuntimeProviderDefinition.providerVersion).toBe("0.20.0-rc.1");
     expect(retromRuntimeProviderDefinition.targets.map((target) => target.id)).toEqual(targetIds);
-    expect(retromRuntimeProviderDefinition.adapters).toHaveLength(10);
+    expect(retromRuntimeProviderDefinition.adapters).toHaveLength(12);
   });
 
   it("projects a public manifest without internal adapter identities", () => {
@@ -45,7 +49,7 @@ describe("retrom-runtime provider declarations", () => {
       clientModulePath: "client.mjs",
       providerApiVersion: 1,
       providerId: "retrom-runtime",
-      providerVersion: "0.19.0-dev.4",
+      providerVersion: "0.20.0-rc.1",
       schemaVersion: 1,
     });
     expect(manifest.targets.map((target) => target.id)).toEqual(targetIds);

@@ -124,7 +124,7 @@ export function targetEnvelope(targetId: string): LaunchEnvelopeV1 {
       contentDigest: digest, entryUrl: "https://runtime.test/__retrom/bootstrap",
       kind: "ISOLATED_WEB", ordinal: 0, origin: "https://runtime.test", role: "game",
     };
-  } else if (targetId === "j2me") {
+  } else if (["j2me", "tic80", "fake08"].includes(targetId)) {
     resource = {kind: "ROM_BLOB", ordinal: 0, rangeRequired: false, role: "game",
       sha256: digest, sizeBytes: 128, url: "/runtime/content/game/game.jar"};
   } else if (targetId === "wasm4") {

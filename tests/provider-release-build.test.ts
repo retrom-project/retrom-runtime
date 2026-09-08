@@ -23,7 +23,7 @@ describe("retrom-runtime Provider release build", () => {
       .toBe('{"𐀀":2,"":1}');
   });
 
-  it("builds all fourteen targets from one staged release without downloading cores", async () => {
+  it("builds all sixteen targets from one staged release without downloading cores", async () => {
     const root = await temporaryRoot();
     const stageRoot = join(root, "stage");
     const manifest = projectProviderManifest(retromRuntimeProviderDefinition);
@@ -52,7 +52,7 @@ describe("retrom-runtime Provider release build", () => {
     const provider = JSON.parse(await readFile(join(first.bundleRoot, "provider.json"), "utf8")) as {
       targets: Array<Record<string, unknown>>;
     };
-    expect(provider.targets).toHaveLength(14);
+    expect(provider.targets).toHaveLength(16);
     expect(provider.targets.some((target) => target.id === "wasm4")).toBe(true);
     expect(provider.targets.every((target) => !("adapterId" in target))).toBe(true);
     expect(await readFile(join(first.bundleRoot, "client.mjs"), "utf8")).toContain("retrom-runtime");

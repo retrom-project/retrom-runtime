@@ -150,7 +150,11 @@ export function installEmulatorJs423StateRestoreCompatibility(playerWindow: Wind
     configurable: true,
     enumerable: managerDescriptor?.enumerable ?? true,
     get: () => managerConstructor,
-    set: (constructor: ManagerConstructor | undefined) => {patchManager(constructor); managerConstructor = constructor;},
+    set: (constructor: ManagerConstructor | undefined) => {
+      managerDescriptor?.set?.call(target, constructor);
+      patchManager(constructor);
+      managerConstructor = constructor;
+    },
   });
 
   const wrapRuntime = (factory: RuntimeFactory | undefined) => {

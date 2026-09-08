@@ -1,6 +1,7 @@
 import {afterEach, describe, expect, it, vi} from "vitest";
 
 import {installEmulatorJs423StateRestoreCompatibility} from "./state-restore.js";
+import {installEmulatorJsRetroArchConfig} from "./retroarch-config.js";
 
 const originalFetch = window.fetch;
 afterEach(() => {
@@ -11,6 +12,18 @@ afterEach(() => {
 });
 
 describe("EmulatorJS 4.2.3 explicit restore", () => {
+  it("preserves configuration hooks installed before the deferred GameManager appears", () => {
+    const cleanupConfig = installEmulatorJsRetroArchConfig(window, "fuse", true);
+    const cleanupState = installEmulatorJs423StateRestoreCompatibility(window);
+    class Manager {getRetroArchCfg() {return "video_vsync = true\n";}}
+    Reflect.set(window, "EJS_GameManager", Manager);
+    expect(new Manager().getRetroArchCfg()).toContain('input_libretro_device_p1 = "513"');
+    expect(new Manager().getRetroArchCfg()).toContain("log_verbosity = true");
+    cleanupState();
+    cleanupConfig();
+    expect(new Manager().getRetroArchCfg()).toBe("video_vsync = true\n");
+  });
+
   it.each([0, 1])("waits for serialization and the actual native load callback with frame counter %s", async (frame) => {
     vi.useFakeTimers();
     window.fetch = vi.fn(async () => new Response("ok"));

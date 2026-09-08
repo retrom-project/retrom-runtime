@@ -118,8 +118,8 @@ const cores: readonly CoreSource[] = [
   core("stella2014", "4.2.3", "stella2014-wasm.data", 1051659, "6c96c6b1746f3f05ca599066abe131a36c77ca61fc20a9e2a7560540457c487d", "f5244febaf876003e9acf97e09b8785f1f51563c3f96527232652c1d9ec40e68"),
   core("vice_x128", "4.2.3", "vice_x128-wasm.data", 1595414, "dbac85e530b006c2d17e200c445de582c7ea272bacf333e4b4f8c1e391ed8506", "e8ef53ec0bc53244319e87a8f6b75396f077a982dd4438743a52e82f0c136126", {inputMode: "POINTER"}),
   core("vice_x64sc", "4.2.3", "vice_x64sc-wasm.data", 1523457, "77f58884c81b58721cbc4754ffc5574838219258e9390630c352a494a3f335ab", "4b788799ef1225e48610b99bdf746425ba6e2bda27fa105fd1238dfbb9fb47cb", {inputMode: "POINTER"}),
-  core("vice_xvic", "4.2.3", "vice_xvic-wasm.data", 1400297, "0829fe9e5cadd4692535809f2e5d02d751b28cf6a622b206413630180e1e256e", "416b4490d217995902c75f421f0a50cb32ed8785fb34376c2b648734239df9e4", {artifactFlavor: "OVERRIDE"}),
-  core("virtualjaguar", "4.2.3", "virtualjaguar-wasm.data", 1199923, "16b62c38e6921fb5b410ab507ba6bc77edcaccbba532ae4711b9521a4256ba6d", "09a2458299da4dc538c0aed65d5f55ec182e9c2fc7f970822a328c45cae7d694", {artifactFlavor: "OVERRIDE"}),
+  core("vice_xvic", "4.2.3", "vice_xvic-wasm.data", 1400563, "8d77779568ff9ac2fe46f11ad6f37e39cc6be44dae337e0fb8cda4f29f283a49", "dc63426f1804edb9ca95a8417c68ec792c0ef52ec860ff1c0e99717415aeb8d9", {artifactFlavor: "OVERRIDE"}),
+  core("virtualjaguar", "4.2.3", "virtualjaguar-wasm.data", 1199923, "16b62c38e6921fb5b410ab507ba6bc77edcaccbba532ae4711b9521a4256ba6d", "b9443f7fc635a091b9460773bb0261bd5c4a9b5cb5ed3162286553e173e6c742", {artifactFlavor: "OVERRIDE"}),
   core("yabause", "4.2.3", "yabause-wasm.data", 991166, "ab253ac263bd98e3124e2ca45ff581e97673426ed06ecec0025333060cd8127c", "1fc177e7be4923208b92755bcfae66ac35ba6e395c3b7ea48df581806ebdf6a6", {contentKinds: ["SINGLE_FILE", "MULTI_DISC"]}),
 ] as const;
 

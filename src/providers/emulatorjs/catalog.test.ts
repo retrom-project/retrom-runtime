@@ -49,6 +49,8 @@ describe("EmulatorJS Provider declarations", () => {
       expect(target?.netplayPort, targetId).toBe(false);
       expect(target?.requiresThreads, targetId).toBe(false);
     }
+    expect(emulatorJsProviderDefinition.targets.find((entry) => entry.id === "fuse")?.implementation.defaultOptions)
+      .toMatchObject({keyboardInput: "enabled"});
   });
 
   it("keeps runtime selection private while publishing exact frame and thread contracts", () => {

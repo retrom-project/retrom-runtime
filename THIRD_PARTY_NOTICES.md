@@ -18,6 +18,10 @@ Release archives aggregate the following independently licensed components:
 - TIC-80 — MIT — <https://github.com/retrom-project/TIC-80>; bundled `licenses/tic80/LICENSES.txt` contains upstream and dependency license texts.
 - FAKE-08 — MIT — <https://github.com/retrom-project/fake-08>; bundled `licenses/fake08/LICENSES.txt` includes z8lua/Eris and other dependency notices.
 - WASM-4 — ISC — <https://github.com/retrom-project/wasm4>
+- ScummVM — GPL-3.0-or-later — <https://github.com/retrom-project/scummvm>; bundled
+  `licenses/scummvm/COPYING`, `COPYRIGHT`, `AUTHORS` and component license texts accompany the
+  engine plugins, support data and native detector. `licenses/scummvm/build-inputs.json` pins the
+  upstream commit, SDK and supporting libraries used by the maintained fork build.
 
 The TyranoScript engine itself is supplied by each game project and is not included in this aggregate release.
 Only the independently authored Retrom host bridge and its MIT license are aggregated from the maintained fork.

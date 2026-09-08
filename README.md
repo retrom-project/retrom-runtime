@@ -305,12 +305,13 @@ in-game recovery; the adapter never guesses from modification time or a highest 
 Core shutdown closes live capture before disposal, then exports any final destructor writes through
 the public final-snapshot event. New frames start with empty save storage unless given a restore payload.
 
-The ScummVM source currently lives in `provider-sources.json` under `developmentInputs`. This is an
-explicit unpublished input, accepted only by a full PFB candidate build with a verified fork-owned
-core candidate directory. It cannot be used by a normal or formal release build, and carries no
-invented release tag. After product acceptance and explicit release authorization, publish the fork
-first and replace the development input with a pinned release source before publishing this Provider.
-The native detector in this candidate supports Linux x86-64. The consuming Host must reject other
+The ScummVM source is pinned in `provider-sources.json` to a published maintenance tag and exact
+fork commit, ABI, upstream baseline, archive size and SHA-256. Aggregation verifies the release
+metadata, closed file layout, plugin mapping and individual file digests before staging any assets.
+The native detector and browser engines always come from the same verified archive. Explicit PFB
+builds can consume a verified fork-owned core candidate; formal release builds reject local core
+overrides. Unpublished inputs remain restricted to full PFB candidates.
+The native detector supports Linux x86-64. The consuming Host must reject other
 server architectures until the fork supplies matching verified tool assets.
 
 ScummVM automatic restoration waits for an explicit native deserialization result

@@ -6,6 +6,8 @@
   capture/export, exact-slot restoration and final save handoff. Keep the unreleased core explicitly
   limited to complete PFB candidates until fork and Provider releases are authorized.
 - Reject mounting immediately if the native engine exits before initialization completes.
+- Advance the complete PFB candidate to `0.19.0-dev.3` for ScummVM drawing and paused
+  resize synchronization, with retained WebGL pixels for readable save screenshots.
 
 - Extend native-save capabilities with explicit capture/export intent and exact-startup-restore support. Native synchronization defaults to exporting existing files, while explicit capture can be available before the first save exists.
 - Deliver validated final native saves with the common exit event, close live checkpoint operations immediately, and keep final payload bytes independent of engine cleanup.

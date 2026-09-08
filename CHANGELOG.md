@@ -1,7 +1,8 @@
 # Changelog
 
-## Unreleased
+## 0.22.0
 
+- Advance the EmulatorJS Provider to 2.5.0.
 - Add opt-in bounded input diagnostics without additional input polling, synthesis or changes to normal input values.
 - Observe existing browser/runtime and adapter delivery boundaries, with optional MV/MZ bridge diagnostics. Core-read confirmation remains unavailable.
 

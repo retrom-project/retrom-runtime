@@ -6,6 +6,8 @@ import {
 import {dirname, isAbsolute, join, relative, resolve} from "node:path";
 import {fileURLToPath, pathToFileURL} from "node:url";
 
+import {forkReleaseFiles, verifyForkMetadata} from "./emulatorjs-fork-releases.mjs";
+
 const scriptRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const proofName = ".materialization.json";
 
@@ -29,12 +31,16 @@ export async function materializeEmulatorJsProviderInput(input) {
       await mkdir(destination, {recursive: true});
       await input.extractArchive(archivePath, destination, releaseSelections(input.definition, release));
     }
-    for (const override of input.catalog.overrides) {
+    for (const override of [...input.catalog.overrides, ...forkReleaseFiles(input.catalog)]) {
       const cachePath = join(input.cacheRoot, `override-${override.sha256}`);
       await cachedDownload(cachePath, override, input.fetchBytes);
       const destination = confined(staging, override.destination);
       await mkdir(dirname(destination), {recursive: true});
       await writeFile(destination, await readFile(cachePath));
+    }
+    for (const fork of input.catalog.forks ?? []) {
+      const metadata = JSON.parse(await readFile(join(staging, `4.2.3/data/cores/reports/${fork.runtimeCore}.json`), "utf8"));
+      verifyForkMetadata(fork, metadata);
     }
     await verifyCoreAssets(staging, input.definition);
     const files = await collectSelectedFiles(staging, input.catalog, input.definition);
@@ -134,6 +140,7 @@ async function collectSelectedFiles(root, catalog, definition) {
   const files = await collectRegularFiles(root, false);
   const allowedAssets = new Set(definition.targets.flatMap((target) => target.assetPaths ?? [])
     .map((path) => path.replace(/^assets\//u, "")));
+  for (const file of forkReleaseFiles(catalog)) {allowedAssets.add(file.destination);}
   const allowedLicenseRoots = catalog.releases.flatMap((release) => release.licenseRoots.map((path) =>
     `${release.id}/${path}`));
   for (const path of files.keys()) {

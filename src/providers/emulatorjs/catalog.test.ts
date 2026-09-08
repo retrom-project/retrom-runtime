@@ -24,7 +24,7 @@ describe("EmulatorJS Provider declarations", () => {
     const manifest = projectProviderManifest(emulatorJsProviderDefinition);
     expect(validateProviderManifest(manifest)).toBe(manifest);
     expect(manifest.providerId).toBe("emulatorjs");
-    expect(manifest.providerVersion).toBe("2.4.0");
+    expect(manifest.providerVersion).toBe("2.4.1-rc.2");
     expect(manifest.targets).toHaveLength(43);
     expect(new Set(manifest.targets.map((target) => target.id)).size).toBe(43);
     for (const targetId of ["dosbox-pure", "genesis-plus-gx-wide", "azahar"]) {
@@ -43,7 +43,7 @@ describe("EmulatorJS Provider declarations", () => {
       const target = emulatorJsProviderDefinition.targets.find((entry) => entry.id === targetId);
       expect(target, targetId).toBeDefined();
       expect(target?.implementation).toMatchObject({
-        artifactFlavor: "WASM", contentKinds: ["SINGLE_FILE"], release: "4.2.3",
+        artifactFlavor: ["vice-xvic", "virtualjaguar"].includes(targetId) ? "OVERRIDE" : "WASM", contentKinds: ["SINGLE_FILE"], release: "4.2.3",
       });
       expect(target?.discSwitch, targetId).toBe(false);
       expect(target?.netplayPort, targetId).toBe(false);

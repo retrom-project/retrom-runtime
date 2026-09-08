@@ -118,8 +118,8 @@ const cores: readonly CoreSource[] = [
   core("stella2014", "4.2.3", "stella2014-wasm.data", 1051659, "6c96c6b1746f3f05ca599066abe131a36c77ca61fc20a9e2a7560540457c487d", "f5244febaf876003e9acf97e09b8785f1f51563c3f96527232652c1d9ec40e68"),
   core("vice_x128", "4.2.3", "vice_x128-wasm.data", 1595414, "dbac85e530b006c2d17e200c445de582c7ea272bacf333e4b4f8c1e391ed8506", "e8ef53ec0bc53244319e87a8f6b75396f077a982dd4438743a52e82f0c136126", {inputMode: "POINTER"}),
   core("vice_x64sc", "4.2.3", "vice_x64sc-wasm.data", 1523457, "77f58884c81b58721cbc4754ffc5574838219258e9390630c352a494a3f335ab", "4b788799ef1225e48610b99bdf746425ba6e2bda27fa105fd1238dfbb9fb47cb", {inputMode: "POINTER"}),
-  core("vice_xvic", "4.2.3", "vice_xvic-wasm.data", 1396793, "4c7de6f858e100e9aea93085d5aef01bdfe87399c21c0fde4e1b6c7f1da56316", "06a3c3786de226ccad23593bdbc5d64a26a9db05431d7d22db0718b8304bf2e8"),
-  core("virtualjaguar", "4.2.3", "virtualjaguar-wasm.data", 942590, "584bcd9d0e051ec3cfe690d32e516cf677a9ff7e207118f4a8cc147a6e123de9", "3438eea5d94789d7a87ba102733640091c104d4f8427aeb6e5021c975ef18857"),
+  core("vice_xvic", "4.2.3", "vice_xvic-wasm.data", 1400115, "beca7386b99240e7f74a16e5cba9f4578eefc58ac560a5c7dd5b0b9b145e1d7b", "545b58275f9b26c0000521d3e835da0f0d83811db1207bb518b24d97b8a22f0d", {artifactFlavor: "OVERRIDE"}),
+  core("virtualjaguar", "4.2.3", "virtualjaguar-wasm.data", 1199923, "16b62c38e6921fb5b410ab507ba6bc77edcaccbba532ae4711b9521a4256ba6d", "09a2458299da4dc538c0aed65d5f55ec182e9c2fc7f970822a328c45cae7d694", {artifactFlavor: "OVERRIDE"}),
   core("yabause", "4.2.3", "yabause-wasm.data", 991166, "ab253ac263bd98e3124e2ca45ff581e97673426ed06ecec0025333060cd8127c", "1fc177e7be4923208b92755bcfae66ac35ba6e395c3b7ea48df581806ebdf6a6", {contentKinds: ["SINGLE_FILE", "MULTI_DISC"]}),
 ] as const;
 
@@ -169,7 +169,7 @@ export const emulatorJsProviderDefinition = defineProvider({
   adapters,
   providerApiVersion: 1,
   providerId: "emulatorjs",
-  providerVersion: "2.4.0",
+  providerVersion: "2.4.1-rc.2",
   targets,
 });
 

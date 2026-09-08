@@ -142,7 +142,9 @@ export function targetEnvelope(targetId: string): LaunchEnvelopeV1 {
       ? {scriptEncoding: "utf8"}
       : targetId === "kirikiri2-kag"
         ? {startupXp3Path: null}
-        : {};
+        : targetId === "scummvm"
+          ? {engineId: "sky", gameId: "sky", root: "", language: "en", platform: "pc", extra: "", guiOptions: "", filename: null}
+          : {};
   return {
     netplay: null,
     resources: [resource],

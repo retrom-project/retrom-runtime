@@ -1,3 +1,4 @@
+import {scummvmAdapter, scummvmTarget} from "./scummvm-declaration.js";
 import {
   defineAdapter,
   defineProvider,
@@ -32,6 +33,7 @@ const isolatedCapabilities = capabilities(true, true, true);
 const wasm4Capabilities = capabilities(true, true, false);
 
 const adapters = [
+  scummvmAdapter,
   defineAdapter({id: "tic80-web", kind: "TIC80_WEB", abi: "tic80-pmem-v1",
     capabilities: capabilities(true, true, true),
     checkpoint: {writeFormat: "tic80-pmem-v1", readFormats: ["tic80-pmem-v1"], semantics: "GAME_SAVE"}}),
@@ -89,6 +91,7 @@ const targets = [
   mkxpTarget("rpgmaker-vx", "RPG Maker VX", 2),
   mkxpTarget("rpgmaker-vx-ace", "RPG Maker VX Ace", 3),
   mkxpTarget("rpgmaker-xp", "RPG Maker XP", 1),
+  scummvmTarget,
   target("tic80", "TIC-80", "tic80-web", noOptionsSchema, false, "SAME_ORIGIN_BLANK", "ROM_BLOB",
     1100, ["assets/tic80/tic80-retrom.mjs", "assets/tic80/tic80-retrom.wasm"]),
   target(
@@ -106,7 +109,7 @@ export const retromRuntimeProviderDefinition = defineProvider({
   adapters,
   providerApiVersion: 1,
   providerId: "retrom-runtime",
-  providerVersion: "0.19.0",
+  providerVersion: "0.20.0",
   targets,
 });
 

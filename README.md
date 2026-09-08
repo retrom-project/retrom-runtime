@@ -2,7 +2,7 @@
 
 `retrom-runtime` is a host-independent browser library and release bundle for RPG Maker 2000, 2003, XP,
 VX, VX Ace, MV and MZ, ONS games powered by ONScripterYuri, KAG-based KiriKiri2 games, supported GameMaker
-projects powered by Butterscotch, browser TyranoScript projects, Java ME JARs and WASM-4 carts. It owns runtime lifecycle, adapters, checkpoint codecs, bridge assets and pinned core
+projects powered by Butterscotch, browser TyranoScript projects, Java ME JARs, ScummVM game projects and WASM-4 carts. It owns runtime lifecycle, adapters, checkpoint codecs, bridge assets and pinned core
 Release inputs. It does not know about a host application's users, database, review flow, storage or HTTP API.
 
 ## EmulatorJS PSP
@@ -44,7 +44,7 @@ the module, checks the exported identity and calls `createRuntime`. It only cons
 chooses EasyRPG, mkxp, native Web or another implementation. The Provider validates the stable `providerId` plus
 `targetId`, current resources, private Target options, optional restore and netplay inputs before mounting.
 
-`src/providers/retrom-runtime/catalog.ts` is the single Target declaration for the 13 targets in this Provider.
+`src/providers/retrom-runtime/catalog.ts` is the single Target declaration for the 14 targets in this Provider.
 The generated declaration provides current capabilities, checkpoint `writeFormat/readFormats/maxBytes/semantics`, resource
 kinds, runtime files and a constrained closed `targetOptionsSchema`. The Provider Module uses that schema to
 exact-validate options before mounting; it has no
@@ -268,6 +268,59 @@ GAME_SAVE runtimes expose a stable availability `revision` for changed native re
 advance the baseline. Empty/unchanged content remains unavailable; failed uploads remain retryable, and
 changes during an upload retain a new revision. The Host owns automatic upload policy; the J2ME core owns
 RMS content comparison, stable-write detection and restore baselines. INSTANT targets retain manual capture.
+
+### Native capture and final exit
+
+For `GAME_SAVE`, `checkpoint({intent: "EXPORT"})` exports existing native files without requesting a new
+in-game save. This is also the default for native-save synchronization. A runtime may expose `availability.save`
+with independent `capture` (`RUNTIME` or `IN_GAME`) and `restore` (`AUTOMATIC` or `IN_GAME`) capabilities.
+`captureAvailable` means `checkpoint({intent: "CAPTURE"})` can create a new native save now, even if
+`availability.available` is false because no unsynchronized save exists. Automatic restore describes the
+runtime's exact-slot startup capability; individual exported bundles may still require the game's load menu
+when no reliable slot is known. These are native files, not an instant memory snapshot.
+
+A native engine's `EXIT_REQUESTED` event may include `finalSnapshot: {checkpoint, screenshot}` after its last
+save streams and destructor writes have closed. The runtime is already exiting; the Host must persist these
+bytes directly and must not call live checkpoint/screenshot APIs to obtain them. A missing screenshot is
+represented by `null`. The final checkpoint obeys the same declared format and byte limit. Live save
+acknowledgments still occur only after durable Host persistence; a final snapshot is detached from the closed
+runtime and needs no acknowledgment. Identical native content retains its revision across repeated writes.
+
+## ScummVM projects
+
+The `scummvm` Target uses the fork's `scummvm-host-v1` Emscripten backend, pinned to
+ScummVM `v2026.3.0` (`fed42f2068dcafc6aafa1c28c77e4c88def74b66`). The declared layout contains
+105 stable parent-engine plugins. A fresh instance fetches the shared module and only its selected
+engine plugin. Support data and game files use 256 KiB range blocks, a 16 MiB memory cache and
+persistent Cache Storage; a later instance reuses verified immutable blocks. Game identification
+and candidate selection happen in the consuming Host using the fork's matching native detector.
+The adapter receives the selected engine/game, relative root and unchanged upstream launch hints.
+
+Native checkpoint format `scummvm-save-bundle-v1` has a 64 MiB bound and preserves the complete
+native save directory. It binds files to the game content and deterministic launch configuration.
+`CAPTURE` asks the game to create a new native save only when its current state permits saving;
+`EXPORT` merely collects completed writes. A known exact slot enables automatic startup recovery
+when the game supports it. Saves collected from an in-game menu without an exact slot require
+in-game recovery; the adapter never guesses from modification time or a highest slot number.
+Core shutdown closes live capture before disposal, then exports any final destructor writes through
+the public final-snapshot event. New frames start with empty save storage unless given a restore payload.
+
+The ScummVM source is pinned in `provider-sources.json` to a published maintenance tag and exact
+fork commit, ABI, upstream baseline, archive size and SHA-256. Aggregation verifies the release
+metadata, closed file layout, plugin mapping and individual file digests before staging any assets.
+The native detector and browser engines always come from the same verified archive. Explicit PFB
+builds can consume a verified fork-owned core candidate; formal release builds reject local core
+overrides. Unpublished inputs remain restricted to full PFB candidates.
+The native detector supports Linux x86-64. The consuming Host must reject other
+server architectures until the fork supplies matching verified tool assets.
+
+ScummVM automatic restoration waits for an explicit native deserialization result
+for the exact slot. The current fork provides this observation for Sky, SCUMM,
+SCI, Queen and Drascula; other engines retain in-game restoration even when upstream
+advertises startup loading. A missing, rejected or mismatched completion fails
+mounting within 60 seconds. A bundle without an exact slot always reports in-game
+restoration; feature flags alone never turn an arbitrary file collection into an
+automatic restore target.
 
 ### TIC-80 and FAKE-08
 

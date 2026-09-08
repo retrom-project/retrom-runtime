@@ -9,9 +9,18 @@ export type CheckpointBlocker =
   | "ALREADY_CREATED"
   | "MODE_UNSUPPORTED";
 
-export type CheckpointAvailability =
+export type NativeSaveCapabilities = {
+  capture: "RUNTIME" | "IN_GAME";
+  restore: "AUTOMATIC" | "IN_GAME";
+  captureAvailable: boolean;
+};
+
+export type CheckpointRequest = {intent: "CAPTURE" | "EXPORT"};
+
+export type CheckpointAvailability = (
   | { available: true; blocker: null; revision?: string }
-  | { available: false; blocker: CheckpointBlocker };
+  | { available: false; blocker: CheckpointBlocker }
+) & {save?: NativeSaveCapabilities};
 
 export type RuntimeCheckpoint = {
   bytes: Uint8Array;

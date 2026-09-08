@@ -1,3 +1,6 @@
+import {assertScummvmCandidateMode} from "./scummvm-release.mjs";
+import {stageScummvmCandidate} from "./scummvm-candidate-stage.mjs";
+import {asScummvmCandidateSource, unpackScummvmRelease} from "./scummvm-published-release.mjs";
 import { unpackJ2meRelease } from "./j2me-release.mjs";
 import { spawnSync } from "node:child_process";
 import { access, mkdir, readFile, cp, rm, writeFile } from "node:fs/promises";
@@ -15,14 +18,18 @@ const providerOnly = process.env.RETROM_PROVIDER_BUILD_ONLY === "1";
 if (candidateBuild === formalBuild) {throw new Error("PROVIDER_BUILD_MODE_REQUIRED");}
 await rejectRetiredCandidateDeclaration(root);
 const sources = await loadProviderSources(root);
+const developmentInputs = sources.developmentInputs ?? [];
+assertScummvmCandidateMode(developmentInputs, process.env.RETROM_PFB_CANDIDATE_BUILD === "1", formalBuild);
 const devReleaseOverrides = parseDevReleaseOverrides(
   process.env.RETROM_RUNTIME_DEV_RELEASE_OVERRIDES,
-  sources.upstreamReleases,
+  [...sources.upstreamReleases, ...developmentInputs],
+  formalBuild,
 );
 const commit = releaseCommit();
 const stage = new URL("../release/stage/", import.meta.url);
 const output = new URL("../release/", import.meta.url);
 await rm(stage, { recursive: true, force: true });
+await rm(new URL("retrom-runtime-release.json", output), {force: true});
 await mkdir(stage, { recursive: true });
 await cp(new URL("../dist", import.meta.url), new URL("library", stage), { recursive: true });
 for (const document of ["CHANGELOG.md", "LICENSE", "THIRD_PARTY_NOTICES.md"]) {
@@ -33,6 +40,11 @@ for (const asset of sources.localAssets) {
 }
 for (const release of sources.upstreamReleases) {
   const devRoot = devReleaseOverrides.get(release.id);
+  if (release.id === "scummvm" && devRoot) {
+    assertScummvmCandidateMode([release], process.env.RETROM_PFB_CANDIDATE_BUILD === "1", formalBuild);
+    await stageScummvmCandidate(asScummvmCandidateSource(release), devRoot, root, stage);
+    continue;
+  }
   let archiveAssets;
   if (!devRoot) {
     const metadata = await download(release.metadataUrl, 65536);
@@ -40,7 +52,9 @@ for (const release of sources.upstreamReleases) {
     if (release.archive) {
       const bytes = await download(`${release.repository}/releases/download/${release.tag}/${release.archive.filename}`,
         release.archive.sizeBytes);
-      archiveAssets = unpackJ2meRelease(release, descriptor, bytes);
+      archiveAssets = release.id === "scummvm"
+        ? unpackScummvmRelease(release, descriptor, bytes, JSON.parse(await readFile(new URL(release.archive.layout, root), "utf8")))
+        : unpackJ2meRelease(release, descriptor, bytes);
     } else {validateUpstreamMetadata(release, descriptor);}
   }
   for (const asset of release.assets) {
@@ -50,23 +64,27 @@ for (const release of sources.upstreamReleases) {
     await publish(contents, new URL(asset.output, stage));
   }
 }
-const records = await collectRecords(sources, stage);
-const metadata = {
-  schemaVersion: 1,
-  repository: "https://github.com/retrom-project/retrom-runtime",
-  tag: `v${sources.packageVersion}`,
-  commit,
-  version: sources.packageVersion,
-  publicApiVersion: sources.publicApiVersion,
-  files: records,
-};
-await writeFile(new URL("retrom-runtime-release.json", output), `${JSON.stringify(metadata, null, 2)}\n`);
+const developmentOutputs = [];
+for (const input of developmentInputs) {
+  developmentOutputs.push(...await stageScummvmCandidate(input, devReleaseOverrides.get(input.id), root, stage));
+}
+const records = await collectRecords(sources, stage, developmentOutputs);
 const provider = await buildCurrentProviderBuild({
   stageRoot: fileURLToPath(stage),
 });
 await verifyBuiltProvider(provider);
 if (formalBuild) {
   assertFormalReleaseEnvironment(commit, sources.packageVersion);
+  const metadata = {
+    schemaVersion: 1,
+    repository: "https://github.com/retrom-project/retrom-runtime",
+    tag: `v${sources.packageVersion}`,
+    commit,
+    version: sources.packageVersion,
+    publicApiVersion: sources.publicApiVersion,
+    files: records,
+  };
+  await writeFile(new URL("retrom-runtime-release.json", output), `${JSON.stringify(metadata, null, 2)}\n`);
   await pinCurrentProviderRelease({release: {
     commit, repository: "https://github.com/retrom-project/retrom-runtime", tag: `v${sources.packageVersion}`,
   }});
@@ -147,9 +165,9 @@ async function publish(contents, target) {
   await writeFile(target, contents);
 }
 
-async function collectRecords(value, directory) {
+async function collectRecords(value, directory, developmentOutputs) {
   const paths = ["CHANGELOG.md", "LICENSE", "THIRD_PARTY_NOTICES.md", "library/index.js", "library/index.d.ts",
-    ...value.localAssets.map((asset) => asset.output),
+    ...value.localAssets.map((asset) => asset.output), ...developmentOutputs,
     ...value.upstreamReleases.flatMap((release) => release.assets.map((asset) => asset.output))].sort();
   return Promise.all(paths.map(async (path) => {
     const contents = await readFile(new URL(path, directory));

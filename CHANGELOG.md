@@ -1,5 +1,20 @@
 # Changelog
 
+## 0.20.0
+
+- Add a ScummVM Target with selected-engine downloads, bounded persistent range files, native
+  capture/export, exact-slot restoration and final save handoff.
+- Pin the maintained ScummVM core release, including 105 engine plugins and the matching native detector.
+  Verify fixed release metadata, archive size/digest and the complete internal layout; reject local core
+  overrides in formal release builds.
+- Reject mounting immediately if the native engine exits before initialization completes.
+- Discover SDL3 controllers connected after startup or reconnected during play, including the native
+  Y/Escape and stick-to-mouse mappings.
+- Synchronize drawing dimensions during resize and pause, retaining WebGL pixels for readable save screenshots.
+
+- Extend native-save capabilities with explicit capture/export intent and exact-startup-restore support. Native synchronization defaults to exporting existing files, while explicit capture can be available before the first save exists.
+- Deliver validated final native saves with the common exit event, close live checkpoint operations immediately, and keep final payload bytes independent of engine cleanup.
+
 ## 0.19.0
 
 - Add independent TIC-80 and FAKE-08 targets from current upstream mainline snapshots.

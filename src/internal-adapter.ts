@@ -1,12 +1,13 @@
 import type {
   CheckpointAvailability,
+  CheckpointRequest,
   RuntimeCheckpoint,
   RuntimeLoadProgress,
 } from "./contract.js";
 import type {RuntimeVideoModeV1} from "./provider/module-api.js";
 
 export type MountedRuntimeAdapter = {
-  checkpoint(): Promise<RuntimeCheckpoint>;
+  checkpoint(request?: CheckpointRequest): Promise<RuntimeCheckpoint>;
   acknowledgeCheckpoint?(checkpoint: RuntimeCheckpoint): Promise<void>;
   exit(): Promise<void>;
   getCanvas(): HTMLCanvasElement | null;
@@ -20,4 +21,5 @@ export type MountedRuntimeAdapter = {
 };
 
 export type RuntimeProgressReporter = (progress: RuntimeLoadProgress) => void;
-export type RuntimeExitReporter = () => void;
+export type RuntimeExitSnapshot = {checkpoint: RuntimeCheckpoint; screenshot: Blob | null};
+export type RuntimeExitReporter = (finalSnapshot?: RuntimeExitSnapshot) => void;

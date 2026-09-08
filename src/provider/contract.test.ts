@@ -44,7 +44,7 @@ describe("Runtime Provider V1 contract consumer", () => {
       .toBe(await readFile(`${root}/provider-module-v1.d.ts`, "utf8"));
   });
 
-  it("accepts the generated twelve-target manifest", () => {
+  it("accepts the generated fourteen-target manifest", () => {
     const manifest = projectProviderManifest(retromRuntimeProviderDefinition);
     expect(validateProviderManifest(manifest)).toEqual(manifest);
   });

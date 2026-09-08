@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "packageName": "@xxxsen/retrom-runtime",
-  "packageVersion": "0.19.0",
+  "packageVersion": "0.20.0",
   "publicApiVersion": 2,
   "upstreamReleases": [
     {
@@ -318,6 +318,1645 @@
       ],
       "tag": "retrom-core-g814991a2571a-r2",
       "metadataUrl": "https://github.com/retrom-project/fake-08/releases/download/retrom-core-g814991a2571a-r2/rpg-runtime-release.json"
+    },
+    {
+      "id": "scummvm",
+      "repository": "https://github.com/retrom-project/scummvm",
+      "upstreamCommit": "fed42f2068dcafc6aafa1c28c77e4c88def74b66",
+      "adapterAbi": "scummvm-host-v1",
+      "archive": {
+        "filename": "scummvm-runtime.zip",
+        "maxSizeBytes": 268435456,
+        "maxUnpackedSizeBytes": 805306368,
+        "layout": "src/scummvm/core-layout.json",
+        "sizeBytes": 217879736,
+        "sha256": "74eb2248db6845fb5e8b97819f1e329b11a0ce6117af67086dcd0edd6f7cf99a"
+      },
+      "tag": "retrom-core-2026.3.0-r1",
+      "commit": "a1a9445836e74e086158943f3142962edc9ec886",
+      "metadataUrl": "https://github.com/retrom-project/scummvm/releases/download/retrom-core-2026.3.0-r1/rpg-runtime-release.json",
+      "assets": [
+        {
+          "filename": "data/access.dat",
+          "output": "runtime/scummvm/data/access.dat",
+          "maxSizeBytes": 524288
+        },
+        {
+          "filename": "data/achievements.dat",
+          "output": "runtime/scummvm/data/achievements.dat",
+          "maxSizeBytes": 262144
+        },
+        {
+          "filename": "data/bagel.dat",
+          "output": "runtime/scummvm/data/bagel.dat",
+          "maxSizeBytes": 65536
+        },
+        {
+          "filename": "data/classicmacfonts.dat",
+          "output": "runtime/scummvm/data/classicmacfonts.dat",
+          "maxSizeBytes": 1048576
+        },
+        {
+          "filename": "data/cryomni3d.dat",
+          "output": "runtime/scummvm/data/cryomni3d.dat",
+          "maxSizeBytes": 131072
+        },
+        {
+          "filename": "data/darkseed.dat",
+          "output": "runtime/scummvm/data/darkseed.dat",
+          "maxSizeBytes": 65536
+        },
+        {
+          "filename": "data/drascula.dat",
+          "output": "runtime/scummvm/data/drascula.dat",
+          "maxSizeBytes": 262144
+        },
+        {
+          "filename": "data/encoding.dat",
+          "output": "runtime/scummvm/data/encoding.dat",
+          "maxSizeBytes": 262144
+        },
+        {
+          "filename": "data/fonts-cjk.dat",
+          "output": "runtime/scummvm/data/fonts-cjk.dat",
+          "maxSizeBytes": 67108864
+        },
+        {
+          "filename": "data/fonts-imgui.dat",
+          "output": "runtime/scummvm/data/fonts-imgui.dat",
+          "maxSizeBytes": 4194304
+        },
+        {
+          "filename": "data/fonts.dat",
+          "output": "runtime/scummvm/data/fonts.dat",
+          "maxSizeBytes": 8388608
+        },
+        {
+          "filename": "data/freescape.dat",
+          "output": "runtime/scummvm/data/freescape.dat",
+          "maxSizeBytes": 65536
+        },
+        {
+          "filename": "data/got.aud",
+          "output": "runtime/scummvm/data/got.aud",
+          "maxSizeBytes": 65536
+        },
+        {
+          "filename": "data/got.gfx",
+          "output": "runtime/scummvm/data/got.gfx",
+          "maxSizeBytes": 524288
+        },
+        {
+          "filename": "data/grim-patch.lab",
+          "output": "runtime/scummvm/data/grim-patch.lab",
+          "maxSizeBytes": 65536
+        },
+        {
+          "filename": "data/gui-icons.dat",
+          "output": "runtime/scummvm/data/gui-icons.dat",
+          "maxSizeBytes": 4194304
+        },
+        {
+          "filename": "data/hadesch_translations.dat",
+          "output": "runtime/scummvm/data/hadesch_translations.dat",
+          "maxSizeBytes": 65536
+        },
+        {
+          "filename": "data/helpdialog.zip",
+          "output": "runtime/scummvm/data/helpdialog.zip",
+          "maxSizeBytes": 262144
+        },
+        {
+          "filename": "data/hugo.dat",
+          "output": "runtime/scummvm/data/hugo.dat",
+          "maxSizeBytes": 262144
+        },
+        {
+          "filename": "data/kyra.dat",
+          "output": "runtime/scummvm/data/kyra.dat",
+          "maxSizeBytes": 2097152
+        },
+        {
+          "filename": "data/lure.dat",
+          "output": "runtime/scummvm/data/lure.dat",
+          "maxSizeBytes": 1048576
+        },
+        {
+          "filename": "data/macgui.dat",
+          "output": "runtime/scummvm/data/macgui.dat",
+          "maxSizeBytes": 131072
+        },
+        {
+          "filename": "data/mm.dat",
+          "output": "runtime/scummvm/data/mm.dat",
+          "maxSizeBytes": 524288
+        },
+        {
+          "filename": "data/mort.dat",
+          "output": "runtime/scummvm/data/mort.dat",
+          "maxSizeBytes": 131072
+        },
+        {
+          "filename": "data/myst3.dat",
+          "output": "runtime/scummvm/data/myst3.dat",
+          "maxSizeBytes": 524288
+        },
+        {
+          "filename": "data/nancy.dat",
+          "output": "runtime/scummvm/data/nancy.dat",
+          "maxSizeBytes": 262144
+        },
+        {
+          "filename": "data/neverhood.dat",
+          "output": "runtime/scummvm/data/neverhood.dat",
+          "maxSizeBytes": 65536
+        },
+        {
+          "filename": "data/pred.dic",
+          "output": "runtime/scummvm/data/pred.dic",
+          "maxSizeBytes": 131072
+        },
+        {
+          "filename": "data/prince_translation.dat",
+          "output": "runtime/scummvm/data/prince_translation.dat",
+          "maxSizeBytes": 262144
+        },
+        {
+          "filename": "data/queen.tbl",
+          "output": "runtime/scummvm/data/queen.tbl",
+          "maxSizeBytes": 2097152
+        },
+        {
+          "filename": "data/residualvm.zip",
+          "output": "runtime/scummvm/data/residualvm.zip",
+          "maxSizeBytes": 131072
+        },
+        {
+          "filename": "data/scummclassic.zip",
+          "output": "runtime/scummvm/data/scummclassic.zip",
+          "maxSizeBytes": 65536
+        },
+        {
+          "filename": "data/scummmodern.zip",
+          "output": "runtime/scummvm/data/scummmodern.zip",
+          "maxSizeBytes": 131072
+        },
+        {
+          "filename": "data/scummremastered.zip",
+          "output": "runtime/scummvm/data/scummremastered.zip",
+          "maxSizeBytes": 131072
+        },
+        {
+          "filename": "data/shaders.dat",
+          "output": "runtime/scummvm/data/shaders.dat",
+          "maxSizeBytes": 1048576
+        },
+        {
+          "filename": "data/shaders/emi_actor.fragment",
+          "output": "runtime/scummvm/data/shaders/emi_actor.fragment",
+          "maxSizeBytes": 65536
+        },
+        {
+          "filename": "data/shaders/emi_actor.vertex",
+          "output": "runtime/scummvm/data/shaders/emi_actor.vertex",
+          "maxSizeBytes": 65536
+        },
+        {
+          "filename": "data/shaders/emi_actorlights.fragment",
+          "output": "runtime/scummvm/data/shaders/emi_actorlights.fragment",
+          "maxSizeBytes": 65536
+        },
+        {
+          "filename": "data/shaders/emi_actorlights.vertex",
+          "output": "runtime/scummvm/data/shaders/emi_actorlights.vertex",
+          "maxSizeBytes": 65536
+        },
+        {
+          "filename": "data/shaders/emi_background.fragment",
+          "output": "runtime/scummvm/data/shaders/emi_background.fragment",
+          "maxSizeBytes": 65536
+        },
+        {
+          "filename": "data/shaders/emi_background.vertex",
+          "output": "runtime/scummvm/data/shaders/emi_background.vertex",
+          "maxSizeBytes": 65536
+        },
+        {
+          "filename": "data/shaders/emi_dimplane.fragment",
+          "output": "runtime/scummvm/data/shaders/emi_dimplane.fragment",
+          "maxSizeBytes": 65536
+        },
+        {
+          "filename": "data/shaders/emi_dimplane.vertex",
+          "output": "runtime/scummvm/data/shaders/emi_dimplane.vertex",
+          "maxSizeBytes": 65536
+        },
+        {
+          "filename": "data/shaders/emi_sprite.fragment",
+          "output": "runtime/scummvm/data/shaders/emi_sprite.fragment",
+          "maxSizeBytes": 65536
+        },
+        {
+          "filename": "data/shaders/emi_sprite.vertex",
+          "output": "runtime/scummvm/data/shaders/emi_sprite.vertex",
+          "maxSizeBytes": 65536
+        },
+        {
+          "filename": "data/shaders/freescape_bitmap.fragment",
+          "output": "runtime/scummvm/data/shaders/freescape_bitmap.fragment",
+          "maxSizeBytes": 65536
+        },
+        {
+          "filename": "data/shaders/freescape_bitmap.vertex",
+          "output": "runtime/scummvm/data/shaders/freescape_bitmap.vertex",
+          "maxSizeBytes": 65536
+        },
+        {
+          "filename": "data/shaders/freescape_cubemap.fragment",
+          "output": "runtime/scummvm/data/shaders/freescape_cubemap.fragment",
+          "maxSizeBytes": 65536
+        },
+        {
+          "filename": "data/shaders/freescape_cubemap.vertex",
+          "output": "runtime/scummvm/data/shaders/freescape_cubemap.vertex",
+          "maxSizeBytes": 65536
+        },
+        {
+          "filename": "data/shaders/freescape_triangle.fragment",
+          "output": "runtime/scummvm/data/shaders/freescape_triangle.fragment",
+          "maxSizeBytes": 65536
+        },
+        {
+          "filename": "data/shaders/freescape_triangle.vertex",
+          "output": "runtime/scummvm/data/shaders/freescape_triangle.vertex",
+          "maxSizeBytes": 65536
+        },
+        {
+          "filename": "data/shaders/grim_actor.fragment",
+          "output": "runtime/scummvm/data/shaders/grim_actor.fragment",
+          "maxSizeBytes": 65536
+        },
+        {
+          "filename": "data/shaders/grim_actor.vertex",
+          "output": "runtime/scummvm/data/shaders/grim_actor.vertex",
+          "maxSizeBytes": 65536
+        },
+        {
+          "filename": "data/shaders/grim_actorlights.fragment",
+          "output": "runtime/scummvm/data/shaders/grim_actorlights.fragment",
+          "maxSizeBytes": 65536
+        },
+        {
+          "filename": "data/shaders/grim_actorlights.vertex",
+          "output": "runtime/scummvm/data/shaders/grim_actorlights.vertex",
+          "maxSizeBytes": 65536
+        },
+        {
+          "filename": "data/shaders/grim_background.fragment",
+          "output": "runtime/scummvm/data/shaders/grim_background.fragment",
+          "maxSizeBytes": 65536
+        },
+        {
+          "filename": "data/shaders/grim_background.vertex",
+          "output": "runtime/scummvm/data/shaders/grim_background.vertex",
+          "maxSizeBytes": 65536
+        },
+        {
+          "filename": "data/shaders/grim_dim.fragment",
+          "output": "runtime/scummvm/data/shaders/grim_dim.fragment",
+          "maxSizeBytes": 65536
+        },
+        {
+          "filename": "data/shaders/grim_dim.vertex",
+          "output": "runtime/scummvm/data/shaders/grim_dim.vertex",
+          "maxSizeBytes": 65536
+        },
+        {
+          "filename": "data/shaders/grim_emerg.fragment",
+          "output": "runtime/scummvm/data/shaders/grim_emerg.fragment",
+          "maxSizeBytes": 65536
+        },
+        {
+          "filename": "data/shaders/grim_emerg.vertex",
+          "output": "runtime/scummvm/data/shaders/grim_emerg.vertex",
+          "maxSizeBytes": 65536
+        },
+        {
+          "filename": "data/shaders/grim_primitive.fragment",
+          "output": "runtime/scummvm/data/shaders/grim_primitive.fragment",
+          "maxSizeBytes": 65536
+        },
+        {
+          "filename": "data/shaders/grim_primitive.vertex",
+          "output": "runtime/scummvm/data/shaders/grim_primitive.vertex",
+          "maxSizeBytes": 65536
+        },
+        {
+          "filename": "data/shaders/grim_shadowplane.fragment",
+          "output": "runtime/scummvm/data/shaders/grim_shadowplane.fragment",
+          "maxSizeBytes": 65536
+        },
+        {
+          "filename": "data/shaders/grim_shadowplane.vertex",
+          "output": "runtime/scummvm/data/shaders/grim_shadowplane.vertex",
+          "maxSizeBytes": 65536
+        },
+        {
+          "filename": "data/shaders/grim_smush.fragment",
+          "output": "runtime/scummvm/data/shaders/grim_smush.fragment",
+          "maxSizeBytes": 65536
+        },
+        {
+          "filename": "data/shaders/grim_smush.vertex",
+          "output": "runtime/scummvm/data/shaders/grim_smush.vertex",
+          "maxSizeBytes": 65536
+        },
+        {
+          "filename": "data/shaders/grim_text.fragment",
+          "output": "runtime/scummvm/data/shaders/grim_text.fragment",
+          "maxSizeBytes": 65536
+        },
+        {
+          "filename": "data/shaders/grim_text.vertex",
+          "output": "runtime/scummvm/data/shaders/grim_text.vertex",
+          "maxSizeBytes": 65536
+        },
+        {
+          "filename": "data/shaders/hpl1_Ambient_Color.fragment",
+          "output": "runtime/scummvm/data/shaders/hpl1_Ambient_Color.fragment",
+          "maxSizeBytes": 65536
+        },
+        {
+          "filename": "data/shaders/hpl1_Bump2D_Light.fragment",
+          "output": "runtime/scummvm/data/shaders/hpl1_Bump2D_Light.fragment",
+          "maxSizeBytes": 65536
+        },
+        {
+          "filename": "data/shaders/hpl1_Bump2D_Light.vertex",
+          "output": "runtime/scummvm/data/shaders/hpl1_Bump2D_Light.vertex",
+          "maxSizeBytes": 65536
+        },
+        {
+          "filename": "data/shaders/hpl1_BumpColorSpec_Light.fragment",
+          "output": "runtime/scummvm/data/shaders/hpl1_BumpColorSpec_Light.fragment",
+          "maxSizeBytes": 65536
+        },
+        {
+          "filename": "data/shaders/hpl1_BumpColorSpec_Light_Spot.fragment",
+          "output": "runtime/scummvm/data/shaders/hpl1_BumpColorSpec_Light_Spot.fragment",
+          "maxSizeBytes": 65536
+        },
+        {
+          "filename": "data/shaders/hpl1_BumpSpec2D_Light.fragment",
+          "output": "runtime/scummvm/data/shaders/hpl1_BumpSpec2D_Light.fragment",
+          "maxSizeBytes": 65536
+        },
+        {
+          "filename": "data/shaders/hpl1_BumpSpec2D_Light.vertex",
+          "output": "runtime/scummvm/data/shaders/hpl1_BumpSpec2D_Light.vertex",
+          "maxSizeBytes": 65536
+        },
+        {
+          "filename": "data/shaders/hpl1_BumpSpec_Light.fragment",
+          "output": "runtime/scummvm/data/shaders/hpl1_BumpSpec_Light.fragment",
+          "maxSizeBytes": 65536
+        },
+        {
+          "filename": "data/shaders/hpl1_BumpSpec_Light_Spot.fragment",
+          "output": "runtime/scummvm/data/shaders/hpl1_BumpSpec_Light_Spot.fragment",
+          "maxSizeBytes": 65536
+        },
+        {
+          "filename": "data/shaders/hpl1_BumpSpec_Light_Spot_pass2.fragment",
+          "output": "runtime/scummvm/data/shaders/hpl1_BumpSpec_Light_Spot_pass2.fragment",
+          "maxSizeBytes": 65536
+        },
+        {
+          "filename": "data/shaders/hpl1_Bump_Light.fragment",
+          "output": "runtime/scummvm/data/shaders/hpl1_Bump_Light.fragment",
+          "maxSizeBytes": 65536
+        },
+        {
+          "filename": "data/shaders/hpl1_Bump_Light_Spot.fragment",
+          "output": "runtime/scummvm/data/shaders/hpl1_Bump_Light_Spot.fragment",
+          "maxSizeBytes": 65536
+        },
+        {
+          "filename": "data/shaders/hpl1_Bump_Light_Spot_pass2.fragment",
+          "output": "runtime/scummvm/data/shaders/hpl1_Bump_Light_Spot_pass2.fragment",
+          "maxSizeBytes": 65536
+        },
+        {
+          "filename": "data/shaders/hpl1_DiffuseSpec_Light.fragment",
+          "output": "runtime/scummvm/data/shaders/hpl1_DiffuseSpec_Light.fragment",
+          "maxSizeBytes": 65536
+        },
+        {
+          "filename": "data/shaders/hpl1_DiffuseSpec_Light.vertex",
+          "output": "runtime/scummvm/data/shaders/hpl1_DiffuseSpec_Light.vertex",
+          "maxSizeBytes": 65536
+        },
+        {
+          "filename": "data/shaders/hpl1_DiffuseSpec_Light_Spot.fragment",
+          "output": "runtime/scummvm/data/shaders/hpl1_DiffuseSpec_Light_Spot.fragment",
+          "maxSizeBytes": 65536
+        },
+        {
+          "filename": "data/shaders/hpl1_DiffuseSpec_Light_Spot.vertex",
+          "output": "runtime/scummvm/data/shaders/hpl1_DiffuseSpec_Light_Spot.vertex",
+          "maxSizeBytes": 65536
+        },
+        {
+          "filename": "data/shaders/hpl1_DiffuseSpec_Light_Spot_pass2.fragment",
+          "output": "runtime/scummvm/data/shaders/hpl1_DiffuseSpec_Light_Spot_pass2.fragment",
+          "maxSizeBytes": 65536
+        },
+        {
+          "filename": "data/shaders/hpl1_Diffuse_Color.fragment",
+          "output": "runtime/scummvm/data/shaders/hpl1_Diffuse_Color.fragment",
+          "maxSizeBytes": 65536
+        },
+        {
+          "filename": "data/shaders/hpl1_Diffuse_Color.vertex",
+          "output": "runtime/scummvm/data/shaders/hpl1_Diffuse_Color.vertex",
+          "maxSizeBytes": 65536
+        },
+        {
+          "filename": "data/shaders/hpl1_Diffuse_ColorMul.vertex",
+          "output": "runtime/scummvm/data/shaders/hpl1_Diffuse_ColorMul.vertex",
+          "maxSizeBytes": 65536
+        },
+        {
+          "filename": "data/shaders/hpl1_Diffuse_EnvMap_Reflect.fragment",
+          "output": "runtime/scummvm/data/shaders/hpl1_Diffuse_EnvMap_Reflect.fragment",
+          "maxSizeBytes": 65536
+        },
+        {
+          "filename": "data/shaders/hpl1_Diffuse_EnvMap_Reflect.vertex",
+          "output": "runtime/scummvm/data/shaders/hpl1_Diffuse_EnvMap_Reflect.vertex",
+          "maxSizeBytes": 65536
+        },
+        {
+          "filename": "data/shaders/hpl1_Diffuse_Light.fragment",
+          "output": "runtime/scummvm/data/shaders/hpl1_Diffuse_Light.fragment",
+          "maxSizeBytes": 65536
+        },
+        {
+          "filename": "data/shaders/hpl1_Diffuse_Light.vertex",
+          "output": "runtime/scummvm/data/shaders/hpl1_Diffuse_Light.vertex",
+          "maxSizeBytes": 65536
+        },
+        {
+          "filename": "data/shaders/hpl1_Diffuse_Light_Spot.fragment",
+          "output": "runtime/scummvm/data/shaders/hpl1_Diffuse_Light_Spot.fragment",
+          "maxSizeBytes": 65536
+        },
+        {
+          "filename": "data/shaders/hpl1_Diffuse_Light_Spot.vertex",
+          "output": "runtime/scummvm/data/shaders/hpl1_Diffuse_Light_Spot.vertex",
+          "maxSizeBytes": 65536
+        },
+        {
+          "filename": "data/shaders/hpl1_Diffuse_Light_Spot_pass1.fragment",
+          "output": "runtime/scummvm/data/shaders/hpl1_Diffuse_Light_Spot_pass1.fragment",
+          "maxSizeBytes": 65536
+        },
+        {
+          "filename": "data/shaders/hpl1_Diffuse_Light_Spot_pass2.fragment",
+          "output": "runtime/scummvm/data/shaders/hpl1_Diffuse_Light_Spot_pass2.fragment",
+          "maxSizeBytes": 65536
+        },
+        {
+          "filename": "data/shaders/hpl1_Fallback01_Bump_Light.fragment",
+          "output": "runtime/scummvm/data/shaders/hpl1_Fallback01_Bump_Light.fragment",
+          "maxSizeBytes": 65536
+        },
+        {
+          "filename": "data/shaders/hpl1_Fallback01_Diffuse_Light_Spot.fragment",
+          "output": "runtime/scummvm/data/shaders/hpl1_Fallback01_Diffuse_Light_Spot.fragment",
+          "maxSizeBytes": 65536
+        },
+        {
+          "filename": "data/shaders/hpl1_Fallback01_Diffuse_Light_Spot_p2.vertex",
+          "output": "runtime/scummvm/data/shaders/hpl1_Fallback01_Diffuse_Light_Spot_p2.vertex",
+          "maxSizeBytes": 65536
+        },
+        {
+          "filename": "data/shaders/hpl1_Fallback01_Diffuse_Light_p1.fragment",
+          "output": "runtime/scummvm/data/shaders/hpl1_Fallback01_Diffuse_Light_p1.fragment",
+          "maxSizeBytes": 65536
+        },
+        {
+          "filename": "data/shaders/hpl1_Fallback01_Diffuse_Light_p1.vertex",
+          "output": "runtime/scummvm/data/shaders/hpl1_Fallback01_Diffuse_Light_p1.vertex",
+          "maxSizeBytes": 65536
+        },
+        {
+          "filename": "data/shaders/hpl1_Fallback01_Diffuse_Light_p2.fragment",
+          "output": "runtime/scummvm/data/shaders/hpl1_Fallback01_Diffuse_Light_p2.fragment",
+          "maxSizeBytes": 65536
+        },
+        {
+          "filename": "data/shaders/hpl1_Fallback01_Diffuse_Light_p2.vertex",
+          "output": "runtime/scummvm/data/shaders/hpl1_Fallback01_Diffuse_Light_p2.vertex",
+          "maxSizeBytes": 65536
+        },
+        {
+          "filename": "data/shaders/hpl1_Fallback02_DIffuse_Light_Spot_p2.fragment",
+          "output": "runtime/scummvm/data/shaders/hpl1_Fallback02_DIffuse_Light_Spot_p2.fragment",
+          "maxSizeBytes": 65536
+        },
+        {
+          "filename": "data/shaders/hpl1_Fallback02_DIffuse_Light_Spot_p3.fragment",
+          "output": "runtime/scummvm/data/shaders/hpl1_Fallback02_DIffuse_Light_Spot_p3.fragment",
+          "maxSizeBytes": 65536
+        },
+        {
+          "filename": "data/shaders/hpl1_Fallback02_Diffuse_Light_Spot_p2.vertex",
+          "output": "runtime/scummvm/data/shaders/hpl1_Fallback02_Diffuse_Light_Spot_p2.vertex",
+          "maxSizeBytes": 65536
+        },
+        {
+          "filename": "data/shaders/hpl1_Fallback02_Diffuse_Light_Spot_p3.vertex",
+          "output": "runtime/scummvm/data/shaders/hpl1_Fallback02_Diffuse_Light_Spot_p3.vertex",
+          "maxSizeBytes": 65536
+        },
+        {
+          "filename": "data/shaders/hpl1_Fallback02_Diffuse_Light_p1.fragment",
+          "output": "runtime/scummvm/data/shaders/hpl1_Fallback02_Diffuse_Light_p1.fragment",
+          "maxSizeBytes": 65536
+        },
+        {
+          "filename": "data/shaders/hpl1_Fallback02_Diffuse_Light_p1.vertex",
+          "output": "runtime/scummvm/data/shaders/hpl1_Fallback02_Diffuse_Light_p1.vertex",
+          "maxSizeBytes": 65536
+        },
+        {
+          "filename": "data/shaders/hpl1_Fallback02_Diffuse_Light_p2.vertex",
+          "output": "runtime/scummvm/data/shaders/hpl1_Fallback02_Diffuse_Light_p2.vertex",
+          "maxSizeBytes": 65536
+        },
+        {
+          "filename": "data/shaders/hpl1_Fog_Solid.fragment",
+          "output": "runtime/scummvm/data/shaders/hpl1_Fog_Solid.fragment",
+          "maxSizeBytes": 65536
+        },
+        {
+          "filename": "data/shaders/hpl1_Fog_Solid.vertex",
+          "output": "runtime/scummvm/data/shaders/hpl1_Fog_Solid.vertex",
+          "maxSizeBytes": 65536
+        },
+        {
+          "filename": "data/shaders/hpl1_Fog_Trans.vertex",
+          "output": "runtime/scummvm/data/shaders/hpl1_Fog_Trans.vertex",
+          "maxSizeBytes": 65536
+        },
+        {
+          "filename": "data/shaders/hpl1_Fog_Trans_Alpha.fragment",
+          "output": "runtime/scummvm/data/shaders/hpl1_Fog_Trans_Alpha.fragment",
+          "maxSizeBytes": 65536
+        },
+        {
+          "filename": "data/shaders/hpl1_Fog_Trans_Mod.fragment",
+          "output": "runtime/scummvm/data/shaders/hpl1_Fog_Trans_Mod.fragment",
+          "maxSizeBytes": 65536
+        },
+        {
+          "filename": "data/shaders/hpl1_Fog_Trans_ModX2.fragment",
+          "output": "runtime/scummvm/data/shaders/hpl1_Fog_Trans_ModX2.fragment",
+          "maxSizeBytes": 65536
+        },
+        {
+          "filename": "data/shaders/hpl1_PostEffect_Bloom.fragment",
+          "output": "runtime/scummvm/data/shaders/hpl1_PostEffect_Bloom.fragment",
+          "maxSizeBytes": 65536
+        },
+        {
+          "filename": "data/shaders/hpl1_PostEffect_Bloom.vertex",
+          "output": "runtime/scummvm/data/shaders/hpl1_PostEffect_Bloom.vertex",
+          "maxSizeBytes": 65536
+        },
+        {
+          "filename": "data/shaders/hpl1_PostEffect_Blur.vertex",
+          "output": "runtime/scummvm/data/shaders/hpl1_PostEffect_Blur.vertex",
+          "maxSizeBytes": 65536
+        },
+        {
+          "filename": "data/shaders/hpl1_PostEffect_Blur_2D.fragment",
+          "output": "runtime/scummvm/data/shaders/hpl1_PostEffect_Blur_2D.fragment",
+          "maxSizeBytes": 65536
+        },
+        {
+          "filename": "data/shaders/hpl1_PostEffect_Blur_Rect.fragment",
+          "output": "runtime/scummvm/data/shaders/hpl1_PostEffect_Blur_Rect.fragment",
+          "maxSizeBytes": 65536
+        },
+        {
+          "filename": "data/shaders/hpl1_PostEffect_DoF.fragment",
+          "output": "runtime/scummvm/data/shaders/hpl1_PostEffect_DoF.fragment",
+          "maxSizeBytes": 65536
+        },
+        {
+          "filename": "data/shaders/hpl1_PostEffect_DoF.vertex",
+          "output": "runtime/scummvm/data/shaders/hpl1_PostEffect_DoF.vertex",
+          "maxSizeBytes": 65536
+        },
+        {
+          "filename": "data/shaders/hpl1_PostEffect_Fallback01_Blur_2D.fragment",
+          "output": "runtime/scummvm/data/shaders/hpl1_PostEffect_Fallback01_Blur_2D.fragment",
+          "maxSizeBytes": 65536
+        },
+        {
+          "filename": "data/shaders/hpl1_PostEffect_Fallback01_Blur_Rect.fragment",
+          "output": "runtime/scummvm/data/shaders/hpl1_PostEffect_Fallback01_Blur_Rect.fragment",
+          "maxSizeBytes": 65536
+        },
+        {
+          "filename": "data/shaders/hpl1_PostEffect_Motion.fragment",
+          "output": "runtime/scummvm/data/shaders/hpl1_PostEffect_Motion.fragment",
+          "maxSizeBytes": 65536
+        },
+        {
+          "filename": "data/shaders/hpl1_PostEffect_Motion.vertex",
+          "output": "runtime/scummvm/data/shaders/hpl1_PostEffect_Motion.vertex",
+          "maxSizeBytes": 65536
+        },
+        {
+          "filename": "data/shaders/hpl1_PostEffect_Motion_staticloop.fragment",
+          "output": "runtime/scummvm/data/shaders/hpl1_PostEffect_Motion_staticloop.fragment",
+          "maxSizeBytes": 65536
+        },
+        {
+          "filename": "data/shaders/hpl1_PostEffect_Offset.fragment",
+          "output": "runtime/scummvm/data/shaders/hpl1_PostEffect_Offset.fragment",
+          "maxSizeBytes": 65536
+        },
+        {
+          "filename": "data/shaders/hpl1_PostEffect_Offset.vertex",
+          "output": "runtime/scummvm/data/shaders/hpl1_PostEffect_Offset.vertex",
+          "maxSizeBytes": 65536
+        },
+        {
+          "filename": "data/shaders/hpl1_ShadowExtrude.fragment",
+          "output": "runtime/scummvm/data/shaders/hpl1_ShadowExtrude.fragment",
+          "maxSizeBytes": 65536
+        },
+        {
+          "filename": "data/shaders/hpl1_ShadowExtrude.vertex",
+          "output": "runtime/scummvm/data/shaders/hpl1_ShadowExtrude.vertex",
+          "maxSizeBytes": 65536
+        },
+        {
+          "filename": "data/shaders/hpl1_Water_Diffuse.fragment",
+          "output": "runtime/scummvm/data/shaders/hpl1_Water_Diffuse.fragment",
+          "maxSizeBytes": 65536
+        },
+        {
+          "filename": "data/shaders/hpl1_Water_Diffuse.vertex",
+          "output": "runtime/scummvm/data/shaders/hpl1_Water_Diffuse.vertex",
+          "maxSizeBytes": 65536
+        },
+        {
+          "filename": "data/shaders/hpl1_Water_Fog.fragment",
+          "output": "runtime/scummvm/data/shaders/hpl1_Water_Fog.fragment",
+          "maxSizeBytes": 65536
+        },
+        {
+          "filename": "data/shaders/hpl1_Water_Fog.vertex",
+          "output": "runtime/scummvm/data/shaders/hpl1_Water_Fog.vertex",
+          "maxSizeBytes": 65536
+        },
+        {
+          "filename": "data/shaders/hpl1_gamma_correction.fragment",
+          "output": "runtime/scummvm/data/shaders/hpl1_gamma_correction.fragment",
+          "maxSizeBytes": 65536
+        },
+        {
+          "filename": "data/shaders/hpl1_gamma_correction.vertex",
+          "output": "runtime/scummvm/data/shaders/hpl1_gamma_correction.vertex",
+          "maxSizeBytes": 65536
+        },
+        {
+          "filename": "data/shaders/hpl1_refract.fragment",
+          "output": "runtime/scummvm/data/shaders/hpl1_refract.fragment",
+          "maxSizeBytes": 65536
+        },
+        {
+          "filename": "data/shaders/hpl1_refract.vertex",
+          "output": "runtime/scummvm/data/shaders/hpl1_refract.vertex",
+          "maxSizeBytes": 65536
+        },
+        {
+          "filename": "data/shaders/hpl1_refract_special.fragment",
+          "output": "runtime/scummvm/data/shaders/hpl1_refract_special.fragment",
+          "maxSizeBytes": 65536
+        },
+        {
+          "filename": "data/shaders/hpl1_refract_water.fragment",
+          "output": "runtime/scummvm/data/shaders/hpl1_refract_water.fragment",
+          "maxSizeBytes": 65536
+        },
+        {
+          "filename": "data/shaders/hpl1_refract_water.vertex",
+          "output": "runtime/scummvm/data/shaders/hpl1_refract_water.vertex",
+          "maxSizeBytes": 65536
+        },
+        {
+          "filename": "data/shaders/myst3_box.fragment",
+          "output": "runtime/scummvm/data/shaders/myst3_box.fragment",
+          "maxSizeBytes": 65536
+        },
+        {
+          "filename": "data/shaders/myst3_box.vertex",
+          "output": "runtime/scummvm/data/shaders/myst3_box.vertex",
+          "maxSizeBytes": 65536
+        },
+        {
+          "filename": "data/shaders/myst3_cube.fragment",
+          "output": "runtime/scummvm/data/shaders/myst3_cube.fragment",
+          "maxSizeBytes": 65536
+        },
+        {
+          "filename": "data/shaders/myst3_cube.vertex",
+          "output": "runtime/scummvm/data/shaders/myst3_cube.vertex",
+          "maxSizeBytes": 65536
+        },
+        {
+          "filename": "data/shaders/myst3_text.fragment",
+          "output": "runtime/scummvm/data/shaders/myst3_text.fragment",
+          "maxSizeBytes": 65536
+        },
+        {
+          "filename": "data/shaders/myst3_text.vertex",
+          "output": "runtime/scummvm/data/shaders/myst3_text.vertex",
+          "maxSizeBytes": 65536
+        },
+        {
+          "filename": "data/shaders/stark_actor.fragment",
+          "output": "runtime/scummvm/data/shaders/stark_actor.fragment",
+          "maxSizeBytes": 65536
+        },
+        {
+          "filename": "data/shaders/stark_actor.vertex",
+          "output": "runtime/scummvm/data/shaders/stark_actor.vertex",
+          "maxSizeBytes": 65536
+        },
+        {
+          "filename": "data/shaders/stark_fade.fragment",
+          "output": "runtime/scummvm/data/shaders/stark_fade.fragment",
+          "maxSizeBytes": 65536
+        },
+        {
+          "filename": "data/shaders/stark_fade.vertex",
+          "output": "runtime/scummvm/data/shaders/stark_fade.vertex",
+          "maxSizeBytes": 65536
+        },
+        {
+          "filename": "data/shaders/stark_prop.fragment",
+          "output": "runtime/scummvm/data/shaders/stark_prop.fragment",
+          "maxSizeBytes": 65536
+        },
+        {
+          "filename": "data/shaders/stark_prop.vertex",
+          "output": "runtime/scummvm/data/shaders/stark_prop.vertex",
+          "maxSizeBytes": 65536
+        },
+        {
+          "filename": "data/shaders/stark_shadow.fragment",
+          "output": "runtime/scummvm/data/shaders/stark_shadow.fragment",
+          "maxSizeBytes": 65536
+        },
+        {
+          "filename": "data/shaders/stark_shadow.vertex",
+          "output": "runtime/scummvm/data/shaders/stark_shadow.vertex",
+          "maxSizeBytes": 65536
+        },
+        {
+          "filename": "data/shaders/stark_surface.fragment",
+          "output": "runtime/scummvm/data/shaders/stark_surface.fragment",
+          "maxSizeBytes": 65536
+        },
+        {
+          "filename": "data/shaders/stark_surface.vertex",
+          "output": "runtime/scummvm/data/shaders/stark_surface.vertex",
+          "maxSizeBytes": 65536
+        },
+        {
+          "filename": "data/shaders/stark_surface_fill.fragment",
+          "output": "runtime/scummvm/data/shaders/stark_surface_fill.fragment",
+          "maxSizeBytes": 65536
+        },
+        {
+          "filename": "data/shaders/stark_surface_fill.vertex",
+          "output": "runtime/scummvm/data/shaders/stark_surface_fill.vertex",
+          "maxSizeBytes": 65536
+        },
+        {
+          "filename": "data/shaders/wme_fade.fragment",
+          "output": "runtime/scummvm/data/shaders/wme_fade.fragment",
+          "maxSizeBytes": 65536
+        },
+        {
+          "filename": "data/shaders/wme_fade.vertex",
+          "output": "runtime/scummvm/data/shaders/wme_fade.vertex",
+          "maxSizeBytes": 65536
+        },
+        {
+          "filename": "data/shaders/wme_flat_shadow_modelx.fragment",
+          "output": "runtime/scummvm/data/shaders/wme_flat_shadow_modelx.fragment",
+          "maxSizeBytes": 65536
+        },
+        {
+          "filename": "data/shaders/wme_flat_shadow_modelx.vertex",
+          "output": "runtime/scummvm/data/shaders/wme_flat_shadow_modelx.vertex",
+          "maxSizeBytes": 65536
+        },
+        {
+          "filename": "data/shaders/wme_geometry.fragment",
+          "output": "runtime/scummvm/data/shaders/wme_geometry.fragment",
+          "maxSizeBytes": 65536
+        },
+        {
+          "filename": "data/shaders/wme_geometry.vertex",
+          "output": "runtime/scummvm/data/shaders/wme_geometry.vertex",
+          "maxSizeBytes": 65536
+        },
+        {
+          "filename": "data/shaders/wme_line.fragment",
+          "output": "runtime/scummvm/data/shaders/wme_line.fragment",
+          "maxSizeBytes": 65536
+        },
+        {
+          "filename": "data/shaders/wme_line.vertex",
+          "output": "runtime/scummvm/data/shaders/wme_line.vertex",
+          "maxSizeBytes": 65536
+        },
+        {
+          "filename": "data/shaders/wme_modelx.fragment",
+          "output": "runtime/scummvm/data/shaders/wme_modelx.fragment",
+          "maxSizeBytes": 65536
+        },
+        {
+          "filename": "data/shaders/wme_modelx.vertex",
+          "output": "runtime/scummvm/data/shaders/wme_modelx.vertex",
+          "maxSizeBytes": 65536
+        },
+        {
+          "filename": "data/shaders/wme_postfilter.fragment",
+          "output": "runtime/scummvm/data/shaders/wme_postfilter.fragment",
+          "maxSizeBytes": 65536
+        },
+        {
+          "filename": "data/shaders/wme_postfilter.vertex",
+          "output": "runtime/scummvm/data/shaders/wme_postfilter.vertex",
+          "maxSizeBytes": 65536
+        },
+        {
+          "filename": "data/shaders/wme_shadow_mask.fragment",
+          "output": "runtime/scummvm/data/shaders/wme_shadow_mask.fragment",
+          "maxSizeBytes": 65536
+        },
+        {
+          "filename": "data/shaders/wme_shadow_mask.vertex",
+          "output": "runtime/scummvm/data/shaders/wme_shadow_mask.vertex",
+          "maxSizeBytes": 65536
+        },
+        {
+          "filename": "data/shaders/wme_shadow_volume.fragment",
+          "output": "runtime/scummvm/data/shaders/wme_shadow_volume.fragment",
+          "maxSizeBytes": 65536
+        },
+        {
+          "filename": "data/shaders/wme_shadow_volume.vertex",
+          "output": "runtime/scummvm/data/shaders/wme_shadow_volume.vertex",
+          "maxSizeBytes": 65536
+        },
+        {
+          "filename": "data/shaders/wme_simple_shadow.fragment",
+          "output": "runtime/scummvm/data/shaders/wme_simple_shadow.fragment",
+          "maxSizeBytes": 65536
+        },
+        {
+          "filename": "data/shaders/wme_simple_shadow.vertex",
+          "output": "runtime/scummvm/data/shaders/wme_simple_shadow.vertex",
+          "maxSizeBytes": 65536
+        },
+        {
+          "filename": "data/shaders/wme_sprite.fragment",
+          "output": "runtime/scummvm/data/shaders/wme_sprite.fragment",
+          "maxSizeBytes": 65536
+        },
+        {
+          "filename": "data/shaders/wme_sprite.vertex",
+          "output": "runtime/scummvm/data/shaders/wme_sprite.vertex",
+          "maxSizeBytes": 65536
+        },
+        {
+          "filename": "data/sky.cpt",
+          "output": "runtime/scummvm/data/sky.cpt",
+          "maxSizeBytes": 524288
+        },
+        {
+          "filename": "data/supernova.dat",
+          "output": "runtime/scummvm/data/supernova.dat",
+          "maxSizeBytes": 524288
+        },
+        {
+          "filename": "data/teenagent.dat",
+          "output": "runtime/scummvm/data/teenagent.dat",
+          "maxSizeBytes": 524288
+        },
+        {
+          "filename": "data/titanic.dat",
+          "output": "runtime/scummvm/data/titanic.dat",
+          "maxSizeBytes": 4194304
+        },
+        {
+          "filename": "data/tony.dat",
+          "output": "runtime/scummvm/data/tony.dat",
+          "maxSizeBytes": 65536
+        },
+        {
+          "filename": "data/toon.dat",
+          "output": "runtime/scummvm/data/toon.dat",
+          "maxSizeBytes": 65536
+        },
+        {
+          "filename": "data/translations.dat",
+          "output": "runtime/scummvm/data/translations.dat",
+          "maxSizeBytes": 4194304
+        },
+        {
+          "filename": "data/ultima.dat",
+          "output": "runtime/scummvm/data/ultima.dat",
+          "maxSizeBytes": 16777216
+        },
+        {
+          "filename": "data/ultima8.dat",
+          "output": "runtime/scummvm/data/ultima8.dat",
+          "maxSizeBytes": 262144
+        },
+        {
+          "filename": "data/wintermute.zip",
+          "output": "runtime/scummvm/data/wintermute.zip",
+          "maxSizeBytes": 65536
+        },
+        {
+          "filename": "licenses/AUTHORS",
+          "output": "licenses/scummvm/AUTHORS",
+          "maxSizeBytes": 65536
+        },
+        {
+          "filename": "licenses/COPYING",
+          "output": "licenses/scummvm/COPYING",
+          "maxSizeBytes": 65536
+        },
+        {
+          "filename": "licenses/COPYING.Apache",
+          "output": "licenses/scummvm/COPYING.Apache",
+          "maxSizeBytes": 65536
+        },
+        {
+          "filename": "licenses/COPYING.BSD",
+          "output": "licenses/scummvm/COPYING.BSD",
+          "maxSizeBytes": 65536
+        },
+        {
+          "filename": "licenses/COPYING.BSL",
+          "output": "licenses/scummvm/COPYING.BSL",
+          "maxSizeBytes": 65536
+        },
+        {
+          "filename": "licenses/COPYING.GLAD",
+          "output": "licenses/scummvm/COPYING.GLAD",
+          "maxSizeBytes": 65536
+        },
+        {
+          "filename": "licenses/COPYING.ISC",
+          "output": "licenses/scummvm/COPYING.ISC",
+          "maxSizeBytes": 65536
+        },
+        {
+          "filename": "licenses/COPYING.LGPL",
+          "output": "licenses/scummvm/COPYING.LGPL",
+          "maxSizeBytes": 65536
+        },
+        {
+          "filename": "licenses/COPYING.LUA",
+          "output": "licenses/scummvm/COPYING.LUA",
+          "maxSizeBytes": 65536
+        },
+        {
+          "filename": "licenses/COPYING.MIT",
+          "output": "licenses/scummvm/COPYING.MIT",
+          "maxSizeBytes": 65536
+        },
+        {
+          "filename": "licenses/COPYING.MKV",
+          "output": "licenses/scummvm/COPYING.MKV",
+          "maxSizeBytes": 65536
+        },
+        {
+          "filename": "licenses/COPYING.MPL",
+          "output": "licenses/scummvm/COPYING.MPL",
+          "maxSizeBytes": 65536
+        },
+        {
+          "filename": "licenses/COPYING.OFL",
+          "output": "licenses/scummvm/COPYING.OFL",
+          "maxSizeBytes": 65536
+        },
+        {
+          "filename": "licenses/COPYING.TINYGL",
+          "output": "licenses/scummvm/COPYING.TINYGL",
+          "maxSizeBytes": 65536
+        },
+        {
+          "filename": "licenses/COPYRIGHT",
+          "output": "licenses/scummvm/COPYRIGHT",
+          "maxSizeBytes": 65536
+        },
+        {
+          "filename": "licenses/CatharonLicense.txt",
+          "output": "licenses/scummvm/CatharonLicense.txt",
+          "maxSizeBytes": 65536
+        },
+        {
+          "filename": "licenses/SDL3-LICENSE.txt",
+          "output": "licenses/scummvm/SDL3-LICENSE.txt",
+          "maxSizeBytes": 1048576
+        },
+        {
+          "filename": "licenses/build-inputs.json",
+          "output": "licenses/scummvm/build-inputs.json",
+          "maxSizeBytes": 65536
+        },
+        {
+          "filename": "licenses/libmad-COPYING",
+          "output": "licenses/scummvm/libmad-COPYING",
+          "maxSizeBytes": 65536
+        },
+        {
+          "filename": "licenses/libmpeg2-COPYING",
+          "output": "licenses/scummvm/libmpeg2-COPYING",
+          "maxSizeBytes": 65536
+        },
+        {
+          "filename": "licenses/libtheora-COPYING",
+          "output": "licenses/scummvm/libtheora-COPYING",
+          "maxSizeBytes": 65536
+        },
+        {
+          "filename": "manifest.json",
+          "output": "runtime/scummvm/manifest.json",
+          "maxSizeBytes": 65536
+        },
+        {
+          "filename": "native/linux-x86_64/scummvm-detector",
+          "output": "runtime/scummvm/native/linux-x86_64/scummvm-detector",
+          "maxSizeBytes": 33554432
+        },
+        {
+          "filename": "plugins/libaccess.so",
+          "output": "runtime/scummvm/plugins/libaccess.so",
+          "maxSizeBytes": 2097152
+        },
+        {
+          "filename": "plugins/libadl.so",
+          "output": "runtime/scummvm/plugins/libadl.so",
+          "maxSizeBytes": 2097152
+        },
+        {
+          "filename": "plugins/libagi.so",
+          "output": "runtime/scummvm/plugins/libagi.so",
+          "maxSizeBytes": 2097152
+        },
+        {
+          "filename": "plugins/libagos.so",
+          "output": "runtime/scummvm/plugins/libagos.so",
+          "maxSizeBytes": 4194304
+        },
+        {
+          "filename": "plugins/libags.so",
+          "output": "runtime/scummvm/plugins/libags.so",
+          "maxSizeBytes": 16777216
+        },
+        {
+          "filename": "plugins/libalcachofa.so",
+          "output": "runtime/scummvm/plugins/libalcachofa.so",
+          "maxSizeBytes": 2097152
+        },
+        {
+          "filename": "plugins/libalg.so",
+          "output": "runtime/scummvm/plugins/libalg.so",
+          "maxSizeBytes": 4194304
+        },
+        {
+          "filename": "plugins/libasylum.so",
+          "output": "runtime/scummvm/plugins/libasylum.so",
+          "maxSizeBytes": 4194304
+        },
+        {
+          "filename": "plugins/libawe.so",
+          "output": "runtime/scummvm/plugins/libawe.so",
+          "maxSizeBytes": 524288
+        },
+        {
+          "filename": "plugins/libbagel.so",
+          "output": "runtime/scummvm/plugins/libbagel.so",
+          "maxSizeBytes": 8388608
+        },
+        {
+          "filename": "plugins/libbbvs.so",
+          "output": "runtime/scummvm/plugins/libbbvs.so",
+          "maxSizeBytes": 1048576
+        },
+        {
+          "filename": "plugins/libbladerunner.so",
+          "output": "runtime/scummvm/plugins/libbladerunner.so",
+          "maxSizeBytes": 8388608
+        },
+        {
+          "filename": "plugins/libbolt.so",
+          "output": "runtime/scummvm/plugins/libbolt.so",
+          "maxSizeBytes": 1048576
+        },
+        {
+          "filename": "plugins/libburied.so",
+          "output": "runtime/scummvm/plugins/libburied.so",
+          "maxSizeBytes": 4194304
+        },
+        {
+          "filename": "plugins/libcge.so",
+          "output": "runtime/scummvm/plugins/libcge.so",
+          "maxSizeBytes": 524288
+        },
+        {
+          "filename": "plugins/libcge2.so",
+          "output": "runtime/scummvm/plugins/libcge2.so",
+          "maxSizeBytes": 524288
+        },
+        {
+          "filename": "plugins/libchewy.so",
+          "output": "runtime/scummvm/plugins/libchewy.so",
+          "maxSizeBytes": 2097152
+        },
+        {
+          "filename": "plugins/libcine.so",
+          "output": "runtime/scummvm/plugins/libcine.so",
+          "maxSizeBytes": 2097152
+        },
+        {
+          "filename": "plugins/libcomposer.so",
+          "output": "runtime/scummvm/plugins/libcomposer.so",
+          "maxSizeBytes": 524288
+        },
+        {
+          "filename": "plugins/libcrab.so",
+          "output": "runtime/scummvm/plugins/libcrab.so",
+          "maxSizeBytes": 4194304
+        },
+        {
+          "filename": "plugins/libcruise.so",
+          "output": "runtime/scummvm/plugins/libcruise.so",
+          "maxSizeBytes": 1048576
+        },
+        {
+          "filename": "plugins/libcryomni3d.so",
+          "output": "runtime/scummvm/plugins/libcryomni3d.so",
+          "maxSizeBytes": 2097152
+        },
+        {
+          "filename": "plugins/libdarkseed.so",
+          "output": "runtime/scummvm/plugins/libdarkseed.so",
+          "maxSizeBytes": 2097152
+        },
+        {
+          "filename": "plugins/libdgds.so",
+          "output": "runtime/scummvm/plugins/libdgds.so",
+          "maxSizeBytes": 4194304
+        },
+        {
+          "filename": "plugins/libdirector.so",
+          "output": "runtime/scummvm/plugins/libdirector.so",
+          "maxSizeBytes": 16777216
+        },
+        {
+          "filename": "plugins/libdraci.so",
+          "output": "runtime/scummvm/plugins/libdraci.so",
+          "maxSizeBytes": 1048576
+        },
+        {
+          "filename": "plugins/libdragons.so",
+          "output": "runtime/scummvm/plugins/libdragons.so",
+          "maxSizeBytes": 1048576
+        },
+        {
+          "filename": "plugins/libdrascula.so",
+          "output": "runtime/scummvm/plugins/libdrascula.so",
+          "maxSizeBytes": 1048576
+        },
+        {
+          "filename": "plugins/libdreamweb.so",
+          "output": "runtime/scummvm/plugins/libdreamweb.so",
+          "maxSizeBytes": 1048576
+        },
+        {
+          "filename": "plugins/libefh.so",
+          "output": "runtime/scummvm/plugins/libefh.so",
+          "maxSizeBytes": 1048576
+        },
+        {
+          "filename": "plugins/libfreescape.so",
+          "output": "runtime/scummvm/plugins/libfreescape.so",
+          "maxSizeBytes": 8388608
+        },
+        {
+          "filename": "plugins/libgamos.so",
+          "output": "runtime/scummvm/plugins/libgamos.so",
+          "maxSizeBytes": 1048576
+        },
+        {
+          "filename": "plugins/libglk.so",
+          "output": "runtime/scummvm/plugins/libglk.so",
+          "maxSizeBytes": 16777216
+        },
+        {
+          "filename": "plugins/libgnap.so",
+          "output": "runtime/scummvm/plugins/libgnap.so",
+          "maxSizeBytes": 2097152
+        },
+        {
+          "filename": "plugins/libgob.so",
+          "output": "runtime/scummvm/plugins/libgob.so",
+          "maxSizeBytes": 8388608
+        },
+        {
+          "filename": "plugins/libgot.so",
+          "output": "runtime/scummvm/plugins/libgot.so",
+          "maxSizeBytes": 1048576
+        },
+        {
+          "filename": "plugins/libgriffon.so",
+          "output": "runtime/scummvm/plugins/libgriffon.so",
+          "maxSizeBytes": 1048576
+        },
+        {
+          "filename": "plugins/libgrim.so",
+          "output": "runtime/scummvm/plugins/libgrim.so",
+          "maxSizeBytes": 8388608
+        },
+        {
+          "filename": "plugins/libgroovie.so",
+          "output": "runtime/scummvm/plugins/libgroovie.so",
+          "maxSizeBytes": 1048576
+        },
+        {
+          "filename": "plugins/libhadesch.so",
+          "output": "runtime/scummvm/plugins/libhadesch.so",
+          "maxSizeBytes": 4194304
+        },
+        {
+          "filename": "plugins/libhdb.so",
+          "output": "runtime/scummvm/plugins/libhdb.so",
+          "maxSizeBytes": 2097152
+        },
+        {
+          "filename": "plugins/libhopkins.so",
+          "output": "runtime/scummvm/plugins/libhopkins.so",
+          "maxSizeBytes": 2097152
+        },
+        {
+          "filename": "plugins/libhpl1.so",
+          "output": "runtime/scummvm/plugins/libhpl1.so",
+          "maxSizeBytes": 33554432
+        },
+        {
+          "filename": "plugins/libhugo.so",
+          "output": "runtime/scummvm/plugins/libhugo.so",
+          "maxSizeBytes": 1048576
+        },
+        {
+          "filename": "plugins/libhypno.so",
+          "output": "runtime/scummvm/plugins/libhypno.so",
+          "maxSizeBytes": 4194304
+        },
+        {
+          "filename": "plugins/libillusions.so",
+          "output": "runtime/scummvm/plugins/libillusions.so",
+          "maxSizeBytes": 2097152
+        },
+        {
+          "filename": "plugins/libkingdom.so",
+          "output": "runtime/scummvm/plugins/libkingdom.so",
+          "maxSizeBytes": 1048576
+        },
+        {
+          "filename": "plugins/libkyra.so",
+          "output": "runtime/scummvm/plugins/libkyra.so",
+          "maxSizeBytes": 16777216
+        },
+        {
+          "filename": "plugins/liblab.so",
+          "output": "runtime/scummvm/plugins/liblab.so",
+          "maxSizeBytes": 1048576
+        },
+        {
+          "filename": "plugins/liblastexpress.so",
+          "output": "runtime/scummvm/plugins/liblastexpress.so",
+          "maxSizeBytes": 8388608
+        },
+        {
+          "filename": "plugins/liblure.so",
+          "output": "runtime/scummvm/plugins/liblure.so",
+          "maxSizeBytes": 2097152
+        },
+        {
+          "filename": "plugins/libm4.so",
+          "output": "runtime/scummvm/plugins/libm4.so",
+          "maxSizeBytes": 8388608
+        },
+        {
+          "filename": "plugins/libmade.so",
+          "output": "runtime/scummvm/plugins/libmade.so",
+          "maxSizeBytes": 1048576
+        },
+        {
+          "filename": "plugins/libmads.so",
+          "output": "runtime/scummvm/plugins/libmads.so",
+          "maxSizeBytes": 8388608
+        },
+        {
+          "filename": "plugins/libmm.so",
+          "output": "runtime/scummvm/plugins/libmm.so",
+          "maxSizeBytes": 8388608
+        },
+        {
+          "filename": "plugins/libmohawk.so",
+          "output": "runtime/scummvm/plugins/libmohawk.so",
+          "maxSizeBytes": 4194304
+        },
+        {
+          "filename": "plugins/libmortevielle.so",
+          "output": "runtime/scummvm/plugins/libmortevielle.so",
+          "maxSizeBytes": 1048576
+        },
+        {
+          "filename": "plugins/libmtropolis.so",
+          "output": "runtime/scummvm/plugins/libmtropolis.so",
+          "maxSizeBytes": 8388608
+        },
+        {
+          "filename": "plugins/libmyst3.so",
+          "output": "runtime/scummvm/plugins/libmyst3.so",
+          "maxSizeBytes": 4194304
+        },
+        {
+          "filename": "plugins/libnancy.so",
+          "output": "runtime/scummvm/plugins/libnancy.so",
+          "maxSizeBytes": 8388608
+        },
+        {
+          "filename": "plugins/libneverhood.so",
+          "output": "runtime/scummvm/plugins/libneverhood.so",
+          "maxSizeBytes": 4194304
+        },
+        {
+          "filename": "plugins/libngi.so",
+          "output": "runtime/scummvm/plugins/libngi.so",
+          "maxSizeBytes": 4194304
+        },
+        {
+          "filename": "plugins/libparallaction.so",
+          "output": "runtime/scummvm/plugins/libparallaction.so",
+          "maxSizeBytes": 2097152
+        },
+        {
+          "filename": "plugins/libpegasus.so",
+          "output": "runtime/scummvm/plugins/libpegasus.so",
+          "maxSizeBytes": 4194304
+        },
+        {
+          "filename": "plugins/libpelrock.so",
+          "output": "runtime/scummvm/plugins/libpelrock.so",
+          "maxSizeBytes": 2097152
+        },
+        {
+          "filename": "plugins/libpetka.so",
+          "output": "runtime/scummvm/plugins/libpetka.so",
+          "maxSizeBytes": 1048576
+        },
+        {
+          "filename": "plugins/libphoenixvr.so",
+          "output": "runtime/scummvm/plugins/libphoenixvr.so",
+          "maxSizeBytes": 1048576
+        },
+        {
+          "filename": "plugins/libpink.so",
+          "output": "runtime/scummvm/plugins/libpink.so",
+          "maxSizeBytes": 1048576
+        },
+        {
+          "filename": "plugins/libplumbers.so",
+          "output": "runtime/scummvm/plugins/libplumbers.so",
+          "maxSizeBytes": 262144
+        },
+        {
+          "filename": "plugins/libprince.so",
+          "output": "runtime/scummvm/plugins/libprince.so",
+          "maxSizeBytes": 1048576
+        },
+        {
+          "filename": "plugins/libprivate.so",
+          "output": "runtime/scummvm/plugins/libprivate.so",
+          "maxSizeBytes": 1048576
+        },
+        {
+          "filename": "plugins/libqdengine.so",
+          "output": "runtime/scummvm/plugins/libqdengine.so",
+          "maxSizeBytes": 8388608
+        },
+        {
+          "filename": "plugins/libqueen.so",
+          "output": "runtime/scummvm/plugins/libqueen.so",
+          "maxSizeBytes": 1048576
+        },
+        {
+          "filename": "plugins/libsaga.so",
+          "output": "runtime/scummvm/plugins/libsaga.so",
+          "maxSizeBytes": 2097152
+        },
+        {
+          "filename": "plugins/libsaga2.so",
+          "output": "runtime/scummvm/plugins/libsaga2.so",
+          "maxSizeBytes": 4194304
+        },
+        {
+          "filename": "plugins/libsci.so",
+          "output": "runtime/scummvm/plugins/libsci.so",
+          "maxSizeBytes": 8388608
+        },
+        {
+          "filename": "plugins/libscumm.so",
+          "output": "runtime/scummvm/plugins/libscumm.so",
+          "maxSizeBytes": 16777216
+        },
+        {
+          "filename": "plugins/libsherlock.so",
+          "output": "runtime/scummvm/plugins/libsherlock.so",
+          "maxSizeBytes": 4194304
+        },
+        {
+          "filename": "plugins/libsky.so",
+          "output": "runtime/scummvm/plugins/libsky.so",
+          "maxSizeBytes": 1048576
+        },
+        {
+          "filename": "plugins/libsludge.so",
+          "output": "runtime/scummvm/plugins/libsludge.so",
+          "maxSizeBytes": 2097152
+        },
+        {
+          "filename": "plugins/libstark.so",
+          "output": "runtime/scummvm/plugins/libstark.so",
+          "maxSizeBytes": 4194304
+        },
+        {
+          "filename": "plugins/libsupernova.so",
+          "output": "runtime/scummvm/plugins/libsupernova.so",
+          "maxSizeBytes": 2097152
+        },
+        {
+          "filename": "plugins/libsword1.so",
+          "output": "runtime/scummvm/plugins/libsword1.so",
+          "maxSizeBytes": 1048576
+        },
+        {
+          "filename": "plugins/libsword2.so",
+          "output": "runtime/scummvm/plugins/libsword2.so",
+          "maxSizeBytes": 2097152
+        },
+        {
+          "filename": "plugins/libsword25.so",
+          "output": "runtime/scummvm/plugins/libsword25.so",
+          "maxSizeBytes": 2097152
+        },
+        {
+          "filename": "plugins/libteenagent.so",
+          "output": "runtime/scummvm/plugins/libteenagent.so",
+          "maxSizeBytes": 1048576
+        },
+        {
+          "filename": "plugins/libtetraedge.so",
+          "output": "runtime/scummvm/plugins/libtetraedge.so",
+          "maxSizeBytes": 8388608
+        },
+        {
+          "filename": "plugins/libtinsel.so",
+          "output": "runtime/scummvm/plugins/libtinsel.so",
+          "maxSizeBytes": 4194304
+        },
+        {
+          "filename": "plugins/libtitanic.so",
+          "output": "runtime/scummvm/plugins/libtitanic.so",
+          "maxSizeBytes": 16777216
+        },
+        {
+          "filename": "plugins/libtoltecs.so",
+          "output": "runtime/scummvm/plugins/libtoltecs.so",
+          "maxSizeBytes": 1048576
+        },
+        {
+          "filename": "plugins/libtony.so",
+          "output": "runtime/scummvm/plugins/libtony.so",
+          "maxSizeBytes": 2097152
+        },
+        {
+          "filename": "plugins/libtoon.so",
+          "output": "runtime/scummvm/plugins/libtoon.so",
+          "maxSizeBytes": 1048576
+        },
+        {
+          "filename": "plugins/libtot.so",
+          "output": "runtime/scummvm/plugins/libtot.so",
+          "maxSizeBytes": 2097152
+        },
+        {
+          "filename": "plugins/libtouche.so",
+          "output": "runtime/scummvm/plugins/libtouche.so",
+          "maxSizeBytes": 1048576
+        },
+        {
+          "filename": "plugins/libtrecision.so",
+          "output": "runtime/scummvm/plugins/libtrecision.so",
+          "maxSizeBytes": 1048576
+        },
+        {
+          "filename": "plugins/libtsage.so",
+          "output": "runtime/scummvm/plugins/libtsage.so",
+          "maxSizeBytes": 16777216
+        },
+        {
+          "filename": "plugins/libtucker.so",
+          "output": "runtime/scummvm/plugins/libtucker.so",
+          "maxSizeBytes": 1048576
+        },
+        {
+          "filename": "plugins/libtwine.so",
+          "output": "runtime/scummvm/plugins/libtwine.so",
+          "maxSizeBytes": 2097152
+        },
+        {
+          "filename": "plugins/libtwp.so",
+          "output": "runtime/scummvm/plugins/libtwp.so",
+          "maxSizeBytes": 8388608
+        },
+        {
+          "filename": "plugins/libultima.so",
+          "output": "runtime/scummvm/plugins/libultima.so",
+          "maxSizeBytes": 16777216
+        },
+        {
+          "filename": "plugins/libvcruise.so",
+          "output": "runtime/scummvm/plugins/libvcruise.so",
+          "maxSizeBytes": 2097152
+        },
+        {
+          "filename": "plugins/libvoyeur.so",
+          "output": "runtime/scummvm/plugins/libvoyeur.so",
+          "maxSizeBytes": 1048576
+        },
+        {
+          "filename": "plugins/libwage.so",
+          "output": "runtime/scummvm/plugins/libwage.so",
+          "maxSizeBytes": 1048576
+        },
+        {
+          "filename": "plugins/libwintermute.so",
+          "output": "runtime/scummvm/plugins/libwintermute.so",
+          "maxSizeBytes": 8388608
+        },
+        {
+          "filename": "plugins/libzvision.so",
+          "output": "runtime/scummvm/plugins/libzvision.so",
+          "maxSizeBytes": 2097152
+        },
+        {
+          "filename": "scummvm-retrom.mjs",
+          "output": "runtime/scummvm/scummvm-retrom.mjs",
+          "maxSizeBytes": 65536
+        },
+        {
+          "filename": "scummvm.mjs",
+          "output": "runtime/scummvm/scummvm.mjs",
+          "maxSizeBytes": 8388608
+        },
+        {
+          "filename": "scummvm.wasm",
+          "output": "runtime/scummvm/scummvm.wasm",
+          "maxSizeBytes": 33554432
+        }
+      ]
     }
   ],
   "localAssets": [

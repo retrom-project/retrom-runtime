@@ -16,15 +16,15 @@ type StateManager = {
 type ManagerConstructor = {prototype?: StateManager};
 type RuntimeConfig = {
   print?: (...args: unknown[]) => void;
+  postMainLoop?: (...args: unknown[]) => void;
   printErr?: (...args: unknown[]) => void;
   [name: string]: unknown;
 };
 type RuntimeFactory = ((config: RuntimeConfig) => unknown) & {retromStateRestoreHook?: boolean};
 type RestoreWindow = Window & {EJS_GameManager?: ManagerConstructor; EJS_Runtime?: RuntimeFactory};
 type PendingLoad = {
-  reject: (error: Error) => void;
-  resolve: () => void;
-  timer: number;
+  finish: (error?: Error) => void;
+  observed: boolean;
 };
 type PendingDelay = {reject: (error: Error) => void; timer: number};
 
@@ -34,6 +34,7 @@ async function waitForSerializable(
   target: RestoreWindow,
   isActive: () => boolean,
   delay: (milliseconds: number) => Promise<void>,
+  requiresInitialFrame: boolean,
 ) {
   while (isActive()) {
     let serializable = false;
@@ -43,7 +44,9 @@ async function waitForSerializable(
       // diagnostic frame counter can still be zero in a serializable core.
       serializable = succeeded === "1" && Number.isSafeInteger(Number(size)) && Number(size) > 0;
     } catch { /* Some cores reject serialization until their GPU exists. */ }
-    if (serializable) {return;}
+    // MAME 2003 Plus can serialize at frame zero, but its native unserialize
+    // explicitly rejects automatic loading until a CPU frame has completed.
+    if (serializable && (!requiresInitialFrame || (manager.getFrameNum?.() ?? 0) > 0)) {return;}
     if (target.performance.now() >= deadline) {throw new Error("PLAYER_SAVE_STATE_RESTORE_TIMEOUT");}
     manager.toggleMainLoop?.(true);
     await delay(Math.min(50, Math.max(1, deadline - target.performance.now())));
@@ -56,6 +59,7 @@ function createStateLoader(dependencies: {
   isActive: () => boolean;
   delay: (milliseconds: number) => Promise<void>;
   registerLoad: (milliseconds: number) => {cancel: () => void; promise: Promise<void>};
+  requiresInitialFrame: boolean;
 }) {
   return async function loadExplicitStateAndWait(
     this: StateManager,
@@ -69,7 +73,9 @@ function createStateLoader(dependencies: {
       throw new Error("PLAYER_STATE_RESTORE_COMPATIBILITY_UNAVAILABLE");
     }
     const deadline = dependencies.target.performance.now() + timeoutMs;
-    await waitForSerializable(this, deadline, dependencies.target, dependencies.isActive, dependencies.delay);
+    await waitForSerializable(this, deadline, dependencies.target, dependencies.isActive, dependencies.delay,
+      dependencies.requiresInitialFrame);
+    this.toggleMainLoop(false);
     const completion = dependencies.registerLoad(Math.max(1, deadline - dependencies.target.performance.now()));
     try {
       try {fileSystem.unlink(statePath);} catch { /* absent before the first load */ }
@@ -86,9 +92,9 @@ function createStateLoader(dependencies: {
   };
 }
 
-export function installEmulatorJs423StateRestoreCompatibility(playerWindow: Window = window) {
+export function installEmulatorJs423StateRestoreCompatibility(playerWindow: Window = window, requiresInitialFrame = false) {
   const target = playerWindow as RestoreWindow;
-  const pendingLoads: PendingLoad[] = [];
+  const pendingLoads = new Set<PendingLoad>();
   const pendingDelays = new Set<PendingDelay>();
   const restorePrototypes: Array<() => void> = [];
   let active = true;
@@ -103,32 +109,26 @@ export function installEmulatorJs423StateRestoreCompatibility(playerWindow: Wind
   const registerLoad = (milliseconds: number) => {
     let pending!: PendingLoad;
     const promise = new Promise<void>((resolve, reject) => {
+      const timer = target.setTimeout(() => pending.finish(
+        new Error("PLAYER_SAVE_STATE_RESTORE_TIMEOUT")), milliseconds);
       pending = {
-        reject,
-        resolve,
-        timer: target.setTimeout(() => finishLoad(pending,
-          new Error("PLAYER_SAVE_STATE_RESTORE_TIMEOUT")), milliseconds),
+        observed: false,
+        finish(error) {
+          if (!pendingLoads.delete(pending)) {return;}
+          target.clearTimeout(timer);
+          if (error) {reject(error);} else {resolve();}
+        },
       };
-      pendingLoads.push(pending);
+      pendingLoads.add(pending);
     });
-    return {cancel: () => finishLoad(pending), promise};
-  };
-  const finishLoad = (pending: PendingLoad, error?: Error) => {
-    const index = pendingLoads.indexOf(pending);
-    if (index < 0) {return;}
-    pendingLoads.splice(index, 1);
-    target.clearTimeout(pending.timer);
-    if (error) {pending.reject(error);} else {pending.resolve();}
+    return {cancel: () => pending.finish(), promise};
   };
   const observeNativeLog = (args: unknown[]) => {
     const message = args.map(String).join(" ");
     if (!message.includes("[State]") || !message.includes("game.state")) {return;}
-    const pending = pendingLoads[0];
-    if (!pending) {return;}
-    if (/failed/iu.test(message)) {
-      target.queueMicrotask(() => finishLoad(pending, new Error("PLAYER_SAVE_STATE_RESTORE_FAILED")));
-    } else if (/loading state/iu.test(message)) {
-      target.queueMicrotask(() => finishLoad(pending));
+    for (const pending of pendingLoads) {
+      if (/failed/iu.test(message)) {pending.finish(new Error("PLAYER_SAVE_STATE_RESTORE_FAILED"));}
+      else if (/loading state/iu.test(message)) {pending.observed = true;}
     }
   };
   const patchManager = (constructor: ManagerConstructor | undefined) => {
@@ -140,6 +140,7 @@ export function installEmulatorJs423StateRestoreCompatibility(playerWindow: Wind
       delay,
       isActive: () => active,
       registerLoad,
+      requiresInitialFrame,
       target,
     });
     restorePrototypes.push(() => Reflect.deleteProperty(prototype, "loadExplicitStateAndWait"));
@@ -155,7 +156,11 @@ export function installEmulatorJs423StateRestoreCompatibility(playerWindow: Wind
     configurable: true,
     enumerable: managerDescriptor?.enumerable ?? true,
     get: () => managerConstructor,
-    set: (constructor: ManagerConstructor | undefined) => {patchManager(constructor); managerConstructor = constructor;},
+    set: (constructor: ManagerConstructor | undefined) => {
+      managerDescriptor?.set?.call(target, constructor);
+      patchManager(constructor);
+      managerConstructor = constructor;
+    },
   });
 
   const wrapRuntime = (factory: RuntimeFactory | undefined) => {
@@ -164,8 +169,15 @@ export function installEmulatorJs423StateRestoreCompatibility(playerWindow: Wind
     const wrapped = function (this: unknown, config: RuntimeConfig) {
       return Reflect.apply(factory, this, [{
         ...config,
-        print: (...args: unknown[]) => {config?.print?.(...args); observeNativeLog(args);},
-        printErr: (...args: unknown[]) => {config?.printErr?.(...args); observeNativeLog(args);},
+        print: (...args: unknown[]) => {observeNativeLog(args);},
+        printErr: (...args: unknown[]) => {observeNativeLog(args);},
+        postMainLoop: (...args: unknown[]) => {
+          config?.postMainLoop?.(...args);
+          // The native task reads large states over multiple loops. Its loading
+          // message precedes unserialize; only finish after that callback returns,
+          // allowing a subsequent native failure message to reject the restore.
+          for (const pending of pendingLoads) {if (pending.observed) {pending.finish();}}
+        },
       }]);
     } as RuntimeFactory;
     Object.defineProperty(wrapped, "retromStateRestoreHook", {value: true});
@@ -208,9 +220,6 @@ export function installEmulatorJs423StateRestoreCompatibility(playerWindow: Wind
       pending.reject(new Error("PLAYER_SESSION_ENDED"));
     }
     pendingDelays.clear();
-    for (const pending of pendingLoads.splice(0)) {
-      target.clearTimeout(pending.timer);
-      pending.reject(new Error("PLAYER_SESSION_ENDED"));
-    }
+    for (const pending of pendingLoads) {pending.finish(new Error("PLAYER_SESSION_ENDED"));}
   };
 }

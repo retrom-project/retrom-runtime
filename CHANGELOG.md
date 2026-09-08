@@ -6,6 +6,7 @@
   capture/export, exact-slot restoration and final save handoff. Keep the unreleased core explicitly
   limited to complete PFB candidates until fork and Provider releases are authorized.
 - Reject mounting immediately if the native engine exits before initialization completes.
+- Advance the complete PFB candidate to `0.19.0-dev.4` for ScummVM SDL3 controller discovery after startup and reconnection. Native mappings and the save format are unchanged.
 - Advance the complete PFB candidate to `0.19.0-dev.3` for ScummVM drawing and paused
   resize synchronization, with retained WebGL pixels for readable save screenshots.
 

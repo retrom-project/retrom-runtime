@@ -28,6 +28,14 @@ describe("remaining EmulatorJS cores", () => {
       const settled = mounting.catch((error: unknown) => error);
       await vi.waitFor(() => expect(runtimeWindow.document.querySelector("script[data-retrom-loader]")).not.toBeNull());
       expect(runtimeWindow.EJS_core).toBe(coreId);
+      if (["81", "cap32", "crocods", "vice_xpet", "vice_xplus4"].includes(coreId)) {
+        expect(runtimeWindow.EJS_defaultOptions).toMatchObject({keyboardInput: "enabled"});
+      }
+      if (coreId === "81") {expect(runtimeWindow.EJS_defaultOptions).toMatchObject({"81_joypad_b": "new line"});}
+      if (coreId === "vice_xpet") {
+        expect(runtimeWindow.EJS_defaultOptions).toMatchObject({vice_pet_model: "4032", vice_userport_joytype: "PET"});
+      }
+      if (coreId === "vice_xplus4") {expect(runtimeWindow.EJS_defaultOptions).toMatchObject({vice_joyport: "1"});}
       // Caprice32 advertises M3U support; EJS otherwise wraps a single DSK
       // in a CD cue and the native core starts with no disk inserted.
       expect(runtimeWindow.EJS_disableCue).toBe(coreId === "cap32" ? true : undefined);

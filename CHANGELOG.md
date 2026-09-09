@@ -1,8 +1,8 @@
 # Changelog
 
-## 0.23.0
+## 0.23.1-rc.1
 
-- Add the Play! PS2 development target with bounded ISO/CHD reads, standard gamepad input,
+- Add the Play! PS2 target with bounded ISO/CHD reads, standard gamepad input,
   screenshots, pause/resume and content-bound native snapshots including memory cards.
 - Distribute Play! through the normal pinned core Release and Provider bundle.
 

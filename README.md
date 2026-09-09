@@ -5,7 +5,7 @@ VX, VX Ace, MV and MZ, ONS games powered by ONScripterYuri, KAG-based KiriKiri2 
 projects powered by Butterscotch, browser TyranoScript projects, Java ME JARs, ScummVM game projects and WASM-4 carts. It owns runtime lifecycle, adapters, checkpoint codecs, bridge assets and pinned core
 Release inputs. It does not know about a host application's users, database, review flow, storage or HTTP API.
 
-## Play! PS2 development candidate
+## Play! PS2
 
 `retrom-runtime/play-ps2` consumes a single ISO or CHD as `SEEKABLE_BLOB` through the
 fork-owned `play-host-v1` module. The core runs in a same-origin blank frame with WebGL2,
@@ -18,10 +18,10 @@ memory LRU. Missing or unavailable persistent storage falls back to bounded Rang
 its 256 MiB limit covers the entire payload. Standard gamepads support two ports; pause,
 blur and exit release controls. Save/load must acknowledge native completion before resuming.
 
-The unpublished core is a development input pinned to upstream commit
-`83700b2c31e593bc94e845b4b31b797be84dda59` in `retrom-project/Play-`.
-Only explicit PFB candidates may consume it. Formal builds reject unpublished inputs;
-release pins follow actual product validation and an immutable fork release.
+Play! is distributed through the normal pinned core release in `provider-sources.json`.
+Ridge Racer V has observed vertical bobbing and missing 3D scenery, also reported in the
+[upstream compatibility tracker](https://github.com/jpd002/Play-Compatibility/issues/349).
+Host lifecycle and snapshot support do not imply complete compatibility for every PS2 game.
 
 ## EmulatorJS single-file cores
 

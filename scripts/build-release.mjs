@@ -1,6 +1,5 @@
 import {assertScummvmCandidateMode} from "./scummvm-release.mjs";
 import {stageScummvmCandidate} from "./scummvm-candidate-stage.mjs";
-import {stagePlayCandidate} from "./play-candidate-stage.mjs";
 import {asScummvmCandidateSource, unpackScummvmRelease} from "./scummvm-published-release.mjs";
 import { unpackJ2meRelease } from "./j2me-release.mjs";
 import { spawnSync } from "node:child_process";
@@ -67,10 +66,7 @@ for (const release of sources.upstreamReleases) {
 }
 const developmentOutputs = [];
 for (const input of developmentInputs) {
-  const outputs = input.id === "play"
-    ? await stagePlayCandidate(input, devReleaseOverrides.get(input.id), stage)
-    : await stageScummvmCandidate(input, devReleaseOverrides.get(input.id), root, stage);
-  developmentOutputs.push(...outputs);
+  developmentOutputs.push(...await stageScummvmCandidate(input, devReleaseOverrides.get(input.id), root, stage));
 }
 const records = await collectRecords(sources, stage, developmentOutputs);
 const provider = await buildCurrentProviderBuild({

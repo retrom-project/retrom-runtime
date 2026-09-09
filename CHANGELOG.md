@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.24.0-rc.1 (unpublished)
+
+- Compress every Provider checkpoint once in a shared gzip storage layer, including tiny states and final native-save snapshots; decode before restore or persistence acknowledgement.
+- Advance EmulatorJS to 2.6.0-rc.1 and version all storage write formats while retaining legacy raw, PSP gzip and mkxp compact reads. Remove private PSP and mkxp compression writers.
+- Preserve bounded streaming decompression, cancellation and explicit native checkpoint validation.
+
 ## 0.23.2-rc.6 (unpublished)
 
 - Add the PC-98 NP2kai PFB candidate with HDI/D88 input, persistent disk caching,

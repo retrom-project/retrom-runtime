@@ -34,7 +34,7 @@ export function wasmEnvelope(): LaunchEnvelopeV1 {
         videoModes: ["original", "pixel", "smooth"],
         volume: false,
       },
-      checkpoint: {maxBytes: 132144, readFormats: ["wasm4-state-v1"], writeFormat: "wasm4-state-v1"},
+      checkpoint: {maxBytes: 132144, readFormats: ["wasm4-state-v1", "wasm4-state-v1-storage-v1"], writeFormat: "wasm4-state-v1-storage-v1"},
       moduleSha256: digest,
       moduleUrl: `/runtime/providers/retrom-runtime/${bundleDigest}/client.mjs`,
       providerApiVersion: 1 as const,

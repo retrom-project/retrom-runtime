@@ -1,3 +1,4 @@
+import {decodeStoredCheckpoint, nativeCheckpointFormat} from "../../provider/checkpoint-storage.js";
 import {afterEach, beforeEach, describe, expect, it, vi} from "vitest";
 import type {RuntimeEventV1, RuntimeHostV1} from "../../provider/module-api.js";
 import {adapterFixture, hostFixture} from "../../../tests/provider-adapter-fixture.js";
@@ -26,7 +27,7 @@ describe("retrom-runtime Provider Module V1", () => {
 
   it("exports only the current provider entry and exact identity", async () => {
     expect(Object.keys(provider).sort()).toEqual(["createRuntime", "providerApiVersion", "providerId", "providerVersion"]);
-    expect(provider).toMatchObject({providerApiVersion: 1, providerId: "retrom-runtime", providerVersion: "0.23.2-rc.6"});
+    expect(provider).toMatchObject({providerApiVersion: 1, providerId: "retrom-runtime", providerVersion: "0.24.0-rc.1"});
     expect((await provider.createRuntime(wasmEnvelope(), hostFixture())).getState()).toBe("CREATED");
     await expect(provider.createRuntime({...wasmEnvelope(), providerId: "leaked"}, hostFixture()))
       .rejects.toThrow("PROVIDER_LAUNCH_REQUEST_INVALID");
@@ -73,7 +74,9 @@ describe("retrom-runtime Provider Module V1", () => {
       expect.objectContaining({restorePayload: restore}));
     vi.mocked(mountTargetAdapter).mock.calls[0][2].onDiagnostic({runtime: "mkxp-z", message: "startup"});
     expect(host.reportDiagnostic).toHaveBeenCalledWith({code: "RETROM_RUNTIME_MKXP_Z", message: "startup"});
-    await expect(player.checkpoint()).resolves.toEqual({bytes: Uint8Array.of(4, 5), format: "wasm4-state-v1", metadata: null});
+    const saved = await player.checkpoint();
+    expect(saved.format).toBe("wasm4-state-v1-storage-v1");
+    expect(await decodeStoredCheckpoint(saved.bytes, saved.format, 132144)).toEqual(Uint8Array.of(4, 5));
     await Promise.all([player.exit(), player.exit()]);
     expect(adapter.exit).toHaveBeenCalledOnce();
   });
@@ -100,7 +103,7 @@ describe("retrom-runtime Provider Module V1", () => {
       let canvas: HTMLCanvasElement | null = null;
       const adapter = adapterFixture({
         getCanvas: () => canvas,
-        checkpoint: vi.fn(async () => ({bytes: Uint8Array.of(1, 2, 3), format: envelope.runtime.checkpoint!.writeFormat})),
+        checkpoint: vi.fn(async () => ({bytes: Uint8Array.of(1, 2, 3), format: nativeCheckpointFormat(envelope.runtime.checkpoint!.writeFormat)})),
       });
       vi.mocked(mountTargetAdapter).mockImplementation(async (_request, mountTarget) => {
         if (envelope.runtime.capabilities.frameMode === "SAME_ORIGIN_BLANK") {
@@ -126,9 +129,10 @@ describe("retrom-runtime Provider Module V1", () => {
         expect(frame.contentDocument?.querySelector("style[data-retrom-runtime-frame]")).not.toBeNull();
         expect(player.getCanvas()?.style).toMatchObject({width: "1093px", height: "820px", left: "93px", top: "0px"});
       } else {expect(mountTarget).toBe(outerTarget);}
-      await expect(player.checkpoint()).resolves.toEqual({
-        bytes: Uint8Array.of(1, 2, 3), format: envelope.runtime.checkpoint!.writeFormat, metadata: null,
-      });
+      const saved = await player.checkpoint();
+      expect(saved.format).toBe(envelope.runtime.checkpoint!.writeFormat);
+      expect(saved.metadata).toBeNull();
+      expect(await decodeStoredCheckpoint(saved.bytes, saved.format, envelope.runtime.checkpoint!.maxBytes)).toEqual(Uint8Array.of(1, 2, 3));
       await player.exit();
       expect(adapter.exit).toHaveBeenCalledOnce();
       expect(player.getState()).toBe("EXITED");

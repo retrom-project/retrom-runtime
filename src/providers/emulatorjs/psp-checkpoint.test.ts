@@ -5,7 +5,7 @@ import {projectProviderManifest} from "../../provider/manifest.js";
 import type {RuntimeHostV1} from "../../provider/module-api.js";
 import {emulatorJsProviderDefinition} from "./catalog.js";
 import {createEmulatorJsPlayer} from "./provider-runtime.js";
-import {decodeEmulatorJsCheckpoint} from "./checkpoint-codec.js";
+import {decodeStoredCheckpoint} from "../../provider/checkpoint-storage.js";
 
 beforeEach(() => {
   vi.stubGlobal("ResizeObserver", class {observe() {} disconnect() {}});
@@ -54,9 +54,9 @@ describe("PSP checkpoint product boundary", () => {
     expect(writeFile).toHaveBeenCalledWith("/game.state", original);
     expect(loadState).toHaveBeenCalledWith("/game.state", 0);
     const checkpoint = await player.checkpoint();
-    expect(checkpoint.format).toBe("emulatorjs-state-gzip-v1");
+    expect(checkpoint.format).toBe("emulatorjs-state-v1-storage-v1");
     expect(checkpoint.bytes.length).toBeLessThan(original.length / 20);
-    expect(await decodeEmulatorJsCheckpoint(checkpoint.bytes, checkpoint.format, original.length)).toEqual(original);
+    expect(await decodeStoredCheckpoint(checkpoint.bytes, checkpoint.format, original.length)).toEqual(original);
     await player.exit();
   });
 });

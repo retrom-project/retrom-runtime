@@ -1,3 +1,4 @@
+import {decodeStoredCheckpoint} from "../../provider/checkpoint-storage.js";
 import {describe, expect, it, vi} from "vitest";
 import type {CheckpointAvailability} from "../../contract.js";
 import type {RuntimeEventV1} from "../../provider/module-api.js";
@@ -31,7 +32,7 @@ describe("native save persistence boundary", () => {
       player.getCheckpointAvailability();
       expect(events.at(-1)).toMatchObject({type: "CHECKPOINT_AVAILABILITY_CHANGED", availability: {revision: "2"}});
       await player.acknowledgeCheckpoint?.(payload);
-      expect(adapter.acknowledgeCheckpoint).toHaveBeenCalledWith(payload);
+      expect(adapter.acknowledgeCheckpoint).toHaveBeenCalledWith({bytes: Uint8Array.of(4, 5), format: "wasm4-state-v1", metadata: null});
       expect(player.getCheckpointAvailability()).toEqual({available: false, reason: "UNCHANGED"});
     } finally {await player.exit();}
   });
@@ -64,15 +65,19 @@ describe("native save persistence boundary", () => {
     const player = createRetromRuntimePlayer(envelope, hostFixture(), {});
     const events: RuntimeEventV1[] = []; player.subscribe((event) => events.push(event));
     await player.mount(document.createElement("div"));
-    const checkpoint = {bytes: new Uint8Array([3, 4]), format: envelope.runtime.checkpoint!.writeFormat};
+    const checkpoint = {bytes: new Uint8Array([3, 4]), format: "wasm4-state-v1"};
     const screenshot = new Blob(["image"], {type: "image/png"});
     const report = vi.mocked(mountTargetAdapter).mock.calls.at(-1)![2].reportExitRequested;
     report({checkpoint, screenshot}); report({checkpoint, screenshot});
     checkpoint.bytes[0] = 9;
     expect(player.getState()).toBe("EXITING");
-    expect(events.filter((event) => event.type === "EXIT_REQUESTED")).toEqual([
-      {type: "EXIT_REQUESTED", finalSnapshot: {checkpoint: {...checkpoint, bytes: new Uint8Array([3, 4]), metadata: null}, screenshot}},
-    ]);
+    await vi.waitFor(() => expect(events.filter(event => event.type === "EXIT_REQUESTED")).toHaveLength(1));
+    const event = events.find(event => event.type === "EXIT_REQUESTED")!;
+    if (event.type !== "EXIT_REQUESTED" || !event.finalSnapshot) {throw Error("final snapshot missing");}
+    expect(event.finalSnapshot.screenshot).toBe(screenshot);
+    const stored = event.finalSnapshot.checkpoint;
+    expect(stored.format).toBe("wasm4-state-v1-storage-v1");
+    expect(await decodeStoredCheckpoint(stored.bytes, stored.format, 132144)).toEqual(new Uint8Array([3, 4]));
     await player.exit(); expect(adapter.exit).toHaveBeenCalledOnce();
   });
 

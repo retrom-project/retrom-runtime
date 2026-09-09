@@ -73,12 +73,8 @@ it uniformly to the host surface. This preserves the full image and limits outpu
 screens; it does not change the game's internal rendering resolution. Native settings keep that viewport so opening a menu does not clear a paused frame. Shader modes
 retain the full host viewport. Resize observation and styles are released on exit.
 
-PSP checkpoints use `emulatorjs-state-gzip-v1`: gzip of the complete native checkpoint, with no
-truncation. Encoding and decoding occur only at the save/restore boundary, using browser streams.
-Native PSP save/load calls await Asyncify with the main loop stopped; restored sessions skip boot-dialog input.
-Both encoded and decoded payloads must fit the declared checkpoint limit; invalid gzip or oversized
-output fails the contract. Raw `emulatorjs-state-v1` payloads are also decoded explicitly by format.
-Other EmulatorJS targets retain their existing raw checkpoint format and output policy.
+All Provider checkpoints now use the common storage codec described below. PSP still stops the
+main loop while awaiting native Asyncify save/load calls; restored sessions skip boot-dialog input.
 
 ## Provider Module V1
 
@@ -265,14 +261,21 @@ the exact non-empty `readFormats` set it can restore; `readFormats` includes `wr
 is absent from the current Target's `readFormats` remains visible but cannot be loaded. Hosts only upgrade and never
 retain, restore or fall back to an older Bundle.
 
-The mkxp core still serializes into its fixed 256 MiB memory buffer. The adapter does not upload that zero-padded
-buffer directly: it trims the unused zero tail in bounded asynchronous chunks, compresses the meaningful prefix in a worker and stores a compact
-`mkxp-state-compact-v1` checkpoint. Restore expands it back to the exact core buffer before publishing an atomic
-native load request. The core loop owns save/restore execution and exposes an explicit completion result. Saving
-preallocates the exact memory-file size and acknowledges only after writing, closing and freeing its temporary
-buffer; a full-length file is never proof of completion. Restoring requires successful native deserialization and
-a subsequent presented frame. The adapter releases temporary state files after consuming them. This private
-request/result ABI replaces synthetic save/load hotkeys without changing the raw serializer or compact format.
+All new checkpoints, including tiny states, native-save exports and final exit snapshots, are
+compressed once with gzip at the Provider boundary. The public format is the native format plus
+`-storage-v1`; payload bytes are standard gzip of the complete native state. There is no size threshold.
+Hosts hash, upload and store the encoded bytes. Restore decodes by the declared format before mounting
+the core; encoded and decoded bytes must both be nonempty and fit the Target limit. Streaming decode
+bounds actual output and rejects corrupt/truncated gzip, oversized output and cancellation.
+Native-save acknowledgement decodes the stored payload back to the adapter's native representation.
+
+The common reader retains old raw formats, PSP `emulatorjs-state-gzip-v1`, and mkxp
+`mkxp-state-compact-v1` (compressed prefix plus a zero-filled tail). These are read-only compatibility
+paths. New PSP and mkxp saves no longer run private compression. The mkxp adapter supplies its exact
+fixed 256 MiB `mkxp-state-v1` buffer to the common codec and restores only decoded raw core bytes.
+Its explicit native completion/result ABI, validation, atomic load request and temporary-file cleanup
+remain responsible for checkpoint correctness. Game-internal save encodings and resource archives
+are separate from this transport codec.
 
 ## Adding and integrating a core
 

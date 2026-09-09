@@ -49,7 +49,7 @@ import {readEmulatorJsCheckpoint} from "./bytes.js";
 import {readPspCheckpoint, restorePspCheckpoint} from "./psp-state.js";
 import {installPspRestoreObserver} from "./psp-restore.js";
 import {installEmulatorJsFrameStyle} from "./frame-style.js";
-import {decodeEmulatorJsCheckpoint, encodeEmulatorJsCheckpoint} from "./checkpoint-codec.js";
+import {decodeStoredCheckpoint, encodeStoredCheckpoint} from "../../provider/checkpoint-storage.js";
 import {installEmulatorJsOutputViewport} from "./output-viewport.js";
 
 import type {EjsInstance, EjsWindow} from "./emulator-instance.js";
@@ -163,7 +163,7 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
       throw contractError();
     }
     const format = this.envelope.runtime.checkpoint!.writeFormat;
-    return {bytes: await encodeEmulatorJsCheckpoint(bytes, format, maximum, this.host.signal), format, metadata: null};
+    return {bytes: await encodeStoredCheckpoint(bytes, format, maximum, this.host.signal), format, metadata: null};
   }
 
   async screenshot() {
@@ -279,7 +279,7 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
     try {
       this.restorePayload = await this.host.loadRestore(this.envelope.restore);
       if (this.restorePayload && this.envelope.restore) {
-        this.restorePayload = await decodeEmulatorJsCheckpoint(this.restorePayload, this.envelope.restore.format,
+        this.restorePayload = await decodeStoredCheckpoint(this.restorePayload, this.envelope.restore.format,
           this.envelope.runtime.checkpoint?.maxBytes ?? 0, this.host.signal);
       }
       const frame = await this.host.mountFrame(target, {resourceRole: null});

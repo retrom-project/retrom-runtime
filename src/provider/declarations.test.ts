@@ -39,8 +39,8 @@ const sameOriginFrameTargetIds = [
 ];
 
 describe("retrom-runtime provider declarations", () => {
-  it("declares the complete 0.23.2-rc.6 target closure in one source", () => {
-    expect(retromRuntimeProviderDefinition.providerVersion).toBe("0.23.2-rc.6");
+  it("declares the complete 0.24.0-rc.1 target closure in one source", () => {
+    expect(retromRuntimeProviderDefinition.providerVersion).toBe("0.24.0-rc.1");
     expect(retromRuntimeProviderDefinition.targets.map((target) => target.id)).toEqual(targetIds);
     expect(retromRuntimeProviderDefinition.adapters).toHaveLength(14);
   });
@@ -51,7 +51,7 @@ describe("retrom-runtime provider declarations", () => {
       clientModulePath: "client.mjs",
       providerApiVersion: 1,
       providerId: "retrom-runtime",
-      providerVersion: "0.23.2-rc.6",
+      providerVersion: "0.24.0-rc.1",
       schemaVersion: 1,
     });
     expect(manifest.targets.map((target) => target.id)).toEqual(targetIds);
@@ -77,8 +77,8 @@ describe("retrom-runtime provider declarations", () => {
     expect(wasm4).toMatchObject({
       checkpoint: {
         maxBytes: 132144,
-        readFormats: ["wasm4-state-v1"],
-        writeFormat: "wasm4-state-v1",
+        readFormats: ["wasm4-state-v1", "wasm4-state-v1-storage-v1"],
+        writeFormat: "wasm4-state-v1-storage-v1",
       },
       inputs: [{ cardinality: "ONE", kind: "WASM4_CART", optional: false, role: "game" }],
       targetOptionsSchema: {

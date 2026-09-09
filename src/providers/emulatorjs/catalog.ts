@@ -1,3 +1,4 @@
+import {storageAdapters} from "../../provider/checkpoint-storage.js";
 import {
   defineAdapter, defineProvider, defineTarget, type TargetInputDeclaration, type TargetOptionsSchema,
 } from "../../provider/declarations.js";
@@ -35,7 +36,7 @@ const adapters = [
   }),
   defineAdapter({
     abi: "emulatorjs-state-gzip-v1", capabilities,
-    checkpoint: {readFormats: ["emulatorjs-state-v1", "emulatorjs-state-gzip-v1"], writeFormat: "emulatorjs-state-gzip-v1"},
+    checkpoint: {readFormats: ["emulatorjs-state-v1", "emulatorjs-state-gzip-v1"], writeFormat: "emulatorjs-state-v1"},
     id: "emulatorjs-psp", kind: "EMULATORJS_PSP",
   }),
 ] as const;
@@ -166,10 +167,10 @@ const targets = cores.map((entry) => {
 });
 
 export const emulatorJsProviderDefinition = defineProvider({
-  adapters,
+  adapters: storageAdapters(adapters),
   providerApiVersion: 1,
   providerId: "emulatorjs",
-  providerVersion: "2.5.0",
+  providerVersion: "2.6.0-rc.1",
   targets,
 });
 

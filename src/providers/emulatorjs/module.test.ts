@@ -1,3 +1,4 @@
+import {decodeStoredCheckpoint} from "../../provider/checkpoint-storage.js";
 import {afterEach, describe, expect, it, vi} from "vitest";
 
 import type {LaunchEnvelopeV1, RuntimeHostV1} from "../../provider/module-api.js";
@@ -18,7 +19,7 @@ describe("EmulatorJS Provider Module V1", () => {
     expect({providerApiVersion, providerId, providerVersion}).toEqual({
       providerApiVersion: 1,
       providerId: "emulatorjs",
-      providerVersion: "2.5.0",
+      providerVersion: "2.6.0-rc.1",
     });
     const envelope = launchEnvelope();
     vi.stubGlobal("__RETROM_PROVIDER_ASSET_INDEX__", {
@@ -225,9 +226,9 @@ describe("EmulatorJS Provider Module V1", () => {
     expect(player.getFrameCount()).toBe(42);
     const focus = vi.spyOn(player.getCanvas()!, "focus");
     await player.pause();
-    await expect(player.checkpoint()).resolves.toEqual({
-      bytes: new Uint8Array([1, 2]), format: "emulatorjs-state-v1", metadata: null,
-    });
+    const saved = await player.checkpoint();
+    expect(saved.format).toBe("emulatorjs-state-v1-storage-v1");
+    expect(await decodeStoredCheckpoint(saved.bytes, saved.format, 268435456)).toEqual(new Uint8Array([1, 2]));
     expect(player.getState()).toBe("PAUSED");
     expect(toggleMainLoop.mock.calls).toEqual([[false]]);
     expect(focus).not.toHaveBeenCalled();

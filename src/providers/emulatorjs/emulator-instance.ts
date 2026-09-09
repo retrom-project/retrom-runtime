@@ -61,6 +61,7 @@ export type EjsWindow = Window & {
   EJS_startOnLoaded?: boolean;
   EJS_dontExtractRom?: boolean;
   EJS_disableBatchBootup?: boolean;
+  EJS_disableCue?: boolean;
   EJS_language?: string;
   EJS_disableAutoLang?: boolean;
   EJS_DEBUG_XX?: boolean;

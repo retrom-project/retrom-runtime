@@ -27,6 +27,9 @@ describe("remaining EmulatorJS cores", () => {
       const settled = mounting.catch((error: unknown) => error);
       await vi.waitFor(() => expect(runtimeWindow.document.querySelector("script[data-retrom-loader]")).not.toBeNull());
       expect(runtimeWindow.EJS_core).toBe(coreId);
+      // Caprice32 advertises M3U support; EJS otherwise wraps a single DSK
+      // in a CD cue and the native core starts with no disk inserted.
+      expect(runtimeWindow.EJS_disableCue).toBe(coreId === "cap32" ? true : undefined);
       expect(runtimeWindow.EJS_defaultControls).toMatchObject({0: {
         4: {value2: "DPAD_UP"}, 5: {value2: "DPAD_DOWN"},
         6: {value2: "DPAD_LEFT"}, 7: {value2: "DPAD_RIGHT"},

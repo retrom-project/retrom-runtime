@@ -47,10 +47,10 @@ it.each(["openbor-game-save-v1", "openbor-game-save-v1-storage-v1"])("decodes %s
   const player = createRetromRuntimePlayer(envelope, hostFixture({loadRestore: async () => stored}), {});
   try {
     await player.mount(document.createElement("div"));
-    expect(vi.mocked(mountTargetAdapter).mock.calls.at(-1)![2].restorePayload).toEqual(bytes);
+    expect(Array.from(vi.mocked(mountTargetAdapter).mock.calls.at(-1)![2].restorePayload!)).toEqual(Array.from(bytes));
     const saved = await player.checkpoint();
     expect(saved.format).toBe("openbor-game-save-v1-storage-v1");
-    expect(gunzipSync(saved.bytes)).toEqual(bytes);
+    expect(Array.from(gunzipSync(saved.bytes))).toEqual(Array.from(bytes));
     expect(saved.bytes.length).toBeLessThan(bytes.length / 2);
     expect(adapter.acknowledgeCheckpoint).not.toHaveBeenCalled();
     await player.acknowledgeCheckpoint?.(saved);

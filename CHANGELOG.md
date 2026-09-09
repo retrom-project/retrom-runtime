@@ -4,7 +4,7 @@ Ruffle candidate follow-up: enforce centered aspect-ratio scaling and expose nat
 `STORAGE` container through the optional public save data kind. Keep existing input mappings and
 changed-data export behavior; no Mode-specific exceptions.
 
-## 0.21.0-dev.2 (unreleased, PFB only)
+## 0.21.0-dev.3 (unreleased, PFB only)
 
 - Keep Ruffle's responsive canvas layout core-owned so fullscreen and viewport changes do not
   compete with the Provider's fixed-resolution fitting. Other adapters retain the default fitting.

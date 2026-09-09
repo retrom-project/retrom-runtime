@@ -5,6 +5,7 @@ import {readFile, rm, writeFile} from "node:fs/promises";
 import {dirname, join, relative, resolve} from "node:path";
 import {fileURLToPath, pathToFileURL} from "node:url";
 
+import {emulatorJsCoreInputs, readEmulatorJsCoreCandidate} from "./emulatorjs-core-candidate.mjs";
 import {verifyProviderBundle} from "./provider-bundle.mjs";
 import {
   buildEmulatorJsProviderBundle,
@@ -41,12 +42,18 @@ export async function buildCurrentProviderBuild(input = {}) {
     outputRoot: join(outputRoot, "retrom-runtime"),
     stageRoot,
   });
+  const directories = JSON.parse(process.env.RETROM_RUNTIME_DEV_RELEASE_OVERRIDES ?? "{}");
+  const candidate = process.env.RETROM_PFB_CANDIDATE_BUILD === "1";
+  const sourceCatalog = emulatorJsCoreInputs(emulatorJsSourceCatalog, directories, candidate);
+  for (const source of sourceCatalog.developmentCores) {
+    await readEmulatorJsCoreCandidate(source, directories[source.id], candidate);
+  }
   const emulatorjs = await buildEmulatorJsProviderBundle({
     definition: emulatorJsProviderDefinition,
     entryPoint: join(root, "src", "providers", "emulatorjs", "module.ts"),
     manifest: emulatorManifest,
     outputRoot: join(outputRoot, "emulatorjs"),
-    sourceCatalog: emulatorJsSourceCatalog,
+    sourceCatalog,
     sourceRoot: resolve(emulatorJsSourceRoot),
   });
   const providers = [releaseMetadata(outputRoot, retromManifest, retrom),

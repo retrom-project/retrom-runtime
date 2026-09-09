@@ -6,6 +6,14 @@ import {emulatorJsProviderDefinition} from "./catalog.js";
 import {emulatorJsNetplayProfiles} from "./netplay-profile.js";
 
 describe("EmulatorJS Provider declarations", () => {
+  it("gives Flycast a bounded, distinct instant checkpoint contract and single-disc target", () => {
+    const manifest = projectProviderManifest(emulatorJsProviderDefinition);
+    const target = manifest.targets.find((entry) => entry.id === "flycast")!;
+    expect(target.checkpoint).toEqual({maxBytes: 268435456,
+      readFormats: ["flycast-state-gzip-v1", "flycast-state-v1"], writeFormat: "flycast-state-gzip-v1"});
+    expect(target.capabilities).toMatchObject({standardGamepad: true, pause: true, screenshot: true,
+      discSwitch: false, requiresThreads: false, netplayPort: false});
+  });
   it("limits PSP output and writes compressed states while retaining raw saves", () => {
     const manifest = projectProviderManifest(emulatorJsProviderDefinition);
     expect(manifest.targets.find((target) => target.id === "ppsspp")?.checkpoint).toMatchObject({
@@ -16,17 +24,17 @@ describe("EmulatorJS Provider declarations", () => {
     const pspAssets = emulatorJsProviderDefinition.targets.find((target) => target.id === "ppsspp")!.assetPaths;
     expect(pspAssets).toContain("assets/4.3.0-pre/data/cores/ppsspp-assets.zip");
     expect(pspAssets).toContain("assets/4.3.0-pre/data/compression/extractzip.js");
-    for (const target of manifest.targets.filter((target) => target.id !== "ppsspp")) {
+    for (const target of manifest.targets.filter((target) => !["ppsspp", "flycast"].includes(target.id))) {
       expect(target.checkpoint?.writeFormat).toBe("emulatorjs-state-v1");
     }
   });
-  it("uses last declaration wins for exactly forty-three current core targets", () => {
+  it("uses last declaration wins for exactly forty-four current core targets", () => {
     const manifest = projectProviderManifest(emulatorJsProviderDefinition);
     expect(validateProviderManifest(manifest)).toBe(manifest);
     expect(manifest.providerId).toBe("emulatorjs");
-    expect(manifest.providerVersion).toBe("2.5.0");
-    expect(manifest.targets).toHaveLength(43);
-    expect(new Set(manifest.targets.map((target) => target.id)).size).toBe(43);
+    expect(manifest.providerVersion).toBe("2.6.0");
+    expect(manifest.targets).toHaveLength(44);
+    expect(new Set(manifest.targets.map((target) => target.id)).size).toBe(44);
     for (const targetId of ["dosbox-pure", "genesis-plus-gx-wide", "azahar"]) {
       const target = emulatorJsProviderDefinition.targets.find((entry) => entry.id === targetId);
       expect(target?.implementation.release).toBe("4.3.0-pre");

@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.23.1
+
+- Add the Play! PS2 target with bounded ISO/CHD reads, standard gamepad input,
+  screenshots, pause/resume and content-bound native snapshots including memory cards.
+- Distribute Play! through the normal pinned core Release and Provider bundle.
+
+
 ## 0.22.0
 
 - Advance the EmulatorJS Provider to 2.5.0.

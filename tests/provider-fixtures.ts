@@ -107,7 +107,7 @@ export function targetEnvelope(targetId: string): LaunchEnvelopeV1 {
   const target = projectProviderManifest(retromRuntimeProviderDefinition).targets.find((entry) => entry.id === targetId);
   if (!target) {throw new Error(`target fixture missing: ${targetId}`);}
   let resource: LaunchEnvelopeV1["resources"][number];
-  if (["rpgmaker-xp", "rpgmaker-vx", "rpgmaker-vx-ace"].includes(targetId)) {
+  if (["rpgmaker-xp", "rpgmaker-vx", "rpgmaker-vx-ace", "play-ps2"].includes(targetId)) {
     resource = {
       kind: "SEEKABLE_BLOB", ordinal: 0, rangeRequired: true, role: "game",
       sha256: digest, sizeBytes: 4096, url: `/runtime/content/project/${digest}/game.mkxpz`,

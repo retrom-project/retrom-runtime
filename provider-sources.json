@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "packageName": "@xxxsen/retrom-runtime",
-  "packageVersion": "0.22.0",
+  "packageVersion": "0.23.1",
   "publicApiVersion": 2,
   "upstreamReleases": [
     {
@@ -1955,6 +1955,58 @@
           "filename": "scummvm.wasm",
           "output": "runtime/scummvm/scummvm.wasm",
           "maxSizeBytes": 33554432
+        }
+      ]
+    },
+    {
+      "id": "play",
+      "repository": "https://github.com/retrom-project/Play-",
+      "tag": "retrom-core-g83700b2c31e5-r2",
+      "commit": "fa483151215ceb0a8891a573ec0903d45328ab57",
+      "adapterAbi": "play-host-v1",
+      "metadataUrl": "https://github.com/retrom-project/Play-/releases/download/retrom-core-g83700b2c31e5-r2/rpg-runtime-release.json",
+      "assets": [
+        {
+          "filename": "LICENSE",
+          "url": "https://github.com/retrom-project/Play-/releases/download/retrom-core-g83700b2c31e5-r2/LICENSE",
+          "output": "licenses/play/LICENSE",
+          "maxSizeBytes": 131072
+        },
+        {
+          "filename": "Play.js",
+          "url": "https://github.com/retrom-project/Play-/releases/download/retrom-core-g83700b2c31e5-r2/Play.js",
+          "output": "runtime/play/Play.js",
+          "maxSizeBytes": 8388608
+        },
+        {
+          "filename": "Play.wasm",
+          "url": "https://github.com/retrom-project/Play-/releases/download/retrom-core-g83700b2c31e5-r2/Play.wasm",
+          "output": "runtime/play/Play.wasm",
+          "maxSizeBytes": 8388608
+        },
+        {
+          "filename": "checkpoint.mjs",
+          "url": "https://github.com/retrom-project/Play-/releases/download/retrom-core-g83700b2c31e5-r2/checkpoint.mjs",
+          "output": "runtime/play/checkpoint.mjs",
+          "maxSizeBytes": 65536
+        },
+        {
+          "filename": "input.mjs",
+          "url": "https://github.com/retrom-project/Play-/releases/download/retrom-core-g83700b2c31e5-r2/input.mjs",
+          "output": "runtime/play/input.mjs",
+          "maxSizeBytes": 65536
+        },
+        {
+          "filename": "play-retrom.mjs",
+          "url": "https://github.com/retrom-project/Play-/releases/download/retrom-core-g83700b2c31e5-r2/play-retrom.mjs",
+          "output": "runtime/play/play-retrom.mjs",
+          "maxSizeBytes": 65536
+        },
+        {
+          "filename": "range-device.mjs",
+          "url": "https://github.com/retrom-project/Play-/releases/download/retrom-core-g83700b2c31e5-r2/range-device.mjs",
+          "output": "runtime/play/range-device.mjs",
+          "maxSizeBytes": 65536
         }
       ]
     }

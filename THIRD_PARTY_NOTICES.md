@@ -31,3 +31,10 @@ The exact repository, release tag, commit and upstream asset used by a release a
 runtime files are recorded by the generated Provider declaration. GitHub source archives for those immutable
 commits and the build workflows in the maintained forks are the corresponding source and build entry points.
 Applications redistributing a release remain responsible for complying with the applicable licenses.
+
+## Play!
+
+Source: https://github.com/retrom-project/Play- (upstream https://github.com/jpd002/Play-),
+base commit `83700b2c31e593bc94e845b4b31b797be84dda59`. Play! uses the BSD 2-Clause license.
+The fork supplies its license and linked dependency notices with release artifacts;
+the Provider preserves them at `licenses/play/LICENSE`. No game or BIOS is bundled.

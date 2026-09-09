@@ -1,5 +1,21 @@
 # Changelog
 
+## 0.29.0
+
+- Add OpenBOR PAK content through a fork-owned Emscripten/SDL2 core and the
+  `openbor-host-v1` interface. Formal builds pin the independent maintained core
+  release `retrom-core-g9d81480f8481-r1`; local source-bound overrides remain
+  restricted to explicit PFB builds.
+- Bind native progress files to the game digest in `openbor-game-save-v1`
+  (`GAME_SAVE`). Restore them before startup and continue through the game menu;
+  this target does not provide instant snapshots.
+- Verify bounded PAK downloads and reuse verified content chunks across Launches.
+  Support standard gamepad scancodes, native keyboard input, pause and screenshots,
+  and release input/audio resources when the core exits.
+
+- Advance EmulatorJS Provider to 2.6.6 for the aggregate OpenBOR license notice;
+  its core assets and behavior remain unchanged.
+
 ## 0.28.0
 
 - Pin PX68K r1 and TyranoScript bridge r8 to immutable releases with verified asset sizes and SHA-256.

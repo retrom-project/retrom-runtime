@@ -1,3 +1,4 @@
+import type {OpenBORParameters} from "../../openbor/adapter.js";
 import type {Px68kParameters} from "../../px68k/core.js";
 import type {WebMSXParameters} from "../../webmsx/adapter.js";
 import scummvmLayout from "../../scummvm/core-layout.json" with {type: "json"};
@@ -223,6 +224,11 @@ function assetBase(envelope: LaunchEnvelopeV1, directory: string) {
 }
 
 function invalidRequest(): never {throw new Error("PROVIDER_LAUNCH_REQUEST_INVALID");}
+
+export function openbor(envelope: LaunchEnvelopeV1): OpenBORParameters {
+  const game = resource(envelope, "game", "ROM_BLOB");
+  return {pak: {url: game.url, sizeBytes: game.sizeBytes, sha256: game.sha256}, runtimeBaseUrl: assetBase(envelope, "openbor")};
+}
 
 export function px68k(envelope: LaunchEnvelopeV1, assetIndex: AssetIndexV1): Px68kParameters {
   const game = resource(envelope, "game", "ROM_BLOB");

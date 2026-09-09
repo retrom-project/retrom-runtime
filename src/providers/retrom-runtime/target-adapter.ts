@@ -1,3 +1,4 @@
+import {mountOpenBOR} from "../../openbor/adapter.js";
 import {mountPx68k} from "../../px68k/adapter.js";
 import {mountWebMSX} from "../../webmsx/adapter.js";
 import {mountScummvm} from "../../scummvm/adapter.js";
@@ -38,8 +39,10 @@ export function mountTargetAdapter(
 ): Promise<MountedRuntimeAdapter> {
   const {declaration, adapter} = resolveAdapter(envelope.runtime.targetId);
   const {frameWindow, restorePayload, reportProgress, reportExitRequested} = context;
-  const reportFailure = context.reportFailure ?? (() => undefined);
+  const reportFailure = failureReporter(context);
   switch (adapter.kind) {
+  case "OPENBOR_WEB":
+    return mountOpenBOR(parameters.openbor(envelope), target, frameWindow, restorePayload, reportProgress, reportFailure, context.signal);
   case "PX68K_WEB":
     return mountPx68k(parameters.px68k(envelope, context.assetIndex), target, frameWindow, restorePayload,
       reportProgress, reportFailure, context.signal);
@@ -83,6 +86,10 @@ export function mountTargetAdapter(
     return mountWasm4(parameters.wasm4(envelope), target, frameWindow, restorePayload, reportProgress);
   default: throw new Error("PROVIDER_LAUNCH_REQUEST_INVALID");
   }
+}
+
+function failureReporter(context: TargetMountContext) {
+  return context.reportFailure ?? (() => undefined);
 }
 
 function requireFrame(context: TargetMountContext) {

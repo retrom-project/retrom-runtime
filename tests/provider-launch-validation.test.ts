@@ -56,7 +56,7 @@ describe("current Provider launch boundary", () => {
       "rpgmaker-2000", "rpgmaker-2003", "rpgmaker-mv", "rpgmaker-mz", "rpgmaker-vx", "rpgmaker-vx-ace", "rpgmaker-xp",
     ]);
     expect(retromRuntimeProviderDefinition.adapters.map((entry) => entry.kind).sort()).toEqual([
-      "BUTTERSCOTCH_WEB", "EASYRPG_WEB", "FAKE08_WEB", "J2ME_MINIJVM_WEB", "KIRIKIRI2_WEB", "MKXP_LIBRETRO_WEB", "NATIVE_WEB", "ONS_YURI_WEB",
+      "BUTTERSCOTCH_WEB", "EASYRPG_WEB", "FAKE08_WEB", "J2ME_MINIJVM_WEB", "KIRIKIRI2_WEB", "MKXP_LIBRETRO_WEB", "NATIVE_WEB", "ONS_YURI_WEB", "OPENBOR_WEB",
       "PLAY_WEB", "PX68K_WEB", "RUFFLE_WEB", "SCUMMVM_WEB", "TIC80_WEB", "TYRANOSCRIPT_WEB", "WASM4_WEB", "WEBMSX_WEB",
     ]);
     for (const entry of targets) {

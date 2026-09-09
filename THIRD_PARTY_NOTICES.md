@@ -54,3 +54,13 @@ This core has mixed inherited licensing: root GPL-2.0 text, the WinX68k
 noncommercial terms in `doc/kero_src.txt`, and FMGen's notice. Its full notices
 are preserved in `licenses/px68k/LICENSES.txt` in the Provider bundle. The runtime
 adapter's MIT license does not relicense the engine. No BIOS or game is included.
+
+## OpenBOR
+
+The maintained OpenBOR Web core comes from <https://github.com/retrom-project/openbor>.
+`licenses/openbor/LICENSE` retains OpenBOR's BSD-style terms, copyright and endorsement
+restriction. `licenses/openbor/LICENSES.txt` includes the complete GPL-2.0 text and
+Advance interpolation header with its MAME-linking exception, plus SDL2, SDL_image,
+XPaint GIF decoder, libpng, zlib, Ogg/Vorbis and Emscripten runtime notices.
+The aggregate adapter license does not replace these component licenses. No game
+PAKs are included. The fixed source commit and asset hashes are in `provider-sources.json`.

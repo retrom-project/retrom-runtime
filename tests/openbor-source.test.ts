@@ -14,6 +14,18 @@ export const openborSource = {id: "openbor", repository: "https://github.com/ret
     .map((filename) => ({filename, output: filename.startsWith("LICENSE") ? `licenses/openbor/${filename}` : `runtime/openbor/${filename}`,
       maxSizeBytes: filename === "openbor.wasm" ? 67108864 : 4194304}))};
 
+it("pins the published OpenBOR identity and requires exact asset digests", async () => {
+  const sources = JSON.parse(await readFile("provider-sources.json", "utf8"));
+  expect(() => validateProviderSources(sources)).not.toThrow();
+  expect(sources.developmentInputs ?? []).toEqual([]);
+  const release = sources.upstreamReleases.find((entry: {id: string}) => entry.id === "openbor");
+  expect(release).toMatchObject({tag: "retrom-core-g9d81480f8481-r1",
+    commit: "e3f86c09bf9ab6ed5b7e5c06cbd9c3d351a80ee6", adapterAbi: "openbor-host-v1"});
+  expect(asOpenBORCandidateSource(release)).toEqual(openborSource);
+  release.assets[0].sha256 = "invalid";
+  expect(() => validateProviderSources(sources)).toThrow("PROVIDER_SOURCES_INVALID");
+});
+
 it("accepts fixed OpenBOR development bytes without inventing a published release", async () => {
   const sources = JSON.parse(await readFile("provider-sources.json", "utf8"));
   sources.upstreamReleases = sources.upstreamReleases.filter((source: {id: string}) => source.id !== "openbor");

@@ -4,7 +4,8 @@
 
 - Add OpenBOR PAK content through a fork-owned Emscripten/SDL2 core and the
   `openbor-host-v1` interface. Formal builds pin the independent maintained core
-  release; local source-bound overrides remain restricted to explicit PFB builds.
+  release `retrom-core-g9d81480f8481-r1`; local source-bound overrides remain
+  restricted to explicit PFB builds.
 - Bind native progress files to the game digest in `openbor-game-save-v1`
   (`GAME_SAVE`). Restore them before startup and continue through the game menu;
   this target does not provide instant snapshots.

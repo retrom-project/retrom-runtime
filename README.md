@@ -464,7 +464,8 @@ pause and screenshots, and exposes native level saves as `GAME_SAVE` with
 restoration requires the in-game Load Game menu. Instant snapshots are not declared.
 Core binaries and their licenses come from the fork; no games are included.
 Unpublished development inputs require explicit PFB candidate mode and cannot be
-used for a formal release. Formal aggregation pins the independent maintained core release.
+used for a formal release. Formal aggregation pins `retrom-core-g9d81480f8481-r1`
+with verified release metadata, asset sizes and SHA-256 digests.
 
 ### PX68K (Sharp X68000)
 

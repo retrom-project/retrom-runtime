@@ -34,6 +34,7 @@ const isolatedCapabilities = capabilities(true, true, true);
 const wasm4Capabilities = capabilities(true, true, false);
 
 const adapters = [
+  adapter("webmsx-web", "WEBMSX_WEB", "webmsx-host-v1", "webmsx-state-v1", standardCapabilities),
   playAdapter,
   defineAdapter({id: "ruffle-web", kind: "RUFFLE_WEB", abi: "ruffle-host-v1",
     capabilities: capabilities(true, false, true),
@@ -86,6 +87,8 @@ const targets = [
     ["assets/kirikiri/assets.zip", "assets/kirikiri/index.js", "assets/kirikiri/index.wasm",
       "assets/kirikiri/vlfs.js"],
   ),
+  target("msx-webmsx", "MSX (WebMSX)", "webmsx-web", noOptionsSchema, false, "SAME_ORIGIN_BLANK", "ROM_BLOB",
+    32 * 1024 * 1024, ["assets/webmsx/webmsx.js"]),
   target(
     "onscripter-yuri", "ONScripter Yuri", "ons-yuri-web", onsOptionsSchema,
     false, "SAME_ORIGIN_BLANK", "FILE_TREE", 64 * 1024 * 1024,
@@ -117,7 +120,7 @@ export const retromRuntimeProviderDefinition = defineProvider({
   adapters,
   providerApiVersion: 1,
   providerId: "retrom-runtime",
-  providerVersion: "0.25.0",
+  providerVersion: "0.27.0",
   targets,
 });
 

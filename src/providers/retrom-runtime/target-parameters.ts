@@ -1,3 +1,4 @@
+import type {WebMSXParameters} from "../../webmsx/adapter.js";
 import scummvmLayout from "../../scummvm/core-layout.json" with {type: "json"};
 import type {ScummvmParameters} from "../../scummvm/parameters.js";
 import type {PlayParameters} from "../../play/core.js";
@@ -221,3 +222,9 @@ function assetBase(envelope: LaunchEnvelopeV1, directory: string) {
 }
 
 function invalidRequest(): never {throw new Error("PROVIDER_LAUNCH_REQUEST_INVALID");}
+
+export function webmsx(envelope: LaunchEnvelopeV1): WebMSXParameters {
+  const game = resource(envelope, "game", "ROM_BLOB");
+  return {mediaUrl: game.url, mediaSizeBytes: game.sizeBytes, contentDigest: game.sha256,
+    runtimeBaseUrl: assetBase(envelope, "webmsx")};
+}

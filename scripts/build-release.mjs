@@ -1,3 +1,5 @@
+import {stageWebMSXRelease} from "./webmsx-release.mjs";
+import {asWebMSXCandidateSource, stageWebMSXCandidate} from "./webmsx-candidate.mjs";
 import {assertScummvmCandidateMode} from "./scummvm-release.mjs";
 import {stageScummvmCandidate} from "./scummvm-candidate-stage.mjs";
 import {asRuffleCandidateSource, stageRuffleCandidate} from "./ruffle-candidate.mjs";
@@ -43,6 +45,11 @@ for (const asset of sources.localAssets) {
 }
 for (const release of sources.upstreamReleases) {
   const devRoot = devReleaseOverrides.get(release.id);
+  if (release.id === "webmsx" && devRoot) {
+    assertScummvmCandidateMode([release], process.env.RETROM_PFB_CANDIDATE_BUILD === "1", formalBuild);
+    await stageWebMSXCandidate(asWebMSXCandidateSource(release), devRoot, stage);
+    continue;
+  }
   if (release.id === "ruffle" && devRoot) {
     assertScummvmCandidateMode([release], process.env.RETROM_PFB_CANDIDATE_BUILD === "1", formalBuild);
     await stageRuffleCandidate(asRuffleCandidateSource(release), devRoot, stage);
@@ -57,6 +64,10 @@ for (const release of sources.upstreamReleases) {
   if (!devRoot) {
     const metadata = await download(release.metadataUrl, 65536);
     const descriptor = JSON.parse(new TextDecoder().decode(metadata));
+    if (release.id === "webmsx") {
+      await stageWebMSXRelease(release, descriptor, download, stage);
+      continue;
+    }
     if (release.archive) {
       const bytes = await download(`${release.repository}/releases/download/${release.tag}/${release.archive.filename}`,
         release.archive.sizeBytes);
@@ -74,7 +85,9 @@ for (const release of sources.upstreamReleases) {
 }
 const developmentOutputs = [];
 for (const input of developmentInputs) {
-  developmentOutputs.push(...await (input.id === "ruffle"
+  developmentOutputs.push(...await (input.id === "webmsx"
+    ? stageWebMSXCandidate(input, devReleaseOverrides.get(input.id), stage)
+    : input.id === "ruffle"
     ? stageRuffleCandidate(input, devReleaseOverrides.get(input.id), stage)
     : stageScummvmCandidate(input, devReleaseOverrides.get(input.id), root, stage)));
 }

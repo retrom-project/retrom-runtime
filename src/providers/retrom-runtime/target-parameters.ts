@@ -1,3 +1,4 @@
+import type {Px68kParameters} from "../../px68k/core.js";
 import type {WebMSXParameters} from "../../webmsx/adapter.js";
 import scummvmLayout from "../../scummvm/core-layout.json" with {type: "json"};
 import type {ScummvmParameters} from "../../scummvm/parameters.js";
@@ -222,6 +223,12 @@ function assetBase(envelope: LaunchEnvelopeV1, directory: string) {
 }
 
 function invalidRequest(): never {throw new Error("PROVIDER_LAUNCH_REQUEST_INVALID");}
+
+export function px68k(envelope: LaunchEnvelopeV1, assetIndex: AssetIndexV1): Px68kParameters {
+  const game = resource(envelope, "game", "ROM_BLOB");
+  const bios = resource(envelope, "external", "EXTERNAL_FILE_SET");
+  return {game, bios: bios.files, runtimeBaseUrl: envelope.runtime.runtimeBaseUrl, assetIndex};
+}
 
 export function webmsx(envelope: LaunchEnvelopeV1): WebMSXParameters {
   const game = resource(envelope, "game", "ROM_BLOB");

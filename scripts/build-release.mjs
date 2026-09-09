@@ -1,3 +1,5 @@
+import {stagePinnedCoreRelease} from "./pinned-core-release.mjs";
+import {stageCoreDevelopmentInput} from "./core-development-input.mjs";
 import {stageWebMSXRelease} from "./webmsx-release.mjs";
 import {asWebMSXCandidateSource, stageWebMSXCandidate} from "./webmsx-candidate.mjs";
 import {assertScummvmCandidateMode} from "./scummvm-release.mjs";
@@ -60,10 +62,21 @@ for (const release of sources.upstreamReleases) {
     await stageScummvmCandidate(asScummvmCandidateSource(release), devRoot, root, stage);
     continue;
   }
+  if (release.id === "px68k" && devRoot) {
+    assertScummvmCandidateMode([release], process.env.RETROM_PFB_CANDIDATE_BUILD === "1", formalBuild);
+    await stageCoreDevelopmentInput({id: release.id, repository: release.repository,
+      upstreamCommit: release.upstreamCommit, adapterAbi: release.adapterAbi,
+      assets: release.assets.map(({filename, output, maxSizeBytes}) => ({filename, output, maxSizeBytes}))}, devRoot, stage);
+    continue;
+  }
   let archiveAssets;
   if (!devRoot) {
     const metadata = await download(release.metadataUrl, 65536);
     const descriptor = JSON.parse(new TextDecoder().decode(metadata));
+    if (["px68k", "tyranoscript"].includes(release.id)) {
+      await stagePinnedCoreRelease(release, descriptor, download, stage);
+      continue;
+    }
     if (release.id === "webmsx") {
       await stageWebMSXRelease(release, descriptor, download, stage);
       continue;
@@ -89,7 +102,9 @@ for (const input of developmentInputs) {
     ? stageWebMSXCandidate(input, devReleaseOverrides.get(input.id), stage)
     : input.id === "ruffle"
     ? stageRuffleCandidate(input, devReleaseOverrides.get(input.id), stage)
-    : stageScummvmCandidate(input, devReleaseOverrides.get(input.id), root, stage)));
+    : input.id === "scummvm"
+    ? stageScummvmCandidate(input, devReleaseOverrides.get(input.id), root, stage)
+    : stageCoreDevelopmentInput(input, devReleaseOverrides.get(input.id), stage)));
 }
 const records = await collectRecords(sources, stage, developmentOutputs);
 const provider = await buildCurrentProviderBuild({

@@ -1,3 +1,4 @@
+import {mountPx68k} from "../../px68k/adapter.js";
 import {mountWebMSX} from "../../webmsx/adapter.js";
 import {mountScummvm} from "../../scummvm/adapter.js";
 import {mountRuffle} from "../../ruffle/adapter.js";
@@ -39,6 +40,9 @@ export function mountTargetAdapter(
   const {frameWindow, restorePayload, reportProgress, reportExitRequested} = context;
   const reportFailure = context.reportFailure ?? (() => undefined);
   switch (adapter.kind) {
+  case "PX68K_WEB":
+    return mountPx68k(parameters.px68k(envelope, context.assetIndex), target, frameWindow, restorePayload,
+      reportProgress, reportFailure, context.signal);
   case "WEBMSX_WEB":
     return mountWebMSX(parameters.webmsx(envelope), target, frameWindow, restorePayload, reportProgress, context.signal);
   case "RUFFLE_WEB":

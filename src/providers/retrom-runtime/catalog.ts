@@ -1,3 +1,4 @@
+import {px68kAdapter, px68kTarget} from "./px68k-declaration.js";
 import {scummvmAdapter, scummvmTarget} from "./scummvm-declaration.js";
 import {playAdapter, playTarget} from "./play-declaration.js";
 import {
@@ -34,6 +35,7 @@ const isolatedCapabilities = capabilities(true, true, true);
 const wasm4Capabilities = capabilities(true, true, false);
 
 const adapters = [
+  px68kAdapter,
   adapter("webmsx-web", "WEBMSX_WEB", "webmsx-host-v1", "webmsx-state-v1", standardCapabilities),
   playAdapter,
   defineAdapter({id: "ruffle-web", kind: "RUFFLE_WEB", abi: "ruffle-host-v1",
@@ -95,6 +97,7 @@ const targets = [
     ["assets/ons/onsyuri.js", "assets/ons/onsyuri.wasm"],
   ),
   playTarget,
+  px68kTarget,
   easyRpgTarget("rpgmaker-2000", "RPG Maker 2000", "rpg2k"),
   easyRpgTarget("rpgmaker-2003", "RPG Maker 2003", "rpg2k3"),
   nativeRpgTarget("rpgmaker-mv", "RPG Maker MV", "RPGMV"),
@@ -120,7 +123,7 @@ export const retromRuntimeProviderDefinition = defineProvider({
   adapters,
   providerApiVersion: 1,
   providerId: "retrom-runtime",
-  providerVersion: "0.27.0",
+  providerVersion: "0.28.0",
   targets,
 });
 

@@ -93,8 +93,8 @@ export const emulatorJsSourceCatalog = {
   },
   {
     "repository": "https://github.com/retrom-project/vice-libretro",
-    "commit": "4802d57251fa017f0324df2331c7b6896ce80e68",
-    "sourceTreeSha256": "8271ab868b2adf4ca7d2ef8b4dad4ca17063362f97acd8ca6f547675a819a6d6",
+    "commit": "ec51edccf2878e20edfcbb1a546340b44a8957d8",
+    "sourceTreeSha256": "24cc9a27d5402e64e97b974f51318f21bbd7c2b2a9adcd91afa265bc165e20ad",
     "adapterAbi": "emulatorjs-state-v1",
     "runtimeCore": "vice_xpet",
     "upstreamCommit": "1b4309f4d56ded7bfc5ad7ba8d5a9a44ac3388a8",
@@ -106,17 +106,17 @@ export const emulatorJsSourceCatalog = {
       },
       {
         "filename": "source.tar.gz",
-        "sha256": "5596dce0703040df4392e1b8f6a20231ddb3c2c4f1ea39ddc9cb6f3af7cc62ae",
-        "sizeBytes": 16757476
+        "sha256": "0dddf24619cdd90fe414825b6916666204e782623fcd8237c61ff638e4b63b0e",
+        "sizeBytes": 16757290
       },
       {
         "filename": "vice_xpet-wasm.data",
-        "sha256": "6873d687d99130d8e1aaca59239d72305663fffffb41b25120c53764e1e89cee",
-        "sizeBytes": 1371676
+        "sha256": "e427461601da6883f1a6ec1559f96a0ff13493d669e88291309dd229b6ff915b",
+        "sizeBytes": 1372369
       },
       {
         "filename": "retrom-core-candidate.json",
-        "sha256": "02c8b2a4e96034d12e6ad499af52aa12bf913dc54f25e764a2d2032a084b0973",
+        "sha256": "b682e460725dc1dfa5a8e35a54fd799c1dc2762e2acd3ac6806af7f80911144b",
         "sizeBytes": 752
       }
     ]

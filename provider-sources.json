@@ -2020,5 +2020,13 @@
       "source": "assets/runtime/butterscotch/worker.mjs",
       "output": "runtime/butterscotch/worker.mjs"
     }
+  ],
+  "developmentInputs": [
+    {
+      "id": "cap32",
+      "repository": "https://github.com/retrom-project/libretro-cap32",
+      "upstreamCommit": "310cc579b79b6051b378b192224b325a73437c9b",
+      "adapterAbi": "emulatorjs-state-v1"
+    }
   ]
 }

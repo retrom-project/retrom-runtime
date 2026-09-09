@@ -1,10 +1,14 @@
+import type {DevelopmentFork} from "./emulatorjs-development-forks.mjs";
 import type {ForkRelease} from "./emulatorjs-fork-releases.mjs";
 
 export type EmulatorJsProviderInput = {
+  allowDevelopmentForks?: boolean;
+  developmentRoots?: ReadonlyMap<string, string>;
   cacheRoot: string;
   catalog: {
     schemaVersion: number;
     forks?: readonly ForkRelease[];
+    developmentForks?: readonly DevelopmentFork[];
     releases: ReadonlyArray<{
       archive: {name: string; sha256: string; sizeBytes: number; url: string};
       commit: string;
@@ -41,3 +45,5 @@ export type EmulatorJsProviderInput = {
 
 export function materializeEmulatorJsProviderInput(input: EmulatorJsProviderInput): Promise<string>;
 export function checkEmulatorJsProviderInput(input: EmulatorJsProviderInput): Promise<string>;
+
+export function currentInput(): Promise<EmulatorJsProviderInput>;

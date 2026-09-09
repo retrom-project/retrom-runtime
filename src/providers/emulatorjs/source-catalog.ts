@@ -1,5 +1,37 @@
 export const emulatorJsSourceCatalog = {
   schemaVersion: 1,
+  developmentForks: [
+  {
+    "runtimeCore": "cap32",
+    "repository": "https://github.com/retrom-project/libretro-cap32",
+    "upstreamCommit": "310cc579b79b6051b378b192224b325a73437c9b",
+    "commit": "d20dacb9ac3a44be8550189cffbd6f030057b972",
+    "sourceTreeSha256": "a2d0e0ddf560889a57a0d78fa90b9a07a065dfb87c8c8f1cc7fb97792cf681aa",
+    "adapterAbi": "emulatorjs-state-v1",
+    "assets": [
+      {
+        "filename": "COPYING",
+        "sha256": "328d7bdacd7f3aa9f03e9b78036b5a00db53907c8cb7a8676b4ba9016430f2be",
+        "sizeBytes": 20252
+      },
+      {
+        "filename": "cap32-wasm.data",
+        "sha256": "c1548926863c4396620e8fc1c951e22c332b269a0614e8cc718f126ffe42493f",
+        "sizeBytes": 1028234
+      },
+      {
+        "filename": "retrom-core-candidate.json",
+        "sizeBytes": 744,
+        "sha256": "90ebf7361c8f4aaf7f80a263e943e3b25544666fce3129e58306a30e33a6f093"
+      },
+      {
+        "filename": "source.tar.gz",
+        "sha256": "90b93964822244c8c5c40d637f72735faac7ad5e1f0d90cfc318e58817ad5243",
+        "sizeBytes": 1356576
+      }
+    ]
+  }
+],
   forks: [
     {
       "repository": "https://github.com/retrom-project/vice-libretro",

@@ -1,3 +1,4 @@
+import {currentInput, materializeEmulatorJsProviderInput} from "./emulatorjs-provider-input.mjs";
 import {assertScummvmCandidateMode} from "./scummvm-release.mjs";
 import {stageScummvmCandidate} from "./scummvm-candidate-stage.mjs";
 import {asScummvmCandidateSource, unpackScummvmRelease} from "./scummvm-published-release.mjs";
@@ -66,8 +67,9 @@ for (const release of sources.upstreamReleases) {
 }
 const developmentOutputs = [];
 for (const input of developmentInputs) {
-  developmentOutputs.push(...await stageScummvmCandidate(input, devReleaseOverrides.get(input.id), root, stage));
+  if (input.id !== "cap32") {developmentOutputs.push(...await stageScummvmCandidate(input, devReleaseOverrides.get(input.id), root, stage));}
 }
+if (developmentInputs.some((input) => input.id === "cap32")) {await materializeEmulatorJsProviderInput(await currentInput());}
 const records = await collectRecords(sources, stage, developmentOutputs);
 const provider = await buildCurrentProviderBuild({
   stageRoot: fileURLToPath(stage),

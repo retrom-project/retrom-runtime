@@ -27,7 +27,7 @@ describe("EmulatorJS Provider release build", () => {
       }
 
       await expect(buildEmulatorJsProviderBundle({
-        definition: emulatorJsProviderDefinition,
+        allowDevelopmentForks: true, definition: emulatorJsProviderDefinition,
         entryPoint: join(process.cwd(), "src/providers/emulatorjs/module.ts"), manifest,
         outputRoot: join(root, "mismatched"), sourceCatalog: emulatorJsSourceCatalog, sourceRoot,
       })).rejects.toThrow("PROVIDER_RELEASE_BUILD_ASSET_MISMATCH");
@@ -45,7 +45,7 @@ describe("EmulatorJS Provider release build", () => {
         }),
       };
       const result = await buildEmulatorJsProviderBundle({
-        definition,
+        allowDevelopmentForks: true, definition,
         entryPoint: join(process.cwd(), "src/providers/emulatorjs/module.ts"), manifest,
         outputRoot: join(root, "output"), sourceCatalog, sourceRoot,
       });
@@ -100,5 +100,29 @@ async function fixtureForks(sourceRoot: string) {
     }
     forks.push({...fork, assets: all.map(({contents: _contents, ...asset}) => asset)});
   }
-  return {...emulatorJsSourceCatalog, forks};
+  return {...emulatorJsSourceCatalog, forks, developmentForks: await fixtureDevelopmentForks(sourceRoot)};
+}
+
+async function fixtureDevelopmentForks(root: string) {
+  const result = [];
+  for (const fork of emulatorJsSourceCatalog.developmentForks) {
+    const content = (name: string) => name.endsWith(".data") ? `fixture:assets/4.2.3/data/cores/${name}\n` : `${name} fixture\n`;
+    const files = fork.assets.filter((asset) => asset.filename !== "retrom-core-candidate.json").map((asset) => ({
+      filename: asset.filename, sizeBytes: Buffer.byteLength(content(asset.filename)),
+      sha256: createHash("sha256").update(content(asset.filename)).digest("hex"),
+    }));
+    const metadata = JSON.stringify({schemaVersion: 1, kind: "RETROM_CORE_CANDIDATE_V1", coreId: fork.runtimeCore,
+      repository: fork.repository, branch: "feat/test-core", commit: fork.commit, dirty: false,
+      sourceTreeSha256: fork.sourceTreeSha256, adapterAbi: fork.adapterAbi, files});
+    const assets = [...files, {filename: "retrom-core-candidate.json", sizeBytes: Buffer.byteLength(metadata),
+      sha256: createHash("sha256").update(metadata).digest("hex")}];
+    for (const asset of assets) {
+      const name = asset.filename;
+      const destination = name.endsWith(".data") ? `4.2.3/data/cores/${name}`
+        : name.endsWith(".json") ? "4.2.3/data/cores/reports/cap32.json" : `4.2.3/licenses/forks/cap32/${name}`;
+      await write(join(root, destination), name.endsWith(".json") ? metadata : content(name));
+    }
+    result.push({...fork, assets});
+  }
+  return result;
 }

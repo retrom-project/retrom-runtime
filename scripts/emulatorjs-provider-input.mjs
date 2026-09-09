@@ -1,3 +1,6 @@
+import {developmentForkFiles, requireDevelopmentForkMode, stageDevelopmentForks} from "./emulatorjs-development-forks.mjs";
+import {parseDevReleaseOverrides} from "./dev-release-overrides.mjs";
+import {loadProviderSources} from "./provider-sources.mjs";
 import {createHash, randomUUID} from "node:crypto";
 import {spawnSync} from "node:child_process";
 import {
@@ -13,6 +16,7 @@ const proofName = ".materialization.json";
 
 export async function materializeEmulatorJsProviderInput(input) {
   validateInput(input);
+  requireDevelopmentForkMode(input.catalog, input.allowDevelopmentForks);
   const expectedCatalogDigest = sha256(Buffer.from(canonicalJson(input.catalog)));
   const expectedDefinitionDigest = sha256(Buffer.from(canonicalJson(input.definition)));
   if (await verifyExisting(
@@ -42,6 +46,7 @@ export async function materializeEmulatorJsProviderInput(input) {
       const metadata = JSON.parse(await readFile(join(staging, `4.2.3/data/cores/reports/${fork.runtimeCore}.json`), "utf8"));
       verifyForkMetadata(fork, metadata);
     }
+    await stageDevelopmentForks(input.catalog, input.developmentRoots, staging);
     await verifyCoreAssets(staging, input.definition);
     const files = await collectSelectedFiles(staging, input.catalog, input.definition);
     await writeFile(join(staging, proofName), `${JSON.stringify({
@@ -73,6 +78,7 @@ export async function materializeEmulatorJsProviderInput(input) {
 
 export async function checkEmulatorJsProviderInput(input) {
   validateInput(input);
+  requireDevelopmentForkMode(input.catalog, input.allowDevelopmentForks);
   const catalogDigest = sha256(Buffer.from(canonicalJson(input.catalog)));
   const definitionDigest = sha256(Buffer.from(canonicalJson(input.definition)));
   if (!await verifyExisting(input.outputRoot, catalogDigest, definitionDigest, input.definition, true)) {
@@ -140,7 +146,7 @@ async function collectSelectedFiles(root, catalog, definition) {
   const files = await collectRegularFiles(root, false);
   const allowedAssets = new Set(definition.targets.flatMap((target) => target.assetPaths ?? [])
     .map((path) => path.replace(/^assets\//u, "")));
-  for (const file of forkReleaseFiles(catalog)) {allowedAssets.add(file.destination);}
+  for (const file of [...forkReleaseFiles(catalog), ...developmentForkFiles(catalog)]) {allowedAssets.add(file.destination);}
   const allowedLicenseRoots = catalog.releases.flatMap((release) => release.licenseRoots.map((path) =>
     `${release.id}/${path}`));
   for (const path of files.keys()) {
@@ -254,7 +260,8 @@ function canonicalJson(value) {
   return `{${Object.keys(value).sort().map((key) => `${JSON.stringify(key)}:${canonicalJson(value[key])}`).join(",")}}`;
 }
 
-async function currentInput() {
+export async function currentInput() {
+  const sources = await loadProviderSources(new URL("../", import.meta.url));
   const [{emulatorJsProviderDefinition}, {emulatorJsSourceCatalog}] = await Promise.all([
     import("../dist/providers/emulatorjs/catalog.js"),
     import("../dist/providers/emulatorjs/source-catalog.js"),
@@ -262,6 +269,9 @@ async function currentInput() {
   return {
     cacheRoot: join(scriptRoot, ".cache", "provider-downloads", "emulatorjs"),
     catalog: emulatorJsSourceCatalog,
+    allowDevelopmentForks: process.env.RETROM_PFB_CANDIDATE_BUILD === "1",
+    developmentRoots: parseDevReleaseOverrides(process.env.RETROM_RUNTIME_DEV_RELEASE_OVERRIDES,
+      [...sources.upstreamReleases, ...sources.developmentInputs ?? []], process.env.RETROM_PROVIDER_BUILD_MODE === "release"),
     definition: emulatorJsProviderDefinition,
     extractArchive: extractWith7Zip,
     fetchBytes: fetchPinnedBytes,

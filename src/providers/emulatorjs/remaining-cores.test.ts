@@ -3,6 +3,7 @@ import {emulatorJsProviderDefinition} from "./catalog.js";
 import {createEmulatorJsPlayer} from "./provider-runtime.js";
 import {launchEnvelope} from "../../../tests/emulatorjs-provider-fixtures.js";
 import {hostFixture} from "../../../tests/provider-adapter-fixture.js";
+import type {EmulatorDefaultControls} from "./default-controls.js";
 
 const coreIds = ["81", "cap32", "crocods", "vice_xpet", "vice_xplus4", "same_cdi", "vice_x64"];
 describe("remaining EmulatorJS cores", () => {
@@ -35,6 +36,12 @@ describe("remaining EmulatorJS cores", () => {
         6: {value2: "DPAD_LEFT"}, 7: {value2: "DPAD_RIGHT"},
         0: {value2: "BUTTON_2"}, 8: {value2: "BUTTON_1"},
       }});
+      // A physical gamepad input must never trigger two native controls.
+      // Keyboard bindings remain independent inputs to those controls.
+      for (const controls of Object.values(runtimeWindow.EJS_defaultControls as EmulatorDefaultControls)) {
+        const gamepadInputs = Object.values(controls).flatMap(({value2}) => value2 ? [value2] : []);
+        expect(new Set(gamepadInputs).size).toBe(gamepadInputs.length);
+      }
       runtimeWindow.EJS_emulator = {gameManager: {getState: () => Uint8Array.of(1, 2, 3)}};
       (runtimeWindow.EJS_ready as () => void)();
       (runtimeWindow.EJS_onGameStart as () => void)(); expect(await settled).toBeUndefined();

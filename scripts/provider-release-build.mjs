@@ -1,3 +1,4 @@
+import {developmentForkFiles, requireDevelopmentForkMode, verifyDevelopmentForkMetadata} from "./emulatorjs-development-forks.mjs";
 import {createHash} from "node:crypto";
 import {lstat, mkdir, mkdtemp, readFile, readdir, rm} from "node:fs/promises";
 import {isAbsolute, join, parse, relative} from "node:path";
@@ -48,6 +49,7 @@ export async function buildRetromRuntimeProviderBundle(input) {
 export async function buildEmulatorJsProviderBundle(input) {
   validateInput(input);
   validateSourceCatalog(input.sourceCatalog);
+  requireDevelopmentForkMode(input.sourceCatalog, input.allowDevelopmentForks);
   await createEmptyDirectory(input.outputRoot);
   await assertDirectory(input.sourceRoot);
   const assetSources = new Map();
@@ -84,6 +86,7 @@ export async function buildEmulatorJsProviderBundle(input) {
         schemaVersion: 1,
         overrides: input.sourceCatalog.overrides,
         forks: input.sourceCatalog.forks ?? [],
+        ...(input.sourceCatalog.developmentForks?.length ? {developmentForks: input.sourceCatalog.developmentForks} : {}),
         upstreamReleases: input.sourceCatalog.releases,
       },
     });
@@ -153,7 +156,7 @@ async function collectLicenses(stageRoot) {
 
 async function collectEmulatorJsLicenses(sourceRoot, sourceCatalog) {
   const result = new Map();
-  for (const file of forkReleaseFiles(sourceCatalog)) {
+  for (const file of [...forkReleaseFiles(sourceCatalog), ...developmentForkFiles(sourceCatalog)]) {
     const source = join(sourceRoot, file.destination);
     const contents = await readRegularFile(source);
     if (sha256(contents) !== file.sha256 || contents.length !== file.sizeBytes) {unsafe();}
@@ -162,6 +165,10 @@ async function collectEmulatorJsLicenses(sourceRoot, sourceCatalog) {
   for (const fork of sourceCatalog.forks ?? []) {
     const metadata = JSON.parse(await readRegularFile(join(sourceRoot, `4.2.3/data/cores/reports/${fork.runtimeCore}.json`)));
     verifyForkMetadata(fork, metadata);
+  }
+  for (const fork of sourceCatalog.developmentForks ?? []) {
+    const metadata = JSON.parse(await readRegularFile(join(sourceRoot, `4.2.3/data/cores/reports/${fork.runtimeCore}.json`)));
+    verifyDevelopmentForkMetadata(fork, metadata);
   }
   for (const release of sourceCatalog.releases) {
     const releaseRoot = join(sourceRoot, release.id);

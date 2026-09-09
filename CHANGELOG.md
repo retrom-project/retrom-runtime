@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.23.1-rc.1
+## 0.23.1
 
 - Add the Play! PS2 target with bounded ISO/CHD reads, standard gamepad input,
   screenshots, pause/resume and content-bound native snapshots including memory cards.

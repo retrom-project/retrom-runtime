@@ -1,9 +1,26 @@
 {
   "schemaVersion": 1,
   "packageName": "@xxxsen/retrom-runtime",
-  "packageVersion": "0.24.0",
+  "packageVersion": "0.25.0",
   "publicApiVersion": 2,
   "upstreamReleases": [
+    {
+      "id": "ruffle",
+      "repository": "https://github.com/retrom-project/ruffle",
+      "tag": "retrom-core-ge46d1642fb67-r2",
+      "commit": "551f2b357783ba855c87b6d5618cdf474a4a217f",
+      "upstreamCommit": "e46d1642fb67a53b56ffa4b1871cb7c57589e36d",
+      "adapterAbi": "ruffle-host-v1",
+      "metadataUrl": "https://github.com/retrom-project/ruffle/releases/download/retrom-core-ge46d1642fb67-r2/rpg-runtime-release.json",
+      "assets": [
+        {"filename": "LICENSE.md", "url": "https://github.com/retrom-project/ruffle/releases/download/retrom-core-ge46d1642fb67-r2/LICENSE.md", "output": "licenses/ruffle/LICENSE.md", "maxSizeBytes": 4194304},
+        {"filename": "LICENSE_APACHE", "url": "https://github.com/retrom-project/ruffle/releases/download/retrom-core-ge46d1642fb67-r2/LICENSE_APACHE", "output": "licenses/ruffle/LICENSE_APACHE", "maxSizeBytes": 4194304},
+        {"filename": "LICENSE_MIT", "url": "https://github.com/retrom-project/ruffle/releases/download/retrom-core-ge46d1642fb67-r2/LICENSE_MIT", "output": "licenses/ruffle/LICENSE_MIT", "maxSizeBytes": 4194304},
+        {"filename": "core.ruffle.js", "url": "https://github.com/retrom-project/ruffle/releases/download/retrom-core-ge46d1642fb67-r2/core.ruffle.js", "output": "runtime/ruffle/core.ruffle.js", "maxSizeBytes": 4194304},
+        {"filename": "ruffle.js", "url": "https://github.com/retrom-project/ruffle/releases/download/retrom-core-ge46d1642fb67-r2/ruffle.js", "output": "runtime/ruffle/ruffle.js", "maxSizeBytes": 4194304},
+        {"filename": "ruffle.wasm", "url": "https://github.com/retrom-project/ruffle/releases/download/retrom-core-ge46d1642fb67-r2/ruffle.wasm", "output": "runtime/ruffle/ruffle.wasm", "maxSizeBytes": 67108864}
+      ]
+    },
     {
       "id": "butterscotch",
       "repository": "https://github.com/retrom-project/Butterscotch",

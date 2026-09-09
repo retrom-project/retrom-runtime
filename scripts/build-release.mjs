@@ -1,5 +1,6 @@
 import {assertScummvmCandidateMode} from "./scummvm-release.mjs";
 import {stageScummvmCandidate} from "./scummvm-candidate-stage.mjs";
+import {asRuffleCandidateSource, stageRuffleCandidate} from "./ruffle-candidate.mjs";
 import {asScummvmCandidateSource, unpackScummvmRelease} from "./scummvm-published-release.mjs";
 import { unpackJ2meRelease } from "./j2me-release.mjs";
 import { spawnSync } from "node:child_process";
@@ -42,6 +43,11 @@ for (const asset of sources.localAssets) {
 }
 for (const release of sources.upstreamReleases) {
   const devRoot = devReleaseOverrides.get(release.id);
+  if (release.id === "ruffle" && devRoot) {
+    assertScummvmCandidateMode([release], process.env.RETROM_PFB_CANDIDATE_BUILD === "1", formalBuild);
+    await stageRuffleCandidate(asRuffleCandidateSource(release), devRoot, stage);
+    continue;
+  }
   if (release.id === "scummvm" && devRoot) {
     assertScummvmCandidateMode([release], process.env.RETROM_PFB_CANDIDATE_BUILD === "1", formalBuild);
     await stageScummvmCandidate(asScummvmCandidateSource(release), devRoot, root, stage);
@@ -68,7 +74,9 @@ for (const release of sources.upstreamReleases) {
 }
 const developmentOutputs = [];
 for (const input of developmentInputs) {
-  developmentOutputs.push(...await stageScummvmCandidate(input, devReleaseOverrides.get(input.id), root, stage));
+  developmentOutputs.push(...await (input.id === "ruffle"
+    ? stageRuffleCandidate(input, devReleaseOverrides.get(input.id), stage)
+    : stageScummvmCandidate(input, devReleaseOverrides.get(input.id), root, stage)));
 }
 const records = await collectRecords(sources, stage, developmentOutputs);
 const provider = await buildCurrentProviderBuild({

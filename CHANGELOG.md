@@ -1,5 +1,26 @@
 # Changelog
 
+## 0.25.0
+
+Ruffle integration: enforce centered aspect-ratio scaling and expose native data as a
+`STORAGE` container through the optional public save data kind. Keep existing input mappings and
+changed-data export behavior; no Mode-specific exceptions.
+
+- Advance EmulatorJS Provider to 2.6.1 for the updated bundled third-party notices; its execution
+  code and core assets remain unchanged from 2.6.0.
+- Keep Ruffle's responsive canvas layout core-owned so fullscreen and viewport changes do not
+  compete with the Provider's fixed-resolution fitting. Other adapters retain the default fitting.
+- Add the independent `flash-ruffle` Target for bounded single-SWF content, with keyboard/mouse
+  and standard gamepad input, pause, volume and screenshots.
+- Transport native SharedObject bytes in `ruffle-sharedobjects-v1` (`GAME_SAVE`, 8 MiB maximum).
+  Restore only explicit identity-matched payloads before movie execution; fresh Launches start empty.
+- Validate SWF compressed/decompressed bounds, exact download sizes and SHA-256; reuse Cache Storage
+  across different Launch URLs by content identity and report deterministic download progress.
+- Pin the published Ruffle fork `retrom-core-ge46d1642fb67-r2`; local core overrides remain
+  restricted to explicit PFB builds with closed candidate inventory checks.
+- Capture freshly rendered GPU pixels without advancing the movie; bound startup waits and destroy
+  cancelled instances even when asynchronous loading finishes late.
+
 ## 0.24.0
 
 - Compress new Flycast instant checkpoints with lossless gzip and retain raw-state restoration.

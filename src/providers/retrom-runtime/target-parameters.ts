@@ -18,6 +18,13 @@ import type {KirikiriParameters} from "../../kirikiri/parameters.js";
 import type {ButterscotchParameters} from "../../butterscotch/parameters.js";
 import type {TyranoScriptParameters} from "../../tyranoscript/parameters.js";
 import type {Wasm4Parameters} from "../../wasm4/parameters.js";
+import type {RuffleParameters} from "../../ruffle/adapter.js";
+
+export function ruffle(envelope: LaunchEnvelopeV1): RuffleParameters {
+  const game = resource(envelope, "game", "ROM_BLOB");
+  return {contentDigest: game.sha256, swfSizeBytes: game.sizeBytes,
+    swfUrl: game.url, runtimeBaseUrl: assetBase(envelope, "ruffle")};
+}
 
 export function easyRpg(envelope: LaunchEnvelopeV1, implementation: Readonly<Record<string, unknown>>): EasyRpgParameters {
   const game = resource(envelope, "game", "FILE_TREE");

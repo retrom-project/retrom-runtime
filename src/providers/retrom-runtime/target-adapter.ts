@@ -1,3 +1,4 @@
+import {mountNP2} from "../../np2kai/adapter.js";
 import {mountScummvm} from "../../scummvm/adapter.js";
 import {mountPlay} from "../../play/adapter.js";
 
@@ -39,6 +40,9 @@ export function mountTargetAdapter(
   const {frameWindow, restorePayload, reportProgress, reportExitRequested} = context;
   const reportFailure = context.reportFailure ?? (() => undefined);
   switch (adapter.kind) {
+  case "NP2KAI_WEB":
+    return mountNP2(parameters.np2kai(envelope, context.assetIndex), target, frameWindow, restorePayload,
+      reportProgress, reportFailure, context.signal);
   case "PLAY_WEB":
     return mountPlay(parameters.play(envelope, context.assetIndex), target, frameWindow, restorePayload,
       reportFailure, context.signal);

@@ -1,3 +1,4 @@
+import {np2kaiAdapter, np2kaiTarget} from "./np2kai-declaration.js";
 import {scummvmAdapter, scummvmTarget} from "./scummvm-declaration.js";
 import {playAdapter, playTarget} from "./play-declaration.js";
 import {
@@ -34,6 +35,7 @@ const isolatedCapabilities = capabilities(true, true, true);
 const wasm4Capabilities = capabilities(true, true, false);
 
 const adapters = [
+  np2kaiAdapter,
   playAdapter,
   scummvmAdapter,
   defineAdapter({id: "tic80-web", kind: "TIC80_WEB", abi: "tic80-pmem-v1",
@@ -81,6 +83,7 @@ const targets = [
     ["assets/kirikiri/assets.zip", "assets/kirikiri/index.js", "assets/kirikiri/index.wasm",
       "assets/kirikiri/vlfs.js"],
   ),
+  np2kaiTarget,
   target(
     "onscripter-yuri", "ONScripter Yuri", "ons-yuri-web", onsOptionsSchema,
     false, "SAME_ORIGIN_BLANK", "FILE_TREE", 64 * 1024 * 1024,
@@ -112,7 +115,7 @@ export const retromRuntimeProviderDefinition = defineProvider({
   adapters,
   providerApiVersion: 1,
   providerId: "retrom-runtime",
-  providerVersion: "0.23.1",
+  providerVersion: "0.23.2-rc.6",
   targets,
 });
 

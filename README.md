@@ -5,6 +5,25 @@ VX, VX Ace, MV and MZ, ONS games powered by ONScripterYuri, KAG-based KiriKiri2 
 projects powered by Butterscotch, browser TyranoScript projects, Java ME JARs, ScummVM game projects and WASM-4 carts. It owns runtime lifecycle, adapters, checkpoint codecs, bridge assets and pinned core
 Release inputs. It does not know about a host application's users, database, review flow, storage or HTTP API.
 
+## PC-98 / NP2kai (PFB candidate)
+
+`retrom-runtime/np2kai-pc98` runs a single HDI hard disk or D88 floppy in a same-origin
+blank frame. The maintained NP2kai fork is pinned to upstream commit
+`5939e0c6d5985c4c08fc70f289a83290e5d3e6f7`. This development input requires an explicit
+PFB core candidate; ordinary release builds reject the unpublished source.
+
+The adapter materializes disks up to 512 MiB with verified size/SHA-256 and reports download
+progress. OPFS retains immutable disk bytes across launches. Each instance writes its own
+memory copy. `np2kai-state-v1` contains the native execution state and changed 64 KiB disk
+blocks, bound to the original disk digest, with a 384 MiB total limit. Fresh launches ignore
+previous disk writes unless a checkpoint is explicitly supplied.
+
+Standard gamepads map directions to cursor keys, A to Space (confirm), B to Escape (cancel),
+X to Z, Y to X and Start to Enter. Keyboard input remains available. Pause, screenshot,
+frame count and instant restore are supported; volume adjustment, netplay, disk switching
+and external BIOS configuration are outside this trial. A freely distributable Shinonome
+font is included in the core build; game bytes are supplied by the host.
+
 ## Play! PS2
 
 `retrom-runtime/play-ps2` consumes a single ISO or CHD as `SEEKABLE_BLOB` through the

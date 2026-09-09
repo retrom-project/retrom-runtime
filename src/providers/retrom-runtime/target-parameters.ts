@@ -1,3 +1,4 @@
+import type {NP2Parameters} from "../../np2kai/adapter.js";
 import scummvmLayout from "../../scummvm/core-layout.json" with {type: "json"};
 import type {ScummvmParameters} from "../../scummvm/parameters.js";
 import type {PlayParameters} from "../../play/core.js";
@@ -214,3 +215,9 @@ function assetBase(envelope: LaunchEnvelopeV1, directory: string) {
 }
 
 function invalidRequest(): never {throw new Error("PROVIDER_LAUNCH_REQUEST_INVALID");}
+
+export function np2kai(envelope: LaunchEnvelopeV1, assetIndex: AssetIndexV1): NP2Parameters {
+  const game = resource(envelope, "game", "ROM_BLOB");
+  return {disk: {url: game.url, sha256: game.sha256, sizeBytes: game.sizeBytes},
+    runtimeBaseUrl: assetBase(envelope, "np2kai"), assetIndex};
+}

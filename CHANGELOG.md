@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.23.2-rc.6 (unpublished)
+
+- Add the PC-98 NP2kai PFB candidate with HDI/D88 input, persistent disk caching,
+  download progress, standard gamepad controls and bounded native execution snapshots
+  including disk changes.
+
 ## 0.23.1
 
 - Add the Play! PS2 target with bounded ISO/CHD reads, standard gamepad input,

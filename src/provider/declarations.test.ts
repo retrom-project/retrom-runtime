@@ -8,6 +8,7 @@ const targetIds = [
   "fake08",
   "j2me",
   "kirikiri2-kag",
+  "np2kai-pc98",
   "onscripter-yuri", "play-ps2",
   "rpgmaker-2000",
   "rpgmaker-2003",
@@ -26,6 +27,7 @@ const sameOriginFrameTargetIds = [
   "fake08",
   "j2me",
   "kirikiri2-kag",
+  "np2kai-pc98",
   "onscripter-yuri", "play-ps2",
   "rpgmaker-2000",
   "rpgmaker-2003",
@@ -37,10 +39,10 @@ const sameOriginFrameTargetIds = [
 ];
 
 describe("retrom-runtime provider declarations", () => {
-  it("declares the complete 0.23.1 target closure in one source", () => {
-    expect(retromRuntimeProviderDefinition.providerVersion).toBe("0.23.1");
+  it("declares the complete 0.23.2-rc.6 target closure in one source", () => {
+    expect(retromRuntimeProviderDefinition.providerVersion).toBe("0.23.2-rc.6");
     expect(retromRuntimeProviderDefinition.targets.map((target) => target.id)).toEqual(targetIds);
-    expect(retromRuntimeProviderDefinition.adapters).toHaveLength(13);
+    expect(retromRuntimeProviderDefinition.adapters).toHaveLength(14);
   });
 
   it("projects a public manifest without internal adapter identities", () => {
@@ -49,7 +51,7 @@ describe("retrom-runtime provider declarations", () => {
       clientModulePath: "client.mjs",
       providerApiVersion: 1,
       providerId: "retrom-runtime",
-      providerVersion: "0.23.1",
+      providerVersion: "0.23.2-rc.6",
       schemaVersion: 1,
     });
     expect(manifest.targets.map((target) => target.id)).toEqual(targetIds);

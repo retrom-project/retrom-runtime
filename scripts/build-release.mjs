@@ -1,3 +1,4 @@
+import {stageNP2Candidate} from "./np2kai-source.mjs";
 import {assertScummvmCandidateMode} from "./scummvm-release.mjs";
 import {stageScummvmCandidate} from "./scummvm-candidate-stage.mjs";
 import {asScummvmCandidateSource, unpackScummvmRelease} from "./scummvm-published-release.mjs";
@@ -66,7 +67,9 @@ for (const release of sources.upstreamReleases) {
 }
 const developmentOutputs = [];
 for (const input of developmentInputs) {
-  developmentOutputs.push(...await stageScummvmCandidate(input, devReleaseOverrides.get(input.id), root, stage));
+  developmentOutputs.push(...await (input.id === "np2kai"
+    ? stageNP2Candidate(input, devReleaseOverrides.get(input.id), stage)
+    : stageScummvmCandidate(input, devReleaseOverrides.get(input.id), root, stage)));
 }
 const records = await collectRecords(sources, stage, developmentOutputs);
 const provider = await buildCurrentProviderBuild({

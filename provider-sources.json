@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "packageName": "@xxxsen/retrom-runtime",
-  "packageVersion": "0.23.1",
+  "packageVersion": "0.23.2-rc.6",
   "publicApiVersion": 2,
   "upstreamReleases": [
     {
@@ -2019,6 +2019,14 @@
     {
       "source": "assets/runtime/butterscotch/worker.mjs",
       "output": "runtime/butterscotch/worker.mjs"
+    }
+  ],
+  "developmentInputs": [
+    {
+      "id": "np2kai",
+      "repository": "https://github.com/retrom-project/NP2kai",
+      "upstreamCommit": "5939e0c6d5985c4c08fc70f289a83290e5d3e6f7",
+      "adapterAbi": "np2kai-host-v1"
     }
   ]
 }

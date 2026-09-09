@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "packageName": "@xxxsen/retrom-runtime",
-  "packageVersion": "0.25.0",
+  "packageVersion": "0.26.0-rc.5",
   "publicApiVersion": 2,
   "upstreamReleases": [
     {
@@ -2036,6 +2036,36 @@
     {
       "source": "assets/runtime/butterscotch/worker.mjs",
       "output": "runtime/butterscotch/worker.mjs"
+    }
+  ],
+  "developmentInputs": [
+    {
+      "id": "openbor",
+      "repository": "https://github.com/retrom-project/openbor",
+      "upstreamCommit": "9d81480f8481fbb9e76b0b5f2a5dfa408376761a",
+      "adapterAbi": "openbor-host-v1",
+      "assets": [
+        {
+          "filename": "LICENSE",
+          "output": "licenses/openbor/LICENSE",
+          "maxSizeBytes": 4194304
+        },
+        {
+          "filename": "LICENSES.txt",
+          "output": "licenses/openbor/LICENSES.txt",
+          "maxSizeBytes": 4194304
+        },
+        {
+          "filename": "openbor.mjs",
+          "output": "runtime/openbor/openbor.mjs",
+          "maxSizeBytes": 4194304
+        },
+        {
+          "filename": "openbor.wasm",
+          "output": "runtime/openbor/openbor.wasm",
+          "maxSizeBytes": 67108864
+        }
+      ]
     }
   ]
 }

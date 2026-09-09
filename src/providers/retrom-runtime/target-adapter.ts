@@ -1,3 +1,4 @@
+import {mountOpenBOR} from "../../openbor/adapter.js";
 import {mountScummvm} from "../../scummvm/adapter.js";
 import {mountRuffle} from "../../ruffle/adapter.js";
 import {mountPlay} from "../../play/adapter.js";
@@ -38,6 +39,8 @@ export function mountTargetAdapter(
   const {frameWindow, restorePayload, reportProgress, reportExitRequested} = context;
   const reportFailure = context.reportFailure ?? (() => undefined);
   switch (adapter.kind) {
+  case "OPENBOR_WEB":
+    return mountOpenBOR(parameters.openbor(envelope), target, frameWindow, restorePayload, reportProgress, reportFailure, context.signal);
   case "RUFFLE_WEB":
     return mountRuffle(parameters.ruffle(envelope), target, frameWindow, restorePayload, reportProgress, context.signal);
   case "PLAY_WEB":

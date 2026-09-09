@@ -1,3 +1,4 @@
+import {stageOpenBORCandidate} from "./openbor-candidate.mjs";
 import {assertScummvmCandidateMode} from "./scummvm-release.mjs";
 import {stageScummvmCandidate} from "./scummvm-candidate-stage.mjs";
 import {asRuffleCandidateSource, stageRuffleCandidate} from "./ruffle-candidate.mjs";
@@ -74,7 +75,8 @@ for (const release of sources.upstreamReleases) {
 }
 const developmentOutputs = [];
 for (const input of developmentInputs) {
-  developmentOutputs.push(...await (input.id === "ruffle"
+  developmentOutputs.push(...await (input.id === "openbor"
+    ? stageOpenBORCandidate(input, devReleaseOverrides.get(input.id), stage) : input.id === "ruffle"
     ? stageRuffleCandidate(input, devReleaseOverrides.get(input.id), stage)
     : stageScummvmCandidate(input, devReleaseOverrides.get(input.id), root, stage)));
 }

@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.26.0-rc.5 (development candidate)
+
+- Add OpenBOR PAK content through a fork-owned Emscripten/SDL2 core and the
+  `openbor-host-v1` interface. Only explicit PFB builds accept its unpublished,
+  source-bound candidate; production releases require a separately published core.
+- Bind native progress files to the game digest in `openbor-game-save-v1`
+  (`GAME_SAVE`). Restore them before startup and continue through the game menu;
+  this target does not provide instant snapshots.
+- Verify bounded PAK downloads and reuse verified content chunks across Launches.
+  Support standard gamepad scancodes, native keyboard input, pause and screenshots,
+  and release input/audio resources when the core exits.
+
 ## 0.25.0
 
 Ruffle integration: enforce centered aspect-ratio scaling and expose native data as a

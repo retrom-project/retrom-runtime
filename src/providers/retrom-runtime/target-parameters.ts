@@ -1,3 +1,4 @@
+import type {OpenBORParameters} from "../../openbor/adapter.js";
 import scummvmLayout from "../../scummvm/core-layout.json" with {type: "json"};
 import type {ScummvmParameters} from "../../scummvm/parameters.js";
 import type {PlayParameters} from "../../play/core.js";
@@ -221,3 +222,8 @@ function assetBase(envelope: LaunchEnvelopeV1, directory: string) {
 }
 
 function invalidRequest(): never {throw new Error("PROVIDER_LAUNCH_REQUEST_INVALID");}
+
+export function openbor(envelope: LaunchEnvelopeV1): OpenBORParameters {
+  const game = resource(envelope, "game", "ROM_BLOB");
+  return {pak: {url: game.url, sizeBytes: game.sizeBytes, sha256: game.sha256}, runtimeBaseUrl: assetBase(envelope, "openbor")};
+}

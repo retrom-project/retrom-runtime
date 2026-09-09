@@ -64,6 +64,9 @@ describe("TyranoScript isolated Web adapter", () => {
     await expect(adapter.screenshot()).resolves.toEqual(expect.objectContaining({size: 4, type: "image/jpeg"}));
     await adapter.pause();
     await adapter.resume();
+    await adapter.setVideoMode!("pixel");
+    await adapter.setVideoMode!("smooth");
+    expect(commands.filter((type) => type === "SET_VIDEO_MODE")).toHaveLength(2);
     adapter.setVolume?.(0.5);
     await vi.waitFor(() => expect(commands).toContain("SET_VOLUME"));
 
@@ -144,7 +147,7 @@ function commandResult(request: RequestEnvelope) {
   const types: Record<string, string> = {
     CHECKPOINT: "CHECKPOINT_RESULT", CLEANUP: "CLEANUP_RESULT", PAUSE: "PAUSE_RESULT",
     PROBE: "PROBE_RESULT", RESTORE: "RESTORE_RESULT", RESUME: "RESUME_RESULT",
-    SCREENSHOT: "SCREENSHOT_RESULT", SET_VOLUME: "SET_VOLUME_RESULT",
+    SET_VIDEO_MODE: "SET_VIDEO_MODE_RESULT", SCREENSHOT: "SCREENSHOT_RESULT", SET_VOLUME: "SET_VOLUME_RESULT",
   };
   return {
     body: bodies[request.type] ?? {}, nonce: request.nonce, protocolVersion: 1,

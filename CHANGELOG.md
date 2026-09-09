@@ -1,5 +1,25 @@
 # Changelog
 
+## 0.25.4（开发中）
+
+- Tyrano 旧版兼容层每个手柄按钮只投射一个键盘目标，不再同时发送 KAG/DOM 手柄事件；现代引擎保留原生手柄路径，真实键盘独立可用。
+- 补齐 TyranoScript 已声明的 pixel/smooth 画面模式控制，修复宿主初始化时的能力错误。
+- Tyrano 4.x 不要求新版 chara 组件，按各版本的菜单方法判断可存档状态。
+- 旧版音频仅在媒体已暂停且播放请求以 AbortError 取消时正常完成；其他播放错误继续传播。
+- 开发候选使用 retrom-runtime 0.25.4、EmulatorJS Provider 2.6.4；后者仅反映聚合第三方说明变化，不改变其核心或输入行为。正式 core/release 锁定尚未更新。
+
+## 0.25.0 (development)
+
+- Add the PX68K single-disk X68000 target with keyboard/gamepad, audio, pause,
+  screenshots and machine/disk checkpoints across fresh launches.
+- Keep PX68K gamepad and keyboard input independent: Button 1 (B) no longer
+  injects Escape and pauses games; A/Start no longer inject Enter.
+- Let arrow keys and Z/X operate PX68K joypad one while retaining native keyboard
+  input, and release held keyboard controls on blur, pause and exit.
+- Verify bounded cached game, BIOS and Wasm bytes before native construction.
+- Accept descriptor-verified flat-file core candidates in PFB builds while
+  keeping unpublished sources out of formal releases.
+
 ## 0.24.0
 
 - Compress new Flycast instant checkpoints with lossless gzip and retain raw-state restoration.

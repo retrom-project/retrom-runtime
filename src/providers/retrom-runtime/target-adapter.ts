@@ -1,3 +1,4 @@
+import {mountPx68k} from "../../px68k/adapter.js";
 import {mountScummvm} from "../../scummvm/adapter.js";
 import {mountPlay} from "../../play/adapter.js";
 
@@ -39,6 +40,9 @@ export function mountTargetAdapter(
   const {frameWindow, restorePayload, reportProgress, reportExitRequested} = context;
   const reportFailure = context.reportFailure ?? (() => undefined);
   switch (adapter.kind) {
+  case "PX68K_WEB":
+    return mountPx68k(parameters.px68k(envelope, context.assetIndex), target, frameWindow, restorePayload,
+      reportProgress, reportFailure, context.signal);
   case "PLAY_WEB":
     return mountPlay(parameters.play(envelope, context.assetIndex), target, frameWindow, restorePayload,
       reportFailure, context.signal);

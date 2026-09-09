@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "packageName": "@xxxsen/retrom-runtime",
-  "packageVersion": "0.24.0",
+  "packageVersion": "0.25.4",
   "publicApiVersion": 2,
   "upstreamReleases": [
     {
@@ -2019,6 +2019,31 @@
     {
       "source": "assets/runtime/butterscotch/worker.mjs",
       "output": "runtime/butterscotch/worker.mjs"
+    }
+  ],
+  "developmentInputs": [
+    {
+      "id": "px68k",
+      "repository": "https://github.com/retrom-project/px68k-libretro",
+      "upstreamCommit": "561dcba6b11d04c9a6d7ca62998d5fb3f544aa49",
+      "adapterAbi": "px68k-host-v1",
+      "assets": [
+        {
+          "filename": "px68k-retrom.mjs",
+          "output": "runtime/px68k/px68k-retrom.mjs",
+          "maxSizeBytes": 8388608
+        },
+        {
+          "filename": "px68k-retrom.wasm",
+          "output": "runtime/px68k/px68k-retrom.wasm",
+          "maxSizeBytes": 8388608
+        },
+        {
+          "filename": "LICENSES.txt",
+          "output": "licenses/px68k/LICENSES.txt",
+          "maxSizeBytes": 8388608
+        }
+      ]
     }
   ]
 }

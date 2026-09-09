@@ -123,8 +123,8 @@ const cores: readonly CoreSource[] = [
   core("vice_x128", "4.2.3", "vice_x128-wasm.data", 1595414, "dbac85e530b006c2d17e200c445de582c7ea272bacf333e4b4f8c1e391ed8506", "e8ef53ec0bc53244319e87a8f6b75396f077a982dd4438743a52e82f0c136126", {inputMode: "POINTER"}),
   core("vice_x64", "4.2.3", "vice_x64-wasm.data", 1528680, "ccc5a868163b67e21f6f4c4cc994a6290cf44ab079eaf28e3a992defa2bd66f0", "643787490d9f261abe7a329d6d2daac8b2cdf469f037adcdac0fa8262fb37d50", {inputMode: "POINTER"}),
   core("vice_x64sc", "4.2.3", "vice_x64sc-wasm.data", 1523457, "77f58884c81b58721cbc4754ffc5574838219258e9390630c352a494a3f335ab", "4b788799ef1225e48610b99bdf746425ba6e2bda27fa105fd1238dfbb9fb47cb", {inputMode: "POINTER"}),
-  core("vice_xpet", "4.2.3", "vice_xpet-wasm.data", 1368677, "eef0d83f7c1af43d51c3384a07db4196ea7c2bbe1292e9e52fade3d3107513c5", "9bf5ec80ab1f58dc7cdccd73f0141385b030f262ce20aaae4403369dd7061301", {defaultOptions: {keyboardInput: "enabled", vice_pet_model: "4032", vice_userport_joytype: "PET"}}),
-  core("vice_xplus4", "4.2.3", "vice_xplus4-wasm.data", 1413246, "f96b6660211a403b687e5f905394fda655c60250db7619a335ef2ccc160bfb30", "838318e4ee8d1ad2cfdd9fdf00350f57ea3eed1ca3d84491535f67074774e5d6", {defaultOptions: {keyboardInput: "enabled", vice_joyport: "1"}}),
+  core("vice_xpet", "4.2.3", "vice_xpet-wasm.data", 1371676, "6873d687d99130d8e1aaca59239d72305663fffffb41b25120c53764e1e89cee", "2276f3b6ec4a726f791edd92bd2ac1d45a802ac1c6c4fc333eec8ab18a1115bd", {artifactFlavor: "OVERRIDE", coreBundleVersion: "vice_xpet-local-4802d57251fa", defaultOptions: {keyboardInput: "enabled", vice_pet_model: "4032", vice_userport_joytype: "PET"}}),
+  core("vice_xplus4", "4.2.3", "vice_xplus4-wasm.data", 1415979, "4a1329c1f891bb90e854ec82096e12034f150b15928345acf23262d6debd1f3d", "70b61b7a36c12337d26c5c2c22a1c7f7ec994ebf10901b36c5968d0946a23862", {artifactFlavor: "OVERRIDE", coreBundleVersion: "vice_xplus4-local-4802d57251fa", defaultOptions: {keyboardInput: "enabled", vice_joyport: "1"}}),
   core("vice_xvic", "4.2.3", "vice_xvic-wasm.data", 1400563, "8d77779568ff9ac2fe46f11ad6f37e39cc6be44dae337e0fb8cda4f29f283a49", "dc63426f1804edb9ca95a8417c68ec792c0ef52ec860ff1c0e99717415aeb8d9", {artifactFlavor: "OVERRIDE"}),
   core("virtualjaguar", "4.2.3", "virtualjaguar-wasm.data", 1199923, "16b62c38e6921fb5b410ab507ba6bc77edcaccbba532ae4711b9521a4256ba6d", "b9443f7fc635a091b9460773bb0261bd5c4a9b5cb5ed3162286553e173e6c742", {artifactFlavor: "OVERRIDE"}),
   core("yabause", "4.2.3", "yabause-wasm.data", 991166, "ab253ac263bd98e3124e2ca45ff581e97673426ed06ecec0025333060cd8127c", "1fc177e7be4923208b92755bcfae66ac35ba6e395c3b7ea48df581806ebdf6a6", {contentKinds: ["SINGLE_FILE", "MULTI_DISC"]}),
@@ -176,7 +176,7 @@ export const emulatorJsProviderDefinition = defineProvider({
   adapters,
   providerApiVersion: 1,
   providerId: "emulatorjs",
-  providerVersion: "2.6.0-rc.6",
+  providerVersion: "2.6.0-rc.8",
   targets,
 });
 

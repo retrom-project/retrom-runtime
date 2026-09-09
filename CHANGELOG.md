@@ -2,7 +2,7 @@
 
 ## Unreleased
 
-- Advance the EmulatorJS development candidate to 2.6.0-rc.6. CrocoDS dismisses its autorun menu after restore, and EightyOne preserves controller port selections while loading content and queries base input devices. Home computer defaults enable independent keyboard input; PET uses a 40-column 4032 with its joystick adapter, and Plus/4 uses joystick port 1.
+- Advance the EmulatorJS development candidate to 2.6.0-rc.8. CrocoDS dismisses its autorun menu after restore, and EightyOne preserves controller port selections while loading content and queries base input devices. EightyOne pins its controller devices through RetroArch command-line overrides so remapping cannot reset them. PET and Plus/4 reopen audio after fresh-instance state restoration; Plus/4 reconstructs the TED display bounds and cursor. Home computer defaults enable independent keyboard input; PET uses a 40-column 4032 with its joystick adapter, and Plus/4 uses joystick port 1.
 
 - Add candidate EmulatorJS targets for EightyOne, Caprice32, CrocoDS, VICE PET, Plus/4, C64 and SAME CD-i, using pinned 4.2.3 assets.
 - Preserve the existing raw checkpoint contract and single-file input policy for these targets.

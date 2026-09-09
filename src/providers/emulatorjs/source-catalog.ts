@@ -31,66 +31,126 @@ export const emulatorJsSourceCatalog = {
       }
     ]
   },
-{
-  "repository": "https://github.com/retrom-project/libretro-crocods",
-  "commit": "046978e8149798f93ba74d76aa2fc6b23de73de1",
-  "sourceTreeSha256": "2799dabf3258acfd827bda1f43691c11c58c3e1e0cf0b38cd8cc8ad2404b121b",
-  "adapterAbi": "emulatorjs-state-v1",
-  "runtimeCore": "crocods",
-  "upstreamCommit": "be00fb904da08d66221017f6708508298f17ff07",
-  "assets": [
-    {
-      "filename": "LICENSE",
-      "sha256": "e7a80285ce71a64bf9823a4e2b210feb8e4dbc5210a8e4d9b64515a021d1a31a",
-      "sizeBytes": 1063
-    },
-    {
-      "filename": "crocods-wasm.data",
-      "sha256": "ab909e321609fbe0aa5eceaf0408b8949b14e0ec2076cd38889aa1671dc28d0d",
-      "sizeBytes": 976361
-    },
-    {
-      "filename": "source.tar.gz",
-      "sha256": "0683ce6857b2ca1247418c19aaf6d5d7d6e79ed29782f0e26437cc9254c1f22d",
-      "sizeBytes": 403695
-    },
-    {
-      "filename": "retrom-core-candidate.json",
-      "sha256": "e31d8125502503344b7208c421cf524ef365faa39e86cc064cee0b44cc5126fb",
-      "sizeBytes": 747
-    }
-  ]
-},
-{
-  "repository": "https://github.com/retrom-project/81-libretro",
-  "commit": "16f9bf7eca805f500c655d2e9f89d6500d449f44",
-  "sourceTreeSha256": "498654dc95c91c915c5f5d4da940da9e1d571f8144dc8252fb111b05a644dafb",
-  "adapterAbi": "emulatorjs-state-v1",
-  "runtimeCore": "81",
-  "upstreamCommit": "86decf3ee61ea5803972948e80197bee8474796b",
-  "assets": [
-    {
-      "filename": "81-wasm.data",
-      "sha256": "a96a2ef49458da2b8dc51466ff836fcff30d16e494fae0e2021f5a0472de4cee",
-      "sizeBytes": 888668
-    },
-    {
-      "filename": "LICENSE",
-      "sha256": "12ac5047f2af0522f06798b1589ffc4599bc29c91f954d7874e0320634e777c0",
-      "sizeBytes": 35122
-    },
-    {
-      "filename": "source.tar.gz",
-      "sha256": "697952dfc0056204003939d914284ea684c6c88462f78b6e6e6fce11b6e12a1d",
-      "sizeBytes": 1204927
-    },
-    {
-      "filename": "retrom-core-candidate.json",
-      "sha256": "a9ee2f1d497a21327c0692d41154c0bb198d86a18806fa30b97e4a97fa06a1ce",
-      "sizeBytes": 734
-    }
-  ]
-}
+  {
+    "repository": "https://github.com/retrom-project/libretro-crocods",
+    "commit": "046978e8149798f93ba74d76aa2fc6b23de73de1",
+    "sourceTreeSha256": "2799dabf3258acfd827bda1f43691c11c58c3e1e0cf0b38cd8cc8ad2404b121b",
+    "adapterAbi": "emulatorjs-state-v1",
+    "runtimeCore": "crocods",
+    "upstreamCommit": "be00fb904da08d66221017f6708508298f17ff07",
+    "assets": [
+      {
+        "filename": "LICENSE",
+        "sha256": "e7a80285ce71a64bf9823a4e2b210feb8e4dbc5210a8e4d9b64515a021d1a31a",
+        "sizeBytes": 1063
+      },
+      {
+        "filename": "crocods-wasm.data",
+        "sha256": "ab909e321609fbe0aa5eceaf0408b8949b14e0ec2076cd38889aa1671dc28d0d",
+        "sizeBytes": 976361
+      },
+      {
+        "filename": "source.tar.gz",
+        "sha256": "0683ce6857b2ca1247418c19aaf6d5d7d6e79ed29782f0e26437cc9254c1f22d",
+        "sizeBytes": 403695
+      },
+      {
+        "filename": "retrom-core-candidate.json",
+        "sha256": "e31d8125502503344b7208c421cf524ef365faa39e86cc064cee0b44cc5126fb",
+        "sizeBytes": 747
+      }
+    ]
+  },
+  {
+    "repository": "https://github.com/retrom-project/81-libretro",
+    "commit": "16f9bf7eca805f500c655d2e9f89d6500d449f44",
+    "sourceTreeSha256": "498654dc95c91c915c5f5d4da940da9e1d571f8144dc8252fb111b05a644dafb",
+    "adapterAbi": "emulatorjs-state-v1",
+    "runtimeCore": "81",
+    "upstreamCommit": "86decf3ee61ea5803972948e80197bee8474796b",
+    "assets": [
+      {
+        "filename": "81-wasm.data",
+        "sha256": "a96a2ef49458da2b8dc51466ff836fcff30d16e494fae0e2021f5a0472de4cee",
+        "sizeBytes": 888668
+      },
+      {
+        "filename": "LICENSE",
+        "sha256": "12ac5047f2af0522f06798b1589ffc4599bc29c91f954d7874e0320634e777c0",
+        "sizeBytes": 35122
+      },
+      {
+        "filename": "source.tar.gz",
+        "sha256": "b672536a21b46dbb7629a0e5b9ace5a533993e326544eac162cbb6a6e900699b",
+        "sizeBytes": 1204926
+      },
+      {
+        "filename": "retrom-core-candidate.json",
+        "sha256": "2ca12e6d6f333a49e36d86b45127289b665d84652ee90bafb9796637e84da5a7",
+        "sizeBytes": 734
+      }
+    ]
+  },
+  {
+    "repository": "https://github.com/retrom-project/vice-libretro",
+    "commit": "4802d57251fa017f0324df2331c7b6896ce80e68",
+    "sourceTreeSha256": "8271ab868b2adf4ca7d2ef8b4dad4ca17063362f97acd8ca6f547675a819a6d6",
+    "adapterAbi": "emulatorjs-state-v1",
+    "runtimeCore": "vice_xpet",
+    "upstreamCommit": "1b4309f4d56ded7bfc5ad7ba8d5a9a44ac3388a8",
+    "assets": [
+      {
+        "filename": "COPYING",
+        "sha256": "b8a2f73f743dc1a51aff23f1aacbca4b868564db52496fa3c0caba755bfd1eaf",
+        "sizeBytes": 17989
+      },
+      {
+        "filename": "source.tar.gz",
+        "sha256": "5596dce0703040df4392e1b8f6a20231ddb3c2c4f1ea39ddc9cb6f3af7cc62ae",
+        "sizeBytes": 16757476
+      },
+      {
+        "filename": "vice_xpet-wasm.data",
+        "sha256": "6873d687d99130d8e1aaca59239d72305663fffffb41b25120c53764e1e89cee",
+        "sizeBytes": 1371676
+      },
+      {
+        "filename": "retrom-core-candidate.json",
+        "sha256": "02c8b2a4e96034d12e6ad499af52aa12bf913dc54f25e764a2d2032a084b0973",
+        "sizeBytes": 752
+      }
+    ]
+  },
+  {
+    "repository": "https://github.com/retrom-project/vice-libretro",
+    "commit": "4802d57251fa017f0324df2331c7b6896ce80e68",
+    "sourceTreeSha256": "8271ab868b2adf4ca7d2ef8b4dad4ca17063362f97acd8ca6f547675a819a6d6",
+    "adapterAbi": "emulatorjs-state-v1",
+    "runtimeCore": "vice_xplus4",
+    "upstreamCommit": "1b4309f4d56ded7bfc5ad7ba8d5a9a44ac3388a8",
+    "assets": [
+      {
+        "filename": "COPYING",
+        "sha256": "b8a2f73f743dc1a51aff23f1aacbca4b868564db52496fa3c0caba755bfd1eaf",
+        "sizeBytes": 17989
+      },
+      {
+        "filename": "source.tar.gz",
+        "sha256": "5596dce0703040df4392e1b8f6a20231ddb3c2c4f1ea39ddc9cb6f3af7cc62ae",
+        "sizeBytes": 16757476
+      },
+      {
+        "filename": "vice_xplus4-wasm.data",
+        "sha256": "4a1329c1f891bb90e854ec82096e12034f150b15928345acf23262d6debd1f3d",
+        "sizeBytes": 1415979
+      },
+      {
+        "filename": "retrom-core-candidate.json",
+        "sha256": "e509c14108b8420440521f82cd6b80dbe94d9c9b4b83e61fbda1ac3d8a312648",
+        "sizeBytes": 756
+      }
+    ]
+  }
 ],
   forks: [
     {

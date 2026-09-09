@@ -24,7 +24,7 @@ describe("EmulatorJS Provider declarations", () => {
     const manifest = projectProviderManifest(emulatorJsProviderDefinition);
     expect(validateProviderManifest(manifest)).toBe(manifest);
     expect(manifest.providerId).toBe("emulatorjs");
-    expect(manifest.providerVersion).toBe("2.6.0-rc.6");
+    expect(manifest.providerVersion).toBe("2.6.0-rc.8");
     expect(manifest.targets).toHaveLength(50);
     expect(new Set(manifest.targets.map((target) => target.id)).size).toBe(50);
     for (const targetId of ["dosbox-pure", "genesis-plus-gx-wide", "azahar"]) {

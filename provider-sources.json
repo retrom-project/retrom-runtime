@@ -2039,6 +2039,18 @@
       "repository": "https://github.com/retrom-project/81-libretro",
       "upstreamCommit": "86decf3ee61ea5803972948e80197bee8474796b",
       "adapterAbi": "emulatorjs-state-v1"
+    },
+    {
+      "id": "vice_xpet",
+      "repository": "https://github.com/retrom-project/vice-libretro",
+      "upstreamCommit": "1b4309f4d56ded7bfc5ad7ba8d5a9a44ac3388a8",
+      "adapterAbi": "emulatorjs-state-v1"
+    },
+    {
+      "id": "vice_xplus4",
+      "repository": "https://github.com/retrom-project/vice-libretro",
+      "upstreamCommit": "1b4309f4d56ded7bfc5ad7ba8d5a9a44ac3388a8",
+      "adapterAbi": "emulatorjs-state-v1"
     }
   ]
 }

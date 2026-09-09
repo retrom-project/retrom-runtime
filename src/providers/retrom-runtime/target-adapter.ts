@@ -1,3 +1,4 @@
+import {mountNP2} from "../../np2kai/adapter.js";
 import {mountOpenBOR} from "../../openbor/adapter.js";
 import {mountPx68k} from "../../px68k/adapter.js";
 import {mountWebMSX} from "../../webmsx/adapter.js";
@@ -43,16 +44,8 @@ export function mountTargetAdapter(
   switch (adapter.kind) {
   case "OPENBOR_WEB":
     return mountOpenBOR(parameters.openbor(envelope), target, frameWindow, restorePayload, reportProgress, reportFailure, context.signal);
-  case "PX68K_WEB":
-    return mountPx68k(parameters.px68k(envelope, context.assetIndex), target, frameWindow, restorePayload,
-      reportProgress, reportFailure, context.signal);
-  case "WEBMSX_WEB":
-    return mountWebMSX(parameters.webmsx(envelope), target, frameWindow, restorePayload, reportProgress, context.signal);
   case "RUFFLE_WEB":
     return mountRuffle(parameters.ruffle(envelope), target, frameWindow, restorePayload, reportProgress, context.signal);
-  case "PLAY_WEB":
-    return mountPlay(parameters.play(envelope, context.assetIndex), target, frameWindow, restorePayload,
-      reportFailure, context.signal);
   case "EASYRPG_WEB":
     return mountEasyRpg(parameters.easyRpg(envelope, declaration.implementation), target,
       frameWindow, restorePayload, reportExitRequested);
@@ -84,7 +77,7 @@ export function mountTargetAdapter(
       restorePayload, reportProgress, reportFailure, context.signal);
   case "WASM4_WEB":
     return mountWasm4(parameters.wasm4(envelope), target, frameWindow, restorePayload, reportProgress);
-  default: throw new Error("PROVIDER_LAUNCH_REQUEST_INVALID");
+  default: return mountMachineAdapter(adapter.kind, envelope, target, context);
   }
 }
 
@@ -102,4 +95,23 @@ function resolveAdapter(targetId: string) {
   const adapter = retromRuntimeProviderDefinition.adapters.find((entry) => entry.id === declaration?.adapterId);
   if (!declaration || !adapter) {throw new Error("PROVIDER_LAUNCH_REQUEST_INVALID");}
   return {declaration, adapter};
+}
+
+function mountMachineAdapter(kind: string, envelope: LaunchEnvelopeV1, target: HTMLElement, context: TargetMountContext) {
+  const {frameWindow, restorePayload, reportProgress} = context;
+  const reportFailure = context.reportFailure ?? (() => undefined);
+  switch (kind) {
+  case "NP2KAI_WEB":
+    return mountNP2(parameters.np2kai(envelope, context.assetIndex), target, frameWindow, restorePayload,
+      reportProgress, reportFailure, context.signal);
+  case "PX68K_WEB":
+    return mountPx68k(parameters.px68k(envelope, context.assetIndex), target, frameWindow, restorePayload,
+      reportProgress, reportFailure, context.signal);
+  case "WEBMSX_WEB":
+    return mountWebMSX(parameters.webmsx(envelope), target, frameWindow, restorePayload, reportProgress, context.signal);
+  case "PLAY_WEB":
+    return mountPlay(parameters.play(envelope, context.assetIndex), target, frameWindow, restorePayload,
+      reportFailure, context.signal);
+  default: throw new Error("PROVIDER_LAUNCH_REQUEST_INVALID");
+  }
 }

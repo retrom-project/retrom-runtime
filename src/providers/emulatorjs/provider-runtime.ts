@@ -1,3 +1,4 @@
+import {requestNativeExit} from "./native-exit.js";
 import {observeEmulatorInput} from "./input-diagnostics.js";
 import {startInputDiagnostics} from "../../provider/input-diagnostics.js";
 import type {RuntimeInputDiagnosticsV1} from "../../provider/module-api.js";
@@ -51,7 +52,7 @@ import {readEmulatorJsCheckpoint} from "./bytes.js";
 import {readPspCheckpoint, restorePspCheckpoint} from "./psp-state.js";
 import {installPspRestoreObserver} from "./psp-restore.js";
 import {installEmulatorJsFrameStyle} from "./frame-style.js";
-import {decodeEmulatorJsCheckpoint, encodeEmulatorJsCheckpoint} from "./checkpoint-codec.js";
+import {decodeStoredCheckpoint, encodeStoredCheckpoint} from "../../provider/checkpoint-storage.js";
 import {installEmulatorJsOutputViewport} from "./output-viewport.js";
 
 import type {EjsInstance, EjsWindow} from "./emulator-instance.js";
@@ -166,7 +167,7 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
       throw contractError();
     }
     const format = this.envelope.runtime.checkpoint!.writeFormat;
-    return {bytes: await encodeEmulatorJsCheckpoint(bytes, format, maximum, this.host.signal), format, metadata: null};
+    return {bytes: await encodeStoredCheckpoint(bytes, format, maximum, this.host.signal), format, metadata: null};
   }
 
   async screenshot() {
@@ -282,7 +283,7 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
     try {
       this.restorePayload = await this.host.loadRestore(this.envelope.restore);
       if (this.restorePayload && this.envelope.restore) {
-        this.restorePayload = await decodeEmulatorJsCheckpoint(this.restorePayload, this.envelope.restore.format,
+        this.restorePayload = await decodeStoredCheckpoint(this.restorePayload, this.envelope.restore.format,
           this.envelope.runtime.checkpoint?.maxBytes ?? 0, this.host.signal);
       }
       const frame = await this.host.mountFrame(target, {resourceRole: null});
@@ -387,7 +388,10 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
     runtimeWindow.EJS_disableBatchBootup = deferredDOSStart;
     runtimeWindow.EJS_language = "zh-CN";
     runtimeWindow.EJS_disableAutoLang = false;
-    runtimeWindow.EJS_DEBUG_XX = this.envelope.session.mode === "NETPLAY";
+    // PSP's native load receipt is emitted only with RetroArch's -v flag.
+    // The restore barrier must observe that receipt before admitting gameplay.
+    runtimeWindow.EJS_DEBUG_XX = this.envelope.session.mode === "NETPLAY" ||
+      (this.implementation.runtimeCore === "ppsspp" && this.envelope.restore !== null);
     runtimeWindow.EJS_EXPERIMENTAL_NETPLAY = false;
     runtimeWindow.EJS_threads = this.envelope.runtime.capabilities.requiresThreads;
     runtimeWindow.EJS_fullscreenOnLoaded = false;
@@ -511,9 +515,7 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
     if (!runtimeWindow || !instance?.callEvent) {return;}
     const nativeExitAlreadyRequested = this.exitRequestedEmitted;
     this.exitRequestedEmitted = true;
-    if (!nativeExitAlreadyRequested) {
-      try {instance.callEvent("exit");} catch { /* Continue bounded host cleanup after a native exit error. */ }
-    }
+    if (!nativeExitAlreadyRequested) {requestNativeExit(instance, this.implementation.runtimeCore);}
     await new Promise<void>((resolve) => runtimeWindow.setTimeout(resolve, 1_100));
   }
 

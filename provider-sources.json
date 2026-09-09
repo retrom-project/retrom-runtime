@@ -1,9 +1,60 @@
 {
   "schemaVersion": 1,
   "packageName": "@xxxsen/retrom-runtime",
-  "packageVersion": "0.29.0",
+  "packageVersion": "0.30.0",
   "publicApiVersion": 2,
   "upstreamReleases": [
+    {
+      "id": "np2kai",
+      "repository": "https://github.com/retrom-project/NP2kai",
+      "upstreamCommit": "5939e0c6d5985c4c08fc70f289a83290e5d3e6f7",
+      "adapterAbi": "np2kai-host-v1",
+      "tag": "retrom-core-g5939e0c6d598-r1",
+      "commit": "44236652583281d7d697ec3add225c32654e871b",
+      "metadataUrl": "https://github.com/retrom-project/NP2kai/releases/download/retrom-core-g5939e0c6d598-r1/rpg-runtime-release.json",
+      "assets": [
+        {
+          "filename": "LICENSE",
+          "sizeBytes": 109565,
+          "sha256": "ff2abb46f9c3311e6238c21a96be0aaf0e8ecc72170d42592ac48d236166d07f",
+          "output": "licenses/np2kai/LICENSE",
+          "maxSizeBytes": 1048576,
+          "url": "https://github.com/retrom-project/NP2kai/releases/download/retrom-core-g5939e0c6d598-r1/LICENSE"
+        },
+        {
+          "filename": "font.bmp",
+          "sizeBytes": 524350,
+          "sha256": "980076d7f5107fbb4b80fc2d6800026f8d488600fb709df3d8a99a975e861492",
+          "output": "runtime/np2kai/font.bmp",
+          "maxSizeBytes": 524350,
+          "url": "https://github.com/retrom-project/NP2kai/releases/download/retrom-core-g5939e0c6d598-r1/font.bmp"
+        },
+        {
+          "filename": "np2kai-register.mjs",
+          "sizeBytes": 97,
+          "sha256": "1cbf0134294402812de509e20fef3818d8c4a064068269f73ef66ca2e76e79e6",
+          "output": "runtime/np2kai/np2kai-register.mjs",
+          "maxSizeBytes": 65536,
+          "url": "https://github.com/retrom-project/NP2kai/releases/download/retrom-core-g5939e0c6d598-r1/np2kai-register.mjs"
+        },
+        {
+          "filename": "np2kai.mjs",
+          "sizeBytes": 366177,
+          "sha256": "cecfe520456715b2828e84e241e2e5e0323b975c3a9cb22a5a9d47b7974ef044",
+          "output": "runtime/np2kai/np2kai.mjs",
+          "maxSizeBytes": 8388608,
+          "url": "https://github.com/retrom-project/NP2kai/releases/download/retrom-core-g5939e0c6d598-r1/np2kai.mjs"
+        },
+        {
+          "filename": "np2kai.wasm",
+          "sizeBytes": 3338691,
+          "sha256": "ffeb7804fcc3a0b9bb0487a996bac8893672e575f42bc101d4cee8f8dd33acaf",
+          "output": "runtime/np2kai/np2kai.wasm",
+          "maxSizeBytes": 33554432,
+          "url": "https://github.com/retrom-project/NP2kai/releases/download/retrom-core-g5939e0c6d598-r1/np2kai.wasm"
+        }
+      ]
+    },
     {
       "id": "webmsx",
       "repository": "https://github.com/retrom-project/WebMSX",

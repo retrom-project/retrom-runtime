@@ -1,3 +1,4 @@
+import {decodeStoredCheckpoint} from "../provider/checkpoint-storage.js";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { decodeKirikiriCheckpoint, encodeKirikiriCheckpoint } from "./checkpoint.js";
@@ -263,12 +264,12 @@ describe("KiriKiri2 KAG runtime", () => {
     expect(module._krkr2_host_save_bookmark).not.toHaveBeenCalled();
     module._krkr2_host_bookmark_is_ready.mockReturnValue(1);
     const checkpoint = await runtime.checkpoint();
-    expect(checkpoint.format).toBe("kirikiri-save-bundle-v1");
+    expect(checkpoint.format).toBe("kirikiri-save-bundle-v1-storage-v1");
     expect(checkpoint.bytes.byteLength).toBeLessThan(1024);
     expect(module._krkr2_host_save_bookmark).toHaveBeenCalledWith(1999);
     expect(module._krkr2_host_save_bookmark).toHaveBeenCalledBefore(module.pauseMainLoop);
     expect(module.resumeMainLoop).toHaveBeenCalledAfter(module._krkr2_host_save_bookmark);
-    expect((await decodeKirikiriCheckpoint(checkpoint.bytes)).entries.map((entry) => entry.path)).toEqual([
+    expect((await decodeKirikiriCheckpoint(await decodeStoredCheckpoint(checkpoint.bytes, checkpoint.format, 64 * 1024 * 1024))).entries.map((entry) => entry.path)).toEqual([
       "savedata/data1999.ksd", "savedata/datasu.ksd",
     ]);
     await runtime.exit();
@@ -276,7 +277,9 @@ describe("KiriKiri2 KAG runtime", () => {
     expect(document.head.querySelector("script[data-runtime=kirikiri2]")).toBeNull();
 
     const restoredVlfs = fakeVlfs();
-    const restored = await createRuntime(config(), currentWindowHost(checkpoint.bytes));
+    const nextConfig = config();
+    nextConfig.restore = {format: checkpoint.format, sha256: "a".repeat(64), sizeBytes: checkpoint.bytes.length, url: "/restore"};
+    const restored = await createRuntime(nextConfig, currentWindowHost(checkpoint.bytes));
     const restoredTarget = document.createElement("div");
     const restoredMount = restored.mount(restoredTarget);
     await loadVlfs(restoredVlfs);
@@ -325,7 +328,7 @@ describe("KiriKiri2 KAG runtime", () => {
 
     expect(module.resumeMainLoop).toHaveBeenCalledBefore(module._krkr2_host_save_bookmark);
     expect(module.pauseMainLoop).toHaveBeenCalledAfter(module._krkr2_host_save_bookmark);
-    expect((await decodeKirikiriCheckpoint(checkpoint.bytes)).entries).toContainEqual({
+    expect((await decodeKirikiriCheckpoint(await decodeStoredCheckpoint(checkpoint.bytes, checkpoint.format, 64 * 1024 * 1024))).entries).toContainEqual({
       path: "savedata/custom-host-bookmark.bmp", data: Uint8Array.of(4, 2),
     });
     await runtime.exit();

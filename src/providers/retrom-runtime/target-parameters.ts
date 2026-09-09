@@ -1,3 +1,4 @@
+import type {NP2Parameters} from "../../np2kai/adapter.js";
 import type {OpenBORParameters} from "../../openbor/adapter.js";
 import type {Px68kParameters} from "../../px68k/core.js";
 import type {WebMSXParameters} from "../../webmsx/adapter.js";
@@ -224,6 +225,12 @@ function assetBase(envelope: LaunchEnvelopeV1, directory: string) {
 }
 
 function invalidRequest(): never {throw new Error("PROVIDER_LAUNCH_REQUEST_INVALID");}
+
+export function np2kai(envelope: LaunchEnvelopeV1, assetIndex: AssetIndexV1): NP2Parameters {
+  const game = resource(envelope, "game", "ROM_BLOB");
+  return {disk: {url: game.url, sha256: game.sha256, sizeBytes: game.sizeBytes},
+    runtimeBaseUrl: assetBase(envelope, "np2kai"), assetIndex};
+}
 
 export function openbor(envelope: LaunchEnvelopeV1): OpenBORParameters {
   const game = resource(envelope, "game", "ROM_BLOB");

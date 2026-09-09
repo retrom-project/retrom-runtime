@@ -1,3 +1,4 @@
+import {storageAdapters} from "../../provider/checkpoint-storage.js";
 import {
   defineAdapter, defineProvider, defineTarget, type TargetInputDeclaration, type TargetOptionsSchema,
 } from "../../provider/declarations.js";
@@ -25,7 +26,7 @@ const capabilities = {
 const adapters = [
   defineAdapter({
     abi: "emulatorjs-flycast-state-v1", capabilities,
-    checkpoint: {readFormats: ["flycast-state-gzip-v1", "flycast-state-v1"], writeFormat: "flycast-state-gzip-v1"},
+    checkpoint: {readFormats: ["flycast-state-gzip-v1", "flycast-state-v1"], writeFormat: "flycast-state-v1"},
     id: "emulatorjs-flycast", kind: "EMULATORJS_FLYCAST",
   }),
   defineAdapter({
@@ -40,7 +41,7 @@ const adapters = [
   }),
   defineAdapter({
     abi: "emulatorjs-state-gzip-v1", capabilities,
-    checkpoint: {readFormats: ["emulatorjs-state-v1", "emulatorjs-state-gzip-v1"], writeFormat: "emulatorjs-state-gzip-v1"},
+    checkpoint: {readFormats: ["emulatorjs-state-v1", "emulatorjs-state-gzip-v1"], writeFormat: "emulatorjs-state-v1"},
     id: "emulatorjs-psp", kind: "EMULATORJS_PSP",
   }),
 ] as const;
@@ -173,10 +174,10 @@ const targets = cores.map((entry) => {
 });
 
 export const emulatorJsProviderDefinition = defineProvider({
-  adapters,
+  adapters: storageAdapters(adapters),
   providerApiVersion: 1,
   providerId: "emulatorjs",
-  providerVersion: "2.6.6",
+  providerVersion: "2.7.0",
   targets,
 });
 

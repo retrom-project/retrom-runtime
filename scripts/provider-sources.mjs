@@ -35,7 +35,7 @@ export function validateProviderSources(sources) {
       !(release.id === "webmsx" ? validWebMSXRelease(release) : release.id === "scummvm" ? validScummvmRelease(release) : release.archive ? validJ2meRelease(release) : validCoreRelease(release))) {
       throw new Error("PROVIDER_SOURCES_INVALID");
     }
-    if (["px68k", "tyranoscript", "openbor"].includes(release.id) && !validPinnedCoreAssets(release)) {throw new Error("PROVIDER_SOURCES_INVALID");}
+    if (["np2kai", "px68k", "tyranoscript", "openbor"].includes(release.id) && !validPinnedCoreAssets(release)) {throw new Error("PROVIDER_SOURCES_INVALID");}
     releases.set(release.id, release);
     for (const asset of release.assets) {
       if (!safePath(asset.filename) ||

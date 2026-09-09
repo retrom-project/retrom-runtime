@@ -1,4 +1,5 @@
-import {decodeEmulatorJsCheckpoint} from "./checkpoint-codec.js";
+import {decodeStoredCheckpoint} from "../../provider/checkpoint-storage.js";
+import {gzipSync, gunzipSync} from "fflate";
 import {afterEach, describe, expect, it, vi} from "vitest";
 import {projectProviderManifest} from "../../provider/manifest.js";
 import {emulatorJsProviderDefinition} from "./catalog.js";
@@ -20,9 +21,10 @@ describe("Flycast player lifecycle", () => {
     }});
     expect(first.runtimeWindow.EJS_dontExtractRom).toBe(true);
     const saved = await first.player.checkpoint();
-    expect(saved.format).toBe("flycast-state-gzip-v1");
+    expect(saved.format).toBe("flycast-state-v1-storage-v1");
+    expect(gunzipSync(saved.bytes)).toEqual(snapshot);
     expect(saved.bytes.length).toBeLessThan(snapshot.length / 10);
-    expect(await decodeEmulatorJsCheckpoint(saved.bytes, saved.format, snapshot.length)).toEqual(snapshot);
+    expect(await decodeStoredCheckpoint(saved.bytes, saved.format, snapshot.length)).toEqual(snapshot);
     await first.player.exit();
     expect(first.runtimeWindow.EJS_gameUrl).toBeUndefined();
     const restored = await mount(saved.bytes, new Uint8Array([4]), saved.format);
@@ -34,9 +36,9 @@ describe("Flycast player lifecycle", () => {
     expect(restored.toggle).toHaveBeenLastCalledWith(true);
     await restored.player.exit();
   });
-  it("continues to load the existing raw Flycast saves", async () => {
+  it.each(["flycast-state-v1", "flycast-state-gzip-v1"])("continues to load existing %s Flycast saves", async format => {
     const raw = new Uint8Array([82, 65, 83, 84, 65, 84, 69, 1, 5]);
-    const restored = await mount(raw, raw);
+    const restored = await mount(format.endsWith("gzip-v1") ? gzipSync(raw) : raw, raw, format);
     expect(restored.load).toHaveBeenCalledWith(raw);
     await restored.player.exit();
   });

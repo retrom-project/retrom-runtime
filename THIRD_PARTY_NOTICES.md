@@ -43,6 +43,14 @@ base commit `83700b2c31e593bc94e845b4b31b797be84dda59`. Play! uses the BSD 2-Cla
 The fork supplies its license and linked dependency notices with release artifacts;
 the Provider preserves them at `licenses/play/LICENSE`. No game or BIOS is bundled.
 
+## NP2kai
+
+Source: https://github.com/retrom-project/NP2kai, upstream AZO234/NP2kai commit
+`5939e0c6d5985c4c08fc70f289a83290e5d3e6f7`. NP2kai includes MIT/BSD code and components
+with additional licenses, including the GPL DOSBox FPU implementation. The fork's generated
+`licenses/np2kai/LICENSE` preserves its upstream LICENSES collection, SDL2, libpng, zlib
+and the pinned np2-wasm 0.3.1 Shinonome font notice. The exact corresponding source and linked-library source inputs are published alongside
+`retrom-core-g5939e0c6d598-r1`; the build entry point remains in the fork; no game or proprietary BIOS image is distributed here.
 ## PX68K
 
 Source: https://github.com/retrom-project/px68k-libretro, based on

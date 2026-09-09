@@ -1,3 +1,5 @@
+import {gunzipSync, zipSync, unzipSync} from "fflate";
+import {decodeStoredCheckpoint, encodeStoredCheckpoint} from "../provider/checkpoint-storage.js";
 import {describe, expect, it} from "vitest";
 import {decodeCheckpoint, encodeCheckpoint} from "./state.js";
 const identity = "a".repeat(64);
@@ -17,4 +19,17 @@ describe("PX68K checkpoint envelope", () => {
     expect(() => encodeCheckpoint(identity, new Uint8Array(), {}, 0)).toThrow();
     expect(() => encodeCheckpoint(identity, new Uint8Array([1]), {"../bios": new Uint8Array([1])}, 0)).toThrow();
   });
+});
+
+it("stores uncompressed ZIP entries and delegates compression to the shared layer", async () => {
+  const state = new Uint8Array(10000); state[9999] = 23;
+  const envelope = encodeCheckpoint(identity, state, {}, 42);
+  expect(new DataView(envelope.buffer, envelope.byteOffset).getUint16(8, true)).toBe(0);
+  const stored = await encodeStoredCheckpoint(envelope, "px68k-state-v1-storage-v1", 100000);
+  expect(gunzipSync(stored)).toEqual(envelope);
+  expect(stored.length).toBeLessThan(envelope.length / 2);
+  const raw = await decodeStoredCheckpoint(stored, "px68k-state-v1-storage-v1", 100000);
+  expect(decodeCheckpoint(identity, raw)).toMatchObject({state, frames: 42});
+  const legacy = zipSync(unzipSync(envelope), {level: 6});
+  expect(decodeCheckpoint(identity, legacy)).toMatchObject({state, frames: 42});
 });

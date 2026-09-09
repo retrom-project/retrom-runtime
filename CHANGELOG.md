@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.30.0
+
+- Add the PC-98 NP2kai target with the pinned r1 core, HDI/D88 input, verified persistent disk cache, download progress and instant machine/disk checkpoints.
+- Compress every new checkpoint exactly once at the shared Provider boundary, without a size threshold; decode before restore and persistence acknowledgement, including final native-save snapshots.
+- Advance EmulatorJS Provider to 2.7.0. Version all storage write formats while retaining legacy raw, PSP/Flycast gzip, mkxp compact and PX68K deflate ZIP reads. New PX68K ZIP entries use STORE and private transport compression writers are removed.
+- Enable PSP native load receipts for explicit restore, and suppress its upstream reboot during explicit exit while retaining native cleanup.
+
 ## 0.29.0
 
 - Add OpenBOR PAK content through a fork-owned Emscripten/SDL2 core and the

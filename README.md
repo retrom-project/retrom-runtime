@@ -5,6 +5,24 @@ VX, VX Ace, MV and MZ, ONS games powered by ONScripterYuri, KAG-based KiriKiri2 
 projects powered by Butterscotch, browser TyranoScript projects, Java ME JARs, ScummVM game projects and WASM-4 carts. It owns runtime lifecycle, adapters, checkpoint codecs, bridge assets and pinned core
 Release inputs. It does not know about a host application's users, database, review flow, storage or HTTP API.
 
+## PC-98 / NP2kai
+
+`retrom-runtime/np2kai-pc98` runs a single HDI hard disk or D88 floppy in a same-origin
+blank frame. The maintained NP2kai fork is pinned to upstream commit
+`5939e0c6d5985c4c08fc70f289a83290e5d3e6f7` and release `retrom-core-g5939e0c6d598-r1`.
+Published assets are pinned by commit, exact size and SHA-256; local PFB overrides remain explicit.
+
+The adapter materializes disks up to 512 MiB with verified size/SHA-256 and reports download
+progress. OPFS retains immutable disk bytes across launches. Each instance writes its own
+memory copy. `np2kai-state-v1` contains the native execution state and changed 64 KiB disk
+blocks, bound to the original disk digest, with a 384 MiB total limit. Fresh launches ignore
+previous disk writes unless a checkpoint is explicitly supplied.
+
+Standard gamepads map directions to cursor keys, A to Space (confirm), B to Escape (cancel),
+X to Z, Y to X and Start to Enter. Keyboard input remains available. Pause, screenshot,
+frame count and instant restore are supported; volume adjustment, netplay, disk switching
+and external BIOS configuration are outside this trial. A freely distributable Shinonome
+font is included in the core build; game bytes are supplied by the host.
 Core admission requires standard-gamepad directional movement and confirmation.
 Gamepad cancellation is optional; existing working cancellation remains supported.
 Within one mapping configuration, each gamepad button has one target input. Do not
@@ -61,12 +79,8 @@ it uniformly to the host surface. This preserves the full image and limits outpu
 screens; it does not change the game's internal rendering resolution. Native settings keep that viewport so opening a menu does not clear a paused frame. Shader modes
 retain the full host viewport. Resize observation and styles are released on exit.
 
-PSP checkpoints use `emulatorjs-state-gzip-v1`: gzip of the complete native checkpoint, with no
-truncation. Encoding and decoding occur only at the save/restore boundary, using browser streams.
-Native PSP save/load calls await Asyncify with the main loop stopped; restored sessions skip boot-dialog input.
-Both encoded and decoded payloads must fit the declared checkpoint limit; invalid gzip or oversized
-output fails the contract. Raw `emulatorjs-state-v1` payloads are also decoded explicitly by format.
-Other EmulatorJS targets retain their existing raw checkpoint format and output policy.
+All Provider checkpoints now use the common storage codec described below. PSP still stops the
+main loop while awaiting native Asyncify save/load calls; restored sessions skip boot-dialog input.
 
 ## Provider Module V1
 
@@ -292,14 +306,21 @@ the exact non-empty `readFormats` set it can restore; `readFormats` includes `wr
 is absent from the current Target's `readFormats` remains visible but cannot be loaded. Hosts only upgrade and never
 retain, restore or fall back to an older Bundle.
 
-The mkxp core still serializes into its fixed 256 MiB memory buffer. The adapter does not upload that zero-padded
-buffer directly: it trims the unused zero tail in bounded asynchronous chunks, compresses the meaningful prefix in a worker and stores a compact
-`mkxp-state-compact-v1` checkpoint. Restore expands it back to the exact core buffer before publishing an atomic
-native load request. The core loop owns save/restore execution and exposes an explicit completion result. Saving
-preallocates the exact memory-file size and acknowledges only after writing, closing and freeing its temporary
-buffer; a full-length file is never proof of completion. Restoring requires successful native deserialization and
-a subsequent presented frame. The adapter releases temporary state files after consuming them. This private
-request/result ABI replaces synthetic save/load hotkeys without changing the raw serializer or compact format.
+All new checkpoints, including tiny states, native-save exports and final exit snapshots, are
+compressed once with gzip at the Provider boundary. The public format is the native format plus
+`-storage-v1`; payload bytes are standard gzip of the complete native state. There is no size threshold.
+Hosts hash, upload and store the encoded bytes. Restore decodes by the declared format before mounting
+the core; encoded and decoded bytes must both be nonempty and fit the Target limit. Streaming decode
+bounds actual output and rejects corrupt/truncated gzip, oversized output and cancellation.
+Native-save acknowledgement decodes the stored payload back to the adapter's native representation.
+
+The common reader retains old raw formats, PSP `emulatorjs-state-gzip-v1`, and mkxp
+`mkxp-state-compact-v1` (compressed prefix plus a zero-filled tail). These are read-only compatibility
+paths. New PSP/Flycast and mkxp saves no longer run private compression. The mkxp adapter supplies its exact
+fixed 256 MiB `mkxp-state-v1` buffer to the common codec and restores only decoded raw core bytes.
+Its explicit native completion/result ABI, validation, atomic load request and temporary-file cleanup
+remain responsible for checkpoint correctness. Game-internal save encodings and resource archives
+are separate from this transport codec.
 
 ## Adding and integrating a core
 

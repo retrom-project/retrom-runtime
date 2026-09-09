@@ -1,3 +1,4 @@
+import {decodeStoredCheckpoint} from "../provider/checkpoint-storage.js";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import {targetEnvelope} from "../../tests/provider-fixtures.js";
@@ -214,8 +215,8 @@ describe("ONS Yuri runtime", () => {
     expect(document.activeElement).toBe(document.querySelector("#game")!.querySelector("canvas"));
 
     const checkpoint = await runtime.checkpoint();
-    expect(checkpoint.format).toBe("ons-save-bundle-v1");
-    const decoded = await decodeOnsCheckpoint(checkpoint.bytes);
+    expect(checkpoint.format).toBe("ons-save-bundle-v1-storage-v1");
+    const decoded = await decodeOnsCheckpoint(await decodeStoredCheckpoint(checkpoint.bytes, checkpoint.format, 64 * 1024 * 1024));
     expect(decoded.resumeSlot).toBe(999);
     expect(decoded.entries.map((entry) => entry.path)).toContain("save999.dat");
     expect(module._onsyuri_host_save).toHaveBeenCalledWith(999);

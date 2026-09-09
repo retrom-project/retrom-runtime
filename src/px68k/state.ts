@@ -14,7 +14,7 @@ export function encodeCheckpoint(identity: string, state: Uint8Array, files: Rec
   const entries = {"state.bin": state, ...files};
   if (Object.keys(files).length > 3 || Object.values(entries).reduce((sum, b) => sum + b.length, 0) > checkpointLimit) {invalid();}
   const metadata = {version: 1, identity, frames, hashes: Object.fromEntries(Object.entries(entries).map(([name, bytes]) => [name, hash(bytes)]))};
-  const bytes = zipSync({...entries, "manifest.json": encoder.encode(JSON.stringify(metadata))}, {level: 6});
+  const bytes = zipSync({...entries, "manifest.json": encoder.encode(JSON.stringify(metadata))}, {level: 0});
   if (bytes.length > checkpointLimit) {invalid();}
   return bytes;
 }

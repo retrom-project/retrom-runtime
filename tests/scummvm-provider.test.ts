@@ -20,7 +20,7 @@ function fixture() {
 describe("ScummVM Provider declaration", () => {
   it("declares native saves, standard input and the complete fixed plugin set", () => {
     const {target} = fixture();
-    expect(target.checkpoint).toMatchObject({writeFormat: "scummvm-save-bundle-v1", semantics: "GAME_SAVE", maxBytes: 67108864});
+    expect(target.checkpoint).toMatchObject({writeFormat: "scummvm-save-bundle-v1-storage-v1", semantics: "GAME_SAVE", maxBytes: 67108864});
     expect(target.capabilities).toMatchObject({standardGamepad: true, inputFilter: true, frameCounter: false, volume: false, requiresThreads: false});
     expect(target.assetPaths.filter((path) => path.startsWith("assets/scummvm/plugins/"))).toHaveLength(105);
     expect(target.assetPaths).toContain("assets/scummvm/native/linux-x86_64/scummvm-detector");

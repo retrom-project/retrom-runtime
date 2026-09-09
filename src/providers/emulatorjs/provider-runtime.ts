@@ -499,7 +499,14 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
     const nativeExitAlreadyRequested = this.exitRequestedEmitted;
     this.exitRequestedEmitted = true;
     if (!nativeExitAlreadyRequested) {
-      try {instance.callEvent("exit");} catch { /* Continue bounded host cleanup after a native exit error. */ }
+      const functions = this.implementation.runtimeCore === "ppsspp" ? instance.gameManager?.functions : undefined;
+      const restart = functions?.restart;
+      try {
+        // Upstream resets to flush directory saves. PSP instant-state exit must not reboot.
+        if (functions && restart) {functions.restart = () => undefined;}
+        instance.callEvent("exit");
+      } catch { /* Continue bounded host cleanup after a native exit error. */ }
+      finally {if (functions && restart) {functions.restart = restart;}}
     }
     await new Promise<void>((resolve) => runtimeWindow.setTimeout(resolve, 1_100));
   }

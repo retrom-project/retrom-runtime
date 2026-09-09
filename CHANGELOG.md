@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.24.0-rc.3 (unpublished)
+
+- Advance EmulatorJS to 2.6.0-rc.3 and suppress the upstream PSP reset during explicit exit, retaining main-loop shutdown, filesystem unmount and delayed native cleanup. Prevent the boot screen from flashing during exit.
+
 ## 0.24.0-rc.2 (unpublished)
 
 - Advance EmulatorJS to 2.6.0-rc.2 and enable native load receipts during PSP restore, preventing valid raw, legacy gzip and shared gzip checkpoints from timing out. Preserve the single common compression boundary.

@@ -1,11 +1,17 @@
 # Changelog
 
-## Unreleased
+## 0.23.0
 
 - Add the Play! PS2 development target with bounded ISO/CHD reads, standard gamepad input,
   screenshots, pause/resume and content-bound native snapshots including memory cards.
-- Keep unpublished Play! inputs restricted to explicitly built PFB candidates.
+- Distribute Play! through the normal pinned core Release and Provider bundle.
 
+
+## 0.22.0
+
+- Advance the EmulatorJS Provider to 2.5.0.
+- Add opt-in bounded input diagnostics without additional input polling, synthesis or changes to normal input values.
+- Observe existing browser/runtime and adapter delivery boundaries, with optional MV/MZ bridge diagnostics. Core-read confirmation remains unavailable.
 
 ## 0.21.0
 

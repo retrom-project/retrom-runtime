@@ -1,6 +1,6 @@
 {
   "name": "@xxxsen/retrom-runtime",
-  "version": "0.24.0-rc.3",
+  "version": "0.30.0",
   "description": "Host-independent browser game runtimes with a shared lifecycle and checkpoint contract",
   "type": "module",
   "license": "MIT",
@@ -36,6 +36,7 @@
     "release:build": "npm run build && npm run provider:input:prepare && node scripts/build-release.mjs"
   },
   "dependencies": {
+    "@noble/hashes": "2.0.1",
     "fflate": "0.8.3",
     "nostalgist": "0.20.2"
   },

@@ -22,14 +22,14 @@ describe("shared compressed checkpoints", () => {
     await expect(encodeStoredCheckpoint(bytes, "emulatorjs-state-v1", maximum)).rejects.toThrow("PLAYER_RUNTIME_CONTRACT_INVALID");
   });
 
-  it("rejects truncated and corrupt gzip states", async () => {
+  it.each([format, "flycast-state-gzip-v1"])("rejects truncated and corrupt gzip states (%s)", async format => {
     const bytes = gzipSync(new Uint8Array(1000));
     await expect(decodeStoredCheckpoint(bytes.slice(0, -1), format, maximum)).rejects.toThrow();
     bytes[bytes.length - 8] ^= 1;
     await expect(decodeStoredCheckpoint(bytes, format, maximum)).rejects.toThrow();
   });
 
-  it("enforces the decoded limit even when a gzip trailer lies about its size", async () => {
+  it.each([format, "flycast-state-gzip-v1"])("enforces the decoded limit even when a gzip trailer lies about its size (%s)", async format => {
     const bytes = gzipSync(new Uint8Array(maximum + 1));
     await expect(decodeStoredCheckpoint(bytes, format, maximum)).rejects.toThrow();
     new DataView(bytes.buffer).setUint32(bytes.length - 4, 1, true);
@@ -54,9 +54,9 @@ it.each([1, 32, 512 * 1024, 512 * 1024 + 1])("always writes one gzip layer for %
   expect(Buffer.from(await decodeStoredCheckpoint(encoded, format, maximum)).equals(Buffer.from(raw))).toBe(true);
 });
 
-it("reads historical PSP gzip through the common decoder", async () => {
+it.each(["emulatorjs-state-gzip-v1", "flycast-state-gzip-v1"])("reads historical %s through the common decoder", async format => {
   const raw = new Uint8Array(700000); raw[0] = 7;
-  expect(await decodeStoredCheckpoint(gzipSync(raw), "emulatorjs-state-gzip-v1", maximum)).toEqual(raw);
+  expect(await decodeStoredCheckpoint(gzipSync(raw), format, maximum)).toEqual(raw);
 });
 
 it("preserves cancellation and refuses a decompression bomb", async () => {

@@ -10,6 +10,7 @@ export type CheckpointBlocker =
   | "MODE_UNSUPPORTED";
 
 export type NativeSaveCapabilities = {
+  dataKind?: "PROGRESS" | "STORAGE";
   capture: "RUNTIME" | "IN_GAME";
   restore: "AUTOMATIC" | "IN_GAME";
   captureAvailable: boolean;

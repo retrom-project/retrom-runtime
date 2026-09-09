@@ -48,7 +48,8 @@ describe("Provider client module build", () => {
     });
     const bytes = await readFile(result.outfile);
     const source = bytes.toString("utf8");
-    expect(source).not.toMatch(/\b(?:Buffer|process|require)\b/u);
+    // Hash implementations may have a process() method; reject Node globals, not method names.
+    expect(source).not.toMatch(/\b(?:Buffer|require)\b|(?<![.\w])process\s*\./u);
     const module = await import(`data:text/javascript;base64,${bytes.toString("base64")}`) as Record<string, unknown>;
     expect(Object.keys(module).sort()).toEqual([
       "createRuntime", "providerApiVersion", "providerId", "providerVersion",

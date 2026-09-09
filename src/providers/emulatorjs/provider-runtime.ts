@@ -1,3 +1,4 @@
+import {requestNativeExit} from "./native-exit.js";
 import {observeEmulatorInput} from "./input-diagnostics.js";
 import {startInputDiagnostics} from "../../provider/input-diagnostics.js";
 import type {RuntimeInputDiagnosticsV1} from "../../provider/module-api.js";
@@ -17,6 +18,8 @@ import type {
 import {PlayerRuntimeError} from "../../provider/errors.js";
 import {focusRuntimeInput} from "../../provider/input-focus.js";
 import {emulatorJsProviderDefinition, type EmulatorImplementation} from "./catalog.js";
+import {loadFlycastDisc} from "./flycast-cache.js";
+import {installFlycastCompatibility} from "./flycast.js";
 import {installArchiveWorkerCompatibility} from "./archive-worker.js";
 import {installDOSBoxPureStateCompatibility} from "./dosbox-state.js";
 import {installExternalFileCompatibility} from "./external-files.js";
@@ -84,6 +87,7 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
   private exitPromise: Promise<void> | null = null;
   private pspRestore: ReturnType<typeof installPspRestoreObserver> | null = null;
   private cleanupArchiveWorker: (() => void) | null = null;
+  private cleanupFlycast: (() => void) | null = null;
   private cleanupFrameStyle: (() => void) | null = null;
   private outputViewport: ReturnType<typeof installEmulatorJsOutputViewport> | null = null;
   private cleanupStateRestore: (() => void) | null = null;
@@ -291,6 +295,8 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
       this.createMountPoint(runtimeWindow);
       this.startBarrier = createStartBarrier();
       this.configure(runtimeWindow);
+      await this.configureFlycast(runtimeWindow);
+
       this.prepareRetroArchConfig(runtimeWindow);
       if (this.netplayProfile) {
         this.cleanupNetplayCompatibility = installEmulatorJs423NetplayCompatibility(runtimeWindow);
@@ -334,6 +340,17 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
     }
   }
 
+  private async configureFlycast(runtimeWindow: EjsWindow) {
+    if (this.implementation.runtimeCore === "flycast") {
+      this.cleanupFlycast = installFlycastCompatibility(runtimeWindow);
+      const game = resource(this.envelope, "game", "ROM_BLOB");
+      const disc = await loadFlycastDisc(game, this.host.signal, (loadedBytes, totalBytes) =>
+        this.emit({type: "LOAD_PROGRESS", loadedBytes, totalBytes}));
+      const FileConstructor = (runtimeWindow as Window & typeof globalThis).File;
+      runtimeWindow.EJS_gameUrl = new FileConstructor([disc], `${game.sha256}.chd`);
+    }
+  }
+
   private createMountPoint(runtimeWindow: Window) {
     const body = runtimeWindow.document.body;
     if (!body) {throw contractError();}
@@ -367,7 +384,7 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
     runtimeWindow.EJS_biosUrl = biosFile(bios);
     runtimeWindow.EJS_gameParentUrl = parent?.url;
     runtimeWindow.EJS_startOnLoaded = !deferredDOSStart;
-    runtimeWindow.EJS_dontExtractRom = deferredDOSStart;
+    runtimeWindow.EJS_dontExtractRom = deferredDOSStart || this.implementation.runtimeCore === "flycast";
     runtimeWindow.EJS_disableBatchBootup = deferredDOSStart;
     runtimeWindow.EJS_language = "zh-CN";
     runtimeWindow.EJS_disableAutoLang = false;
@@ -382,7 +399,7 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
     runtimeWindow.EJS_disableLocalStorage = true;
     runtimeWindow.EJS_CacheLimit = 0;
     runtimeWindow.EJS_Buttons = {exitEmulation: false};
-    runtimeWindow.EJS_defaultControls = createRetromDefaultControls();
+    runtimeWindow.EJS_defaultControls = createRetromDefaultControls(this.implementation.runtimeCore);
     runtimeWindow.EJS_defaultOptions = this.netplayProfile ? {
       ...this.netplayProfile.defaultCoreOptions,
       ...(this.implementation.runtimeCore === "fbneo" ? {"fbneo-hiscores": "disabled"} : {}),
@@ -498,16 +515,7 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
     if (!runtimeWindow || !instance?.callEvent) {return;}
     const nativeExitAlreadyRequested = this.exitRequestedEmitted;
     this.exitRequestedEmitted = true;
-    if (!nativeExitAlreadyRequested) {
-      const functions = this.implementation.runtimeCore === "ppsspp" ? instance.gameManager?.functions : undefined;
-      const restart = functions?.restart;
-      try {
-        // Upstream resets to flush directory saves. PSP instant-state exit must not reboot.
-        if (functions && restart) {functions.restart = () => undefined;}
-        instance.callEvent("exit");
-      } catch { /* Continue bounded host cleanup after a native exit error. */ }
-      finally {if (functions && restart) {functions.restart = restart;}}
-    }
+    if (!nativeExitAlreadyRequested) {requestNativeExit(instance, this.implementation.runtimeCore);}
     await new Promise<void>((resolve) => runtimeWindow.setTimeout(resolve, 1_100));
   }
 
@@ -566,6 +574,7 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
   }
 
   private cleanupSurface() {
+    this.cleanupFlycast?.(); this.cleanupFlycast = null;
     this.cleanupFrameStyle?.();
     this.cleanupFrameStyle = null;
     this.outputViewport?.cleanup();

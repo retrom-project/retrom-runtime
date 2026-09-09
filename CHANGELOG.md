@@ -1,24 +1,74 @@
 # Changelog
 
-## 0.24.0-rc.3 (unpublished)
+## 0.30.0
 
-- Advance EmulatorJS to 2.6.0-rc.3 and suppress the upstream PSP reset during explicit exit, retaining main-loop shutdown, filesystem unmount and delayed native cleanup. Prevent the boot screen from flashing during exit.
+- Add the PC-98 NP2kai target with the pinned r1 core, HDI/D88 input, verified persistent disk cache, download progress and instant machine/disk checkpoints.
+- Compress every new checkpoint exactly once at the shared Provider boundary, without a size threshold; decode before restore and persistence acknowledgement, including final native-save snapshots.
+- Advance EmulatorJS Provider to 2.7.0. Version all storage write formats while retaining legacy raw, PSP/Flycast gzip, mkxp compact and PX68K deflate ZIP reads. New PX68K ZIP entries use STORE and private transport compression writers are removed.
+- Enable PSP native load receipts for explicit restore, and suppress its upstream reboot during explicit exit while retaining native cleanup.
 
-## 0.24.0-rc.2 (unpublished)
+## 0.28.0
 
-- Advance EmulatorJS to 2.6.0-rc.2 and enable native load receipts during PSP restore, preventing valid raw, legacy gzip and shared gzip checkpoints from timing out. Preserve the single common compression boundary.
+- Pin PX68K r1 and TyranoScript bridge r8 to immutable releases with verified asset sizes and SHA-256.
+- Advance EmulatorJS Provider to 2.6.5 for the aggregate third-party notice change; its core assets and input behavior remain unchanged.
 
-## 0.24.0-rc.1 (unpublished)
+- Tyrano 旧版兼容层每个手柄按钮只投射一个键盘目标，不再同时发送 KAG/DOM 手柄事件；现代引擎保留原生手柄路径，真实键盘独立可用。
+- 补齐 TyranoScript 已声明的 pixel/smooth 画面模式控制，修复宿主初始化时的能力错误。
+- Tyrano 4.x 不要求新版 chara 组件，按各版本的菜单方法判断可存档状态。
+- 旧版音频仅在媒体已暂停且播放请求以 AbortError 取消时正常完成；其他播放错误继续传播。
 
-- Compress every Provider checkpoint once in a shared gzip storage layer, including tiny states and final native-save snapshots; decode before restore or persistence acknowledgement.
-- Advance EmulatorJS to 2.6.0-rc.1 and version all storage write formats while retaining legacy raw, PSP gzip and mkxp compact reads. Remove private PSP and mkxp compression writers.
-- Preserve bounded streaming decompression, cancellation and explicit native checkpoint validation.
+- Add the PX68K single-disk X68000 target with keyboard/gamepad, audio, pause,
+  screenshots and machine/disk checkpoints across fresh launches.
+- Keep PX68K gamepad and keyboard input independent: Button 1 (B) no longer
+  injects Escape and pauses games; A/Start no longer inject Enter.
+- Let arrow keys and Z/X operate PX68K joypad one while retaining native keyboard
+  input, and release held keyboard controls on blur, pause and exit.
+- Verify bounded cached game, BIOS and Wasm bytes before native construction.
+- Accept descriptor-verified flat-file core candidates in PFB builds while
+  keeping unpublished sources out of formal releases.
 
-## 0.23.2-rc.6 (unpublished)
+## 0.27.0
 
-- Add the PC-98 NP2kai PFB candidate with HDI/D88 input, persistent disk caching,
-  download progress, standard gamepad controls and bounded native execution snapshots
-  including disk changes.
+- Add the independent `msx-webmsx` Target with bounded single-media loading, persistent
+  content cache, standard controller input, screenshots and pause/resume.
+- Bind `webmsx-state-v1` instant snapshots to the game's content digest and restore them
+  into a fresh machine. Release controller input on pause and exit.
+- Pin the WebMSX maintenance release with exact commit, asset lengths and SHA-256.
+  Local overrides remain restricted to explicit PFB builds. Preserve the unresolved
+  upstream source and embedded system-ROM license status in the dedicated notice.
+
+## 0.25.0
+
+Ruffle integration: enforce centered aspect-ratio scaling and expose native data as a
+`STORAGE` container through the optional public save data kind. Keep existing input mappings and
+changed-data export behavior; no Mode-specific exceptions.
+
+- Advance EmulatorJS Provider to 2.6.1 for the updated bundled third-party notices; its execution
+  code and core assets remain unchanged from 2.6.0.
+- Keep Ruffle's responsive canvas layout core-owned so fullscreen and viewport changes do not
+  compete with the Provider's fixed-resolution fitting. Other adapters retain the default fitting.
+- Add the independent `flash-ruffle` Target for bounded single-SWF content, with keyboard/mouse
+  and standard gamepad input, pause, volume and screenshots.
+- Transport native SharedObject bytes in `ruffle-sharedobjects-v1` (`GAME_SAVE`, 8 MiB maximum).
+  Restore only explicit identity-matched payloads before movie execution; fresh Launches start empty.
+- Validate SWF compressed/decompressed bounds, exact download sizes and SHA-256; reuse Cache Storage
+  across different Launch URLs by content identity and report deterministic download progress.
+- Pin the published Ruffle fork `retrom-core-ge46d1642fb67-r2`; local core overrides remain
+  restricted to explicit PFB builds with closed candidate inventory checks.
+- Capture freshly rendered GPU pixels without advancing the movie; bound startup waits and destroy
+  cancelled instances even when asynchronous loading finishes late.
+
+## 0.24.0
+
+- Compress new Flycast instant checkpoints with lossless gzip and retain raw-state restoration.
+  Retain the Flycast WebGL drawing buffer so screenshots remain available after pause/presentation.
+
+- Advance EmulatorJS Provider to 2.6.0 and add a Dreamcast Flycast WASM JIT target with WebGL2, verified CHD caching,
+  Dreamcast face-button mappings and independent instant checkpoint format.
+- Pin Flycast core release `retrom-core-1.0-r1` with verified release metadata and licenses.
+- Preserve RetroArch restore configuration when BIOS external-file hooks are installed.
+- Validate local core candidate provenance and closed artifact sets before materializing
+  EmulatorJS inputs; formal builds reject unpublished candidates.
 
 ## 0.23.1
 

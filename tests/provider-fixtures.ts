@@ -124,7 +124,7 @@ export function targetEnvelope(targetId: string): LaunchEnvelopeV1 {
       contentDigest: digest, entryUrl: "https://runtime.test/__retrom/bootstrap",
       kind: "ISOLATED_WEB", ordinal: 0, origin: "https://runtime.test", role: "game",
     };
-  } else if (["j2me", "tic80", "fake08", "np2kai-pc98"].includes(targetId)) {
+  } else if (["j2me", "tic80", "fake08", "flash-ruffle", "msx-webmsx", "px68k", "np2kai-pc98"].includes(targetId)) {
     resource = {kind: "ROM_BLOB", ordinal: 0, rangeRequired: false, role: "game",
       sha256: digest, sizeBytes: 128, url: "/runtime/content/game/game.jar"};
   } else if (targetId === "wasm4") {
@@ -147,7 +147,11 @@ export function targetEnvelope(targetId: string): LaunchEnvelopeV1 {
           : {};
   return {
     netplay: null,
-    resources: [resource],
+    resources: targetId === "px68k" ? [resource, {
+      kind: "EXTERNAL_FILE_SET", role: "external", ordinal: 0,
+      files: ["cgrom.dat", "iplrom.dat"].map(logicalName => ({logicalName, virtualPath: `game/keropi/${logicalName}`, sha256: digest, sizeBytes: 128,
+        url: `/runtime/content/bios/${logicalName}`})),
+    }] : [resource],
     restore: null,
     runtime: {
       bundleSha256: bundleDigest,

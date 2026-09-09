@@ -52,7 +52,7 @@ export type EjsWindow = Window & {
   EJS_player?: string;
   EJS_core?: string;
   EJS_controlScheme?: string;
-  EJS_gameUrl?: string;
+  EJS_gameUrl?: string | File;
   EJS_gameName?: string;
   EJS_gameID?: number;
   EJS_pathtodata?: string;

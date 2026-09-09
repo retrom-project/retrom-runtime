@@ -219,7 +219,7 @@ describe("Provider-owned lifecycle", () => {
     await player.exit();
   });
 
-  it.each(["third-party error", "TYRANOSCRIPT_RUNTIME_TIMEOUT", "FANTASY_CORE_ABI_MISMATCH", "NP2KAI_RUNTIME_CONFIG_INVALID"])("fails once and cleans controls after %s", async (error) => {
+  it.each(["third-party error", "TYRANOSCRIPT_RUNTIME_TIMEOUT", "FANTASY_CORE_ABI_MISMATCH", "WEBMSX_START_TIMEOUT", "NP2KAI_RUNTIME_CONFIG_INVALID"])("fails once and cleans controls after %s", async (error) => {
     const adapter = adapterFixture({pause: vi.fn(async () => {throw new Error(error);})});
     vi.mocked(mountTargetAdapter).mockResolvedValue(adapter);
     const player = await createRuntime(wasmEnvelope(), hostFixture());

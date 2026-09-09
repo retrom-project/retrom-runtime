@@ -10,3 +10,4 @@ export type ForkRelease = {
 export function forkReleaseFiles(catalog: {forks?: readonly ForkRelease[]}):
   Array<ForkAsset & {destination: string; runtimeCore: string}>;
 export function verifyForkMetadata(fork: ForkRelease, metadata: unknown): void;
+export function forkMetadataPath(fork: ForkRelease): string;

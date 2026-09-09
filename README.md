@@ -5,12 +5,12 @@ VX, VX Ace, MV and MZ, ONS games powered by ONScripterYuri, KAG-based KiriKiri2 
 projects powered by Butterscotch, browser TyranoScript projects, Java ME JARs, ScummVM game projects and WASM-4 carts. It owns runtime lifecycle, adapters, checkpoint codecs, bridge assets and pinned core
 Release inputs. It does not know about a host application's users, database, review flow, storage or HTTP API.
 
-## PC-98 / NP2kai (PFB candidate)
+## PC-98 / NP2kai
 
 `retrom-runtime/np2kai-pc98` runs a single HDI hard disk or D88 floppy in a same-origin
 blank frame. The maintained NP2kai fork is pinned to upstream commit
-`5939e0c6d5985c4c08fc70f289a83290e5d3e6f7`. This development input requires an explicit
-PFB core candidate; ordinary release builds reject the unpublished source.
+`5939e0c6d5985c4c08fc70f289a83290e5d3e6f7` and release `retrom-core-g5939e0c6d598-r1`.
+Published assets are pinned by commit, exact size and SHA-256; local PFB overrides remain explicit.
 
 The adapter materializes disks up to 512 MiB with verified size/SHA-256 and reports download
 progress. OPFS retains immutable disk bytes across launches. Each instance writes its own
@@ -23,6 +23,12 @@ X to Z, Y to X and Start to Enter. Keyboard input remains available. Pause, scre
 frame count and instant restore are supported; volume adjustment, netplay, disk switching
 and external BIOS configuration are outside this trial. A freely distributable Shinonome
 font is included in the core build; game bytes are supplied by the host.
+Core admission requires standard-gamepad directional movement and confirmation.
+Gamepad cancellation is optional; existing working cancellation remains supported.
+Within one mapping configuration, each gamepad button has one target input. Do not
+send both native A/B and keyboard Enter/Escape to satisfy a menu requirement.
+Real keyboard input remains independent. Press/release events for the same target
+are one input lifecycle; a host UI's B-to-back behavior is separate from game controls.
 
 ## Play! PS2
 
@@ -161,6 +167,12 @@ restores it in a fresh frame without opening the game's load menu. Restore uses 
 including its current BGM replay, and waits for `load-complete` before reporting ready. A game `[close]` command is
 translated into the common `EXIT_REQUESTED` event instead of leaving the host on a closed or black frame.
 
+Modern TyranoScript uses its native gamepad input. Old engines without the event
+API use only the bridge's keyboard mapping (A/Start to Enter, B to Escape and
+D-pad to arrows); the same press does not also emit gamepad events. Real keyboard
+events remain available. This preserves existing legacy confirmation/cancellation
+without requiring every core to implement cancellation.
+
 WASM-4 consumes one content-addressed cart of at most 64 KiB and verifies its exact byte length and SHA-256 before
 starting the core. The maintained fork exposes a host-independent Web module with keyboard and standard-gamepad
 input, screenshots, bounded `wasm4-state-v1` checkpoints and direct restore in a fresh instance. Checkpoints bind
@@ -229,6 +241,39 @@ screenshots contain the displayed frame instead of a cleared black buffer.
 
 ## Development
 
+### Flash / Ruffle candidate
+
+`flash-ruffle` accepts one `game: ROM_BLOB` containing a standalone SWF (64 MiB maximum
+compressed and declared uncompressed size). Companion assets, network services, projectors and
+AIR packages are not supported by this Target. Script access, URL opening and movie networking
+are disabled. Compatibility with a particular Flash API/game must be verified separately.
+
+The fork ABI is `ruffle-host-v1`. Instance-owned SharedObject storage replaces localStorage;
+the stable movie URL uses the content digest, not a Launch ID. `ruffle-sharedobjects-v1` is a
+native `GAME_SAVE` envelope, not an instant execution snapshot: the game must actually write
+SharedObjects before a changed payload can be exported. It allows 128 keys, 4 MiB native data
+and an 8 MiB encoded envelope. Saves are installed before load and never implicitly restored.
+
+Availability declares `save.dataKind: "STORAGE"`: these files are a persistent storage container,
+possibly only settings or play counters, not guaranteed progress. Hosts update the selected container
+on subsequent saves and create a fresh one only for a new game without an explicit restore.
+Changed data remains exportable; no title-specific save or input exceptions are installed.
+The stage is forced to `showAll` with centered alignment so game scripts cannot reset it to
+an unscaled top-left surface; aspect-ratio letterboxing remains intentional.
+The adapter declares internal `canvasLayout: "CORE"`: Ruffle alone sizes its responsive canvas
+and DPI-scaled backing buffer. The Provider still fills the frame, but must not fit that changing
+buffer as though it were a fixed-resolution game or overwrite the canvas offsets on resize/fullscreen.
+
+Standard pad directions and left stick map to arrows; south maps to Space, east to Escape,
+west to X and north/Start to Enter. Disconnect, pause and exit release held keys. Games needing
+different or mouse-only controls still require per-game compatibility verification.
+
+The provider pins the maintained fork release `retrom-core-ge46d1642fb67-r2` in `provider-sources.json`.
+Runtime scripts consume its published assets and never compile the core. Local core changes require
+an explicit fork build in the same PFB followed by `candidate:build`; overrides retain the closed
+candidate inventory checks and are rejected by formal builds. Product acceptance belongs to the
+Host's `ACC-FLASH-001`.
+
 ```bash
 npm ci
 npm run lint
@@ -271,7 +316,7 @@ Native-save acknowledgement decodes the stored payload back to the adapter's nat
 
 The common reader retains old raw formats, PSP `emulatorjs-state-gzip-v1`, and mkxp
 `mkxp-state-compact-v1` (compressed prefix plus a zero-filled tail). These are read-only compatibility
-paths. New PSP and mkxp saves no longer run private compression. The mkxp adapter supplies its exact
+paths. New PSP/Flycast and mkxp saves no longer run private compression. The mkxp adapter supplies its exact
 fixed 256 MiB `mkxp-state-v1` buffer to the common codec and restores only decoded raw core bytes.
 Its explicit native completion/result ABI, validation, atomic load request and temporary-file cleanup
 remain responsible for checkpoint correctness. Game-internal save encodings and resource archives
@@ -396,6 +441,30 @@ TIC-80 `retrom-core-g4aba09c98f1e-r1` and FAKE-08 `retrom-core-g814991a2571a-r2`
 `provider-sources.json` records each release's exact repository, tag commit, asset filenames and ABI.
 Core builds remain owned by the forks; runtime builds download and verify the published release identities.
 
+
+### Dreamcast
+
+The EmulatorJS Provider includes a Flycast WASM JIT Target for single-file Dreamcast CHD.
+It requires WebGL2 and installed `dc/dc_boot.bin` + `dc/dc_flash.bin`, uses standard gamepad
+controls, and supports bounded `flycast-state-gzip-v1` instant checkpoints, with lossless gzip compression
+and compatibility with existing raw `flycast-state-v1` saves. CHDs are streamed
+through SHA-256 validation into OPFS; cache hits are revalidated, and unavailable storage
+falls back to a validated Blob. The cache contains no launch authorization or save state.
+WinCE/MMU games, arcade variants, disc switching and netplay are outside this target.
+
+The core comes from `retrom-project/flycast-wasm` release `retrom-core-1.0-r1`.
+`src/providers/emulatorjs/source-catalog.ts` pins its repository, tag commit, asset digests,
+sizes and adapter ABI. Provider builds verify the published release metadata and license texts.
+
+Local core changes remain explicit PFB candidates. Build the core in the same PFB, then run:
+
+```bash
+npm run candidate:build -- --spec <absolute-pfb-spec> --output <empty-runtime-candidate-directory>
+```
+
+Formal builds reject unpublished overrides. A changed core requires a new verified release
+and a higher EmulatorJS Provider version.
+
 ### Optional input diagnostics
 
 Provider Module V1 exposes optional `startInputDiagnostics()` with bounded `read`, `clear` and idempotent `stop`.
@@ -405,3 +474,42 @@ The history retains 64 transitions; gamepad values are quantized for diagnostics
 remain unavailable and `coreRead` is always false: an input API call is not evidence that a game acted on it.
 EmulatorJS delivery observation applies to single-player; MV/MZ use the existing isolated bridge STATUS cadence.
 Other inaccessible isolated frames explicitly remain unavailable. Sessions are cleaned up on disable and exit.
+
+### PX68K (Sharp X68000)
+
+The `px68k` target uses `px68k-host-v1` and accepts one DIM, XDF or HDF image
+(up to 64 MiB). The host supplies `iplrom.dat` and `cgrom.dat` as verified
+`EXTERNAL_FILE_SET` entries. D88, M3U playlists and drive switching are not
+advertised. Keyboard input and two standard gamepads are supported. Standard
+Button 0/1 map to native joypad A/B without synthesizing Enter/Escape; keyboard
+arrows, letters, Enter, Escape and F1–F12 go directly to the emulated keyboard.
+Arrow keys and Z/X also operate joypad one (directions and A/B), allowing keyboard
+play in games that only read a joystick. Click the game canvas to focus keyboard
+input. Video, stereo audio, pause, volume,
+screenshots and `px68k-state-v1` instant checkpoints share the Provider lifecycle.
+Checkpoints contain machine state and writable disk contents; a new launch
+restores only an explicitly supplied checkpoint belonging to the same game.
+
+PX68K is pinned to the maintenance release `retrom-core-g561dcba6b11d-r1`
+with exact commit, sizes and SHA-256. PFB development overrides use the core
+fork's descriptor-verified candidate workflow; formal releases reject overrides. Inherited engine licensing
+includes a noncommercial clause; see the complete bundled `LICENSES.txt` and
+`THIRD_PARTY_NOTICES.md` before distribution.
+
+### MSX / WebMSX
+
+`msx-webmsx` accepts one `game: ROM_BLOB` (16 MiB maximum), using the maintained
+WebMSX fork's `webmsx-host-v1` ABI and a fixed Japanese MSX2+ machine. It exposes
+pause/resume, screenshots and bounded instant checkpoints (`webmsx-state-v1`, 32 MiB).
+Snapshots carry the content digest and complete machine state, including writable media;
+only an explicitly supplied checkpoint is restored. Exact media size and SHA-256 are
+verified before loading, with Cache Storage reuse across Launch URLs and bounded progress.
+
+The source is `retrom-project/WebMSX`, maintained from upstream v6.0.8 at
+`4f4009e86d3e0bb9be7dcd7f0a582b0cd411d660`. `provider-sources.json` pins the
+`retrom-core-6.0.8-r1` release commit, ABI and exact sizes/SHA-256 of `webmsx.js`
+and `UPSTREAM-NOTICE.txt`. Aggregation verifies the release metadata and both assets.
+Local candidate overrides are accepted only in explicit PFB builds, never formal releases.
+Upstream references a missing license file; this integration does not assert MIT/GPL
+licensing. The dedicated notice and release metadata preserve unresolved source and
+embedded machine-ROM distribution status; publication does not grant those rights.

@@ -1,3 +1,4 @@
+import {emulatorJsCoreInputs, readEmulatorJsCoreCandidate} from "./emulatorjs-core-candidate.mjs";
 import {createHash, randomUUID} from "node:crypto";
 import {spawnSync} from "node:child_process";
 import {
@@ -6,13 +7,14 @@ import {
 import {dirname, isAbsolute, join, relative, resolve} from "node:path";
 import {fileURLToPath, pathToFileURL} from "node:url";
 
-import {forkReleaseFiles, verifyForkMetadata} from "./emulatorjs-fork-releases.mjs";
+import {forkMetadataPath, forkReleaseFiles, verifyForkMetadata} from "./emulatorjs-fork-releases.mjs";
 
 const scriptRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const proofName = ".materialization.json";
 
 export async function materializeEmulatorJsProviderInput(input) {
   validateInput(input);
+  const developmentFiles = await candidateFiles(input);
   const expectedCatalogDigest = sha256(Buffer.from(canonicalJson(input.catalog)));
   const expectedDefinitionDigest = sha256(Buffer.from(canonicalJson(input.definition)));
   if (await verifyExisting(
@@ -38,8 +40,13 @@ export async function materializeEmulatorJsProviderInput(input) {
       await mkdir(dirname(destination), {recursive: true});
       await writeFile(destination, await readFile(cachePath));
     }
+    for (const [path, contents] of developmentFiles) {
+      const destination = confined(staging, path);
+      await mkdir(dirname(destination), {recursive: true});
+      await writeFile(destination, contents);
+    }
     for (const fork of input.catalog.forks ?? []) {
-      const metadata = JSON.parse(await readFile(join(staging, `4.2.3/data/cores/reports/${fork.runtimeCore}.json`), "utf8"));
+      const metadata = JSON.parse(await readFile(join(staging, forkMetadataPath(fork)), "utf8"));
       verifyForkMetadata(fork, metadata);
     }
     await verifyCoreAssets(staging, input.definition);
@@ -73,6 +80,7 @@ export async function materializeEmulatorJsProviderInput(input) {
 
 export async function checkEmulatorJsProviderInput(input) {
   validateInput(input);
+  await candidateFiles(input);
   const catalogDigest = sha256(Buffer.from(canonicalJson(input.catalog)));
   const definitionDigest = sha256(Buffer.from(canonicalJson(input.definition)));
   if (!await verifyExisting(input.outputRoot, catalogDigest, definitionDigest, input.definition, true)) {
@@ -259,9 +267,12 @@ async function currentInput() {
     import("../dist/providers/emulatorjs/catalog.js"),
     import("../dist/providers/emulatorjs/source-catalog.js"),
   ]);
+  const candidate = process.env.RETROM_PFB_CANDIDATE_BUILD === "1";
+  const coreDirectories = JSON.parse(process.env.RETROM_RUNTIME_DEV_RELEASE_OVERRIDES ?? "{}");
   return {
+    candidate, coreDirectories,
     cacheRoot: join(scriptRoot, ".cache", "provider-downloads", "emulatorjs"),
-    catalog: emulatorJsSourceCatalog,
+    catalog: emulatorJsCoreInputs(emulatorJsSourceCatalog, coreDirectories, candidate),
     definition: emulatorJsProviderDefinition,
     extractArchive: extractWith7Zip,
     fetchBytes: fetchPinnedBytes,
@@ -279,4 +290,13 @@ if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1]
     ? await materializeEmulatorJsProviderInput(input)
     : await checkEmulatorJsProviderInput(input);
   process.stdout.write(`${command}: ${result}\n`);
+}
+
+async function candidateFiles(input) {
+  const files = new Map();
+  for (const source of input.catalog.developmentCores ?? []) {
+    const verified = await readEmulatorJsCoreCandidate(source, input.coreDirectories?.[source.id], input.candidate === true);
+    for (const [path, bytes] of verified) {files.set(path, bytes);}
+  }
+  return files;
 }

@@ -24,7 +24,7 @@ export async function encodeStoredCheckpoint(bytes: Uint8Array, format: string, 
 
 export async function decodeStoredCheckpoint(bytes: Uint8Array, format: string, maximum: number, signal?: AbortSignal) {
   checkpointSize(bytes, maximum); signal?.throwIfAborted();
-  if (format.endsWith(suffix) || format === "emulatorjs-state-gzip-v1") {return transformCheckpoint(bytes, true, maximum, signal);}
+  if (format.endsWith(suffix) || ["emulatorjs-state-gzip-v1", "flycast-state-gzip-v1"].includes(format)) {return transformCheckpoint(bytes, true, maximum, signal);}
   if (format === "mkxp-state-compact-v1") {return decodeLegacyMkxpCheckpoint(bytes, maximum, signal);}
   return bytes;
 }

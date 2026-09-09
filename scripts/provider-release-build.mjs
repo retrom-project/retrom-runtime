@@ -1,5 +1,6 @@
 import {createHash} from "node:crypto";
 import {lstat, mkdir, mkdtemp, readFile, readdir, rm} from "node:fs/promises";
+import {fileURLToPath} from "node:url";
 import {isAbsolute, join, parse, relative} from "node:path";
 
 import {buildProviderBundle} from "./provider-bundle.mjs";
@@ -58,6 +59,9 @@ export async function buildEmulatorJsProviderBundle(input) {
   }
   verifyEmulatorJsImplementationAssets(input.definition, assetIndex);
   const licenseSources = await collectEmulatorJsLicenses(input.sourceRoot, input.sourceCatalog);
+  for (const name of ["LICENSE", "THIRD_PARTY_NOTICES.md", "EMULATORJS_THIRD_PARTY_NOTICES.md"]) {
+    licenseSources.set(`licenses/retrom-runtime/${name}`, fileURLToPath(new URL(`../${name}`, import.meta.url)));
+  }
   const temporaryRoot = await mkdtemp(join(input.outputRoot, ".provider-client-"));
   try {
     const clientPath = join(temporaryRoot, "client.mjs");
@@ -82,6 +86,10 @@ export async function buildEmulatorJsProviderBundle(input) {
         schemaVersion: 1,
         overrides: input.sourceCatalog.overrides,
         upstreamReleases: input.sourceCatalog.releases,
+        ...(input.sourceCatalog.developmentCores?.length
+          ? {developmentCores: input.sourceCatalog.developmentCores} : {}),
+        ...(input.sourceCatalog.publishedCores?.length
+          ? {publishedCores: input.sourceCatalog.publishedCores} : {}),
       },
     });
   } finally {

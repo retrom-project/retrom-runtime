@@ -1,6 +1,10 @@
 export type EmulatorJsProviderInput = {
+  candidate?: boolean;
+  coreDirectories?: Record<string, string>;
   cacheRoot: string;
   catalog: {
+    developmentCores?: readonly import("./emulatorjs-core-candidate.mjs").EmulatorJsCoreSource[];
+    publishedCores?: readonly import("./emulatorjs-core-release.mjs").EmulatorJsCoreRelease[];
     schemaVersion: number;
     releases: ReadonlyArray<{
       archive: {name: string; sha256: string; sizeBytes: number; url: string};

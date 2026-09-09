@@ -5,6 +5,8 @@ import {readFile, rm, writeFile} from "node:fs/promises";
 import {dirname, join, relative, resolve} from "node:path";
 import {fileURLToPath, pathToFileURL} from "node:url";
 
+import {loadProviderSources} from "./provider-sources.mjs";
+import {readEmulatorJsCoreCandidate} from "./emulatorjs-core-candidate.mjs";
 import {verifyProviderBundle} from "./provider-bundle.mjs";
 import {
   buildEmulatorJsProviderBundle,
@@ -41,12 +43,20 @@ export async function buildCurrentProviderBuild(input = {}) {
     outputRoot: join(outputRoot, "retrom-runtime"),
     stageRoot,
   });
+  const sources = await loadProviderSources(new URL("../", import.meta.url));
+  const publishedCores = sources.upstreamReleases.filter((source) => source.id === "flycast");
+  const developmentCores = sources.developmentInputs?.filter(
+    (source) => source.id === "flycast") ?? [];
+  const directories = JSON.parse(process.env.RETROM_RUNTIME_DEV_RELEASE_OVERRIDES ?? "{}");
+  for (const source of developmentCores) {
+    await readEmulatorJsCoreCandidate(source, directories[source.id], process.env.RETROM_PFB_CANDIDATE_BUILD === "1");
+  }
   const emulatorjs = await buildEmulatorJsProviderBundle({
     definition: emulatorJsProviderDefinition,
     entryPoint: join(root, "src", "providers", "emulatorjs", "module.ts"),
     manifest: emulatorManifest,
     outputRoot: join(outputRoot, "emulatorjs"),
-    sourceCatalog: emulatorJsSourceCatalog,
+    sourceCatalog: {...emulatorJsSourceCatalog, developmentCores, publishedCores},
     sourceRoot: resolve(emulatorJsSourceRoot),
   });
   const providers = [releaseMetadata(outputRoot, retromManifest, retrom),

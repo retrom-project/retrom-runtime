@@ -38,7 +38,7 @@ for (const document of ["CHANGELOG.md", "LICENSE", "THIRD_PARTY_NOTICES.md"]) {
 for (const asset of sources.localAssets) {
   await publish(await readFile(new URL(asset.source, root)), new URL(asset.output, stage));
 }
-for (const release of sources.upstreamReleases) {
+for (const release of sources.upstreamReleases.filter((source) => source.id !== "flycast")) {
   const devRoot = devReleaseOverrides.get(release.id);
   if (release.id === "scummvm" && devRoot) {
     assertScummvmCandidateMode([release], process.env.RETROM_PFB_CANDIDATE_BUILD === "1", formalBuild);
@@ -65,7 +65,7 @@ for (const release of sources.upstreamReleases) {
   }
 }
 const developmentOutputs = [];
-for (const input of developmentInputs) {
+for (const input of developmentInputs.filter((source) => source.id !== "flycast")) {
   developmentOutputs.push(...await stageScummvmCandidate(input, devReleaseOverrides.get(input.id), root, stage));
 }
 const records = await collectRecords(sources, stage, developmentOutputs);
@@ -168,7 +168,8 @@ async function publish(contents, target) {
 async function collectRecords(value, directory, developmentOutputs) {
   const paths = ["CHANGELOG.md", "LICENSE", "THIRD_PARTY_NOTICES.md", "library/index.js", "library/index.d.ts",
     ...value.localAssets.map((asset) => asset.output), ...developmentOutputs,
-    ...value.upstreamReleases.flatMap((release) => release.assets.map((asset) => asset.output))].sort();
+    ...value.upstreamReleases.filter((release) => release.id !== "flycast")
+      .flatMap((release) => release.assets.map((asset) => asset.output))].sort();
   return Promise.all(paths.map(async (path) => {
     const contents = await readFile(new URL(path, directory));
     return { path, filename: basename(path), sizeBytes: contents.length, sha256: sha256(contents) };

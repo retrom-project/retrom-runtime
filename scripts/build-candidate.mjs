@@ -65,6 +65,7 @@ const candidateEnvironment = {
   RETROM_PROVIDER_BUILD_ONLY: "1",
   RETROM_RUNTIME_DEV_RELEASE_OVERRIDES: JSON.stringify(overrides),
 };
+run("npm", ["run", "provider:input:prepare"], candidateEnvironment);
 run("node", ["scripts/build-release.mjs"], candidateEnvironment);
 run("npm", ["run", "package:check"], { RETROM_PFB_CANDIDATE_BUILD: "1" });
 await cp(join(root, "release", "providers"), join(args.output, "providers"), { recursive: true });

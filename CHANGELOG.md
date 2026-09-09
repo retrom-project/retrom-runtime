@@ -1,5 +1,15 @@
 # Changelog
 
+## Unreleased — EmulatorJS Provider
+
+- Compress new Flycast instant checkpoints with lossless gzip and retain raw-state restoration.
+  Retain the Flycast WebGL drawing buffer so screenshots remain available after pause/presentation.
+
+- Add a Dreamcast Flycast WASM JIT candidate with WebGL2, verified CHD caching,
+  Dreamcast face-button mappings and independent instant checkpoint format.
+- Validate local core candidate provenance and closed artifact sets before materializing
+  EmulatorJS inputs; formal builds reject unpublished candidates.
+
 ## 0.20.0
 
 - Add a ScummVM Target with selected-engine downloads, bounded persistent range files, native

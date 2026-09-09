@@ -20,7 +20,7 @@ export const emulatorJsSourceCatalog = {
       },
       commit: "e150dc0491ae747028919fb82d6598954976ede6",
       id: "4.2.3",
-      licenseRoots: ["LICENSE"],
+      licenseRoots: ["LICENSE", "licenses/flycast"],
       repository: "https://github.com/EmulatorJS/EmulatorJS",
       tag: "v4.2.3",
     },

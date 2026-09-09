@@ -71,7 +71,12 @@ const playerOneGamepad: Readonly<Record<number, string>> = {
   23: "RIGHT_STICK_Y:-1",
 };
 
-export function createRetromDefaultControls(): EmulatorDefaultControls {
+// Flycast maps libretro B/A/Y/X to Dreamcast A/B/X/Y. Preserve the
+// standard physical face-button positions instead of the SNES defaults.
+const flycastGamepad: Readonly<Record<number, string>> = {...playerOneGamepad, 0: "BUTTON_1", 8: "BUTTON_2", 1: "BUTTON_3", 9: "BUTTON_4"};
+
+export function createRetromDefaultControls(core?: string): EmulatorDefaultControls {
+  const gamepad = core === "flycast" ? flycastGamepad : playerOneGamepad;
   const controllers: EmulatorDefaultControls = {};
   for (let player = 0; player < 4; player += 1) {
     const keyboard: Readonly<Record<number, string>> = player === 0
@@ -79,7 +84,7 @@ export function createRetromDefaultControls(): EmulatorDefaultControls {
       : player === 1 ? playerTwoKeyboard : {};
     const controls: Record<number, EmulatorControlBinding> = {};
     for (let control = 0; control < controlCount; control += 1) {
-      const value2 = player === 0 ? playerOneGamepad[control] : undefined;
+      const value2 = player === 0 ? gamepad[control] : undefined;
       controls[control] = {
         value: keyboard[control] ?? "",
         ...(value2 ? {value2} : {}),

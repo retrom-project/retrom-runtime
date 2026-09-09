@@ -1968,5 +1968,32 @@
       "source": "assets/runtime/butterscotch/worker.mjs",
       "output": "runtime/butterscotch/worker.mjs"
     }
+  ],
+  "developmentInputs": [
+    {
+      "repository": "https://github.com/retrom-project/flycast-wasm",
+      "adapterAbi": "emulatorjs-flycast-state-v1",
+      "id": "flycast",
+      "files": [
+        {
+          "filename": "LICENSE",
+          "sha256": "71433d9114710e9d2f65310c43561515c051fc13500de981fd1ebe7ce499ba92",
+          "sizeBytes": 61843,
+          "output": "4.2.3/licenses/flycast/LICENSE"
+        },
+        {
+          "filename": "flycast-wasm.data",
+          "sha256": "fab41d57ae056e318c893e1421495ba984088630e3d59b5494796412d34850b2",
+          "sizeBytes": 3530830,
+          "output": "4.2.3/data/cores/flycast-wasm.data"
+        },
+        {
+          "filename": "flycast.json",
+          "sha256": "215107a9bf4af4fd96f89d864b0ad927edb6e878616d851417dcf50a56bde814",
+          "sizeBytes": 92,
+          "output": "4.2.3/data/cores/reports/flycast.json"
+        }
+      ]
+    }
   ]
 }

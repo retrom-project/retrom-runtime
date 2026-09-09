@@ -336,3 +336,25 @@ The provider pins immutable core releases from the maintained upstream snapshots
 TIC-80 `retrom-core-g4aba09c98f1e-r1` and FAKE-08 `retrom-core-g814991a2571a-r2`.
 `provider-sources.json` records each release's exact repository, tag commit, asset filenames and ABI.
 Core builds remain owned by the forks; runtime builds download and verify the published release identities.
+
+
+### Dreamcast development candidate
+
+The EmulatorJS Provider includes a Flycast WASM JIT Target for single-file Dreamcast CHD.
+It requires WebGL2 and installed `dc/dc_boot.bin` + `dc/dc_flash.bin`, uses standard gamepad
+controls, and supports bounded `flycast-state-gzip-v1` instant checkpoints, with lossless gzip compression
+and compatibility with existing raw `flycast-state-v1` saves. CHDs are streamed
+through SHA-256 validation into OPFS; cache hits are revalidated, and unavailable storage
+falls back to a validated Blob. The cache contains no launch authorization or save state.
+WinCE/MMU games, arcade variants, disc switching and netplay are outside this target.
+
+This feature currently consumes an unpublished `retrom-project/flycast-wasm` core candidate.
+Build the core explicitly inside the same PFB, then run:
+
+```bash
+npm run candidate:build -- --spec <absolute-pfb-spec> --output <empty-runtime-candidate-directory>
+```
+
+Formal release builds
+reject this development input. Core size/digests and licensing come from `provider-sources.json`;
+changing a core requires a complete new Provider candidate and a higher Provider version.

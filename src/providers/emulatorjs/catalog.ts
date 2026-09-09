@@ -24,6 +24,11 @@ const capabilities = {
 
 const adapters = [
   defineAdapter({
+    abi: "emulatorjs-flycast-state-v1", capabilities,
+    checkpoint: {readFormats: ["flycast-state-gzip-v1", "flycast-state-v1"], writeFormat: "flycast-state-gzip-v1"},
+    id: "emulatorjs-flycast", kind: "EMULATORJS_FLYCAST",
+  }),
+  defineAdapter({
     abi: "emulatorjs-state-v1", capabilities,
     checkpoint: {readFormats: ["emulatorjs-state-v1"], writeFormat: "emulatorjs-state-v1"},
     id: "emulatorjs-4.2.3", kind: "EMULATORJS_4_2_3",
@@ -78,6 +83,8 @@ type CoreSource = {
 };
 
 const cores: readonly CoreSource[] = [
+  core("flycast", "4.2.3", "flycast-wasm.data", 3530830, "fab41d57ae056e318c893e1421495ba984088630e3d59b5494796412d34850b2", "dd9a34d0c624fceff8bd44fb49f07a8882d03872a2284cdd7b2bb4a199389d82", {coreBundleVersion: "1.0", defaultOptions: {reicast_hle_bios: "disabled", reicast_boot_to_bios: "disabled", reicast_internal_resolution: "640x480", reicast_threaded_rendering: "disabled", reicast_alpha_sorting: "per-strip (fast, least accurate)"}}),
+
   core("a5200", "4.2.3", "a5200-wasm.data", 881560, "c82476478d6b70b9da80cccc27ca06a5fd85acf7cdd5643f230cc4d6777990ef", "c402648f858a8a566b39c8d0949470eeeda5f0346b8dfc6228dad312a0af295d"),
   core("azahar", "4.3.0-pre", "azahar-thread-wasm.data", 3985011, "d90696e6ea68c4fc00ef147411ad399962777f07b6c7e73d5537da0eaffc2e3b", "77bf9b92bdc0f55b5d2dc5c2394971fe40b80b10b79fc40501db07d199bed94c", {inputMode: "POINTER", defaultOptions: {webgl2Enabled: "enabled"}}),
   core("beetle_vb", "4.2.3", "beetle_vb-wasm.data", 858313, "3db727a78b6a6551a4024c273069eb39c8e8f33aa78ef16a073ed7460f6ce692", "71604fbf1001fc5d053b08ce5f8396a1da456f176a0b3106eff08f7cac3e5986", {startupActions: [press(2000, 0), press(4000, 3), press(15000, 3), press(25000, 3)]}),
@@ -118,7 +125,7 @@ const cores: readonly CoreSource[] = [
 const targets = cores.map((entry) => {
   const netplayProfile = emulatorJsNetplayProfiles[entry.id] ?? null;
   return defineTarget({
-  adapterId: entry.id === "ppsspp" ? "emulatorjs-psp" : `emulatorjs-${entry.release}`,
+  adapterId: entry.id === "flycast" ? "emulatorjs-flycast" : entry.id === "ppsspp" ? "emulatorjs-psp" : `emulatorjs-${entry.release}`,
   assetPaths: [
     ...commonAssets(entry.release),
     entry.asset,
@@ -161,7 +168,7 @@ export const emulatorJsProviderDefinition = defineProvider({
   adapters,
   providerApiVersion: 1,
   providerId: "emulatorjs",
-  providerVersion: "2.3.2",
+  providerVersion: "2.4.0-dev.4",
   targets,
 });
 

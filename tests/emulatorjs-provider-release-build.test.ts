@@ -12,7 +12,7 @@ import {emulatorJsSourceCatalog} from "../src/providers/emulatorjs/source-catalo
 import {buildEmulatorJsProviderBundle} from "../scripts/provider-release-build.mjs";
 
 describe("EmulatorJS Provider release build", () => {
-  it("builds all 35 targets from one verified materialized input without downloads", {timeout: 30_000}, async () => {
+  it("builds all 36 targets from one verified materialized input without downloads", {timeout: 30_000}, async () => {
     const root = await temporaryRoot();
     try {
       const sourceRoot = join(root, "source");
@@ -21,6 +21,9 @@ describe("EmulatorJS Provider release build", () => {
         await write(join(sourceRoot, assetPath.replace(/^assets\//u, "")), `fixture:${assetPath}\n`);
       }
       for (const release of emulatorJsSourceCatalog.releases) {
+        for (const path of release.licenseRoots.filter((path) => path.startsWith("licenses/"))) {
+          await write(join(sourceRoot, release.id, path, "LICENSE"), `${release.id} custom core license\n`);
+        }
         await write(join(sourceRoot, release.id, "LICENSE"), `${release.id} license\n`);
         await write(join(sourceRoot, release.id, "THIRD_PARTY_NOTICES"), `${release.id} notices\n`);
         await write(join(sourceRoot, release.id, "licenses/core/LICENSE"), `${release.id} core\n`);
@@ -53,7 +56,7 @@ describe("EmulatorJS Provider release build", () => {
         providerId: string; targets: unknown[];
       };
       expect(provider.providerId).toBe("emulatorjs");
-      expect(provider.targets).toHaveLength(35);
+      expect(provider.targets).toHaveLength(36);
       expect(await readFile(result.archivePath)).toHaveLength(result.bundleSizeBytes);
       expect(await readFile(join(result.bundleRoot, "licenses/emulatorjs/4.2.3/LICENSE"), "utf8"))
         .toBe("4.2.3 license\n");

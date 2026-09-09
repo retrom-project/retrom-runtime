@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+- Add candidate EmulatorJS targets for EightyOne, Caprice32, CrocoDS, VICE PET, Plus/4, C64 and SAME CD-i, using pinned 4.2.3 assets.
+- Preserve the existing raw checkpoint contract and single-file input policy for these targets.
+
 ## 0.23.1
 
 - Add the Play! PS2 target with bounded ISO/CHD reads, standard gamepad input,

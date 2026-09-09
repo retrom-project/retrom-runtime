@@ -1,14 +1,11 @@
 # Changelog
 
-## 0.25.4（开发中）
+## 0.28.0
 
 - Tyrano 旧版兼容层每个手柄按钮只投射一个键盘目标，不再同时发送 KAG/DOM 手柄事件；现代引擎保留原生手柄路径，真实键盘独立可用。
 - 补齐 TyranoScript 已声明的 pixel/smooth 画面模式控制，修复宿主初始化时的能力错误。
 - Tyrano 4.x 不要求新版 chara 组件，按各版本的菜单方法判断可存档状态。
 - 旧版音频仅在媒体已暂停且播放请求以 AbortError 取消时正常完成；其他播放错误继续传播。
-- 开发候选使用 retrom-runtime 0.25.4、EmulatorJS Provider 2.6.4；后者仅反映聚合第三方说明变化，不改变其核心或输入行为。正式 core/release 锁定尚未更新。
-
-## 0.25.0 (development)
 
 - Add the PX68K single-disk X68000 target with keyboard/gamepad, audio, pause,
   screenshots and machine/disk checkpoints across fresh launches.
@@ -19,6 +16,37 @@
 - Verify bounded cached game, BIOS and Wasm bytes before native construction.
 - Accept descriptor-verified flat-file core candidates in PFB builds while
   keeping unpublished sources out of formal releases.
+
+## 0.27.0
+
+- Add the independent `msx-webmsx` Target with bounded single-media loading, persistent
+  content cache, standard controller input, screenshots and pause/resume.
+- Bind `webmsx-state-v1` instant snapshots to the game's content digest and restore them
+  into a fresh machine. Release controller input on pause and exit.
+- Pin the WebMSX maintenance release with exact commit, asset lengths and SHA-256.
+  Local overrides remain restricted to explicit PFB builds. Preserve the unresolved
+  upstream source and embedded system-ROM license status in the dedicated notice.
+
+## 0.25.0
+
+Ruffle integration: enforce centered aspect-ratio scaling and expose native data as a
+`STORAGE` container through the optional public save data kind. Keep existing input mappings and
+changed-data export behavior; no Mode-specific exceptions.
+
+- Advance EmulatorJS Provider to 2.6.1 for the updated bundled third-party notices; its execution
+  code and core assets remain unchanged from 2.6.0.
+- Keep Ruffle's responsive canvas layout core-owned so fullscreen and viewport changes do not
+  compete with the Provider's fixed-resolution fitting. Other adapters retain the default fitting.
+- Add the independent `flash-ruffle` Target for bounded single-SWF content, with keyboard/mouse
+  and standard gamepad input, pause, volume and screenshots.
+- Transport native SharedObject bytes in `ruffle-sharedobjects-v1` (`GAME_SAVE`, 8 MiB maximum).
+  Restore only explicit identity-matched payloads before movie execution; fresh Launches start empty.
+- Validate SWF compressed/decompressed bounds, exact download sizes and SHA-256; reuse Cache Storage
+  across different Launch URLs by content identity and report deterministic download progress.
+- Pin the published Ruffle fork `retrom-core-ge46d1642fb67-r2`; local core overrides remain
+  restricted to explicit PFB builds with closed candidate inventory checks.
+- Capture freshly rendered GPU pixels without advancing the movie; bound startup waits and destroy
+  cancelled instances even when asynchronous loading finishes late.
 
 ## 0.24.0
 

@@ -1,9 +1,83 @@
 {
   "schemaVersion": 1,
   "packageName": "@xxxsen/retrom-runtime",
-  "packageVersion": "0.25.4",
+  "packageVersion": "0.28.0",
   "publicApiVersion": 2,
   "upstreamReleases": [
+    {
+      "id": "webmsx",
+      "repository": "https://github.com/retrom-project/WebMSX",
+      "upstreamCommit": "4f4009e86d3e0bb9be7dcd7f0a582b0cd411d660",
+      "adapterAbi": "webmsx-host-v1",
+      "assets": [
+        {
+          "filename": "UPSTREAM-NOTICE.txt",
+          "output": "licenses/webmsx/UPSTREAM-NOTICE.txt",
+          "maxSizeBytes": 65536,
+          "sizeBytes": 534,
+          "sha256": "2e713b17ffcdbcdd6c092cd34d5fb6554bed02391baa30d4b9fb67ab7ba440f8",
+          "url": "https://github.com/retrom-project/WebMSX/releases/download/retrom-core-6.0.8-r1/UPSTREAM-NOTICE.txt"
+        },
+        {
+          "filename": "webmsx.js",
+          "output": "runtime/webmsx/webmsx.js",
+          "maxSizeBytes": 8388608,
+          "sizeBytes": 6127484,
+          "sha256": "b8a8dcd0ae403086c699e0c6bd61ba1f47a4ffe32a8d4af4438d8fb47cc9d68d",
+          "url": "https://github.com/retrom-project/WebMSX/releases/download/retrom-core-6.0.8-r1/webmsx.js"
+        }
+      ],
+      "tag": "retrom-core-6.0.8-r1",
+      "commit": "5efaceb9fc440b0d49c5bd44597c4c626078aab6",
+      "metadataUrl": "https://github.com/retrom-project/WebMSX/releases/download/retrom-core-6.0.8-r1/rpg-runtime-release.json"
+    },
+    {
+      "id": "ruffle",
+      "repository": "https://github.com/retrom-project/ruffle",
+      "tag": "retrom-core-ge46d1642fb67-r2",
+      "commit": "551f2b357783ba855c87b6d5618cdf474a4a217f",
+      "upstreamCommit": "e46d1642fb67a53b56ffa4b1871cb7c57589e36d",
+      "adapterAbi": "ruffle-host-v1",
+      "metadataUrl": "https://github.com/retrom-project/ruffle/releases/download/retrom-core-ge46d1642fb67-r2/rpg-runtime-release.json",
+      "assets": [
+        {
+          "filename": "LICENSE.md",
+          "url": "https://github.com/retrom-project/ruffle/releases/download/retrom-core-ge46d1642fb67-r2/LICENSE.md",
+          "output": "licenses/ruffle/LICENSE.md",
+          "maxSizeBytes": 4194304
+        },
+        {
+          "filename": "LICENSE_APACHE",
+          "url": "https://github.com/retrom-project/ruffle/releases/download/retrom-core-ge46d1642fb67-r2/LICENSE_APACHE",
+          "output": "licenses/ruffle/LICENSE_APACHE",
+          "maxSizeBytes": 4194304
+        },
+        {
+          "filename": "LICENSE_MIT",
+          "url": "https://github.com/retrom-project/ruffle/releases/download/retrom-core-ge46d1642fb67-r2/LICENSE_MIT",
+          "output": "licenses/ruffle/LICENSE_MIT",
+          "maxSizeBytes": 4194304
+        },
+        {
+          "filename": "core.ruffle.js",
+          "url": "https://github.com/retrom-project/ruffle/releases/download/retrom-core-ge46d1642fb67-r2/core.ruffle.js",
+          "output": "runtime/ruffle/core.ruffle.js",
+          "maxSizeBytes": 4194304
+        },
+        {
+          "filename": "ruffle.js",
+          "url": "https://github.com/retrom-project/ruffle/releases/download/retrom-core-ge46d1642fb67-r2/ruffle.js",
+          "output": "runtime/ruffle/ruffle.js",
+          "maxSizeBytes": 4194304
+        },
+        {
+          "filename": "ruffle.wasm",
+          "url": "https://github.com/retrom-project/ruffle/releases/download/retrom-core-ge46d1642fb67-r2/ruffle.wasm",
+          "output": "runtime/ruffle/ruffle.wasm",
+          "maxSizeBytes": 67108864
+        }
+      ]
+    },
     {
       "id": "butterscotch",
       "repository": "https://github.com/retrom-project/Butterscotch",

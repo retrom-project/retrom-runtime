@@ -55,7 +55,8 @@ class RetromRuntimePlayer implements PlayerRuntimeV1 {
       const runtimeWindow = frame?.contentWindow as Window | undefined ?? window;
       this.runtimeWindow = runtimeWindow;
       const runtimeTarget = frameMode === "SAME_ORIGIN_BLANK"
-        ? (this.frameSurface = installRuntimeFrameSurface(runtimeWindow, () => this.adapter?.getCanvas() ?? null)).target
+        ? (this.frameSurface = installRuntimeFrameSurface(runtimeWindow, () => this.adapter?.getCanvas() ?? null,
+          () => this.adapter?.canvasLayout === "CORE")).target
         : target;
       if (this.inputFilter) {this.cleanupInputFilter = installRuntimeGamepadFilter(runtimeWindow, this.inputFilter);}
       const adapter = await mountTargetAdapter(this.envelope, runtimeTarget, {
@@ -327,7 +328,8 @@ class RetromRuntimePlayer implements PlayerRuntimeV1 {
     const next = this.currentAvailability();
     if (next.available !== this.lastAvailability.available || next.reason !== this.lastAvailability.reason ||
       next.revision !== this.lastAvailability.revision || next.save?.capture !== this.lastAvailability.save?.capture ||
-      next.save?.restore !== this.lastAvailability.save?.restore || next.save?.captureAvailable !== this.lastAvailability.save?.captureAvailable) {
+      next.save?.restore !== this.lastAvailability.save?.restore || next.save?.captureAvailable !== this.lastAvailability.save?.captureAvailable ||
+      next.save?.dataKind !== this.lastAvailability.save?.dataKind) {
       this.lastAvailability = next;
       this.emit({type: "CHECKPOINT_AVAILABILITY_CHANGED", availability: next});
     }
@@ -372,7 +374,8 @@ class RetromRuntimePlayer implements PlayerRuntimeV1 {
 function validNativeSave(value: RuntimeNativeSaveCapabilitiesV1 | undefined, native: boolean) {
   return value === undefined || native && ["RUNTIME", "IN_GAME"].includes(value.capture) &&
     ["AUTOMATIC", "IN_GAME"].includes(value.restore) && typeof value.captureAvailable === "boolean" &&
-    (value.capture === "RUNTIME" || !value.captureAvailable);
+    (value.capture === "RUNTIME" || !value.captureAvailable) &&
+    (value.dataKind === undefined || value.dataKind === "PROGRESS" || value.dataKind === "STORAGE");
 }
 function providerDiagnosticCode(runtime: string) {
   const suffix = runtime.toUpperCase().replace(/[^A-Z0-9]+/gu, "_")
@@ -394,7 +397,7 @@ function validProgress(value: {loadedBytes: number; totalBytes: number | null}) 
 function isAbort(error: unknown) {return error instanceof DOMException && error.name === "AbortError";}
 function stableError(error: unknown) {
   if (isAbort(error)) {return error as DOMException;}
-  if (error instanceof Error && /^(?:RUNTIME|CHECKPOINT|PLAYER|PROVIDER|RPG|ONS|KIRIKIRI|BUTTERSCOTCH|TYRANOSCRIPT|WASM4|J2ME|SCUMMVM|FANTASY|PX68K)_[A-Z0-9_]+$/u.test(error.message)) {
+  if (error instanceof Error && /^(?:RUNTIME|CHECKPOINT|PLAYER|PROVIDER|RPG|ONS|KIRIKIRI|BUTTERSCOTCH|TYRANOSCRIPT|WASM4|J2ME|SCUMMVM|FANTASY|WEBMSX|PX68K)_[A-Z0-9_]+$/u.test(error.message)) {
     return error;
   }
   return new Error("RUNTIME_FAILED");

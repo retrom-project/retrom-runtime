@@ -36,7 +36,11 @@ const wasm4Capabilities = capabilities(true, true, false);
 
 const adapters = [
   px68kAdapter,
+  adapter("webmsx-web", "WEBMSX_WEB", "webmsx-host-v1", "webmsx-state-v1", standardCapabilities),
   playAdapter,
+  defineAdapter({id: "ruffle-web", kind: "RUFFLE_WEB", abi: "ruffle-host-v1",
+    capabilities: capabilities(true, false, true),
+    checkpoint: {writeFormat: "ruffle-sharedobjects-v1", readFormats: ["ruffle-sharedobjects-v1"], semantics: "GAME_SAVE"}}),
   scummvmAdapter,
   defineAdapter({id: "tic80-web", kind: "TIC80_WEB", abi: "tic80-pmem-v1",
     capabilities: capabilities(true, true, true),
@@ -70,6 +74,8 @@ const targets = [
   ),
   target("fake08", "PICO-8 (FAKE-08)", "fake08-web", noOptionsSchema, false, "SAME_ORIGIN_BLANK", "ROM_BLOB",
     4194380, ["assets/fake08/fake08-retrom.mjs", "assets/fake08/fake08-retrom.wasm"]),
+  target("flash-ruffle", "Flash (Ruffle)", "ruffle-web", noOptionsSchema, false, "SAME_ORIGIN_BLANK", "ROM_BLOB",
+    8 * 1024 * 1024, ["assets/ruffle/ruffle.js", "assets/ruffle/core.ruffle.js", "assets/ruffle/ruffle.wasm"]),
   target(
     "j2me", "Java ME", "j2me-minijvm-web", noOptionsSchema,
     true, "SAME_ORIGIN_BLANK", "ROM_BLOB", 2 * 1024 * 1024,
@@ -83,6 +89,8 @@ const targets = [
     ["assets/kirikiri/assets.zip", "assets/kirikiri/index.js", "assets/kirikiri/index.wasm",
       "assets/kirikiri/vlfs.js"],
   ),
+  target("msx-webmsx", "MSX (WebMSX)", "webmsx-web", noOptionsSchema, false, "SAME_ORIGIN_BLANK", "ROM_BLOB",
+    32 * 1024 * 1024, ["assets/webmsx/webmsx.js"]),
   target(
     "onscripter-yuri", "ONScripter Yuri", "ons-yuri-web", onsOptionsSchema,
     false, "SAME_ORIGIN_BLANK", "FILE_TREE", 64 * 1024 * 1024,
@@ -115,7 +123,7 @@ export const retromRuntimeProviderDefinition = defineProvider({
   adapters,
   providerApiVersion: 1,
   providerId: "retrom-runtime",
-  providerVersion: "0.25.4",
+  providerVersion: "0.28.0",
   targets,
 });
 

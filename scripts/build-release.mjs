@@ -1,6 +1,9 @@
 import {stageCoreDevelopmentInput} from "./core-development-input.mjs";
+import {stageWebMSXRelease} from "./webmsx-release.mjs";
+import {asWebMSXCandidateSource, stageWebMSXCandidate} from "./webmsx-candidate.mjs";
 import {assertScummvmCandidateMode} from "./scummvm-release.mjs";
 import {stageScummvmCandidate} from "./scummvm-candidate-stage.mjs";
+import {asRuffleCandidateSource, stageRuffleCandidate} from "./ruffle-candidate.mjs";
 import {asScummvmCandidateSource, unpackScummvmRelease} from "./scummvm-published-release.mjs";
 import { unpackJ2meRelease } from "./j2me-release.mjs";
 import { spawnSync } from "node:child_process";
@@ -43,6 +46,16 @@ for (const asset of sources.localAssets) {
 }
 for (const release of sources.upstreamReleases) {
   const devRoot = devReleaseOverrides.get(release.id);
+  if (release.id === "webmsx" && devRoot) {
+    assertScummvmCandidateMode([release], process.env.RETROM_PFB_CANDIDATE_BUILD === "1", formalBuild);
+    await stageWebMSXCandidate(asWebMSXCandidateSource(release), devRoot, stage);
+    continue;
+  }
+  if (release.id === "ruffle" && devRoot) {
+    assertScummvmCandidateMode([release], process.env.RETROM_PFB_CANDIDATE_BUILD === "1", formalBuild);
+    await stageRuffleCandidate(asRuffleCandidateSource(release), devRoot, stage);
+    continue;
+  }
   if (release.id === "scummvm" && devRoot) {
     assertScummvmCandidateMode([release], process.env.RETROM_PFB_CANDIDATE_BUILD === "1", formalBuild);
     await stageScummvmCandidate(asScummvmCandidateSource(release), devRoot, root, stage);
@@ -52,6 +65,10 @@ for (const release of sources.upstreamReleases) {
   if (!devRoot) {
     const metadata = await download(release.metadataUrl, 65536);
     const descriptor = JSON.parse(new TextDecoder().decode(metadata));
+    if (release.id === "webmsx") {
+      await stageWebMSXRelease(release, descriptor, download, stage);
+      continue;
+    }
     if (release.archive) {
       const bytes = await download(`${release.repository}/releases/download/${release.tag}/${release.archive.filename}`,
         release.archive.sizeBytes);
@@ -69,7 +86,11 @@ for (const release of sources.upstreamReleases) {
 }
 const developmentOutputs = [];
 for (const input of developmentInputs) {
-  developmentOutputs.push(...await (input.id === "scummvm"
+  developmentOutputs.push(...await (input.id === "webmsx"
+    ? stageWebMSXCandidate(input, devReleaseOverrides.get(input.id), stage)
+    : input.id === "ruffle"
+    ? stageRuffleCandidate(input, devReleaseOverrides.get(input.id), stage)
+    : input.id === "scummvm"
     ? stageScummvmCandidate(input, devReleaseOverrides.get(input.id), root, stage)
     : stageCoreDevelopmentInput(input, devReleaseOverrides.get(input.id), stage)));
 }

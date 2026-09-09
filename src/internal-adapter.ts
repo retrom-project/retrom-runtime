@@ -7,6 +7,8 @@ import type {
 import type {RuntimeVideoModeV1, RuntimeInputDiagnosticsV1} from "./provider/module-api.js";
 
 export type MountedRuntimeAdapter = {
+  /** CORE owns responsive canvas sizing; otherwise the Provider fits a fixed-resolution canvas. */
+  canvasLayout?: "CORE";
   checkpoint(request?: CheckpointRequest): Promise<RuntimeCheckpoint>;
   acknowledgeCheckpoint?(checkpoint: RuntimeCheckpoint): Promise<void>;
   exit(): Promise<void>;

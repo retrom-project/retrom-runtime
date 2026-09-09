@@ -227,6 +227,39 @@ screenshots contain the displayed frame instead of a cleared black buffer.
 
 ## Development
 
+### Flash / Ruffle candidate
+
+`flash-ruffle` accepts one `game: ROM_BLOB` containing a standalone SWF (64 MiB maximum
+compressed and declared uncompressed size). Companion assets, network services, projectors and
+AIR packages are not supported by this Target. Script access, URL opening and movie networking
+are disabled. Compatibility with a particular Flash API/game must be verified separately.
+
+The fork ABI is `ruffle-host-v1`. Instance-owned SharedObject storage replaces localStorage;
+the stable movie URL uses the content digest, not a Launch ID. `ruffle-sharedobjects-v1` is a
+native `GAME_SAVE` envelope, not an instant execution snapshot: the game must actually write
+SharedObjects before a changed payload can be exported. It allows 128 keys, 4 MiB native data
+and an 8 MiB encoded envelope. Saves are installed before load and never implicitly restored.
+
+Availability declares `save.dataKind: "STORAGE"`: these files are a persistent storage container,
+possibly only settings or play counters, not guaranteed progress. Hosts update the selected container
+on subsequent saves and create a fresh one only for a new game without an explicit restore.
+Changed data remains exportable; no title-specific save or input exceptions are installed.
+The stage is forced to `showAll` with centered alignment so game scripts cannot reset it to
+an unscaled top-left surface; aspect-ratio letterboxing remains intentional.
+The adapter declares internal `canvasLayout: "CORE"`: Ruffle alone sizes its responsive canvas
+and DPI-scaled backing buffer. The Provider still fills the frame, but must not fit that changing
+buffer as though it were a fixed-resolution game or overwrite the canvas offsets on resize/fullscreen.
+
+Standard pad directions and left stick map to arrows; south maps to Space, east to Escape,
+west to X and north/Start to Enter. Disconnect, pause and exit release held keys. Games needing
+different or mouse-only controls still require per-game compatibility verification.
+
+The provider pins the maintained fork release `retrom-core-ge46d1642fb67-r2` in `provider-sources.json`.
+Runtime scripts consume its published assets and never compile the core. Local core changes require
+an explicit fork build in the same PFB followed by `candidate:build`; overrides retain the closed
+candidate inventory checks and are rejected by formal builds. Product acceptance belongs to the
+Host's `ACC-FLASH-001`.
+
 ```bash
 npm ci
 npm run lint
@@ -441,3 +474,21 @@ core fork's candidate workflow, then use `candidate:build` with the PFB spec.
 Formal release mode rejects unpublished inputs. Inherited engine licensing
 includes a noncommercial clause; see the complete bundled `LICENSES.txt` and
 `THIRD_PARTY_NOTICES.md` before distribution.
+
+### MSX / WebMSX
+
+`msx-webmsx` accepts one `game: ROM_BLOB` (16 MiB maximum), using the maintained
+WebMSX fork's `webmsx-host-v1` ABI and a fixed Japanese MSX2+ machine. It exposes
+pause/resume, screenshots and bounded instant checkpoints (`webmsx-state-v1`, 32 MiB).
+Snapshots carry the content digest and complete machine state, including writable media;
+only an explicitly supplied checkpoint is restored. Exact media size and SHA-256 are
+verified before loading, with Cache Storage reuse across Launch URLs and bounded progress.
+
+The source is `retrom-project/WebMSX`, maintained from upstream v6.0.8 at
+`4f4009e86d3e0bb9be7dcd7f0a582b0cd411d660`. `provider-sources.json` pins the
+`retrom-core-6.0.8-r1` release commit, ABI and exact sizes/SHA-256 of `webmsx.js`
+and `UPSTREAM-NOTICE.txt`. Aggregation verifies the release metadata and both assets.
+Local candidate overrides are accepted only in explicit PFB builds, never formal releases.
+Upstream references a missing license file; this integration does not assert MIT/GPL
+licensing. The dedicated notice and release metadata preserve unresolved source and
+embedded machine-ROM distribution status; publication does not grant those rights.

@@ -4,6 +4,7 @@
 
 - Add candidate EmulatorJS targets for EightyOne, Caprice32, CrocoDS, VICE PET, Plus/4, C64 and SAME CD-i, using pinned 4.2.3 assets.
 - Preserve the existing raw checkpoint contract and single-file input policy for these targets.
+- Keep original/pixel output on an explicit, unfiltered passthrough shader. EmulatorJS 4.2.3's disabled-shader fallback can display solid colors or cropped output after native video geometry changes.
 
 ## 0.23.1
 

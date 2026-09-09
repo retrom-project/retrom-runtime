@@ -11,8 +11,8 @@ const modeConfiguration: Record<RuntimeVideoModeV1, {
   imageRendering: "auto" | "pixelated";
 }> = {
   "adaptive-sharpen": {shader: "retrom-adaptive-sharpen", imageRendering: "auto"},
-  original: {shader: "disabled", imageRendering: "auto"},
-  pixel: {shader: "disabled", imageRendering: "pixelated"},
+  original: {shader: "retrom-passthrough", imageRendering: "auto"},
+  pixel: {shader: "retrom-passthrough", imageRendering: "pixelated"},
   "sharp-bilinear": {shader: "retrom-sharp-bilinear", imageRendering: "pixelated"},
   smooth: {shader: "sabr", imageRendering: "auto"},
 };

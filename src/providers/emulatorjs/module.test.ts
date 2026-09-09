@@ -332,10 +332,10 @@ describe("EmulatorJS Provider Module V1", () => {
     await expect(player.setVolume(Number.NaN)).rejects.toMatchObject({code: "PLAYER_RUNTIME_CONTRACT_INVALID"});
     for (const [mode, shader, imageRendering] of [
       ["sharp-bilinear", "retrom-sharp-bilinear", "pixelated"],
-      ["pixel", "disabled", "pixelated"],
+      ["pixel", "retrom-passthrough", "pixelated"],
       ["adaptive-sharpen", "retrom-adaptive-sharpen", "auto"],
       ["smooth", "sabr", "auto"],
-      ["original", "disabled", "auto"],
+      ["original", "retrom-passthrough", "auto"],
     ] as const) {
       await player.setVideoMode(mode);
       expect(changeSettingOption).toHaveBeenLastCalledWith("shader", shader);

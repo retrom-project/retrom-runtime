@@ -132,7 +132,7 @@ export const retromRuntimeProviderDefinition = defineProvider({
   adapters: storageAdapters(adapters),
   providerApiVersion: 1,
   providerId: "retrom-runtime",
-  providerVersion: "0.30.0-rc.2",
+  providerVersion: "0.30.0",
   targets,
 });
 

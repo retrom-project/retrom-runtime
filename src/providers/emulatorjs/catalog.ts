@@ -177,7 +177,7 @@ export const emulatorJsProviderDefinition = defineProvider({
   adapters: storageAdapters(adapters),
   providerApiVersion: 1,
   providerId: "emulatorjs",
-  providerVersion: "2.7.0-rc.2",
+  providerVersion: "2.7.0",
   targets,
 });
 

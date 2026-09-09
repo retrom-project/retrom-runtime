@@ -1,4 +1,6 @@
 import {mountOpenBOR} from "../../openbor/adapter.js";
+import {mountPx68k} from "../../px68k/adapter.js";
+import {mountWebMSX} from "../../webmsx/adapter.js";
 import {mountScummvm} from "../../scummvm/adapter.js";
 import {mountRuffle} from "../../ruffle/adapter.js";
 import {mountPlay} from "../../play/adapter.js";
@@ -41,6 +43,11 @@ export function mountTargetAdapter(
   switch (adapter.kind) {
   case "OPENBOR_WEB":
     return mountOpenBOR(parameters.openbor(envelope), target, frameWindow, restorePayload, reportProgress, reportFailure, context.signal);
+  case "PX68K_WEB":
+    return mountPx68k(parameters.px68k(envelope, context.assetIndex), target, frameWindow, restorePayload,
+      reportProgress, reportFailure, context.signal);
+  case "WEBMSX_WEB":
+    return mountWebMSX(parameters.webmsx(envelope), target, frameWindow, restorePayload, reportProgress, context.signal);
   case "RUFFLE_WEB":
     return mountRuffle(parameters.ruffle(envelope), target, frameWindow, restorePayload, reportProgress, context.signal);
   case "PLAY_WEB":

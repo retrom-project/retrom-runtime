@@ -1,4 +1,8 @@
-import {stageOpenBORCandidate} from "./openbor-candidate.mjs";
+import {asOpenBORCandidateSource, stageOpenBORCandidate} from "./openbor-candidate.mjs";
+import {stagePinnedCoreRelease} from "./pinned-core-release.mjs";
+import {stageCoreDevelopmentInput} from "./core-development-input.mjs";
+import {stageWebMSXRelease} from "./webmsx-release.mjs";
+import {asWebMSXCandidateSource, stageWebMSXCandidate} from "./webmsx-candidate.mjs";
 import {assertScummvmCandidateMode} from "./scummvm-release.mjs";
 import {stageScummvmCandidate} from "./scummvm-candidate-stage.mjs";
 import {asRuffleCandidateSource, stageRuffleCandidate} from "./ruffle-candidate.mjs";
@@ -44,6 +48,16 @@ for (const asset of sources.localAssets) {
 }
 for (const release of sources.upstreamReleases) {
   const devRoot = devReleaseOverrides.get(release.id);
+  if (release.id === "openbor" && devRoot) {
+    assertScummvmCandidateMode([release], process.env.RETROM_PFB_CANDIDATE_BUILD === "1", formalBuild);
+    await stageOpenBORCandidate(asOpenBORCandidateSource(release), devRoot, stage);
+    continue;
+  }
+  if (release.id === "webmsx" && devRoot) {
+    assertScummvmCandidateMode([release], process.env.RETROM_PFB_CANDIDATE_BUILD === "1", formalBuild);
+    await stageWebMSXCandidate(asWebMSXCandidateSource(release), devRoot, stage);
+    continue;
+  }
   if (release.id === "ruffle" && devRoot) {
     assertScummvmCandidateMode([release], process.env.RETROM_PFB_CANDIDATE_BUILD === "1", formalBuild);
     await stageRuffleCandidate(asRuffleCandidateSource(release), devRoot, stage);
@@ -54,10 +68,25 @@ for (const release of sources.upstreamReleases) {
     await stageScummvmCandidate(asScummvmCandidateSource(release), devRoot, root, stage);
     continue;
   }
+  if (release.id === "px68k" && devRoot) {
+    assertScummvmCandidateMode([release], process.env.RETROM_PFB_CANDIDATE_BUILD === "1", formalBuild);
+    await stageCoreDevelopmentInput({id: release.id, repository: release.repository,
+      upstreamCommit: release.upstreamCommit, adapterAbi: release.adapterAbi,
+      assets: release.assets.map(({filename, output, maxSizeBytes}) => ({filename, output, maxSizeBytes}))}, devRoot, stage);
+    continue;
+  }
   let archiveAssets;
   if (!devRoot) {
     const metadata = await download(release.metadataUrl, 65536);
     const descriptor = JSON.parse(new TextDecoder().decode(metadata));
+    if (["px68k", "tyranoscript", "openbor"].includes(release.id)) {
+      await stagePinnedCoreRelease(release, descriptor, download, stage);
+      continue;
+    }
+    if (release.id === "webmsx") {
+      await stageWebMSXRelease(release, descriptor, download, stage);
+      continue;
+    }
     if (release.archive) {
       const bytes = await download(`${release.repository}/releases/download/${release.tag}/${release.archive.filename}`,
         release.archive.sizeBytes);
@@ -76,9 +105,13 @@ for (const release of sources.upstreamReleases) {
 const developmentOutputs = [];
 for (const input of developmentInputs) {
   developmentOutputs.push(...await (input.id === "openbor"
-    ? stageOpenBORCandidate(input, devReleaseOverrides.get(input.id), stage) : input.id === "ruffle"
+    ? stageOpenBORCandidate(input, devReleaseOverrides.get(input.id), stage) : input.id === "webmsx"
+    ? stageWebMSXCandidate(input, devReleaseOverrides.get(input.id), stage)
+    : input.id === "ruffle"
     ? stageRuffleCandidate(input, devReleaseOverrides.get(input.id), stage)
-    : stageScummvmCandidate(input, devReleaseOverrides.get(input.id), root, stage)));
+    : input.id === "scummvm"
+    ? stageScummvmCandidate(input, devReleaseOverrides.get(input.id), root, stage)
+    : stageCoreDevelopmentInput(input, devReleaseOverrides.get(input.id), stage)));
 }
 const records = await collectRecords(sources, stage, developmentOutputs);
 const provider = await buildCurrentProviderBuild({

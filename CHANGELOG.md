@@ -1,16 +1,49 @@
 # Changelog
 
-## 0.26.0-rc.5 (development candidate)
+## 0.29.0
 
 - Add OpenBOR PAK content through a fork-owned Emscripten/SDL2 core and the
-  `openbor-host-v1` interface. Only explicit PFB builds accept its unpublished,
-  source-bound candidate; production releases require a separately published core.
+  `openbor-host-v1` interface. Formal builds pin the independent maintained core
+  release; local source-bound overrides remain restricted to explicit PFB builds.
 - Bind native progress files to the game digest in `openbor-game-save-v1`
   (`GAME_SAVE`). Restore them before startup and continue through the game menu;
   this target does not provide instant snapshots.
 - Verify bounded PAK downloads and reuse verified content chunks across Launches.
   Support standard gamepad scancodes, native keyboard input, pause and screenshots,
   and release input/audio resources when the core exits.
+
+- Advance EmulatorJS Provider to 2.6.6 for the aggregate OpenBOR license notice;
+  its core assets and behavior remain unchanged.
+
+## 0.28.0
+
+- Pin PX68K r1 and TyranoScript bridge r8 to immutable releases with verified asset sizes and SHA-256.
+- Advance EmulatorJS Provider to 2.6.5 for the aggregate third-party notice change; its core assets and input behavior remain unchanged.
+
+- Tyrano 旧版兼容层每个手柄按钮只投射一个键盘目标，不再同时发送 KAG/DOM 手柄事件；现代引擎保留原生手柄路径，真实键盘独立可用。
+- 补齐 TyranoScript 已声明的 pixel/smooth 画面模式控制，修复宿主初始化时的能力错误。
+- Tyrano 4.x 不要求新版 chara 组件，按各版本的菜单方法判断可存档状态。
+- 旧版音频仅在媒体已暂停且播放请求以 AbortError 取消时正常完成；其他播放错误继续传播。
+
+- Add the PX68K single-disk X68000 target with keyboard/gamepad, audio, pause,
+  screenshots and machine/disk checkpoints across fresh launches.
+- Keep PX68K gamepad and keyboard input independent: Button 1 (B) no longer
+  injects Escape and pauses games; A/Start no longer inject Enter.
+- Let arrow keys and Z/X operate PX68K joypad one while retaining native keyboard
+  input, and release held keyboard controls on blur, pause and exit.
+- Verify bounded cached game, BIOS and Wasm bytes before native construction.
+- Accept descriptor-verified flat-file core candidates in PFB builds while
+  keeping unpublished sources out of formal releases.
+
+## 0.27.0
+
+- Add the independent `msx-webmsx` Target with bounded single-media loading, persistent
+  content cache, standard controller input, screenshots and pause/resume.
+- Bind `webmsx-state-v1` instant snapshots to the game's content digest and restore them
+  into a fresh machine. Release controller input on pause and exit.
+- Pin the WebMSX maintenance release with exact commit, asset lengths and SHA-256.
+  Local overrides remain restricted to explicit PFB builds. Preserve the unresolved
+  upstream source and embedded system-ROM license status in the dedicated notice.
 
 ## 0.25.0
 

@@ -1,3 +1,4 @@
+import {px68kAdapter, px68kTarget} from "./px68k-declaration.js";
 import {scummvmAdapter, scummvmTarget} from "./scummvm-declaration.js";
 import {playAdapter, playTarget} from "./play-declaration.js";
 import {
@@ -37,6 +38,8 @@ const adapters = [
   defineAdapter({id: "openbor-web", kind: "OPENBOR_WEB", abi: "openbor-host-v1",
     capabilities: capabilities(true, true, false),
     checkpoint: {writeFormat: "openbor-game-save-v1", readFormats: ["openbor-game-save-v1"], semantics: "GAME_SAVE"}}),
+  px68kAdapter,
+  adapter("webmsx-web", "WEBMSX_WEB", "webmsx-host-v1", "webmsx-state-v1", standardCapabilities),
   playAdapter,
   defineAdapter({id: "ruffle-web", kind: "RUFFLE_WEB", abi: "ruffle-host-v1",
     capabilities: capabilities(true, false, true),
@@ -89,6 +92,8 @@ const targets = [
     ["assets/kirikiri/assets.zip", "assets/kirikiri/index.js", "assets/kirikiri/index.wasm",
       "assets/kirikiri/vlfs.js"],
   ),
+  target("msx-webmsx", "MSX (WebMSX)", "webmsx-web", noOptionsSchema, false, "SAME_ORIGIN_BLANK", "ROM_BLOB",
+    32 * 1024 * 1024, ["assets/webmsx/webmsx.js"]),
   target(
     "onscripter-yuri", "ONScripter Yuri", "ons-yuri-web", onsOptionsSchema,
     false, "SAME_ORIGIN_BLANK", "FILE_TREE", 64 * 1024 * 1024,
@@ -97,6 +102,7 @@ const targets = [
   target("openbor", "OpenBOR", "openbor-web", noOptionsSchema, false, "SAME_ORIGIN_BLANK", "ROM_BLOB",
     16 * 1024 * 1024, ["assets/openbor/openbor.mjs", "assets/openbor/openbor.wasm"]),
   playTarget,
+  px68kTarget,
   easyRpgTarget("rpgmaker-2000", "RPG Maker 2000", "rpg2k"),
   easyRpgTarget("rpgmaker-2003", "RPG Maker 2003", "rpg2k3"),
   nativeRpgTarget("rpgmaker-mv", "RPG Maker MV", "RPGMV"),
@@ -122,7 +128,7 @@ export const retromRuntimeProviderDefinition = defineProvider({
   adapters,
   providerApiVersion: 1,
   providerId: "retrom-runtime",
-  providerVersion: "0.26.0-rc.5",
+  providerVersion: "0.29.0",
   targets,
 });
 

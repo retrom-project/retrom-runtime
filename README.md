@@ -5,6 +5,13 @@ VX, VX Ace, MV and MZ, ONS games powered by ONScripterYuri, KAG-based KiriKiri2 
 projects powered by Butterscotch, browser TyranoScript projects, Java ME JARs, ScummVM game projects and WASM-4 carts. It owns runtime lifecycle, adapters, checkpoint codecs, bridge assets and pinned core
 Release inputs. It does not know about a host application's users, database, review flow, storage or HTTP API.
 
+Core admission requires standard-gamepad directional movement and confirmation.
+Gamepad cancellation is optional; existing working cancellation remains supported.
+Within one mapping configuration, each gamepad button has one target input. Do not
+send both native A/B and keyboard Enter/Escape to satisfy a menu requirement.
+Real keyboard input remains independent. Press/release events for the same target
+are one input lifecycle; a host UI's B-to-back behavior is separate from game controls.
+
 ## Play! PS2
 
 `retrom-runtime/play-ps2` consumes a single ISO or CHD as `SEEKABLE_BLOB` through the
@@ -145,6 +152,12 @@ gamepad input to TyranoScript's browser input layer, captures a bounded semantic
 restores it in a fresh frame without opening the game's load menu. Restore uses TyranoScript's normal load lifecycle,
 including its current BGM replay, and waits for `load-complete` before reporting ready. A game `[close]` command is
 translated into the common `EXIT_REQUESTED` event instead of leaving the host on a closed or black frame.
+
+Modern TyranoScript uses its native gamepad input. Old engines without the event
+API use only the bridge's keyboard mapping (A/Start to Enter, B to Escape and
+D-pad to arrows); the same press does not also emit gamepad events. Real keyboard
+events remain available. This preserves existing legacy confirmation/cancellation
+without requiring every core to implement cancellation.
 
 WASM-4 consumes one content-addressed cart of at most 64 KiB and verifies its exact byte length and SHA-256 before
 starting the core. The maintained fork exposes a host-independent Web module with keyboard and standard-gamepad
@@ -441,9 +454,9 @@ remain unavailable and `coreRead` is always false: an input API call is not evid
 EmulatorJS delivery observation applies to single-player; MV/MZ use the existing isolated bridge STATUS cadence.
 Other inaccessible isolated frames explicitly remain unavailable. Sessions are cleaned up on disable and exit.
 
-### OpenBOR development target
+### OpenBOR
 
-The PFB candidate includes `openbor`, backed by the maintained
+The Provider includes `openbor`, backed by the maintained
 [OpenBOR fork](https://github.com/retrom-project/openbor) and `openbor-host-v1`.
 It accepts one PAK32 game package (up to 512 MiB), supports standard gamepad input,
 pause and screenshots, and exposes native level saves as `GAME_SAVE` with
@@ -451,4 +464,43 @@ pause and screenshots, and exposes native level saves as `GAME_SAVE` with
 restoration requires the in-game Load Game menu. Instant snapshots are not declared.
 Core binaries and their licenses come from the fork; no games are included.
 Unpublished development inputs require explicit PFB candidate mode and cannot be
-used for a formal release. The production source lock is unchanged by this candidate.
+used for a formal release. Formal aggregation pins the independent maintained core release.
+
+### PX68K (Sharp X68000)
+
+The `px68k` target uses `px68k-host-v1` and accepts one DIM, XDF or HDF image
+(up to 64 MiB). The host supplies `iplrom.dat` and `cgrom.dat` as verified
+`EXTERNAL_FILE_SET` entries. D88, M3U playlists and drive switching are not
+advertised. Keyboard input and two standard gamepads are supported. Standard
+Button 0/1 map to native joypad A/B without synthesizing Enter/Escape; keyboard
+arrows, letters, Enter, Escape and F1–F12 go directly to the emulated keyboard.
+Arrow keys and Z/X also operate joypad one (directions and A/B), allowing keyboard
+play in games that only read a joystick. Click the game canvas to focus keyboard
+input. Video, stereo audio, pause, volume,
+screenshots and `px68k-state-v1` instant checkpoints share the Provider lifecycle.
+Checkpoints contain machine state and writable disk contents; a new launch
+restores only an explicitly supplied checkpoint belonging to the same game.
+
+PX68K is pinned to the maintenance release `retrom-core-g561dcba6b11d-r1`
+with exact commit, sizes and SHA-256. PFB development overrides use the core
+fork's descriptor-verified candidate workflow; formal releases reject overrides. Inherited engine licensing
+includes a noncommercial clause; see the complete bundled `LICENSES.txt` and
+`THIRD_PARTY_NOTICES.md` before distribution.
+
+### MSX / WebMSX
+
+`msx-webmsx` accepts one `game: ROM_BLOB` (16 MiB maximum), using the maintained
+WebMSX fork's `webmsx-host-v1` ABI and a fixed Japanese MSX2+ machine. It exposes
+pause/resume, screenshots and bounded instant checkpoints (`webmsx-state-v1`, 32 MiB).
+Snapshots carry the content digest and complete machine state, including writable media;
+only an explicitly supplied checkpoint is restored. Exact media size and SHA-256 are
+verified before loading, with Cache Storage reuse across Launch URLs and bounded progress.
+
+The source is `retrom-project/WebMSX`, maintained from upstream v6.0.8 at
+`4f4009e86d3e0bb9be7dcd7f0a582b0cd411d660`. `provider-sources.json` pins the
+`retrom-core-6.0.8-r1` release commit, ABI and exact sizes/SHA-256 of `webmsx.js`
+and `UPSTREAM-NOTICE.txt`. Aggregation verifies the release metadata and both assets.
+Local candidate overrides are accepted only in explicit PFB builds, never formal releases.
+Upstream references a missing license file; this integration does not assert MIT/GPL
+licensing. The dedicated notice and release metadata preserve unresolved source and
+embedded machine-ROM distribution status; publication does not grant those rights.

@@ -1,4 +1,6 @@
 import type {OpenBORParameters} from "../../openbor/adapter.js";
+import type {Px68kParameters} from "../../px68k/core.js";
+import type {WebMSXParameters} from "../../webmsx/adapter.js";
 import scummvmLayout from "../../scummvm/core-layout.json" with {type: "json"};
 import type {ScummvmParameters} from "../../scummvm/parameters.js";
 import type {PlayParameters} from "../../play/core.js";
@@ -226,4 +228,16 @@ function invalidRequest(): never {throw new Error("PROVIDER_LAUNCH_REQUEST_INVAL
 export function openbor(envelope: LaunchEnvelopeV1): OpenBORParameters {
   const game = resource(envelope, "game", "ROM_BLOB");
   return {pak: {url: game.url, sizeBytes: game.sizeBytes, sha256: game.sha256}, runtimeBaseUrl: assetBase(envelope, "openbor")};
+}
+
+export function px68k(envelope: LaunchEnvelopeV1, assetIndex: AssetIndexV1): Px68kParameters {
+  const game = resource(envelope, "game", "ROM_BLOB");
+  const bios = resource(envelope, "external", "EXTERNAL_FILE_SET");
+  return {game, bios: bios.files, runtimeBaseUrl: envelope.runtime.runtimeBaseUrl, assetIndex};
+}
+
+export function webmsx(envelope: LaunchEnvelopeV1): WebMSXParameters {
+  const game = resource(envelope, "game", "ROM_BLOB");
+  return {mediaUrl: game.url, mediaSizeBytes: game.sizeBytes, contentDigest: game.sha256,
+    runtimeBaseUrl: assetBase(envelope, "webmsx")};
 }

@@ -1,9 +1,12 @@
 import {createHash} from "node:crypto";
 import {lstat, mkdir, mkdtemp, readFile, readdir, rm} from "node:fs/promises";
+import {fileURLToPath} from "node:url";
 import {isAbsolute, join, parse, relative} from "node:path";
 
 import {buildProviderBundle} from "./provider-bundle.mjs";
 import {buildProviderClient} from "./provider-client-build.mjs";
+
+import {forkMetadataPath, forkReleaseFiles, verifyForkMetadata} from "./emulatorjs-fork-releases.mjs";
 
 const sourceRepository = "https://github.com/retrom-project/retrom-runtime";
 
@@ -58,6 +61,9 @@ export async function buildEmulatorJsProviderBundle(input) {
   }
   verifyEmulatorJsImplementationAssets(input.definition, assetIndex);
   const licenseSources = await collectEmulatorJsLicenses(input.sourceRoot, input.sourceCatalog);
+  for (const name of ["LICENSE", "THIRD_PARTY_NOTICES.md", "EMULATORJS_THIRD_PARTY_NOTICES.md"]) {
+    licenseSources.set(`licenses/retrom-runtime/${name}`, fileURLToPath(new URL(`../${name}`, import.meta.url)));
+  }
   const temporaryRoot = await mkdtemp(join(input.outputRoot, ".provider-client-"));
   try {
     const clientPath = join(temporaryRoot, "client.mjs");
@@ -81,7 +87,10 @@ export async function buildEmulatorJsProviderBundle(input) {
         declarationSha256: sha256(canonicalJsonBytes(input.manifest)),
         schemaVersion: 1,
         overrides: input.sourceCatalog.overrides,
+        forks: input.sourceCatalog.forks ?? [],
         upstreamReleases: input.sourceCatalog.releases,
+        ...(input.sourceCatalog.developmentCores?.length
+          ? {developmentCores: input.sourceCatalog.developmentCores} : {}),
       },
     });
   } finally {
@@ -150,6 +159,16 @@ async function collectLicenses(stageRoot) {
 
 async function collectEmulatorJsLicenses(sourceRoot, sourceCatalog) {
   const result = new Map();
+  for (const file of forkReleaseFiles(sourceCatalog)) {
+    const source = join(sourceRoot, file.destination);
+    const contents = await readRegularFile(source);
+    if (sha256(contents) !== file.sha256 || contents.length !== file.sizeBytes) {unsafe();}
+    if (file.destination.includes("/licenses/")) {result.set(`licenses/emulatorjs/${file.destination}`, source);}
+  }
+  for (const fork of sourceCatalog.forks ?? []) {
+    const metadata = JSON.parse(await readRegularFile(join(sourceRoot, forkMetadataPath(fork))));
+    verifyForkMetadata(fork, metadata);
+  }
   for (const release of sourceCatalog.releases) {
     const releaseRoot = join(sourceRoot, release.id);
     for (const licenseRoot of release.licenseRoots) {
@@ -181,6 +200,7 @@ async function collectEmulatorJsLicenses(sourceRoot, sourceCatalog) {
 }
 
 function validateSourceCatalog(value) {
+  forkReleaseFiles(value);
   if (!value || value.schemaVersion !== 1 || !Array.isArray(value.releases) || value.releases.length !== 2 ||
     value.releases.map((release) => release.id).join("\0") !== `4.2.3${"\0"}4.3.0-pre` ||
     !Array.isArray(value.overrides) || value.overrides.length !== 1) {unsafe();}

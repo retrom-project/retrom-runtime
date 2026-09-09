@@ -56,6 +56,17 @@ describe("Provider candidate and formal release identity", () => {
     }, "0.12.0")).toThrow("PROVIDER_RELEASE_INVALID");
   });
 
+  it("pins an RC to its exact immutable package tag", () => {
+    const version = "0.19.0-rc.1";
+    const build = createProviderBuildMetadata([provider("emulatorjs", "2.4.1-rc.3"),
+      provider("retrom-runtime", version)], "a".repeat(64));
+    const release = {commit: "b".repeat(40), repository: "https://github.com/retrom-project/retrom-runtime",
+      tag: `v${version}`};
+    expect(pinProviderReleaseMetadata(build, release, version).release).toEqual(release);
+    expect(() => pinProviderReleaseMetadata(build, {...release, tag: "v0.19.0-rc.2"}, version))
+      .toThrow("PROVIDER_RELEASE_INVALID");
+  });
+
   it("hashes the working source tree while excluding tracked files deleted by the change", async () => {
     const repository = await mkdtemp(join(tmpdir(), "provider-source-tree-"));
     try {

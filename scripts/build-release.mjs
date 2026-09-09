@@ -19,11 +19,13 @@ const providerOnly = process.env.RETROM_PROVIDER_BUILD_ONLY === "1";
 if (candidateBuild === formalBuild) {throw new Error("PROVIDER_BUILD_MODE_REQUIRED");}
 await rejectRetiredCandidateDeclaration(root);
 const sources = await loadProviderSources(root);
+const {emulatorJsSourceCatalog} = await import("../dist/providers/emulatorjs/source-catalog.js");
 const developmentInputs = sources.developmentInputs ?? [];
 assertScummvmCandidateMode(developmentInputs, process.env.RETROM_PFB_CANDIDATE_BUILD === "1", formalBuild);
 const devReleaseOverrides = parseDevReleaseOverrides(
   process.env.RETROM_RUNTIME_DEV_RELEASE_OVERRIDES,
-  [...sources.upstreamReleases, ...developmentInputs],
+  [...sources.upstreamReleases, ...developmentInputs, ...emulatorJsSourceCatalog.developmentCores ?? [],
+    ...(emulatorJsSourceCatalog.forks ?? []).map((fork) => ({id: fork.runtimeCore}))],
   formalBuild,
 );
 const commit = releaseCommit();

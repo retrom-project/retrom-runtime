@@ -1,25 +1,26 @@
 {
   "schemaVersion": 1,
   "packageName": "@xxxsen/retrom-runtime",
-  "packageVersion": "0.21.0-dev.3",
+  "packageVersion": "0.25.0",
   "publicApiVersion": 2,
-  "developmentInputs": [
+  "upstreamReleases": [
     {
       "id": "ruffle",
       "repository": "https://github.com/retrom-project/ruffle",
+      "tag": "retrom-core-ge46d1642fb67-r2",
+      "commit": "551f2b357783ba855c87b6d5618cdf474a4a217f",
       "upstreamCommit": "e46d1642fb67a53b56ffa4b1871cb7c57589e36d",
       "adapterAbi": "ruffle-host-v1",
+      "metadataUrl": "https://github.com/retrom-project/ruffle/releases/download/retrom-core-ge46d1642fb67-r2/rpg-runtime-release.json",
       "assets": [
-        {"filename": "LICENSE.md", "output": "licenses/ruffle/LICENSE.md", "maxSizeBytes": 4194304},
-        {"filename": "LICENSE_APACHE", "output": "licenses/ruffle/LICENSE_APACHE", "maxSizeBytes": 4194304},
-        {"filename": "LICENSE_MIT", "output": "licenses/ruffle/LICENSE_MIT", "maxSizeBytes": 4194304},
-        {"filename": "core.ruffle.js", "output": "runtime/ruffle/core.ruffle.js", "maxSizeBytes": 4194304},
-        {"filename": "ruffle.js", "output": "runtime/ruffle/ruffle.js", "maxSizeBytes": 4194304},
-        {"filename": "ruffle.wasm", "output": "runtime/ruffle/ruffle.wasm", "maxSizeBytes": 67108864}
+        {"filename": "LICENSE.md", "url": "https://github.com/retrom-project/ruffle/releases/download/retrom-core-ge46d1642fb67-r2/LICENSE.md", "output": "licenses/ruffle/LICENSE.md", "maxSizeBytes": 4194304},
+        {"filename": "LICENSE_APACHE", "url": "https://github.com/retrom-project/ruffle/releases/download/retrom-core-ge46d1642fb67-r2/LICENSE_APACHE", "output": "licenses/ruffle/LICENSE_APACHE", "maxSizeBytes": 4194304},
+        {"filename": "LICENSE_MIT", "url": "https://github.com/retrom-project/ruffle/releases/download/retrom-core-ge46d1642fb67-r2/LICENSE_MIT", "output": "licenses/ruffle/LICENSE_MIT", "maxSizeBytes": 4194304},
+        {"filename": "core.ruffle.js", "url": "https://github.com/retrom-project/ruffle/releases/download/retrom-core-ge46d1642fb67-r2/core.ruffle.js", "output": "runtime/ruffle/core.ruffle.js", "maxSizeBytes": 4194304},
+        {"filename": "ruffle.js", "url": "https://github.com/retrom-project/ruffle/releases/download/retrom-core-ge46d1642fb67-r2/ruffle.js", "output": "runtime/ruffle/ruffle.js", "maxSizeBytes": 4194304},
+        {"filename": "ruffle.wasm", "url": "https://github.com/retrom-project/ruffle/releases/download/retrom-core-ge46d1642fb67-r2/ruffle.wasm", "output": "runtime/ruffle/ruffle.wasm", "maxSizeBytes": 67108864}
       ]
-    }
-  ],
-  "upstreamReleases": [
+    },
     {
       "id": "butterscotch",
       "repository": "https://github.com/retrom-project/Butterscotch",
@@ -1971,6 +1972,58 @@
           "filename": "scummvm.wasm",
           "output": "runtime/scummvm/scummvm.wasm",
           "maxSizeBytes": 33554432
+        }
+      ]
+    },
+    {
+      "id": "play",
+      "repository": "https://github.com/retrom-project/Play-",
+      "tag": "retrom-core-g83700b2c31e5-r2",
+      "commit": "fa483151215ceb0a8891a573ec0903d45328ab57",
+      "adapterAbi": "play-host-v1",
+      "metadataUrl": "https://github.com/retrom-project/Play-/releases/download/retrom-core-g83700b2c31e5-r2/rpg-runtime-release.json",
+      "assets": [
+        {
+          "filename": "LICENSE",
+          "url": "https://github.com/retrom-project/Play-/releases/download/retrom-core-g83700b2c31e5-r2/LICENSE",
+          "output": "licenses/play/LICENSE",
+          "maxSizeBytes": 131072
+        },
+        {
+          "filename": "Play.js",
+          "url": "https://github.com/retrom-project/Play-/releases/download/retrom-core-g83700b2c31e5-r2/Play.js",
+          "output": "runtime/play/Play.js",
+          "maxSizeBytes": 8388608
+        },
+        {
+          "filename": "Play.wasm",
+          "url": "https://github.com/retrom-project/Play-/releases/download/retrom-core-g83700b2c31e5-r2/Play.wasm",
+          "output": "runtime/play/Play.wasm",
+          "maxSizeBytes": 8388608
+        },
+        {
+          "filename": "checkpoint.mjs",
+          "url": "https://github.com/retrom-project/Play-/releases/download/retrom-core-g83700b2c31e5-r2/checkpoint.mjs",
+          "output": "runtime/play/checkpoint.mjs",
+          "maxSizeBytes": 65536
+        },
+        {
+          "filename": "input.mjs",
+          "url": "https://github.com/retrom-project/Play-/releases/download/retrom-core-g83700b2c31e5-r2/input.mjs",
+          "output": "runtime/play/input.mjs",
+          "maxSizeBytes": 65536
+        },
+        {
+          "filename": "play-retrom.mjs",
+          "url": "https://github.com/retrom-project/Play-/releases/download/retrom-core-g83700b2c31e5-r2/play-retrom.mjs",
+          "output": "runtime/play/play-retrom.mjs",
+          "maxSizeBytes": 65536
+        },
+        {
+          "filename": "range-device.mjs",
+          "url": "https://github.com/retrom-project/Play-/releases/download/retrom-core-g83700b2c31e5-r2/range-device.mjs",
+          "output": "runtime/play/range-device.mjs",
+          "maxSizeBytes": 65536
         }
       ]
     }

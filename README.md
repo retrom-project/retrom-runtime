@@ -5,6 +5,43 @@ VX, VX Ace, MV and MZ, ONS games powered by ONScripterYuri, KAG-based KiriKiri2 
 projects powered by Butterscotch, browser TyranoScript projects, Java ME JARs, ScummVM game projects and WASM-4 carts. It owns runtime lifecycle, adapters, checkpoint codecs, bridge assets and pinned core
 Release inputs. It does not know about a host application's users, database, review flow, storage or HTTP API.
 
+## Play! PS2
+
+`retrom-runtime/play-ps2` consumes a single ISO or CHD as `SEEKABLE_BLOB` through the
+fork-owned `play-host-v1` module. The core runs in a same-origin blank frame with WebGL2,
+WebAssembly threads and cross-origin isolation. No BIOS upload is required. Multi-disc,
+ELF boot, native settings, volume controls and netplay are not declared.
+
+Disc access uses 256 KiB persistent cache blocks keyed by content identity, plus an 8 MiB
+memory LRU. Missing or unavailable persistent storage falls back to bounded Range requests.
+`play-state-v1` binds a native execution snapshot and both memory cards to the disc SHA-256;
+its 256 MiB limit covers the entire payload. Standard gamepads support two ports; pause,
+blur and exit release controls. Save/load must acknowledge native completion before resuming.
+
+Play! is distributed through the normal pinned core release in `provider-sources.json`.
+Ridge Racer V has observed vertical bobbing and missing 3D scenery, also reported in the
+[upstream compatibility tracker](https://github.com/jpd002/Play-Compatibility/issues/349).
+Host lifecycle and snapshot support do not imply complete compatibility for every PS2 game.
+
+## EmulatorJS single-file cores
+
+The EmulatorJS Provider adds Fuse, Gearcoleco, PrBoom, PUAE, VICE x128/x64sc/xvic and
+Virtual Jaguar as separate single-file targets. These targets have no multi-disc or netplay
+capability. Their fixed input sources are declared in `src/providers/emulatorjs/source-catalog.ts`:
+six use the official 4.2.3 assets; only VICE xvic and Virtual Jaguar use Retrom fork releases.
+The fork records pin repository, annotated tag, commit, adapter ABI, archive, metadata and license.
+The downloaded metadata must agree with every pinned asset hash and size. `artifactSetSha256`
+for a fork target identifies that pinned metadata file. Hashes establish cache integrity;
+the release workflow and commit identify the build source.
+
+Fuse enables direct keyboard input and configures controller one as Kempston, with controller two
+disabled to avoid competing joystick ports. Its standard pad uses the libretro controls, including
+Space/Return shoulder buttons for keyboard-oriented title menus. Instant restore retains the
+minified 4.2.3 loader, enables native state diagnostics internally, and waits for the asynchronous
+native load callback and its error result. Exit runs EmulatorJS's native cleanup before disposal.
+New core admission still requires a real host import, preview, product launch, visible input
+response and checkpoint restore into a fresh instance; passing serialization alone is insufficient.
+
 ## EmulatorJS PSP
 
 The separate `emulatorjs` Provider declares its targets in `src/providers/emulatorjs/catalog.ts`.
@@ -204,10 +241,11 @@ Standard pad directions and left stick map to arrows; south maps to Space, east 
 west to X and north/Start to Enter. Disconnect, pause and exit release held keys. Games needing
 different or mouse-only controls still require per-game compatibility verification.
 
-This prerelease consumes a fixed-upstream, explicit fork candidate through `developmentInputs`.
-Build the fork in its PFB first, then run `candidate:build`; runtime scripts never compile the core.
-Ordinary/release builds deliberately fail with `UNPUBLISHED_CORE_INPUT` until an authorized core
-release has been published and pinned. Product acceptance belongs to the Host's `ACC-FLASH-001`.
+The provider pins the maintained fork release `retrom-core-ge46d1642fb67-r2` in `provider-sources.json`.
+Runtime scripts consume its published assets and never compile the core. Local core changes require
+an explicit fork build in the same PFB followed by `candidate:build`; overrides retain the closed
+candidate inventory checks and are rejected by formal builds. Product acceptance belongs to the
+Host's `ACC-FLASH-001`.
 
 ```bash
 npm ci
@@ -368,3 +406,37 @@ The provider pins immutable core releases from the maintained upstream snapshots
 TIC-80 `retrom-core-g4aba09c98f1e-r1` and FAKE-08 `retrom-core-g814991a2571a-r2`.
 `provider-sources.json` records each release's exact repository, tag commit, asset filenames and ABI.
 Core builds remain owned by the forks; runtime builds download and verify the published release identities.
+
+
+### Dreamcast
+
+The EmulatorJS Provider includes a Flycast WASM JIT Target for single-file Dreamcast CHD.
+It requires WebGL2 and installed `dc/dc_boot.bin` + `dc/dc_flash.bin`, uses standard gamepad
+controls, and supports bounded `flycast-state-gzip-v1` instant checkpoints, with lossless gzip compression
+and compatibility with existing raw `flycast-state-v1` saves. CHDs are streamed
+through SHA-256 validation into OPFS; cache hits are revalidated, and unavailable storage
+falls back to a validated Blob. The cache contains no launch authorization or save state.
+WinCE/MMU games, arcade variants, disc switching and netplay are outside this target.
+
+The core comes from `retrom-project/flycast-wasm` release `retrom-core-1.0-r1`.
+`src/providers/emulatorjs/source-catalog.ts` pins its repository, tag commit, asset digests,
+sizes and adapter ABI. Provider builds verify the published release metadata and license texts.
+
+Local core changes remain explicit PFB candidates. Build the core in the same PFB, then run:
+
+```bash
+npm run candidate:build -- --spec <absolute-pfb-spec> --output <empty-runtime-candidate-directory>
+```
+
+Formal builds reject unpublished overrides. A changed core requires a new verified release
+and a higher EmulatorJS Provider version.
+
+### Optional input diagnostics
+
+Provider Module V1 exposes optional `startInputDiagnostics()` with bounded `read`, `clear` and idempotent `stop`.
+It observes existing input events, gamepad reads and adapter delivery boundaries only while enabled. It never polls
+extra gamepad frames, synthesizes inputs or pauses/resumes a game. The Host may refresh snapshots at up to 10 Hz.
+The history retains 64 transitions; gamepad values are quantized for diagnostics only. Unsupported observation points
+remain unavailable and `coreRead` is always false: an input API call is not evidence that a game acted on it.
+EmulatorJS delivery observation applies to single-player; MV/MZ use the existing isolated bridge STATUS cadence.
+Other inaccessible isolated frames explicitly remain unavailable. Sessions are cleaned up on disable and exit.

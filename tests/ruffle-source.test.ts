@@ -14,6 +14,17 @@ export const ruffleSource = {id: "ruffle", repository: "https://github.com/retro
     .map((filename) => ({filename, output: filename.startsWith("LICENSE") ? `licenses/ruffle/${filename}` : `runtime/ruffle/${filename}`,
       maxSizeBytes: filename === "ruffle.wasm" ? 67108864 : 4194304}))};
 
+it("pins the published Ruffle maintenance release without development inputs", async () => {
+  const sources = JSON.parse(await readFile("provider-sources.json", "utf8"));
+  expect(() => validateProviderSources(sources)).not.toThrow();
+  expect(sources.developmentInputs).toBeUndefined();
+  const release = sources.upstreamReleases.find((source: {id: string}) => source.id === "ruffle");
+  expect(release).toMatchObject({tag: "retrom-core-ge46d1642fb67-r2",
+    commit: "551f2b357783ba855c87b6d5618cdf474a4a217f", adapterAbi: "ruffle-host-v1"});
+  expect(asRuffleCandidateSource(release).assets.map((asset) => asset.filename).sort())
+    .toEqual(ruffleSource.assets.map((asset) => asset.filename));
+});
+
 it("accepts fixed Ruffle development bytes without inventing a published release", async () => {
   const sources = JSON.parse(await readFile("provider-sources.json", "utf8"));
   sources.upstreamReleases = sources.upstreamReleases.filter((source: {id: string}) => source.id !== "ruffle");

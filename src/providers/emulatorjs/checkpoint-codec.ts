@@ -1,14 +1,14 @@
 import {PlayerRuntimeError} from "../../provider/errors.js";
 
-const rawFormat = "emulatorjs-state-v1";
-const gzipFormat = "emulatorjs-state-gzip-v1";
+const rawFormats = new Set(["emulatorjs-state-v1", "flycast-state-v1"]);
+const gzipFormats = new Set(["emulatorjs-state-gzip-v1", "flycast-state-gzip-v1"]);
 
 export async function encodeEmulatorJsCheckpoint(
   bytes: Uint8Array, format: string, maximum: number, signal?: AbortSignal,
 ) {
   validateSize(bytes, maximum);
-  if (format === rawFormat) {return bytes;}
-  if (format !== gzipFormat) {throw invalidCheckpoint();}
+  if (rawFormats.has(format)) {return bytes;}
+  if (!gzipFormats.has(format)) {throw invalidCheckpoint();}
   return transformCheckpoint(bytes, new CompressionStream("gzip"), maximum, signal);
 }
 
@@ -16,8 +16,8 @@ export async function decodeEmulatorJsCheckpoint(
   bytes: Uint8Array, format: string, maximum: number, signal?: AbortSignal,
 ) {
   validateSize(bytes, maximum);
-  if (format === rawFormat) {return bytes;}
-  if (format !== gzipFormat) {throw invalidCheckpoint();}
+  if (rawFormats.has(format)) {return bytes;}
+  if (!gzipFormats.has(format)) {throw invalidCheckpoint();}
   return transformCheckpoint(bytes, new DecompressionStream("gzip"), maximum, signal);
 }
 

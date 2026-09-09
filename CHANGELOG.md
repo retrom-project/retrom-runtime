@@ -1,10 +1,10 @@
 # Changelog
 
-Ruffle candidate follow-up: enforce centered aspect-ratio scaling and expose native data as a
+## 0.25.0
+
+Ruffle integration: enforce centered aspect-ratio scaling and expose native data as a
 `STORAGE` container through the optional public save data kind. Keep existing input mappings and
 changed-data export behavior; no Mode-specific exceptions.
-
-## 0.21.0-dev.3 (unreleased, PFB only)
 
 - Keep Ruffle's responsive canvas layout core-owned so fullscreen and viewport changes do not
   compete with the Provider's fixed-resolution fitting. Other adapters retain the default fitting.
@@ -14,10 +14,51 @@ changed-data export behavior; no Mode-specific exceptions.
   Restore only explicit identity-matched payloads before movie execution; fresh Launches start empty.
 - Validate SWF compressed/decompressed bounds, exact download sizes and SHA-256; reuse Cache Storage
   across different Launch URLs by content identity and report deterministic download progress.
-- Consume explicitly built, inventoried Ruffle fork candidates through `developmentInputs`.
-  Ordinary and formal release builds reject this unpublished input; no stable core release is implied.
+- Pin the published Ruffle fork `retrom-core-ge46d1642fb67-r2`; local core overrides remain
+  restricted to explicit PFB builds with closed candidate inventory checks.
 - Capture freshly rendered GPU pixels without advancing the movie; bound startup waits and destroy
   cancelled instances even when asynchronous loading finishes late.
+
+## 0.24.0
+
+- Compress new Flycast instant checkpoints with lossless gzip and retain raw-state restoration.
+  Retain the Flycast WebGL drawing buffer so screenshots remain available after pause/presentation.
+
+- Advance EmulatorJS Provider to 2.6.0 and add a Dreamcast Flycast WASM JIT target with WebGL2, verified CHD caching,
+  Dreamcast face-button mappings and independent instant checkpoint format.
+- Pin Flycast core release `retrom-core-1.0-r1` with verified release metadata and licenses.
+- Preserve RetroArch restore configuration when BIOS external-file hooks are installed.
+- Validate local core candidate provenance and closed artifact sets before materializing
+  EmulatorJS inputs; formal builds reject unpublished candidates.
+
+## 0.23.1
+
+- Add the Play! PS2 target with bounded ISO/CHD reads, standard gamepad input,
+  screenshots, pause/resume and content-bound native snapshots including memory cards.
+- Distribute Play! through the normal pinned core Release and Provider bundle.
+
+
+## 0.22.0
+
+- Advance the EmulatorJS Provider to 2.5.0.
+- Add opt-in bounded input diagnostics without additional input polling, synthesis or changes to normal input values.
+- Observe existing browser/runtime and adapter delivery boundaries, with optional MV/MZ bridge diagnostics. Core-read confirmation remains unavailable.
+
+## 0.21.0
+
+- Wait for MAME 2003 Plus to execute its first emulation frame before restoring. The core
+  can serialize at frame zero but rejects automatic state loading at that point. Other
+  cores retain serialization readiness, including cores with a zero diagnostic counter.
+- Advance the EmulatorJS Provider to 2.4.1 and add Fuse, Gearcoleco, PrBoom, PUAE,
+  VICE x128, VICE x64sc, VICE xvic and Virtual Jaguar as single-file targets. Multi-disc
+  switching stays disabled for these targets. VICE xvic and Virtual Jaguar pin independently
+  verified Retrom fork assets (VICE r1 and Virtual Jaguar r1); the other six retain the official 4.2.3 artifacts. Checkpoint restore keeps the 4.2.3 native-load
+  observer active while intercepting its verbose native output before it reaches the browser
+  console, and waits for the native load callback instead of counting frames. This avoids
+  premature completion for large VICE and PUAE states. Fuse enables direct keyboard input
+  and selects a Kempston joystick for the first controller port. Host exit also dispatches EmulatorJS's
+  native exit lifecycle and waits for its bounded Wasm teardown, so a previous core cannot
+  keep running while a saved session starts in a new instance.
 
 ## 0.20.0
 

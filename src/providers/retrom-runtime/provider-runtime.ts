@@ -1,3 +1,5 @@
+import {startInputDiagnostics} from "../../provider/input-diagnostics.js";
+import type {RuntimeInputDiagnosticsV1} from "../../provider/module-api.js";
 import type {MountedRuntimeAdapter, RuntimeProgressReporter, RuntimeExitReporter} from "../../internal-adapter.js";
 import type {
   AssetIndexV1, LaunchEnvelopeV1, PlayerRuntimeV1, RuntimeCheckpointAvailabilityV1, RuntimeCheckpointV1, RuntimeCheckpointRequestV1, RuntimeFinalSnapshotV1, RuntimeNativeSaveCapabilitiesV1,
@@ -24,6 +26,7 @@ class RetromRuntimePlayer implements PlayerRuntimeV1 {
   private operationTail: Promise<void> = Promise.resolve();
   private availabilityTimer: number | null = null;
   private lastAvailability: RuntimeCheckpointAvailabilityV1 = {available: false, reason: "NOT_READY"};
+  private inputDiagnostics: RuntimeInputDiagnosticsV1 | null = null;
   private runtimeWindow: Window | null = null;
   private inputFilter: RuntimeGamepadFilter | null = null;
   private cleanupInputFilter: (() => void) | null = null;
@@ -209,6 +212,13 @@ class RetromRuntimePlayer implements PlayerRuntimeV1 {
     }
   }
 
+  startInputDiagnostics() {
+    this.inputDiagnostics?.stop();
+    this.inputDiagnostics = this.adapter?.startInputDiagnostics?.() ??
+      startInputDiagnostics(this.runtimeWindow ?? window, () => this.getCanvas());
+    return this.inputDiagnostics;
+  }
+
   subscribe(listener: (event: RuntimeEventV1) => void) {
     this.listeners.add(listener);
     return () => this.listeners.delete(listener);
@@ -267,6 +277,8 @@ class RetromRuntimePlayer implements PlayerRuntimeV1 {
   private async performExit(failed: boolean) {
     if (this.availabilityTimer !== null) {window.clearInterval(this.availabilityTimer);}
     this.availabilityTimer = null;
+    this.inputDiagnostics?.stop();
+    this.inputDiagnostics = null;
     const adapter = this.adapter;
     this.adapter = null;
     let failure: unknown;

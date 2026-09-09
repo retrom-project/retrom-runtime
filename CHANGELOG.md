@@ -6,6 +6,8 @@ Ruffle integration: enforce centered aspect-ratio scaling and expose native data
 `STORAGE` container through the optional public save data kind. Keep existing input mappings and
 changed-data export behavior; no Mode-specific exceptions.
 
+- Advance EmulatorJS Provider to 2.6.1 for the updated bundled third-party notices; its execution
+  code and core assets remain unchanged from 2.6.0.
 - Keep Ruffle's responsive canvas layout core-owned so fullscreen and viewport changes do not
   compete with the Provider's fixed-resolution fitting. Other adapters retain the default fitting.
 - Add the independent `flash-ruffle` Target for bounded single-SWF content, with keyboard/mouse

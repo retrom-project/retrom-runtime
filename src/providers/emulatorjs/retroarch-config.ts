@@ -15,15 +15,18 @@ export function installEmulatorJsRetroArchConfig(playerWindow: Window, core: str
   if (descriptor && !descriptor.configurable) {throw new Error("PLAYER_RUNTIME_CONFIG_UNAVAILABLE");}
   const patched = new Map<Manager, PropertyDescriptor>();
   const nativeEntries = new Map<NativeModule, NonNullable<NativeModule["callMain"]>>();
-  const enableRestoreObservation = (module: NativeModule | undefined) => {
+  const configureNativeEntry = (module: NativeModule | undefined) => {
     if (!module?.callMain) {throw new Error("PLAYER_RUNTIME_CONFIG_UNAVAILABLE");}
     if (nativeEntries.has(module)) {return;}
     const callMain = module.callMain;
     nativeEntries.set(module, callMain);
-    // Some 4.2.3 cores initialize logging before reading log_verbosity from
-    // retroarch.cfg. Enable their native state observer at argument parsing.
     module.callMain = function (args) {
-      return callMain.call(this, args.includes("-v") ? args : ["-v", ...args]);
+      // RetroArch resets device types from its remapping cache unless they are
+      // command-line overrides; retroarch.cfg alone cannot preserve these ports.
+      const devices = core === "81" ? ["--device", "1:257", "--device", "2:259"] : [];
+      // Logging is initialized before retroarch.cfg in some 4.2.3 cores.
+      const logging = restoring && !args.includes("-v") ? ["-v"] : [];
+      return callMain.call(this, [...devices, ...logging, ...args]);
     };
   };
   const patch = (constructor: Constructor | undefined) => {
@@ -37,7 +40,7 @@ export function installEmulatorJsRetroArchConfig(playerWindow: Window, core: str
     const getConfig = prototype.getRetroArchCfg;
     patched.set(prototype, original);
     prototype.getRetroArchCfg = function () {
-      if (restoring) {enableRestoreObservation(this.Module);}
+      if (restoring || core === "81") {configureNativeEntry(this.Module);}
       return `${getConfig.call(this)}\n${settings.join("\n")}\n`;
     };
   };

@@ -1,3 +1,4 @@
+import {validPinnedCoreAssets} from "./pinned-core-release.mjs";
 import {validCoreDevelopmentInput} from "./core-development-input.mjs";
 import {validWebMSXRelease} from "./webmsx-release.mjs";
 import {validScummvmSource} from "./scummvm-release.mjs";
@@ -33,6 +34,7 @@ export function validateProviderSources(sources) {
       !(release.id === "webmsx" ? validWebMSXRelease(release) : release.id === "scummvm" ? validScummvmRelease(release) : release.archive ? validJ2meRelease(release) : validCoreRelease(release))) {
       throw new Error("PROVIDER_SOURCES_INVALID");
     }
+    if (["px68k", "tyranoscript"].includes(release.id) && !validPinnedCoreAssets(release)) {throw new Error("PROVIDER_SOURCES_INVALID");}
     releases.set(release.id, release);
     for (const asset of release.assets) {
       if (!safePath(asset.filename) ||

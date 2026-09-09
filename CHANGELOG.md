@@ -2,6 +2,9 @@
 
 ## 0.28.0
 
+- Pin PX68K r1 and TyranoScript bridge r8 to immutable releases with verified asset sizes and SHA-256.
+- Advance EmulatorJS Provider to 2.6.5 for the aggregate third-party notice change; its core assets and input behavior remain unchanged.
+
 - Tyrano 旧版兼容层每个手柄按钮只投射一个键盘目标，不再同时发送 KAG/DOM 手柄事件；现代引擎保留原生手柄路径，真实键盘独立可用。
 - 补齐 TyranoScript 已声明的 pixel/smooth 画面模式控制，修复宿主初始化时的能力错误。
 - Tyrano 4.x 不要求新版 chara 组件，按各版本的菜单方法判断可存档状态。

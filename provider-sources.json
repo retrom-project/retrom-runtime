@@ -296,22 +296,26 @@
     {
       "id": "tyranoscript",
       "repository": "https://github.com/retrom-project/tyranoscript",
-      "tag": "retrom-core-gc8dbfd492afd-r7",
-      "commit": "af9306d6ec227885fd1f83a6858b287b1ca6be7e",
+      "tag": "retrom-core-gc8dbfd492afd-r8",
+      "commit": "e1bf773d4c2411a95ae47813becb8e8a7464cf9f",
       "adapterAbi": "tyranoscript-snapshot-v1",
-      "metadataUrl": "https://github.com/retrom-project/tyranoscript/releases/download/retrom-core-gc8dbfd492afd-r7/rpg-runtime-release.json",
+      "metadataUrl": "https://github.com/retrom-project/tyranoscript/releases/download/retrom-core-gc8dbfd492afd-r8/rpg-runtime-release.json",
       "assets": [
         {
           "filename": "retrom-tyranoscript-bridge.js",
-          "url": "https://github.com/retrom-project/tyranoscript/releases/download/retrom-core-gc8dbfd492afd-r7/retrom-tyranoscript-bridge.js",
+          "url": "https://github.com/retrom-project/tyranoscript/releases/download/retrom-core-gc8dbfd492afd-r8/retrom-tyranoscript-bridge.js",
           "output": "runtime/tyranoscript/bridge.js",
-          "maxSizeBytes": 65536
+          "maxSizeBytes": 65536,
+          "sizeBytes": 46253,
+          "sha256": "0f9ce15bd99eb4cea7aa55e187f377167fc8492988830b702a22d00131a5decc"
         },
         {
           "filename": "RETROM-BRIDGE-LICENSE",
-          "url": "https://github.com/retrom-project/tyranoscript/releases/download/retrom-core-gc8dbfd492afd-r7/RETROM-BRIDGE-LICENSE",
+          "url": "https://github.com/retrom-project/tyranoscript/releases/download/retrom-core-gc8dbfd492afd-r8/RETROM-BRIDGE-LICENSE",
           "output": "licenses/tyranoscript/RETROM-BRIDGE-LICENSE",
-          "maxSizeBytes": 65536
+          "maxSizeBytes": 65536,
+          "sizeBytes": 1076,
+          "sha256": "79fe3dd28d66eae4b6fc58b278a3ca5e5aa887bd6204adeaaa6505a949c81dbc"
         }
       ]
     },
@@ -2083,6 +2087,41 @@
           "maxSizeBytes": 65536
         }
       ]
+    },
+    {
+      "id": "px68k",
+      "repository": "https://github.com/retrom-project/px68k-libretro",
+      "upstreamCommit": "561dcba6b11d04c9a6d7ca62998d5fb3f544aa49",
+      "adapterAbi": "px68k-host-v1",
+      "assets": [
+        {
+          "filename": "px68k-retrom.mjs",
+          "output": "runtime/px68k/px68k-retrom.mjs",
+          "maxSizeBytes": 8388608,
+          "sizeBytes": 66107,
+          "sha256": "a290054b0208858c9306c48a8b5d2d3c3ef83c1d8ed4ad4c7f36f8eed53c4192",
+          "url": "https://github.com/retrom-project/px68k-libretro/releases/download/retrom-core-g561dcba6b11d-r1/px68k-retrom.mjs"
+        },
+        {
+          "filename": "px68k-retrom.wasm",
+          "output": "runtime/px68k/px68k-retrom.wasm",
+          "maxSizeBytes": 8388608,
+          "sizeBytes": 650536,
+          "sha256": "cc6d987b8534b0423e127725b7fb6abdeefbb96e1b7900943bfde26814c150d7",
+          "url": "https://github.com/retrom-project/px68k-libretro/releases/download/retrom-core-g561dcba6b11d-r1/px68k-retrom.wasm"
+        },
+        {
+          "filename": "LICENSES.txt",
+          "output": "licenses/px68k/LICENSES.txt",
+          "maxSizeBytes": 8388608,
+          "sizeBytes": 28224,
+          "sha256": "a3238ebdd070a3900c53cd278981ab2d0f9ea74111aef4a3c3a3f52b8b2dea71",
+          "url": "https://github.com/retrom-project/px68k-libretro/releases/download/retrom-core-g561dcba6b11d-r1/LICENSES.txt"
+        }
+      ],
+      "tag": "retrom-core-g561dcba6b11d-r1",
+      "commit": "47e16598e85659ab860cc80255ff41b9b6391787",
+      "metadataUrl": "https://github.com/retrom-project/px68k-libretro/releases/download/retrom-core-g561dcba6b11d-r1/rpg-runtime-release.json"
     }
   ],
   "localAssets": [
@@ -2095,29 +2134,5 @@
       "output": "runtime/butterscotch/worker.mjs"
     }
   ],
-  "developmentInputs": [
-    {
-      "id": "px68k",
-      "repository": "https://github.com/retrom-project/px68k-libretro",
-      "upstreamCommit": "561dcba6b11d04c9a6d7ca62998d5fb3f544aa49",
-      "adapterAbi": "px68k-host-v1",
-      "assets": [
-        {
-          "filename": "px68k-retrom.mjs",
-          "output": "runtime/px68k/px68k-retrom.mjs",
-          "maxSizeBytes": 8388608
-        },
-        {
-          "filename": "px68k-retrom.wasm",
-          "output": "runtime/px68k/px68k-retrom.wasm",
-          "maxSizeBytes": 8388608
-        },
-        {
-          "filename": "LICENSES.txt",
-          "output": "licenses/px68k/LICENSES.txt",
-          "maxSizeBytes": 8388608
-        }
-      ]
-    }
-  ]
+  "developmentInputs": []
 }

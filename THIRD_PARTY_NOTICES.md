@@ -43,7 +43,7 @@ base commit `83700b2c31e593bc94e845b4b31b797be84dda59`. Play! uses the BSD 2-Cla
 The fork supplies its license and linked dependency notices with release artifacts;
 the Provider preserves them at `licenses/play/LICENSE`. No game or BIOS is bundled.
 
-## PX68K development input
+## PX68K
 
 Source: https://github.com/retrom-project/px68k-libretro, based on
 uraraworks/px68k-libretro `561dcba6b11d04c9a6d7ca62998d5fb3f544aa49`, with
@@ -52,5 +52,5 @@ storage files from libretro/px68k-libretro
 
 This core has mixed inherited licensing: root GPL-2.0 text, the WinX68k
 noncommercial terms in `doc/kero_src.txt`, and FMGen's notice. Its full notices
-are preserved in `licenses/px68k/LICENSES.txt` in candidate staging. The runtime
+are preserved in `licenses/px68k/LICENSES.txt` in the Provider bundle. The runtime
 adapter's MIT license does not relicense the engine. No BIOS or game is included.

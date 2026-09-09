@@ -469,9 +469,9 @@ screenshots and `px68k-state-v1` instant checkpoints share the Provider lifecycl
 Checkpoints contain machine state and writable disk contents; a new launch
 restores only an explicitly supplied checkpoint belonging to the same game.
 
-PX68K is currently an unpublished PFB development input. Build it through the
-core fork's candidate workflow, then use `candidate:build` with the PFB spec.
-Formal release mode rejects unpublished inputs. Inherited engine licensing
+PX68K is pinned to the maintenance release `retrom-core-g561dcba6b11d-r1`
+with exact commit, sizes and SHA-256. PFB development overrides use the core
+fork's descriptor-verified candidate workflow; formal releases reject overrides. Inherited engine licensing
 includes a noncommercial clause; see the complete bundled `LICENSES.txt` and
 `THIRD_PARTY_NOTICES.md` before distribution.
 

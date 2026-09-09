@@ -103,7 +103,7 @@ describe("independent package boundary", () => {
       adapterAbi: "tyranoscript-snapshot-v1",
       id: "tyranoscript",
       repository: "https://github.com/retrom-project/tyranoscript",
-      tag: "retrom-core-gc8dbfd492afd-r7",
+      tag: "retrom-core-gc8dbfd492afd-r8",
     }), expect.objectContaining({
       adapterAbi: "wasm4-state-v1",
       id: "wasm4",
@@ -111,7 +111,7 @@ describe("independent package boundary", () => {
       tag: "retrom-core-gca2600db8de4-r1",
     })]));
     const releaseIds = sources.upstreamReleases.map((release: { id: string }) => release.id).sort();
-    expect(releaseIds).toEqual(["butterscotch", "easyrpg", "fake08", "j2me", "kirikiri2", "mkxp", "onsyuri", "play", "ruffle", "scummvm", "tic80", "tyranoscript", "wasm4", "webmsx"]);
+    expect(releaseIds).toEqual(["butterscotch", "easyrpg", "fake08", "j2me", "kirikiri2", "mkxp", "onsyuri", "play", "px68k", "ruffle", "scummvm", "tic80", "tyranoscript", "wasm4", "webmsx"]);
     expect(await readdir(join(root, "scripts"))).not.toEqual(expect.arrayContaining([
       "build-kirikiri-core.sh", "build-ons-core.sh",
     ]));

@@ -31,7 +31,10 @@ export function installExternalFileCompatibility(playerWindow: Window = window) 
     configurable: true,
     enumerable: descriptor?.enumerable ?? true,
     get: () => current,
-    set: (value: ManagerConstructor | undefined) => {patch(value); current = value;},
+    set: (value: ManagerConstructor | undefined) => {
+      descriptor?.set?.call(target, value);
+      patch(value); current = value;
+    },
   });
   return () => {
     for (const [prototype, original] of patched) {Object.defineProperty(prototype, "writeFile", original);}

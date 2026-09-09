@@ -1,4 +1,4 @@
-import {describe, expect, it} from "vitest";
+import {describe, expect, it, vi} from "vitest";
 import {installEmulatorJsRetroArchConfig} from "./retroarch-config.js";
 
 describe("EmulatorJS RetroArch configuration", () => {
@@ -16,11 +16,19 @@ describe("EmulatorJS RetroArch configuration", () => {
   });
 
   it("enables native restore observation without changing other core devices", () => {
-    class Manager {getRetroArchCfg() {return "";}}
+    const callMain = vi.fn();
+    class Manager {Module = {callMain}; getRetroArchCfg() {return "";}}
     const cleanup = installEmulatorJsRetroArchConfig(window, "vice_x64sc", true);
     Reflect.set(window, "EJS_GameManager", Manager);
-    expect(new Manager().getRetroArchCfg()).toBe("\nlog_verbosity = true\n");
+    const manager = new Manager();
+    expect(manager.getRetroArchCfg()).toBe("\nlog_verbosity = true\n");
+    manager.Module.callMain(["/game.chd"]);
+    expect(callMain).toHaveBeenLastCalledWith(["-v", "/game.chd"]);
+    manager.getRetroArchCfg();
+    manager.Module.callMain(["-v", "/game.chd"]);
+    expect(callMain).toHaveBeenLastCalledWith(["-v", "/game.chd"]);
     cleanup();
+    expect(manager.Module.callMain).toBe(callMain);
   });
 
   it("leaves ordinary launches untouched", () => {

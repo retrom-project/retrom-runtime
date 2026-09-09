@@ -1,4 +1,5 @@
-type Manager = {getRetroArchCfg?: () => string};
+type NativeModule = {callMain?: (args: string[]) => unknown};
+type Manager = {getRetroArchCfg?: () => string; Module?: NativeModule};
 type Constructor = {prototype?: Manager};
 type ConfigWindow = Window & {EJS_GameManager?: Constructor};
 
@@ -12,6 +13,18 @@ export function installEmulatorJsRetroArchConfig(playerWindow: Window, core: str
   const descriptor = Object.getOwnPropertyDescriptor(target, "EJS_GameManager");
   if (descriptor && !descriptor.configurable) {throw new Error("PLAYER_RUNTIME_CONFIG_UNAVAILABLE");}
   const patched = new Map<Manager, PropertyDescriptor>();
+  const nativeEntries = new Map<NativeModule, NonNullable<NativeModule["callMain"]>>();
+  const enableRestoreObservation = (module: NativeModule | undefined) => {
+    if (!module?.callMain) {throw new Error("PLAYER_RUNTIME_CONFIG_UNAVAILABLE");}
+    if (nativeEntries.has(module)) {return;}
+    const callMain = module.callMain;
+    nativeEntries.set(module, callMain);
+    // Some 4.2.3 cores initialize logging before reading log_verbosity from
+    // retroarch.cfg. Enable their native state observer at argument parsing.
+    module.callMain = function (args) {
+      return callMain.call(this, args.includes("-v") ? args : ["-v", ...args]);
+    };
+  };
   const patch = (constructor: Constructor | undefined) => {
     const prototype = constructor?.prototype;
     if (!prototype || typeof prototype.getRetroArchCfg !== "function") {
@@ -23,6 +36,7 @@ export function installEmulatorJsRetroArchConfig(playerWindow: Window, core: str
     const getConfig = prototype.getRetroArchCfg;
     patched.set(prototype, original);
     prototype.getRetroArchCfg = function () {
+      if (restoring) {enableRestoreObservation(this.Module);}
       return `${getConfig.call(this)}\n${settings.join("\n")}\n`;
     };
   };
@@ -35,6 +49,7 @@ export function installEmulatorJsRetroArchConfig(playerWindow: Window, core: str
     set: (value: Constructor | undefined) => {patch(value); current = value;},
   });
   return () => {
+    for (const [module, callMain] of nativeEntries) {module.callMain = callMain;}
     for (const [prototype, original] of patched) {Object.defineProperty(prototype, "getRetroArchCfg", original);}
     if (descriptor) {Object.defineProperty(target, "EJS_GameManager", descriptor);}
     else {Reflect.deleteProperty(target, "EJS_GameManager");}

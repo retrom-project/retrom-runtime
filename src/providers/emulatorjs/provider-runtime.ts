@@ -43,7 +43,7 @@ import {
   openEmulatorJsNativeSettings,
 } from "./native-settings.js";
 import {retromShaders} from "./shaders.js";
-import {applyEmulatorJsVideoMode} from "./video-mode.js";
+import {createEmulatorJsVideoModeController} from "./video-mode.js";
 import {biosFile, externalFiles, fileName, optionalResource, resource, runtimeBase} from "./resources.js";
 import {readEmulatorJsCheckpoint} from "./bytes.js";
 import {readPspCheckpoint, restorePspCheckpoint} from "./psp-state.js";
@@ -86,6 +86,7 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
   private cleanupArchiveWorker: (() => void) | null = null;
   private cleanupFrameStyle: (() => void) | null = null;
   private outputViewport: ReturnType<typeof installEmulatorJsOutputViewport> | null = null;
+  private videoModeController: ReturnType<typeof createEmulatorJsVideoModeController> | null = null;
   private cleanupStateRestore: (() => void) | null = null;
   private cleanupExternalFiles: (() => void) | null = null;
   private cleanupInputFilter: (() => void) | null = null;
@@ -190,7 +191,8 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
 
   async setVideoMode(mode: RuntimeVideoModeV1) {
     if (!this.envelope.runtime.capabilities.videoModes.includes(mode)) {throw capabilityError();}
-    if (!applyEmulatorJsVideoMode(this.requireInstance(), mode)) {throw contractError();}
+    this.videoModeController ??= createEmulatorJsVideoModeController(this.requireInstance(), this.runtimeWindow!);
+    if (!this.videoModeController.setVideoMode(mode)) {throw contractError();}
     this.outputViewport?.setVideoMode(mode);
   }
   async openNativeSettings(panel: "controls" | "display" | "core") {
@@ -557,6 +559,8 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
   }
 
   private cleanupSurface() {
+    this.videoModeController?.cleanup();
+    this.videoModeController = null;
     this.cleanupFrameStyle?.();
     this.cleanupFrameStyle = null;
     this.outputViewport?.cleanup();

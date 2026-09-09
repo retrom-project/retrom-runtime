@@ -5,6 +5,24 @@ VX, VX Ace, MV and MZ, ONS games powered by ONScripterYuri, KAG-based KiriKiri2 
 projects powered by Butterscotch, browser TyranoScript projects, Java ME JARs, ScummVM game projects and WASM-4 carts. It owns runtime lifecycle, adapters, checkpoint codecs, bridge assets and pinned core
 Release inputs. It does not know about a host application's users, database, review flow, storage or HTTP API.
 
+## Play! PS2 development candidate
+
+`retrom-runtime/play-ps2` consumes a single ISO or CHD as `SEEKABLE_BLOB` through the
+fork-owned `play-host-v1` module. The core runs in a same-origin blank frame with WebGL2,
+WebAssembly threads and cross-origin isolation. No BIOS upload is required. Multi-disc,
+ELF boot, native settings, volume controls and netplay are not declared.
+
+Disc access uses 256 KiB persistent cache blocks keyed by content identity, plus an 8 MiB
+memory LRU. Missing or unavailable persistent storage falls back to bounded Range requests.
+`play-state-v1` binds a native execution snapshot and both memory cards to the disc SHA-256;
+its 256 MiB limit covers the entire payload. Standard gamepads support two ports; pause,
+blur and exit release controls. Save/load must acknowledge native completion before resuming.
+
+The unpublished core is a development input pinned to upstream commit
+`83700b2c31e593bc94e845b4b31b797be84dda59` in `retrom-project/Play-`.
+Only explicit PFB candidates may consume it. Formal builds reject unpublished inputs;
+release pins follow actual product validation and an immutable fork release.
+
 ## EmulatorJS single-file cores
 
 The EmulatorJS Provider adds Fuse, Gearcoleco, PrBoom, PUAE, VICE x128/x64sc/xvic and

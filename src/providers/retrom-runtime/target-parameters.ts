@@ -1,5 +1,11 @@
 import scummvmLayout from "../../scummvm/core-layout.json" with {type: "json"};
 import type {ScummvmParameters} from "../../scummvm/parameters.js";
+import type {PlayParameters} from "../../play/core.js";
+
+export function play(envelope: LaunchEnvelopeV1, assetIndex: AssetIndexV1): PlayParameters {
+  const game = resource(envelope, "game", "SEEKABLE_BLOB");
+  return {disc: seekableSource(game), runtimeBaseUrl: assetBase(envelope, "play"), assetIndex};
+}
 import type {FantasyParameters} from "../../fantasy-console/core.js";
 import type {J2meParameters} from "../../j2me/parameters.js";
 import type {FileTreeSource, SeekableBlobSource} from "../../contract.js";

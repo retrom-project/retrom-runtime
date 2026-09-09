@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased
+
+- Add the Play! PS2 development target with bounded ISO/CHD reads, standard gamepad input,
+  screenshots, pause/resume and content-bound native snapshots including memory cards.
+- Keep unpublished Play! inputs restricted to explicitly built PFB candidates.
+
+
 ## 0.21.0
 
 - Wait for MAME 2003 Plus to execute its first emulation frame before restoring. The core

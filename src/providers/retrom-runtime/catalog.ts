@@ -1,4 +1,5 @@
 import {scummvmAdapter, scummvmTarget} from "./scummvm-declaration.js";
+import {playAdapter, playTarget} from "./play-declaration.js";
 import {
   defineAdapter,
   defineProvider,
@@ -33,6 +34,7 @@ const isolatedCapabilities = capabilities(true, true, true);
 const wasm4Capabilities = capabilities(true, true, false);
 
 const adapters = [
+  playAdapter,
   scummvmAdapter,
   defineAdapter({id: "tic80-web", kind: "TIC80_WEB", abi: "tic80-pmem-v1",
     capabilities: capabilities(true, true, true),
@@ -84,6 +86,7 @@ const targets = [
     false, "SAME_ORIGIN_BLANK", "FILE_TREE", 64 * 1024 * 1024,
     ["assets/ons/onsyuri.js", "assets/ons/onsyuri.wasm"],
   ),
+  playTarget,
   easyRpgTarget("rpgmaker-2000", "RPG Maker 2000", "rpg2k"),
   easyRpgTarget("rpgmaker-2003", "RPG Maker 2003", "rpg2k3"),
   nativeRpgTarget("rpgmaker-mv", "RPG Maker MV", "RPGMV"),
@@ -109,7 +112,7 @@ export const retromRuntimeProviderDefinition = defineProvider({
   adapters,
   providerApiVersion: 1,
   providerId: "retrom-runtime",
-  providerVersion: "0.21.0",
+  providerVersion: "0.22.0-rc.5",
   targets,
 });
 

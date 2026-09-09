@@ -1,4 +1,5 @@
 import {validScummvmSource} from "./scummvm-release.mjs";
+import {validPlaySource} from "./play-candidate-stage.mjs";
 import {validScummvmRelease} from "./scummvm-published-release.mjs";
 import { validJ2meRelease } from "./j2me-release.mjs";
 import { createHash } from "node:crypto";
@@ -40,9 +41,9 @@ export function validateProviderSources(sources) {
     }
   }
   const development = sources.developmentInputs ?? [];
-  if (!Array.isArray(development) || development.length > 1) {throw new Error("PROVIDER_SOURCES_INVALID");}
+  if (!Array.isArray(development) || development.length > 2) {throw new Error("PROVIDER_SOURCES_INVALID");}
   for (const input of development) {
-    if (!validScummvmSource(input) || releases.has(input.id)) {throw new Error("PROVIDER_SOURCES_INVALID");}
+    if (!(validScummvmSource(input) || validPlaySource(input)) || releases.has(input.id)) {throw new Error("PROVIDER_SOURCES_INVALID");}
     releases.set(input.id, input);
   }
   for (const asset of sources.localAssets) {

@@ -371,7 +371,10 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
     runtimeWindow.EJS_disableBatchBootup = deferredDOSStart;
     runtimeWindow.EJS_language = "zh-CN";
     runtimeWindow.EJS_disableAutoLang = false;
-    runtimeWindow.EJS_DEBUG_XX = this.envelope.session.mode === "NETPLAY";
+    // PSP's native load receipt is emitted only with RetroArch's -v flag.
+    // The restore barrier must observe that receipt before admitting gameplay.
+    runtimeWindow.EJS_DEBUG_XX = this.envelope.session.mode === "NETPLAY" ||
+      (this.implementation.runtimeCore === "ppsspp" && this.envelope.restore !== null);
     runtimeWindow.EJS_EXPERIMENTAL_NETPLAY = false;
     runtimeWindow.EJS_threads = this.envelope.runtime.capabilities.requiresThreads;
     runtimeWindow.EJS_fullscreenOnLoaded = false;

@@ -6,6 +6,7 @@ import { retromRuntimeProviderDefinition } from "../providers/retrom-runtime/cat
 const targetIds = [
   "butterscotch-gamemaker",
   "fake08",
+  "flash-ruffle",
   "j2me",
   "kirikiri2-kag",
   "onscripter-yuri",
@@ -24,6 +25,7 @@ const targetIds = [
 const sameOriginFrameTargetIds = [
   "butterscotch-gamemaker",
   "fake08",
+  "flash-ruffle",
   "j2me",
   "kirikiri2-kag",
   "onscripter-yuri",
@@ -37,10 +39,10 @@ const sameOriginFrameTargetIds = [
 ];
 
 describe("retrom-runtime provider declarations", () => {
-  it("declares the complete 0.20.0 target closure in one source", () => {
-    expect(retromRuntimeProviderDefinition.providerVersion).toBe("0.20.0");
+  it("declares the complete 0.21.0-dev.2 target closure in one source", () => {
+    expect(retromRuntimeProviderDefinition.providerVersion).toBe("0.21.0-dev.2");
     expect(retromRuntimeProviderDefinition.targets.map((target) => target.id)).toEqual(targetIds);
-    expect(retromRuntimeProviderDefinition.adapters).toHaveLength(12);
+    expect(retromRuntimeProviderDefinition.adapters).toHaveLength(13);
   });
 
   it("projects a public manifest without internal adapter identities", () => {
@@ -49,7 +51,7 @@ describe("retrom-runtime provider declarations", () => {
       clientModulePath: "client.mjs",
       providerApiVersion: 1,
       providerId: "retrom-runtime",
-      providerVersion: "0.20.0",
+      providerVersion: "0.21.0-dev.2",
       schemaVersion: 1,
     });
     expect(manifest.targets.map((target) => target.id)).toEqual(targetIds);

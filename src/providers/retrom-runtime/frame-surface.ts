@@ -18,6 +18,7 @@ canvas{display:block;max-width:none!important;max-height:none!important;margin:a
 export function installRuntimeFrameSurface(
   frameWindow: Window,
   getCanvas: () => HTMLCanvasElement | null,
+  ownsCanvasLayout: () => boolean = () => false,
 ): RuntimeFrameSurface {
   const runtimeWindow = frameWindow as RuntimeFrameWindow;
   const frameDocument = frameWindow.document;
@@ -31,6 +32,7 @@ export function installRuntimeFrameSurface(
   frameDocument.body.replaceChildren(target);
 
   const refresh = () => {
+    if (ownsCanvasLayout()) {return;}
     const canvas = getCanvas() ?? frameDocument.querySelector<HTMLCanvasElement>("canvas");
     if (!canvas) {return;}
     fitCanvasToViewport(canvas, frameWindow.innerWidth, frameWindow.innerHeight);

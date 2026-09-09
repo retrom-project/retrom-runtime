@@ -33,6 +33,9 @@ const isolatedCapabilities = capabilities(true, true, true);
 const wasm4Capabilities = capabilities(true, true, false);
 
 const adapters = [
+  defineAdapter({id: "ruffle-web", kind: "RUFFLE_WEB", abi: "ruffle-host-v1",
+    capabilities: capabilities(true, false, true),
+    checkpoint: {writeFormat: "ruffle-sharedobjects-v1", readFormats: ["ruffle-sharedobjects-v1"], semantics: "GAME_SAVE"}}),
   scummvmAdapter,
   defineAdapter({id: "tic80-web", kind: "TIC80_WEB", abi: "tic80-pmem-v1",
     capabilities: capabilities(true, true, true),
@@ -66,6 +69,8 @@ const targets = [
   ),
   target("fake08", "PICO-8 (FAKE-08)", "fake08-web", noOptionsSchema, false, "SAME_ORIGIN_BLANK", "ROM_BLOB",
     4194380, ["assets/fake08/fake08-retrom.mjs", "assets/fake08/fake08-retrom.wasm"]),
+  target("flash-ruffle", "Flash (Ruffle)", "ruffle-web", noOptionsSchema, false, "SAME_ORIGIN_BLANK", "ROM_BLOB",
+    8 * 1024 * 1024, ["assets/ruffle/ruffle.js", "assets/ruffle/core.ruffle.js", "assets/ruffle/ruffle.wasm"]),
   target(
     "j2me", "Java ME", "j2me-minijvm-web", noOptionsSchema,
     true, "SAME_ORIGIN_BLANK", "ROM_BLOB", 2 * 1024 * 1024,
@@ -109,7 +114,7 @@ export const retromRuntimeProviderDefinition = defineProvider({
   adapters,
   providerApiVersion: 1,
   providerId: "retrom-runtime",
-  providerVersion: "0.20.0",
+  providerVersion: "0.21.0-dev.2",
   targets,
 });
 

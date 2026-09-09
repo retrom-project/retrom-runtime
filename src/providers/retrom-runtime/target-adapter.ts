@@ -1,4 +1,5 @@
 import {mountScummvm} from "../../scummvm/adapter.js";
+import {mountRuffle} from "../../ruffle/adapter.js";
 
 import {mountFantasyConsole} from "../../fantasy-console/adapter.js";
 import {mountJ2me} from "../../j2me/adapter.js";
@@ -32,11 +33,11 @@ export function mountTargetAdapter(
   target: HTMLElement,
   context: TargetMountContext,
 ): Promise<MountedRuntimeAdapter> {
-  const declaration = retromRuntimeProviderDefinition.targets.find((entry) => entry.id === envelope.runtime.targetId);
-  const adapter = retromRuntimeProviderDefinition.adapters.find((entry) => entry.id === declaration?.adapterId);
-  if (!declaration || !adapter) {throw new Error("PROVIDER_LAUNCH_REQUEST_INVALID");}
+  const {declaration, adapter} = resolveAdapter(envelope.runtime.targetId);
   const {frameWindow, restorePayload, reportProgress, reportExitRequested} = context;
   switch (adapter.kind) {
+  case "RUFFLE_WEB":
+    return mountRuffle(parameters.ruffle(envelope), target, frameWindow, restorePayload, reportProgress, context.signal);
   case "EASYRPG_WEB":
     return mountEasyRpg(parameters.easyRpg(envelope, declaration.implementation), target,
       frameWindow, restorePayload, reportExitRequested);
@@ -75,4 +76,11 @@ export function mountTargetAdapter(
 function requireFrame(context: TargetMountContext) {
   if (!context.frame) {throw new Error("PROVIDER_HOST_INVALID");}
   return context.frame;
+}
+
+function resolveAdapter(targetId: string) {
+  const declaration = retromRuntimeProviderDefinition.targets.find((entry) => entry.id === targetId);
+  const adapter = retromRuntimeProviderDefinition.adapters.find((entry) => entry.id === declaration?.adapterId);
+  if (!declaration || !adapter) {throw new Error("PROVIDER_LAUNCH_REQUEST_INVALID");}
+  return {declaration, adapter};
 }

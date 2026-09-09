@@ -9,6 +9,36 @@ import {mountTargetAdapter} from "./target-adapter.js";
 vi.mock("./target-adapter.js", () => ({mountTargetAdapter: vi.fn()}));
 
 describe("native save persistence boundary", () => {
+  it("rejects an unknown native-save data kind", async () => {
+    const availability = {available: true, blocker: null,
+      save: {capture: "IN_GAME", restore: "AUTOMATIC", captureAvailable: false, dataKind: "UNKNOWN"}};
+    vi.mocked(mountTargetAdapter).mockResolvedValue(adapterFixture({
+      getCheckpointAvailability: () => availability as CheckpointAvailability,
+    }));
+    const envelope = wasmEnvelope(); envelope.runtime.checkpoint!.semantics = "GAME_SAVE";
+    const player = createRetromRuntimePlayer(envelope, hostFixture(), {});
+    try {
+      await player.mount(document.createElement("div"));
+      expect(player.getCheckpointAvailability()).toEqual({available: false, reason: "FAILED"});
+    } finally {await player.exit();}
+  });
+  it("publishes a storage data-kind change without changing save eligibility", async () => {
+    let availability: CheckpointAvailability = {available: true, blocker: null, revision: "1",
+      save: {capture: "IN_GAME", restore: "AUTOMATIC", captureAvailable: false, dataKind: "PROGRESS"}};
+    vi.mocked(mountTargetAdapter).mockResolvedValue(adapterFixture({getCheckpointAvailability: () => availability}));
+    const envelope = wasmEnvelope(); envelope.runtime.checkpoint!.semantics = "GAME_SAVE";
+    const player = createRetromRuntimePlayer(envelope, hostFixture(), {});
+    const events: RuntimeEventV1[] = []; player.subscribe((event) => events.push(event));
+    try {
+      await player.mount(document.createElement("div"));
+      events.length = 0;
+      availability = {...availability, save: {...availability.save!, dataKind: "STORAGE"}};
+      expect(player.getCheckpointAvailability()).toMatchObject({available: true, save: {dataKind: "STORAGE"}});
+      expect(events).toEqual([{type: "CHECKPOINT_AVAILABILITY_CHANGED",
+        availability: {available: true, reason: null, revision: "1", save: availability.save}}]);
+      await expect(player.checkpoint()).resolves.toBeDefined();
+    } finally {await player.exit();}
+  });
   it("forwards revisions without acknowledging exports and confirms only the explicit payload", async () => {
     let availability: CheckpointAvailability = {available: true, blocker: null, revision: "1"};
     const adapter = adapterFixture({

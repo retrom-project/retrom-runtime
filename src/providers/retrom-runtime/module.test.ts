@@ -12,6 +12,32 @@ beforeEach(() => {vi.mocked(mountTargetAdapter).mockReset();});
 afterEach(() => {document.body.replaceChildren(); vi.useRealTimers();});
 
 describe("retrom-runtime Provider Module V1", () => {
+  it("leaves a core-owned responsive canvas untouched across buffer and viewport resizes", async () => {
+    const frame = document.createElement("iframe"); document.body.append(frame);
+    const realm = frame.contentWindow!;
+    const canvas = realm.document.createElement("canvas");
+    canvas.style.cssText = "width:100%;height:100%";
+    const original = canvas.style.cssText;
+    const adapter = Object.assign(adapterFixture({getCanvas: () => canvas}), {canvasLayout: "CORE" as const});
+    vi.mocked(mountTargetAdapter).mockImplementation(async (_request, target) => {
+      const host = realm.document.createElement("div");
+      host.attachShadow({mode: "open"}).append(canvas); target.append(host);
+      return adapter;
+    });
+    const host = hostFixture({mountFrame: vi.fn(async () => ({contentWindow: realm, element: frame, origin: location.origin}))});
+    const player = createRetromRuntimePlayer(wasmEnvelope(), host, {});
+    try {
+      await player.mount(document.createElement("div"));
+      expect(canvas.style.cssText).toBe(original);
+      for (const [width, height] of [[1920, 1080], [900, 1280], [1280, 900]]) {
+        Object.defineProperties(realm, {innerWidth: {configurable: true, value: width}, innerHeight: {configurable: true, value: height}});
+        canvas.width = width * 2; canvas.height = height * 2;
+        realm.dispatchEvent(new Event("resize"));
+        await Promise.resolve();
+        expect(canvas.style.cssText).toBe(original);
+      }
+    } finally {await player.exit();}
+  });
   it("exposes ordinary play controls without a production proof interface", async () => {
     const player = await provider.createRuntime(wasmEnvelope(), hostFixture());
     expect(player).not.toHaveProperty("runValidationProbe");
@@ -26,7 +52,7 @@ describe("retrom-runtime Provider Module V1", () => {
 
   it("exports only the current provider entry and exact identity", async () => {
     expect(Object.keys(provider).sort()).toEqual(["createRuntime", "providerApiVersion", "providerId", "providerVersion"]);
-    expect(provider).toMatchObject({providerApiVersion: 1, providerId: "retrom-runtime", providerVersion: "0.20.0"});
+    expect(provider).toMatchObject({providerApiVersion: 1, providerId: "retrom-runtime", providerVersion: "0.21.0-dev.2"});
     expect((await provider.createRuntime(wasmEnvelope(), hostFixture())).getState()).toBe("CREATED");
     await expect(provider.createRuntime({...wasmEnvelope(), providerId: "leaked"}, hostFixture()))
       .rejects.toThrow("PROVIDER_LAUNCH_REQUEST_INVALID");

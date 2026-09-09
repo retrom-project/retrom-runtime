@@ -2,6 +2,10 @@
 
 Release archives aggregate the following independently licensed components:
 
+- Ruffle (unreleased PFB input) — MIT OR Apache-2.0 — <https://github.com/retrom-project/ruffle>;
+  `licenses/ruffle/LICENSE.md` includes dependency notices; `LICENSE_MIT` and `LICENSE_APACHE`
+  retain the selfhosted package license texts. The underlying upstream is <https://github.com/ruffle-rs/ruffle>.
+
 - EasyRPG Player — GPL-3.0-or-later — <https://github.com/retrom-project/Player>
 - liblcf — MIT — <https://github.com/EasyRPG/liblcf>
 - mkxp-z — GPL-2.0-or-later — <https://github.com/retrom-project/mkxp-z-libretro-emscripten>

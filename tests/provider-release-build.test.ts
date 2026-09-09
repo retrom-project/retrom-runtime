@@ -52,7 +52,7 @@ describe("retrom-runtime Provider release build", () => {
     const provider = JSON.parse(await readFile(join(first.bundleRoot, "provider.json"), "utf8")) as {
       targets: Array<Record<string, unknown>>;
     };
-    expect(provider.targets).toHaveLength(16);
+    expect(provider.targets).toHaveLength(17);
     expect(provider.targets.some((target) => target.id === "wasm4")).toBe(true);
     expect(provider.targets.every((target) => !("adapterId" in target))).toBe(true);
     expect(await readFile(join(first.bundleRoot, "client.mjs"), "utf8")).toContain("retrom-runtime");

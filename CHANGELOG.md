@@ -1,5 +1,24 @@
 # Changelog
 
+Ruffle candidate follow-up: enforce centered aspect-ratio scaling and expose native data as a
+`STORAGE` container through the optional public save data kind. Keep existing input mappings and
+changed-data export behavior; no Mode-specific exceptions.
+
+## 0.21.0-dev.2 (unreleased, PFB only)
+
+- Keep Ruffle's responsive canvas layout core-owned so fullscreen and viewport changes do not
+  compete with the Provider's fixed-resolution fitting. Other adapters retain the default fitting.
+- Add the independent `flash-ruffle` Target for bounded single-SWF content, with keyboard/mouse
+  and standard gamepad input, pause, volume and screenshots.
+- Transport native SharedObject bytes in `ruffle-sharedobjects-v1` (`GAME_SAVE`, 8 MiB maximum).
+  Restore only explicit identity-matched payloads before movie execution; fresh Launches start empty.
+- Validate SWF compressed/decompressed bounds, exact download sizes and SHA-256; reuse Cache Storage
+  across different Launch URLs by content identity and report deterministic download progress.
+- Consume explicitly built, inventoried Ruffle fork candidates through `developmentInputs`.
+  Ordinary and formal release builds reject this unpublished input; no stable core release is implied.
+- Capture freshly rendered GPU pixels without advancing the movie; bound startup waits and destroy
+  cancelled instances even when asynchronous loading finishes late.
+
 ## 0.20.0
 
 - Add a ScummVM Target with selected-engine downloads, bounded persistent range files, native

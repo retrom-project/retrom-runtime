@@ -2033,6 +2033,12 @@
       "repository": "https://github.com/retrom-project/libretro-crocods",
       "upstreamCommit": "be00fb904da08d66221017f6708508298f17ff07",
       "adapterAbi": "emulatorjs-state-v1"
+    },
+    {
+      "id": "81",
+      "repository": "https://github.com/retrom-project/81-libretro",
+      "upstreamCommit": "86decf3ee61ea5803972948e80197bee8474796b",
+      "adapterAbi": "emulatorjs-state-v1"
     }
   ]
 }

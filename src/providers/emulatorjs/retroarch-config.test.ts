@@ -2,6 +2,15 @@ import {describe, expect, it, vi} from "vitest";
 import {installEmulatorJsRetroArchConfig} from "./retroarch-config.js";
 
 describe("EmulatorJS RetroArch configuration", () => {
+  it("assigns EightyOne's second port to its keyboard so it cannot release player one's joypad keys", () => {
+    class Manager {getRetroArchCfg() {return "";}}
+    const cleanup = installEmulatorJsRetroArchConfig(window, "81", false);
+    Reflect.set(window, "EJS_GameManager", Manager);
+    try {
+      expect(new Manager().getRetroArchCfg()).toContain('input_libretro_device_p1 = "257"');
+      expect(new Manager().getRetroArchCfg()).toContain('input_libretro_device_p2 = "259"');
+    } finally {cleanup(); Reflect.deleteProperty(window, "EJS_GameManager");}
+  });
   it("selects the Fuse Kempston port before construction and restores the prototype", () => {
     class Manager {getRetroArchCfg() {return "video_vsync = true\n";}}
     const original = Manager.prototype.getRetroArchCfg;

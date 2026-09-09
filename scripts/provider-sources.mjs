@@ -41,7 +41,7 @@ export function validateProviderSources(sources) {
     }
   }
   const development = sources.developmentInputs ?? [];
-  if (!Array.isArray(development) || development.length > 2) {throw new Error("PROVIDER_SOURCES_INVALID");}
+  if (!Array.isArray(development)) {throw new Error("PROVIDER_SOURCES_INVALID");}
   for (const input of development) {
     if ((!validScummvmSource(input) && !validEmulatorJsDevelopmentSource(input)) || releases.has(input.id)) {throw new Error("PROVIDER_SOURCES_INVALID");}
     releases.set(input.id, input);

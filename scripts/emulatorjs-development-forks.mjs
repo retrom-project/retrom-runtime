@@ -3,6 +3,8 @@ import {lstat, readFile, readdir, writeFile, mkdir} from "node:fs/promises";
 import {dirname, isAbsolute, join} from "node:path";
 
 const sources = new Map([
+  ["81", {repository: "https://github.com/retrom-project/81-libretro",
+    upstreamCommit: "86decf3ee61ea5803972948e80197bee8474796b", license: "LICENSE"}],
   ["cap32", {repository: "https://github.com/retrom-project/libretro-cap32",
     upstreamCommit: "310cc579b79b6051b378b192224b325a73437c9b", license: "COPYING"}],
   ["crocods", {repository: "https://github.com/retrom-project/libretro-crocods",

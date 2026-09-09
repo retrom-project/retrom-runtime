@@ -2,7 +2,7 @@
 
 ## Unreleased
 
-- Advance the EmulatorJS development candidate to 2.6.0-rc.3 for the verified CrocoDS restore fix; a fresh restored instance now closes its autorun menu.
+- Advance the EmulatorJS development candidate to 2.6.0-rc.4. CrocoDS dismisses its autorun menu after restore, and EightyOne preserves controller port selections while loading content.
 
 - Add candidate EmulatorJS targets for EightyOne, Caprice32, CrocoDS, VICE PET, Plus/4, C64 and SAME CD-i, using pinned 4.2.3 assets.
 - Preserve the existing raw checkpoint contract and single-file input policy for these targets.

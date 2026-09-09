@@ -60,6 +60,36 @@ export const emulatorJsSourceCatalog = {
       "sizeBytes": 747
     }
   ]
+},
+{
+  "repository": "https://github.com/retrom-project/81-libretro",
+  "commit": "a35fa552dbb872848fc3fbf463cc5699686c0a92",
+  "sourceTreeSha256": "e4954976dd538153bc59de25fd95588c8f93bc9676b7e94bcfbebe134c54ea99",
+  "adapterAbi": "emulatorjs-state-v1",
+  "runtimeCore": "81",
+  "upstreamCommit": "86decf3ee61ea5803972948e80197bee8474796b",
+  "assets": [
+    {
+      "filename": "81-wasm.data",
+      "sha256": "3b7f2f53099dace1ed853f33606671ce8b2acc430bcd8a08465f31f754fbe16e",
+      "sizeBytes": 888392
+    },
+    {
+      "filename": "LICENSE",
+      "sha256": "12ac5047f2af0522f06798b1589ffc4599bc29c91f954d7874e0320634e777c0",
+      "sizeBytes": 35122
+    },
+    {
+      "filename": "source.tar.gz",
+      "sha256": "5ee55afc44bf449d5bd030f2faa0357a15ffdadb584d53d9d16dbef36aec3fe6",
+      "sizeBytes": 1204667
+    },
+    {
+      "filename": "retrom-core-candidate.json",
+      "sha256": "20ac928d068a4e90897ac773745e043d9a7b6e43d175a02a83bf908e6aea1198",
+      "sizeBytes": 734
+    }
+  ]
 }
 ],
   forks: [

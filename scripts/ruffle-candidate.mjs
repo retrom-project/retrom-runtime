@@ -3,6 +3,14 @@ import {join} from "node:path";
 import {sha256} from "./provider-sources.mjs";
 
 const filenames = ["LICENSE.md", "LICENSE_APACHE", "LICENSE_MIT", "core.ruffle.js", "ruffle.js", "ruffle.wasm"];
+export function asRuffleCandidateSource(release) {
+  const source = {id: release?.id, repository: release?.repository, upstreamCommit: release?.upstreamCommit,
+    adapterAbi: release?.adapterAbi, assets: release?.assets?.map(({filename, output, maxSizeBytes}) =>
+      ({filename, output, maxSizeBytes}))};
+  if (!validRuffleSource(source)) {throw invalid();}
+  return source;
+}
+
 export function validRuffleSource(source) {
   return exact(source, ["id", "repository", "upstreamCommit", "adapterAbi", "assets"]) &&
     source.id === "ruffle" && source.repository === "https://github.com/retrom-project/ruffle" &&

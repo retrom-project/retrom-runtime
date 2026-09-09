@@ -5,7 +5,7 @@ import {pathToFileURL} from "node:url";
 import {expect, it} from "vitest";
 import {validateProviderSources} from "../scripts/provider-sources.mjs";
 import {sha256} from "../scripts/provider-sources.mjs";
-import {stageRuffleCandidate} from "../scripts/ruffle-candidate.mjs";
+import {asRuffleCandidateSource, stageRuffleCandidate} from "../scripts/ruffle-candidate.mjs";
 import {assertScummvmCandidateMode} from "../scripts/scummvm-release.mjs";
 
 export const ruffleSource = {id: "ruffle", repository: "https://github.com/retrom-project/ruffle",
@@ -16,10 +16,19 @@ export const ruffleSource = {id: "ruffle", repository: "https://github.com/retro
 
 it("accepts fixed Ruffle development bytes without inventing a published release", async () => {
   const sources = JSON.parse(await readFile("provider-sources.json", "utf8"));
+  sources.upstreamReleases = sources.upstreamReleases.filter((source: {id: string}) => source.id !== "ruffle");
   sources.developmentInputs = [structuredClone(ruffleSource)];
   expect(() => validateProviderSources(sources)).not.toThrow();
   sources.developmentInputs[0].tag = "latest";
   expect(() => validateProviderSources(sources)).toThrow("PROVIDER_SOURCES_INVALID");
+});
+
+it("keeps the strict candidate inventory when a published input is overridden in a PFB", () => {
+  const release = {...ruffleSource, tag: "retrom-core-ge46d1642fb67-r1", commit: "a".repeat(40),
+    assets: ruffleSource.assets.map((asset) => ({...asset, url: `https://example.com/${asset.filename}`}))};
+  expect(asRuffleCandidateSource(release)).toEqual(ruffleSource);
+  expect(() => asRuffleCandidateSource({...release, adapterAbi: "unknown"})).toThrow("RUFFLE_CANDIDATE_INVALID");
+  expect(() => asRuffleCandidateSource({...release, assets: release.assets.slice(1)})).toThrow("RUFFLE_CANDIDATE_INVALID");
 });
 
 it("rejects Ruffle input outside explicit PFB builds, including formal releases", () => {

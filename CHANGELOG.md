@@ -1,12 +1,14 @@
 # Changelog
 
-## Unreleased — EmulatorJS Provider
+## 0.24.0
 
 - Compress new Flycast instant checkpoints with lossless gzip and retain raw-state restoration.
   Retain the Flycast WebGL drawing buffer so screenshots remain available after pause/presentation.
 
-- Add a Dreamcast Flycast WASM JIT candidate with WebGL2, verified CHD caching,
+- Advance EmulatorJS Provider to 2.6.0 and add a Dreamcast Flycast WASM JIT target with WebGL2, verified CHD caching,
   Dreamcast face-button mappings and independent instant checkpoint format.
+- Pin Flycast core release `retrom-core-1.0-r1` with verified release metadata and licenses.
+- Preserve RetroArch restore configuration when BIOS external-file hooks are installed.
 - Validate local core candidate provenance and closed artifact sets before materializing
   EmulatorJS inputs; formal builds reject unpublished candidates.
 

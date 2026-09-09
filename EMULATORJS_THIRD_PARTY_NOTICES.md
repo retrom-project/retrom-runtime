@@ -1,8 +1,8 @@
 # EmulatorJS Provider components
 
-## Flycast development integration
+## Flycast integration
 
-Flycast WASM and its linked EmulatorJS RetroArch frontend are GPL-2.0-or-later and GPL-3.0-or-later respectively. Their license texts accompany the candidate core. The source fork is https://github.com/retrom-project/flycast-wasm.
+Flycast WASM and its linked EmulatorJS RetroArch frontend are GPL-2.0-or-later and GPL-3.0-or-later respectively. Their license texts accompany the pinned core release. The source fork is https://github.com/retrom-project/flycast-wasm.
 
 The CHD cache uses @noble/hashes 2.0.1 (https://github.com/paulmillr/noble-hashes), under the following MIT license:
 

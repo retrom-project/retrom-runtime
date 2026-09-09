@@ -20,7 +20,7 @@ describe("independent package boundary", () => {
     const sources = JSON.parse(await readFile(join(root, "provider-sources.json"), "utf8"));
     expect(retromRuntimeProviderDefinition.providerId).toBe("retrom-runtime");
     expect(retromRuntimeProviderDefinition.targets.map((target) => target.id)).toEqual([
-      "butterscotch-gamemaker", "fake08", "flash-ruffle", "j2me", "kirikiri2-kag", "msx-webmsx", "np2kai-pc98", "onscripter-yuri", "play-ps2", "px68k", "rpgmaker-2000", "rpgmaker-2003",
+      "butterscotch-gamemaker", "fake08", "flash-ruffle", "j2me", "kirikiri2-kag", "msx-webmsx", "np2kai-pc98", "onscripter-yuri", "openbor", "play-ps2", "px68k", "rpgmaker-2000", "rpgmaker-2003",
       "rpgmaker-mv", "rpgmaker-mz", "rpgmaker-vx", "rpgmaker-vx-ace", "rpgmaker-xp", "scummvm", "tic80", "tyranoscript", "wasm4",
     ]);
     expect(sources.localAssets.map((asset: { output: string }) => asset.output).sort()).toEqual([
@@ -32,12 +32,12 @@ describe("independent package boundary", () => {
 
   it("contains one clean Provider-private adapter role without migration-era aliases", async () => {
     expect(retromRuntimeProviderDefinition.adapters.map((adapter) => adapter.id).sort()).toEqual([
-      "butterscotch-web", "easyrpg-web", "fake08-web", "j2me-minijvm-web", "kirikiri2-web", "mkxp-libretro-web", "native-web", "np2kai-web", "ons-yuri-web",
+      "butterscotch-web", "easyrpg-web", "fake08-web", "j2me-minijvm-web", "kirikiri2-web", "mkxp-libretro-web", "native-web", "np2kai-web", "ons-yuri-web", "openbor-web",
       "play-web", "px68k-web", "ruffle-web", "scummvm-web", "tic80-web", "tyranoscript-web", "wasm4-web", "webmsx-web",
     ]);
     expect(retromRuntimeProviderDefinition.adapters.map((adapter) => adapter.abi).sort()).toEqual([
       "butterscotch-checkpoint-v2", "easyrpg-save", "fake08-state-v1", "j2me-rms", "kirikiri-kag-bookmark", "mkxp-state-compact",
-      "native-save", "np2kai-host-v1", "ons-save", "play-host-v1", "px68k-host-v1", "ruffle-host-v1", "scummvm-host-v1", "tic80-pmem-v1", "tyranoscript-snapshot-v1", "wasm4-state-v1", "webmsx-host-v1",
+      "native-save", "np2kai-host-v1", "ons-save", "openbor-host-v1", "play-host-v1", "px68k-host-v1", "ruffle-host-v1", "scummvm-host-v1", "tic80-pmem-v1", "tyranoscript-snapshot-v1", "wasm4-state-v1", "webmsx-host-v1",
     ]);
     expect((await readdir(join(root, "assets/runtime"))).sort()).toEqual(["butterscotch", "native"]);
     for (const asset of [
@@ -111,7 +111,7 @@ describe("independent package boundary", () => {
       tag: "retrom-core-gca2600db8de4-r1",
     })]));
     const releaseIds = sources.upstreamReleases.map((release: { id: string }) => release.id).sort();
-    expect(releaseIds).toEqual(["butterscotch", "easyrpg", "fake08", "j2me", "kirikiri2", "mkxp", "np2kai", "onsyuri", "play", "px68k", "ruffle", "scummvm", "tic80", "tyranoscript", "wasm4", "webmsx"]);
+    expect(releaseIds).toEqual(["butterscotch", "easyrpg", "fake08", "j2me", "kirikiri2", "mkxp", "np2kai", "onsyuri", "openbor", "play", "px68k", "ruffle", "scummvm", "tic80", "tyranoscript", "wasm4", "webmsx"]);
     expect(await readdir(join(root, "scripts"))).not.toEqual(expect.arrayContaining([
       "build-kirikiri-core.sh", "build-ons-core.sh",
     ]));

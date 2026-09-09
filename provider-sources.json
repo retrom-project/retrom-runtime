@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "packageName": "@xxxsen/retrom-runtime",
-  "packageVersion": "0.30.0-rc.1",
+  "packageVersion": "0.30.0-rc.2",
   "publicApiVersion": 2,
   "upstreamReleases": [
     {
@@ -2173,6 +2173,49 @@
       "tag": "retrom-core-g561dcba6b11d-r1",
       "commit": "47e16598e85659ab860cc80255ff41b9b6391787",
       "metadataUrl": "https://github.com/retrom-project/px68k-libretro/releases/download/retrom-core-g561dcba6b11d-r1/rpg-runtime-release.json"
+    },
+    {
+      "id": "openbor",
+      "repository": "https://github.com/retrom-project/openbor",
+      "upstreamCommit": "9d81480f8481fbb9e76b0b5f2a5dfa408376761a",
+      "adapterAbi": "openbor-host-v1",
+      "assets": [
+        {
+          "filename": "LICENSE",
+          "output": "licenses/openbor/LICENSE",
+          "maxSizeBytes": 4194304,
+          "sizeBytes": 1537,
+          "sha256": "b8f3916944f0b5aee216ef7a494820d17ae658336a4680992dc244ebedecf3ea",
+          "url": "https://github.com/retrom-project/openbor/releases/download/retrom-core-g9d81480f8481-r1/LICENSE"
+        },
+        {
+          "filename": "LICENSES.txt",
+          "output": "licenses/openbor/LICENSES.txt",
+          "maxSizeBytes": 4194304,
+          "sizeBytes": 76271,
+          "sha256": "bbdf8499d26846916b7cc8753917afe5132df91718b8ebb454a7a2793606ddbb",
+          "url": "https://github.com/retrom-project/openbor/releases/download/retrom-core-g9d81480f8481-r1/LICENSES.txt"
+        },
+        {
+          "filename": "openbor.mjs",
+          "output": "runtime/openbor/openbor.mjs",
+          "maxSizeBytes": 4194304,
+          "sizeBytes": 198200,
+          "sha256": "109e5e9b1b79823a1bb1c807c6eadf16bd05c6e01f607a3cc4dd4c10dfa1cf70",
+          "url": "https://github.com/retrom-project/openbor/releases/download/retrom-core-g9d81480f8481-r1/openbor.mjs"
+        },
+        {
+          "filename": "openbor.wasm",
+          "output": "runtime/openbor/openbor.wasm",
+          "maxSizeBytes": 67108864,
+          "sizeBytes": 3039318,
+          "sha256": "e062acae071cdbaf59a73f8a4dd2cd2e37f79cf99f01912e3a8b4403eb52fec7",
+          "url": "https://github.com/retrom-project/openbor/releases/download/retrom-core-g9d81480f8481-r1/openbor.wasm"
+        }
+      ],
+      "tag": "retrom-core-g9d81480f8481-r1",
+      "commit": "e3f86c09bf9ab6ed5b7e5c06cbd9c3d351a80ee6",
+      "metadataUrl": "https://github.com/retrom-project/openbor/releases/download/retrom-core-g9d81480f8481-r1/rpg-runtime-release.json"
     }
   ],
   "localAssets": [

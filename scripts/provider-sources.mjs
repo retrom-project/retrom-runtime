@@ -2,6 +2,7 @@ import {validPinnedCoreAssets} from "./pinned-core-release.mjs";
 import {validCoreDevelopmentInput} from "./core-development-input.mjs";
 import {validWebMSXRelease} from "./webmsx-release.mjs";
 import {validScummvmSource} from "./scummvm-release.mjs";
+import {validOpenBORSource} from "./openbor-candidate.mjs";
 import {validWebMSXSource} from "./webmsx-candidate.mjs";
 import {validRuffleSource} from "./ruffle-candidate.mjs";
 import {validScummvmRelease} from "./scummvm-published-release.mjs";
@@ -34,7 +35,7 @@ export function validateProviderSources(sources) {
       !(release.id === "webmsx" ? validWebMSXRelease(release) : release.id === "scummvm" ? validScummvmRelease(release) : release.archive ? validJ2meRelease(release) : validCoreRelease(release))) {
       throw new Error("PROVIDER_SOURCES_INVALID");
     }
-    if (["np2kai", "px68k", "tyranoscript"].includes(release.id) && !validPinnedCoreAssets(release)) {throw new Error("PROVIDER_SOURCES_INVALID");}
+    if (["np2kai", "px68k", "tyranoscript", "openbor"].includes(release.id) && !validPinnedCoreAssets(release)) {throw new Error("PROVIDER_SOURCES_INVALID");}
     releases.set(release.id, release);
     for (const asset of release.assets) {
       if (!safePath(asset.filename) ||
@@ -48,7 +49,7 @@ export function validateProviderSources(sources) {
   const development = sources.developmentInputs ?? [];
   if (!Array.isArray(development) || development.length > 16) {throw new Error("PROVIDER_SOURCES_INVALID");}
   for (const input of development) {
-    if ((!validScummvmSource(input) && !validRuffleSource(input) && !validWebMSXSource(input) && !validCoreDevelopmentInput(input)) || releases.has(input.id)) {throw new Error("PROVIDER_SOURCES_INVALID");}
+    if ((!validScummvmSource(input) && !validRuffleSource(input) && !validOpenBORSource(input) && !validWebMSXSource(input) && !validCoreDevelopmentInput(input)) || releases.has(input.id)) {throw new Error("PROVIDER_SOURCES_INVALID");}
     releases.set(input.id, input);
   }
   for (const asset of sources.localAssets) {

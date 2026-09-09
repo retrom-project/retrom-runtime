@@ -1,4 +1,5 @@
 import {mountNP2} from "../../np2kai/adapter.js";
+import {mountOpenBOR} from "../../openbor/adapter.js";
 import {mountPx68k} from "../../px68k/adapter.js";
 import {mountWebMSX} from "../../webmsx/adapter.js";
 import {mountScummvm} from "../../scummvm/adapter.js";
@@ -39,8 +40,10 @@ export function mountTargetAdapter(
 ): Promise<MountedRuntimeAdapter> {
   const {declaration, adapter} = resolveAdapter(envelope.runtime.targetId);
   const {frameWindow, restorePayload, reportProgress, reportExitRequested} = context;
-  const reportFailure = context.reportFailure ?? (() => undefined);
+  const reportFailure = failureReporter(context);
   switch (adapter.kind) {
+  case "OPENBOR_WEB":
+    return mountOpenBOR(parameters.openbor(envelope), target, frameWindow, restorePayload, reportProgress, reportFailure, context.signal);
   case "RUFFLE_WEB":
     return mountRuffle(parameters.ruffle(envelope), target, frameWindow, restorePayload, reportProgress, context.signal);
   case "EASYRPG_WEB":
@@ -76,6 +79,10 @@ export function mountTargetAdapter(
     return mountWasm4(parameters.wasm4(envelope), target, frameWindow, restorePayload, reportProgress);
   default: return mountMachineAdapter(adapter.kind, envelope, target, context);
   }
+}
+
+function failureReporter(context: TargetMountContext) {
+  return context.reportFailure ?? (() => undefined);
 }
 
 function requireFrame(context: TargetMountContext) {

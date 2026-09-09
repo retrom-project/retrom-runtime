@@ -1,4 +1,5 @@
 import type {NP2Parameters} from "../../np2kai/adapter.js";
+import type {OpenBORParameters} from "../../openbor/adapter.js";
 import type {Px68kParameters} from "../../px68k/core.js";
 import type {WebMSXParameters} from "../../webmsx/adapter.js";
 import scummvmLayout from "../../scummvm/core-layout.json" with {type: "json"};
@@ -229,6 +230,11 @@ export function np2kai(envelope: LaunchEnvelopeV1, assetIndex: AssetIndexV1): NP
   const game = resource(envelope, "game", "ROM_BLOB");
   return {disk: {url: game.url, sha256: game.sha256, sizeBytes: game.sizeBytes},
     runtimeBaseUrl: assetBase(envelope, "np2kai"), assetIndex};
+}
+
+export function openbor(envelope: LaunchEnvelopeV1): OpenBORParameters {
+  const game = resource(envelope, "game", "ROM_BLOB");
+  return {pak: {url: game.url, sizeBytes: game.sizeBytes, sha256: game.sha256}, runtimeBaseUrl: assetBase(envelope, "openbor")};
 }
 
 export function px68k(envelope: LaunchEnvelopeV1, assetIndex: AssetIndexV1): Px68kParameters {

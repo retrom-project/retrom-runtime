@@ -38,6 +38,9 @@ const wasm4Capabilities = capabilities(true, true, false);
 
 const adapters = [
   np2kaiAdapter,
+  defineAdapter({id: "openbor-web", kind: "OPENBOR_WEB", abi: "openbor-host-v1",
+    capabilities: capabilities(true, true, false),
+    checkpoint: {writeFormat: "openbor-game-save-v1", readFormats: ["openbor-game-save-v1"], semantics: "GAME_SAVE"}}),
   px68kAdapter,
   adapter("webmsx-web", "WEBMSX_WEB", "webmsx-host-v1", "webmsx-state-v1", standardCapabilities),
   playAdapter,
@@ -100,6 +103,8 @@ const targets = [
     false, "SAME_ORIGIN_BLANK", "FILE_TREE", 64 * 1024 * 1024,
     ["assets/ons/onsyuri.js", "assets/ons/onsyuri.wasm"],
   ),
+  target("openbor", "OpenBOR", "openbor-web", noOptionsSchema, false, "SAME_ORIGIN_BLANK", "ROM_BLOB",
+    16 * 1024 * 1024, ["assets/openbor/openbor.mjs", "assets/openbor/openbor.wasm"]),
   playTarget,
   px68kTarget,
   easyRpgTarget("rpgmaker-2000", "RPG Maker 2000", "rpg2k"),
@@ -127,7 +132,7 @@ export const retromRuntimeProviderDefinition = defineProvider({
   adapters: storageAdapters(adapters),
   providerApiVersion: 1,
   providerId: "retrom-runtime",
-  providerVersion: "0.30.0-rc.1",
+  providerVersion: "0.30.0-rc.2",
   targets,
 });
 

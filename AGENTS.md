@@ -6,7 +6,7 @@
 
 - `src/` 实现 Provider declaration、Provider Module V1、运行时生命周期、Target 私有实现、checkpoint codec 与宿主无关的 Envelope 校验。
 - `assets/` 只保存项目自有 bridge 与小型文本资产；不得保存第三方核心源码、源码补丁或构建产物。
-- `src/providers/*/catalog.ts` 生成的 Provider declaration 是 Target、能力、checkpoint contract 与运行文件的唯一机器事实源；`provider-sources.json` 只记录第三方上游/本地构建来源，不能声明 Target 或宿主路由。
+- `src/providers/*/catalog.ts` 生成的 Provider declaration 是 Target、能力、checkpoint contract 与运行文件的唯一机器事实源；`provider-sources.json`（retrom-runtime）和 `src/providers/emulatorjs/source-catalog.ts`（EmulatorJS）只记录第三方上游/本地构建来源，不能声明 Target 或宿主路由。
 - 本仓库不得编译第三方核心。第三方核心的源码修改、构建脚本、质量门禁和 Release 全部由对应 fork 的
   `retrom/<baseline>` 分支维护（J2ME 原创集成层使用 `main`）；本仓库只聚合固定 fork tag/commit 的 Release 资产并提供统一接口。
 - `tests/` 和与源码同目录的 `*.test.ts` 覆盖运行时行为；宿主产品的导入、发布和权限测试留在宿主仓库。
@@ -15,7 +15,7 @@
 ## 工作方式
 
 1. 修改行为前先补能在旧行为失败的回归测试。
-2. 新增第三方核心时先在独立 fork 完成源码、构建和 Release，再更新 `provider-sources.json` 并在 Provider declaration 增加独立 Target；不得在本仓库临时加入源码构建、向 candidate 注入 Target 或使用默认 fallback。
+2. 新增第三方核心时先在独立 fork 完成源码、构建和 Release，再更新所属 Provider 的来源清单并在 Provider declaration 增加独立 Target；不得在本仓库临时加入源码构建、向 candidate 注入 Target 或使用默认 fallback。
 3. 保持配置显式、错误码稳定、生命周期可清理；不为推测风险增加复杂框架。
 4. 第三方版本必须固定 repository、tag/commit、asset 文件名和 adapter ABI；不得使用 `latest` 或浮动分支。
 5. 不提交第三方游戏、RTP、运行时二进制、凭据或本机缓存。
@@ -67,7 +67,7 @@ npm run package:check
 
 - 完成一个功能或 bug 修复后单独提交；不要混入无关格式化。
 - PR 到 `master` 必须通过 `.github/workflows/quality.yml`；该门禁会聚合并验证固定 fork Release，但不得编译核心。
-- `v*` tag 由 `.github/workflows/release.yml` 构建 GitHub Release；tag 不移动、不覆盖。
+- `v*` tag 由 `.github/workflows/release.yml` 构建 GitHub Release；tag 不移动、不覆盖。`vX.Y.Z-rc.N` 可从功能分支发布 GitHub prerelease，稳定 tag 必须已进入 `master`；两者都执行相同代码和聚合门禁。
 - `providerId + targetId` 是长期稳定的 Target 身份。Provider Bundle 是单次部署与 Launch 的不可变产物，不能成为 Game、Review 或 Save 的兼容身份。破坏 Provider Module、Launch Envelope 消费、checkpoint 格式或 Target 行为时必须升级相应版本并在 CHANGELOG 说明。
 - checkpoint 格式变化时更新 `writeFormat`，并只在真实验证后把旧值保留在 `readFormats`。宿主只向前激活更高 Provider 版本；旧存档格式不可读时禁用恢复，不保留旧 Bundle 或设计运行时回滚。
 
@@ -76,7 +76,7 @@ npm run package:check
 - 功能分支完成旧行为必红的回归和聚焦门禁后，先保留在分支，不要为了让 Retrom 取得候选 bytes 而提前合并、打 tag 或创建 Release。
 - 使用 Retrom PFB 流程，在同一 `.worktree/<pfb>/project/` 下放置 Retrom、本仓库和涉及的 core worktree；`RUNTIME_ROOT` 与 `CORE_ROOTS` 只能指向该 PFB 树。源码与持久 workspace bind mount 到轻量开发容器，日常不构建 Provider archive 或 core。
 - 新 PFB 显式导入已验证的 Provider 基座；运行中的 watcher 原子生成当前 loose module，adapter 修改后确认模块 SHA 改变并轻量 restart。工具链、锁文件或 API 生成输入改变时才 down/build/up；不为源码变更创建 revision 目录、切换数据库或反复 checkout 大仓库。
-- 显式 candidate/release 构建仍生成完整 Provider Bundle V1；core candidate 只能覆盖 `provider-sources.json` 已声明的来源，不能新增 Target、改写宿主 binding 或污染 production lock。core 字节变化须按 Retrom 的 `pfb-core-build` 显式构建。
+- 显式 candidate/release 构建仍生成完整 Provider Bundle V1；core candidate 只能覆盖所属 Provider 来源清单已声明的来源（`provider-sources.json` 或 EmulatorJS `source-catalog.ts`），不能新增 Target、改写宿主 binding 或污染 production lock。core 字节变化须按 Retrom 的 `pfb-core-build` 显式构建。
 - PFB 必须经真实 Retrom 导入、Review Preview、Product Launch、共享 dispatcher、输入、checkpoint、不同 Launch 恢复，
   并在 Target 实现 `EXIT_REQUESTED` 时验证退出清理。源码/依赖构建与实时浏览器验收分开执行，避免热更新干扰活动
   会话；确认通过且取得用户授权后才合并 PR、发布 core tag，再发布本仓库新的不可移动 `v*` tag。

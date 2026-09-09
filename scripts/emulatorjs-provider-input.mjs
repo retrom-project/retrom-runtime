@@ -1,6 +1,4 @@
-import {readEmulatorJsCoreCandidate} from "./emulatorjs-core-candidate.mjs";
-import {readEmulatorJsCoreRelease} from "./emulatorjs-core-release.mjs";
-import {loadProviderSources} from "./provider-sources.mjs";
+import {emulatorJsCoreInputs, readEmulatorJsCoreCandidate} from "./emulatorjs-core-candidate.mjs";
 import {createHash, randomUUID} from "node:crypto";
 import {spawnSync} from "node:child_process";
 import {
@@ -8,6 +6,8 @@ import {
 } from "node:fs/promises";
 import {dirname, isAbsolute, join, relative, resolve} from "node:path";
 import {fileURLToPath, pathToFileURL} from "node:url";
+
+import {forkMetadataPath, forkReleaseFiles, verifyForkMetadata} from "./emulatorjs-fork-releases.mjs";
 
 const scriptRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const proofName = ".materialization.json";
@@ -33,7 +33,7 @@ export async function materializeEmulatorJsProviderInput(input) {
       await mkdir(destination, {recursive: true});
       await input.extractArchive(archivePath, destination, releaseSelections(input.definition, release));
     }
-    for (const override of input.catalog.overrides) {
+    for (const override of [...input.catalog.overrides, ...forkReleaseFiles(input.catalog)]) {
       const cachePath = join(input.cacheRoot, `override-${override.sha256}`);
       await cachedDownload(cachePath, override, input.fetchBytes);
       const destination = confined(staging, override.destination);
@@ -44,6 +44,10 @@ export async function materializeEmulatorJsProviderInput(input) {
       const destination = confined(staging, path);
       await mkdir(dirname(destination), {recursive: true});
       await writeFile(destination, contents);
+    }
+    for (const fork of input.catalog.forks ?? []) {
+      const metadata = JSON.parse(await readFile(join(staging, forkMetadataPath(fork)), "utf8"));
+      verifyForkMetadata(fork, metadata);
     }
     await verifyCoreAssets(staging, input.definition);
     const files = await collectSelectedFiles(staging, input.catalog, input.definition);
@@ -144,6 +148,7 @@ async function collectSelectedFiles(root, catalog, definition) {
   const files = await collectRegularFiles(root, false);
   const allowedAssets = new Set(definition.targets.flatMap((target) => target.assetPaths ?? [])
     .map((path) => path.replace(/^assets\//u, "")));
+  for (const file of forkReleaseFiles(catalog)) {allowedAssets.add(file.destination);}
   const allowedLicenseRoots = catalog.releases.flatMap((release) => release.licenseRoots.map((path) =>
     `${release.id}/${path}`));
   for (const path of files.keys()) {
@@ -262,14 +267,12 @@ async function currentInput() {
     import("../dist/providers/emulatorjs/catalog.js"),
     import("../dist/providers/emulatorjs/source-catalog.js"),
   ]);
-  const sources = await loadProviderSources(new URL("../", import.meta.url));
-  const developmentCores = (sources.developmentInputs ?? []).filter((source) => source.id === "flycast");
+  const candidate = process.env.RETROM_PFB_CANDIDATE_BUILD === "1";
+  const coreDirectories = JSON.parse(process.env.RETROM_RUNTIME_DEV_RELEASE_OVERRIDES ?? "{}");
   return {
-    candidate: process.env.RETROM_PFB_CANDIDATE_BUILD === "1",
-    coreDirectories: JSON.parse(process.env.RETROM_RUNTIME_DEV_RELEASE_OVERRIDES ?? "{}"),
+    candidate, coreDirectories,
     cacheRoot: join(scriptRoot, ".cache", "provider-downloads", "emulatorjs"),
-    catalog: {...emulatorJsSourceCatalog, developmentCores,
-      publishedCores: sources.upstreamReleases.filter((source) => source.id === "flycast")},
+    catalog: emulatorJsCoreInputs(emulatorJsSourceCatalog, coreDirectories, candidate),
     definition: emulatorJsProviderDefinition,
     extractArchive: extractWith7Zip,
     fetchBytes: fetchPinnedBytes,
@@ -291,10 +294,6 @@ if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1]
 
 async function candidateFiles(input) {
   const files = new Map();
-  for (const release of input.catalog.publishedCores ?? []) {
-    const verified = await readEmulatorJsCoreRelease(release, input.fetchBytes);
-    for (const [path, bytes] of verified) {files.set(path, bytes);}
-  }
   for (const source of input.catalog.developmentCores ?? []) {
     const verified = await readEmulatorJsCoreCandidate(source, input.coreDirectories?.[source.id], input.candidate === true);
     for (const [path, bytes] of verified) {files.set(path, bytes);}

@@ -19,6 +19,7 @@
   let engineReadySent = false;
   let sceneManagerHooked = false;
   let exitRequested = false;
+  let inputDiagnostics = null;
 
   function ownKeys(value, expected) {
     if (!value || typeof value !== "object" || Array.isArray(value)) return false;
@@ -355,9 +356,85 @@
     }
   }
 
+  // Optional diagnostics observe engine-bound events; they never poll or synthesize inputs.
+  function startInputDiagnostics() {
+    let active = true;
+    let sequence = 0;
+    let dropped = 0;
+    let events = [];
+    const held = new Map();
+    const values = new Map();
+    const removers = [];
+    const record = (device, control, value, target, stage) => {
+      if (!active) return;
+      const key = `${device}:${control}`;
+      if ((values.get(key) || 0) === value) return;
+      const previous = held.get(key);
+      if (value === 0) values.delete(key);
+      else if (values.size < 128) values.set(key, value);
+      else { dropped++; return; }
+      const atMs = global.performance.now();
+      const observation = {sequence: ++sequence, atMs, device, control, value, target, stage,
+        reason: null, heldMs: !value && previous ? atMs - previous.atMs : null};
+      if (value === 0) held.delete(key);
+      else if (!previous) held.set(key, observation);
+      events.push(observation);
+      if (events.length > 64) { events.shift(); dropped++; }
+    };
+    const keyEvent = (event) => {
+      if (event.repeat || !event.code) return;
+      record("keyboard", event.code.slice(0, 40), event.type === "keydown" ? 1 : 0,
+        null, "BROWSER");
+    };
+    const reset = () => {held.clear(); values.clear();};
+    global.addEventListener("keydown", keyEvent, {capture: true, passive: true});
+    global.addEventListener("keyup", keyEvent, {capture: true, passive: true});
+    global.addEventListener("blur", reset);
+    removers.push(() => {
+      global.removeEventListener("keydown", keyEvent, true);
+      global.removeEventListener("keyup", keyEvent, true);
+      global.removeEventListener("blur", reset);
+    });
+    const input = global.Input;
+    let gamepad = false;
+    if (input && typeof input._updateGamepadState === "function") {
+      const original = input._updateGamepadState;
+      const observed = function (pad) {
+        const result = original.call(this, pad);
+        try {
+          if (pad && pad.buttons) for (let index = 0; index < Math.min(32, pad.buttons.length); index++) {
+            record(`gamepad:${pad.index}`, `Button ${index}`, pad.buttons[index].pressed ? 1 : 0,
+              typeof this.gamepadMapper[index] === "string" ? this.gamepadMapper[index] : null, "DELIVERED");
+          }
+        } catch { /* Diagnostics cannot interrupt engine input. */ }
+        return result;
+      };
+      try {
+        input._updateGamepadState = observed;
+        removers.push(() => {if (input._updateGamepadState === observed) input._updateGamepadState = original;});
+        gamepad = true;
+      } catch { /* Frozen engine input remains playable without diagnostics. */ }
+    }
+    return {
+      read: () => ({events, held: [...held.values()], dropped, keyboard: true, gamepad, delivery: gamepad,
+        focus: global.document.hasFocus() ? "GAME" : "UNFOCUSED", coreRead: false}),
+      clear: () => {events = []; dropped = 0;},
+      stop: () => {active = false; for (const remove of removers.reverse()) {try {remove();} catch { /* Keep later owners. */ }}},
+    };
+  }
+
   async function dispatch(message) {
     switch (message.type) {
-    case "STATUS": return { type: "STATUS_RESULT", body: { ready: readyForCheckpoint(), frameCount } };
+    case "STATUS": return { type: "STATUS_RESULT", body: { ready: readyForCheckpoint(), frameCount,
+      ...(inputDiagnostics ? {inputDiagnostics: inputDiagnostics.read()} : {}) } };
+    case "INPUT_DIAGNOSTICS":
+      if (typeof message.body.enabled !== "boolean") throw new Error("RPG_NATIVE_MESSAGE_INVALID");
+      if (inputDiagnostics) inputDiagnostics.stop();
+      inputDiagnostics = message.body.enabled ? startInputDiagnostics() : null;
+      return {type: "INPUT_DIAGNOSTICS_RESULT", body: {}};
+    case "CLEAR_INPUT_DIAGNOSTICS":
+      if (inputDiagnostics) inputDiagnostics.clear();
+      return {type: "CLEAR_INPUT_DIAGNOSTICS_RESULT", body: {}};
     case "SAVE": return { type: "SAVE_RESULT", body: await captureNativeSave() };
     case "RESTORE": return { type: "RESTORE_RESULT", body: await restoreNativeSave(message.body.bundle) };
     case "SCREENSHOT": return { type: "SCREENSHOT_RESULT", body: await screenshot() };
@@ -366,6 +443,8 @@
     case "SET_VIDEO_MODE": setVideoMode(message.body.mode); return { type: "SET_VIDEO_MODE_RESULT", body: {} };
     case "SET_VOLUME": setVolume(message.body.value); return { type: "SET_VOLUME_RESULT", body: {} };
     case "CLEANUP":
+      if (inputDiagnostics) inputDiagnostics.stop();
+      inputDiagnostics = null;
       if (cleanupUrl) {
         void global.fetch(cleanupUrl, { method: "POST", credentials: "same-origin", keepalive: true })
           .catch(() => undefined);

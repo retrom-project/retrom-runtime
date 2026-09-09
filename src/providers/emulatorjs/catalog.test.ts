@@ -28,19 +28,37 @@ describe("EmulatorJS Provider declarations", () => {
       expect(target.checkpoint?.writeFormat).toBe("emulatorjs-state-v1");
     }
   });
-  it("uses last declaration wins for exactly thirty-six current core targets", () => {
+  it("uses last declaration wins for exactly forty-four current core targets", () => {
     const manifest = projectProviderManifest(emulatorJsProviderDefinition);
     expect(validateProviderManifest(manifest)).toBe(manifest);
     expect(manifest.providerId).toBe("emulatorjs");
-    expect(manifest.providerVersion).toBe("2.4.0-dev.4");
-    expect(manifest.targets).toHaveLength(36);
-    expect(new Set(manifest.targets.map((target) => target.id)).size).toBe(36);
+    expect(manifest.providerVersion).toBe("2.6.0-rc.1");
+    expect(manifest.targets).toHaveLength(44);
+    expect(new Set(manifest.targets.map((target) => target.id)).size).toBe(44);
     for (const targetId of ["dosbox-pure", "genesis-plus-gx-wide", "azahar"]) {
       const target = emulatorJsProviderDefinition.targets.find((entry) => entry.id === targetId);
       expect(target?.implementation.release).toBe("4.3.0-pre");
     }
     expect(emulatorJsProviderDefinition.targets.find((entry) => entry.id === "dosbox-pure")?.implementation)
       .toMatchObject({artifactFlavor: "THREAD_WASM", runtimeCore: "dosbox_pure"});
+  });
+
+  it("adds the eight EmulatorJS 4.2.3 cores as single-file targets", () => {
+    const targetIds = [
+      "fuse", "gearcoleco", "prboom", "puae", "vice-x128", "vice-x64sc", "vice-xvic", "virtualjaguar",
+    ];
+    for (const targetId of targetIds) {
+      const target = emulatorJsProviderDefinition.targets.find((entry) => entry.id === targetId);
+      expect(target, targetId).toBeDefined();
+      expect(target?.implementation).toMatchObject({
+        artifactFlavor: ["vice-xvic", "virtualjaguar"].includes(targetId) ? "OVERRIDE" : "WASM", contentKinds: ["SINGLE_FILE"], release: "4.2.3",
+      });
+      expect(target?.discSwitch, targetId).toBe(false);
+      expect(target?.netplayPort, targetId).toBe(false);
+      expect(target?.requiresThreads, targetId).toBe(false);
+    }
+    expect(emulatorJsProviderDefinition.targets.find((entry) => entry.id === "fuse")?.implementation.defaultOptions)
+      .toMatchObject({keyboardInput: "enabled"});
   });
 
   it("keeps runtime selection private while publishing exact frame and thread contracts", () => {

@@ -5,8 +5,7 @@ import {readFile, rm, writeFile} from "node:fs/promises";
 import {dirname, join, relative, resolve} from "node:path";
 import {fileURLToPath, pathToFileURL} from "node:url";
 
-import {loadProviderSources} from "./provider-sources.mjs";
-import {readEmulatorJsCoreCandidate} from "./emulatorjs-core-candidate.mjs";
+import {emulatorJsCoreInputs, readEmulatorJsCoreCandidate} from "./emulatorjs-core-candidate.mjs";
 import {verifyProviderBundle} from "./provider-bundle.mjs";
 import {
   buildEmulatorJsProviderBundle,
@@ -43,20 +42,18 @@ export async function buildCurrentProviderBuild(input = {}) {
     outputRoot: join(outputRoot, "retrom-runtime"),
     stageRoot,
   });
-  const sources = await loadProviderSources(new URL("../", import.meta.url));
-  const publishedCores = sources.upstreamReleases.filter((source) => source.id === "flycast");
-  const developmentCores = sources.developmentInputs?.filter(
-    (source) => source.id === "flycast") ?? [];
   const directories = JSON.parse(process.env.RETROM_RUNTIME_DEV_RELEASE_OVERRIDES ?? "{}");
-  for (const source of developmentCores) {
-    await readEmulatorJsCoreCandidate(source, directories[source.id], process.env.RETROM_PFB_CANDIDATE_BUILD === "1");
+  const candidate = process.env.RETROM_PFB_CANDIDATE_BUILD === "1";
+  const sourceCatalog = emulatorJsCoreInputs(emulatorJsSourceCatalog, directories, candidate);
+  for (const source of sourceCatalog.developmentCores) {
+    await readEmulatorJsCoreCandidate(source, directories[source.id], candidate);
   }
   const emulatorjs = await buildEmulatorJsProviderBundle({
     definition: emulatorJsProviderDefinition,
     entryPoint: join(root, "src", "providers", "emulatorjs", "module.ts"),
     manifest: emulatorManifest,
     outputRoot: join(outputRoot, "emulatorjs"),
-    sourceCatalog: {...emulatorJsSourceCatalog, developmentCores, publishedCores},
+    sourceCatalog,
     sourceRoot: resolve(emulatorJsSourceRoot),
   });
   const providers = [releaseMetadata(outputRoot, retromManifest, retrom),
@@ -125,7 +122,7 @@ export async function pinCurrentProviderRelease(input = {}) {
 
 function validRelease(value) {
   return exactKeys(value, ["commit", "repository", "tag"]) && value.repository === repository &&
-    /^[0-9a-f]{40}$/u.test(value.commit) && /^v(?:0|[1-9][0-9]*)\.(?:0|[1-9][0-9]*)\.(?:0|[1-9][0-9]*)$/u.test(value.tag);
+    /^[0-9a-f]{40}$/u.test(value.commit) && /^v(?:0|[1-9][0-9]*)\.(?:0|[1-9][0-9]*)\.(?:0|[1-9][0-9]*)(?:-rc\.[1-9][0-9]*)?$/u.test(value.tag);
 }
 
 function releaseMetadata(outputRoot, manifest, result) {

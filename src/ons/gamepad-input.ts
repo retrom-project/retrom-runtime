@@ -1,3 +1,4 @@
+import {inputObserver} from "../provider/input-observations.js";
 const pressThreshold = 0.6;
 const releaseThreshold = 0.35;
 
@@ -62,4 +63,6 @@ function dispatchKey(frameWindow: Window, canvas: HTMLCanvasElement, type: "keyd
     code: key,
     key,
   }));
+  inputObserver(frameWindow)?.record({device: "gamepad", control: key,
+    value: type === "keydown" ? 1 : 0, stage: "DELIVERED", target: `keyboard:${key}`, reason: null}, frameWindow.performance.now());
 }

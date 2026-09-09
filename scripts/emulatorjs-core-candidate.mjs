@@ -1,11 +1,12 @@
 import {createHash} from "node:crypto";
 import {lstat, readFile, readdir} from "node:fs/promises";
 import {isAbsolute, join} from "node:path";
+import {forkReleaseFiles} from "./emulatorjs-fork-releases.mjs";
 
 const outputs = {
   "flycast-wasm.data": "4.2.3/data/cores/flycast-wasm.data",
   "flycast.json": "4.2.3/data/cores/reports/flycast.json",
-  LICENSE: "4.2.3/licenses/flycast/LICENSE",
+  LICENSE: "4.2.3/licenses/forks/flycast/LICENSE",
 };
 export function validEmulatorJsCoreSource(source) {
   return exactKeys(source, ["adapterAbi", "files", "id", "repository"]) && source.id === "flycast" && source.repository === "https://github.com/retrom-project/flycast-wasm" &&
@@ -60,4 +61,19 @@ function invalid() {return new Error("EMULATORJS_CORE_CANDIDATE_INVALID");}
 function exactKeys(value, keys) {
   return value !== null && typeof value === "object" && !Array.isArray(value) &&
     JSON.stringify(Object.keys(value).sort()) === JSON.stringify(keys);
+}
+
+export function emulatorJsCoreInputs(catalog, directories = {}, candidate = false) {
+  const developmentCores = [...catalog.developmentCores ?? []];
+  const forks = (catalog.forks ?? []).filter((fork) => {
+    if (!Object.hasOwn(directories, fork.runtimeCore)) {return true;}
+    if (!candidate) {throw new Error("UNPUBLISHED_CORE_INPUT");}
+    const source = {id: fork.runtimeCore, repository: fork.repository, adapterAbi: fork.adapterAbi,
+      files: forkReleaseFiles({forks: [fork]}).filter((file) => file.filename !== "rpg-runtime-release.json")
+        .map(({filename, destination, sizeBytes, sha256}) => ({filename, output: destination, sizeBytes, sha256}))};
+    if (!validEmulatorJsCoreSource(source)) {throw invalid();}
+    developmentCores.push(source);
+    return false;
+  });
+  return {...catalog, forks, developmentCores};
 }

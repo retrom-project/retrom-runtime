@@ -1,4 +1,5 @@
 import {mountScummvm} from "../../scummvm/adapter.js";
+import {mountPlay} from "../../play/adapter.js";
 
 import {mountFantasyConsole} from "../../fantasy-console/adapter.js";
 import {mountJ2me} from "../../j2me/adapter.js";
@@ -36,7 +37,11 @@ export function mountTargetAdapter(
   const adapter = retromRuntimeProviderDefinition.adapters.find((entry) => entry.id === declaration?.adapterId);
   if (!declaration || !adapter) {throw new Error("PROVIDER_LAUNCH_REQUEST_INVALID");}
   const {frameWindow, restorePayload, reportProgress, reportExitRequested} = context;
+  const reportFailure = context.reportFailure ?? (() => undefined);
   switch (adapter.kind) {
+  case "PLAY_WEB":
+    return mountPlay(parameters.play(envelope, context.assetIndex), target, frameWindow, restorePayload,
+      reportFailure, context.signal);
   case "EASYRPG_WEB":
     return mountEasyRpg(parameters.easyRpg(envelope, declaration.implementation), target,
       frameWindow, restorePayload, reportExitRequested);
@@ -57,15 +62,15 @@ export function mountTargetAdapter(
     return mountTyranoScript(parameters.tyranoScript(envelope), requireFrame(context), restorePayload, reportExitRequested);
   case "J2ME_MINIJVM_WEB":
     return mountJ2me(parameters.j2me(envelope), target, frameWindow, restorePayload, reportProgress,
-      reportExitRequested, context.reportFailure ?? (() => undefined), context.signal);
+      reportExitRequested, reportFailure, context.signal);
   case "SCUMMVM_WEB":
     return mountScummvm(parameters.scummvm(envelope), target, frameWindow, restorePayload, reportProgress,
-      reportExitRequested, context.reportFailure ?? (() => undefined), context.signal);
+      reportExitRequested, reportFailure, context.signal);
 
   case "TIC80_WEB":
   case "FAKE08_WEB":
     return mountFantasyConsole(parameters.fantasy(envelope, context.assetIndex), target, frameWindow,
-      restorePayload, reportProgress, context.reportFailure ?? (() => undefined), context.signal);
+      restorePayload, reportProgress, reportFailure, context.signal);
   case "WASM4_WEB":
     return mountWasm4(parameters.wasm4(envelope), target, frameWindow, restorePayload, reportProgress);
   default: throw new Error("PROVIDER_LAUNCH_REQUEST_INVALID");

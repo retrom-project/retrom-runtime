@@ -6,6 +6,7 @@ import { fileURLToPath } from "node:url";
 
 import {loadProviderSources} from "./provider-sources.mjs";
 import {sourceTreeSha256} from "./provider-release.mjs";
+import {forkReleaseFiles} from "./emulatorjs-fork-releases.mjs";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const args = parseArgs(process.argv.slice(2));
@@ -36,9 +37,16 @@ for (const core of spec.cores) {
   });
 }
 const providerSources = await loadProviderSources(new URL("../", import.meta.url));
-const declaredSources = [...providerSources.upstreamReleases, ...providerSources.developmentInputs ?? []];
+run("npm", ["run", "build"]);
+const {emulatorJsSourceCatalog} = await import("../dist/providers/emulatorjs/source-catalog.js");
+const developmentInputs = [...providerSources.developmentInputs ?? [], ...emulatorJsSourceCatalog.developmentCores ?? []];
+const upstreamReleases = [...providerSources.upstreamReleases, ...(emulatorJsSourceCatalog.forks ?? []).map((fork) => ({
+  ...fork, id: fork.runtimeCore,
+  assets: forkReleaseFiles({forks: [fork]}).map((file) => ({...file, output: file.destination})),
+}))];
+const declaredSources = [...upstreamReleases, ...developmentInputs];
 const declaredIds = new Set(declaredSources.map((release) => release.id));
-const coreInputs = providerSources.upstreamReleases.map((release) => branchInputs.get(release.id) ?? ({
+const coreInputs = upstreamReleases.map((release) => branchInputs.get(release.id) ?? ({
   id: release.id, mode: "formal", repository: release.repository, tag: release.tag,
   commit: release.commit, adapterAbi: release.adapterAbi,
   assets: release.assets.map((asset) => ({ filename: asset.filename, output: asset.output })),
@@ -54,12 +62,11 @@ for (const source of declaredSources) {
     throw new Error(`PFB_CANDIDATE_OUTPUT_INVALID:${source.id}`);
   }
 }
-for (const source of providerSources.developmentInputs ?? []) {
+for (const source of developmentInputs) {
   const branch = branchInputs.get(source.id);
   if (!branch) {throw new Error(`UNPUBLISHED_CORE_INPUT:${source.id}`);}
   coreInputs.push(branch);
 }
-run("npm", ["run", "build"]);
 const candidateEnvironment = {
   RETROM_PFB_CANDIDATE_BUILD: "1",
   RETROM_PROVIDER_BUILD_ONLY: "1",

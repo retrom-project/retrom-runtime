@@ -1,3 +1,4 @@
+import {NativeInputDiagnostics} from "./input-diagnostics.js";
 import {
   decodeRpgCheckpoint,
   encodeRpgCheckpoint,
@@ -76,6 +77,7 @@ export async function mountNativeRpg(
       ? { available: true, blocker: null }
       : { available: false, blocker: "BUSY" },
     getFrameCount: () => channel.frames(),
+    startInputDiagnostics: () => channel.inputDiagnostics.start(),
     pause: async () => {await channel.request("PAUSE", {}, 5_000);},
     resume: async () => {await channel.request("RESUME", {}, 5_000);},
     screenshot: () => channel.screenshot(),
@@ -88,6 +90,7 @@ export async function mountNativeRpg(
 }
 
 export class NativeChannel {
+  readonly inputDiagnostics = new NativeInputDiagnostics((type, body) => this.request(type, body));
   private readonly config: NativeRpgParameters;
   private readonly nonce = randomNonce();
   private readonly port = new MessageChannel();
@@ -200,6 +203,7 @@ export class NativeChannel {
         if (reply.type === "STATUS_RESULT") {
           this.available = reply.body.ready === true;
           this.updateFrames(reply.body.frameCount);
+          this.inputDiagnostics.update(reply.body.inputDiagnostics);
         }
       } catch {
         this.available = false;
@@ -228,6 +232,7 @@ export class NativeChannel {
   }
 
   close() {
+    this.inputDiagnostics.stop();
     this.closed = true;
     this.stopStatusLoop();
     if (this.pending) {

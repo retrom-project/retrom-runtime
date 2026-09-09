@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "packageName": "@xxxsen/retrom-runtime",
-  "packageVersion": "0.20.0",
+  "packageVersion": "0.24.0-rc.1",
   "publicApiVersion": 2,
   "upstreamReleases": [
     {
@@ -1957,6 +1957,58 @@
           "maxSizeBytes": 33554432
         }
       ]
+    },
+    {
+      "id": "play",
+      "repository": "https://github.com/retrom-project/Play-",
+      "tag": "retrom-core-g83700b2c31e5-r2",
+      "commit": "fa483151215ceb0a8891a573ec0903d45328ab57",
+      "adapterAbi": "play-host-v1",
+      "metadataUrl": "https://github.com/retrom-project/Play-/releases/download/retrom-core-g83700b2c31e5-r2/rpg-runtime-release.json",
+      "assets": [
+        {
+          "filename": "LICENSE",
+          "url": "https://github.com/retrom-project/Play-/releases/download/retrom-core-g83700b2c31e5-r2/LICENSE",
+          "output": "licenses/play/LICENSE",
+          "maxSizeBytes": 131072
+        },
+        {
+          "filename": "Play.js",
+          "url": "https://github.com/retrom-project/Play-/releases/download/retrom-core-g83700b2c31e5-r2/Play.js",
+          "output": "runtime/play/Play.js",
+          "maxSizeBytes": 8388608
+        },
+        {
+          "filename": "Play.wasm",
+          "url": "https://github.com/retrom-project/Play-/releases/download/retrom-core-g83700b2c31e5-r2/Play.wasm",
+          "output": "runtime/play/Play.wasm",
+          "maxSizeBytes": 8388608
+        },
+        {
+          "filename": "checkpoint.mjs",
+          "url": "https://github.com/retrom-project/Play-/releases/download/retrom-core-g83700b2c31e5-r2/checkpoint.mjs",
+          "output": "runtime/play/checkpoint.mjs",
+          "maxSizeBytes": 65536
+        },
+        {
+          "filename": "input.mjs",
+          "url": "https://github.com/retrom-project/Play-/releases/download/retrom-core-g83700b2c31e5-r2/input.mjs",
+          "output": "runtime/play/input.mjs",
+          "maxSizeBytes": 65536
+        },
+        {
+          "filename": "play-retrom.mjs",
+          "url": "https://github.com/retrom-project/Play-/releases/download/retrom-core-g83700b2c31e5-r2/play-retrom.mjs",
+          "output": "runtime/play/play-retrom.mjs",
+          "maxSizeBytes": 65536
+        },
+        {
+          "filename": "range-device.mjs",
+          "url": "https://github.com/retrom-project/Play-/releases/download/retrom-core-g83700b2c31e5-r2/range-device.mjs",
+          "output": "runtime/play/range-device.mjs",
+          "maxSizeBytes": 65536
+        }
+      ]
     }
   ],
   "localAssets": [
@@ -1967,33 +2019,6 @@
     {
       "source": "assets/runtime/butterscotch/worker.mjs",
       "output": "runtime/butterscotch/worker.mjs"
-    }
-  ],
-  "developmentInputs": [
-    {
-      "repository": "https://github.com/retrom-project/flycast-wasm",
-      "adapterAbi": "emulatorjs-flycast-state-v1",
-      "id": "flycast",
-      "files": [
-        {
-          "filename": "LICENSE",
-          "sha256": "71433d9114710e9d2f65310c43561515c051fc13500de981fd1ebe7ce499ba92",
-          "sizeBytes": 61843,
-          "output": "4.2.3/licenses/flycast/LICENSE"
-        },
-        {
-          "filename": "flycast-wasm.data",
-          "sha256": "fab41d57ae056e318c893e1421495ba984088630e3d59b5494796412d34850b2",
-          "sizeBytes": 3530830,
-          "output": "4.2.3/data/cores/flycast-wasm.data"
-        },
-        {
-          "filename": "flycast.json",
-          "sha256": "215107a9bf4af4fd96f89d864b0ad927edb6e878616d851417dcf50a56bde814",
-          "sizeBytes": 92,
-          "output": "4.2.3/data/cores/reports/flycast.json"
-        }
-      ]
     }
   ]
 }

@@ -18,11 +18,13 @@ const providerOnly = process.env.RETROM_PROVIDER_BUILD_ONLY === "1";
 if (candidateBuild === formalBuild) {throw new Error("PROVIDER_BUILD_MODE_REQUIRED");}
 await rejectRetiredCandidateDeclaration(root);
 const sources = await loadProviderSources(root);
+const {emulatorJsSourceCatalog} = await import("../dist/providers/emulatorjs/source-catalog.js");
 const developmentInputs = sources.developmentInputs ?? [];
 assertScummvmCandidateMode(developmentInputs, process.env.RETROM_PFB_CANDIDATE_BUILD === "1", formalBuild);
 const devReleaseOverrides = parseDevReleaseOverrides(
   process.env.RETROM_RUNTIME_DEV_RELEASE_OVERRIDES,
-  [...sources.upstreamReleases, ...developmentInputs],
+  [...sources.upstreamReleases, ...developmentInputs, ...emulatorJsSourceCatalog.developmentCores ?? [],
+    ...(emulatorJsSourceCatalog.forks ?? []).map((fork) => ({id: fork.runtimeCore}))],
   formalBuild,
 );
 const commit = releaseCommit();
@@ -39,7 +41,6 @@ for (const asset of sources.localAssets) {
   await publish(await readFile(new URL(asset.source, root)), new URL(asset.output, stage));
 }
 for (const release of sources.upstreamReleases) {
-  if (release.id === "flycast") {continue;}
   const devRoot = devReleaseOverrides.get(release.id);
   if (release.id === "scummvm" && devRoot) {
     assertScummvmCandidateMode([release], process.env.RETROM_PFB_CANDIDATE_BUILD === "1", formalBuild);
@@ -66,7 +67,7 @@ for (const release of sources.upstreamReleases) {
   }
 }
 const developmentOutputs = [];
-for (const input of developmentInputs.filter((source) => source.id !== "flycast")) {
+for (const input of developmentInputs) {
   developmentOutputs.push(...await stageScummvmCandidate(input, devReleaseOverrides.get(input.id), root, stage));
 }
 const records = await collectRecords(sources, stage, developmentOutputs);
@@ -169,8 +170,7 @@ async function publish(contents, target) {
 async function collectRecords(value, directory, developmentOutputs) {
   const paths = ["CHANGELOG.md", "LICENSE", "THIRD_PARTY_NOTICES.md", "library/index.js", "library/index.d.ts",
     ...value.localAssets.map((asset) => asset.output), ...developmentOutputs,
-    ...value.upstreamReleases.filter((release) => release.id !== "flycast")
-      .flatMap((release) => release.assets.map((asset) => asset.output))].sort();
+    ...value.upstreamReleases.flatMap((release) => release.assets.map((asset) => asset.output))].sort();
   return Promise.all(paths.map(async (path) => {
     const contents = await readFile(new URL(path, directory));
     return { path, filename: basename(path), sizeBytes: contents.length, sha256: sha256(contents) };

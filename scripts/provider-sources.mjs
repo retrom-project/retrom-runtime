@@ -1,5 +1,3 @@
-import {validEmulatorJsCoreSource} from "./emulatorjs-core-candidate.mjs";
-import {validEmulatorJsCoreRelease} from "./emulatorjs-core-release.mjs";
 import {validScummvmSource} from "./scummvm-release.mjs";
 import {validScummvmRelease} from "./scummvm-published-release.mjs";
 import { validJ2meRelease } from "./j2me-release.mjs";
@@ -28,7 +26,7 @@ export function validateProviderSources(sources) {
     if (!release?.id || releases.has(release.id) ||
       !/^https:\/\/github\.com\/retrom-project\/[A-Za-z0-9._-]+$/u.test(release.repository) ||
       !/^[0-9a-f]{40}$/u.test(release.commit) ||
-      !validRelease(release)) {
+      !(release.id === "scummvm" ? validScummvmRelease(release) : release.archive ? validJ2meRelease(release) : validCoreRelease(release))) {
       throw new Error("PROVIDER_SOURCES_INVALID");
     }
     releases.set(release.id, release);
@@ -42,21 +40,15 @@ export function validateProviderSources(sources) {
     }
   }
   const development = sources.developmentInputs ?? [];
-  if (!Array.isArray(development) || development.length > 2) {throw new Error("PROVIDER_SOURCES_INVALID");}
+  if (!Array.isArray(development) || development.length > 1) {throw new Error("PROVIDER_SOURCES_INVALID");}
   for (const input of development) {
-    if ((!validScummvmSource(input) && !validEmulatorJsCoreSource(input)) || releases.has(input.id)) {throw new Error("PROVIDER_SOURCES_INVALID");}
+    if (!validScummvmSource(input) || releases.has(input.id)) {throw new Error("PROVIDER_SOURCES_INVALID");}
     releases.set(input.id, input);
   }
   for (const asset of sources.localAssets) {
     if (!safePath(asset.source) || !safePath(asset.output)) {throw new Error("PROVIDER_SOURCES_INVALID");}
     assetPaths.add(asset.output);
   }
-}
-
-function validRelease(release) {
-  if (release.id === "flycast") {return validEmulatorJsCoreRelease(release);}
-  if (release.id === "scummvm") {return validScummvmRelease(release);}
-  return release.archive ? validJ2meRelease(release) : validCoreRelease(release);
 }
 
 export function safePath(value) {

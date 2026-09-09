@@ -119,7 +119,7 @@ async function fixtureDevelopmentForks(root: string) {
     for (const asset of assets) {
       const name = asset.filename;
       const destination = name.endsWith(".data") ? `4.2.3/data/cores/${name}`
-        : name.endsWith(".json") ? "4.2.3/data/cores/reports/cap32.json" : `4.2.3/licenses/forks/cap32/${name}`;
+        : name.endsWith(".json") ? `4.2.3/data/cores/reports/${fork.runtimeCore}.json` : `4.2.3/licenses/forks/${fork.runtimeCore}/${name}`;
       await write(join(root, destination), name.endsWith(".json") ? metadata : content(name));
     }
     result.push({...fork, assets});

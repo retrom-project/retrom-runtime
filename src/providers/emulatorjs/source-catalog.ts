@@ -30,7 +30,37 @@ export const emulatorJsSourceCatalog = {
         "sizeBytes": 1356576
       }
     ]
-  }
+  },
+{
+  "repository": "https://github.com/retrom-project/libretro-crocods",
+  "commit": "046978e8149798f93ba74d76aa2fc6b23de73de1",
+  "sourceTreeSha256": "2799dabf3258acfd827bda1f43691c11c58c3e1e0cf0b38cd8cc8ad2404b121b",
+  "adapterAbi": "emulatorjs-state-v1",
+  "runtimeCore": "crocods",
+  "upstreamCommit": "be00fb904da08d66221017f6708508298f17ff07",
+  "assets": [
+    {
+      "filename": "LICENSE",
+      "sha256": "e7a80285ce71a64bf9823a4e2b210feb8e4dbc5210a8e4d9b64515a021d1a31a",
+      "sizeBytes": 1063
+    },
+    {
+      "filename": "crocods-wasm.data",
+      "sha256": "ab909e321609fbe0aa5eceaf0408b8949b14e0ec2076cd38889aa1671dc28d0d",
+      "sizeBytes": 976361
+    },
+    {
+      "filename": "source.tar.gz",
+      "sha256": "0683ce6857b2ca1247418c19aaf6d5d7d6e79ed29782f0e26437cc9254c1f22d",
+      "sizeBytes": 403695
+    },
+    {
+      "filename": "retrom-core-candidate.json",
+      "sha256": "e31d8125502503344b7208c421cf524ef365faa39e86cc064cee0b44cc5126fb",
+      "sizeBytes": 747
+    }
+  ]
+}
 ],
   forks: [
     {

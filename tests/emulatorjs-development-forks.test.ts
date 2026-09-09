@@ -24,17 +24,18 @@ import {developmentForkFiles, requireDevelopmentForkMode, stageDevelopmentForks,
 const roots: string[] = [];
 afterEach(async () => {await Promise.all(roots.splice(0).map((root) => rm(root, {recursive: true, force: true})));});
 const sha = (bytes: Uint8Array) => createHash("sha256").update(bytes).digest("hex");
-function fixture() {
-  const contents = new Map([...["COPYING", "cap32-wasm.data", "source.tar.gz"].map((name) =>
+function fixture(core = "cap32") {
+  const license = core === "cap32" ? "COPYING" : "LICENSE";
+  const contents = new Map([...[license, `${core}-wasm.data`, "source.tar.gz"].map((name) =>
     [name, Buffer.from(`project-owned ${name} test bytes`)] as const)]);
   const files = [...contents].map(([filename, bytes]) => ({filename, sha256: sha(bytes), sizeBytes: bytes.length}));
-  const metadata = {schemaVersion: 1, kind: "RETROM_CORE_CANDIDATE_V1", coreId: "cap32",
-    repository: "https://github.com/retrom-project/libretro-cap32", branch: "feat/test-core",
+  const metadata = {schemaVersion: 1, kind: "RETROM_CORE_CANDIDATE_V1", coreId: core,
+    repository: `https://github.com/retrom-project/libretro-${core}`, branch: "feat/test-core",
     commit: "a".repeat(40), dirty: false, sourceTreeSha256: "b".repeat(64), adapterAbi: "emulatorjs-state-v1", files};
   const bytes = Buffer.from(JSON.stringify(metadata));
   contents.set("retrom-core-candidate.json", bytes);
-  const fork = {runtimeCore: "cap32", repository: metadata.repository,
-    upstreamCommit: "310cc579b79b6051b378b192224b325a73437c9b", commit: metadata.commit,
+  const fork = {runtimeCore: core, repository: metadata.repository,
+    upstreamCommit: core === "cap32" ? "310cc579b79b6051b378b192224b325a73437c9b" : "be00fb904da08d66221017f6708508298f17ff07", commit: metadata.commit,
     sourceTreeSha256: metadata.sourceTreeSha256, adapterAbi: metadata.adapterAbi,
     assets: [...files, {filename: "retrom-core-candidate.json", sha256: sha(bytes), sizeBytes: bytes.length}]};
   return {contents, metadata, fork, catalog: {developmentForks: [fork]}};
@@ -42,6 +43,18 @@ function fixture() {
 async function directory() {const root = await mkdtemp(join(tmpdir(), "cap32-candidate-")); roots.push(root); return root;}
 
 describe("EmulatorJS local core provenance", () => {
+  it("stages two declared forks separately and rejects duplicate identities", async () => {
+    const cap = fixture(), croco = fixture("crocods"), output = await directory();
+    const catalog = {developmentForks: [cap.fork, croco.fork]}, inputs = new Map<string, string>();
+    for (const entry of [cap, croco]) {
+      const source = await directory(); inputs.set(entry.fork.runtimeCore, source);
+      for (const [name, bytes] of entry.contents) {await writeFile(join(source, name), bytes);}
+    }
+    await stageDevelopmentForks(catalog, inputs, output);
+    expect(await readFile(join(output, "4.2.3/data/cores/crocods-wasm.data"))).toEqual(croco.contents.get("crocods-wasm.data"));
+    expect(await readFile(join(output, "4.2.3/licenses/forks/crocods/LICENSE"))).toEqual(croco.contents.get("LICENSE"));
+    expect(() => developmentForkFiles({developmentForks: [cap.fork, cap.fork]})).toThrow();
+  });
   it("rejects formal builds and undeclared core identities", () => {
     const {catalog, fork} = fixture();
     expect(() => requireDevelopmentForkMode(catalog, false)).toThrow("UNPUBLISHED_CORE_INPUT");

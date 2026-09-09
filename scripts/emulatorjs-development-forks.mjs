@@ -2,34 +2,39 @@ import {createHash} from "node:crypto";
 import {lstat, readFile, readdir, writeFile, mkdir} from "node:fs/promises";
 import {dirname, isAbsolute, join} from "node:path";
 
-const repository = "https://github.com/retrom-project/libretro-cap32";
-const baseline = "310cc579b79b6051b378b192224b325a73437c9b";
-const names = ["COPYING", "cap32-wasm.data", "retrom-core-candidate.json", "source.tar.gz"];
+const sources = new Map([
+  ["cap32", {repository: "https://github.com/retrom-project/libretro-cap32",
+    upstreamCommit: "310cc579b79b6051b378b192224b325a73437c9b", license: "COPYING"}],
+  ["crocods", {repository: "https://github.com/retrom-project/libretro-crocods",
+    upstreamCommit: "be00fb904da08d66221017f6708508298f17ff07", license: "LICENSE"}],
+]);
+const names = (core) => [sources.get(core)?.license, `${core}-wasm.data`, "retrom-core-candidate.json", "source.tar.gz"].sort();
 const hash = (bytes) => createHash("sha256").update(bytes).digest("hex");
 const digest = (value) => typeof value === "string" && /^[0-9a-f]{64}$/u.test(value);
 const exact = (value, keys) => value && typeof value === "object" && !Array.isArray(value) &&
   Object.keys(value).sort().join("\0") === [...keys].sort().join("\0");
 
 export function validEmulatorJsDevelopmentSource(value) {
-  return exact(value, ["id", "repository", "upstreamCommit", "adapterAbi"]) && value.id === "cap32" &&
-    value.repository === repository && value.upstreamCommit === baseline && value.adapterAbi === "emulatorjs-state-v1";
+  const source = sources.get(value?.id);
+  return !!source && exact(value, ["id", "repository", "upstreamCommit", "adapterAbi"]) &&
+    value.repository === source.repository && value.upstreamCommit === source.upstreamCommit && value.adapterAbi === "emulatorjs-state-v1";
 }
 
 export function developmentForkFiles(catalog) {
   const forks = catalog.developmentForks ?? [];
-  if (!Array.isArray(forks) || forks.length > 1) {invalid();}
+  if (!Array.isArray(forks) || forks.length > sources.size || new Set(forks.map((fork) => fork?.runtimeCore)).size !== forks.length) {invalid();}
   return forks.flatMap((fork) => {
     if (!exact(fork, ["runtimeCore", "repository", "upstreamCommit", "commit", "sourceTreeSha256", "adapterAbi", "assets"]) ||
       !validEmulatorJsDevelopmentSource({id: fork.runtimeCore, repository: fork.repository,
         upstreamCommit: fork.upstreamCommit, adapterAbi: fork.adapterAbi}) ||
       !/^[0-9a-f]{40}$/u.test(fork.commit) || !digest(fork.sourceTreeSha256) || !Array.isArray(fork.assets) ||
-      fork.assets.map((file) => file.filename).sort().join("\0") !== names.join("\0")) {invalid();}
+      fork.assets.map((file) => file.filename).sort().join("\0") !== names(fork.runtimeCore).join("\0")) {invalid();}
     return fork.assets.map((file) => {
       if (!exact(file, ["filename", "sha256", "sizeBytes"]) || !digest(file.sha256) ||
         !Number.isSafeInteger(file.sizeBytes) || file.sizeBytes < 1 || file.sizeBytes > 16 * 1024 * 1024) {invalid();}
-      const destination = file.filename === "cap32-wasm.data" ? "4.2.3/data/cores/cap32-wasm.data"
-        : file.filename === "retrom-core-candidate.json" ? "4.2.3/data/cores/reports/cap32.json"
-          : `4.2.3/licenses/forks/cap32/${file.filename}`;
+      const destination = file.filename === `${fork.runtimeCore}-wasm.data` ? `4.2.3/data/cores/${file.filename}`
+        : file.filename === "retrom-core-candidate.json" ? `4.2.3/data/cores/reports/${fork.runtimeCore}.json`
+          : `4.2.3/licenses/forks/${fork.runtimeCore}/${file.filename}`;
       return {...file, destination, runtimeCore: fork.runtimeCore};
     });
   });
@@ -61,7 +66,7 @@ export async function stageDevelopmentForks(catalog, roots, destinationRoot) {
     if (typeof directory !== "string" || !isAbsolute(directory)) {invalid();}
     const info = await lstat(directory);
     if (!info.isDirectory() || info.isSymbolicLink() ||
-      (await readdir(directory)).sort().join("\0") !== names.join("\0")) {invalid();}
+      (await readdir(directory)).sort().join("\0") !== names(fork.runtimeCore).join("\0")) {invalid();}
     for (const file of files.filter((entry) => entry.runtimeCore === fork.runtimeCore)) {
       const source = join(directory, file.filename);
       const info = await lstat(source);

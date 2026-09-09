@@ -2027,6 +2027,12 @@
       "repository": "https://github.com/retrom-project/libretro-cap32",
       "upstreamCommit": "310cc579b79b6051b378b192224b325a73437c9b",
       "adapterAbi": "emulatorjs-state-v1"
+    },
+    {
+      "id": "crocods",
+      "repository": "https://github.com/retrom-project/libretro-crocods",
+      "upstreamCommit": "be00fb904da08d66221017f6708508298f17ff07",
+      "adapterAbi": "emulatorjs-state-v1"
     }
   ]
 }

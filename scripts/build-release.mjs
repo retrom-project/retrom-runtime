@@ -38,7 +38,8 @@ for (const document of ["CHANGELOG.md", "LICENSE", "THIRD_PARTY_NOTICES.md"]) {
 for (const asset of sources.localAssets) {
   await publish(await readFile(new URL(asset.source, root)), new URL(asset.output, stage));
 }
-for (const release of sources.upstreamReleases.filter((source) => source.id !== "flycast")) {
+for (const release of sources.upstreamReleases) {
+  if (release.id === "flycast") {continue;}
   const devRoot = devReleaseOverrides.get(release.id);
   if (release.id === "scummvm" && devRoot) {
     assertScummvmCandidateMode([release], process.env.RETROM_PFB_CANDIDATE_BUILD === "1", formalBuild);

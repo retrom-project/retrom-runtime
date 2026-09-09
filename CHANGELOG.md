@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Advance the EmulatorJS development candidate to 2.6.0-rc.3 for the verified CrocoDS restore fix; a fresh restored instance now closes its autorun menu.
+
 - Add candidate EmulatorJS targets for EightyOne, Caprice32, CrocoDS, VICE PET, Plus/4, C64 and SAME CD-i, using pinned 4.2.3 assets.
 - Preserve the existing raw checkpoint contract and single-file input policy for these targets.
 - Preserve Caprice32 DSK input instead of letting EmulatorJS synthesize an unsupported CD cue for a core advertising M3U support.

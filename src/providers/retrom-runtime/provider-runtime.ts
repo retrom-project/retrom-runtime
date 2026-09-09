@@ -397,7 +397,7 @@ function validProgress(value: {loadedBytes: number; totalBytes: number | null}) 
 function isAbort(error: unknown) {return error instanceof DOMException && error.name === "AbortError";}
 function stableError(error: unknown) {
   if (isAbort(error)) {return error as DOMException;}
-  if (error instanceof Error && /^(?:RUNTIME|CHECKPOINT|PLAYER|PROVIDER|RPG|ONS|KIRIKIRI|BUTTERSCOTCH|TYRANOSCRIPT|WASM4|J2ME|SCUMMVM|FANTASY)_[A-Z0-9_]+$/u.test(error.message)) {
+  if (error instanceof Error && /^(?:RUNTIME|CHECKPOINT|PLAYER|PROVIDER|RPG|ONS|KIRIKIRI|BUTTERSCOTCH|TYRANOSCRIPT|WASM4|J2ME|SCUMMVM|FANTASY|WEBMSX)_[A-Z0-9_]+$/u.test(error.message)) {
     return error;
   }
   return new Error("RUNTIME_FAILED");

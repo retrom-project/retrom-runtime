@@ -1,3 +1,4 @@
+import {mountWebMSX} from "../../webmsx/adapter.js";
 import {mountScummvm} from "../../scummvm/adapter.js";
 import {mountRuffle} from "../../ruffle/adapter.js";
 import {mountPlay} from "../../play/adapter.js";
@@ -38,6 +39,8 @@ export function mountTargetAdapter(
   const {frameWindow, restorePayload, reportProgress, reportExitRequested} = context;
   const reportFailure = context.reportFailure ?? (() => undefined);
   switch (adapter.kind) {
+  case "WEBMSX_WEB":
+    return mountWebMSX(parameters.webmsx(envelope), target, frameWindow, restorePayload, reportProgress, context.signal);
   case "RUFFLE_WEB":
     return mountRuffle(parameters.ruffle(envelope), target, frameWindow, restorePayload, reportProgress, context.signal);
   case "PLAY_WEB":

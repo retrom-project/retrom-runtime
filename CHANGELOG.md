@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.27.0
+
+- Add the independent `msx-webmsx` Target with bounded single-media loading, persistent
+  content cache, standard controller input, screenshots and pause/resume.
+- Bind `webmsx-state-v1` instant snapshots to the game's content digest and restore them
+  into a fresh machine. Release controller input on pause and exit.
+- Pin the WebMSX maintenance release with exact commit, asset lengths and SHA-256.
+  Local overrides remain restricted to explicit PFB builds. Preserve the unresolved
+  upstream source and embedded system-ROM license status in the dedicated notice.
+
 ## 0.25.0
 
 Ruffle integration: enforce centered aspect-ratio scaling and expose native data as a

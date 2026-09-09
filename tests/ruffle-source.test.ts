@@ -17,7 +17,7 @@ export const ruffleSource = {id: "ruffle", repository: "https://github.com/retro
 it("pins the published Ruffle maintenance release without development inputs", async () => {
   const sources = JSON.parse(await readFile("provider-sources.json", "utf8"));
   expect(() => validateProviderSources(sources)).not.toThrow();
-  expect(sources.developmentInputs).toBeUndefined();
+  expect(sources.developmentInputs?.some((source: {id: string}) => source.id === "ruffle") ?? false).toBe(false);
   const release = sources.upstreamReleases.find((source: {id: string}) => source.id === "ruffle");
   expect(release).toMatchObject({tag: "retrom-core-ge46d1642fb67-r2",
     commit: "551f2b357783ba855c87b6d5618cdf474a4a217f", adapterAbi: "ruffle-host-v1"});

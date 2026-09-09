@@ -78,7 +78,7 @@ type CoreSource = {
 };
 
 const cores: readonly CoreSource[] = [
-  core("81", "4.2.3", "81-wasm.data", 888778, "d8183615958acb143b098c6419c0f51e974895093de1b5cc06abaf7ef3a9d96d", "4007fcd6f8a9ec3e9169d7522f47726af9ac2f60777753813939a4cf94780916", {artifactFlavor: "OVERRIDE", coreBundleVersion: "81-local-af89137ecb71", defaultOptions: {keyboardInput: "enabled", "81_joypad_b": "new line"}}),
+  core("81", "4.2.3", "81-wasm.data", 888668, "a96a2ef49458da2b8dc51466ff836fcff30d16e494fae0e2021f5a0472de4cee", "4007fcd6f8a9ec3e9169d7522f47726af9ac2f60777753813939a4cf94780916", {artifactFlavor: "OVERRIDE", coreBundleVersion: "81-local-16f9bf7eca80", defaultOptions: {keyboardInput: "enabled", "81_joypad_b": "new line"}}),
   core("a5200", "4.2.3", "a5200-wasm.data", 881560, "c82476478d6b70b9da80cccc27ca06a5fd85acf7cdd5643f230cc4d6777990ef", "c402648f858a8a566b39c8d0949470eeeda5f0346b8dfc6228dad312a0af295d"),
   core("azahar", "4.3.0-pre", "azahar-thread-wasm.data", 3985011, "d90696e6ea68c4fc00ef147411ad399962777f07b6c7e73d5537da0eaffc2e3b", "77bf9b92bdc0f55b5d2dc5c2394971fe40b80b10b79fc40501db07d199bed94c", {inputMode: "POINTER", defaultOptions: {webgl2Enabled: "enabled"}}),
   core("beetle_vb", "4.2.3", "beetle_vb-wasm.data", 858313, "3db727a78b6a6551a4024c273069eb39c8e8f33aa78ef16a073ed7460f6ce692", "71604fbf1001fc5d053b08ce5f8396a1da456f176a0b3106eff08f7cac3e5986", {startupActions: [press(2000, 0), press(4000, 3), press(15000, 3), press(25000, 3)]}),
@@ -176,7 +176,7 @@ export const emulatorJsProviderDefinition = defineProvider({
   adapters,
   providerApiVersion: 1,
   providerId: "emulatorjs",
-  providerVersion: "2.6.0-rc.5",
+  providerVersion: "2.6.0-rc.6",
   targets,
 });
 

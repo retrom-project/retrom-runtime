@@ -12,7 +12,9 @@ describe("EmulatorJS external files", () => {
     const cleanupFiles = installExternalFileCompatibility(window);
     const cleanupState = installEmulatorJs423StateRestoreCompatibility(window);
     const writeFile = vi.fn();
+    const callMain = vi.fn();
     class Manager {
+      Module = {callMain};
       getRetroArchCfg() {return "video_vsync = true\n";}
       writeFile(path: string, value: unknown) {writeFile(path, value);}
     }
@@ -21,6 +23,8 @@ describe("EmulatorJS external files", () => {
       Reflect.set(window, "EJS_GameManager", Manager);
       const manager = new Manager();
       expect(manager.getRetroArchCfg()).toContain("log_verbosity = true");
+      manager.Module.callMain(["game.chd"]);
+      expect(callMain).toHaveBeenCalledWith(["-v", "game.chd"]);
       manager.writeFile("/system/dc/dc_boot.bin", Uint8Array.of(1, 2, 3).buffer);
       expect(writeFile).toHaveBeenCalledWith("/system/dc/dc_boot.bin", Uint8Array.of(1, 2, 3));
       expect(Reflect.get(manager, "loadExplicitStateAndWait")).toBeTypeOf("function");

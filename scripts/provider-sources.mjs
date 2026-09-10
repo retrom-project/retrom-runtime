@@ -1,3 +1,4 @@
+import {validEmulatorJsDevelopmentSource} from "./emulatorjs-development-forks.mjs";
 import {validPinnedCoreAssets} from "./pinned-core-release.mjs";
 import {validCoreDevelopmentInput} from "./core-development-input.mjs";
 import {validWebMSXRelease} from "./webmsx-release.mjs";
@@ -49,7 +50,7 @@ export function validateProviderSources(sources) {
   const development = sources.developmentInputs ?? [];
   if (!Array.isArray(development) || development.length > 16) {throw new Error("PROVIDER_SOURCES_INVALID");}
   for (const input of development) {
-    if ((!validScummvmSource(input) && !validRuffleSource(input) && !validOpenBORSource(input) && !validWebMSXSource(input) && !validCoreDevelopmentInput(input)) || releases.has(input.id)) {throw new Error("PROVIDER_SOURCES_INVALID");}
+    if ((!validEmulatorJsDevelopmentSource(input) && !validScummvmSource(input) && !validRuffleSource(input) && !validOpenBORSource(input) && !validWebMSXSource(input) && !validCoreDevelopmentInput(input)) || releases.has(input.id)) {throw new Error("PROVIDER_SOURCES_INVALID");}
     releases.set(input.id, input);
   }
   for (const asset of sources.localAssets) {

@@ -54,6 +54,7 @@ export async function buildCurrentProviderBuild(input = {}) {
     manifest: emulatorManifest,
     outputRoot: join(outputRoot, "emulatorjs"),
     sourceCatalog,
+    allowDevelopmentForks: process.env.RETROM_PFB_CANDIDATE_BUILD === "1",
     sourceRoot: resolve(emulatorJsSourceRoot),
   });
   const providers = [releaseMetadata(outputRoot, retromManifest, retrom),

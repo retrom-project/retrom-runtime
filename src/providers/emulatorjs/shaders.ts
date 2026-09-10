@@ -84,6 +84,14 @@ void main()
 #endif
 `;
 
+const passthroughSource = `${compatibilityHeader}
+void main()
+{
+  FragColor = COMPAT_TEXTURE(Texture, TEX0.xy);
+}
+#endif
+`;
+
 const adaptiveSharpenSource = `${compatibilityHeader}
 void main()
 {
@@ -108,9 +116,14 @@ function shader(preset: string, resourceName: string, source: string): RetromSha
   };
 }
 
-// These two small shaders are authored by Retrom and shipped with the web
+// These small shaders are authored by Retrom and shipped with the web
 // application. They avoid adding a second, unpinned third-party shader payload.
 export const retromShaders: Record<string, RetromShader> = {
+  "retrom-passthrough": shader(
+    'shaders = 1\nshader0 = "retrom-passthrough.glsl"\nfilter_linear0 = false\n',
+    "retrom-passthrough.glsl",
+    passthroughSource,
+  ),
   "retrom-sharp-bilinear": shader(
     'shaders = 1\nshader0 = "retrom-sharp-bilinear.glsl"\nfilter_linear0 = true\n',
     "retrom-sharp-bilinear.glsl",

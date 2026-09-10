@@ -15,6 +15,7 @@ export function buildRetromRuntimeProviderBundle(
 ): Promise<ProviderBundleResult>;
 
 export type EmulatorJsProviderBuildInput = Omit<RetromRuntimeProviderBuildInput, "stageRoot"> & {
+  allowDevelopmentForks?: boolean;
   sourceCatalog: unknown;
   sourceRoot: string;
 };

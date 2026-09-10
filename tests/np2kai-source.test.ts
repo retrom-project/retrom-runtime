@@ -14,7 +14,7 @@ const source = {id: "np2kai", repository: "https://github.com/retrom-project/NP2
     {"filename": "np2kai.wasm", "output": "runtime/np2kai/np2kai.wasm", "maxSizeBytes": 33554432}]};
 it("pins the published NP2kai release and retains descriptor-verified PFB overrides", async () => {
   const sources = JSON.parse(await readFile("provider-sources.json", "utf8"));
-  expect(sources.developmentInputs).toEqual([]);
+  expect(sources.developmentInputs?.some((source: {id: string}) => source.id === "np2kai") ?? false).toBe(false);
   const release = sources.upstreamReleases.find((entry: {id: string}) => entry.id === "np2kai");
   expect(release).toMatchObject({...source, tag: "retrom-core-g5939e0c6d598-r1", commit: "44236652583281d7d697ec3add225c32654e871b"});
   expect(validNP2Source(source)).toBe(true);

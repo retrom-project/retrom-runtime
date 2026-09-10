@@ -1,3 +1,5 @@
+import {validEmulatorJsDevelopmentSource} from "./emulatorjs-development-forks.mjs";
+import {currentInput, materializeEmulatorJsProviderInput} from "./emulatorjs-provider-input.mjs";
 import {asOpenBORCandidateSource, stageOpenBORCandidate} from "./openbor-candidate.mjs";
 import {stagePinnedCoreRelease} from "./pinned-core-release.mjs";
 import {stageCoreDevelopmentInput} from "./core-development-input.mjs";
@@ -104,6 +106,7 @@ for (const release of sources.upstreamReleases) {
 }
 const developmentOutputs = [];
 for (const input of developmentInputs) {
+  if (validEmulatorJsDevelopmentSource(input)) {continue;}
   developmentOutputs.push(...await (input.id === "openbor"
     ? stageOpenBORCandidate(input, devReleaseOverrides.get(input.id), stage) : input.id === "webmsx"
     ? stageWebMSXCandidate(input, devReleaseOverrides.get(input.id), stage)
@@ -113,6 +116,7 @@ for (const input of developmentInputs) {
     ? stageScummvmCandidate(input, devReleaseOverrides.get(input.id), root, stage)
     : stageCoreDevelopmentInput(input, devReleaseOverrides.get(input.id), stage)));
 }
+if (developmentInputs.some(validEmulatorJsDevelopmentSource)) {await materializeEmulatorJsProviderInput(await currentInput());}
 const records = await collectRecords(sources, stage, developmentOutputs);
 const provider = await buildCurrentProviderBuild({
   stageRoot: fileURLToPath(stage),

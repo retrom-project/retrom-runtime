@@ -10,10 +10,11 @@ import {projectProviderManifest} from "../src/provider/manifest.js";
 import {emulatorJsProviderDefinition} from "../src/providers/emulatorjs/catalog.js";
 import {emulatorJsSourceCatalog} from "../src/providers/emulatorjs/source-catalog.js";
 import {buildEmulatorJsProviderBundle} from "../scripts/provider-release-build.mjs";
+import type {DevelopmentFork} from "../scripts/emulatorjs-development-forks.mjs";
 import {forkReleaseFiles} from "../scripts/emulatorjs-fork-releases.mjs";
 
 describe("EmulatorJS Provider release build", () => {
-  it("builds all 44 targets from one verified materialized input without downloads", {timeout: 30_000}, async () => {
+  it("builds all 51 targets from one verified materialized input without downloads", {timeout: 30_000}, async () => {
     const root = await temporaryRoot();
     try {
       const sourceRoot = join(root, "source");
@@ -31,7 +32,7 @@ describe("EmulatorJS Provider release build", () => {
       }
 
       await expect(buildEmulatorJsProviderBundle({
-        definition: emulatorJsProviderDefinition,
+        allowDevelopmentForks: true, definition: emulatorJsProviderDefinition,
         entryPoint: join(process.cwd(), "src/providers/emulatorjs/module.ts"), manifest,
         outputRoot: join(root, "mismatched"), sourceCatalog: emulatorJsSourceCatalog, sourceRoot,
       })).rejects.toThrow("PROVIDER_RELEASE_BUILD_ASSET_MISMATCH");
@@ -49,7 +50,7 @@ describe("EmulatorJS Provider release build", () => {
         }),
       };
       const result = await buildEmulatorJsProviderBundle({
-        definition,
+        allowDevelopmentForks: true, definition,
         entryPoint: join(process.cwd(), "src/providers/emulatorjs/module.ts"), manifest,
         outputRoot: join(root, "output"), sourceCatalog, sourceRoot,
       });
@@ -58,7 +59,7 @@ describe("EmulatorJS Provider release build", () => {
         providerId: string; targets: unknown[];
       };
       expect(provider.providerId).toBe("emulatorjs");
-      expect(provider.targets).toHaveLength(44);
+      expect(provider.targets).toHaveLength(51);
       const provenance = JSON.parse(await readFile(join(result.bundleRoot, "provenance.json"), "utf8"));
       expect(provenance.forks).toEqual(sourceCatalog.forks);
       expect(await readFile(join(result.bundleRoot,
@@ -84,7 +85,8 @@ async function temporaryRoot() {
 async function fixtureForks(sourceRoot: string) {
   const forks = [];
   for (const fork of emulatorJsSourceCatalog.forks) {
-    const assets = fork.assets.filter((asset) => asset.filename !== "rpg-runtime-release.json").map((asset) => {
+    const metadataAsset = fork.assets.find((asset) => asset.filename.endsWith("-release.json"))!;
+    const assets = fork.assets.filter((asset) => asset !== metadataAsset).map((asset) => {
       const contents = asset.filename.endsWith(".data")
         ? `fixture:assets/4.2.3/data/cores/${asset.filename}\n` : `${fork.runtimeCore} fixture license\n`;
       return {...asset, contents, sha256: createHash("sha256").update(contents).digest("hex"),
@@ -94,7 +96,6 @@ async function fixtureForks(sourceRoot: string) {
       ...(fork.runtimeCore === "flycast" ? {sha256: asset.sha256} : {observedSha256: asset.sha256})}));
     const metadata = JSON.stringify({...fork, schemaVersion: 1,
       ...(fork.runtimeCore === "flycast" ? {files: records} : {assets: records})});
-    const metadataAsset = fork.assets.find((asset) => asset.filename === "rpg-runtime-release.json")!;
     const all = [...assets, {...metadataAsset, contents: metadata,
       sha256: createHash("sha256").update(metadata).digest("hex"), sizeBytes: Buffer.byteLength(metadata)}];
     for (const file of forkReleaseFiles({forks: [{...fork, assets: all}]})) {
@@ -102,5 +103,30 @@ async function fixtureForks(sourceRoot: string) {
     }
     forks.push({...fork, assets: all.map(({contents: _contents, ...asset}) => asset)});
   }
-  return {...emulatorJsSourceCatalog, forks};
+  return {...emulatorJsSourceCatalog, forks, developmentForks: await fixtureDevelopmentForks(sourceRoot)};
+}
+
+async function fixtureDevelopmentForks(root: string) {
+  const result = [];
+  const developmentForks: readonly DevelopmentFork[] = emulatorJsSourceCatalog.developmentForks;
+  for (const fork of developmentForks) {
+    const content = (name: string) => name.endsWith(".data") ? `fixture:assets/4.2.3/data/cores/${name}\n` : `${name} fixture\n`;
+    const files = fork.assets.filter((asset) => asset.filename !== "retrom-core-candidate.json").map((asset) => ({
+      filename: asset.filename, sizeBytes: Buffer.byteLength(content(asset.filename)),
+      sha256: createHash("sha256").update(content(asset.filename)).digest("hex"),
+    }));
+    const metadata = JSON.stringify({schemaVersion: 1, kind: "RETROM_CORE_CANDIDATE_V1", coreId: fork.runtimeCore,
+      repository: fork.repository, branch: "feat/test-core", commit: fork.commit, dirty: false,
+      sourceTreeSha256: fork.sourceTreeSha256, adapterAbi: fork.adapterAbi, files});
+    const assets = [...files, {filename: "retrom-core-candidate.json", sizeBytes: Buffer.byteLength(metadata),
+      sha256: createHash("sha256").update(metadata).digest("hex")}];
+    for (const asset of assets) {
+      const name = asset.filename;
+      const destination = name.endsWith(".data") ? `4.2.3/data/cores/${name}`
+        : name.endsWith(".json") ? `4.2.3/data/cores/reports/${fork.runtimeCore}.json` : `4.2.3/licenses/forks/${fork.runtimeCore}/${name}`;
+      await write(join(root, destination), name.endsWith(".json") ? metadata : content(name));
+    }
+    result.push({...fork, assets});
+  }
+  return result;
 }

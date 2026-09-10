@@ -67,6 +67,18 @@ native load callback and its error result. Exit runs EmulatorJS's native cleanup
 New core admission still requires a real host import, preview, product launch, visible input
 response and checkpoint restore into a fresh instance; passing serialization alone is insufficient.
 
+SAME CD-i configures both digital pointer increments to 20 through its native
+MAME machine configuration before startup. This keeps both movement signs above
+games’ pointer quantization threshold while preserving native button sequences
+and physical mouse sensitivity. The same configuration applies before checkpoint
+restoration; PAL execution remains 50 Hz.
+
+The SAME_CDI release uses the maintenance baseline of EmulatorJS/same_cdi at
+`cfb05d803f54130adf94efef88edd816d01df7a3`, with MAME CDIC startup and sound-map
+restart timing backports. Its immutable release descriptor, complete source archive and COPYING
+are pinned in the source catalog. Compare audio after a fresh boot: an older checkpoint
+can retain the guest audio driver state responsible for periodic interruptions.
+
 ## EmulatorJS PSP
 
 The separate `emulatorjs` Provider declares its targets in `src/providers/emulatorjs/catalog.ts`.

@@ -8,7 +8,7 @@ it('pins published WebMSX bytes and keeps unpublished overrides restricted', asy
   expect(() => validateProviderSources(sources)).not.toThrow();
   const release = sources.upstreamReleases.find((entry: {id: string}) => entry.id === 'webmsx');
   expect(release.tag).toBe('retrom-core-6.0.8-r1');
-  expect(sources.developmentInputs ?? []).toEqual([]);
+  expect(sources.developmentInputs?.some((source: {id: string}) => source.id === "webmsx") ?? false).toBe(false);
   const source = asWebMSXCandidateSource(release);
   expect(source).toMatchObject({repository: 'https://github.com/retrom-project/WebMSX',
     upstreamCommit: '4f4009e86d3e0bb9be7dcd7f0a582b0cd411d660', adapterAbi: 'webmsx-host-v1'});

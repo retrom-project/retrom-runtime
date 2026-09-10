@@ -1,6 +1,7 @@
 import {afterEach, describe, expect, it, vi} from "vitest";
 
 import {installEmulatorJs423StateRestoreCompatibility} from "./state-restore.js";
+import {installExternalFileCompatibility} from "./external-files.js";
 import {installEmulatorJsRetroArchConfig} from "./retroarch-config.js";
 
 const originalFetch = window.fetch;
@@ -48,12 +49,17 @@ describe("EmulatorJS 4.2.3 explicit restore", () => {
 
   it("preserves configuration hooks installed before the deferred GameManager appears", () => {
     const cleanupConfig = installEmulatorJsRetroArchConfig(window, "fuse", true);
+    const cleanupExternal = installExternalFileCompatibility(window);
     const cleanupState = installEmulatorJs423StateRestoreCompatibility(window);
-    class Manager {getRetroArchCfg() {return "video_vsync = true\n";}}
+    const callMain = vi.fn<(args: string[]) => void>();
+    class Manager {Module = {callMain}; writeFile() {} getRetroArchCfg() {return "video_vsync = true\n";}}
     Reflect.set(window, "EJS_GameManager", Manager);
     expect(new Manager().getRetroArchCfg()).toContain('input_libretro_device_p1 = "513"');
     expect(new Manager().getRetroArchCfg()).toContain("log_verbosity = true");
+    const manager = new Manager(); manager.getRetroArchCfg(); manager.Module.callMain(["/game.chd"]);
+    expect(callMain).toHaveBeenCalledWith(["-v", "/game.chd"]);
     cleanupState();
+    cleanupExternal();
     cleanupConfig();
     expect(new Manager().getRetroArchCfg()).toBe("video_vsync = true\n");
   });

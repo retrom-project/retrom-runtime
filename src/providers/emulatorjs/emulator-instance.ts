@@ -61,6 +61,7 @@ export type EjsWindow = Window & {
   EJS_startOnLoaded?: boolean;
   EJS_dontExtractRom?: boolean;
   EJS_disableBatchBootup?: boolean;
+  EJS_disableCue?: boolean;
   EJS_language?: string;
   EJS_disableAutoLang?: boolean;
   EJS_DEBUG_XX?: boolean;
@@ -80,3 +81,13 @@ export type EjsWindow = Window & {
   EJS_onGameStart?: () => void;
   EJS_emulator?: EjsInstance;
 };
+
+export const configuredGlobals = [
+  "EJS_player", "EJS_core", "EJS_controlScheme", "EJS_gameUrl", "EJS_gameName", "EJS_gameID", "EJS_pathtodata",
+  "EJS_biosUrl", "EJS_gameParentUrl", "EJS_startOnLoaded", "EJS_dontExtractRom",
+  "EJS_disableBatchBootup", "EJS_disableCue", "EJS_language", "EJS_disableAutoLang", "EJS_DEBUG_XX",
+  "EJS_EXPERIMENTAL_NETPLAY", "EJS_threads", "EJS_fullscreenOnLoaded", "EJS_disableDatabases",
+  "EJS_disableLocalStorage", "EJS_CacheLimit", "EJS_Buttons", "EJS_defaultControls",
+  "EJS_defaultOptions", "EJS_shaders", "EJS_paths",
+  "EJS_externalFiles", "EJS_ready", "EJS_onGameStart",
+] as const;

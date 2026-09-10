@@ -17,7 +17,7 @@ export const openborSource = {id: "openbor", repository: "https://github.com/ret
 it("pins the published OpenBOR identity and requires exact asset digests", async () => {
   const sources = JSON.parse(await readFile("provider-sources.json", "utf8"));
   expect(() => validateProviderSources(sources)).not.toThrow();
-  expect(sources.developmentInputs ?? []).toEqual([]);
+  expect(sources.developmentInputs?.some((source: {id: string}) => source.id === "openbor") ?? false).toBe(false);
   const release = sources.upstreamReleases.find((entry: {id: string}) => entry.id === "openbor");
   expect(release).toMatchObject({tag: "retrom-core-g9d81480f8481-r1",
     commit: "e3f86c09bf9ab6ed5b7e5c06cbd9c3d351a80ee6", adapterAbi: "openbor-host-v1"});

@@ -84,11 +84,14 @@ type CoreSource = {
 };
 
 const cores: readonly CoreSource[] = [
+  core("81", "4.2.3", "81-wasm.data", 888668, "b78716a9566f7b31ad82f3d3250ba882af284294df4ec84b80012906aa1da417", "01c76aa09d95022d001e16f80e8ff32c0a62088da9445c6b321be06872943cf2", {artifactFlavor: "OVERRIDE", coreBundleVersion: "retrom-core-g86decf3ee61e-r1", defaultOptions: {keyboardInput: "enabled", "81_joypad_b": "new line"}}),
   core("flycast", "4.2.3", "flycast-wasm.data", 3530713, "c4e848767db6ad58e8aad665970ae6760ffbe2db3426bb27deec0396cbac44d6", "f3c6762e6ea597791a223215982f291674cf5afafa294fcc4fdec57ac0de6e30", {artifactFlavor: "OVERRIDE", coreBundleVersion: "1.0", defaultOptions: {reicast_hle_bios: "disabled", reicast_boot_to_bios: "disabled", reicast_internal_resolution: "640x480", reicast_threaded_rendering: "disabled", reicast_alpha_sorting: "per-strip (fast, least accurate)"}}),
 
   core("a5200", "4.2.3", "a5200-wasm.data", 881560, "c82476478d6b70b9da80cccc27ca06a5fd85acf7cdd5643f230cc4d6777990ef", "c402648f858a8a566b39c8d0949470eeeda5f0346b8dfc6228dad312a0af295d"),
   core("azahar", "4.3.0-pre", "azahar-thread-wasm.data", 3985011, "d90696e6ea68c4fc00ef147411ad399962777f07b6c7e73d5537da0eaffc2e3b", "77bf9b92bdc0f55b5d2dc5c2394971fe40b80b10b79fc40501db07d199bed94c", {inputMode: "POINTER", defaultOptions: {webgl2Enabled: "enabled"}}),
   core("beetle_vb", "4.2.3", "beetle_vb-wasm.data", 858313, "3db727a78b6a6551a4024c273069eb39c8e8f33aa78ef16a073ed7460f6ce692", "71604fbf1001fc5d053b08ce5f8396a1da456f176a0b3106eff08f7cac3e5986", {startupActions: [press(2000, 0), press(4000, 3), press(15000, 3), press(25000, 3)]}),
+  core("cap32", "4.2.3", "cap32-wasm.data", 1028234, "cbebe15e960fad04eb27c08c5a73c7fbbc1df3d9cc13294f357104640c2da49f", "59278925c02b401d4d61fe396c29cd0ad23cf0b4970b4b2c2d976135c0dede37", {artifactFlavor: "OVERRIDE", coreBundleVersion: "retrom-core-g310cc579b79b-r2", defaultOptions: {keyboardInput: "enabled"}}),
+  core("crocods", "4.2.3", "crocods-wasm.data", 976148, "8c70df810436f225c5a2b40f31555636d6e12eacd41968f28b7dc708a9c6db10", "51e5f77fbcd99f13c49efae470290e4d1215ad10bc992e4a3332da72568119c9", {artifactFlavor: "OVERRIDE", coreBundleVersion: "retrom-core-gbe00fb904da0-r1", defaultOptions: {keyboardInput: "enabled"}}),
   core("desmume", "4.2.3", "desmume-wasm.data", 1172604, "a9fddaa4bd742e558dfe5095fa4eaf074493b591a7bc18c5f7c65d64b9fa7572", "970284459eedf8f7345d2b02d564dc7d32e7029aa8009011a8474df94244d57c", {inputMode: "POINTER"}),
   core("desmume2015", "4.2.3", "desmume2015-wasm.data", 1043573, "6f45da7f37007c0a69b7d91490b43e8294d4d642d1cc4ac999b341416f1ce13f", "5fc49392b5b73cd59446bf2ff6e01f4a2a9a7c07761cdb724ac1712bcc69ac0f", {inputMode: "POINTER"}),
   core("dosbox_pure", "4.3.0-pre", "dosbox_pure-thread-wasm.data", 1827779, "89b0e89b03ced9ba07c5fe27bc789fd0f42bd5378b399f93befa2edc3571a70a", "da9d4f66147c00ad9a9f75b6c0e4dc26fa779c425739c7835067574a9612d72e", {contentKinds: ["DOS_BUNDLE"]}),
@@ -121,11 +124,15 @@ const cores: readonly CoreSource[] = [
   core("prboom", "4.2.3", "prboom-wasm.data", 1091036, "830686c3b5176de25de45846f8cad9153803478718e6a487dda938437ecd0c0e", "5468d3146d11438aed17c6e7b93357912cf7638a6352edd9386ef4c2c4b8b38c"),
   core("prosystem", "4.2.3", "prosystem-wasm.data", 852864, "d3483e1c155c8d26e6b7b299c8ecc58c5abcfa0c5af5f03b75a55d219e71c3c8", "5ab7fa94d4cc9da68fff24911d76a32d3fba8ffbecd3fec740a1992670df809e"),
   core("puae", "4.2.3", "puae-wasm.data", 4140232, "8b58d776244c650c872dcaaf8693a2d75fd92a5219c7250cf5be5f517b11f1b5", "e833cb9a0d942770a2bd841dfe92decd069dd5a5bad817270d113f66ab239485", {inputMode: "POINTER"}),
+  core("same_cdi", "4.2.3", "same_cdi-wasm.data", 3492455, "4a0d2829af998d4066a12294a0ecfd1d23371bdea95906a48ef726298826a03c", "c4450a15fe43d5253ab2593a3f51d249332b92e5921ba0875cc40a9d33fda663", {artifactFlavor: "OVERRIDE", coreBundleVersion: "retrom-core-gcfb05d803f54-r1"}),
   core("smsplus", "4.2.3", "smsplus-wasm.data", 855876, "0f197c5e0000f17b2d072122a72b3f8fc1693514c4014fcd9694eec78584aa08", "a09612f1d088bffe8d9c107caf196b023710ed4aaeaa24f05caee7eec8591ff0"),
   core("snes9x", "4.2.3", "snes9x-wasm.data", 1093765, "eaa0bcfce67673809886e50387a80a616b719502175db64c090d04c9d75958ee", "f2ecf64d84dc3845ccd9828daf48436667f6aa79e6a5d6c41f0965f0151f1f34"),
   core("stella2014", "4.2.3", "stella2014-wasm.data", 1051659, "6c96c6b1746f3f05ca599066abe131a36c77ca61fc20a9e2a7560540457c487d", "f5244febaf876003e9acf97e09b8785f1f51563c3f96527232652c1d9ec40e68"),
   core("vice_x128", "4.2.3", "vice_x128-wasm.data", 1595414, "dbac85e530b006c2d17e200c445de582c7ea272bacf333e4b4f8c1e391ed8506", "e8ef53ec0bc53244319e87a8f6b75396f077a982dd4438743a52e82f0c136126", {inputMode: "POINTER"}),
+  core("vice_x64", "4.2.3", "vice_x64-wasm.data", 1528680, "ccc5a868163b67e21f6f4c4cc994a6290cf44ab079eaf28e3a992defa2bd66f0", "643787490d9f261abe7a329d6d2daac8b2cdf469f037adcdac0fa8262fb37d50", {inputMode: "POINTER"}),
   core("vice_x64sc", "4.2.3", "vice_x64sc-wasm.data", 1523457, "77f58884c81b58721cbc4754ffc5574838219258e9390630c352a494a3f335ab", "4b788799ef1225e48610b99bdf746425ba6e2bda27fa105fd1238dfbb9fb47cb", {inputMode: "POINTER"}),
+  core("vice_xpet", "4.2.3", "vice_xpet-wasm.data", 1372018, "abc999e5603d327d0ee8329bab6209edb6aa02bfd8296d5913ec54f8ee1d052d", "dfa2fa5e3e6b6183bcda9bbfb1c1469f41ac88b7d08c9a0c885e3f878bef35dd", {artifactFlavor: "OVERRIDE", coreBundleVersion: "retrom-core-g1b4309f4d56d-r2", defaultOptions: {keyboardInput: "enabled", vice_pet_model: "4032", vice_userport_joytype: "PET"}}),
+  core("vice_xplus4", "4.2.3", "vice_xplus4-wasm.data", 1416694, "5725e2b32b7c7bf7fd49cf7fc117eae20ca96a67676a8642147b2ebf130750fb", "230a0b53aa7889dc4746bcb2c8f2b1a28b51c50c9a911d623b52d0426310c3bb", {artifactFlavor: "OVERRIDE", coreBundleVersion: "retrom-core-g1b4309f4d56d-r2", defaultOptions: {keyboardInput: "enabled", vice_joyport: "1"}}),
   core("vice_xvic", "4.2.3", "vice_xvic-wasm.data", 1400563, "8d77779568ff9ac2fe46f11ad6f37e39cc6be44dae337e0fb8cda4f29f283a49", "dc63426f1804edb9ca95a8417c68ec792c0ef52ec860ff1c0e99717415aeb8d9", {artifactFlavor: "OVERRIDE"}),
   core("virtualjaguar", "4.2.3", "virtualjaguar-wasm.data", 1199923, "16b62c38e6921fb5b410ab507ba6bc77edcaccbba532ae4711b9521a4256ba6d", "b9443f7fc635a091b9460773bb0261bd5c4a9b5cb5ed3162286553e173e6c742", {artifactFlavor: "OVERRIDE"}),
   core("yabause", "4.2.3", "yabause-wasm.data", 991166, "ab253ac263bd98e3124e2ca45ff581e97673426ed06ecec0025333060cd8127c", "1fc177e7be4923208b92755bcfae66ac35ba6e395c3b7ea48df581806ebdf6a6", {contentKinds: ["SINGLE_FILE", "MULTI_DISC"]}),
@@ -177,7 +184,7 @@ export const emulatorJsProviderDefinition = defineProvider({
   adapters: storageAdapters(adapters),
   providerApiVersion: 1,
   providerId: "emulatorjs",
-  providerVersion: "2.7.0",
+  providerVersion: "2.8.0",
   targets,
 });
 

@@ -44,3 +44,30 @@ describe("EmulatorJS fork Release inputs", () => {
       .toThrow("EMULATORJS_FORK_RELEASE_INVALID");
   });
 });
+
+const promotedCores = [
+  ["81", "81-libretro", "g86decf3ee61e", "LICENSE"],
+  ["cap32", "libretro-cap32", "g310cc579b79b", "COPYING"],
+  ["crocods", "libretro-crocods", "gbe00fb904da0", "LICENSE"],
+  ["same_cdi", "same_cdi", "gcfb05d803f54", "COPYING"],
+  ["vice_xpet", "vice-libretro", "g1b4309f4d56d", "COPYING"],
+  ["vice_xplus4", "vice-libretro", "g1b4309f4d56d", "COPYING"],
+];
+it.each(promotedCores)("verifies the published %s core, source archive and variant metadata", (core, repo, baseline, license) => {
+  const repository = `https://github.com/retrom-project/${repo}`, tag = `retrom-core-${baseline}-r1`;
+  const variant = core.startsWith("vice_");
+  const report = variant ? `${core}-release.json` : "rpg-runtime-release.json";
+  const source = variant ? `${core}-source.tar.gz` : "source.tar.gz";
+  const assets = [`${core}-wasm.data`, license, source, report].map(filename => ({filename,
+    sha256: "b".repeat(64), sizeBytes: 12, url: `${repository}/releases/download/${tag}/${filename}`}));
+  const fork = {runtimeCore: core, repository, tag, commit: "a".repeat(40), adapterAbi: "emulatorjs-state-v1", assets};
+  const metadata = {...fork, schemaVersion: 1, assets: assets.filter(a => a.filename !== report).map(a => ({
+    filename: a.filename, observedSha256: a.sha256, sizeBytes: a.sizeBytes,
+  }))};
+  expect(forkReleaseFiles({forks: [fork]}).map((f: {destination: string}) => f.destination))
+    .toContain(`4.2.3/licenses/forks/${core}/${source}`);
+  expect(() => verifyForkMetadata(fork, metadata)).not.toThrow();
+  expect(() => forkReleaseFiles({forks: [{...fork, assets: assets.filter(a => a.filename !== source)}]})).toThrow();
+  expect(() => verifyForkMetadata(fork, {...metadata, assets: metadata.assets.slice(1)})).toThrow();
+  expect(() => verifyForkMetadata(fork, {...metadata, assets: metadata.assets.map(a => a.filename === source ? {...a, observedSha256: "c".repeat(64)} : a)})).toThrow();
+});

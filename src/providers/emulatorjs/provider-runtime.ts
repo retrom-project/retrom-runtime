@@ -46,7 +46,7 @@ import {
   openEmulatorJsNativeSettings,
 } from "./native-settings.js";
 import {retromShaders} from "./shaders.js";
-import {applyEmulatorJsVideoMode} from "./video-mode.js";
+import {createEmulatorJsVideoModeController} from "./video-mode.js";
 import {biosFile, externalFiles, fileName, optionalResource, resource, runtimeBase} from "./resources.js";
 import {readEmulatorJsCheckpoint} from "./bytes.js";
 import {readPspCheckpoint, restorePspCheckpoint} from "./psp-state.js";
@@ -55,17 +55,10 @@ import {installEmulatorJsFrameStyle} from "./frame-style.js";
 import {decodeStoredCheckpoint, encodeStoredCheckpoint} from "../../provider/checkpoint-storage.js";
 import {installEmulatorJsOutputViewport} from "./output-viewport.js";
 
+import {configuredGlobals} from "./emulator-instance.js";
 import type {EjsInstance, EjsWindow} from "./emulator-instance.js";
 
-const configuredGlobals = [
-  "EJS_player", "EJS_core", "EJS_controlScheme", "EJS_gameUrl", "EJS_gameName", "EJS_gameID", "EJS_pathtodata",
-  "EJS_biosUrl", "EJS_gameParentUrl", "EJS_startOnLoaded", "EJS_dontExtractRom",
-  "EJS_disableBatchBootup", "EJS_language", "EJS_disableAutoLang", "EJS_DEBUG_XX",
-  "EJS_EXPERIMENTAL_NETPLAY", "EJS_threads", "EJS_fullscreenOnLoaded", "EJS_disableDatabases",
-  "EJS_disableLocalStorage", "EJS_CacheLimit", "EJS_Buttons", "EJS_defaultControls",
-  "EJS_defaultOptions", "EJS_shaders", "EJS_paths",
-  "EJS_externalFiles", "EJS_ready", "EJS_onGameStart",
-] as const;
+
 
 export async function createEmulatorJsPlayer(
   envelope: LaunchEnvelopeV1,
@@ -90,6 +83,7 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
   private cleanupFlycast: (() => void) | null = null;
   private cleanupFrameStyle: (() => void) | null = null;
   private outputViewport: ReturnType<typeof installEmulatorJsOutputViewport> | null = null;
+  private videoModeController: ReturnType<typeof createEmulatorJsVideoModeController> | null = null;
   private cleanupStateRestore: (() => void) | null = null;
   private cleanupExternalFiles: (() => void) | null = null;
   private cleanupInputFilter: (() => void) | null = null;
@@ -194,7 +188,8 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
 
   async setVideoMode(mode: RuntimeVideoModeV1) {
     if (!this.envelope.runtime.capabilities.videoModes.includes(mode)) {throw capabilityError();}
-    if (!applyEmulatorJsVideoMode(this.requireInstance(), mode)) {throw contractError();}
+    this.videoModeController ??= createEmulatorJsVideoModeController(this.requireInstance(), this.runtimeWindow!);
+    if (!this.videoModeController.setVideoMode(mode)) {throw contractError();}
     this.outputViewport?.setVideoMode(mode);
   }
   async openNativeSettings(panel: "controls" | "display" | "core") {
@@ -386,6 +381,7 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
     runtimeWindow.EJS_startOnLoaded = !deferredDOSStart;
     runtimeWindow.EJS_dontExtractRom = deferredDOSStart || this.implementation.runtimeCore === "flycast";
     runtimeWindow.EJS_disableBatchBootup = deferredDOSStart;
+    runtimeWindow.EJS_disableCue = this.implementation.runtimeCore === "cap32" ? true : undefined;
     runtimeWindow.EJS_language = "zh-CN";
     runtimeWindow.EJS_disableAutoLang = false;
     // PSP's native load receipt is emitted only with RetroArch's -v flag.
@@ -574,6 +570,8 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
   }
 
   private cleanupSurface() {
+    this.videoModeController?.cleanup();
+    this.videoModeController = null;
     this.cleanupFlycast?.(); this.cleanupFlycast = null;
     this.cleanupFrameStyle?.();
     this.cleanupFrameStyle = null;

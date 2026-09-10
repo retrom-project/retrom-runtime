@@ -1,7 +1,31 @@
-import {describe, expect, it} from "vitest";
+import {describe, expect, it, vi} from "vitest";
 import {installEmulatorJsRetroArchConfig} from "./retroarch-config.js";
 
 describe("EmulatorJS RetroArch configuration", () => {
+  it("assigns EightyOne's second port to its keyboard so it cannot release player one's joypad keys", () => {
+    const callMain = vi.fn();
+    class Manager {Module = {callMain}; getRetroArchCfg() {return "";}}
+    const cleanup = installEmulatorJsRetroArchConfig(window, "81", false);
+    Reflect.set(window, "EJS_GameManager", Manager);
+    try {
+      expect(new Manager().getRetroArchCfg()).toContain('input_libretro_device_p1 = "257"');
+      expect(new Manager().getRetroArchCfg()).toContain('input_libretro_device_p2 = "259"');
+      const manager = new Manager(); manager.getRetroArchCfg();
+      manager.Module.callMain(["/game.p"]);
+      expect(callMain).toHaveBeenCalledWith(["--device", "1:257", "--device", "2:259", "/game.p"]);
+    } finally {cleanup(); Reflect.deleteProperty(window, "EJS_GameManager");}
+  });
+  it("combines EightyOne device overrides with restore observation and cleans up", () => {
+    const callMain = vi.fn();
+    class Manager {Module = {callMain}; getRetroArchCfg() {return "";}}
+    const cleanup = installEmulatorJsRetroArchConfig(window, "81", true);
+    Reflect.set(window, "EJS_GameManager", Manager);
+    const manager = new Manager(); manager.getRetroArchCfg(); manager.getRetroArchCfg();
+    manager.Module.callMain(["-v", "/game.p"]);
+    expect(callMain).toHaveBeenCalledWith(["--device", "1:257", "--device", "2:259", "-v", "/game.p"]);
+    cleanup(); expect(manager.Module.callMain).toBe(callMain);
+    Reflect.deleteProperty(window, "EJS_GameManager");
+  });
   it("selects the Fuse Kempston port before construction and restores the prototype", () => {
     class Manager {getRetroArchCfg() {return "video_vsync = true\n";}}
     const original = Manager.prototype.getRetroArchCfg;
@@ -16,11 +40,19 @@ describe("EmulatorJS RetroArch configuration", () => {
   });
 
   it("enables native restore observation without changing other core devices", () => {
-    class Manager {getRetroArchCfg() {return "";}}
+    const callMain = vi.fn();
+    class Manager {Module = {callMain}; getRetroArchCfg() {return "";}}
     const cleanup = installEmulatorJsRetroArchConfig(window, "vice_x64sc", true);
     Reflect.set(window, "EJS_GameManager", Manager);
-    expect(new Manager().getRetroArchCfg()).toBe("\nlog_verbosity = true\n");
+    const manager = new Manager();
+    expect(manager.getRetroArchCfg()).toBe("\nlog_verbosity = true\n");
+    manager.Module.callMain(["/game.chd"]);
+    expect(callMain).toHaveBeenLastCalledWith(["-v", "/game.chd"]);
+    manager.getRetroArchCfg();
+    manager.Module.callMain(["-v", "/game.chd"]);
+    expect(callMain).toHaveBeenLastCalledWith(["-v", "/game.chd"]);
     cleanup();
+    expect(manager.Module.callMain).toBe(callMain);
   });
 
   it("leaves ordinary launches untouched", () => {

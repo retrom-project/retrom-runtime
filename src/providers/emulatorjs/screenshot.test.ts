@@ -1,4 +1,4 @@
-import {describe, expect, it, vi} from "vitest";
+import {afterEach, describe, expect, it, vi} from "vitest";
 
 import {
   captureEmulatorJsScreenshot,
@@ -7,6 +7,67 @@ import {
 } from "./screenshot.js";
 
 describe("EmulatorJS Provider screenshots", () => {
+  afterEach(() => vi.unstubAllGlobals());
+
+  it.each([[768, 280, 4 / 3, 768, 576], [256, 240, 4 / 3, 320, 240]])(
+    "corrects non-square pixels in a %i × %i core capture without cropping",
+    async (width, height, aspect, expectedWidth, expectedHeight) => {
+      const bytes = pngWithDimensions(width, height);
+      const bitmap = {width, height, close: vi.fn()};
+      vi.stubGlobal("createImageBitmap", vi.fn(async () => bitmap));
+      const drawImage = vi.fn();
+      const context = {drawImage, imageSmoothingEnabled: true,
+        getImageData: () => ({data: new Uint8ClampedArray(64 * 64 * 4).fill(255)})};
+      vi.spyOn(HTMLCanvasElement.prototype, "getContext").mockReturnValue(context as unknown as CanvasRenderingContext2D);
+      const pause = vi.fn();
+      const toBlob = vi.spyOn(HTMLCanvasElement.prototype, "toBlob").mockImplementation(function (this: HTMLCanvasElement, callback) {
+        expect(pause.mock.calls).toEqual([[true], [false]]);
+        callback(new Blob([pngWithDimensions(this.width, this.height)], {type: "image/png"}));
+      });
+      const takeScreenshot = vi.fn();
+      const result = await captureEmulatorJsScreenshot({paused: true, takeScreenshot, gameManager: {
+        FS: {readFile: () => bytes, stat: () => ({size: bytes.length})},
+        functions: {screenshot: vi.fn()}, toggleMainLoop: pause, getVideoDimensions: () => aspect,
+      }});
+      const output = new DataView(await result.arrayBuffer());
+      expect([output.getUint32(16), output.getUint32(20)]).toEqual([expectedWidth, expectedHeight]);
+      expect(drawImage).toHaveBeenCalledWith(bitmap, 0, 0, expectedWidth, expectedHeight);
+      expect(toBlob).toHaveBeenCalledOnce();
+      expect(takeScreenshot).not.toHaveBeenCalled();
+      expect(bitmap.close).toHaveBeenCalled();
+    },
+  );
+
+  it.each([4 / 3, undefined, NaN, 0])("preserves an already proportioned PNG with aspect %s", async (aspect) => {
+    const bytes = pngWithDimensions(640, 480);
+    vi.stubGlobal("createImageBitmap", vi.fn(async () => ({width: 640, height: 480, close: vi.fn()})));
+    vi.spyOn(HTMLCanvasElement.prototype, "getContext").mockReturnValue({drawImage: vi.fn(),
+      getImageData: () => ({data: new Uint8ClampedArray(64 * 64 * 4).fill(255)})} as unknown as CanvasRenderingContext2D);
+    const toBlob = vi.spyOn(HTMLCanvasElement.prototype, "toBlob");
+    const captured = await captureEmulatorJsScreenshot({gameManager: {
+      FS: {readFile: () => bytes, stat: () => ({size: bytes.length})},
+      functions: {screenshot: vi.fn()}, getVideoDimensions: () => aspect,
+    }});
+    expect(new Uint8Array(await captured.arrayBuffer())).toEqual(bytes);
+    expect(toBlob).not.toHaveBeenCalled();
+  });
+
+  it("falls back to displayed output if aspect correction cannot encode an image", async () => {
+    const bytes = pngWithDimensions(768, 280), close = vi.fn();
+    vi.stubGlobal("createImageBitmap", vi.fn(async () => ({width: 768, height: 280, close})));
+    vi.spyOn(HTMLCanvasElement.prototype, "getContext").mockReturnValue({drawImage: vi.fn(),
+      getImageData: () => ({data: new Uint8ClampedArray(64 * 64 * 4).fill(255)})} as unknown as CanvasRenderingContext2D);
+    vi.spyOn(HTMLCanvasElement.prototype, "toBlob").mockImplementation(callback => callback(null));
+    const takeScreenshot = vi.fn(async () => ({blob: new Blob(["displayed"]), format: "png"}));
+    const captured = await captureEmulatorJsScreenshot({takeScreenshot, gameManager: {
+      FS: {readFile: () => bytes, stat: () => ({size: bytes.length})},
+      functions: {screenshot: vi.fn()}, getVideoDimensions: () => 4 / 3,
+    }});
+    expect(await captured.text()).toBe("displayed");
+    expect(takeScreenshot).toHaveBeenCalledOnce();
+    expect(close).toHaveBeenCalledTimes(2);
+  });
+
   it("detects a core framebuffer whose dimensions need the displayed canvas orientation", () => {
     const portrait = pngWithDimensions(256, 224);
     expect(coreFramebufferNeedsCanvasOrientation(portrait, 3 / 4)).toBe(true);

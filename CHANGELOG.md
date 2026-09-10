@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Correct EmulatorJS core framebuffer screenshots to the reported display aspect ratio before returning them to the host. This prevents non-square pixel output such as CD-i 768×280 from producing vertically flattened save and review thumbnails; native pixels remain uncropped.
+
 - Advance the EmulatorJS candidate to 2.8.0-rc.2 with a source-pinned SAME_CDI build. Backport CDIC disc startup and sound-map restart timing fixes to remove periodic audio interruptions in Nobelia Demo 1 after fresh boot. PAL remains 50 Hz; existing state fields are unchanged. Old checkpoints may preserve the interrupted guest audio driver until a new stream starts.
 
 - Configure SAME CD-i digital pointer increments to 20 before native startup, preserving its button mappings and mouse sensitivity. This fixes right/down movement being filtered out by games such as Nobelia, including after fresh-launch checkpoint restoration. PAL timing remains 50 Hz.

@@ -23,18 +23,55 @@ const sampleSide = 64;
 export async function captureEmulatorJsScreenshot(instance: ScreenshotInstance): Promise<Blob> {
   const manager = instance.gameManager;
   const resumeForCapture = instance.paused === true ? manager?.toggleMainLoop : undefined;
+  let framebuffer: Blob | undefined;
   if (!instance.paused || resumeForCapture) {
     try {
       resumeForCapture?.call(manager, true);
       const core = await captureCoreFramebuffer(instance);
-      if (await screenshotHasVisibleContent(core)) {return core;}
+      if (await screenshotHasVisibleContent(core)) {framebuffer = core;}
     } catch {
       // Displayed output is the bounded fallback for missing, blank, or incorrectly oriented core output.
     } finally {
       resumeForCapture?.call(manager, false);
     }
   }
+  if (framebuffer) {
+    try {
+      return await correctCorePixelAspect(framebuffer, manager?.getVideoDimensions?.("aspect"));
+    } catch {
+      // Keep display capture available when browser image conversion fails.
+    }
+  }
   return captureDisplayedOutput(instance);
+}
+
+async function correctCorePixelAspect(screenshot: Blob, aspect: number | undefined): Promise<Blob> {
+  if (!aspect || !Number.isFinite(aspect) || aspect <= 0 || typeof createImageBitmap !== "function") {
+    return screenshot;
+  }
+  const bitmap = await createImageBitmap(screenshot);
+  try {
+    // Core PNGs contain framebuffer pixels; e.g. CD-i's 768 × 280 is displayed at 4:3.
+    // Expand the short axis so no source rows/columns are discarded or cropped.
+    const width = Math.max(bitmap.width, Math.round(bitmap.height * aspect));
+    const height = Math.max(bitmap.height, Math.round(bitmap.width / aspect));
+    if (Math.abs(width - bitmap.width) <= 1 && Math.abs(height - bitmap.height) <= 1) {return screenshot;}
+    const canvas = document.createElement("canvas");
+    canvas.width = width;
+    canvas.height = height;
+    const context = canvas.getContext("2d", {alpha: false});
+    if (!context) {throw new Error("PLAYER_SCREENSHOT_UNAVAILABLE");}
+    context.imageSmoothingEnabled = false;
+    context.drawImage(bitmap, 0, 0, width, height);
+    return await new Promise<Blob>((resolve, reject) => {
+      canvas.toBlob((blob) => {
+        if (blob?.size) {resolve(blob);}
+        else {reject(new Error("PLAYER_SCREENSHOT_EMPTY"));}
+      }, "image/png");
+    });
+  } finally {
+    bitmap.close();
+  }
 }
 
 export function screenshotPixelsHaveVisibleContent(pixels: Uint8ClampedArray) {

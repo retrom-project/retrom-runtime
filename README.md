@@ -67,6 +67,12 @@ native load callback and its error result. Exit runs EmulatorJS's native cleanup
 New core admission still requires a real host import, preview, product launch, visible input
 response and checkpoint restore into a fresh instance; passing serialization alone is insufficient.
 
+SAME CD-i configures both digital pointer increments to 20 through its native
+MAME machine configuration before startup. This keeps both movement signs above
+games’ pointer quantization threshold while preserving native button sequences
+and physical mouse sensitivity. The same configuration applies before checkpoint
+restoration; PAL execution remains 50 Hz.
+
 ## EmulatorJS PSP
 
 The separate `emulatorjs` Provider declares its targets in `src/providers/emulatorjs/catalog.ts`.

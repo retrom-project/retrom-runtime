@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Configure SAME CD-i digital pointer increments to 20 before native startup, preserving its button mappings and mouse sensitivity. This fixes right/down movement being filtered out by games such as Nobelia, including after fresh-launch checkpoint restoration. PAL timing remains 50 Hz.
+
 - Advance the EmulatorJS development candidate to 2.8.0-rc.1. CrocoDS dismisses its autorun menu after restore, and EightyOne preserves controller port selections while loading content and queries base input devices. EightyOne pins its controller devices through RetroArch command-line overrides so remapping cannot reset them. PET routes the first RetroPad to its actual user-port joystick instead of an absent built-in port. PET and Plus/4 reopen audio after fresh-instance state restoration; Plus/4 reconstructs the TED display bounds and cursor. Home computer defaults enable independent keyboard input; PET uses a 40-column 4032 with its joystick adapter, and Plus/4 uses joystick port 1.
 
 - Add candidate EmulatorJS targets for EightyOne, Caprice32, CrocoDS, VICE PET, Plus/4, C64 and SAME CD-i, using pinned 4.2.3 assets.

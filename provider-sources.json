@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "packageName": "@xxxsen/retrom-runtime",
-  "packageVersion": "0.30.0",
+  "packageVersion": "0.31.0",
   "publicApiVersion": 2,
   "upstreamReleases": [
     {
@@ -2228,42 +2228,5 @@
       "output": "runtime/butterscotch/worker.mjs"
     }
   ],
-  "developmentInputs": [
-    {
-      "id": "cap32",
-      "repository": "https://github.com/retrom-project/libretro-cap32",
-      "upstreamCommit": "310cc579b79b6051b378b192224b325a73437c9b",
-      "adapterAbi": "emulatorjs-state-v1"
-    },
-    {
-      "id": "crocods",
-      "repository": "https://github.com/retrom-project/libretro-crocods",
-      "upstreamCommit": "be00fb904da08d66221017f6708508298f17ff07",
-      "adapterAbi": "emulatorjs-state-v1"
-    },
-    {
-      "id": "81",
-      "repository": "https://github.com/retrom-project/81-libretro",
-      "upstreamCommit": "86decf3ee61ea5803972948e80197bee8474796b",
-      "adapterAbi": "emulatorjs-state-v1"
-    },
-    {
-      "id": "vice_xpet",
-      "repository": "https://github.com/retrom-project/vice-libretro",
-      "upstreamCommit": "1b4309f4d56ded7bfc5ad7ba8d5a9a44ac3388a8",
-      "adapterAbi": "emulatorjs-state-v1"
-    },
-    {
-      "id": "vice_xplus4",
-      "repository": "https://github.com/retrom-project/vice-libretro",
-      "upstreamCommit": "1b4309f4d56ded7bfc5ad7ba8d5a9a44ac3388a8",
-      "adapterAbi": "emulatorjs-state-v1"
-    },
-    {
-      "id": "same_cdi",
-      "repository": "https://github.com/retrom-project/same_cdi",
-      "upstreamCommit": "cfb05d803f54130adf94efef88edd816d01df7a3",
-      "adapterAbi": "emulatorjs-state-v1"
-    }
-  ]
+  "developmentInputs": []
 }

@@ -1,16 +1,16 @@
 # Changelog
 
-## Unreleased
+## 0.31.0
 
 - Correct EmulatorJS core framebuffer screenshots to the reported display aspect ratio before returning them to the host. This prevents non-square pixel output such as CD-i 768×280 from producing vertically flattened save and review thumbnails; native pixels remain uncropped.
 
-- Advance the EmulatorJS candidate to 2.8.0-rc.2 with a source-pinned SAME_CDI build. Backport CDIC disc startup and sound-map restart timing fixes to remove periodic audio interruptions in Nobelia Demo 1 after fresh boot. PAL remains 50 Hz; existing state fields are unchanged. Old checkpoints may preserve the interrupted guest audio driver until a new stream starts.
+- Publish EmulatorJS Provider 2.8.0 with pinned core fork releases. Backport CDIC disc startup and sound-map restart timing fixes to remove periodic audio interruptions in Nobelia Demo 1 after fresh boot. PAL remains 50 Hz; existing state fields are unchanged. Old checkpoints may preserve the interrupted guest audio driver until a new stream starts.
 
 - Configure SAME CD-i digital pointer increments to 20 before native startup, preserving its button mappings and mouse sensitivity. This fixes right/down movement being filtered out by games such as Nobelia, including after fresh-launch checkpoint restoration. PAL timing remains 50 Hz.
 
-- Advance the EmulatorJS development candidate to 2.8.0-rc.1. CrocoDS dismisses its autorun menu after restore, and EightyOne preserves controller port selections while loading content and queries base input devices. EightyOne pins its controller devices through RetroArch command-line overrides so remapping cannot reset them. PET routes the first RetroPad to its actual user-port joystick instead of an absent built-in port. PET and Plus/4 reopen audio after fresh-instance state restoration; Plus/4 reconstructs the TED display bounds and cursor. Home computer defaults enable independent keyboard input; PET uses a 40-column 4032 with its joystick adapter, and Plus/4 uses joystick port 1.
+- CrocoDS dismisses its autorun menu after restore, and EightyOne preserves controller port selections while loading content and queries base input devices. EightyOne pins its controller devices through RetroArch command-line overrides so remapping cannot reset them. PET routes the first RetroPad to its actual user-port joystick instead of an absent built-in port. PET and Plus/4 reopen audio after fresh-instance state restoration; Plus/4 reconstructs the TED display bounds and cursor. Home computer defaults enable independent keyboard input; PET uses a 40-column 4032 with its joystick adapter, and Plus/4 uses joystick port 1.
 
-- Add candidate EmulatorJS targets for EightyOne, Caprice32, CrocoDS, VICE PET, Plus/4, C64 and SAME CD-i, using pinned 4.2.3 assets.
+- Add EmulatorJS targets for EightyOne, Caprice32, CrocoDS, VICE PET, Plus/4, C64 and SAME CD-i, using pinned 4.2.3 assets.
 - Use the shared compressed checkpoint write contract, retain legacy raw checkpoint reads and preserve the single-file input policy for these targets.
 - Preserve Caprice32 DSK input instead of letting EmulatorJS synthesize an unsupported CD cue for a core advertising M3U support.
 - Keep original/pixel output on an explicit, unfiltered passthrough shader. EmulatorJS 4.2.3's disabled-shader fallback can display solid colors or cropped output after native video geometry changes.

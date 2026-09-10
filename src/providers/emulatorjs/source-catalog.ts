@@ -1,188 +1,205 @@
 export const emulatorJsSourceCatalog = {
   schemaVersion: 1,
-  developmentForks: [
+  developmentForks: [],
+  forks: [
 {
   "repository": "https://github.com/retrom-project/same_cdi",
-  "commit": "7155d0ad1a52d8b726d5d7c7385fbfee31c4ee98",
-  "sourceTreeSha256": "b6cb9d825257dce31a6a644e5a535c245282440746b9abbe199afbd83538ac86",
+  "tag": "retrom-core-gcfb05d803f54-r1",
+  "commit": "097d7fbe62f4890dd70b233916011a1c2e948657",
   "adapterAbi": "emulatorjs-state-v1",
   "runtimeCore": "same_cdi",
-  "upstreamCommit": "cfb05d803f54130adf94efef88edd816d01df7a3",
   "assets": [
     {
       "filename": "COPYING",
       "sha256": "5ecf4880f928bda4a5a23b0a8fdcfa471941f8590842570698737b7c3f337f05",
-      "sizeBytes": 11333
+      "sizeBytes": 11333,
+      "url": "https://github.com/retrom-project/same_cdi/releases/download/retrom-core-gcfb05d803f54-r1/COPYING"
     },
     {
       "filename": "same_cdi-wasm.data",
-      "sha256": "c81528c87536ab532116473ae434f4c6ff0f2016f6cfeffff455a435bce20e63",
-      "sizeBytes": 3479130
+      "sha256": "4a0d2829af998d4066a12294a0ecfd1d23371bdea95906a48ef726298826a03c",
+      "sizeBytes": 3492455,
+      "url": "https://github.com/retrom-project/same_cdi/releases/download/retrom-core-gcfb05d803f54-r1/same_cdi-wasm.data"
     },
     {
       "filename": "source.tar.gz",
-      "sha256": "f7623762b2ec973a4c33becc79ea41eb2bc0d3e123d250895bb7650666efaf66",
-      "sizeBytes": 16219020
+      "sha256": "773f489b8b826f2311c85fbded7326d8ffd632fb2972256f679997bdaab7a537",
+      "sizeBytes": 16219554,
+      "url": "https://github.com/retrom-project/same_cdi/releases/download/retrom-core-gcfb05d803f54-r1/source.tar.gz"
     },
     {
-      "filename": "retrom-core-candidate.json",
-      "sha256": "5d15ba25415733af1be78ce28250510bfbad0d301ffe48f058963bedf7a8dd8e",
-      "sizeBytes": 745
+      "filename": "rpg-runtime-release.json",
+      "sha256": "c4450a15fe43d5253ab2593a3f51d249332b92e5921ba0875cc40a9d33fda663",
+      "sizeBytes": 791,
+      "url": "https://github.com/retrom-project/same_cdi/releases/download/retrom-core-gcfb05d803f54-r1/rpg-runtime-release.json"
     }
   ]
 },
-  {
-    "runtimeCore": "cap32",
-    "repository": "https://github.com/retrom-project/libretro-cap32",
-    "upstreamCommit": "310cc579b79b6051b378b192224b325a73437c9b",
-    "commit": "d20dacb9ac3a44be8550189cffbd6f030057b972",
-    "sourceTreeSha256": "a2d0e0ddf560889a57a0d78fa90b9a07a065dfb87c8c8f1cc7fb97792cf681aa",
-    "adapterAbi": "emulatorjs-state-v1",
-    "assets": [
-      {
-        "filename": "COPYING",
-        "sha256": "328d7bdacd7f3aa9f03e9b78036b5a00db53907c8cb7a8676b4ba9016430f2be",
-        "sizeBytes": 20252
-      },
-      {
-        "filename": "cap32-wasm.data",
-        "sha256": "c1548926863c4396620e8fc1c951e22c332b269a0614e8cc718f126ffe42493f",
-        "sizeBytes": 1028234
-      },
-      {
-        "filename": "retrom-core-candidate.json",
-        "sizeBytes": 744,
-        "sha256": "90ebf7361c8f4aaf7f80a263e943e3b25544666fce3129e58306a30e33a6f093"
-      },
-      {
-        "filename": "source.tar.gz",
-        "sha256": "90b93964822244c8c5c40d637f72735faac7ad5e1f0d90cfc318e58817ad5243",
-        "sizeBytes": 1356576
-      }
-    ]
-  },
-  {
-    "repository": "https://github.com/retrom-project/libretro-crocods",
-    "commit": "046978e8149798f93ba74d76aa2fc6b23de73de1",
-    "sourceTreeSha256": "2799dabf3258acfd827bda1f43691c11c58c3e1e0cf0b38cd8cc8ad2404b121b",
-    "adapterAbi": "emulatorjs-state-v1",
-    "runtimeCore": "crocods",
-    "upstreamCommit": "be00fb904da08d66221017f6708508298f17ff07",
-    "assets": [
-      {
-        "filename": "LICENSE",
-        "sha256": "e7a80285ce71a64bf9823a4e2b210feb8e4dbc5210a8e4d9b64515a021d1a31a",
-        "sizeBytes": 1063
-      },
-      {
-        "filename": "crocods-wasm.data",
-        "sha256": "ab909e321609fbe0aa5eceaf0408b8949b14e0ec2076cd38889aa1671dc28d0d",
-        "sizeBytes": 976361
-      },
-      {
-        "filename": "source.tar.gz",
-        "sha256": "0683ce6857b2ca1247418c19aaf6d5d7d6e79ed29782f0e26437cc9254c1f22d",
-        "sizeBytes": 403695
-      },
-      {
-        "filename": "retrom-core-candidate.json",
-        "sha256": "e31d8125502503344b7208c421cf524ef365faa39e86cc064cee0b44cc5126fb",
-        "sizeBytes": 747
-      }
-    ]
-  },
-  {
-    "repository": "https://github.com/retrom-project/81-libretro",
-    "commit": "16f9bf7eca805f500c655d2e9f89d6500d449f44",
-    "sourceTreeSha256": "498654dc95c91c915c5f5d4da940da9e1d571f8144dc8252fb111b05a644dafb",
-    "adapterAbi": "emulatorjs-state-v1",
-    "runtimeCore": "81",
-    "upstreamCommit": "86decf3ee61ea5803972948e80197bee8474796b",
-    "assets": [
-      {
-        "filename": "81-wasm.data",
-        "sha256": "a96a2ef49458da2b8dc51466ff836fcff30d16e494fae0e2021f5a0472de4cee",
-        "sizeBytes": 888668
-      },
-      {
-        "filename": "LICENSE",
-        "sha256": "12ac5047f2af0522f06798b1589ffc4599bc29c91f954d7874e0320634e777c0",
-        "sizeBytes": 35122
-      },
-      {
-        "filename": "source.tar.gz",
-        "sha256": "b672536a21b46dbb7629a0e5b9ace5a533993e326544eac162cbb6a6e900699b",
-        "sizeBytes": 1204926
-      },
-      {
-        "filename": "retrom-core-candidate.json",
-        "sha256": "2ca12e6d6f333a49e36d86b45127289b665d84652ee90bafb9796637e84da5a7",
-        "sizeBytes": 734
-      }
-    ]
-  },
-  {
-    "repository": "https://github.com/retrom-project/vice-libretro",
-    "commit": "ec51edccf2878e20edfcbb1a546340b44a8957d8",
-    "sourceTreeSha256": "24cc9a27d5402e64e97b974f51318f21bbd7c2b2a9adcd91afa265bc165e20ad",
-    "adapterAbi": "emulatorjs-state-v1",
-    "runtimeCore": "vice_xpet",
-    "upstreamCommit": "1b4309f4d56ded7bfc5ad7ba8d5a9a44ac3388a8",
-    "assets": [
-      {
-        "filename": "COPYING",
-        "sha256": "b8a2f73f743dc1a51aff23f1aacbca4b868564db52496fa3c0caba755bfd1eaf",
-        "sizeBytes": 17989
-      },
-      {
-        "filename": "source.tar.gz",
-        "sha256": "0dddf24619cdd90fe414825b6916666204e782623fcd8237c61ff638e4b63b0e",
-        "sizeBytes": 16757290
-      },
-      {
-        "filename": "vice_xpet-wasm.data",
-        "sha256": "e427461601da6883f1a6ec1559f96a0ff13493d669e88291309dd229b6ff915b",
-        "sizeBytes": 1372369
-      },
-      {
-        "filename": "retrom-core-candidate.json",
-        "sha256": "b682e460725dc1dfa5a8e35a54fd799c1dc2762e2acd3ac6806af7f80911144b",
-        "sizeBytes": 752
-      }
-    ]
-  },
-  {
-    "repository": "https://github.com/retrom-project/vice-libretro",
-    "commit": "4802d57251fa017f0324df2331c7b6896ce80e68",
-    "sourceTreeSha256": "8271ab868b2adf4ca7d2ef8b4dad4ca17063362f97acd8ca6f547675a819a6d6",
-    "adapterAbi": "emulatorjs-state-v1",
-    "runtimeCore": "vice_xplus4",
-    "upstreamCommit": "1b4309f4d56ded7bfc5ad7ba8d5a9a44ac3388a8",
-    "assets": [
-      {
-        "filename": "COPYING",
-        "sha256": "b8a2f73f743dc1a51aff23f1aacbca4b868564db52496fa3c0caba755bfd1eaf",
-        "sizeBytes": 17989
-      },
-      {
-        "filename": "source.tar.gz",
-        "sha256": "5596dce0703040df4392e1b8f6a20231ddb3c2c4f1ea39ddc9cb6f3af7cc62ae",
-        "sizeBytes": 16757476
-      },
-      {
-        "filename": "vice_xplus4-wasm.data",
-        "sha256": "4a1329c1f891bb90e854ec82096e12034f150b15928345acf23262d6debd1f3d",
-        "sizeBytes": 1415979
-      },
-      {
-        "filename": "retrom-core-candidate.json",
-        "sha256": "e509c14108b8420440521f82cd6b80dbe94d9c9b4b83e61fbda1ac3d8a312648",
-        "sizeBytes": 756
-      }
-    ]
-  }
-],
-  forks: [
+{
+  "repository": "https://github.com/retrom-project/vice-libretro",
+  "tag": "retrom-core-g1b4309f4d56d-r2",
+  "commit": "c9964f3d5552f66ac3ac8cac3092a1a4580c31a6",
+  "adapterAbi": "emulatorjs-state-v1",
+  "runtimeCore": "vice_xpet",
+  "assets": [
+    {
+      "filename": "vice_xpet-wasm.data",
+      "sha256": "abc999e5603d327d0ee8329bab6209edb6aa02bfd8296d5913ec54f8ee1d052d",
+      "sizeBytes": 1372018,
+      "url": "https://github.com/retrom-project/vice-libretro/releases/download/retrom-core-g1b4309f4d56d-r2/vice_xpet-wasm.data"
+    },
+    {
+      "filename": "COPYING",
+      "sha256": "b8a2f73f743dc1a51aff23f1aacbca4b868564db52496fa3c0caba755bfd1eaf",
+      "sizeBytes": 17989,
+      "url": "https://github.com/retrom-project/vice-libretro/releases/download/retrom-core-g1b4309f4d56d-r2/COPYING"
+    },
+    {
+      "filename": "vice_xpet-source.tar.gz",
+      "sha256": "929629f45797ef4f48ef0ab9a58e474ddbdbc9720d3200622ad1209086ea9d7f",
+      "sizeBytes": 16759407,
+      "url": "https://github.com/retrom-project/vice-libretro/releases/download/retrom-core-g1b4309f4d56d-r2/vice_xpet-source.tar.gz"
+    },
+    {
+      "filename": "vice_xpet-release.json",
+      "sha256": "dfa2fa5e3e6b6183bcda9bbfb1c1469f41ac88b7d08c9a0c885e3f878bef35dd",
+      "sizeBytes": 807,
+      "url": "https://github.com/retrom-project/vice-libretro/releases/download/retrom-core-g1b4309f4d56d-r2/vice_xpet-release.json"
+    }
+  ]
+},
+{
+  "repository": "https://github.com/retrom-project/vice-libretro",
+  "tag": "retrom-core-g1b4309f4d56d-r2",
+  "commit": "c9964f3d5552f66ac3ac8cac3092a1a4580c31a6",
+  "adapterAbi": "emulatorjs-state-v1",
+  "runtimeCore": "vice_xplus4",
+  "assets": [
+    {
+      "filename": "vice_xplus4-wasm.data",
+      "sha256": "5725e2b32b7c7bf7fd49cf7fc117eae20ca96a67676a8642147b2ebf130750fb",
+      "sizeBytes": 1416694,
+      "url": "https://github.com/retrom-project/vice-libretro/releases/download/retrom-core-g1b4309f4d56d-r2/vice_xplus4-wasm.data"
+    },
+    {
+      "filename": "COPYING",
+      "sha256": "b8a2f73f743dc1a51aff23f1aacbca4b868564db52496fa3c0caba755bfd1eaf",
+      "sizeBytes": 17989,
+      "url": "https://github.com/retrom-project/vice-libretro/releases/download/retrom-core-g1b4309f4d56d-r2/COPYING"
+    },
+    {
+      "filename": "vice_xplus4-source.tar.gz",
+      "sha256": "929629f45797ef4f48ef0ab9a58e474ddbdbc9720d3200622ad1209086ea9d7f",
+      "sizeBytes": 16759407,
+      "url": "https://github.com/retrom-project/vice-libretro/releases/download/retrom-core-g1b4309f4d56d-r2/vice_xplus4-source.tar.gz"
+    },
+    {
+      "filename": "vice_xplus4-release.json",
+      "sha256": "230a0b53aa7889dc4746bcb2c8f2b1a28b51c50c9a911d623b52d0426310c3bb",
+      "sizeBytes": 811,
+      "url": "https://github.com/retrom-project/vice-libretro/releases/download/retrom-core-g1b4309f4d56d-r2/vice_xplus4-release.json"
+    }
+  ]
+},
+{
+  "repository": "https://github.com/retrom-project/libretro-cap32",
+  "tag": "retrom-core-g310cc579b79b-r2",
+  "commit": "1c8820a45b3445297f03720c52cb54ed4e8c7949",
+  "adapterAbi": "emulatorjs-state-v1",
+  "runtimeCore": "cap32",
+  "assets": [
+    {
+      "filename": "COPYING",
+      "sha256": "328d7bdacd7f3aa9f03e9b78036b5a00db53907c8cb7a8676b4ba9016430f2be",
+      "sizeBytes": 20252,
+      "url": "https://github.com/retrom-project/libretro-cap32/releases/download/retrom-core-g310cc579b79b-r2/COPYING"
+    },
+    {
+      "filename": "cap32-wasm.data",
+      "sha256": "cbebe15e960fad04eb27c08c5a73c7fbbc1df3d9cc13294f357104640c2da49f",
+      "sizeBytes": 1028234,
+      "url": "https://github.com/retrom-project/libretro-cap32/releases/download/retrom-core-g310cc579b79b-r2/cap32-wasm.data"
+    },
+    {
+      "filename": "source.tar.gz",
+      "sha256": "3b6e980a6ad716fed4d2a5a558387fea09a664e1d2368dcad20e94b29dff8a5a",
+      "sizeBytes": 1357672,
+      "url": "https://github.com/retrom-project/libretro-cap32/releases/download/retrom-core-g310cc579b79b-r2/source.tar.gz"
+    },
+    {
+      "filename": "rpg-runtime-release.json",
+      "sha256": "59278925c02b401d4d61fe396c29cd0ad23cf0b4970b4b2c2d976135c0dede37",
+      "sizeBytes": 793,
+      "url": "https://github.com/retrom-project/libretro-cap32/releases/download/retrom-core-g310cc579b79b-r2/rpg-runtime-release.json"
+    }
+  ]
+},
+{
+  "repository": "https://github.com/retrom-project/libretro-crocods",
+  "tag": "retrom-core-gbe00fb904da0-r1",
+  "commit": "391341c0e99965e9cd1f6e6ebbd43ff40525548d",
+  "adapterAbi": "emulatorjs-state-v1",
+  "runtimeCore": "crocods",
+  "assets": [
+    {
+      "filename": "LICENSE",
+      "sha256": "e7a80285ce71a64bf9823a4e2b210feb8e4dbc5210a8e4d9b64515a021d1a31a",
+      "sizeBytes": 1063,
+      "url": "https://github.com/retrom-project/libretro-crocods/releases/download/retrom-core-gbe00fb904da0-r1/LICENSE"
+    },
+    {
+      "filename": "crocods-wasm.data",
+      "sha256": "8c70df810436f225c5a2b40f31555636d6e12eacd41968f28b7dc708a9c6db10",
+      "sizeBytes": 976148,
+      "url": "https://github.com/retrom-project/libretro-crocods/releases/download/retrom-core-gbe00fb904da0-r1/crocods-wasm.data"
+    },
+    {
+      "filename": "source.tar.gz",
+      "sha256": "8dd97e62b97942153fdaf9b3378fa08f535d86629b725af0c0101fac0a9724fd",
+      "sizeBytes": 405361,
+      "url": "https://github.com/retrom-project/libretro-crocods/releases/download/retrom-core-gbe00fb904da0-r1/source.tar.gz"
+    },
+    {
+      "filename": "rpg-runtime-release.json",
+      "sha256": "51e5f77fbcd99f13c49efae470290e4d1215ad10bc992e4a3332da72568119c9",
+      "sizeBytes": 794,
+      "url": "https://github.com/retrom-project/libretro-crocods/releases/download/retrom-core-gbe00fb904da0-r1/rpg-runtime-release.json"
+    }
+  ]
+},
+{
+  "repository": "https://github.com/retrom-project/81-libretro",
+  "tag": "retrom-core-g86decf3ee61e-r1",
+  "commit": "c003c9bbbde5e16e2ca7b355345b7012dfd7854f",
+  "adapterAbi": "emulatorjs-state-v1",
+  "runtimeCore": "81",
+  "assets": [
+    {
+      "filename": "81-wasm.data",
+      "sha256": "b78716a9566f7b31ad82f3d3250ba882af284294df4ec84b80012906aa1da417",
+      "sizeBytes": 888668,
+      "url": "https://github.com/retrom-project/81-libretro/releases/download/retrom-core-g86decf3ee61e-r1/81-wasm.data"
+    },
+    {
+      "filename": "LICENSE",
+      "sha256": "12ac5047f2af0522f06798b1589ffc4599bc29c91f954d7874e0320634e777c0",
+      "sizeBytes": 35122,
+      "url": "https://github.com/retrom-project/81-libretro/releases/download/retrom-core-g86decf3ee61e-r1/LICENSE"
+    },
+    {
+      "filename": "source.tar.gz",
+      "sha256": "db0481d276f64332c8a6108a1817f0eb0e058020cade002c5d34a1a7c3abe6ca",
+      "sizeBytes": 1207953,
+      "url": "https://github.com/retrom-project/81-libretro/releases/download/retrom-core-g86decf3ee61e-r1/source.tar.gz"
+    },
+    {
+      "filename": "rpg-runtime-release.json",
+      "sha256": "01c76aa09d95022d001e16f80e8ff32c0a62088da9445c6b321be06872943cf2",
+      "sizeBytes": 786,
+      "url": "https://github.com/retrom-project/81-libretro/releases/download/retrom-core-g86decf3ee61e-r1/rpg-runtime-release.json"
+    }
+  ]
+},
     {
       "repository": "https://github.com/retrom-project/flycast-wasm",
       "tag": "retrom-core-1.0-r1",

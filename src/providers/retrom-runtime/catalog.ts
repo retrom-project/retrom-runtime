@@ -1,3 +1,6 @@
+import {storageAdapters} from "../../provider/checkpoint-storage.js";
+import {np2kaiAdapter, np2kaiTarget} from "./np2kai-declaration.js";
+import {px68kAdapter, px68kTarget} from "./px68k-declaration.js";
 import {scummvmAdapter, scummvmTarget} from "./scummvm-declaration.js";
 import {playAdapter, playTarget} from "./play-declaration.js";
 import {
@@ -34,7 +37,16 @@ const isolatedCapabilities = capabilities(true, true, true);
 const wasm4Capabilities = capabilities(true, true, false);
 
 const adapters = [
+  np2kaiAdapter,
+  defineAdapter({id: "openbor-web", kind: "OPENBOR_WEB", abi: "openbor-host-v1",
+    capabilities: capabilities(true, true, false),
+    checkpoint: {writeFormat: "openbor-game-save-v1", readFormats: ["openbor-game-save-v1"], semantics: "GAME_SAVE"}}),
+  px68kAdapter,
+  adapter("webmsx-web", "WEBMSX_WEB", "webmsx-host-v1", "webmsx-state-v1", standardCapabilities),
   playAdapter,
+  defineAdapter({id: "ruffle-web", kind: "RUFFLE_WEB", abi: "ruffle-host-v1",
+    capabilities: capabilities(true, false, true),
+    checkpoint: {writeFormat: "ruffle-sharedobjects-v1", readFormats: ["ruffle-sharedobjects-v1"], semantics: "GAME_SAVE"}}),
   scummvmAdapter,
   defineAdapter({id: "tic80-web", kind: "TIC80_WEB", abi: "tic80-pmem-v1",
     capabilities: capabilities(true, true, true),
@@ -50,8 +62,8 @@ const adapters = [
   }),
   adapter("kirikiri2-web", "KIRIKIRI2_WEB", "kirikiri-kag-bookmark",
     "kirikiri-save-bundle-v1", standardCapabilities),
-  adapter("mkxp-libretro-web", "MKXP_LIBRETRO_WEB", "mkxp-state-compact",
-    "mkxp-state-compact-v1", rpgCapabilities),
+  defineAdapter({id: "mkxp-libretro-web", kind: "MKXP_LIBRETRO_WEB", abi: "mkxp-state-compact",
+    checkpoint: {writeFormat: "mkxp-state-v1", readFormats: ["mkxp-state-v1", "mkxp-state-compact-v1"]}, capabilities: rpgCapabilities}),
   adapter("native-web", "NATIVE_WEB", "native-save", "native-save-bundle-v1", nativeCapabilities),
   adapter("ons-yuri-web", "ONS_YURI_WEB", "ons-save", "ons-save-bundle-v1", standardCapabilities),
   adapter("tyranoscript-web", "TYRANOSCRIPT_WEB", "tyranoscript-snapshot-v1",
@@ -68,6 +80,8 @@ const targets = [
   ),
   target("fake08", "PICO-8 (FAKE-08)", "fake08-web", noOptionsSchema, false, "SAME_ORIGIN_BLANK", "ROM_BLOB",
     4194380, ["assets/fake08/fake08-retrom.mjs", "assets/fake08/fake08-retrom.wasm"]),
+  target("flash-ruffle", "Flash (Ruffle)", "ruffle-web", noOptionsSchema, false, "SAME_ORIGIN_BLANK", "ROM_BLOB",
+    8 * 1024 * 1024, ["assets/ruffle/ruffle.js", "assets/ruffle/core.ruffle.js", "assets/ruffle/ruffle.wasm"]),
   target(
     "j2me", "Java ME", "j2me-minijvm-web", noOptionsSchema,
     true, "SAME_ORIGIN_BLANK", "ROM_BLOB", 2 * 1024 * 1024,
@@ -81,12 +95,18 @@ const targets = [
     ["assets/kirikiri/assets.zip", "assets/kirikiri/index.js", "assets/kirikiri/index.wasm",
       "assets/kirikiri/vlfs.js"],
   ),
+  target("msx-webmsx", "MSX (WebMSX)", "webmsx-web", noOptionsSchema, false, "SAME_ORIGIN_BLANK", "ROM_BLOB",
+    32 * 1024 * 1024, ["assets/webmsx/webmsx.js"]),
+  np2kaiTarget,
   target(
     "onscripter-yuri", "ONScripter Yuri", "ons-yuri-web", onsOptionsSchema,
     false, "SAME_ORIGIN_BLANK", "FILE_TREE", 64 * 1024 * 1024,
     ["assets/ons/onsyuri.js", "assets/ons/onsyuri.wasm"],
   ),
+  target("openbor", "OpenBOR", "openbor-web", noOptionsSchema, false, "SAME_ORIGIN_BLANK", "ROM_BLOB",
+    16 * 1024 * 1024, ["assets/openbor/openbor.mjs", "assets/openbor/openbor.wasm"]),
   playTarget,
+  px68kTarget,
   easyRpgTarget("rpgmaker-2000", "RPG Maker 2000", "rpg2k"),
   easyRpgTarget("rpgmaker-2003", "RPG Maker 2003", "rpg2k3"),
   nativeRpgTarget("rpgmaker-mv", "RPG Maker MV", "RPGMV"),
@@ -109,10 +129,10 @@ const targets = [
 ] as const;
 
 export const retromRuntimeProviderDefinition = defineProvider({
-  adapters,
+  adapters: storageAdapters(adapters),
   providerApiVersion: 1,
   providerId: "retrom-runtime",
-  providerVersion: "0.23.1",
+  providerVersion: "0.30.0",
   targets,
 });
 

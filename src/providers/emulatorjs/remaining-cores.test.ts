@@ -1,3 +1,4 @@
+import {gunzipSync} from "fflate";
 import {describe, expect, it, vi} from "vitest";
 import {emulatorJsProviderDefinition} from "./catalog.js";
 import {createEmulatorJsPlayer} from "./provider-runtime.js";
@@ -55,8 +56,8 @@ describe("remaining EmulatorJS cores", () => {
       (runtimeWindow.EJS_onGameStart as () => void)(); expect(await settled).toBeUndefined();
       expect(player.getState()).toBe("RUNNING");
       const saved = await player.checkpoint();
-      expect(saved.bytes).toEqual(Uint8Array.of(1, 2, 3));
-      expect(saved).toMatchObject({format: "emulatorjs-state-v1"});
+      expect(gunzipSync(saved.bytes)).toEqual(Uint8Array.of(1, 2, 3));
+      expect(saved).toMatchObject({format: "emulatorjs-state-v1-storage-v1"});
     } finally {await player.exit(); frame.remove();}
   });
 });

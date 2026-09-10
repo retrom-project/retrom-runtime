@@ -2,12 +2,98 @@
 
 ## Unreleased
 
-- Advance the EmulatorJS development candidate to 2.6.0-rc.9. CrocoDS dismisses its autorun menu after restore, and EightyOne preserves controller port selections while loading content and queries base input devices. EightyOne pins its controller devices through RetroArch command-line overrides so remapping cannot reset them. PET routes the first RetroPad to its actual user-port joystick instead of an absent built-in port. PET and Plus/4 reopen audio after fresh-instance state restoration; Plus/4 reconstructs the TED display bounds and cursor. Home computer defaults enable independent keyboard input; PET uses a 40-column 4032 with its joystick adapter, and Plus/4 uses joystick port 1.
+- Advance the EmulatorJS development candidate to 2.8.0-rc.1. CrocoDS dismisses its autorun menu after restore, and EightyOne preserves controller port selections while loading content and queries base input devices. EightyOne pins its controller devices through RetroArch command-line overrides so remapping cannot reset them. PET routes the first RetroPad to its actual user-port joystick instead of an absent built-in port. PET and Plus/4 reopen audio after fresh-instance state restoration; Plus/4 reconstructs the TED display bounds and cursor. Home computer defaults enable independent keyboard input; PET uses a 40-column 4032 with its joystick adapter, and Plus/4 uses joystick port 1.
 
 - Add candidate EmulatorJS targets for EightyOne, Caprice32, CrocoDS, VICE PET, Plus/4, C64 and SAME CD-i, using pinned 4.2.3 assets.
-- Preserve the existing raw checkpoint contract and single-file input policy for these targets.
+- Use the shared compressed checkpoint write contract, retain legacy raw checkpoint reads and preserve the single-file input policy for these targets.
 - Preserve Caprice32 DSK input instead of letting EmulatorJS synthesize an unsupported CD cue for a core advertising M3U support.
 - Keep original/pixel output on an explicit, unfiltered passthrough shader. EmulatorJS 4.2.3's disabled-shader fallback can display solid colors or cropped output after native video geometry changes.
+
+## 0.30.0
+
+- Add the PC-98 NP2kai target with the pinned r1 core, HDI/D88 input, verified persistent disk cache, download progress and instant machine/disk checkpoints.
+- Compress every new checkpoint exactly once at the shared Provider boundary, without a size threshold; decode before restore and persistence acknowledgement, including final native-save snapshots.
+- Advance EmulatorJS Provider to 2.7.0. Version all storage write formats while retaining legacy raw, PSP/Flycast gzip, mkxp compact and PX68K deflate ZIP reads. New PX68K ZIP entries use STORE and private transport compression writers are removed.
+- Enable PSP native load receipts for explicit restore, and suppress its upstream reboot during explicit exit while retaining native cleanup.
+
+## 0.29.0
+
+- Add OpenBOR PAK content through a fork-owned Emscripten/SDL2 core and the
+  `openbor-host-v1` interface. Formal builds pin the independent maintained core
+  release `retrom-core-g9d81480f8481-r1`; local source-bound overrides remain
+  restricted to explicit PFB builds.
+- Bind native progress files to the game digest in `openbor-game-save-v1`
+  (`GAME_SAVE`). Restore them before startup and continue through the game menu;
+  this target does not provide instant snapshots.
+- Verify bounded PAK downloads and reuse verified content chunks across Launches.
+  Support standard gamepad scancodes, native keyboard input, pause and screenshots,
+  and release input/audio resources when the core exits.
+
+- Advance EmulatorJS Provider to 2.6.6 for the aggregate OpenBOR license notice;
+  its core assets and behavior remain unchanged.
+
+## 0.28.0
+
+- Pin PX68K r1 and TyranoScript bridge r8 to immutable releases with verified asset sizes and SHA-256.
+- Advance EmulatorJS Provider to 2.6.5 for the aggregate third-party notice change; its core assets and input behavior remain unchanged.
+
+- Tyrano 旧版兼容层每个手柄按钮只投射一个键盘目标，不再同时发送 KAG/DOM 手柄事件；现代引擎保留原生手柄路径，真实键盘独立可用。
+- 补齐 TyranoScript 已声明的 pixel/smooth 画面模式控制，修复宿主初始化时的能力错误。
+- Tyrano 4.x 不要求新版 chara 组件，按各版本的菜单方法判断可存档状态。
+- 旧版音频仅在媒体已暂停且播放请求以 AbortError 取消时正常完成；其他播放错误继续传播。
+
+- Add the PX68K single-disk X68000 target with keyboard/gamepad, audio, pause,
+  screenshots and machine/disk checkpoints across fresh launches.
+- Keep PX68K gamepad and keyboard input independent: Button 1 (B) no longer
+  injects Escape and pauses games; A/Start no longer inject Enter.
+- Let arrow keys and Z/X operate PX68K joypad one while retaining native keyboard
+  input, and release held keyboard controls on blur, pause and exit.
+- Verify bounded cached game, BIOS and Wasm bytes before native construction.
+- Accept descriptor-verified flat-file core candidates in PFB builds while
+  keeping unpublished sources out of formal releases.
+
+## 0.27.0
+
+- Add the independent `msx-webmsx` Target with bounded single-media loading, persistent
+  content cache, standard controller input, screenshots and pause/resume.
+- Bind `webmsx-state-v1` instant snapshots to the game's content digest and restore them
+  into a fresh machine. Release controller input on pause and exit.
+- Pin the WebMSX maintenance release with exact commit, asset lengths and SHA-256.
+  Local overrides remain restricted to explicit PFB builds. Preserve the unresolved
+  upstream source and embedded system-ROM license status in the dedicated notice.
+
+## 0.25.0
+
+Ruffle integration: enforce centered aspect-ratio scaling and expose native data as a
+`STORAGE` container through the optional public save data kind. Keep existing input mappings and
+changed-data export behavior; no Mode-specific exceptions.
+
+- Advance EmulatorJS Provider to 2.6.1 for the updated bundled third-party notices; its execution
+  code and core assets remain unchanged from 2.6.0.
+- Keep Ruffle's responsive canvas layout core-owned so fullscreen and viewport changes do not
+  compete with the Provider's fixed-resolution fitting. Other adapters retain the default fitting.
+- Add the independent `flash-ruffle` Target for bounded single-SWF content, with keyboard/mouse
+  and standard gamepad input, pause, volume and screenshots.
+- Transport native SharedObject bytes in `ruffle-sharedobjects-v1` (`GAME_SAVE`, 8 MiB maximum).
+  Restore only explicit identity-matched payloads before movie execution; fresh Launches start empty.
+- Validate SWF compressed/decompressed bounds, exact download sizes and SHA-256; reuse Cache Storage
+  across different Launch URLs by content identity and report deterministic download progress.
+- Pin the published Ruffle fork `retrom-core-ge46d1642fb67-r2`; local core overrides remain
+  restricted to explicit PFB builds with closed candidate inventory checks.
+- Capture freshly rendered GPU pixels without advancing the movie; bound startup waits and destroy
+  cancelled instances even when asynchronous loading finishes late.
+
+## 0.24.0
+
+- Compress new Flycast instant checkpoints with lossless gzip and retain raw-state restoration.
+  Retain the Flycast WebGL drawing buffer so screenshots remain available after pause/presentation.
+
+- Advance EmulatorJS Provider to 2.6.0 and add a Dreamcast Flycast WASM JIT target with WebGL2, verified CHD caching,
+  Dreamcast face-button mappings and independent instant checkpoint format.
+- Pin Flycast core release `retrom-core-1.0-r1` with verified release metadata and licenses.
+- Preserve RetroArch restore configuration when BIOS external-file hooks are installed.
+- Validate local core candidate provenance and closed artifact sets before materializing
+  EmulatorJS inputs; formal builds reject unpublished candidates.
 
 ## 0.23.1
 

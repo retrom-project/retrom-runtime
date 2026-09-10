@@ -1,0 +1,23 @@
+import {afterEach, expect, it, vi} from "vitest";
+import {installInput} from "./input.js";
+afterEach(() => vi.restoreAllMocks());
+it("releases controls on blur, pause, disconnect and disposal without reacquiring background input", () => {
+  let tick: FrameRequestCallback = () => undefined;
+  vi.spyOn(window, "requestAnimationFrame").mockImplementation(callback => {tick = callback; return 1;});
+  const cancel = vi.spyOn(window, "cancelAnimationFrame").mockImplementation(() => undefined);
+  const pad = {connected: true, mapping: "standard", axes: [1, 0], buttons: []} as unknown as Gamepad;
+  Object.defineProperty(navigator, "getGamepads", {configurable: true, value: () => [pad]});
+  const keys = vi.fn();
+  const input = installInput(window, keys);
+  tick(0); expect(keys).toHaveBeenLastCalledWith([79]);
+  window.dispatchEvent(new Event("blur"));
+  tick(1); expect(keys).toHaveBeenLastCalledWith([]);
+  window.dispatchEvent(new Event("focus"));
+  tick(2); expect(keys).toHaveBeenLastCalledWith([79]);
+  input.pause(); tick(3); expect(keys).toHaveBeenLastCalledWith([]);
+  input.resume(); tick(4); expect(keys).toHaveBeenLastCalledWith([79]);
+  Object.defineProperty(pad, "connected", {value: false});
+  tick(5); expect(keys).toHaveBeenLastCalledWith([]);
+  input.dispose(); expect(cancel).toHaveBeenCalledWith(1);
+  keys.mockClear(); tick(6); expect(keys).not.toHaveBeenCalled();
+});

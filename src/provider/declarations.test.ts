@@ -6,9 +6,10 @@ import { retromRuntimeProviderDefinition } from "../providers/retrom-runtime/cat
 const targetIds = [
   "butterscotch-gamemaker",
   "fake08",
+  "flash-ruffle",
   "j2me",
-  "kirikiri2-kag",
-  "onscripter-yuri", "play-ps2",
+  "kirikiri2-kag", "msx-webmsx", "np2kai-pc98",
+  "onscripter-yuri", "openbor", "play-ps2", "px68k",
   "rpgmaker-2000",
   "rpgmaker-2003",
   "rpgmaker-mv",
@@ -24,9 +25,10 @@ const targetIds = [
 const sameOriginFrameTargetIds = [
   "butterscotch-gamemaker",
   "fake08",
+  "flash-ruffle",
   "j2me",
-  "kirikiri2-kag",
-  "onscripter-yuri", "play-ps2",
+  "kirikiri2-kag", "msx-webmsx", "np2kai-pc98",
+  "onscripter-yuri", "openbor", "play-ps2", "px68k",
   "rpgmaker-2000",
   "rpgmaker-2003",
   "rpgmaker-vx",
@@ -37,10 +39,10 @@ const sameOriginFrameTargetIds = [
 ];
 
 describe("retrom-runtime provider declarations", () => {
-  it("declares the complete 0.23.1 target closure in one source", () => {
-    expect(retromRuntimeProviderDefinition.providerVersion).toBe("0.23.1");
+  it("declares the complete 0.30.0 target closure in one source", () => {
+    expect(retromRuntimeProviderDefinition.providerVersion).toBe("0.30.0");
     expect(retromRuntimeProviderDefinition.targets.map((target) => target.id)).toEqual(targetIds);
-    expect(retromRuntimeProviderDefinition.adapters).toHaveLength(13);
+    expect(retromRuntimeProviderDefinition.adapters).toHaveLength(18);
   });
 
   it("projects a public manifest without internal adapter identities", () => {
@@ -49,7 +51,7 @@ describe("retrom-runtime provider declarations", () => {
       clientModulePath: "client.mjs",
       providerApiVersion: 1,
       providerId: "retrom-runtime",
-      providerVersion: "0.23.1",
+      providerVersion: "0.30.0",
       schemaVersion: 1,
     });
     expect(manifest.targets.map((target) => target.id)).toEqual(targetIds);
@@ -75,8 +77,8 @@ describe("retrom-runtime provider declarations", () => {
     expect(wasm4).toMatchObject({
       checkpoint: {
         maxBytes: 132144,
-        readFormats: ["wasm4-state-v1"],
-        writeFormat: "wasm4-state-v1",
+        readFormats: ["wasm4-state-v1", "wasm4-state-v1-storage-v1"],
+        writeFormat: "wasm4-state-v1-storage-v1",
       },
       inputs: [{ cardinality: "ONE", kind: "WASM4_CART", optional: false, role: "game" }],
       targetOptionsSchema: {

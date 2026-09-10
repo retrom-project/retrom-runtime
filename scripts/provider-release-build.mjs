@@ -1,12 +1,13 @@
 import {developmentForkFiles, requireDevelopmentForkMode, verifyDevelopmentForkMetadata} from "./emulatorjs-development-forks.mjs";
 import {createHash} from "node:crypto";
 import {lstat, mkdir, mkdtemp, readFile, readdir, rm} from "node:fs/promises";
+import {fileURLToPath} from "node:url";
 import {isAbsolute, join, parse, relative} from "node:path";
 
 import {buildProviderBundle} from "./provider-bundle.mjs";
 import {buildProviderClient} from "./provider-client-build.mjs";
 
-import {forkReleaseFiles, verifyForkMetadata} from "./emulatorjs-fork-releases.mjs";
+import {forkMetadataPath, forkReleaseFiles, verifyForkMetadata} from "./emulatorjs-fork-releases.mjs";
 
 const sourceRepository = "https://github.com/retrom-project/retrom-runtime";
 
@@ -62,6 +63,9 @@ export async function buildEmulatorJsProviderBundle(input) {
   }
   verifyEmulatorJsImplementationAssets(input.definition, assetIndex);
   const licenseSources = await collectEmulatorJsLicenses(input.sourceRoot, input.sourceCatalog);
+  for (const name of ["LICENSE", "THIRD_PARTY_NOTICES.md", "EMULATORJS_THIRD_PARTY_NOTICES.md"]) {
+    licenseSources.set(`licenses/retrom-runtime/${name}`, fileURLToPath(new URL(`../${name}`, import.meta.url)));
+  }
   const temporaryRoot = await mkdtemp(join(input.outputRoot, ".provider-client-"));
   try {
     const clientPath = join(temporaryRoot, "client.mjs");
@@ -88,6 +92,8 @@ export async function buildEmulatorJsProviderBundle(input) {
         forks: input.sourceCatalog.forks ?? [],
         ...(input.sourceCatalog.developmentForks?.length ? {developmentForks: input.sourceCatalog.developmentForks} : {}),
         upstreamReleases: input.sourceCatalog.releases,
+        ...(input.sourceCatalog.developmentCores?.length
+          ? {developmentCores: input.sourceCatalog.developmentCores} : {}),
       },
     });
   } finally {
@@ -163,7 +169,7 @@ async function collectEmulatorJsLicenses(sourceRoot, sourceCatalog) {
     if (file.destination.includes("/licenses/")) {result.set(`licenses/emulatorjs/${file.destination}`, source);}
   }
   for (const fork of sourceCatalog.forks ?? []) {
-    const metadata = JSON.parse(await readRegularFile(join(sourceRoot, `4.2.3/data/cores/reports/${fork.runtimeCore}.json`)));
+    const metadata = JSON.parse(await readRegularFile(join(sourceRoot, forkMetadataPath(fork))));
     verifyForkMetadata(fork, metadata);
   }
   for (const fork of sourceCatalog.developmentForks ?? []) {

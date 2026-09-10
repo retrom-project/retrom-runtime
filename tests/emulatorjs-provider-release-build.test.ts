@@ -10,9 +10,10 @@ import {projectProviderManifest} from "../src/provider/manifest.js";
 import {emulatorJsProviderDefinition} from "../src/providers/emulatorjs/catalog.js";
 import {emulatorJsSourceCatalog} from "../src/providers/emulatorjs/source-catalog.js";
 import {buildEmulatorJsProviderBundle} from "../scripts/provider-release-build.mjs";
+import {forkReleaseFiles} from "../scripts/emulatorjs-fork-releases.mjs";
 
 describe("EmulatorJS Provider release build", () => {
-  it("builds all 50 targets from one verified materialized input without downloads", {timeout: 30_000}, async () => {
+  it("builds all 51 targets from one verified materialized input without downloads", {timeout: 30_000}, async () => {
     const root = await temporaryRoot();
     try {
       const sourceRoot = join(root, "source");
@@ -21,6 +22,9 @@ describe("EmulatorJS Provider release build", () => {
         await write(join(sourceRoot, assetPath.replace(/^assets\//u, "")), `fixture:${assetPath}\n`);
       }
       for (const release of emulatorJsSourceCatalog.releases) {
+        for (const path of release.licenseRoots.filter((path) => path.startsWith("licenses/"))) {
+          await write(join(sourceRoot, release.id, path, "LICENSE"), `${release.id} custom core license\n`);
+        }
         await write(join(sourceRoot, release.id, "LICENSE"), `${release.id} license\n`);
         await write(join(sourceRoot, release.id, "THIRD_PARTY_NOTICES"), `${release.id} notices\n`);
         await write(join(sourceRoot, release.id, "licenses/core/LICENSE"), `${release.id} core\n`);
@@ -54,7 +58,7 @@ describe("EmulatorJS Provider release build", () => {
         providerId: string; targets: unknown[];
       };
       expect(provider.providerId).toBe("emulatorjs");
-      expect(provider.targets).toHaveLength(50);
+      expect(provider.targets).toHaveLength(51);
       const provenance = JSON.parse(await readFile(join(result.bundleRoot, "provenance.json"), "utf8"));
       expect(provenance.forks).toEqual(sourceCatalog.forks);
       expect(await readFile(join(result.bundleRoot,
@@ -86,17 +90,15 @@ async function fixtureForks(sourceRoot: string) {
       return {...asset, contents, sha256: createHash("sha256").update(contents).digest("hex"),
         sizeBytes: Buffer.byteLength(contents)};
     });
-    const metadata = JSON.stringify({...fork, schemaVersion: 1, assets: assets.map((asset) => ({
-      filename: asset.filename, observedSha256: asset.sha256, sizeBytes: asset.sizeBytes,
-    }))});
+    const records = assets.map((asset) => ({filename: asset.filename, sizeBytes: asset.sizeBytes,
+      ...(fork.runtimeCore === "flycast" ? {sha256: asset.sha256} : {observedSha256: asset.sha256})}));
+    const metadata = JSON.stringify({...fork, schemaVersion: 1,
+      ...(fork.runtimeCore === "flycast" ? {files: records} : {assets: records})});
     const metadataAsset = fork.assets.find((asset) => asset.filename === "rpg-runtime-release.json")!;
     const all = [...assets, {...metadataAsset, contents: metadata,
       sha256: createHash("sha256").update(metadata).digest("hex"), sizeBytes: Buffer.byteLength(metadata)}];
-    for (const asset of all) {
-      const destination = asset.filename.endsWith(".data") ? `4.2.3/data/cores/${asset.filename}`
-        : asset.filename.endsWith(".json") ? `4.2.3/data/cores/reports/${fork.runtimeCore}.json`
-          : `4.2.3/licenses/forks/${fork.runtimeCore}/${asset.filename}`;
-      await write(join(sourceRoot, destination), asset.contents);
+    for (const file of forkReleaseFiles({forks: [{...fork, assets: all}]})) {
+      await write(join(sourceRoot, file.destination), all.find((asset) => asset.filename === file.filename)!.contents);
     }
     forks.push({...fork, assets: all.map(({contents: _contents, ...asset}) => asset)});
   }

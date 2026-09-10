@@ -1,9 +1,134 @@
 {
   "schemaVersion": 1,
   "packageName": "@xxxsen/retrom-runtime",
-  "packageVersion": "0.23.1",
+  "packageVersion": "0.30.0",
   "publicApiVersion": 2,
   "upstreamReleases": [
+    {
+      "id": "np2kai",
+      "repository": "https://github.com/retrom-project/NP2kai",
+      "upstreamCommit": "5939e0c6d5985c4c08fc70f289a83290e5d3e6f7",
+      "adapterAbi": "np2kai-host-v1",
+      "tag": "retrom-core-g5939e0c6d598-r1",
+      "commit": "44236652583281d7d697ec3add225c32654e871b",
+      "metadataUrl": "https://github.com/retrom-project/NP2kai/releases/download/retrom-core-g5939e0c6d598-r1/rpg-runtime-release.json",
+      "assets": [
+        {
+          "filename": "LICENSE",
+          "sizeBytes": 109565,
+          "sha256": "ff2abb46f9c3311e6238c21a96be0aaf0e8ecc72170d42592ac48d236166d07f",
+          "output": "licenses/np2kai/LICENSE",
+          "maxSizeBytes": 1048576,
+          "url": "https://github.com/retrom-project/NP2kai/releases/download/retrom-core-g5939e0c6d598-r1/LICENSE"
+        },
+        {
+          "filename": "font.bmp",
+          "sizeBytes": 524350,
+          "sha256": "980076d7f5107fbb4b80fc2d6800026f8d488600fb709df3d8a99a975e861492",
+          "output": "runtime/np2kai/font.bmp",
+          "maxSizeBytes": 524350,
+          "url": "https://github.com/retrom-project/NP2kai/releases/download/retrom-core-g5939e0c6d598-r1/font.bmp"
+        },
+        {
+          "filename": "np2kai-register.mjs",
+          "sizeBytes": 97,
+          "sha256": "1cbf0134294402812de509e20fef3818d8c4a064068269f73ef66ca2e76e79e6",
+          "output": "runtime/np2kai/np2kai-register.mjs",
+          "maxSizeBytes": 65536,
+          "url": "https://github.com/retrom-project/NP2kai/releases/download/retrom-core-g5939e0c6d598-r1/np2kai-register.mjs"
+        },
+        {
+          "filename": "np2kai.mjs",
+          "sizeBytes": 366177,
+          "sha256": "cecfe520456715b2828e84e241e2e5e0323b975c3a9cb22a5a9d47b7974ef044",
+          "output": "runtime/np2kai/np2kai.mjs",
+          "maxSizeBytes": 8388608,
+          "url": "https://github.com/retrom-project/NP2kai/releases/download/retrom-core-g5939e0c6d598-r1/np2kai.mjs"
+        },
+        {
+          "filename": "np2kai.wasm",
+          "sizeBytes": 3338691,
+          "sha256": "ffeb7804fcc3a0b9bb0487a996bac8893672e575f42bc101d4cee8f8dd33acaf",
+          "output": "runtime/np2kai/np2kai.wasm",
+          "maxSizeBytes": 33554432,
+          "url": "https://github.com/retrom-project/NP2kai/releases/download/retrom-core-g5939e0c6d598-r1/np2kai.wasm"
+        }
+      ]
+    },
+    {
+      "id": "webmsx",
+      "repository": "https://github.com/retrom-project/WebMSX",
+      "upstreamCommit": "4f4009e86d3e0bb9be7dcd7f0a582b0cd411d660",
+      "adapterAbi": "webmsx-host-v1",
+      "assets": [
+        {
+          "filename": "UPSTREAM-NOTICE.txt",
+          "output": "licenses/webmsx/UPSTREAM-NOTICE.txt",
+          "maxSizeBytes": 65536,
+          "sizeBytes": 534,
+          "sha256": "2e713b17ffcdbcdd6c092cd34d5fb6554bed02391baa30d4b9fb67ab7ba440f8",
+          "url": "https://github.com/retrom-project/WebMSX/releases/download/retrom-core-6.0.8-r1/UPSTREAM-NOTICE.txt"
+        },
+        {
+          "filename": "webmsx.js",
+          "output": "runtime/webmsx/webmsx.js",
+          "maxSizeBytes": 8388608,
+          "sizeBytes": 6127484,
+          "sha256": "b8a8dcd0ae403086c699e0c6bd61ba1f47a4ffe32a8d4af4438d8fb47cc9d68d",
+          "url": "https://github.com/retrom-project/WebMSX/releases/download/retrom-core-6.0.8-r1/webmsx.js"
+        }
+      ],
+      "tag": "retrom-core-6.0.8-r1",
+      "commit": "5efaceb9fc440b0d49c5bd44597c4c626078aab6",
+      "metadataUrl": "https://github.com/retrom-project/WebMSX/releases/download/retrom-core-6.0.8-r1/rpg-runtime-release.json"
+    },
+    {
+      "id": "ruffle",
+      "repository": "https://github.com/retrom-project/ruffle",
+      "tag": "retrom-core-ge46d1642fb67-r2",
+      "commit": "551f2b357783ba855c87b6d5618cdf474a4a217f",
+      "upstreamCommit": "e46d1642fb67a53b56ffa4b1871cb7c57589e36d",
+      "adapterAbi": "ruffle-host-v1",
+      "metadataUrl": "https://github.com/retrom-project/ruffle/releases/download/retrom-core-ge46d1642fb67-r2/rpg-runtime-release.json",
+      "assets": [
+        {
+          "filename": "LICENSE.md",
+          "url": "https://github.com/retrom-project/ruffle/releases/download/retrom-core-ge46d1642fb67-r2/LICENSE.md",
+          "output": "licenses/ruffle/LICENSE.md",
+          "maxSizeBytes": 4194304
+        },
+        {
+          "filename": "LICENSE_APACHE",
+          "url": "https://github.com/retrom-project/ruffle/releases/download/retrom-core-ge46d1642fb67-r2/LICENSE_APACHE",
+          "output": "licenses/ruffle/LICENSE_APACHE",
+          "maxSizeBytes": 4194304
+        },
+        {
+          "filename": "LICENSE_MIT",
+          "url": "https://github.com/retrom-project/ruffle/releases/download/retrom-core-ge46d1642fb67-r2/LICENSE_MIT",
+          "output": "licenses/ruffle/LICENSE_MIT",
+          "maxSizeBytes": 4194304
+        },
+        {
+          "filename": "core.ruffle.js",
+          "url": "https://github.com/retrom-project/ruffle/releases/download/retrom-core-ge46d1642fb67-r2/core.ruffle.js",
+          "output": "runtime/ruffle/core.ruffle.js",
+          "maxSizeBytes": 4194304
+        },
+        {
+          "filename": "ruffle.js",
+          "url": "https://github.com/retrom-project/ruffle/releases/download/retrom-core-ge46d1642fb67-r2/ruffle.js",
+          "output": "runtime/ruffle/ruffle.js",
+          "maxSizeBytes": 4194304
+        },
+        {
+          "filename": "ruffle.wasm",
+          "url": "https://github.com/retrom-project/ruffle/releases/download/retrom-core-ge46d1642fb67-r2/ruffle.wasm",
+          "output": "runtime/ruffle/ruffle.wasm",
+          "maxSizeBytes": 67108864
+        }
+      ]
+    },
     {
       "id": "butterscotch",
       "repository": "https://github.com/retrom-project/Butterscotch",
@@ -222,22 +347,26 @@
     {
       "id": "tyranoscript",
       "repository": "https://github.com/retrom-project/tyranoscript",
-      "tag": "retrom-core-gc8dbfd492afd-r7",
-      "commit": "af9306d6ec227885fd1f83a6858b287b1ca6be7e",
+      "tag": "retrom-core-gc8dbfd492afd-r8",
+      "commit": "e1bf773d4c2411a95ae47813becb8e8a7464cf9f",
       "adapterAbi": "tyranoscript-snapshot-v1",
-      "metadataUrl": "https://github.com/retrom-project/tyranoscript/releases/download/retrom-core-gc8dbfd492afd-r7/rpg-runtime-release.json",
+      "metadataUrl": "https://github.com/retrom-project/tyranoscript/releases/download/retrom-core-gc8dbfd492afd-r8/rpg-runtime-release.json",
       "assets": [
         {
           "filename": "retrom-tyranoscript-bridge.js",
-          "url": "https://github.com/retrom-project/tyranoscript/releases/download/retrom-core-gc8dbfd492afd-r7/retrom-tyranoscript-bridge.js",
+          "url": "https://github.com/retrom-project/tyranoscript/releases/download/retrom-core-gc8dbfd492afd-r8/retrom-tyranoscript-bridge.js",
           "output": "runtime/tyranoscript/bridge.js",
-          "maxSizeBytes": 65536
+          "maxSizeBytes": 65536,
+          "sizeBytes": 46253,
+          "sha256": "0f9ce15bd99eb4cea7aa55e187f377167fc8492988830b702a22d00131a5decc"
         },
         {
           "filename": "RETROM-BRIDGE-LICENSE",
-          "url": "https://github.com/retrom-project/tyranoscript/releases/download/retrom-core-gc8dbfd492afd-r7/RETROM-BRIDGE-LICENSE",
+          "url": "https://github.com/retrom-project/tyranoscript/releases/download/retrom-core-gc8dbfd492afd-r8/RETROM-BRIDGE-LICENSE",
           "output": "licenses/tyranoscript/RETROM-BRIDGE-LICENSE",
-          "maxSizeBytes": 65536
+          "maxSizeBytes": 65536,
+          "sizeBytes": 1076,
+          "sha256": "79fe3dd28d66eae4b6fc58b278a3ca5e5aa887bd6204adeaaa6505a949c81dbc"
         }
       ]
     },
@@ -2009,6 +2138,84 @@
           "maxSizeBytes": 65536
         }
       ]
+    },
+    {
+      "id": "px68k",
+      "repository": "https://github.com/retrom-project/px68k-libretro",
+      "upstreamCommit": "561dcba6b11d04c9a6d7ca62998d5fb3f544aa49",
+      "adapterAbi": "px68k-host-v1",
+      "assets": [
+        {
+          "filename": "px68k-retrom.mjs",
+          "output": "runtime/px68k/px68k-retrom.mjs",
+          "maxSizeBytes": 8388608,
+          "sizeBytes": 66107,
+          "sha256": "a290054b0208858c9306c48a8b5d2d3c3ef83c1d8ed4ad4c7f36f8eed53c4192",
+          "url": "https://github.com/retrom-project/px68k-libretro/releases/download/retrom-core-g561dcba6b11d-r1/px68k-retrom.mjs"
+        },
+        {
+          "filename": "px68k-retrom.wasm",
+          "output": "runtime/px68k/px68k-retrom.wasm",
+          "maxSizeBytes": 8388608,
+          "sizeBytes": 650536,
+          "sha256": "cc6d987b8534b0423e127725b7fb6abdeefbb96e1b7900943bfde26814c150d7",
+          "url": "https://github.com/retrom-project/px68k-libretro/releases/download/retrom-core-g561dcba6b11d-r1/px68k-retrom.wasm"
+        },
+        {
+          "filename": "LICENSES.txt",
+          "output": "licenses/px68k/LICENSES.txt",
+          "maxSizeBytes": 8388608,
+          "sizeBytes": 28224,
+          "sha256": "a3238ebdd070a3900c53cd278981ab2d0f9ea74111aef4a3c3a3f52b8b2dea71",
+          "url": "https://github.com/retrom-project/px68k-libretro/releases/download/retrom-core-g561dcba6b11d-r1/LICENSES.txt"
+        }
+      ],
+      "tag": "retrom-core-g561dcba6b11d-r1",
+      "commit": "47e16598e85659ab860cc80255ff41b9b6391787",
+      "metadataUrl": "https://github.com/retrom-project/px68k-libretro/releases/download/retrom-core-g561dcba6b11d-r1/rpg-runtime-release.json"
+    },
+    {
+      "id": "openbor",
+      "repository": "https://github.com/retrom-project/openbor",
+      "upstreamCommit": "9d81480f8481fbb9e76b0b5f2a5dfa408376761a",
+      "adapterAbi": "openbor-host-v1",
+      "assets": [
+        {
+          "filename": "LICENSE",
+          "output": "licenses/openbor/LICENSE",
+          "maxSizeBytes": 4194304,
+          "sizeBytes": 1537,
+          "sha256": "b8f3916944f0b5aee216ef7a494820d17ae658336a4680992dc244ebedecf3ea",
+          "url": "https://github.com/retrom-project/openbor/releases/download/retrom-core-g9d81480f8481-r1/LICENSE"
+        },
+        {
+          "filename": "LICENSES.txt",
+          "output": "licenses/openbor/LICENSES.txt",
+          "maxSizeBytes": 4194304,
+          "sizeBytes": 76271,
+          "sha256": "bbdf8499d26846916b7cc8753917afe5132df91718b8ebb454a7a2793606ddbb",
+          "url": "https://github.com/retrom-project/openbor/releases/download/retrom-core-g9d81480f8481-r1/LICENSES.txt"
+        },
+        {
+          "filename": "openbor.mjs",
+          "output": "runtime/openbor/openbor.mjs",
+          "maxSizeBytes": 4194304,
+          "sizeBytes": 198200,
+          "sha256": "109e5e9b1b79823a1bb1c807c6eadf16bd05c6e01f607a3cc4dd4c10dfa1cf70",
+          "url": "https://github.com/retrom-project/openbor/releases/download/retrom-core-g9d81480f8481-r1/openbor.mjs"
+        },
+        {
+          "filename": "openbor.wasm",
+          "output": "runtime/openbor/openbor.wasm",
+          "maxSizeBytes": 67108864,
+          "sizeBytes": 3039318,
+          "sha256": "e062acae071cdbaf59a73f8a4dd2cd2e37f79cf99f01912e3a8b4403eb52fec7",
+          "url": "https://github.com/retrom-project/openbor/releases/download/retrom-core-g9d81480f8481-r1/openbor.wasm"
+        }
+      ],
+      "tag": "retrom-core-g9d81480f8481-r1",
+      "commit": "e3f86c09bf9ab6ed5b7e5c06cbd9c3d351a80ee6",
+      "metadataUrl": "https://github.com/retrom-project/openbor/releases/download/retrom-core-g9d81480f8481-r1/rpg-runtime-release.json"
     }
   ],
   "localAssets": [

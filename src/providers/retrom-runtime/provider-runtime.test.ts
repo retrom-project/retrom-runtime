@@ -1,3 +1,4 @@
+import {decodeStoredCheckpoint} from "../../provider/checkpoint-storage.js";
 import {afterEach, beforeEach, describe, expect, it, vi} from "vitest";
 import type {RuntimeEventV1} from "../../provider/module-api.js";
 import type {MountedRuntimeAdapter} from "../../internal-adapter.js";
@@ -152,7 +153,8 @@ describe("Provider-owned lifecycle", () => {
     expect(adapter.checkpoint).not.toHaveBeenCalled();
     pause.resolve();
     await pausing;
-    await expect(saving).resolves.toMatchObject({bytes: Uint8Array.of(4, 5)});
+    const saved = await saving;
+    expect(await decodeStoredCheckpoint(saved.bytes, saved.format, 132144)).toEqual(Uint8Array.of(4, 5));
     expect(player.getState()).toBe("PAUSED");
     await player.exit();
   });
@@ -217,7 +219,7 @@ describe("Provider-owned lifecycle", () => {
     await player.exit();
   });
 
-  it.each(["third-party error", "TYRANOSCRIPT_RUNTIME_TIMEOUT", "FANTASY_CORE_ABI_MISMATCH"])("fails once and cleans controls after %s", async (error) => {
+  it.each(["third-party error", "TYRANOSCRIPT_RUNTIME_TIMEOUT", "FANTASY_CORE_ABI_MISMATCH", "WEBMSX_START_TIMEOUT", "NP2KAI_RUNTIME_CONFIG_INVALID", "OPENBOR_CORE_LOAD_FAILED"])("fails once and cleans controls after %s", async (error) => {
     const adapter = adapterFixture({pause: vi.fn(async () => {throw new Error(error);})});
     vi.mocked(mountTargetAdapter).mockResolvedValue(adapter);
     const player = await createRuntime(wasmEnvelope(), hostFixture());

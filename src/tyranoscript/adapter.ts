@@ -62,6 +62,10 @@ export async function mountTyranoScript(
     pause: async () => {await channel.request("PAUSE", {});},
     resume: async () => {await channel.request("RESUME", {});},
     screenshot: () => channel.screenshot(),
+    setVideoMode: async (mode) => {
+      const reply = await channel.request("SET_VIDEO_MODE", {mode});
+      if (reply.type !== "SET_VIDEO_MODE_RESULT") {throw new Error("TYRANOSCRIPT_PROTOCOL_INVALID");}
+    },
     setVolume: (value) => {void channel.request("SET_VOLUME", {value});},
   };
 }

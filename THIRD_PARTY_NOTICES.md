@@ -2,6 +2,10 @@
 
 Release archives aggregate the following independently licensed components:
 
+- Ruffle — MIT OR Apache-2.0 — <https://github.com/retrom-project/ruffle>;
+  `licenses/ruffle/LICENSE.md` includes dependency notices; `LICENSE_MIT` and `LICENSE_APACHE`
+  retain the selfhosted package license texts. The underlying upstream is <https://github.com/ruffle-rs/ruffle>.
+
 - EasyRPG Player — GPL-3.0-or-later — <https://github.com/retrom-project/Player>
 - liblcf — MIT — <https://github.com/EasyRPG/liblcf>
 - mkxp-z — GPL-2.0-or-later — <https://github.com/retrom-project/mkxp-z-libretro-emscripten>
@@ -38,3 +42,33 @@ Source: https://github.com/retrom-project/Play- (upstream https://github.com/jpd
 base commit `83700b2c31e593bc94e845b4b31b797be84dda59`. Play! uses the BSD 2-Clause license.
 The fork supplies its license and linked dependency notices with release artifacts;
 the Provider preserves them at `licenses/play/LICENSE`. No game or BIOS is bundled.
+
+## NP2kai
+
+Source: https://github.com/retrom-project/NP2kai, upstream AZO234/NP2kai commit
+`5939e0c6d5985c4c08fc70f289a83290e5d3e6f7`. NP2kai includes MIT/BSD code and components
+with additional licenses, including the GPL DOSBox FPU implementation. The fork's generated
+`licenses/np2kai/LICENSE` preserves its upstream LICENSES collection, SDL2, libpng, zlib
+and the pinned np2-wasm 0.3.1 Shinonome font notice. The exact corresponding source and linked-library source inputs are published alongside
+`retrom-core-g5939e0c6d598-r1`; the build entry point remains in the fork; no game or proprietary BIOS image is distributed here.
+## PX68K
+
+Source: https://github.com/retrom-project/px68k-libretro, based on
+uraraworks/px68k-libretro `561dcba6b11d04c9a6d7ca62998d5fb3f544aa49`, with
+storage files from libretro/px68k-libretro
+`0ad84d7058a12b7db4f7f7a906e87fad4e2f26f6`.
+
+This core has mixed inherited licensing: root GPL-2.0 text, the WinX68k
+noncommercial terms in `doc/kero_src.txt`, and FMGen's notice. Its full notices
+are preserved in `licenses/px68k/LICENSES.txt` in the Provider bundle. The runtime
+adapter's MIT license does not relicense the engine. No BIOS or game is included.
+
+## OpenBOR
+
+The maintained OpenBOR Web core comes from <https://github.com/retrom-project/openbor>.
+`licenses/openbor/LICENSE` retains OpenBOR's BSD-style terms, copyright and endorsement
+restriction. `licenses/openbor/LICENSES.txt` includes the complete GPL-2.0 text and
+Advance interpolation header with its MAME-linking exception, plus SDL2, SDL_image,
+XPaint GIF decoder, libpng, zlib, Ogg/Vorbis and Emscripten runtime notices.
+The aggregate adapter license does not replace these component licenses. No game
+PAKs are included. The fixed source commit and asset hashes are in `provider-sources.json`.

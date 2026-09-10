@@ -241,7 +241,7 @@ async function mountMkxpUnchecked(
   return {
     checkpoint: async () => ({
       bytes: await saveStateBytes(status!, fileSystem, config.stateBufferBytes, dependencies.encodeCheckpoint),
-      format: "mkxp-state-compact-v1",
+      format: "mkxp-state-v1",
     }),
     exit: async () => {
       await exitCore();

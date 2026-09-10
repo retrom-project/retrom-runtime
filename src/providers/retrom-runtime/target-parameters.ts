@@ -1,3 +1,7 @@
+import type {NP2Parameters} from "../../np2kai/adapter.js";
+import type {OpenBORParameters} from "../../openbor/adapter.js";
+import type {Px68kParameters} from "../../px68k/core.js";
+import type {WebMSXParameters} from "../../webmsx/adapter.js";
 import scummvmLayout from "../../scummvm/core-layout.json" with {type: "json"};
 import type {ScummvmParameters} from "../../scummvm/parameters.js";
 import type {PlayParameters} from "../../play/core.js";
@@ -18,6 +22,13 @@ import type {KirikiriParameters} from "../../kirikiri/parameters.js";
 import type {ButterscotchParameters} from "../../butterscotch/parameters.js";
 import type {TyranoScriptParameters} from "../../tyranoscript/parameters.js";
 import type {Wasm4Parameters} from "../../wasm4/parameters.js";
+import type {RuffleParameters} from "../../ruffle/adapter.js";
+
+export function ruffle(envelope: LaunchEnvelopeV1): RuffleParameters {
+  const game = resource(envelope, "game", "ROM_BLOB");
+  return {contentDigest: game.sha256, swfSizeBytes: game.sizeBytes,
+    swfUrl: game.url, runtimeBaseUrl: assetBase(envelope, "ruffle")};
+}
 
 export function easyRpg(envelope: LaunchEnvelopeV1, implementation: Readonly<Record<string, unknown>>): EasyRpgParameters {
   const game = resource(envelope, "game", "FILE_TREE");
@@ -214,3 +225,26 @@ function assetBase(envelope: LaunchEnvelopeV1, directory: string) {
 }
 
 function invalidRequest(): never {throw new Error("PROVIDER_LAUNCH_REQUEST_INVALID");}
+
+export function np2kai(envelope: LaunchEnvelopeV1, assetIndex: AssetIndexV1): NP2Parameters {
+  const game = resource(envelope, "game", "ROM_BLOB");
+  return {disk: {url: game.url, sha256: game.sha256, sizeBytes: game.sizeBytes},
+    runtimeBaseUrl: assetBase(envelope, "np2kai"), assetIndex};
+}
+
+export function openbor(envelope: LaunchEnvelopeV1): OpenBORParameters {
+  const game = resource(envelope, "game", "ROM_BLOB");
+  return {pak: {url: game.url, sizeBytes: game.sizeBytes, sha256: game.sha256}, runtimeBaseUrl: assetBase(envelope, "openbor")};
+}
+
+export function px68k(envelope: LaunchEnvelopeV1, assetIndex: AssetIndexV1): Px68kParameters {
+  const game = resource(envelope, "game", "ROM_BLOB");
+  const bios = resource(envelope, "external", "EXTERNAL_FILE_SET");
+  return {game, bios: bios.files, runtimeBaseUrl: envelope.runtime.runtimeBaseUrl, assetIndex};
+}
+
+export function webmsx(envelope: LaunchEnvelopeV1): WebMSXParameters {
+  const game = resource(envelope, "game", "ROM_BLOB");
+  return {mediaUrl: game.url, mediaSizeBytes: game.sizeBytes, contentDigest: game.sha256,
+    runtimeBaseUrl: assetBase(envelope, "webmsx")};
+}

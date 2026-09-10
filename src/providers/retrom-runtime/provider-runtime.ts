@@ -1,3 +1,4 @@
+import {decodeStoredCheckpoint, encodeStoredCheckpoint, nativeCheckpointFormat} from "../../provider/checkpoint-storage.js";
 import {startInputDiagnostics} from "../../provider/input-diagnostics.js";
 import type {RuntimeInputDiagnosticsV1} from "../../provider/module-api.js";
 import type {MountedRuntimeAdapter, RuntimeProgressReporter, RuntimeExitReporter} from "../../internal-adapter.js";
@@ -23,6 +24,7 @@ class RetromRuntimePlayer implements PlayerRuntimeV1 {
   private state: RuntimeStateV1 = "CREATED";
   private adapter: MountedRuntimeAdapter | null = null;
   private exitPromise: Promise<void> | null = null;
+  private finalSnapshotPromise: Promise<void> | null = null;
   private operationTail: Promise<void> = Promise.resolve();
   private availabilityTimer: number | null = null;
   private lastAvailability: RuntimeCheckpointAvailabilityV1 = {available: false, reason: "NOT_READY"};
@@ -45,7 +47,7 @@ class RetromRuntimePlayer implements PlayerRuntimeV1 {
     try {
       this.assertActive();
       this.transition("MOUNTING");
-      const restorePayload = await this.host.loadRestore(this.envelope.restore);
+      const restorePayload = await this.loadRestore();
       this.assertActive();
       const frameMode = this.envelope.runtime.capabilities.frameMode;
       const frame = frameMode === "NONE"
@@ -55,7 +57,8 @@ class RetromRuntimePlayer implements PlayerRuntimeV1 {
       const runtimeWindow = frame?.contentWindow as Window | undefined ?? window;
       this.runtimeWindow = runtimeWindow;
       const runtimeTarget = frameMode === "SAME_ORIGIN_BLANK"
-        ? (this.frameSurface = installRuntimeFrameSurface(runtimeWindow, () => this.adapter?.getCanvas() ?? null)).target
+        ? (this.frameSurface = installRuntimeFrameSurface(runtimeWindow, () => this.adapter?.getCanvas() ?? null,
+          () => this.adapter?.canvasLayout === "CORE")).target
         : target;
       if (this.inputFilter) {this.cleanupInputFilter = installRuntimeGamepadFilter(runtimeWindow, this.inputFilter);}
       const adapter = await mountTargetAdapter(this.envelope, runtimeTarget, {
@@ -86,6 +89,13 @@ class RetromRuntimePlayer implements PlayerRuntimeV1 {
     }
   }
 
+  private async loadRestore() {
+    const payload = await this.host.loadRestore(this.envelope.restore);
+    if (!payload || !this.envelope.restore) {return payload;}
+    return decodeStoredCheckpoint(payload, this.envelope.restore.format,
+      this.envelope.runtime.checkpoint?.maxBytes ?? 0, this.host.signal);
+  }
+
   pause() {return this.enqueue(() => this.changePause("PAUSED"));}
   resume() {return this.enqueue(() => this.changePause("RUNNING"));}
 
@@ -109,7 +119,8 @@ class RetromRuntimePlayer implements PlayerRuntimeV1 {
       try {
         const checkpoint = await adapter.checkpoint({intent});
         this.assertActive();
-        return this.validateCheckpoint(checkpoint);
+        const saved = await this.storeCheckpoint(this.validateCheckpoint(checkpoint));
+        this.assertActive(); return saved;
       } finally {
         if (this.state === "CHECKPOINTING") {
           this.transition(previous);
@@ -135,7 +146,11 @@ class RetromRuntimePlayer implements PlayerRuntimeV1 {
       if (this.envelope.runtime.checkpoint?.semantics !== "GAME_SAVE" || !adapter.acknowledgeCheckpoint) {
         throw capabilityError();
       }
-      await adapter.acknowledgeCheckpoint(checkpoint);
+      const contract = this.envelope.runtime.checkpoint!;
+      if (!contract.readFormats.includes(checkpoint.format)) {throw contractError();}
+      const bytes = await decodeStoredCheckpoint(checkpoint.bytes, checkpoint.format, contract.maxBytes, this.host.signal);
+      this.assertActive();
+      await adapter.acknowledgeCheckpoint({...checkpoint, bytes, format: nativeCheckpointFormat(contract.writeFormat)});
       this.assertActive();
       this.refreshAvailability();
     });
@@ -231,6 +246,10 @@ class RetromRuntimePlayer implements PlayerRuntimeV1 {
   private readonly reportExitRequested: RuntimeExitReporter = (snapshot) => {
     if (this.stopping()) {return;}
     const exiting = this.exit();
+    this.finalSnapshotPromise = this.emitFinalSnapshot(snapshot).catch(error => this.reportCleanupFailure(error));
+    void exiting.catch((error) => this.reportCleanupFailure(error));
+  };
+  private async emitFinalSnapshot(snapshot: Parameters<RuntimeExitReporter>[0]) {
     let finalSnapshot: RuntimeFinalSnapshotV1 | undefined;
     if (snapshot) {
       try {
@@ -239,14 +258,13 @@ class RetromRuntimePlayer implements PlayerRuntimeV1 {
         const screenshot = snapshot.screenshot;
         if (screenshot !== null && (Object.prototype.toString.call(screenshot) !== "[object Blob]" ||
           !screenshot.size || screenshot.size > 16 * 1024 * 1024 || screenshot.type !== "image/png")) {throw contractError();}
-        finalSnapshot = {checkpoint, screenshot};
+        finalSnapshot = {checkpoint: await this.storeCheckpoint(checkpoint), screenshot};
       } catch {
         this.host.reportDiagnostic({code: "RETROM_RUNTIME_FINAL_SAVE_INVALID", message: "Final native save did not match the checkpoint contract"});
       }
     }
     this.emit({type: "EXIT_REQUESTED", ...(finalSnapshot ? {finalSnapshot} : {})});
-    void exiting.catch((error) => this.reportCleanupFailure(error));
-  };
+  }
   private readonly pollAvailability = () => {
     if (this.state !== "RUNNING" && this.state !== "PAUSED") {return;}
     try {this.refreshAvailability();} catch (error) {void this.fail(error);}
@@ -290,6 +308,7 @@ class RetromRuntimePlayer implements PlayerRuntimeV1 {
       this.frameSurface?.cleanup();
       this.frameSurface = null;
       this.runtimeWindow = null;
+      await this.finalSnapshotPromise;
       if (!failed) {this.transition("EXITED");}
       this.listeners.clear();
     }
@@ -327,7 +346,8 @@ class RetromRuntimePlayer implements PlayerRuntimeV1 {
     const next = this.currentAvailability();
     if (next.available !== this.lastAvailability.available || next.reason !== this.lastAvailability.reason ||
       next.revision !== this.lastAvailability.revision || next.save?.capture !== this.lastAvailability.save?.capture ||
-      next.save?.restore !== this.lastAvailability.save?.restore || next.save?.captureAvailable !== this.lastAvailability.save?.captureAvailable) {
+      next.save?.restore !== this.lastAvailability.save?.restore || next.save?.captureAvailable !== this.lastAvailability.save?.captureAvailable ||
+      next.save?.dataKind !== this.lastAvailability.save?.dataKind) {
       this.lastAvailability = next;
       this.emit({type: "CHECKPOINT_AVAILABILITY_CHANGED", availability: next});
     }
@@ -355,8 +375,14 @@ class RetromRuntimePlayer implements PlayerRuntimeV1 {
   private validateCheckpoint(checkpoint: {bytes: Uint8Array; format: string}): RuntimeCheckpointV1 {
     const contract = this.envelope.runtime.checkpoint;
     if (!contract || !isUint8Array(checkpoint.bytes) || checkpoint.bytes.byteLength < 1 ||
-      checkpoint.bytes.byteLength > contract.maxBytes || checkpoint.format !== contract.writeFormat) {throw contractError();}
+      checkpoint.bytes.byteLength > contract.maxBytes || checkpoint.format !== nativeCheckpointFormat(contract.writeFormat)) {throw contractError();}
     return {bytes: Uint8Array.from(checkpoint.bytes), format: checkpoint.format, metadata: null};
+  }
+
+  private async storeCheckpoint(checkpoint: RuntimeCheckpointV1): Promise<RuntimeCheckpointV1> {
+    const contract = this.envelope.runtime.checkpoint!;
+    return {...checkpoint, bytes: await encodeStoredCheckpoint(checkpoint.bytes, contract.writeFormat, contract.maxBytes, this.host.signal),
+      format: contract.writeFormat};
   }
 
   private transition(next: RuntimeStateV1) {
@@ -372,7 +398,8 @@ class RetromRuntimePlayer implements PlayerRuntimeV1 {
 function validNativeSave(value: RuntimeNativeSaveCapabilitiesV1 | undefined, native: boolean) {
   return value === undefined || native && ["RUNTIME", "IN_GAME"].includes(value.capture) &&
     ["AUTOMATIC", "IN_GAME"].includes(value.restore) && typeof value.captureAvailable === "boolean" &&
-    (value.capture === "RUNTIME" || !value.captureAvailable);
+    (value.capture === "RUNTIME" || !value.captureAvailable) &&
+    (value.dataKind === undefined || value.dataKind === "PROGRESS" || value.dataKind === "STORAGE");
 }
 function providerDiagnosticCode(runtime: string) {
   const suffix = runtime.toUpperCase().replace(/[^A-Z0-9]+/gu, "_")
@@ -394,7 +421,7 @@ function validProgress(value: {loadedBytes: number; totalBytes: number | null}) 
 function isAbort(error: unknown) {return error instanceof DOMException && error.name === "AbortError";}
 function stableError(error: unknown) {
   if (isAbort(error)) {return error as DOMException;}
-  if (error instanceof Error && /^(?:RUNTIME|CHECKPOINT|PLAYER|PROVIDER|RPG|ONS|KIRIKIRI|BUTTERSCOTCH|TYRANOSCRIPT|WASM4|J2ME|SCUMMVM|FANTASY)_[A-Z0-9_]+$/u.test(error.message)) {
+  if (error instanceof Error && /^(?:RUNTIME|CHECKPOINT|PLAYER|PROVIDER|RPG|ONS|KIRIKIRI|BUTTERSCOTCH|TYRANOSCRIPT|WASM4|J2ME|SCUMMVM|FANTASY|WEBMSX|PX68K|NP2KAI|OPENBOR)_[A-Z0-9_]+$/u.test(error.message)) {
     return error;
   }
   return new Error("RUNTIME_FAILED");

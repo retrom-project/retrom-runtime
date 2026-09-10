@@ -4,8 +4,11 @@ import type {ForkRelease} from "./emulatorjs-fork-releases.mjs";
 export type EmulatorJsProviderInput = {
   allowDevelopmentForks?: boolean;
   developmentRoots?: ReadonlyMap<string, string>;
+  candidate?: boolean;
+  coreDirectories?: Record<string, string>;
   cacheRoot: string;
   catalog: {
+    developmentCores?: readonly import("./emulatorjs-core-candidate.mjs").EmulatorJsCoreSource[];
     schemaVersion: number;
     forks?: readonly ForkRelease[];
     developmentForks?: readonly DevelopmentFork[];

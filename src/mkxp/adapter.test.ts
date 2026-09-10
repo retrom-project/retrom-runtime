@@ -386,7 +386,7 @@ describe("mkxp runtime mount", () => {
     const checkpoint = await checkpointPromise;
     expect(checkpoint.bytes.byteLength).toBeLessThan(1024);
     expect(checkpoint.bytes.slice(0, 8)).toEqual(Uint8Array.of(0x52, 0x54, 0x4d, 0x4b, 0x58, 0x50, 0x53, 1));
-    expect(checkpoint).toEqual({ bytes: checkpointFixture, format: "mkxp-state-compact-v1" });
+    expect(checkpoint).toEqual({ bytes: checkpointFixture, format: "mkxp-state-v1" });
     expect(harness.actions).toEqual([
       `mkdir:${coreStateRoot}`, `write:${statePath}`, "start", "restore", "save", `write:${statePath}`,
     ]);

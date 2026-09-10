@@ -154,6 +154,39 @@ export const emulatorJsSourceCatalog = {
 ],
   forks: [
     {
+      "repository": "https://github.com/retrom-project/flycast-wasm",
+      "tag": "retrom-core-1.0-r1",
+      "commit": "db8efeea0a98c7385d4499268eac6d8275242df3",
+      "adapterAbi": "emulatorjs-flycast-state-v1",
+      "runtimeCore": "flycast",
+      "assets": [
+        {
+          "filename": "LICENSE",
+          "sha256": "71433d9114710e9d2f65310c43561515c051fc13500de981fd1ebe7ce499ba92",
+          "sizeBytes": 61843,
+          "url": "https://github.com/retrom-project/flycast-wasm/releases/download/retrom-core-1.0-r1/LICENSE"
+        },
+        {
+          "filename": "flycast-wasm.data",
+          "sha256": "c4e848767db6ad58e8aad665970ae6760ffbe2db3426bb27deec0396cbac44d6",
+          "sizeBytes": 3530713,
+          "url": "https://github.com/retrom-project/flycast-wasm/releases/download/retrom-core-1.0-r1/flycast-wasm.data"
+        },
+        {
+          "filename": "flycast.json",
+          "sha256": "215107a9bf4af4fd96f89d864b0ad927edb6e878616d851417dcf50a56bde814",
+          "sizeBytes": 92,
+          "url": "https://github.com/retrom-project/flycast-wasm/releases/download/retrom-core-1.0-r1/flycast.json"
+        },
+        {
+          "filename": "rpg-runtime-release.json",
+          "sha256": "f3c6762e6ea597791a223215982f291674cf5afafa294fcc4fdec57ac0de6e30",
+          "sizeBytes": 709,
+          "url": "https://github.com/retrom-project/flycast-wasm/releases/download/retrom-core-1.0-r1/rpg-runtime-release.json"
+        }
+      ]
+    },
+    {
       "repository": "https://github.com/retrom-project/vice-libretro",
       "tag": "retrom-core-g1b4309f4d56d-r1",
       "commit": "515d625643e4b0fbc30f3ab185daab0e43331dd9",
@@ -228,7 +261,7 @@ export const emulatorJsSourceCatalog = {
       },
       commit: "e150dc0491ae747028919fb82d6598954976ede6",
       id: "4.2.3",
-      licenseRoots: ["LICENSE"],
+      licenseRoots: ["LICENSE", "licenses/forks/flycast"],
       repository: "https://github.com/EmulatorJS/EmulatorJS",
       tag: "v4.2.3",
     },

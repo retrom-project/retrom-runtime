@@ -5,7 +5,7 @@ import {projectProviderManifest} from "../../provider/manifest.js";
 import type {RuntimeHostV1} from "../../provider/module-api.js";
 import {emulatorJsProviderDefinition} from "./catalog.js";
 import {createEmulatorJsPlayer} from "./provider-runtime.js";
-import {decodeEmulatorJsCheckpoint} from "./checkpoint-codec.js";
+import {decodeStoredCheckpoint} from "../../provider/checkpoint-storage.js";
 
 beforeEach(() => {
   vi.stubGlobal("ResizeObserver", class {observe() {} disconnect() {}});
@@ -13,7 +13,7 @@ beforeEach(() => {
 afterEach(() => {vi.unstubAllGlobals(); document.body.replaceChildren();});
 
 describe("PSP checkpoint product boundary", () => {
-  it.each(["emulatorjs-state-v1", "emulatorjs-state-gzip-v1"])("restores %s and creates a compressed checkpoint", async (format) => {
+  it.each(["emulatorjs-state-v1", "emulatorjs-state-gzip-v1", "emulatorjs-state-v1-storage-v1"])("restores %s and creates a compressed checkpoint", async (format) => {
     const frame = document.createElement("iframe");
     document.body.append(frame);
     const runtimeWindow = frame.contentWindow as Window & Record<string, unknown>;
@@ -37,10 +37,15 @@ describe("PSP checkpoint product boundary", () => {
       [implementation.coreAssetPath]: {sha256: implementation.coreSha256, sizeBytes: implementation.coreSizeBytes},
     });
     let native!: {print: (message: string) => void; postMainLoop: () => void};
-    const loadState = vi.fn(async () => {native.print('[State] Loading state "/game.state".'); native.postMainLoop(); native.postMainLoop(); return 0;});
+    const loadState = vi.fn(async () => {
+      if (runtimeWindow.EJS_DEBUG_XX) {native.print('[State] Loading state "/game.state".');}
+      native.postMainLoop(); native.postMainLoop(); return 0;
+    });
     const writeFile = vi.fn();
     const mounting = player.mount(document.createElement("div"));
     await vi.waitFor(() => expect(runtimeWindow.document.querySelector("script[data-retrom-loader]")).not.toBeNull());
+    // The pinned core emits the restore receipt only when the loader enables -v.
+    expect(runtimeWindow.EJS_DEBUG_XX).toBe(true);
     runtimeWindow.EJS_Runtime = (config: typeof native) => {native = config;};
     (runtimeWindow.EJS_Runtime as (config: object) => unknown)({});
     const heap = new Uint8Array(original.length + 64); heap.set(original, 64);
@@ -54,9 +59,9 @@ describe("PSP checkpoint product boundary", () => {
     expect(writeFile).toHaveBeenCalledWith("/game.state", original);
     expect(loadState).toHaveBeenCalledWith("/game.state", 0);
     const checkpoint = await player.checkpoint();
-    expect(checkpoint.format).toBe("emulatorjs-state-gzip-v1");
+    expect(checkpoint.format).toBe("emulatorjs-state-v1-storage-v1");
     expect(checkpoint.bytes.length).toBeLessThan(original.length / 20);
-    expect(await decodeEmulatorJsCheckpoint(checkpoint.bytes, checkpoint.format, original.length)).toEqual(original);
+    expect(await decodeStoredCheckpoint(checkpoint.bytes, checkpoint.format, original.length)).toEqual(original);
     await player.exit();
   });
 });

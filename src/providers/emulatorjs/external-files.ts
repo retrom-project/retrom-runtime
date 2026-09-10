@@ -33,7 +33,8 @@ export function installExternalFileCompatibility(playerWindow: Window = window) 
     get: () => current,
     set: (value: ManagerConstructor | undefined) => {
       descriptor?.set?.call(target, value);
-      patch(value); current = value;
+      patch(value);
+      current = value;
     },
   });
   return () => {

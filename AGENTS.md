@@ -22,9 +22,13 @@
 
 ## 核心最低能力准入
 
-- 每个登记在 Provider declaration 的 Target 都必须在 Chrome 中支持标准手柄完成至少方向移动、确认和取消；
+- 每个登记在 Provider declaration 的 Target 都必须在 Chrome 中支持标准手柄完成至少方向移动和确认；
+  手柄取消是可选能力，不得因缺少取消拒绝核心接入；已有明确且正常工作的取消能力继续保留和验证。
   上游 Web 核心缺少某个浏览器手柄边界时，由本仓库 adapter 补齐最小映射并在 `exit()` 时释放全部按键，不能把
   “可用键盘或鼠标操作”当作手柄能力。
+- 同一映射配置中，一个手柄按钮只能对应一个具体目标输入，不能同时映射多个键或跨输入类型重复发送。
+  例如原生 A/B 与键盘 Enter/Escape 不能叠加；不得用重复映射补足确认或可选的取消。真实键盘输入保持独立。
+  同一目标的按下/释放事件是一个映射的生命周期，不是多个映射；宿主菜单中的 B 返回不等同于游戏内取消。
 - 每个核心都必须提供非空、格式明确且有大小上限的存档。checkpoint 未声明 `semantics` 时按 `INSTANT` 处理，
   必须在新实例中直接恢复执行状态且继续接受输入。明确声明 `GAME_SAVE` 的 Target 保存游戏原生存档数据，
   可以要求游戏内保存/读档；Host 必须根据该公共声明展示操作提示，并验证原生保存、整包传输、新实例启动前导入、
@@ -42,6 +46,14 @@
   或已声明能力的候选不得加入 Provider declaration、合并到 `master` 或发布稳定 tag。
 - 核心差异只能体现在各自 adapter、checkpoint codec 和显式 ABI 中；不得通过降低上述最低能力、要求宿主写
   核心专用旁路或跳过产品验证来完成接入。
+
+## 公共存档压缩
+
+- 所有新存档不设大小阈值，必须在 Provider 公共存档边界统一执行一次 gzip 压缩；恢复时由同一公共层有界解压后再交给核心。覆盖即时快照、原生存档导出、退出最终快照和成功持久化后的确认。
+- 核心 adapter 只输出、接收自身未压缩的状态或语义封包；移除 adapter 内已有的传输压缩写入，不得叠加核心 gzip 与公共 gzip。PX68K 等多文件语义容器保留 ZIP，但新写入使用 STORE（level 0），由公共 gzip 压缩；旧 deflate ZIP 继续可读。核心原生状态序列化中的字段编码（例如 WebMSX 的数组编码）、游戏固有存档编码和游戏资源解包不属于整包传输压缩；不得破坏核心原生读取契约。
+- 公共存储格式通过各 Target 的 `writeFormat`/`readFormats` 显式版本化。旧未压缩、PSP/Flycast gzip、mkxp compact 存档按原格式分派到兼容读取路径；旧压缩编码只读，不继续写入，也不得按魔数猜测旧格式。
+- 压缩和解压都须校验非空与 Target 大小上限；解压流逐块限制实际输出量，不能只信任 gzip 尾部的长度。损坏、截断、解压超限或取消必须失败，不得回退为新游戏或把压缩字节传入核心。
+- 回归必须覆盖小存档、完整字节往返、旧格式读取、单层压缩、损坏/超限、取消，以及原生存档确认和退出最终快照。宿主保存、哈希和传输压缩后的字节，不复制核心专用编解码。
 
 ## 可选退出通知
 
@@ -76,7 +88,7 @@ npm run package:check
 - 功能分支完成旧行为必红的回归和聚焦门禁后，先保留在分支，不要为了让 Retrom 取得候选 bytes 而提前合并、打 tag 或创建 Release。
 - 使用 Retrom PFB 流程，在同一 `.worktree/<pfb>/project/` 下放置 Retrom、本仓库和涉及的 core worktree；`RUNTIME_ROOT` 与 `CORE_ROOTS` 只能指向该 PFB 树。源码与持久 workspace bind mount 到轻量开发容器，日常不构建 Provider archive 或 core。
 - 新 PFB 显式导入已验证的 Provider 基座；运行中的 watcher 原子生成当前 loose module，adapter 修改后确认模块 SHA 改变并轻量 restart。工具链、锁文件或 API 生成输入改变时才 down/build/up；不为源码变更创建 revision 目录、切换数据库或反复 checkout 大仓库。
-- 显式 candidate/release 构建仍生成完整 Provider Bundle V1；core candidate 只能覆盖 `provider-sources.json` 已声明的来源，不能新增 Target、改写宿主 binding 或污染 production lock。core 字节变化须按 Retrom 的 `pfb-core-build` 显式构建。
+- 显式 candidate/release 构建仍生成完整 Provider Bundle V1；core candidate 只能覆盖所属 Provider 来源清单已声明的来源（`provider-sources.json` 或 EmulatorJS `source-catalog.ts`），不能新增 Target、改写宿主 binding 或污染 production lock。core 字节变化须按 Retrom 的 `pfb-core-build` 显式构建。
 - PFB 必须经真实 Retrom 导入、Review Preview、Product Launch、共享 dispatcher、输入、checkpoint、不同 Launch 恢复，
   并在 Target 实现 `EXIT_REQUESTED` 时验证退出清理。源码/依赖构建与实时浏览器验收分开执行，避免热更新干扰活动
   会话；确认通过且取得用户授权后才合并 PR、发布 core tag，再发布本仓库新的不可移动 `v*` tag。

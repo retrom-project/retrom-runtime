@@ -1,6 +1,36 @@
 export const emulatorJsSourceCatalog = {
   schemaVersion: 1,
   developmentForks: [
+{
+  "repository": "https://github.com/retrom-project/same_cdi",
+  "commit": "7155d0ad1a52d8b726d5d7c7385fbfee31c4ee98",
+  "sourceTreeSha256": "b6cb9d825257dce31a6a644e5a535c245282440746b9abbe199afbd83538ac86",
+  "adapterAbi": "emulatorjs-state-v1",
+  "runtimeCore": "same_cdi",
+  "upstreamCommit": "cfb05d803f54130adf94efef88edd816d01df7a3",
+  "assets": [
+    {
+      "filename": "COPYING",
+      "sha256": "5ecf4880f928bda4a5a23b0a8fdcfa471941f8590842570698737b7c3f337f05",
+      "sizeBytes": 11333
+    },
+    {
+      "filename": "same_cdi-wasm.data",
+      "sha256": "c81528c87536ab532116473ae434f4c6ff0f2016f6cfeffff455a435bce20e63",
+      "sizeBytes": 3479130
+    },
+    {
+      "filename": "source.tar.gz",
+      "sha256": "f7623762b2ec973a4c33becc79ea41eb2bc0d3e123d250895bb7650666efaf66",
+      "sizeBytes": 16219020
+    },
+    {
+      "filename": "retrom-core-candidate.json",
+      "sha256": "5d15ba25415733af1be78ce28250510bfbad0d301ffe48f058963bedf7a8dd8e",
+      "sizeBytes": 745
+    }
+  ]
+},
   {
     "runtimeCore": "cap32",
     "repository": "https://github.com/retrom-project/libretro-cap32",

@@ -2258,6 +2258,12 @@
       "repository": "https://github.com/retrom-project/vice-libretro",
       "upstreamCommit": "1b4309f4d56ded7bfc5ad7ba8d5a9a44ac3388a8",
       "adapterAbi": "emulatorjs-state-v1"
+    },
+    {
+      "id": "same_cdi",
+      "repository": "https://github.com/retrom-project/same_cdi",
+      "upstreamCommit": "cfb05d803f54130adf94efef88edd816d01df7a3",
+      "adapterAbi": "emulatorjs-state-v1"
     }
   ]
 }

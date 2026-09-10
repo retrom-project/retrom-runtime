@@ -532,3 +532,9 @@ Local candidate overrides are accepted only in explicit PFB builds, never formal
 Upstream references a missing license file; this integration does not assert MIT/GPL
 licensing. The dedicated notice and release metadata preserve unresolved source and
 embedded machine-ROM distribution status; publication does not grant those rights.
+
+The SAME_CDI candidate uses the local maintenance build of EmulatorJS/same_cdi at
+`cfb05d803f54130adf94efef88edd816d01df7a3`, with MAME CDIC startup and sound-map
+restart timing backports. Its candidate descriptor, complete source archive and COPYING
+are pinned in the source catalog. Compare audio after a fresh boot: an older checkpoint
+can retain the guest audio driver state responsible for periodic interruptions.

@@ -124,7 +124,7 @@ const cores: readonly CoreSource[] = [
   core("prboom", "4.2.3", "prboom-wasm.data", 1091036, "830686c3b5176de25de45846f8cad9153803478718e6a487dda938437ecd0c0e", "5468d3146d11438aed17c6e7b93357912cf7638a6352edd9386ef4c2c4b8b38c"),
   core("prosystem", "4.2.3", "prosystem-wasm.data", 852864, "d3483e1c155c8d26e6b7b299c8ecc58c5abcfa0c5af5f03b75a55d219e71c3c8", "5ab7fa94d4cc9da68fff24911d76a32d3fba8ffbecd3fec740a1992670df809e"),
   core("puae", "4.2.3", "puae-wasm.data", 4140232, "8b58d776244c650c872dcaaf8693a2d75fd92a5219c7250cf5be5f517b11f1b5", "e833cb9a0d942770a2bd841dfe92decd069dd5a5bad817270d113f66ab239485", {inputMode: "POINTER"}),
-  core("same_cdi", "4.2.3", "same_cdi-wasm.data", 3483095, "ecaab54bb61a05bcf02e240f3aca4d8b4b3a5085911225822347ee0daf3a9d91", "8551f375ff9ecf015ec279ba3e79413dd51e2962630c9ac1b1528455ac340827"),
+  core("same_cdi", "4.2.3", "same_cdi-wasm.data", 3479130, "c81528c87536ab532116473ae434f4c6ff0f2016f6cfeffff455a435bce20e63", "5d15ba25415733af1be78ce28250510bfbad0d301ffe48f058963bedf7a8dd8e", {artifactFlavor: "OVERRIDE", coreBundleVersion: "same-cdi-local-7155d0ad1a52"}),
   core("smsplus", "4.2.3", "smsplus-wasm.data", 855876, "0f197c5e0000f17b2d072122a72b3f8fc1693514c4014fcd9694eec78584aa08", "a09612f1d088bffe8d9c107caf196b023710ed4aaeaa24f05caee7eec8591ff0"),
   core("snes9x", "4.2.3", "snes9x-wasm.data", 1093765, "eaa0bcfce67673809886e50387a80a616b719502175db64c090d04c9d75958ee", "f2ecf64d84dc3845ccd9828daf48436667f6aa79e6a5d6c41f0965f0151f1f34"),
   core("stella2014", "4.2.3", "stella2014-wasm.data", 1051659, "6c96c6b1746f3f05ca599066abe131a36c77ca61fc20a9e2a7560540457c487d", "f5244febaf876003e9acf97e09b8785f1f51563c3f96527232652c1d9ec40e68"),
@@ -184,7 +184,7 @@ export const emulatorJsProviderDefinition = defineProvider({
   adapters: storageAdapters(adapters),
   providerApiVersion: 1,
   providerId: "emulatorjs",
-  providerVersion: "2.8.0-rc.1",
+  providerVersion: "2.8.0-rc.2",
   targets,
 });
 

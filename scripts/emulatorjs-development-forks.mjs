@@ -3,6 +3,8 @@ import {lstat, readFile, readdir, writeFile, mkdir} from "node:fs/promises";
 import {dirname, isAbsolute, join} from "node:path";
 
 const sources = new Map([
+  ["same_cdi", {repository: "https://github.com/retrom-project/same_cdi",
+    upstreamCommit: "cfb05d803f54130adf94efef88edd816d01df7a3", license: "COPYING"}],
   ...["vice_xpet", "vice_xplus4"].map((core) => [core, {repository: "https://github.com/retrom-project/vice-libretro",
     upstreamCommit: "1b4309f4d56ded7bfc5ad7ba8d5a9a44ac3388a8", license: "COPYING"}]),
   ["81", {repository: "https://github.com/retrom-project/81-libretro",

@@ -10,6 +10,7 @@ import {projectProviderManifest} from "../src/provider/manifest.js";
 import {emulatorJsProviderDefinition} from "../src/providers/emulatorjs/catalog.js";
 import {emulatorJsSourceCatalog} from "../src/providers/emulatorjs/source-catalog.js";
 import {buildEmulatorJsProviderBundle} from "../scripts/provider-release-build.mjs";
+import type {DevelopmentFork} from "../scripts/emulatorjs-development-forks.mjs";
 import {forkReleaseFiles} from "../scripts/emulatorjs-fork-releases.mjs";
 
 describe("EmulatorJS Provider release build", () => {
@@ -84,7 +85,8 @@ async function temporaryRoot() {
 async function fixtureForks(sourceRoot: string) {
   const forks = [];
   for (const fork of emulatorJsSourceCatalog.forks) {
-    const assets = fork.assets.filter((asset) => asset.filename !== "rpg-runtime-release.json").map((asset) => {
+    const metadataAsset = fork.assets.find((asset) => asset.filename.endsWith("-release.json"))!;
+    const assets = fork.assets.filter((asset) => asset !== metadataAsset).map((asset) => {
       const contents = asset.filename.endsWith(".data")
         ? `fixture:assets/4.2.3/data/cores/${asset.filename}\n` : `${fork.runtimeCore} fixture license\n`;
       return {...asset, contents, sha256: createHash("sha256").update(contents).digest("hex"),
@@ -94,7 +96,6 @@ async function fixtureForks(sourceRoot: string) {
       ...(fork.runtimeCore === "flycast" ? {sha256: asset.sha256} : {observedSha256: asset.sha256})}));
     const metadata = JSON.stringify({...fork, schemaVersion: 1,
       ...(fork.runtimeCore === "flycast" ? {files: records} : {assets: records})});
-    const metadataAsset = fork.assets.find((asset) => asset.filename === "rpg-runtime-release.json")!;
     const all = [...assets, {...metadataAsset, contents: metadata,
       sha256: createHash("sha256").update(metadata).digest("hex"), sizeBytes: Buffer.byteLength(metadata)}];
     for (const file of forkReleaseFiles({forks: [{...fork, assets: all}]})) {
@@ -107,7 +108,8 @@ async function fixtureForks(sourceRoot: string) {
 
 async function fixtureDevelopmentForks(root: string) {
   const result = [];
-  for (const fork of emulatorJsSourceCatalog.developmentForks) {
+  const developmentForks: readonly DevelopmentFork[] = emulatorJsSourceCatalog.developmentForks;
+  for (const fork of developmentForks) {
     const content = (name: string) => name.endsWith(".data") ? `fixture:assets/4.2.3/data/cores/${name}\n` : `${name} fixture\n`;
     const files = fork.assets.filter((asset) => asset.filename !== "retrom-core-candidate.json").map((asset) => ({
       filename: asset.filename, sizeBytes: Buffer.byteLength(content(asset.filename)),

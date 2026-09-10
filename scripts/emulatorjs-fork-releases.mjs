@@ -1,4 +1,10 @@
 const identities = {
+  "81": {repository: "https://github.com/retrom-project/81-libretro", baseline: "g86decf3ee61e", license: "LICENSE", source: "source.tar.gz"},
+  cap32: {repository: "https://github.com/retrom-project/libretro-cap32", baseline: "g310cc579b79b", license: "COPYING", source: "source.tar.gz"},
+  crocods: {repository: "https://github.com/retrom-project/libretro-crocods", baseline: "gbe00fb904da0", license: "LICENSE", source: "source.tar.gz"},
+  same_cdi: {repository: "https://github.com/retrom-project/same_cdi", baseline: "gcfb05d803f54", license: "COPYING", source: "source.tar.gz"},
+  vice_xpet: {repository: "https://github.com/retrom-project/vice-libretro", baseline: "g1b4309f4d56d", license: "COPYING", source: "vice_xpet-source.tar.gz", metadata: "vice_xpet-release.json"},
+  vice_xplus4: {repository: "https://github.com/retrom-project/vice-libretro", baseline: "g1b4309f4d56d", license: "COPYING", source: "vice_xplus4-source.tar.gz", metadata: "vice_xplus4-release.json"},
   vice_xvic: {repository: "https://github.com/retrom-project/vice-libretro", baseline: "g1b4309f4d56d", license: "COPYING"},
   virtualjaguar: {repository: "https://github.com/retrom-project/virtualjaguar-libretro", baseline: "3.6.1", license: "LICENSE"},
   flycast: {repository: "https://github.com/retrom-project/flycast-wasm", baseline: "1.0", license: "LICENSE",
@@ -16,8 +22,9 @@ export function forkReleaseFiles(catalog) {
         .test(fork.tag)) {invalid();}
     const expected = [
       [`${fork.runtimeCore}-wasm.data`, `4.2.3/data/cores/${fork.runtimeCore}-wasm.data`],
-      ["rpg-runtime-release.json", forkMetadataPath(fork)],
+      [identity.metadata ?? "rpg-runtime-release.json", forkMetadataPath(fork)],
       [identity.license, `4.2.3/licenses/forks/${fork.runtimeCore}/${identity.license}`],
+      ...(identity.source ? [[identity.source, `4.2.3/licenses/forks/${fork.runtimeCore}/${identity.source}`]] : []),
       ...(fork.runtimeCore === "flycast" ? [["flycast.json", "4.2.3/data/cores/reports/flycast.json"]] : []),
     ];
     if (!Array.isArray(fork.assets) || fork.assets.length !== expected.length) {invalid();}
@@ -34,7 +41,7 @@ export function verifyForkMetadata(fork, metadata) {
   const records = fork.runtimeCore === "flycast" ? metadata.files : metadata.assets;
   if (metadata.repository !== fork.repository || metadata.commit !== fork.commit || metadata.tag !== fork.tag ||
     metadata.adapterAbi !== fork.adapterAbi || metadata.schemaVersion !== 1 || !Array.isArray(records)) {invalid();}
-  const assets = fork.assets.filter((asset) => asset.filename !== "rpg-runtime-release.json");
+  const assets = fork.assets.filter((asset) => asset.filename !== (identities[fork.runtimeCore]?.metadata ?? "rpg-runtime-release.json"));
   if (records.length !== assets.length || new Set(records.map((entry) => entry.filename)).size !== records.length) {invalid();}
   for (const asset of assets) {
     const described = records.find((entry) => entry.filename === asset.filename);

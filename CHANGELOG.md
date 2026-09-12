@@ -1,6 +1,8 @@
 # Changelog
 
-## Unreleased
+## 0.40.0
+
+- Pin Cap32 r3: restore CPC Plus ASIC, palette, DMA and decoded cartridge ROM mapping across Launches; retain ordinary CPC snapshot compatibility. Publish EmulatorJS Provider 2.17.0.
 
 - PFB development can explicitly consume verified, already-built EmulatorJS fork candidates, including license/source provenance. Compile the client asset index from the selected bytes before publishing the atomic loose descriptor; formal catalogs and release locks remain pinned.
 

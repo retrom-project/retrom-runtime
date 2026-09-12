@@ -235,8 +235,8 @@ export const emulatorJsSourceCatalog = {
 },
 {
   "repository": "https://github.com/retrom-project/libretro-cap32",
-  "tag": "retrom-core-g310cc579b79b-r2",
-  "commit": "1c8820a45b3445297f03720c52cb54ed4e8c7949",
+  "tag": "retrom-core-g310cc579b79b-r3",
+  "commit": "9dea3c0fe73db3faa581621e48e83efb69bd20cb",
   "adapterAbi": "emulatorjs-state-v1",
   "runtimeCore": "cap32",
   "assets": [
@@ -244,25 +244,25 @@ export const emulatorJsSourceCatalog = {
       "filename": "COPYING",
       "sha256": "328d7bdacd7f3aa9f03e9b78036b5a00db53907c8cb7a8676b4ba9016430f2be",
       "sizeBytes": 20252,
-      "url": "https://github.com/retrom-project/libretro-cap32/releases/download/retrom-core-g310cc579b79b-r2/COPYING"
+      "url": "https://github.com/retrom-project/libretro-cap32/releases/download/retrom-core-g310cc579b79b-r3/COPYING"
     },
     {
       "filename": "cap32-wasm.data",
-      "sha256": "cbebe15e960fad04eb27c08c5a73c7fbbc1df3d9cc13294f357104640c2da49f",
-      "sizeBytes": 1028234,
-      "url": "https://github.com/retrom-project/libretro-cap32/releases/download/retrom-core-g310cc579b79b-r2/cap32-wasm.data"
+      "sha256": "b37038ec29f943d242967999e52a8064b74e407048e72a62f50131df3227a75f",
+      "sizeBytes": 1030149,
+      "url": "https://github.com/retrom-project/libretro-cap32/releases/download/retrom-core-g310cc579b79b-r3/cap32-wasm.data"
     },
     {
       "filename": "source.tar.gz",
-      "sha256": "3b6e980a6ad716fed4d2a5a558387fea09a664e1d2368dcad20e94b29dff8a5a",
-      "sizeBytes": 1357672,
-      "url": "https://github.com/retrom-project/libretro-cap32/releases/download/retrom-core-g310cc579b79b-r2/source.tar.gz"
+      "sha256": "d8c1d7e391caf137d38897091625329ffc52e73e67f00cfd7b4817ebac82a57c",
+      "sizeBytes": 1361461,
+      "url": "https://github.com/retrom-project/libretro-cap32/releases/download/retrom-core-g310cc579b79b-r3/source.tar.gz"
     },
     {
       "filename": "rpg-runtime-release.json",
-      "sha256": "59278925c02b401d4d61fe396c29cd0ad23cf0b4970b4b2c2d976135c0dede37",
+      "sha256": "06896fca4777d161b2bc8e4891fbe58aef199158c15aea6d5037fe612abde04e",
       "sizeBytes": 793,
-      "url": "https://github.com/retrom-project/libretro-cap32/releases/download/retrom-core-g310cc579b79b-r2/rpg-runtime-release.json"
+      "url": "https://github.com/retrom-project/libretro-cap32/releases/download/retrom-core-g310cc579b79b-r3/rpg-runtime-release.json"
     }
   ]
 },

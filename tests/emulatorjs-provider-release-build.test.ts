@@ -86,10 +86,11 @@ async function temporaryRoot() {
 async function fixtureForks(sourceRoot: string) {
   const forks = [];
   for (const fork of emulatorJsSourceCatalog.forks) {
+    const destinations = new Map(forkReleaseFiles({forks: [fork]}).map((file) => [file.filename, file.destination]));
     const metadataAsset = fork.assets.find((asset) => asset.filename.endsWith("-release.json"))!;
     const assets = fork.assets.filter((asset) => asset !== metadataAsset).map((asset) => {
       const contents = asset.filename.endsWith(".data")
-        ? `fixture:assets/4.2.3/data/cores/${asset.filename}\n` : `${fork.runtimeCore} fixture license\n`;
+        ? `fixture:assets/${destinations.get(asset.filename)}\n` : `${fork.runtimeCore} fixture license\n`;
       return {...asset, contents, sha256: createHash("sha256").update(contents).digest("hex"),
         sizeBytes: Buffer.byteLength(contents)};
     });

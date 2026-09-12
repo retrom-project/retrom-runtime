@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "packageName": "@xxxsen/retrom-runtime",
-  "packageVersion": "0.34.0",
+  "packageVersion": "0.35.0",
   "publicApiVersion": 2,
   "upstreamReleases": [
     {
@@ -2228,12 +2228,5 @@
       "output": "runtime/butterscotch/worker.mjs"
     }
   ],
-  "developmentInputs": [
-    {
-      "id": "bsnes",
-      "repository": "https://github.com/retrom-project/bsnes-libretro",
-      "upstreamCommit": "4b344745e3878e7c0675a60c624582935524b8f7",
-      "adapterAbi": "emulatorjs-state-v1"
-    }
-  ]
+  "developmentInputs": []
 }

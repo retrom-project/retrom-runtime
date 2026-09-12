@@ -1,38 +1,40 @@
 export const emulatorJsSourceCatalog = {
   schemaVersion: 1,
-  developmentForks: [
-  {
-    "repository": "https://github.com/retrom-project/bsnes-libretro",
-    "commit": "4b344745e3878e7c0675a60c624582935524b8f7",
-    "sourceTreeSha256": "f097f6a18dc5deb68a3512d6e72d9d1b3062706af8c3b3537301c75c45321225",
-    "adapterAbi": "emulatorjs-state-v1",
-    "runtimeCore": "bsnes",
-    "upstreamCommit": "4b344745e3878e7c0675a60c624582935524b8f7",
-    "assets": [
-      {
-        "filename": "LICENSE.txt",
-        "sha256": "0f054caebeba5dd03fb38f520008d3bd9ebf1a1ac02d3ddffee27a4194c3679a",
-        "sizeBytes": 1865
-      },
-      {
-        "filename": "bsnes-wasm.data",
-        "sha256": "85cd9a3c18ecd4bf423d67ec6153be91f5e10e0f757a6787ed367b48939d3820",
-        "sizeBytes": 1215631
-      },
-      {
-        "filename": "source.tar.gz",
-        "sha256": "67f70614c1848e857e4d55b72ca605fed84d29e52b4eb5bbe8dda23b7774df81",
-        "sizeBytes": 7372457
-      },
-      {
-        "filename": "retrom-core-candidate.json",
-        "sizeBytes": 725,
-        "sha256": "2b2f09372410ba4efaa2b85851103d9fe40dabbf2f356feb637101afa7539ae8"
-      }
-    ]
-  }
-],
+  developmentForks: [],
   forks: [
+{
+  "repository": "https://github.com/retrom-project/bsnes-libretro",
+  "tag": "retrom-core-g4b344745e387-r1",
+  "commit": "81ba085d2bcedce487e1eb9bb39a440cfac9bf1d",
+  "adapterAbi": "emulatorjs-state-v1",
+  "runtimeCore": "bsnes",
+  "assets": [
+    {
+      "filename": "LICENSE.txt",
+      "sha256": "8dade5b9bb5a98c28dab6af284548e3630b3a0a3f0dbb299ed68a6d14607ab56",
+      "sizeBytes": 38843,
+      "url": "https://github.com/retrom-project/bsnes-libretro/releases/download/retrom-core-g4b344745e387-r1/LICENSE.txt"
+    },
+    {
+      "filename": "bsnes-wasm.data",
+      "sha256": "c0384975cf12d2227ccf31a03966ebf677c63fef44fc0852ef574efa2673fec1",
+      "sizeBytes": 1226327,
+      "url": "https://github.com/retrom-project/bsnes-libretro/releases/download/retrom-core-g4b344745e387-r1/bsnes-wasm.data"
+    },
+    {
+      "filename": "rpg-runtime-release.json",
+      "sha256": "91994d91c9d828d8179936ada920d64b7a28cfb274ef75d560a60b46305fe610",
+      "sizeBytes": 797,
+      "url": "https://github.com/retrom-project/bsnes-libretro/releases/download/retrom-core-g4b344745e387-r1/rpg-runtime-release.json"
+    },
+    {
+      "filename": "source.tar.gz",
+      "sha256": "903747598047f128118d5747cd293dc642d9abe93b13b7fbd0b1620c76d297fb",
+      "sizeBytes": 7373496,
+      "url": "https://github.com/retrom-project/bsnes-libretro/releases/download/retrom-core-g4b344745e387-r1/source.tar.gz"
+    }
+  ]
+},
 {
   "repository": "https://github.com/retrom-project/quasi88-libretro",
   "tag": "retrom-core-g459bbc6e90ca-r1",

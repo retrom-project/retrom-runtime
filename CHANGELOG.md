@@ -1,9 +1,9 @@
 # Changelog
 
-## Unreleased
+## 0.35.0
 
-- Add an independent bsnes Target to EmulatorJS Provider 2.9.1-bsnes.3 using the
-  pinned 4.3.0-pre frontend and a local bsnes fork candidate. The fork restores
+- Add an independent bsnes Target to EmulatorJS Provider 2.12.0 using the
+  pinned 4.3.0-pre frontend and an immutable bsnes fork release. The fork restores
   Asyncify and fiber lifecycle support, and fixes native save completion and
   heap ownership. The target uses standard SNES controls and the distinct
   `bsnes-state-v1-storage-v1` checkpoint format; it rejects generic EmulatorJS

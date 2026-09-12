@@ -1,4 +1,5 @@
 const identities = {
+  bsnes: {repository: "https://github.com/retrom-project/bsnes-libretro", baseline: "g4b344745e387", license: "LICENSE.txt", source: "source.tar.gz", release: "4.3.0-pre"},
   quasi88: {repository: "https://github.com/retrom-project/quasi88-libretro", baseline: "g459bbc6e90ca", license: "LICENSE", source: "source.tar.gz"},
   vecx: {repository: "https://github.com/retrom-project/libretro-vecx", baseline: "g8f671cc9d737", license: "LICENSE.md", source: "source.tar.gz"},
   "81": {repository: "https://github.com/retrom-project/81-libretro", baseline: "g86decf3ee61e", license: "LICENSE", source: "source.tar.gz"},
@@ -22,11 +23,12 @@ export function forkReleaseFiles(catalog) {
       fork.adapterAbi !== (identity.adapterAbi ?? "emulatorjs-state-v1") ||
       !new RegExp(`^retrom-core-${identity.baseline.replaceAll(".", "\\.")}-r[1-9][0-9]*(-rc\\.[1-9][0-9]*)?$`, "u")
         .test(fork.tag)) {invalid();}
+    const release = identity.release ?? "4.2.3";
     const expected = [
-      [`${fork.runtimeCore}-wasm.data`, `4.2.3/data/cores/${fork.runtimeCore}-wasm.data`],
+      [`${fork.runtimeCore}-wasm.data`, `${release}/data/cores/${fork.runtimeCore}-wasm.data`],
       [identity.metadata ?? "rpg-runtime-release.json", forkMetadataPath(fork)],
-      [identity.license, `4.2.3/licenses/forks/${fork.runtimeCore}/${identity.license}`],
-      ...(identity.source ? [[identity.source, `4.2.3/licenses/forks/${fork.runtimeCore}/${identity.source}`]] : []),
+      [identity.license, `${release}/licenses/forks/${fork.runtimeCore}/${identity.license}`],
+      ...(identity.source ? [[identity.source, `${release}/licenses/forks/${fork.runtimeCore}/${identity.source}`]] : []),
       ...(fork.runtimeCore === "flycast" ? [["flycast.json", "4.2.3/data/cores/reports/flycast.json"]] : []),
     ];
     if (!Array.isArray(fork.assets) || fork.assets.length !== expected.length) {invalid();}
@@ -53,7 +55,8 @@ export function verifyForkMetadata(fork, metadata) {
 }
 
 export function forkMetadataPath(fork) {
-  return `4.2.3/data/cores/reports/${fork.runtimeCore}${fork.runtimeCore === "flycast" ? "-release" : ""}.json`;
+  const release = identities[fork.runtimeCore]?.release ?? "4.2.3";
+  return `${release}/data/cores/reports/${fork.runtimeCore}${fork.runtimeCore === "flycast" ? "-release" : ""}.json`;
 }
 
 function invalid() {throw new Error("EMULATORJS_FORK_RELEASE_INVALID");}

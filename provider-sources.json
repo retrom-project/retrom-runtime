@@ -2306,12 +2306,5 @@
       "output": "runtime/butterscotch/worker.mjs"
     }
   ],
-  "developmentInputs": [
-    {
-      "id": "uzem",
-      "repository": "https://github.com/retrom-project/libretro-uzem",
-      "upstreamCommit": "d991ee94547c8294abc1c4cb73d63116aa58b5bc",
-      "adapterAbi": "emulatorjs-state-v1"
-    }
-  ]
+  "developmentInputs": []
 }

@@ -2,11 +2,11 @@
 
 Release archives aggregate the following independently licensed components:
 
-- Uzem (development candidate) — MIT — <https://github.com/retrom-project/libretro-uzem>;
+- Uzem — MIT — <https://github.com/retrom-project/libretro-uzem>;
   upstream <https://github.com/libretro/libretro-uzem> at `d991ee94547c8294abc1c4cb73d63116aa58b5bc`.
   The web build links the separately licensed EmulatorJS RetroArch fork; its GPL notice
-  is included in the core candidate LICENSE alongside the Uzem notice. Source archives
-  and exact build inputs accompany the candidate.
+  is included in the core release LICENSE alongside the Uzem notice. Source archives
+  and exact build inputs accompany `retrom-core-gd991ee94547c-r1`.
 
 - Ruffle — MIT OR Apache-2.0 — <https://github.com/retrom-project/ruffle>;
   `licenses/ruffle/LICENSE.md` includes dependency notices; `LICENSE_MIT` and `LICENSE_APACHE`

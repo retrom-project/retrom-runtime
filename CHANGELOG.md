@@ -1,8 +1,9 @@
 # Changelog
 
-## Unreleased
+## 0.38.0
 
-- Add the NXEngine development target for original freeware Cave Story projects, with persistent resource caching, standard controller input and explicit native game-save transfer between instances. Formal core release input remains unpublished until product validation and release authorization.
+- Add the NXEngine target for original freeware Cave Story projects, with persistent resource caching, standard controller input and explicit native game-save transfer between instances. Pin the immutable NXEngine core release and verify its full asset inventory.
+- Refresh the aggregate license notice carried by EmulatorJS Provider 2.15.0; its core payloads and target behavior remain unchanged.
 
 ## 0.37.0
 

@@ -1,8 +1,8 @@
 # Changelog
 
-## Unreleased
+## 0.36.0
 
-- Add the NeoCD single-CHD target in EmulatorJS Provider 2.9.0-rc.3, using an explicit source-verified PFB candidate. The maintained fork owns the WASM build; ordinary release builds reject this unpublished source.
+- Add the NeoCD single-CHD target in EmulatorJS Provider 2.13.0, pinned to the immutable NeoCD fork release. The maintained fork owns the WASM build.
 - Map NeoCD native A/B/C/D to the standard bottom/right/left/top face buttons, without binding native multi-button shoulder macros.
 - Load NeoCD through bounded, persistent Range blocks and an Asyncify core bridge, without a startup whole-disc download or hash scan; retain Flycast OPFS behavior. Preserve native load skipping and compressed instant checkpoints.
 

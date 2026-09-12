@@ -575,7 +575,7 @@ PC-88 games can require additional keyboard controls: The Librarian uses keypad
 Product acceptance belongs to the host; a single sample does not establish the complete
 PC-88 compatibility matrix.
 
-## NeoCD development candidate
+## NeoCD
 
 `emulatorjs/neocd` accepts a single CHD as `SEEKABLE_BLOB`. The host supplies the
 installed CDZ BIOS as an external file at `/neocd/neocd.bin`. Only requested

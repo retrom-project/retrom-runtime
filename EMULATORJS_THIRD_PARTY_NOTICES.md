@@ -56,12 +56,14 @@ VecX is GPL-3.0; the PSG component retains its MIT notice in `vecx_psg.c` and
 source archive, including component notices. EmulatorJS RetroArch linker source
 is pinned by the fork build recipe. Release: `retrom-core-g8f671cc9d737-r1`.
 
-## NeoCD (development candidate)
+## NeoCD
 
 Source: https://github.com/retrom-project/neocd_libretro, upstream libretro/neocd_libretro
 commit `3118c6901787e863e80e79170d02d47657b3b0ab`. The top-level license is LGPL-3.0;
 its Z80 component explicitly restricts commercial use. The linked EmulatorJS RetroArch
-frontend is GPL-3.0. This is not an unrestricted LGPL-only binary. Candidate bundles
+frontend is GPL-3.0. This is not an unrestricted LGPL-only binary. Published bundles
 retain original component notices and licenses at
 `licenses/emulatorjs/4.2.3/licenses/forks/neocd/LICENSE.md`, alongside `source.tar.gz`.
 BIOS and games are supplied separately by the operator.
+
+NeoCD Release: `retrom-core-g3118c6901787-r1`.

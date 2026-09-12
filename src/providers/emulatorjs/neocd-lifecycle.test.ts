@@ -6,7 +6,6 @@ import {emulatorJsProviderDefinition} from "./catalog.js";
 import {createEmulatorJsPlayer} from "./provider-runtime.js";
 import {launchEnvelope} from "../../../tests/emulatorjs-provider-fixtures.js";
 import type {RuntimeHostV1} from "../../provider/module-api.js";
-vi.mock("./neocd-cache.js", () => ({loadNeoCDDisc: async () => new Blob(["disc"])}));
 afterEach(() => {document.body.replaceChildren();});
 
 describe("NeoCD player lifecycle", () => {
@@ -26,6 +25,8 @@ describe("NeoCD player lifecycle", () => {
     for (const button of [10, 11, 12, 13, 14, 15]) {expect(controls[button]?.value2).toBeUndefined();}
     expect(first.runtimeWindow.EJS_controlScheme).toBe("arcade");
     expect(first.runtimeWindow.EJS_dontExtractRom).toBe(true);
+    expect((first.runtimeWindow.EJS_gameUrl as File).size).toBeLessThan(128);
+    expect(first.runtimeWindow.RETROM_NEOCD_RANGE).toBeDefined();
     const saved = await first.player.checkpoint();
     expect(saved.format).toBe("emulatorjs-state-v1-storage-v1");
     expect(gunzipSync(saved.bytes)).toEqual(snapshot);
@@ -33,6 +34,7 @@ describe("NeoCD player lifecycle", () => {
     expect(await decodeStoredCheckpoint(saved.bytes, saved.format, snapshot.length)).toEqual(snapshot);
     await first.player.exit();
     expect(first.runtimeWindow.EJS_gameUrl).toBeUndefined();
+    expect(first.runtimeWindow.RETROM_NEOCD_RANGE).toBeUndefined();
     const restored = await mount(saved.bytes, new Uint8Array([4]), saved.format);
     expect(restored.load).toHaveBeenCalledWith(snapshot);
     expect(restored.toggle).toHaveBeenLastCalledWith(true);
@@ -41,6 +43,19 @@ describe("NeoCD player lifecycle", () => {
     await restored.player.resume();
     expect(restored.toggle).toHaveBeenLastCalledWith(true);
     await restored.player.exit();
+  });
+  it("waits for a suspended disc read before pausing or serializing", async () => {
+    const fixture = await mount(null, new Uint8Array([1, 2, 3]));
+    const bridge = fixture.runtimeWindow.RETROM_NEOCD_RANGE as ReturnType<typeof import("./neocd-range.js").createNeoCDRange>;
+    bridge.begin(); fixture.toggle.mockClear();
+    const pause = fixture.player.pause();
+    await Promise.resolve(); expect(fixture.toggle).not.toHaveBeenCalled();
+    bridge.end(); await pause; expect(fixture.toggle).toHaveBeenCalledWith(false);
+    bridge.begin(); let serialized = false;
+    const saving = fixture.player.checkpoint().then(() => {serialized = true;});
+    await Promise.resolve(); expect(serialized).toBe(false);
+    bridge.end(); await saving; expect(serialized).toBe(true);
+    await fixture.player.exit();
   });
   it("rejects an empty core checkpoint", async () => {
     const fixture = await mount(null, new Uint8Array());
@@ -52,6 +67,7 @@ async function mount(restore: Uint8Array | null, state: Uint8Array, format = "em
   const target = emulatorJsProviderDefinition.targets.find((entry) => entry.id === "neocd")!;
   const manifest = projectProviderManifest(emulatorJsProviderDefinition).targets.find((entry) => entry.id === "neocd")!;
   const envelope = launchEnvelope();
+  Object.assign(envelope.resources[0], {kind: "SEEKABLE_BLOB", rangeRequired: true});
   Object.assign(envelope.runtime, {targetId: "neocd", capabilities: manifest.capabilities, checkpoint: manifest.checkpoint});
   if (restore) {envelope.restore = {format, sha256: "a".repeat(64), sizeBytes: restore.length, url: "/restore"};}
   const frame = document.createElement("iframe"); document.body.append(frame);
@@ -66,7 +82,7 @@ async function mount(restore: Uint8Array | null, state: Uint8Array, format = "em
   const load = vi.fn(async () => {}), toggle = vi.fn();
   const mounting = player.mount(document.createElement("div"));
   await vi.waitFor(() => expect(runtimeWindow.document.querySelector("script[data-retrom-loader]")).not.toBeNull());
-  runtimeWindow.EJS_emulator = {gameManager: {getState: () => state, loadExplicitStateAndWait: load, toggleMainLoop: toggle}};
+  runtimeWindow.EJS_emulator = {startGame: vi.fn(), gameManager: {getState: () => state, loadExplicitStateAndWait: load, toggleMainLoop: toggle}};
   (runtimeWindow.EJS_ready as () => void)();
   (runtimeWindow.EJS_onGameStart as () => void)();
   await mounting;

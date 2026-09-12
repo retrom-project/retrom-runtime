@@ -8,6 +8,7 @@ import {emulatorJsNetplayProfiles} from "./netplay-profile.js";
 describe("EmulatorJS Provider declarations", () => {
   it("declares NeoCD with upstream load options and bounded single-disc storage", () => {
     const target = emulatorJsProviderDefinition.targets.find((entry) => entry.id === "neocd")!;
+    expect(target.inputs.find(input => input.role === "game")?.kind).toBe("SEEKABLE_BLOB");
     expect(target.implementation).toMatchObject({runtimeCore: "neocd", contentKinds: ["SINGLE_FILE"],
       defaultOptions: {neocd_region: "Japan", neocd_cdspeedhack: "On", neocd_loadskip: "On"}});
     const manifest = projectProviderManifest(emulatorJsProviderDefinition).targets.find((entry) => entry.id === "neocd")!;

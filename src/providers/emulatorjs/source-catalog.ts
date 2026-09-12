@@ -3,8 +3,8 @@ export const emulatorJsSourceCatalog = {
   developmentForks: [
   {
     "repository": "https://github.com/retrom-project/neocd_libretro",
-    "commit": "3118c6901787e863e80e79170d02d47657b3b0ab",
-    "sourceTreeSha256": "dff235633032f2d19e89bde198041632e760998f7a3d90302684cec7969a31cf",
+    "commit": "9f4e2e6478c8e1809726810a9eb4c2d6f976f2c3",
+    "sourceTreeSha256": "f25d41ebd6669ae2050854efc160fe0aae5868be86bf83c8101cf5cc0e69fadb",
     "adapterAbi": "emulatorjs-state-v1",
     "runtimeCore": "neocd",
     "upstreamCommit": "3118c6901787e863e80e79170d02d47657b3b0ab",
@@ -16,17 +16,17 @@ export const emulatorJsSourceCatalog = {
       },
       {
         "filename": "neocd-wasm.data",
-        "sha256": "1d07ac12b6926069265d07a8979d1a17611cc194249480b13ec5416eb3c4afdc",
-        "sizeBytes": 1080725
+        "sha256": "3702540c38faab7d3eadae748791364d61e043b16d937b5bbae05c9c0134ec0c",
+        "sizeBytes": 1080566
       },
       {
         "filename": "source.tar.gz",
-        "sha256": "2a1d2d71699b64cb9a74bcade00a0412927231f74f590c3ee582b61303d2d261",
-        "sizeBytes": 801364
+        "sha256": "62480310ecfccd8375b6acde5a4511b8abdc534c95d60f5bc0907f3307868c97",
+        "sizeBytes": 802124
       },
       {
         "filename": "retrom-core-candidate.json",
-        "sha256": "927ee844a22c61b179d5921b5b57b30f691a9a1a0d7c1d295adbac41a807597b",
+        "sha256": "3fd5d0c26c094a14f8662779d5375a027f634eb96a3f202a44121220a8912ba0",
         "sizeBytes": 728
       }
     ]

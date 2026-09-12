@@ -37,7 +37,7 @@ export function installArchiveWorkerCompatibility(
   const target = runtimeWindow as CompressionWindow;
   if (emulatorJsVersion === "4.2.3") {return installBlobCompatibility(target);}
   if (emulatorJsVersion === "4.3.0-pre") {
-    const archive = installResponseCompatibility(target, runtimeBaseUrl);
+    const archive = installResponseCompatibility(target, runtimeBaseUrl, core);
     const psp = core === "ppsspp" ? installPspAssetCompatibility(target, runtimeBaseUrl) : null;
     return () => {psp?.(); archive();};
   }
@@ -101,11 +101,12 @@ function normalizeReader(runtimeWindow: CompressionWindow, constructor: EjsCompr
   prototype.getWorkerFile = compatible;
 }
 
-function installResponseCompatibility(runtimeWindow: CompressionWindow, runtimeBaseUrl: string) {
+function installResponseCompatibility(runtimeWindow: CompressionWindow, runtimeBaseUrl: string, core: string) {
   const originalFetch = runtimeWindow.fetch;
   if (typeof originalFetch !== "function") {throw unavailable();}
   const baseURL = httpBase(runtimeWindow);
   const runtimeURL = new runtimeWindow.URL(runtimeBaseUrl, baseURL);
+  const reportURL = core === "freeintv" ? new runtimeWindow.URL("cores/reports/freeintv.json", runtimeURL).href : null;
   const workerURLs = new Map<string, ArchiveType>([
     [new runtimeWindow.URL("compression/extract7z.js", runtimeURL).href, "7z"],
     [new runtimeWindow.URL("compression/extractzip.js", runtimeURL).href, "zip"],
@@ -113,8 +114,13 @@ function installResponseCompatibility(runtimeWindow: CompressionWindow, runtimeB
   const compatibleFetch: typeof fetch = async (input, init) => {
     const requestURL = requestUrl(runtimeWindow, input, baseURL);
     const archiveType = workerURLs.get(requestURL.href);
-    const response = await originalFetch.call(runtimeWindow, input, init);
     const method = init?.method ?? (typeof input === "string" || input instanceof URL ? "GET" : input.method);
+    // The pinned FreeIntv loader adds an hourly query to this immutable report.
+    const report = method.toUpperCase() === "GET" && requestURL.origin + requestURL.pathname === reportURL &&
+      /^\?v=\d+$/.test(requestURL.search) && !requestURL.hash;
+    const forwarded = report && reportURL ? typeof input === "string" || input instanceof URL
+      ? reportURL : new Request(reportURL, input) : input;
+    const response = await originalFetch.call(runtimeWindow, forwarded, init);
     if (!archiveType || method.toUpperCase() !== "GET" || !response.ok) {return response;}
     const headers = new Headers(response.headers);
     headers.delete("content-length");

@@ -99,6 +99,7 @@ const cores: readonly CoreSource[] = [
   core("fbalpha2012_cps2", "4.2.3", "fbalpha2012_cps2-wasm.data", 992866, "432c2dd513603b04ccbf4e81f282f012763d2435311805443e2bd0cc9021d8d1", "73ac6fc4b1a2030701471b630e658118486e99c6c7349663dadcde4abeab6e5d"),
   core("fbneo", "4.2.3", "fbneo-wasm.data", 8273551, "315a25e0bcd61d58ee0d9e8b1dbf3740b9e0ca4b7d0726f848ce1068de73437c", "cbd006664ec1c76f6bdad7747d487ee137ae70d15390ec479e11f8e17f01bc84"),
   core("fceumm", "4.2.3", "fceumm-wasm.data", 1054015, "8c449fd5c36646fb0769423ed6ffa9efbdfc21fbfdc9bac7952b559d34d5b493", "d1a20a10b27908b6f199ed8d10f7ccf4376065b8a733492aee53b4d4a2c2f26d"),
+  core("freeintv", "4.3.0-pre", "freeintv-wasm.data", 1139022, "e5f84b6a322e5b01b077e6e60895f52555af6ddc5838bfc775f946a0d44a8d6e", "9a5045b039305fbc0ed13a679cb6534980f2b2b4e1cb321ba9d109c5cc0c9062"),
   core("fuse", "4.2.3", "fuse-wasm.data", 1218229, "791fe40dfba9ac236c5c14d629d555133c5fe3c36d1dbdc2a48ced487da51373", "0f2dee6ecd4bd57fe793239ec42bd6efa4b4b8696aae4f62a2a469cad2a22f32", {defaultOptions: {keyboardInput: "enabled"}}),
   core("gambatte", "4.2.3", "gambatte-wasm.data", 967156, "ad67c7bf57f8f8b62606048e6ea498afac5b5abc76ad8de5f9dfc2a6719374bb", "c1d7561f109647715f8795c8fa977318dc78bfc847cd8879bb029d62c55fa605"),
   core("gearcoleco", "4.2.3", "gearcoleco-wasm.data", 891907, "164e213e4d5f2c14a0f2b55da973ed5a54ef7601cb352e64c9a73ace1a7ba606", "1c377b55d252fc7133bb99b845c1bc1931a3f9989fd1410659c50bd3b2a78a4d"),
@@ -185,7 +186,7 @@ export const emulatorJsProviderDefinition = defineProvider({
   adapters: storageAdapters(adapters),
   providerApiVersion: 1,
   providerId: "emulatorjs",
-  providerVersion: "2.9.0",
+  providerVersion: "2.10.0",
   targets,
 });
 

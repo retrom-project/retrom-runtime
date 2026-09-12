@@ -18,7 +18,8 @@ import type {
 import {PlayerRuntimeError} from "../../provider/errors.js";
 import {focusRuntimeInput} from "../../provider/input-focus.js";
 import {emulatorJsProviderDefinition, type EmulatorImplementation} from "./catalog.js";
-import {loadFlycastDisc} from "./flycast-cache.js";
+import {installNeoCDStartup} from "./neocd-startup.js";
+import {mountNeoCDRange, loadFlycastFile} from "./disc-mount.js";
 import {installFlycastCompatibility} from "./flycast.js";
 import {installArchiveWorkerCompatibility} from "./archive-worker.js";
 import {installDOSBoxPureStateCompatibility} from "./dosbox-state.js";
@@ -51,7 +52,7 @@ import {biosFile, externalFiles, fileName, optionalResource, resource, runtimeBa
 import {readEmulatorJsCheckpoint} from "./bytes.js";
 import {readPspCheckpoint, restorePspCheckpoint} from "./psp-state.js";
 import {installPspRestoreObserver} from "./psp-restore.js";
-import {installEmulatorJsFrameStyle} from "./frame-style.js";
+import {createEmulatorJsMountPoint} from "./frame-style.js";
 import {decodeStoredCheckpoint, encodeStoredCheckpoint} from "../../provider/checkpoint-storage.js";
 import {installEmulatorJsOutputViewport} from "./output-viewport.js";
 
@@ -80,6 +81,7 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
   private exitPromise: Promise<void> | null = null;
   private pspRestore: ReturnType<typeof installPspRestoreObserver> | null = null;
   private cleanupArchiveWorker: (() => void) | null = null;
+  private neoCDRange: ReturnType<typeof mountNeoCDRange> | null = null;
   private cleanupFlycast: (() => void) | null = null;
   private cleanupFrameStyle: (() => void) | null = null;
   private outputViewport: ReturnType<typeof installEmulatorJsOutputViewport> | null = null;
@@ -133,6 +135,7 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
     const instance = this.requireInstance();
     const toggle = instance.gameManager?.toggleMainLoop;
     if (!toggle) {throw contractError();}
+    if (this.neoCDRange) {await this.neoCDRange.idle();}
     toggle.call(instance.gameManager, false);
     instance.paused = true;
     this.transition("PAUSED");
@@ -152,6 +155,7 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
   }
 
   async checkpoint() {
+    if (this.neoCDRange) {await this.neoCDRange.idle();}
     const manager = this.requireInstance().gameManager;
     const maximum = this.envelope.runtime.checkpoint?.maxBytes ?? 0;
     const bytes = this.implementation.runtimeCore === "ppsspp"
@@ -165,6 +169,7 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
   }
 
   async screenshot() {
+    if (this.neoCDRange) {await this.neoCDRange.idle();}
     return captureEmulatorJsScreenshot(this.requireInstance());
   }
 
@@ -290,7 +295,7 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
       this.createMountPoint(runtimeWindow);
       this.startBarrier = createStartBarrier();
       this.configure(runtimeWindow);
-      await this.configureFlycast(runtimeWindow);
+      await this.configureDisc(runtimeWindow);
 
       this.prepareRetroArchConfig(runtimeWindow);
       if (this.netplayProfile) {
@@ -335,35 +340,27 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
     }
   }
 
-  private async configureFlycast(runtimeWindow: EjsWindow) {
-    if (this.implementation.runtimeCore === "flycast") {
-      this.cleanupFlycast = installFlycastCompatibility(runtimeWindow);
-      const game = resource(this.envelope, "game", "ROM_BLOB");
-      const disc = await loadFlycastDisc(game, this.host.signal, (loadedBytes, totalBytes) =>
-        this.emit({type: "LOAD_PROGRESS", loadedBytes, totalBytes}));
-      const FileConstructor = (runtimeWindow as Window & typeof globalThis).File;
-      runtimeWindow.EJS_gameUrl = new FileConstructor([disc], `${game.sha256}.chd`);
+  private async configureDisc(runtimeWindow: EjsWindow) {
+    const core = this.implementation.runtimeCore;
+    if (!["flycast", "neocd"].includes(core)) {return;}
+    if (core === "flycast") {this.cleanupFlycast = installFlycastCompatibility(runtimeWindow);}
+    const game = resource(this.envelope, "game", this.implementation.runtimeCore === "neocd" ? "SEEKABLE_BLOB" : "ROM_BLOB");
+    if (core === "neocd") {
+      this.neoCDRange = mountNeoCDRange(runtimeWindow, game, this.host.signal,
+        error => this.fail("NEOCD_RANGE_READ_FAILED", error));
+      return;
     }
+    runtimeWindow.EJS_gameUrl = await loadFlycastFile(runtimeWindow, game, this.host.signal,
+      (loadedBytes, totalBytes) => this.emit({type: "LOAD_PROGRESS", loadedBytes, totalBytes}));
   }
 
   private createMountPoint(runtimeWindow: Window) {
-    const body = runtimeWindow.document.body;
-    if (!body) {throw contractError();}
-    const mountPoint = runtimeWindow.document.createElement("div");
-    mountPoint.id = "retrom-emulator";
-    mountPoint.style.width = "100%";
-    mountPoint.style.height = "100%";
-    body.replaceChildren(mountPoint);
-    body.style.margin = "0";
-    body.style.width = "100vw";
-    body.style.height = "100vh";
-    body.style.overflow = "hidden";
-    this.cleanupFrameStyle = installEmulatorJsFrameStyle(runtimeWindow.document);
+    this.cleanupFrameStyle = createEmulatorJsMountPoint(runtimeWindow);
   }
 
   private configure(runtimeWindow: EjsWindow) {
     if (this.implementation.runtimeCore === "ppsspp") {this.pspRestore = installPspRestoreObserver(runtimeWindow);}
-    const game = resource(this.envelope, "game", "ROM_BLOB");
+    const game = resource(this.envelope, "game", this.implementation.runtimeCore === "neocd" ? "SEEKABLE_BLOB" : "ROM_BLOB");
     const bios = optionalResource(this.envelope, "bios", "BIOS_BUNDLE");
     const parent = optionalResource(this.envelope, "parent", "PARENT_ARCHIVE");
     const releaseBase = runtimeBase(this.envelope, this.implementation.release);
@@ -379,9 +376,9 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
     runtimeWindow.EJS_biosUrl = biosFile(bios);
     runtimeWindow.EJS_gameParentUrl = parent?.url;
     runtimeWindow.EJS_startOnLoaded = !deferredDOSStart;
-    runtimeWindow.EJS_dontExtractRom = deferredDOSStart || this.implementation.runtimeCore === "flycast";
+    runtimeWindow.EJS_dontExtractRom = deferredDOSStart || ["flycast", "neocd"].includes(this.implementation.runtimeCore);
     runtimeWindow.EJS_disableBatchBootup = deferredDOSStart;
-    runtimeWindow.EJS_disableCue = this.implementation.runtimeCore === "cap32" ? true : undefined;
+    runtimeWindow.EJS_disableCue = ["cap32", "quasi88"].includes(this.implementation.runtimeCore) ? true : undefined;
     runtimeWindow.EJS_language = "zh-CN";
     runtimeWindow.EJS_disableAutoLang = false;
     // PSP's native load receipt is emitted only with RetroArch's -v flag.
@@ -406,7 +403,10 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
     runtimeWindow.EJS_externalFiles = externalFiles(this.envelope);
     runtimeWindow.EJS_ready = () => {
       this.instance = runtimeWindow.EJS_emulator ?? null;
-      if (this.instance) {initializeEmulatorJsGamepads(this.instance);}
+      if (this.instance) {
+        initializeEmulatorJsGamepads(this.instance);
+        if (this.neoCDRange) {installNeoCDStartup(this.instance, this.neoCDRange);}
+      }
       if (!this.instance) {this.fail("PLAYER_RUNTIME_UNAVAILABLE");}
       this.instance?.on?.("exit", () => this.requestExit());
       const discs = optionalResource(this.envelope, "discs", "MULTI_DISC");
@@ -476,6 +476,7 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
   }
 
   private async restore(bytes: Uint8Array) {
+    if (this.neoCDRange) {await this.neoCDRange.idle();}
     const manager = this.instance?.gameManager;
     if (this.implementation.runtimeCore === "ppsspp") {
       await restorePspCheckpoint(manager, bytes, this.envelope.runtime.checkpoint?.maxBytes ?? 0,
@@ -506,6 +507,7 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
   }
 
   private async stopNativeInstance() {
+    if (this.neoCDRange) {await this.neoCDRange.dispose(); this.neoCDRange = null;}
     const runtimeWindow = this.runtimeWindow;
     const instance = this.instance;
     if (!runtimeWindow || !instance?.callEvent) {return;}

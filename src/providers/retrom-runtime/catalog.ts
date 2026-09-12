@@ -1,4 +1,5 @@
 import {pspAdapter, pspTarget} from "./psp-declaration.js";
+import {gbeAdapter, gbeTarget} from "./gbe-pokemini-declaration.js";
 import {storageAdapters} from "../../provider/checkpoint-storage.js";
 import {np2kaiAdapter, np2kaiTarget} from "./np2kai-declaration.js";
 import {px68kAdapter, px68kTarget} from "./px68k-declaration.js";
@@ -38,7 +39,10 @@ const isolatedCapabilities = capabilities(true, true, true);
 const wasm4Capabilities = capabilities(true, true, false);
 
 const adapters = [
-  np2kaiAdapter,
+  defineAdapter({id: "nxengine-web", kind: "NXENGINE_WEB", abi: "nxengine-host-v1",
+    capabilities: capabilities(true, true, true),
+    checkpoint: {writeFormat: "nxengine-game-save-v1", readFormats: ["nxengine-game-save-v1"], semantics: "GAME_SAVE"}}),
+  np2kaiAdapter, gbeAdapter,
   defineAdapter({id: "openbor-web", kind: "OPENBOR_WEB", abi: "openbor-host-v1",
     capabilities: capabilities(true, true, false),
     checkpoint: {writeFormat: "openbor-game-save-v1", readFormats: ["openbor-game-save-v1"], semantics: "GAME_SAVE"}}),
@@ -84,6 +88,7 @@ const targets = [
     4194380, ["assets/fake08/fake08-retrom.mjs", "assets/fake08/fake08-retrom.wasm"]),
   target("flash-ruffle", "Flash (Ruffle)", "ruffle-web", noOptionsSchema, false, "SAME_ORIGIN_BLANK", "ROM_BLOB",
     8 * 1024 * 1024, ["assets/ruffle/ruffle.js", "assets/ruffle/core.ruffle.js", "assets/ruffle/ruffle.wasm"]),
+  gbeTarget,
   target(
     "j2me", "Java ME", "j2me-minijvm-web", noOptionsSchema,
     true, "SAME_ORIGIN_BLANK", "ROM_BLOB", 2 * 1024 * 1024,
@@ -100,6 +105,8 @@ const targets = [
   target("msx-webmsx", "MSX (WebMSX)", "webmsx-web", noOptionsSchema, false, "SAME_ORIGIN_BLANK", "ROM_BLOB",
     32 * 1024 * 1024, ["assets/webmsx/webmsx.js"]),
   np2kaiTarget,
+  target("nxengine", "Cave Story (NXEngine)", "nxengine-web", noOptionsSchema, false, "SAME_ORIGIN_BLANK", "FILE_TREE",
+    16384, ["assets/nxengine/nxengine-retrom.mjs", "assets/nxengine/nxengine-retrom.wasm"]),
   target(
     "onscripter-yuri", "ONScripter Yuri", "ons-yuri-web", onsOptionsSchema,
     false, "SAME_ORIGIN_BLANK", "FILE_TREE", 64 * 1024 * 1024,
@@ -135,7 +142,7 @@ export const retromRuntimeProviderDefinition = defineProvider({
   adapters: storageAdapters(adapters),
   providerApiVersion: 1,
   providerId: "retrom-runtime",
-  providerVersion: "0.32.0-rc.5",
+  providerVersion: "0.39.0",
   targets,
 });
 

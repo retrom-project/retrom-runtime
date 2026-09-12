@@ -124,7 +124,7 @@ export function targetEnvelope(targetId: string): LaunchEnvelopeV1 {
       contentDigest: digest, entryUrl: "https://runtime.test/__retrom/bootstrap",
       kind: "ISOLATED_WEB", ordinal: 0, origin: "https://runtime.test", role: "game",
     };
-  } else if (["j2me", "tic80", "fake08", "flash-ruffle", "msx-webmsx", "openbor", "px68k", "np2kai-pc98"].includes(targetId)) {
+  } else if (["gbe-pokemini", "j2me", "tic80", "fake08", "flash-ruffle", "msx-webmsx", "openbor", "px68k", "np2kai-pc98"].includes(targetId)) {
     resource = {kind: "ROM_BLOB", ordinal: 0, rangeRequired: false, role: "game",
       sha256: digest, sizeBytes: 128, url: "/runtime/content/game/game.jar"};
   } else if (targetId === "wasm4") {
@@ -151,6 +151,10 @@ export function targetEnvelope(targetId: string): LaunchEnvelopeV1 {
       kind: "EXTERNAL_FILE_SET", role: "external", ordinal: 0,
       files: ["cgrom.dat", "iplrom.dat"].map(logicalName => ({logicalName, virtualPath: `game/keropi/${logicalName}`, sha256: digest, sizeBytes: 128,
         url: `/runtime/content/bios/${logicalName}`})),
+    }] : targetId === "gbe-pokemini" ? [resource, {
+      kind: "EXTERNAL_FILE_SET", role: "external", ordinal: 0,
+      files: [{logicalName: "bios.min", virtualPath: "bios.min", sha256: digest, sizeBytes: 4096,
+        url: "/runtime/content/bios/bios.min"}],
     }] : [resource],
     restore: null,
     runtime: {

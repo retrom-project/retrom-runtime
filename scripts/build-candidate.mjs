@@ -39,7 +39,8 @@ for (const core of spec.cores) {
 const providerSources = await loadProviderSources(new URL("../", import.meta.url));
 run("npm", ["run", "build"]);
 const {emulatorJsSourceCatalog} = await import("../dist/providers/emulatorjs/source-catalog.js");
-const developmentInputs = [...providerSources.developmentInputs ?? [], ...emulatorJsSourceCatalog.developmentCores ?? []];
+const developmentInputs = [...providerSources.developmentInputs ?? [], ...emulatorJsSourceCatalog.developmentCores ?? [],
+  ...(emulatorJsSourceCatalog.developmentForks ?? []).map((fork) => ({...fork, id: fork.runtimeCore}))];
 const upstreamReleases = [...providerSources.upstreamReleases, ...(emulatorJsSourceCatalog.forks ?? []).map((fork) => ({
   ...fork, id: fork.runtimeCore,
   assets: forkReleaseFiles({forks: [fork]}).map((file) => ({...file, output: file.destination})),

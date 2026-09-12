@@ -3,6 +3,16 @@ import {lstat, readFile, readdir, writeFile, mkdir} from "node:fs/promises";
 import {dirname, isAbsolute, join} from "node:path";
 
 const sources = new Map([
+  ["vecx", {repository: "https://github.com/retrom-project/libretro-vecx",
+    upstreamCommit: "8f671cc9d737f2890c3ce19e177e2984dcae121f", license: "LICENSE.md"}],
+
+  ["quasi88", {repository: "https://github.com/retrom-project/quasi88-libretro",
+    upstreamCommit: "459bbc6e90caa3dc392ae8e64a9b0881b1e5ef77", license: "LICENSE"}],
+  ["bsnes", {repository: "https://github.com/retrom-project/bsnes-libretro",
+    upstreamCommit: "4b344745e3878e7c0675a60c624582935524b8f7", license: "LICENSE.txt", release: "4.3.0-pre"}],
+
+  ["neocd", {repository: "https://github.com/retrom-project/neocd_libretro",
+    upstreamCommit: "3118c6901787e863e80e79170d02d47657b3b0ab", license: "LICENSE.md"}],
   ["same_cdi", {repository: "https://github.com/retrom-project/same_cdi",
     upstreamCommit: "cfb05d803f54130adf94efef88edd816d01df7a3", license: "COPYING"}],
   ...["vice_xpet", "vice_xplus4"].map((core) => [core, {repository: "https://github.com/retrom-project/vice-libretro",
@@ -38,9 +48,10 @@ export function developmentForkFiles(catalog) {
     return fork.assets.map((file) => {
       if (!exact(file, ["filename", "sha256", "sizeBytes"]) || !digest(file.sha256) ||
         !Number.isSafeInteger(file.sizeBytes) || file.sizeBytes < 1 || file.sizeBytes > 16 * 1024 * 1024) {invalid();}
-      const destination = file.filename === `${fork.runtimeCore}-wasm.data` ? `4.2.3/data/cores/${file.filename}`
-        : file.filename === "retrom-core-candidate.json" ? `4.2.3/data/cores/reports/${fork.runtimeCore}.json`
-          : `4.2.3/licenses/forks/${fork.runtimeCore}/${file.filename}`;
+      const release = sources.get(fork.runtimeCore).release ?? "4.2.3";
+      const destination = file.filename === `${fork.runtimeCore}-wasm.data` ? `${release}/data/cores/${file.filename}`
+        : file.filename === "retrom-core-candidate.json" ? `${release}/data/cores/reports/${fork.runtimeCore}.json`
+          : `${release}/licenses/forks/${fork.runtimeCore}/${file.filename}`;
       return {...file, destination, runtimeCore: fork.runtimeCore};
     });
   });

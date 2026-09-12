@@ -5,6 +5,25 @@ VX, VX Ace, MV and MZ, ONS games powered by ONScripterYuri, KAG-based KiriKiri2 
 projects powered by Butterscotch, browser TyranoScript projects, Java ME JARs, ScummVM game projects and WASM-4 carts. It owns runtime lifecycle, adapters, checkpoint codecs, bridge assets and pinned core
 Release inputs. It does not know about a host application's users, database, review flow, storage or HTTP API.
 
+## Pokémon Mini / GBE+
+
+The target `retrom-runtime/gbe-pokemini` runs one 8.25 KiB–2 MiB
+`.min` ROM with a separately supplied 4 KiB `bios.min`. Its fork is
+[retrom-project/gbe-plus](https://github.com/retrom-project/gbe-plus), based on
+upstream commit `05a05e931b3993ff3e6316b0d841a1fb4d3ac7a7`.
+The source catalog pins the immutable `retrom-core-g05a05e931b39-r1` release,
+commit, ABI and exact asset sizes/SHA-256. Formal builds verify the release descriptor
+and every downloaded byte. Local overrides remain restricted to explicit PFB candidates.
+
+A standard gamepad maps the D-pad/left stick to directions, A/B/X to Mini A/B/C,
+LB to Shake, and Select to Power. Keyboard arrows and Z/X/D/C/Space remain usable.
+Pause, exit and blur release held keys. Native instantaneous CPU/MMU/APU/LCD
+snapshots are bound to the ROM SHA-256 and checked for integrity, then compressed
+once by the shared Provider storage boundary as `gbe-pokemini-state-v1-storage-v1`
+(maximum 1 MiB). ROM and BIOS bytes use verified persistent Cache Storage across
+instances. The target supports screenshots, volume and frame counting; infrared
+multiplayer and native configuration UI are outside this target.
+
 ## PC-98 / NP2kai
 
 `retrom-runtime/np2kai-pc98` runs a single HDI hard disk or D88 floppy in a same-origin
@@ -78,6 +97,14 @@ The SAME_CDI release uses the maintenance baseline of EmulatorJS/same_cdi at
 restart timing backports. Its immutable release descriptor, complete source archive and COPYING
 are pinned in the source catalog. Compare audio after a fresh boot: an older checkpoint
 can retain the guest audio driver state responsible for periodic interruptions.
+
+## EmulatorJS bsnes
+
+The optional bsnes SNES target uses the pinned EmulatorJS 4.3.0-pre frontend and
+`retrom-project/bsnes-libretro` release `retrom-core-g4b344745e387-r1`.
+Its Asyncify fiber and native callback bridge support asynchronous instant snapshots.
+The distinct `bsnes-state-v1-storage-v1` format prevents exchanging incompatible
+snapshots with Snes9x; standard SNES input remains available after a fresh-instance restore.
 
 ## EmulatorJS PSP
 
@@ -538,3 +565,77 @@ Local candidate overrides are accepted only in explicit PFB builds, never formal
 Upstream references a missing license file; this integration does not assert MIT/GPL
 licensing. The dedicated notice and release metadata preserve unresolved source and
 embedded machine-ROM distribution status; publication does not grant those rights.
+
+## Intellivision
+
+`emulatorjs/freeintv` uses the official EmulatorJS `v4.3.0-pre` release, pinned by
+archive and core hashes. It accepts a single Intellivision cartridge and uses the
+standard libretro gamepad, with shoulder buttons opening the numeric keypad.
+The host supplies both `exec.bin` and `grom.bin` as BIOS resources. ECS, multi-disc
+and netplay are not declared. Instant checkpoints use the shared bounded gzip
+storage contract. The core compatibility report digest is recorded in
+`artifactSetSha256`; it identifies the bundled report, not an exact core source commit.
+The adapter removes the loader's hourly cache buster only from this pinned report's
+GET request, so the host can serve the immutable bundle asset without a 400 response.
+
+### PC-88
+
+The `quasi88` EmulatorJS target accepts raw D88/U88 media through the host catalog.
+It defaults to N88 V2 with keyboard input enabled. Standard D-pad directions send
+numeric keypad movement; the primary face button sends Return through native Start.
+The swapped Start/primary bindings remain one-to-one. Checkpoints use
+`emulatorjs-state-v1-storage-v1`; no multi-disc or netplay capability is declared.
+Seven NEC firmware files are external dependencies in the core system `quasi88/` directory.
+The adapter sets `system_directory` explicitly before native startup, so the pinned
+RetroArch linker does not fall back to the content directory.
+The source catalog pins the immutable fork release and all asset digests.
+PC-88 games can require additional keyboard controls: The Librarian uses keypad
+7/9/4/6/1/3 for hex movement, while the generic D-pad sends 8/2/4/6.
+Product acceptance belongs to the host; a single sample does not establish the complete
+PC-88 compatibility matrix.
+
+## NeoCD
+
+`emulatorjs/neocd` accepts a single CHD as `SEEKABLE_BLOB`. The host supplies the
+installed CDZ BIOS as an external file at `/neocd/neocd.bin`. Only requested
+256 KiB blocks are fetched; no whole-disc download or hash scan precedes startup.
+A 16 MiB memory LRU and persistent block cache reuse content across Launches.
+Responses require 206, exact Content-Range/length and the frozen digest ETag;
+cached blocks carry a locally computed SHA-256 to detect corruption. This is
+block transport/cache validation, not a whole-file client hash verification.
+Cache denial/quota errors keep bounded network reads; ignored Range responses
+fail rather than silently downloading the entire image.
+
+The fork's rchd reader suspends through Asyncify only for missing blocks. The
+adapter waits for suspended reads at pause/checkpoint boundaries and aborts them
+on exit. Instant state retains `emulatorjs-state-v1-storage-v1` compatibility.
+Standard bottom/right/left/top buttons map to native A/B/C/D independently.
+The pinned PFB candidate is not a published release. Ordinary release builds
+reject unpublished sources. See `EMULATORJS_THIRD_PARTY_NOTICES.md` for the
+bundled Z80 component's non-commercial restriction.
+### Cave Story / NXEngine
+
+`nxengine` accepts a `FILE_TREE` containing original freeware `Doukutsu.exe` and the complete `data/` directory. The maintained [libretro fork](https://github.com/retrom-project/nxengine-libretro) supplies a software-rendered Wasm core, `nxengine-host-v1`, 320×240 RGBA and 22050 Hz stereo PCM. The adapter owns bounded materialization, immutable-URL Cache Storage reuse, whole-project progress and standard joypad/independent keyboard input. Limits: 4096 files, 32 MiB per file, 64 MiB total. Original filename case is retained, apart from the executable marker.
+
+The target declares `GAME_SAVE`: save at a native game save point, then export through the host. `nxengine-game-save-v1-storage-v1` is the common single-gzip envelope around an identity-bound JSON container of up to five native 1540-byte profile slots. Explicit restore imports slots before native startup; use the game's Load menu to resume. Fresh launches never import previous files implicitly. No instant state, netplay, CS+ or arbitrary mod compatibility is advertised.
+
+The source catalog pins an immutable core fork release, its commit, adapter ABI and complete asset digests. The product acceptance contract lives in Retrom's `ACC-NXENGINE-001`; game data is never packaged in this repository.
+
+### PSP / PPSSPP
+
+`ppsspp` accepts one `SEEKABLE_BLOB` and uses the maintained official-source
+PPSSPP fork through `ppsspp-host-v2`. WebGL2, OffscreenCanvas, worker modules,
+cross-origin isolation and SharedArrayBuffer are required. The core reads only
+requested 256 KiB HTTP ranges, with bounded memory caches and persistent block
+reuse. Responses must match the requested range, exact length and strong content
+ETag. Local block checksums detect cache corruption; source identity comes from
+the authorized immutable server, without a startup whole-ROM client hash scan.
+Cache failures retain bounded network reads, and ignored ranges never trigger a
+whole-disc fallback. The adapter fully verifies executable core asset hashes.
+
+Standard gamepad input, audio, pause, screenshots and instant checkpoints share
+the Provider lifecycle. `ppsspp-state-v1-storage-v1` contains complete execution
+state and memory-stick files under one bounded gzip envelope, with a 256 MiB
+limit. Pre-Range independent-core checkpoints remain readable; EmulatorJS PSP
+checkpoint formats belong to a different target and are not accepted here.
+PSP networking is disabled. ROMs and firmware are caller supplied.

@@ -6,6 +6,7 @@ export type EmulatorControlBinding = {
 export type EmulatorDefaultControls = Record<number, Record<number, EmulatorControlBinding>>;
 
 export function emulatorControlScheme(core: string, release: "4.2.3" | "4.3.0-pre") {
+  if (core === "neocd") {return "arcade";}
   if (!["genesis_plus_gx", "genesis_plus_gx_wide", "picodrive"].includes(core)) {return undefined;}
   // Auto-detection picks Master System for these multi-system cores and removes
   // Start/A/X/Y/Z. In 4.2.3 only the segaCD alias exposes the MD six-button layout
@@ -71,12 +72,16 @@ const playerOneGamepad: Readonly<Record<number, string>> = {
   23: "RIGHT_STICK_Y:-1",
 };
 
-// Flycast maps libretro B/A/Y/X to Dreamcast A/B/X/Y. Preserve the
-// standard physical face-button positions instead of the SNES defaults.
-const flycastGamepad: Readonly<Record<number, string>> = {...playerOneGamepad, 0: "BUTTON_1", 8: "BUTTON_2", 1: "BUTTON_3", 9: "BUTTON_4"};
+// Flycast and NeoCD map libretro B/A/Y/X to their native A/B/left/top
+// actions. Keep the primary action on the bottom standard gamepad button.
+const nativeFaceGamepad: Readonly<Record<number, string>> = {...playerOneGamepad, 0: "BUTTON_1", 8: "BUTTON_2", 1: "BUTTON_3", 9: "BUTTON_4"};
+
+// PC-88 confirmation is Return (native Start). Swap the two bindings so
+// each physical button still sends exactly one native control.
+const pc88Gamepad: Readonly<Record<number, string>> = {...playerOneGamepad, 3: "BUTTON_1", 8: "START"};
 
 export function createRetromDefaultControls(core?: string): EmulatorDefaultControls {
-  const gamepad = core === "flycast" ? flycastGamepad : playerOneGamepad;
+  const gamepad = ["flycast", "neocd"].includes(core ?? "") ? nativeFaceGamepad : core === "quasi88" ? pc88Gamepad : playerOneGamepad;
   const controllers: EmulatorDefaultControls = {};
   for (let player = 0; player < 4; player += 1) {
     const keyboard: Readonly<Record<number, string>> = player === 0
@@ -84,7 +89,9 @@ export function createRetromDefaultControls(core?: string): EmulatorDefaultContr
       : player === 1 ? playerTwoKeyboard : {};
     const controls: Record<number, EmulatorControlBinding> = {};
     for (let control = 0; control < controlCount; control += 1) {
-      const value2 = player === 0 ? gamepad[control] : undefined;
+      // NeoCD shoulder/stick clicks are native multi-button macros; leave them unbound.
+      const macro = core === "neocd" && control >= 10 && control <= 15;
+      const value2 = player === 0 && !macro ? gamepad[control] : undefined;
       controls[control] = {
         value: keyboard[control] ?? "",
         ...(value2 ? {value2} : {}),

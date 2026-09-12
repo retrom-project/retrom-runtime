@@ -1,27 +1,52 @@
 # Changelog
 
-## 0.32.0-rc.5 (development candidate)
+## 0.39.0
 
-- Change PPSSPP game input to `SEEKABLE_BLOB` and the core ABI to `ppsspp-host-v2`. Read only
-  requested 256 KiB ranges through a dedicated I/O worker, with bounded memory and persistent
-  block caching across launches. Do not download a full disc or report unread bytes as loading progress.
-- Require exact 206 ranges, lengths and SHA-256 identity ETags. Cache block checksums detect local
-  corruption; the authorized immutable server supplies source identity, rather than a pre-launch
-  whole-disc client hash. Core code assets retain complete SHA-256 verification.
-- Preserve native state bytes, virtual disc paths and the `ppsspp-state-v1-storage-v1` checkpoint
-  contract. Exit cancels pending reads and releases the emulator and I/O workers.
+- Add the independent PPSSPP target from the pinned official-source fork, with WebGL2, standard gamepad input, audio and complete instant checkpoints including memory-stick files.
+- Read PSP discs through bounded 256 KiB HTTP ranges and persistent block caching instead of a startup whole-disc download. Require exact 206 ranges, lengths and strong SHA-256 identity ETags; cached block checksums detect local corruption, while the authorized immutable server supplies source identity. Core assets retain full SHA-256 verification.
+- Keep the `ppsspp-state-v1-storage-v1` checkpoint contract, with verified restore of pre-Range independent-core saves. EmulatorJS PSP save formats are not compatible with this new target.
+- Refresh the aggregate license notice carried by EmulatorJS Provider 2.16.0; its core payloads and target behavior remain unchanged.
 
-## 0.32.0-rc.2 (development candidate)
+## 0.38.0
 
-- Add the independent `retrom-runtime/ppsspp` target using the official PPSSPP baseline
-  `2e6fd06ed6c77db467dea5fb3f67abd93457da20` through the Retrom core fork. The browser frontend
-  owns worker lifecycle, WebGL2, audio and standard gamepad input through `ppsspp-host-v1`.
-- Validate complete immutable PSP files and reuse OPFS content across launches with determinate
-  download progress. Checkpoints include complete execution state and memory-stick files, with
-  a 256 MiB bound and one public gzip layer (`ppsspp-state-v1-storage-v1`).
-- EmulatorJS PSP state formats are not accepted by this new Target. The source currently uses a
-  PFB development input; a fixed core release and product acceptance are required before publication.
+- Add the NXEngine target for original freeware Cave Story projects, with persistent resource caching, standard controller input and explicit native game-save transfer between instances. Pin the immutable NXEngine core release and verify its full asset inventory.
+- Refresh the aggregate license notice carried by EmulatorJS Provider 2.15.0; its core payloads and target behavior remain unchanged.
 
+## 0.37.0
+
+- Add the GBE+ Pokémon Mini target with required BIOS, standard gamepad controls, verified persistent content caching and the shared compressed instant checkpoint contract. Pin the immutable GBE+ core release and verify its complete asset inventory and byte hashes.
+- Refresh the aggregate license notice carried by EmulatorJS Provider 2.14.0; its core payloads and target behavior are unchanged from the preceding release.
+
+## 0.36.0
+
+- Add the NeoCD single-CHD target in EmulatorJS Provider 2.13.0, pinned to the immutable NeoCD fork release. The maintained fork owns the WASM build.
+- Map NeoCD native A/B/C/D to the standard bottom/right/left/top face buttons, without binding native multi-button shoulder macros.
+- Load NeoCD through bounded, persistent Range blocks and an Asyncify core bridge, without a startup whole-disc download or hash scan; retain Flycast OPFS behavior. Preserve native load skipping and compressed instant checkpoints.
+
+## 0.35.0
+
+- Add an independent bsnes Target to EmulatorJS Provider 2.12.0 using the
+  pinned 4.3.0-pre frontend and an immutable bsnes fork release. The fork restores
+  Asyncify and fiber lifecycle support, and fixes native save completion and
+  heap ownership. The target uses standard SNES controls and the distinct
+  `bsnes-state-v1-storage-v1` checkpoint format; it rejects generic EmulatorJS
+  snapshots to prevent mixing bsnes and Snes9x states. Snes9x and netplay
+  profiles remain unchanged.
+
+## 0.34.0
+
+- Add the PC-88 QUASI88 target in EmulatorJS Provider 2.11.0, pinned to the immutable core fork release. D88/U88 launches use N88 V2, independent keyboard input, one-to-one standard gamepad controls and the shared compressed instant checkpoint contract.
+
+## 0.33.0
+
+- Add the Intellivision `freeintv` target from EmulatorJS 4.3.0-pre with standard gamepad and instant checkpoint support (EmulatorJS Provider 2.10.0).
+- Resolve FreeIntv's report cache-busting request to its pinned bundle asset, preserving unrelated requests and fetch cleanup.
+
+## 0.32.0
+
+- Add the EmulatorJS `vecx` target for Vectrex cartridges.
+- Publish EmulatorJS Provider 2.9.0 with the immutable VecX fork release, complete native checkpoints, and standard four-button input.
+- Keep unpublished core inputs rejected by formal Provider builds.
 
 ## 0.31.0
 

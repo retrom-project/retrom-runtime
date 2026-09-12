@@ -55,6 +55,18 @@ describe("EmulatorJS RetroArch configuration", () => {
     expect(manager.Module.callMain).toBe(callMain);
   });
 
+  it("points QUASI88 at the installed external firmware before native startup", () => {
+    class Manager {getRetroArchCfg() {return "video_vsync = true\n";}}
+    const original = Manager.prototype.getRetroArchCfg;
+    const cleanup = installEmulatorJsRetroArchConfig(window, "quasi88", false);
+    Reflect.set(window, "EJS_GameManager", Manager);
+    try {
+      expect(new Manager().getRetroArchCfg()).toContain('system_directory = "/retroarch/userdata/system"');
+      expect(new Manager().getRetroArchCfg()).toContain("video_vsync = true");
+    } finally {cleanup(); Reflect.deleteProperty(window, "EJS_GameManager");}
+    expect(Manager.prototype.getRetroArchCfg).toBe(original);
+  });
+
   it("leaves ordinary launches untouched", () => {
     const cleanup = installEmulatorJsRetroArchConfig(window, "fceumm", false);
     expect(Reflect.has(window, "EJS_GameManager")).toBe(false);

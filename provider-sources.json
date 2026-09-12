@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "packageName": "@xxxsen/retrom-runtime",
-  "packageVersion": "0.37.0",
+  "packageVersion": "0.38.0",
   "publicApiVersion": 2,
   "upstreamReleases": [
     {
@@ -2271,5 +2271,29 @@
       "output": "runtime/butterscotch/worker.mjs"
     }
   ],
-  "developmentInputs": []
+  "developmentInputs": [
+    {
+      "id": "nxengine",
+      "repository": "https://github.com/retrom-project/nxengine-libretro",
+      "upstreamCommit": "fd1c0686f8b4c0aea9b5addbc077e3ad7da23bb7",
+      "adapterAbi": "nxengine-host-v1",
+      "assets": [
+        {
+          "filename": "nxengine-retrom.mjs",
+          "output": "runtime/nxengine/nxengine-retrom.mjs",
+          "maxSizeBytes": 2097152
+        },
+        {
+          "filename": "nxengine-retrom.wasm",
+          "output": "runtime/nxengine/nxengine-retrom.wasm",
+          "maxSizeBytes": 16777216
+        },
+        {
+          "filename": "LICENSES.txt",
+          "output": "licenses/nxengine/LICENSES.txt",
+          "maxSizeBytes": 1048576
+        }
+      ]
+    }
+  ]
 }

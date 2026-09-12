@@ -1,4 +1,5 @@
 import {mountGBE} from "../../gbe-pokemini/adapter.js";
+import {mountNXEngine} from "../../nxengine/adapter.js";
 import {mountNP2} from "../../np2kai/adapter.js";
 import {mountOpenBOR} from "../../openbor/adapter.js";
 import {mountPx68k} from "../../px68k/adapter.js";
@@ -43,6 +44,8 @@ export function mountTargetAdapter(
   const {frameWindow, restorePayload, reportProgress, reportExitRequested} = context;
   const reportFailure = failureReporter(context);
   switch (adapter.kind) {
+  case "NXENGINE_WEB":
+    return mountNXEngine(parameters.nxengine(envelope, context.assetIndex), target, frameWindow, restorePayload, reportProgress, reportFailure, context.signal);
   case "OPENBOR_WEB":
     return mountOpenBOR(parameters.openbor(envelope), target, frameWindow, restorePayload, reportProgress, reportFailure, context.signal);
   case "RUFFLE_WEB":

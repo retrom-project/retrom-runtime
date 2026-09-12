@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "packageName": "@xxxsen/retrom-runtime",
-  "packageVersion": "0.36.0",
+  "packageVersion": "0.37.0",
   "publicApiVersion": 2,
   "upstreamReleases": [
     {
@@ -2228,5 +2228,34 @@
       "output": "runtime/butterscotch/worker.mjs"
     }
   ],
-  "developmentInputs": []
+  "developmentInputs": [
+    {
+      "id": "gbe_plus",
+      "repository": "https://github.com/retrom-project/gbe-plus",
+      "upstreamCommit": "05a05e931b3993ff3e6316b0d841a1fb4d3ac7a7",
+      "adapterAbi": "gbe-pokemini-host-v1",
+      "assets": [
+        {
+          "filename": "LICENSE",
+          "output": "licenses/gbe_plus/LICENSE",
+          "maxSizeBytes": 8388608
+        },
+        {
+          "filename": "gbe-pokemini-register.mjs",
+          "output": "runtime/gbe_plus/gbe-pokemini-register.mjs",
+          "maxSizeBytes": 8388608
+        },
+        {
+          "filename": "gbe-pokemini.mjs",
+          "output": "runtime/gbe_plus/gbe-pokemini.mjs",
+          "maxSizeBytes": 8388608
+        },
+        {
+          "filename": "gbe-pokemini.wasm",
+          "output": "runtime/gbe_plus/gbe-pokemini.wasm",
+          "maxSizeBytes": 8388608
+        }
+      ]
+    }
+  ]
 }

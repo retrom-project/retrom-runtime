@@ -84,3 +84,13 @@ The same LICENSE includes the RetroArch GPL notice. The source archive contains 
 core and build recipe; `retrom-fork.json` pins the corresponding linker source at
 <https://github.com/EmulatorJS/RetroArch/tree/6dd4353937ef48b6ec0bfbdbb15d1c5992d86927>.
 No NEC firmware or game content is included.
+
+## GBE+ Pokémon Mini (local candidate)
+
+- Upstream: https://github.com/shonumi/gbe-plus
+- Maintained fork: https://github.com/retrom-project/gbe-plus
+- Upstream commit: `05a05e931b3993ff3e6316b0d841a1fb4d3ac7a7`.
+- License: GNU GPL version 2; candidate bundles include `licenses/gbe_plus/LICENSE`.
+- Browser source and the pinned Emscripten build belong to the core fork.
+  The Provider consumes its explicit, unpublished `gbe-pokemini-host-v1` candidate.
+- Game ROMs and the required Pokémon Mini BIOS are user-supplied and are not bundled.

@@ -1,3 +1,4 @@
+import type {GBEParameters} from "../../gbe-pokemini/core.js";
 import type {NP2Parameters} from "../../np2kai/adapter.js";
 import type {OpenBORParameters} from "../../openbor/adapter.js";
 import type {Px68kParameters} from "../../px68k/core.js";
@@ -247,4 +248,9 @@ export function webmsx(envelope: LaunchEnvelopeV1): WebMSXParameters {
   const game = resource(envelope, "game", "ROM_BLOB");
   return {mediaUrl: game.url, mediaSizeBytes: game.sizeBytes, contentDigest: game.sha256,
     runtimeBaseUrl: assetBase(envelope, "webmsx")};
+}
+
+export function gbePokemini(envelope: LaunchEnvelopeV1, assetIndex: AssetIndexV1): GBEParameters {
+  const game = resource(envelope, "game", "ROM_BLOB"), bios = resource(envelope, "external", "EXTERNAL_FILE_SET");
+  return {game, bios: bios.files, runtimeBaseUrl: envelope.runtime.runtimeBaseUrl, assetIndex};
 }

@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.32.0-pokemini.1 (unpublished candidate)
+
+- Refresh the aggregate license notice carried by EmulatorJS Provider in candidate `2.8.1-pokemini.1`; its core payloads and target behavior are unchanged.
+- Add the GBE+ Pokémon Mini target with required BIOS, standard gamepad controls and the shared compressed checkpoint contract. Core artifacts remain explicit PFB development inputs pending product validation and a formal core release.
+
 ## 0.36.0
 
 - Add the NeoCD single-CHD target in EmulatorJS Provider 2.13.0, pinned to the immutable NeoCD fork release. The maintained fork owns the WASM build.

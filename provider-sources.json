@@ -2228,5 +2228,12 @@
       "output": "runtime/butterscotch/worker.mjs"
     }
   ],
-  "developmentInputs": []
+  "developmentInputs": [
+    {
+      "id": "bsnes",
+      "repository": "https://github.com/retrom-project/bsnes-libretro",
+      "upstreamCommit": "4b344745e3878e7c0675a60c624582935524b8f7",
+      "adapterAbi": "emulatorjs-state-v1"
+    }
+  ]
 }

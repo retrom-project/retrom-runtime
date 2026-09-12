@@ -1,5 +1,24 @@
 # EmulatorJS Provider components
 
+## bsnes integration
+
+The optional bsnes target uses the EmulatorJS `v4.3.0-pre` frontend with a local
+candidate built by https://github.com/retrom-project/bsnes-libretro from
+EmulatorJS/bsnes-libretro commit `4b344745e3878e7c0675a60c624582935524b8f7`.
+The fork repairs Asyncify fiber lifecycle and enables Asyncify at link time.
+Its pinned RetroArch patch completes asynchronous saves through an explicit
+callback, copies state bytes before releasing their native allocation, and
+uses owned heap storage for the state metadata. ROM-free regression tests use
+real fiber switches and check repeated saves for heap growth.
+Its `LICENSE.txt`, source archive and candidate provenance accompany the Provider.
+The core and linked RetroArch include GPL-3.0-or-later and component licenses.
+
+The original 4.3.0-pre prebuilt core is not used: it omitted `co_serializable`
+and `co_derive`, and its linker did not enable Asyncify. Its build report did not
+record an exact core source commit. The fork baseline above is explicitly pinned
+for this integration and is not asserted to be that prebuilt core's revision.
+Unpublished core inputs remain restricted to PFB candidate builds.
+
 ## Flycast integration
 
 Flycast WASM and its linked EmulatorJS RetroArch frontend are GPL-2.0-or-later and GPL-3.0-or-later respectively. Their license texts accompany the pinned core release. The source fork is https://github.com/retrom-project/flycast-wasm.

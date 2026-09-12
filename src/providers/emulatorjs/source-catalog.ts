@@ -1,6 +1,37 @@
 export const emulatorJsSourceCatalog = {
   schemaVersion: 1,
-  developmentForks: [],
+  developmentForks: [
+  {
+    "repository": "https://github.com/retrom-project/bsnes-libretro",
+    "commit": "4b344745e3878e7c0675a60c624582935524b8f7",
+    "sourceTreeSha256": "f097f6a18dc5deb68a3512d6e72d9d1b3062706af8c3b3537301c75c45321225",
+    "adapterAbi": "emulatorjs-state-v1",
+    "runtimeCore": "bsnes",
+    "upstreamCommit": "4b344745e3878e7c0675a60c624582935524b8f7",
+    "assets": [
+      {
+        "filename": "LICENSE.txt",
+        "sha256": "0f054caebeba5dd03fb38f520008d3bd9ebf1a1ac02d3ddffee27a4194c3679a",
+        "sizeBytes": 1865
+      },
+      {
+        "filename": "bsnes-wasm.data",
+        "sha256": "85cd9a3c18ecd4bf423d67ec6153be91f5e10e0f757a6787ed367b48939d3820",
+        "sizeBytes": 1215631
+      },
+      {
+        "filename": "source.tar.gz",
+        "sha256": "67f70614c1848e857e4d55b72ca605fed84d29e52b4eb5bbe8dda23b7774df81",
+        "sizeBytes": 7372457
+      },
+      {
+        "filename": "retrom-core-candidate.json",
+        "sizeBytes": 725,
+        "sha256": "2b2f09372410ba4efaa2b85851103d9fe40dabbf2f356feb637101afa7539ae8"
+      }
+    ]
+  }
+],
   forks: [
 {
   "repository": "https://github.com/retrom-project/quasi88-libretro",

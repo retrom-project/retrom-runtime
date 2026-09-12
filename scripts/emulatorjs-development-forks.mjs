@@ -8,6 +8,8 @@ const sources = new Map([
 
   ["quasi88", {repository: "https://github.com/retrom-project/quasi88-libretro",
     upstreamCommit: "459bbc6e90caa3dc392ae8e64a9b0881b1e5ef77", license: "LICENSE"}],
+  ["bsnes", {repository: "https://github.com/retrom-project/bsnes-libretro",
+    upstreamCommit: "4b344745e3878e7c0675a60c624582935524b8f7", license: "LICENSE.txt", release: "4.3.0-pre"}],
   ["same_cdi", {repository: "https://github.com/retrom-project/same_cdi",
     upstreamCommit: "cfb05d803f54130adf94efef88edd816d01df7a3", license: "COPYING"}],
   ...["vice_xpet", "vice_xplus4"].map((core) => [core, {repository: "https://github.com/retrom-project/vice-libretro",
@@ -43,9 +45,10 @@ export function developmentForkFiles(catalog) {
     return fork.assets.map((file) => {
       if (!exact(file, ["filename", "sha256", "sizeBytes"]) || !digest(file.sha256) ||
         !Number.isSafeInteger(file.sizeBytes) || file.sizeBytes < 1 || file.sizeBytes > 16 * 1024 * 1024) {invalid();}
-      const destination = file.filename === `${fork.runtimeCore}-wasm.data` ? `4.2.3/data/cores/${file.filename}`
-        : file.filename === "retrom-core-candidate.json" ? `4.2.3/data/cores/reports/${fork.runtimeCore}.json`
-          : `4.2.3/licenses/forks/${fork.runtimeCore}/${file.filename}`;
+      const release = sources.get(fork.runtimeCore).release ?? "4.2.3";
+      const destination = file.filename === `${fork.runtimeCore}-wasm.data` ? `${release}/data/cores/${file.filename}`
+        : file.filename === "retrom-core-candidate.json" ? `${release}/data/cores/reports/${fork.runtimeCore}.json`
+          : `${release}/licenses/forks/${fork.runtimeCore}/${file.filename}`;
       return {...file, destination, runtimeCore: fork.runtimeCore};
     });
   });

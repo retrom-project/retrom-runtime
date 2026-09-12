@@ -44,6 +44,11 @@ const adapters = [
     checkpoint: {readFormats: ["emulatorjs-state-v1", "emulatorjs-state-gzip-v1"], writeFormat: "emulatorjs-state-v1"},
     id: "emulatorjs-psp", kind: "EMULATORJS_PSP",
   }),
+  defineAdapter({
+    abi: "emulatorjs-state-v1", capabilities,
+    checkpoint: {readFormats: ["bsnes-state-v1"], writeFormat: "bsnes-state-v1"},
+    id: "emulatorjs-bsnes", kind: "EMULATORJS_4_3_0_PRE",
+  }),
 ] as const;
 
 const inputs = [
@@ -90,6 +95,7 @@ const cores: readonly CoreSource[] = [
   core("a5200", "4.2.3", "a5200-wasm.data", 881560, "c82476478d6b70b9da80cccc27ca06a5fd85acf7cdd5643f230cc4d6777990ef", "c402648f858a8a566b39c8d0949470eeeda5f0346b8dfc6228dad312a0af295d"),
   core("azahar", "4.3.0-pre", "azahar-thread-wasm.data", 3985011, "d90696e6ea68c4fc00ef147411ad399962777f07b6c7e73d5537da0eaffc2e3b", "77bf9b92bdc0f55b5d2dc5c2394971fe40b80b10b79fc40501db07d199bed94c", {inputMode: "POINTER", defaultOptions: {webgl2Enabled: "enabled"}}),
   core("beetle_vb", "4.2.3", "beetle_vb-wasm.data", 858313, "3db727a78b6a6551a4024c273069eb39c8e8f33aa78ef16a073ed7460f6ce692", "71604fbf1001fc5d053b08ce5f8396a1da456f176a0b3106eff08f7cac3e5986", {startupActions: [press(2000, 0), press(4000, 3), press(15000, 3), press(25000, 3)]}),
+  core("bsnes", "4.3.0-pre", "bsnes-wasm.data", 1215631, "85cd9a3c18ecd4bf423d67ec6153be91f5e10e0f757a6787ed367b48939d3820", "2b2f09372410ba4efaa2b85851103d9fe40dabbf2f356feb637101afa7539ae8", {artifactFlavor: "OVERRIDE", coreBundleVersion: "pfb-bsnes-f097f6a18dc5"}),
   core("cap32", "4.2.3", "cap32-wasm.data", 1028234, "cbebe15e960fad04eb27c08c5a73c7fbbc1df3d9cc13294f357104640c2da49f", "59278925c02b401d4d61fe396c29cd0ad23cf0b4970b4b2c2d976135c0dede37", {artifactFlavor: "OVERRIDE", coreBundleVersion: "retrom-core-g310cc579b79b-r2", defaultOptions: {keyboardInput: "enabled"}}),
   core("crocods", "4.2.3", "crocods-wasm.data", 976148, "8c70df810436f225c5a2b40f31555636d6e12eacd41968f28b7dc708a9c6db10", "51e5f77fbcd99f13c49efae470290e4d1215ad10bc992e4a3332da72568119c9", {artifactFlavor: "OVERRIDE", coreBundleVersion: "retrom-core-gbe00fb904da0-r1", defaultOptions: {keyboardInput: "enabled"}}),
   core("desmume", "4.2.3", "desmume-wasm.data", 1172604, "a9fddaa4bd742e558dfe5095fa4eaf074493b591a7bc18c5f7c65d64b9fa7572", "970284459eedf8f7345d2b02d564dc7d32e7029aa8009011a8474df94244d57c", {inputMode: "POINTER"}),
@@ -144,7 +150,7 @@ const cores: readonly CoreSource[] = [
 const targets = cores.map((entry) => {
   const netplayProfile = emulatorJsNetplayProfiles[entry.id] ?? null;
   return defineTarget({
-  adapterId: entry.id === "flycast" ? "emulatorjs-flycast" : entry.id === "ppsspp" ? "emulatorjs-psp" : `emulatorjs-${entry.release}`,
+  adapterId: entry.id === "bsnes" ? "emulatorjs-bsnes" : entry.id === "flycast" ? "emulatorjs-flycast" : entry.id === "ppsspp" ? "emulatorjs-psp" : `emulatorjs-${entry.release}`,
   assetPaths: [
     ...commonAssets(entry.release),
     entry.asset,
@@ -187,7 +193,7 @@ export const emulatorJsProviderDefinition = defineProvider({
   adapters: storageAdapters(adapters),
   providerApiVersion: 1,
   providerId: "emulatorjs",
-  providerVersion: "2.11.0",
+  providerVersion: "2.12.0",
   targets,
 });
 
@@ -247,6 +253,7 @@ function commonAssets(release: RuntimeRelease) {
 }
 
 function displayName(value: string) {
+  if (value === "bsnes") {return value;}
   return value.split("_").map((part) => part.length <= 3 ? part.toUpperCase() :
     `${part[0]?.toUpperCase() ?? ""}${part.slice(1)}`).join(" ");
 }

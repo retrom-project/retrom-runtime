@@ -30,14 +30,14 @@ export async function readEmulatorJsCheckpoint(
   manager.toggleMainLoop(true);
   try {
     await waitForRunningFrame();
-    return readCheckpointBytes(manager);
+    return await readCheckpointBytes(manager);
   } finally {
     manager.toggleMainLoop(false);
   }
 }
 
 async function readCheckpointBytes(manager: CheckpointManager) {
-  return copyByteView(manager.getStateAsync ? await manager.getStateAsync() : manager.getState?.());
+  return copyByteView(manager.getStateAsync ? await manager.getStateAsync() : await manager.getState?.());
 }
 
 function nextRunningFrame() {

@@ -22,7 +22,7 @@ type EjsManager = {
   clearEJSResetTimer?: () => void;
   functions?: {restart?: () => void; loadState?: (path: string, slot: number) => unknown; screenshot?: () => void};
   getFrameNum?: () => number;
-  getState?: () => Uint8Array;
+  getState?: () => Uint8Array | Promise<Uint8Array>;
   getStateAsync?: () => Promise<Uint8Array>;
   loadExplicitStateAndWait?: (state: Uint8Array) => Promise<void>;
   loadStateAndWait?: (state: Uint8Array) => Promise<unknown>;

@@ -3,6 +3,8 @@ import {lstat, readFile, readdir, writeFile, mkdir} from "node:fs/promises";
 import {dirname, isAbsolute, join} from "node:path";
 
 const sources = new Map([
+  ["vecx", {repository: "https://github.com/retrom-project/libretro-vecx",
+    upstreamCommit: "8f671cc9d737f2890c3ce19e177e2984dcae121f", license: "LICENSE.md"}],
   ["same_cdi", {repository: "https://github.com/retrom-project/same_cdi",
     upstreamCommit: "cfb05d803f54130adf94efef88edd816d01df7a3", license: "COPYING"}],
   ...["vice_xpet", "vice_xplus4"].map((core) => [core, {repository: "https://github.com/retrom-project/vice-libretro",

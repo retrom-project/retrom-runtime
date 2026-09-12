@@ -128,6 +128,7 @@ const cores: readonly CoreSource[] = [
   core("smsplus", "4.2.3", "smsplus-wasm.data", 855876, "0f197c5e0000f17b2d072122a72b3f8fc1693514c4014fcd9694eec78584aa08", "a09612f1d088bffe8d9c107caf196b023710ed4aaeaa24f05caee7eec8591ff0"),
   core("snes9x", "4.2.3", "snes9x-wasm.data", 1093765, "eaa0bcfce67673809886e50387a80a616b719502175db64c090d04c9d75958ee", "f2ecf64d84dc3845ccd9828daf48436667f6aa79e6a5d6c41f0965f0151f1f34"),
   core("stella2014", "4.2.3", "stella2014-wasm.data", 1051659, "6c96c6b1746f3f05ca599066abe131a36c77ca61fc20a9e2a7560540457c487d", "f5244febaf876003e9acf97e09b8785f1f51563c3f96527232652c1d9ec40e68"),
+  core("vecx", "4.2.3", "vecx-wasm.data", 856199, "bd66a59cafb8ad3f742d85f177550966f79926030aa7bd660f4ffe3a0c02c6db", "16ea415148668169b2f67f3a929cee70e26e05ca92b1d87f2a8012aeb2312ccb", {artifactFlavor: "OVERRIDE", coreBundleVersion: "retrom-core-g8f671cc9d737-r1"}),
   core("vice_x128", "4.2.3", "vice_x128-wasm.data", 1595414, "dbac85e530b006c2d17e200c445de582c7ea272bacf333e4b4f8c1e391ed8506", "e8ef53ec0bc53244319e87a8f6b75396f077a982dd4438743a52e82f0c136126", {inputMode: "POINTER"}),
   core("vice_x64", "4.2.3", "vice_x64-wasm.data", 1528680, "ccc5a868163b67e21f6f4c4cc994a6290cf44ab079eaf28e3a992defa2bd66f0", "643787490d9f261abe7a329d6d2daac8b2cdf469f037adcdac0fa8262fb37d50", {inputMode: "POINTER"}),
   core("vice_x64sc", "4.2.3", "vice_x64sc-wasm.data", 1523457, "77f58884c81b58721cbc4754ffc5574838219258e9390630c352a494a3f335ab", "4b788799ef1225e48610b99bdf746425ba6e2bda27fa105fd1238dfbb9fb47cb", {inputMode: "POINTER"}),
@@ -184,7 +185,7 @@ export const emulatorJsProviderDefinition = defineProvider({
   adapters: storageAdapters(adapters),
   providerApiVersion: 1,
   providerId: "emulatorjs",
-  providerVersion: "2.8.0",
+  providerVersion: "2.9.0",
   targets,
 });
 

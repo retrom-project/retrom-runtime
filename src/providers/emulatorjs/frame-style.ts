@@ -1,3 +1,4 @@
+import {PlayerRuntimeError} from "../../provider/errors.js";
 const frameStyleText = `
 html,body,#retrom-emulator,.ejs_parent,.ejs_game,.ejs_canvas_parent{width:100%!important;height:100%!important;margin:0!important;overflow:hidden;background:#05060a}
 .ejs_canvas_parent{display:grid!important;place-items:center!important}
@@ -23,4 +24,19 @@ export function installEmulatorJsFrameStyle(frameDocument: Document) {
     style.remove();
     frameDocument.documentElement.classList.remove("retrom-native-menu-locked", "retrom-native-settings-open");
   };
+}
+
+export function createEmulatorJsMountPoint(runtimeWindow: Window) {
+  const body = runtimeWindow.document.body;
+  if (!body) {throw new PlayerRuntimeError("PLAYER_RUNTIME_CONTRACT_INVALID");}
+  const mountPoint = runtimeWindow.document.createElement("div");
+  mountPoint.id = "retrom-emulator";
+  mountPoint.style.width = "100%";
+  mountPoint.style.height = "100%";
+  body.replaceChildren(mountPoint);
+  body.style.margin = "0";
+  body.style.width = "100vw";
+  body.style.height = "100vh";
+  body.style.overflow = "hidden";
+  return installEmulatorJsFrameStyle(runtimeWindow.document);
 }

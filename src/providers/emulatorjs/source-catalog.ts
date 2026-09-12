@@ -3,6 +3,39 @@ export const emulatorJsSourceCatalog = {
   developmentForks: [],
   forks: [
 {
+  "repository": "https://github.com/retrom-project/neocd_libretro",
+  "tag": "retrom-core-g3118c6901787-r1",
+  "commit": "53334661fcf0d6fd68fcf2fea03c800149588f0c",
+  "adapterAbi": "emulatorjs-state-v1",
+  "runtimeCore": "neocd",
+  "assets": [
+    {
+      "filename": "LICENSE.md",
+      "sha256": "91db8ba33e34262247444a5ba0dffb5a69c1ceddb6939b773561abb1747980d7",
+      "sizeBytes": 165739,
+      "url": "https://github.com/retrom-project/neocd_libretro/releases/download/retrom-core-g3118c6901787-r1/LICENSE.md"
+    },
+    {
+      "filename": "neocd-wasm.data",
+      "sha256": "3702540c38faab7d3eadae748791364d61e043b16d937b5bbae05c9c0134ec0c",
+      "sizeBytes": 1080566,
+      "url": "https://github.com/retrom-project/neocd_libretro/releases/download/retrom-core-g3118c6901787-r1/neocd-wasm.data"
+    },
+    {
+      "filename": "rpg-runtime-release.json",
+      "sha256": "ae9dddaebf459deb11ab689c69b4f964efbf560e73a51788d9095cf24f8fec7c",
+      "sizeBytes": 796,
+      "url": "https://github.com/retrom-project/neocd_libretro/releases/download/retrom-core-g3118c6901787-r1/rpg-runtime-release.json"
+    },
+    {
+      "filename": "source.tar.gz",
+      "sha256": "15e662de980cde2cb644ca1fa8ac0be56956db94910061062496c0fbd6774ab4",
+      "sizeBytes": 804590,
+      "url": "https://github.com/retrom-project/neocd_libretro/releases/download/retrom-core-g3118c6901787-r1/source.tar.gz"
+    }
+  ]
+},
+{
   "repository": "https://github.com/retrom-project/bsnes-libretro",
   "tag": "retrom-core-g4b344745e387-r1",
   "commit": "81ba085d2bcedce487e1eb9bb39a440cfac9bf1d",

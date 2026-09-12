@@ -6,6 +6,17 @@ import {emulatorJsProviderDefinition} from "./catalog.js";
 import {emulatorJsNetplayProfiles} from "./netplay-profile.js";
 
 describe("EmulatorJS Provider declarations", () => {
+  it("declares NeoCD with upstream load options and bounded single-disc storage", () => {
+    const target = emulatorJsProviderDefinition.targets.find((entry) => entry.id === "neocd")!;
+    expect(target.inputs.find(input => input.role === "game")?.kind).toBe("SEEKABLE_BLOB");
+    expect(target.implementation).toMatchObject({runtimeCore: "neocd", contentKinds: ["SINGLE_FILE"],
+      defaultOptions: {neocd_region: "Japan", neocd_cdspeedhack: "On", neocd_loadskip: "On"}});
+    const manifest = projectProviderManifest(emulatorJsProviderDefinition).targets.find((entry) => entry.id === "neocd")!;
+    expect(manifest.checkpoint?.writeFormat).toBe("emulatorjs-state-v1-storage-v1");
+    expect(manifest.capabilities).toMatchObject({standardGamepad: true, pause: true, screenshot: true,
+      discSwitch: false, requiresThreads: false, netplayPort: false});
+  });
+
   it("gives Flycast a bounded, distinct instant checkpoint contract and single-disc target", () => {
     const manifest = projectProviderManifest(emulatorJsProviderDefinition);
     const target = manifest.targets.find((entry) => entry.id === "flycast")!;
@@ -28,13 +39,13 @@ describe("EmulatorJS Provider declarations", () => {
       expect(target.checkpoint?.writeFormat).toBe("emulatorjs-state-v1-storage-v1");
     }
   });
-  it("uses last declaration wins for exactly fifty-five current core targets", () => {
+  it("uses last declaration wins for exactly fifty-six current core targets", () => {
     const manifest = projectProviderManifest(emulatorJsProviderDefinition);
     expect(validateProviderManifest(manifest)).toBe(manifest);
     expect(manifest.providerId).toBe("emulatorjs");
-    expect(manifest.providerVersion).toBe("2.12.0");
-    expect(manifest.targets).toHaveLength(55);
-    expect(new Set(manifest.targets.map((target) => target.id)).size).toBe(55);
+    expect(manifest.providerVersion).toBe("2.13.0");
+    expect(manifest.targets).toHaveLength(56);
+    expect(new Set(manifest.targets.map((target) => target.id)).size).toBe(56);
     for (const targetId of ["dosbox-pure", "genesis-plus-gx-wide", "azahar", "freeintv"]) {
       const target = emulatorJsProviderDefinition.targets.find((entry) => entry.id === targetId);
       expect(target?.implementation.release).toBe("4.3.0-pre");

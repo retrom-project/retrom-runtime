@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- Add a PFB-only PC-88 QUASI88 EmulatorJS candidate, pinned to the maintained fork and exact local build digests. D88/U88 launches use N88 V2, independent keyboard input, one-to-one standard gamepad controls and the shared compressed instant checkpoint contract.
+
 ## 0.33.0
 
 - Add the Intellivision `freeintv` target from EmulatorJS 4.3.0-pre with standard gamepad and instant checkpoint support (EmulatorJS Provider 2.10.0).

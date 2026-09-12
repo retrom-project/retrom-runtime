@@ -1,6 +1,37 @@
 export const emulatorJsSourceCatalog = {
   schemaVersion: 1,
-  developmentForks: [],
+  developmentForks: [
+  {
+    "repository": "https://github.com/retrom-project/quasi88-libretro",
+    "commit": "459bbc6e90caa3dc392ae8e64a9b0881b1e5ef77",
+    "sourceTreeSha256": "84db32130cb5858355db3de5a327000a9fb8e3ade060952b1f0d272af47cc646",
+    "adapterAbi": "emulatorjs-state-v1",
+    "runtimeCore": "quasi88",
+    "upstreamCommit": "459bbc6e90caa3dc392ae8e64a9b0881b1e5ef77",
+    "assets": [
+      {
+        "filename": "LICENSE",
+        "sha256": "d8f7f8b340dc97bb6b2792cd0c5a5dc5d8a1b5493ea0f9652682974dcdac6669",
+        "sizeBytes": 42553
+      },
+      {
+        "filename": "quasi88-wasm.data",
+        "sha256": "c23c7f390bc5a8071a13e3c9e860c1ab96f34792bd531ca79ee12cff6a67c57d",
+        "sizeBytes": 1041569
+      },
+      {
+        "filename": "source.tar.gz",
+        "sha256": "816243b0f8f3a85857ca38129cdea167390ed1b91f1bc098a4e014de0cbf1c29",
+        "sizeBytes": 938685
+      },
+      {
+        "filename": "retrom-core-candidate.json",
+        "sizeBytes": 726,
+        "sha256": "ccd6f824caa32336fa558bb23e18ea275fa525523b4dd700a2b2efbe311098d2"
+      }
+    ]
+  }
+],
   forks: [
 {
   "repository": "https://github.com/retrom-project/libretro-vecx",

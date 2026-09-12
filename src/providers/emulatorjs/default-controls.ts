@@ -75,8 +75,12 @@ const playerOneGamepad: Readonly<Record<number, string>> = {
 // standard physical face-button positions instead of the SNES defaults.
 const flycastGamepad: Readonly<Record<number, string>> = {...playerOneGamepad, 0: "BUTTON_1", 8: "BUTTON_2", 1: "BUTTON_3", 9: "BUTTON_4"};
 
+// PC-88 confirmation is Return (native Start). Swap the two bindings so
+// each physical button still sends exactly one native control.
+const pc88Gamepad: Readonly<Record<number, string>> = {...playerOneGamepad, 3: "BUTTON_1", 8: "START"};
+
 export function createRetromDefaultControls(core?: string): EmulatorDefaultControls {
-  const gamepad = core === "flycast" ? flycastGamepad : playerOneGamepad;
+  const gamepad = core === "flycast" ? flycastGamepad : core === "quasi88" ? pc88Gamepad : playerOneGamepad;
   const controllers: EmulatorDefaultControls = {};
   for (let player = 0; player < 4; player += 1) {
     const keyboard: Readonly<Record<number, string>> = player === 0

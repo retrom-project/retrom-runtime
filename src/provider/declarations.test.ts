@@ -41,7 +41,7 @@ const sameOriginFrameTargetIds = [
 ];
 
 describe("retrom-runtime provider declarations", () => {
-  it("declares the complete 0.31.0 target closure in one source", () => {
+  it("declares the complete target closure in one source", () => {
     expect(retromRuntimeProviderDefinition.providerVersion).toBe("0.37.0");
     expect(retromRuntimeProviderDefinition.targets.map((target) => target.id)).toEqual(targetIds);
     expect(retromRuntimeProviderDefinition.adapters).toHaveLength(19);

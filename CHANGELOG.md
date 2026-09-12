@@ -6,6 +6,7 @@
 - Read PSP discs through bounded 256 KiB HTTP ranges and persistent block caching instead of a startup whole-disc download. Require exact 206 ranges, lengths and strong SHA-256 identity ETags; cached block checksums detect local corruption, while the authorized immutable server supplies source identity. Core assets retain full SHA-256 verification.
 - Keep the `ppsspp-state-v1-storage-v1` checkpoint contract, with verified restore of pre-Range independent-core saves. EmulatorJS PSP save formats are not compatible with this new target.
 - Refresh the aggregate license notice carried by EmulatorJS Provider 2.16.0; its core payloads and target behavior remain unchanged.
+- Route NXEngine and PPSSPP release downloads through full metadata inventory and exact byte hash/size verification before publishing any asset. Share the routing policy with source validation so a pinned declaration cannot silently use the generic download path.
 
 ## 0.38.0
 

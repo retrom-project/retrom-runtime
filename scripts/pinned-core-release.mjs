@@ -1,6 +1,15 @@
 import {mkdir, writeFile} from "node:fs/promises";
 import {sha256} from "./provider-sources.mjs";
 
+export function usesPinnedCoreAssets(id) {
+  return ["np2kai", "px68k", "tyranoscript", "openbor", "gbe_plus", "nxengine", "ppsspp"].includes(id);
+}
+export async function stagePinnedCoreIfNeeded(release, metadata, download, stage) {
+  if (!usesPinnedCoreAssets(release.id)) {return false;}
+  await stagePinnedCoreRelease(release, metadata, download, stage);
+  return true;
+}
+
 export function validPinnedCoreAssets(release) {
   return Array.isArray(release.assets) && release.assets.length > 0 &&
     release.assets.every(asset => /^[0-9a-f]{64}$/u.test(asset.sha256) &&

@@ -72,3 +72,12 @@ Advance interpolation header with its MAME-linking exception, plus SDL2, SDL_ima
 XPaint GIF decoder, libpng, zlib, Ogg/Vorbis and Emscripten runtime notices.
 The aggregate adapter license does not replace these component licenses. No game
 PAKs are included. The fixed source commit and asset hashes are in `provider-sources.json`.
+
+## PPSSPP
+
+The independent PSP core is maintained in <https://github.com/retrom-project/ppsspp>, based on
+<https://github.com/hrydgard/ppsspp> commit `2e6fd06ed6c77db467dea5fb3f67abd93457da20`. The complete engine and component
+notices are bundled in `licenses/ppsspp/LICENSE`. They include PPSSPP, libkirk, FFmpeg, Lua,
+libretro-common, libpng, zlib and other compiled dependencies. Retrom's adapter license does not
+relicense these components. No PSP game or firmware image is bundled. Development candidates
+record the exact source tree and generated asset hashes; release inputs must pin immutable fork tags.

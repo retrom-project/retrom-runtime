@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.32.0-rc.2 (development candidate)
+
+- Add the independent `retrom-runtime/ppsspp` target using the official PPSSPP baseline
+  `2e6fd06ed6c77db467dea5fb3f67abd93457da20` through the Retrom core fork. The browser frontend
+  owns worker lifecycle, WebGL2, audio and standard gamepad input through `ppsspp-host-v1`.
+- Validate complete immutable PSP files and reuse OPFS content across launches with determinate
+  download progress. Checkpoints include complete execution state and memory-stick files, with
+  a 256 MiB bound and one public gzip layer (`ppsspp-state-v1-storage-v1`).
+- EmulatorJS PSP state formats are not accepted by this new Target. The source currently uses a
+  PFB development input; a fixed core release and product acceptance are required before publication.
+
+
 ## 0.31.0
 
 - Correct EmulatorJS core framebuffer screenshots to the reported display aspect ratio before returning them to the host. This prevents non-square pixel output such as CD-i 768×280 from producing vertically flattened save and review thumbnails; native pixels remain uncropped.

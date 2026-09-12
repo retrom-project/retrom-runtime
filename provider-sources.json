@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "packageName": "@xxxsen/retrom-runtime",
-  "packageVersion": "0.31.0",
+  "packageVersion": "0.32.0-rc.2",
   "publicApiVersion": 2,
   "upstreamReleases": [
     {
@@ -2228,5 +2228,54 @@
       "output": "runtime/butterscotch/worker.mjs"
     }
   ],
-  "developmentInputs": []
+  "developmentInputs": [
+    {
+      "id": "ppsspp",
+      "repository": "https://github.com/retrom-project/ppsspp",
+      "upstreamCommit": "2e6fd06ed6c77db467dea5fb3f67abd93457da20",
+      "adapterAbi": "ppsspp-host-v1",
+      "assets": [
+        {
+          "filename": "LICENSE",
+          "output": "licenses/ppsspp/LICENSE",
+          "maxSizeBytes": 1048576
+        },
+        {
+          "filename": "ppsspp.js",
+          "output": "runtime/ppsspp/ppsspp.js",
+          "maxSizeBytes": 1048576
+        },
+        {
+          "filename": "ppsspp.wasm",
+          "output": "runtime/ppsspp/ppsspp.wasm",
+          "maxSizeBytes": 134217728
+        },
+        {
+          "filename": "ppsspp.data",
+          "output": "runtime/ppsspp/ppsspp.data",
+          "maxSizeBytes": 134217728
+        },
+        {
+          "filename": "ppsspp.worker.mjs",
+          "output": "runtime/ppsspp/ppsspp.worker.mjs",
+          "maxSizeBytes": 1048576
+        },
+        {
+          "filename": "ppsspp-host.mjs",
+          "output": "runtime/ppsspp/ppsspp-host.mjs",
+          "maxSizeBytes": 1048576
+        },
+        {
+          "filename": "ppsspp-input.mjs",
+          "output": "runtime/ppsspp/ppsspp-input.mjs",
+          "maxSizeBytes": 1048576
+        },
+        {
+          "filename": "ppsspp-audio.mjs",
+          "output": "runtime/ppsspp/ppsspp-audio.mjs",
+          "maxSizeBytes": 1048576
+        }
+      ]
+    }
+  ]
 }

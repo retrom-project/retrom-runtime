@@ -1,3 +1,4 @@
+import type {PSPParameters} from "../../psp/core.js";
 import type {NP2Parameters} from "../../np2kai/adapter.js";
 import type {OpenBORParameters} from "../../openbor/adapter.js";
 import type {Px68kParameters} from "../../px68k/core.js";
@@ -247,4 +248,10 @@ export function webmsx(envelope: LaunchEnvelopeV1): WebMSXParameters {
   const game = resource(envelope, "game", "ROM_BLOB");
   return {mediaUrl: game.url, mediaSizeBytes: game.sizeBytes, contentDigest: game.sha256,
     runtimeBaseUrl: assetBase(envelope, "webmsx")};
+}
+
+export function psp(envelope: LaunchEnvelopeV1, assetIndex: AssetIndexV1): PSPParameters {
+  const game = resource(envelope, "game", "ROM_BLOB");
+  return {game: {url: game.url, sha256: game.sha256, sizeBytes: game.sizeBytes},
+    runtimeBaseUrl: assetBase(envelope, "ppsspp"), assetIndex};
 }

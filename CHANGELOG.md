@@ -8,6 +8,14 @@
 
 - Select Game Gear and SG-1000 controller layouts from the delivered ROM extension while retaining Mega Drive six-button controls. Select Cap32 Plus hardware and its required 24-bit color depth for CPR cartridges without changing CPC disk defaults.
 
+## 0.39.0
+
+- Add the independent PPSSPP target from the official-source fork release `retrom-core-g2e6fd06ed6c7-r2`, with WebGL2, standard gamepad input, audio and complete instant checkpoints including memory-stick files.
+- Read PSP discs through bounded 256 KiB HTTP ranges and persistent block caching instead of a startup whole-disc download. Require exact 206 ranges, lengths and strong SHA-256 identity ETags; cached block checksums detect local corruption, while the authorized immutable server supplies source identity. Core assets retain full SHA-256 verification.
+- Keep the `ppsspp-state-v1-storage-v1` checkpoint contract, with verified restore of pre-Range independent-core saves. EmulatorJS PSP save formats are not compatible with this new target.
+- Refresh the aggregate license notice carried by EmulatorJS Provider 2.16.0; its core payloads and target behavior remain unchanged.
+- Route NXEngine and PPSSPP release downloads through full metadata inventory and exact byte hash/size verification before publishing any asset. Share the routing policy with source validation so a pinned declaration cannot silently use the generic download path.
+
 ## 0.38.0
 
 - Add the NXEngine target for original freeware Cave Story projects, with persistent resource caching, standard controller input and explicit native game-save transfer between instances. Pin the immutable NXEngine core release and verify its full asset inventory.

@@ -620,3 +620,22 @@ bundled Z80 component's non-commercial restriction.
 The target declares `GAME_SAVE`: save at a native game save point, then export through the host. `nxengine-game-save-v1-storage-v1` is the common single-gzip envelope around an identity-bound JSON container of up to five native 1540-byte profile slots. Explicit restore imports slots before native startup; use the game's Load menu to resume. Fresh launches never import previous files implicitly. No instant state, netplay, CS+ or arbitrary mod compatibility is advertised.
 
 The source catalog pins an immutable core fork release, its commit, adapter ABI and complete asset digests. The product acceptance contract lives in Retrom's `ACC-NXENGINE-001`; game data is never packaged in this repository.
+
+### PSP / PPSSPP
+
+`ppsspp` accepts one `SEEKABLE_BLOB` and uses the maintained official-source
+PPSSPP fork through `ppsspp-host-v2`. WebGL2, OffscreenCanvas, worker modules,
+cross-origin isolation and SharedArrayBuffer are required. The core reads only
+requested 256 KiB HTTP ranges, with bounded memory caches and persistent block
+reuse. Responses must match the requested range, exact length and strong content
+ETag. Local block checksums detect cache corruption; source identity comes from
+the authorized immutable server, without a startup whole-ROM client hash scan.
+Cache failures retain bounded network reads, and ignored ranges never trigger a
+whole-disc fallback. The adapter fully verifies executable core asset hashes.
+
+Standard gamepad input, audio, pause, screenshots and instant checkpoints share
+the Provider lifecycle. `ppsspp-state-v1-storage-v1` contains complete execution
+state and memory-stick files under one bounded gzip envelope, with a 256 MiB
+limit. Pre-Range independent-core checkpoints remain readable; EmulatorJS PSP
+checkpoint formats belong to a different target and are not accepted here.
+PSP networking is disabled. ROMs and firmware are caller supplied.

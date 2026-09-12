@@ -1,7 +1,7 @@
 import {validEmulatorJsDevelopmentSource} from "./emulatorjs-development-forks.mjs";
 import {currentInput, materializeEmulatorJsProviderInput} from "./emulatorjs-provider-input.mjs";
 import {asOpenBORCandidateSource, stageOpenBORCandidate} from "./openbor-candidate.mjs";
-import {stagePinnedCoreRelease} from "./pinned-core-release.mjs";
+import {stagePinnedCoreIfNeeded} from "./pinned-core-release.mjs";
 import {stageCoreDevelopmentInput} from "./core-development-input.mjs";
 import {stageWebMSXRelease} from "./webmsx-release.mjs";
 import {asWebMSXCandidateSource, stageWebMSXCandidate} from "./webmsx-candidate.mjs";
@@ -81,8 +81,7 @@ for (const release of sources.upstreamReleases) {
   if (!devRoot) {
     const metadata = await download(release.metadataUrl, 65536);
     const descriptor = JSON.parse(new TextDecoder().decode(metadata));
-    if (["np2kai", "px68k", "tyranoscript", "openbor", "gbe_plus"].includes(release.id)) {
-      await stagePinnedCoreRelease(release, descriptor, download, stage);
+    if (await stagePinnedCoreIfNeeded(release, descriptor, download, stage)) {
       continue;
     }
     if (release.id === "webmsx") {

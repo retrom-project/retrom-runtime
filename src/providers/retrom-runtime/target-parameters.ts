@@ -1,3 +1,4 @@
+import type {PSPParameters} from "../../psp/core.js";
 import type {GBEParameters} from "../../gbe-pokemini/core.js";
 import type {NXEngineParameters} from "../../nxengine/core.js";
 import type {NP2Parameters} from "../../np2kai/adapter.js";
@@ -249,6 +250,12 @@ export function webmsx(envelope: LaunchEnvelopeV1): WebMSXParameters {
   const game = resource(envelope, "game", "ROM_BLOB");
   return {mediaUrl: game.url, mediaSizeBytes: game.sizeBytes, contentDigest: game.sha256,
     runtimeBaseUrl: assetBase(envelope, "webmsx")};
+}
+
+export function psp(envelope: LaunchEnvelopeV1, assetIndex: AssetIndexV1): PSPParameters {
+  const game = resource(envelope, "game", "SEEKABLE_BLOB");
+  return {game: seekableSource(game),
+    runtimeBaseUrl: assetBase(envelope, "ppsspp"), assetIndex};
 }
 
 export function gbePokemini(envelope: LaunchEnvelopeV1, assetIndex: AssetIndexV1): GBEParameters {

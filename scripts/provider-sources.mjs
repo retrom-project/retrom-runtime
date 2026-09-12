@@ -1,5 +1,5 @@
 import {validEmulatorJsDevelopmentSource} from "./emulatorjs-development-forks.mjs";
-import {validPinnedCoreAssets} from "./pinned-core-release.mjs";
+import {usesPinnedCoreAssets, validPinnedCoreAssets} from "./pinned-core-release.mjs";
 import {validCoreDevelopmentInput} from "./core-development-input.mjs";
 import {validWebMSXRelease} from "./webmsx-release.mjs";
 import {validScummvmSource} from "./scummvm-release.mjs";
@@ -36,7 +36,7 @@ export function validateProviderSources(sources) {
       !(release.id === "webmsx" ? validWebMSXRelease(release) : release.id === "scummvm" ? validScummvmRelease(release) : release.archive ? validJ2meRelease(release) : validCoreRelease(release))) {
       throw new Error("PROVIDER_SOURCES_INVALID");
     }
-    if (["np2kai", "px68k", "tyranoscript", "openbor", "gbe_plus", "nxengine"].includes(release.id) && !validPinnedCoreAssets(release)) {throw new Error("PROVIDER_SOURCES_INVALID");}
+    if (usesPinnedCoreAssets(release.id) && !validPinnedCoreAssets(release)) {throw new Error("PROVIDER_SOURCES_INVALID");}
     releases.set(release.id, release);
     for (const asset of release.assets) {
       if (!safePath(asset.filename) ||

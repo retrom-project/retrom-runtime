@@ -101,3 +101,12 @@ No NEC firmware or game content is included.
   The Provider consumes the fixed `retrom-core-g05a05e931b39-r1` release
   with the `gbe-pokemini-host-v1` ABI.
 - Game ROMs and the required Pokémon Mini BIOS are user-supplied and are not bundled.
+
+## PPSSPP
+
+The independent PSP core is maintained in <https://github.com/retrom-project/ppsspp>, based on
+<https://github.com/hrydgard/ppsspp> commit `2e6fd06ed6c77db467dea5fb3f67abd93457da20`. The complete engine and component
+notices are bundled in `licenses/ppsspp/LICENSE`. They include PPSSPP, libkirk, FFmpeg, Lua,
+libretro-common, libpng, zlib and other compiled dependencies. Retrom's adapter license does not
+relicense these components. No PSP game or firmware image is bundled. Development candidates
+record the exact source tree and generated asset hashes; release inputs must pin immutable fork tags.

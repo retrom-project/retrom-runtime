@@ -1,3 +1,4 @@
+import {pspAdapter, pspTarget} from "./psp-declaration.js";
 import {gbeAdapter, gbeTarget} from "./gbe-pokemini-declaration.js";
 import {storageAdapters} from "../../provider/checkpoint-storage.js";
 import {np2kaiAdapter, np2kaiTarget} from "./np2kai-declaration.js";
@@ -48,6 +49,7 @@ const adapters = [
   px68kAdapter,
   adapter("webmsx-web", "WEBMSX_WEB", "webmsx-host-v1", "webmsx-state-v1", standardCapabilities),
   playAdapter,
+  pspAdapter,
   defineAdapter({id: "ruffle-web", kind: "RUFFLE_WEB", abi: "ruffle-host-v1",
     capabilities: capabilities(true, false, true),
     checkpoint: {writeFormat: "ruffle-sharedobjects-v1", readFormats: ["ruffle-sharedobjects-v1"], semantics: "GAME_SAVE"}}),
@@ -113,6 +115,7 @@ const targets = [
   target("openbor", "OpenBOR", "openbor-web", noOptionsSchema, false, "SAME_ORIGIN_BLANK", "ROM_BLOB",
     16 * 1024 * 1024, ["assets/openbor/openbor.mjs", "assets/openbor/openbor.wasm"]),
   playTarget,
+  pspTarget,
   px68kTarget,
   easyRpgTarget("rpgmaker-2000", "RPG Maker 2000", "rpg2k"),
   easyRpgTarget("rpgmaker-2003", "RPG Maker 2003", "rpg2k3"),
@@ -139,7 +142,7 @@ export const retromRuntimeProviderDefinition = defineProvider({
   adapters: storageAdapters(adapters),
   providerApiVersion: 1,
   providerId: "retrom-runtime",
-  providerVersion: "0.38.0",
+  providerVersion: "0.39.0",
   targets,
 });
 

@@ -551,7 +551,7 @@ storage contract. The core compatibility report digest is recorded in
 The adapter removes the loader's hourly cache buster only from this pinned report's
 GET request, so the host can serve the immutable bundle asset without a 400 response.
 
-### PC-88 candidate
+### PC-88
 
 The `quasi88` EmulatorJS target accepts raw D88/U88 media through the host catalog.
 It defaults to N88 V2 with keyboard input enabled. Standard D-pad directions send
@@ -561,7 +561,8 @@ The swapped Start/primary bindings remain one-to-one. Checkpoints use
 Seven NEC firmware files are external dependencies in the core system `quasi88/` directory.
 The adapter sets `system_directory` explicitly before native startup, so the pinned
 RetroArch linker does not fall back to the content directory.
-The current source is an unpublished development candidate: use the PFB development
-input override mechanism and exact candidate descriptor, never a fabricated release URL.
+The source catalog pins the immutable fork release and all asset digests.
+PC-88 games can require additional keyboard controls: The Librarian uses keypad
+7/9/4/6/1/3 for hex movement, while the generic D-pad sends 8/2/4/6.
 Product acceptance belongs to the host; a single sample does not establish the complete
 PC-88 compatibility matrix.

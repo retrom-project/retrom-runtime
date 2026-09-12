@@ -1,8 +1,8 @@
 # Changelog
 
-## Unreleased
+## 0.34.0
 
-- Add a PFB-only PC-88 QUASI88 EmulatorJS candidate, pinned to the maintained fork and exact local build digests. D88/U88 launches use N88 V2, independent keyboard input, one-to-one standard gamepad controls and the shared compressed instant checkpoint contract.
+- Add the PC-88 QUASI88 target in EmulatorJS Provider 2.11.0, pinned to the immutable core fork release. D88/U88 launches use N88 V2, independent keyboard input, one-to-one standard gamepad controls and the shared compressed instant checkpoint contract.
 
 ## 0.33.0
 

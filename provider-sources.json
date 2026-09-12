@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "packageName": "@xxxsen/retrom-runtime",
-  "packageVersion": "0.33.0",
+  "packageVersion": "0.34.0",
   "publicApiVersion": 2,
   "upstreamReleases": [
     {
@@ -2228,12 +2228,5 @@
       "output": "runtime/butterscotch/worker.mjs"
     }
   ],
-  "developmentInputs": [
-    {
-      "id": "quasi88",
-      "repository": "https://github.com/retrom-project/quasi88-libretro",
-      "upstreamCommit": "459bbc6e90caa3dc392ae8e64a9b0881b1e5ef77",
-      "adapterAbi": "emulatorjs-state-v1"
-    }
-  ]
+  "developmentInputs": []
 }

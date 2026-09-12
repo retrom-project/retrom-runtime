@@ -1,38 +1,40 @@
 export const emulatorJsSourceCatalog = {
   schemaVersion: 1,
-  developmentForks: [
-  {
-    "repository": "https://github.com/retrom-project/quasi88-libretro",
-    "commit": "459bbc6e90caa3dc392ae8e64a9b0881b1e5ef77",
-    "sourceTreeSha256": "84db32130cb5858355db3de5a327000a9fb8e3ade060952b1f0d272af47cc646",
-    "adapterAbi": "emulatorjs-state-v1",
-    "runtimeCore": "quasi88",
-    "upstreamCommit": "459bbc6e90caa3dc392ae8e64a9b0881b1e5ef77",
-    "assets": [
-      {
-        "filename": "LICENSE",
-        "sha256": "d8f7f8b340dc97bb6b2792cd0c5a5dc5d8a1b5493ea0f9652682974dcdac6669",
-        "sizeBytes": 42553
-      },
-      {
-        "filename": "quasi88-wasm.data",
-        "sha256": "c23c7f390bc5a8071a13e3c9e860c1ab96f34792bd531ca79ee12cff6a67c57d",
-        "sizeBytes": 1041569
-      },
-      {
-        "filename": "source.tar.gz",
-        "sha256": "816243b0f8f3a85857ca38129cdea167390ed1b91f1bc098a4e014de0cbf1c29",
-        "sizeBytes": 938685
-      },
-      {
-        "filename": "retrom-core-candidate.json",
-        "sizeBytes": 726,
-        "sha256": "ccd6f824caa32336fa558bb23e18ea275fa525523b4dd700a2b2efbe311098d2"
-      }
-    ]
-  }
-],
+  developmentForks: [],
   forks: [
+{
+  "repository": "https://github.com/retrom-project/quasi88-libretro",
+  "tag": "retrom-core-g459bbc6e90ca-r1",
+  "commit": "6d1eb000465c035eb91ff1a256a977bc3e04f770",
+  "adapterAbi": "emulatorjs-state-v1",
+  "runtimeCore": "quasi88",
+  "assets": [
+    {
+      "filename": "LICENSE",
+      "sha256": "d8f7f8b340dc97bb6b2792cd0c5a5dc5d8a1b5493ea0f9652682974dcdac6669",
+      "sizeBytes": 42553,
+      "url": "https://github.com/retrom-project/quasi88-libretro/releases/download/retrom-core-g459bbc6e90ca-r1/LICENSE"
+    },
+    {
+      "filename": "quasi88-wasm.data",
+      "sha256": "c23c7f390bc5a8071a13e3c9e860c1ab96f34792bd531ca79ee12cff6a67c57d",
+      "sizeBytes": 1041569,
+      "url": "https://github.com/retrom-project/quasi88-libretro/releases/download/retrom-core-g459bbc6e90ca-r1/quasi88-wasm.data"
+    },
+    {
+      "filename": "rpg-runtime-release.json",
+      "sha256": "e3f7752189bac0b364e2fc4daf6a3a69176ccddf87c0177a30b7bc99d1621e8a",
+      "sizeBytes": 796,
+      "url": "https://github.com/retrom-project/quasi88-libretro/releases/download/retrom-core-g459bbc6e90ca-r1/rpg-runtime-release.json"
+    },
+    {
+      "filename": "source.tar.gz",
+      "sha256": "f03534e88641f9dfa342f9b59e62eb64d9c48c91dad3542e0e666059d5c58f74",
+      "sizeBytes": 939099,
+      "url": "https://github.com/retrom-project/quasi88-libretro/releases/download/retrom-core-g459bbc6e90ca-r1/source.tar.gz"
+    }
+  ]
+},
 {
   "repository": "https://github.com/retrom-project/libretro-vecx",
   "tag": "retrom-core-g8f671cc9d737-r1",

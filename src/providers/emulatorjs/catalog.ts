@@ -44,6 +44,11 @@ const adapters = [
     checkpoint: {readFormats: ["emulatorjs-state-v1", "emulatorjs-state-gzip-v1"], writeFormat: "emulatorjs-state-v1"},
     id: "emulatorjs-psp", kind: "EMULATORJS_PSP",
   }),
+  defineAdapter({
+    abi: "emulatorjs-state-v1", capabilities,
+    checkpoint: {readFormats: ["bsnes-state-v1"], writeFormat: "bsnes-state-v1"},
+    id: "emulatorjs-bsnes", kind: "EMULATORJS_4_3_0_PRE",
+  }),
 ] as const;
 
 const inputs = [
@@ -90,12 +95,14 @@ declare const __RETROM_PFB_CORE_INPUTS__: Readonly<Record<string, {
 }>>;
 
 const cores: readonly CoreSource[] = [
+  core("neocd", "4.2.3", "neocd-wasm.data", 1080566, "3702540c38faab7d3eadae748791364d61e043b16d937b5bbae05c9c0134ec0c", "ae9dddaebf459deb11ab689c69b4f964efbf560e73a51788d9095cf24f8fec7c", {artifactFlavor: "OVERRIDE", coreBundleVersion: "retrom-core-g3118c6901787-r1", defaultOptions: {neocd_region: "Japan", neocd_cdspeedhack: "On", neocd_loadskip: "On"}}),
   core("81", "4.2.3", "81-wasm.data", 888668, "b78716a9566f7b31ad82f3d3250ba882af284294df4ec84b80012906aa1da417", "01c76aa09d95022d001e16f80e8ff32c0a62088da9445c6b321be06872943cf2", {artifactFlavor: "OVERRIDE", coreBundleVersion: "retrom-core-g86decf3ee61e-r1", defaultOptions: {keyboardInput: "enabled", "81_joypad_b": "new line"}}),
   core("flycast", "4.2.3", "flycast-wasm.data", 3530713, "c4e848767db6ad58e8aad665970ae6760ffbe2db3426bb27deec0396cbac44d6", "f3c6762e6ea597791a223215982f291674cf5afafa294fcc4fdec57ac0de6e30", {artifactFlavor: "OVERRIDE", coreBundleVersion: "1.0", defaultOptions: {reicast_hle_bios: "disabled", reicast_boot_to_bios: "disabled", reicast_internal_resolution: "640x480", reicast_threaded_rendering: "disabled", reicast_alpha_sorting: "per-strip (fast, least accurate)"}}),
 
   core("a5200", "4.2.3", "a5200-wasm.data", 881560, "c82476478d6b70b9da80cccc27ca06a5fd85acf7cdd5643f230cc4d6777990ef", "c402648f858a8a566b39c8d0949470eeeda5f0346b8dfc6228dad312a0af295d"),
   core("azahar", "4.3.0-pre", "azahar-thread-wasm.data", 3985011, "d90696e6ea68c4fc00ef147411ad399962777f07b6c7e73d5537da0eaffc2e3b", "77bf9b92bdc0f55b5d2dc5c2394971fe40b80b10b79fc40501db07d199bed94c", {inputMode: "POINTER", defaultOptions: {webgl2Enabled: "enabled"}}),
   core("beetle_vb", "4.2.3", "beetle_vb-wasm.data", 858313, "3db727a78b6a6551a4024c273069eb39c8e8f33aa78ef16a073ed7460f6ce692", "71604fbf1001fc5d053b08ce5f8396a1da456f176a0b3106eff08f7cac3e5986", {startupActions: [press(2000, 0), press(4000, 3), press(15000, 3), press(25000, 3)]}),
+  core("bsnes", "4.3.0-pre", "bsnes-wasm.data", 1226327, "c0384975cf12d2227ccf31a03966ebf677c63fef44fc0852ef574efa2673fec1", "91994d91c9d828d8179936ada920d64b7a28cfb274ef75d560a60b46305fe610", {artifactFlavor: "OVERRIDE", coreBundleVersion: "retrom-core-g4b344745e387-r1"}),
   core("cap32", "4.2.3", "cap32-wasm.data", 1028234, "cbebe15e960fad04eb27c08c5a73c7fbbc1df3d9cc13294f357104640c2da49f", "59278925c02b401d4d61fe396c29cd0ad23cf0b4970b4b2c2d976135c0dede37", {artifactFlavor: "OVERRIDE", coreBundleVersion: "retrom-core-g310cc579b79b-r2", defaultOptions: {keyboardInput: "enabled"}}),
   core("crocods", "4.2.3", "crocods-wasm.data", 976148, "8c70df810436f225c5a2b40f31555636d6e12eacd41968f28b7dc708a9c6db10", "51e5f77fbcd99f13c49efae470290e4d1215ad10bc992e4a3332da72568119c9", {artifactFlavor: "OVERRIDE", coreBundleVersion: "retrom-core-gbe00fb904da0-r1", defaultOptions: {keyboardInput: "enabled"}}),
   core("desmume", "4.2.3", "desmume-wasm.data", 1172604, "a9fddaa4bd742e558dfe5095fa4eaf074493b591a7bc18c5f7c65d64b9fa7572", "970284459eedf8f7345d2b02d564dc7d32e7029aa8009011a8474df94244d57c", {inputMode: "POINTER"}),
@@ -105,6 +112,7 @@ const cores: readonly CoreSource[] = [
   core("fbalpha2012_cps2", "4.2.3", "fbalpha2012_cps2-wasm.data", 992866, "432c2dd513603b04ccbf4e81f282f012763d2435311805443e2bd0cc9021d8d1", "73ac6fc4b1a2030701471b630e658118486e99c6c7349663dadcde4abeab6e5d"),
   core("fbneo", "4.2.3", "fbneo-wasm.data", 8273551, "315a25e0bcd61d58ee0d9e8b1dbf3740b9e0ca4b7d0726f848ce1068de73437c", "cbd006664ec1c76f6bdad7747d487ee137ae70d15390ec479e11f8e17f01bc84"),
   core("fceumm", "4.2.3", "fceumm-wasm.data", 1054015, "8c449fd5c36646fb0769423ed6ffa9efbdfc21fbfdc9bac7952b559d34d5b493", "d1a20a10b27908b6f199ed8d10f7ccf4376065b8a733492aee53b4d4a2c2f26d"),
+  core("freeintv", "4.3.0-pre", "freeintv-wasm.data", 1139022, "e5f84b6a322e5b01b077e6e60895f52555af6ddc5838bfc775f946a0d44a8d6e", "9a5045b039305fbc0ed13a679cb6534980f2b2b4e1cb321ba9d109c5cc0c9062"),
   core("fuse", "4.2.3", "fuse-wasm.data", 1218229, "791fe40dfba9ac236c5c14d629d555133c5fe3c36d1dbdc2a48ced487da51373", "0f2dee6ecd4bd57fe793239ec42bd6efa4b4b8696aae4f62a2a469cad2a22f32", {defaultOptions: {keyboardInput: "enabled"}}),
   core("gambatte", "4.2.3", "gambatte-wasm.data", 967156, "ad67c7bf57f8f8b62606048e6ea498afac5b5abc76ad8de5f9dfc2a6719374bb", "c1d7561f109647715f8795c8fa977318dc78bfc847cd8879bb029d62c55fa605"),
   core("gearcoleco", "4.2.3", "gearcoleco-wasm.data", 891907, "164e213e4d5f2c14a0f2b55da973ed5a54ef7601cb352e64c9a73ace1a7ba606", "1c377b55d252fc7133bb99b845c1bc1931a3f9989fd1410659c50bd3b2a78a4d"),
@@ -130,10 +138,12 @@ const cores: readonly CoreSource[] = [
   core("prboom", "4.2.3", "prboom-wasm.data", 1091036, "830686c3b5176de25de45846f8cad9153803478718e6a487dda938437ecd0c0e", "5468d3146d11438aed17c6e7b93357912cf7638a6352edd9386ef4c2c4b8b38c"),
   core("prosystem", "4.2.3", "prosystem-wasm.data", 852864, "d3483e1c155c8d26e6b7b299c8ecc58c5abcfa0c5af5f03b75a55d219e71c3c8", "5ab7fa94d4cc9da68fff24911d76a32d3fba8ffbecd3fec740a1992670df809e"),
   core("puae", "4.2.3", "puae-wasm.data", 4140232, "8b58d776244c650c872dcaaf8693a2d75fd92a5219c7250cf5be5f517b11f1b5", "e833cb9a0d942770a2bd841dfe92decd069dd5a5bad817270d113f66ab239485", {inputMode: "POINTER"}),
+  core("quasi88", "4.2.3", "quasi88-wasm.data", 1041569, "c23c7f390bc5a8071a13e3c9e860c1ab96f34792bd531ca79ee12cff6a67c57d", "e3f7752189bac0b364e2fc4daf6a3a69176ccddf87c0177a30b7bc99d1621e8a", {artifactFlavor: "OVERRIDE", coreBundleVersion: "retrom-core-g459bbc6e90ca-r1", defaultOptions: {keyboardInput: "enabled", q88_basic_mode: "N88 V2"}}),
   core("same_cdi", "4.2.3", "same_cdi-wasm.data", 3492455, "4a0d2829af998d4066a12294a0ecfd1d23371bdea95906a48ef726298826a03c", "c4450a15fe43d5253ab2593a3f51d249332b92e5921ba0875cc40a9d33fda663", {artifactFlavor: "OVERRIDE", coreBundleVersion: "retrom-core-gcfb05d803f54-r1"}),
   core("smsplus", "4.2.3", "smsplus-wasm.data", 855876, "0f197c5e0000f17b2d072122a72b3f8fc1693514c4014fcd9694eec78584aa08", "a09612f1d088bffe8d9c107caf196b023710ed4aaeaa24f05caee7eec8591ff0"),
   core("snes9x", "4.2.3", "snes9x-wasm.data", 1093765, "eaa0bcfce67673809886e50387a80a616b719502175db64c090d04c9d75958ee", "f2ecf64d84dc3845ccd9828daf48436667f6aa79e6a5d6c41f0965f0151f1f34"),
   core("stella2014", "4.2.3", "stella2014-wasm.data", 1051659, "6c96c6b1746f3f05ca599066abe131a36c77ca61fc20a9e2a7560540457c487d", "f5244febaf876003e9acf97e09b8785f1f51563c3f96527232652c1d9ec40e68"),
+  core("vecx", "4.2.3", "vecx-wasm.data", 856199, "bd66a59cafb8ad3f742d85f177550966f79926030aa7bd660f4ffe3a0c02c6db", "16ea415148668169b2f67f3a929cee70e26e05ca92b1d87f2a8012aeb2312ccb", {artifactFlavor: "OVERRIDE", coreBundleVersion: "retrom-core-g8f671cc9d737-r1"}),
   core("vice_x128", "4.2.3", "vice_x128-wasm.data", 1595414, "dbac85e530b006c2d17e200c445de582c7ea272bacf333e4b4f8c1e391ed8506", "e8ef53ec0bc53244319e87a8f6b75396f077a982dd4438743a52e82f0c136126", {inputMode: "POINTER"}),
   core("vice_x64", "4.2.3", "vice_x64-wasm.data", 1528680, "ccc5a868163b67e21f6f4c4cc994a6290cf44ab079eaf28e3a992defa2bd66f0", "643787490d9f261abe7a329d6d2daac8b2cdf469f037adcdac0fa8262fb37d50", {inputMode: "POINTER"}),
   core("vice_x64sc", "4.2.3", "vice_x64sc-wasm.data", 1523457, "77f58884c81b58721cbc4754ffc5574838219258e9390630c352a494a3f335ab", "4b788799ef1225e48610b99bdf746425ba6e2bda27fa105fd1238dfbb9fb47cb", {inputMode: "POINTER"}),
@@ -147,7 +157,7 @@ const cores: readonly CoreSource[] = [
 const targets = cores.map((entry) => {
   const netplayProfile = emulatorJsNetplayProfiles[entry.id] ?? null;
   return defineTarget({
-  adapterId: entry.id === "flycast" ? "emulatorjs-flycast" : entry.id === "ppsspp" ? "emulatorjs-psp" : `emulatorjs-${entry.release}`,
+  adapterId: entry.id === "bsnes" ? "emulatorjs-bsnes" : entry.id === "flycast" ? "emulatorjs-flycast" : entry.id === "ppsspp" ? "emulatorjs-psp" : `emulatorjs-${entry.release}`,
   assetPaths: [
     ...commonAssets(entry.release),
     entry.asset,
@@ -176,7 +186,7 @@ const targets = cores.map((entry) => {
     runtimeCore: entry.id,
     startupActions: entry.startupActions,
   },
-  inputs,
+  inputs: entry.id === "neocd" ? inputs.map(input => input.role === "game" ? {...input, kind: "SEEKABLE_BLOB" as const} : input) : inputs,
   inputFilter: true,
   nativeSettings: true,
   netplayPort: netplayProfile !== null,
@@ -190,7 +200,7 @@ export const emulatorJsProviderDefinition = defineProvider({
   adapters: storageAdapters(adapters),
   providerApiVersion: 1,
   providerId: "emulatorjs",
-  providerVersion: "2.8.0",
+  providerVersion: "2.15.0",
   targets,
 });
 
@@ -253,6 +263,7 @@ function commonAssets(release: RuntimeRelease) {
 }
 
 function displayName(value: string) {
+  if (value === "bsnes") {return value;}
   return value.split("_").map((part) => part.length <= 3 ? part.toUpperCase() :
     `${part[0]?.toUpperCase() ?? ""}${part.slice(1)}`).join(" ");
 }

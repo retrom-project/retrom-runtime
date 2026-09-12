@@ -1,5 +1,24 @@
 # EmulatorJS Provider components
 
+## bsnes integration
+
+The optional bsnes target uses the EmulatorJS `v4.3.0-pre` frontend with the immutable
+`retrom-core-g4b344745e387-r1` release built by https://github.com/retrom-project/bsnes-libretro from
+EmulatorJS/bsnes-libretro commit `4b344745e3878e7c0675a60c624582935524b8f7`.
+The fork repairs Asyncify fiber lifecycle and enables Asyncify at link time.
+Its pinned RetroArch patch completes asynchronous saves through an explicit
+callback, copies state bytes before releasing their native allocation, and
+uses owned heap storage for the state metadata. ROM-free regression tests use
+real fiber switches and check repeated saves for heap growth.
+Its `LICENSE.txt`, source archive and release provenance accompany the Provider.
+The core and linked RetroArch include GPL-3.0-or-later and component licenses.
+
+The original 4.3.0-pre prebuilt core is not used: it omitted `co_serializable`
+and `co_derive`, and its linker did not enable Asyncify. Its build report did not
+record an exact core source commit. The fork baseline above is explicitly pinned
+for this integration and is not asserted to be that prebuilt core's revision.
+Unpublished core inputs remain restricted to PFB candidate builds.
+
 ## Flycast integration
 
 Flycast WASM and its linked EmulatorJS RetroArch frontend are GPL-2.0-or-later and GPL-3.0-or-later respectively. Their license texts accompany the pinned core release. The source fork is https://github.com/retrom-project/flycast-wasm.
@@ -27,3 +46,24 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
+
+## VecX
+
+Source: https://github.com/retrom-project/libretro-vecx, based on
+https://github.com/libretro/libretro-vecx at 8f671cc9d737f2890c3ce19e177e2984dcae121f.
+VecX is GPL-3.0; the PSG component retains its MIT notice in `vecx_psg.c` and
+`vecx_psg.h`. The core release includes the original `LICENSE.md` and complete
+source archive, including component notices. EmulatorJS RetroArch linker source
+is pinned by the fork build recipe. Release: `retrom-core-g8f671cc9d737-r1`.
+
+## NeoCD
+
+Source: https://github.com/retrom-project/neocd_libretro, upstream libretro/neocd_libretro
+commit `3118c6901787e863e80e79170d02d47657b3b0ab`. The top-level license is LGPL-3.0;
+its Z80 component explicitly restricts commercial use. The linked EmulatorJS RetroArch
+frontend is GPL-3.0. This is not an unrestricted LGPL-only binary. Published bundles
+retain original component notices and licenses at
+`licenses/emulatorjs/4.2.3/licenses/forks/neocd/LICENSE.md`, alongside `source.tar.gz`.
+BIOS and games are supplied separately by the operator.
+
+NeoCD Release: `retrom-core-g3118c6901787-r1`.

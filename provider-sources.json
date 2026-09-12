@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "packageName": "@xxxsen/retrom-runtime",
-  "packageVersion": "0.31.0",
+  "packageVersion": "0.38.0",
   "publicApiVersion": 2,
   "upstreamReleases": [
     {
@@ -2216,6 +2216,84 @@
       "tag": "retrom-core-g9d81480f8481-r1",
       "commit": "e3f86c09bf9ab6ed5b7e5c06cbd9c3d351a80ee6",
       "metadataUrl": "https://github.com/retrom-project/openbor/releases/download/retrom-core-g9d81480f8481-r1/rpg-runtime-release.json"
+    },
+    {
+      "id": "gbe_plus",
+      "repository": "https://github.com/retrom-project/gbe-plus",
+      "upstreamCommit": "05a05e931b3993ff3e6316b0d841a1fb4d3ac7a7",
+      "adapterAbi": "gbe-pokemini-host-v1",
+      "assets": [
+        {
+          "filename": "LICENSE",
+          "output": "licenses/gbe_plus/LICENSE",
+          "maxSizeBytes": 8388608,
+          "sha256": "a45d0bb572ed792ed34627a72621834b3ba92aab6e2cc4e04301dee7a728d753",
+          "sizeBytes": 18027,
+          "url": "https://github.com/retrom-project/gbe-plus/releases/download/retrom-core-g05a05e931b39-r1/LICENSE"
+        },
+        {
+          "filename": "gbe-pokemini-register.mjs",
+          "output": "runtime/gbe_plus/gbe-pokemini-register.mjs",
+          "maxSizeBytes": 8388608,
+          "sha256": "657e66ce555bee6f552e2b6954291eec4a97047ebf9aff17f12efcb24e6860d0",
+          "sizeBytes": 99,
+          "url": "https://github.com/retrom-project/gbe-plus/releases/download/retrom-core-g05a05e931b39-r1/gbe-pokemini-register.mjs"
+        },
+        {
+          "filename": "gbe-pokemini.mjs",
+          "output": "runtime/gbe_plus/gbe-pokemini.mjs",
+          "maxSizeBytes": 8388608,
+          "sha256": "686fdfe80303abfa4910f097c00fdec6df7c31711cb0f086b0dcf6c8084cc700",
+          "sizeBytes": 186271,
+          "url": "https://github.com/retrom-project/gbe-plus/releases/download/retrom-core-g05a05e931b39-r1/gbe-pokemini.mjs"
+        },
+        {
+          "filename": "gbe-pokemini.wasm",
+          "output": "runtime/gbe_plus/gbe-pokemini.wasm",
+          "maxSizeBytes": 8388608,
+          "sha256": "a760b348ce678d775ab590eef074f7c756fa23eb2297a725e94ce94f33428aa8",
+          "sizeBytes": 977806,
+          "url": "https://github.com/retrom-project/gbe-plus/releases/download/retrom-core-g05a05e931b39-r1/gbe-pokemini.wasm"
+        }
+      ],
+      "tag": "retrom-core-g05a05e931b39-r1",
+      "commit": "d528ce24c200cc49f56b5c62af6a3e54fc9784f8",
+      "metadataUrl": "https://github.com/retrom-project/gbe-plus/releases/download/retrom-core-g05a05e931b39-r1/rpg-runtime-release.json"
+    },
+    {
+      "id": "nxengine",
+      "repository": "https://github.com/retrom-project/nxengine-libretro",
+      "adapterAbi": "nxengine-host-v1",
+      "assets": [
+        {
+          "filename": "LICENSES.txt",
+          "sizeBytes": 145599,
+          "sha256": "7a7ba330b0676c3a7fcac6a6f3df7710e77064ec44f3d96755868ea0c13d6340",
+          "output": "licenses/nxengine/LICENSES.txt",
+          "url": "https://github.com/retrom-project/nxengine-libretro/releases/download/retrom-core-gfd1c0686f8b4-r1/LICENSES.txt",
+          "maxSizeBytes": 1048576
+        },
+        {
+          "filename": "nxengine-retrom.mjs",
+          "sizeBytes": 61383,
+          "sha256": "1170386fa209fe475607c9bc53c95d8b46750ea7bc6845de502e635983eeb8e9",
+          "output": "runtime/nxengine/nxengine-retrom.mjs",
+          "url": "https://github.com/retrom-project/nxengine-libretro/releases/download/retrom-core-gfd1c0686f8b4-r1/nxengine-retrom.mjs",
+          "maxSizeBytes": 2097152
+        },
+        {
+          "filename": "nxengine-retrom.wasm",
+          "sizeBytes": 717930,
+          "sha256": "af40e6668a9f2882975e8ed648eccec307c54cb7e616a57feab5ba9ed0e4c2e2",
+          "output": "runtime/nxengine/nxengine-retrom.wasm",
+          "url": "https://github.com/retrom-project/nxengine-libretro/releases/download/retrom-core-gfd1c0686f8b4-r1/nxengine-retrom.wasm",
+          "maxSizeBytes": 16777216
+        }
+      ],
+      "tag": "retrom-core-gfd1c0686f8b4-r1",
+      "commit": "00f85d438636be9fcea4c407ba0c4955aef6889a",
+      "metadataUrl": "https://github.com/retrom-project/nxengine-libretro/releases/download/retrom-core-gfd1c0686f8b4-r1/rpg-runtime-release.json",
+      "upstreamCommit": "fd1c0686f8b4c0aea9b5addbc077e3ad7da23bb7"
     }
   ],
   "localAssets": [

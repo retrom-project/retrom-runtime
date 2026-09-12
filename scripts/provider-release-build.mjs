@@ -173,7 +173,9 @@ async function collectEmulatorJsLicenses(sourceRoot, sourceCatalog) {
     verifyForkMetadata(fork, metadata);
   }
   for (const fork of sourceCatalog.developmentForks ?? []) {
-    const metadata = JSON.parse(await readRegularFile(join(sourceRoot, `4.2.3/data/cores/reports/${fork.runtimeCore}.json`)));
+    const metadataFile = developmentForkFiles({developmentForks: [fork]})
+      .find((file) => file.filename === "retrom-core-candidate.json");
+    const metadata = JSON.parse(await readRegularFile(join(sourceRoot, metadataFile.destination)));
     verifyDevelopmentForkMetadata(fork, metadata);
   }
   for (const release of sourceCatalog.releases) {

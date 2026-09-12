@@ -72,3 +72,26 @@ Advance interpolation header with its MAME-linking exception, plus SDL2, SDL_ima
 XPaint GIF decoder, libpng, zlib, Ogg/Vorbis and Emscripten runtime notices.
 The aggregate adapter license does not replace these component licenses. No game
 PAKs are included. The fixed source commit and asset hashes are in `provider-sources.json`.
+
+## PC-88 QUASI88
+
+QUASI88/libretro uses the maintained fork <https://github.com/retrom-project/quasi88-libretro>,
+based on libretro/quasi88-libretro commit `459bbc6e90caa3dc392ae8e64a9b0881b1e5ef77`.
+The root BSD 3-Clause notice does not replace the original sound component terms.
+The release LICENSE bundles the upstream root LICENSE, `src/snddrv/license.txt`
+(historical MAME sound notices) and `src/fmgen/readme.txt` (FMGEN terms).
+The same LICENSE includes the RetroArch GPL notice. The source archive contains the
+core and build recipe; `retrom-fork.json` pins the corresponding linker source at
+<https://github.com/EmulatorJS/RetroArch/tree/6dd4353937ef48b6ec0bfbdbb15d1c5992d86927>.
+No NEC firmware or game content is included.
+
+## GBE+ Pokémon Mini
+
+- Upstream: https://github.com/shonumi/gbe-plus
+- Maintained fork: https://github.com/retrom-project/gbe-plus
+- Upstream commit: `05a05e931b3993ff3e6316b0d841a1fb4d3ac7a7`.
+- License: GNU GPL version 2; bundles include `licenses/gbe_plus/LICENSE`.
+- Browser source and the pinned Emscripten build belong to the core fork.
+  The Provider consumes the fixed `retrom-core-g05a05e931b39-r1` release
+  with the `gbe-pokemini-host-v1` ABI.
+- Game ROMs and the required Pokémon Mini BIOS are user-supplied and are not bundled.

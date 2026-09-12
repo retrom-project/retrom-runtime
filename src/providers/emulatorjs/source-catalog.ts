@@ -3,6 +3,138 @@ export const emulatorJsSourceCatalog = {
   developmentForks: [],
   forks: [
 {
+  "repository": "https://github.com/retrom-project/neocd_libretro",
+  "tag": "retrom-core-g3118c6901787-r1",
+  "commit": "53334661fcf0d6fd68fcf2fea03c800149588f0c",
+  "adapterAbi": "emulatorjs-state-v1",
+  "runtimeCore": "neocd",
+  "assets": [
+    {
+      "filename": "LICENSE.md",
+      "sha256": "91db8ba33e34262247444a5ba0dffb5a69c1ceddb6939b773561abb1747980d7",
+      "sizeBytes": 165739,
+      "url": "https://github.com/retrom-project/neocd_libretro/releases/download/retrom-core-g3118c6901787-r1/LICENSE.md"
+    },
+    {
+      "filename": "neocd-wasm.data",
+      "sha256": "3702540c38faab7d3eadae748791364d61e043b16d937b5bbae05c9c0134ec0c",
+      "sizeBytes": 1080566,
+      "url": "https://github.com/retrom-project/neocd_libretro/releases/download/retrom-core-g3118c6901787-r1/neocd-wasm.data"
+    },
+    {
+      "filename": "rpg-runtime-release.json",
+      "sha256": "ae9dddaebf459deb11ab689c69b4f964efbf560e73a51788d9095cf24f8fec7c",
+      "sizeBytes": 796,
+      "url": "https://github.com/retrom-project/neocd_libretro/releases/download/retrom-core-g3118c6901787-r1/rpg-runtime-release.json"
+    },
+    {
+      "filename": "source.tar.gz",
+      "sha256": "15e662de980cde2cb644ca1fa8ac0be56956db94910061062496c0fbd6774ab4",
+      "sizeBytes": 804590,
+      "url": "https://github.com/retrom-project/neocd_libretro/releases/download/retrom-core-g3118c6901787-r1/source.tar.gz"
+    }
+  ]
+},
+{
+  "repository": "https://github.com/retrom-project/bsnes-libretro",
+  "tag": "retrom-core-g4b344745e387-r1",
+  "commit": "81ba085d2bcedce487e1eb9bb39a440cfac9bf1d",
+  "adapterAbi": "emulatorjs-state-v1",
+  "runtimeCore": "bsnes",
+  "assets": [
+    {
+      "filename": "LICENSE.txt",
+      "sha256": "8dade5b9bb5a98c28dab6af284548e3630b3a0a3f0dbb299ed68a6d14607ab56",
+      "sizeBytes": 38843,
+      "url": "https://github.com/retrom-project/bsnes-libretro/releases/download/retrom-core-g4b344745e387-r1/LICENSE.txt"
+    },
+    {
+      "filename": "bsnes-wasm.data",
+      "sha256": "c0384975cf12d2227ccf31a03966ebf677c63fef44fc0852ef574efa2673fec1",
+      "sizeBytes": 1226327,
+      "url": "https://github.com/retrom-project/bsnes-libretro/releases/download/retrom-core-g4b344745e387-r1/bsnes-wasm.data"
+    },
+    {
+      "filename": "rpg-runtime-release.json",
+      "sha256": "91994d91c9d828d8179936ada920d64b7a28cfb274ef75d560a60b46305fe610",
+      "sizeBytes": 797,
+      "url": "https://github.com/retrom-project/bsnes-libretro/releases/download/retrom-core-g4b344745e387-r1/rpg-runtime-release.json"
+    },
+    {
+      "filename": "source.tar.gz",
+      "sha256": "903747598047f128118d5747cd293dc642d9abe93b13b7fbd0b1620c76d297fb",
+      "sizeBytes": 7373496,
+      "url": "https://github.com/retrom-project/bsnes-libretro/releases/download/retrom-core-g4b344745e387-r1/source.tar.gz"
+    }
+  ]
+},
+{
+  "repository": "https://github.com/retrom-project/quasi88-libretro",
+  "tag": "retrom-core-g459bbc6e90ca-r1",
+  "commit": "6d1eb000465c035eb91ff1a256a977bc3e04f770",
+  "adapterAbi": "emulatorjs-state-v1",
+  "runtimeCore": "quasi88",
+  "assets": [
+    {
+      "filename": "LICENSE",
+      "sha256": "d8f7f8b340dc97bb6b2792cd0c5a5dc5d8a1b5493ea0f9652682974dcdac6669",
+      "sizeBytes": 42553,
+      "url": "https://github.com/retrom-project/quasi88-libretro/releases/download/retrom-core-g459bbc6e90ca-r1/LICENSE"
+    },
+    {
+      "filename": "quasi88-wasm.data",
+      "sha256": "c23c7f390bc5a8071a13e3c9e860c1ab96f34792bd531ca79ee12cff6a67c57d",
+      "sizeBytes": 1041569,
+      "url": "https://github.com/retrom-project/quasi88-libretro/releases/download/retrom-core-g459bbc6e90ca-r1/quasi88-wasm.data"
+    },
+    {
+      "filename": "rpg-runtime-release.json",
+      "sha256": "e3f7752189bac0b364e2fc4daf6a3a69176ccddf87c0177a30b7bc99d1621e8a",
+      "sizeBytes": 796,
+      "url": "https://github.com/retrom-project/quasi88-libretro/releases/download/retrom-core-g459bbc6e90ca-r1/rpg-runtime-release.json"
+    },
+    {
+      "filename": "source.tar.gz",
+      "sha256": "f03534e88641f9dfa342f9b59e62eb64d9c48c91dad3542e0e666059d5c58f74",
+      "sizeBytes": 939099,
+      "url": "https://github.com/retrom-project/quasi88-libretro/releases/download/retrom-core-g459bbc6e90ca-r1/source.tar.gz"
+    }
+  ]
+},
+{
+  "repository": "https://github.com/retrom-project/libretro-vecx",
+  "tag": "retrom-core-g8f671cc9d737-r1",
+  "commit": "cbb4cf4dadc1e799b0a760f301c3a306a6d71c3a",
+  "adapterAbi": "emulatorjs-state-v1",
+  "runtimeCore": "vecx",
+  "assets": [
+    {
+      "filename": "LICENSE.md",
+      "sha256": "72d6e1a0ffb74e5e95841061200da2f5e14b66bbe043f41e634ef9bc6070132a",
+      "sizeBytes": 35229,
+      "url": "https://github.com/retrom-project/libretro-vecx/releases/download/retrom-core-g8f671cc9d737-r1/LICENSE.md"
+    },
+    {
+      "filename": "rpg-runtime-release.json",
+      "sha256": "16ea415148668169b2f67f3a929cee70e26e05ca92b1d87f2a8012aeb2312ccb",
+      "sizeBytes": 792,
+      "url": "https://github.com/retrom-project/libretro-vecx/releases/download/retrom-core-g8f671cc9d737-r1/rpg-runtime-release.json"
+    },
+    {
+      "filename": "source.tar.gz",
+      "sha256": "aac1c2ecff203128bbd19cfeff55b77fa6c98611884b437073b59c2b05d90580",
+      "sizeBytes": 245151,
+      "url": "https://github.com/retrom-project/libretro-vecx/releases/download/retrom-core-g8f671cc9d737-r1/source.tar.gz"
+    },
+    {
+      "filename": "vecx-wasm.data",
+      "sha256": "bd66a59cafb8ad3f742d85f177550966f79926030aa7bd660f4ffe3a0c02c6db",
+      "sizeBytes": 856199,
+      "url": "https://github.com/retrom-project/libretro-vecx/releases/download/retrom-core-g8f671cc9d737-r1/vecx-wasm.data"
+    }
+  ]
+},
+{
   "repository": "https://github.com/retrom-project/same_cdi",
   "tag": "retrom-core-gcfb05d803f54-r1",
   "commit": "097d7fbe62f4890dd70b233916011a1c2e948657",

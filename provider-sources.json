@@ -2270,5 +2270,6 @@
       "source": "assets/runtime/butterscotch/worker.mjs",
       "output": "runtime/butterscotch/worker.mjs"
     }
-  ]
+  ],
+  "developmentInputs": []
 }

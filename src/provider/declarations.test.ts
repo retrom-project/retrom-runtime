@@ -44,7 +44,7 @@ describe("retrom-runtime provider declarations", () => {
   it("declares the complete target closure in one source", () => {
     expect(retromRuntimeProviderDefinition.providerVersion).toBe("0.38.0");
     expect(retromRuntimeProviderDefinition.targets.map((target) => target.id)).toEqual(targetIds);
-    expect(retromRuntimeProviderDefinition.adapters).toHaveLength(19);
+    expect(retromRuntimeProviderDefinition.adapters).toHaveLength(20);
   });
 
   it("projects a public manifest without internal adapter identities", () => {

@@ -32,7 +32,7 @@ assertScummvmCandidateMode(developmentInputs, process.env.RETROM_PFB_CANDIDATE_B
 const devReleaseOverrides = parseDevReleaseOverrides(
   process.env.RETROM_RUNTIME_DEV_RELEASE_OVERRIDES,
   [...sources.upstreamReleases, ...developmentInputs, ...emulatorJsSourceCatalog.developmentCores ?? [],
-    ...(emulatorJsSourceCatalog.forks ?? []).map((fork) => ({id: fork.runtimeCore}))],
+    ...[...emulatorJsSourceCatalog.forks ?? [], ...emulatorJsSourceCatalog.developmentForks ?? []].map((fork) => ({id: fork.runtimeCore}))],
   formalBuild,
 );
 const commit = releaseCommit();

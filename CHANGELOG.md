@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+- Add the NeoCD single-CHD target in EmulatorJS Provider 2.9.0-rc.2, using an explicit source-verified PFB candidate. The maintained fork owns the WASM build; ordinary release builds reject this unpublished source.
+- Map NeoCD native A/B/C/D to the standard bottom/right/left/top face buttons, without binding native multi-button shoulder macros.
+- Reuse verified OPFS disc storage with isolated NeoCD and Flycast namespaces, download progress and fallback; configure standard arcade controls, native load skipping and shared compressed instant checkpoints.
+
 ## 0.35.0
 
 - Add an independent bsnes Target to EmulatorJS Provider 2.12.0 using the

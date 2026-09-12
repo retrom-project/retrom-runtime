@@ -574,3 +574,16 @@ PC-88 games can require additional keyboard controls: The Librarian uses keypad
 7/9/4/6/1/3 for hex movement, while the generic D-pad sends 8/2/4/6.
 Product acceptance belongs to the host; a single sample does not establish the complete
 PC-88 compatibility matrix.
+
+## NeoCD development candidate
+
+`emulatorjs/neocd` accepts a single CHD through the shared Provider API. The host
+supplies the installed CDZ BIOS as an external file at `/neocd/neocd.bin`.
+The adapter uses verified OPFS disc storage, progress reporting, standard arcade
+controls and `emulatorjs-state-v1-storage-v1` instant checkpoints. CUE/BIN and
+multi-disc inputs are outside this first integration's host contract.
+
+The fork owns all core compilation. `source-catalog.ts` pins the upstream commit,
+local candidate metadata and exact assets. Candidate mode requires the matching
+PFB core descriptor; ordinary releases reject unpublished inputs. See the NeoCD
+section of EMULATORJS_THIRD_PARTY_NOTICES.md for component license restrictions.

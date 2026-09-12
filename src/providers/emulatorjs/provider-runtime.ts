@@ -18,6 +18,7 @@ import type {
 import {PlayerRuntimeError} from "../../provider/errors.js";
 import {focusRuntimeInput} from "../../provider/input-focus.js";
 import {emulatorJsProviderDefinition, type EmulatorImplementation} from "./catalog.js";
+import {loadNeoCDDisc} from "./neocd-cache.js";
 import {loadFlycastDisc} from "./flycast-cache.js";
 import {installFlycastCompatibility} from "./flycast.js";
 import {installArchiveWorkerCompatibility} from "./archive-worker.js";
@@ -290,7 +291,7 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
       this.createMountPoint(runtimeWindow);
       this.startBarrier = createStartBarrier();
       this.configure(runtimeWindow);
-      await this.configureFlycast(runtimeWindow);
+      await this.configureDisc(runtimeWindow);
 
       this.prepareRetroArchConfig(runtimeWindow);
       if (this.netplayProfile) {
@@ -335,15 +336,16 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
     }
   }
 
-  private async configureFlycast(runtimeWindow: EjsWindow) {
-    if (this.implementation.runtimeCore === "flycast") {
-      this.cleanupFlycast = installFlycastCompatibility(runtimeWindow);
-      const game = resource(this.envelope, "game", "ROM_BLOB");
-      const disc = await loadFlycastDisc(game, this.host.signal, (loadedBytes, totalBytes) =>
-        this.emit({type: "LOAD_PROGRESS", loadedBytes, totalBytes}));
-      const FileConstructor = (runtimeWindow as Window & typeof globalThis).File;
-      runtimeWindow.EJS_gameUrl = new FileConstructor([disc], `${game.sha256}.chd`);
-    }
+  private async configureDisc(runtimeWindow: EjsWindow) {
+    const core = this.implementation.runtimeCore;
+    if (!["flycast", "neocd"].includes(core)) {return;}
+    if (core === "flycast") {this.cleanupFlycast = installFlycastCompatibility(runtimeWindow);}
+    const game = resource(this.envelope, "game", "ROM_BLOB");
+    const load = core === "flycast" ? loadFlycastDisc : loadNeoCDDisc;
+    const disc = await load(game, this.host.signal, (loadedBytes, totalBytes) =>
+      this.emit({type: "LOAD_PROGRESS", loadedBytes, totalBytes}));
+    const FileConstructor = (runtimeWindow as Window & typeof globalThis).File;
+    runtimeWindow.EJS_gameUrl = new FileConstructor([disc], `${game.sha256}.chd`);
   }
 
   private createMountPoint(runtimeWindow: Window) {
@@ -379,7 +381,7 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
     runtimeWindow.EJS_biosUrl = biosFile(bios);
     runtimeWindow.EJS_gameParentUrl = parent?.url;
     runtimeWindow.EJS_startOnLoaded = !deferredDOSStart;
-    runtimeWindow.EJS_dontExtractRom = deferredDOSStart || this.implementation.runtimeCore === "flycast";
+    runtimeWindow.EJS_dontExtractRom = deferredDOSStart || ["flycast", "neocd"].includes(this.implementation.runtimeCore);
     runtimeWindow.EJS_disableBatchBootup = deferredDOSStart;
     runtimeWindow.EJS_disableCue = ["cap32", "quasi88"].includes(this.implementation.runtimeCore) ? true : undefined;
     runtimeWindow.EJS_language = "zh-CN";

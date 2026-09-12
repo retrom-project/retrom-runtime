@@ -1,6 +1,37 @@
 export const emulatorJsSourceCatalog = {
   schemaVersion: 1,
-  developmentForks: [],
+  developmentForks: [
+  {
+    "repository": "https://github.com/retrom-project/neocd_libretro",
+    "commit": "3118c6901787e863e80e79170d02d47657b3b0ab",
+    "sourceTreeSha256": "dff235633032f2d19e89bde198041632e760998f7a3d90302684cec7969a31cf",
+    "adapterAbi": "emulatorjs-state-v1",
+    "runtimeCore": "neocd",
+    "upstreamCommit": "3118c6901787e863e80e79170d02d47657b3b0ab",
+    "assets": [
+      {
+        "filename": "LICENSE.md",
+        "sha256": "91db8ba33e34262247444a5ba0dffb5a69c1ceddb6939b773561abb1747980d7",
+        "sizeBytes": 165739
+      },
+      {
+        "filename": "neocd-wasm.data",
+        "sha256": "1d07ac12b6926069265d07a8979d1a17611cc194249480b13ec5416eb3c4afdc",
+        "sizeBytes": 1080725
+      },
+      {
+        "filename": "source.tar.gz",
+        "sha256": "2a1d2d71699b64cb9a74bcade00a0412927231f74f590c3ee582b61303d2d261",
+        "sizeBytes": 801364
+      },
+      {
+        "filename": "retrom-core-candidate.json",
+        "sha256": "927ee844a22c61b179d5921b5b57b30f691a9a1a0d7c1d295adbac41a807597b",
+        "sizeBytes": 728
+      }
+    ]
+  }
+],
   forks: [
 {
   "repository": "https://github.com/retrom-project/bsnes-libretro",

@@ -89,6 +89,7 @@ type CoreSource = {
 };
 
 const cores: readonly CoreSource[] = [
+  core("neocd", "4.2.3", "neocd-wasm.data", 1080725, "1d07ac12b6926069265d07a8979d1a17611cc194249480b13ec5416eb3c4afdc", "927ee844a22c61b179d5921b5b57b30f691a9a1a0d7c1d295adbac41a807597b", {artifactFlavor: "OVERRIDE", coreBundleVersion: "g3118c6901787-candidate", defaultOptions: {neocd_region: "Japan", neocd_cdspeedhack: "On", neocd_loadskip: "On"}}),
   core("81", "4.2.3", "81-wasm.data", 888668, "b78716a9566f7b31ad82f3d3250ba882af284294df4ec84b80012906aa1da417", "01c76aa09d95022d001e16f80e8ff32c0a62088da9445c6b321be06872943cf2", {artifactFlavor: "OVERRIDE", coreBundleVersion: "retrom-core-g86decf3ee61e-r1", defaultOptions: {keyboardInput: "enabled", "81_joypad_b": "new line"}}),
   core("flycast", "4.2.3", "flycast-wasm.data", 3530713, "c4e848767db6ad58e8aad665970ae6760ffbe2db3426bb27deec0396cbac44d6", "f3c6762e6ea597791a223215982f291674cf5afafa294fcc4fdec57ac0de6e30", {artifactFlavor: "OVERRIDE", coreBundleVersion: "1.0", defaultOptions: {reicast_hle_bios: "disabled", reicast_boot_to_bios: "disabled", reicast_internal_resolution: "640x480", reicast_threaded_rendering: "disabled", reicast_alpha_sorting: "per-strip (fast, least accurate)"}}),
 
@@ -193,7 +194,7 @@ export const emulatorJsProviderDefinition = defineProvider({
   adapters: storageAdapters(adapters),
   providerApiVersion: 1,
   providerId: "emulatorjs",
-  providerVersion: "2.12.0",
+  providerVersion: "2.13.0",
   targets,
 });
 

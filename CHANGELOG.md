@@ -1,9 +1,9 @@
 # Changelog
 
-## 0.32.0-pokemini.1 (unpublished candidate)
+## 0.37.0
 
-- Refresh the aggregate license notice carried by EmulatorJS Provider in candidate `2.8.1-pokemini.1`; its core payloads and target behavior are unchanged.
-- Add the GBE+ Pokémon Mini target with required BIOS, standard gamepad controls and the shared compressed checkpoint contract. Core artifacts remain explicit PFB development inputs pending product validation and a formal core release.
+- Add the GBE+ Pokémon Mini target with required BIOS, standard gamepad controls, verified persistent content caching and the shared compressed instant checkpoint contract. Pin the immutable GBE+ core release and verify its complete asset inventory and byte hashes.
+- Refresh the aggregate license notice carried by EmulatorJS Provider 2.14.0; its core payloads and target behavior are unchanged from the preceding release.
 
 ## 0.36.0
 

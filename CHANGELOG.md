@@ -1,8 +1,8 @@
 # Changelog
 
-## Unreleased
+## 0.33.0
 
-- Add the Intellivision `freeintv` target from EmulatorJS 4.3.0-pre with standard gamepad and instant checkpoint support (EmulatorJS Provider 2.9.0).
+- Add the Intellivision `freeintv` target from EmulatorJS 4.3.0-pre with standard gamepad and instant checkpoint support (EmulatorJS Provider 2.10.0).
 - Resolve FreeIntv's report cache-busting request to its pinned bundle asset, preserving unrelated requests and fetch cleanup.
 
 ## 0.32.0

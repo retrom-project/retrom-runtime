@@ -88,6 +88,12 @@ type CoreSource = {
   contentKinds: readonly ("SINGLE_FILE" | "DOS_BUNDLE" | "MULTI_DISC")[];
 };
 
+// Replaced with an empty object by formal builds. PFB supplies only verified,
+// already-declared candidates; this cannot add targets or change public contracts.
+declare const __RETROM_PFB_CORE_INPUTS__: Readonly<Record<string, {
+  sha256: string; sizeBytes: number; artifactSetSha256: string;
+}>>;
+
 const cores: readonly CoreSource[] = [
   core("neocd", "4.2.3", "neocd-wasm.data", 1080566, "3702540c38faab7d3eadae748791364d61e043b16d937b5bbae05c9c0134ec0c", "ae9dddaebf459deb11ab689c69b4f964efbf560e73a51788d9095cf24f8fec7c", {artifactFlavor: "OVERRIDE", coreBundleVersion: "retrom-core-g3118c6901787-r1", defaultOptions: {neocd_region: "Japan", neocd_cdspeedhack: "On", neocd_loadskip: "On"}}),
   core("81", "4.2.3", "81-wasm.data", 888668, "b78716a9566f7b31ad82f3d3250ba882af284294df4ec84b80012906aa1da417", "01c76aa09d95022d001e16f80e8ff32c0a62088da9445c6b321be06872943cf2", {artifactFlavor: "OVERRIDE", coreBundleVersion: "retrom-core-g86decf3ee61e-r1", defaultOptions: {keyboardInput: "enabled", "81_joypad_b": "new line"}}),
@@ -97,7 +103,7 @@ const cores: readonly CoreSource[] = [
   core("azahar", "4.3.0-pre", "azahar-thread-wasm.data", 3985011, "d90696e6ea68c4fc00ef147411ad399962777f07b6c7e73d5537da0eaffc2e3b", "77bf9b92bdc0f55b5d2dc5c2394971fe40b80b10b79fc40501db07d199bed94c", {inputMode: "POINTER", defaultOptions: {webgl2Enabled: "enabled"}}),
   core("beetle_vb", "4.2.3", "beetle_vb-wasm.data", 858313, "3db727a78b6a6551a4024c273069eb39c8e8f33aa78ef16a073ed7460f6ce692", "71604fbf1001fc5d053b08ce5f8396a1da456f176a0b3106eff08f7cac3e5986", {startupActions: [press(2000, 0), press(4000, 3), press(15000, 3), press(25000, 3)]}),
   core("bsnes", "4.3.0-pre", "bsnes-wasm.data", 1226327, "c0384975cf12d2227ccf31a03966ebf677c63fef44fc0852ef574efa2673fec1", "91994d91c9d828d8179936ada920d64b7a28cfb274ef75d560a60b46305fe610", {artifactFlavor: "OVERRIDE", coreBundleVersion: "retrom-core-g4b344745e387-r1"}),
-  core("cap32", "4.2.3", "cap32-wasm.data", 1028234, "cbebe15e960fad04eb27c08c5a73c7fbbc1df3d9cc13294f357104640c2da49f", "59278925c02b401d4d61fe396c29cd0ad23cf0b4970b4b2c2d976135c0dede37", {artifactFlavor: "OVERRIDE", coreBundleVersion: "retrom-core-g310cc579b79b-r2", defaultOptions: {keyboardInput: "enabled"}}),
+  core("cap32", "4.2.3", "cap32-wasm.data", 1029996, "534321cbb8f3f62fd2d2c8cc01b34ae50f6315869755218f8f6fa6581aa5083b", "2b1bc24a3fef304aca5a1e2a240b3ecde947fe4f72a3af75624953ccfc4e8faf", {artifactFlavor: "OVERRIDE", coreBundleVersion: "retrom-core-g310cc579b79b-r4", defaultOptions: {keyboardInput: "enabled"}}),
   core("crocods", "4.2.3", "crocods-wasm.data", 976148, "8c70df810436f225c5a2b40f31555636d6e12eacd41968f28b7dc708a9c6db10", "51e5f77fbcd99f13c49efae470290e4d1215ad10bc992e4a3332da72568119c9", {artifactFlavor: "OVERRIDE", coreBundleVersion: "retrom-core-gbe00fb904da0-r1", defaultOptions: {keyboardInput: "enabled"}}),
   core("desmume", "4.2.3", "desmume-wasm.data", 1172604, "a9fddaa4bd742e558dfe5095fa4eaf074493b591a7bc18c5f7c65d64b9fa7572", "970284459eedf8f7345d2b02d564dc7d32e7029aa8009011a8474df94244d57c", {inputMode: "POINTER"}),
   core("desmume2015", "4.2.3", "desmume2015-wasm.data", 1043573, "6f45da7f37007c0a69b7d91490b43e8294d4d642d1cc4ac999b341416f1ce13f", "5fc49392b5b73cd59446bf2ff6e01f4a2a9a7c07761cdb724ac1712bcc69ac0f", {inputMode: "POINTER"}),
@@ -194,7 +200,7 @@ export const emulatorJsProviderDefinition = defineProvider({
   adapters: storageAdapters(adapters),
   providerApiVersion: 1,
   providerId: "emulatorjs",
-  providerVersion: "2.16.0",
+  providerVersion: "2.17.0",
   targets,
 });
 
@@ -210,6 +216,7 @@ function core(
   overrides: Partial<Omit<CoreSource, "id" | "release" | "asset" | "sizeBytes" | "sha256" | "artifactSetSha256">> = {},
 ): CoreSource {
   const thread = filename.includes("-thread-wasm.data");
+  const candidate = typeof __RETROM_PFB_CORE_INPUTS__ === "undefined" ? undefined : __RETROM_PFB_CORE_INPUTS__[id];
   return {
     artifactFlavor: thread ? "THREAD_WASM" : "WASM",
     artifactSetSha256,
@@ -226,6 +233,8 @@ function core(
     sizeBytes,
     startupActions: [],
     ...overrides,
+    ...(candidate ? {sha256: candidate.sha256, sizeBytes: candidate.sizeBytes,
+      artifactSetSha256: candidate.artifactSetSha256, coreBundleVersion: `pfb-${candidate.artifactSetSha256}`} : {}),
     defaultOptions: {webgl2Enabled: "enabled", ...overrides.defaultOptions},
   };
 }

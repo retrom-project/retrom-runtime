@@ -368,7 +368,7 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
       this.implementation.runtimeCore === "dosbox_pure";
     runtimeWindow.EJS_player = "#retrom-emulator";
     runtimeWindow.EJS_core = this.implementation.runtimeCore;
-    runtimeWindow.EJS_controlScheme = emulatorControlScheme(this.implementation.runtimeCore, this.implementation.release);
+    runtimeWindow.EJS_controlScheme = emulatorControlScheme(this.implementation.runtimeCore, this.implementation.release, game.url);
     runtimeWindow.EJS_gameUrl = game.url;
     runtimeWindow.EJS_gameName = this.envelope.session.title;
     runtimeWindow.EJS_gameID = 0;
@@ -396,7 +396,10 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
     runtimeWindow.EJS_defaultOptions = this.netplayProfile ? {
       ...this.netplayProfile.defaultCoreOptions,
       ...(this.implementation.runtimeCore === "fbneo" ? {"fbneo-hiscores": "disabled"} : {}),
-    } : {...this.implementation.defaultOptions};
+    } : {...this.implementation.defaultOptions,
+      ...(this.implementation.runtimeCore === "cap32" && new URL(game.url, "http://runtime.invalid").pathname.toLowerCase().endsWith(".cpr")
+        ? {cap32_model: "6128+ (experimental)", cap32_gfx_colors: "24bit"} : {}),
+    };
     runtimeWindow.EJS_shaders = retromShaders;
     runtimeWindow.EJS_paths = {[fileName(this.implementation.coreAssetPath)]:
       `${this.envelope.runtime.runtimeBaseUrl}${this.implementation.coreAssetPath}`};

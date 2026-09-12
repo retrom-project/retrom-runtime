@@ -4,6 +4,7 @@ import {dirname, isAbsolute, join, resolve} from "node:path";
 import {fileURLToPath} from "node:url";
 
 import {buildProviderClient} from "./provider-client-build.mjs";
+import {readPFBProviderCoreFiles} from "./pfb-provider-cores.mjs";
 
 const runtimeRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 
@@ -34,12 +35,15 @@ export async function buildPFBProviderDev(input) {
   const staging = await mkdtemp(join(parent, ".provider-dev-"));
   try {
     const clientPath = join(staging, "client.mjs");
-    await buildProviderClient({
-      assetIndex,
-      entryPoint: input.entryPoint,
-      outfile: clientPath,
-    });
-    const files = [];
+    const coreFiles = (await readPFBProviderCoreFiles(input.outputRoot, providerId, staging, assetIndex))
+      .map(({path, contents}) => fileDescriptor(path, contents));
+    const pfbCoreInputs = Object.fromEntries(coreFiles.filter((file) => file.path.endsWith("-wasm.data"))
+      .map((file) => {
+        const id = file.path.split("/").at(-1).replace(/-wasm\.data$/u, "");
+        const report = coreFiles.find((entry) => entry.path === `assets/4.2.3/data/cores/reports/${id}.json`);
+        return [id, {sha256: file.sha256, sizeBytes: file.sizeBytes, artifactSetSha256: report.sha256}];
+      }));
+    const files = [...coreFiles];
     for (const local of input.localAssets) {
       if (!isAbsolute(local.source) || !safeRelative(local.output)) {
         throw new Error("PFB_PROVIDER_DEV_INPUT_INVALID");
@@ -48,6 +52,13 @@ export async function buildPFBProviderDev(input) {
       const path = `assets/${local.output.replace(/^runtime\//u, "")}`;
       files.push(fileDescriptor(path, contents));
     }
+    if (new Set(files.map((file) => file.path)).size !== files.length) {
+      throw new Error("PFB_PROVIDER_DEV_INPUT_INVALID:duplicate-asset");
+    }
+    for (const file of files.filter((file) => file.path.startsWith("assets/"))) {
+      assetIndex[file.path] = {sha256: file.sha256, sizeBytes: file.sizeBytes};
+    }
+    await buildProviderClient({assetIndex, pfbCoreInputs, entryPoint: input.entryPoint, outfile: clientPath});
     files.push(fileDescriptor("client.mjs", await readRegular(clientPath)));
     files.sort((left, right) => Buffer.from(left.path).compare(Buffer.from(right.path)));
     const descriptor = {
@@ -99,7 +110,8 @@ function fileDescriptor(path, contents) {
     path,
     sizeBytes: contents.byteLength,
     sha256: sha256(contents),
-    mediaType: path.endsWith(".rb") ? "text/plain; charset=utf-8" : "text/javascript; charset=utf-8",
+    mediaType: /\.[cm]?js$/u.test(path) ? "text/javascript; charset=utf-8"
+      : path.endsWith(".json") ? "application/json; charset=utf-8" : /\.(?:data|gz)$/u.test(path) ? "application/octet-stream" : "text/plain; charset=utf-8",
     contentBase64: contents.toString("base64"),
   };
 }

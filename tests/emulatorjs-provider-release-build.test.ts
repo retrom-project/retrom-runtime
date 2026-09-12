@@ -59,7 +59,7 @@ describe("EmulatorJS Provider release build", () => {
         providerId: string; targets: unknown[];
       };
       expect(provider.providerId).toBe("emulatorjs");
-      expect(provider.targets).toHaveLength(52);
+      expect(provider.targets).toHaveLength(53);
       const provenance = JSON.parse(await readFile(join(result.bundleRoot, "provenance.json"), "utf8"));
       expect(provenance.forks).toEqual(sourceCatalog.forks);
       expect(await readFile(join(result.bundleRoot,

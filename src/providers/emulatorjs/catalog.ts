@@ -125,6 +125,7 @@ const cores: readonly CoreSource[] = [
   core("prboom", "4.2.3", "prboom-wasm.data", 1091036, "830686c3b5176de25de45846f8cad9153803478718e6a487dda938437ecd0c0e", "5468d3146d11438aed17c6e7b93357912cf7638a6352edd9386ef4c2c4b8b38c"),
   core("prosystem", "4.2.3", "prosystem-wasm.data", 852864, "d3483e1c155c8d26e6b7b299c8ecc58c5abcfa0c5af5f03b75a55d219e71c3c8", "5ab7fa94d4cc9da68fff24911d76a32d3fba8ffbecd3fec740a1992670df809e"),
   core("puae", "4.2.3", "puae-wasm.data", 4140232, "8b58d776244c650c872dcaaf8693a2d75fd92a5219c7250cf5be5f517b11f1b5", "e833cb9a0d942770a2bd841dfe92decd069dd5a5bad817270d113f66ab239485", {inputMode: "POINTER"}),
+  core("quasi88", "4.2.3", "quasi88-wasm.data", 1041569, "c23c7f390bc5a8071a13e3c9e860c1ab96f34792bd531ca79ee12cff6a67c57d", "e3f7752189bac0b364e2fc4daf6a3a69176ccddf87c0177a30b7bc99d1621e8a", {artifactFlavor: "OVERRIDE", coreBundleVersion: "retrom-core-g459bbc6e90ca-r1", defaultOptions: {keyboardInput: "enabled", q88_basic_mode: "N88 V2"}}),
   core("same_cdi", "4.2.3", "same_cdi-wasm.data", 3492455, "4a0d2829af998d4066a12294a0ecfd1d23371bdea95906a48ef726298826a03c", "c4450a15fe43d5253ab2593a3f51d249332b92e5921ba0875cc40a9d33fda663", {artifactFlavor: "OVERRIDE", coreBundleVersion: "retrom-core-gcfb05d803f54-r1"}),
   core("smsplus", "4.2.3", "smsplus-wasm.data", 855876, "0f197c5e0000f17b2d072122a72b3f8fc1693514c4014fcd9694eec78584aa08", "a09612f1d088bffe8d9c107caf196b023710ed4aaeaa24f05caee7eec8591ff0"),
   core("snes9x", "4.2.3", "snes9x-wasm.data", 1093765, "eaa0bcfce67673809886e50387a80a616b719502175db64c090d04c9d75958ee", "f2ecf64d84dc3845ccd9828daf48436667f6aa79e6a5d6c41f0965f0151f1f34"),
@@ -186,7 +187,7 @@ export const emulatorJsProviderDefinition = defineProvider({
   adapters: storageAdapters(adapters),
   providerApiVersion: 1,
   providerId: "emulatorjs",
-  providerVersion: "2.10.0",
+  providerVersion: "2.11.0",
   targets,
 });
 

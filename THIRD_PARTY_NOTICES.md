@@ -72,3 +72,15 @@ Advance interpolation header with its MAME-linking exception, plus SDL2, SDL_ima
 XPaint GIF decoder, libpng, zlib, Ogg/Vorbis and Emscripten runtime notices.
 The aggregate adapter license does not replace these component licenses. No game
 PAKs are included. The fixed source commit and asset hashes are in `provider-sources.json`.
+
+## PC-88 QUASI88
+
+QUASI88/libretro uses the maintained fork <https://github.com/retrom-project/quasi88-libretro>,
+based on libretro/quasi88-libretro commit `459bbc6e90caa3dc392ae8e64a9b0881b1e5ef77`.
+The root BSD 3-Clause notice does not replace the original sound component terms.
+The release LICENSE bundles the upstream root LICENSE, `src/snddrv/license.txt`
+(historical MAME sound notices) and `src/fmgen/readme.txt` (FMGEN terms).
+The same LICENSE includes the RetroArch GPL notice. The source archive contains the
+core and build recipe; `retrom-fork.json` pins the corresponding linker source at
+<https://github.com/EmulatorJS/RetroArch/tree/6dd4353937ef48b6ec0bfbdbb15d1c5992d86927>.
+No NEC firmware or game content is included.

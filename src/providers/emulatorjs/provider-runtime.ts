@@ -381,7 +381,7 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
     runtimeWindow.EJS_startOnLoaded = !deferredDOSStart;
     runtimeWindow.EJS_dontExtractRom = deferredDOSStart || this.implementation.runtimeCore === "flycast";
     runtimeWindow.EJS_disableBatchBootup = deferredDOSStart;
-    runtimeWindow.EJS_disableCue = this.implementation.runtimeCore === "cap32" ? true : undefined;
+    runtimeWindow.EJS_disableCue = ["cap32", "quasi88"].includes(this.implementation.runtimeCore) ? true : undefined;
     runtimeWindow.EJS_language = "zh-CN";
     runtimeWindow.EJS_disableAutoLang = false;
     // PSP's native load receipt is emitted only with RetroArch's -v flag.

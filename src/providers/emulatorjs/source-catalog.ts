@@ -3,6 +3,39 @@ export const emulatorJsSourceCatalog = {
   developmentForks: [],
   forks: [
 {
+  "repository": "https://github.com/retrom-project/quasi88-libretro",
+  "tag": "retrom-core-g459bbc6e90ca-r1",
+  "commit": "6d1eb000465c035eb91ff1a256a977bc3e04f770",
+  "adapterAbi": "emulatorjs-state-v1",
+  "runtimeCore": "quasi88",
+  "assets": [
+    {
+      "filename": "LICENSE",
+      "sha256": "d8f7f8b340dc97bb6b2792cd0c5a5dc5d8a1b5493ea0f9652682974dcdac6669",
+      "sizeBytes": 42553,
+      "url": "https://github.com/retrom-project/quasi88-libretro/releases/download/retrom-core-g459bbc6e90ca-r1/LICENSE"
+    },
+    {
+      "filename": "quasi88-wasm.data",
+      "sha256": "c23c7f390bc5a8071a13e3c9e860c1ab96f34792bd531ca79ee12cff6a67c57d",
+      "sizeBytes": 1041569,
+      "url": "https://github.com/retrom-project/quasi88-libretro/releases/download/retrom-core-g459bbc6e90ca-r1/quasi88-wasm.data"
+    },
+    {
+      "filename": "rpg-runtime-release.json",
+      "sha256": "e3f7752189bac0b364e2fc4daf6a3a69176ccddf87c0177a30b7bc99d1621e8a",
+      "sizeBytes": 796,
+      "url": "https://github.com/retrom-project/quasi88-libretro/releases/download/retrom-core-g459bbc6e90ca-r1/rpg-runtime-release.json"
+    },
+    {
+      "filename": "source.tar.gz",
+      "sha256": "f03534e88641f9dfa342f9b59e62eb64d9c48c91dad3542e0e666059d5c58f74",
+      "sizeBytes": 939099,
+      "url": "https://github.com/retrom-project/quasi88-libretro/releases/download/retrom-core-g459bbc6e90ca-r1/source.tar.gz"
+    }
+  ]
+},
+{
   "repository": "https://github.com/retrom-project/libretro-vecx",
   "tag": "retrom-core-g8f671cc9d737-r1",
   "commit": "cbb4cf4dadc1e799b0a760f301c3a306a6d71c3a",

@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "packageName": "@xxxsen/retrom-runtime",
-  "packageVersion": "0.32.0-rc.2",
+  "packageVersion": "0.32.0-rc.5",
   "publicApiVersion": 2,
   "upstreamReleases": [
     {
@@ -2233,7 +2233,7 @@
       "id": "ppsspp",
       "repository": "https://github.com/retrom-project/ppsspp",
       "upstreamCommit": "2e6fd06ed6c77db467dea5fb3f67abd93457da20",
-      "adapterAbi": "ppsspp-host-v1",
+      "adapterAbi": "ppsspp-host-v2",
       "assets": [
         {
           "filename": "LICENSE",
@@ -2266,13 +2266,8 @@
           "maxSizeBytes": 1048576
         },
         {
-          "filename": "ppsspp-input.mjs",
-          "output": "runtime/ppsspp/ppsspp-input.mjs",
-          "maxSizeBytes": 1048576
-        },
-        {
-          "filename": "ppsspp-audio.mjs",
-          "output": "runtime/ppsspp/ppsspp-audio.mjs",
+          "filename": "ppsspp-io.worker.mjs",
+          "output": "runtime/ppsspp/ppsspp-io.worker.mjs",
           "maxSizeBytes": 1048576
         }
       ]

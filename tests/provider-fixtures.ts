@@ -107,7 +107,7 @@ export function targetEnvelope(targetId: string): LaunchEnvelopeV1 {
   const target = projectProviderManifest(retromRuntimeProviderDefinition).targets.find((entry) => entry.id === targetId);
   if (!target) {throw new Error(`target fixture missing: ${targetId}`);}
   let resource: LaunchEnvelopeV1["resources"][number];
-  if (["rpgmaker-xp", "rpgmaker-vx", "rpgmaker-vx-ace", "play-ps2"].includes(targetId)) {
+  if (["rpgmaker-xp", "rpgmaker-vx", "rpgmaker-vx-ace", "play-ps2", "ppsspp"].includes(targetId)) {
     resource = {
       kind: "SEEKABLE_BLOB", ordinal: 0, rangeRequired: true, role: "game",
       sha256: digest, sizeBytes: 4096, url: `/runtime/content/project/${digest}/game.mkxpz`,
@@ -124,7 +124,7 @@ export function targetEnvelope(targetId: string): LaunchEnvelopeV1 {
       contentDigest: digest, entryUrl: "https://runtime.test/__retrom/bootstrap",
       kind: "ISOLATED_WEB", ordinal: 0, origin: "https://runtime.test", role: "game",
     };
-  } else if (["j2me", "tic80", "fake08", "flash-ruffle", "msx-webmsx", "openbor", "ppsspp", "px68k", "np2kai-pc98"].includes(targetId)) {
+  } else if (["j2me", "tic80", "fake08", "flash-ruffle", "msx-webmsx", "openbor", "px68k", "np2kai-pc98"].includes(targetId)) {
     resource = {kind: "ROM_BLOB", ordinal: 0, rangeRequired: false, role: "game",
       sha256: digest, sizeBytes: 128, url: "/runtime/content/game/game.jar"};
   } else if (targetId === "wasm4") {

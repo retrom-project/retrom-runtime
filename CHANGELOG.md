@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.32.0-rc.5 (development candidate)
+
+- Change PPSSPP game input to `SEEKABLE_BLOB` and the core ABI to `ppsspp-host-v2`. Read only
+  requested 256 KiB ranges through a dedicated I/O worker, with bounded memory and persistent
+  block caching across launches. Do not download a full disc or report unread bytes as loading progress.
+- Require exact 206 ranges, lengths and SHA-256 identity ETags. Cache block checksums detect local
+  corruption; the authorized immutable server supplies source identity, rather than a pre-launch
+  whole-disc client hash. Core code assets retain complete SHA-256 verification.
+- Preserve native state bytes, virtual disc paths and the `ppsspp-state-v1-storage-v1` checkpoint
+  contract. Exit cancels pending reads and releases the emulator and I/O workers.
+
 ## 0.32.0-rc.2 (development candidate)
 
 - Add the independent `retrom-runtime/ppsspp` target using the official PPSSPP baseline

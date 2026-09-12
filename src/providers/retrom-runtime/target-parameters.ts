@@ -251,7 +251,7 @@ export function webmsx(envelope: LaunchEnvelopeV1): WebMSXParameters {
 }
 
 export function psp(envelope: LaunchEnvelopeV1, assetIndex: AssetIndexV1): PSPParameters {
-  const game = resource(envelope, "game", "ROM_BLOB");
-  return {game: {url: game.url, sha256: game.sha256, sizeBytes: game.sizeBytes},
+  const game = resource(envelope, "game", "SEEKABLE_BLOB");
+  return {game: seekableSource(game),
     runtimeBaseUrl: assetBase(envelope, "ppsspp"), assetIndex};
 }

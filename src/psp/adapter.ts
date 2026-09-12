@@ -1,11 +1,10 @@
-import {loadPSPFile, openPSPStore} from "./content.js";
 import type {RuntimeProgressReporter} from "../internal-adapter.js";
 import type {MountedRuntimeAdapter} from "../internal-adapter.js";
 import {loadPSP, validPSPCore, validPSPModule, type PSPLoader, type PSPParameters} from "./core.js";
 
 export async function mountPSP(config: PSPParameters, target: HTMLElement, frameWindow: Window,
-  restorePayload: Uint8Array | null, reportProgress: RuntimeProgressReporter, reportFailure: (error: Error) => void, signal?: AbortSignal,
-  dependencies: {loader?: PSPLoader; content?: (config: PSPParameters) => Promise<Blob>} = {},
+  restorePayload: Uint8Array | null, _reportProgress: RuntimeProgressReporter, reportFailure: (error: Error) => void, signal?: AbortSignal,
+  dependencies: {loader?: PSPLoader} = {},
 ): Promise<MountedRuntimeAdapter> {
   if (target.ownerDocument !== frameWindow.document || restorePayload &&
       (restorePayload.byteLength < 1 || restorePayload.byteLength > 268435456)) {throw new Error("PPSSPP_RUNTIME_CONFIG_INVALID");}
@@ -13,11 +12,8 @@ export async function mountPSP(config: PSPParameters, target: HTMLElement, frame
   const module = await (dependencies.loader ?? loadPSP)(config, frameWindow, signal);
   if (!validPSPModule(module)) {throw new Error("PPSSPP_CORE_ABI_MISMATCH");}
   signal?.throwIfAborted();
-  const file = dependencies.content ? await dependencies.content(config) :
-    await loadPSPFile(config.game, reportProgress, await openPSPStore(frameWindow), signal);
-  const extension = await contentExtension(file);
-  signal?.throwIfAborted();
-  const core = await module.createPPSSPPHost({file, extension, restore: restorePayload?.slice() ?? null,
+  const source = {...config.game, url: new URL(config.game.url, window.location.href).href};
+  const core = await module.createPPSSPPHost({source, restore: restorePayload?.slice() ?? null,
     target, onFailure: reportFailure, signal});
   if (!validPSPCore(core)) {throw new Error("PPSSPP_CORE_ABI_MISMATCH");}
   let exited = false;
@@ -53,14 +49,4 @@ export async function mountPSP(config: PSPParameters, target: HTMLElement, frame
     },
     setVolume: value => {requireActive(); core.setVolume(value);},
   };
-}
-
-async function contentExtension(file: Blob) {
-  const bytes = new Uint8Array(await file.slice(0, 8).arrayBuffer());
-  const magic = Array.from(bytes, value => String.fromCharCode(value)).join("");
-  if (magic.startsWith("\0PBP")) {return "pbp";}
-  if (magic.startsWith("CISO")) {return "cso";}
-  if (magic === "MComprHD") {return "chd";}
-  if (magic.startsWith("\x7fELF")) {return "elf";}
-  return "iso";
 }

@@ -2,6 +2,7 @@ import type {AssetIndexV1} from "../src/provider/module-api.js";
 
 export type ProviderClientBuildInput = {
   assetIndex: AssetIndexV1;
+  pfbCoreInputs?: Record<string, {sha256: string; sizeBytes: number; artifactSetSha256: string}>;
   entryPoint: string;
   outfile: string;
 };

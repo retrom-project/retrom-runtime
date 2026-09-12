@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+- PFB development can explicitly consume verified, already-built EmulatorJS fork candidates, including license/source provenance. Compile the client asset index from the selected bytes before publishing the atomic loose descriptor; formal catalogs and release locks remain pinned.
+
+- Select Game Gear and SG-1000 controller layouts from the delivered ROM extension while retaining Mega Drive six-button controls. Select Cap32 Plus hardware and its required 24-bit color depth for CPR cartridges without changing CPC disk defaults.
+
 ## 0.31.0
 
 - Correct EmulatorJS core framebuffer screenshots to the reported display aspect ratio before returning them to the host. This prevents non-square pixel output such as CD-i 768×280 from producing vertically flattened save and review thumbnails; native pixels remain uncropped.

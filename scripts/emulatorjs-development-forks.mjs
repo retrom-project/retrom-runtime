@@ -20,6 +20,12 @@ const digest = (value) => typeof value === "string" && /^[0-9a-f]{64}$/u.test(va
 const exact = (value, keys) => value && typeof value === "object" && !Array.isArray(value) &&
   Object.keys(value).sort().join("\0") === [...keys].sort().join("\0");
 
+export function developmentForkSource(id) {
+  const source = sources.get(id);
+  if (!source) {invalid();}
+  return {id, repository: source.repository, upstreamCommit: source.upstreamCommit, adapterAbi: "emulatorjs-state-v1"};
+}
+
 export function validEmulatorJsDevelopmentSource(value) {
   const source = sources.get(value?.id);
   return !!source && exact(value, ["id", "repository", "upstreamCommit", "adapterAbi"]) &&

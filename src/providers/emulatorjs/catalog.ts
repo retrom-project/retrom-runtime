@@ -83,6 +83,12 @@ type CoreSource = {
   contentKinds: readonly ("SINGLE_FILE" | "DOS_BUNDLE" | "MULTI_DISC")[];
 };
 
+// Replaced with an empty object by formal builds. PFB supplies only verified,
+// already-declared candidates; this cannot add targets or change public contracts.
+declare const __RETROM_PFB_CORE_INPUTS__: Readonly<Record<string, {
+  sha256: string; sizeBytes: number; artifactSetSha256: string;
+}>>;
+
 const cores: readonly CoreSource[] = [
   core("81", "4.2.3", "81-wasm.data", 888668, "b78716a9566f7b31ad82f3d3250ba882af284294df4ec84b80012906aa1da417", "01c76aa09d95022d001e16f80e8ff32c0a62088da9445c6b321be06872943cf2", {artifactFlavor: "OVERRIDE", coreBundleVersion: "retrom-core-g86decf3ee61e-r1", defaultOptions: {keyboardInput: "enabled", "81_joypad_b": "new line"}}),
   core("flycast", "4.2.3", "flycast-wasm.data", 3530713, "c4e848767db6ad58e8aad665970ae6760ffbe2db3426bb27deec0396cbac44d6", "f3c6762e6ea597791a223215982f291674cf5afafa294fcc4fdec57ac0de6e30", {artifactFlavor: "OVERRIDE", coreBundleVersion: "1.0", defaultOptions: {reicast_hle_bios: "disabled", reicast_boot_to_bios: "disabled", reicast_internal_resolution: "640x480", reicast_threaded_rendering: "disabled", reicast_alpha_sorting: "per-strip (fast, least accurate)"}}),
@@ -200,6 +206,7 @@ function core(
   overrides: Partial<Omit<CoreSource, "id" | "release" | "asset" | "sizeBytes" | "sha256" | "artifactSetSha256">> = {},
 ): CoreSource {
   const thread = filename.includes("-thread-wasm.data");
+  const candidate = typeof __RETROM_PFB_CORE_INPUTS__ === "undefined" ? undefined : __RETROM_PFB_CORE_INPUTS__[id];
   return {
     artifactFlavor: thread ? "THREAD_WASM" : "WASM",
     artifactSetSha256,
@@ -216,6 +223,8 @@ function core(
     sizeBytes,
     startupActions: [],
     ...overrides,
+    ...(candidate ? {sha256: candidate.sha256, sizeBytes: candidate.sizeBytes,
+      artifactSetSha256: candidate.artifactSetSha256, coreBundleVersion: `pfb-${candidate.artifactSetSha256}`} : {}),
     defaultOptions: {webgl2Enabled: "enabled", ...overrides.defaultOptions},
   };
 }

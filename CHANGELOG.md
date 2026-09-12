@@ -1,5 +1,15 @@
 # Changelog
 
+## Unreleased — 0.36.0-rc.1 / EmulatorJS Provider 2.13.0-rc.2
+
+- Bump both Provider versions because their aggregated provenance and license material changes.
+- Add the independent `uzem` development target, SNES gamepad layout and explicit
+  source provenance for the Uzem fork with complete machine-state serialization.
+- Uzebox `.uze` cartridges support fresh-instance instant restore; SD and mouse
+  peripherals are outside this candidate. Production aggregation remains blocked
+  until the core inputs are published and pinned.
+
+
 ## 0.35.0
 
 - Add an independent bsnes Target to EmulatorJS Provider 2.12.0 using the

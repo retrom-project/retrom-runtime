@@ -5,6 +5,20 @@ VX, VX Ace, MV and MZ, ONS games powered by ONScripterYuri, KAG-based KiriKiri2 
 projects powered by Butterscotch, browser TyranoScript projects, Java ME JARs, ScummVM game projects and WASM-4 carts. It owns runtime lifecycle, adapters, checkpoint codecs, bridge assets and pinned core
 Release inputs. It does not know about a host application's users, database, review flow, storage or HTTP API.
 
+## Uzebox / Uzem (development candidate)
+
+`emulatorjs/uzem` accepts a single `.uze` cartridge for ATmega644 Uzebox, version 1,
+using the maintained `retrom-project/libretro-uzem` fork. It exposes an SNES control
+layout while loading the Uzem core: standard D-pad, A/B/X/Y, shoulders, Select and Start
+map to one native input each. The current core polls player one only.
+
+The candidate adds a bounded, versioned complete machine checkpoint including CPU,
+RAM, EEPROM, timers, RNG, latched controller input and framebuffer. Public storage uses
+one gzip layer, as for other EmulatorJS targets. Restore is cartridge-bound and must
+work in a fresh instance. Mouse cartridges, SD media and `.hex` files are excluded.
+Candidate bytes are explicit development inputs; production aggregation rejects them
+until the independently maintained fork has a verified immutable release.
+
 ## PC-98 / NP2kai
 
 `retrom-runtime/np2kai-pc98` runs a single HDI hard disk or D88 floppy in a same-origin

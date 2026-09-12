@@ -6,6 +6,7 @@ export type EmulatorControlBinding = {
 export type EmulatorDefaultControls = Record<number, Record<number, EmulatorControlBinding>>;
 
 export function emulatorControlScheme(core: string, release: "4.2.3" | "4.3.0-pre") {
+  if (core === "uzem") {return "snes";}
   if (!["genesis_plus_gx", "genesis_plus_gx_wide", "picodrive"].includes(core)) {return undefined;}
   // Auto-detection picks Master System for these multi-system cores and removes
   // Start/A/X/Y/Z. In 4.2.3 only the segaCD alias exposes the MD six-button layout

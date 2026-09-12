@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "packageName": "@xxxsen/retrom-runtime",
-  "packageVersion": "0.35.0",
+  "packageVersion": "0.36.0-rc.1",
   "publicApiVersion": 2,
   "upstreamReleases": [
     {
@@ -2228,5 +2228,12 @@
       "output": "runtime/butterscotch/worker.mjs"
     }
   ],
-  "developmentInputs": []
+  "developmentInputs": [
+    {
+      "id": "uzem",
+      "repository": "https://github.com/retrom-project/libretro-uzem",
+      "upstreamCommit": "d991ee94547c8294abc1c4cb73d63116aa58b5bc",
+      "adapterAbi": "emulatorjs-state-v1"
+    }
+  ]
 }

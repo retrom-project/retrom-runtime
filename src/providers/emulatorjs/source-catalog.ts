@@ -1,6 +1,37 @@
 export const emulatorJsSourceCatalog = {
   schemaVersion: 1,
-  developmentForks: [],
+  developmentForks: [
+  {
+    "repository": "https://github.com/retrom-project/libretro-uzem",
+    "commit": "d991ee94547c8294abc1c4cb73d63116aa58b5bc",
+    "sourceTreeSha256": "474cd26a6ea35d1160b7a991c8a4ff7cfd296e0a74060bb27db7876edd83cb45",
+    "adapterAbi": "emulatorjs-state-v1",
+    "runtimeCore": "uzem",
+    "upstreamCommit": "d991ee94547c8294abc1c4cb73d63116aa58b5bc",
+    "assets": [
+      {
+        "filename": "LICENSE",
+        "sha256": "c207df9e7e659356a80ca2fe83df77bb823c197b154d6f7a8e664600a006ea6f",
+        "sizeBytes": 36424
+      },
+      {
+        "filename": "source.tar.gz",
+        "sha256": "53cd372dd3a593b0f84f6efb82c0c07bab8940c4e3879d280f4e5393f3d197b6",
+        "sizeBytes": 175365
+      },
+      {
+        "filename": "uzem-wasm.data",
+        "sha256": "c9f0e7d66f00fdb51c82b81c1d20269689b87e7f68d82267c31e2c03a54b221c",
+        "sizeBytes": 852642
+      },
+      {
+        "filename": "retrom-core-candidate.json",
+        "sha256": "2248f6881d726b03e559c60a3b0a5292fcded8c1846f03533da2ad3132cc47b7",
+        "sizeBytes": 718
+      }
+    ]
+  }
+],
   forks: [
 {
   "repository": "https://github.com/retrom-project/bsnes-libretro",

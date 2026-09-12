@@ -35,7 +35,7 @@ function fixture(core = "cap32") {
   const bytes = Buffer.from(JSON.stringify(metadata));
   contents.set("retrom-core-candidate.json", bytes);
   const fork = {runtimeCore: core, repository: metadata.repository,
-    upstreamCommit: core === "bsnes" ? "4b344745e3878e7c0675a60c624582935524b8f7" : core === "vecx" ? "8f671cc9d737f2890c3ce19e177e2984dcae121f" : core === "same_cdi" ? "cfb05d803f54130adf94efef88edd816d01df7a3" : core.startsWith("vice_") ? "1b4309f4d56ded7bfc5ad7ba8d5a9a44ac3388a8" : core === "cap32" ? "310cc579b79b6051b378b192224b325a73437c9b" : core === "81" ? "86decf3ee61ea5803972948e80197bee8474796b" : "be00fb904da08d66221017f6708508298f17ff07", commit: metadata.commit,
+    upstreamCommit: core === "uzem" ? "d991ee94547c8294abc1c4cb73d63116aa58b5bc" : core === "bsnes" ? "4b344745e3878e7c0675a60c624582935524b8f7" : core === "vecx" ? "8f671cc9d737f2890c3ce19e177e2984dcae121f" : core === "same_cdi" ? "cfb05d803f54130adf94efef88edd816d01df7a3" : core.startsWith("vice_") ? "1b4309f4d56ded7bfc5ad7ba8d5a9a44ac3388a8" : core === "cap32" ? "310cc579b79b6051b378b192224b325a73437c9b" : core === "81" ? "86decf3ee61ea5803972948e80197bee8474796b" : "be00fb904da08d66221017f6708508298f17ff07", commit: metadata.commit,
     sourceTreeSha256: metadata.sourceTreeSha256, adapterAbi: metadata.adapterAbi,
     assets: [...files, {filename: "retrom-core-candidate.json", sha256: sha(bytes), sizeBytes: bytes.length}]};
   return {contents, metadata, fork, catalog: {developmentForks: [fork]}};
@@ -43,6 +43,17 @@ function fixture(core = "cap32") {
 async function directory() {const root = await mkdtemp(join(tmpdir(), "cap32-candidate-")); roots.push(root); return root;}
 
 describe("EmulatorJS local core provenance", () => {
+  it("stages the Uzebox fork and rejects source drift, tampering and production use", async () => {
+    const {catalog, contents, fork, metadata} = fixture("uzem"), source = await directory(), output = await directory();
+    for (const [name, bytes] of contents) {await writeFile(join(source, name), bytes);}
+    await stageDevelopmentForks(catalog, new Map([["uzem", source]]), output);
+    expect(await readFile(join(output, "4.2.3/data/cores/uzem-wasm.data"))).toEqual(contents.get("uzem-wasm.data"));
+    expect(() => requireDevelopmentForkMode(catalog, false)).toThrow("UNPUBLISHED_CORE_INPUT");
+    expect(() => developmentForkFiles({developmentForks: [{...fork, upstreamCommit: "a".repeat(40)}]})).toThrow();
+    expect(() => verifyDevelopmentForkMetadata(fork, {...metadata, sourceTreeSha256: "c".repeat(64)})).toThrow();
+    await writeFile(join(source, "uzem-wasm.data"), "tampered");
+    await expect(stageDevelopmentForks(catalog, new Map([["uzem", source]]), output)).rejects.toThrow();
+  });
   it("stages bsnes only under 4.3.0-pre and forbids unpublished production inputs", async () => {
     const {catalog, contents, fork, metadata} = fixture("bsnes"), source = await directory(), output = await directory();
     for (const [name, bytes] of contents) {await writeFile(join(source, name), bytes);}

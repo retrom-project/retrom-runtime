@@ -6,7 +6,7 @@ import {launchEnvelope} from "../../../tests/emulatorjs-provider-fixtures.js";
 import {hostFixture} from "../../../tests/provider-adapter-fixture.js";
 import type {EmulatorDefaultControls} from "./default-controls.js";
 
-const coreIds = ["81", "cap32", "crocods", "vice_xpet", "vice_xplus4", "same_cdi", "vice_x64"];
+const coreIds = ["uzem", "81", "cap32", "crocods", "vice_xpet", "vice_xplus4", "same_cdi", "vice_x64"];
 describe("remaining EmulatorJS cores", () => {
   it.each(coreIds)("mounts %s through the declared loader and preserves checkpoint bytes", async (coreId) => {
     const targetId = coreId.replaceAll("_", "-");

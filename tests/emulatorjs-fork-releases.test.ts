@@ -46,6 +46,7 @@ describe("EmulatorJS fork Release inputs", () => {
 });
 
 const promotedCores = [
+  ["uzem", "libretro-uzem", "gd991ee94547c", "LICENSE"],
   ["bsnes", "bsnes-libretro", "g4b344745e387", "LICENSE.txt"],
   ["neocd", "neocd_libretro", "g3118c6901787", "LICENSE.md"],
   ["vecx", "libretro-vecx", "g8f671cc9d737", "LICENSE.md"],

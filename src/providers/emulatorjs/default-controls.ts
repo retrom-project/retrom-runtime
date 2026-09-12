@@ -7,6 +7,7 @@ export type EmulatorDefaultControls = Record<number, Record<number, EmulatorCont
 
 export function emulatorControlScheme(core: string, release: "4.2.3" | "4.3.0-pre", gameUrl = "") {
   if (core === "neocd") {return "arcade";}
+  if (core === "uzem") {return "snes";}
   if (!["genesis_plus_gx", "genesis_plus_gx_wide", "picodrive"].includes(core)) {return undefined;}
   const extension = new URL(gameUrl, "http://runtime.invalid").pathname.toLowerCase().split(".").pop();
   if (extension === "gg") {return "segaGG";}

@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.41.0 / EmulatorJS Provider 2.18.0
+
+- Bump both Provider versions because their aggregated provenance and license material changes.
+- Add the independent `uzem` target, SNES gamepad layout and explicit
+  source provenance for the Uzem fork with complete machine-state serialization.
+- Uzebox `.uze` cartridges support fresh-instance instant restore; SD and mouse
+  peripherals are excluded. Pin the verified immutable core release
+  `retrom-core-gd991ee94547c-r1` and its complete source/license inventory.
+
+
 ## 0.40.0
 
 - Pin Cap32 r4: restore CPC Plus ASIC, palette, DMA and decoded cartridge ROM mapping across Launches; reject corrupted sprite palette indices before state mutation and retain ordinary CPC snapshot compatibility. Publish EmulatorJS Provider 2.17.0.

@@ -3,6 +3,39 @@ export const emulatorJsSourceCatalog = {
   developmentForks: [],
   forks: [
 {
+  "repository": "https://github.com/retrom-project/libretro-uzem",
+  "tag": "retrom-core-gd991ee94547c-r1",
+  "commit": "ae27af7177da4c80159e76ef24b31f0734646973",
+  "adapterAbi": "emulatorjs-state-v1",
+  "runtimeCore": "uzem",
+  "assets": [
+    {
+      "filename": "LICENSE",
+      "sha256": "c207df9e7e659356a80ca2fe83df77bb823c197b154d6f7a8e664600a006ea6f",
+      "sizeBytes": 36424,
+      "url": "https://github.com/retrom-project/libretro-uzem/releases/download/retrom-core-gd991ee94547c-r1/LICENSE"
+    },
+    {
+      "filename": "rpg-runtime-release.json",
+      "sha256": "6cba9cc2c184cb56033f76af19c911e79d5355aa6a0afa1b25b949ff962af123",
+      "sizeBytes": 789,
+      "url": "https://github.com/retrom-project/libretro-uzem/releases/download/retrom-core-gd991ee94547c-r1/rpg-runtime-release.json"
+    },
+    {
+      "filename": "source.tar.gz",
+      "sha256": "4e9188a30b745e5f1e2976c691e496d6b648b69b55f7a035f555a0c890786f48",
+      "sizeBytes": 176800,
+      "url": "https://github.com/retrom-project/libretro-uzem/releases/download/retrom-core-gd991ee94547c-r1/source.tar.gz"
+    },
+    {
+      "filename": "uzem-wasm.data",
+      "sha256": "c9f0e7d66f00fdb51c82b81c1d20269689b87e7f68d82267c31e2c03a54b221c",
+      "sizeBytes": 852642,
+      "url": "https://github.com/retrom-project/libretro-uzem/releases/download/retrom-core-gd991ee94547c-r1/uzem-wasm.data"
+    }
+  ]
+},
+{
   "repository": "https://github.com/retrom-project/neocd_libretro",
   "tag": "retrom-core-g3118c6901787-r1",
   "commit": "53334661fcf0d6fd68fcf2fea03c800149588f0c",

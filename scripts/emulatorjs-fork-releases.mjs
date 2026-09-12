@@ -1,4 +1,5 @@
 const identities = {
+  uzem: {repository: "https://github.com/retrom-project/libretro-uzem", baseline: "gd991ee94547c", license: "LICENSE", source: "source.tar.gz"},
   bsnes: {repository: "https://github.com/retrom-project/bsnes-libretro", baseline: "g4b344745e387", license: "LICENSE.txt", source: "source.tar.gz", release: "4.3.0-pre"},
   neocd: {repository: "https://github.com/retrom-project/neocd_libretro", baseline: "g3118c6901787", license: "LICENSE.md", source: "source.tar.gz"},
   quasi88: {repository: "https://github.com/retrom-project/quasi88-libretro", baseline: "g459bbc6e90ca", license: "LICENSE", source: "source.tar.gz"},

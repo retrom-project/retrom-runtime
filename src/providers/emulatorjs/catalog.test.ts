@@ -39,13 +39,13 @@ describe("EmulatorJS Provider declarations", () => {
       expect(target.checkpoint?.writeFormat).toBe("emulatorjs-state-v1-storage-v1");
     }
   });
-  it("uses last declaration wins for exactly fifty-six current core targets", () => {
+  it("uses last declaration wins for exactly fifty-seven current core targets", () => {
     const manifest = projectProviderManifest(emulatorJsProviderDefinition);
     expect(validateProviderManifest(manifest)).toBe(manifest);
     expect(manifest.providerId).toBe("emulatorjs");
-    expect(manifest.providerVersion).toBe("2.17.0");
-    expect(manifest.targets).toHaveLength(56);
-    expect(new Set(manifest.targets.map((target) => target.id)).size).toBe(56);
+    expect(manifest.providerVersion).toBe("2.18.0");
+    expect(manifest.targets).toHaveLength(57);
+    expect(new Set(manifest.targets.map((target) => target.id)).size).toBe(57);
     for (const targetId of ["dosbox-pure", "genesis-plus-gx-wide", "azahar", "freeintv"]) {
       const target = emulatorJsProviderDefinition.targets.find((entry) => entry.id === targetId);
       expect(target?.implementation.release).toBe("4.3.0-pre");

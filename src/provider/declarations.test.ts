@@ -9,7 +9,7 @@ const targetIds = [
   "flash-ruffle",
   "gbe-pokemini",
   "j2me",
-  "kirikiri2-kag", "msx-webmsx", "np2kai-pc98",
+  "kirikiri2-kag", "msx-webmsx", "np2kai-pc98", "nxengine",
   "onscripter-yuri", "openbor", "play-ps2", "px68k",
   "rpgmaker-2000",
   "rpgmaker-2003",
@@ -29,7 +29,7 @@ const sameOriginFrameTargetIds = [
   "flash-ruffle",
   "gbe-pokemini",
   "j2me",
-  "kirikiri2-kag", "msx-webmsx", "np2kai-pc98",
+  "kirikiri2-kag", "msx-webmsx", "np2kai-pc98", "nxengine",
   "onscripter-yuri", "openbor", "play-ps2", "px68k",
   "rpgmaker-2000",
   "rpgmaker-2003",
@@ -42,7 +42,7 @@ const sameOriginFrameTargetIds = [
 
 describe("retrom-runtime provider declarations", () => {
   it("declares the complete target closure in one source", () => {
-    expect(retromRuntimeProviderDefinition.providerVersion).toBe("0.37.0");
+    expect(retromRuntimeProviderDefinition.providerVersion).toBe("0.38.0");
     expect(retromRuntimeProviderDefinition.targets.map((target) => target.id)).toEqual(targetIds);
     expect(retromRuntimeProviderDefinition.adapters).toHaveLength(19);
   });
@@ -53,7 +53,7 @@ describe("retrom-runtime provider declarations", () => {
       clientModulePath: "client.mjs",
       providerApiVersion: 1,
       providerId: "retrom-runtime",
-      providerVersion: "0.37.0",
+      providerVersion: "0.38.0",
       schemaVersion: 1,
     });
     expect(manifest.targets.map((target) => target.id)).toEqual(targetIds);

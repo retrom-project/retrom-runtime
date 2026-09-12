@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- Add the NXEngine development target for original freeware Cave Story projects, with persistent resource caching, standard controller input and explicit native game-save transfer between instances. Formal core release input remains unpublished until product validation and release authorization.
+
 ## 0.37.0
 
 - Add the GBE+ Pokémon Mini target with required BIOS, standard gamepad controls, verified persistent content caching and the shared compressed instant checkpoint contract. Pin the immutable GBE+ core release and verify its complete asset inventory and byte hashes.

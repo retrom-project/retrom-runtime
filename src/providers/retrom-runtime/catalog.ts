@@ -38,6 +38,9 @@ const isolatedCapabilities = capabilities(true, true, true);
 const wasm4Capabilities = capabilities(true, true, false);
 
 const adapters = [
+  defineAdapter({id: "nxengine-web", kind: "NXENGINE_WEB", abi: "nxengine-host-v1",
+    capabilities: capabilities(true, true, true),
+    checkpoint: {writeFormat: "nxengine-game-save-v1", readFormats: ["nxengine-game-save-v1"], semantics: "GAME_SAVE"}}),
   np2kaiAdapter, gbeAdapter,
   defineAdapter({id: "openbor-web", kind: "OPENBOR_WEB", abi: "openbor-host-v1",
     capabilities: capabilities(true, true, false),
@@ -100,6 +103,8 @@ const targets = [
   target("msx-webmsx", "MSX (WebMSX)", "webmsx-web", noOptionsSchema, false, "SAME_ORIGIN_BLANK", "ROM_BLOB",
     32 * 1024 * 1024, ["assets/webmsx/webmsx.js"]),
   np2kaiTarget,
+  target("nxengine", "Cave Story (NXEngine)", "nxengine-web", noOptionsSchema, false, "SAME_ORIGIN_BLANK", "FILE_TREE",
+    16384, ["assets/nxengine/nxengine-retrom.mjs", "assets/nxengine/nxengine-retrom.wasm"]),
   target(
     "onscripter-yuri", "ONScripter Yuri", "ons-yuri-web", onsOptionsSchema,
     false, "SAME_ORIGIN_BLANK", "FILE_TREE", 64 * 1024 * 1024,
@@ -134,7 +139,7 @@ export const retromRuntimeProviderDefinition = defineProvider({
   adapters: storageAdapters(adapters),
   providerApiVersion: 1,
   providerId: "retrom-runtime",
-  providerVersion: "0.37.0",
+  providerVersion: "0.38.0",
   targets,
 });
 

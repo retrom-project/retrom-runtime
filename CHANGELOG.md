@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.37.0
+
+- Add the GBE+ Pokémon Mini target with required BIOS, standard gamepad controls, verified persistent content caching and the shared compressed instant checkpoint contract. Pin the immutable GBE+ core release and verify its complete asset inventory and byte hashes.
+- Refresh the aggregate license notice carried by EmulatorJS Provider 2.14.0; its core payloads and target behavior are unchanged from the preceding release.
+
 ## 0.36.0
 
 - Add the NeoCD single-CHD target in EmulatorJS Provider 2.13.0, pinned to the immutable NeoCD fork release. The maintained fork owns the WASM build.

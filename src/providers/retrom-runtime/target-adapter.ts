@@ -1,3 +1,4 @@
+import {mountGBE} from "../../gbe-pokemini/adapter.js";
 import {mountNP2} from "../../np2kai/adapter.js";
 import {mountOpenBOR} from "../../openbor/adapter.js";
 import {mountPx68k} from "../../px68k/adapter.js";
@@ -101,6 +102,8 @@ function mountMachineAdapter(kind: string, envelope: LaunchEnvelopeV1, target: H
   const {frameWindow, restorePayload, reportProgress} = context;
   const reportFailure = context.reportFailure ?? (() => undefined);
   switch (kind) {
+  case "GBE_POKEMINI_WEB":
+    return mountGBE(parameters.gbePokemini(envelope, context.assetIndex), target, frameWindow, restorePayload, reportProgress, context.signal);
   case "NP2KAI_WEB":
     return mountNP2(parameters.np2kai(envelope, context.assetIndex), target, frameWindow, restorePayload,
       reportProgress, reportFailure, context.signal);

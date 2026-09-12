@@ -7,6 +7,7 @@ const targetIds = [
   "butterscotch-gamemaker",
   "fake08",
   "flash-ruffle",
+  "gbe-pokemini",
   "j2me",
   "kirikiri2-kag", "msx-webmsx", "np2kai-pc98",
   "onscripter-yuri", "openbor", "play-ps2", "px68k",
@@ -26,6 +27,7 @@ const sameOriginFrameTargetIds = [
   "butterscotch-gamemaker",
   "fake08",
   "flash-ruffle",
+  "gbe-pokemini",
   "j2me",
   "kirikiri2-kag", "msx-webmsx", "np2kai-pc98",
   "onscripter-yuri", "openbor", "play-ps2", "px68k",
@@ -39,10 +41,10 @@ const sameOriginFrameTargetIds = [
 ];
 
 describe("retrom-runtime provider declarations", () => {
-  it("declares the complete 0.31.0 target closure in one source", () => {
-    expect(retromRuntimeProviderDefinition.providerVersion).toBe("0.36.0");
+  it("declares the complete target closure in one source", () => {
+    expect(retromRuntimeProviderDefinition.providerVersion).toBe("0.37.0");
     expect(retromRuntimeProviderDefinition.targets.map((target) => target.id)).toEqual(targetIds);
-    expect(retromRuntimeProviderDefinition.adapters).toHaveLength(18);
+    expect(retromRuntimeProviderDefinition.adapters).toHaveLength(19);
   });
 
   it("projects a public manifest without internal adapter identities", () => {
@@ -51,7 +53,7 @@ describe("retrom-runtime provider declarations", () => {
       clientModulePath: "client.mjs",
       providerApiVersion: 1,
       providerId: "retrom-runtime",
-      providerVersion: "0.36.0",
+      providerVersion: "0.37.0",
       schemaVersion: 1,
     });
     expect(manifest.targets.map((target) => target.id)).toEqual(targetIds);

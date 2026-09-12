@@ -70,7 +70,7 @@ for (const release of sources.upstreamReleases) {
     await stageScummvmCandidate(asScummvmCandidateSource(release), devRoot, root, stage);
     continue;
   }
-  if (["np2kai", "px68k"].includes(release.id) && devRoot) {
+  if (["np2kai", "px68k", "gbe_plus"].includes(release.id) && devRoot) {
     assertScummvmCandidateMode([release], process.env.RETROM_PFB_CANDIDATE_BUILD === "1", formalBuild);
     await stageCoreDevelopmentInput({id: release.id, repository: release.repository,
       upstreamCommit: release.upstreamCommit, adapterAbi: release.adapterAbi,
@@ -81,7 +81,7 @@ for (const release of sources.upstreamReleases) {
   if (!devRoot) {
     const metadata = await download(release.metadataUrl, 65536);
     const descriptor = JSON.parse(new TextDecoder().decode(metadata));
-    if (["np2kai", "px68k", "tyranoscript", "openbor"].includes(release.id)) {
+    if (["np2kai", "px68k", "tyranoscript", "openbor", "gbe_plus"].includes(release.id)) {
       await stagePinnedCoreRelease(release, descriptor, download, stage);
       continue;
     }

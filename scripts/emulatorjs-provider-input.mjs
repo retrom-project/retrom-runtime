@@ -283,7 +283,7 @@ export async function currentInput() {
     allowDevelopmentForks: process.env.RETROM_PFB_CANDIDATE_BUILD === "1",
     developmentRoots: parseDevReleaseOverrides(process.env.RETROM_RUNTIME_DEV_RELEASE_OVERRIDES,
       [...sources.upstreamReleases, ...sources.developmentInputs ?? [], ...emulatorJsSourceCatalog.developmentCores ?? [],
-        ...(emulatorJsSourceCatalog.forks ?? []).map((fork) => ({id: fork.runtimeCore}))], process.env.RETROM_PROVIDER_BUILD_MODE === "release"),
+        ...[...emulatorJsSourceCatalog.forks ?? [], ...emulatorJsSourceCatalog.developmentForks ?? []].map((fork) => ({id: fork.runtimeCore}))], process.env.RETROM_PROVIDER_BUILD_MODE === "release"),
     definition: emulatorJsProviderDefinition,
     extractArchive: extractWith7Zip,
     fetchBytes: fetchPinnedBytes,

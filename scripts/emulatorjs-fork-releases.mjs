@@ -1,5 +1,6 @@
 const identities = {
   bsnes: {repository: "https://github.com/retrom-project/bsnes-libretro", baseline: "g4b344745e387", license: "LICENSE.txt", source: "source.tar.gz", release: "4.3.0-pre"},
+  neocd: {repository: "https://github.com/retrom-project/neocd_libretro", baseline: "g3118c6901787", license: "LICENSE.md", source: "source.tar.gz"},
   quasi88: {repository: "https://github.com/retrom-project/quasi88-libretro", baseline: "g459bbc6e90ca", license: "LICENSE", source: "source.tar.gz"},
   vecx: {repository: "https://github.com/retrom-project/libretro-vecx", baseline: "g8f671cc9d737", license: "LICENSE.md", source: "source.tar.gz"},
   "81": {repository: "https://github.com/retrom-project/81-libretro", baseline: "g86decf3ee61e", license: "LICENSE", source: "source.tar.gz"},

@@ -24,18 +24,21 @@ import {developmentForkFiles, requireDevelopmentForkMode, stageDevelopmentForks,
 const roots: string[] = [];
 afterEach(async () => {await Promise.all(roots.splice(0).map((root) => rm(root, {recursive: true, force: true})));});
 const sha = (bytes: Uint8Array) => createHash("sha256").update(bytes).digest("hex");
+function fixtureUpstreamCommit(core: string) {
+  return core === "uzem" ? "d991ee94547c8294abc1c4cb73d63116aa58b5bc" : core === "neocd" ? "3118c6901787e863e80e79170d02d47657b3b0ab" : core === "bsnes" ? "4b344745e3878e7c0675a60c624582935524b8f7" : core === "vecx" ? "8f671cc9d737f2890c3ce19e177e2984dcae121f" : core === "same_cdi" ? "cfb05d803f54130adf94efef88edd816d01df7a3" : core.startsWith("vice_") ? "1b4309f4d56ded7bfc5ad7ba8d5a9a44ac3388a8" : core === "cap32" ? "310cc579b79b6051b378b192224b325a73437c9b" : core === "81" ? "86decf3ee61ea5803972948e80197bee8474796b" : "be00fb904da08d66221017f6708508298f17ff07";
+}
 function fixture(core = "cap32") {
-  const license = core === "bsnes" ? "LICENSE.txt" : core === "vecx" ? "LICENSE.md" : (core === "cap32" || core === "same_cdi" || core.startsWith("vice_")) ? "COPYING" : "LICENSE";
+  const license = core === "bsnes" ? "LICENSE.txt" : ["vecx", "neocd"].includes(core) ? "LICENSE.md" : (core === "cap32" || core === "same_cdi" || core.startsWith("vice_")) ? "COPYING" : "LICENSE";
   const contents = new Map([...[license, `${core}-wasm.data`, "source.tar.gz"].map((name) =>
     [name, Buffer.from(`project-owned ${name} test bytes`)] as const)]);
   const files = [...contents].map(([filename, bytes]) => ({filename, sha256: sha(bytes), sizeBytes: bytes.length}));
   const metadata = {schemaVersion: 1, kind: "RETROM_CORE_CANDIDATE_V1", coreId: core,
-    repository: `https://github.com/retrom-project/${core === "bsnes" ? "bsnes-libretro" : core.startsWith("vice_") ? "vice-libretro" : core === "81" ? "81-libretro" : core === "same_cdi" ? "same_cdi" : `libretro-${core}`}`, branch: "feat/test-core",
+    repository: `https://github.com/retrom-project/${core === "neocd" ? "neocd_libretro" : core === "bsnes" ? "bsnes-libretro" : core.startsWith("vice_") ? "vice-libretro" : core === "81" ? "81-libretro" : core === "same_cdi" ? "same_cdi" : `libretro-${core}`}`, branch: "feat/test-core",
     commit: "a".repeat(40), dirty: false, sourceTreeSha256: "b".repeat(64), adapterAbi: "emulatorjs-state-v1", files};
   const bytes = Buffer.from(JSON.stringify(metadata));
   contents.set("retrom-core-candidate.json", bytes);
   const fork = {runtimeCore: core, repository: metadata.repository,
-    upstreamCommit: core === "uzem" ? "d991ee94547c8294abc1c4cb73d63116aa58b5bc" : core === "bsnes" ? "4b344745e3878e7c0675a60c624582935524b8f7" : core === "vecx" ? "8f671cc9d737f2890c3ce19e177e2984dcae121f" : core === "same_cdi" ? "cfb05d803f54130adf94efef88edd816d01df7a3" : core.startsWith("vice_") ? "1b4309f4d56ded7bfc5ad7ba8d5a9a44ac3388a8" : core === "cap32" ? "310cc579b79b6051b378b192224b325a73437c9b" : core === "81" ? "86decf3ee61ea5803972948e80197bee8474796b" : "be00fb904da08d66221017f6708508298f17ff07", commit: metadata.commit,
+    upstreamCommit: fixtureUpstreamCommit(core), commit: metadata.commit,
     sourceTreeSha256: metadata.sourceTreeSha256, adapterAbi: metadata.adapterAbi,
     assets: [...files, {filename: "retrom-core-candidate.json", sha256: sha(bytes), sizeBytes: bytes.length}]};
   return {contents, metadata, fork, catalog: {developmentForks: [fork]}};
@@ -66,6 +69,24 @@ describe("EmulatorJS local core provenance", () => {
     await writeFile(join(source, "bsnes-wasm.data"), "tampered");
     await expect(stageDevelopmentForks(catalog, new Map([["bsnes", source]]), output)).rejects.toThrow();
   });
+  it("admits NeoCD only as a verified local candidate with its license and source", async () => {
+    const {catalog, contents, fork, metadata} = fixture("neocd"), source = await directory(), output = await directory();
+    expect(() => requireDevelopmentForkMode(catalog, false)).toThrow("UNPUBLISHED_CORE_INPUT");
+    expect(() => requireDevelopmentForkMode(catalog, true)).not.toThrow();
+    for (const [name, bytes] of contents) {await writeFile(join(source, name), bytes);}
+    await stageDevelopmentForks(catalog, new Map([["neocd", source]]), output);
+    expect(await readFile(join(output, "4.2.3/data/cores/neocd-wasm.data"))).toEqual(contents.get("neocd-wasm.data"));
+    expect(await readFile(join(output, "4.2.3/licenses/forks/neocd/LICENSE.md"))).toEqual(contents.get("LICENSE.md"));
+    expect(await readFile(join(output, "4.2.3/licenses/forks/neocd/source.tar.gz"))).toEqual(contents.get("source.tar.gz"));
+    for (const changed of [{...fork, repository: "https://github.com/libretro/neocd_libretro"},
+      {...fork, adapterAbi: "other"}, {...fork, upstreamCommit: "a".repeat(40)}]) {
+      expect(() => developmentForkFiles({developmentForks: [changed]})).toThrow();
+    }
+    expect(() => verifyDevelopmentForkMetadata(fork, {...metadata, coreId: "fbneo"})).toThrow();
+    await writeFile(join(source, "neocd-wasm.data"), "tampered");
+    await expect(stageDevelopmentForks(catalog, new Map([["neocd", source]]), output)).rejects.toThrow();
+  });
+
   it("stages three declared forks separately and rejects duplicate identities", async () => {
     const cap = fixture(), croco = fixture("crocods"), eightyOne = fixture("81"), output = await directory();
     const catalog = {developmentForks: [cap.fork, croco.fork, eightyOne.fork]}, inputs = new Map<string, string>();

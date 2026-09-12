@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased — 0.36.0-rc.1 / EmulatorJS Provider 2.13.0-rc.2
+## 0.41.0 / EmulatorJS Provider 2.18.0
 
 - Bump both Provider versions because their aggregated provenance and license material changes.
 - Add the independent `uzem` development target, SNES gamepad layout and explicit
@@ -9,6 +9,22 @@
   peripherals are outside this candidate. Production aggregation remains blocked
   until the core inputs are published and pinned.
 
+
+## 0.38.0
+
+- Add the NXEngine target for original freeware Cave Story projects, with persistent resource caching, standard controller input and explicit native game-save transfer between instances. Pin the immutable NXEngine core release and verify its full asset inventory.
+- Refresh the aggregate license notice carried by EmulatorJS Provider 2.15.0; its core payloads and target behavior remain unchanged.
+
+## 0.37.0
+
+- Add the GBE+ Pokémon Mini target with required BIOS, standard gamepad controls, verified persistent content caching and the shared compressed instant checkpoint contract. Pin the immutable GBE+ core release and verify its complete asset inventory and byte hashes.
+- Refresh the aggregate license notice carried by EmulatorJS Provider 2.14.0; its core payloads and target behavior are unchanged from the preceding release.
+
+## 0.36.0
+
+- Add the NeoCD single-CHD target in EmulatorJS Provider 2.13.0, pinned to the immutable NeoCD fork release. The maintained fork owns the WASM build.
+- Map NeoCD native A/B/C/D to the standard bottom/right/left/top face buttons, without binding native multi-button shoulder macros.
+- Load NeoCD through bounded, persistent Range blocks and an Asyncify core bridge, without a startup whole-disc download or hash scan; retain Flycast OPFS behavior. Preserve native load skipping and compressed instant checkpoints.
 
 ## 0.35.0
 

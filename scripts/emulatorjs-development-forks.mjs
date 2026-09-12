@@ -12,6 +12,9 @@ const sources = new Map([
     upstreamCommit: "459bbc6e90caa3dc392ae8e64a9b0881b1e5ef77", license: "LICENSE"}],
   ["bsnes", {repository: "https://github.com/retrom-project/bsnes-libretro",
     upstreamCommit: "4b344745e3878e7c0675a60c624582935524b8f7", license: "LICENSE.txt", release: "4.3.0-pre"}],
+
+  ["neocd", {repository: "https://github.com/retrom-project/neocd_libretro",
+    upstreamCommit: "3118c6901787e863e80e79170d02d47657b3b0ab", license: "LICENSE.md"}],
   ["same_cdi", {repository: "https://github.com/retrom-project/same_cdi",
     upstreamCommit: "cfb05d803f54130adf94efef88edd816d01df7a3", license: "COPYING"}],
   ...["vice_xpet", "vice_xplus4"].map((core) => [core, {repository: "https://github.com/retrom-project/vice-libretro",

@@ -19,6 +19,25 @@ work in a fresh instance. Mouse cartridges, SD media and `.hex` files are exclud
 Candidate bytes are explicit development inputs; production aggregation rejects them
 until the independently maintained fork has a verified immutable release.
 
+## Pokémon Mini / GBE+
+
+The target `retrom-runtime/gbe-pokemini` runs one 8.25 KiB–2 MiB
+`.min` ROM with a separately supplied 4 KiB `bios.min`. Its fork is
+[retrom-project/gbe-plus](https://github.com/retrom-project/gbe-plus), based on
+upstream commit `05a05e931b3993ff3e6316b0d841a1fb4d3ac7a7`.
+The source catalog pins the immutable `retrom-core-g05a05e931b39-r1` release,
+commit, ABI and exact asset sizes/SHA-256. Formal builds verify the release descriptor
+and every downloaded byte. Local overrides remain restricted to explicit PFB candidates.
+
+A standard gamepad maps the D-pad/left stick to directions, A/B/X to Mini A/B/C,
+LB to Shake, and Select to Power. Keyboard arrows and Z/X/D/C/Space remain usable.
+Pause, exit and blur release held keys. Native instantaneous CPU/MMU/APU/LCD
+snapshots are bound to the ROM SHA-256 and checked for integrity, then compressed
+once by the shared Provider storage boundary as `gbe-pokemini-state-v1-storage-v1`
+(maximum 1 MiB). ROM and BIOS bytes use verified persistent Cache Storage across
+instances. The target supports screenshots, volume and frame counting; infrared
+multiplayer and native configuration UI are outside this target.
+
 ## PC-98 / NP2kai
 
 `retrom-runtime/np2kai-pc98` runs a single HDI hard disk or D88 floppy in a same-origin
@@ -588,3 +607,30 @@ PC-88 games can require additional keyboard controls: The Librarian uses keypad
 7/9/4/6/1/3 for hex movement, while the generic D-pad sends 8/2/4/6.
 Product acceptance belongs to the host; a single sample does not establish the complete
 PC-88 compatibility matrix.
+
+## NeoCD
+
+`emulatorjs/neocd` accepts a single CHD as `SEEKABLE_BLOB`. The host supplies the
+installed CDZ BIOS as an external file at `/neocd/neocd.bin`. Only requested
+256 KiB blocks are fetched; no whole-disc download or hash scan precedes startup.
+A 16 MiB memory LRU and persistent block cache reuse content across Launches.
+Responses require 206, exact Content-Range/length and the frozen digest ETag;
+cached blocks carry a locally computed SHA-256 to detect corruption. This is
+block transport/cache validation, not a whole-file client hash verification.
+Cache denial/quota errors keep bounded network reads; ignored Range responses
+fail rather than silently downloading the entire image.
+
+The fork's rchd reader suspends through Asyncify only for missing blocks. The
+adapter waits for suspended reads at pause/checkpoint boundaries and aborts them
+on exit. Instant state retains `emulatorjs-state-v1-storage-v1` compatibility.
+Standard bottom/right/left/top buttons map to native A/B/C/D independently.
+The pinned PFB candidate is not a published release. Ordinary release builds
+reject unpublished sources. See `EMULATORJS_THIRD_PARTY_NOTICES.md` for the
+bundled Z80 component's non-commercial restriction.
+### Cave Story / NXEngine
+
+`nxengine` accepts a `FILE_TREE` containing original freeware `Doukutsu.exe` and the complete `data/` directory. The maintained [libretro fork](https://github.com/retrom-project/nxengine-libretro) supplies a software-rendered Wasm core, `nxengine-host-v1`, 320×240 RGBA and 22050 Hz stereo PCM. The adapter owns bounded materialization, immutable-URL Cache Storage reuse, whole-project progress and standard joypad/independent keyboard input. Limits: 4096 files, 32 MiB per file, 64 MiB total. Original filename case is retained, apart from the executable marker.
+
+The target declares `GAME_SAVE`: save at a native game save point, then export through the host. `nxengine-game-save-v1-storage-v1` is the common single-gzip envelope around an identity-bound JSON container of up to five native 1540-byte profile slots. Explicit restore imports slots before native startup; use the game's Load menu to resume. Fresh launches never import previous files implicitly. No instant state, netplay, CS+ or arbitrary mod compatibility is advertised.
+
+The source catalog pins an immutable core fork release, its commit, adapter ABI and complete asset digests. The product acceptance contract lives in Retrom's `ACC-NXENGINE-001`; game data is never packaged in this repository.

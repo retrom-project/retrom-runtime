@@ -1,4 +1,5 @@
 const identities = {
+  vecx: {repository: "https://github.com/retrom-project/libretro-vecx", baseline: "g8f671cc9d737", license: "LICENSE.md", source: "source.tar.gz"},
   "81": {repository: "https://github.com/retrom-project/81-libretro", baseline: "g86decf3ee61e", license: "LICENSE", source: "source.tar.gz"},
   cap32: {repository: "https://github.com/retrom-project/libretro-cap32", baseline: "g310cc579b79b", license: "COPYING", source: "source.tar.gz"},
   crocods: {repository: "https://github.com/retrom-project/libretro-crocods", baseline: "gbe00fb904da0", license: "LICENSE", source: "source.tar.gz"},

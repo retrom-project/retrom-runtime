@@ -32,9 +32,9 @@ describe("EmulatorJS Provider declarations", () => {
     const manifest = projectProviderManifest(emulatorJsProviderDefinition);
     expect(validateProviderManifest(manifest)).toBe(manifest);
     expect(manifest.providerId).toBe("emulatorjs");
-    expect(manifest.providerVersion).toBe("2.8.0");
-    expect(manifest.targets).toHaveLength(51);
-    expect(new Set(manifest.targets.map((target) => target.id)).size).toBe(51);
+    expect(manifest.providerVersion).toBe("2.9.0");
+    expect(manifest.targets).toHaveLength(52);
+    expect(new Set(manifest.targets.map((target) => target.id)).size).toBe(52);
     for (const targetId of ["dosbox-pure", "genesis-plus-gx-wide", "azahar"]) {
       const target = emulatorJsProviderDefinition.targets.find((entry) => entry.id === targetId);
       expect(target?.implementation.release).toBe("4.3.0-pre");

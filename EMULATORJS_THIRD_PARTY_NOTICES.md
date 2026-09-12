@@ -27,3 +27,12 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
+
+## VecX
+
+Source: https://github.com/retrom-project/libretro-vecx, based on
+https://github.com/libretro/libretro-vecx at 8f671cc9d737f2890c3ce19e177e2984dcae121f.
+VecX is GPL-3.0; the PSG component retains its MIT notice in `vecx_psg.c` and
+`vecx_psg.h`. The core release includes the original `LICENSE.md` and complete
+source archive, including component notices. EmulatorJS RetroArch linker source
+is pinned by the fork build recipe. Release: `retrom-core-g8f671cc9d737-r1`.

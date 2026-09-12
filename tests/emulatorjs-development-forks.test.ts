@@ -25,7 +25,7 @@ const roots: string[] = [];
 afterEach(async () => {await Promise.all(roots.splice(0).map((root) => rm(root, {recursive: true, force: true})));});
 const sha = (bytes: Uint8Array) => createHash("sha256").update(bytes).digest("hex");
 function fixture(core = "cap32") {
-  const license = (core === "cap32" || core === "same_cdi" || core.startsWith("vice_")) ? "COPYING" : "LICENSE";
+  const license = core === "vecx" ? "LICENSE.md" : (core === "cap32" || core === "same_cdi" || core.startsWith("vice_")) ? "COPYING" : "LICENSE";
   const contents = new Map([...[license, `${core}-wasm.data`, "source.tar.gz"].map((name) =>
     [name, Buffer.from(`project-owned ${name} test bytes`)] as const)]);
   const files = [...contents].map(([filename, bytes]) => ({filename, sha256: sha(bytes), sizeBytes: bytes.length}));
@@ -35,7 +35,7 @@ function fixture(core = "cap32") {
   const bytes = Buffer.from(JSON.stringify(metadata));
   contents.set("retrom-core-candidate.json", bytes);
   const fork = {runtimeCore: core, repository: metadata.repository,
-    upstreamCommit: core === "same_cdi" ? "cfb05d803f54130adf94efef88edd816d01df7a3" : core.startsWith("vice_") ? "1b4309f4d56ded7bfc5ad7ba8d5a9a44ac3388a8" : core === "cap32" ? "310cc579b79b6051b378b192224b325a73437c9b" : core === "81" ? "86decf3ee61ea5803972948e80197bee8474796b" : "be00fb904da08d66221017f6708508298f17ff07", commit: metadata.commit,
+    upstreamCommit: core === "vecx" ? "8f671cc9d737f2890c3ce19e177e2984dcae121f" : core === "same_cdi" ? "cfb05d803f54130adf94efef88edd816d01df7a3" : core.startsWith("vice_") ? "1b4309f4d56ded7bfc5ad7ba8d5a9a44ac3388a8" : core === "cap32" ? "310cc579b79b6051b378b192224b325a73437c9b" : core === "81" ? "86decf3ee61ea5803972948e80197bee8474796b" : "be00fb904da08d66221017f6708508298f17ff07", commit: metadata.commit,
     sourceTreeSha256: metadata.sourceTreeSha256, adapterAbi: metadata.adapterAbi,
     assets: [...files, {filename: "retrom-core-candidate.json", sha256: sha(bytes), sizeBytes: bytes.length}]};
   return {contents, metadata, fork, catalog: {developmentForks: [fork]}};
@@ -63,6 +63,15 @@ describe("EmulatorJS local core provenance", () => {
     expect(await readFile(join(output, `4.2.3/data/cores/${core}-wasm.data`))).toEqual(contents.get(`${core}-wasm.data`));
     expect(await readFile(join(output, `4.2.3/licenses/forks/${core}/source.tar.gz`))).toEqual(contents.get("source.tar.gz"));
     expect(() => verifyDevelopmentForkMetadata(fork, {...metadata, coreId: core === "vice_xpet" ? "vice_xplus4" : "vice_xpet"})).toThrow();
+  });
+  it("stages the Vectrex fork and rejects unpublished source drift", async () => {
+    const {catalog, contents, fork} = fixture("vecx"), source = await directory(), output = await directory();
+    for (const [name, bytes] of contents) {await writeFile(join(source, name), bytes);}
+    await stageDevelopmentForks(catalog, new Map([["vecx", source]]), output);
+    expect(await readFile(join(output, "4.2.3/data/cores/vecx-wasm.data"))).toEqual(contents.get("vecx-wasm.data"));
+    expect(await readFile(join(output, "4.2.3/licenses/forks/vecx/LICENSE.md"))).toEqual(contents.get("LICENSE.md"));
+    expect(() => requireDevelopmentForkMode(catalog, false)).toThrow("UNPUBLISHED_CORE_INPUT");
+    expect(() => developmentForkFiles({developmentForks: [{...fork, upstreamCommit: "a".repeat(40)}]})).toThrow();
   });
   it("stages the CD-i timing fix with its exact source identity and license", async () => {
     const {catalog, contents, fork, metadata} = fixture("same_cdi"), source = await directory(), output = await directory();

@@ -3,6 +3,39 @@ export const emulatorJsSourceCatalog = {
   developmentForks: [],
   forks: [
 {
+  "repository": "https://github.com/retrom-project/libretro-vecx",
+  "tag": "retrom-core-g8f671cc9d737-r1",
+  "commit": "cbb4cf4dadc1e799b0a760f301c3a306a6d71c3a",
+  "adapterAbi": "emulatorjs-state-v1",
+  "runtimeCore": "vecx",
+  "assets": [
+    {
+      "filename": "LICENSE.md",
+      "sha256": "72d6e1a0ffb74e5e95841061200da2f5e14b66bbe043f41e634ef9bc6070132a",
+      "sizeBytes": 35229,
+      "url": "https://github.com/retrom-project/libretro-vecx/releases/download/retrom-core-g8f671cc9d737-r1/LICENSE.md"
+    },
+    {
+      "filename": "rpg-runtime-release.json",
+      "sha256": "16ea415148668169b2f67f3a929cee70e26e05ca92b1d87f2a8012aeb2312ccb",
+      "sizeBytes": 792,
+      "url": "https://github.com/retrom-project/libretro-vecx/releases/download/retrom-core-g8f671cc9d737-r1/rpg-runtime-release.json"
+    },
+    {
+      "filename": "source.tar.gz",
+      "sha256": "aac1c2ecff203128bbd19cfeff55b77fa6c98611884b437073b59c2b05d90580",
+      "sizeBytes": 245151,
+      "url": "https://github.com/retrom-project/libretro-vecx/releases/download/retrom-core-g8f671cc9d737-r1/source.tar.gz"
+    },
+    {
+      "filename": "vecx-wasm.data",
+      "sha256": "bd66a59cafb8ad3f742d85f177550966f79926030aa7bd660f4ffe3a0c02c6db",
+      "sizeBytes": 856199,
+      "url": "https://github.com/retrom-project/libretro-vecx/releases/download/retrom-core-g8f671cc9d737-r1/vecx-wasm.data"
+    }
+  ]
+},
+{
   "repository": "https://github.com/retrom-project/same_cdi",
   "tag": "retrom-core-gcfb05d803f54-r1",
   "commit": "097d7fbe62f4890dd70b233916011a1c2e948657",

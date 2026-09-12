@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.32.0
+
+- Add the EmulatorJS `vecx` target for Vectrex cartridges.
+- Publish EmulatorJS Provider 2.9.0 with the immutable VecX fork release, complete native checkpoints, and standard four-button input.
+- Keep unpublished core inputs rejected by formal Provider builds.
+
 ## 0.31.0
 
 - Correct EmulatorJS core framebuffer screenshots to the reported display aspect ratio before returning them to the host. This prevents non-square pixel output such as CD-i 768×280 from producing vertically flattened save and review thumbnails; native pixels remain uncropped.

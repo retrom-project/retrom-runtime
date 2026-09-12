@@ -46,6 +46,7 @@ describe("EmulatorJS fork Release inputs", () => {
 });
 
 const promotedCores = [
+  ["vecx", "libretro-vecx", "g8f671cc9d737", "LICENSE.md"],
   ["81", "81-libretro", "g86decf3ee61e", "LICENSE"],
   ["cap32", "libretro-cap32", "g310cc579b79b", "COPYING"],
   ["crocods", "libretro-crocods", "gbe00fb904da0", "LICENSE"],

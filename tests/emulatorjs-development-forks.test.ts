@@ -25,17 +25,17 @@ const roots: string[] = [];
 afterEach(async () => {await Promise.all(roots.splice(0).map((root) => rm(root, {recursive: true, force: true})));});
 const sha = (bytes: Uint8Array) => createHash("sha256").update(bytes).digest("hex");
 function fixture(core = "cap32") {
-  const license = core === "vecx" ? "LICENSE.md" : (core === "cap32" || core === "same_cdi" || core.startsWith("vice_")) ? "COPYING" : "LICENSE";
+  const license = core === "bsnes" ? "LICENSE.txt" : core === "vecx" ? "LICENSE.md" : (core === "cap32" || core === "same_cdi" || core.startsWith("vice_")) ? "COPYING" : "LICENSE";
   const contents = new Map([...[license, `${core}-wasm.data`, "source.tar.gz"].map((name) =>
     [name, Buffer.from(`project-owned ${name} test bytes`)] as const)]);
   const files = [...contents].map(([filename, bytes]) => ({filename, sha256: sha(bytes), sizeBytes: bytes.length}));
   const metadata = {schemaVersion: 1, kind: "RETROM_CORE_CANDIDATE_V1", coreId: core,
-    repository: `https://github.com/retrom-project/${core.startsWith("vice_") ? "vice-libretro" : core === "81" ? "81-libretro" : core === "same_cdi" ? "same_cdi" : `libretro-${core}`}`, branch: "feat/test-core",
+    repository: `https://github.com/retrom-project/${core === "bsnes" ? "bsnes-libretro" : core.startsWith("vice_") ? "vice-libretro" : core === "81" ? "81-libretro" : core === "same_cdi" ? "same_cdi" : `libretro-${core}`}`, branch: "feat/test-core",
     commit: "a".repeat(40), dirty: false, sourceTreeSha256: "b".repeat(64), adapterAbi: "emulatorjs-state-v1", files};
   const bytes = Buffer.from(JSON.stringify(metadata));
   contents.set("retrom-core-candidate.json", bytes);
   const fork = {runtimeCore: core, repository: metadata.repository,
-    upstreamCommit: core === "vecx" ? "8f671cc9d737f2890c3ce19e177e2984dcae121f" : core === "same_cdi" ? "cfb05d803f54130adf94efef88edd816d01df7a3" : core.startsWith("vice_") ? "1b4309f4d56ded7bfc5ad7ba8d5a9a44ac3388a8" : core === "cap32" ? "310cc579b79b6051b378b192224b325a73437c9b" : core === "81" ? "86decf3ee61ea5803972948e80197bee8474796b" : "be00fb904da08d66221017f6708508298f17ff07", commit: metadata.commit,
+    upstreamCommit: core === "bsnes" ? "4b344745e3878e7c0675a60c624582935524b8f7" : core === "vecx" ? "8f671cc9d737f2890c3ce19e177e2984dcae121f" : core === "same_cdi" ? "cfb05d803f54130adf94efef88edd816d01df7a3" : core.startsWith("vice_") ? "1b4309f4d56ded7bfc5ad7ba8d5a9a44ac3388a8" : core === "cap32" ? "310cc579b79b6051b378b192224b325a73437c9b" : core === "81" ? "86decf3ee61ea5803972948e80197bee8474796b" : "be00fb904da08d66221017f6708508298f17ff07", commit: metadata.commit,
     sourceTreeSha256: metadata.sourceTreeSha256, adapterAbi: metadata.adapterAbi,
     assets: [...files, {filename: "retrom-core-candidate.json", sha256: sha(bytes), sizeBytes: bytes.length}]};
   return {contents, metadata, fork, catalog: {developmentForks: [fork]}};
@@ -43,6 +43,18 @@ function fixture(core = "cap32") {
 async function directory() {const root = await mkdtemp(join(tmpdir(), "cap32-candidate-")); roots.push(root); return root;}
 
 describe("EmulatorJS local core provenance", () => {
+  it("stages bsnes only under 4.3.0-pre and forbids unpublished production inputs", async () => {
+    const {catalog, contents, fork, metadata} = fixture("bsnes"), source = await directory(), output = await directory();
+    for (const [name, bytes] of contents) {await writeFile(join(source, name), bytes);}
+    await stageDevelopmentForks(catalog, new Map([["bsnes", source]]), output);
+    expect(await readFile(join(output, "4.3.0-pre/data/cores/bsnes-wasm.data"))).toEqual(contents.get("bsnes-wasm.data"));
+    expect(await readFile(join(output, "4.3.0-pre/licenses/forks/bsnes/LICENSE.txt"))).toEqual(contents.get("LICENSE.txt"));
+    expect(developmentForkFiles(catalog).every((file) => file.destination.startsWith("4.3.0-pre/"))).toBe(true);
+    expect(() => requireDevelopmentForkMode(catalog, false)).toThrow("UNPUBLISHED_CORE_INPUT");
+    expect(() => verifyDevelopmentForkMetadata(fork, {...metadata, repository: "https://github.com/EmulatorJS/bsnes-libretro"})).toThrow();
+    await writeFile(join(source, "bsnes-wasm.data"), "tampered");
+    await expect(stageDevelopmentForks(catalog, new Map([["bsnes", source]]), output)).rejects.toThrow();
+  });
   it("stages three declared forks separately and rejects duplicate identities", async () => {
     const cap = fixture(), croco = fixture("crocods"), eightyOne = fixture("81"), output = await directory();
     const catalog = {developmentForks: [cap.fork, croco.fork, eightyOne.fork]}, inputs = new Map<string, string>();

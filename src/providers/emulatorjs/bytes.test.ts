@@ -19,4 +19,17 @@ describe("EmulatorJS checkpoint bytes", () => {
     expect(toggleMainLoop.mock.calls).toEqual([[true], [false]]);
     expect(waitForRunningFrame).toHaveBeenCalledOnce();
   });
+  it("keeps the retry running until an asynchronous native save completes", async () => {
+    let complete!: (value: Uint8Array) => void;
+    const pending = new Promise<Uint8Array>((resolve) => {complete = resolve;});
+    const getState = vi.fn().mockRejectedValueOnce(new Error("paused")).mockReturnValueOnce(pending);
+    const toggleMainLoop = vi.fn();
+    const result = readEmulatorJsCheckpoint({getState, toggleMainLoop}, true, async () => undefined);
+    await vi.waitFor(() => expect(getState).toHaveBeenCalledTimes(2));
+    expect(toggleMainLoop.mock.calls).toEqual([[true]]);
+    complete(Uint8Array.of(4, 5, 6));
+    await expect(result).resolves.toEqual(Uint8Array.of(4, 5, 6));
+    expect(toggleMainLoop.mock.calls).toEqual([[true], [false]]);
+  });
+
 });

@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.35.0
+
+- Add an independent bsnes Target to EmulatorJS Provider 2.12.0 using the
+  pinned 4.3.0-pre frontend and an immutable bsnes fork release. The fork restores
+  Asyncify and fiber lifecycle support, and fixes native save completion and
+  heap ownership. The target uses standard SNES controls and the distinct
+  `bsnes-state-v1-storage-v1` checkpoint format; it rejects generic EmulatorJS
+  snapshots to prevent mixing bsnes and Snes9x states. Snes9x and netplay
+  profiles remain unchanged.
+
 ## 0.34.0
 
 - Add the PC-88 QUASI88 target in EmulatorJS Provider 2.11.0, pinned to the immutable core fork release. D88/U88 launches use N88 V2, independent keyboard input, one-to-one standard gamepad controls and the shared compressed instant checkpoint contract.

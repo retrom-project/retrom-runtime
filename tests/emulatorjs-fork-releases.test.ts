@@ -1,5 +1,5 @@
 import {describe, expect, it} from "vitest";
-import {forkReleaseFiles, verifyForkMetadata} from "../scripts/emulatorjs-fork-releases.mjs";
+import {forkReleaseFiles, forkMetadataPath, verifyForkMetadata} from "../scripts/emulatorjs-fork-releases.mjs";
 
 function fixture() {
   const repository = "https://github.com/retrom-project/vice-libretro";
@@ -46,6 +46,7 @@ describe("EmulatorJS fork Release inputs", () => {
 });
 
 const promotedCores = [
+  ["bsnes", "bsnes-libretro", "g4b344745e387", "LICENSE.txt"],
   ["vecx", "libretro-vecx", "g8f671cc9d737", "LICENSE.md"],
   ["81", "81-libretro", "g86decf3ee61e", "LICENSE"],
   ["cap32", "libretro-cap32", "g310cc579b79b", "COPYING"],
@@ -65,8 +66,9 @@ it.each(promotedCores)("verifies the published %s core, source archive and varia
   const metadata = {...fork, schemaVersion: 1, assets: assets.filter(a => a.filename !== report).map(a => ({
     filename: a.filename, observedSha256: a.sha256, sizeBytes: a.sizeBytes,
   }))};
+  expect(forkMetadataPath(fork)).toBe(`${core === "bsnes" ? "4.3.0-pre" : "4.2.3"}/data/cores/reports/${core}.json`);
   expect(forkReleaseFiles({forks: [fork]}).map((f: {destination: string}) => f.destination))
-    .toContain(`4.2.3/licenses/forks/${core}/${source}`);
+    .toContain(`${core === "bsnes" ? "4.3.0-pre" : "4.2.3"}/licenses/forks/${core}/${source}`);
   expect(() => verifyForkMetadata(fork, metadata)).not.toThrow();
   expect(() => forkReleaseFiles({forks: [{...fork, assets: assets.filter(a => a.filename !== source)}]})).toThrow();
   expect(() => verifyForkMetadata(fork, {...metadata, assets: metadata.assets.slice(1)})).toThrow();

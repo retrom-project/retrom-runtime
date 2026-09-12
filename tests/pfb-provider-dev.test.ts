@@ -64,13 +64,13 @@ describe("PFB loose provider", () => {
     const localAsset = join(root, "worker.mjs");
     await writeFile(localAsset, "export const changed=1;\n");
     const entryPoint = join(root, "entry.ts");
-    await writeFile(entryPoint, "export const providerApiVersion=1;\n");
+    await writeFile(entryPoint, "export const providerApiVersion=1; export const assets=__RETROM_PROVIDER_ASSET_INDEX__;\n");
     const first = await buildPFBProviderDev({
       activePath, entryPoint, installedRoot, providerId,
       localAssets: [{source: localAsset, output: "runtime/butterscotch/worker.mjs"}],
       outputRoot,
     });
-    await writeFile(entryPoint, "export const providerApiVersion=2;\n");
+    await writeFile(entryPoint, "export const providerApiVersion=2; export const assets=__RETROM_PROVIDER_ASSET_INDEX__;\n");
     const second = await buildPFBProviderDev({
       activePath, entryPoint, installedRoot, providerId,
       localAssets: [{source: localAsset, output: "runtime/butterscotch/worker.mjs"}],
@@ -88,8 +88,10 @@ describe("PFB loose provider", () => {
     expect(Buffer.from(descriptor.files[0].contentBase64, "base64").toString("utf8"))
       .toBe("export const changed=1;\n");
     const client = Buffer.from(descriptor.files[1].contentBase64, "base64").toString("utf8");
-    expect(client).toMatch(/=2;/u);
+    expect(client).toMatch(/=2[,;]/u);
     expect(client).toContain("providerApiVersion");
+    expect(client).toContain(sha256("export const changed=1;\n"));
+    expect(client).not.toContain(sha256(baseAsset));
     expect(sha256(client)).toBe(second.moduleSha256);
 
     // A failed rebuild cannot replace the complete, previously working payload.

@@ -10,6 +10,14 @@
   `retrom-core-gd991ee94547c-r1` and its complete source/license inventory.
 
 
+## 0.40.0
+
+- Pin Cap32 r4: restore CPC Plus ASIC, palette, DMA and decoded cartridge ROM mapping across Launches; reject corrupted sprite palette indices before state mutation and retain ordinary CPC snapshot compatibility. Publish EmulatorJS Provider 2.17.0.
+
+- PFB development can explicitly consume verified, already-built EmulatorJS fork candidates, including license/source provenance. Compile the client asset index from the selected bytes before publishing the atomic loose descriptor; formal catalogs and release locks remain pinned.
+
+- Select Game Gear and SG-1000 controller layouts from the delivered ROM extension while retaining Mega Drive six-button controls. Select Cap32 Plus hardware and its required 24-bit color depth for CPR cartridges without changing CPC disk defaults.
+
 ## 0.39.0
 
 - Add the independent PPSSPP target from the official-source fork release `retrom-core-g2e6fd06ed6c7-r2`, with WebGL2, standard gamepad input, audio and complete instant checkpoints including memory-stick files.

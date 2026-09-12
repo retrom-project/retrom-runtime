@@ -2,7 +2,7 @@
 
 ## 0.39.0
 
-- Add the independent PPSSPP target from the pinned official-source fork, with WebGL2, standard gamepad input, audio and complete instant checkpoints including memory-stick files.
+- Add the independent PPSSPP target from the official-source fork release `retrom-core-g2e6fd06ed6c7-r2`, with WebGL2, standard gamepad input, audio and complete instant checkpoints including memory-stick files.
 - Read PSP discs through bounded 256 KiB HTTP ranges and persistent block caching instead of a startup whole-disc download. Require exact 206 ranges, lengths and strong SHA-256 identity ETags; cached block checksums detect local corruption, while the authorized immutable server supplies source identity. Core assets retain full SHA-256 verification.
 - Keep the `ppsspp-state-v1-storage-v1` checkpoint contract, with verified restore of pre-Range independent-core saves. EmulatorJS PSP save formats are not compatible with this new target.
 - Refresh the aggregate license notice carried by EmulatorJS Provider 2.16.0; its core payloads and target behavior remain unchanged.

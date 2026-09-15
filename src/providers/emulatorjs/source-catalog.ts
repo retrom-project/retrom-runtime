@@ -1,6 +1,37 @@
 export const emulatorJsSourceCatalog = {
   schemaVersion: 1,
-  developmentForks: [],
+  developmentForks: [
+  {
+    "runtimeCore": "gam4980",
+    "repository": "https://github.com/retrom-project/gam4980",
+    "upstreamCommit": "eeaa531b55e7127ab4b5e0bdc5ceba686df59c6a",
+    "commit": "9ea18f8fe44087d4cca6b2c494b50df5f16165a1",
+    "sourceTreeSha256": "b5b3a4b6baab96a0ab092952a0a98aabf4e15f68fc919bb35828b728710fadfe",
+    "adapterAbi": "emulatorjs-state-v1",
+    "assets": [
+      {
+        "filename": "LICENSE",
+        "sha256": "dafc393710f9004fc9de3d51c8f9907594f8a61cb4c3f1c73becbb8c40ca24e5",
+        "sizeBytes": 70294
+      },
+      {
+        "filename": "gam4980-wasm.data",
+        "sha256": "9932334daaf0a16549abf4f7771eee7a22c9e61b24f81af9b2fb1e2752f06fc3",
+        "sizeBytes": 852491
+      },
+      {
+        "filename": "retrom-core-candidate.json",
+        "sha256": "3f17f20f5eb40ef00a4038ad051098f5db853c065d32997783125f2c00665057",
+        "sizeBytes": 719
+      },
+      {
+        "filename": "source.tar.gz",
+        "sha256": "c26c220dd5f258fded1780c279bb840ae5a3d46a648cbee2ea62c3c84af61b5f",
+        "sizeBytes": 119670
+      }
+    ]
+  }
+],
   forks: [
 {
   "repository": "https://github.com/retrom-project/libretro-uzem",

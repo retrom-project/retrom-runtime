@@ -3,6 +3,8 @@ import {lstat, readFile, readdir, writeFile, mkdir} from "node:fs/promises";
 import {dirname, isAbsolute, join} from "node:path";
 
 const sources = new Map([
+  ["gam4980", {repository: "https://github.com/retrom-project/gam4980",
+    upstreamCommit: "eeaa531b55e7127ab4b5e0bdc5ceba686df59c6a", license: "LICENSE"}],
   ["uzem", {repository: "https://github.com/retrom-project/libretro-uzem",
     upstreamCommit: "d991ee94547c8294abc1c4cb73d63116aa58b5bc", license: "LICENSE"}],
   ["vecx", {repository: "https://github.com/retrom-project/libretro-vecx",

@@ -25,6 +25,11 @@ const capabilities = {
 
 const adapters = [
   defineAdapter({
+    abi: "emulatorjs-state-v1", capabilities: {...capabilities, volume: false},
+    checkpoint: {readFormats: ["gam4980-state-v1"], writeFormat: "gam4980-state-v1"},
+    id: "emulatorjs-gam4980", kind: "EMULATORJS_4_2_3",
+  }),
+  defineAdapter({
     abi: "emulatorjs-flycast-state-v1", capabilities,
     checkpoint: {readFormats: ["flycast-state-gzip-v1", "flycast-state-v1"], writeFormat: "flycast-state-v1"},
     id: "emulatorjs-flycast", kind: "EMULATORJS_FLYCAST",
@@ -95,6 +100,7 @@ declare const __RETROM_PFB_CORE_INPUTS__: Readonly<Record<string, {
 }>>;
 
 const cores: readonly CoreSource[] = [
+  core("gam4980", "4.2.3", "gam4980-wasm.data", 852491, "9932334daaf0a16549abf4f7771eee7a22c9e61b24f81af9b2fb1e2752f06fc3", "3f17f20f5eb40ef00a4038ad051098f5db853c065d32997783125f2c00665057", {artifactFlavor: "OVERRIDE", coreBundleVersion: "candidate-b5b3a4b6baab96a0ab092952a0a98aabf4e15f68fc919bb35828b728710fadfe", defaultOptions: {gam4980_lcd_color: "grey", gam4980_lcd_ghosting: "0"}}),
   core("neocd", "4.2.3", "neocd-wasm.data", 1080566, "3702540c38faab7d3eadae748791364d61e043b16d937b5bbae05c9c0134ec0c", "ae9dddaebf459deb11ab689c69b4f964efbf560e73a51788d9095cf24f8fec7c", {artifactFlavor: "OVERRIDE", coreBundleVersion: "retrom-core-g3118c6901787-r1", defaultOptions: {neocd_region: "Japan", neocd_cdspeedhack: "On", neocd_loadskip: "On"}}),
   core("uzem", "4.2.3", "uzem-wasm.data", 852642, "c9f0e7d66f00fdb51c82b81c1d20269689b87e7f68d82267c31e2c03a54b221c", "6cba9cc2c184cb56033f76af19c911e79d5355aa6a0afa1b25b949ff962af123", {artifactFlavor: "OVERRIDE", coreBundleVersion: "retrom-core-gd991ee94547c-r1"}),
   core("81", "4.2.3", "81-wasm.data", 888668, "b78716a9566f7b31ad82f3d3250ba882af284294df4ec84b80012906aa1da417", "01c76aa09d95022d001e16f80e8ff32c0a62088da9445c6b321be06872943cf2", {artifactFlavor: "OVERRIDE", coreBundleVersion: "retrom-core-g86decf3ee61e-r1", defaultOptions: {keyboardInput: "enabled", "81_joypad_b": "new line"}}),
@@ -158,7 +164,7 @@ const cores: readonly CoreSource[] = [
 const targets = cores.map((entry) => {
   const netplayProfile = emulatorJsNetplayProfiles[entry.id] ?? null;
   return defineTarget({
-  adapterId: entry.id === "bsnes" ? "emulatorjs-bsnes" : entry.id === "flycast" ? "emulatorjs-flycast" : entry.id === "ppsspp" ? "emulatorjs-psp" : `emulatorjs-${entry.release}`,
+  adapterId: entry.id === "gam4980" ? "emulatorjs-gam4980" : entry.id === "bsnes" ? "emulatorjs-bsnes" : entry.id === "flycast" ? "emulatorjs-flycast" : entry.id === "ppsspp" ? "emulatorjs-psp" : `emulatorjs-${entry.release}`,
   assetPaths: [
     ...commonAssets(entry.release),
     entry.asset,
@@ -201,7 +207,7 @@ export const emulatorJsProviderDefinition = defineProvider({
   adapters: storageAdapters(adapters),
   providerApiVersion: 1,
   providerId: "emulatorjs",
-  providerVersion: "2.18.0",
+  providerVersion: "2.19.0",
   targets,
 });
 

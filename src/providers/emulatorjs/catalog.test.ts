@@ -35,17 +35,17 @@ describe("EmulatorJS Provider declarations", () => {
     const pspAssets = emulatorJsProviderDefinition.targets.find((target) => target.id === "ppsspp")!.assetPaths;
     expect(pspAssets).toContain("assets/4.3.0-pre/data/cores/ppsspp-assets.zip");
     expect(pspAssets).toContain("assets/4.3.0-pre/data/compression/extractzip.js");
-    for (const target of manifest.targets.filter((target) => !["ppsspp", "flycast", "bsnes"].includes(target.id))) {
+    for (const target of manifest.targets.filter((target) => !["ppsspp", "flycast", "bsnes", "gam4980"].includes(target.id))) {
       expect(target.checkpoint?.writeFormat).toBe("emulatorjs-state-v1-storage-v1");
     }
   });
-  it("uses last declaration wins for exactly fifty-seven current core targets", () => {
+  it("uses last declaration wins for exactly fifty-eight current core targets", () => {
     const manifest = projectProviderManifest(emulatorJsProviderDefinition);
     expect(validateProviderManifest(manifest)).toBe(manifest);
     expect(manifest.providerId).toBe("emulatorjs");
-    expect(manifest.providerVersion).toBe("2.18.0");
-    expect(manifest.targets).toHaveLength(57);
-    expect(new Set(manifest.targets.map((target) => target.id)).size).toBe(57);
+    expect(manifest.providerVersion).toBe("2.19.0");
+    expect(manifest.targets).toHaveLength(58);
+    expect(new Set(manifest.targets.map((target) => target.id)).size).toBe(58);
     for (const targetId of ["dosbox-pure", "genesis-plus-gx-wide", "azahar", "freeintv"]) {
       const target = emulatorJsProviderDefinition.targets.find((entry) => entry.id === targetId);
       expect(target?.implementation.release).toBe("4.3.0-pre");

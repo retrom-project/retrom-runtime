@@ -1,5 +1,16 @@
 # EmulatorJS Provider components
 
+## BBK RPG / GAM4980 integration
+
+The `gam4980` target uses [ThisBoringWorld/gam4980](https://github.com/ThisBoringWorld/gam4980)
+commit `eeaa531b55e7127ab4b5e0bdc5ceba686df59c6a`, maintained in
+[retrom-project/gam4980](https://github.com/retrom-project/gam4980).
+The core and its pinned EmulatorJS RetroArch linker are GPL-3.0-or-later.
+Candidate inputs include their license texts, the core source archive and exact build provenance.
+BIOS banks and game images are excluded from the Provider and source payload.
+The fork adds bounded input loading and complete, checked machine-state serialization.
+It does not add audio emulation. Unpublished inputs are restricted to explicit PFB candidate builds.
+
 ## bsnes integration
 
 The optional bsnes target uses the EmulatorJS `v4.3.0-pre` frontend with the immutable

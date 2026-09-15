@@ -1,12 +1,12 @@
 # Changelog
 
-## Unreleased / 0.42.0 / EmulatorJS Provider 2.19.0
+## Unreleased / 0.42.0 / EmulatorJS Provider 2.19.1
 
 - Add the `gam4980` target for BBK RPG `.gam` games, with independent keyboard controls and standard gamepad directions, confirm and cancel.
 - Use complete `gam4980-state-v1-storage-v1` checkpoints, including flash and timing state. Generic EmulatorJS snapshots are not compatible.
 - Consume an explicitly verified local core candidate in PFB. Formal builds reject this unpublished input until an immutable core release is pinned.
 - The upstream core has no audio implementation; this target does not advertise volume control. BIOS banks are supplied separately by the host.
-- Bump both Provider versions for the changed source and license provenance.
+- Bump both Provider versions for the changed source and license provenance. EmulatorJS 2.19.1 records the clean core candidate identity without rebuilding the earlier local 2.19.0 version.
 
 ## 0.41.0 / EmulatorJS Provider 2.18.0
 

@@ -1,4 +1,5 @@
 const identities = {
+  gam4980: {repository: "https://github.com/retrom-project/gam4980", baseline: "g552e717ec5b3", license: "LICENSE", source: "source.tar.gz"},
   uzem: {repository: "https://github.com/retrom-project/libretro-uzem", baseline: "gd991ee94547c", license: "LICENSE", source: "source.tar.gz"},
   bsnes: {repository: "https://github.com/retrom-project/bsnes-libretro", baseline: "g4b344745e387", license: "LICENSE.txt", source: "source.tar.gz", release: "4.3.0-pre"},
   neocd: {repository: "https://github.com/retrom-project/neocd_libretro", baseline: "g3118c6901787", license: "LICENSE.md", source: "source.tar.gz"},

@@ -5,8 +5,8 @@ export const emulatorJsSourceCatalog = {
     "runtimeCore": "gam4980",
     "repository": "https://github.com/retrom-project/gam4980",
     "upstreamCommit": "eeaa531b55e7127ab4b5e0bdc5ceba686df59c6a",
-    "commit": "9ea18f8fe44087d4cca6b2c494b50df5f16165a1",
-    "sourceTreeSha256": "b5b3a4b6baab96a0ab092952a0a98aabf4e15f68fc919bb35828b728710fadfe",
+    "commit": "de535c318396da61bc21f5ad1e4541fa126c668b",
+    "sourceTreeSha256": "552e717ec5b3de5d85d36bf42713d2bc41db21e8376d33205be5eac6ff7a615a",
     "adapterAbi": "emulatorjs-state-v1",
     "assets": [
       {
@@ -16,18 +16,18 @@ export const emulatorJsSourceCatalog = {
       },
       {
         "filename": "gam4980-wasm.data",
-        "sha256": "9932334daaf0a16549abf4f7771eee7a22c9e61b24f81af9b2fb1e2752f06fc3",
-        "sizeBytes": 852491
+        "sha256": "4b05e77e91c28a87fbf3c71880df2d06fa3dd39dacc587147c29ecaec0a9f791",
+        "sizeBytes": 852549
       },
       {
         "filename": "retrom-core-candidate.json",
-        "sha256": "3f17f20f5eb40ef00a4038ad051098f5db853c065d32997783125f2c00665057",
+        "sha256": "ebc8cca2a1d79d73a59b0e3a8d572079f78fd531f3df0be0938670a1413a5a55",
         "sizeBytes": 719
       },
       {
         "filename": "source.tar.gz",
-        "sha256": "c26c220dd5f258fded1780c279bb840ae5a3d46a648cbee2ea62c3c84af61b5f",
-        "sizeBytes": 119670
+        "sha256": "b129525199a178c08fa1f48c2911c39352b5ce734cc3429668e2b17b45643992",
+        "sizeBytes": 126537
       }
     ]
   }

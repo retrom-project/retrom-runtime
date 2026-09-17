@@ -19,7 +19,7 @@ describe("EmulatorJS Provider Module V1", () => {
     expect({providerApiVersion, providerId, providerVersion}).toEqual({
       providerApiVersion: 1,
       providerId: "emulatorjs",
-      providerVersion: "2.19.1",
+      providerVersion: "2.20.0",
     });
     const envelope = launchEnvelope();
     vi.stubGlobal("__RETROM_PROVIDER_ASSET_INDEX__", {

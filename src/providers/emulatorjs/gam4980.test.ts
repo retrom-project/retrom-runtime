@@ -20,9 +20,10 @@ describe("BBK RPG runtime", () => {
       netplayPort: false, requiresThreads: false,
       implementation: {runtimeCore: "gam4980", contentKinds: ["SINGLE_FILE"]}});
     const adapter = emulatorJsProviderDefinition.adapters.find(entry => entry.id === "emulatorjs-gam4980");
-    expect(adapter?.capabilities.volume).toBe(false);
+    expect(adapter?.capabilities.volume).toBe(true);
     expect(adapter?.checkpoint).toEqual({
-      readFormats: ["gam4980-state-v1", "gam4980-state-v1-storage-v1"], writeFormat: "gam4980-state-v1-storage-v1",
+      readFormats: ["gam4980-state-v1", "gam4980-state-v1-storage-v1", "gam4980-state-v2", "gam4980-state-v2-storage-v1"],
+      writeFormat: "gam4980-state-v2-storage-v1",
     });
   });
 });

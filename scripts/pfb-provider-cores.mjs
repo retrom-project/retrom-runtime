@@ -19,7 +19,8 @@ export async function readPFBProviderCoreFiles(outputRoot, providerId, staging, 
   const result = [];
   for (const core of selection.cores) {
     if (!exact(core, ["id", "directory"]) || typeof core.directory !== "string" || !isAbsolute(core.directory)) {invalid();}
-    const declared = emulatorJsSourceCatalog.forks.find((fork) => fork.runtimeCore === core.id);
+    const declared = [...emulatorJsSourceCatalog.forks, ...emulatorJsSourceCatalog.developmentForks]
+      .find((fork) => fork.runtimeCore === core.id);
     const source = developmentForkSource(core.id);
     if (!declared || declared.repository !== source.repository || declared.adapterAbi !== source.adapterAbi ||
       !Object.hasOwn(assetIndex, `assets/4.2.3/data/cores/${core.id}-wasm.data`)) {invalid();}

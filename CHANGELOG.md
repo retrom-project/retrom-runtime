@@ -1,5 +1,13 @@
 # Changelog
 
+## Unreleased / 0.43.0 / EmulatorJS Provider 2.20.0
+
+- Add the `gam4980` target for BBK RPG `.gam` games, with independent keyboard controls and standard gamepad directions, confirm and cancel.
+- Enable host volume control for the core's two-channel melody audio. The core generates the game's own register-driven music and melody interrupts; external dictionary speech is unsupported and analogue fidelity is not claimed.
+- Write complete `gam4980-state-v2-storage-v1` checkpoints, including flash, timing and melody phases. Retain bounded reading of complete v1 native and storage checkpoints. Generic EmulatorJS snapshots are incompatible; shared storage applies gzip once.
+- Consume explicitly verified PFB core candidates from the independent GAM4980 fork. Formal release builds continue to reject unpublished inputs, and the candidate does not enter production locks.
+- Bump both Provider versions for the changed capability, checkpoint and source provenance. Browser verification covers actual audio, volume/mute/pause, standard controls and restoration into a different Launch.
+
 ## 0.41.0 / EmulatorJS Provider 2.18.0
 
 - Bump both Provider versions because their aggregated provenance and license material changes.

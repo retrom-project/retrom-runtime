@@ -1,38 +1,40 @@
 export const emulatorJsSourceCatalog = {
   schemaVersion: 1,
-  developmentForks: [
-  {
-    "runtimeCore": "gam4980",
-    "repository": "https://github.com/retrom-project/gam4980",
-    "upstreamCommit": "eeaa531b55e7127ab4b5e0bdc5ceba686df59c6a",
-    "commit": "de535c318396da61bc21f5ad1e4541fa126c668b",
-    "sourceTreeSha256": "552e717ec5b3de5d85d36bf42713d2bc41db21e8376d33205be5eac6ff7a615a",
-    "adapterAbi": "emulatorjs-state-v1",
-    "assets": [
-      {
-        "filename": "LICENSE",
-        "sha256": "dafc393710f9004fc9de3d51c8f9907594f8a61cb4c3f1c73becbb8c40ca24e5",
-        "sizeBytes": 70294
-      },
-      {
-        "filename": "gam4980-wasm.data",
-        "sha256": "4b05e77e91c28a87fbf3c71880df2d06fa3dd39dacc587147c29ecaec0a9f791",
-        "sizeBytes": 852549
-      },
-      {
-        "filename": "retrom-core-candidate.json",
-        "sha256": "ebc8cca2a1d79d73a59b0e3a8d572079f78fd531f3df0be0938670a1413a5a55",
-        "sizeBytes": 719
-      },
-      {
-        "filename": "source.tar.gz",
-        "sha256": "b129525199a178c08fa1f48c2911c39352b5ce734cc3429668e2b17b45643992",
-        "sizeBytes": 126537
-      }
-    ]
-  }
-],
+  developmentForks: [],
   forks: [
+{
+  "repository": "https://github.com/retrom-project/gam4980",
+  "tag": "retrom-core-g552e717ec5b3-r1",
+  "commit": "de535c318396da61bc21f5ad1e4541fa126c668b",
+  "adapterAbi": "emulatorjs-state-v1",
+  "runtimeCore": "gam4980",
+  "assets": [
+    {
+      "filename": "LICENSE",
+      "sha256": "dafc393710f9004fc9de3d51c8f9907594f8a61cb4c3f1c73becbb8c40ca24e5",
+      "sizeBytes": 70294,
+      "url": "https://github.com/retrom-project/gam4980/releases/download/retrom-core-g552e717ec5b3-r1/LICENSE"
+    },
+    {
+      "filename": "rpg-runtime-release.json",
+      "sha256": "ebc8cca2a1d79d73a59b0e3a8d572079f78fd531f3df0be0938670a1413a5a55",
+      "sizeBytes": 719,
+      "url": "https://github.com/retrom-project/gam4980/releases/download/retrom-core-g552e717ec5b3-r1/rpg-runtime-release.json"
+    },
+    {
+      "filename": "source.tar.gz",
+      "sha256": "b129525199a178c08fa1f48c2911c39352b5ce734cc3429668e2b17b45643992",
+      "sizeBytes": 126537,
+      "url": "https://github.com/retrom-project/gam4980/releases/download/retrom-core-g552e717ec5b3-r1/source.tar.gz"
+    },
+    {
+      "filename": "gam4980-wasm.data",
+      "sha256": "4b05e77e91c28a87fbf3c71880df2d06fa3dd39dacc587147c29ecaec0a9f791",
+      "sizeBytes": 852549,
+      "url": "https://github.com/retrom-project/gam4980/releases/download/retrom-core-g552e717ec5b3-r1/gam4980-wasm.data"
+    }
+  ]
+},
 {
   "repository": "https://github.com/retrom-project/libretro-uzem",
   "tag": "retrom-core-gd991ee94547c-r1",

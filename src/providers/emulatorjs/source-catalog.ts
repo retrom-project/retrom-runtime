@@ -17,8 +17,8 @@ export const emulatorJsSourceCatalog = {
     },
     {
       "filename": "rpg-runtime-release.json",
-      "sha256": "ebc8cca2a1d79d73a59b0e3a8d572079f78fd531f3df0be0938670a1413a5a55",
-      "sizeBytes": 719,
+      "sha256": "bdd9c2ec5e70bd68ace4aea74c82a167dbffbdb2fdba51bb9ca41b9d62d26061",
+      "sizeBytes": 786,
       "url": "https://github.com/retrom-project/gam4980/releases/download/retrom-core-g552e717ec5b3-r1/rpg-runtime-release.json"
     },
     {

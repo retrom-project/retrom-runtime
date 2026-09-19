@@ -1,3 +1,6 @@
+import type {ContentInputPolicyV1} from "../../contracts/content-io/v1/content-io.js";
+import {validateContentPolicies} from "../content-io/policy.js";
+import {contentBoundaries} from "./content-policies.js";
 export type ResourceKind =
   | "ROM_BLOB"
   | "FILE_TREE"
@@ -105,6 +108,7 @@ export type TargetDeclaration = {
   netplayPort: boolean;
   videoModes: readonly VideoMode[];
   inputs: readonly TargetInputDeclaration[];
+  contentIO: Readonly<Record<string, ContentInputPolicyV1>>;
   checkpointMaxBytes: number | null;
   assetPaths: readonly string[];
   implementation: Readonly<Record<string, unknown>>;
@@ -123,7 +127,11 @@ export function defineAdapter<const Definition extends AdapterDeclaration>(defin
 }
 
 export function defineTarget<const Definition extends TargetDeclaration>(definition: Definition): Definition {
-  return definition;
+  const contentIO = validateContentPolicies(definition.inputs.map((input) => input.role), definition.contentIO, Object.keys(contentBoundaries));
+  const policies=Object.values(contentIO), assets=[...definition.assetPaths];
+  if(policies.some(policy=>"bridge" in policy)){assets.push("assets/content-io/worker.mjs");}
+  if(policies.some(policy=>"bridge" in policy && policy.bridge==="SYNC_WORKER")){assets.push("assets/content-io/sync-client.mjs");}
+  return {...definition, contentIO, assetPaths:Object.freeze([...new Set(assets)])};
 }
 
 export function defineProvider<const Definition extends ProviderDefinition>(definition: Definition): Definition {
@@ -134,5 +142,5 @@ export function defineProvider<const Definition extends ProviderDefinition>(defi
   for (const target of definition.targets) {
     if (!adapterIds.has(target.adapterId)) {throw new Error("PROVIDER_TARGET_ADAPTER_UNKNOWN");}
   }
-  return definition;
+  return {...definition, targets: definition.targets.map(defineTarget)};
 }

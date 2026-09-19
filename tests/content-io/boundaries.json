@@ -1,0 +1,737 @@
+{
+  "schemaVersion": 1,
+  "entries": [
+    {
+      "id": "B-001",
+      "repository": "runtime",
+      "path": "assets/runtime/butterscotch/worker.mjs",
+      "symbol": "createScreenshot",
+      "classification": "SAVE_OR_OVERLAY",
+      "reason": "Checkpoint/screenshot bytes or runtime-session cleanup POST, independent of immutable game content acquisition.",
+      "ownerStage": "S09",
+      "tests": [
+        "runtime:scripts/content-io/boundaries.test.mjs"
+      ]
+    },
+    {
+      "id": "B-002",
+      "repository": "runtime",
+      "path": "assets/runtime/native/bridge.js",
+      "symbol": "encodeScreenshot",
+      "classification": "SAVE_OR_OVERLAY",
+      "reason": "Checkpoint/screenshot bytes or runtime-session cleanup POST, independent of immutable game content acquisition.",
+      "ownerStage": "S09",
+      "tests": [
+        "runtime:scripts/content-io/boundaries.test.mjs"
+      ]
+    },
+    {
+      "id": "B-003",
+      "repository": "runtime",
+      "path": "assets/runtime/native/bridge.js",
+      "symbol": "dispatch",
+      "classification": "SAVE_OR_OVERLAY",
+      "reason": "Checkpoint/screenshot bytes or runtime-session cleanup POST, independent of immutable game content acquisition.",
+      "ownerStage": "S09",
+      "tests": [
+        "runtime:scripts/content-io/boundaries.test.mjs"
+      ]
+    },
+    {
+      "id": "B-004",
+      "repository": "runtime",
+      "path": "src/butterscotch/project-store.ts",
+      "symbol": "prepareButterscotchProject",
+      "classification": "SAVE_OR_OVERLAY",
+      "reason": "Separate writable save directory; immutable project generation is acquired through prepareWorkspaceProject.",
+      "ownerStage": "S17",
+      "tests": [
+        "runtime:scripts/content-io/boundaries.test.mjs"
+      ]
+    },
+    {
+      "id": "B-005",
+      "repository": "runtime",
+      "path": "src/content-io/bounded-stream.ts",
+      "symbol": "iterateExact",
+      "classification": "COMMON_CONTENT_IO",
+      "reason": "Shared transport, bounded response decoding, raw storage or workspace receipt implementation; no core-specific download algorithm.",
+      "ownerStage": "S03",
+      "tests": [
+        "runtime:scripts/content-io/boundaries.test.mjs"
+      ]
+    },
+    {
+      "id": "B-006",
+      "repository": "runtime",
+      "path": "src/content-io/http.ts",
+      "symbol": "fetch",
+      "classification": "COMMON_CONTENT_IO",
+      "reason": "Shared transport, bounded response decoding, raw storage or workspace receipt implementation; no core-specific download algorithm.",
+      "ownerStage": "S03",
+      "tests": [
+        "runtime:scripts/content-io/boundaries.test.mjs"
+      ]
+    },
+    {
+      "id": "B-007",
+      "repository": "runtime",
+      "path": "src/content-io/http.ts",
+      "symbol": "request",
+      "classification": "COMMON_CONTENT_IO",
+      "reason": "Shared transport, bounded response decoding, raw storage or workspace receipt implementation; no core-specific download algorithm.",
+      "ownerStage": "S03",
+      "tests": [
+        "runtime:scripts/content-io/boundaries.test.mjs"
+      ]
+    },
+    {
+      "id": "B-008",
+      "repository": "runtime",
+      "path": "src/content-io/sinks/workspace.ts",
+      "symbol": "prepareWorkspaceProject",
+      "classification": "COMMON_CONTENT_IO",
+      "reason": "Shared transport, bounded response decoding, raw storage or workspace receipt implementation; no core-specific download algorithm.",
+      "ownerStage": "S08",
+      "tests": [
+        "runtime:scripts/content-io/boundaries.test.mjs"
+      ]
+    },
+    {
+      "id": "B-009",
+      "repository": "runtime",
+      "path": "src/content-io/sinks/workspace.ts",
+      "symbol": "buildWorkspace",
+      "classification": "COMMON_CONTENT_IO",
+      "reason": "Shared transport, bounded response decoding, raw storage or workspace receipt implementation; no core-specific download algorithm.",
+      "ownerStage": "S08",
+      "tests": [
+        "runtime:scripts/content-io/boundaries.test.mjs"
+      ]
+    },
+    {
+      "id": "B-010",
+      "repository": "runtime",
+      "path": "src/content-io/sinks/workspace.ts",
+      "symbol": "verifyWorkspaceFile",
+      "classification": "COMMON_CONTENT_IO",
+      "reason": "Shared transport, bounded response decoding, raw storage or workspace receipt implementation; no core-specific download algorithm.",
+      "ownerStage": "S08",
+      "tests": [
+        "runtime:scripts/content-io/boundaries.test.mjs"
+      ]
+    },
+    {
+      "id": "B-011",
+      "repository": "runtime",
+      "path": "src/content-io/sinks/workspace.ts",
+      "symbol": "findWorkspace",
+      "classification": "COMMON_CONTENT_IO",
+      "reason": "Shared transport, bounded response decoding, raw storage or workspace receipt implementation; no core-specific download algorithm.",
+      "ownerStage": "S08",
+      "tests": [
+        "runtime:scripts/content-io/boundaries.test.mjs"
+      ]
+    },
+    {
+      "id": "B-012",
+      "repository": "runtime",
+      "path": "src/content-io/sinks/workspace.ts",
+      "symbol": "fileTarget",
+      "classification": "COMMON_CONTENT_IO",
+      "reason": "Shared transport, bounded response decoding, raw storage or workspace receipt implementation; no core-specific download algorithm.",
+      "ownerStage": "S08",
+      "tests": [
+        "runtime:scripts/content-io/boundaries.test.mjs"
+      ]
+    },
+    {
+      "id": "B-013",
+      "repository": "runtime",
+      "path": "src/content-io/store/cache-storage.ts",
+      "symbol": "CacheBlockStore.open",
+      "classification": "COMMON_CONTENT_IO",
+      "reason": "Shared transport, bounded response decoding, raw storage or workspace receipt implementation; no core-specific download algorithm.",
+      "ownerStage": "S06",
+      "tests": [
+        "runtime:scripts/content-io/boundaries.test.mjs"
+      ]
+    },
+    {
+      "id": "B-014",
+      "repository": "runtime",
+      "path": "src/content-io/store/metadata.ts",
+      "symbol": "ContentMetadata.open",
+      "classification": "COMMON_CONTENT_IO",
+      "reason": "Shared transport, bounded response decoding, raw storage or workspace receipt implementation; no core-specific download algorithm.",
+      "ownerStage": "S06",
+      "tests": [
+        "runtime:scripts/content-io/boundaries.test.mjs"
+      ]
+    },
+    {
+      "id": "B-015",
+      "repository": "runtime",
+      "path": "src/content-io/store/opfs.ts",
+      "symbol": "OPFSStore.open",
+      "classification": "COMMON_CONTENT_IO",
+      "reason": "Shared transport, bounded response decoding, raw storage or workspace receipt implementation; no core-specific download algorithm.",
+      "ownerStage": "S06",
+      "tests": [
+        "runtime:scripts/content-io/boundaries.test.mjs"
+      ]
+    },
+    {
+      "id": "B-016",
+      "repository": "runtime",
+      "path": "src/content-io/store/opfs.ts",
+      "symbol": "OPFSStore.remove",
+      "classification": "COMMON_CONTENT_IO",
+      "reason": "Shared transport, bounded response decoding, raw storage or workspace receipt implementation; no core-specific download algorithm.",
+      "ownerStage": "S06",
+      "tests": [
+        "runtime:scripts/content-io/boundaries.test.mjs"
+      ]
+    },
+    {
+      "id": "B-017",
+      "repository": "runtime",
+      "path": "src/content-io/store/opfs.ts",
+      "symbol": "OPFSStore.handle",
+      "classification": "COMMON_CONTENT_IO",
+      "reason": "Shared transport, bounded response decoding, raw storage or workspace receipt implementation; no core-specific download algorithm.",
+      "ownerStage": "S06",
+      "tests": [
+        "runtime:scripts/content-io/boundaries.test.mjs"
+      ]
+    },
+    {
+      "id": "B-018",
+      "repository": "runtime",
+      "path": "src/easyrpg/adapter.ts",
+      "symbol": "fetchRtpIndex",
+      "classification": "METADATA",
+      "reason": "Optional RTP index JSON; core-native file reads remain the upstream loader.",
+      "ownerStage": "S17",
+      "tests": [
+        "runtime:scripts/content-io/boundaries.test.mjs"
+      ]
+    },
+    {
+      "id": "B-019",
+      "repository": "runtime",
+      "path": "src/gbe-pokemini/adapter.ts",
+      "symbol": "screenshot",
+      "classification": "SAVE_OR_OVERLAY",
+      "reason": "Checkpoint/screenshot bytes or runtime-session cleanup POST, independent of immutable game content acquisition.",
+      "ownerStage": "S09",
+      "tests": [
+        "runtime:scripts/content-io/boundaries.test.mjs"
+      ]
+    },
+    {
+      "id": "B-020",
+      "repository": "runtime",
+      "path": "src/np2kai/adapter.ts",
+      "symbol": "screenshot",
+      "classification": "SAVE_OR_OVERLAY",
+      "reason": "Checkpoint/screenshot bytes or runtime-session cleanup POST, independent of immutable game content acquisition.",
+      "ownerStage": "S09",
+      "tests": [
+        "runtime:scripts/content-io/boundaries.test.mjs"
+      ]
+    },
+    {
+      "id": "B-021",
+      "repository": "runtime",
+      "path": "src/nxengine/project.ts",
+      "symbol": "loadProject",
+      "classification": "METADATA",
+      "reason": "Bounded project index JSON; all declared game bodies use the public materializer.",
+      "ownerStage": "S17",
+      "tests": [
+        "runtime:scripts/content-io/boundaries.test.mjs"
+      ]
+    },
+    {
+      "id": "B-022",
+      "repository": "runtime",
+      "path": "src/nxengine/project.ts",
+      "symbol": "readBounded",
+      "classification": "METADATA",
+      "reason": "Bounded project index JSON; all declared game bodies use the public materializer.",
+      "ownerStage": "S17",
+      "tests": [
+        "runtime:scripts/content-io/boundaries.test.mjs"
+      ]
+    },
+    {
+      "id": "B-023",
+      "repository": "runtime",
+      "path": "src/openbor/adapter.ts",
+      "symbol": "screenshot",
+      "classification": "SAVE_OR_OVERLAY",
+      "reason": "Checkpoint/screenshot bytes or runtime-session cleanup POST, independent of immutable game content acquisition.",
+      "ownerStage": "S09",
+      "tests": [
+        "runtime:scripts/content-io/boundaries.test.mjs"
+      ]
+    },
+    {
+      "id": "B-024",
+      "repository": "runtime",
+      "path": "src/play/adapter.ts",
+      "symbol": "screenshot",
+      "classification": "SAVE_OR_OVERLAY",
+      "reason": "Checkpoint/screenshot bytes or runtime-session cleanup POST, independent of immutable game content acquisition.",
+      "ownerStage": "S09",
+      "tests": [
+        "runtime:scripts/content-io/boundaries.test.mjs"
+      ]
+    },
+    {
+      "id": "B-025",
+      "repository": "runtime",
+      "path": "src/provider/checkpoint-compression.ts",
+      "symbol": "transformCheckpoint",
+      "classification": "SAVE_OR_OVERLAY",
+      "reason": "Checkpoint/screenshot bytes or runtime-session cleanup POST, independent of immutable game content acquisition.",
+      "ownerStage": "S09",
+      "tests": [
+        "runtime:scripts/content-io/boundaries.test.mjs"
+      ]
+    },
+    {
+      "id": "B-026",
+      "repository": "runtime",
+      "path": "src/provider/metadata.ts",
+      "symbol": "boundedJson",
+      "classification": "METADATA",
+      "reason": "Bounded UTF-8 project index metadata with timeout and size limit.",
+      "ownerStage": "S17",
+      "tests": [
+        "runtime:scripts/content-io/boundaries.test.mjs"
+      ]
+    },
+    {
+      "id": "B-027",
+      "repository": "runtime",
+      "path": "src/provider/metadata.ts",
+      "symbol": "fetchMetadataJson",
+      "classification": "METADATA",
+      "reason": "Bounded UTF-8 project index metadata with timeout and size limit.",
+      "ownerStage": "S17",
+      "tests": [
+        "runtime:scripts/content-io/boundaries.test.mjs"
+      ]
+    },
+    {
+      "id": "B-028",
+      "repository": "runtime",
+      "path": "src/providers/emulatorjs/archive-worker.ts",
+      "symbol": "compatibleFetch",
+      "classification": "UPSTREAM_LOADER",
+      "reason": "Pinned EmulatorJS fetch compatibility forwarding for native loader assets/netplay; no independent game raw cache or Range implementation.",
+      "ownerStage": "S09",
+      "tests": [
+        "runtime:scripts/content-io/boundaries.test.mjs"
+      ]
+    },
+    {
+      "id": "B-029",
+      "repository": "runtime",
+      "path": "src/providers/emulatorjs/dosbox-state.ts",
+      "symbol": "installDOSBoxPureStateCompatibility",
+      "classification": "SAVE_OR_OVERLAY",
+      "reason": "Checkpoint/screenshot bytes or runtime-session cleanup POST, independent of immutable game content acquisition.",
+      "ownerStage": "S09",
+      "tests": [
+        "runtime:scripts/content-io/boundaries.test.mjs"
+      ]
+    },
+    {
+      "id": "B-030",
+      "repository": "runtime",
+      "path": "src/providers/emulatorjs/netplay-compatibility.ts",
+      "symbol": "installEmulatorJs423NetplayCompatibility",
+      "classification": "UPSTREAM_LOADER",
+      "reason": "Pinned EmulatorJS fetch compatibility forwarding for native loader assets/netplay; no independent game raw cache or Range implementation.",
+      "ownerStage": "S09",
+      "tests": [
+        "runtime:scripts/content-io/boundaries.test.mjs"
+      ]
+    },
+    {
+      "id": "B-031",
+      "repository": "runtime",
+      "path": "src/providers/emulatorjs/psp-assets.ts",
+      "symbol": "compatible",
+      "classification": "UPSTREAM_LOADER",
+      "reason": "Pinned EmulatorJS fetch compatibility forwarding for native loader assets/netplay; no independent game raw cache or Range implementation.",
+      "ownerStage": "S09",
+      "tests": [
+        "runtime:scripts/content-io/boundaries.test.mjs"
+      ]
+    },
+    {
+      "id": "B-032",
+      "repository": "runtime",
+      "path": "src/providers/emulatorjs/screenshot.ts",
+      "symbol": "captureDisplayedOutput",
+      "classification": "SAVE_OR_OVERLAY",
+      "reason": "Checkpoint/screenshot bytes or runtime-session cleanup POST, independent of immutable game content acquisition.",
+      "ownerStage": "S09",
+      "tests": [
+        "runtime:scripts/content-io/boundaries.test.mjs"
+      ]
+    },
+    {
+      "id": "B-033",
+      "repository": "runtime",
+      "path": "src/providers/emulatorjs/state-restore.ts",
+      "symbol": "installEmulatorJs423StateRestoreCompatibility",
+      "classification": "SAVE_OR_OVERLAY",
+      "reason": "Checkpoint/screenshot bytes or runtime-session cleanup POST, independent of immutable game content acquisition.",
+      "ownerStage": "S09",
+      "tests": [
+        "runtime:scripts/content-io/boundaries.test.mjs"
+      ]
+    },
+    {
+      "id": "B-034",
+      "repository": "runtime",
+      "path": "src/psp/adapter.ts",
+      "symbol": "screenshot",
+      "classification": "SAVE_OR_OVERLAY",
+      "reason": "Checkpoint/screenshot bytes or runtime-session cleanup POST, independent of immutable game content acquisition.",
+      "ownerStage": "S09",
+      "tests": [
+        "runtime:scripts/content-io/boundaries.test.mjs"
+      ]
+    },
+    {
+      "id": "B-035",
+      "repository": "runtime",
+      "path": "src/ruffle/adapter.ts",
+      "symbol": "screenshot",
+      "classification": "SAVE_OR_OVERLAY",
+      "reason": "Checkpoint/screenshot bytes or runtime-session cleanup POST, independent of immutable game content acquisition.",
+      "ownerStage": "S09",
+      "tests": [
+        "runtime:scripts/content-io/boundaries.test.mjs"
+      ]
+    },
+    {
+      "id": "B-036",
+      "repository": "runtime",
+      "path": "src/scummvm/json.ts",
+      "symbol": "scummvmJson",
+      "classification": "METADATA",
+      "reason": "Bounded project indexes and core manifests; no game data bodies.",
+      "ownerStage": "S17",
+      "tests": [
+        "runtime:scripts/content-io/boundaries.test.mjs"
+      ]
+    },
+    {
+      "id": "B-037",
+      "repository": "runtime",
+      "path": "src/tyranoscript/adapter.ts",
+      "symbol": "cleanup",
+      "classification": "SAVE_OR_OVERLAY",
+      "reason": "Checkpoint/screenshot bytes or runtime-session cleanup POST, independent of immutable game content acquisition.",
+      "ownerStage": "S09",
+      "tests": [
+        "runtime:scripts/content-io/boundaries.test.mjs"
+      ]
+    },
+    {
+      "id": "B-038",
+      "repository": "runtime",
+      "path": "src/wasm4/adapter.ts",
+      "symbol": "screenshot",
+      "classification": "SAVE_OR_OVERLAY",
+      "reason": "Checkpoint/screenshot bytes or runtime-session cleanup POST, independent of immutable game content acquisition.",
+      "ownerStage": "S09",
+      "tests": [
+        "runtime:scripts/content-io/boundaries.test.mjs"
+      ]
+    },
+    {
+      "id": "B-039",
+      "repository": "runtime",
+      "path": "src/webmsx/adapter.ts",
+      "symbol": "screenshot",
+      "classification": "SAVE_OR_OVERLAY",
+      "reason": "Checkpoint/screenshot bytes or runtime-session cleanup POST, independent of immutable game content acquisition.",
+      "ownerStage": "S09",
+      "tests": [
+        "runtime:scripts/content-io/boundaries.test.mjs"
+      ]
+    },
+    {
+      "id": "B-040",
+      "repository": "kirikiri2",
+      "path": "platforms/web/sw.js",
+      "symbol": "<module>",
+      "classification": "UPSTREAM_LOADER",
+      "reason": "Upstream standalone demo service worker; excluded from Retrom build-web.sh asset list and Provider candidate.",
+      "ownerStage": "S15",
+      "tests": [
+        "runtime:scripts/content-io/boundaries.test.mjs"
+      ]
+    },
+    {
+      "id": "B-041",
+      "repository": "kirikiri2",
+      "path": "platforms/web/vlfs.js",
+      "symbol": "init",
+      "classification": "DERIVED_FORMAT_STORAGE",
+      "reason": "Local Blob/File slices and ZIP-derived OPFS blocks; remote source reads delegate to the public Content I/O Reader.",
+      "ownerStage": "S15",
+      "tests": [
+        "runtime:scripts/content-io/boundaries.test.mjs"
+      ]
+    },
+    {
+      "id": "B-042",
+      "repository": "kirikiri2",
+      "path": "platforms/web/vlfs.js",
+      "symbol": "_prepareZipCache",
+      "classification": "DERIVED_FORMAT_STORAGE",
+      "reason": "Local Blob/File slices and ZIP-derived OPFS blocks; remote source reads delegate to the public Content I/O Reader.",
+      "ownerStage": "S15",
+      "tests": [
+        "runtime:scripts/content-io/boundaries.test.mjs"
+      ]
+    },
+    {
+      "id": "B-043",
+      "repository": "kirikiri2",
+      "path": "platforms/web/vlfs.js",
+      "symbol": "_readSource",
+      "classification": "DERIVED_FORMAT_STORAGE",
+      "reason": "Local Blob/File slices and ZIP-derived OPFS blocks; remote source reads delegate to the public Content I/O Reader.",
+      "ownerStage": "S15",
+      "tests": [
+        "runtime:scripts/content-io/boundaries.test.mjs"
+      ]
+    },
+    {
+      "id": "B-044",
+      "repository": "kirikiri2",
+      "path": "platforms/web/vlfs.js",
+      "symbol": "_readZipSourceBytes",
+      "classification": "DERIVED_FORMAT_STORAGE",
+      "reason": "Local Blob/File slices and ZIP-derived OPFS blocks; remote source reads delegate to the public Content I/O Reader.",
+      "ownerStage": "S15",
+      "tests": [
+        "runtime:scripts/content-io/boundaries.test.mjs"
+      ]
+    },
+    {
+      "id": "R-NCD",
+      "repository": "runtime",
+      "path": "src/providers/emulatorjs/neocd-range.ts",
+      "symbol": "createNeoCDRange",
+      "classification": "CORE_BRIDGE",
+      "reason": "Preserves Uint8Array | Promise<Uint8Array> delivery/EOF semantics; source acquisition delegates to the common Reader/materializer.",
+      "ownerStage": "S10",
+      "tests": [
+        "runtime:scripts/content-io/boundaries.test.mjs"
+      ]
+    },
+    {
+      "id": "R-SCM",
+      "repository": "runtime",
+      "path": "src/scummvm/files.ts",
+      "symbol": "ScummvmFiles",
+      "classification": "CORE_BRIDGE",
+      "reason": "Preserves Promise<Uint8Array> delivery/EOF semantics; source acquisition delegates to the common Reader/materializer.",
+      "ownerStage": "S11",
+      "tests": [
+        "runtime:scripts/content-io/boundaries.test.mjs"
+      ]
+    },
+    {
+      "id": "R-PSP",
+      "repository": "ppsspp",
+      "path": "libretro/retrom/ppsspp-disc.mjs",
+      "symbol": "discReader",
+      "classification": "CORE_BRIDGE",
+      "reason": "Preserves Promise<Uint8Array> delivery/EOF semantics; source acquisition delegates to the common Reader/materializer.",
+      "ownerStage": "S12",
+      "tests": [
+        "runtime:scripts/content-io/boundaries.test.mjs"
+      ]
+    },
+    {
+      "id": "R-PLY",
+      "repository": "play",
+      "path": "js/retrom/disc-device.mjs",
+      "symbol": "discDevice",
+      "classification": "CORE_BRIDGE",
+      "reason": "Preserves Promise<Uint8Array> delivery/EOF semantics; source acquisition delegates to the common Reader/materializer.",
+      "ownerStage": "S13",
+      "tests": [
+        "runtime:scripts/content-io/boundaries.test.mjs"
+      ]
+    },
+    {
+      "id": "R-MKP",
+      "repository": "mkxp",
+      "path": ".github/rpg-runtime/content-io/retrom-content-bridge.cpp",
+      "symbol": "retromContentBridge",
+      "classification": "CORE_BRIDGE",
+      "reason": "Preserves native WasmFS read delivery/EOF semantics; source acquisition delegates to the common Reader/materializer.",
+      "ownerStage": "S14",
+      "tests": [
+        "runtime:scripts/content-io/boundaries.test.mjs"
+      ]
+    },
+    {
+      "id": "R-KRK",
+      "repository": "kirikiri2",
+      "path": "platforms/web/vlfs.js",
+      "symbol": "VLFS",
+      "classification": "CORE_BRIDGE",
+      "reason": "Preserves VLFS remote read delivery/EOF semantics; source acquisition delegates to the common Reader/materializer.",
+      "ownerStage": "S15",
+      "tests": [
+        "runtime:scripts/content-io/boundaries.test.mjs"
+      ]
+    },
+    {
+      "id": "F-FLY",
+      "repository": "runtime",
+      "path": "src/providers/emulatorjs/disc-cache.ts",
+      "symbol": "loadDisc",
+      "classification": "CORE_BRIDGE",
+      "reason": "Preserves Promise<Blob> delivery/EOF semantics; source acquisition delegates to the common Reader/materializer.",
+      "ownerStage": "S16",
+      "tests": [
+        "runtime:scripts/content-io/boundaries.test.mjs"
+      ]
+    },
+    {
+      "id": "F-NP2",
+      "repository": "runtime",
+      "path": "src/np2kai/content.ts",
+      "symbol": "loadDisk",
+      "classification": "CORE_BRIDGE",
+      "reason": "Preserves Promise<Uint8Array> delivery/EOF semantics; source acquisition delegates to the common Reader/materializer.",
+      "ownerStage": "S16",
+      "tests": [
+        "runtime:scripts/content-io/boundaries.test.mjs"
+      ]
+    },
+    {
+      "id": "F-ONS",
+      "repository": "runtime",
+      "path": "src/ons/project-files.ts",
+      "symbol": "createOnsProjectFileMap",
+      "classification": "CORE_BRIDGE",
+      "reason": "Preserves Promise<Uint8Array> delivery/EOF semantics; source acquisition delegates to the common Reader/materializer.",
+      "ownerStage": "S17",
+      "tests": [
+        "runtime:scripts/content-io/boundaries.test.mjs"
+      ]
+    },
+    {
+      "id": "F-PX68K",
+      "repository": "runtime",
+      "path": "src/px68k/files.ts",
+      "symbol": "fetchFile",
+      "classification": "CORE_BRIDGE",
+      "reason": "Preserves Promise<Uint8Array> delivery/EOF semantics; source acquisition delegates to the common Reader/materializer.",
+      "ownerStage": "S16",
+      "tests": [
+        "runtime:scripts/content-io/boundaries.test.mjs"
+      ]
+    },
+    {
+      "id": "F-GBE",
+      "repository": "runtime",
+      "path": "src/gbe-pokemini/files.ts",
+      "symbol": "fetchFile",
+      "classification": "CORE_BRIDGE",
+      "reason": "Preserves Promise<Uint8Array> delivery/EOF semantics; source acquisition delegates to the common Reader/materializer.",
+      "ownerStage": "S16",
+      "tests": [
+        "runtime:scripts/content-io/boundaries.test.mjs"
+      ]
+    },
+    {
+      "id": "F-OBOR",
+      "repository": "runtime",
+      "path": "src/openbor/fetch.ts",
+      "symbol": "fetchPak",
+      "classification": "CORE_BRIDGE",
+      "reason": "Preserves Promise<Uint8Array> delivery/EOF semantics; source acquisition delegates to the common Reader/materializer.",
+      "ownerStage": "S16",
+      "tests": [
+        "runtime:scripts/content-io/boundaries.test.mjs"
+      ]
+    },
+    {
+      "id": "F-MSX",
+      "repository": "runtime",
+      "path": "src/webmsx/fetch.ts",
+      "symbol": "fetchMedia",
+      "classification": "CORE_BRIDGE",
+      "reason": "Preserves Promise<Uint8Array> delivery/EOF semantics; source acquisition delegates to the common Reader/materializer.",
+      "ownerStage": "S16",
+      "tests": [
+        "runtime:scripts/content-io/boundaries.test.mjs"
+      ]
+    },
+    {
+      "id": "F-SWF",
+      "repository": "runtime",
+      "path": "src/ruffle/fetch.ts",
+      "symbol": "fetchSwf",
+      "classification": "CORE_BRIDGE",
+      "reason": "Preserves Promise<Uint8Array> delivery/EOF semantics; source acquisition delegates to the common Reader/materializer.",
+      "ownerStage": "S16",
+      "tests": [
+        "runtime:scripts/content-io/boundaries.test.mjs"
+      ]
+    },
+    {
+      "id": "F-FANTASY",
+      "repository": "runtime",
+      "path": "src/fantasy-console/fetch.ts",
+      "symbol": "verifiedFetch",
+      "classification": "CORE_BRIDGE",
+      "reason": "Preserves Promise<Uint8Array> delivery/EOF semantics; source acquisition delegates to the common Reader/materializer.",
+      "ownerStage": "S16",
+      "tests": [
+        "runtime:scripts/content-io/boundaries.test.mjs"
+      ]
+    },
+    {
+      "id": "F-WASM4",
+      "repository": "runtime",
+      "path": "src/wasm4/content.ts",
+      "symbol": "fetchCart",
+      "classification": "CORE_BRIDGE",
+      "reason": "Preserves Promise<Uint8Array> delivery/EOF semantics; source acquisition delegates to the common Reader/materializer.",
+      "ownerStage": "S16",
+      "tests": [
+        "runtime:scripts/content-io/boundaries.test.mjs"
+      ]
+    },
+    {
+      "id": "F-PSP-ASSET",
+      "repository": "runtime",
+      "path": "src/psp/content.ts",
+      "symbol": "loadPSPFile",
+      "classification": "CORE_BRIDGE",
+      "reason": "Preserves Promise<void> delivery/EOF semantics; source acquisition delegates to the common Reader/materializer.",
+      "ownerStage": "S12",
+      "tests": [
+        "runtime:scripts/content-io/boundaries.test.mjs"
+      ]
+    }
+  ]
+}

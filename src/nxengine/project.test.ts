@@ -1,18 +1,14 @@
+import {managedAdapterFixture} from "../../tests/managed-adapter-fixture.js";
 import {afterEach, expect, it, vi} from "vitest";
 import {fetchContent, parseIndex} from "./project.js";
 afterEach(() => vi.unstubAllGlobals());
-it("reuses exact immutable content across instances and replaces corrupt cached bytes", async () => {
-  const stored = new Map<string, Response>();
-  vi.stubGlobal("caches", {open: async () => ({match: async (url: string) => stored.get(url)?.clone(),
-    put: async (url: string, response: Response) => stored.set(url, response), delete: async (url: string) => stored.delete(url)})});
+it("materializes indexed bytes through the public session with project/path identity", async () => {
   const fetch = vi.fn(async () => new Response(Uint8Array.of(1, 2, 3))); vi.stubGlobal("fetch", fetch);
-  const file = {url: "https://host/content/hash/game", sizeBytes: 3};
-  expect(await fetchContent(file, () => undefined)).toEqual(Uint8Array.of(1, 2, 3));
-  expect(await fetchContent(file, () => undefined)).toEqual(Uint8Array.of(1, 2, 3));
-  expect(fetch).toHaveBeenCalledTimes(1);
-  stored.set(file.url, new Response(Uint8Array.of(1)));
-  await fetchContent(file, () => undefined); expect(fetch).toHaveBeenCalledTimes(2);
-  await expect(fetchContent({...file, sizeBytes: 2}, () => undefined)).rejects.toThrow("NXENGINE_PROJECT_INVALID");
+  const file = {path: "data/game", url: "https://host/content/hash/game", sizeBytes: 3};
+  const content = managedAdapterFixture(file), opened = vi.spyOn(content.contentSession, "open");
+  expect(await fetchContent(file, () => undefined, undefined, content.contentSession, "a".repeat(64))).toEqual(Uint8Array.of(1, 2, 3));
+  expect(opened.mock.calls[0][0]).toMatchObject({identity: {kind: "INDEX_ENTRY", projectDigest: "a".repeat(64), logicalPath: file.path}, etagPolicy: "PIN_STRONG"});
+  await expect(fetchContent({...file, sizeBytes: 2}, () => undefined, undefined, content.contentSession, "a".repeat(64))).rejects.toThrow("CONTENT_IO_LENGTH_MISMATCH");
 });
 it("rejects unsafe, duplicate, excessive and incomplete project indexes", () => {
   const files = ["Doukutsu.exe", "data/npc.tbl", "data/Stage/Start.pxm", "data/Stage/Start.tsc"]

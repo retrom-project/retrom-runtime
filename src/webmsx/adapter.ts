@@ -1,3 +1,4 @@
+import type {AdapterContentOptions} from "../provider/content-inputs.js";
 import type {MountedRuntimeAdapter, RuntimeProgressReporter} from "../internal-adapter.js";
 import {fetchMedia, type MediaSource} from "./fetch.js";
 import {loadWebMSX, type WebMSXLoader} from "./core.js";
@@ -7,12 +8,10 @@ export type WebMSXParameters = MediaSource & {runtimeBaseUrl: string};
 export const webmsxCheckpointMaximum = 32 * 1024 * 1024;
 export async function mountWebMSX(config: WebMSXParameters, target: HTMLElement, frameWindow: Window,
   restore: Uint8Array | null, progress: RuntimeProgressReporter, signal?: AbortSignal,
-  loader: WebMSXLoader = loadWebMSX): Promise<MountedRuntimeAdapter> {
+  loader: WebMSXLoader = loadWebMSX, content?: AdapterContentOptions): Promise<MountedRuntimeAdapter> {
   if (target.ownerDocument !== frameWindow.document || restore &&
     (!restore.length || restore.length > webmsxCheckpointMaximum)) {throw new Error("WEBMSX_CONFIG_INVALID");}
-  let cache: CacheStorage | undefined;
-  try {cache = frameWindow.caches;} catch { /* Browser storage may be unavailable. */ }
-  const bytes = await fetchMedia(config, progress, cache, signal);
+  const bytes = await fetchMedia(config, progress, content?.contentSession, signal);
   signal?.throwIfAborted();
   const module = await loader(new URL("webmsx.js", new URL(config.runtimeBaseUrl, window.location.href)).href, frameWindow, signal);
   signal?.throwIfAborted();

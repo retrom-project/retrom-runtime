@@ -1,3 +1,4 @@
+import type {AdapterContentOptions} from "../provider/content-inputs.js";
 import type {MountedRuntimeAdapter, RuntimeProgressReporter} from "../internal-adapter.js";
 import {fetchSwf, type SwfSource} from "./fetch.js";
 import {boundedLoad, loadRuffle, waitReady, type RuffleLoader} from "./player.js";
@@ -8,13 +9,11 @@ export type RuffleParameters = SwfSource & {runtimeBaseUrl: string};
 
 export async function mountRuffle(config: RuffleParameters, target: HTMLElement, frameWindow: Window,
   restore: Uint8Array | null, progress: RuntimeProgressReporter, signal?: AbortSignal,
-  loader: RuffleLoader = loadRuffle): Promise<MountedRuntimeAdapter> {
+  loader: RuffleLoader = loadRuffle, content?: AdapterContentOptions): Promise<MountedRuntimeAdapter> {
   if (target.ownerDocument !== frameWindow.document) {throw new Error("RUFFLE_RUNTIME_CONFIG_INVALID");}
   const storage = new RuffleStorage(config.contentDigest, restore);
   const realm = frameWindow as Window & {Uint8Array: typeof Uint8Array};
-  let cache: CacheStorage | undefined;
-  try {cache = frameWindow.caches;} catch { /* A sandbox may disable persistent caching. */ }
-  const data = await fetchSwf(config, progress, cache, signal);
+  const data = await fetchSwf(config, progress, content?.contentSession, signal);
   signal?.throwIfAborted();
   const base = new URL(config.runtimeBaseUrl, window.location.href).href;
   const player = await loader(base, frameWindow, signal);

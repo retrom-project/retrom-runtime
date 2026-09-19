@@ -1,3 +1,4 @@
+import type {ContentSessionClient} from "../../content-io/client.js";
 import {mountFantasyConsole} from "../../fantasy-console/adapter.js";
 import {beforeEach, describe, expect, it, vi} from "vitest";
 import {mountEasyRpg} from "../../easyrpg/adapter.js";
@@ -29,7 +30,7 @@ const assetIndex = {
 
 function context(): TargetMountContext {
   return {
-    assetIndex, frame: document.createElement("iframe"), frameWindow: window,
+    contentSession: {} as ContentSessionClient, assetIndex, frame: document.createElement("iframe"), frameWindow: window,
     restorePayload: null, reportProgress: vi.fn(), reportExitRequested: vi.fn(), onDiagnostic: vi.fn(),
   };
 }
@@ -41,7 +42,7 @@ describe("Provider to core-private parameters", () => {
     await mountTargetAdapter(request, target, options);
     expect(mountFantasyConsole).toHaveBeenCalledWith({core: id, contentDigest: "a".repeat(64),
       cartSizeBytes: 128, cartUrl: "/runtime/content/game/game.jar", runtimeBaseUrl: request.runtime.runtimeBaseUrl,
-      assetIndex}, target, window, null, options.reportProgress, options.reportFailure, options.signal);
+      assetIndex}, target, window, null, options.reportProgress, options.reportFailure, options.signal, undefined, {contentSession:options.contentSession,assetIndex});
   });
   it.each([["rpgmaker-2000", "rpg2k"], ["rpgmaker-2003", "rpg2k3"]])(
     "constructs only the EasyRPG parameters for %s", async (id, engineMode) => {
@@ -97,14 +98,14 @@ describe("Provider to core-private parameters", () => {
     ons.targetOptions.scriptEncoding = "sjis";
     await mountTargetAdapter(ons, document.createElement("div"), context());
     expect(vi.mocked(mountOnsYuri).mock.calls[0][0]).toEqual({
-      checkpointSlot: 999, scriptEncoding: "sjis", projectIndexUrl: `/runtime/content/project/${"a".repeat(64)}/index.json`,
+      contentDigest:"a".repeat(64), checkpointSlot: 999, scriptEncoding: "sjis", projectIndexUrl: `/runtime/content/project/${"a".repeat(64)}/index.json`,
       runtimeBaseUrl: ons.runtime.runtimeBaseUrl + "assets/ons/",
     });
     const kiri = targetEnvelope("kirikiri2-kag");
     kiri.targetOptions.startupXp3Path = "data.xp3";
     await mountTargetAdapter(kiri, document.createElement("div"), context());
     expect(vi.mocked(mountKirikiri2).mock.calls[0][0]).toEqual({
-      checkpointSlot: 1999, startupXp3Path: "data.xp3", projectIndexUrl: `/runtime/content/project/${"a".repeat(64)}/index.json`,
+      contentDigest:"a".repeat(64), checkpointSlot: 1999, startupXp3Path: "data.xp3", projectIndexUrl: `/runtime/content/project/${"a".repeat(64)}/index.json`,
       runtimeBaseUrl: kiri.runtime.runtimeBaseUrl + "assets/kirikiri/",
     });
   });
@@ -137,7 +138,7 @@ describe("Provider to core-private parameters", () => {
     expect(mountWasm4).toHaveBeenCalledWith({
       contentDigest: "a".repeat(64), cartSizeBytes: 128, cartUrl: "/runtime/content/game/cart.wasm",
       runtimeBaseUrl: request.runtime.runtimeBaseUrl + "assets/wasm4/",
-    }, target, window, null, options.reportProgress);
+    }, target, window, null, options.reportProgress, undefined, {contentSession:options.contentSession,assetIndex,signal:undefined});
   });
 
   it("does not initialize a threaded core without its verified asset inventory", () => {

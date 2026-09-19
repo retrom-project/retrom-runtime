@@ -1,0 +1,3849 @@
+[
+  {
+    "id": "S00",
+    "dependencies": [],
+    "inputs": [
+      "scripts/content-io/pfb-environment.py",
+      "scripts/content-io/preflight.mjs",
+      "scripts/content-io/preflight.test.mjs",
+      "scripts/content-io/baseline.mjs",
+      "scripts/content-io/baseline.test.mjs",
+      "tests/content-io/entrypoints.json"
+    ],
+    "tests": [
+      {
+        "runner": "node",
+        "files": [
+          "scripts/content-io/preflight.test.mjs",
+          "scripts/content-io/baseline.test.mjs"
+        ]
+      }
+    ],
+    "required": [
+      {
+        "caseId": "S00",
+        "subcase": "preflight-arguments",
+        "level": "UNIT"
+      },
+      {
+        "caseId": "S00",
+        "subcase": "preflight-realpath",
+        "level": "UNIT"
+      },
+      {
+        "caseId": "S00",
+        "subcase": "inventory-symbols",
+        "level": "UNIT"
+      },
+      {
+        "caseId": "S00",
+        "subcase": "baseline-gates-and-golden",
+        "level": "UNIT"
+      },
+      {
+        "caseId": "S00",
+        "subcase": "preflight-repeat-and-pfb-boundary",
+        "level": "UNIT"
+      },
+      {
+        "caseId": "S00",
+        "subcase": "preflight-candidate-paths",
+        "level": "UNIT"
+      }
+    ]
+  },
+  {
+    "id": "S01",
+    "dependencies": [
+      "S00"
+    ],
+    "inputs": [
+      "scripts/content-io/cli.mjs",
+      "scripts/content-io/stage.mjs",
+      "scripts/content-io/stage.test.mjs",
+      "scripts/content-io/evidence.mjs",
+      "scripts/content-io/report-node.mjs",
+      "tests/content-io/fixture-bytes.mjs",
+      "tests/content-io/fixture-server.mjs",
+      "tests/content-io/fixture-server.test.mjs",
+      "tests/content-io/fixture.browser.ts",
+      "tests/content-io/playwright.config.ts",
+      "tests/content-io/requirements.json",
+      "tests/content-io/stages.json",
+      "package.json",
+      "package-lock.json",
+      "scripts/content-io/reports.mjs",
+      "scripts/content-io/evidence-crosscheck.test.mjs",
+      "scripts/content-io"
+    ],
+    "tests": [
+      {
+        "runner": "node",
+        "files": [
+          "tests/content-io/fixture-server.test.mjs",
+          "scripts/content-io/stage.test.mjs",
+          "scripts/content-io/evidence-crosscheck.test.mjs",
+          "scripts/content-io/repository-tree.test.mjs",
+          "scripts/content-io/evidence-scope.test.mjs",
+          "scripts/content-io/core-identities.test.mjs",
+          "scripts/content-io/core-suite.test.mjs",
+          "scripts/content-io/signoff.test.mjs",
+          "scripts/content-io/artifacts.test.mjs"
+        ]
+      },
+      {
+        "runner": "playwright",
+        "files": [
+          "fixture.browser.ts"
+        ]
+      }
+    ],
+    "required": [
+      {
+        "caseId": "S01",
+        "subcase": "fixture-vectors",
+        "level": "UNIT"
+      },
+      {
+        "caseId": "S01",
+        "subcase": "fixture-http",
+        "level": "UNIT"
+      },
+      {
+        "caseId": "S01",
+        "subcase": "fixture-errors",
+        "level": "UNIT"
+      },
+      {
+        "caseId": "S01",
+        "subcase": "runner-coverage",
+        "level": "UNIT"
+      },
+      {
+        "caseId": "S01",
+        "subcase": "runner-child-failure",
+        "level": "UNIT"
+      },
+      {
+        "caseId": "S01",
+        "subcase": "runner-stale-and-tampered",
+        "level": "UNIT"
+      },
+      {
+        "caseId": "S01",
+        "subcase": "fixture-secure-context",
+        "level": "BROWSER"
+      },
+      {
+        "caseId": "X-29",
+        "subcase": "stage-S01",
+        "level": "UNIT"
+      },
+      {
+        "caseId": "X-29",
+        "level": "UNIT",
+        "subcase": "exact-subcase"
+      },
+      {
+        "caseId": "S01",
+        "level": "UNIT",
+        "subcase": "hard-timeout"
+      },
+      {
+        "caseId": "X-29",
+        "level": "UNIT",
+        "subcase": "evidence-copied-assertions"
+      },
+      {
+        "caseId": "X-29",
+        "level": "UNIT",
+        "subcase": "evidence-failed-command"
+      },
+      {
+        "caseId": "X-29",
+        "level": "UNIT",
+        "subcase": "evidence-missing-command"
+      },
+      {
+        "caseId": "X-29",
+        "level": "UNIT",
+        "subcase": "evidence-wrong-command"
+      },
+      {
+        "caseId": "X-29",
+        "level": "UNIT",
+        "subcase": "evidence-missing-report"
+      },
+      {
+        "caseId": "X-29",
+        "level": "UNIT",
+        "subcase": "evidence-wrong-runner"
+      },
+      {
+        "caseId": "X-29",
+        "level": "UNIT",
+        "subcase": "evidence-report-location"
+      },
+      {
+        "caseId": "X-29",
+        "level": "UNIT",
+        "subcase": "evidence-environment"
+      },
+      {
+        "caseId": "X-29",
+        "level": "UNIT",
+        "subcase": "evidence-source-after"
+      },
+      {
+        "caseId": "X-29",
+        "level": "UNIT",
+        "subcase": "evidence-no-logs"
+      },
+      {
+        "caseId": "X-29",
+        "level": "UNIT",
+        "subcase": "evidence-timeout-with-exit-zero"
+      },
+      {
+        "caseId": "X-29",
+        "level": "UNIT",
+        "subcase": "evidence-unknown-field"
+      },
+      {
+        "caseId": "X-29",
+        "level": "UNIT",
+        "subcase": "evidence-outside-root"
+      },
+      {
+        "caseId": "X-29",
+        "level": "UNIT",
+        "subcase": "evidence-symlink"
+      },
+      {
+        "caseId": "X-29",
+        "level": "UNIT",
+        "subcase": "evidence-missing-run-id"
+      },
+      {
+        "caseId": "X-29",
+        "level": "UNIT",
+        "subcase": "evidence-reported-sha"
+      },
+      {
+        "caseId": "X-29",
+        "subcase": "repository-tree-untracked",
+        "level": "UNIT"
+      },
+      {
+        "caseId": "X-29",
+        "subcase": "repository-tree-mode",
+        "level": "UNIT"
+      },
+      {
+        "caseId": "X-29",
+        "subcase": "repository-tree-outside-stage",
+        "level": "UNIT"
+      },
+      {
+        "caseId": "X-29",
+        "subcase": "repository-tree-gitlink",
+        "level": "UNIT"
+      },
+      {
+        "caseId": "X-29",
+        "subcase": "evidence-scope",
+        "level": "UNIT"
+      },
+      {
+        "caseId": "PK-04",
+        "level": "CONTRACT",
+        "subcase": "core-proof"
+      },
+      {
+        "caseId": "S01",
+        "level": "UNIT",
+        "subcase": "fork-runner"
+      }
+    ]
+  },
+  {
+    "id": "S02",
+    "dependencies": [
+      "S01"
+    ],
+    "inputs": [
+      "scripts/content-io/contract.mjs",
+      "contracts/content-io",
+      "src/content-io/source.ts",
+      "src/content-io/source.test.ts",
+      "src/content-io/errors.ts",
+      "src/content-io/errors.test.ts",
+      "src/content-io/limits.ts",
+      "src/content-io/policy.ts",
+      "src/content-io/policy.test.ts",
+      "src/content-io/contract.test.ts",
+      "src/provider/declarations.ts",
+      "src/provider/content-policies.ts",
+      "src/providers/retrom-runtime/catalog.ts",
+      "src/providers/emulatorjs/catalog.ts",
+      "tests/content-io/declarations.test.ts",
+      "tests/content-io/public-manifests.golden.json"
+    ],
+    "tests": [
+      {
+        "runner": "vitest",
+        "files": [
+          "src/content-io/source.test.ts",
+          "src/content-io/policy.test.ts",
+          "src/content-io/errors.test.ts",
+          "tests/content-io/declarations.test.ts",
+          "src/content-io/contract.test.ts"
+        ]
+      }
+    ],
+    "required": [
+      {
+        "caseId": "IO-01",
+        "subcase": "registration",
+        "level": "CONTRACT"
+      },
+      {
+        "caseId": "IO-03",
+        "subcase": "bounds-zero",
+        "level": "CONTRACT"
+      },
+      {
+        "caseId": "IO-04",
+        "subcase": "invalid-integers",
+        "level": "CONTRACT"
+      },
+      {
+        "caseId": "IO-05",
+        "subcase": "large-offsets",
+        "level": "CONTRACT"
+      },
+      {
+        "caseId": "IO-21",
+        "subcase": "object-identity",
+        "level": "CONTRACT"
+      },
+      {
+        "caseId": "PK-01",
+        "subcase": "private-policies",
+        "level": "CONTRACT"
+      },
+      {
+        "caseId": "X-30",
+        "subcase": "stage-S02",
+        "level": "CONTRACT"
+      }
+    ]
+  },
+  {
+    "id": "S03",
+    "dependencies": [
+      "S02"
+    ],
+    "inputs": [
+      "scripts/content-io/contract.mjs",
+      "contracts/content-io",
+      "src/content-io/source.ts",
+      "src/content-io/source.test.ts",
+      "src/content-io/errors.ts",
+      "src/content-io/errors.test.ts",
+      "src/content-io/limits.ts",
+      "src/content-io/policy.ts",
+      "src/content-io/policy.test.ts",
+      "src/content-io/contract.test.ts",
+      "src/provider/declarations.ts",
+      "src/provider/content-policies.ts",
+      "src/providers/retrom-runtime/catalog.ts",
+      "src/providers/emulatorjs/catalog.ts",
+      "tests/content-io/declarations.test.ts",
+      "tests/content-io/public-manifests.golden.json",
+      "src/content-io/http.ts",
+      "src/content-io/http.test.ts",
+      "src/content-io/bounded-stream.ts",
+      "src/content-io/bounded-stream.test.ts",
+      "src/content-io/abort.ts",
+      "tests/content-io/http.browser.ts",
+      "tests/content-io/fixture-server.mjs",
+      "src/content-io/fetch-policy.ts",
+      "tests/content-io/window-threshold.browser.ts",
+      "src/content-io/http-metrics.test.ts",
+      "src/content-io/transport-metrics.test.ts",
+      "src/content-io/store/manager.ts",
+      "src/content-io/window-loader.ts",
+      "src/content-io/materializer.ts"
+    ],
+    "tests": [
+      {
+        "runner": "vitest",
+        "files": [
+          "src/content-io/http.test.ts",
+          "src/content-io/bounded-stream.test.ts",
+          "src/content-io/http-metrics.test.ts",
+          "src/content-io/transport-metrics.test.ts"
+        ]
+      },
+      {
+        "runner": "playwright",
+        "files": [
+          "http.browser.ts",
+          "window-threshold.browser.ts"
+        ]
+      }
+    ],
+    "required": [
+      {
+        "caseId": "IO-11",
+        "subcase": "transport",
+        "level": "UNIT"
+      },
+      {
+        "caseId": "IO-12",
+        "subcase": "transport",
+        "level": "UNIT"
+      },
+      {
+        "caseId": "IO-13",
+        "subcase": "transport",
+        "level": "UNIT"
+      },
+      {
+        "caseId": "IO-14",
+        "subcase": "transport",
+        "level": "UNIT"
+      },
+      {
+        "caseId": "IO-15",
+        "subcase": "transport",
+        "level": "UNIT"
+      },
+      {
+        "caseId": "IO-16",
+        "subcase": "transport",
+        "level": "UNIT"
+      },
+      {
+        "caseId": "IO-17",
+        "subcase": "transport",
+        "level": "UNIT"
+      },
+      {
+        "caseId": "IO-20",
+        "subcase": "transport",
+        "level": "UNIT"
+      },
+      {
+        "caseId": "IO-21",
+        "subcase": "transport",
+        "level": "UNIT"
+      },
+      {
+        "caseId": "IO-24",
+        "subcase": "transport",
+        "level": "UNIT"
+      },
+      {
+        "caseId": "X-01",
+        "subcase": "transport",
+        "level": "UNIT"
+      },
+      {
+        "caseId": "X-02",
+        "subcase": "transport",
+        "level": "UNIT"
+      },
+      {
+        "caseId": "X-03",
+        "subcase": "transport",
+        "level": "UNIT"
+      },
+      {
+        "caseId": "X-27",
+        "subcase": "stage-S03",
+        "level": "UNIT"
+      },
+      {
+        "caseId": "X-30",
+        "subcase": "stage-S03",
+        "level": "UNIT"
+      },
+      {
+        "caseId": "IO-05",
+        "subcase": "transport",
+        "level": "BROWSER"
+      },
+      {
+        "caseId": "IO-13",
+        "subcase": "transport-metrics",
+        "level": "UNIT"
+      },
+      {
+        "caseId": "IO-17",
+        "subcase": "transport-metrics",
+        "level": "UNIT"
+      },
+      {
+        "caseId": "IO-20",
+        "subcase": "transport-metrics",
+        "level": "UNIT"
+      },
+      {
+        "caseId": "IO-24",
+        "subcase": "transport-metrics",
+        "level": "UNIT"
+      }
+    ]
+  },
+  {
+    "id": "S04",
+    "dependencies": [
+      "S03"
+    ],
+    "inputs": [
+      "src/content-io",
+      "contracts/content-io/v1",
+      "tests/content-io/fixture-bytes.mjs",
+      "tests/content-io/stages.json",
+      "tests/content-io/fetch-windows.browser.ts",
+      "tests/content-io/window-cancel.browser.ts",
+      "tests/content-io/window-budget.browser.ts"
+    ],
+    "tests": [
+      {
+        "runner": "vitest",
+        "files": [
+          "src/content-io/range-reader.test.ts",
+          "src/content-io/lru.test.ts",
+          "src/content-io/scheduler.test.ts",
+          "src/content-io/credits.test.ts",
+          "src/content-io/fetch-policy.test.ts",
+          "src/content-io/block-pool-failure.test.ts",
+          "src/content-io/resource-peaks.test.ts",
+          "src/content-io/read-accounting.test.ts"
+        ]
+      },
+      {
+        "runner": "playwright",
+        "files": [
+          "fetch-windows.browser.ts",
+          "window-cancel.browser.ts",
+          "window-budget.browser.ts"
+        ]
+      }
+    ],
+    "required": [
+      {
+        "caseId": "IO-01",
+        "subcase": "reader",
+        "level": "UNIT"
+      },
+      {
+        "caseId": "IO-02",
+        "subcase": "reader",
+        "level": "UNIT"
+      },
+      {
+        "caseId": "IO-03",
+        "subcase": "reader",
+        "level": "UNIT"
+      },
+      {
+        "caseId": "IO-04",
+        "subcase": "reader",
+        "level": "UNIT"
+      },
+      {
+        "caseId": "IO-05",
+        "subcase": "reader",
+        "level": "UNIT"
+      },
+      {
+        "caseId": "IO-06",
+        "subcase": "reader",
+        "level": "UNIT"
+      },
+      {
+        "caseId": "IO-07",
+        "subcase": "reader",
+        "level": "UNIT"
+      },
+      {
+        "caseId": "IO-08",
+        "subcase": "reader",
+        "level": "UNIT"
+      },
+      {
+        "caseId": "IO-09",
+        "subcase": "reader",
+        "level": "UNIT"
+      },
+      {
+        "caseId": "IO-10",
+        "subcase": "reader",
+        "level": "UNIT"
+      },
+      {
+        "caseId": "IO-22",
+        "subcase": "reader",
+        "level": "UNIT"
+      },
+      {
+        "caseId": "IO-23",
+        "subcase": "reader",
+        "level": "UNIT"
+      },
+      {
+        "caseId": "IO-24",
+        "subcase": "reader",
+        "level": "UNIT"
+      },
+      {
+        "caseId": "X-04",
+        "subcase": "reader",
+        "level": "UNIT"
+      },
+      {
+        "caseId": "X-05",
+        "subcase": "reader",
+        "level": "UNIT"
+      },
+      {
+        "caseId": "IO-02",
+        "subcase": "random-trace",
+        "level": "UNIT"
+      },
+      {
+        "caseId": "IO-02",
+        "level": "UNIT",
+        "subcase": "fetch-config"
+      },
+      {
+        "caseId": "IO-05",
+        "level": "UNIT",
+        "subcase": "window-safe-offset"
+      },
+      {
+        "caseId": "IO-23",
+        "subcase": "resource-peaks",
+        "level": "UNIT"
+      },
+      {
+        "caseId": "IO-23",
+        "subcase": "logical-hit-bytes",
+        "level": "UNIT"
+      }
+    ]
+  },
+  {
+    "id": "S05",
+    "dependencies": [
+      "S04"
+    ],
+    "inputs": [
+      "src/content-io",
+      "contracts/content-io/v1",
+      "tests/content-io/fixture-bytes.mjs",
+      "tests/content-io/fixture-server.mjs",
+      "tests/content-io/session.browser.ts",
+      "tests/content-io/consumer.browser.ts",
+      "tests/content-io/bootstrap.browser.ts",
+      "tests/content-io/channel-groups.browser.ts",
+      "tests/content-io/async-revocation.browser.ts",
+      "tests/content-io/probe-deadline.browser.ts",
+      "tests/content-io/stages.json"
+    ],
+    "tests": [
+      {
+        "runner": "vitest",
+        "files": [
+          "src/content-io/bridge/protocol.test.ts",
+          "src/content-io/bridge/async-service.test.ts"
+        ]
+      },
+      {
+        "runner": "playwright",
+        "files": [
+          "session.browser.ts",
+          "consumer.browser.ts",
+          "bootstrap.browser.ts",
+          "channel-groups.browser.ts",
+          "async-revocation.browser.ts",
+          "probe-deadline.browser.ts"
+        ]
+      }
+    ],
+    "required": [
+      {
+        "caseId": "BR-10",
+        "subcase": "session",
+        "level": "BROWSER"
+      },
+      {
+        "caseId": "BR-11",
+        "subcase": "session",
+        "level": "UNIT"
+      },
+      {
+        "caseId": "BR-12",
+        "subcase": "session",
+        "level": "UNIT"
+      },
+      {
+        "caseId": "PK-02",
+        "subcase": "session",
+        "level": "UNIT"
+      },
+      {
+        "caseId": "PK-03",
+        "subcase": "verified-worker",
+        "level": "BROWSER"
+      },
+      {
+        "caseId": "X-06",
+        "subcase": "missing-ack",
+        "level": "UNIT"
+      },
+      {
+        "caseId": "X-06",
+        "subcase": "future-ack",
+        "level": "BROWSER"
+      },
+      {
+        "caseId": "X-07",
+        "subcase": "channel-groups",
+        "level": "BROWSER"
+      },
+      {
+        "caseId": "X-21",
+        "subcase": "async-identity",
+        "level": "BROWSER"
+      },
+      {
+        "caseId": "X-21",
+        "subcase": "async-host-close",
+        "level": "BROWSER"
+      },
+      {
+        "caseId": "X-22",
+        "subcase": "probe-deadline",
+        "level": "BROWSER"
+      }
+    ]
+  },
+  {
+    "id": "S06",
+    "dependencies": [
+      "S05"
+    ],
+    "inputs": [
+      "src/content-io",
+      "src/butterscotch",
+      "src/provider",
+      "contracts/content-io/v1",
+      "tests/content-io",
+      "scripts/content-io"
+    ],
+    "tests": [
+      {
+        "runner": "vitest",
+        "files": [
+          "src/content-io/store/metadata.test.ts",
+          "src/content-io/store/backing.test.ts",
+          "src/content-io/store/identity.test.ts",
+          "src/butterscotch/adapter.test.ts"
+        ]
+      },
+      {
+        "runner": "playwright",
+        "files": [
+          "storage.browser.ts",
+          "store-gc.browser.ts",
+          "store-concurrency.browser.ts",
+          "staged-crash.browser.ts",
+          "published-corruption.browser.ts",
+          "fallback-restart.browser.ts",
+          "fallback-concurrent.browser.ts",
+          "window-reuse.browser.ts",
+          "workspace.browser.ts",
+          "materialize.browser.ts",
+          "probe-deadline.browser.ts"
+        ]
+      }
+    ],
+    "required": [
+      {
+        "caseId": "ST-01",
+        "level": "UNIT",
+        "subcase": "short-io"
+      },
+      {
+        "caseId": "ST-01",
+        "level": "BROWSER",
+        "subcase": "restart-OPFS"
+      },
+      {
+        "caseId": "ST-01",
+        "level": "BROWSER",
+        "subcase": "window-change"
+      },
+      {
+        "caseId": "ST-02",
+        "level": "BROWSER",
+        "subcase": "restart-CACHE_BLOCKS"
+      },
+      {
+        "caseId": "ST-03",
+        "level": "BROWSER",
+        "subcase": "restart-MEMORY"
+      },
+      {
+        "caseId": "ST-04",
+        "level": "BROWSER",
+        "subcase": "workspace-denied"
+      },
+      {
+        "caseId": "ST-04",
+        "level": "UNIT",
+        "subcase": "workspace-denied"
+      },
+      {
+        "caseId": "ST-05",
+        "level": "BROWSER",
+        "subcase": "crash-before-receipt"
+      },
+      {
+        "caseId": "ST-06",
+        "level": "BROWSER",
+        "subcase": "staged-crash-resume"
+      },
+      {
+        "caseId": "ST-06",
+        "level": "BROWSER",
+        "subcase": "staged-crash-bad-hash"
+      },
+      {
+        "caseId": "ST-07",
+        "level": "UNIT",
+        "subcase": "receipt"
+      },
+      {
+        "caseId": "ST-07",
+        "level": "BROWSER",
+        "subcase": "data-lock"
+      },
+      {
+        "caseId": "ST-07",
+        "level": "BROWSER",
+        "subcase": "two-pages-same-block"
+      },
+      {
+        "caseId": "ST-07",
+        "level": "BROWSER",
+        "subcase": "two-pages-different-block"
+      },
+      {
+        "caseId": "ST-07",
+        "level": "BROWSER",
+        "subcase": "two-pages-pin-race"
+      },
+      {
+        "caseId": "ST-08",
+        "level": "BROWSER",
+        "subcase": "use-lock"
+      },
+      {
+        "caseId": "ST-08",
+        "level": "BROWSER",
+        "subcase": "Blob"
+      },
+      {
+        "caseId": "ST-17",
+        "level": "UNIT",
+        "subcase": "cache-identity"
+      },
+      {
+        "caseId": "ST-18",
+        "level": "BROWSER",
+        "subcase": "namespace"
+      },
+      {
+        "caseId": "IO-18",
+        "level": "UNIT",
+        "subcase": "published-corruption"
+      },
+      {
+        "caseId": "IO-18",
+        "level": "BROWSER",
+        "subcase": "corrupt-block"
+      },
+      {
+        "caseId": "IO-19",
+        "level": "BROWSER",
+        "subcase": "missing-receipt"
+      },
+      {
+        "caseId": "X-08",
+        "level": "BROWSER",
+        "subcase": "idb-cas"
+      },
+      {
+        "caseId": "X-08",
+        "level": "BROWSER",
+        "subcase": "external-await"
+      },
+      {
+        "caseId": "X-09",
+        "level": "BROWSER",
+        "subcase": "fallback-restart-FILE_SHA256"
+      },
+      {
+        "caseId": "X-09",
+        "level": "BROWSER",
+        "subcase": "fallback-restart-INDEX_ENTRY"
+      },
+      {
+        "caseId": "X-10",
+        "level": "BROWSER",
+        "subcase": "published-corruption"
+      },
+      {
+        "caseId": "X-22",
+        "level": "BROWSER",
+        "subcase": "probe-deadline"
+      },
+      {
+        "caseId": "X-24",
+        "level": "BROWSER",
+        "subcase": "fallback-inflight"
+      },
+      {
+        "caseId": "X-24",
+        "level": "UNIT",
+        "subcase": "complete-immutable"
+      }
+    ]
+  },
+  {
+    "id": "S07",
+    "dependencies": [
+      "S06"
+    ],
+    "inputs": [
+      "src/content-io",
+      "src/scummvm",
+      "src/provider/content-policies.ts",
+      "contracts/content-io/v1",
+      "tests/content-io",
+      "scripts/content-io"
+    ],
+    "tests": [
+      {
+        "runner": "vitest",
+        "files": [
+          "src/content-io/materializer.test.ts",
+          "src/content-io/limits.test.ts",
+          "src/content-io/store/backing.test.ts",
+          "src/content-io/client-lifecycle.test.ts",
+          "src/scummvm/assets.test.ts"
+        ]
+      },
+      {
+        "runner": "playwright",
+        "files": [
+          "materialize.browser.ts",
+          "materialize-resume.browser.ts",
+          "materialize-cache-failure.browser.ts",
+          "materialize-terminal.browser.ts",
+          "materialize-max.browser.ts",
+          "fallback.browser.ts",
+          "published-corruption.browser.ts"
+        ]
+      }
+    ],
+    "required": [
+      {
+        "caseId": "ST-09",
+        "level": "BROWSER",
+        "subcase": "partial-holes"
+      },
+      {
+        "caseId": "ST-10",
+        "level": "BROWSER",
+        "subcase": "whole-to-range"
+      },
+      {
+        "caseId": "ST-11",
+        "level": "BROWSER",
+        "subcase": "whole"
+      },
+      {
+        "caseId": "ST-12",
+        "level": "BROWSER",
+        "subcase": "strong-prefix"
+      },
+      {
+        "caseId": "ST-12",
+        "level": "BROWSER",
+        "subcase": "unbound-prefix"
+      },
+      {
+        "caseId": "ST-12",
+        "level": "BROWSER",
+        "subcase": "weak-prefix"
+      },
+      {
+        "caseId": "ST-13",
+        "level": "BROWSER",
+        "subcase": "cache-put-BYTES"
+      },
+      {
+        "caseId": "ST-13",
+        "level": "BROWSER",
+        "subcase": "cache-put-SINK"
+      },
+      {
+        "caseId": "ST-13",
+        "level": "BROWSER",
+        "subcase": "idb-commit-BYTES"
+      },
+      {
+        "caseId": "ST-13",
+        "level": "BROWSER",
+        "subcase": "idb-commit-SINK"
+      },
+      {
+        "caseId": "X-13",
+        "level": "BROWSER",
+        "subcase": "cache-put-BYTES"
+      },
+      {
+        "caseId": "X-13",
+        "level": "BROWSER",
+        "subcase": "cache-put-SINK"
+      },
+      {
+        "caseId": "X-13",
+        "level": "BROWSER",
+        "subcase": "idb-commit-BYTES"
+      },
+      {
+        "caseId": "X-13",
+        "level": "BROWSER",
+        "subcase": "idb-commit-SINK"
+      },
+      {
+        "caseId": "ST-14",
+        "level": "BROWSER",
+        "subcase": "readable-prefix"
+      },
+      {
+        "caseId": "ST-14",
+        "level": "BROWSER",
+        "subcase": "missing-prefix"
+      },
+      {
+        "caseId": "ST-14",
+        "level": "BROWSER",
+        "subcase": "whole-restart"
+      },
+      {
+        "caseId": "ST-14",
+        "level": "UNIT",
+        "subcase": "restart"
+      },
+      {
+        "caseId": "ST-15",
+        "level": "UNIT",
+        "subcase": "declared-limits"
+      },
+      {
+        "caseId": "ST-15",
+        "level": "UNIT",
+        "subcase": "max-signedDisc"
+      },
+      {
+        "caseId": "ST-15",
+        "level": "UNIT",
+        "subcase": "max-np2kaiDisk"
+      },
+      {
+        "caseId": "ST-15",
+        "level": "UNIT",
+        "subcase": "max-firmwareFile"
+      },
+      {
+        "caseId": "ST-15",
+        "level": "UNIT",
+        "subcase": "max-gbeRom"
+      },
+      {
+        "caseId": "ST-15",
+        "level": "UNIT",
+        "subcase": "max-openborPak"
+      },
+      {
+        "caseId": "ST-15",
+        "level": "UNIT",
+        "subcase": "max-webmsxMedia"
+      },
+      {
+        "caseId": "ST-15",
+        "level": "UNIT",
+        "subcase": "max-ruffleSwf"
+      },
+      {
+        "caseId": "ST-15",
+        "level": "UNIT",
+        "subcase": "max-fantasyFile"
+      },
+      {
+        "caseId": "ST-15",
+        "level": "UNIT",
+        "subcase": "max-wasm4Cart"
+      },
+      {
+        "caseId": "ST-15",
+        "level": "UNIT",
+        "subcase": "max-nxengineFile"
+      },
+      {
+        "caseId": "ST-15",
+        "level": "UNIT",
+        "subcase": "max-pspAsset"
+      },
+      {
+        "caseId": "ST-15",
+        "level": "UNIT",
+        "subcase": "max-indexedFile"
+      },
+      {
+        "caseId": "ST-15",
+        "level": "BROWSER",
+        "subcase": "max-512MiB-OPFS"
+      },
+      {
+        "caseId": "ST-15",
+        "level": "BROWSER",
+        "subcase": "max-512MiB-CACHE_BLOCKS"
+      },
+      {
+        "caseId": "IO-20",
+        "level": "UNIT",
+        "subcase": "materialize"
+      },
+      {
+        "caseId": "IO-21",
+        "level": "UNIT",
+        "subcase": "materialize"
+      },
+      {
+        "caseId": "HP-02",
+        "level": "UNIT",
+        "subcase": "progress"
+      },
+      {
+        "caseId": "X-11",
+        "level": "UNIT",
+        "subcase": "queue"
+      },
+      {
+        "caseId": "X-11",
+        "level": "BROWSER",
+        "subcase": "independent-results"
+      },
+      {
+        "caseId": "X-12",
+        "level": "BROWSER",
+        "subcase": "stream-write"
+      },
+      {
+        "caseId": "X-12",
+        "level": "BROWSER",
+        "subcase": "stream-commit"
+      },
+      {
+        "caseId": "X-12",
+        "level": "BROWSER",
+        "subcase": "stream-last-ack-cancel"
+      },
+      {
+        "caseId": "X-22",
+        "level": "UNIT",
+        "subcase": "sync-gate-failure"
+      },
+      {
+        "caseId": "X-22",
+        "level": "UNIT",
+        "subcase": "completion-credit-failure"
+      },
+      {
+        "caseId": "X-22",
+        "level": "UNIT",
+        "subcase": "materialize-credit-failure"
+      },
+      {
+        "caseId": "X-22",
+        "level": "BROWSER",
+        "subcase": "long-prepare"
+      },
+      {
+        "caseId": "X-24",
+        "level": "UNIT",
+        "subcase": "complete-immutable"
+      },
+      {
+        "caseId": "X-10",
+        "level": "BROWSER",
+        "subcase": "published-corruption"
+      },
+      {
+        "caseId": "X-26",
+        "level": "UNIT",
+        "subcase": "empty"
+      },
+      {
+        "caseId": "X-26",
+        "level": "UNIT",
+        "subcase": "commit"
+      },
+      {
+        "caseId": "X-26",
+        "level": "BROWSER",
+        "subcase": "stream-commit"
+      },
+      {
+        "caseId": "X-27",
+        "level": "UNIT",
+        "subcase": "scummvm-manifest"
+      },
+      {
+        "caseId": "X-27",
+        "level": "UNIT",
+        "subcase": "scummvm-catalog"
+      },
+      {
+        "caseId": "X-27",
+        "level": "UNIT",
+        "subcase": "scummvm-executable"
+      },
+      {
+        "caseId": "X-27",
+        "level": "UNIT",
+        "subcase": "scummvm-plugin"
+      },
+      {
+        "caseId": "X-22",
+        "level": "UNIT",
+        "subcase": "stream-credit-failure"
+      }
+    ]
+  },
+  {
+    "id": "S08",
+    "dependencies": [
+      "S07"
+    ],
+    "inputs": [
+      "scripts/content-io",
+      "tests/content-io",
+      "src/content-io",
+      "contracts/content-io"
+    ],
+    "tests": [
+      {
+        "runner": "vitest",
+        "files": [
+          "src/content-io/bridge/blocking.test.ts",
+          "src/content-io/bridge/sync-service.test.ts",
+          "src/content-io/bridge/protocol.test.ts",
+          "src/content-io/credits.test.ts",
+          "src/content-io/client-lifecycle.test.ts"
+        ]
+      },
+      {
+        "runner": "playwright",
+        "files": [
+          "sync.browser.ts",
+          "sync-failures.browser.ts",
+          "session.browser.ts",
+          "consumer.browser.ts",
+          "channel-groups.browser.ts"
+        ]
+      }
+    ],
+    "required": [
+      {
+        "caseId": "BR-02",
+        "level": "UNIT",
+        "subcase": "main-thread"
+      },
+      {
+        "caseId": "BR-02",
+        "level": "BROWSER",
+        "subcase": "blocking"
+      },
+      {
+        "caseId": "BR-03",
+        "level": "UNIT",
+        "subcase": "sync-deadline"
+      },
+      {
+        "caseId": "BR-03",
+        "level": "BROWSER",
+        "subcase": "sync-notify"
+      },
+      {
+        "caseId": "BR-03",
+        "level": "BROWSER",
+        "subcase": "sync-deadline"
+      },
+      {
+        "caseId": "BR-03",
+        "level": "BROWSER",
+        "subcase": "sync-close"
+      },
+      {
+        "caseId": "BR-03",
+        "level": "BROWSER",
+        "subcase": "sync-identity"
+      },
+      {
+        "caseId": "BR-03",
+        "level": "BROWSER",
+        "subcase": "sync-range-200"
+      },
+      {
+        "caseId": "BR-03",
+        "level": "BROWSER",
+        "subcase": "sync-checksum"
+      },
+      {
+        "caseId": "BR-09",
+        "level": "BROWSER",
+        "subcase": "sync-notify"
+      },
+      {
+        "caseId": "BR-09",
+        "level": "BROWSER",
+        "subcase": "sync-deadline"
+      },
+      {
+        "caseId": "BR-09",
+        "level": "BROWSER",
+        "subcase": "sync-close"
+      },
+      {
+        "caseId": "BR-09",
+        "level": "BROWSER",
+        "subcase": "sync-identity"
+      },
+      {
+        "caseId": "BR-09",
+        "level": "BROWSER",
+        "subcase": "sync-range-200"
+      },
+      {
+        "caseId": "BR-09",
+        "level": "BROWSER",
+        "subcase": "sync-checksum"
+      },
+      {
+        "caseId": "X-21",
+        "level": "BROWSER",
+        "subcase": "sync-notify"
+      },
+      {
+        "caseId": "X-21",
+        "level": "BROWSER",
+        "subcase": "sync-deadline"
+      },
+      {
+        "caseId": "X-21",
+        "level": "BROWSER",
+        "subcase": "sync-close"
+      },
+      {
+        "caseId": "X-21",
+        "level": "BROWSER",
+        "subcase": "sync-identity"
+      },
+      {
+        "caseId": "X-21",
+        "level": "BROWSER",
+        "subcase": "sync-range-200"
+      },
+      {
+        "caseId": "X-21",
+        "level": "BROWSER",
+        "subcase": "sync-checksum"
+      },
+      {
+        "caseId": "BR-09",
+        "level": "UNIT",
+        "subcase": "sync-close"
+      },
+      {
+        "caseId": "BR-10",
+        "level": "UNIT",
+        "subcase": "sync-copy"
+      },
+      {
+        "caseId": "BR-10",
+        "level": "BROWSER",
+        "subcase": "session"
+      },
+      {
+        "caseId": "BR-11",
+        "level": "UNIT",
+        "subcase": "session"
+      },
+      {
+        "caseId": "BR-11",
+        "level": "UNIT",
+        "subcase": "sync-epoch"
+      },
+      {
+        "caseId": "BR-11",
+        "level": "UNIT",
+        "subcase": "sync-sequence"
+      },
+      {
+        "caseId": "BR-11",
+        "level": "UNIT",
+        "subcase": "sync-length"
+      },
+      {
+        "caseId": "BR-11",
+        "level": "BROWSER",
+        "subcase": "consumer"
+      },
+      {
+        "caseId": "BR-12",
+        "level": "UNIT",
+        "subcase": "boot"
+      },
+      {
+        "caseId": "BR-12",
+        "level": "UNIT",
+        "subcase": "session"
+      },
+      {
+        "caseId": "IO-22",
+        "level": "UNIT",
+        "subcase": "sync-copy"
+      },
+      {
+        "caseId": "IO-23",
+        "level": "UNIT",
+        "subcase": "reader"
+      },
+      {
+        "caseId": "IO-23",
+        "level": "UNIT",
+        "subcase": "cache-write-budget"
+      },
+      {
+        "caseId": "X-07",
+        "level": "BROWSER",
+        "subcase": "channel-groups"
+      },
+      {
+        "caseId": "X-14",
+        "level": "UNIT",
+        "subcase": "before-copy"
+      },
+      {
+        "caseId": "X-14",
+        "level": "UNIT",
+        "subcase": "before-publish"
+      },
+      {
+        "caseId": "X-21",
+        "level": "BROWSER",
+        "subcase": "closed-l1"
+      },
+      {
+        "caseId": "X-23",
+        "level": "BROWSER",
+        "subcase": "consecutive-slots"
+      },
+      {
+        "caseId": "X-23",
+        "level": "UNIT",
+        "subcase": "sync-error"
+      }
+    ]
+  },
+  {
+    "id": "S09",
+    "dependencies": [
+      "S08"
+    ],
+    "inputs": [
+      "src/content-io",
+      "src/provider",
+      "src/providers",
+      "contracts",
+      "tests/content-io",
+      "tests/provider-adapter-fixture.ts",
+      "scripts/content-io"
+    ],
+    "tests": [
+      {
+        "runner": "vitest",
+        "files": [
+          "src/providers/retrom-runtime/provider-content.test.ts",
+          "src/providers/retrom-runtime/provider-runtime.test.ts",
+          "src/providers/emulatorjs/neocd-lifecycle.test.ts",
+          "src/providers/emulatorjs/flycast-lifecycle.test.ts",
+          "src/providers/emulatorjs/neocd-exit.test.ts",
+          "src/content-io/bootstrap.test.ts",
+          "src/content-io/lifecycle-regressions.test.ts",
+          "tests/content-io/declarations.test.ts",
+          "src/content-io/bridge/channel-release.test.ts",
+          "src/content-io/bridge/diagnostic.test.ts",
+          "src/content-io/sync-accounting.test.ts",
+          "src/content-io/sync-metrics.test.ts",
+          "src/content-io/diagnostics.test.ts"
+        ]
+      },
+      {
+        "runner": "playwright",
+        "files": [
+          "bootstrap.browser.ts",
+          "async-revocation.browser.ts",
+          "published-corruption.browser.ts"
+        ]
+      },
+      {
+        "runner": "playwright",
+        "files": [
+          "tests/content-io/diagnostics.browser.ts"
+        ]
+      }
+    ],
+    "required": [
+      {
+        "caseId": "BR-07",
+        "level": "UNIT",
+        "subcase": "provider-native-safe-point"
+      },
+      {
+        "caseId": "BR-07",
+        "level": "UNIT",
+        "subcase": "neocd-safe-point"
+      },
+      {
+        "caseId": "BR-08",
+        "level": "UNIT",
+        "subcase": "provider-normal"
+      },
+      {
+        "caseId": "BR-08",
+        "level": "UNIT",
+        "subcase": "provider-force"
+      },
+      {
+        "caseId": "BR-09",
+        "level": "UNIT",
+        "subcase": "provider-worker-failure"
+      },
+      {
+        "caseId": "BR-09",
+        "level": "UNIT",
+        "subcase": "bootstrap-abort"
+      },
+      {
+        "caseId": "BR-12",
+        "level": "UNIT",
+        "subcase": "provider-bootstrap-ABI_MISMATCH"
+      },
+      {
+        "caseId": "BR-12",
+        "level": "UNIT",
+        "subcase": "provider-bootstrap-CHECKSUM_MISMATCH"
+      },
+      {
+        "caseId": "PK-01",
+        "level": "CONTRACT",
+        "subcase": "private-policies"
+      },
+      {
+        "caseId": "PK-01",
+        "level": "CONTRACT",
+        "subcase": "declaration"
+      },
+      {
+        "caseId": "PK-01",
+        "level": "CONTRACT",
+        "subcase": "managed"
+      },
+      {
+        "caseId": "PK-03",
+        "level": "BROWSER",
+        "subcase": "verified-worker"
+      },
+      {
+        "caseId": "X-15",
+        "level": "UNIT",
+        "subcase": "provider-normal"
+      },
+      {
+        "caseId": "X-15",
+        "level": "UNIT",
+        "subcase": "provider-force"
+      },
+      {
+        "caseId": "X-16",
+        "level": "UNIT",
+        "subcase": "bootstrap-abort"
+      },
+      {
+        "caseId": "X-16",
+        "level": "UNIT",
+        "subcase": "provider-core-failure"
+      },
+      {
+        "caseId": "X-16",
+        "level": "UNIT",
+        "subcase": "provider-late-worker"
+      },
+      {
+        "caseId": "X-16",
+        "level": "UNIT",
+        "subcase": "provider-late-adapter"
+      },
+      {
+        "caseId": "X-21",
+        "level": "UNIT",
+        "subcase": "provider-force"
+      },
+      {
+        "caseId": "X-21",
+        "level": "BROWSER",
+        "subcase": "async-identity"
+      },
+      {
+        "caseId": "X-21",
+        "level": "BROWSER",
+        "subcase": "async-host-close"
+      },
+      {
+        "caseId": "BR-08",
+        "subcase": "shared-channel-release",
+        "level": "UNIT"
+      },
+      {
+        "caseId": "X-29",
+        "level": "UNIT",
+        "subcase": "diagnostic-metrics"
+      },
+      {
+        "caseId": "IO-23",
+        "subcase": "sync-logical-hits",
+        "level": "UNIT"
+      },
+      {
+        "caseId": "IO-23",
+        "subcase": "sync-metrics",
+        "level": "UNIT"
+      },
+      {
+        "caseId": "X-29",
+        "subcase": "session-diagnostics",
+        "level": "UNIT"
+      },
+      {
+        "caseId": "X-29",
+        "subcase": "session-diagnostics",
+        "level": "BROWSER"
+      }
+    ]
+  },
+  {
+    "id": "S10",
+    "dependencies": [
+      "S09"
+    ],
+    "inputs": [
+      "scripts/content-io",
+      "tests/content-io",
+      "src/content-io",
+      "contracts/content-io",
+      "src/providers/emulatorjs",
+      "src/provider",
+      "src/checkpoint.ts",
+      "tests/emulatorjs-provider-fixtures.ts"
+    ],
+    "tests": [
+      {
+        "runner": "vitest",
+        "files": [
+          "src/providers/emulatorjs/neocd-range.test.ts",
+          "src/providers/emulatorjs/neocd-lifecycle.test.ts",
+          "src/providers/emulatorjs/neocd-startup.test.ts",
+          "src/providers/emulatorjs/neocd-exit.test.ts"
+        ]
+      },
+      {
+        "runner": "playwright",
+        "files": [
+          "neocd.browser.ts",
+          "facade-trace.browser.ts"
+        ]
+      }
+    ],
+    "required": [
+      {
+        "caseId": "BR-01",
+        "subcase": "neocd",
+        "level": "UNIT"
+      },
+      {
+        "caseId": "BR-07",
+        "subcase": "neocd-safe-point",
+        "level": "UNIT"
+      },
+      {
+        "caseId": "BR-08",
+        "subcase": "neocd",
+        "level": "UNIT"
+      },
+      {
+        "caseId": "BR-09",
+        "subcase": "neocd",
+        "level": "UNIT"
+      },
+      {
+        "caseId": "IO-06",
+        "subcase": "neocd",
+        "level": "UNIT"
+      },
+      {
+        "caseId": "IO-08",
+        "subcase": "neocd",
+        "level": "UNIT"
+      },
+      {
+        "caseId": "IO-10",
+        "subcase": "neocd-trace-10000",
+        "level": "BROWSER"
+      },
+      {
+        "caseId": "IO-14",
+        "subcase": "neocd",
+        "level": "UNIT"
+      },
+      {
+        "caseId": "IO-15",
+        "subcase": "neocd",
+        "level": "UNIT"
+      },
+      {
+        "caseId": "IO-22",
+        "subcase": "neocd",
+        "level": "UNIT"
+      },
+      {
+        "caseId": "ST-01",
+        "subcase": "neocd",
+        "level": "BROWSER"
+      },
+      {
+        "caseId": "ST-03",
+        "subcase": "neocd",
+        "level": "BROWSER"
+      },
+      {
+        "caseId": "ST-16",
+        "subcase": "neocd-raw-isolation",
+        "level": "UNIT"
+      },
+      {
+        "caseId": "X-30",
+        "subcase": "neocd-existing-read-limit",
+        "level": "UNIT"
+      },
+      {
+        "caseId": "ST-16",
+        "subcase": "neocd-checkpoint-isolation",
+        "level": "UNIT"
+      },
+      {
+        "caseId": "BR-08",
+        "subcase": "neocd-trace-close",
+        "level": "BROWSER"
+      }
+    ]
+  },
+  {
+    "id": "S11",
+    "dependencies": [
+      "S09"
+    ],
+    "inputs": [
+      "scripts/content-io",
+      "tests/content-io",
+      "src/content-io",
+      "contracts/content-io",
+      "src/scummvm",
+      "src/provider",
+      "tests/content-session-fixture.ts"
+    ],
+    "tests": [
+      {
+        "runner": "vitest",
+        "files": [
+          "src/scummvm"
+        ]
+      },
+      {
+        "runner": "playwright",
+        "files": [
+          "scummvm.browser.ts",
+          "scummvm-policy.browser.ts",
+          "scummvm-corruption.browser.ts",
+          "scummvm-channels.browser.ts",
+          "scummvm-realm.browser.ts",
+          "facade-trace.browser.ts"
+        ]
+      }
+    ],
+    "required": [
+      {
+        "caseId": "IO-01",
+        "subcase": "scummvm",
+        "level": "UNIT"
+      },
+      {
+        "caseId": "IO-02",
+        "subcase": "scummvm",
+        "level": "UNIT"
+      },
+      {
+        "caseId": "IO-03",
+        "subcase": "scummvm",
+        "level": "UNIT"
+      },
+      {
+        "caseId": "IO-18",
+        "subcase": "scummvm-corrupt-block",
+        "level": "BROWSER"
+      },
+      {
+        "caseId": "IO-21",
+        "subcase": "scummvm",
+        "level": "UNIT"
+      },
+      {
+        "caseId": "ST-01",
+        "subcase": "scummvm",
+        "level": "BROWSER"
+      },
+      {
+        "caseId": "ST-17",
+        "subcase": "scummvm",
+        "level": "UNIT"
+      },
+      {
+        "caseId": "BR-10",
+        "subcase": "scummvm-cross-realm",
+        "level": "BROWSER"
+      },
+      {
+        "caseId": "X-07",
+        "subcase": "scummvm-channel-groups",
+        "level": "BROWSER"
+      },
+      {
+        "caseId": "X-27",
+        "subcase": "scummvm",
+        "level": "UNIT"
+      },
+      {
+        "caseId": "X-30",
+        "subcase": "scummvm-existing-read-limit",
+        "level": "UNIT"
+      },
+      {
+        "caseId": "IO-17",
+        "level": "BROWSER",
+        "subcase": "scummvm-262144-below"
+      },
+      {
+        "caseId": "IO-17",
+        "level": "BROWSER",
+        "subcase": "scummvm-262144-exact"
+      },
+      {
+        "caseId": "IO-17",
+        "level": "BROWSER",
+        "subcase": "scummvm-262144-above"
+      },
+      {
+        "caseId": "IO-17",
+        "level": "BROWSER",
+        "subcase": "scummvm-1048576-below"
+      },
+      {
+        "caseId": "IO-17",
+        "level": "BROWSER",
+        "subcase": "scummvm-1048576-exact"
+      },
+      {
+        "caseId": "IO-17",
+        "level": "BROWSER",
+        "subcase": "scummvm-1048576-above"
+      },
+      {
+        "caseId": "IO-17",
+        "level": "BROWSER",
+        "subcase": "scummvm-fault-IGNORE_RANGE"
+      },
+      {
+        "caseId": "IO-17",
+        "level": "BROWSER",
+        "subcase": "scummvm-fault-MISSING_ETAG"
+      },
+      {
+        "caseId": "IO-17",
+        "level": "BROWSER",
+        "subcase": "scummvm-fault-STATUS_412"
+      },
+      {
+        "caseId": "IO-17",
+        "level": "BROWSER",
+        "subcase": "scummvm-fault-WRONG_LENGTH"
+      },
+      {
+        "caseId": "IO-17",
+        "level": "BROWSER",
+        "subcase": "scummvm-fault-SHORT_BODY"
+      },
+      {
+        "caseId": "IO-10",
+        "level": "BROWSER",
+        "subcase": "scummvm-trace-10000"
+      },
+      {
+        "caseId": "BR-08",
+        "level": "BROWSER",
+        "subcase": "scummvm-trace-close"
+      },
+      {
+        "caseId": "ST-03",
+        "level": "BROWSER",
+        "subcase": "scummvm"
+      }
+    ]
+  },
+  {
+    "id": "S12",
+    "dependencies": [
+      "S09"
+    ],
+    "inputs": [
+      "scripts/content-io",
+      "tests/content-io",
+      "src/content-io",
+      "contracts/content-io",
+      "src/psp",
+      "provider-sources.json",
+      "src/providers/retrom-runtime"
+    ],
+    "tests": [
+      {
+        "runner": "node",
+        "files": [
+          "scripts/content-io/ppsspp.stage.mjs"
+        ]
+      },
+      {
+        "runner": "vitest",
+        "files": [
+          "src/psp"
+        ]
+      },
+      {
+        "runner": "playwright",
+        "files": [
+          "tests/content-io/core-ppsspp.browser.ts",
+          "tests/content-io/ppsspp-trace.browser.ts",
+          "tests/content-io/sync-failures.browser.ts"
+        ]
+      }
+    ],
+    "required": [
+      {
+        "caseId": "BR-12",
+        "level": "UNIT",
+        "subcase": "ppsspp-fork-protocol"
+      },
+      {
+        "caseId": "PK-04",
+        "level": "CONTRACT",
+        "subcase": "core-ppsspp"
+      },
+      {
+        "caseId": "BR-07",
+        "level": "UNIT",
+        "subcase": "ppsspp-lifecycle"
+      },
+      {
+        "caseId": "BR-12",
+        "level": "UNIT",
+        "subcase": "ppsspp-abi"
+      },
+      {
+        "caseId": "BR-03",
+        "level": "BROWSER",
+        "subcase": "ppsspp-fork"
+      },
+      {
+        "caseId": "IO-10",
+        "level": "BROWSER",
+        "subcase": "ppsspp-trace-10000"
+      },
+      {
+        "caseId": "BR-08",
+        "level": "BROWSER",
+        "subcase": "ppsspp-trace-close"
+      }
+    ]
+  },
+  {
+    "id": "S13",
+    "dependencies": [
+      "S09"
+    ],
+    "inputs": [
+      "scripts/content-io",
+      "tests/content-io",
+      "src/content-io",
+      "contracts/content-io",
+      "src/play",
+      "provider-sources.json",
+      "src/providers/retrom-runtime"
+    ],
+    "tests": [
+      {
+        "runner": "node",
+        "files": [
+          "scripts/content-io/play.stage.mjs"
+        ]
+      },
+      {
+        "runner": "vitest",
+        "files": [
+          "src/play"
+        ]
+      },
+      {
+        "runner": "playwright",
+        "files": [
+          "tests/content-io/core-play.browser.ts",
+          "tests/content-io/fork-async-trace.browser.ts"
+        ]
+      }
+    ],
+    "required": [
+      {
+        "caseId": "BR-04",
+        "level": "UNIT",
+        "subcase": "play-fork-protocol"
+      },
+      {
+        "caseId": "PK-04",
+        "level": "CONTRACT",
+        "subcase": "core-play"
+      },
+      {
+        "caseId": "BR-07",
+        "level": "UNIT",
+        "subcase": "play-lifecycle"
+      },
+      {
+        "caseId": "BR-12",
+        "level": "UNIT",
+        "subcase": "play-abi"
+      },
+      {
+        "caseId": "BR-04",
+        "level": "BROWSER",
+        "subcase": "play-fork"
+      },
+      {
+        "caseId": "IO-10",
+        "level": "BROWSER",
+        "subcase": "play-trace-10000"
+      }
+    ]
+  },
+  {
+    "id": "S14",
+    "dependencies": [
+      "S09"
+    ],
+    "inputs": [
+      "scripts/content-io",
+      "tests/content-io",
+      "src/content-io",
+      "contracts/content-io",
+      "src/mkxp",
+      "provider-sources.json",
+      "src/providers/retrom-runtime"
+    ],
+    "tests": [
+      {
+        "runner": "node",
+        "files": [
+          "scripts/content-io/mkxp.stage.mjs"
+        ]
+      },
+      {
+        "runner": "vitest",
+        "files": [
+          "src/mkxp"
+        ]
+      },
+      {
+        "runner": "playwright",
+        "files": [
+          "tests/content-io/mkxp-native.browser.ts"
+        ]
+      }
+    ],
+    "required": [
+      {
+        "caseId": "BR-05",
+        "level": "UNIT",
+        "subcase": "mkxp-fork-protocol"
+      },
+      {
+        "caseId": "PK-04",
+        "level": "CONTRACT",
+        "subcase": "core-mkxp"
+      },
+      {
+        "caseId": "BR-05",
+        "level": "CORE",
+        "subcase": "mkxp"
+      },
+      {
+        "caseId": "IO-10",
+        "level": "CORE",
+        "subcase": "mkxp-trace-10000"
+      },
+      {
+        "caseId": "BR-07",
+        "level": "UNIT",
+        "subcase": "mkxp-lifecycle"
+      },
+      {
+        "caseId": "BR-08",
+        "level": "UNIT",
+        "subcase": "mkxp-teardown"
+      }
+    ]
+  },
+  {
+    "id": "S15",
+    "dependencies": [
+      "S09"
+    ],
+    "inputs": [
+      "scripts/content-io",
+      "tests/content-io",
+      "src/content-io",
+      "contracts/content-io",
+      "src/kirikiri",
+      "provider-sources.json",
+      "src/providers/retrom-runtime"
+    ],
+    "tests": [
+      {
+        "runner": "node",
+        "files": [
+          "scripts/content-io/kirikiri2.stage.mjs"
+        ]
+      },
+      {
+        "runner": "vitest",
+        "files": [
+          "src/kirikiri"
+        ]
+      },
+      {
+        "runner": "playwright",
+        "files": [
+          "tests/content-io/core-kirikiri.browser.ts",
+          "tests/content-io/fork-async-trace.browser.ts"
+        ]
+      }
+    ],
+    "required": [
+      {
+        "caseId": "BR-06",
+        "level": "UNIT",
+        "subcase": "kirikiri2-fork-protocol"
+      },
+      {
+        "caseId": "PK-04",
+        "level": "CONTRACT",
+        "subcase": "core-kirikiri2"
+      },
+      {
+        "caseId": "BR-07",
+        "level": "UNIT",
+        "subcase": "kirikiri-lifecycle"
+      },
+      {
+        "caseId": "BR-06",
+        "level": "BROWSER",
+        "subcase": "kirikiri-fork"
+      },
+      {
+        "caseId": "IO-10",
+        "level": "BROWSER",
+        "subcase": "kirikiri-trace-10000"
+      },
+      {
+        "caseId": "X-27",
+        "level": "UNIT",
+        "subcase": "kirikiri"
+      },
+      {
+        "caseId": "X-09",
+        "level": "UNIT",
+        "subcase": "kirikiri"
+      }
+    ]
+  },
+  {
+    "id": "S16",
+    "dependencies": [
+      "S09"
+    ],
+    "inputs": [
+      "scripts/content-io",
+      "tests/content-io",
+      "src/content-io",
+      "contracts/content-io",
+      "src/providers/emulatorjs",
+      "src/fantasy-console",
+      "src/gbe-pokemini",
+      "src/px68k",
+      "src/np2kai",
+      "src/openbor",
+      "src/ruffle",
+      "src/webmsx",
+      "src/wasm4",
+      "src/nxengine",
+      "src/provider"
+    ],
+    "tests": [
+      {
+        "runner": "vitest",
+        "files": [
+          "src/content-io/materializer.test.ts",
+          "src/content-io/limits.test.ts",
+          "src/content-io/store/backing.test.ts",
+          "src/content-io/client-lifecycle.test.ts",
+          "src/scummvm/assets.test.ts",
+          "src/providers/emulatorjs",
+          "src/fantasy-console",
+          "src/gbe-pokemini",
+          "src/px68k",
+          "src/np2kai",
+          "src/openbor",
+          "src/ruffle",
+          "src/webmsx",
+          "src/wasm4",
+          "src/nxengine",
+          "src/provider",
+          "tests/content-io/eager-adapters.test.ts"
+        ]
+      },
+      {
+        "runner": "playwright",
+        "files": [
+          "materialize.browser.ts",
+          "materialize-resume.browser.ts",
+          "materialize-cache-failure.browser.ts",
+          "materialize-terminal.browser.ts",
+          "materialize-max.browser.ts",
+          "fallback.browser.ts",
+          "published-corruption.browser.ts",
+          "eager-adapters.browser.ts"
+        ]
+      }
+    ],
+    "required": [
+      {
+        "caseId": "ST-09",
+        "level": "BROWSER",
+        "subcase": "partial-holes"
+      },
+      {
+        "caseId": "ST-10",
+        "level": "BROWSER",
+        "subcase": "whole-to-range"
+      },
+      {
+        "caseId": "ST-11",
+        "level": "BROWSER",
+        "subcase": "whole"
+      },
+      {
+        "caseId": "ST-12",
+        "level": "BROWSER",
+        "subcase": "strong-prefix"
+      },
+      {
+        "caseId": "ST-12",
+        "level": "BROWSER",
+        "subcase": "unbound-prefix"
+      },
+      {
+        "caseId": "ST-12",
+        "level": "BROWSER",
+        "subcase": "weak-prefix"
+      },
+      {
+        "caseId": "ST-13",
+        "level": "BROWSER",
+        "subcase": "cache-put-BYTES"
+      },
+      {
+        "caseId": "ST-13",
+        "level": "BROWSER",
+        "subcase": "cache-put-SINK"
+      },
+      {
+        "caseId": "ST-13",
+        "level": "BROWSER",
+        "subcase": "idb-commit-BYTES"
+      },
+      {
+        "caseId": "ST-13",
+        "level": "BROWSER",
+        "subcase": "idb-commit-SINK"
+      },
+      {
+        "caseId": "X-13",
+        "level": "BROWSER",
+        "subcase": "cache-put-BYTES"
+      },
+      {
+        "caseId": "X-13",
+        "level": "BROWSER",
+        "subcase": "cache-put-SINK"
+      },
+      {
+        "caseId": "X-13",
+        "level": "BROWSER",
+        "subcase": "idb-commit-BYTES"
+      },
+      {
+        "caseId": "X-13",
+        "level": "BROWSER",
+        "subcase": "idb-commit-SINK"
+      },
+      {
+        "caseId": "ST-14",
+        "level": "BROWSER",
+        "subcase": "readable-prefix"
+      },
+      {
+        "caseId": "ST-14",
+        "level": "BROWSER",
+        "subcase": "missing-prefix"
+      },
+      {
+        "caseId": "ST-14",
+        "level": "BROWSER",
+        "subcase": "whole-restart"
+      },
+      {
+        "caseId": "ST-14",
+        "level": "UNIT",
+        "subcase": "restart"
+      },
+      {
+        "caseId": "ST-15",
+        "level": "UNIT",
+        "subcase": "declared-limits"
+      },
+      {
+        "caseId": "ST-15",
+        "level": "UNIT",
+        "subcase": "max-signedDisc"
+      },
+      {
+        "caseId": "ST-15",
+        "level": "UNIT",
+        "subcase": "max-np2kaiDisk"
+      },
+      {
+        "caseId": "ST-15",
+        "level": "UNIT",
+        "subcase": "max-firmwareFile"
+      },
+      {
+        "caseId": "ST-15",
+        "level": "UNIT",
+        "subcase": "max-gbeRom"
+      },
+      {
+        "caseId": "ST-15",
+        "level": "UNIT",
+        "subcase": "max-openborPak"
+      },
+      {
+        "caseId": "ST-15",
+        "level": "UNIT",
+        "subcase": "max-webmsxMedia"
+      },
+      {
+        "caseId": "ST-15",
+        "level": "UNIT",
+        "subcase": "max-ruffleSwf"
+      },
+      {
+        "caseId": "ST-15",
+        "level": "UNIT",
+        "subcase": "max-fantasyFile"
+      },
+      {
+        "caseId": "ST-15",
+        "level": "UNIT",
+        "subcase": "max-wasm4Cart"
+      },
+      {
+        "caseId": "ST-15",
+        "level": "UNIT",
+        "subcase": "max-nxengineFile"
+      },
+      {
+        "caseId": "ST-15",
+        "level": "UNIT",
+        "subcase": "max-pspAsset"
+      },
+      {
+        "caseId": "ST-15",
+        "level": "UNIT",
+        "subcase": "max-indexedFile"
+      },
+      {
+        "caseId": "ST-15",
+        "level": "BROWSER",
+        "subcase": "max-512MiB-OPFS"
+      },
+      {
+        "caseId": "ST-15",
+        "level": "BROWSER",
+        "subcase": "max-512MiB-CACHE_BLOCKS"
+      },
+      {
+        "caseId": "IO-20",
+        "level": "UNIT",
+        "subcase": "materialize"
+      },
+      {
+        "caseId": "IO-21",
+        "level": "UNIT",
+        "subcase": "materialize"
+      },
+      {
+        "caseId": "HP-02",
+        "level": "UNIT",
+        "subcase": "progress"
+      },
+      {
+        "caseId": "X-11",
+        "level": "UNIT",
+        "subcase": "queue"
+      },
+      {
+        "caseId": "X-11",
+        "level": "BROWSER",
+        "subcase": "independent-results"
+      },
+      {
+        "caseId": "X-12",
+        "level": "BROWSER",
+        "subcase": "stream-write"
+      },
+      {
+        "caseId": "X-12",
+        "level": "BROWSER",
+        "subcase": "stream-commit"
+      },
+      {
+        "caseId": "X-12",
+        "level": "BROWSER",
+        "subcase": "stream-last-ack-cancel"
+      },
+      {
+        "caseId": "X-22",
+        "level": "UNIT",
+        "subcase": "sync-gate-failure"
+      },
+      {
+        "caseId": "X-22",
+        "level": "UNIT",
+        "subcase": "completion-credit-failure"
+      },
+      {
+        "caseId": "X-22",
+        "level": "UNIT",
+        "subcase": "materialize-credit-failure"
+      },
+      {
+        "caseId": "X-22",
+        "level": "BROWSER",
+        "subcase": "long-prepare"
+      },
+      {
+        "caseId": "X-24",
+        "level": "UNIT",
+        "subcase": "complete-immutable"
+      },
+      {
+        "caseId": "X-10",
+        "level": "BROWSER",
+        "subcase": "published-corruption"
+      },
+      {
+        "caseId": "X-26",
+        "level": "UNIT",
+        "subcase": "empty"
+      },
+      {
+        "caseId": "X-26",
+        "level": "UNIT",
+        "subcase": "commit"
+      },
+      {
+        "caseId": "X-26",
+        "level": "BROWSER",
+        "subcase": "stream-commit"
+      },
+      {
+        "caseId": "X-27",
+        "level": "UNIT",
+        "subcase": "scummvm-manifest"
+      },
+      {
+        "caseId": "X-27",
+        "level": "UNIT",
+        "subcase": "scummvm-catalog"
+      },
+      {
+        "caseId": "X-27",
+        "level": "UNIT",
+        "subcase": "scummvm-executable"
+      },
+      {
+        "caseId": "X-27",
+        "level": "UNIT",
+        "subcase": "scummvm-plugin"
+      },
+      {
+        "caseId": "X-22",
+        "level": "UNIT",
+        "subcase": "stream-credit-failure"
+      },
+      {
+        "caseId": "X-26",
+        "level": "BROWSER",
+        "subcase": "tic80"
+      },
+      {
+        "caseId": "ST-03",
+        "level": "BROWSER",
+        "subcase": "tic80"
+      },
+      {
+        "caseId": "IO-22",
+        "level": "BROWSER",
+        "subcase": "tic80"
+      },
+      {
+        "caseId": "X-26",
+        "level": "BROWSER",
+        "subcase": "fake08"
+      },
+      {
+        "caseId": "ST-03",
+        "level": "BROWSER",
+        "subcase": "fake08"
+      },
+      {
+        "caseId": "IO-22",
+        "level": "BROWSER",
+        "subcase": "fake08"
+      },
+      {
+        "caseId": "X-26",
+        "level": "BROWSER",
+        "subcase": "gbe"
+      },
+      {
+        "caseId": "ST-03",
+        "level": "BROWSER",
+        "subcase": "gbe"
+      },
+      {
+        "caseId": "IO-22",
+        "level": "BROWSER",
+        "subcase": "gbe"
+      },
+      {
+        "caseId": "X-26",
+        "level": "BROWSER",
+        "subcase": "px68k"
+      },
+      {
+        "caseId": "ST-03",
+        "level": "BROWSER",
+        "subcase": "px68k"
+      },
+      {
+        "caseId": "IO-22",
+        "level": "BROWSER",
+        "subcase": "px68k"
+      },
+      {
+        "caseId": "X-26",
+        "level": "BROWSER",
+        "subcase": "np2kai"
+      },
+      {
+        "caseId": "ST-03",
+        "level": "BROWSER",
+        "subcase": "np2kai"
+      },
+      {
+        "caseId": "IO-22",
+        "level": "BROWSER",
+        "subcase": "np2kai"
+      },
+      {
+        "caseId": "X-26",
+        "level": "BROWSER",
+        "subcase": "openbor"
+      },
+      {
+        "caseId": "ST-03",
+        "level": "BROWSER",
+        "subcase": "openbor"
+      },
+      {
+        "caseId": "IO-22",
+        "level": "BROWSER",
+        "subcase": "openbor"
+      },
+      {
+        "caseId": "X-26",
+        "level": "BROWSER",
+        "subcase": "ruffle"
+      },
+      {
+        "caseId": "ST-03",
+        "level": "BROWSER",
+        "subcase": "ruffle"
+      },
+      {
+        "caseId": "IO-22",
+        "level": "BROWSER",
+        "subcase": "ruffle"
+      },
+      {
+        "caseId": "X-26",
+        "level": "BROWSER",
+        "subcase": "webmsx"
+      },
+      {
+        "caseId": "ST-03",
+        "level": "BROWSER",
+        "subcase": "webmsx"
+      },
+      {
+        "caseId": "IO-22",
+        "level": "BROWSER",
+        "subcase": "webmsx"
+      },
+      {
+        "caseId": "X-26",
+        "level": "BROWSER",
+        "subcase": "wasm4"
+      },
+      {
+        "caseId": "ST-03",
+        "level": "BROWSER",
+        "subcase": "wasm4"
+      },
+      {
+        "caseId": "IO-22",
+        "level": "BROWSER",
+        "subcase": "wasm4"
+      },
+      {
+        "caseId": "X-26",
+        "level": "BROWSER",
+        "subcase": "flycast"
+      },
+      {
+        "caseId": "ST-03",
+        "level": "BROWSER",
+        "subcase": "flycast"
+      },
+      {
+        "caseId": "IO-22",
+        "level": "BROWSER",
+        "subcase": "flycast"
+      },
+      {
+        "caseId": "X-26",
+        "level": "BROWSER",
+        "subcase": "nxengine"
+      },
+      {
+        "caseId": "ST-03",
+        "level": "BROWSER",
+        "subcase": "nxengine"
+      },
+      {
+        "caseId": "IO-22",
+        "level": "BROWSER",
+        "subcase": "nxengine"
+      },
+      {
+        "caseId": "X-26",
+        "level": "UNIT",
+        "subcase": "eager-fantasy"
+      },
+      {
+        "caseId": "X-26",
+        "level": "UNIT",
+        "subcase": "eager-gbe"
+      },
+      {
+        "caseId": "X-26",
+        "level": "UNIT",
+        "subcase": "eager-px68k"
+      },
+      {
+        "caseId": "X-26",
+        "level": "UNIT",
+        "subcase": "eager-np2kai"
+      },
+      {
+        "caseId": "X-26",
+        "level": "UNIT",
+        "subcase": "eager-openbor"
+      },
+      {
+        "caseId": "X-26",
+        "level": "UNIT",
+        "subcase": "eager-ruffle"
+      },
+      {
+        "caseId": "X-26",
+        "level": "UNIT",
+        "subcase": "eager-webmsx"
+      }
+    ]
+  },
+  {
+    "id": "S17",
+    "dependencies": [
+      "S09"
+    ],
+    "inputs": [
+      "scripts/content-io",
+      "tests/content-io",
+      "src/content-io",
+      "contracts/content-io",
+      "src/ons",
+      "src/butterscotch",
+      "src/nxengine",
+      "src/provider"
+    ],
+    "tests": [
+      {
+        "runner": "vitest",
+        "files": [
+          "src/ons",
+          "src/butterscotch",
+          "src/nxengine",
+          "src/provider/metadata.test.ts",
+          "src/content-io/store/identity.test.ts",
+          "tests/content-io/ons-on-open.test.ts"
+        ]
+      },
+      {
+        "runner": "playwright",
+        "files": [
+          "workspace.browser.ts",
+          "workspace-publication.browser.ts",
+          "workspace-damage.browser.ts",
+          "project-files.browser.ts",
+          "materialize-cache-failure.browser.ts"
+        ]
+      }
+    ],
+    "required": [
+      {
+        "caseId": "ST-04",
+        "level": "UNIT",
+        "subcase": "workspace-denied"
+      },
+      {
+        "caseId": "ST-04",
+        "level": "BROWSER",
+        "subcase": "workspace-denied"
+      },
+      {
+        "caseId": "ST-05",
+        "level": "BROWSER",
+        "subcase": "workspace-incomplete"
+      },
+      {
+        "caseId": "ST-13",
+        "level": "BROWSER",
+        "subcase": "cache-put-SINK"
+      },
+      {
+        "caseId": "ST-13",
+        "level": "BROWSER",
+        "subcase": "idb-commit-SINK"
+      },
+      {
+        "caseId": "ST-16",
+        "level": "BROWSER",
+        "subcase": "workspace-receipt"
+      },
+      {
+        "caseId": "ST-16",
+        "level": "BROWSER",
+        "subcase": "workspace-incomplete"
+      },
+      {
+        "caseId": "ST-16",
+        "level": "BROWSER",
+        "subcase": "workspace-same-size"
+      },
+      {
+        "caseId": "ST-17",
+        "level": "UNIT",
+        "subcase": "cache-identity"
+      },
+      {
+        "caseId": "HP-02",
+        "level": "BROWSER",
+        "subcase": "ons-progress"
+      },
+      {
+        "caseId": "HP-02",
+        "level": "BROWSER",
+        "subcase": "nxengine-progress"
+      },
+      {
+        "caseId": "HP-02",
+        "level": "BROWSER",
+        "subcase": "workspace-progress"
+      },
+      {
+        "caseId": "X-17",
+        "level": "BROWSER",
+        "subcase": "workspace-receipt"
+      },
+      {
+        "caseId": "X-17",
+        "level": "BROWSER",
+        "subcase": "workspace-incomplete"
+      },
+      {
+        "caseId": "X-17",
+        "level": "BROWSER",
+        "subcase": "workspace-same-size"
+      },
+      {
+        "caseId": "X-17",
+        "level": "BROWSER",
+        "subcase": "workspace-published-abort"
+      },
+      {
+        "caseId": "X-18",
+        "level": "BROWSER",
+        "subcase": "ons-file-set"
+      },
+      {
+        "caseId": "X-18",
+        "level": "BROWSER",
+        "subcase": "nxengine-file-set"
+      },
+      {
+        "caseId": "X-18",
+        "level": "BROWSER",
+        "subcase": "workspace"
+      },
+      {
+        "caseId": "X-25",
+        "level": "BROWSER",
+        "subcase": "workspace-locks-true"
+      },
+      {
+        "caseId": "X-25",
+        "level": "BROWSER",
+        "subcase": "workspace-locks-false"
+      },
+      {
+        "caseId": "X-28",
+        "level": "UNIT",
+        "subcase": "metadata"
+      },
+      {
+        "caseId": "IO-01",
+        "level": "UNIT",
+        "subcase": "ons"
+      },
+      {
+        "caseId": "BR-08",
+        "level": "UNIT",
+        "subcase": "ons"
+      }
+    ]
+  },
+  {
+    "id": "S18",
+    "dependencies": [
+      "S10",
+      "S11",
+      "S12",
+      "S13",
+      "S14",
+      "S15",
+      "S16",
+      "S17"
+    ],
+    "inputs": [
+      "scripts/content-io",
+      "tests/content-io",
+      "src/content-io",
+      "contracts/content-io",
+      "scripts",
+      "src/provider",
+      "src/providers",
+      "tests",
+      "provider-sources.json",
+      "package.json",
+      "package-lock.json"
+    ],
+    "tests": [
+      {
+        "runner": "node",
+        "files": [
+          "scripts/content-io/build-assets.test.mjs",
+          "scripts/content-io/candidate-input.test.mjs",
+          "scripts/content-io/provider-identities.test.mjs",
+          "scripts/content-io/provider.stage.mjs",
+          "scripts/content-io/boundaries.test.mjs",
+          "scripts/content-io/boundaries.stage.mjs"
+        ]
+      },
+      {
+        "runner": "vitest",
+        "files": [
+          "tests/content-io/declarations.test.ts",
+          "tests/provider-client-build.test.ts",
+          "tests/provider-build-metadata.test.ts",
+          "tests/provider-release-build.test.ts",
+          "tests/emulatorjs-provider-release-build.test.ts",
+          "tests/pfb-provider-dev.test.ts",
+          "tests/pfb-provider-cores.test.ts",
+          "tests/provider-source-boundary.test.ts",
+          "tests/ppsspp-release.test.ts"
+        ]
+      },
+      {
+        "runner": "playwright",
+        "files": [
+          "bootstrap.browser.ts"
+        ]
+      }
+    ],
+    "required": [
+      {
+        "caseId": "PK-01",
+        "level": "CONTRACT",
+        "subcase": "private-policies"
+      },
+      {
+        "caseId": "PK-01",
+        "level": "CONTRACT",
+        "subcase": "client-emulatorjs"
+      },
+      {
+        "caseId": "PK-01",
+        "level": "CONTRACT",
+        "subcase": "client-retrom-runtime"
+      },
+      {
+        "caseId": "PK-02",
+        "level": "BROWSER",
+        "subcase": "verified-worker"
+      },
+      {
+        "caseId": "PK-03",
+        "level": "BROWSER",
+        "subcase": "verified-worker"
+      },
+      {
+        "caseId": "PK-03",
+        "level": "CONTRACT",
+        "subcase": "installed-base"
+      },
+      {
+        "caseId": "PK-04",
+        "level": "UNIT",
+        "subcase": "loose-emulatorjs"
+      },
+      {
+        "caseId": "PK-04",
+        "level": "UNIT",
+        "subcase": "loose-retrom-runtime"
+      },
+      {
+        "caseId": "PK-04",
+        "level": "CONTRACT",
+        "subcase": "asset-build"
+      },
+      {
+        "caseId": "PK-04",
+        "level": "CONTRACT",
+        "subcase": "provider-proof"
+      },
+      {
+        "caseId": "PK-04",
+        "level": "CONTRACT",
+        "subcase": "current-providers"
+      },
+      {
+        "caseId": "PK-05",
+        "level": "CONTRACT",
+        "subcase": "candidate"
+      },
+      {
+        "caseId": "PK-05",
+        "level": "CONTRACT",
+        "subcase": "core-contract-fingerprint-ppsspp"
+      },
+      {
+        "caseId": "PK-05",
+        "level": "CONTRACT",
+        "subcase": "core-contract-fingerprint-play"
+      },
+      {
+        "caseId": "PK-05",
+        "level": "CONTRACT",
+        "subcase": "core-contract-fingerprint-mkxp"
+      },
+      {
+        "caseId": "PK-06",
+        "level": "CONTRACT",
+        "subcase": "sync-graph"
+      },
+      {
+        "caseId": "PK-06",
+        "level": "CONTRACT",
+        "subcase": "current-boundaries"
+      },
+      {
+        "caseId": "PK-06",
+        "level": "CONTRACT",
+        "subcase": "boundary-alias"
+      },
+      {
+        "caseId": "PK-06",
+        "level": "CONTRACT",
+        "subcase": "boundary-computed"
+      },
+      {
+        "caseId": "PK-06",
+        "level": "CONTRACT",
+        "subcase": "boundary-shadowing"
+      },
+      {
+        "caseId": "X-19",
+        "level": "UNIT",
+        "subcase": "old-base"
+      },
+      {
+        "caseId": "X-20",
+        "level": "CONTRACT",
+        "subcase": "candidate"
+      },
+      {
+        "caseId": "X-20",
+        "level": "CONTRACT",
+        "subcase": "core-contract-fingerprint-ppsspp"
+      },
+      {
+        "caseId": "X-20",
+        "level": "CONTRACT",
+        "subcase": "core-contract-fingerprint-play"
+      },
+      {
+        "caseId": "X-20",
+        "level": "CONTRACT",
+        "subcase": "core-contract-fingerprint-mkxp"
+      },
+      {
+        "caseId": "PK-05",
+        "level": "CONTRACT",
+        "subcase": "core-contract-fingerprint-kirikiri2"
+      },
+      {
+        "caseId": "X-20",
+        "level": "CONTRACT",
+        "subcase": "core-contract-fingerprint-kirikiri2"
+      }
+    ]
+  },
+  {
+    "id": "S19",
+    "dependencies": [
+      "S18"
+    ],
+    "inputs": [
+      "scripts/content-io",
+      "tests/content-io",
+      "src/content-io",
+      "contracts/content-io",
+      "src/provider",
+      "src/providers"
+    ],
+    "tests": [
+      {
+        "runner": "node",
+        "files": [
+          "scripts/content-io/host.stage.mjs"
+        ],
+        "timeoutMs": 960000
+      },
+      {
+        "runner": "node",
+        "files": [
+          "scripts/content-io/host-browser.stage.mjs"
+        ],
+        "timeoutMs": 60000
+      }
+    ],
+    "required": [
+      {
+        "caseId": "HP-01",
+        "level": "UNIT",
+        "subcase": "host-routes"
+      },
+      {
+        "caseId": "HP-02",
+        "level": "UNIT",
+        "subcase": "host-observers"
+      },
+      {
+        "caseId": "HP-03",
+        "level": "UNIT",
+        "subcase": "host-observers"
+      },
+      {
+        "caseId": "HP-04",
+        "level": "UNIT",
+        "subcase": "host-observers"
+      },
+      {
+        "caseId": "HP-05",
+        "level": "UNIT",
+        "subcase": "host-catalog"
+      },
+      {
+        "caseId": "HP-06",
+        "level": "UNIT",
+        "subcase": "host-catalog"
+      },
+      {
+        "caseId": "HP-07",
+        "level": "UNIT",
+        "subcase": "host-observers"
+      },
+      {
+        "caseId": "HP-03",
+        "level": "BROWSER",
+        "subcase": "host-metrics"
+      }
+    ]
+  },
+  {
+    "id": "S20",
+    "dependencies": [
+      "S19"
+    ],
+    "inputs": [
+      "scripts/content-io",
+      "tests/content-io",
+      "src/content-io",
+      "contracts/content-io"
+    ],
+    "tests": [
+      {
+        "runner": "node",
+        "files": [
+          "scripts/content-io/product.stage.mjs"
+        ],
+        "timeoutMs": 12900000
+      }
+    ],
+    "required": [
+      {
+        "caseId": "HP-01",
+        "subcase": "product",
+        "level": "PRODUCT"
+      },
+      {
+        "caseId": "HP-02",
+        "subcase": "product",
+        "level": "PRODUCT"
+      },
+      {
+        "caseId": "HP-03",
+        "subcase": "product",
+        "level": "PRODUCT"
+      },
+      {
+        "caseId": "HP-04",
+        "subcase": "product",
+        "level": "PRODUCT"
+      },
+      {
+        "caseId": "HP-05",
+        "subcase": "product",
+        "level": "PRODUCT"
+      },
+      {
+        "caseId": "HP-06",
+        "subcase": "product",
+        "level": "PRODUCT"
+      },
+      {
+        "caseId": "HP-07",
+        "subcase": "product",
+        "level": "PRODUCT"
+      },
+      {
+        "caseId": "BR-07",
+        "level": "PRODUCT",
+        "subcase": "ppsspp"
+      },
+      {
+        "caseId": "BR-07",
+        "level": "PRODUCT",
+        "subcase": "play"
+      },
+      {
+        "caseId": "BR-07",
+        "level": "PRODUCT",
+        "subcase": "mkxp-xp"
+      },
+      {
+        "caseId": "BR-07",
+        "level": "PRODUCT",
+        "subcase": "mkxp-vx"
+      },
+      {
+        "caseId": "BR-07",
+        "level": "PRODUCT",
+        "subcase": "mkxp-vx-ace"
+      },
+      {
+        "caseId": "BR-07",
+        "level": "PRODUCT",
+        "subcase": "kirikiri"
+      }
+    ]
+  },
+  {
+    "id": "S21",
+    "dependencies": [
+      "S20"
+    ],
+    "inputs": [
+      "scripts/content-io",
+      "tests/content-io",
+      "src/content-io",
+      "contracts/content-io"
+    ],
+    "tests": [
+      {
+        "runner": "node",
+        "files": [
+          "scripts/content-io/signoff.stage.mjs",
+          "scripts/content-io/boundaries.stage.mjs"
+        ]
+      },
+      {
+        "runner": "node",
+        "files": [
+          "scripts/content-io/quality.stage.mjs"
+        ],
+        "timeoutMs": 1500000
+      }
+    ],
+    "required": [
+      {
+        "caseId": "IO-01",
+        "subcase": "signoff",
+        "level": "CONTRACT"
+      },
+      {
+        "caseId": "IO-02",
+        "subcase": "signoff",
+        "level": "CONTRACT"
+      },
+      {
+        "caseId": "IO-03",
+        "subcase": "signoff",
+        "level": "CONTRACT"
+      },
+      {
+        "caseId": "IO-04",
+        "subcase": "signoff",
+        "level": "CONTRACT"
+      },
+      {
+        "caseId": "IO-05",
+        "subcase": "signoff",
+        "level": "CONTRACT"
+      },
+      {
+        "caseId": "IO-06",
+        "subcase": "signoff",
+        "level": "CONTRACT"
+      },
+      {
+        "caseId": "IO-07",
+        "subcase": "signoff",
+        "level": "CONTRACT"
+      },
+      {
+        "caseId": "IO-08",
+        "subcase": "signoff",
+        "level": "CONTRACT"
+      },
+      {
+        "caseId": "IO-09",
+        "subcase": "signoff",
+        "level": "CONTRACT"
+      },
+      {
+        "caseId": "IO-10",
+        "subcase": "signoff",
+        "level": "CONTRACT"
+      },
+      {
+        "caseId": "IO-11",
+        "subcase": "signoff",
+        "level": "CONTRACT"
+      },
+      {
+        "caseId": "IO-12",
+        "subcase": "signoff",
+        "level": "CONTRACT"
+      },
+      {
+        "caseId": "IO-13",
+        "subcase": "signoff",
+        "level": "CONTRACT"
+      },
+      {
+        "caseId": "IO-14",
+        "subcase": "signoff",
+        "level": "CONTRACT"
+      },
+      {
+        "caseId": "IO-15",
+        "subcase": "signoff",
+        "level": "CONTRACT"
+      },
+      {
+        "caseId": "IO-16",
+        "subcase": "signoff",
+        "level": "CONTRACT"
+      },
+      {
+        "caseId": "IO-17",
+        "subcase": "signoff",
+        "level": "CONTRACT"
+      },
+      {
+        "caseId": "IO-18",
+        "subcase": "signoff",
+        "level": "CONTRACT"
+      },
+      {
+        "caseId": "IO-19",
+        "subcase": "signoff",
+        "level": "CONTRACT"
+      },
+      {
+        "caseId": "IO-20",
+        "subcase": "signoff",
+        "level": "CONTRACT"
+      },
+      {
+        "caseId": "IO-21",
+        "subcase": "signoff",
+        "level": "CONTRACT"
+      },
+      {
+        "caseId": "IO-22",
+        "subcase": "signoff",
+        "level": "CONTRACT"
+      },
+      {
+        "caseId": "IO-23",
+        "subcase": "signoff",
+        "level": "CONTRACT"
+      },
+      {
+        "caseId": "IO-24",
+        "subcase": "signoff",
+        "level": "CONTRACT"
+      },
+      {
+        "caseId": "ST-01",
+        "subcase": "signoff",
+        "level": "CONTRACT"
+      },
+      {
+        "caseId": "ST-02",
+        "subcase": "signoff",
+        "level": "CONTRACT"
+      },
+      {
+        "caseId": "ST-03",
+        "subcase": "signoff",
+        "level": "CONTRACT"
+      },
+      {
+        "caseId": "ST-04",
+        "subcase": "signoff",
+        "level": "CONTRACT"
+      },
+      {
+        "caseId": "ST-05",
+        "subcase": "signoff",
+        "level": "CONTRACT"
+      },
+      {
+        "caseId": "ST-06",
+        "subcase": "signoff",
+        "level": "CONTRACT"
+      },
+      {
+        "caseId": "ST-07",
+        "subcase": "signoff",
+        "level": "CONTRACT"
+      },
+      {
+        "caseId": "ST-08",
+        "subcase": "signoff",
+        "level": "CONTRACT"
+      },
+      {
+        "caseId": "ST-09",
+        "subcase": "signoff",
+        "level": "CONTRACT"
+      },
+      {
+        "caseId": "ST-10",
+        "subcase": "signoff",
+        "level": "CONTRACT"
+      },
+      {
+        "caseId": "ST-11",
+        "subcase": "signoff",
+        "level": "CONTRACT"
+      },
+      {
+        "caseId": "ST-12",
+        "subcase": "signoff",
+        "level": "CONTRACT"
+      },
+      {
+        "caseId": "ST-13",
+        "subcase": "signoff",
+        "level": "CONTRACT"
+      },
+      {
+        "caseId": "ST-14",
+        "subcase": "signoff",
+        "level": "CONTRACT"
+      },
+      {
+        "caseId": "ST-15",
+        "subcase": "signoff",
+        "level": "CONTRACT"
+      },
+      {
+        "caseId": "ST-16",
+        "subcase": "signoff",
+        "level": "CONTRACT"
+      },
+      {
+        "caseId": "ST-17",
+        "subcase": "signoff",
+        "level": "CONTRACT"
+      },
+      {
+        "caseId": "ST-18",
+        "subcase": "signoff",
+        "level": "CONTRACT"
+      },
+      {
+        "caseId": "BR-01",
+        "subcase": "signoff",
+        "level": "CONTRACT"
+      },
+      {
+        "caseId": "BR-02",
+        "subcase": "signoff",
+        "level": "CONTRACT"
+      },
+      {
+        "caseId": "BR-03",
+        "subcase": "signoff",
+        "level": "CONTRACT"
+      },
+      {
+        "caseId": "BR-04",
+        "subcase": "signoff",
+        "level": "CONTRACT"
+      },
+      {
+        "caseId": "BR-05",
+        "subcase": "signoff",
+        "level": "CONTRACT"
+      },
+      {
+        "caseId": "BR-06",
+        "subcase": "signoff",
+        "level": "CONTRACT"
+      },
+      {
+        "caseId": "BR-07",
+        "subcase": "signoff",
+        "level": "CONTRACT"
+      },
+      {
+        "caseId": "BR-08",
+        "subcase": "signoff",
+        "level": "CONTRACT"
+      },
+      {
+        "caseId": "BR-09",
+        "subcase": "signoff",
+        "level": "CONTRACT"
+      },
+      {
+        "caseId": "BR-10",
+        "subcase": "signoff",
+        "level": "CONTRACT"
+      },
+      {
+        "caseId": "BR-11",
+        "subcase": "signoff",
+        "level": "CONTRACT"
+      },
+      {
+        "caseId": "BR-12",
+        "subcase": "signoff",
+        "level": "CONTRACT"
+      },
+      {
+        "caseId": "PK-01",
+        "subcase": "signoff",
+        "level": "CONTRACT"
+      },
+      {
+        "caseId": "PK-02",
+        "subcase": "signoff",
+        "level": "CONTRACT"
+      },
+      {
+        "caseId": "PK-03",
+        "subcase": "signoff",
+        "level": "CONTRACT"
+      },
+      {
+        "caseId": "PK-04",
+        "subcase": "signoff",
+        "level": "CONTRACT"
+      },
+      {
+        "caseId": "PK-05",
+        "subcase": "signoff",
+        "level": "CONTRACT"
+      },
+      {
+        "caseId": "PK-06",
+        "subcase": "signoff",
+        "level": "CONTRACT"
+      },
+      {
+        "caseId": "X-01",
+        "subcase": "signoff",
+        "level": "CONTRACT"
+      },
+      {
+        "caseId": "X-02",
+        "subcase": "signoff",
+        "level": "CONTRACT"
+      },
+      {
+        "caseId": "X-03",
+        "subcase": "signoff",
+        "level": "CONTRACT"
+      },
+      {
+        "caseId": "X-04",
+        "subcase": "signoff",
+        "level": "CONTRACT"
+      },
+      {
+        "caseId": "X-05",
+        "subcase": "signoff",
+        "level": "CONTRACT"
+      },
+      {
+        "caseId": "X-06",
+        "subcase": "signoff",
+        "level": "CONTRACT"
+      },
+      {
+        "caseId": "X-07",
+        "subcase": "signoff",
+        "level": "CONTRACT"
+      },
+      {
+        "caseId": "X-08",
+        "subcase": "signoff",
+        "level": "CONTRACT"
+      },
+      {
+        "caseId": "X-09",
+        "subcase": "signoff",
+        "level": "CONTRACT"
+      },
+      {
+        "caseId": "X-10",
+        "subcase": "signoff",
+        "level": "CONTRACT"
+      },
+      {
+        "caseId": "X-11",
+        "subcase": "signoff",
+        "level": "CONTRACT"
+      },
+      {
+        "caseId": "X-12",
+        "subcase": "signoff",
+        "level": "CONTRACT"
+      },
+      {
+        "caseId": "X-13",
+        "subcase": "signoff",
+        "level": "CONTRACT"
+      },
+      {
+        "caseId": "X-14",
+        "subcase": "signoff",
+        "level": "CONTRACT"
+      },
+      {
+        "caseId": "X-15",
+        "subcase": "signoff",
+        "level": "CONTRACT"
+      },
+      {
+        "caseId": "X-16",
+        "subcase": "signoff",
+        "level": "CONTRACT"
+      },
+      {
+        "caseId": "X-17",
+        "subcase": "signoff",
+        "level": "CONTRACT"
+      },
+      {
+        "caseId": "X-18",
+        "subcase": "signoff",
+        "level": "CONTRACT"
+      },
+      {
+        "caseId": "X-19",
+        "subcase": "signoff",
+        "level": "CONTRACT"
+      },
+      {
+        "caseId": "X-20",
+        "subcase": "signoff",
+        "level": "CONTRACT"
+      },
+      {
+        "caseId": "X-21",
+        "subcase": "signoff",
+        "level": "CONTRACT"
+      },
+      {
+        "caseId": "X-22",
+        "subcase": "signoff",
+        "level": "CONTRACT"
+      },
+      {
+        "caseId": "X-23",
+        "subcase": "signoff",
+        "level": "CONTRACT"
+      },
+      {
+        "caseId": "X-24",
+        "subcase": "signoff",
+        "level": "CONTRACT"
+      },
+      {
+        "caseId": "X-25",
+        "subcase": "signoff",
+        "level": "CONTRACT"
+      },
+      {
+        "caseId": "X-26",
+        "subcase": "signoff",
+        "level": "CONTRACT"
+      },
+      {
+        "caseId": "X-27",
+        "subcase": "signoff",
+        "level": "CONTRACT"
+      },
+      {
+        "caseId": "X-28",
+        "subcase": "signoff",
+        "level": "CONTRACT"
+      },
+      {
+        "caseId": "X-29",
+        "subcase": "signoff",
+        "level": "CONTRACT"
+      },
+      {
+        "caseId": "X-30",
+        "subcase": "signoff",
+        "level": "CONTRACT"
+      },
+      {
+        "caseId": "PK-06",
+        "level": "CONTRACT",
+        "subcase": "runtime-quality"
+      },
+      {
+        "caseId": "HP-01",
+        "level": "CONTRACT",
+        "subcase": "host-quality"
+      }
+    ]
+  },
+  {
+    "id": "S22",
+    "dependencies": [
+      "S21"
+    ],
+    "inputs": [
+      "scripts/content-io",
+      "tests/content-io",
+      "src/content-io",
+      "contracts/content-io"
+    ],
+    "tests": [],
+    "required": [
+      {
+        "caseId": "HP-01",
+        "subcase": "release",
+        "level": "PRODUCT"
+      },
+      {
+        "caseId": "HP-02",
+        "subcase": "release",
+        "level": "PRODUCT"
+      },
+      {
+        "caseId": "HP-03",
+        "subcase": "release",
+        "level": "PRODUCT"
+      },
+      {
+        "caseId": "HP-04",
+        "subcase": "release",
+        "level": "PRODUCT"
+      },
+      {
+        "caseId": "HP-05",
+        "subcase": "release",
+        "level": "PRODUCT"
+      },
+      {
+        "caseId": "HP-06",
+        "subcase": "release",
+        "level": "PRODUCT"
+      },
+      {
+        "caseId": "HP-07",
+        "subcase": "release",
+        "level": "PRODUCT"
+      },
+      {
+        "caseId": "PK-01",
+        "subcase": "release",
+        "level": "PRODUCT"
+      },
+      {
+        "caseId": "PK-02",
+        "subcase": "release",
+        "level": "PRODUCT"
+      },
+      {
+        "caseId": "PK-03",
+        "subcase": "release",
+        "level": "PRODUCT"
+      },
+      {
+        "caseId": "PK-04",
+        "subcase": "release",
+        "level": "PRODUCT"
+      },
+      {
+        "caseId": "PK-05",
+        "subcase": "release",
+        "level": "PRODUCT"
+      },
+      {
+        "caseId": "PK-06",
+        "subcase": "release",
+        "level": "PRODUCT"
+      }
+    ]
+  }
+]

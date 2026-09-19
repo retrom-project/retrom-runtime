@@ -1,3 +1,5 @@
+import {fetchCart} from "./content.js";
+import type {AdapterContentOptions} from "../provider/content-inputs.js";
 import type { CheckpointAvailability } from "../contract.js";
 import type { MountedRuntimeAdapter, RuntimeProgressReporter } from "../internal-adapter.js";
 import type {Wasm4Parameters} from "./parameters.js";
@@ -24,7 +26,6 @@ export type Wasm4CoreModule = {
 };
 
 export type Wasm4ModuleLoader = (url: string, frameWindow: Window) => Promise<unknown>;
-export type Wasm4CartHasher = (bytes: Uint8Array) => Promise<string>;
 
 const adapterAbi = "wasm4-state-v1";
 const checkpointFormat = "wasm4-state-v1";
@@ -38,13 +39,13 @@ export async function mountWasm4(
   restorePayload: Uint8Array | null,
   reportProgress: RuntimeProgressReporter = () => undefined,
   loadModule: Wasm4ModuleLoader = defaultModuleLoader,
-  hashCart: Wasm4CartHasher = sha256,
+  content?: AdapterContentOptions & {signal?: AbortSignal},
 ): Promise<MountedRuntimeAdapter> {
   if (target.ownerDocument !== frameWindow.document || restorePayload &&
     (restorePayload.byteLength < 1 || restorePayload.byteLength > maximumCheckpointBytes)) {
     throw new Error("WASM4_RUNTIME_CONFIG_INVALID");
   }
-  const cartBytes = await fetchCart(config, reportProgress, hashCart);
+  const cartBytes = await fetchCart(config, reportProgress, content);
   const runtimeBaseUrl = new URL(normalizedBase(config.runtimeBaseUrl), window.location.href);
   const moduleUrl = new URL("wasm4-retrom.mjs", runtimeBaseUrl).href;
   let module: unknown;
@@ -114,33 +115,6 @@ export async function mountWasm4(
     },
     setVolume: null,
   };
-}
-
-async function fetchCart(
-  config: Wasm4Parameters,
-  reportProgress: RuntimeProgressReporter,
-  hashCart: Wasm4CartHasher,
-) {
-  const response = await fetch(config.cartUrl, {credentials: "same-origin"});
-  if (!response.ok) {throw new Error("WASM4_CART_FETCH_FAILED");}
-  const declaredLength = response.headers.get("content-length");
-  if (declaredLength !== null && Number(declaredLength) !== config.cartSizeBytes) {
-    throw new Error("WASM4_CART_SIZE_MISMATCH");
-  }
-  const bytes = new Uint8Array(await response.arrayBuffer());
-  if (bytes.byteLength !== config.cartSizeBytes || bytes.byteLength > 1 << 16) {
-    throw new Error("WASM4_CART_SIZE_MISMATCH");
-  }
-  if (await hashCart(bytes) !== config.contentDigest) {throw new Error("WASM4_CART_DIGEST_MISMATCH");}
-  reportProgress({loadedBytes: bytes.byteLength, phase: "PROJECT_CONTENT", totalBytes: bytes.byteLength});
-  return bytes;
-}
-
-async function sha256(bytes: Uint8Array) {
-  const copy = new Uint8Array(bytes.byteLength);
-  copy.set(bytes);
-  const digest = new Uint8Array(await crypto.subtle.digest("SHA-256", copy.buffer));
-  return [...digest].map((value) => value.toString(16).padStart(2, "0")).join("");
 }
 
 function validCoreModule(value: unknown): value is Wasm4CoreModule {

@@ -1,3 +1,4 @@
+import type {AdapterContentOptions} from "../provider/content-inputs.js";
 import {PersistentMemory} from "./pmem.js";
 import type {MountedRuntimeAdapter, RuntimeProgressReporter} from "../internal-adapter.js";
 import {checkpointFormats, checkpointLimits, decodeState, encodeState} from "./state.js";
@@ -9,11 +10,12 @@ export async function mountFantasyConsole(config: FantasyParameters, target: HTM
   frameWindow: Window, restorePayload: Uint8Array | null, progress: RuntimeProgressReporter,
   reportFailure: (error: Error) => void, signal?: AbortSignal,
   loader: ModuleLoader = (url) => import(/* webpackIgnore: true */ /* @vite-ignore */ url),
+  content?: AdapterContentOptions,
 ): Promise<MountedRuntimeAdapter> {
   if (target.ownerDocument !== frameWindow.document) {throw new Error("FANTASY_RUNTIME_CONFIG_INVALID");}
   const restore = restorePayload ? await decodeState(config.core, config.contentDigest, restorePayload) : null;
   signal?.throwIfAborted();
-  const {core, cart} = await loadCore(config, progress, signal, loader);
+  const {core, cart} = await loadCore(config, progress, signal, loader, content?.contentSession);
   const pmem = config.core === "tic80" ? new PersistentMemory(core, restore) : null;
   const canvas = frameWindow.document.createElement("canvas");
   canvas.width = config.core === "tic80" ? 240 : 128;

@@ -1,99 +1,85 @@
-import {describe, expect, it, vi} from "vitest";
-import {createNeoCDRange, neoCDRangeBlockSize as blockSize} from "./neocd-range.js";
-
-const digest = "a".repeat(64), disc = {url: "https://game.test/launch-a", sizeBytes: 400 * 1024 * 1024, sha256: digest};
-function setup() {
-  const stored = new Map<string, Response>();
-  const cache = {match: async (key: string) => stored.get(key)?.clone(),
-    put: async (key: string, value: Response) => {stored.set(key, value.clone());},
-    delete: async (key: string) => stored.delete(key)};
-  const fetcher = vi.fn(async (_url: string | URL | Request, options?: RequestInit) => {
-    const range = new Headers(options?.headers).get("Range")!;
-    const [start, end] = range.slice(6).split("-").map(Number);
-    return new Response(new Uint8Array(end - start + 1).fill(start / blockSize + 1), {status: 206,
-      headers: {"Content-Range": `bytes ${start}-${end}/${disc.sizeBytes}`, ETag: `"sha256-${digest}"`}});
+// @vitest-environment node
+import {afterEach, describe, expect, it, vi} from "vitest";
+import {BlockPool, type BlockObject} from "../../content-io/block-pool.js";
+import {RangeReader} from "../../content-io/range-reader.js";
+import {fetchRangeBlock} from "../../content-io/http.js";
+import {createNeoCDRange, neoCDRangeBlockSize as B} from "./neocd-range.js";
+const disc = {sizeBytes: 400 * 1024 * 1024, sha256: "a".repeat(64)};
+const pools: BlockPool[] = [];
+function setup(sizeBytes = disc.sizeBytes) {
+  const fetcher = vi.fn<typeof fetch>(async (_url, options) => {
+    const [start, end] = new Headers(options?.headers).get("Range")!.slice(6).split("-").map(Number);
+    return new Response(new Uint8Array(end - start + 1).fill(start / B + 1), {status: 206, headers: {
+      "Content-Range": `bytes ${start}-${end}/${sizeBytes}`, ETag: `"sha256-${disc.sha256}"`}});
   });
-  const make = (url = disc.url) => createNeoCDRange({...disc, url}, new AbortController().signal, vi.fn(), {cache: async () => cache, fetcher});
-  return {stored, cache, fetcher, make};
+  const object: BlockObject = {key: "disc", state: {generation: "generation", pinnedEtag: null, revoked: false},
+    source: {identity: {kind: "FILE_SHA256", sha256: disc.sha256}, sizeBytes, url: "https://game.test/launch",
+      purpose: "GAME", transport: "RANGE_REQUIRED", etagPolicy: "EXPECTED_SHA256", contentLengthPolicy: "EXACT_IF_PRESENT", }};
+  const pool = new BlockPool(0, (object, index, signal) => fetchRangeBlock(object.source, object.state, index, signal, 15000, {fetch: async (...args) => {const response = await fetcher(...args); Object.defineProperty(response, "url", {value: "https://game.test/launch"}); return response;}}));
+  pools.push(pool);
+  const make = () => createNeoCDRange({...disc, sizeBytes}, new RangeReader(crypto.randomUUID(), object, pool), vi.fn());
+  return {fetcher, pool, make};
 }
-describe("NeoCD bounded Range disc", () => {
-  it("starts without a full download and reuses verified blocks across Launch URLs", async () => {
-    const fixture = setup(), first = fixture.make();
-    expect(fixture.fetcher).not.toHaveBeenCalled();
-    expect(await first.read(10, 8)).toEqual(new Uint8Array(8).fill(1));
-    expect(await first.read(blockSize - 2, 4)).toEqual(new Uint8Array([1, 1, 2, 2]));
-    expect(first.read(10, 8)).toBeInstanceOf(Uint8Array);
-    expect(fixture.fetcher).toHaveBeenCalledTimes(2);
-    await first.dispose();
-    const second = fixture.make("https://game.test/launch-b");
-    expect(await second.read(10, 8)).toEqual(new Uint8Array(8).fill(1));
-    expect(fixture.fetcher).toHaveBeenCalledTimes(2);
-    await second.dispose();
+afterEach(() => {for (const pool of pools.splice(0)) {pool.close();}});
+describe("NeoCD public Reader facade", () => {
+  it("[BR-01] UNIT/neocd [IO-06] UNIT/neocd preserves synchronous hits, asynchronous misses and shared handles", async () => {
+    const {fetcher, make} = setup(), first = make(); expect(fetcher).not.toHaveBeenCalled();
+    const cold = first.read(10, 8); expect(cold).toBeInstanceOf(Promise); expect(await cold).toEqual(new Uint8Array(8).fill(1));
+    const partial = first.read(B - 2, 4); expect(partial).toBeInstanceOf(Promise); expect(await partial).toEqual(new Uint8Array([1, 1, 2, 2]));
+    const hit = first.read(10, 8); expect(hit).toBeInstanceOf(Uint8Array); expect(fetcher).toHaveBeenCalledTimes(2);
+    const second = make(); await first.dispose(); expect(second.read(10, 8)).toBeInstanceOf(Uint8Array);
+    expect(fetcher).toHaveBeenCalledTimes(2); await second.dispose();
   });
-  it("rejects servers ignoring Range without consuming the full body", async () => {
-    const cancel = vi.fn(), fetcher = vi.fn(async () => new Response(new ReadableStream({cancel}), {status: 200}));
-    const reader = createNeoCDRange(disc, new AbortController().signal, vi.fn(), {cache: async () => null, fetcher});
-    await expect(reader.read(0, 16)).rejects.toThrow("NEOCD_RANGE_INVALID");
+  it("[IO-22] UNIT/neocd [ST-16] UNIT/neocd-raw-isolation outputs can be mutated or detached without poisoning public cache", async () => {
+    const {make, fetcher} = setup(), reader = make(), sibling = make(), bytes = await reader.read(0, 8);
+    bytes.fill(99); structuredClone(bytes, {transfer: [bytes.buffer]});
+    expect(reader.read(0, 8)).toEqual(new Uint8Array(8).fill(1)); expect(fetcher).toHaveBeenCalledTimes(1);
+    await reader.dispose(); expect(() => reader.read(0, 8)).toThrow("ABORTED");
+    expect(sibling.read(0, 8)).toEqual(new Uint8Array(8).fill(1)); expect(fetcher).toHaveBeenCalledTimes(1); await sibling.dispose();
+  });
+  it("[IO-14] UNIT/neocd rejects ignored Range without consuming a full body", async () => {
+    const {fetcher, make} = setup(), cancel = vi.fn();
+    fetcher.mockImplementation(async () => new Response(new ReadableStream({cancel}), {status: 200}));
+    const reader = make(); await expect(reader.read(0, 8)).rejects.toThrow("RANGE_UNSUPPORTED");
     expect(cancel).toHaveBeenCalled(); await reader.dispose();
   });
-  it("rejects mismatched identity, range, short and oversized payloads", async () => {
-    for (const change of [{etag: '"other"'}, {range: `bytes 1-${blockSize}/${disc.sizeBytes}`}, {length: 5}, {length: blockSize + 1}]) {
-      const fetcher = vi.fn(async () => new Response(new Uint8Array(change.length ?? blockSize), {status: 206, headers: {
-        ETag: change.etag ?? `"sha256-${digest}"`, "Content-Range": change.range ?? `bytes 0-${blockSize - 1}/${disc.sizeBytes}`}}));
-      const reader = createNeoCDRange(disc, new AbortController().signal, vi.fn(), {cache: async () => null, fetcher});
-      await expect(reader.read(0, 10)).rejects.toThrow("NEOCD_RANGE_INVALID"); await reader.dispose();
+  it("[IO-15] UNIT/neocd propagates shared identity/range/length errors", async () => {
+    for (const change of [{etag: '"other"', code: "IDENTITY_CHANGED"}, {range: `bytes 1-${B}/${disc.sizeBytes}`, code: "RANGE_INVALID"},
+      {length: 5, code: "LENGTH_MISMATCH"}, {length: B + 1, code: "LENGTH_MISMATCH"}]) {
+      const {fetcher, make} = setup();
+      fetcher.mockImplementation(async () => new Response(new Uint8Array(change.length ?? B), {status: 206, headers: {
+        ETag: change.etag ?? `"sha256-${disc.sha256}"`, "Content-Range": change.range ?? `bytes 0-${B - 1}/${disc.sizeBytes}`}}));
+      const reader = make(); await expect(reader.read(0, 8)).rejects.toThrow(change.code); await reader.dispose();
     }
   });
-  it("detects same-size cache corruption and refetches only that block", async () => {
-    const fixture = setup(), first = fixture.make(); await first.read(0, 4); await first.dispose();
-    const [key, value] = [...fixture.stored][0];
-    fixture.stored.set(key, new Response(new Uint8Array(blockSize).fill(9), {headers: value.headers}));
-    const second = fixture.make(); expect(await second.read(0, 4)).toEqual(new Uint8Array(4).fill(1));
-    expect(fixture.fetcher).toHaveBeenCalledTimes(2); await second.dispose();
+  it("[IO-08] UNIT/neocd deduplicates overlap while native idle remains an independent barrier", async () => {
+    const {make, fetcher, pool} = setup(), reader = make();
+    reader.begin(); let idle = false; const barrier = reader.idle().then(() => {idle = true;});
+    await Promise.all([reader.read(0, 8), reader.read(4, 8)]); expect(fetcher).toHaveBeenCalledTimes(1); expect(idle).toBe(false);
+    reader.end(); await barrier; expect(idle).toBe(true); expect(() => reader.end()).toThrow("INTERNAL");
+    for (let index = 1; index < 70; index++) {await reader.read(index * B, 4);}
+    expect(pool.stats.lruBytes).toBeLessThanOrEqual(16 * 1024 * 1024);
+    expect(() => reader.read(0, B + 1)).toThrow("BOUNDS"); await reader.dispose();
   });
-  it("continues bounded network reads when persistent storage fails", async () => {
-    const fixture = setup(); fixture.cache.put = async () => {throw new Error("quota");};
-    const first = fixture.make(); await first.read(0, 4); await first.dispose();
-    const second = fixture.make(); await second.read(0, 4); expect(fixture.fetcher).toHaveBeenCalledTimes(2); await second.dispose();
-  });
-  it("bounds memory, deduplicates overlapping reads and aborts on disposal", async () => {
-    const fixture = setup(), reader = fixture.make();
-    await Promise.all([reader.read(0, 8), reader.read(4, 8)]); expect(fixture.fetcher).toHaveBeenCalledTimes(1);
-    for (let i = 1; i < 70; ++i) {await reader.read(i * blockSize, 4);}
-    expect(reader.memoryBytes).toBeLessThanOrEqual(16 * 1024 * 1024);
-    expect(() => reader.read(0, blockSize + 1)).toThrow("NEOCD_RANGE_READ_INVALID");
-    await reader.dispose(); expect(() => reader.read(0, 4)).toThrow();
-  });
-  it("aborts an in-flight network block and settles native idle before disposal", async () => {
-    let started!: () => void;
-    const ready = new Promise<void>(resolve => {started = resolve;});
-    const fetcher: typeof fetch = async (_url, options) => new Promise((_resolve, reject) => {
-      options!.signal!.addEventListener("abort", () => reject(new Error("aborted")), {once: true}); started();
-    });
-    const reader = createNeoCDRange(disc, new AbortController().signal, vi.fn(), {cache: async () => null, fetcher});
-    reader.begin();
+  it("[BR-08] UNIT/neocd [BR-09] UNIT/neocd disposal cancels pending I/O then waits for native finally/end", async () => {
+    const {fetcher, make} = setup(); let started!: () => void; const ready = new Promise<void>(resolve => {started = resolve;});
+    fetcher.mockImplementation(async (_url, options) => new Promise((_resolve, reject) => {
+      options!.signal!.addEventListener("abort", () => reject(new DOMException("Aborted", "AbortError")), {once: true}); started();
+    }));
+    const reader = make(); reader.begin();
     const reading = Promise.resolve(reader.read(0, 8)).finally(() => reader.end());
-    const rejected = expect(reading).rejects.toThrow("aborted");
-    await ready; await reader.dispose(); await rejected;
-    expect(reader.memoryBytes).toBe(0);
+    const rejected = expect(reading).rejects.toThrow("ABORTED"); await ready;
+    const closing = reader.dispose(); expect(reader.dispose()).toBe(closing); await closing; await rejected;
   });
   it("reads the exact short final block and rejects reads past EOF", async () => {
-    const small = {...disc, sizeBytes: blockSize + 3};
-    const fetcher = vi.fn(async () => new Response(new Uint8Array([4, 5, 6]), {status: 206, headers: {
-      ETag: `"sha256-${digest}"`, "Content-Range": `bytes ${blockSize}-${blockSize + 2}/${small.sizeBytes}`}}));
-    const reader = createNeoCDRange(small, new AbortController().signal, vi.fn(), {cache: async () => null, fetcher});
-    expect(await reader.read(blockSize + 1, 2)).toEqual(new Uint8Array([5, 6]));
-    expect(() => reader.read(blockSize + 2, 2)).toThrow("NEOCD_RANGE_READ_INVALID");
-    await reader.dispose();
+    const {make} = setup(B + 3), reader = make();
+    expect(await reader.read(B + 1, 2)).toEqual(new Uint8Array([2, 2]));
+    expect(() => reader.read(B + 2, 2)).toThrow("BOUNDS"); await reader.dispose();
   });
-
-  it("calls browser fetch without an options-object receiver", async () => {
-    const fixture = setup();
-    const fetcher: typeof fetch = async function(this: unknown, ...args) {
-      expect(this).toBeUndefined(); return fixture.fetcher(...args);
-    };
-    const reader = createNeoCDRange(disc, new AbortController().signal, vi.fn(), {cache: async () => null, fetcher});
-    await reader.read(0, 8); await reader.dispose();
+  it("[X-30] UNIT/neocd-existing-read-limit preserves the existing native facade bound before acquisition", async () => {
+    const {make, fetcher} = setup(), reader = make();
+    expect(() => reader.read(0, 17 * 1024 * 1024)).toThrow("BOUNDS");
+    expect(fetcher).not.toHaveBeenCalled();
+    expect((await reader.read(0, B)).length).toBe(B); await reader.dispose();
   });
-
 });

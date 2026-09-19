@@ -1,3 +1,4 @@
+import type {AdapterContentSession} from "../provider/content-inputs.js";
 import {fetchFile, type FileSource} from "./files.js";
 import type {AssetIndexV1} from "../provider/module-api.js";
 import type {RuntimeProgressReporter} from "../internal-adapter.js";
@@ -16,7 +17,7 @@ export type Px68kCore = {
 };
 export type ModuleLoader = (url: string) => Promise<unknown>;
 export async function loadCore(config: Px68kParameters, progress: RuntimeProgressReporter, signal?: AbortSignal,
-  loader: ModuleLoader = (url) => import(/* webpackIgnore: true */ /* @vite-ignore */ url)) {
+  loader: ModuleLoader = (url) => import(/* webpackIgnore: true */ /* @vite-ignore */ url), session?: AdapterContentSession) {
   const base = new URL(config.runtimeBaseUrl, window.location.href);
   const assets = ["px68k-retrom.mjs", "px68k-retrom.wasm"].map((name) => {
     const path = `assets/px68k/${name}`, info = config.assetIndex[path];
@@ -34,7 +35,7 @@ export async function loadCore(config: Px68kParameters, progress: RuntimeProgres
   progress({phase: "PROJECT_CONTENT", loadedBytes: 0, totalBytes: total});
   const bytes = await Promise.all(sources.map((source, index) => fetchFile(source, (size) => {
     loaded[index] = size; progress({phase: "PROJECT_CONTENT", loadedBytes: loaded.reduce((a, b) => a + b, 0), totalBytes: total});
-  }, signal)));
+  }, signal, session, index === 0 ? "GAME" : index < 3 ? "FIRMWARE" : "CORE_ASSET")));
   const module = await loader(assets[0].url);
   if (!module || typeof module !== "object" || !("default" in module) || typeof module.default !== "function") {
     throw new Error("PX68K_CORE_ABI_MISMATCH");

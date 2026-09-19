@@ -1,6 +1,7 @@
+import {managedAdapterFixture} from "../../tests/managed-adapter-fixture.js";
 import {createHash, webcrypto} from "node:crypto";
 import {afterEach, expect, it, vi} from "vitest";
-import {mountWebMSX} from "./adapter.js";
+import {mountWebMSX as mount} from "./adapter.js";
 import type {WebMSXModule} from "./core.js";
 const bytes = new Uint8Array([65, 66, 0, 64, 0, 0, 0, 0]);
 const config = {mediaUrl: 'https://content.test/cart', mediaSizeBytes: bytes.length,
@@ -48,3 +49,7 @@ it('preserves bounded error codes thrown by the iframe realm', async () => {
     expect(error).toHaveProperty('message', 'WEBMSX_START_TIMEOUT');
   } finally {frame.remove();}
 });
+
+const mountWebMSX: typeof mount = (...args) => {
+  args[7] ??= managedAdapterFixture(args[0]); return mount(...args);
+};

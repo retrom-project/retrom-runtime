@@ -1,3 +1,6 @@
+import {abi as contentAbi, contractSha256} from "../content-io/identity.js";
+import type {ContentSessionClient} from "../content-io/client.js";
+import type {AdapterContentSession} from "../provider/content-inputs.js";
 import type {SeekableBlobSource} from "../contract.js";
 import type {AssetIndexV1} from "../provider/module-api.js";
 import {loadPSPFile} from "./content.js";
@@ -19,21 +22,25 @@ export type PSPCore = {
 };
 export type PSPModule = {
   abi: string;
+  contentAbi: string;
+  contractSha256: string;
   createPPSSPPHost(options: {
-    source: SeekableBlobSource;
+    source: Pick<SeekableBlobSource, "sha256" | "sizeBytes">;
+    content: PSPContent;
     restore: Uint8Array | null;
     target: HTMLElement;
     onFailure: (error: Error) => void;
     signal?: AbortSignal;
   }): Promise<unknown>;
 };
-export type PSPLoader = (config: PSPParameters, win: Window, signal?: AbortSignal) => Promise<unknown>;
+export type PSPContent = Awaited<ReturnType<ContentSessionClient["createSyncChannel"]>> & {abi: "content-io-v1"; contractSha256: string; syncClientUrl: string};
+export type PSPContentOptions = {contentSession: AdapterContentSession & Pick<ContentSessionClient, "createSyncChannel">; runtimeBaseURL: string};
+export type PSPLoader = (config: PSPParameters, win: Window, signal?: AbortSignal, content?: AdapterContentSession) => Promise<unknown>;
 const registration = "__RETROM_PPSSPP_V1__";
 
-export const loadPSP: PSPLoader = async (config, win, signal) => {
+export const loadPSP: PSPLoader = async (config, win, signal, content) => {
   const base = new URL(config.runtimeBaseUrl, window.location.href);
-  const files = ["ppsspp.js", "ppsspp.wasm", "ppsspp.data", "ppsspp.worker.mjs", "ppsspp-host.mjs",
-    "ppsspp-io.worker.mjs"];
+  const files = ["ppsspp.js", "ppsspp.wasm", "ppsspp.data", "ppsspp.worker.mjs", "ppsspp-host.mjs"];
   for (const file of files) {
     const identity = config.assetIndex?.[`assets/ppsspp/${file}`];
     if (!identity) {throw new Error("PPSSPP_ASSET_MISSING");}
@@ -41,7 +48,7 @@ export const loadPSP: PSPLoader = async (config, win, signal) => {
       throw new Error("PPSSPP_ASSET_SIZE_INVALID");
     }
     await loadPSPFile({url: new URL(file, base).href, sizeBytes: identity.sizeBytes, sha256: identity.sha256},
-      signal);
+      signal, content);
   }
   signal?.throwIfAborted();
   const url = new URL("ppsspp-host.mjs", base).href;
@@ -64,7 +71,7 @@ export const loadPSP: PSPLoader = async (config, win, signal) => {
 export function validPSPModule(value: unknown): value is PSPModule {
   if (!value || typeof value !== "object") {return false;}
   const module = value as Partial<PSPModule>;
-  return module.abi === "ppsspp-host-v2" && typeof module.createPPSSPPHost === "function";
+  return module.abi === "ppsspp-host-v3" && module.contentAbi === contentAbi && module.contractSha256 === contractSha256 && typeof module.createPPSSPPHost === "function";
 }
 
 export function validPSPCore(value: unknown): value is PSPCore {

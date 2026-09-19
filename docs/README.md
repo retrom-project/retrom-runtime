@@ -28,5 +28,6 @@ This directory contains detailed documentation for individual runtime targets.
 ## Architecture
 
 - [Provider Module V1](provider-module-v1.md)
+- [Content I/O v1](content-io.md)
 - [Adding and Integrating a Core](adding-a-core.md)
 - [Maintaining Upstream Forks](maintaining-forks.md)

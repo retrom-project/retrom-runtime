@@ -1,5 +1,8 @@
-import {sha256} from "@noble/hashes/sha2.js";
-import {loadProject, fetchContent} from "./project.js";
+import type {AdapterContentSession} from "../provider/content-inputs.js";
+import {materializeFileBytes} from "../provider/content-inputs.js";
+import {eagerPolicy} from "../provider/content-policies.js";
+import {ContentIOError} from "../content-io/errors.js";
+import {loadProject} from "./project.js";
 import {isSaveName} from "./save.js";
 import type {RuntimeProgressReporter} from "../internal-adapter.js";
 import type {AssetIndexV1} from "../provider/module-api.js";
@@ -16,21 +19,16 @@ export type NXEngineCore = {
 };
 export type ModuleLoader = (url: string) => Promise<unknown>;
 export async function loadCore(config: NXEngineParameters, progress: RuntimeProgressReporter, signal?: AbortSignal,
-  loader: ModuleLoader = (url) => import(/* webpackIgnore: true */ /* @vite-ignore */ url)) {
+  loader: ModuleLoader = (url) => import(/* webpackIgnore: true */ /* @vite-ignore */ url), session?: AdapterContentSession) {
   const base = new URL(config.runtimeBaseUrl, window.location.href);
   const assets = ["nxengine-retrom.mjs", "nxengine-retrom.wasm"].map((name) => {
     const info = config.assetIndex[`assets/nxengine/${name}`];
     if (!info || info.sizeBytes > 32 * 1024 * 1024) {throw new Error("NXENGINE_ASSET_MISSING");}
     return {...info, url: new URL(name, base).href};
   });
-  const bytes = await Promise.all(assets.map(async (asset) => {
-    const data = await fetchContent(asset, () => undefined, signal);
-    if (Array.from(sha256(data), (b) => b.toString(16).padStart(2, "0")).join("") !== asset.sha256) {
-      throw new Error("NXENGINE_ASSET_INVALID");
-    }
-    return data;
-  }));
-  const files = await loadProject(config.projectIndexUrl, progress, signal);
+  if (!session) {throw new ContentIOError("ABI_MISMATCH");}
+  const bytes = await Promise.all(assets.map(asset => materializeFileBytes(session, asset, eagerPolicy(32 * 1024 * 1024), "CORE_ASSET", signal)));
+  const files = await loadProject(config.projectIndexUrl, progress, signal, session, config.contentDigest);
   const module = await loader(assets[0].url);
   if (!module || typeof module !== "object" || !("default" in module) || typeof module.default !== "function") {
     throw new Error("NXENGINE_CORE_ABI_MISMATCH");

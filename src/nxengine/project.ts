@@ -1,7 +1,11 @@
+import type {AdapterContentSession} from "../provider/content-inputs.js";
+import {eagerPolicy} from "../provider/content-policies.js";
+import {ContentIOError} from "../content-io/errors.js";
+import {contentLimits} from "../content-io/limits.js";
 import type {RuntimeProgressReporter} from "../internal-adapter.js";
 
 export type ProjectFile = {path: string; sizeBytes: number; url: string};
-const maximumFileBytes = 32 * 1024 * 1024;
+const maximumFileBytes = contentLimits.nxengineFile;
 const maximumProjectBytes = 64 * 1024 * 1024;
 export function parseIndex(value: unknown): ProjectFile[] {
   if (!value || typeof value !== "object" || !("schemaVersion" in value) || value.schemaVersion !== 1 ||
@@ -23,7 +27,7 @@ export function parseIndex(value: unknown): ProjectFile[] {
   }
   return files;
 }
-export async function loadProject(indexUrl: string, progress: RuntimeProgressReporter, signal?: AbortSignal) {
+export async function loadProject(indexUrl: string, progress: RuntimeProgressReporter, signal?: AbortSignal, session?: AdapterContentSession, projectDigest?: string) {
   indexUrl = new URL(indexUrl, window.location.href).href;
   const response = await fetch(indexUrl, {credentials: "same-origin", redirect: "error", signal});
   const raw = await readBounded(response, 2 * 1024 * 1024, signal);
@@ -35,29 +39,22 @@ export async function loadProject(indexUrl: string, progress: RuntimeProgressRep
   for (const file of files) {
     const bytes = await fetchContent({...file, url: new URL(file.url, indexUrl).href}, (loaded) => {
       progress({phase: "PROJECT_CONTENT", loadedBytes: loadedBytes + loaded, totalBytes});
-    }, signal);
+    }, signal, session, projectDigest);
     result.push({path: file.path, bytes}); loadedBytes += bytes.length;
   }
   return result;
 }
-export async function fetchContent(file: {url: string; sizeBytes: number}, progress: (loaded: number) => void, signal?: AbortSignal) {
-  let cache: Cache | undefined;
-  try {cache = await caches.open("retrom-nxengine-content-v1");} catch { /* Storage is optional. */ }
-  if (cache) {
-    try {
-      const hit = await cache.match(file.url);
-      if (hit) {const data = await exactBytes(hit, file.sizeBytes, signal); progress(data.length); return data;}
-    } catch {await cache.delete(file.url).catch(() => false); signal?.throwIfAborted();}
-  }
-  const response = await fetch(file.url, {credentials: "same-origin", redirect: "error", signal});
-  const bytes = await exactBytes(response, file.sizeBytes, signal);
-  await cache?.put(file.url, new Response(Uint8Array.from(bytes))).catch(() => undefined);
-  progress(bytes.length);
-  return bytes;
-}
-async function exactBytes(response: Response, size: number, signal?: AbortSignal) {
-  const bytes = await readBounded(response, size, signal);
-  if (bytes.length !== size) {throw invalid();} return bytes;
+export async function fetchContent(file: ProjectFile, progress: (loaded: number) => void, signal?: AbortSignal,
+  session?: AdapterContentSession, projectDigest?: string) {
+  if (!session || !projectDigest) {throw new ContentIOError("ABI_MISMATCH");}
+  const policy = eagerPolicy(maximumFileBytes);
+  const reader = await session.open({identity: {kind: "INDEX_ENTRY", projectDigest, logicalPath: file.path},
+    url: file.url, sizeBytes: file.sizeBytes, purpose: "GAME", transport: "WHOLE_ALLOWED", etagPolicy: "PIN_STRONG",
+    contentLengthPolicy: policy.contentLengthPolicy, }, policy, signal);
+  try {
+    const result = await session.materialize(reader.id, {kind: "BYTES", maxBytes: maximumFileBytes}, signal, value => progress(value.readyBytes));
+    if (result.kind !== "BYTES") {throw new ContentIOError("INTERNAL");} return result.bytes;
+  } finally {await reader.close();}
 }
 async function readBounded(response: Response, maximum: number, signal?: AbortSignal) {
   if (!response.ok || !response.body) {throw new Error("NXENGINE_FETCH_FAILED");}

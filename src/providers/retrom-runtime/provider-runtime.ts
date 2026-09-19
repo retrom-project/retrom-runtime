@@ -1,3 +1,6 @@
+import {ProviderContentOwner} from "../../provider/content-owner.js";
+import {retromRuntimeProviderDefinition} from "./catalog.js";
+import {ContentIOError} from "../../content-io/errors.js";
 import {decodeStoredCheckpoint, encodeStoredCheckpoint, nativeCheckpointFormat} from "../../provider/checkpoint-storage.js";
 import {startInputDiagnostics} from "../../provider/input-diagnostics.js";
 import type {RuntimeInputDiagnosticsV1} from "../../provider/module-api.js";
@@ -20,6 +23,7 @@ export function createRetromRuntimePlayer(
 }
 
 class RetromRuntimePlayer implements PlayerRuntimeV1 {
+  private readonly contentOwner = new ProviderContentOwner((error) => {void this.fail(error);}, diagnostic => this.host.reportDiagnostic({code: "CONTENT_IO_METRICS", message: JSON.stringify(diagnostic)}));
   private readonly listeners = new Set<(event: RuntimeEventV1) => void>();
   private state: RuntimeStateV1 = "CREATED";
   private adapter: MountedRuntimeAdapter | null = null;
@@ -61,8 +65,12 @@ class RetromRuntimePlayer implements PlayerRuntimeV1 {
           () => this.adapter?.canvasLayout === "CORE")).target
         : target;
       if (this.inputFilter) {this.cleanupInputFilter = installRuntimeGamepadFilter(runtimeWindow, this.inputFilter);}
+      const declaration = retromRuntimeProviderDefinition.targets.find((entry) => entry.id === this.envelope.runtime.targetId);
+      if (!declaration) {throw contractError();}
+      const contentSession = await this.contentOwner.start(declaration, this.envelope, this.assetIndex);
+      this.assertActive();
       const adapter = await mountTargetAdapter(this.envelope, runtimeTarget, {
-        assetIndex: this.assetIndex,
+        assetIndex: this.assetIndex, contentSession,
         signal: this.host.signal,
         reportFailure: (error) => {void this.fail(error);},
         frame: frame?.element,
@@ -238,7 +246,7 @@ class RetromRuntimePlayer implements PlayerRuntimeV1 {
     return () => this.listeners.delete(listener);
   }
 
-  private readonly abort = () => {void this.exit().catch((error) => this.reportCleanupFailure(error));};
+  private readonly abort = () => {this.contentOwner.force(); void this.exit().catch((error) => this.reportCleanupFailure(error));};
   private readonly reportProgress: RuntimeProgressReporter = (progress) => {
     if (this.state !== "MOUNTING" || !validProgress(progress)) {return;}
     this.emit({type: "LOAD_PROGRESS", loadedBytes: progress.loadedBytes, totalBytes: progress.totalBytes});
@@ -309,6 +317,7 @@ class RetromRuntimePlayer implements PlayerRuntimeV1 {
       this.frameSurface = null;
       this.runtimeWindow = null;
       await this.finalSnapshotPromise;
+      await this.contentOwner.close();
       if (!failed) {this.transition("EXITED");}
       this.listeners.clear();
     }
@@ -318,6 +327,7 @@ class RetromRuntimePlayer implements PlayerRuntimeV1 {
   private async fail(error: unknown) {
     if (this.stopping()) {return;}
     this.transition("FAILED");
+    this.contentOwner.force(error instanceof ContentIOError ? error : new ContentIOError("INTERNAL", {cause: error}));
     this.emit({type: "FATAL_ERROR", code: stableError(error).message});
     try {await this.exit();} catch (cleanupError) {this.reportCleanupFailure(cleanupError);}
   }
@@ -421,7 +431,7 @@ function validProgress(value: {loadedBytes: number; totalBytes: number | null}) 
 function isAbort(error: unknown) {return error instanceof DOMException && error.name === "AbortError";}
 function stableError(error: unknown) {
   if (isAbort(error)) {return error as DOMException;}
-  if (error instanceof Error && /^(?:RUNTIME|CHECKPOINT|PLAYER|PROVIDER|RPG|ONS|KIRIKIRI|BUTTERSCOTCH|TYRANOSCRIPT|WASM4|J2ME|SCUMMVM|FANTASY|WEBMSX|PX68K|NP2KAI|OPENBOR|NXENGINE)_[A-Z0-9_]+$/u.test(error.message)) {
+  if (error instanceof Error && /^(?:CONTENT_IO|RUNTIME|CHECKPOINT|PLAYER|PROVIDER|RPG|ONS|KIRIKIRI|BUTTERSCOTCH|TYRANOSCRIPT|WASM4|J2ME|SCUMMVM|FANTASY|WEBMSX|PX68K|NP2KAI|OPENBOR|NXENGINE)_[A-Z0-9_]+$/u.test(error.message)) {
     return error;
   }
   return new Error("RUNTIME_FAILED");

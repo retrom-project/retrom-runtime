@@ -1,3 +1,4 @@
+import type {AdapterContentOptions} from "../provider/content-inputs.js";
 import type {MountedRuntimeAdapter, RuntimeProgressReporter} from "../internal-adapter.js";
 import {loadCore, withBytes, type ModuleLoader, type NXEngineParameters} from "./core.js";
 import {nativeSaves} from "./native-saves.js";
@@ -6,9 +7,9 @@ import {keyboardPadMask, padMask} from "./input.js";
 import {NXEngineAudio} from "./audio.js";
 export async function mountNXEngine(config: NXEngineParameters, target: HTMLElement, frameWindow: Window,
   restorePayload: Uint8Array | null, progress: RuntimeProgressReporter, reportFailure: (error: Error) => void,
-  signal?: AbortSignal, loader?: ModuleLoader): Promise<MountedRuntimeAdapter> {
+  signal?: AbortSignal, loader?: ModuleLoader, content?: AdapterContentOptions): Promise<MountedRuntimeAdapter> {
   if (restorePayload) {decodeSave(restorePayload, config.contentDigest);}
-  const core = await loadCore(config, progress, signal, loader);
+  const core = await loadCore(config, progress, signal, loader, content?.contentSession);
   const saves = nativeSaves(core, config.contentDigest, restorePayload);
   const canvas = frameWindow.document.createElement("canvas");
   canvas.tabIndex = 0; canvas.setAttribute("aria-label", "nxengine game");

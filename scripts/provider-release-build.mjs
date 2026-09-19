@@ -1,3 +1,4 @@
+import {buildContentAssets} from "./content-io/build-assets.mjs";
 import {developmentForkFiles, requireDevelopmentForkMode, verifyDevelopmentForkMetadata} from "./emulatorjs-development-forks.mjs";
 import {createHash} from "node:crypto";
 import {lstat, mkdir, mkdtemp, readFile, readdir, rm} from "node:fs/promises";
@@ -16,17 +17,19 @@ export async function buildRetromRuntimeProviderBundle(input) {
   await createEmptyDirectory(input.outputRoot);
   await assertDirectory(input.stageRoot);
 
+  const temporaryRoot = await mkdtemp(join(input.outputRoot, ".provider-client-"));
+  try {
+  const generatedRoot = join(temporaryRoot,"content-io");
+  const generated = new Set((await buildContentAssets(generatedRoot)).files.map(file=>file.path));
   const assetSources = new Map();
   const assetIndex = {};
   for (const assetPath of uniqueAssetPaths(input.manifest)) {
-    const source = join(input.stageRoot, assetPath.replace(/^assets\//u, "runtime/"));
+    const source = generated.has(assetPath) ? join(generatedRoot,assetPath.split("/").at(-1)) : join(input.stageRoot, assetPath.replace(/^assets\//u, "runtime/"));
     const contents = await readRegularFile(source);
     assetSources.set(assetPath, source);
     assetIndex[assetPath] = {sha256: sha256(contents), sizeBytes: contents.byteLength};
   }
   const licenseSources = await collectLicenses(input.stageRoot);
-  const temporaryRoot = await mkdtemp(join(input.outputRoot, ".provider-client-"));
-  try {
     const clientPath = join(temporaryRoot, "client.mjs");
     await buildProviderClient({
       assetIndex,
@@ -53,10 +56,14 @@ export async function buildEmulatorJsProviderBundle(input) {
   requireDevelopmentForkMode(input.sourceCatalog, input.allowDevelopmentForks);
   await createEmptyDirectory(input.outputRoot);
   await assertDirectory(input.sourceRoot);
+  const temporaryRoot = await mkdtemp(join(input.outputRoot, ".provider-client-"));
+  try {
+  const generatedRoot = join(temporaryRoot,"content-io");
+  const generated = new Set((await buildContentAssets(generatedRoot)).files.map(file=>file.path));
   const assetSources = new Map();
   const assetIndex = {};
   for (const assetPath of uniqueAssetPaths(input.manifest)) {
-    const source = join(input.sourceRoot, assetPath.replace(/^assets\//u, ""));
+    const source = generated.has(assetPath) ? join(generatedRoot,assetPath.split("/").at(-1)) : join(input.sourceRoot, assetPath.replace(/^assets\//u, ""));
     const contents = await readRegularFile(source);
     assetSources.set(assetPath, source);
     assetIndex[assetPath] = {sha256: sha256(contents), sizeBytes: contents.byteLength};
@@ -66,8 +73,6 @@ export async function buildEmulatorJsProviderBundle(input) {
   for (const name of ["LICENSE", "THIRD_PARTY_NOTICES.md", "EMULATORJS_THIRD_PARTY_NOTICES.md"]) {
     licenseSources.set(`licenses/retrom-runtime/${name}`, fileURLToPath(new URL(`../${name}`, import.meta.url)));
   }
-  const temporaryRoot = await mkdtemp(join(input.outputRoot, ".provider-client-"));
-  try {
     const clientPath = join(temporaryRoot, "client.mjs");
     await buildProviderClient({
       assetIndex,

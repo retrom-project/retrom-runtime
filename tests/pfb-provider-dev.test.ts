@@ -25,7 +25,7 @@ describe("PFB loose provider", () => {
     await writeFile(join(root, "provider-id"), "../emulatorjs\n");
     await expect(selectedPFBProviderDevInput(root)).rejects.toThrow("PFB_PROVIDER_DEV_INPUT_INVALID:provider-id");
   });
-  it.each(["retrom-runtime", "emulatorjs"] as const)("atomically replaces the selected %s dev provider", async (providerId) => {
+  it.each(["retrom-runtime", "emulatorjs"] as const)("[PK-04] UNIT/loose-%s [X-19] UNIT/old-base atomically publishes declared assets and preserves the last valid revision", async (providerId) => {
     const root = await temporaryRoot();
     const installedRoot = join(root, "installed");
     const outputRoot = join(root, "dev");
@@ -71,6 +71,7 @@ describe("PFB loose provider", () => {
       outputRoot,
     });
     await writeFile(entryPoint, "export const providerApiVersion=2; export const assets=__RETROM_PROVIDER_ASSET_INDEX__;\n");
+    await writeFile(localAsset, "export const changed=2;\n");
     const second = await buildPFBProviderDev({
       activePath, entryPoint, installedRoot, providerId,
       localAssets: [{source: localAsset, output: "runtime/butterscotch/worker.mjs"}],
@@ -86,13 +87,21 @@ describe("PFB loose provider", () => {
       "assets/butterscotch/worker.mjs", "client.mjs",
     ]);
     expect(Buffer.from(descriptor.files[0].contentBase64, "base64").toString("utf8"))
-      .toBe("export const changed=1;\n");
+      .toBe("export const changed=2;\n");
     const client = Buffer.from(descriptor.files[1].contentBase64, "base64").toString("utf8");
     expect(client).toMatch(/=2[,;]/u);
     expect(client).toContain("providerApiVersion");
-    expect(client).toContain(sha256("export const changed=1;\n"));
+    expect(client).toContain(sha256("export const changed=2;\n"));
     expect(client).not.toContain(sha256(baseAsset));
     expect(sha256(client)).toBe(second.moduleSha256);
+
+    // A local worker cannot add an undeclared asset to an old installed base.
+    const beforeInvalidAsset = await readFile(join(outputRoot, "dev-provider.json"), "utf8");
+    await expect(buildPFBProviderDev({
+      activePath, entryPoint, installedRoot, providerId,
+      localAssets: [{source: localAsset, output: "runtime/content-io/worker.mjs"}], outputRoot,
+    })).rejects.toThrow("PFB_PROVIDER_BASE_INVALID:undeclared-asset");
+    expect(await readFile(join(outputRoot, "dev-provider.json"), "utf8")).toBe(beforeInvalidAsset);
 
     // A failed rebuild cannot replace the complete, previously working payload.
     const published = await readFile(join(outputRoot, "dev-provider.json"), "utf8");

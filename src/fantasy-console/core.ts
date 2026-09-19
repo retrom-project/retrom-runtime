@@ -1,3 +1,4 @@
+import type {AdapterContentSession} from "../provider/content-inputs.js";
 import type {FantasyCore} from "./state.js";
 import {verifiedFetch} from "./fetch.js";
 import type {AssetIndexV1} from "../provider/module-api.js";
@@ -17,7 +18,7 @@ export type NativeCore = {
 };
 export type ModuleLoader = (url: string) => Promise<unknown>;
 export async function loadCore(config: FantasyParameters, progress: RuntimeProgressReporter,
-  signal: AbortSignal | undefined, loader: ModuleLoader): Promise<{core: NativeCore; cart: Uint8Array}> {
+  signal: AbortSignal | undefined, loader: ModuleLoader, session?: AdapterContentSession): Promise<{core: NativeCore; cart: Uint8Array}> {
   const base = new URL(config.runtimeBaseUrl, window.location.href);
   const modulePath = `assets/${config.core}/${config.core}-retrom.mjs`;
   const wasmPath = `assets/${config.core}/${config.core}-retrom.wasm`;
@@ -26,13 +27,21 @@ export async function loadCore(config: FantasyParameters, progress: RuntimeProgr
     throw new Error("FANTASY_RUNTIME_CONFIG_INVALID");
   }
   const moduleURL = new URL(modulePath, base).href;
+  const assetReady = [0, 0], assetTotal = wasmInfo.sizeBytes + jsInfo.sizeBytes;
+  progress({phase: "PROJECT_CONTENT", loadedBytes: 0, totalBytes: config.cartSizeBytes});
+  progress({phase: "RUNTIME_ASSET", loadedBytes: 0, totalBytes: assetTotal});
+  const reportAsset = (index: number, ready: number) => {
+    assetReady[index] = ready;
+    progress({phase: "RUNTIME_ASSET", loadedBytes: assetReady[0] + assetReady[1], totalBytes: assetTotal});
+  };
   const [cart, wasm] = await Promise.all([
-    verifiedFetch(config.cartUrl, config.cartSizeBytes, config.contentDigest, signal),
-    verifiedFetch(new URL(wasmPath, base).href, wasmInfo.sizeBytes, wasmInfo.sha256, signal),
-    verifiedFetch(moduleURL, jsInfo.sizeBytes, jsInfo.sha256, signal),
+    verifiedFetch(config.cartUrl, config.cartSizeBytes, config.contentDigest, signal, session, "GAME",
+      value => progress({phase: "PROJECT_CONTENT", loadedBytes: value.readyBytes, totalBytes: config.cartSizeBytes})),
+    verifiedFetch(new URL(wasmPath, base).href, wasmInfo.sizeBytes, wasmInfo.sha256, signal, session, "CORE_ASSET",
+      value => reportAsset(0, value.readyBytes)),
+    verifiedFetch(moduleURL, jsInfo.sizeBytes, jsInfo.sha256, signal, session, "CORE_ASSET",
+      value => reportAsset(1, value.readyBytes)),
   ]);
-  progress({phase: "PROJECT_CONTENT", loadedBytes: cart.length, totalBytes: cart.length});
-  progress({phase: "RUNTIME_ASSET", loadedBytes: wasm.length + jsInfo.sizeBytes, totalBytes: wasm.length + jsInfo.sizeBytes});
   const module = await loader(moduleURL);
   if (!module || typeof module !== "object" || !("default" in module) || typeof module.default !== "function") {
     throw new Error("FANTASY_CORE_ABI_MISMATCH");

@@ -1,40 +1,42 @@
-import {scummvmJson} from "./json.js";
 import type {RuntimeProgressReporter} from "../internal-adapter.js";
-import {saveDigest} from "./checkpoint.js";
-import {blockSize, ScummvmFiles, type BlockCache} from "./files.js";
-
+import type {AdapterContentOptions} from "../provider/content-inputs.js";
+import {materializeFileBytes} from "../provider/content-inputs.js";
+import {eagerPolicy} from "../provider/content-policies.js";
+import {ScummvmFiles} from "./files.js";
 type Asset = {path: string; sizeBytes: number; sha256: string};
 export type CoreManifest = {schemaVersion: 1; adapterAbi: string; upstreamCommit: string;
   engines: Record<string, string>; files: Asset[]};
-
-export async function coreAssets(base: string, engine: string, cache: BlockCache | null,
+export async function coreAssets(base: string, engine: string, content: AdapterContentOptions,
   signal: AbortSignal, report: RuntimeProgressReporter) {
-  const manifest = await scummvmJson(new URL("manifest.json", base).href, 1024 * 1024, signal, "SCUMMVM_CORE_MANIFEST_INVALID");
+  const manifestIdentity = content.assetIndex["assets/scummvm/manifest.json"];
+  if (!manifestIdentity) {throw invalid();}
+  const raw = await materializeFileBytes(content.contentSession, {...manifestIdentity, url: new URL("manifest.json", base).href},
+    eagerPolicy(1024 * 1024), "CORE_ASSET", signal);
+  let manifest: unknown;
+  try {manifest = JSON.parse(new TextDecoder("utf-8", {fatal: true}).decode(raw));} catch {throw invalid();}
   if (!validManifest(manifest)) {throw invalid();}
-  const plugin = manifest.engines[engine];
-  if (!plugin) {throw new Error("SCUMMVM_ENGINE_UNAVAILABLE");}
-  const digest = await saveDigest(new TextEncoder().encode(JSON.stringify(manifest)));
-  const index = (files: Asset[], strip: string) => ({schemaVersion: 1,
-    files: files.map((entry) => ({...entry, path: entry.path.slice(strip.length), url: new URL(entry.path, base).href}))});
-  const all = new ScummvmFiles(index(manifest.files, ""), digest, fetch, cache, signal);
-  const data = new ScummvmFiles(index(manifest.files.filter((entry) => entry.path.startsWith("data/")), "data/"),
-    digest, fetch, cache, signal, "/data");
-  const needed = ["scummvm.wasm", plugin].map((path) => manifest.files.find((entry) => entry.path === path));
-  if (needed.some((entry) => !entry || entry.sizeBytes <= 0 || entry.sizeBytes > 128 * 1024 * 1024)) {throw invalid();}
-  const totalBytes = needed.reduce((total, entry) => total + entry!.sizeBytes, 0);
-  let loadedBytes = 0;
+  // A self-consistent but foreign manifest cannot authorize executable or lazy data URLs.
+  for (const file of manifest.files.filter(file => !file.path.startsWith("licenses/"))) {
+    const trusted = content.assetIndex[`assets/scummvm/${file.path}`];
+    if (!trusted || trusted.sizeBytes !== file.sizeBytes || trusted.sha256 !== file.sha256) {throw invalid();}
+  }
+  const plugin = manifest.engines[engine]; if (!plugin) {throw new Error("SCUMMVM_ENGINE_UNAVAILABLE");}
+  const needed = ["scummvm.wasm", plugin].map(path => manifest.files.find(file => file.path === path));
+  if (needed.some(file => !file || file.sizeBytes <= 0 || file.sizeBytes > 128 * 1024 * 1024)) {throw invalid();}
+  const totalBytes = needed.reduce((total, file) => total + file!.sizeBytes, 0); let loadedBytes = 0;
   const read = async (entry: Asset) => {
-    const result = new Uint8Array(entry.sizeBytes);
-    for (let start = 0; start < entry.sizeBytes; start += blockSize) {
-      const bytes = await all.read(`/game/${entry.path}`, start, Math.min(blockSize, entry.sizeBytes - start));
-      result.set(bytes, start); loadedBytes += bytes.length;
-      report({phase: "RUNTIME_ASSET", loadedBytes, totalBytes});
-    }
-    if (await saveDigest(result) !== entry.sha256) {throw new Error("SCUMMVM_ASSET_DIGEST_MISMATCH");}
-    return result;
+    const bytes = await materializeFileBytes(content.contentSession, {...entry, url: new URL(entry.path, base).href},
+      eagerPolicy(128 * 1024 * 1024), "CORE_ASSET", signal,
+      progress => report({phase: "RUNTIME_ASSET", loadedBytes: loadedBytes + progress.readyBytes, totalBytes}));
+    loadedBytes += bytes.length; return bytes;
   };
   report({phase: "RUNTIME_ASSET", loadedBytes: 0, totalBytes});
-  return {data, plugin, wasm: await read(needed[0]!), pluginBytes: await read(needed[1]!)};
+  const wasm = await read(needed[0]!), pluginBytes = await read(needed[1]!);
+  const dataFiles = manifest.files.filter(file => file.path.startsWith("data/"));
+  const data = new ScummvmFiles({schemaVersion: 1, files: dataFiles.map(entry => ({...entry,
+    path: entry.path.slice(5), url: new URL(entry.path, base).href}))}, manifestIdentity.sha256, content.contentSession, signal,
+  "/data", new Map(dataFiles.map(file => [file.path.slice(5), file.sha256])));
+  return {data, plugin, wasm, pluginBytes};
 }
 
 function validManifest(value: unknown): value is CoreManifest {
@@ -45,11 +47,19 @@ function validManifest(value: unknown): value is CoreManifest {
     !Array.isArray(manifest.files) || !manifest.files.length || manifest.files.length > 4096) {return false;}
   const paths = new Set<string>();
   for (const file of manifest.files) {
-    if (!file || typeof file.path !== "string" || paths.has(file.path) ||
-      !Number.isSafeInteger(file.sizeBytes) || file.sizeBytes < 0 || !/^[0-9a-f]{64}$/u.test(file.sha256)) {return false;}
+    if (!validAsset(file) || paths.has(file.path)) {return false;}
     paths.add(file.path);
   }
   return Object.entries(manifest.engines).every(([engine, path]) => /^[a-z0-9_]+$/u.test(engine) &&
     path === `plugins/lib${engine}.so` && paths.has(path));
 }
 function invalid() {return new Error("SCUMMVM_CORE_MANIFEST_INVALID");}
+
+function validAsset(file: Asset) {
+  return file && typeof file.path === "string" && safePath(file.path) && Number.isSafeInteger(file.sizeBytes) &&
+    file.sizeBytes >= 0 && /^[0-9a-f]{64}$/u.test(file.sha256);
+}
+function safePath(path: string) {
+  return !/[\\?#%]/u.test(path) && [...path].every(character => character.charCodeAt(0) >= 32 && character.charCodeAt(0) !== 127) &&
+    path.split("/").every(part => Boolean(part) && part !== "." && part !== "..");
+}

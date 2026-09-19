@@ -1,6 +1,7 @@
+import type {AdapterContentOptions} from "../provider/content-inputs.js";
 import type {MountedRuntimeAdapter, RuntimeProgressReporter} from "../internal-adapter.js";
 import {loadCore, type CoreLoader, type CoreParameters, type NP2Core} from "./core.js";
-import {loadDisk, openDiskStore, type DiskSource} from "./content.js";
+import {loadDisk, type DiskSource} from "./content.js";
 import {configuration, diskName} from "./disk.js";
 import {installGamepad} from "./input.js";
 import {decodeState, encodeState} from "./state.js";
@@ -8,14 +9,14 @@ export type NP2Parameters = CoreParameters & {disk: DiskSource};
 const root = "/emulator/np2kai/";
 export async function mountNP2(config: NP2Parameters, target: HTMLElement, win: Window,
   restore: Uint8Array | null, progress: RuntimeProgressReporter, reportFailure: (error: Error) => void,
-  signal?: AbortSignal, loader: CoreLoader = loadCore): Promise<MountedRuntimeAdapter> {
+  signal?: AbortSignal, loader: CoreLoader = loadCore, content?: AdapterContentOptions): Promise<MountedRuntimeAdapter> {
   if (target.ownerDocument !== win.document) {throw new Error("NP2KAI_RUNTIME_CONFIG_INVALID");}
-  const base = await loadDisk(config.disk, progress, await openDiskStore(win), signal);
+  const base = await loadDisk(config.disk, progress, content?.contentSession, signal);
   const name = diskName(base), restored = restore ? decodeState(restore, config.disk.sha256, base) : null;
   const canvas = win.document.createElement("canvas"); canvas.width = 640; canvas.height = 400; canvas.tabIndex = 0; canvas.id = "canvas";
   canvas.setAttribute("aria-label", "PC-98 game"); target.append(canvas);
   let core: NP2Core;
-  try {core = await loader(config, win, canvas, signal);} catch (error) {canvas.remove(); throw error;}
+  try {core = await loader(config, win, canvas, signal, content?.contentSession);} catch (error) {canvas.remove(); throw error;}
   let stopped = false, paused = true;
   const controls = installGamepad(win, (key, value) => core._retrom_key(key, value));
   const exit = async () => {

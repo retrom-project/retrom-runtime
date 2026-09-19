@@ -1,3 +1,4 @@
+import type {AdapterContentSession} from "../provider/content-inputs.js";
 import type {AssetIndexV1} from "../provider/module-api.js";
 import {fetchFile, type FileSource} from "./files.js";
 export type GBEParameters = {game: FileSource; bios: (FileSource & {logicalName: string})[];
@@ -8,14 +9,14 @@ export type GBECore = {
   _retrom_key(key: number, value: number): void; _retrom_pause(value: number): void;
   _retrom_save(): number; _retrom_restore(): number; _retrom_stop(): void; _retrom_volume(value: number): void;
 };
-export type CoreLoader = (config: GBEParameters, win: Window, canvas: HTMLCanvasElement, signal?: AbortSignal) => Promise<GBECore>;
-export const loadCore: CoreLoader = async (config, win, canvas, signal) => {
+export type CoreLoader = (config: GBEParameters, win: Window, canvas: HTMLCanvasElement, signal?: AbortSignal, session?: AdapterContentSession) => Promise<GBECore>;
+export const loadCore: CoreLoader = async (config, win, canvas, signal, session) => {
   const base = new URL("assets/gbe_plus/", new URL(config.runtimeBaseUrl, win.document.baseURI));
   const files = new Map<string, Uint8Array>();
   for (const name of ["gbe-pokemini.mjs", "gbe-pokemini.wasm", "gbe-pokemini-register.mjs"]) {
     const asset = config.assetIndex[`assets/gbe_plus/${name}`];
     if (!asset) {throw new Error("GBE_ASSET_MISSING");}
-    files.set(name, await fetchFile({url: new URL(name, base).href, ...asset}, () => undefined, signal));
+    files.set(name, await fetchFile({url: new URL(name, base).href, ...asset}, () => undefined, signal, session, "CORE_ASSET"));
   }
   const factory = await loadFactory(win, new URL("gbe-pokemini-register.mjs", base).href, signal);
   signal?.throwIfAborted();

@@ -1,3 +1,4 @@
+import {contentSessionFixture} from "../../tests/content-session-fixture.js";
 // @vitest-environment jsdom
 import {webcrypto} from "node:crypto";
 import {afterEach, beforeEach, describe, expect, it, vi} from "vitest";
@@ -10,7 +11,8 @@ beforeEach(() => {
   vi.stubGlobal("crypto", webcrypto);
   vi.spyOn(HTMLCanvasElement.prototype, "toBlob").mockImplementation((callback) => callback(new Blob(["image"], {type: "image/png"})));
 });
-afterEach(() => {vi.unstubAllGlobals(); vi.restoreAllMocks();});
+const cleanups: (() => Promise<void>)[] = [];
+afterEach(async () => {await Promise.all(cleanups.splice(0).map(close => close())); vi.unstubAllGlobals(); vi.restoreAllMocks();});
 const config: ScummvmParameters = {contentDigest: "a".repeat(64), projectIndexUrl: "http://localhost/game/index.json",
   runtimeBaseUrl: "http://localhost/core/", selection: {engineId: "sky", gameId: "sky", root: "", language: "en",
     platform: "pc", extra: "v0.0348 Floppy", guiOptions: "sndNoSpeech", filename: null}};
@@ -20,14 +22,19 @@ async function fixture(earlyExit = false, reportRestore = true) {
   const hash = await saveDigest(data);
   const assets = ["scummvm.wasm", "plugins/libsky.so", "plugins/libqueen.so", "data/encoding.dat"]
     .map((path) => ({path, sizeBytes: data.length, sha256: hash}));
+  const manifestBytes = new TextEncoder().encode(JSON.stringify({schemaVersion: 1, adapterAbi: "scummvm-host-v1",
+    upstreamCommit: "b".repeat(40), engines: {sky: "plugins/libsky.so", queen: "plugins/libqueen.so"}, files: assets}));
   const fetcher = vi.fn(async (url: string) => {
-    if (url.endsWith("manifest.json")) {return Response.json({schemaVersion: 1, adapterAbi: "scummvm-host-v1",
-      upstreamCommit: "b".repeat(40), engines: {sky: "plugins/libsky.so", queen: "plugins/libqueen.so"}, files: assets});}
+    if (url.endsWith("manifest.json")) {const response = new Response(manifestBytes); Object.defineProperty(response, "url", {value: url}); return response;}
     if (url.endsWith("index.json")) {return Response.json({schemaVersion: 1,
       files: [{path: "sky.dsk", sizeBytes: 3000000, url: "http://localhost/game/sky.dsk"}]});}
-    return new Response(data);
+    const response = new Response(data); Object.defineProperty(response, "url", {value: url}); return response;
   });
   vi.stubGlobal("fetch", fetcher);
+  const content = contentSessionFixture("http://localhost");
+  cleanups.push(content.close);
+  const assetIndex = Object.fromEntries(assets.map(file => [`assets/scummvm/${file.path}`, {sha256: file.sha256, sizeBytes: file.sizeBytes}]));
+  assetIndex["assets/scummvm/manifest.json"] = {sha256: await saveDigest(manifestBytes), sizeBytes: manifestBytes.length};
   const files = new Map<string, Uint8Array>();
   const fs = {mkdirTree: vi.fn(), writeFile: (path: string, bytes: Uint8Array | string) => files.set(path,
     typeof bytes === "string" ? new TextEncoder().encode(bytes) : bytes),
@@ -45,7 +52,7 @@ async function fixture(earlyExit = false, reportRestore = true) {
   const target = document.createElement("div");
   const loader = vi.fn(async () => ({adapterAbi: "scummvm-host-v1", createScummVM: factory}));
   return {files, factory, fetcher, onExit, onFailure, host: () => options.retromHost,
-    mount: (restore: Uint8Array | null = null) => mountScummvm(config, target, window, restore, vi.fn(), onExit, onFailure, undefined, loader)};
+    mount: (restore: Uint8Array | null = null) => mountScummvm(config, target, window, restore, vi.fn(), onExit, onFailure, undefined, loader, {contentSession: content.session, assetIndex})};
 }
 
 async function restoreFixture() {

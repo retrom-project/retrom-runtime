@@ -6,6 +6,8 @@ Host-independent browser library and release bundle for retro game runtimes. It 
 
 Supported targets, Provider Module architecture and core integration guides are maintained in the [docs](docs/) directory.
 
+Managed game acquisition and cache/bridge ownership are described in [Content I/O v1](docs/content-io.md).
+
 ## Provider Module V1
 
 Hosts integrate the generated Provider Bundle. A Bundle exports one `client.mjs`:

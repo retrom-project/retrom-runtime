@@ -1,8 +1,10 @@
+import type {ContentSessionClient} from "../content-io/client.js";
+import {managedAdapterFixture} from "../../tests/managed-adapter-fixture.js";
 import {decodeStoredCheckpoint} from "../provider/checkpoint-storage.js";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import {targetEnvelope} from "../../tests/provider-fixtures.js";
-import {currentWindowHost} from "../../tests/provider-adapter-fixture.js";
+import {contentBootstrap, currentWindowHost} from "../../tests/provider-adapter-fixture.js";
 import { decodeOnsCheckpoint, encodeOnsCheckpoint } from "./checkpoint.js";
 import { createRuntime } from "../index.js";
 
@@ -91,7 +93,7 @@ describe("ONS Yuri runtime", () => {
     expect(cancelAnimationFrame).toHaveBeenCalled();
   });
 
-  it("persists immutable project files across runtime instances and reports aggregate loading progress", async () => {
+  it("opens only files requested by each native instance without reporting a fictitious whole-project download", async () => {
     const projectFiles = [
       { path: "0.txt", bytes: Uint8Array.of(1) },
       { path: "default.ttf", bytes: Uint8Array.of(2, 3) },
@@ -118,7 +120,10 @@ describe("ONS Yuri runtime", () => {
       });
     });
     vi.stubGlobal("fetch", fetchMock);
-    vi.stubGlobal("caches", new MemoryCacheStorage());
+    const bootstrap = contentBootstrap, previous = bootstrap.getMockImplementation()!;
+    const session = managedAdapterFixture({url: "https://content.example"}).contentSession;
+    bootstrap.mockImplementation(async () => ({...session, close: vi.fn(async () => {}), fail: vi.fn()}) as unknown as ContentSessionClient);
+    try {
 
     for (let run = 0; run < 2; run += 1) {
       const module = fakeModule();
@@ -140,13 +145,14 @@ describe("ONS Yuri runtime", () => {
       await loadRuntimeScript();
       await mounting;
       expect(progress.at(-1)).toEqual({
-        loadedBytes: 7, totalBytes: 7, type: "LOAD_PROGRESS",
+        loadedBytes: 1, totalBytes: 1, type: "LOAD_PROGRESS",
       });
       await runtime.exit();
     }
 
     expect(fetchMock.mock.calls.map(([input]) => requestUrl(input)).filter((url) => !url.endsWith("/index.json")))
-      .toEqual(projectFiles.map(({ path }) => `https://content.example/${path}`));
+      .toEqual([...projectFiles, ...projectFiles].map(({ path }) => `https://content.example/${path}`));
+    } finally {bootstrap.mockImplementation(previous);}
   });
 
   it("retains the WebGL drawing buffer used by review and save screenshots", async () => {
@@ -473,22 +479,6 @@ class FakeFs {
 
   isDir(mode: number) {return mode === 16384;}
   unlink(path: string) {this.files.delete(path);}
-}
-
-class MemoryCacheStorage {
-  private readonly cache = new MemoryCache();
-
-  async open() {return this.cache;}
-}
-
-class MemoryCache {
-  private readonly responses = new Map<string, Response>();
-
-  async delete(request: RequestInfo | URL) {return this.responses.delete(requestUrl(request));}
-  async match(request: RequestInfo | URL) {return this.responses.get(requestUrl(request))?.clone();}
-  async put(request: RequestInfo | URL, response: Response) {
-    this.responses.set(requestUrl(request), response.clone());
-  }
 }
 
 function requestUrl(input: RequestInfo | URL) {

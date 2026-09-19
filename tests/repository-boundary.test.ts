@@ -36,8 +36,8 @@ describe("independent package boundary", () => {
       "play-web", "ppsspp-web", "px68k-web", "ruffle-web", "scummvm-web", "tic80-web", "tyranoscript-web", "wasm4-web", "webmsx-web",
     ]);
     expect(retromRuntimeProviderDefinition.adapters.map((adapter) => adapter.abi).sort()).toEqual([
-      "butterscotch-checkpoint-v2", "easyrpg-save", "fake08-state-v1", "gbe-pokemini-host-v1", "j2me-rms", "kirikiri-kag-bookmark", "mkxp-state-compact",
-      "native-save", "np2kai-host-v1", "nxengine-host-v1", "ons-save", "openbor-host-v1", "play-host-v1", "ppsspp-host-v2", "px68k-host-v1", "ruffle-host-v1", "scummvm-host-v1", "tic80-pmem-v1", "tyranoscript-snapshot-v1", "wasm4-state-v1", "webmsx-host-v1",
+      "butterscotch-checkpoint-v2", "easyrpg-save", "fake08-state-v1", "gbe-pokemini-host-v1", "j2me-rms", "kirikiri-content-io-v1", "mkxp-content-io-v1",
+      "native-save", "np2kai-host-v1", "nxengine-host-v1", "ons-save", "openbor-host-v1", "play-host-v2", "ppsspp-host-v3", "px68k-host-v1", "ruffle-host-v1", "scummvm-host-v1", "tic80-pmem-v1", "tyranoscript-snapshot-v1", "wasm4-state-v1", "webmsx-host-v1",
     ]);
     expect((await readdir(join(root, "assets/runtime"))).sort()).toEqual(["butterscotch", "native"]);
     for (const asset of [
@@ -90,11 +90,6 @@ describe("independent package boundary", () => {
       repository: "https://github.com/retrom-project/OnscripterYuri",
       tag: "retrom-core-0.7.7beta-r4",
     }), expect.objectContaining({
-      adapterAbi: "kirikiri-kag-bookmark",
-      id: "kirikiri2",
-      repository: "https://github.com/retrom-project/kirikiroid2-web",
-      tag: "retrom-core-g338d2029f169-r2",
-    }), expect.objectContaining({
       adapterAbi: "butterscotch-checkpoint-v2",
       id: "butterscotch",
       repository: "https://github.com/retrom-project/Butterscotch",
@@ -111,7 +106,9 @@ describe("independent package boundary", () => {
       tag: "retrom-core-gca2600db8de4-r1",
     })]));
     const releaseIds = sources.upstreamReleases.map((release: { id: string }) => release.id).sort();
-    expect(releaseIds).toEqual(["butterscotch", "easyrpg", "fake08", "gbe_plus", "j2me", "kirikiri2", "mkxp", "np2kai", "nxengine", "onsyuri", "openbor", "play", "ppsspp", "px68k", "ruffle", "scummvm", "tic80", "tyranoscript", "wasm4", "webmsx"]);
+    expect(releaseIds).toEqual(["butterscotch", "easyrpg", "fake08", "gbe_plus", "j2me", "np2kai", "nxengine", "onsyuri", "openbor", "px68k", "ruffle", "scummvm", "tic80", "tyranoscript", "wasm4", "webmsx"]);
+    expect(sources.developmentInputs.map((input:{id:string})=>input.id).sort()).toEqual(["kirikiri2","mkxp","play","ppsspp"]);
+    for(const input of sources.developmentInputs){expect(input).not.toHaveProperty("tag");expect(input.upstreamCommit).toMatch(/^[0-9a-f]{40}$/u);}
     expect(await readdir(join(root, "scripts"))).not.toEqual(expect.arrayContaining([
       "build-kirikiri-core.sh", "build-ons-core.sh",
     ]));

@@ -1,92 +1,84 @@
-import {describe, expect, it, vi} from "vitest";
-import {ScummvmFiles, blockSize} from "./files.js";
-
+// @vitest-environment node
+import {afterEach, describe, expect, it, vi} from "vitest";
+import {contentSessionFixture} from "../../tests/content-session-fixture.js";
+import {ScummvmFiles, blockSize as B} from "./files.js";
 const digest = "a".repeat(64);
-const index = {schemaVersion: 1, files: [{path: "Folder/Game.dat", sizeBytes: 3 * blockSize, url: "https://games.test/content/data"}]};
-
-function network() {
-  return vi.fn(async (_url: string | URL | Request, options?: RequestInit) => {
-    const range = new Headers(options?.headers).get("Range")!;
-    const [, start, end] = /^bytes=(\d+)-(\d+)$/u.exec(range)!;
-    const bytes = new Uint8Array(Number(end) - Number(start) + 1).fill(Number(start) / blockSize + 1);
-    return new Response(bytes, {status: 206, headers: {"Content-Range": `bytes ${start}-${end}/${3 * blockSize}`}});
+const index = {schemaVersion: 1, files: [{path: "Folder/Game.dat", sizeBytes: 3 * B, url: "https://games.test/content/data"}]};
+const cleanups: (() => Promise<void>)[] = [];
+function fixture() {
+  const content = contentSessionFixture("https://games.test"); cleanups.push(content.close);
+  const fetcher = vi.fn<typeof fetch>(async (url, options) => {
+    const [start, end] = new Headers(options?.headers).get("Range")!.slice(6).split("-").map(Number);
+    const response = new Response(new Uint8Array(end - start + 1).fill(start / B + 1), {status: 206, headers: {
+      "Content-Range": `bytes ${start}-${end}/${3 * B}`, ETag: '"immutable-index-entry"'}});
+    Object.defineProperty(response, "url", {value: String(url)}); return response;
   });
+  vi.stubGlobal("fetch", fetcher);
+  return {...content, fetcher, make: (value = index, identity = digest) => new ScummvmFiles(value, identity, content.session)};
 }
-
-function cache() {
-  const values = new Map<string, Response>();
-  return {
-    match: vi.fn(async (key: string) => values.get(key)?.clone()),
-    put: vi.fn(async (key: string, value: Response) => {values.set(key, value.clone());}),
-    delete: vi.fn(async (key: string) => values.delete(key)),
-  };
-}
-
-describe("ScummVM seekable game files", () => {
-  it("calls a native fetch function without binding the file system as its receiver", async () => {
-    const response = network();
-    const fetcher: typeof fetch = async function (this: unknown, input, init) {
-      if (this !== undefined) {throw new TypeError("Illegal invocation");}
-      return response(input, init);
-    };
-    const files = new ScummvmFiles(index, digest, fetcher, null, undefined, "/data");
-    expect(files.list("/data")).toEqual(["Folder"]);
-    expect(await files.read("/data/Folder/Game.dat", 0, 1)).toEqual(new Uint8Array([1]));
+afterEach(async () => {await Promise.all(cleanups.splice(0).map(close => close())); vi.unstubAllGlobals();});
+describe("ScummVM public content files", () => {
+  it("[IO-01] UNIT/scummvm [IO-02] UNIT/scummvm stat/list do not open content and lazy reads retain index semantics", async () => {
+    const f = fixture(), files = f.make();
+    expect(files.stat("/game/Folder")).toBe(-1); expect(files.stat("/game/nope")).toBe(-2); expect(files.list("/game")).toEqual(["Folder"]);
+    expect(f.files.size).toBe(0); expect(f.fetcher).not.toHaveBeenCalled();
+    expect(await files.read("/game/Folder/Game.dat", B - 2, 4)).toEqual(new Uint8Array([1, 1, 2, 2]));
+    expect(f.fetcher.mock.calls.map(([, options]) => new Headers(options?.headers).get("Range")))
+      .toEqual([`bytes=0-${B - 1}`, `bytes=${B}-${2 * B - 1}`]);
+    expect(new Headers(f.fetcher.mock.calls[1][1]?.headers).get("If-Match")).toBe('"immutable-index-entry"');
+    await files.close(); expect(f.files.size).toBe(0); await expect(files.read("/game/Folder/Game.dat", 0, 0)).rejects.toThrow("ABORTED");
   });
-  it("indexes directories without downloading content and reads bounded blocks across a seek", async () => {
-    const fetcher = network();
-    const files = new ScummvmFiles(index, digest, fetcher, null);
-    expect(files.stat("/game/Folder")).toBe(-1);
-    expect(files.list("/game")).toEqual(["Folder"]);
-    expect(fetcher).not.toHaveBeenCalled();
-    const bytes = await files.read("/game/Folder/Game.dat", blockSize - 2, 4);
-    expect([...bytes]).toEqual([1, 1, 2, 2]);
-    expect(fetcher).toHaveBeenCalledTimes(2);
-    expect(fetcher.mock.calls.map((call) => new Headers(call[1]?.headers).get("Range")))
-      .toEqual([`bytes=0-${blockSize - 1}`, `bytes=${blockSize}-${2 * blockSize - 1}`]);
+  it("[IO-06] UNIT/scummvm [IO-21] UNIT/scummvm shared public cache separates different index identities", async () => {
+    const f = fixture(), first = f.make(), second = f.make(), foreign = f.make(index, "b".repeat(64));
+    await first.read("/game/Folder/Game.dat", 4, 4); await second.read("/game/Folder/Game.dat", 0, 20);
+    expect(f.fetcher).toHaveBeenCalledTimes(1);
+    await foreign.read("/game/Folder/Game.dat", 0, 1); expect(f.fetcher).toHaveBeenCalledTimes(2);
+    await Promise.all([first.close(), second.close(), foreign.close()]);
   });
-
-  it("reuses persistent blocks in another launch while separating different content identities", async () => {
-    const fetcher = network();
-    const store = cache();
-    await new ScummvmFiles(index, digest, fetcher, store).read("/game/Folder/Game.dat", 4, 4);
-    await new ScummvmFiles(index, digest, fetcher, store).read("/game/Folder/Game.dat", 0, 20);
-    expect(fetcher).toHaveBeenCalledTimes(1);
-    await new ScummvmFiles(index, "b".repeat(64), fetcher, store).read("/game/Folder/Game.dat", 0, 1);
-    expect(fetcher).toHaveBeenCalledTimes(2);
+  it.each(["../outside", "/absolute", "folder/../game", "Folder//game", "Folder\\game"])("rejects unsafe path %s", path => {
+    const f = fixture(); expect(() => f.make({schemaVersion: 1, files: [{...index.files[0], path}]})).toThrow("SCUMMVM_INDEX_INVALID");
   });
-
-  it("rejects servers ignoring Range before reading a large response body", async () => {
-    const response = new Response(new Uint8Array(1), {status: 200});
-    const read = vi.spyOn(response, "arrayBuffer");
-    const fetcher = vi.fn(async () => response);
-    await expect(new ScummvmFiles(index, digest, fetcher, null).read("/game/Folder/Game.dat", 0, 1))
-      .rejects.toThrow("SCUMMVM_RANGE_INVALID");
-    expect(read).not.toHaveBeenCalled();
+  it("rejects case collisions and files colliding with directories", () => {
+    const f = fixture();
+    for (const path of ["folder/game.dat", "folder"]) {expect(() => f.make({schemaVersion: 1, files: [...index.files, {...index.files[0], path}]})).toThrow("SCUMMVM_INDEX_INVALID");}
   });
-
-  it("continues network reads if persistent storage fails", async () => {
-    const fetcher = network();
-    const store = cache();
-    store.match.mockRejectedValue(new Error("unavailable"));
-    store.put.mockRejectedValue(new Error("quota"));
-    expect(await new ScummvmFiles(index, digest, fetcher, store).read("/game/Folder/Game.dat", 0, 1))
-      .toEqual(new Uint8Array([1]));
-  });
-
-  it.each(["../outside", "/absolute", "folder/../game", "Folder//game", "Folder\\game"])("rejects unsafe paths: %s", (path) => {
-      expect(() => new ScummvmFiles({schemaVersion: 1, files: [{...index.files[0], path}]}, digest, network(), null))
-        .toThrow("SCUMMVM_INDEX_INVALID");
+  it("[X-27] UNIT/scummvm game blocks require a strong first ETag", async () => {
+    const f = fixture(); f.fetcher.mockImplementation(async url => {
+      const response = new Response(new Uint8Array(B), {status: 206, headers: {"Content-Range": `bytes 0-${B - 1}/${3 * B}`}});
+      Object.defineProperty(response, "url", {value: String(url)}); return response;
     });
-
-  it("rejects short, oversized and mismatched Range responses", async () => {
-    for (const response of [
-      new Response(new Uint8Array(2), {status: 206, headers: {"Content-Range": `bytes 0-${blockSize - 1}/${3 * blockSize}`}}),
-      new Response(new Uint8Array(blockSize + 1), {status: 206, headers: {"Content-Range": `bytes 0-${blockSize - 1}/${3 * blockSize}`}}),
-      new Response(new Uint8Array(blockSize), {status: 206, headers: {"Content-Range": `bytes 1-${blockSize}/${3 * blockSize}`}}),
-    ]) {
-      await expect(new ScummvmFiles(index, digest, async () => response, null).read("/game/Folder/Game.dat", 0, 1))
-        .rejects.toThrow("SCUMMVM_RANGE_INVALID");
-    }
+    await expect(f.make().read("/game/Folder/Game.dat", 0, 1)).rejects.toThrow("IDENTITY_CHANGED");
+  });
+  it("[X-27] UNIT/scummvm only preverified CORE_ASSET data can read without an ETag", async () => {
+    const f = fixture(); f.fetcher.mockImplementation(async url => {
+      const response = new Response(new Uint8Array(B).fill(17), {status: 206, headers: {"Content-Range": `bytes 0-${B - 1}/${3 * B}`}});
+      Object.defineProperty(response, "url", {value: String(url)}); return response;
+    });
+    const files = new ScummvmFiles(index, digest, f.session, undefined, "/data", new Map([["Folder/Game.dat", "b".repeat(64)]]));
+    expect(await files.read("/data/Folder/Game.dat", 0, 1)).toEqual(new Uint8Array([17])); await files.close();
+  });
+  it("[IO-03] UNIT/scummvm empty files and exact EOF reads do not fetch while invalid bounds fail", async () => {
+    const f = fixture(), files = f.make({schemaVersion: 1, files: [{...index.files[0], sizeBytes: 0}]});
+    expect(files.stat("/game/Folder/Game.dat")).toBe(0);
+    expect(await files.read("/game/Folder/Game.dat", 0, 0)).toEqual(new Uint8Array());
+    await expect(files.read("/game/Folder/Game.dat", 1, 0)).rejects.toThrow("BOUNDS");
+    await expect(files.read("/game/Folder/Game.dat", 0, 1)).rejects.toThrow("BOUNDS");
+    const normal = f.make(); expect(await normal.read("/game/Folder/Game.dat", 3 * B, 0)).toEqual(new Uint8Array());
+    expect(f.fetcher).not.toHaveBeenCalled(); await files.close(); await normal.close();
+  });
+  it("[ST-17] UNIT/scummvm URL renewal reuses identity while logical paths remain separate", async () => {
+    const f = fixture(), first = f.make(); await first.read("/game/Folder/Game.dat", 0, 1);
+    const renewed = f.make({schemaVersion: 1, files: [{...index.files[0], url: `${index.files[0].url}?authorization=renewed`}]});
+    expect(await renewed.read("/game/Folder/Game.dat", 0, 1)).toEqual(new Uint8Array([1]));
+    expect(f.fetcher).toHaveBeenCalledTimes(1);
+    const foreign = f.make({schemaVersion: 1, files: [{...index.files[0], path: "other.dat"}]});
+    await foreign.read("/game/other.dat", 0, 1); expect(f.fetcher).toHaveBeenCalledTimes(2);
+    await Promise.all([first.close(), renewed.close(), foreign.close()]);
+  });
+  it("[X-30] UNIT/scummvm-existing-read-limit preserves the existing block-sized native facade", async () => {
+    const f = fixture(), files = f.make();
+    await expect(files.read("/game/Folder/Game.dat", 0, 17 * 1024 * 1024)).rejects.toThrow("BOUNDS");
+    expect(f.fetcher).not.toHaveBeenCalled(); expect((await files.read("/game/Folder/Game.dat", 0, B)).length).toBe(B);
+    await files.close();
   });
 });

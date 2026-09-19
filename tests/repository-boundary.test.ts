@@ -50,8 +50,8 @@ describe("independent package boundary", () => {
 
   it("ships the current license closure in the aggregate release", async () => {
     const script = await readFile(join(root, "scripts/build-release.mjs"), "utf8");
-    expect(script).toContain('["CHANGELOG.md", "LICENSE", "THIRD_PARTY_NOTICES.md"]');
-    expect(script).toContain('"CHANGELOG.md", "LICENSE", "THIRD_PARTY_NOTICES.md", "library/index.js"');
+    expect(script).toContain('["LICENSE", "THIRD_PARTY_NOTICES.md"]');
+    expect(script).toContain('"LICENSE", "THIRD_PARTY_NOTICES.md", "library/index.js"');
     expect(script).toContain("await rm(stage, { recursive: true, force: true })");
     expect(script).not.toContain("sourceBuilds");
   });

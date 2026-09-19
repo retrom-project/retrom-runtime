@@ -8,7 +8,6 @@
   "files": [
     "dist",
     "assets",
-    "CHANGELOG.md",
     "README.md",
     "LICENSE",
     "THIRD_PARTY_NOTICES.md"

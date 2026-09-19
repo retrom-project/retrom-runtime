@@ -80,7 +80,7 @@ npm run package:check
 - 完成一个功能或 bug 修复后单独提交；不要混入无关格式化。
 - PR 到 `master` 必须通过 `.github/workflows/quality.yml`；该门禁会聚合并验证固定 fork Release，但不得编译核心。
 - `v*` tag 由 `.github/workflows/release.yml` 构建 GitHub Release；tag 不移动、不覆盖。`vX.Y.Z-rc.N` 可从功能分支发布 GitHub prerelease，稳定 tag 必须已进入 `master`；两者都执行相同代码和聚合门禁。
-- `providerId + targetId` 是长期稳定的 Target 身份。Provider Bundle 是单次部署与 Launch 的不可变产物，不能成为 Game、Review 或 Save 的兼容身份。破坏 Provider Module、Launch Envelope 消费、checkpoint 格式或 Target 行为时必须升级相应版本并在 CHANGELOG 说明。
+- `providerId + targetId` 是长期稳定的 Target 身份。Provider Bundle 是单次部署与 Launch 的不可变产物，不能成为 Game、Review 或 Save 的兼容身份。破坏 Provider Module、Launch Envelope 消费、checkpoint 格式或 Target 行为时必须升级相应版本并在提交说明中记录。
 - checkpoint 格式变化时更新 `writeFormat`，并只在真实验证后把旧值保留在 `readFormats`。宿主只向前激活更高 Provider 版本；旧存档格式不可读时禁用恢复，不保留旧 Bundle 或设计运行时回滚。
 
 ## 与 Retrom 的本地联调
@@ -96,19 +96,7 @@ npm run package:check
 
 ## 上游 fork 维护
 
-- J2ME 原创集成层 `retrom-project/j2me-web` 使用 `main` 与 annotated `vX.Y.Z`。其三个支持 fork
-  使用 `main` 与 `j2me-web-<upstream>-<revision>` annotated tag；固定输入、许可与发布顺序由该核心的
-  `docs/MAINTENANCE.md` 维护。以下 upstream 镜像与 `retrom/<baseline>` 规则适用于其余核心。
-
-- `retrom-project/Player` 的 `master`、`retrom-project/mkxp-z-libretro-emscripten` 的 `main`、
-  `retrom-project/OnscripterYuri` 的 `master`、`retrom-project/kirikiroid2-web` 的 `web`、
-  `retrom-project/Butterscotch` 的 `main`、`retrom-project/tyranoscript` 的 `master` 与 `retrom-project/wasm4` 的 `main`
-  只做上游 fast-forward 镜像，不含 Retrom 修改；当前维护与默认分支分别是
-  `retrom/0.8.1.1`、`retrom/f2efc98`、`retrom/0.7.7beta`、
-  `retrom/g338d2029f169`、`retrom/gae2602f1f83c`、`retrom/gc8dbfd492afd` 与
-  `retrom/gca2600db8de4`。各 fork 根目录
-  `AGENTS.md` 和 `retrom-fork.json` 是镜像、维护基线与 Release 资产的
-  事实源。
+- 各 fork 根目录的 `AGENTS.md` 和 `retrom-fork.json` 是镜像、维护基线与 Release 资产的事实源。具体的 fork 仓库、上游镜像分支与当前维护分支信息参见各 fork 仓库自身的文档。
 - fork 工作分支只允许 `fix/*`、`feat/*`、`build/*` 与
   `sync/upstream-*`，并从当前 `retrom/<baseline>` 创建、合并后删除；
   不得把补丁并入移动的上游镜像，不得创建 `runtime-clean`、平行版本

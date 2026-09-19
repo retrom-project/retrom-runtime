@@ -2,21 +2,9 @@
 
 Host-independent browser library and release bundle for retro game runtimes. It owns runtime lifecycle, adapters, checkpoint codecs, bridge assets and pinned core release inputs. It does not know about a host application's users, database, review flow, storage or HTTP API.
 
-## Supported Targets
+## Documentation
 
-The runtime currently includes the following targets across two Providers (`retrom-runtime` and `emulatorjs`):
-
-- **RPG Maker** — EasyRPG (2000/2003), mkxp (XP/VX/VX Ace), native Web (MV/MZ)
-- **ONScripterYuri** — ONS visual novel games
-- **KiriKiri2** — KAG-based visual novel games
-- **Butterscotch** — GameMaker projects
-- **TyranoScript** — browser TyranoScript projects
-- **WASM-4** — fantasy console carts
-- **Java ME** — J2ME JAR MIDlets
-- **ScummVM** — point-and-click adventure games (105 engine plugins)
-- **EmulatorJS cores** — SNES (bsnes/Snes9x), Mega Drive, PSP (PPSSPP), PS2 (Play!), Dreamcast (Flycast), PC-98 (NP2kai), MSX (WebMSX), Pokémon Mini (GBE+), Uzebox, Intellivision, Vectrex, PC-88 (QUASI88), NeoCD, Flash (Ruffle), OpenBOR, PX68K, TIC-80, FAKE-08, Cave Story (NXEngine), and various home computers (Fuse, Gearcoleco, PrBoom, PUAE, VICE, Virtual Jaguar, CrocoDS, Caprice32, EightyOne, CD-i, PET, Plus/4, C64)
-
-For detailed documentation on individual targets, see the [docs](docs/) directory.
+Supported targets, Provider Module architecture and core integration guides are maintained in the [docs](docs/) directory.
 
 ## Provider Module V1
 

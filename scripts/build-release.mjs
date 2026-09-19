@@ -42,7 +42,7 @@ await rm(stage, { recursive: true, force: true });
 await rm(new URL("retrom-runtime-release.json", output), {force: true});
 await mkdir(stage, { recursive: true });
 await cp(new URL("../dist", import.meta.url), new URL("library", stage), { recursive: true });
-for (const document of ["CHANGELOG.md", "LICENSE", "THIRD_PARTY_NOTICES.md"]) {
+for (const document of ["LICENSE", "THIRD_PARTY_NOTICES.md"]) {
   await publish(await readFile(new URL(`../${document}`, import.meta.url)), new URL(document, stage));
 }
 for (const asset of sources.localAssets) {
@@ -143,14 +143,7 @@ function assertFormalReleaseEnvironment(commit, packageVersion) {
     process.env.GITHUB_SHA !== commit) {throw new Error("PROVIDER_FORMAL_RELEASE_IDENTITY_INVALID");}
 }
 if (!providerOnly) {
-  const archive = `retrom-runtime-${sources.packageVersion}.tar.gz`;
-  const tar = spawnSync("tar", ["--sort=name", "--mtime=UTC 2020-01-01", "--owner=0", "--group=0", "--numeric-owner", "-czf", archive, "-C", "stage", "."], {
-    cwd: new URL("../release", import.meta.url),
-    stdio: "inherit",
-  });
-  if (tar.status !== 0) {throw new Error("RELEASE_ARCHIVE_FAILED");}
-  const npmPackage = createNpmPackage(sources.packageVersion);
-  console.log(`release: ${archive}, ${npmPackage}`);
+  console.log("release: provider archives ready");
 }
 
 async function verifyBuiltProvider(provider) {
@@ -170,21 +163,6 @@ function releaseCommit() {
   const value = result.stdout?.trim();
   if (result.status !== 0 || !/^[0-9a-f]{40}$/u.test(value)) {throw new Error("RELEASE_COMMIT_UNAVAILABLE");}
   return value;
-}
-
-function createNpmPackage(version) {
-  const result = spawnSync("npm", ["pack", "--pack-destination", "release"], {
-    cwd: root,
-    encoding: "utf8",
-  });
-  if (result.status !== 0) {
-    process.stderr.write(result.stderr ?? "");
-    throw new Error("NPM_PACKAGE_FAILED");
-  }
-  const generated = result.stdout.trim().split(/\r?\n/u).at(-1);
-  const expected = `xxxsen-retrom-runtime-${version}.tgz`;
-  if (generated !== expected) {throw new Error("NPM_PACKAGE_NAME_INVALID");}
-  return expected;
 }
 
 async function download(url, maximum) {
@@ -214,7 +192,7 @@ async function publish(contents, target) {
 }
 
 async function collectRecords(value, directory, developmentOutputs) {
-  const paths = ["CHANGELOG.md", "LICENSE", "THIRD_PARTY_NOTICES.md", "library/index.js", "library/index.d.ts",
+  const paths = ["LICENSE", "THIRD_PARTY_NOTICES.md", "library/index.js", "library/index.d.ts",
     ...value.localAssets.map((asset) => asset.output), ...developmentOutputs,
     ...value.upstreamReleases.flatMap((release) => release.assets.map((asset) => asset.output))].sort();
   return Promise.all(paths.map(async (path) => {

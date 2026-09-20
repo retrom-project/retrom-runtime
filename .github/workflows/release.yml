@@ -23,15 +23,14 @@ jobs:
       - name: Validate release identity
         run: |
           set -euo pipefail
-          package_version=$(node -p "require('./package.json').version")
-          test "$GITHUB_REF_NAME" = "v${package_version}"
+          node --input-type=module -e 'import {versionFromTag} from "./scripts/release-version.mjs"; versionFromTag(process.env.GITHUB_REF_NAME)'
           remote_tag_ref="refs/retrom-release/$GITHUB_REF_NAME"
           git fetch origin "refs/tags/$GITHUB_REF_NAME:$remote_tag_ref"
           test "$(git cat-file -t "$remote_tag_ref")" = tag
           test "$(git rev-list -n 1 "$remote_tag_ref")" = "$GITHUB_SHA"
           test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
           git fetch --no-tags origin '+refs/heads/master:refs/remotes/origin/master'
-          if [[ "$package_version" =~ -rc\.[1-9][0-9]*$ ]]; then
+          if [[ "$GITHUB_REF_NAME" =~ -rc\.[1-9][0-9]*$ ]]; then
             echo "Publishing an immutable release candidate; stable branch promotion remains separate."
           else
             git merge-base --is-ancestor "$GITHUB_SHA" origin/master

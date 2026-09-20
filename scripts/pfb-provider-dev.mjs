@@ -68,7 +68,7 @@ export async function buildPFBProviderDev(input) {
     for (const file of files.filter((file) => file.path.startsWith("assets/"))) {
       assetIndex[file.path] = {sha256: file.sha256, sizeBytes: file.sizeBytes};
     }
-    await buildProviderClient({assetIndex, pfbCoreInputs, entryPoint: input.entryPoint, outfile: clientPath});
+    await buildProviderClient({providerVersion: manifest.providerVersion, assetIndex, pfbCoreInputs, entryPoint: input.entryPoint, outfile: clientPath});
     files.push(fileDescriptor("client.mjs", await readRegular(clientPath)));
     files.sort((left, right) => Buffer.from(left.path).compare(Buffer.from(right.path)));
     const descriptor = {

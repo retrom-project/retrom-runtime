@@ -13,7 +13,7 @@ import {
   sourceTreeSha256,
 } from "../scripts/provider-release.mjs";
 
-const providers = [provider("emulatorjs", "1.0.0"), provider("retrom-runtime", "0.12.0")];
+const providers = [provider("emulatorjs", "0.12.0"), provider("retrom-runtime", "0.12.0")];
 
 describe("Provider candidate and formal release identity", () => {
   it("uses the same working-tree identity implementation for the PFB candidate", async () => {
@@ -39,31 +39,39 @@ describe("Provider candidate and formal release identity", () => {
     expect(metadata.providers.map((entry) => entry.providerId)).toEqual(["emulatorjs", "retrom-runtime"]);
   });
 
-  it("pins formal metadata only to the exact package tag and immutable commit", () => {
+  it("pins formal metadata only to the exact GitHub tag and immutable commit", () => {
     const build = createProviderBuildMetadata(providers, "a".repeat(64));
     const release = pinProviderReleaseMetadata(build, {
       commit: "b".repeat(40), repository: "https://github.com/retrom-project/retrom-runtime", tag: "v0.12.0",
-    }, "0.12.0");
+    });
     expect(release.release).toEqual({
       commit: "b".repeat(40), repository: "https://github.com/retrom-project/retrom-runtime", tag: "v0.12.0",
     });
     expect(release.providers).toEqual(build.providers);
     expect(() => pinProviderReleaseMetadata(build, {
       commit: "b".repeat(40), repository: "https://github.com/retrom-project/retrom-runtime", tag: "v0.11.2",
-    }, "0.12.0")).toThrow("PROVIDER_RELEASE_INVALID");
+    })).toThrow("PROVIDER_RELEASE_INVALID");
     expect(() => pinProviderReleaseMetadata(build, {
       commit: "HEAD", repository: "https://github.com/retrom-project/retrom-runtime", tag: "v0.12.0",
-    }, "0.12.0")).toThrow("PROVIDER_RELEASE_INVALID");
+    })).toThrow("PROVIDER_RELEASE_INVALID");
   });
 
-  it("pins an RC to its exact immutable package tag", () => {
+  it("rejects a release whose EmulatorJS version differs from its tag", () => {
+    const build = createProviderBuildMetadata([provider("emulatorjs", "2.21.0"),
+      provider("retrom-runtime", "0.46.0")], "a".repeat(64));
+    expect(() => pinProviderReleaseMetadata(build, {commit: "b".repeat(40),
+      repository: "https://github.com/retrom-project/retrom-runtime", tag: "v0.46.0"}))
+      .toThrow("PROVIDER_RELEASE_INVALID");
+  });
+
+  it("pins an RC to its exact immutable GitHub tag", () => {
     const version = "0.19.0-rc.1";
-    const build = createProviderBuildMetadata([provider("emulatorjs", "2.4.1-rc.3"),
+    const build = createProviderBuildMetadata([provider("emulatorjs", version),
       provider("retrom-runtime", version)], "a".repeat(64));
     const release = {commit: "b".repeat(40), repository: "https://github.com/retrom-project/retrom-runtime",
       tag: `v${version}`};
-    expect(pinProviderReleaseMetadata(build, release, version).release).toEqual(release);
-    expect(() => pinProviderReleaseMetadata(build, {...release, tag: "v0.19.0-rc.2"}, version))
+    expect(pinProviderReleaseMetadata(build, release).release).toEqual(release);
+    expect(() => pinProviderReleaseMetadata(build, {...release, tag: "v0.19.0-rc.2"}))
       .toThrow("PROVIDER_RELEASE_INVALID");
   });
 

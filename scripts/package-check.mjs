@@ -5,7 +5,7 @@ const root = new URL("../", import.meta.url);
 await rejectRetiredCandidateDeclaration(root);
 const sources = await loadProviderSources(root);
 const packageJson = JSON.parse(await readFile(new URL("package.json", root), "utf8"));
-if (packageJson.version !== sources.packageVersion) {throw new Error("PACKAGE_VERSION_MISMATCH");}
+if ("version" in packageJson || "packageVersion" in sources) {throw new Error("PROVIDER_VERSION_MUST_COME_FROM_TAG");}
 await Promise.all([
   access(new URL("dist/index.js", root)),
   access(new URL("dist/index.d.ts", root)),

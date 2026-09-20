@@ -1,3 +1,4 @@
+import {buildVersion} from "./release-version.mjs";
 import {validEmulatorJsDevelopmentSource} from "./emulatorjs-development-forks.mjs";
 import {currentInput, materializeEmulatorJsProviderInput} from "./emulatorjs-provider-input.mjs";
 import {asOpenBORCandidateSource, stageOpenBORCandidate} from "./openbor-candidate.mjs";
@@ -36,6 +37,8 @@ const devReleaseOverrides = parseDevReleaseOverrides(
   formalBuild,
 );
 const commit = releaseCommit();
+const version = buildVersion();
+if (formalBuild) {assertFormalReleaseEnvironment(commit, version);}
 const stage = new URL("../release/stage/", import.meta.url);
 const output = new URL("../release/", import.meta.url);
 await rm(stage, { recursive: true, force: true });
@@ -122,24 +125,24 @@ const provider = await buildCurrentProviderBuild({
 });
 await verifyBuiltProvider(provider);
 if (formalBuild) {
-  assertFormalReleaseEnvironment(commit, sources.packageVersion);
+  assertFormalReleaseEnvironment(commit, version);
   const metadata = {
     schemaVersion: 1,
     repository: "https://github.com/retrom-project/retrom-runtime",
-    tag: `v${sources.packageVersion}`,
+    tag: `v${version}`,
     commit,
-    version: sources.packageVersion,
+    version: version,
     publicApiVersion: sources.publicApiVersion,
     files: records,
   };
   await writeFile(new URL("retrom-runtime-release.json", output), `${JSON.stringify(metadata, null, 2)}\n`);
   await pinCurrentProviderRelease({release: {
-    commit, repository: "https://github.com/retrom-project/retrom-runtime", tag: `v${sources.packageVersion}`,
+    commit, repository: "https://github.com/retrom-project/retrom-runtime", tag: `v${version}`,
   }});
 }
 
-function assertFormalReleaseEnvironment(commit, packageVersion) {
-  if (process.env.GITHUB_REF_TYPE !== "tag" || process.env.GITHUB_REF_NAME !== `v${packageVersion}` ||
+function assertFormalReleaseEnvironment(commit, version) {
+  if (process.env.GITHUB_REF_TYPE !== "tag" || process.env.GITHUB_REF_NAME !== `v${version}` ||
     process.env.GITHUB_SHA !== commit) {throw new Error("PROVIDER_FORMAL_RELEASE_IDENTITY_INVALID");}
 }
 if (!providerOnly) {
@@ -147,11 +150,10 @@ if (!providerOnly) {
 }
 
 async function verifyBuiltProvider(provider) {
-  const {emulatorJsProviderDefinition} = await import("../dist/providers/emulatorjs/catalog.js");
   const retrom = provider.metadata.providers.find((entry) => entry.providerId === "retrom-runtime");
   const emulatorjs = provider.metadata.providers.find((entry) => entry.providerId === "emulatorjs");
-  if (retrom?.providerVersion !== sources.packageVersion ||
-    emulatorjs?.providerVersion !== emulatorJsProviderDefinition.providerVersion) {
+  if (retrom?.providerVersion !== version ||
+    emulatorjs?.providerVersion !== version) {
     throw new Error("PROVIDER_RELEASE_INVALID");
   }
 }

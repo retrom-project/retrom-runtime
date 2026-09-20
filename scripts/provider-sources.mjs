@@ -20,9 +20,8 @@ export async function loadProviderSources(root) {
 export function validateProviderSources(sources) {
   if (sources?.schemaVersion !== 1 || sources.publicApiVersion !== 2 ||
     sources.packageName !== "@xxxsen/retrom-runtime" ||
-    !/^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?$/u.test(sources.packageVersion) ||
-    !["localAssets,packageName,packageVersion,publicApiVersion,schemaVersion,upstreamReleases",
-      "developmentInputs,localAssets,packageName,packageVersion,publicApiVersion,schemaVersion,upstreamReleases"]
+    !["localAssets,packageName,publicApiVersion,schemaVersion,upstreamReleases",
+      "developmentInputs,localAssets,packageName,publicApiVersion,schemaVersion,upstreamReleases"]
       .includes(Object.keys(sources).sort().join(",")) ||
     !Array.isArray(sources.upstreamReleases) || !Array.isArray(sources.localAssets)) {
     throw new Error("PROVIDER_SOURCES_INVALID");

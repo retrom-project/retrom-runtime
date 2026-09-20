@@ -1,3 +1,4 @@
+import {providerVersion} from "../../provider/version.js";
 import {emulatorContentPolicies} from "../../provider/content-policies.js";
 import {storageAdapters} from "../../provider/checkpoint-storage.js";
 import {
@@ -209,7 +210,7 @@ export const emulatorJsProviderDefinition = defineProvider({
   adapters: storageAdapters(adapters),
   providerApiVersion: 1,
   providerId: "emulatorjs",
-  providerVersion: "2.21.1",
+  providerVersion,
   targets,
 });
 

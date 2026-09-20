@@ -1,9 +1,11 @@
 # Changelog
 
 
-## 0.45.1
+## 0.46.0
 
-- Advance the EmulatorJS Provider to 2.21.1 because shared Content I/O prefetch changes its bundle bytes. This restores forward-only upgrades from v0.44.0; v0.45.0 reused EmulatorJS 2.21.0 with a different bundle digest and cannot be activated over an existing installation.
+- Derive both Provider versions exclusively from the immutable GitHub release tag, removing separately maintained package/source/catalog versions. Both archives, manifests and client exports use 0.46.0 for tag v0.46.0.
+- Keep untagged builds explicitly developmental and inject the installed base version into PFB clients. Reject formal metadata with inconsistent Provider versions.
+- Replace the old EmulatorJS 2.x version sequence. Retrom development data and active Provider state require an archived reset; downgrade protection remains enabled and no old-data migration is provided.
 
 ## 0.45.0
 

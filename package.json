@@ -1,6 +1,5 @@
 {
   "name": "@xxxsen/retrom-runtime",
-  "version": "0.45.1",
   "description": "Host-independent browser game runtimes with a shared lifecycle and checkpoint contract",
   "type": "module",
   "license": "MIT",
@@ -58,5 +57,6 @@
     "typescript": "5.9.3",
     "typescript-eslint": "8.66.0",
     "vitest": "4.1.8"
-  }
+  },
+  "private": true
 }

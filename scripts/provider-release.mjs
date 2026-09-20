@@ -1,3 +1,4 @@
+import {buildVersion, versionFromTag} from "./release-version.mjs";
 import {createHash} from "node:crypto";
 import {spawnSync} from "node:child_process";
 import {lstatSync, readFileSync, readlinkSync} from "node:fs";
@@ -31,8 +32,9 @@ export async function buildCurrentProviderBuild(input = {}) {
     import("../dist/provider/contract.js"),
   ]);
   await rm(outputRoot, {force: true, recursive: true});
-  const retromManifest = projectProviderManifest(retromRuntimeProviderDefinition);
-  const emulatorManifest = projectProviderManifest(emulatorJsProviderDefinition);
+  const providerVersion = buildVersion();
+  const retromManifest = projectProviderManifest({...retromRuntimeProviderDefinition, providerVersion});
+  const emulatorManifest = projectProviderManifest({...emulatorJsProviderDefinition, providerVersion});
   validateProviderManifest(retromManifest);
   validateProviderManifest(emulatorManifest);
   const retrom = await buildRetromRuntimeProviderBundle({
@@ -102,11 +104,10 @@ export function createProviderBuildMetadata(providers, sourceTreeSha256) {
   return {providers: sortedProviders, schemaVersion: 1, sourceTreeSha256};
 }
 
-export function pinProviderReleaseMetadata(build, release, packageVersion) {
+export function pinProviderReleaseMetadata(build, release) {
   if (!exactKeys(build, ["providers", "schemaVersion", "sourceTreeSha256"]) || build.schemaVersion !== 1 ||
-    !/^[0-9a-f]{64}$/u.test(build.sourceTreeSha256) || !validRelease(release) ||
-    release.tag !== `v${packageVersion}` || !build.providers.some((provider) =>
-      provider.providerId === "retrom-runtime" && provider.providerVersion === packageVersion)) {invalid();}
+    !/^[0-9a-f]{64}$/u.test(build.sourceTreeSha256) || !validRelease(release) || !Array.isArray(build.providers) ||
+    !build.providers.every((provider) => provider.providerVersion === versionFromTag(release.tag))) {invalid();}
   const verified = createProviderBuildMetadata(build.providers, build.sourceTreeSha256);
   return {providers: verified.providers, release: {...release}, schemaVersion: 1};
 }
@@ -114,9 +115,8 @@ export function pinProviderReleaseMetadata(build, release, packageVersion) {
 export async function pinCurrentProviderRelease(input = {}) {
   const outputRoot = input.outputRoot ?? join(root, "release", "providers");
   const build = (await checkCurrentProviderBuild({outputRoot})).metadata;
-  const packageVersion = JSON.parse(await readFile(join(root, "package.json"), "utf8").catch(invalid)).version;
-  const release = input.release ?? {commit: releaseCommit(), repository, tag: `v${packageVersion}`};
-  const metadata = pinProviderReleaseMetadata(build, release, packageVersion);
+  const release = input.release ?? {commit: releaseCommit(), repository, tag: process.env.GITHUB_REF_NAME};
+  const metadata = pinProviderReleaseMetadata(build, release);
   await writeFile(join(outputRoot, releaseMetadataName), `${JSON.stringify(metadata, null, 2)}\n`);
   return metadata;
 }

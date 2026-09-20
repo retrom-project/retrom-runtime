@@ -24,7 +24,7 @@ export function launchEnvelope(): LaunchEnvelopeV1 {
       moduleUrl: `/runtime/providers/emulatorjs/${bundleDigest}/client.mjs`,
       providerApiVersion: 1,
       providerId: "emulatorjs",
-      providerVersion: "2.21.1",
+      providerVersion: "0.0.0-dev",
       runtimeBaseUrl: `/runtime/providers/emulatorjs/${bundleDigest}/`,
       targetId: "fceumm",
     },

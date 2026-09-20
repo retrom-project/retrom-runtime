@@ -1,6 +1,6 @@
 import {abortError, checkSignal} from "./abort.js";
 import {ContentIOError, fail, toContentIOError} from "./errors.js";
-export type Priority = "FOREGROUND" | "MATERIALIZE";
+export type Priority = "FOREGROUND" | "MATERIALIZE" | "PREFETCH";
 export type ScheduleOptions = {signal?: AbortSignal; timeoutMs?: number; priority?: Priority; whole?: boolean};
 type Waiter<Value> = {deliver: (value: Value) => void; reject: (error: ContentIOError) => void; clean: () => void};
 type Task<Value> = {key: string; priority: Priority; whole: boolean; controller: AbortController;
@@ -10,6 +10,7 @@ export class BlockScheduler<Value> {
   private readonly tasks = new Map<string, Task<Value>>();
   private readonly queue: Task<Value>[] = [];
   private active = 0;
+  private readonly running = new Set<Task<Value>>();
   private wholeActive = 0;
   private consecutiveForeground = 0;
   private closed = false;
@@ -17,6 +18,12 @@ export class BlockScheduler<Value> {
   constructor(private readonly dispose: (value: Value) => void = () => {}) {}
   get stats() {return {active: this.active, queued: this.queue.length, pending: this.tasks.size,
     waiters: [...this.tasks.values()].reduce((sum, task) => sum + task.waiters.size, 0)};}
+  has(key: string): boolean {return this.tasks.has(key);}
+  /** Speculation is admitted immediately or skipped; it never fills the demand queue. */
+  get canPrefetch(): boolean {
+    return !this.closed && this.active < 4 && this.queue.length === 0 && !this.prefetchRunning;
+  }
+  private get prefetchRunning(): boolean {return [...this.running].some(task => task.priority === "PREFETCH");}
   get peaks() {return {...this.peak};}
   private recordPeak(): void {
     const current = this.stats;
@@ -31,13 +38,14 @@ export class BlockScheduler<Value> {
     if (this.closed) {fail("ABORTED");}
     const timeout = options.timeoutMs ?? (options.whole ? undefined : 15000);
     if (timeout !== undefined && (!(timeout > 0) || !Number.isFinite(timeout) || timeout > 15000)) {fail("TIMEOUT");}
+    const priority = options.priority ?? "FOREGROUND";
     let task = this.tasks.get(key);
     if (!task) {
       if (this.queue.length >= 256) {fail("CAPACITY_EXCEEDED");}
-      task = {key, run, priority: options.priority ?? "FOREGROUND", whole: options.whole ?? false,
+      task = {key, run, priority, whole: options.whole ?? false,
         controller: new AbortController(), waiters: new Set()};
       this.tasks.set(key, task); this.queue.push(task);
-    } else if (options.priority === "FOREGROUND") {task.priority = "FOREGROUND";}
+    } else if (priority === "FOREGROUND" || priority === "MATERIALIZE" && task.priority === "PREFETCH") {task.priority = priority;}
     const shared = task;
     return new Promise<Result>((resolve, reject) => {
       const abort = () => this.cancel(shared, waiter, abortError(options.signal!));
@@ -72,11 +80,14 @@ export class BlockScheduler<Value> {
       const candidates = this.queue.filter((task) => !task.whole || this.wholeActive === 0);
       const foreground = candidates.find((task) => task.priority === "FOREGROUND");
       const background = candidates.find((task) => task.priority === "MATERIALIZE");
-      const task = foreground && (!background || this.consecutiveForeground < 8) ? foreground : background;
+      const demand = foreground && (!background || this.consecutiveForeground < 8) ? foreground : background;
+      const prefetch = !this.prefetchRunning && !this.queue.some(task => task.priority !== "PREFETCH") ?
+        candidates.find(task => task.priority === "PREFETCH") : undefined;
+      const task = demand ?? prefetch;
       if (!task) {return;}
       this.consecutiveForeground = task.priority === "FOREGROUND" ? Math.min(8, this.consecutiveForeground + 1) : 0;
       this.queue.splice(this.queue.indexOf(task), 1);
-      this.active++; if (task.whole) {this.wholeActive++;}
+      this.active++; this.running.add(task); if (task.whole) {this.wholeActive++;}
       if (!task.whole) {task.timer = setTimeout(() => this.cancelTask(task, new ContentIOError("TIMEOUT")), 15000);}
       void this.run(task);
     }
@@ -91,7 +102,7 @@ export class BlockScheduler<Value> {
       for (const waiter of task.waiters) {waiter.clean(); waiter.reject(toContentIOError(error));}
     } finally {
       if (acquired) {this.dispose(value as Value);}
-      clearTimeout(task.timer); task.waiters.clear(); this.active--; if (task.whole) {this.wholeActive--;}
+      clearTimeout(task.timer); task.waiters.clear(); this.running.delete(task); this.active--; if (task.whole) {this.wholeActive--;}
       if (this.tasks.get(task.key) === task) {this.tasks.delete(task.key);}
       this.dispatch();
     }

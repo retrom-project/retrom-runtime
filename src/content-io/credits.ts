@@ -28,6 +28,28 @@ export class BufferCredits {
       this.waiting.push(claim); this.drain();
     });
   }
+  /** Reserve speculation synchronously, leaving room for a demand window and its output block. */
+  tryReserveScratch(bytes: number, headroom: number): (() => void) | null {
+    const available = this.capacity - this.cacheWriteCapacity - (this.used - this.cacheWrite);
+    if (this.waiting.length || bytes + headroom > available) {return null;}
+    if (!integer(bytes, 0, this.capacity - this.cacheWriteCapacity) || !integer(headroom)) {fail("CAPACITY_EXCEEDED");}
+    return this.allocate(bytes, "SCRATCH");
+  }
+  private allocate(bytes: number, kind: Kind): () => void {
+    this.used += bytes;
+    if (kind === "CACHE_WRITE") {this.cacheWrite += bytes;}
+    if (kind === "OUTPUT") {this.output += bytes;}
+    this.peak.temporaryBytes = Math.max(this.peak.temporaryBytes, this.used);
+    this.peak.outputBytes = Math.max(this.peak.outputBytes, this.output);
+    this.peak.cacheWriteBytes = Math.max(this.peak.cacheWriteBytes, this.cacheWrite);
+    let released = false;
+    return () => {
+      if (released) {return;} released = true;
+      if (kind === "CACHE_WRITE") {this.cacheWrite -= bytes;}
+      this.used -= bytes; if (kind === "OUTPUT") {this.output -= bytes;}
+      this.drain();
+    };
+  }
   private drain(): void {
     for (let index = 0; index < this.waiting.length;) {
       const claim = this.waiting[index];
@@ -35,19 +57,7 @@ export class BufferCredits {
         this.capacity - this.cacheWriteCapacity - (this.used - this.cacheWrite);
       if (claim.bytes > available || claim.kind === "OUTPUT" && claim.bytes > this.outputCapacity - this.output) {index++; continue;}
       this.waiting.splice(index, 1); claim.signal?.removeEventListener("abort", claim.abort);
-      this.used += claim.bytes;
-      if (claim.kind === "CACHE_WRITE") {this.cacheWrite += claim.bytes;}
-      if (claim.kind === "OUTPUT") {this.output += claim.bytes;}
-      this.peak.temporaryBytes = Math.max(this.peak.temporaryBytes, this.used);
-      this.peak.outputBytes = Math.max(this.peak.outputBytes, this.output);
-      this.peak.cacheWriteBytes = Math.max(this.peak.cacheWriteBytes, this.cacheWrite);
-      let released = false;
-      claim.resolve(() => {
-        if (released) {return;} released = true;
-        if (claim.kind === "CACHE_WRITE") {this.cacheWrite -= claim.bytes;}
-        this.used -= claim.bytes; if (claim.kind === "OUTPUT") {this.output -= claim.bytes;}
-        this.drain();
-      });
+      claim.resolve(this.allocate(claim.bytes, claim.kind));
     }
   }
 }

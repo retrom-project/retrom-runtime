@@ -12,6 +12,7 @@ for (const all of [false, true]) {
     const identity = server.register({id: "game", fixtureId: "multi-tail", behavior: "NORMAL", seed: 17,
       delayBeforeHeadersMs: null, chunkDelayMs: null, disconnectAfterBytes: null, barrier: "pending"});
     await page.exposeFunction("waitRequest", async () => {await expect.poll(() => server.requests("game").length).toBe(1);});
+    await page.exposeFunction("waitPrefetch", async () => {await expect.poll(() => server.requests("game").length).toBe(2);});
     await page.exposeFunction("releaseRequest", () => server.release("pending"));
     try {
       await page.goto(`${server.origin}/__test__/page`);
@@ -20,7 +21,7 @@ for (const all of [false, true]) {
         const {createContentSession} = await import(url) as typeof import("../../src/content-io/client.js");
         const session = await createContentSession(new Worker("/__test__/worker.mjs", {type: "module"}),
           {storageOrigin: location.origin, allowedOrigins: [location.origin]}, {fetchPolicy: {smallFileThresholdBytes: 0, networkWindowBytes: 3 * B}});
-        const hooks = globalThis as unknown as {waitRequest(): Promise<void>; releaseRequest(): Promise<void>};
+        const hooks = globalThis as unknown as {waitRequest(): Promise<void>; waitPrefetch(): Promise<void>; releaseRequest(): Promise<void>};
         try {
           const source = {identity: identity.identity, sizeBytes: identity.sizeBytes,
             url: `${location.origin}/objects/multi-tail/game`, purpose: "GAME", transport: "RANGE_REQUIRED",
@@ -33,13 +34,18 @@ for (const all of [false, true]) {
           await hooks.waitRequest(); controllers[0].abort();
           if (all) controllers[1].abort();
           const first = await reads[0]; await hooks.releaseRequest(); const second = await reads[1];
-          if (!all) await readers[1].readInto(2 * B, new Uint8Array(1));
+          if (!all) {await readers[1].readInto(2 * B, new Uint8Array(1)); await hooks.waitPrefetch();}
           await session.close(); return {first, second, samples: bytes.map(value => value[0]), stats: session.stats};
         } finally {await session.close();}
       }, {identity, all, B});
       expect(result.first).toBe("CONTENT_IO_ABORTED"); expect(result.second).toBe(all ? "CONTENT_IO_ABORTED" : "OK");
       expect(result.samples[0]).toBe(0);
-      expect(server.requests("game")).toHaveLength(1); expect(server.requests("game")[0].range).toBe(`bytes=0-${3 * B - 1}`);
+      expect(server.requests("game")).toHaveLength(all ? 1 : 2); expect(server.requests("game")[0].range).toBe(`bytes=0-${3 * B - 1}`);
+      if (!all) {
+        expect(server.requests("game")[1].range).toBe(`bytes=${3 * B}-${identity.sizeBytes - 1}`);
+        expect(server.requests("game")[1].sentBytes).toBe(0);
+        expect(server.requests("game")[1].disconnected).toBe(true);
+      }
       expect(result.stats).toMatchObject({pending: 0, channels: 0, files: 0, lruBytes: 0});
     } finally {server.release("pending"); await server.close();}
   });

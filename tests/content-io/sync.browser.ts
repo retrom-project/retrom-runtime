@@ -50,7 +50,13 @@ self.onmessage = ({data}) => {
     expect(result.values.first).toEqual(Array.from({length: 32}, (_, n) => byteAt(262136 + n)));
     expect(result.values.high).toEqual(Array.from({length: 32}, (_, n) => byteAt(4295229424 + n)));
     expect(result.closed.errors).toEqual(["CONTENT_IO_ABORTED", "CONTENT_IO_ABORTED"]);
-    expect(server.requests("game").map((request) => request.range)).toEqual(["bytes=0-262143", "bytes=262144-524287", "bytes=4294967296-4295229439", "bytes=4295229440-4295491583"]);
+    const ranges = server.requests("game").map(request => request.range);
+    const demand = ["bytes=0-262143", "bytes=262144-524287", "bytes=4294967296-4295229439", "bytes=4295229440-4295491583"];
+    const adjacent = ["bytes=524288-786431", "bytes=4295491584-4295753727"];
+    expect(ranges.filter(range => !adjacent.includes(range ?? ""))).toEqual(demand);
+    // Speculation may be skipped or cancelled before HTTP on immediate close; no duplicates or other windows are allowed.
+    expect(new Set(ranges).size).toBe(ranges.length);
+    expect(ranges.every(range => [...demand, ...adjacent].includes(range ?? ""))).toBe(true);
     expect(result.stats).toMatchObject({pending: 0, channels: 0, lruBytes: 0});
   } finally {await server.close();}
 });

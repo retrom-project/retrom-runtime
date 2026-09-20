@@ -1,6 +1,12 @@
 # Changelog
 
 
+## 0.45.0
+
+- Prefetch the adjacent network window when demand reads reach the current window's final internal block, using existing memory and persistent caches without changing core reads or the Content I/O contract.
+- Deduplicate demand and prefetch in either arrival order, promote adopted work to foreground without restarting HTTP, and limit speculative work to spare scheduling and buffer capacity.
+- Cover multi-window reads, cancellation, deadlines, failures, persistent reuse, and resource cleanup with unit and browser regressions.
+
 ## 0.44.0
 
 - TIC-80／FAKE-08 在准备开始前报告游戏与运行资产总量，随后按已校验并提交的字节推进加载进度。

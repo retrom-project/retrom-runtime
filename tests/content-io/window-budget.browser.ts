@@ -9,7 +9,8 @@ for (const windowBytes of [3 * B, 8 * B]) for (const backend of ["quota", "denie
     const worker = await compile(`import {BufferCredits} from './src/content-io/credits.ts';
 import {OPFSStore} from './src/content-io/store/opfs.ts';
 import './src/content-io/worker.ts';
-${backend === "denied" ? "Object.defineProperty(globalThis, 'indexedDB', {value: undefined});" : backend === "hang" ? "OPFSStore.prototype.write = () => new Promise(() => {});" : "OPFSStore.prototype.write = async () => {throw new DOMException('quota', 'QuotaExceededError');};"}
+const delayedWrites = []; let finishWrites = false;
+${backend === "denied" ? "Object.defineProperty(globalThis, 'indexedDB', {value: undefined});" : backend === "hang" ? "OPFSStore.prototype.write = () => finishWrites ? Promise.resolve() : new Promise(resolve => delayedWrites.push(resolve));" : "OPFSStore.prototype.write = async () => {throw new DOMException('quota', 'QuotaExceededError');};"}
 const reserve = BufferCredits.prototype.reserve, credits = new Set();
 let peak = 0, output = 0;
 BufferCredits.prototype.reserve = async function(...args) {
@@ -17,7 +18,10 @@ BufferCredits.prototype.reserve = async function(...args) {
   peak = Math.max(peak, this.stats.temporaryBytes); output = Math.max(output, this.stats.outputBytes);
   return release;
 };
-addEventListener('message', ({data}) => {if(data?.testBudget) postMessage({peak, output, stats: [...credits].map(credit => credit.stats)});});`);
+addEventListener('message', ({data}) => {
+  if(data?.testBudget) postMessage({peak: Math.max(peak, ...[...credits].map(credit => credit.peaks.temporaryBytes)), output, stats: [...credits].map(credit => credit.stats)});
+  if(data?.finishWrites) {finishWrites = true; for (const resolve of delayedWrites.splice(0)) resolve(); postMessage({writesReleased: true});}
+});`);
     const server = await startFixtureServer({contentModule: await compile("export {createContentSession} from './src/content-io/client.ts';"), modules: {"worker.mjs": worker}});
     const identity = server.register({id: "game", fixtureId: "big-offset", behavior: "NORMAL", seed: 17,
       delayBeforeHeadersMs: null, chunkDelayMs: null, disconnectAfterBytes: null, barrier: null});
@@ -48,6 +52,10 @@ addEventListener('message', ({data}) => {if(data?.testBudget) postMessage({peak,
           const budget = await new Promise<{peak: number; output: number; stats: {temporaryBytes: number; waiting: number; cacheWriteBytes: number}[]}>(resolve => {
             worker.addEventListener("message", event => resolve(event.data), {once: true}); worker.postMessage({testBudget: true});
           });
+          // Observe retained optional-write credits first, then release injected I/O before graceful shutdown.
+          await new Promise<void>(resolve => {
+            worker.addEventListener("message", () => resolve(), {once: true}); worker.postMessage({finishWrites: true});
+          });
           return {samples, budget, backend: session.stats.backend};
         } finally {await session.close();}
       }, {identity, windowBytes, B});
@@ -58,8 +66,13 @@ addEventListener('message', ({data}) => {if(data?.testBudget) postMessage({peak,
       expect(result.budget.stats.every(stat => stat.waiting === 0)).toBe(true);
       if (backend === "hang") expect(result.budget.stats.some(stat => stat.cacheWriteBytes >= B)).toBe(true);
       else expect(result.backend).toBe(backend === "denied" ? "MEMORY" : "CACHE_BLOCKS");
-      expect(server.requests("game").map(request => request.range).sort()).toEqual(
+      const ranges = server.requests("game").map(request => request.range);
+      const adjacent = `bytes=${4 * windowBytes}-${5 * windowBytes - 1}`;
+      expect(ranges.filter(range => range !== adjacent).sort()).toEqual(
         Array.from({length: 4}, (_, index) => `bytes=${index * windowBytes}-${(index + 1) * windowBytes - 1}`).sort());
+      expect(new Set(ranges).size).toBe(ranges.length);
+      if (windowBytes === 8 * B) {expect(ranges).toHaveLength(4);}
+      else {expect(ranges.length).toBeLessThanOrEqual(5);}
     } finally {await server.close();}
   });
 }

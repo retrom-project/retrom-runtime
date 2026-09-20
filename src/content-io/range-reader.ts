@@ -9,7 +9,7 @@ export class RangeReader implements ContentReaderV1 {
   readonly sizeBytes: number;
   private readonly controller = new AbortController();
   private closePromise: Promise<void> | undefined;
-  constructor(readonly id: string, private readonly object: BlockObject, private readonly pool: Pick<BlockPool, "cache" | "key" | "check" | "copy">, private readonly onClose: () => Promise<void> = async () => {}, private readonly copied: ReadObserver = () => {}) {
+  constructor(readonly id: string, private readonly object: BlockObject, private readonly pool: Pick<BlockPool, "cache" | "key" | "check" | "copy"> & Partial<Pick<BlockPool, "prefetchAfter">>, private readonly onClose: () => Promise<void> = async () => {}, private readonly copied: ReadObserver = () => {}) {
     this.sizeBytes = object.source.sizeBytes;
   }
   async readInto(offset: number, destination: Uint8Array, signal?: AbortSignal, copied: ReadObserver = this.copied): Promise<number> {
@@ -26,6 +26,8 @@ export class RangeReader implements ContentReaderV1 {
         const length = Math.min(size - written, BLOCK_BYTES - within);
         await this.pool.copy(this.object, index, within, destination.subarray(written, written + length),
           () => this.check(), {copied, signal: scope.signal, timeoutMs: Math.max(0, 15000 - (performance.now() - started))});
+        this.check(); checkSignal(scope.signal);
+        this.pool.prefetchAfter?.(this.object, index, this.controller.signal);
         written += length;
       }
       this.check(); checkSignal(scope.signal); return size;
@@ -44,7 +46,9 @@ export class RangeReader implements ContentReaderV1 {
       const count = Math.min(length - written, BLOCK_BYTES - within);
       this.pool.cache.copyInto(this.pool.key(this.object, index), within, destination.subarray(written, written + count)); written += count;
     }
-    this.copied("MEMORY", length); return length;
+    this.copied("MEMORY", length);
+    for (let index = first; index <= last; index++) {this.pool.prefetchAfter?.(this.object, index, this.controller.signal);}
+    return length;
   }
   async *stream(offset: number, length: number, signal?: AbortSignal): AsyncIterable<Uint8Array> {
     this.check(); checkSignal(signal);

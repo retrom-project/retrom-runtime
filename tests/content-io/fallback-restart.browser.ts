@@ -42,12 +42,13 @@ OPFSStore.prototype.write = function(receipt, bytes) {
             workspace: "NONE", writes: "DENY", contentLengthPolicy: "EXACT_IF_PRESENT", } as const;
           const reader = await session.open(source, policy);
           // Block 1 triggers OPFS failure; block 2 is committed in the fallback store.
-          for (const index of [0, 1, 2]) {
+          for (const index of [0, 1, 2, 3]) {
             const bytes = new Uint8Array(17); await reader.readInto(index * 262144, bytes);
             if (index === 2) samples.push(Array.from(bytes));
           }
           const added = await session.open({...source, purpose: "FIRMWARE"}, policy);
           await added.readInto(2 * 262144, new Uint8Array(17));
+          await added.readInto(3 * 262144, new Uint8Array(17));
           counts.push((await (await fetch("/__test__/requests/game")).json() as unknown[]).length);
         } finally {await session.close();}
       }
@@ -61,7 +62,7 @@ OPFSStore.prototype.write = function(receipt, bytes) {
       });
       return {samples, counts, objects, events};
     }, {identity, identityKind});
-    expect(result.events.filter(event => event.type === "DIAGNOSTIC")).toEqual([expect.objectContaining({operation: "CACHE_WRITE", codeNumber: 12})]);
+    expect(result.events.filter(event => event.type === "DIAGNOSTIC" && event.codeNumber !== 0)).toEqual([expect.objectContaining({operation: "CACHE_WRITE", codeNumber: 12})]);
     expect(result.objects).toBe(2);
     expect(result.samples[1]).toEqual(result.samples[0]);
     expect(result.counts[1]).toBe(result.counts[0]);

@@ -15,7 +15,7 @@ test("[ST-01] BROWSER/window-change reuses old blocks and fetches only the holes
       const url = "/__test__/content.mjs";
       const {createContentSession} = await import(url) as typeof import("../../src/content-io/client.js");
       const cases = [
-        {policy: {smallFileThresholdBytes: 0, networkWindowBytes: B}, offsets: [B, 3 * B]},
+        {policy: {smallFileThresholdBytes: 0, networkWindowBytes: B}, offsets: [B, 2 * B, 3 * B]},
         {policy: {smallFileThresholdBytes: 4 * B, networkWindowBytes: 5 * B}, offsets: [0, B, 2 * B]},
         {policy: {smallFileThresholdBytes: B - 1, networkWindowBytes: 3 * B}, offsets: [0, B, 2 * B, 3 * B]},
       ], counts = [], backends = [], samples = [];
@@ -38,9 +38,9 @@ test("[ST-01] BROWSER/window-change reuses old blocks and fetches only the holes
       return {counts, backends, samples};
     }, {identity, B});
     expect(result.backends).toEqual(["OPFS", "OPFS", "OPFS"]);
-    expect(result.counts).toEqual([2, 4, 4]);
+    expect(result.counts).toEqual([3, 4, 4]);
     expect(server.requests("game").map(request => request.range)).toEqual([
-      `bytes=${B}-${2 * B - 1}`, `bytes=${3 * B}-${identity.sizeBytes - 1}`, `bytes=0-${B - 1}`, `bytes=${2 * B}-${3 * B - 1}`,
+      `bytes=${B}-${2 * B - 1}`, `bytes=${2 * B}-${3 * B - 1}`, `bytes=${3 * B}-${identity.sizeBytes - 1}`, `bytes=0-${B - 1}`,
     ]);
     for (const {offset, value} of result.samples) {
       expect(value).toBe((offset % 251 + 17 * (Math.floor(offset / 251) % 251) + 31 * (Math.floor(offset / 65536) % 251) + 17) % 256);

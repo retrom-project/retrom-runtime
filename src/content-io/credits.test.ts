@@ -22,3 +22,15 @@ it("[IO-23] UNIT/cache-write-budget retains abandoned write credits independentl
   expect(() => credits.reserve(8, "SCRATCH")).toThrow("CAPACITY_EXCEEDED");
   next(); write(); expect(credits.stats.temporaryBytes).toBe(0);
 });
+it("speculative credits preserve demand headroom, respect waiting claims, and release once", async () => {
+  const credits = new BufferCredits(100, 50);
+  const speculative = credits.tryReserveScratch(40, 60);
+  expect(speculative).not.toBeNull(); expect(credits.stats.temporaryBytes).toBe(40);
+  expect(credits.tryReserveScratch(1, 60)).toBeNull();
+  const demand = await credits.reserve(60, "SCRATCH");
+  let admitted = false;
+  const waiting = credits.reserve(70, "SCRATCH").then(release => {admitted = true; return release;});
+  demand(); expect(credits.tryReserveScratch(1, 0)).toBeNull(); expect(admitted).toBe(false);
+  speculative!(); speculative!(); const release = await waiting;
+  expect(credits.stats.temporaryBytes).toBe(70); release(); expect(credits.stats.temporaryBytes).toBe(0);
+});

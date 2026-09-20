@@ -29,7 +29,8 @@ for (const failure of ["identity", "host-close"] as const) {
           const warm = second.tryReadInto(0, output), errors = [];
           if (failure === "identity") {
             const changed = await session.open({...source, url: `${location.origin}/objects/multi-tail/changed`}, policy);
-            try {await changed.readInto(262144, output);} catch (error) {errors.push((error as Error).message);}
+            // Block 1 can already be prefetched; force a still-cold block to observe the changed identity.
+            try {await changed.readInto(2 * 262144, output);} catch (error) {errors.push((error as Error).message);}
           } else {await session.close();}
           for (const reader of [first, second]) for (const length of [0, 1]) {
             try {reader.tryReadInto(0, new Uint8Array(length)); errors.push("UNEXPECTED_SUCCESS");}

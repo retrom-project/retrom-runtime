@@ -56,3 +56,47 @@ it("whole streams share four network slots but only one whole task can run", asy
   expect(started).toEqual(["a", "c"]); releases.shift()!(); await tick(); expect(started).toEqual(["a", "c", "b"]);
   for (const release of releases) {release();} await Promise.all(tasks); scheduler.close();
 });
+it("foreground and materialization dispatch before queued prefetch, with at most one active prefetch", async () => {
+  const scheduler = new BlockScheduler<void>(), releases: (() => void)[] = [], order: string[] = [];
+  const run = (name: string) => async () => {order.push(name); await new Promise<void>(resolve => releases.push(resolve));};
+  const reads = Array.from({length: 4}, (_, n) => scheduler.schedule(`busy${n}`, run(`busy${n}`)));
+  reads.push(scheduler.schedule("prefetch-a", run("prefetch-a"), {priority: "PREFETCH"}));
+  reads.push(scheduler.schedule("prefetch-b", run("prefetch-b"), {priority: "PREFETCH"}));
+  reads.push(scheduler.schedule("materialize", run("materialize"), {priority: "MATERIALIZE"}));
+  reads.push(scheduler.schedule("demand", run("demand")));
+  expect(scheduler.canPrefetch).toBe(false);
+  for (let n = 0; n < 4; n++) {releases.shift()!(); await tick();}
+  expect(order.slice(4)).toEqual(["demand", "materialize", "prefetch-a"]);
+  expect(scheduler.stats.active).toBe(3); expect(scheduler.canPrefetch).toBe(false);
+  while (releases.length) {releases.shift()!(); await tick();}
+  await Promise.all(reads); expect(order.at(-1)).toBe("prefetch-b"); expect(scheduler.canPrefetch).toBe(true);
+});
+it("default foreground joins and promotes a queued prefetch without replacing its operation", async () => {
+  const scheduler = new BlockScheduler<number>(), releases: (() => void)[] = [], order: string[] = [];
+  const run = (name: string) => async () => {order.push(name); await new Promise<void>(resolve => releases.push(resolve)); return 7;};
+  const reads = Array.from({length: 4}, (_, n) => scheduler.schedule(`busy${n}`, run(`busy${n}`)));
+  const original = vi.fn(run("prefetch")), replacement = vi.fn(run("duplicate"));
+  reads.push(scheduler.schedule("same", original, {priority: "PREFETCH"}));
+  reads.push(scheduler.schedule("materialize", run("materialize"), {priority: "MATERIALIZE"}));
+  reads.push(scheduler.schedule("same", replacement));
+  releases.shift()!(); await tick(); expect(order.at(-1)).toBe("prefetch");
+  while (releases.length) {releases.shift()!(); await tick();}
+  await expect(Promise.all(reads)).resolves.toEqual(Array(7).fill(7));
+  expect(original).toHaveBeenCalledTimes(1); expect(replacement).not.toHaveBeenCalled();
+});
+it("promotion of active prefetch releases the speculative limit without aborting the physical task", async () => {
+  const scheduler = new BlockScheduler<number>(); let finish!: (value: number) => void;
+  let signal!: AbortSignal;
+  const prefetched = scheduler.schedule("same", active => {signal = active; return new Promise(resolve => {finish = resolve;});}, {priority: "PREFETCH"});
+  expect(scheduler.canPrefetch).toBe(false);
+  const duplicate = vi.fn(async () => 99), demand = scheduler.schedule("same", duplicate);
+  expect(scheduler.canPrefetch).toBe(true); expect(signal.aborted).toBe(false);
+  finish(7); expect(await Promise.all([prefetched, demand])).toEqual([7, 7]); expect(duplicate).not.toHaveBeenCalled();
+});
+it("cancelled noncooperative prefetch retains its slot and speculative limit until cleanup finishes", async () => {
+  const scheduler = new BlockScheduler<number>(), controller = new AbortController(); let finish!: (n: number) => void;
+  const pending = scheduler.schedule("same", () => new Promise<number>(resolve => {finish = resolve;}), {priority: "PREFETCH", signal: controller.signal});
+  const rejected = expect(pending).rejects.toThrow("ABORTED"); controller.abort(); await rejected;
+  expect(scheduler.stats.active).toBe(1); expect(scheduler.canPrefetch).toBe(false);
+  finish(7); await tick(); expect(scheduler.canPrefetch).toBe(true); expect(scheduler.stats.active).toBe(0);
+});

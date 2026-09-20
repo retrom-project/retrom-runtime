@@ -31,6 +31,14 @@ export function fetchWindow(sizeBytes: number, blockIndex: number, policy: Fetch
   return {start, length, firstBlock: start / BLOCK_BYTES, blockCount: Math.ceil(length / BLOCK_BYTES), wholeFile};
 }
 
+/** A real read of the last internal block may fetch only its immediately adjacent window. */
+export function nextFetchWindow(sizeBytes: number, blockIndex: number, policy: FetchPolicy): FetchWindow | undefined {
+  const current = fetchWindow(sizeBytes, blockIndex, policy);
+  const next = current.start + current.length;
+  if (current.wholeFile || next >= sizeBytes || blockIndex !== current.firstBlock + current.blockCount - 1) {return;}
+  return fetchWindow(sizeBytes, next / BLOCK_BYTES, policy);
+}
+
 export type MissingRange = Readonly<{start: number; length: number}>;
 export function missingRanges(window: FetchWindow, present: ReadonlySet<number>): MissingRange[] {
   const result: {start: number; length: number}[] = [];

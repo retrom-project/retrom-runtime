@@ -27,6 +27,6 @@ export function createProviderBuildMetadata(
   providers: ProviderBuildRecord[], sourceTreeSha256: string,
 ): ProviderBuildMetadata;
 export function pinProviderReleaseMetadata(
-  build: ProviderBuildMetadata, release: ProviderReleaseIdentity, packageVersion: string,
+  build: ProviderBuildMetadata, release: ProviderReleaseIdentity,
 ): ProviderReleaseMetadata;
 export function sourceTreeSha256(repositoryRoot?: string): string;

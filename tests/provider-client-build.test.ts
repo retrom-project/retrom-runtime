@@ -43,6 +43,7 @@ describe("Provider client module build", () => {
   ] as const)("[PK-01] CONTRACT/client-%s imports the built client with exactly four public exports", async (providerId, entry) => {
     const root = await temporaryRoot();
     const result = await buildProviderClient({
+      providerVersion: "0.46.0",
       assetIndex: {},
       entryPoint: join(process.cwd(), entry),
       outfile: join(root, "client.mjs"),
@@ -59,6 +60,7 @@ describe("Provider client module build", () => {
       "createRuntime", "providerApiVersion", "providerId", "providerVersion",
     ]);
     expect(module.providerId).toBe(providerId);
+    expect(module.providerVersion).toBe("0.46.0");
     expect(module.providerApiVersion).toBe(1);
     expect(module.createRuntime).toBeTypeOf("function");
   });

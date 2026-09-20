@@ -1,6 +1,12 @@
 # Changelog
 
 
+## 0.46.0
+
+- Derive both Provider versions exclusively from the immutable GitHub release tag, removing separately maintained package/source/catalog versions. Both archives, manifests and client exports use 0.46.0 for tag v0.46.0.
+- Keep untagged builds explicitly developmental and inject the installed base version into PFB clients. Reject formal metadata with inconsistent Provider versions.
+- Replace the old EmulatorJS 2.x version sequence. Retrom development data and active Provider state require an archived reset; downgrade protection remains enabled and no old-data migration is provided.
+
 ## 0.45.0
 
 - Prefetch the adjacent network window when demand reads reach the current window's final internal block, using existing memory and persistent caches without changing core reads or the Content I/O contract.

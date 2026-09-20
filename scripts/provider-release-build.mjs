@@ -32,6 +32,7 @@ export async function buildRetromRuntimeProviderBundle(input) {
   const licenseSources = await collectLicenses(input.stageRoot);
     const clientPath = join(temporaryRoot, "client.mjs");
     await buildProviderClient({
+      providerVersion: input.manifest.providerVersion,
       assetIndex,
       entryPoint: input.entryPoint,
       outfile: clientPath,
@@ -75,6 +76,7 @@ export async function buildEmulatorJsProviderBundle(input) {
   }
     const clientPath = join(temporaryRoot, "client.mjs");
     await buildProviderClient({
+      providerVersion: input.manifest.providerVersion,
       assetIndex,
       entryPoint: input.entryPoint,
       outfile: clientPath,

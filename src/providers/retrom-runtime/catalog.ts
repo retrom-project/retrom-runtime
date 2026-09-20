@@ -1,3 +1,4 @@
+import {providerVersion} from "../../provider/version.js";
 import {runtimeGamePolicy} from "../../provider/content-policies.js";
 import {pspAdapter, pspTarget} from "./psp-declaration.js";
 import {gbeAdapter, gbeTarget} from "./gbe-pokemini-declaration.js";
@@ -143,7 +144,7 @@ export const retromRuntimeProviderDefinition = defineProvider({
   adapters: storageAdapters(adapters),
   providerApiVersion: 1,
   providerId: "retrom-runtime",
-  providerVersion: "0.45.0",
+  providerVersion,
   targets,
 });
 

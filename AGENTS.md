@@ -79,6 +79,7 @@ npm run package:check
 
 - 完成一个功能或 bug 修复后单独提交；不要混入无关格式化。
 - PR 到 `master` 必须通过 `.github/workflows/quality.yml`；该门禁会聚合并验证固定 fork Release，但不得编译核心。
+- 发布版本只来自 GitHub 的不可移动 `vX.Y.Z`（或 RC）tag；两个 Provider 的 manifest、客户端导出和归档名统一使用去掉 `v` 的版本。不得在 package.json、provider-sources.json 或 catalog 中维护独立发布版本；未打 tag 的构建使用 `0.0.0-dev`，PFB 客户端沿用已校验基座版本。
 - `v*` tag 由 `.github/workflows/release.yml` 构建 GitHub Release；tag 不移动、不覆盖。`vX.Y.Z-rc.N` 可从功能分支发布 GitHub prerelease，稳定 tag 必须已进入 `master`；两者都执行相同代码和聚合门禁。
 - `providerId + targetId` 是长期稳定的 Target 身份。Provider Bundle 是单次部署与 Launch 的不可变产物，不能成为 Game、Review 或 Save 的兼容身份。破坏 Provider Module、Launch Envelope 消费、checkpoint 格式或 Target 行为时必须升级相应版本并在提交说明中记录。
 - checkpoint 格式变化时更新 `writeFormat`，并只在真实验证后把旧值保留在 `readFormats`。宿主只向前激活更高 Provider 版本；旧存档格式不可读时禁用恢复，不保留旧 Bundle 或设计运行时回滚。

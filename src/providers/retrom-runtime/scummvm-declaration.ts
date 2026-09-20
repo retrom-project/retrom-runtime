@@ -1,3 +1,5 @@
+import {rangePolicy} from "../../provider/content-policies.js";
+import {contentLimits as limits} from "../../content-io/limits.js";
 import {defineAdapter, defineTarget, type TargetOptionsSchema} from "../../provider/declarations.js";
 import layout from "../../scummvm/core-layout.json" with {type: "json"};
 
@@ -20,6 +22,7 @@ export const scummvmAdapter = defineAdapter({id: "scummvm-web", kind: "SCUMMVM_W
 });
 export const scummvmTarget = defineTarget({id: "scummvm", displayName: "ScummVM", adapterId: scummvmAdapter.id,
   checkpointMaxBytes: 64 * 1024 * 1024, frameMode: "SAME_ORIGIN_BLANK", requiresThreads: false,
+  contentIO: {game: rangePolicy("ASYNC", limits.indexedFile, {})},
   inputs: [{role: "game", kind: "FILE_TREE", cardinality: "ONE", optional: false}],
   targetOptionsSchema: options, implementation: {}, inputFilter: true, discSwitch: false, nativeSettings: false,
   netplayPort: false, videoModes: ["original", "pixel", "smooth"],

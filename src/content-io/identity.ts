@@ -1,0 +1,2 @@
+export const abi = "content-io-v1" as const;
+export const contractSha256 = "9601f63ba9d1bad095b42b32a3d6167166535be246a87f0efac7c5b125ed27bf";

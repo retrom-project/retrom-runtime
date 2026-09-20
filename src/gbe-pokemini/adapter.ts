@@ -1,3 +1,5 @@
+import type {AdapterContentOptions} from "../provider/content-inputs.js";
+import {contentLimits} from "../content-io/limits.js";
 import type {MountedRuntimeAdapter, RuntimeProgressReporter} from "../internal-adapter.js";
 import {loadCore, type CoreLoader, type GBEParameters} from "./core.js";
 import {fetchFile} from "./files.js";
@@ -6,18 +8,19 @@ import {decodeState, encodeState, stateFormat} from "./state.js";
 const statePath = "/game.min.ss";
 export async function mountGBE(config: GBEParameters, target: HTMLElement, win: Window,
   restore: Uint8Array | null, progress: RuntimeProgressReporter, signal?: AbortSignal,
-  loader: CoreLoader = loadCore): Promise<MountedRuntimeAdapter> {
+  loader: CoreLoader = loadCore, content?: AdapterContentOptions): Promise<MountedRuntimeAdapter> {
   if (target.ownerDocument !== win.document) {throw new Error("GBE_CONFIG_INVALID");}
+  const session = content?.contentSession;
   const bios = config.bios.filter(file => file.logicalName === "bios.min");
   if (bios.length !== 1 || bios[0].sizeBytes !== 4096) {throw new Error("GBE_BIOS_MISSING");}
-  if (config.game.sizeBytes < 0x2100 || config.game.sizeBytes > 0x200000) {throw new Error("GBE_ROM_INVALID");}
+  if (config.game.sizeBytes < 0x2100 || config.game.sizeBytes > contentLimits.gbeRom) {throw new Error("GBE_ROM_INVALID");}
   const restored = restore ? decodeState(config.game.sha256, restore) : null;
   const game = await fetchFile(config.game, loadedBytes => progress({phase: "PROJECT_CONTENT", loadedBytes,
-    totalBytes: config.game.sizeBytes}), signal);
-  const firmware = await fetchFile(bios[0], () => undefined, signal);
+    totalBytes: config.game.sizeBytes}), signal, session, "GAME", contentLimits.gbeRom);
+  const firmware = await fetchFile(bios[0], () => undefined, signal, session, "FIRMWARE");
   const canvas = win.document.createElement("canvas"); canvas.width = 96; canvas.height = 64; canvas.tabIndex = 0;
   canvas.setAttribute("aria-label", "Pokémon Mini game"); target.append(canvas);
-  const core = await loader(config, win, canvas, signal).catch(error => {canvas.remove(); throw error;});
+  const core = await loader(config, win, canvas, signal, session).catch(error => {canvas.remove(); throw error;});
   const input = installInput(win, (key, value) => core._retrom_key(key, value));
   let stopped = false, paused = true;
   const exit = async () => {

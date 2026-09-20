@@ -1,6 +1,7 @@
+import {managedAdapterFixture} from "../../tests/managed-adapter-fixture.js";
 import {afterEach, expect, it, vi} from "vitest";
 import {sha256} from "@noble/hashes/sha2.js";
-import {mountGBE} from "./adapter.js";
+import {mountGBE as mount} from "./adapter.js";
 import type {GBECore} from "./core.js";
 import {encodeState} from "./state.js";
 afterEach(() => {vi.unstubAllGlobals(); document.body.replaceChildren();});
@@ -53,3 +54,7 @@ it("requires BIOS and aborts without starting a core", async () => {
   await expect(mountGBE(f.config, document.body, window, null, vi.fn(), abort.signal, f.loader)).rejects.toThrow();
   expect(f.core._retrom_init).not.toHaveBeenCalled();
 });
+
+const mountGBE: typeof mount = (...args) => {
+  args[7] ??= managedAdapterFixture(args[0]); return mount(...args);
+};

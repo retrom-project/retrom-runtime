@@ -1,3 +1,4 @@
+import type {AdapterContentSession} from "../provider/content-inputs.js";
 import type {AssetIndexV1} from "../provider/module-api.js";
 import {loadDisk} from "./content.js";
 export type NP2Core = {
@@ -12,15 +13,15 @@ export type NP2Core = {
   _retrom_stop(): void;
 };
 export type CoreParameters = {runtimeBaseUrl: string; assetIndex: AssetIndexV1};
-export type CoreLoader = (config: CoreParameters, win: Window, canvas: HTMLCanvasElement, signal?: AbortSignal) => Promise<NP2Core>;
+export type CoreLoader = (config: CoreParameters, win: Window, canvas: HTMLCanvasElement, signal?: AbortSignal, session?: AdapterContentSession) => Promise<NP2Core>;
 const registration = "__RETROM_NP2KAI_FACTORY_V1__";
-export const loadCore: CoreLoader = async (config, win, canvas, signal) => {
+export const loadCore: CoreLoader = async (config, win, canvas, signal, session) => {
   const base = new URL(config.runtimeBaseUrl, win.document.baseURI);
   const files = new Map<string, Uint8Array>();
   for (const file of ["np2kai.mjs", "np2kai.wasm", "np2kai-register.mjs", "font.bmp"]) {
     const asset = config.assetIndex[`assets/np2kai/${file}`];
     if (!asset) {throw new Error("NP2KAI_ASSET_MISSING");}
-    files.set(file, await loadDisk({url: new URL(file, base).href, ...asset}, () => undefined, null, signal));
+    files.set(file, await loadDisk({url: new URL(file, base).href, ...asset}, () => undefined, session, signal, "CORE_ASSET"));
   }
   const factory = await loadFactory(win, new URL("np2kai-register.mjs", base).href, signal);
   const value: unknown = await factory({canvas, wasmBinary: files.get("np2kai.wasm"), noInitialRun: true,

@@ -44,7 +44,7 @@ describe("NeoCD player lifecycle", () => {
     expect(restored.toggle).toHaveBeenLastCalledWith(true);
     await restored.player.exit();
   });
-  it("waits for a suspended disc read before pausing or serializing", async () => {
+  it("[BR-07] UNIT/neocd-safe-point waits for a suspended disc read before pausing or serializing", async () => {
     const fixture = await mount(null, new Uint8Array([1, 2, 3]));
     const bridge = fixture.runtimeWindow.RETROM_NEOCD_RANGE as ReturnType<typeof import("./neocd-range.js").createNeoCDRange>;
     bridge.begin(); fixture.toggle.mockClear();
@@ -61,6 +61,17 @@ describe("NeoCD player lifecycle", () => {
     const fixture = await mount(null, new Uint8Array());
     await expect(fixture.player.checkpoint()).rejects.toThrow();
     await fixture.player.exit();
+  });
+  it("[ST-16] UNIT/neocd-checkpoint-isolation restores only the explicitly supplied instance", async () => {
+    const original = new Uint8Array(65536).fill(1), fresh = new Uint8Array(65536).fill(9);
+    const first = await mount(null, original), saved = await first.player.checkpoint(); await first.player.exit();
+    const restored = await mount(saved.bytes, original, saved.format), independent = await mount(null, fresh);
+    try {
+      expect(restored.load).toHaveBeenCalledWith(original); expect(independent.load).not.toHaveBeenCalled();
+      const snapshot = await independent.player.checkpoint();
+      expect(await decodeStoredCheckpoint(snapshot.bytes, snapshot.format, fresh.length)).toEqual(fresh);
+      expect(original).toEqual(new Uint8Array(65536).fill(1));
+    } finally {await restored.player.exit(); await independent.player.exit();}
   });
 });
 async function mount(restore: Uint8Array | null, state: Uint8Array, format = "emulatorjs-state-v1-storage-v1") {
@@ -88,3 +99,9 @@ async function mount(restore: Uint8Array | null, state: Uint8Array, format = "em
   await mounting;
   return {player, runtimeWindow, load, toggle};
 }
+
+vi.mock("../../content-io/bootstrap.js", () => ({bootstrapContentSession: vi.fn(async () => ({
+  open: vi.fn(async (source: {sizeBytes: number}) => ({abi: "content-io-v1", id: "fixture", sizeBytes: source.sizeBytes,
+    tryReadInto: vi.fn(() => null), readInto: vi.fn(async (_offset: number, bytes: Uint8Array) => bytes.byteLength), close: vi.fn(async () => {})})),
+  close: vi.fn(async () => {}), fail: vi.fn(),
+}))}));

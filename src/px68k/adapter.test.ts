@@ -1,5 +1,6 @@
+import {managedAdapterFixture} from "../../tests/managed-adapter-fixture.js";
 import {afterEach, expect, it, vi} from "vitest";
-import {mountPx68k} from "./adapter.js";
+import {mountPx68k as mount} from "./adapter.js";
 import {decodeCheckpoint, encodeCheckpoint} from "./state.js";
 import {px68kFixture} from "../../tests/px68k-adapter-fixture.js";
 afterEach(() => {vi.restoreAllMocks(); vi.unstubAllGlobals(); document.body.replaceChildren();});
@@ -95,3 +96,7 @@ it("cleans up if cancellation arrives during module construction", async () => {
   await expect(mountPx68k(f.config, f.target, window, null, vi.fn(), vi.fn(), controller.signal, loader)).rejects.toThrow();
   expect(f.core._retrom_stop).toHaveBeenCalledOnce(); expect(f.target.children).toHaveLength(0);
 });
+
+const mountPx68k: typeof mount = (...args) => {
+  args[8] ??= managedAdapterFixture(args[0]); return mount(...args);
+};

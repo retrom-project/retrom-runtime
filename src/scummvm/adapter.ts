@@ -3,15 +3,17 @@ import type {MountedRuntimeAdapter, RuntimeExitReporter, RuntimeProgressReporter
 import {coreAssets} from "./assets.js";
 import {ScummvmBridge, type NativeStatus} from "./bridge.js";
 import {decodeScummvmSave, saveDigest} from "./checkpoint.js";
-import {openScummvmBlockCache, ScummvmFiles} from "./files.js";
+import type {AdapterContentOptions} from "../provider/content-inputs.js";
+import {ScummvmFiles} from "./files.js";
 import {loadScummvmModule, validFactory, type ScummvmModuleLoader} from "./module.js";
 import {selectionConfig, type ScummvmParameters} from "./parameters.js";
 
 export async function mountScummvm(config: ScummvmParameters, target: HTMLElement, frameWindow: Window,
   restorePayload: Uint8Array | null, reportProgress: RuntimeProgressReporter, reportExit: RuntimeExitReporter,
-  reportFailure: (error: Error) => void, signal?: AbortSignal, loader: ScummvmModuleLoader = loadScummvmModule,
+  reportFailure: (error: Error) => void, signal?: AbortSignal, loader: ScummvmModuleLoader = loadScummvmModule, content?: AdapterContentOptions,
 ): Promise<MountedRuntimeAdapter> {
   if (target.ownerDocument !== frameWindow.document) {throw new Error("SCUMMVM_RUNTIME_CONFIG_INVALID");}
+  if (!content) {throw new Error("CONTENT_IO_ABI_MISMATCH");}
   const baseConfig = selectionConfig(config.selection, null);
   const base = new URL(config.runtimeBaseUrl, window.location.href).href;
   const identity = await saveDigest(new TextEncoder().encode(`${config.contentDigest}\n${baseConfig}`));
@@ -20,6 +22,7 @@ export async function mountScummvm(config: ScummvmParameters, target: HTMLElemen
   const abort = new AbortController();
   const onAbort = () => abort.abort(); signal?.addEventListener("abort", onAbort, {once: true});
   if (signal?.aborted) {onAbort();}
+  const fileSystems: ScummvmFiles[] = [];
   const bridge = new ScummvmBridge(identity);
   const canvas = frameWindow.document.createElement("canvas");
   canvas.id = "canvas";
@@ -43,7 +46,7 @@ export async function mountScummvm(config: ScummvmParameters, target: HTMLElemen
   const failed = (cause: unknown) => {
     if (requestedExit || disposed || failureReported) {return;}
     failureReported = true;
-    const error = cause instanceof Error && /^SCUMMVM_[A-Z0-9_]+$/u.test(cause.message) ? cause : new Error("SCUMMVM_RUNTIME_FAILED");
+    const error = cause instanceof Error && /^(?:SCUMMVM|CONTENT_IO)_[A-Z0-9_]+$/u.test(cause.message) ? cause : new Error("SCUMMVM_RUNTIME_FAILED");
     void bridge.stop().catch(() => undefined);
     ready.reject(error); reportFailure(error);
   };
@@ -88,13 +91,15 @@ export async function mountScummvm(config: ScummvmParameters, target: HTMLElemen
   const dispose = () => {
     if (disposed) {return;}
     disposed = true; abort.abort(); signal?.removeEventListener("abort", onAbort);
+    for (const files of fileSystems) {void files.close().catch(() => {});}
     frameWindow.removeEventListener("error", coreError); canvas.remove();
   };
   try {
-    const cache = await openScummvmBlockCache(frameWindow);
     const index = await scummvmJson(config.projectIndexUrl, 16 * 1024 * 1024, abort.signal, "SCUMMVM_INDEX_FETCH_FAILED");
-    const game = new ScummvmFiles(index, config.contentDigest, fetch, cache, abort.signal);
-    const assets = await coreAssets(base, config.selection.engineId, cache, abort.signal, reportProgress);
+    const game = new ScummvmFiles(index, config.contentDigest, content.contentSession, abort.signal);
+    fileSystems.push(game);
+    const assets = await coreAssets(base, config.selection.engineId, content, abort.signal, reportProgress);
+    fileSystems.push(assets.data);
     Object.assign(host, {files: {stat: (path: string) => source(path).stat(path), list: (path: string) => source(path).list(path),
       read: (path: string, position: number, length: number) => source(path).read(path, position, length)}});
     const source = (path: string) => path === "/data" || path.startsWith("/data/") ? assets.data : game;

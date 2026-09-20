@@ -1,0 +1,490 @@
+{
+  "schemaVersion": 1,
+  "requirements": [
+    {
+      "caseId": "IO-01",
+      "scenario": "注册multi-tail；构建文件树；对所有条目stat",
+      "assertions": "game GET/HEAD正文请求均0；size来自声明；不创建完整输出"
+    },
+    {
+      "caseId": "IO-02",
+      "scenario": "首/中/尾部、跨块与跨窗口；多组非默认阈值及窗口",
+      "assertions": "逐字节等于独立生成器；内部块256KiB；网络只补当前需求窗口的缺失连续块且裁剪EOF，不跨窗口预取"
+    },
+    {
+      "caseId": "IO-03",
+      "scenario": "FILE_TREE零文件；尾部length0；offset>size的length0；native EOF",
+      "assertions": "合法返回0不联网；越界BOUNDS；native截断/EOF与原契约一致"
+    },
+    {
+      "caseId": "IO-04",
+      "scenario": "offset/length为-1/NaN/Infinity/1.5/MAX_SAFE+1；size错误",
+      "assertions": "在分配和网络前拒绝；分配spy和fetch计数0"
+    },
+    {
+      "caseId": "IO-05",
+      "scenario": "D2.2大偏移trace；native64位offset往返",
+      "assertions": "请求保留4GiB以上位；结果正确；不能用unsigned32截断"
+    },
+    {
+      "caseId": "IO-06",
+      "scenario": "barrier挡住同一冷窗口；20个跨块read并发，释放",
+      "assertions": "共享一个窗口任务及必要的缺失区间请求；调用均得到正确且独立结果"
+    },
+    {
+      "caseId": "IO-07",
+      "scenario": "同窗口不同片段、跨窗口重叠、部分缓存和不相邻窗口",
+      "assertions": "只补被需求窗口内的缺失连续块；好块不重下，不合并跨空洞巨型Range"
+    },
+    {
+      "caseId": "IO-08",
+      "scenario": "两waiter等同块，取消第一个后释放响应",
+      "assertions": "第一个ABORTED，第二个正确；底层请求未被第一个signal取消"
+    },
+    {
+      "caseId": "IO-09",
+      "scenario": "同块全部waiter取消；其中一个取消发生在queue中",
+      "assertions": "底层abort一次；队列/监听/pending/credit最终0"
+    },
+    {
+      "caseId": "IO-10",
+      "scenario": "两块响应倒序；关reader后释放旧响应；新建reader",
+      "assertions": "id/epoch匹配；旧响应不写新目标/L1；不会串盘"
+    },
+    {
+      "caseId": "IO-11",
+      "scenario": "RANGE_REQUIRED收到IGNORE_RANGE的大200",
+      "assertions": "RANGE_UNSUPPORTED；header后cancel；没有完整Blob/数组/COMPLETE"
+    },
+    {
+      "caseId": "IO-12",
+      "scenario": "WRONG_START/END/TOTAL，未知总数`*`及垃圾后缀",
+      "assertions": "RANGE_INVALID；无持久有效receipt；未读正文时不分配body缓冲"
+    },
+    {
+      "caseId": "IO-13",
+      "scenario": "SHORT_BODY/LONG_BODY/DISCONNECT/HANG_AFTER_EXPECTED_BYTES",
+      "assertions": "正常done短/长为LENGTH_MISMATCH；挂满后不结束按TIMEOUT；全部清理"
+    },
+    {
+      "caseId": "IO-14",
+      "scenario": "缺失/弱/变化ETag、412；并发首次PIN返回两个ETag",
+      "assertions": "IDENTITY_CHANGED；不同表示不能组成对象；无whole/匿名重试"
+    },
+    {
+      "caseId": "IO-15",
+      "scenario": "EXACT_IF_PRESENT无长度；REQUIRED_EXACT无长度；错误长度",
+      "assertions": "第一种只靠准确body可通过；PPSSPP严格profile必须失败；错误长度全失败"
+    },
+    {
+      "caseId": "IO-16",
+      "scenario": "416、multipart、302跨源redirect；核心提交不规范区间",
+      "assertions": "明确失败；客户端不扩大区间、不跟随redirect、不发多range"
+    },
+    {
+      "caseId": "IO-17",
+      "scenario": "阈值前/等于/后一字节；多组非默认阈值；已缓存部分小文件",
+      "assertions": "只有显式计划且size<=Session阈值、无有效缓存时整文件200通过；部分读取响应仍须准确206"
+    },
+    {
+      "caseId": "IO-18",
+      "scenario": "缓存块长度不变但改一个byte，然后读取",
+      "assertions": "本地SHA发现损坏；只撤销坏块，网络重取一次；好块不重下"
+    },
+    {
+      "caseId": "IO-19",
+      "scenario": "data有高偏移空洞但无receipt；receipt长度/代不匹配",
+      "assertions": "全当miss/坏块；不能根据stat.size重建完成记录"
+    },
+    {
+      "caseId": "IO-20",
+      "scenario": "WHOLE文件提供等长错误正文，预期完整SHA固定",
+      "assertions": "不交付结果、不调用sink.commit、不标COMPLETE；code准确"
+    },
+    {
+      "caseId": "IO-21",
+      "scenario": "INDEX_ENTRY两同size文件与FILE_SHA256同size文件",
+      "assertions": "key不同；assurance不同；不拿projectDigest当fileHash"
+    },
+    {
+      "caseId": "IO-22",
+      "scenario": "修改输出数组、transfer输出buffer、close后复读cache",
+      "assertions": "L1/L2不被改或detach；第二次读取仍正确；不共享最终可变数组"
+    },
+    {
+      "caseId": "IO-23",
+      "scenario": "4槽满、256不同任务排队，再加第257个；不断换文件",
+      "assertions": "并发/队列/LRU/临时池受限；capacity失败可清理；无预取"
+    },
+    {
+      "caseId": "IO-24",
+      "scenario": "fake clock推进429/503一次、timeout、cancel、Retry-After超预算",
+      "assertions": "最多2attempts；同逻辑deadline不刷新；identity/cancel不重试"
+    },
+    {
+      "caseId": "ST-01",
+      "scenario": "真OPFS cold写三个块，等待持久commit；关Session；同profile新Session读",
+      "assertions": "backend=OPFS；body网络0；数据正确；无旧Reader/L1引用"
+    },
+    {
+      "caseId": "ST-02",
+      "scenario": "拒绝OPFS，保留真实IDB/locks/Cache；重复ST-01",
+      "assertions": "backend=CACHE_BLOCKS；新实例复用；保存Response status=200而非206"
+    },
+    {
+      "caseId": "ST-03",
+      "scenario": "依次拒绝IDB、locks、所有持久backend；Range和BYTES/BLOB各运行",
+      "assertions": "backend=MEMORY；正常访问模式保持；不承诺新实例热命中；不能因cachefail终止有效读"
+    },
+    {
+      "caseId": "ST-04",
+      "scenario": "Butterscotch目标工作OPFS拒绝，网络和可选cache正常",
+      "assertions": "WORKSPACE_UNAVAILABLE；原生start未调用；不伪报RUNNING"
+    },
+    {
+      "caseId": "ST-05",
+      "scenario": "在AFTER_DATA_FLUSH_BEFORE_RECEIPT终止Worker，再创建Session读",
+      "assertions": "孤儿字节不算命中；重新读取/校验；没有伪造receipt"
+    },
+    {
+      "caseId": "ST-06",
+      "scenario": "完整GET最后块写后、full hash前终止；新Range和materialize",
+      "assertions": "不存在COMPLETE；Range不读STAGED；materialize需重新顺序全文hash"
+    },
+    {
+      "caseId": "ST-07",
+      "scenario": "同Context两page写同对象相同块，另测不同块/首次PIN竞争",
+      "assertions": "存储可见状态一致；无半写receipt；无data/use锁死锁；不要求跨Session网络去重"
+    },
+    {
+      "caseId": "ST-08",
+      "scenario": "活动Reader/File lease存在时运行GC；关闭后再运行",
+      "assertions": "活动对象保留；释放后可回收；不动存档/旧namespace/其他origin"
+    },
+    {
+      "caseId": "ST-09",
+      "scenario": "预缓存multi-tail首块和尾块，然后materialize",
+      "assertions": "只GET缺失规范块；按offset顺序hash；准确全文输出"
+    },
+    {
+      "caseId": "ST-10",
+      "scenario": "WHOLE物化完成并提交，然后新Reader任意Range读",
+      "assertions": "共用objectKey/backing；无第二下载；COMPLETE变坏时不能假命中"
+    },
+    {
+      "caseId": "ST-11",
+      "scenario": "无cache的WHOLE_ALLOWED EAGER启动",
+      "assertions": "恰好1条无RangeGET；分块hash/sink；无N字节临时concat"
+    },
+    {
+      "caseId": "ST-12",
+      "scenario": "WHOLE下载已提交若干STAGED块后取消，强ETag不变再物化",
+      "assertions": "保留可信前缀，补缺；没有把部分长度当完成；弱/无强绑定不复用未完成段"
+    },
+    {
+      "caseId": "ST-13",
+      "scenario": "对cache.put/IDB提交抛一次错误，sink仍可写",
+      "assertions": "同一有效response继续交付；不新增整GET；只记录cache degraded"
+    },
+    {
+      "caseId": "ST-14",
+      "scenario": "OPFS兼作Blob backing写中失败；分别让前缀可读和不可读",
+      "assertions": "可读有界重放；不可读按规范块补缺；Range不支持时WHOLE最多重启1次"
+    },
+    {
+      "caseId": "ST-15",
+      "scenario": "每个业务路径的max允许值与max+1，另执行可承载的最大文件browser测试",
+      "assertions": "原边界不变；存储后端无隐式小条目上限；不能用小fixture冒充max全量通过"
+    },
+    {
+      "caseId": "ST-16",
+      "scenario": "两Launch同原始内容，各写不同save/overlay；仅其中一个带restore",
+      "assertions": "raw不变；writeRoot不串；无restore者不继承另一实例写入"
+    },
+    {
+      "caseId": "ST-17",
+      "scenario": "origin/purpose/project/path/size变化；另只换签名URL",
+      "assertions": "前五种按key不串；URL变化但身份/授权有效可复用；新Session先有合法Envelope"
+    },
+    {
+      "caseId": "ST-18",
+      "scenario": "建立旧核心namespace假数据，运行新版本cold/warm/GC",
+      "assertions": "不读入旧格式；不自动删旧namespace；新格式冷启动及随后热命中正常"
+    },
+    {
+      "caseId": "BR-01",
+      "scenario": "真NeoCD桥先miss后hit；跨块部分hit；checkpoint前pending",
+      "assertions": "hit保持同步，无新Promise/RPC；miss可挂起；idle/begin/end语义保留"
+    },
+    {
+      "caseId": "BR-02",
+      "scenario": "emulator Worker同步read；Content Worker延迟后提供字节",
+      "assertions": "主线程无Atomics.wait；服务可在模拟器等待期间继续；内容正确"
+    },
+    {
+      "caseId": "BR-03",
+      "scenario": "模拟器等待时终止服务；另无error事件等到deadline",
+      "assertions": "Provider notify或16秒超时使等待结束；错误不是永久冻结"
+    },
+    {
+      "caseId": "BR-04",
+      "scenario": "Play read大于一块；分块延迟；末块错误",
+      "assertions": "done仅全部结束后true；hasError锁定；失败上报一次；重复outstanding拒绝"
+    },
+    {
+      "caseId": "BR-05",
+      "scenario": "mkxp真实WasmFS小测试读game+RTP，stat、seek、EOF及取消",
+      "assertions": "实际backend走公共桥；stat不联网；无wasmFS$JSMemoryRanges/fetch；原线程测试通过"
+    },
+    {
+      "caseId": "BR-06",
+      "scenario": "Kiri main JSPI和pthread各读文件；ZIP头/尾/stream及保存overlay",
+      "assertions": "所有remote源走同句柄；无私有HTTP；挂起正确恢复；派生/存档隔离"
+    },
+    {
+      "caseId": "BR-07",
+      "scenario": "读pending时pause/screenshot/checkpoint，然后新实例restore",
+      "assertions": "原生安全点成立；公共drain不是替代；状态和输入正常"
+    },
+    {
+      "caseId": "BR-08",
+      "scenario": "退出撤销后释放旧响应；模拟HEAP增长/实例销毁",
+      "assertions": "迟到响应不写HEAP、不重建reader/cache；所有worker/port/lease释放"
+    },
+    {
+      "caseId": "BR-09",
+      "scenario": "reader.close/session.close/exit各连续两次，交错调用",
+      "assertions": "幂等；不重复terminate/notify/failure；pending全部settle"
+    },
+    {
+      "caseId": "BR-10",
+      "scenario": "iframe创建buffer；await间Wasm.memory.grow；Blob跨realm",
+      "assertions": "合法类型不被instanceof误拒；写当前HEAP；转移不损坏cache"
+    },
+    {
+      "caseId": "BR-11",
+      "scenario": "消费port发OPEN/任意URL、未授权fileId、旧epoch、非法READ",
+      "assertions": "边界拒绝并关闭违规channel；没有越权fetch；其他合法通道受控"
+    },
+    {
+      "caseId": "BR-12",
+      "scenario": "缺content、旧ABI、错contractHash、未READY就core start",
+      "assertions": "原生start前失败；不自动调用legacy Reader/未验证资产"
+    },
+    {
+      "caseId": "PK-01",
+      "scenario": "两Provider生成manifest和client exports，改变私有policy",
+      "assertions": "contentIO/函数/内部字段不泄漏；四个公共导出和闭合schema保持；checkpoint不被改"
+    },
+    {
+      "caseId": "PK-02",
+      "scenario": "worker/syncclient资产错size、错SHA、同URL二次不同字节",
+      "assertions": "不执行错字节；执行已验证Blob；不是验证一次再import原URL"
+    },
+    {
+      "caseId": "PK-03",
+      "scenario": "Host真实dispatcher从Blob导入client，再创建worker",
+      "assertions": "通过runtimeBaseUrl+assetIndex定位；不依赖blob import.meta.url目录"
+    },
+    {
+      "caseId": "PK-04",
+      "scenario": "测试性改公共源，watcher生成后restart",
+      "assertions": "相关worker/client/index SHA联动且与实际字节一致；失败build不覆盖旧dev descriptor"
+    },
+    {
+      "caseId": "PK-05",
+      "scenario": "core候选/正式资产缺文件、错ABI、浮动tag、hash漂移",
+      "assertions": "完整校验拒绝；不会拼旧资源补全新ABI；正式输入不含development candidate"
+    },
+    {
+      "caseId": "PK-06",
+      "scenario": "扫描源码依赖、metafile和Release清单；注入一条私有fetch",
+      "assertions": "注入必红；已迁移六Range/自有下载无私有HTTP/cache；例外精确到符号"
+    },
+    {
+      "caseId": "HP-01",
+      "scenario": "真Host路由/CAS/授权发GET/HEAD/206/412/416/多Range及投影内容",
+      "assertions": "状态/header/body/身份正确；未授权不读内容；不是测试HTTP服务替代"
+    },
+    {
+      "caseId": "HP-02",
+      "scenario": "EAGER cache命中/下载/restart；Range及ON_OPEN运行中读",
+      "assertions": "准备进度唯一、最终commit前不100%；Range不伪整盘百分比；RUNNING不重开遮罩"
+    },
+    {
+      "caseId": "HP-03",
+      "scenario": "冷启动六Range核心，观察Context内全部相关请求",
+      "assertions": "不漏Worker/无RangeGET；区间有界；资源role正确；实际执行资产匹配"
+    },
+    {
+      "caseId": "HP-04",
+      "scenario": "已持久化后不同Launch，同origin/profile重放已缓存动作",
+      "assertions": "缓存区间正文网络0；不是同一Reader热L1或浏览器HTTP缓存造成"
+    },
+    {
+      "caseId": "HP-05",
+      "scenario": "正常上传/导入→Review Preview→产品发布→Product Launch",
+      "assertions": "原权限链和共享dispatcher均走到；无核心专用旁路/直开demo代替"
+    },
+    {
+      "caseId": "HP-06",
+      "scenario": "原checkpoint语义保存→新Launch恢复→手柄方向/确认",
+      "assertions": "实际游戏状态恢复；输入有可观察结果；已有取消保持；不能只验证字节非空"
+    },
+    {
+      "caseId": "HP-07",
+      "scenario": "固定长时操作、退出、可选EXIT_REQUESTED",
+      "assertions": "公共保留内存有界；请求/Worker/锁回收；重复退出不漏；不把已知核心渲染缺陷混为I/O新回归"
+    },
+    {
+      "caseId": "X-01",
+      "scenario": "CORE_ASSET有普通ETag或无ETag，但size/SHA正确；另SHA错",
+      "assertions": "前者完整验证后可用；后者拒绝；没有构造假的sha256 ETag"
+    },
+    {
+      "caseId": "X-02",
+      "scenario": "RANGE响应带gzip/br Content-Encoding",
+      "assertions": "读取body前失败；服务端代理关闭该类表示压缩后正常"
+    },
+    {
+      "caseId": "X-03",
+      "scenario": "header正确且送满expected bytes后不结束stream",
+      "assertions": "readExact仍等待done，最终按deadline失败；不能提前commit"
+    },
+    {
+      "caseId": "X-04",
+      "scenario": "跨4块逻辑读，每块耗时少于15秒但总计超过15秒",
+      "assertions": "整体在同逻辑预算截止；不会每块延长15秒"
+    },
+    {
+      "caseId": "X-05",
+      "scenario": "20waiter分布多个deadline/取消；有foreground和物化积压",
+      "assertions": "共享请求不受单waiter误杀；8:1调度可验证；资源池不超限"
+    },
+    {
+      "caseId": "X-06",
+      "scenario": "READ_OK不ACK，发送伪未来ACK，JOB_ACK错chunkIndex",
+      "assertions": "超时/协议错误收口；不提前释放仍占用credit；不无限分配"
+    },
+    {
+      "caseId": "X-07",
+      "scenario": "FILE_TREE超过128文件，访问9个通道组，含pending组",
+      "assertions": "8条通道上限；只关闭idle组；无open/stat正文；后续访问可重建组"
+    },
+    {
+      "caseId": "X-08",
+      "scenario": "IDB事务期间故意插入外部await的测试替身",
+      "assertions": "fixture证明事务提前结束风险；正式metadata实现无该await且CAS正确"
+    },
+    {
+      "caseId": "X-09",
+      "scenario": "OPFS高offset写配额失败＋后端降级；旧代有好块",
+      "assertions": "新代需求复用好块；无整库迁移；generation不被核心指定"
+    },
+    {
+      "caseId": "X-10",
+      "scenario": "已交付完整File仍被core持有时发现坏块",
+      "assertions": "不原地改写已交付backing；旧lease失败通知一次；新代可重新准备"
+    },
+    {
+      "caseId": "X-11",
+      "scenario": "同对象两个BYTES物化，一个SINK后排队，取消排队者",
+      "assertions": "最终数组/sink不共享可写对象；排队取消不杀活动任务；无持久时不伪称零重下"
+    },
+    {
+      "caseId": "X-12",
+      "scenario": "STREAM在write失败、最后chunk ACK前取消、commit失败",
+      "assertions": "不ACK失败块；一次任务终态；sink.abort幂等；不向core返回成功"
+    },
+    {
+      "caseId": "X-13",
+      "scenario": "cache失效但workspace/BYTES sink成功",
+      "assertions": "本次结果receipt完整；持久对象不伪COMPLETE；无额外GET"
+    },
+    {
+      "caseId": "X-14",
+      "scenario": "SAB在服务“复制前/复制后发布前”触发关闭，马上建新channel",
+      "assertions": "CLOSED不可被CAS改回OK；旧SAB永久隔离；新通道结果不串"
+    },
+    {
+      "caseId": "X-15",
+      "scenario": "正常native stop内部还要读文件；另force stop",
+      "assertions": "正常stop完成前reader可用；force先撤销唤醒；不会复用同退出顺序误伤"
+    },
+    {
+      "caseId": "X-16",
+      "scenario": "mount在worker创建后、core初始化前/后分别失败",
+      "assertions": "Content Worker、URL、ports、lease与core全部清理；Host生命周期不假RUNNING"
+    },
+    {
+      "caseId": "X-17",
+      "scenario": "workspace等长坏文件、坏receipt、写完最后文件前崩溃",
+      "assertions": "校验失败；新工作代；不使用未完成项目；旧正常项目/save不删"
+    },
+    {
+      "caseId": "X-18",
+      "scenario": "ONS未打开大文件；Butterscotch两个Launch；NXEngine额外无关文件",
+      "assertions": "ONS无主动正文；Butterscotch原始复用写隔离；NXEngine集合不扩大"
+    },
+    {
+      "caseId": "X-19",
+      "scenario": "旧PFB base硬加公共worker路径；新完整base正常；同版本不同bundle",
+      "assertions": "旧base拒绝；验证新base可导入；upgrade-only未被关闭"
+    },
+    {
+      "caseId": "X-20",
+      "scenario": "runtime来源old正式ABI/new候选ABI不一致，丢失candidate或contractHash错",
+      "assertions": "构建/启动失败而不是用旧core填充；完成真实新Release后正式gate可通过"
+    },
+    {
+      "caseId": "X-21",
+      "scenario": "有缓存但无当前 Host 授权；合法新 Launch；已热 L1 时对象撤销／Host abort（S05/S08/S09/S19）",
+      "assertions": "不凭 receipt 建立授权；合法新 Launch 可复用；本 Session 撤销清 ASYNC L1、使 SYNC 命中也失败、通知 File lease 持有者；不伪称即时感知远端撤权"
+    },
+    {
+      "caseId": "X-22",
+      "scenario": "各存储探测耗满2秒；首个 READ 提前；物化持续超过5秒；STREAM背压（S05/S06/S07）",
+      "assertions": "READY 不被可选探测卡住；500ms 路径确定并清迟到资源；长物化不会被管理总超时杀死；网络 idle 与 sink ACK 使用各自期限"
+    },
+    {
+      "caseId": "X-23",
+      "scenario": "同一同步调用连续读取两冷块，暂停服务至 SLOT_FREE 和下一 READ 都入队；另注入 ERROR（S08/S12）",
+      "assertions": "旧 ACK 不检查或覆写新 REQUESTED；下一块正确；ERROR 不等待阻塞线程消息事件；pending／credit 清零"
+    },
+    {
+      "caseId": "X-24",
+      "scenario": "两 Session：一方持完整 File，另一方迟到 Range／whole 写；另触发本地后端超时／MEMORY降级（S06/S07）",
+      "assertions": "COMPLETE 代不再写；File 可读；本地降级不切换另一实例 current；旧代元数据和 GC 无泄漏；COMPLETE 前崩溃不提前暴露 STAGED"
+    },
+    {
+      "caseId": "X-25",
+      "scenario": "项目包含 `.content-io-complete-v1.json`、`meta/complete-v1.json` 同名业务文件；双实例准备；无 Web Locks（S17）",
+      "assertions": "内容仅落 data/；标记不可覆盖；pointer 有锁串行写；无锁不访问共享 pointer；取得 lease 后再验证／交付"
+    },
+    {
+      "caseId": "X-26",
+      "scenario": "STREAM 最后 ACK 已到但本地 commit 延迟／失败；合法空 BYTES／BLOB（S07）",
+      "assertions": "commit 成功前没有公开100%或成功结果；失败终态唯一；空结果类型正确且摘要匹配"
+    },
+    {
+      "caseId": "X-27",
+      "scenario": "ScummVM data 不带强 ETag／带普通强 ETag；可执行 plugin 同长度错字节；被篡改资产目录（S03/S07/S11）",
+      "assertions": "仅已验证不可变 data profile 可以无强 ETag 按需；未访问 data 无正文；plugin 必须完整 SHA；来源未验证则启动失败；无第二 Range 实现"
+    },
+    {
+      "caseId": "X-28",
+      "scenario": "mkxp 真实 PROXY_TO_PTHREAD 夹具，跨多块 read、EOF、超时和线程取消（S14）",
+      "assertions": "目标为 browser UI 线程；非原生 main；Promise 能推进；分段长度合法且不刷新逻辑期限；迟到回调不写释放的 native task"
+    },
+    {
+      "caseId": "X-29",
+      "scenario": "在 S02 运行合同子用例；将同 ID 的 UNIT 报告冒充 CORE／PRODUCT；删一个冻结 subcase（S01/S21）",
+      "assertions": "早期无循环依赖；错误层级及缺 subcase 必败；最终覆盖表包含 D3 全部断言"
+    },
+    {
+      "caseId": "X-30",
+      "scenario": "伪造 OPEN policy/result/maxBytes；MAX_SAFE_INTEGER 附近尾块；超过16MiB原生读（S02/S03/S10—S15）",
+      "assertions": "policy 被管理路径固定；PREPARE 不可扩大上限；Range 算术准确；桥按既有原生语义分段，不把公共限长变成新格式限制"
+    }
+  ]
+}

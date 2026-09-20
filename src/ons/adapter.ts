@@ -1,3 +1,5 @@
+import type {AdapterContentOptions} from "../provider/content-inputs.js";
+import {fetchMetadataJson, indexByteBudget} from "../provider/metadata.js";
 import { decodeOnsCheckpoint, encodeOnsCheckpoint, type OnsCheckpointBundle } from "./checkpoint.js";
 import type { MountedRuntimeAdapter, RuntimeExitReporter, RuntimeProgressReporter } from "../internal-adapter.js";
 import type {OnsParameters} from "./parameters.js";
@@ -56,10 +58,11 @@ export async function mountOnsYuri(
   restorePayload: Uint8Array | null,
   reportProgress: RuntimeProgressReporter = () => undefined,
   reportExitRequested: RuntimeExitReporter = () => undefined,
+  content?: AdapterContentOptions & {signal?: AbortSignal; onFailure?: (error: Error) => void},
 ): Promise<MountedRuntimeAdapter> {
   if (target.ownerDocument !== frameWindow.document) {throw new Error("ONS_RUNTIME_TARGET_INVALID");}
   reportProgress({ phase: "PROJECT_INDEX", loadedBytes: 0, totalBytes: null });
-  const index = await loadProjectIndex(config.projectIndexUrl);
+  const index = await loadProjectIndex(config.projectIndexUrl, content?.signal);
   reportProgress({ phase: "PROJECT_INDEX", loadedBytes: 1, totalBytes: 1 });
   const restore = await readRestore(restorePayload);
   const host = frameWindow as OnsHostWindow;
@@ -87,7 +90,7 @@ export async function mountOnsYuri(
   const gamepadCleanup = installOnsAnalogGamepad(frameWindow, canvas);
 
   const globals = captureGlobals(host);
-  const projectFiles = createOnsProjectFileMap(index.files, frameWindow, reportProgress);
+  const projectFiles = createOnsProjectFileMap(index.files, frameWindow, reportProgress, content && {...content, projectDigest: config.contentDigest});
   const fileMap = projectFiles.fileMap;
   let module: OnsModule | null = null;
   let paused = false;
@@ -135,6 +138,7 @@ export async function mountOnsYuri(
     canvas.removeEventListener("pointerdown", focusCanvas, true);
     target.replaceChildren();
     restoreGlobals(host, globals);
+    await projectFiles.close();
     throw error;
   }
 
@@ -168,6 +172,7 @@ export async function mountOnsYuri(
       exited = true;
       activeModule._onsyuri_host_set_paused(1);
       videoCleanup();
+      await projectFiles.close();
       gamepadCleanup();
       script?.remove();
       canvas.removeEventListener("pointerdown", focusCanvas, true);
@@ -184,12 +189,10 @@ export async function mountOnsYuri(
   };
 }
 
-async function loadProjectIndex(url: string): Promise<ProjectIndex> {
+async function loadProjectIndex(url: string, signal?: AbortSignal): Promise<ProjectIndex> {
   let value: unknown;
   try {
-    const response = await fetch(url, { credentials: "same-origin" });
-    if (!response.ok) {throw new Error("response");}
-    value = await response.json();
+    value = await fetchMetadataJson(url, indexByteBudget(maximumProjectFiles, 1024), signal);
   } catch {throw new Error("ONS_PROJECT_INDEX_UNAVAILABLE");}
   if (!validIndex(value)) {throw new Error("ONS_PROJECT_INDEX_INVALID");}
   return value;

@@ -1,3 +1,6 @@
+import type {AdapterContentOptions} from "../provider/content-inputs.js";
+import {MkxpContent, fetchVerified} from "./content.js";
+import {ContentIOError} from "../content-io/errors.js";
 import { Nostalgist } from "nostalgist";
 import type { MountedRuntimeAdapter, RuntimeExitReporter, RuntimeProgressReporter } from "../internal-adapter.js";
 import {type MkxpStatus, mkxpStatus, waitForMkxpExit, waitForMkxpFrame, waitForMkxpRestore, waitForMkxpSave} from "./status.js";
@@ -26,6 +29,7 @@ type MkxpRuntime = Pick<Nostalgist,
 
 type MkxpPrepareOptions = Parameters<typeof Nostalgist.prepare>[0] & {
   emscriptenModule: NonNullable<Parameters<typeof Nostalgist.prepare>[0]["emscriptenModule"]> & {
+    retromContentBridge: MkxpContent["bridge"];
     onExit: (status: number) => void;
     preRun: Array<(module: { ENV: Record<string, string> }) => void>;
   };
@@ -34,7 +38,7 @@ type MkxpPrepareOptions = Parameters<typeof Nostalgist.prepare>[0] & {
 type MkxpMountDependencies = {
   decodeCheckpoint: typeof decodeMkxpCheckpoint;
   encodeCheckpoint: typeof encodeMkxpCheckpoint;
-  fetchVerified: (url: string, expectedSize: number, expectedDigest: string) => Promise<Uint8Array>;
+  fetchVerified: typeof fetchVerified;
   prepare: (options: MkxpPrepareOptions) => Promise<MkxpRuntime>;
 };
 
@@ -45,7 +49,6 @@ const statePath = `${coreStateRoot}/game.state`;
 const remoteGamePath = "/retrom-content/game.mkxpz";
 const fetchManifestPath = `${systemRoot}/mkxp-z/fetch.manifest`;
 const fetchBaseDirectory = "/retrom-fetch";
-const fetchChunkSizeBytes = 256 * 1024;
 const pauseToggleHotkey = { code: "F6", keyCode: 117 } as const;
 const browserDependencies: MkxpMountDependencies = {
   decodeCheckpoint: decodeMkxpCheckpoint,
@@ -71,13 +74,17 @@ export async function mountMkxp(
   onDiagnostic: (diagnostic: { runtime: string; message: string }) => void = defaultMkxpDiagnostic,
   reportProgress: RuntimeProgressReporter = () => undefined,
   reportExitRequested: RuntimeExitReporter = () => undefined,
+  content?: AdapterContentOptions & {signal?: AbortSignal; onFailure?: (error: Error) => void},
 ) {
+  if (!content) {throw new ContentIOError("ABI_MISMATCH");}
+  const bridge = new MkxpContent(content, content.onFailure ?? (() => undefined), content.signal);
   try {
     return await mountMkxpUnchecked(
-      config, target, restorePayload, dependencies, onDiagnostic, reportProgress, reportExitRequested,
+      config, target, restorePayload, dependencies, onDiagnostic, reportProgress, reportExitRequested, content, bridge,
     );
   }
   catch (error) {
+    await bridge.close();
     onDiagnostic({ runtime: "mkxp-z", message: `RPG_RUNTIME_MOUNT_FAILED:${mountFailureMessage(error)}` });
     target.replaceChildren();
     throw error;
@@ -100,6 +107,8 @@ async function mountMkxpUnchecked(
   onDiagnostic: (diagnostic: { runtime: string; message: string }) => void,
   reportProgress: RuntimeProgressReporter,
   reportExitRequested: RuntimeExitReporter,
+  content: AdapterContentOptions & {signal?: AbortSignal},
+  bridge: MkxpContent,
 ) {
   if (!window.crossOriginIsolated || typeof SharedArrayBuffer === "undefined") {
     throw new Error("RPG_RUNTIME_THREADS_REQUIRED");
@@ -125,14 +134,14 @@ async function mountMkxpUnchecked(
   reportProgress({ phase: "RUNTIME_ASSET", loadedBytes: 0, totalBytes: runtimeAssetBytes });
   const [jsBytes, wasmBytes] = await Promise.all([
     dependencies.fetchVerified(
-      config.core.jsUrl, config.core.jsSizeBytes, config.core.jsSha256,
+      config.core.jsUrl, config.core.jsSizeBytes, config.core.jsSha256, content, content.signal,
     ),
     dependencies.fetchVerified(
-      config.core.wasmUrl, config.core.wasmSizeBytes, config.core.wasmSha256,
+      config.core.wasmUrl, config.core.wasmSizeBytes, config.core.wasmSha256, content, content.signal,
     ),
   ]);
   reportProgress({ phase: "RUNTIME_ASSET", loadedBytes: runtimeAssetBytes, totalBytes: runtimeAssetBytes });
-  const remoteContent = remoteContentManifest(config);
+  const remoteContent = remoteContentManifest(config, bridge);
   reportProgress({ phase: "PROJECT_INDEX", loadedBytes: 0, totalBytes: remoteContent.manifest.byteLength });
   const printDiagnostic = (...args: unknown[]) => {
     onDiagnostic({ runtime: "mkxp-z", message: args.map(String).join(" ") });
@@ -153,6 +162,7 @@ async function mountMkxpUnchecked(
     element: canvas,
     emscriptenModule: {
       arguments: [remoteGamePath],
+      retromContentBridge: bridge.bridge,
       onExit: (status) => {
         if (nativeExited) {return;}
         nativeExited = true;
@@ -190,6 +200,7 @@ async function mountMkxpUnchecked(
       "mkxp-z_saveStateSize": String(config.stateBufferBytes / (1024 * 1024)),
     },
   });
+  bridge.attach(nostalgist.getEmscriptenModule() as Parameters<MkxpContent["attach"]>[0]);
   // Nostalgist 0.20.2 combines native force-exit and JS listener/blob cleanup.
   // Its public Emscripten facade must not re-enter global destruction after
   // onExit: the first exit has already terminated the supporting pthreads.
@@ -206,6 +217,7 @@ async function mountMkxpUnchecked(
       await waitForMkxpExit(nativeExit);
       onDiagnostic({runtime: "mkxp-z", message: "RPG_RUNTIME_EXIT_ACKNOWLEDGED"});
     }
+    await bridge.close();
     await nostalgist.exit();
     onDiagnostic({runtime: "mkxp-z", message: "RPG_RUNTIME_EXIT_DISPOSED"});
   });
@@ -224,7 +236,6 @@ async function mountMkxpUnchecked(
       loadedBytes: remoteContent.manifest.byteLength,
       totalBytes: remoteContent.manifest.byteLength,
     });
-    reportProgress({ phase: "PROJECT_CONTENT", loadedBytes: 0, totalBytes: remoteContent.totalBytes });
     await waitForMkxpFrame(status);
     if (restorePayload) {
       status.requestRestore();
@@ -277,37 +288,16 @@ function installRuntimeFiles(
 function fetchEnvironment() {
   return {
     FETCH_BASE_DIR: fetchBaseDirectory,
-    FETCH_CHUNK_SIZE_BYTES: String(fetchChunkSizeBytes),
     FETCH_MANIFEST: fetchManifestPath,
   };
 }
 
-function remoteContentManifest(config: MkxpParameters) {
-  const entries = [
-    { localPath: remoteGamePath, source: config.projectArchive },
-    ...config.rtpArchives.map((archive, index) => ({
-      localPath: `${systemRoot}/mkxp-z/RTP/${runtimePackFileName(index, archive.declaredName)}`,
-      source: archive,
-    })),
-  ];
-  const urls = entries.map((entry) => new URL(entry.source.url, document.baseURI));
-  const origin = urls[0]?.origin;
-  if (!origin || urls.some((url) => url.origin !== origin || url.username || url.password || url.hash)) {
-    throw new Error("RPG_RUNTIME_CONTENT_UNAVAILABLE");
+function remoteContentManifest(config: MkxpParameters, bridge: MkxpContent) {
+  bridge.register(config.projectArchive, remoteGamePath, "GAME");
+  for (const [index, archive] of config.rtpArchives.entries()) {
+    bridge.register(archive, `${systemRoot}/mkxp-z/RTP/${runtimePackFileName(index, archive.declaredName)}`, "FIRMWARE");
   }
-  const baseUrl = `${origin}/`;
-  const lines = entries.map((entry, index) => {
-    const url = urls[index];
-    const fetchPath = `${url.pathname.replace(/^\/+/, "")}${url.search}`;
-    if (!fetchPath || /[\r\n ]/u.test(fetchPath) || /[\r\n]/u.test(entry.localPath)) {
-      throw new Error("RPG_RUNTIME_CONTENT_UNAVAILABLE");
-    }
-    return `${fetchPath} ${entry.localPath}`;
-  });
-  return {
-    manifest: new TextEncoder().encode([baseUrl, ...lines, ""].join("\n")),
-    totalBytes: entries.reduce((total, entry) => total + entry.source.sizeBytes, 0),
-  };
+  return {manifest: new TextEncoder().encode(bridge.manifest())};
 }
 
 function runtimePackFileName(index: number, declaredName: string) {
@@ -325,21 +315,6 @@ function hasControlCharacter(value: string) {
     const codePoint = character.codePointAt(0) ?? 0;
     return codePoint <= 31 || codePoint === 127;
   });
-}
-
-export async function fetchVerified(url: string, expectedSize: number, expectedDigest: string) {
-  const response = await fetch(url, { credentials: "same-origin", cache: "default", redirect: "error" });
-  if (!response.ok || response.url !== new URL(url, window.location.href).href) {throw new Error("RPG_RUNTIME_CONTENT_UNAVAILABLE");}
-  const bytes = new Uint8Array(await response.arrayBuffer());
-  if (bytes.byteLength !== expectedSize || await digest(bytes) !== expectedDigest) {
-    throw new Error("RPG_RUNTIME_CONTENT_DIGEST_MISMATCH");
-  }
-  return bytes;
-}
-
-async function digest(bytes: Uint8Array) {
-  const result = new Uint8Array(await crypto.subtle.digest("SHA-256", bytes.slice()));
-  return [...result].map((value) => value.toString(16).padStart(2, "0")).join("");
 }
 
 function canvasBlob(canvas: HTMLCanvasElement) {

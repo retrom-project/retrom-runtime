@@ -72,3 +72,9 @@ async function mount(restore: Uint8Array | null, state: Uint8Array, format = "fl
   await mounting;
   return {player, runtimeWindow, load, toggle};
 }
+
+vi.mock("../../content-io/bootstrap.js", () => ({bootstrapContentSession: vi.fn(async () => ({
+  open: vi.fn(async (source: {sizeBytes: number}) => ({abi: "content-io-v1", id: "fixture", sizeBytes: source.sizeBytes,
+    tryReadInto: vi.fn(() => null), readInto: vi.fn(async (_offset: number, bytes: Uint8Array) => bytes.byteLength), close: vi.fn(async () => {})})),
+  close: vi.fn(async () => {}), fail: vi.fn(),
+}))}));

@@ -1,3 +1,4 @@
+import {requireContentSession} from "../../provider/content-inputs.js";
 import {mountGBE} from "../../gbe-pokemini/adapter.js";
 import {mountNXEngine} from "../../nxengine/adapter.js";
 import {mountNP2} from "../../np2kai/adapter.js";
@@ -24,7 +25,9 @@ import type {AssetIndexV1, LaunchEnvelopeV1} from "../../provider/module-api.js"
 import {retromRuntimeProviderDefinition} from "./catalog.js";
 import * as parameters from "./target-parameters.js";
 
+import type {ContentSessionClient} from "../../content-io/client.js";
 export type TargetMountContext = {
+  contentSession?: ContentSessionClient | null;
   signal?: AbortSignal;
   reportFailure?: (error: Error) => void;
   assetIndex: AssetIndexV1;
@@ -46,27 +49,30 @@ export function mountTargetAdapter(
   const reportFailure = failureReporter(context);
   switch (adapter.kind) {
   case "NXENGINE_WEB":
-    return mountNXEngine(parameters.nxengine(envelope, context.assetIndex), target, frameWindow, restorePayload, reportProgress, reportFailure, context.signal);
+    return mountNXEngine(parameters.nxengine(envelope, context.assetIndex), target, frameWindow, restorePayload, reportProgress, reportFailure, context.signal, undefined, contentOptions(context));
   case "OPENBOR_WEB":
-    return mountOpenBOR(parameters.openbor(envelope), target, frameWindow, restorePayload, reportProgress, reportFailure, context.signal);
+    return mountOpenBOR(parameters.openbor(envelope), target, frameWindow, restorePayload, reportProgress, reportFailure, context.signal, contentOptions(context));
   case "RUFFLE_WEB":
-    return mountRuffle(parameters.ruffle(envelope), target, frameWindow, restorePayload, reportProgress, context.signal);
+    return mountRuffle(parameters.ruffle(envelope), target, frameWindow, restorePayload, reportProgress, context.signal, undefined, contentOptions(context));
   case "EASYRPG_WEB":
     return mountEasyRpg(parameters.easyRpg(envelope, declaration.implementation), target,
       frameWindow, restorePayload, reportExitRequested);
   case "MKXP_LIBRETRO_WEB":
     return mountMkxp(parameters.mkxp(envelope, declaration.implementation, context.assetIndex), target,
-      restorePayload, undefined, context.onDiagnostic, reportProgress, reportExitRequested);
+      restorePayload, undefined, context.onDiagnostic, reportProgress, reportExitRequested,
+      {...contentOptions(context), signal: context.signal, onFailure: reportFailure});
   case "NATIVE_WEB":
     return mountNativeRpg(parameters.nativeRpg(envelope, declaration.implementation), requireFrame(context),
       restorePayload, reportExitRequested);
   case "ONS_YURI_WEB":
-    return mountOnsYuri(parameters.ons(envelope), target, frameWindow, restorePayload, reportProgress, reportExitRequested);
+    return mountOnsYuri(parameters.ons(envelope), target, frameWindow, restorePayload, reportProgress, reportExitRequested,
+      {...contentOptions(context), signal: context.signal, onFailure: reportFailure});
   case "KIRIKIRI2_WEB":
-    return mountKirikiri2(parameters.kirikiri(envelope), target, frameWindow, restorePayload, reportExitRequested);
+    return mountKirikiri2(parameters.kirikiri(envelope), target, frameWindow, restorePayload, reportExitRequested,
+      {contentSession: requireContentSession(context.contentSession), assetIndex: context.assetIndex, signal: context.signal});
   case "BUTTERSCOTCH_WEB":
     return mountButterscotch(parameters.butterscotch(envelope), target, frameWindow, restorePayload,
-      reportProgress, reportExitRequested);
+      reportProgress, reportExitRequested, {...contentOptions(context), signal: context.signal});
   case "TYRANOSCRIPT_WEB":
     return mountTyranoScript(parameters.tyranoScript(envelope), requireFrame(context), restorePayload, reportExitRequested);
   case "J2ME_MINIJVM_WEB":
@@ -74,14 +80,14 @@ export function mountTargetAdapter(
       reportExitRequested, reportFailure, context.signal);
   case "SCUMMVM_WEB":
     return mountScummvm(parameters.scummvm(envelope), target, frameWindow, restorePayload, reportProgress,
-      reportExitRequested, reportFailure, context.signal);
+      reportExitRequested, reportFailure, context.signal, undefined, {contentSession: requireContentSession(context.contentSession), assetIndex: context.assetIndex});
 
   case "TIC80_WEB":
   case "FAKE08_WEB":
     return mountFantasyConsole(parameters.fantasy(envelope, context.assetIndex), target, frameWindow,
-      restorePayload, reportProgress, reportFailure, context.signal);
+      restorePayload, reportProgress, reportFailure, context.signal, undefined, contentOptions(context));
   case "WASM4_WEB":
-    return mountWasm4(parameters.wasm4(envelope), target, frameWindow, restorePayload, reportProgress);
+    return mountWasm4(parameters.wasm4(envelope), target, frameWindow, restorePayload, reportProgress, undefined, {...contentOptions(context), signal: context.signal});
   default: return mountMachineAdapter(adapter.kind, envelope, target, context);
   }
 }
@@ -107,21 +113,25 @@ function mountMachineAdapter(kind: string, envelope: LaunchEnvelopeV1, target: H
   const reportFailure = context.reportFailure ?? (() => undefined);
   switch (kind) {
   case "GBE_POKEMINI_WEB":
-    return mountGBE(parameters.gbePokemini(envelope, context.assetIndex), target, frameWindow, restorePayload, reportProgress, context.signal);
+    return mountGBE(parameters.gbePokemini(envelope, context.assetIndex), target, frameWindow, restorePayload, reportProgress, context.signal, undefined, contentOptions(context));
   case "NP2KAI_WEB":
     return mountNP2(parameters.np2kai(envelope, context.assetIndex), target, frameWindow, restorePayload,
-      reportProgress, reportFailure, context.signal);
+      reportProgress, reportFailure, context.signal, undefined, contentOptions(context));
   case "PX68K_WEB":
     return mountPx68k(parameters.px68k(envelope, context.assetIndex), target, frameWindow, restorePayload,
-      reportProgress, reportFailure, context.signal);
+      reportProgress, reportFailure, context.signal, undefined, contentOptions(context));
   case "WEBMSX_WEB":
-    return mountWebMSX(parameters.webmsx(envelope), target, frameWindow, restorePayload, reportProgress, context.signal);
+    return mountWebMSX(parameters.webmsx(envelope), target, frameWindow, restorePayload, reportProgress, context.signal, undefined, contentOptions(context));
   case "PPSSPP_WEB":
     return mountPSP(parameters.psp(envelope, context.assetIndex), target, frameWindow, restorePayload,
-      reportProgress, reportFailure, context.signal);
+      reportProgress, reportFailure, context.signal, {}, {contentSession: requireContentSession(context.contentSession), runtimeBaseURL: envelope.runtime.runtimeBaseUrl});
   case "PLAY_WEB":
     return mountPlay(parameters.play(envelope, context.assetIndex), target, frameWindow, restorePayload,
-      reportFailure, context.signal);
+      reportFailure, context.signal, undefined, {contentSession: requireContentSession(context.contentSession), assetIndex: context.assetIndex});
   default: throw new Error("PROVIDER_LAUNCH_REQUEST_INVALID");
   }
+}
+
+function contentOptions(context: TargetMountContext) {
+  return {contentSession: requireContentSession(context.contentSession), assetIndex: context.assetIndex};
 }

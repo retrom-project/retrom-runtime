@@ -1,22 +1,16 @@
 // @vitest-environment node
 import {readFile} from "node:fs/promises";
-import {expect, it} from "vitest";
+import {expect,it} from "vitest";
 import {validateProviderSources} from "../scripts/provider-sources.mjs";
-
-it("requires the complete immutable PSP release before accepting formal sources", async () => {
-  const sources = JSON.parse(await readFile("provider-sources.json", "utf8"));
-  const release = sources.upstreamReleases.find((entry: {id: string}) => entry.id === "ppsspp");
-  expect(release).toMatchObject({repository: "https://github.com/retrom-project/ppsspp",
-    tag: "retrom-core-g2e6fd06ed6c7-r2", commit: "fe5a19d2d1d619869b064e72a73e835519bb2ed2", adapterAbi: "ppsspp-host-v2"});
-  expect(release.assets.map((asset: {filename: string}) => asset.filename).sort()).toEqual([
-    "LICENSE", "ppsspp-host.mjs", "ppsspp-io.worker.mjs", "ppsspp.data", "ppsspp.js", "ppsspp.wasm", "ppsspp.worker.mjs",
-  ]);
-  expect(sources.developmentInputs?.some((entry: {id: string}) => entry.id === "ppsspp") ?? false).toBe(false);
-  expect(() => validateProviderSources(sources)).not.toThrow();
-  const original = release.assets[0].sha256;
-  release.assets[0].sha256 = "missing";
-  expect(() => validateProviderSources(sources)).toThrow("PROVIDER_SOURCES_INVALID");
-  release.assets[0].sha256 = original;
-  release.assets[0].sizeBytes = release.assets[0].maxSizeBytes + 1;
-  expect(() => validateProviderSources(sources)).toThrow("PROVIDER_SOURCES_INVALID");
+import {assertScummvmCandidateMode} from "../scripts/scummvm-release.mjs";
+it("[PK-06] CONTRACT/PSP pins a published ABI-v3 core with no private I/O Worker",async()=>{
+ const sources=JSON.parse(await readFile("provider-sources.json","utf8"));validateProviderSources(sources);
+ const input=sources.upstreamReleases.find((v:{id:string})=>v.id==="ppsspp");
+ expect(input).toMatchObject({repository:"https://github.com/retrom-project/ppsspp",upstreamCommit:"2e6fd06ed6c77db467dea5fb3f67abd93457da20",adapterAbi:"ppsspp-host-v3"});
+ expect(input.tag).toBe("retrom-core-g2e6fd06ed6c7-r3");expect(input.commit).toMatch(/^[0-9a-f]{40}$/u);
+ expect(sources.developmentInputs.some((v:{id:string})=>v.id==="ppsspp")).toBe(false);
+ expect(input.assets.map((v:{filename:string})=>v.filename).sort()).toEqual(["LICENSE","ppsspp-host.mjs","ppsspp.data","ppsspp.js","ppsspp.wasm","ppsspp.worker.mjs"]);
+ for(const asset of input.assets){expect(asset.sizeBytes).toBeGreaterThan(0);expect(asset.sha256).toMatch(/^[0-9a-f]{64}$/u);}
+ expect(()=>assertScummvmCandidateMode([input],true,true)).toThrow("UNPUBLISHED_CORE_INPUT");
+ input.assets[0].maxSizeBytes=0;expect(()=>validateProviderSources(sources)).toThrow("PROVIDER_SOURCES_INVALID");
 });

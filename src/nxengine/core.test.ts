@@ -1,3 +1,4 @@
+import {managedAdapterFixture} from "../../tests/managed-adapter-fixture.js";
 import {afterEach, expect, it, vi} from "vitest";
 import {sha256} from "@noble/hashes/sha2.js";
 import {loadCore} from "./core.js";
@@ -15,7 +16,7 @@ it("resolves host-relative asset and project URLs before loading the native modu
     ? Response.json({schemaVersion: 1, files}) : new Response(bytes));
   vi.stubGlobal("fetch", fetch); vi.stubGlobal("caches", undefined);
   const loader = vi.fn(async () => {throw Error("TEST_MODULE_BOUNDARY");});
-  await expect(loadCore(config, () => undefined, undefined, loader)).rejects.toThrow("TEST_MODULE_BOUNDARY");
+  await expect(loadCore(config, () => undefined, undefined, loader, managedAdapterFixture(config).contentSession)).rejects.toThrow("TEST_MODULE_BOUNDARY");
   expect(loader).toHaveBeenCalledWith(new URL(`${config.runtimeBaseUrl}nxengine-retrom.mjs`, window.location.href).href);
   expect(fetch.mock.calls.map(([url]) => url)).toContain(new URL("/runtime/projects/digest/data/npc.tbl", window.location.href).href);
 });
@@ -36,7 +37,7 @@ it("does not let bundled profiles seed native progress in a fresh machine", asyn
     _malloc: () => 8, _free() {}, _retrom_abi: () => 1, _retrom_load: () => 1, _retrom_ready: () => 1,
     _retrom_step: () => 1, _retrom_key() {}, _retrom_pixels: () => 1, _retrom_width: () => 320,
     _retrom_height: () => 240, _retrom_fps: () => 60, _retrom_audio: () => 1, _retrom_audio_count: () => 0, _retrom_stop() {}};
-  await loadCore(config, () => undefined, undefined, async () => ({default: async () => core}));
+  await loadCore(config, () => undefined, undefined, async () => ({default: async () => core}), managedAdapterFixture(config).contentSession);
   expect(core.FS.writeFile.mock.calls.map(([path]) => path)).toEqual([
     "/game/Doukutsu.exe", "/game/data/npc.tbl", "/game/data/Stage/Start.pxm", "/game/data/Stage/Start.tsc",
   ]);

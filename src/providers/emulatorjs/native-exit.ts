@@ -10,3 +10,15 @@ export function requestNativeExit(instance: EjsInstance, core: string) {
   } catch { /* Continue bounded host cleanup after a native exit error. */ }
   finally {if (functions && restart) {functions.restart = restart;}}
 }
+
+/** Keep content readable until native teardown has consumed its existing grace period. */
+export async function stopNativeInstance(runtimeWindow: Window | null, instance: EjsInstance | null,
+  core: string, alreadyRequested: boolean, range: {idle(): Promise<void>} | null) {
+  if (!runtimeWindow || !instance?.callEvent) {return;}
+  if (!alreadyRequested) {requestNativeExit(instance, core);}
+  let timer: number | undefined;
+  try {
+    await Promise.race([range?.idle() ?? Promise.resolve(), new Promise<void>(resolve => {timer = runtimeWindow.setTimeout(resolve, 1_100);})]);
+  } finally {runtimeWindow.clearTimeout(timer);}
+  await new Promise<void>((resolve) => runtimeWindow.setTimeout(resolve, 1_100));
+}

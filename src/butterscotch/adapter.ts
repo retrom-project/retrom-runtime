@@ -1,3 +1,4 @@
+import type {AdapterContentOptions} from "../provider/content-inputs.js";
 import type { MountedRuntimeAdapter, RuntimeExitReporter, RuntimeProgressReporter } from "../internal-adapter.js";
 import type { CheckpointAvailability } from "../contract.js";
 import type {ButterscotchParameters} from "./parameters.js";
@@ -36,11 +37,12 @@ export async function mountButterscotch(
   restorePayload: Uint8Array | null,
   reportProgress: RuntimeProgressReporter = () => undefined,
   reportExitRequested: RuntimeExitReporter = () => undefined,
+  content?: AdapterContentOptions & {signal?: AbortSignal},
 ): Promise<MountedRuntimeAdapter> {
   if (target.ownerDocument !== frameWindow.document || !browserSupported(frameWindow)) {
     throw new Error("BUTTERSCOTCH_RUNTIME_UNAVAILABLE");
   }
-  const project = await prepareButterscotchProject(config, frameWindow, reportProgress);
+  let project: Awaited<ReturnType<typeof prepareButterscotchProject>> | undefined;
   const surface = frameWindow.document.createElement("div");
   const canvas = frameWindow.document.createElement("canvas");
   canvas.width = 640;
@@ -78,7 +80,9 @@ export async function mountButterscotch(
   frameWindow.addEventListener("resize", fitCanvasToSurface);
   const runtimeBase = new URL(normalizedBase(config.runtimeBaseUrl), frameWindow.document.baseURI);
   const workerUrl = new URL("worker.mjs", runtimeBase);
-  const worker = new (frameWindow as WorkerWindow).Worker(workerUrl, { type: "module" });
+  let worker: Worker;
+  try {worker = new (frameWindow as WorkerWindow).Worker(workerUrl, { type: "module" });}
+  catch(error){resizeObserver?.disconnect();frameWindow.removeEventListener("resize",fitCanvasToSurface);surface.remove();throw error;}
   const audio = createButterscotchAudio(frameWindow);
   const pending = new Map<string, { reject: (error: Error) => void; resolve: (message: HostMessage) => void }>();
   const ready = deferred<void>();
@@ -129,6 +133,7 @@ export async function mountButterscotch(
   canvas.addEventListener("keyup", onKeyUp);
 
   try {
+    project = await prepareButterscotchProject(config, frameWindow, reportProgress, content);
     const offscreen = canvas.transferControlToOffscreen();
     worker.postMessage({
       canvas: offscreen,
@@ -167,6 +172,7 @@ export async function mountButterscotch(
     worker.removeEventListener("message", onMessage as EventListener);
     worker.removeEventListener("error", onError);
     worker.terminate();
+    project?.release();
     void audio?.close();
     for (const waiter of pending.values()) {waiter.reject(new DOMException("Aborted", "AbortError") as unknown as Error);}
     pending.clear();
@@ -250,7 +256,7 @@ function browserSupported(frameWindow: Window) {
 }
 
 function stableMountError(error: unknown) {
-  if (error instanceof Error && /^BUTTERSCOTCH_[A-Z0-9_]+$/u.test(error.message)) {return error;}
+  if (error instanceof Error && /^(?:BUTTERSCOTCH|CONTENT_IO)_[A-Z0-9_]+$/u.test(error.message)) {return error;}
   return new Error("BUTTERSCOTCH_RUNTIME_FAILED");
 }
 function checkpointAvailability(available: boolean, status: number): CheckpointAvailability {

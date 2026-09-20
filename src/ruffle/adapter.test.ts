@@ -1,7 +1,8 @@
+import {managedAdapterFixture} from "../../tests/managed-adapter-fixture.js";
 import {createHash, webcrypto} from "node:crypto";
 import {Blob as ForeignBlob} from "node:buffer";
 import {afterEach, describe, expect, it, vi} from "vitest";
-import {mountRuffle} from "./adapter.js";
+import {mountRuffle as mount} from "./adapter.js";
 import type {RufflePlayer, RuffleAPI} from "./player.js";
 
 const swf = new Uint8Array([70, 87, 83, 9, 8, 0, 0, 0]);
@@ -66,3 +67,7 @@ describe("Ruffle adapter", () => {
     expect(f.api.destroy).toHaveBeenCalled();
   });
 });
+
+const mountRuffle: typeof mount = (...args) => {
+  args[7] ??= managedAdapterFixture(args[0]); return mount(...args);
+};

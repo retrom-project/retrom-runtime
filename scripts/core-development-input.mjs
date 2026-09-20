@@ -7,14 +7,15 @@ export function validCoreDevelopmentInput(value) {
     !/^[0-9a-f]{40}$/u.test(value.upstreamCommit) || !/^[a-z0-9-]+$/u.test(value.adapterAbi) ||
     !Array.isArray(value.assets) || value.assets.length < 2 || value.assets.length > 8) {return false;}
   const names = new Set(), outputs = new Set();
+  const runtimeDirectory=value.id === "kirikiri2" ? "kirikiri" : value.id;
   for (const asset of value.assets) {
     if (!exact(asset, ["filename", "output", "maxSizeBytes"]) || !/^[A-Za-z0-9._-]+$/u.test(asset.filename) ||
-      !new RegExp(`^(runtime|licenses)/${value.id}/[A-Za-z0-9._-]+$`, "u").test(asset.output) ||
+      !new RegExp(`^(runtime/${runtimeDirectory}|licenses/${value.id})/[A-Za-z0-9._-]+$`, "u").test(asset.output) ||
       !Number.isSafeInteger(asset.maxSizeBytes) || asset.maxSizeBytes < 1 || asset.maxSizeBytes > 128 * 1024 * 1024 ||
       names.has(asset.filename) || outputs.has(asset.output)) {return false;}
     names.add(asset.filename); outputs.add(asset.output);
   }
-  return value.assets.some((asset) => asset.output.startsWith("licenses/"));
+  return value.assets.some((asset) => asset.output.startsWith("licenses/")) || value.id === "mkxp" && value.repository === "https://github.com/retrom-project/mkxp-z-libretro-emscripten";
 }
 export async function stageCoreDevelopmentInput(source, directory, stage) {
   if (!validCoreDevelopmentInput(source) || !directory) {throw new Error("UNPUBLISHED_CORE_INPUT");}

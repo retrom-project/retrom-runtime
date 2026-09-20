@@ -1,3 +1,4 @@
+import {emulatorContentPolicies} from "../../provider/content-policies.js";
 import {storageAdapters} from "../../provider/checkpoint-storage.js";
 import {
   defineAdapter, defineProvider, defineTarget, type TargetInputDeclaration, type TargetOptionsSchema,
@@ -194,6 +195,7 @@ const targets = cores.map((entry) => {
     startupActions: entry.startupActions,
   },
   inputs: entry.id === "neocd" ? inputs.map(input => input.role === "game" ? {...input, kind: "SEEKABLE_BLOB" as const} : input) : inputs,
+  contentIO: emulatorContentPolicies(entry.id),
   inputFilter: true,
   nativeSettings: true,
   netplayPort: netplayProfile !== null,
@@ -207,7 +209,7 @@ export const emulatorJsProviderDefinition = defineProvider({
   adapters: storageAdapters(adapters),
   providerApiVersion: 1,
   providerId: "emulatorjs",
-  providerVersion: "2.20.0",
+  providerVersion: "2.21.0",
   targets,
 });
 

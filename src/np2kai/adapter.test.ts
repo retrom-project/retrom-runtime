@@ -1,5 +1,6 @@
+import {managedAdapterFixture} from "../../tests/managed-adapter-fixture.js";
 import {afterEach, expect, it, vi} from "vitest";
-import {mountNP2} from "./adapter.js";
+import {mountNP2 as mount} from "./adapter.js";
 import type {NP2Core} from "./core.js";
 afterEach(() => {vi.unstubAllGlobals(); document.body.replaceChildren();});
 it("transfers execution state and disk writes into a different runtime instance and cleans up", async () => {
@@ -34,3 +35,7 @@ it("transfers execution state and disk writes into a different runtime instance 
   await next.exit(); expect(document.querySelector("canvas")).toBeNull();
   await expect(next.checkpoint()).rejects.toThrow("NP2KAI_RUNTIME_EXITED");
 });
+
+const mountNP2: typeof mount = (...args) => {
+  args[8] ??= managedAdapterFixture(args[0]); return mount(...args);
+};

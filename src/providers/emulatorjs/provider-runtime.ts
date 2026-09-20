@@ -1,4 +1,7 @@
-import {requestNativeExit} from "./native-exit.js";
+import {ProviderContentOwner} from "../../provider/content-owner.js";
+import type {ContentSessionClient} from "../../content-io/client.js";
+import {ContentIOError} from "../../content-io/errors.js";
+import {stopNativeInstance} from "./native-exit.js";
 import {observeEmulatorInput} from "./input-diagnostics.js";
 import {startInputDiagnostics} from "../../provider/input-diagnostics.js";
 import type {RuntimeInputDiagnosticsV1} from "../../provider/module-api.js";
@@ -19,8 +22,7 @@ import {PlayerRuntimeError} from "../../provider/errors.js";
 import {focusRuntimeInput} from "../../provider/input-focus.js";
 import {emulatorJsProviderDefinition, type EmulatorImplementation} from "./catalog.js";
 import {installNeoCDStartup} from "./neocd-startup.js";
-import {mountNeoCDRange, loadFlycastFile} from "./disc-mount.js";
-import {installFlycastCompatibility} from "./flycast.js";
+import {mountNeoCDRange, configureContentDisc} from "./disc-mount.js";
 import {installArchiveWorkerCompatibility} from "./archive-worker.js";
 import {installDOSBoxPureStateCompatibility} from "./dosbox-state.js";
 import {installExternalFileCompatibility} from "./external-files.js";
@@ -81,7 +83,7 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
   private exitPromise: Promise<void> | null = null;
   private pspRestore: ReturnType<typeof installPspRestoreObserver> | null = null;
   private cleanupArchiveWorker: (() => void) | null = null;
-  private neoCDRange: ReturnType<typeof mountNeoCDRange> | null = null;
+  private neoCDRange: Awaited<ReturnType<typeof mountNeoCDRange>> | null = null;
   private cleanupFlycast: (() => void) | null = null;
   private cleanupFrameStyle: (() => void) | null = null;
   private outputViewport: ReturnType<typeof installEmulatorJsOutputViewport> | null = null;
@@ -103,7 +105,9 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
   private checkpointAvailability = {available: false, reason: "NOT_READY" as string | null};
   private readonly implementation: EmulatorImplementation;
   private readonly netplayProfile: ValidatedEmulatorJsNetplayProfile | null;
-  private readonly hostAbort = () => {void this.exit();};
+  private readonly contentOwner = new ProviderContentOwner(error => this.fail(error.message, error), diagnostic => this.host.reportDiagnostic({code: "CONTENT_IO_METRICS", message: JSON.stringify(diagnostic)}));
+  private contentSession: ContentSessionClient | null = null;
+  private readonly hostAbort = () => {this.contentOwner.force(); void this.exit();};
 
   constructor(
     private readonly envelope: LaunchEnvelopeV1,
@@ -174,7 +178,7 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
   }
 
   exit() {
-    this.exitPromise ??= this.performExit();
+    this.exitPromise ??= Promise.resolve().then(() => this.performExit());
     return this.exitPromise;
   }
 
@@ -280,7 +284,9 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
 
   private async performMount(target: HTMLElement) {
     this.transition("MOUNTING");
+    this.host.signal.addEventListener("abort", this.hostAbort, {once: true});
     try {
+      this.checkMountActive();
       this.restorePayload = await this.host.loadRestore(this.envelope.restore);
       if (this.restorePayload && this.envelope.restore) {
         this.restorePayload = await decodeStoredCheckpoint(this.restorePayload, this.envelope.restore.format,
@@ -292,10 +298,17 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
       }
       const runtimeWindow = frame.contentWindow as EjsWindow;
       this.runtimeWindow = runtimeWindow;
+      this.checkMountActive();
+      const declaration = emulatorJsProviderDefinition.targets.find(entry => entry.id === this.envelope.runtime.targetId)!;
+      this.contentSession = await this.contentOwner.start(declaration, this.envelope, this.assetIndex);
+      this.checkMountActive();
       this.createMountPoint(runtimeWindow);
       this.startBarrier = createStartBarrier();
       this.configure(runtimeWindow);
-      await this.configureDisc(runtimeWindow);
+      const disc = await configureContentDisc(runtimeWindow, this.envelope, this.implementation.runtimeCore, this.host.signal,
+        this.contentSession, error => this.fail(error.message, error), event => this.emit({type: "LOAD_PROGRESS", ...event}));
+      this.neoCDRange = disc.range; this.cleanupFlycast = disc.cleanup;
+      this.checkMountActive();
 
       this.prepareRetroArchConfig(runtimeWindow);
       if (this.netplayProfile) {
@@ -329,29 +342,16 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
       this.loader = loader;
       loader.addEventListener("error", () => this.fail("PLAYER_RUNTIME_LOADER_FAILED"), {once: true});
       this.startTimeout = runtimeWindow.setTimeout(() => this.fail("PLAYER_RUNTIME_START_TIMEOUT"), 30_000);
-      this.host.signal.addEventListener("abort", this.hostAbort, {once: true});
       await this.startBarrier.promise;
+      this.checkMountActive();
       this.clearStartBarrier();
       this.transition("RUNNING");
     } catch (error) {
       if (this.state !== "FAILED" && this.state !== "EXITED") {this.transition("FAILED");}
-      await (this.exitPromise ??= this.performExit());
+      this.contentOwner.force();
+      await this.exit();
       throw error;
     }
-  }
-
-  private async configureDisc(runtimeWindow: EjsWindow) {
-    const core = this.implementation.runtimeCore;
-    if (!["flycast", "neocd"].includes(core)) {return;}
-    if (core === "flycast") {this.cleanupFlycast = installFlycastCompatibility(runtimeWindow);}
-    const game = resource(this.envelope, "game", this.implementation.runtimeCore === "neocd" ? "SEEKABLE_BLOB" : "ROM_BLOB");
-    if (core === "neocd") {
-      this.neoCDRange = mountNeoCDRange(runtimeWindow, game, this.host.signal,
-        error => this.fail("NEOCD_RANGE_READ_FAILED", error));
-      return;
-    }
-    runtimeWindow.EJS_gameUrl = await loadFlycastFile(runtimeWindow, game, this.host.signal,
-      (loadedBytes, totalBytes) => this.emit({type: "LOAD_PROGRESS", loadedBytes, totalBytes}));
   }
 
   private createMountPoint(runtimeWindow: Window) {
@@ -509,15 +509,8 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
     return resourceValue;
   }
 
-  private async stopNativeInstance() {
-    if (this.neoCDRange) {await this.neoCDRange.dispose(); this.neoCDRange = null;}
-    const runtimeWindow = this.runtimeWindow;
-    const instance = this.instance;
-    if (!runtimeWindow || !instance?.callEvent) {return;}
-    const nativeExitAlreadyRequested = this.exitRequestedEmitted;
-    this.exitRequestedEmitted = true;
-    if (!nativeExitAlreadyRequested) {requestNativeExit(instance, this.implementation.runtimeCore);}
-    await new Promise<void>((resolve) => runtimeWindow.setTimeout(resolve, 1_100));
+  private checkMountActive() {
+    if (this.host.signal.aborted || this.exitPromise || this.state !== "MOUNTING") {throw new DOMException("Aborted", "AbortError");}
   }
 
   private async performExit() {
@@ -525,7 +518,9 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
     if (this.state === "MOUNTING") {this.startBarrier?.reject(contractError());}
     this.clearStartBarrier();
     this.host.signal.removeEventListener("abort", this.hostAbort);
-    await this.stopNativeInstance();
+    const nativeExitAlreadyRequested = this.exitRequestedEmitted; this.exitRequestedEmitted = true;
+    await stopNativeInstance(this.runtimeWindow, this.instance, this.implementation.runtimeCore, nativeExitAlreadyRequested, this.neoCDRange);
+    await this.closeContent();
     if (this.runtimeWindow) {
       for (const timer of this.startupTimers) {this.runtimeWindow.clearTimeout(timer);}
     }
@@ -563,6 +558,11 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
     this.listeners.clear();
   }
 
+  private async closeContent() {
+    await this.contentOwner.close(); this.contentSession = null;
+    await this.neoCDRange?.dispose(); this.neoCDRange = null;
+  }
+
   private requireInstance() {
     if (!this.instance || this.state === "CREATED" || this.state === "MOUNTING" ||
       this.state === "FAILED" || this.state === "EXITED") {throw contractError();}
@@ -587,6 +587,7 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
   private fail(code: string, error?: unknown) {
     if (this.state === "FAILED" || this.state === "EXITED") {return;}
     this.transition("FAILED");
+    this.contentOwner.force(error instanceof ContentIOError ? error : new ContentIOError("INTERNAL"));
     this.updateCheckpointAvailability({available: false, reason: "FAILED"});
     this.host.reportDiagnostic({code, message: error instanceof Error ? error.message : code});
     this.emit({type: "FATAL_ERROR", code});

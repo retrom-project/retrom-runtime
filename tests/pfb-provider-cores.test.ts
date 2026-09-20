@@ -18,7 +18,7 @@ it.each(["cap32", "gam4980"] as const)("binds %s candidate bytes without changin
   const bundle = "d".repeat(64), installedRoot = join(root, "installed");
   const installation = join(installedRoot, "emulatorjs", bundle);
   await mkdir(installation, {recursive: true});
-  await writeFile(join(installation, "provider.json"), JSON.stringify({providerId: "emulatorjs"}));
+  await writeFile(join(installation, "provider.json"), JSON.stringify({providerId: "emulatorjs",targets:[{id:core,assetPaths:[corePath]}]}));
   await writeFile(join(installation, "integrity.json"), JSON.stringify({files: [{path: corePath, ...index[corePath]}]}));
   const activePath = join(root, "active.json"), entryPoint = join(root, "entry.ts");
   await writeFile(activePath, JSON.stringify({providers: [{providerId: "emulatorjs", bundleSha256: bundle,

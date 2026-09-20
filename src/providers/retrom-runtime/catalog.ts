@@ -1,3 +1,4 @@
+import {runtimeGamePolicy} from "../../provider/content-policies.js";
 import {pspAdapter, pspTarget} from "./psp-declaration.js";
 import {gbeAdapter, gbeTarget} from "./gbe-pokemini-declaration.js";
 import {storageAdapters} from "../../provider/checkpoint-storage.js";
@@ -66,9 +67,9 @@ const adapters = [
     capabilities: capabilities(true, true, true),
     checkpoint: {writeFormat: "j2me-rms-bundle-v1", readFormats: ["j2me-rms-bundle-v1"], semantics: "GAME_SAVE"},
   }),
-  adapter("kirikiri2-web", "KIRIKIRI2_WEB", "kirikiri-kag-bookmark",
+  adapter("kirikiri2-web", "KIRIKIRI2_WEB", "kirikiri-content-io-v1",
     "kirikiri-save-bundle-v1", standardCapabilities),
-  defineAdapter({id: "mkxp-libretro-web", kind: "MKXP_LIBRETRO_WEB", abi: "mkxp-state-compact",
+  defineAdapter({id: "mkxp-libretro-web", kind: "MKXP_LIBRETRO_WEB", abi: "mkxp-content-io-v1",
     checkpoint: {writeFormat: "mkxp-state-v1", readFormats: ["mkxp-state-v1", "mkxp-state-compact-v1"]}, capabilities: rpgCapabilities}),
   adapter("native-web", "NATIVE_WEB", "native-save", "native-save-bundle-v1", nativeCapabilities),
   adapter("ons-yuri-web", "ONS_YURI_WEB", "ons-save", "ons-save-bundle-v1", standardCapabilities),
@@ -142,7 +143,7 @@ export const retromRuntimeProviderDefinition = defineProvider({
   adapters: storageAdapters(adapters),
   providerApiVersion: 1,
   providerId: "retrom-runtime",
-  providerVersion: "0.43.2",
+  providerVersion: "0.44.0",
   targets,
 });
 
@@ -200,6 +201,7 @@ function target(
     implementation,
     inputFilter: true,
     inputs: [{cardinality: "ONE", kind: resourceKind, optional: false, role: "game"}],
+    contentIO: {game: runtimeGamePolicy(id)},
     nativeSettings: false,
     netplayPort: false,
     targetOptionsSchema,
@@ -216,6 +218,7 @@ function mkxpTarget(id: string, displayName: string, rgssVersion: 1 | 2 | 3) {
   );
   return defineTarget({
     ...result,
+    contentIO: {game: runtimeGamePolicy(id), rtp: runtimeGamePolicy(id)},
     inputs: [
       result.inputs[0],
       {cardinality: "MANY", kind: "SEEKABLE_BLOB", optional: true, role: "rtp"},
@@ -235,6 +238,7 @@ function easyRpgTarget(
   );
   return defineTarget({
     ...result,
+    contentIO: {game: runtimeGamePolicy(id), rtp: runtimeGamePolicy(id)},
     inputs: [
       result.inputs[0],
       {cardinality: "ONE", kind: "FILE_TREE", optional: true, role: "rtp"},

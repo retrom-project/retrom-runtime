@@ -1,3 +1,4 @@
+import type {AdapterContentOptions} from "../provider/content-inputs.js";
 import type {MountedRuntimeAdapter, RuntimeProgressReporter} from "../internal-adapter.js";
 import {loadCore, withBytes, type ModuleLoader, type Px68kParameters} from "./core.js";
 import {checkpointFormat, decodeCheckpoint, encodeCheckpoint} from "./state.js";
@@ -5,9 +6,9 @@ import {keyCode, keyboardPadMask, padMask} from "./input.js";
 import {Px68kAudio} from "./audio.js";
 export async function mountPx68k(config: Px68kParameters, target: HTMLElement, frameWindow: Window,
   restorePayload: Uint8Array | null, progress: RuntimeProgressReporter, reportFailure: (error: Error) => void,
-  signal?: AbortSignal, loader?: ModuleLoader): Promise<MountedRuntimeAdapter> {
+  signal?: AbortSignal, loader?: ModuleLoader, content?: AdapterContentOptions): Promise<MountedRuntimeAdapter> {
   const restored = restorePayload ? decodeCheckpoint(config.game.sha256, restorePayload) : null;
-  const {core, disk} = await loadCore(config, progress, signal, loader);
+  const {core, disk} = await loadCore(config, progress, signal, loader, content?.contentSession);
   const canvas = frameWindow.document.createElement("canvas");
   canvas.tabIndex = 0; canvas.setAttribute("aria-label", "px68k game");
   const graphics = canvas.getContext("2d", {alpha: false});

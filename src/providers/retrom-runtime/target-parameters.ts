@@ -100,6 +100,7 @@ export function ons(envelope: LaunchEnvelopeV1): OnsParameters {
   if (encoding !== "gbk" && encoding !== "sjis" && encoding !== "utf8") {invalidRequest();}
   return {
     checkpointSlot: 999,
+    contentDigest: game.contentDigest,
     projectIndexUrl: game.indexUrl,
     runtimeBaseUrl: assetBase(envelope, "ons"),
     scriptEncoding: encoding,
@@ -112,6 +113,7 @@ export function kirikiri(envelope: LaunchEnvelopeV1): KirikiriParameters {
   if (startupXp3Path !== null && typeof startupXp3Path !== "string") {invalidRequest();}
   return {
     checkpointSlot: 1999,
+    contentDigest: game.contentDigest,
     projectIndexUrl: game.indexUrl,
     runtimeBaseUrl: assetBase(envelope, "kirikiri"),
     startupXp3Path,

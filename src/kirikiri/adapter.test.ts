@@ -6,6 +6,16 @@ import {targetEnvelope} from "../../tests/provider-fixtures.js";
 import {currentWindowHost} from "../../tests/provider-adapter-fixture.js";
 import { createRuntime } from "../index.js";
 
+vi.mock("./content.js", async importOriginal => {
+  const actual = await importOriginal<typeof import("./content.js")>();
+  return {...actual, KirikiriContent: class extends actual.KirikiriContent {
+    override async assets(base: URL) {
+      return {vlfsUrl: new URL("vlfs.js", base).href, scriptUrl: new URL("index.js", base).href,
+        wasm: new Uint8Array([0]), archive: new Blob([Uint8Array.of(1)])};
+    }
+  }};
+});
+
 type FakeModule = {
   onExit?: (status: number) => void;
   postRun: Array<() => void>;
@@ -230,7 +240,7 @@ describe("KiriKiri2 KAG runtime", () => {
     expect(cancelAnimationFrame).toHaveBeenCalled();
   });
 
-  it("mounts, focuses, creates a small semantic checkpoint and restores it", async () => {
+  it("[BR-07] UNIT/kirikiri-lifecycle mounts, focuses, creates a small semantic checkpoint and restores it", async () => {
     enableRuntimeFeatures();
     const vlfs = fakeVlfs();
     mockDownloads();
@@ -243,18 +253,11 @@ describe("KiriKiri2 KAG runtime", () => {
     await mounting;
 
     expect(module._startupXp3Path).toBe("/data.xp3");
-    expect(vlfs.registerRemote).toHaveBeenCalledWith(
-      "/data.xp3",
-      `${location.origin}/runtime/content/project/${"a".repeat(64)}/data.xp3`,
-      1234,
-      true,
-    );
-    expect(vlfs.registerRemote).toHaveBeenCalledWith(
-      "/startup.tjs",
-      `${location.origin}/runtime/content/project/${"a".repeat(64)}/startup.tjs`,
-      40,
-      true,
-    );
+    expect(module.retromContentBridge).toEqual({abi: "content-io-v1", contractSha256: vlfs.contractSha256});
+    expect(vlfs.registerContent).toHaveBeenCalledWith("/data.xp3", {fileId: expect.any(String), sizeBytes: 1234},
+      expect.objectContaining({abi: "content-io-v1", sizeBytes: 1234}));
+    expect(vlfs.registerContent).toHaveBeenCalledWith("/startup.tjs", {fileId: expect.any(String), sizeBytes: 40},
+      expect.objectContaining({abi: "content-io-v1", sizeBytes: 40}));
     expect(document.activeElement).toBe(document.querySelector("#game")!.querySelector("canvas"));
     expect(document.querySelector("#game")!.firstElementChild?.getAttribute("data-kirikiri-runtime-surface")).toBe("");
     module._krkr2_host_bookmark_is_ready.mockReturnValue(0);
@@ -452,7 +455,9 @@ function fakeVlfs() {
     mkdir: vi.fn(() => 0),
     onWriteClose: null as ((path: string, data: Uint8Array) => void) | null,
     registerOverlayFile: vi.fn(),
-    registerRemote: vi.fn(),
+    contentAbi: "content-io-v1",
+    contractSha256: "9601f63ba9d1bad095b42b32a3d6167166535be246a87f0efac7c5b125ed27bf",
+    registerContent: vi.fn(),
     registerZipBlob: vi.fn(async () => ({ paths: ["/ui/font.ttf"], xp3Paths: [] as string[] })),
   };
   return value;

@@ -1,3 +1,4 @@
+import {buildContentAssets} from "./content-io/build-assets.mjs";
 import {createHash, randomUUID} from "node:crypto";
 import {lstat, mkdir, mkdtemp, readFile, rename, rm, writeFile} from "node:fs/promises";
 import {dirname, isAbsolute, join, resolve} from "node:path";
@@ -44,12 +45,21 @@ export async function buildPFBProviderDev(input) {
         return [id, {sha256: file.sha256, sizeBytes: file.sizeBytes, artifactSetSha256: report.sha256}];
       }));
     const files = [...coreFiles];
+    const generatedRoot=join(staging,"content-io"), generated=await buildContentAssets(generatedRoot);
+    const declared=new Set(manifest.targets.flatMap(target=>target.assetPaths));
+    for(const asset of generated.files){
+      if(declared.has(asset.path)){
+        if(!assetIndex[asset.path]){throw new Error("PFB_PROVIDER_BASE_INVALID:content-io-asset");}
+        files.push(fileDescriptor(asset.path,await readRegular(join(generatedRoot,asset.path.split("/").at(-1)))));
+      }
+    }
     for (const local of input.localAssets) {
       if (!isAbsolute(local.source) || !safeRelative(local.output)) {
         throw new Error("PFB_PROVIDER_DEV_INPUT_INVALID");
       }
       const contents = await readRegular(local.source);
       const path = `assets/${local.output.replace(/^runtime\//u, "")}`;
+      if (!declared.has(path) || !assetIndex[path]) {throw new Error("PFB_PROVIDER_BASE_INVALID:undeclared-asset");}
       files.push(fileDescriptor(path, contents));
     }
     if (new Set(files.map((file) => file.path)).size !== files.length) {

@@ -1,3 +1,4 @@
+import type {AdapterContentOptions} from "../provider/content-inputs.js";
 import {sha256} from "@noble/hashes/sha2.js";
 import type {CheckpointAvailability, RuntimeCheckpoint} from "../contract.js";
 import type {MountedRuntimeAdapter, RuntimeProgressReporter} from "../internal-adapter.js";
@@ -9,13 +10,11 @@ import {decodeSave, encodeSave, isSaveName, saveFormat, type SaveFile} from "./s
 export type OpenBORParameters = {pak: PakSource; runtimeBaseUrl: string};
 export async function mountOpenBOR(config: OpenBORParameters, target: HTMLElement, realm: Window,
   restore: Uint8Array | null, progress: RuntimeProgressReporter, failure: (error: Error) => void,
-  signal?: AbortSignal): Promise<MountedRuntimeAdapter> {
+  signal?: AbortSignal, content?: AdapterContentOptions): Promise<MountedRuntimeAdapter> {
   if (target.ownerDocument !== realm.document) {throw new Error("OPENBOR_RUNTIME_CONFIG_INVALID");}
   const ByteArray = (realm as Window & {Uint8Array: Uint8ArrayConstructor}).Uint8Array;
   const restored = restore ? decodeSave(restore, config.pak.sha256) : [];
-  let cache: CacheStorage | undefined;
-  try {cache = realm.caches;} catch { /* A browser may disable persistent storage. */ }
-  const bytes = await fetchPak(config.pak, progress, cache, signal);
+  const bytes = await fetchPak(config.pak, progress, content?.contentSession, signal);
   signal?.throwIfAborted();
   const base = new URL(config.runtimeBaseUrl, window.location.href);
   const factory = await loadModule(new URL("openbor.mjs", base).href, realm, signal);

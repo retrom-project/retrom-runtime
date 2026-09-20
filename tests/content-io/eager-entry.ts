@@ -1,0 +1,10 @@
+export {verifiedFetch} from "../../src/fantasy-console/fetch.js";
+export {fetchFile as gbe} from "../../src/gbe-pokemini/files.js";
+export {fetchFile as px68k} from "../../src/px68k/files.js";
+export {loadDisk} from "../../src/np2kai/content.js";
+export {fetchPak} from "../../src/openbor/fetch.js";
+export {fetchSwf} from "../../src/ruffle/fetch.js";
+export {fetchMedia} from "../../src/webmsx/fetch.js";
+export {fetchCart} from "../../src/wasm4/content.js";
+export {loadFlycastDisc} from "../../src/providers/emulatorjs/flycast-cache.js";
+export {fetchContent} from "../../src/nxengine/project.js";

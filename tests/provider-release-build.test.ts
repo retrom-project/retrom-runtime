@@ -46,6 +46,10 @@ describe("retrom-runtime Provider release build", () => {
       outputRoot: join(root, "second"),
       stageRoot,
     });
+    for(const name of ["worker","sync-client"]){
+      const asset=await readFile(join(first.bundleRoot,`assets/content-io/${name}.mjs`),"utf8");
+      expect(asset).not.toContain("fixture:");expect(asset).toContain("content-io-v1");
+    }
     expect(first.bundleSha256).toBe(second.bundleSha256);
     expect(await readFile(first.archivePath)).toEqual(await readFile(second.archivePath));
 

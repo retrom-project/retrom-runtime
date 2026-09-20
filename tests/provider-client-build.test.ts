@@ -1,3 +1,4 @@
+import ts from "typescript";
 // @vitest-environment node
 
 import { mkdtemp, readFile, rm } from "node:fs/promises";
@@ -39,7 +40,7 @@ describe("Provider client module build", () => {
   it.each([
     ["emulatorjs", "src/providers/emulatorjs/module.ts"],
     ["retrom-runtime", "src/providers/retrom-runtime/module.ts"],
-  ] as const)("imports the built %s client as a closed browser module", async (providerId, entry) => {
+  ] as const)("[PK-01] CONTRACT/client-%s imports the built client with exactly four public exports", async (providerId, entry) => {
     const root = await temporaryRoot();
     const result = await buildProviderClient({
       assetIndex: {},
@@ -49,7 +50,10 @@ describe("Provider client module build", () => {
     const bytes = await readFile(result.outfile);
     const source = bytes.toString("utf8");
     // Hash implementations may have a process() method; reject Node globals, not method names.
-    expect(source).not.toMatch(/\b(?:Buffer|require)\b|(?<![.\w])process\s*\./u);
+    const identifiers:string[]=[];
+    const scan=(node:ts.Node)=>{if(ts.isIdentifier(node) && ["Buffer","require","process"].includes(node.text) && !((ts.isPropertyAccessExpression(node.parent)||ts.isMethodDeclaration(node.parent))&&node.parent.name===node)){identifiers.push(node.text);}ts.forEachChild(node,scan);};
+    scan(ts.createSourceFile("client.mjs",source,ts.ScriptTarget.Latest,true,ts.ScriptKind.JS));
+    expect(identifiers).toEqual([]);
     const module = await import(`data:text/javascript;base64,${bytes.toString("base64")}`) as Record<string, unknown>;
     expect(Object.keys(module).sort()).toEqual([
       "createRuntime", "providerApiVersion", "providerId", "providerVersion",

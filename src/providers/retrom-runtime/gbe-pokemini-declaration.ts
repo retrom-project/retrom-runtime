@@ -1,3 +1,5 @@
+import {eagerPolicy} from "../../provider/content-policies.js";
+import {contentLimits as limits} from "../../content-io/limits.js";
 import {defineAdapter, defineTarget} from "../../provider/declarations.js";
 export const gbeAdapter = defineAdapter({id: "gbe-pokemini-web", kind: "GBE_POKEMINI_WEB", abi: "gbe-pokemini-host-v1",
   capabilities: {checkpoint: true, pause: true, screenshot: true, standardGamepad: true, frameCounter: true, volume: true},
@@ -5,6 +7,7 @@ export const gbeAdapter = defineAdapter({id: "gbe-pokemini-web", kind: "GBE_POKE
 });
 export const gbeTarget = defineTarget({id: "gbe-pokemini", displayName: "Pokémon Mini (GBE+)", adapterId: gbeAdapter.id,
   checkpointMaxBytes: 1024 * 1024, frameMode: "SAME_ORIGIN_BLANK", requiresThreads: false,
+  contentIO: {game: eagerPolicy(limits.gbeRom), external: eagerPolicy(limits.firmwareFile)},
   inputs: [{role: "game", kind: "ROM_BLOB", cardinality: "ONE", optional: false},
     {role: "external", kind: "EXTERNAL_FILE_SET", cardinality: "ONE", optional: false}],
   targetOptionsSchema: {type: "object", additionalProperties: false, properties: {}, required: []},

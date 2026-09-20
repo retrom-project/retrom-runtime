@@ -1,0 +1,323 @@
+{
+  "schemaVersion": 1,
+  "entries": [
+    {
+      "id": "R-NCD",
+      "repository": "runtime",
+      "path": "src/providers/emulatorjs/neocd-range.ts",
+      "symbol": "createNeoCDRange",
+      "stage": "S10",
+      "mode": "RANGE",
+      "result": "Uint8Array | Promise<Uint8Array>",
+      "maxFileBytes": 2147483647,
+      "caller": "disc-mount.ts",
+      "roles": [
+        "game"
+      ],
+      "identity": "FILE_SHA256",
+      "baselineBehavior": "SYNC_HIT_ASYNC_MISS; exact read <=256KiB; native begin/end/idle"
+    },
+    {
+      "id": "R-SCM",
+      "repository": "runtime",
+      "path": "src/scummvm/files.ts",
+      "symbol": "ScummvmFiles",
+      "stage": "S11",
+      "mode": "RANGE",
+      "result": "Promise<Uint8Array>",
+      "maxFileBytes": 9007199254740991,
+      "caller": "scummvm/adapter.ts and assets.ts",
+      "roles": [
+        "game",
+        "core-data"
+      ],
+      "identity": "INDEX_ENTRY / FILE_SHA256 asset",
+      "baselineBehavior": "stat/list local; exact read <=256KiB; empty allowed; game/data mounts"
+    },
+    {
+      "id": "R-PSP",
+      "repository": "ppsspp",
+      "path": "libretro/retrom/ppsspp-disc.mjs",
+      "symbol": "discReader",
+      "stage": "S12",
+      "mode": "RANGE",
+      "result": "Promise<Uint8Array>",
+      "maxFileBytes": 2147483647,
+      "caller": "ppsspp.worker.mjs -> mountDisc (public SYNC_WORKER Reader)",
+      "roles": [
+        "game"
+      ],
+      "identity": "FILE_SHA256",
+      "baselineBehavior": "native EOF truncates; strong sha ETag and exact Content-Length; 15s timeout",
+      "baselinePath": "libretro/retrom/ppsspp-range.mjs",
+      "baselineSymbol": "RangeReader"
+    },
+    {
+      "id": "R-PLY",
+      "repository": "play",
+      "path": "js/retrom/disc-device.mjs",
+      "symbol": "discDevice",
+      "stage": "S13",
+      "mode": "RANGE",
+      "result": "Promise<Uint8Array>",
+      "maxFileBytes": 9007199254740991,
+      "caller": "play-retrom.mjs",
+      "roles": [
+        "game"
+      ],
+      "identity": "FILE_SHA256",
+      "baselineBehavior": "polling read/isDone/hasError; retain mailbox and memory card saves",
+      "baselinePath": "js/retrom/range-device.mjs",
+      "baselineSymbol": "RangeReader"
+    },
+    {
+      "id": "R-MKP",
+      "repository": "mkxp",
+      "path": ".github/rpg-runtime/content-io/retrom-content-bridge.cpp",
+      "symbol": "retromContentBridge",
+      "stage": "S14",
+      "mode": "RANGE",
+      "result": "native WasmFS read",
+      "maxFileBytes": 9007199254740991,
+      "caller": "runtime src/mkxp/adapter.ts -> manifest",
+      "roles": [
+        "game",
+        "rtp"
+      ],
+      "identity": "INDEX_ENTRY",
+      "baselineBehavior": "WasmFS proxy; stat/read/seek; retain pthread/state fixes",
+      "baselinePath": ".github/rpg-runtime/patch-remote-content.py",
+      "baselineSymbol": "wasmfs"
+    },
+    {
+      "id": "R-KRK",
+      "repository": "kirikiri2",
+      "path": "platforms/web/vlfs.js",
+      "symbol": "VLFS",
+      "stage": "S15",
+      "mode": "RANGE",
+      "result": "VLFS remote read",
+      "maxFileBytes": 9007199254740991,
+      "caller": "runtime src/kirikiri/adapter.ts",
+      "roles": [
+        "game"
+      ],
+      "identity": "INDEX_ENTRY",
+      "baselineBehavior": "project, remote ZIP bytes and stream; preserve ZIP/overlay semantics"
+    },
+    {
+      "id": "F-FLY",
+      "repository": "runtime",
+      "path": "src/providers/emulatorjs/disc-cache.ts",
+      "symbol": "loadDisc",
+      "stage": "S16",
+      "mode": "EAGER",
+      "result": "Promise<Blob>",
+      "maxFileBytes": 2147483647,
+      "caller": "flycast-cache.ts -> disc-mount.ts",
+      "roles": [
+        "game"
+      ],
+      "identity": "FILE_SHA256",
+      "baselineBehavior": "whole 200; OPFS optional; loaded/total; signal; File facade"
+    },
+    {
+      "id": "F-NP2",
+      "repository": "runtime",
+      "path": "src/np2kai/content.ts",
+      "symbol": "loadDisk",
+      "stage": "S16",
+      "mode": "EAGER",
+      "result": "Promise<Uint8Array>",
+      "maxFileBytes": 536870912,
+      "caller": "np2kai/adapter.ts",
+      "roles": [
+        "game"
+      ],
+      "identity": "FILE_SHA256",
+      "baselineBehavior": "nonempty; optional OPFS; 1MiB progress; signal"
+    },
+    {
+      "id": "F-ONS",
+      "repository": "runtime",
+      "path": "src/ons/project-files.ts",
+      "symbol": "createOnsProjectFileMap",
+      "stage": "S17",
+      "mode": "ON_OPEN",
+      "result": "Promise<Uint8Array>",
+      "maxFileBytes": 9007199254740991,
+      "caller": "ons/adapter.ts",
+      "roles": [
+        "game"
+      ],
+      "identity": "INDEX_ENTRY",
+      "baselineBehavior": "first-open only; serialized per project; case insensitive; loaded/total; no original abort signal"
+    },
+    {
+      "id": "F-BUT",
+      "repository": "runtime",
+      "path": "src/butterscotch/project-store.ts",
+      "symbol": "prepareButterscotchProject",
+      "stage": "S17",
+      "mode": "EAGER",
+      "result": "OPFS workspace",
+      "maxFileBytes": 9007199254740991,
+      "caller": "butterscotch/adapter.ts",
+      "roles": [
+        "game"
+      ],
+      "identity": "INDEX_ENTRY",
+      "baselineBehavior": "OPFS required; <=10000 files; writeRoot separate; nonempty files in old index"
+    },
+    {
+      "id": "F-PX68K",
+      "repository": "runtime",
+      "path": "src/px68k/files.ts",
+      "symbol": "fetchFile",
+      "stage": "S16",
+      "mode": "EAGER",
+      "result": "Promise<Uint8Array>",
+      "maxFileBytes": 67108864,
+      "caller": "px68k/adapter.ts",
+      "roles": [
+        "game",
+        "bios"
+      ],
+      "identity": "FILE_SHA256",
+      "baselineBehavior": "nonempty; progress per chunk; signal; cache optional; native disk COW separate"
+    },
+    {
+      "id": "F-GBE",
+      "repository": "runtime",
+      "path": "src/gbe-pokemini/files.ts",
+      "symbol": "fetchFile",
+      "stage": "S16",
+      "mode": "EAGER",
+      "result": "Promise<Uint8Array>",
+      "maxFileBytes": 67108864,
+      "caller": "gbe-pokemini/adapter.ts",
+      "roles": [
+        "game",
+        "bios"
+      ],
+      "identity": "FILE_SHA256",
+      "baselineBehavior": "adapter ROM tighter: 0x2100..0x200000; generic helper max64MiB; signal"
+    },
+    {
+      "id": "F-OBOR",
+      "repository": "runtime",
+      "path": "src/openbor/fetch.ts",
+      "symbol": "fetchPak",
+      "stage": "S16",
+      "mode": "EAGER",
+      "result": "Promise<Uint8Array>",
+      "maxFileBytes": 536870912,
+      "caller": "openbor/adapter.ts",
+      "roles": [
+        "game"
+      ],
+      "identity": "FILE_SHA256",
+      "baselineBehavior": "min12; PACK header/version0; chunk progress; signal; optional cache"
+    },
+    {
+      "id": "F-MSX",
+      "repository": "runtime",
+      "path": "src/webmsx/fetch.ts",
+      "symbol": "fetchMedia",
+      "stage": "S16",
+      "mode": "EAGER",
+      "result": "Promise<Uint8Array>",
+      "maxFileBytes": 16777216,
+      "caller": "webmsx/adapter.ts",
+      "roles": [
+        "game"
+      ],
+      "identity": "FILE_SHA256",
+      "baselineBehavior": "min8; chunk progress; signal; optional cache"
+    },
+    {
+      "id": "F-SWF",
+      "repository": "runtime",
+      "path": "src/ruffle/fetch.ts",
+      "symbol": "fetchSwf",
+      "stage": "S16",
+      "mode": "EAGER",
+      "result": "Promise<Uint8Array>",
+      "maxFileBytes": 67108864,
+      "caller": "ruffle/adapter.ts",
+      "roles": [
+        "game"
+      ],
+      "identity": "FILE_SHA256",
+      "baselineBehavior": "min8; SWF signature/version/declaredSize; progress; signal; optional cache"
+    },
+    {
+      "id": "F-FANTASY",
+      "repository": "runtime",
+      "path": "src/fantasy-console/fetch.ts",
+      "symbol": "verifiedFetch",
+      "stage": "S16",
+      "mode": "EAGER",
+      "result": "Promise<Uint8Array>",
+      "maxFileBytes": 8388608,
+      "caller": "fantasy-console/adapter.ts",
+      "roles": [
+        "game"
+      ],
+      "identity": "FILE_SHA256",
+      "baselineBehavior": "nonempty; exact hash/size; signal"
+    },
+    {
+      "id": "F-WASM4",
+      "repository": "runtime",
+      "path": "src/wasm4/content.ts",
+      "symbol": "fetchCart",
+      "stage": "S16",
+      "mode": "EAGER",
+      "result": "Promise<Uint8Array>",
+      "maxFileBytes": 65536,
+      "caller": "mountWasm4",
+      "roles": [
+        "game"
+      ],
+      "identity": "FILE_SHA256",
+      "baselineBehavior": "nonempty cart size from parameters; SHA; preserve cartridge/restore limits",
+      "baselinePath": "src/wasm4/adapter.ts",
+      "baselineSymbol": "fetchCart"
+    },
+    {
+      "id": "F-NXE",
+      "repository": "runtime",
+      "path": "src/nxengine/project.ts",
+      "symbol": "loadProject",
+      "stage": "S17",
+      "mode": "EAGER",
+      "result": "Promise<Uint8Array>",
+      "maxFileBytes": 33554432,
+      "caller": "loadProject -> nxengine/adapter.ts",
+      "roles": [
+        "game"
+      ],
+      "identity": "INDEX_ENTRY",
+      "baselineBehavior": "project max64MiB; only indexed required files; empty allowed; progress; signal",
+      "baselinePath": "src/nxengine/project.ts",
+      "baselineSymbol": "fetchContent"
+    },
+    {
+      "id": "F-PSP-ASSET",
+      "repository": "runtime",
+      "path": "src/psp/content.ts",
+      "symbol": "loadPSPFile",
+      "stage": "S12",
+      "mode": "EAGER",
+      "result": "Promise<void>",
+      "maxFileBytes": 134217728,
+      "caller": "psp/core.ts",
+      "roles": [
+        "core-asset"
+      ],
+      "identity": "FILE_SHA256",
+      "baselineBehavior": "asset digest check before execution; no game bytes"
+    }
+  ]
+}

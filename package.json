@@ -1,6 +1,6 @@
 {
   "name": "@xxxsen/retrom-runtime",
-  "version": "0.43.2",
+  "version": "0.44.0",
   "description": "Host-independent browser game runtimes with a shared lifecycle and checkpoint contract",
   "type": "module",
   "license": "MIT",
@@ -10,7 +10,8 @@
     "assets",
     "README.md",
     "LICENSE",
-    "THIRD_PARTY_NOTICES.md"
+    "THIRD_PARTY_NOTICES.md",
+    "contracts/content-io/v1"
   ],
   "exports": {
     ".": {
@@ -32,7 +33,15 @@
     "provider:input:check": "node scripts/emulatorjs-provider-input.mjs check",
     "provider:build": "npm run build && npm run provider:input:prepare && RETROM_PROVIDER_BUILD_ONLY=1 node scripts/build-release.mjs",
     "provider:check": "npm run provider:input:check && node scripts/provider-release.mjs check",
-    "release:build": "npm run build && npm run provider:input:prepare && node scripts/build-release.mjs"
+    "release:build": "npm run build && npm run provider:input:prepare && node scripts/build-release.mjs",
+    "content-io:preflight": "node scripts/content-io/preflight.mjs",
+    "content-io:inventory": "node scripts/content-io/inventory.mjs",
+    "content-io:boundaries": "node scripts/content-io/boundaries.mjs",
+    "content-io:stage": "node scripts/content-io/stage.mjs",
+    "content-io:evidence:check": "node scripts/content-io/evidence.mjs",
+    "content-io:test": "node scripts/content-io/test.mjs",
+    "content-io:browser": "node scripts/content-io/browser.mjs",
+    "content-io:assets": "node scripts/content-io/build-assets.mjs"
   },
   "dependencies": {
     "@noble/hashes": "2.0.1",
@@ -41,6 +50,7 @@
   },
   "devDependencies": {
     "@eslint/js": "9.39.0",
+    "@playwright/test": "1.61.1",
     "@types/node": "24.13.3",
     "esbuild": "0.27.0",
     "eslint": "9.39.0",

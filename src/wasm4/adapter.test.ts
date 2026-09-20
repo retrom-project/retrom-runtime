@@ -1,3 +1,4 @@
+import {managedAdapterFixture} from "../../tests/managed-adapter-fixture.js";
 import { createHash } from "node:crypto";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
@@ -29,7 +30,7 @@ describe("WASM-4 Web adapter", () => {
     const progress = vi.fn();
 
     const adapter = await mountWasm4(
-      runtimeConfig, target, window, restore, progress, loader, async () => digest,
+      runtimeConfig, target, window, restore, progress, loader, managedAdapterFixture(runtimeConfig),
     );
 
     expect(loader).toHaveBeenCalledWith(
@@ -66,8 +67,8 @@ describe("WASM-4 Web adapter", () => {
 
     await expect(mountWasm4(
       config("f".repeat(64), cart.byteLength), document.createElement("div"), window, null,
-      () => undefined, async () => core.module, async () => sha256(cart),
-    )).rejects.toThrow("WASM4_CART_DIGEST_MISMATCH");
+      () => undefined, async () => core.module, managedAdapterFixture(config("f".repeat(64), cart.byteLength)),
+    )).rejects.toThrow("CONTENT_IO_IDENTITY_CHANGED");
     expect(core.create).not.toHaveBeenCalled();
   });
 
@@ -79,7 +80,7 @@ describe("WASM-4 Web adapter", () => {
     incompatible.module.RETROM_WASM4_ADAPTER_ABI = "unknown";
     await expect(mountWasm4(
       config(digest, cart.byteLength), document.createElement("div"), window, null,
-      () => undefined, async () => incompatible.module, async () => digest,
+      () => undefined, async () => incompatible.module, managedAdapterFixture(config(digest, cart.byteLength)),
     )).rejects.toThrow("WASM4_CORE_ABI_MISMATCH");
 
     const oversized = fakeCore(
@@ -87,7 +88,7 @@ describe("WASM-4 Web adapter", () => {
     );
     const adapter = await mountWasm4(
       config(digest, cart.byteLength), document.createElement("div"), window, null,
-      () => undefined, async () => oversized.module, async () => digest,
+      () => undefined, async () => oversized.module, managedAdapterFixture(config(digest, cart.byteLength)),
     );
     await expect(adapter.checkpoint()).rejects.toThrow("WASM4_CHECKPOINT_CREATE_FAILED");
     await adapter.exit();
@@ -104,7 +105,7 @@ describe("WASM-4 Web adapter", () => {
 
     await expect(mountWasm4(
       config(digest, cart.byteLength), document.createElement("div"), window, null,
-      () => undefined, async () => core.module, async () => digest,
+      () => undefined, async () => core.module, managedAdapterFixture(config(digest, cart.byteLength)),
     )).rejects.toThrow("WASM4_CHECKPOINT_RESTORE_FAILED");
   });
 });

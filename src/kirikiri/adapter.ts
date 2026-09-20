@@ -1,3 +1,8 @@
+import {fetchMetadataJson, indexByteBudget} from "../provider/metadata.js";
+import {KirikiriContent} from "./content.js";
+import type {AdapterContentOptions} from "../provider/content-inputs.js";
+import type {ContentReaderV1} from "../../contracts/content-io/v1/content-io.js";
+import {abi, contractSha256} from "../content-io/identity.js";
 import { decodeKirikiriCheckpoint, encodeKirikiriCheckpoint, type KirikiriCheckpointEntry } from "./checkpoint.js";
 import type { MountedRuntimeAdapter, RuntimeExitReporter } from "../internal-adapter.js";
 import type {KirikiriParameters} from "./parameters.js";
@@ -6,15 +11,20 @@ import { installKirikiriStandardGamepad } from "./gamepad-input.js";
 type ProjectFile = { path: string; url: string; sizeBytes: number };
 type ProjectIndex = { schemaVersion: 1; files: ProjectFile[] };
 type KirikiriVlfs = {
+  contentAbi: string;
+  contractSha256: string;
   init(): Promise<void>;
   mkdir(path: string): number;
   onWriteClose: ((path: string, data: Uint8Array) => void) | null;
   registerOverlayFile(path: string, data: Uint8Array): unknown;
-  registerRemote(path: string, url: string, size: number, supportsRanges: boolean): unknown;
+  registerContent(path: string, handle: {fileId: string; sizeBytes: number}, reader: ContentReaderV1): unknown;
   registerZipBlob(blob: Blob, options?: Record<string, unknown>): Promise<unknown>;
 };
 type KirikiriModule = {
   arguments: string[];
+  retromContentBridge: {abi: string; contractSha256: string};
+  wasmBinary: Uint8Array;
+  PThread?: {terminateAllThreads(): void};
   canvas: HTMLCanvasElement;
   locateFile(path: string): string;
   mainScriptUrlOrBlob: string;
@@ -56,9 +66,12 @@ export async function mountKirikiri2(
   frameWindow: Window,
   restorePayload: Uint8Array | null,
   reportExitRequested: RuntimeExitReporter = () => undefined,
+  contentOptions?: AdapterContentOptions & {signal?: AbortSignal},
 ): Promise<MountedRuntimeAdapter> {
   if (target.ownerDocument !== frameWindow.document) {throw new Error("KIRIKIRI_RUNTIME_TARGET_INVALID");}
   requireBrowserFeatures(frameWindow);
+  if (!contentOptions) {throw new Error("CONTENT_IO_ABI_MISMATCH");}
+  const content = new KirikiriContent(contentOptions, contentOptions.signal);
   const host = frameWindow as KirikiriHostWindow;
   const document = frameWindow.document;
   const surface = document.createElement("div");
@@ -106,9 +119,10 @@ export async function mountKirikiri2(
       new URL("index.wasm", base).href,
       reportRuntimeExit,
     );
-    scripts.push(await loadClassicScript(document, new URL("vlfs.js", base).href));
+    const assets = await content.assets(base);
+    scripts.push(await loadClassicScript(document, assets.vlfsUrl));
     const vlfs = host.VLFS;
-    if (!vlfs) {throw new Error("KIRIKIRI_RUNTIME_ARTIFACT_INVALID");}
+    requireVlfs(vlfs);
     await vlfs.init();
     vlfs.mkdir("/save");
     vlfs.mkdir("/savedata");
@@ -120,8 +134,8 @@ export async function mountKirikiri2(
       writeSequences.set(normalized, writeSequence);
       lastWriteAt = Date.now();
     };
-    await registerRuntimeAssets(vlfs, new URL("assets.zip", base));
-    const project = await registerProject(vlfs, config.projectIndexUrl, document.baseURI);
+    await vlfs.registerZipBlob(assets.archive, {stripPrefix: ""});
+    const project = await registerProject(vlfs, config.projectIndexUrl, document.baseURI, content, config.contentDigest, contentOptions.signal);
     const restore = restorePayload ? await decodeKirikiriCheckpoint(restorePayload) : null;
     for (const entry of restore?.entries ?? []) {
       const path = `/${entry.path}`;
@@ -129,9 +143,11 @@ export async function mountKirikiri2(
       writes.set(entry.path, entry.data.slice());
     }
     const ready = deferred<void>();
-    const runtimeUrl = new URL("index.js", base).href;
+    const runtimeUrl = assets.scriptUrl;
     const options: Partial<KirikiriModule> = {
       arguments: [],
+      retromContentBridge: {abi: content.abi, contractSha256: content.contractSha256},
+      wasmBinary: assets.wasm,
       canvas,
       locateFile: (path) => new URL(path, base).href,
       mainScriptUrlOrBlob: runtimeUrl,
@@ -162,6 +178,8 @@ export async function mountKirikiri2(
       host, previousModule, previousVlfs, target, canvas, focusCanvas,
       gamepadCleanup, runtimeTerminationCleanup, scripts,
     );
+    module?.PThread?.terminateAllThreads();
+    await content.close();
     throw stableMountError(error);
   }
 
@@ -206,6 +224,8 @@ export async function mountKirikiri2(
       if (exited) {return;}
       exited = true;
       activeModule.pauseMainLoop();
+      activeModule.PThread?.terminateAllThreads();
+      await content.close();
       cleanup(
         host, previousModule, previousVlfs, target, canvas, focusCanvas,
         gamepadCleanup, runtimeTerminationCleanup, scripts,
@@ -242,25 +262,19 @@ async function restoreBookmark(module: KirikiriModule, slot: number) {
   }
 }
 
-async function registerRuntimeAssets(vlfs: KirikiriVlfs, url: URL) {
-  const response = await fetch(url, { credentials: "same-origin" });
-  if (!response.ok) {throw new Error("KIRIKIRI_RUNTIME_ARTIFACT_UNAVAILABLE");}
-  await vlfs.registerZipBlob(await response.blob(), { stripPrefix: "" });
-}
-
-async function registerProject(vlfs: KirikiriVlfs, indexUrl: string, documentBaseUrl: string) {
+async function registerProject(vlfs: KirikiriVlfs, indexUrl: string, documentBaseUrl: string,
+  content: KirikiriContent, contentDigest: string, signal?: AbortSignal) {
   let value: unknown;
   try {
-    const response = await fetch(indexUrl, { credentials: "same-origin" });
-    if (!response.ok) {throw new Error("response");}
-    value = await response.json();
+    value = await fetchMetadataJson(new URL(indexUrl, documentBaseUrl), indexByteBudget(maximumProjectFiles, 1024), signal);
   } catch {throw new Error("KIRIKIRI_PROJECT_INDEX_UNAVAILABLE");}
   if (!validProjectIndex(value)) {throw new Error("KIRIKIRI_PROJECT_INDEX_INVALID");}
   const base = new URL(indexUrl, documentBaseUrl);
   const xp3Paths: string[] = [];
   for (const file of value.files) {
     const path = `/${file.path}`;
-    vlfs.registerRemote(path, new URL(file.url, base).href, file.sizeBytes, true);
+    const reader = content.register(contentDigest, file.path, new URL(file.url, base).href, file.sizeBytes);
+    vlfs.registerContent(path, {fileId: reader.id, sizeBytes: reader.sizeBytes}, reader);
     if (file.path.toLowerCase().endsWith(".xp3")) {xp3Paths.push(path);}
   }
   return { xp3Paths };
@@ -451,7 +465,11 @@ async function withTimeout<T>(promise: Promise<T>, timeout: number, code: string
   } finally {if (timer) {clearTimeout(timer);}}
 }
 function stableMountError(error: unknown) {
-  return error instanceof Error && /^KIRIKIRI_[A-Z0-9_]+$/u.test(error.message)
+  return error instanceof Error && /^(?:KIRIKIRI|CONTENT_IO)_[A-Z0-9_]+$/u.test(error.message)
     ? error
     : new Error("KIRIKIRI_RUNTIME_FAILED");
+}
+
+function requireVlfs(vlfs: KirikiriVlfs | undefined): asserts vlfs is KirikiriVlfs {
+  if (!vlfs || vlfs.contentAbi !== abi || vlfs.contractSha256 !== contractSha256 || typeof vlfs.registerContent !== "function") {throw new Error("CONTENT_IO_ABI_MISMATCH");}
 }

@@ -30,7 +30,7 @@ describe("PSP explicit exit", () => {
     });
     runtimeWindow.EJS_emulator = {gameManager: {functions, toggleMainLoop, simulateInput: vi.fn(), getState: () => Uint8Array.of(1)}, callEvent};
     (runtimeWindow.EJS_ready as () => void)(); (runtimeWindow.EJS_onGameStart as () => void)(); await mounting;
-    const exiting = player.exit();
+    const exiting = player.exit(); await vi.advanceTimersByTimeAsync(0);
     expect(restart).toHaveBeenCalledTimes(targetId === "ppsspp" ? 0 : 1);
     expect(functions.restart).toBe(restart);
     expect(toggleMainLoop).toHaveBeenCalledWith(false); expect(unmount).toHaveBeenCalledOnce();

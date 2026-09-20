@@ -1,13 +1,44 @@
+import {prepareButterscotchProject} from "./project-store.js";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { mountButterscotch } from "./adapter.js";
 import type {ButterscotchParameters} from "./parameters.js";
+
+vi.mock("./project-store.js", () => ({prepareButterscotchProject: vi.fn(async (config: ButterscotchParameters) => ({
+  gamePath: `/butterscotch/projects/${config.contentDigest}/00000000-0000-4000-8000-000000000000/data/data.win`,
+  savePath: `/butterscotch/saves/${config.sessionId}`, release: vi.fn(),
+}))}));
 
 afterEach(() => {
   vi.restoreAllMocks();
   vi.unstubAllGlobals();
   document.body.replaceChildren();
   Reflect.deleteProperty(window.navigator, "getGamepads");
+});
+
+it("[ST-08] UNIT/workspace does not acquire a project lease before Worker construction succeeds",async()=>{
+ installIsolatedBrowserGlobals();
+ Object.defineProperty(HTMLCanvasElement.prototype,"transferControlToOffscreen",{configurable:true,value:()=>({})});
+ Object.defineProperty(window.navigator,"storage",{configurable:true,value:{getDirectory:async()=>new MemoryDirectory()}});
+ Object.defineProperty(window,"Worker",{configurable:true,value:class{constructor(){throw new Error("worker denied");}}});
+ vi.mocked(prepareButterscotchProject).mockClear();
+ await expect(mountButterscotch(config(),document.createElement("div"),window,null)).rejects.toThrow("worker denied");
+ expect(prepareButterscotchProject).not.toHaveBeenCalled();
+});
+
+it("[ST-04] UNIT/workspace-denied never starts native code and releases the constructed Worker", async () => {
+  installIsolatedBrowserGlobals();
+  const workers: FakeWorker[] = [];
+  Object.defineProperty(window, "Worker", {configurable: true,
+    value: class extends FakeWorker {constructor(url: URL) {super(url); workers.push(this);}}});
+  Object.defineProperty(HTMLCanvasElement.prototype, "transferControlToOffscreen", {configurable: true, value: () => ({})});
+  Object.defineProperty(window.navigator, "storage", {configurable: true, value: {getDirectory: async () => new MemoryDirectory()}});
+  vi.mocked(prepareButterscotchProject).mockRejectedValueOnce(new Error("CONTENT_IO_WORKSPACE_UNAVAILABLE"));
+  const target = document.createElement("div");
+  await expect(mountButterscotch(config(), target, window, null)).rejects.toThrow("CONTENT_IO_WORKSPACE_UNAVAILABLE");
+  expect(workers).toHaveLength(1); expect(workers[0].terminated).toBe(true);
+  expect(workers[0].messages.some(message => message.type === "START")).toBe(false);
+  expect(target.childElementCount).toBe(0);
 });
 
 describe("Butterscotch Web adapter", () => {

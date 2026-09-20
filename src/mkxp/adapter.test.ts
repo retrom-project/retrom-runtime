@@ -1,5 +1,11 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { fetchVerified, mountMkxp } from "./adapter";
+import {mountMkxp as mountMkxpImplementation} from "./adapter";
+import {fetchVerified} from "./content.js";
+import {managedAdapterFixture} from "../../tests/managed-adapter-fixture.js";
+const mountMkxp: typeof mountMkxpImplementation = (...args) => {
+ args[7] ??= {contentSession: {open: vi.fn(),materialize:vi.fn(),closeFile:vi.fn()},assetIndex:{}};
+ return mountMkxpImplementation(...args);
+};
 import { encodeMkxpRastate } from "./state";
 
 import type {MkxpParameters} from "./parameters.js";
@@ -88,7 +94,7 @@ describe("mkxp runtime mount", () => {
     harness.frame.remove();
   });
 
-  it("waits for core-owned teardown before forcing worker cleanup or removing the canvas", async () => {
+  it("[BR-08] UNIT/mkxp-teardown waits for core-owned teardown before forcing worker cleanup or removing the canvas", async () => {
     const harness = createHarness();
     harness.autoExit = false;
     const reportExit = vi.fn();
@@ -163,23 +169,13 @@ describe("mkxp runtime mount", () => {
     harness.frame.remove();
   });
 
-  it("lets immutable runtime assets use the browser cache", async () => {
+  it("materializes immutable core assets through the public service with a full SHA check", async () => {
     const url = new URL("/runtime/mkxp/core.js", window.location.href).href;
-    const fetchMock = vi.fn(async () => ({
-      arrayBuffer: async () => Uint8Array.of(1).buffer,
-      ok: true,
-      url,
-    }));
-    vi.stubGlobal("fetch", fetchMock);
-
-    await expect(fetchVerified(
-      "/runtime/mkxp/core.js",
-      1,
-      "4bf5122f344554c53bde2ebb8cd2b7e3d1600ad631c385a5d7cce23c7785459a",
-    )).resolves.toEqual(Uint8Array.of(1));
-    expect(fetchMock).toHaveBeenCalledWith("/runtime/mkxp/core.js", {
-      cache: "default", credentials: "same-origin", redirect: "error",
-    });
+    const fetchMock=vi.fn(async()=>new Response(Uint8Array.of(1)));
+    vi.stubGlobal("fetch",fetchMock);
+    const content=managedAdapterFixture({url});
+    await expect(fetchVerified(url,1,"4bf5122f344554c53bde2ebb8cd2b7e3d1600ad631c385a5d7cce23c7785459a",content)).resolves.toEqual(Uint8Array.of(1));
+    expect(fetchMock).toHaveBeenCalledOnce();
   });
 
   it("forwards native stdout and stderr without using the Next development error channel", async () => {
@@ -281,7 +277,6 @@ describe("mkxp runtime mount", () => {
     expect(harness.prepareOptions?.emscriptenModule).not.toHaveProperty("ENV");
     expect(harness.emscriptenEnvironment).toEqual({
       FETCH_BASE_DIR: "/retrom-fetch",
-      FETCH_CHUNK_SIZE_BYTES: "262144",
       FETCH_MANIFEST: "/home/web_user/retroarch/userdata/system/mkxp-z/fetch.manifest",
     });
     const manifestBytes = harness.files.get(
@@ -289,12 +284,12 @@ describe("mkxp runtime mount", () => {
     );
     if (!manifestBytes) {throw new Error("missing fetch manifest");}
     const manifest = new TextDecoder().decode(manifestBytes);
-    expect(manifest).toBe([
-      window.location.origin + "/",
-      "projects/01980000-0000-7000-8000-000000000001/game.mkxpz /retrom-content/game.mkxpz",
-      "projects/01980000-0000-7000-8000-000000000001/rtp/standard.mkxpz /home/web_user/retroarch/userdata/system/mkxp-z/RTP/Standard.mkxpz",
-      "",
-    ].join("\n"));
+    const lines=manifest.trimEnd().split("\n");
+    expect(lines[0]).toBe("RETROM_CONTENT_IO_V1");expect(lines).toHaveLength(3);
+    expect(lines[1]).toMatch(/^[0-9a-f-]{36}\t8388608\t\/retrom-content\/game.mkxpz$/u);
+    expect(lines[2]).toMatch(/^[0-9a-f-]{36}\t16777216\t\/home\/web_user\/retroarch\/userdata\/system\/mkxp-z\/RTP\/Standard.mkxpz$/u);
+    expect(manifest).not.toContain("http");expect(manifest).not.toContain("projects/");
+    expect(harness.prepareOptions?.emscriptenModule).toHaveProperty("retromContentBridge.abi","content-io-v1");
     expect(progress).toEqual([
       { phase: "RUNTIME_ASSET", loadedBytes: 0, totalBytes: 42_745_421 },
       { phase: "RUNTIME_ASSET", loadedBytes: 42_745_421, totalBytes: 42_745_421 },
@@ -304,7 +299,6 @@ describe("mkxp runtime mount", () => {
         loadedBytes: manifestBytes.byteLength,
         totalBytes: manifestBytes.byteLength,
       },
-      { phase: "PROJECT_CONTENT", loadedBytes: 0, totalBytes: 25_165_824 },
     ]);
     await mounted.exit();
     harness.frame.remove();
@@ -334,7 +328,7 @@ describe("mkxp runtime mount", () => {
     harness.frame.remove();
   });
 
-  it("requests exact restore and save on the core loop without transient keyboard input", async () => {
+  it("[BR-07] UNIT/mkxp-lifecycle requests exact restore and save on the core loop without transient keyboard input", async () => {
     const harness = createHarness();
     harness.onStateRequest = (code) => {
       harness.actions.push(code);

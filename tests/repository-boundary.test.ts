@@ -106,9 +106,8 @@ describe("independent package boundary", () => {
       tag: "retrom-core-gca2600db8de4-r1",
     })]));
     const releaseIds = sources.upstreamReleases.map((release: { id: string }) => release.id).sort();
-    expect(releaseIds).toEqual(["butterscotch", "easyrpg", "fake08", "gbe_plus", "j2me", "np2kai", "nxengine", "onsyuri", "openbor", "px68k", "ruffle", "scummvm", "tic80", "tyranoscript", "wasm4", "webmsx"]);
-    expect(sources.developmentInputs.map((input:{id:string})=>input.id).sort()).toEqual(["kirikiri2","mkxp","play","ppsspp"]);
-    for(const input of sources.developmentInputs){expect(input).not.toHaveProperty("tag");expect(input.upstreamCommit).toMatch(/^[0-9a-f]{40}$/u);}
+    expect(releaseIds).toEqual(["butterscotch", "easyrpg", "fake08", "gbe_plus", "j2me", "kirikiri2", "mkxp", "np2kai", "nxengine", "onsyuri", "openbor", "play", "ppsspp", "px68k", "ruffle", "scummvm", "tic80", "tyranoscript", "wasm4", "webmsx"]);
+    expect(sources.developmentInputs).toEqual([]);
     expect(await readdir(join(root, "scripts"))).not.toEqual(expect.arrayContaining([
       "build-kirikiri-core.sh", "build-ons-core.sh",
     ]));

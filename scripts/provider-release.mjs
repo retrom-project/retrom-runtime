@@ -38,7 +38,7 @@ export async function buildCurrentProviderBuild(input = {}) {
   validateProviderManifest(retromManifest);
   validateProviderManifest(emulatorManifest);
   const retrom = await buildRetromRuntimeProviderBundle({
-    definition: retromRuntimeProviderDefinition,
+    definition: {...retromRuntimeProviderDefinition, providerVersion},
     entryPoint: join(root, "src", "providers", "retrom-runtime", "module.ts"),
     manifest: retromManifest,
     outputRoot: join(outputRoot, "retrom-runtime"),
@@ -51,7 +51,7 @@ export async function buildCurrentProviderBuild(input = {}) {
     await readEmulatorJsCoreCandidate(source, directories[source.id], candidate);
   }
   const emulatorjs = await buildEmulatorJsProviderBundle({
-    definition: emulatorJsProviderDefinition,
+    definition: {...emulatorJsProviderDefinition, providerVersion},
     entryPoint: join(root, "src", "providers", "emulatorjs", "module.ts"),
     manifest: emulatorManifest,
     outputRoot: join(outputRoot, "emulatorjs"),

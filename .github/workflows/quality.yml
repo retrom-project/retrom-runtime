@@ -23,4 +23,7 @@ jobs:
       - run: npm run release:build
         env:
           RETROM_PROVIDER_BUILD_MODE: candidate
+          # Exercise tag-derived identity without publishing release metadata.
+          GITHUB_REF_TYPE: tag
+          GITHUB_REF_NAME: v0.0.0-rc.1
       - run: npm run package:check

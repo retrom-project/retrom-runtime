@@ -1,6 +1,10 @@
 # Changelog
 
 
+## 0.45.1
+
+- Advance the EmulatorJS Provider to 2.21.1 because shared Content I/O prefetch changes its bundle bytes. This restores forward-only upgrades from v0.44.0; v0.45.0 reused EmulatorJS 2.21.0 with a different bundle digest and cannot be activated over an existing installation.
+
 ## 0.45.0
 
 - Prefetch the adjacent network window when demand reads reach the current window's final internal block, using existing memory and persistent caches without changing core reads or the Content I/O contract.

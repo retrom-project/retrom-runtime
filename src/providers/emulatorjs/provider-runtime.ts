@@ -14,7 +14,6 @@ import type {
   RuntimeHostV1,
   RuntimeInputFilterPolicyV1,
   RuntimeMultiDiscResourceV1,
-  RuntimeNetplayPortV1,
   RuntimeStateV1,
   RuntimeVideoModeV1,
 } from "../../provider/module-api.js";
@@ -27,12 +26,6 @@ import {installArchiveWorkerCompatibility} from "./archive-worker.js";
 import {installDOSBoxPureStateCompatibility} from "./dosbox-state.js";
 import {installExternalFileCompatibility} from "./external-files.js";
 import {RuntimeGamepadFilter, installRuntimeGamepadFilter} from "../../provider/gamepad-filter.js";
-import {installEmulatorJs423NetplayCompatibility} from "./netplay-compatibility.js";
-import {EmulatorJsNetplayPort} from "./netplay-port.js";
-import {
-  type ValidatedEmulatorJsNetplayProfile,
-  validateEmulatorJsNetplayProfile,
-} from "./netplay-profile.js";
 import {
   initializeEmulatorJsDiscs,
   readEmulatorJsDiscState,
@@ -93,8 +86,6 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
   private cleanupInputFilter: (() => void) | null = null;
   private inputFilter: RuntimeGamepadFilter | null = null;
   private cleanupRetroArchConfig: () => void = () => undefined;
-  private cleanupNetplayCompatibility: (() => void) | null = null;
-  private netplayPort: EmulatorJsNetplayPort | null = null;
   private dosboxCompatibility: ReturnType<typeof installDOSBoxPureStateCompatibility> | null = null;
   private cleanupDeferredStart: (() => void) | null = null;
   private startBarrier: StartBarrier | null = null;
@@ -104,7 +95,6 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
   private exitRequestedEmitted = false;
   private checkpointAvailability = {available: false, reason: "NOT_READY" as string | null};
   private readonly implementation: EmulatorImplementation;
-  private readonly netplayProfile: ValidatedEmulatorJsNetplayProfile | null;
   private readonly contentOwner = new ProviderContentOwner(error => this.fail(error.message, error), diagnostic => this.host.reportDiagnostic({code: "CONTENT_IO_METRICS", message: JSON.stringify(diagnostic)}));
   private contentSession: ContentSessionClient | null = null;
   private readonly hostAbort = () => {this.contentOwner.force(); void this.exit();};
@@ -122,8 +112,6 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
       core.sizeBytes !== this.implementation.coreSizeBytes) {
       invalid();
     }
-    try {this.netplayProfile = validateEmulatorJsNetplayProfile(envelope, this.implementation);}
-    catch {invalid();}
   }
 
   mount(target: HTMLElement) {
@@ -236,7 +224,6 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
   }
   async setInputFilter(policy: RuntimeInputFilterPolicyV1 | null) {
     if (!this.envelope.runtime.capabilities.inputFilter) {throw capabilityError();}
-    if (this.envelope.session.mode === "NETPLAY") {throw contractError();}
     if (this.state === "FAILED" || this.state === "EXITED" || !validInputFilterPolicy(policy)) {
       throw contractError();
     }
@@ -254,19 +241,10 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
       catch (error) {throw contractError(error);}
     }
   }
-  async getNetplayPort(): Promise<RuntimeNetplayPortV1> {
-    if (!this.envelope.runtime.capabilities.netplayPort) {throw capabilityError();}
-    if (!this.netplayProfile) {throw contractError();}
-    const instance = this.requireInstance();
-    try {
-      this.netplayPort ??= new EmulatorJsNetplayPort(instance, this.netplayProfile.maxStateBytes, this.netplayProfile.profileId);
-      return this.netplayPort;
-    } catch (error) {throw contractError(error);}
-  }
   startInputDiagnostics() {
     this.inputDiagnostics?.stop();
     this.inputDiagnostics = startInputDiagnostics(this.runtimeWindow ?? window, () => this.getCanvas());
-    if (this.runtimeWindow && this.envelope.session.mode === "SINGLE") {
+    if (this.runtimeWindow) {
       this.inputDiagnostics = observeEmulatorInput(this.runtimeWindow, this.instance, this.inputDiagnostics);
     }
     return this.inputDiagnostics;
@@ -311,9 +289,6 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
       this.checkMountActive();
 
       this.prepareRetroArchConfig(runtimeWindow);
-      if (this.netplayProfile) {
-        this.cleanupNetplayCompatibility = installEmulatorJs423NetplayCompatibility(runtimeWindow);
-      }
       this.cleanupArchiveWorker = installArchiveWorkerCompatibility(
         runtimeWindow,
         this.implementation.release,
@@ -383,8 +358,7 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
     runtimeWindow.EJS_disableAutoLang = false;
     // PSP's native load receipt is emitted only with RetroArch's -v flag.
     // The restore barrier must observe that receipt before admitting gameplay.
-    runtimeWindow.EJS_DEBUG_XX = this.envelope.session.mode === "NETPLAY" ||
-      (this.implementation.runtimeCore === "ppsspp" && this.envelope.restore !== null);
+    runtimeWindow.EJS_DEBUG_XX = (this.implementation.runtimeCore === "ppsspp" && this.envelope.restore !== null);
     runtimeWindow.EJS_EXPERIMENTAL_NETPLAY = false;
     runtimeWindow.EJS_threads = this.envelope.runtime.capabilities.requiresThreads;
     runtimeWindow.EJS_fullscreenOnLoaded = false;
@@ -393,10 +367,7 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
     runtimeWindow.EJS_CacheLimit = 0;
     runtimeWindow.EJS_Buttons = {exitEmulation: false};
     runtimeWindow.EJS_defaultControls = createRetromDefaultControls(this.implementation.runtimeCore);
-    runtimeWindow.EJS_defaultOptions = this.netplayProfile ? {
-      ...this.netplayProfile.defaultCoreOptions,
-      ...(this.implementation.runtimeCore === "fbneo" ? {"fbneo-hiscores": "disabled"} : {}),
-    } : {...this.implementation.defaultOptions,
+    runtimeWindow.EJS_defaultOptions = {...this.implementation.defaultOptions,
       ...(this.implementation.runtimeCore === "cap32" && new URL(game.url, "http://runtime.invalid").pathname.toLowerCase().endsWith(".cpr")
         ? {cap32_model: "6128+ (experimental)", cap32_gfx_colors: "24bit"} : {}),
     };
@@ -536,10 +507,6 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
     this.dosboxCompatibility = null;
     this.cleanupExternalFiles?.();
     this.cleanupExternalFiles = null;
-    await this.netplayPort?.close();
-    this.netplayPort = null;
-    this.cleanupNetplayCompatibility?.();
-    this.cleanupNetplayCompatibility = null;
     this.stopInputDiagnostics();
     this.cleanupRetroArchConfig();
     this.cleanupRetroArchConfig = () => undefined;

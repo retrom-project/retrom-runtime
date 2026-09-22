@@ -5,7 +5,6 @@ const bundleDigest = "b".repeat(64);
 
 export function launchEnvelope(): LaunchEnvelopeV1 {
   return {
-    netplay: null,
     resources: [{
       kind: "ROM_BLOB", ordinal: 0, rangeRequired: false, role: "game",
       sha256: digest, sizeBytes: 128, url: "/runtime/content/game/game.nes",
@@ -15,7 +14,7 @@ export function launchEnvelope(): LaunchEnvelopeV1 {
       bundleSha256: bundleDigest,
       capabilities: {
         checkpoint: true, discSwitch: false, frameCounter: true, frameMode: "SAME_ORIGIN_BLANK",
-        inputFilter: true, nativeSettings: true, netplayPort: true, pause: true, requiresThreads: false,
+        inputFilter: true, nativeSettings: true, pause: true, requiresThreads: false,
         screenshot: true, standardGamepad: true,
         videoModes: ["adaptive-sharpen", "original", "pixel", "sharp-bilinear", "smooth"], volume: true,
       },

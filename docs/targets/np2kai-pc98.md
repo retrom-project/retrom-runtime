@@ -13,7 +13,7 @@ previous disk writes unless a checkpoint is explicitly supplied.
 
 Standard gamepads map directions to cursor keys, A to Space (confirm), B to Escape (cancel),
 X to Z, Y to X and Start to Enter. Keyboard input remains available. Pause, screenshot,
-frame count and instant restore are supported; volume adjustment, netplay, disk switching
+frame count and instant restore are supported; volume adjustment, disk switching
 and external BIOS configuration are outside this trial. A freely distributable Shinonome
 font is included in the core build; game bytes are supplied by the host.
 Core admission requires standard-gamepad directional movement and confirmation.

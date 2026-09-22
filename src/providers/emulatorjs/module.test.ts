@@ -4,7 +4,6 @@ import {afterEach, describe, expect, it, vi} from "vitest";
 import type {LaunchEnvelopeV1, RuntimeHostV1} from "../../provider/module-api.js";
 import {projectProviderManifest} from "../../provider/manifest.js";
 import {emulatorJsProviderDefinition} from "./catalog.js";
-import {validateEmulatorJsNetplayProfile} from "./netplay-profile.js";
 import {createEmulatorJsPlayer} from "./provider-runtime.js";
 import {launchEnvelope} from "../../../tests/emulatorjs-provider-fixtures.js";
 import {createRuntime, providerApiVersion, providerId, providerVersion} from "./module.js";
@@ -469,94 +468,6 @@ describe("EmulatorJS Provider Module V1", () => {
     expect(runtimeWindow.navigator.getGamepads).toBe(nativeGetGamepads);
   });
 
-  it("exposes the standard netplay port and restores native hooks on close", async () => {
-    const frame = document.createElement("iframe");
-    document.body.append(frame);
-    const runtimeWindow = frame.contentWindow as Window & Record<string, unknown>;
-    runtimeWindow.fetch = vi.fn(async () => new Response("ok"));
-    const host: RuntimeHostV1 = {
-      loadRestore: vi.fn(async () => null),
-      mountFrame: vi.fn(async () => ({contentWindow: runtimeWindow, element: frame, origin: location.origin})),
-      reportDiagnostic: vi.fn(),
-      signal: new AbortController().signal,
-    };
-    const player = await createEmulatorJsPlayer(netplayEnvelope("fceumm"), host, {
-      "assets/4.2.3/data/cores/fceumm-wasm.data": {
-        sha256: "8c449fd5c36646fb0769423ed6ffa9efbdfc21fbfdc9bac7952b559d34d5b493",
-        sizeBytes: 1054015,
-      },
-    });
-    const mounting = player.mount(document.createElement("div"));
-    await vi.waitFor(() => expect(runtimeWindow.document.querySelector("script[data-retrom-loader]")).not.toBeNull());
-    expect(runtimeWindow.EJS_DEBUG_XX).toBe(true);
-    expect(Object.getOwnPropertyDescriptor(runtimeWindow, "EJS_GameManager")?.set).toBeTypeOf("function");
-    const publicInput = vi.fn();
-    const nativeInput = vi.fn();
-    let currentState = raState([1, 2, 3]);
-    let currentFrame = 9;
-    const runNetplayFrame = vi.fn(async () => ++currentFrame);
-    const manager = {
-      functions: {simulateInput: nativeInput},
-      getFrameNum: () => currentFrame,
-      getState: () => new (runtimeWindow.Uint8Array as Uint8ArrayConstructor)(currentState),
-      loadStateAndWait: vi.fn(async (state: Uint8Array) => {
-        currentState = new Uint8Array(state);
-        return {byteExact: true};
-      }),
-      runNetplayFrame,
-      simulateInput: publicInput,
-      toggleMainLoop: vi.fn(),
-    };
-    runtimeWindow.EJS_emulator = {gameManager: manager, muted: false, paused: false, volume: 0.7};
-    (runtimeWindow.EJS_ready as () => void)();
-    (runtimeWindow.EJS_onGameStart as () => void)();
-    await mounting;
-
-    const port = await player.getNetplayPort();
-    expect(port.controlCount).toBe(24);
-    manager.simulateInput(0, 3, 1);
-    expect(port.sampleLocalControls()[3]).toBe(1);
-    const controls = new Int16Array(96);
-    controls[6] = 1;
-    controls[31] = -1;
-    await port.runFrame(controls, 0, false);
-    expect(nativeInput).toHaveBeenCalledTimes(96);
-    expect(nativeInput).toHaveBeenCalledWith(0, 6, 1);
-    expect(nativeInput).toHaveBeenCalledWith(1, 7, -1);
-    await expect(port.captureState(1)).resolves.toEqual(currentState);
-    await expect(port.loadStateAndWait(raState([4, 5, 6]), 1)).resolves.toBeUndefined();
-    await expect(port.pauseAtBoundary()).resolves.toBe(11);
-    port.resetLocalControls();
-    expect([...port.sampleLocalControls()]).toEqual(Array(24).fill(0));
-    await port.close();
-    manager.simulateInput(0, 3, 0);
-    expect(publicInput).toHaveBeenCalledWith(0, 3, 0);
-    await player.exit();
-    expect(Object.getOwnPropertyDescriptor(runtimeWindow, "EJS_GameManager")).toBeUndefined();
-  });
-
-  it("binds netplay only to the current session bundle and rejects removed identity fields", () => {
-    const target = emulatorJsProviderDefinition.targets.find((entry) => entry.id === "fceumm");
-    if (!target) {throw new Error("fceumm target fixture missing");}
-    const implementation = target.implementation as Parameters<typeof validateEmulatorJsNetplayProfile>[1];
-    const current = netplayEnvelope("fceumm");
-    expect(validateEmulatorJsNetplayProfile(current, implementation)).toMatchObject({
-      profileId: "fceumm-423-v1",
-    });
-
-    const differentBundle = structuredClone(current);
-    if (!differentBundle.netplay) {throw new Error("netplay fixture missing");}
-    differentBundle.netplay.profile.bundleSha256 = "c".repeat(64);
-    expect(() => validateEmulatorJsNetplayProfile(differentBundle, implementation))
-      .toThrow("PLAYER_NETPLAY_PROFILE_INVALID");
-
-    const legacy = structuredClone(current);
-    if (!legacy.netplay) {throw new Error("netplay fixture missing");}
-    Object.assign(legacy.netplay.profile, {gameVariantRevisionId: "01980000-0000-7000-8000-000000000006"});
-    expect(() => validateEmulatorJsNetplayProfile(legacy, implementation))
-      .toThrow("PLAYER_NETPLAY_PROFILE_INVALID");
-  });
-
 });
 
 function yabauseEnvelope(): LaunchEnvelopeV1 {
@@ -585,29 +496,6 @@ function yabauseEnvelope(): LaunchEnvelopeV1 {
   };
 }
 
-function netplayEnvelope(targetId: "fceumm"): LaunchEnvelopeV1 {
-  const envelope = launchEnvelope();
-  return {
-    ...envelope,
-    netplay: {
-      profile: {
-        bundleSha256: envelope.runtime.bundleSha256,
-        canonicalHistoryFrames: 600, checkpointEveryFrames: 120, controlCount: 24,
-        coreId: "fceumm", dependencySnapshotDigest: "e".repeat(64),
-        maxPlayers: 2, maxPredictionFrames: 8, maxRollbackFrames: 120, maxStateBytes: 1_048_576,
-        platformIds: ["nes"],
-        profileId: "fceumm-423-v1", protocolVersion: "retrom-netplay-v2",
-        providerId: "emulatorjs", schemaVersion: 2, sourceManifestDigest: "f".repeat(64),
-        targetId,
-      },
-      roomId: "fixture-room", sessionId: "018f0f31-26fe-7a31-9d61-4ec92f16d4c4",
-      socketUrl: "wss://runtime.example.test/netplay", playerNo: 1,
-    },
-    runtime: {...envelope.runtime, targetId},
-    session: {...envelope.session, mode: "NETPLAY"},
-  };
-}
-
 function gamepad(index: number, select: boolean, start: boolean) {
   const buttons = Array.from({length: 16}, () => ({pressed: false, touched: false, value: 0}));
   buttons[8] = {pressed: select, touched: select, value: select ? 1 : 0};
@@ -616,16 +504,4 @@ function gamepad(index: number, select: boolean, start: boolean) {
     axes: [0.25, -0.5], buttons, connected: true, id: `pad-${index}`,
     index, mapping: "standard" as const, timestamp: 1,
   };
-}
-
-function raState(core: number[]) {
-  const corePadded = (core.length + 7) & ~7;
-  const state = new Uint8Array(8 + 8 + corePadded + 8);
-  state.set(new TextEncoder().encode("RASTATE"));
-  state[7] = 1;
-  state.set(new TextEncoder().encode("MEM "), 8);
-  new DataView(state.buffer).setUint32(12, core.length, true);
-  state.set(core, 16);
-  state.set(new TextEncoder().encode("END "), 16 + corePadded);
-  return state;
 }

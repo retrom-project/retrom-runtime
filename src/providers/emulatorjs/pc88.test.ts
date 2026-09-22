@@ -13,7 +13,6 @@ describe("PC-88 QUASI88", () => {
     const target = emulatorJsProviderDefinition.targets.find((entry) => entry.id === targetId);
     expect(target).toBeDefined();
     if (!target) {throw new Error("missing target");}
-    expect(target.netplayPort).toBe(false);
     expect(target.discSwitch).toBe(false);
     expect(target.implementation.release).toBe("4.2.3");
     const frame = document.createElement("iframe"); document.body.append(frame);

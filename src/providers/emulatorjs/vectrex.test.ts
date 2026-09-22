@@ -10,7 +10,7 @@ it("loads VecX with directional and four-button input and a compressed instant c
   const target = emulatorJsProviderDefinition.targets.find((entry) => entry.id === "vecx");
   expect(target).toBeDefined();
   if (!target) {throw new Error("missing Vectrex target");}
-  expect(target).toMatchObject({discSwitch: false, netplayPort: false});
+  expect(target).toMatchObject({discSwitch: false});
   const frame = document.createElement("iframe"); document.body.append(frame);
   const runtimeWindow = frame.contentWindow as Window & Record<string, unknown>;
   runtimeWindow.Response = Response; runtimeWindow.fetch = fetch;

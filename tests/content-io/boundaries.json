@@ -331,7 +331,7 @@
       "path": "src/providers/emulatorjs/archive-worker.ts",
       "symbol": "compatibleFetch",
       "classification": "UPSTREAM_LOADER",
-      "reason": "Pinned EmulatorJS fetch compatibility forwarding for native loader assets/netplay; no independent game raw cache or Range implementation.",
+      "reason": "Pinned EmulatorJS fetch compatibility forwarding for native loader assets; no independent game raw cache or Range implementation.",
       "ownerStage": "S09",
       "tests": [
         "runtime:scripts/content-io/boundaries.test.mjs"
@@ -350,24 +350,12 @@
       ]
     },
     {
-      "id": "B-030",
-      "repository": "runtime",
-      "path": "src/providers/emulatorjs/netplay-compatibility.ts",
-      "symbol": "installEmulatorJs423NetplayCompatibility",
-      "classification": "UPSTREAM_LOADER",
-      "reason": "Pinned EmulatorJS fetch compatibility forwarding for native loader assets/netplay; no independent game raw cache or Range implementation.",
-      "ownerStage": "S09",
-      "tests": [
-        "runtime:scripts/content-io/boundaries.test.mjs"
-      ]
-    },
-    {
       "id": "B-031",
       "repository": "runtime",
       "path": "src/providers/emulatorjs/psp-assets.ts",
       "symbol": "compatible",
       "classification": "UPSTREAM_LOADER",
-      "reason": "Pinned EmulatorJS fetch compatibility forwarding for native loader assets/netplay; no independent game raw cache or Range implementation.",
+      "reason": "Pinned EmulatorJS fetch compatibility forwarding for native loader assets; no independent game raw cache or Range implementation.",
       "ownerStage": "S09",
       "tests": [
         "runtime:scripts/content-io/boundaries.test.mjs"

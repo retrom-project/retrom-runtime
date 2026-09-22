@@ -4,7 +4,6 @@ import {storageAdapters} from "../../provider/checkpoint-storage.js";
 import {
   defineAdapter, defineProvider, defineTarget, type TargetInputDeclaration, type TargetOptionsSchema,
 } from "../../provider/declarations.js";
-import {emulatorJsNetplayProfiles} from "./netplay-profile.js";
 
 const emulatorJsOptionsSchema = {
   additionalProperties: false,
@@ -164,7 +163,6 @@ const cores: readonly CoreSource[] = [
 ] as const;
 
 const targets = cores.map((entry) => {
-  const netplayProfile = emulatorJsNetplayProfiles[entry.id] ?? null;
   return defineTarget({
   adapterId: entry.id === "gam4980" ? "emulatorjs-gam4980" : entry.id === "bsnes" ? "emulatorjs-bsnes" : entry.id === "flycast" ? "emulatorjs-flycast" : entry.id === "ppsspp" ? "emulatorjs-psp" : `emulatorjs-${entry.release}`,
   assetPaths: [
@@ -190,7 +188,6 @@ const targets = cores.map((entry) => {
     coreSizeBytes: entry.sizeBytes,
     defaultOptions: entry.defaultOptions,
     inputMode: entry.inputMode,
-    netplayProfile,
     release: entry.release,
     runtimeCore: entry.id,
     startupActions: entry.startupActions,
@@ -199,7 +196,6 @@ const targets = cores.map((entry) => {
   contentIO: emulatorContentPolicies(entry.id),
   inputFilter: true,
   nativeSettings: true,
-  netplayPort: netplayProfile !== null,
   targetOptionsSchema: emulatorJsOptionsSchema,
   requiresThreads: entry.requiresThreads,
   videoModes: ["adaptive-sharpen", "original", "pixel", "sharp-bilinear", "smooth"],

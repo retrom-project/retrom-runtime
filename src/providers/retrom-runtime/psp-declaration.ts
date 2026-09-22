@@ -12,7 +12,7 @@ export const pspTarget = defineTarget({id: "ppsspp", displayName: "PPSSPP (PSP)"
   contentIO: {game: rangePolicy("SYNC_WORKER", limits.signedDisc, {contentLengthPolicy: "REQUIRED_EXACT"})},
   inputs: [{role: "game", kind: "SEEKABLE_BLOB", cardinality: "ONE", optional: false}],
   targetOptionsSchema: {type: "object", additionalProperties: false, properties: {}, required: []},
-  implementation: {}, inputFilter: true, discSwitch: false, nativeSettings: false, netplayPort: false,
+  implementation: {}, inputFilter: true, discSwitch: false, nativeSettings: false,
   videoModes: ["original", "pixel", "smooth"],
   assetPaths: ["ppsspp.js", "ppsspp.wasm", "ppsspp.data", "ppsspp.worker.mjs", "ppsspp-host.mjs"]
     .map(file => `assets/ppsspp/${file}`),

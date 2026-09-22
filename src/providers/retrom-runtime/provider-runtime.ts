@@ -8,7 +8,7 @@ import type {MountedRuntimeAdapter, RuntimeProgressReporter, RuntimeExitReporter
 import type {
   AssetIndexV1, LaunchEnvelopeV1, PlayerRuntimeV1, RuntimeCheckpointAvailabilityV1, RuntimeCheckpointV1, RuntimeCheckpointRequestV1, RuntimeFinalSnapshotV1, RuntimeNativeSaveCapabilitiesV1,
   RuntimeDiscStateV1, RuntimeEventV1, RuntimeHostV1, RuntimeInputFilterPolicyV1,
-  RuntimeNetplayPortV1, RuntimeStateV1, RuntimeVideoModeV1,
+  RuntimeStateV1, RuntimeVideoModeV1,
 } from "../../provider/module-api.js";
 import {PlayerRuntimeError} from "../../provider/errors.js";
 import {focusRuntimeInput} from "../../provider/input-focus.js";
@@ -214,7 +214,6 @@ class RetromRuntimePlayer implements PlayerRuntimeV1 {
   async closeNativeSettings() {throw capabilityError();}
   getDiscState(): Promise<RuntimeDiscStateV1> {return Promise.reject(capabilityError());}
   switchDisc(_index: number): Promise<RuntimeDiscStateV1> {return Promise.reject(capabilityError());}
-  getNetplayPort(): Promise<RuntimeNetplayPortV1> {return Promise.reject(capabilityError());}
 
   async setInputFilter(policy: RuntimeInputFilterPolicyV1 | null) {
     this.requireCapability("inputFilter");

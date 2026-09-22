@@ -204,7 +204,6 @@ function target(
     inputs: [{cardinality: "ONE", kind: resourceKind, optional: false, role: "game"}],
     contentIO: {game: runtimeGamePolicy(id)},
     nativeSettings: false,
-    netplayPort: false,
     targetOptionsSchema,
     requiresThreads,
     videoModes: ["original", "pixel", "smooth"],

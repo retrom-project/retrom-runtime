@@ -25,6 +25,6 @@ export const scummvmTarget = defineTarget({id: "scummvm", displayName: "ScummVM"
   contentIO: {game: rangePolicy("ASYNC", limits.indexedFile, {})},
   inputs: [{role: "game", kind: "FILE_TREE", cardinality: "ONE", optional: false}],
   targetOptionsSchema: options, implementation: {}, inputFilter: true, discSwitch: false, nativeSettings: false,
-  netplayPort: false, videoModes: ["original", "pixel", "smooth"],
+  videoModes: ["original", "pixel", "smooth"],
   assetPaths: layout.files.filter((file) => !file.path.startsWith("licenses/")).map((file) => `assets/scummvm/${file.path}`),
 });

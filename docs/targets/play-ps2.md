@@ -3,7 +3,7 @@
 `retrom-runtime/play-ps2` consumes a single ISO or CHD as `SEEKABLE_BLOB` through the
 fork-owned `play-host-v1` module. The core runs in a same-origin blank frame with WebGL2,
 WebAssembly threads and cross-origin isolation. No BIOS upload is required. Multi-disc,
-ELF boot, native settings, volume controls and netplay are not declared.
+ELF boot, native settings, volume controls are not declared.
 
 Disc access uses 256 KiB persistent cache blocks keyed by content identity, plus an 8 MiB
 memory LRU. Missing or unavailable persistent storage falls back to bounded Range requests.

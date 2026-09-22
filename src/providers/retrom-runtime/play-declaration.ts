@@ -12,7 +12,7 @@ export const playTarget = defineTarget({id: "play-ps2", displayName: "Play! (Pla
   contentIO: {game: rangePolicy("POLLING", limits.indexedFile)},
   inputs: [{role: "game", kind: "SEEKABLE_BLOB", cardinality: "ONE", optional: false}],
   targetOptionsSchema: {type: "object", additionalProperties: false, properties: {}, required: []},
-  implementation: {}, inputFilter: true, discSwitch: false, nativeSettings: false, netplayPort: false,
+  implementation: {}, inputFilter: true, discSwitch: false, nativeSettings: false,
   videoModes: ["original", "pixel", "smooth"],
   assetPaths: ["Play.js", "Play.wasm", "checkpoint.mjs", "input.mjs", "play-retrom.mjs", "disc-device.mjs"]
     .map(file => `assets/play/${file}`),

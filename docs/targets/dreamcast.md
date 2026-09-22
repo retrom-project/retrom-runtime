@@ -6,7 +6,7 @@ controls, and supports bounded `flycast-state-gzip-v1` instant checkpoints, with
 and compatibility with existing raw `flycast-state-v1` saves. CHDs are streamed
 through SHA-256 validation into OPFS; cache hits are revalidated, and unavailable storage
 falls back to a validated Blob. The cache contains no launch authorization or save state.
-WinCE/MMU games, arcade variants, disc switching and netplay are outside this target.
+WinCE/MMU games, arcade variants, disc switching are outside this target.
 
 The core comes from `retrom-project/flycast-wasm` release `retrom-core-1.0-r1`.
 `src/providers/emulatorjs/source-catalog.ts` pins its repository, tag commit, asset digests,

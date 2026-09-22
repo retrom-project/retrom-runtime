@@ -16,7 +16,7 @@ export async function createRuntime(
 The host validates a Launch Envelope V1, verifies the module URL and SHA-256 against the active Bundle, imports
 the module, checks the exported identity and calls `createRuntime`. It only consumes `PlayerRuntimeV1`; it never
 chooses EasyRPG, mkxp, native Web or another implementation. The Provider validates the stable `providerId` plus
-`targetId`, current resources, private Target options, optional restore and netplay inputs before mounting.
+`targetId`, current resources, private Target options, optional restore input before mounting.
 
 `src/providers/retrom-runtime/catalog.ts` is the single Target declaration for the 14 targets in this Provider.
 The generated declaration provides current capabilities, checkpoint `writeFormat/readFormats/maxBytes/semantics`, resource

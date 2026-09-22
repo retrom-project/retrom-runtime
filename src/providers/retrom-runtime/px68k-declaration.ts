@@ -10,6 +10,6 @@ export const px68kTarget = defineTarget({id: "px68k", displayName: "Sharp X68000
   contentIO: {game: eagerPolicy(limits.firmwareFile, {writes: "SESSION_OVERLAY"}), external: eagerPolicy(limits.firmwareFile)},
   inputs: [{role: "game", kind: "ROM_BLOB", cardinality: "ONE", optional: false},
     {role: "external", kind: "EXTERNAL_FILE_SET", cardinality: "ONE", optional: false}],
-  implementation: {}, nativeSettings: false, netplayPort: false, requiresThreads: false, videoModes: ["original", "pixel", "smooth"],
+  implementation: {}, nativeSettings: false, requiresThreads: false, videoModes: ["original", "pixel", "smooth"],
   targetOptionsSchema: {type: "object", additionalProperties: false, properties: {}, required: []},
 });

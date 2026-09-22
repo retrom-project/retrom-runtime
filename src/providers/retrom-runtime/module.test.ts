@@ -110,7 +110,7 @@ describe("retrom-runtime Provider Module V1", () => {
   it("rejects unsupported operations with the stable capability error", async () => {
     const player = await provider.createRuntime(wasmEnvelope(), hostFixture());
     for (const action of [
-      () => player.getDiscState(), () => player.switchDisc(1), () => player.getNetplayPort(),
+      () => player.getDiscState(), () => player.switchDisc(1),
       () => player.openNativeSettings("core"), () => player.closeNativeSettings(), () => player.setVolume(0.5),
     ]) {await expect(action()).rejects.toMatchObject({code: "PLAYER_RUNTIME_CAPABILITY_UNSUPPORTED"});}
     await player.exit();

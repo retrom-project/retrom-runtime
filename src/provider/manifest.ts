@@ -27,7 +27,6 @@ export function projectProviderManifest(definition: ProviderDefinition) {
         frameMode: target.frameMode,
         inputFilter: target.inputFilter,
         nativeSettings: target.nativeSettings,
-        netplayPort: target.netplayPort,
         pause: adapter.capabilities.pause,
         requiresThreads: target.requiresThreads,
         screenshot: adapter.capabilities.screenshot,

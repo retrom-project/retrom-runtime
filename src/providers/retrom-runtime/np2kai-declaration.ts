@@ -10,7 +10,7 @@ export const np2kaiTarget = defineTarget({id: "np2kai-pc98", displayName: "PC-98
   contentIO: {game: eagerPolicy(limits.np2kaiDisk, {writes: "SESSION_OVERLAY"})},
   inputs: [{role: "game", kind: "ROM_BLOB", cardinality: "ONE", optional: false}],
   targetOptionsSchema: {type: "object", additionalProperties: false, properties: {}, required: []},
-  implementation: {}, inputFilter: true, discSwitch: false, nativeSettings: false, netplayPort: false,
+  implementation: {}, inputFilter: true, discSwitch: false, nativeSettings: false,
   videoModes: ["original", "pixel", "smooth"],
   assetPaths: ["font.bmp", "np2kai-register.mjs", "np2kai.mjs", "np2kai.wasm"].map(file => `assets/np2kai/${file}`),
 });

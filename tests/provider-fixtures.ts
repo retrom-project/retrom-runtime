@@ -6,7 +6,6 @@ const bundleDigest = "b".repeat(64);
 
 export function wasmEnvelope(): LaunchEnvelopeV1 {
   return {
-    netplay: null,
     resources: [{
       kind: "WASM4_CART" as const,
       ordinal: 0,
@@ -26,7 +25,6 @@ export function wasmEnvelope(): LaunchEnvelopeV1 {
         frameMode: "SAME_ORIGIN_BLANK" as const,
         inputFilter: true,
         nativeSettings: false,
-        netplayPort: false,
         pause: true,
         requiresThreads: false,
         screenshot: true,
@@ -64,7 +62,6 @@ export function rpgMvEnvelope(): LaunchEnvelopeV1 {
   );
   if (!target || !target.checkpoint) {throw new Error("RPG Maker MV target fixture missing");}
   return {
-    netplay: null,
     resources: [{
       bootstrapTicket: "t".repeat(48),
       cleanupUrl: "https://runtime.test/__retrom/cleanup",
@@ -146,7 +143,6 @@ export function targetEnvelope(targetId: string): LaunchEnvelopeV1 {
           ? {engineId: "sky", gameId: "sky", root: "", language: "en", platform: "pc", extra: "", guiOptions: "", filename: null}
           : {};
   return {
-    netplay: null,
     resources: targetId === "px68k" ? [resource, {
       kind: "EXTERNAL_FILE_SET", role: "external", ordinal: 0,
       files: ["cgrom.dat", "iplrom.dat"].map(logicalName => ({logicalName, virtualPath: `game/keropi/${logicalName}`, sha256: digest, sizeBytes: 128,

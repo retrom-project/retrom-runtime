@@ -13,7 +13,7 @@ describe("Uzebox cartridge runtime", () => {
   });
   it("declares a single cartridge, software core with instant checkpoints", () => {
     const target = emulatorJsProviderDefinition.targets.find(entry => entry.id === "uzem");
-    expect(target).toMatchObject({discSwitch: false, netplayPort: false,
+    expect(target).toMatchObject({discSwitch: false,
       requiresThreads: false, implementation: {runtimeCore: "uzem", contentKinds: ["SINGLE_FILE"]}});
   });
 });

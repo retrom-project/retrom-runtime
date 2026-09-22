@@ -1,6 +1,5 @@
 import type {EmulatorDiscInstance} from "./discs.js";
 import type {EmulatorNativeSettingsInstance} from "./native-settings.js";
-import type {EmulatorNetplayInstance} from "./netplay-port.js";
 import type {EmulatorGamepadInstance} from "./startup-gamepads.js";
 import type {EmulatorDefaultControls} from "./default-controls.js";
 import type {retromShaders} from "./shaders.js";
@@ -32,7 +31,7 @@ type EjsManager = {
   toggleMainLoop?: (running: boolean) => void;
 };
 
-export type EjsInstance = EmulatorDiscInstance & EmulatorNativeSettingsInstance & EmulatorNetplayInstance & EmulatorGamepadInstance & {
+export type EjsInstance = EmulatorDiscInstance & EmulatorNativeSettingsInstance & EmulatorGamepadInstance & {
   fileName?: string;
   debug?: boolean;
   Module?: {callMain?: (args: string[]) => unknown};

@@ -17,7 +17,6 @@ describe("BBK RPG runtime", () => {
   it("declares a single GAM and an independent complete-state checkpoint format", () => {
     const target = emulatorJsProviderDefinition.targets.find(entry => entry.id === "gam4980");
     expect(target).toMatchObject({adapterId: "emulatorjs-gam4980", discSwitch: false,
-      netplayPort: false, requiresThreads: false,
       implementation: {runtimeCore: "gam4980", contentKinds: ["SINGLE_FILE"]}});
     const adapter = emulatorJsProviderDefinition.adapters.find(entry => entry.id === "emulatorjs-gam4980");
     expect(adapter?.capabilities.volume).toBe(true);

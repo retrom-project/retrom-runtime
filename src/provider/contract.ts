@@ -11,7 +11,7 @@ const targetKeys = [
   "assetPaths", "capabilities", "checkpoint", "displayName", "id", "inputs", "targetOptionsSchema",
 ];
 const capabilityKeys = [
-  "checkpoint", "discSwitch", "frameCounter", "frameMode", "inputFilter", "nativeSettings", "netplayPort",
+  "checkpoint", "discSwitch", "frameCounter", "frameMode", "inputFilter", "nativeSettings",
   "pause", "requiresThreads", "screenshot", "standardGamepad", "videoModes", "volume",
 ];
 const inputKeys = ["cardinality", "kind", "optional", "role"];
@@ -143,7 +143,7 @@ function validateCapabilities(value: unknown): void {
   const capabilities = record(value);
   if (!capabilities || !exactKeys(capabilities, capabilityKeys)) {invalidManifest();}
   for (const key of [
-    "checkpoint", "discSwitch", "frameCounter", "inputFilter", "nativeSettings", "netplayPort", "pause",
+    "checkpoint", "discSwitch", "frameCounter", "inputFilter", "nativeSettings", "pause",
     "requiresThreads", "screenshot", "standardGamepad", "volume",
   ]) {
     if (typeof capabilities[key] !== "boolean") {invalidManifest();}

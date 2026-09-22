@@ -1,7 +1,7 @@
 # EmulatorJS Single-File Cores
 
 The EmulatorJS Provider adds Fuse, Gearcoleco, PrBoom, PUAE, VICE x128/x64sc/xvic and
-Virtual Jaguar as separate single-file targets. These targets have no multi-disc or netplay
+Virtual Jaguar as separate single-file targets. These targets have no multi-disc
 capability. Their fixed input sources are declared in `src/providers/emulatorjs/source-catalog.ts`:
 six use the official 4.2.3 assets; only VICE xvic and Virtual Jaguar use Retrom fork releases.
 The fork records pin repository, annotated tag, commit, adapter ABI, archive, metadata and license.

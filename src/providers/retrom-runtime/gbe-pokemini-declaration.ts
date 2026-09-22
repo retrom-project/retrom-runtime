@@ -11,7 +11,7 @@ export const gbeTarget = defineTarget({id: "gbe-pokemini", displayName: "Pokémo
   inputs: [{role: "game", kind: "ROM_BLOB", cardinality: "ONE", optional: false},
     {role: "external", kind: "EXTERNAL_FILE_SET", cardinality: "ONE", optional: false}],
   targetOptionsSchema: {type: "object", additionalProperties: false, properties: {}, required: []},
-  implementation: {}, inputFilter: true, discSwitch: false, nativeSettings: false, netplayPort: false,
+  implementation: {}, inputFilter: true, discSwitch: false, nativeSettings: false,
   videoModes: ["original", "pixel", "smooth"],
   assetPaths: ["gbe-pokemini.mjs", "gbe-pokemini.wasm", "gbe-pokemini-register.mjs"].map(file => `assets/gbe_plus/${file}`),
 });

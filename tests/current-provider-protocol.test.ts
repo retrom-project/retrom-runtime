@@ -27,7 +27,6 @@ describe("current Provider protocol", () => {
       "src/provider/module-api.ts",
       "src/providers/emulatorjs/catalog.ts",
       "src/providers/emulatorjs/module.ts",
-      "src/providers/emulatorjs/netplay-profile.ts",
       "src/providers/retrom-runtime/catalog.ts",
       "src/providers/retrom-runtime/target-parameters.ts",
       "src/providers/retrom-runtime/module.ts",
@@ -57,6 +56,16 @@ describe("current Provider protocol", () => {
     delete fixture.runtime.gameCompatibilityLine;
     delete fixture.runtime.targetContractSha256;
     expect(() => parseLaunchEnvelopeJSON(JSON.stringify(fixture))).not.toThrow();
+  });
+
+  it("rejects the removed multiplayer mode and configuration", async () => {
+    const fixture = JSON.parse(await readFile(
+      "contracts/retrom-provider/v1/fixtures/valid/single-minimal.json", "utf8",
+    )) as {session: Record<string, unknown>};
+    expect(() => validateLaunchEnvelopeBoundary({...fixture, netplay: null}))
+      .toThrow("PROVIDER_LAUNCH_REQUEST_INVALID");
+    expect(() => validateLaunchEnvelopeBoundary({...fixture, session: {...fixture.session, mode: "NETPLAY"}}))
+      .toThrow("PROVIDER_LAUNCH_REQUEST_INVALID");
   });
 
   it("rejects removed compatibility fields instead of accepting a legacy facade", async () => {

@@ -105,7 +105,6 @@ export type TargetDeclaration = {
   discSwitch: boolean;
   nativeSettings: boolean;
   inputFilter: boolean;
-  netplayPort: boolean;
   videoModes: readonly VideoMode[];
   inputs: readonly TargetInputDeclaration[];
   contentIO: Readonly<Record<string, ContentInputPolicyV1>>;

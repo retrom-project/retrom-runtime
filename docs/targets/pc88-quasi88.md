@@ -4,7 +4,7 @@ The `quasi88` EmulatorJS target accepts raw D88/U88 media through the host catal
 It defaults to N88 V2 with keyboard input enabled. Standard D-pad directions send
 numeric keypad movement; the primary face button sends Return through native Start.
 The swapped Start/primary bindings remain one-to-one. Checkpoints use
-`emulatorjs-state-v1-storage-v1`; no multi-disc or netplay capability is declared.
+`emulatorjs-state-v1-storage-v1`; no multi-disc capability is declared.
 Seven NEC firmware files are external dependencies in the core system `quasi88/` directory.
 The adapter sets `system_directory` explicitly before native startup, so the pinned
 RetroArch linker does not fall back to the content directory.

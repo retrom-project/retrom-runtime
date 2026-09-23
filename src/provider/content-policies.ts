@@ -26,6 +26,7 @@ const gamePolicies: Readonly<Record<string, ContentInputPolicyV1>> = {
   fake08: eagerPolicy(limits.fantasyFile),
   "flash-ruffle": eagerPolicy(limits.ruffleSwf),
   j2me: upstream("j2me-loader"),
+  "bbc-jsbeeb": eagerPolicy(32 * 1024 * 1024),
   "kirikiri2-kag": rangePolicy("VLFS", limits.indexedFile, { writes: "SESSION_OVERLAY"}),
   "msx-webmsx": eagerPolicy(limits.webmsxMedia),
   nxengine: eagerPolicy(limits.nxengineFile),

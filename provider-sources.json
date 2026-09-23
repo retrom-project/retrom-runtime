@@ -2395,5 +2395,29 @@
       "output": "runtime/butterscotch/worker.mjs"
     }
   ],
-  "developmentInputs": []
+  "developmentInputs": [
+    {
+      "id": "jsbeeb",
+      "repository": "https://github.com/retrom-project/jsbeeb",
+      "upstreamCommit": "c4839b888af29777390a5534f69d8ef8189bbed9",
+      "adapterAbi": "jsbeeb-web-v1",
+      "assets": [
+        {
+          "filename": "LICENSE",
+          "output": "licenses/jsbeeb/LICENSE",
+          "maxSizeBytes": 1048576
+        },
+        {
+          "filename": "jsbeeb-site.tar.gz",
+          "output": "runtime/jsbeeb/jsbeeb-site.tar.gz",
+          "maxSizeBytes": 8388608
+        },
+        {
+          "filename": "source.tar.gz",
+          "output": "licenses/jsbeeb/source.tar.gz",
+          "maxSizeBytes": 8388608
+        }
+      ]
+    }
+  ]
 }

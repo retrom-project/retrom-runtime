@@ -78,6 +78,7 @@ type StartupAction = {
 
 type CoreSource = {
   id: string;
+  targetId?: string;
   release: RuntimeRelease;
   coreBundleVersion: string;
   artifactFlavor: "WASM" | "THREAD_WASM" | "OVERRIDE";
@@ -100,7 +101,17 @@ declare const __RETROM_PFB_CORE_INPUTS__: Readonly<Record<string, {
   sha256: string; sizeBytes: number; artifactSetSha256: string;
 }>>;
 
+const atari800 = core("atari800", "4.2.3", "atari800-wasm.data", 996215, "b8ce8d014e44ddd8b54db56215d08d4804a4fc5954ea1f094d5b30c56ea99d34", "de2e82a2a28ab46e6ffa24475e093cdbb70ed1765ddd30dca5923b1c363367fd", {artifactFlavor: "OVERRIDE", coreBundleVersion: "pfb-atari800", defaultOptions: {keyboardInput: "enabled", atari800_system: "800XL (64K)", atari800_os_xl: "AltirraOS"}});
+
 const cores: readonly CoreSource[] = [
+  atari800,
+  {...atari800, targetId: "atari800-xegs", defaultOptions: {...atari800.defaultOptions, atari800_system: "XEGS"}},
+  core("ardens", "4.2.3", "ardens-wasm.data", 964328, "ecc82f645e6401dfe5ee0c349c37cd2e08c13a4fe858e12c9426763be3e1301e", "486babf71e42e038e4ca9be7e301093367eec1d7863c7f8f09a2a387d43314da", {artifactFlavor: "OVERRIDE", coreBundleVersion: "pfb-ardens"}),
+  core("freechaf", "4.2.3", "freechaf-wasm.data", 850028, "9d7ebfb7adc4b10ddde86a3815c0834c5af05c16e1f2ec96f7716e625daf374b", "1ec4c13e9565021dc2e73751311557894022757d2a7e8313f8039405fee5c7c5", {artifactFlavor: "OVERRIDE", coreBundleVersion: "pfb-freechaf"}),
+  core("hatarib", "4.2.3", "hatarib-wasm.data", 2529506, "27a00ce291e34a8779b7e6a3645f28837a3fdd2d0e36c4700304f46d1f478990", "976e88937bf6ce37bc5111b1462a7026a42299ae93a6ae97216c7556b3a30443", {artifactFlavor: "OVERRIDE", coreBundleVersion: "pfb-hatarib", defaultOptions: {keyboardInput: "enabled"}}),
+  core("sameduck", "4.2.3", "sameduck-wasm.data", 858887, "71269ccee7033e47f4ecbd4df3e4a11110553e6e31971c22c9d7d7813f24f083", "9b0419b3a1bf4a4cfaf4ff5b848d6053f37952e566516b5d6d5dbc0f0edfc2e4", {artifactFlavor: "OVERRIDE", coreBundleVersion: "pfb-sameduck"}),
+  core("potator", "4.2.3", "potator-wasm.data", 847963, "5ec5be24a6e3d9a2af963ccfcd850f1ee012907ba6e940cabfb6b613e0143026", "9dafc9cfb208f1b23ebee7c8b17da78534f377e1aeeed96be7a2997991673095", {artifactFlavor: "OVERRIDE", coreBundleVersion: "pfb-potator"}),
+  core("theodore", "4.2.3", "theodore-wasm.data", 1374439, "143fc947236d461032183caccf83a194755c020e13412a654d0c78f6c642f8f7", "63894d9d94f788989ef1c457512144828d5641d6d62a8a523048b1ef2276979e", {artifactFlavor: "OVERRIDE", coreBundleVersion: "pfb-theodore", defaultOptions: {keyboardInput: "enabled"}}),
   core("gam4980", "4.2.3", "gam4980-wasm.data", 852549, "4b05e77e91c28a87fbf3c71880df2d06fa3dd39dacc587147c29ecaec0a9f791", "f2d8aeca9848f86afdec7cd86d06eebeae4194dd30ac725bd1a1a905bce7957c", {artifactFlavor: "OVERRIDE", coreBundleVersion: "retrom-core-geeaa531b55e7-r1", defaultOptions: {gam4980_lcd_color: "grey", gam4980_lcd_ghosting: "0"}}),
   core("neocd", "4.2.3", "neocd-wasm.data", 1080566, "3702540c38faab7d3eadae748791364d61e043b16d937b5bbae05c9c0134ec0c", "ae9dddaebf459deb11ab689c69b4f964efbf560e73a51788d9095cf24f8fec7c", {artifactFlavor: "OVERRIDE", coreBundleVersion: "retrom-core-g3118c6901787-r1", defaultOptions: {neocd_region: "Japan", neocd_cdspeedhack: "On", neocd_loadskip: "On"}}),
   core("uzem", "4.2.3", "uzem-wasm.data", 852642, "c9f0e7d66f00fdb51c82b81c1d20269689b87e7f68d82267c31e2c03a54b221c", "6cba9cc2c184cb56033f76af19c911e79d5355aa6a0afa1b25b949ff962af123", {artifactFlavor: "OVERRIDE", coreBundleVersion: "retrom-core-gd991ee94547c-r1"}),
@@ -174,9 +185,9 @@ const targets = cores.map((entry) => {
   ].sort(compareUtf8),
   checkpointMaxBytes: 256 * 1024 * 1024,
   discSwitch: entry.id === "yabause",
-  displayName: displayName(entry.id),
+  displayName: displayName(entry.targetId ?? entry.id),
   frameMode: "SAME_ORIGIN_BLANK",
-  id: providerTargetId(entry.id),
+  id: providerTargetId(entry.targetId ?? entry.id),
   implementation: {
     artifactFlavor: entry.artifactFlavor,
     artifactSetSha256: entry.artifactSetSha256,

@@ -1,6 +1,8 @@
+import {emulatorJsDevelopmentForks} from "./development-source-catalog.js";
+
 export const emulatorJsSourceCatalog = {
   schemaVersion: 1,
-  developmentForks: [],
+  developmentForks: emulatorJsDevelopmentForks,
   forks: [
 {
   "repository": "https://github.com/retrom-project/libretro-o2em",

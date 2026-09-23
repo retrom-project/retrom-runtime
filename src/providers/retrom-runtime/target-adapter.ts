@@ -5,6 +5,7 @@ import {mountNP2} from "../../np2kai/adapter.js";
 import {mountOpenBOR} from "../../openbor/adapter.js";
 import {mountPx68k} from "../../px68k/adapter.js";
 import {mountWebMSX} from "../../webmsx/adapter.js";
+import {mountJsbeeb} from "../../jsbeeb/adapter.js";
 import {mountScummvm} from "../../scummvm/adapter.js";
 import {mountRuffle} from "../../ruffle/adapter.js";
 import {mountPSP} from "../../psp/adapter.js";
@@ -128,6 +129,10 @@ function mountMachineAdapter(kind: string, envelope: LaunchEnvelopeV1, target: H
   case "PLAY_WEB":
     return mountPlay(parameters.play(envelope, context.assetIndex), target, frameWindow, restorePayload,
       reportFailure, context.signal, undefined, {contentSession: requireContentSession(context.contentSession), assetIndex: context.assetIndex});
+
+  case "JSBEEB_WEB":
+    return mountJsbeeb(parameters.jsbeeb(envelope), target, frameWindow, restorePayload, reportProgress,
+      requireContentSession(context.contentSession), context.signal);
   default: throw new Error("PROVIDER_LAUNCH_REQUEST_INVALID");
   }
 }

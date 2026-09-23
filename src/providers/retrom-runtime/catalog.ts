@@ -1,5 +1,6 @@
 import {providerVersion} from "../../provider/version.js";
-import {runtimeGamePolicy} from "../../provider/content-policies.js";
+import {eagerPolicy, runtimeGamePolicy} from "../../provider/content-policies.js";
+import jsbeebSiteAssets from "../../jsbeeb/site-assets.json" with {type: "json"};
 import {pspAdapter, pspTarget} from "./psp-declaration.js";
 import {gbeAdapter, gbeTarget} from "./gbe-pokemini-declaration.js";
 import {storageAdapters} from "../../provider/checkpoint-storage.js";
@@ -50,6 +51,7 @@ const adapters = [
     checkpoint: {writeFormat: "openbor-game-save-v1", readFormats: ["openbor-game-save-v1"], semantics: "GAME_SAVE"}}),
   px68kAdapter,
   adapter("webmsx-web", "WEBMSX_WEB", "webmsx-host-v1", "webmsx-state-v1", standardCapabilities),
+  adapter("jsbeeb-web", "JSBEEB_WEB", "jsbeeb-web-v1", "jsbeeb-snapshot-gzip-v1", capabilities(true, false, false)),
   playAdapter,
   pspAdapter,
   defineAdapter({id: "ruffle-web", kind: "RUFFLE_WEB", abi: "ruffle-host-v1",
@@ -80,6 +82,16 @@ const adapters = [
 ] as const;
 
 const targets = [
+  defineTarget({
+    ...target("bbc-jsbeeb", "BBC Micro (jsbeeb)", "jsbeeb-web", noOptionsSchema, false,
+      "SAME_ORIGIN_BLANK", "ROM_BLOB", 32 * 1024 * 1024,
+      jsbeebSiteAssets.map((path) => `assets/jsbeeb/site/${path}`)),
+    inputs: [
+      {cardinality: "ONE", kind: "ROM_BLOB", optional: false, role: "game"},
+      {cardinality: "ONE", kind: "EXTERNAL_FILE_SET", optional: false, role: "external"},
+    ],
+    contentIO: {game: runtimeGamePolicy("bbc-jsbeeb"), external: eagerPolicy(1024 * 1024)},
+  }),
   target(
     "butterscotch-gamemaker", "GameMaker (Butterscotch)", "butterscotch-web", noOptionsSchema,
     true, "SAME_ORIGIN_BLANK", "FILE_TREE", 16 * 1024 * 1024,

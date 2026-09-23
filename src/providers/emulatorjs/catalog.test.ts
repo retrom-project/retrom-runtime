@@ -5,6 +5,16 @@ import {validateProviderManifest} from "../../provider/contract.js";
 import {emulatorJsProviderDefinition} from "./catalog.js";
 
 describe("EmulatorJS Provider declarations", () => {
+  it("selects separate Atari 8-bit and XEGS machines from one verified core", () => {
+    const standard = emulatorJsProviderDefinition.targets.find((target) => target.id === "atari800");
+    const xegs = emulatorJsProviderDefinition.targets.find((target) => target.id === "atari800-xegs");
+    expect(standard?.implementation).toMatchObject({runtimeCore: "atari800",
+      defaultOptions: {atari800_system: "800XL (64K)", atari800_os_xl: "AltirraOS"}});
+    expect(xegs?.implementation).toMatchObject({runtimeCore: "atari800",
+      defaultOptions: {atari800_system: "XEGS", atari800_os_xl: "AltirraOS"}});
+    expect(xegs?.implementation.coreSha256).toBe(standard?.implementation.coreSha256);
+  });
+
   it("declares NeoCD with upstream load options and bounded single-disc storage", () => {
     const target = emulatorJsProviderDefinition.targets.find((entry) => entry.id === "neocd")!;
     expect(target.inputs.find(input => input.role === "game")?.kind).toBe("SEEKABLE_BLOB");
@@ -38,13 +48,13 @@ describe("EmulatorJS Provider declarations", () => {
       expect(target.checkpoint?.writeFormat).toBe("emulatorjs-state-v1-storage-v1");
     }
   });
-  it("uses last declaration wins for exactly fifty-nine current core targets", () => {
+  it("uses last declaration wins for exactly sixty-seven current core targets", () => {
     const manifest = projectProviderManifest(emulatorJsProviderDefinition);
     expect(validateProviderManifest(manifest)).toBe(manifest);
     expect(manifest.providerId).toBe("emulatorjs");
     expect(manifest.providerVersion).toBe("0.0.0-dev");
-    expect(manifest.targets).toHaveLength(59);
-    expect(new Set(manifest.targets.map((target) => target.id)).size).toBe(59);
+    expect(manifest.targets).toHaveLength(67);
+    expect(new Set(manifest.targets.map((target) => target.id)).size).toBe(67);
     for (const targetId of ["dosbox-pure", "genesis-plus-gx-wide", "azahar", "freeintv"]) {
       const target = emulatorJsProviderDefinition.targets.find((entry) => entry.id === targetId);
       expect(target?.implementation.release).toBe("4.3.0-pre");

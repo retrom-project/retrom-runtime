@@ -7,6 +7,8 @@ const sources = new Map([
     upstreamCommit: "eeaa531b55e7127ab4b5e0bdc5ceba686df59c6a", license: "LICENSE"}],
   ["uzem", {repository: "https://github.com/retrom-project/libretro-uzem",
     upstreamCommit: "d991ee94547c8294abc1c4cb73d63116aa58b5bc", license: "LICENSE"}],
+  ["o2em", {repository: "https://github.com/retrom-project/libretro-o2em",
+    upstreamCommit: "679d6fec04963f6e70a7ec217e3d0ebb1fe472fc", license: "LICENSE"}],
   ["vecx", {repository: "https://github.com/retrom-project/libretro-vecx",
     upstreamCommit: "8f671cc9d737f2890c3ce19e177e2984dcae121f", license: "LICENSE.md"}],
 

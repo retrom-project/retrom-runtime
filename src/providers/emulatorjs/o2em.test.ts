@@ -1,8 +1,18 @@
 import {describe, expect, it} from "vitest";
 import {emulatorJsProviderDefinition} from "./catalog.js";
 import {createRetromDefaultControls} from "./default-controls.js";
+import {emulatorJsSourceCatalog} from "./source-catalog.js";
 
 describe("O2EM cartridge runtime", () => {
+  it("pins the published fork release rather than a development candidate", () => {
+    expect(emulatorJsSourceCatalog.developmentForks).toEqual([]);
+    expect(emulatorJsSourceCatalog.forks.find((fork) => fork.runtimeCore === "o2em"))
+      .toMatchObject({repository: "https://github.com/retrom-project/libretro-o2em",
+        tag: "retrom-core-g679d6fec0496-r2",
+        commit: "e3583cf23d951a38a48e16a0f05279d85ac07bea",
+        adapterAbi: "emulatorjs-state-v1"});
+  });
+
   it("declares the single-file core, firmware input and instant checkpoint", () => {
     const target = emulatorJsProviderDefinition.targets.find((entry) => entry.id === "o2em");
     expect(target).toMatchObject({discSwitch: false, requiresThreads: false,

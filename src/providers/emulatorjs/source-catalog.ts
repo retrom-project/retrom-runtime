@@ -1,20 +1,24 @@
 export const emulatorJsSourceCatalog = {
   schemaVersion: 1,
-  developmentForks: [{
-    runtimeCore: "o2em",
-    repository: "https://github.com/retrom-project/libretro-o2em",
-    upstreamCommit: "679d6fec04963f6e70a7ec217e3d0ebb1fe472fc",
-    adapterAbi: "emulatorjs-state-v1",
-    commit: "f31905448c9b104745151c70e0942b1e62e69550",
-    sourceTreeSha256: "a11eac890903ec7b7ed3edbb2e6d43546fbe14148cafe62d50b8086660ebd742",
-    assets: [
-      {filename: "LICENSE", sha256: "b28495ecc51ad0417f44a8728bc2addbb01272e0e26c7a5b8cc52b37eec7a46d", sizeBytes: 43828},
-      {filename: "o2em-wasm.data", sha256: "8eca44869f146666f181579971d28eea69eed6a349e70b20badeec3f27178c7a", sizeBytes: 905818},
-      {filename: "retrom-core-candidate.json", sha256: "5a806f9195e33ac34828a0bda34174c002d0164c06e53db3e592fdce4404672c", sizeBytes: 717},
-      {filename: "source.tar.gz", sha256: "1ff2911476654abaf7c29bc16d3db106e76d9a76bc852e6a40ee9dfad0047213", sizeBytes: 501927},
-    ],
-  }],
+  developmentForks: [],
   forks: [
+{
+  "repository": "https://github.com/retrom-project/libretro-o2em",
+  "tag": "retrom-core-g679d6fec0496-r2",
+  "commit": "e3583cf23d951a38a48e16a0f05279d85ac07bea",
+  "adapterAbi": "emulatorjs-state-v1",
+  "runtimeCore": "o2em",
+  "assets": [
+    {"filename": "LICENSE", "sha256": "b28495ecc51ad0417f44a8728bc2addbb01272e0e26c7a5b8cc52b37eec7a46d", "sizeBytes": 43828,
+      "url": "https://github.com/retrom-project/libretro-o2em/releases/download/retrom-core-g679d6fec0496-r2/LICENSE"},
+    {"filename": "o2em-wasm.data", "sha256": "051bc1b257966ef15bc255df3ea70aadec8a25a4ddb0b846a3f399db1859479d", "sizeBytes": 905816,
+      "url": "https://github.com/retrom-project/libretro-o2em/releases/download/retrom-core-g679d6fec0496-r2/o2em-wasm.data"},
+    {"filename": "rpg-runtime-release.json", "sha256": "502ca7b9f5ed3fdedf01d98b3b5d8bce85eee79f47b01c46dc8d1f40fb06c42b", "sizeBytes": 789,
+      "url": "https://github.com/retrom-project/libretro-o2em/releases/download/retrom-core-g679d6fec0496-r2/rpg-runtime-release.json"},
+    {"filename": "source.tar.gz", "sha256": "1e4f1bbc1e0c0d2682fd527047c9e70e3da95711f03974080ef95b4e627a1a4c", "sizeBytes": 501882,
+      "url": "https://github.com/retrom-project/libretro-o2em/releases/download/retrom-core-g679d6fec0496-r2/source.tar.gz"},
+  ],
+},
 {
   "repository": "https://github.com/retrom-project/gam4980",
   "tag": "retrom-core-geeaa531b55e7-r1",

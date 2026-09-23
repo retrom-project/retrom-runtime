@@ -85,7 +85,7 @@ const nativeFaceGamepad: Readonly<Record<number, string>> = {...playerOneGamepad
 const pc88Gamepad: Readonly<Record<number, string>> = {...playerOneGamepad, 3: "BUTTON_1", 8: "START"};
 
 export function createRetromDefaultControls(core?: string): EmulatorDefaultControls {
-  const gamepad = ["flycast", "neocd"].includes(core ?? "") ? nativeFaceGamepad : core === "quasi88" ? pc88Gamepad : playerOneGamepad;
+  const gamepad = ["flycast", "neocd", "o2em"].includes(core ?? "") ? nativeFaceGamepad : core === "quasi88" ? pc88Gamepad : playerOneGamepad;
   const controllers: EmulatorDefaultControls = {};
   for (let player = 0; player < 4; player += 1) {
     const keyboard: Readonly<Record<number, string>> = player === 0
@@ -95,7 +95,7 @@ export function createRetromDefaultControls(core?: string): EmulatorDefaultContr
     for (let control = 0; control < controlCount; control += 1) {
       // NeoCD shoulder/stick clicks are native multi-button macros; leave them unbound.
       const macro = core === "neocd" && control >= 10 && control <= 15;
-      const value2 = player === 0 && !macro ? gamepad[control] : undefined;
+      const value2 = (player === 0 || core === "o2em" && player === 1) && !macro ? gamepad[control] : undefined;
       controls[control] = {
         value: keyboard[control] ?? "",
         ...(value2 ? {value2} : {}),

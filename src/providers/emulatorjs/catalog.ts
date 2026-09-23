@@ -104,6 +104,7 @@ const cores: readonly CoreSource[] = [
   core("gam4980", "4.2.3", "gam4980-wasm.data", 852549, "4b05e77e91c28a87fbf3c71880df2d06fa3dd39dacc587147c29ecaec0a9f791", "f2d8aeca9848f86afdec7cd86d06eebeae4194dd30ac725bd1a1a905bce7957c", {artifactFlavor: "OVERRIDE", coreBundleVersion: "retrom-core-geeaa531b55e7-r1", defaultOptions: {gam4980_lcd_color: "grey", gam4980_lcd_ghosting: "0"}}),
   core("neocd", "4.2.3", "neocd-wasm.data", 1080566, "3702540c38faab7d3eadae748791364d61e043b16d937b5bbae05c9c0134ec0c", "ae9dddaebf459deb11ab689c69b4f964efbf560e73a51788d9095cf24f8fec7c", {artifactFlavor: "OVERRIDE", coreBundleVersion: "retrom-core-g3118c6901787-r1", defaultOptions: {neocd_region: "Japan", neocd_cdspeedhack: "On", neocd_loadskip: "On"}}),
   core("uzem", "4.2.3", "uzem-wasm.data", 852642, "c9f0e7d66f00fdb51c82b81c1d20269689b87e7f68d82267c31e2c03a54b221c", "6cba9cc2c184cb56033f76af19c911e79d5355aa6a0afa1b25b949ff962af123", {artifactFlavor: "OVERRIDE", coreBundleVersion: "retrom-core-gd991ee94547c-r1"}),
+  core("o2em", "4.2.3", "o2em-wasm.data", 905816, "051bc1b257966ef15bc255df3ea70aadec8a25a4ddb0b846a3f399db1859479d", "502ca7b9f5ed3fdedf01d98b3b5d8bce85eee79f47b01c46dc8d1f40fb06c42b", {artifactFlavor: "OVERRIDE", coreBundleVersion: "retrom-core-g679d6fec0496-r2", defaultOptions: {keyboardInput: "enabled", o2em_bios: "o2rom.bin"}}),
   core("81", "4.2.3", "81-wasm.data", 888668, "b78716a9566f7b31ad82f3d3250ba882af284294df4ec84b80012906aa1da417", "01c76aa09d95022d001e16f80e8ff32c0a62088da9445c6b321be06872943cf2", {artifactFlavor: "OVERRIDE", coreBundleVersion: "retrom-core-g86decf3ee61e-r1", defaultOptions: {keyboardInput: "enabled", "81_joypad_b": "new line"}}),
   core("flycast", "4.2.3", "flycast-wasm.data", 3530713, "c4e848767db6ad58e8aad665970ae6760ffbe2db3426bb27deec0396cbac44d6", "f3c6762e6ea597791a223215982f291674cf5afafa294fcc4fdec57ac0de6e30", {artifactFlavor: "OVERRIDE", coreBundleVersion: "1.0", defaultOptions: {reicast_hle_bios: "disabled", reicast_boot_to_bios: "disabled", reicast_internal_resolution: "640x480", reicast_threaded_rendering: "disabled", reicast_alpha_sorting: "per-strip (fast, least accurate)"}}),
 
@@ -270,6 +271,7 @@ function commonAssets(release: RuntimeRelease) {
 
 function displayName(value: string) {
   if (value === "bsnes") {return value;}
+  if (value === "o2em") {return "O2EM";}
   return value.split("_").map((part) => part.length <= 3 ? part.toUpperCase() :
     `${part[0]?.toUpperCase() ?? ""}${part.slice(1)}`).join(" ");
 }

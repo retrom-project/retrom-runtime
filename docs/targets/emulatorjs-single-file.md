@@ -17,6 +17,13 @@ native load callback and its error result. Exit runs EmulatorJS's native cleanup
 New core admission still requires a real host import, preview, product launch, visible input
 response and checkpoint restore into a fresh instance; passing serialization alone is insufficient.
 
+O2EM uses the `retrom-project/libretro-o2em` fork Release for Odyssey² / Videopac `.bin`
+cartridges. Its `o2rom.bin` firmware is supplied by the user and delivered as a BIOS bundle.
+Keyboard input starts a game; standard gamepad direction and action are mapped for both
+players. The browser build does not include The Voice speech hardware. The fork release
+pins the Web core, source archive, license and metadata; Retrom's `ACC-O2EM-001` checks
+real import, launch, input and cross-launch checkpoint restore.
+
 SAME CD-i configures both digital pointer increments to 20 through its native
 MAME machine configuration before startup. This keeps both movement signs above
 games' pointer quantization threshold while preserving native button sequences

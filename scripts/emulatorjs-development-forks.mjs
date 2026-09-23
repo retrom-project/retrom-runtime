@@ -15,6 +15,8 @@ const sources = new Map([
     upstreamCommit: "5619abdb01cee6bedb47599cdb5532c318443b52", license: "LICENSE"}],
   ["potator", {repository: "https://github.com/retrom-project/potator",
     upstreamCommit: "227c5f6f3ce74d32e9002ce24c1420288559a860", license: "LICENSE"}],
+  ["supermodel", {repository: "https://github.com/retrom-project/Libretro-Supermodel",
+    upstreamCommit: "84bc106b45b279bf868a53b9232897c8dc10ca17", license: "LICENSE", release: "4.3.0-pre"}],
   ["theodore", {repository: "https://github.com/retrom-project/theodore",
     upstreamCommit: "4d469ce0f71ee046ceb78cdbf8e9f18364aaa918", license: "LICENSE"}],
   ["gam4980", {repository: "https://github.com/retrom-project/gam4980",

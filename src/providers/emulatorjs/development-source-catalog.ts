@@ -84,6 +84,20 @@ export const emulatorJsDevelopmentForks = [{
     ],
   },
   {
+    runtimeCore: "supermodel",
+    repository: "https://github.com/retrom-project/Libretro-Supermodel",
+    upstreamCommit: "84bc106b45b279bf868a53b9232897c8dc10ca17",
+    commit: "182d4475320f65d0ff1a948abc054ecb9c87f504",
+    sourceTreeSha256: "3d6e9b868df89398e1b133aef4db8e2c47251e11a86b7ade6e8179ad7ad36895",
+    adapterAbi: "emulatorjs-state-v1",
+    assets: [
+      {filename: "LICENSE", sha256: "315d765e4a4041d07b51ed3b2760fc1a3b3c9fd6fc9782b403005e2f0c5206c7", sizeBytes: 72093},
+      {filename: "retrom-core-candidate.json", sha256: "80d20ea2360321289a6573c361c32dc6ee73bfd01965d6134cb1910e006e900a", sizeBytes: 747},
+      {filename: "source.tar.gz", sha256: "811810a22f4e83ea0b62fb15a5a616b81826469399101eb4fcb985b00ce0eff8", sizeBytes: 3144958},
+      {filename: "supermodel-wasm.data", sha256: "0fec2c536500685b0a9456f7c3ad3d01c3214696cbf7ef3c218b42dc7e3b2355", sizeBytes: 1365895},
+    ],
+  },
+  {
     runtimeCore: "theodore",
     repository: "https://github.com/retrom-project/theodore",
     upstreamCommit: "4d469ce0f71ee046ceb78cdbf8e9f18364aaa918",

@@ -8027,6 +8027,121 @@
       },
       {
         "assetPaths": [
+          "assets/4.3.0-pre/data/compression/extract7z.js",
+          "assets/4.3.0-pre/data/cores/supermodel-wasm.data",
+          "assets/4.3.0-pre/data/cores/reports/supermodel.json",
+          "assets/4.3.0-pre/data/emulator.css",
+          "assets/4.3.0-pre/data/emulator.min.css",
+          "assets/4.3.0-pre/data/emulator.min.js",
+          "assets/4.3.0-pre/data/loader.js",
+          "assets/4.3.0-pre/data/localization/en.json",
+          "assets/4.3.0-pre/data/localization/retroarch.json",
+          "assets/4.3.0-pre/data/localization/zh.json",
+          "assets/4.3.0-pre/data/src/GameManager.js",
+          "assets/4.3.0-pre/data/src/cache.js",
+          "assets/4.3.0-pre/data/src/compression.js",
+          "assets/4.3.0-pre/data/src/consts.js",
+          "assets/4.3.0-pre/data/src/emulator.js",
+          "assets/4.3.0-pre/data/src/gamepad.js",
+          "assets/4.3.0-pre/data/src/license.js",
+          "assets/4.3.0-pre/data/src/netplay.js",
+          "assets/4.3.0-pre/data/src/setup.js",
+          "assets/4.3.0-pre/data/src/shaders.js",
+          "assets/4.3.0-pre/data/src/storage.js",
+          "assets/4.3.0-pre/data/src/utils.js",
+          "assets/4.3.0-pre/data/src/vendor/nipplejs.js",
+          "assets/4.3.0-pre/data/src/vendor/socket.io.min.js"
+        ],
+        "capabilities": {
+          "checkpoint": true,
+          "discSwitch": false,
+          "frameCounter": true,
+          "frameMode": "SAME_ORIGIN_BLANK",
+          "inputFilter": true,
+          "nativeSettings": true,
+          "pause": true,
+          "requiresThreads": false,
+          "screenshot": true,
+          "standardGamepad": true,
+          "videoModes": [
+            "adaptive-sharpen",
+            "original",
+            "pixel",
+            "sharp-bilinear",
+            "smooth"
+          ],
+          "volume": true
+        },
+        "checkpoint": {
+          "maxBytes": 268435456,
+          "readFormats": [
+            "emulatorjs-state-v1",
+            "emulatorjs-state-v1-storage-v1"
+          ],
+          "writeFormat": "emulatorjs-state-v1-storage-v1"
+        },
+        "displayName": "Supermodel",
+        "id": "supermodel",
+        "inputs": [
+          {
+            "cardinality": "ONE",
+            "kind": "ROM_BLOB",
+            "optional": false,
+            "role": "game"
+          },
+          {
+            "cardinality": "ONE",
+            "kind": "BIOS_BUNDLE",
+            "optional": true,
+            "role": "bios"
+          },
+          {
+            "cardinality": "ONE",
+            "kind": "PARENT_ARCHIVE",
+            "optional": true,
+            "role": "parent"
+          },
+          {
+            "cardinality": "ONE",
+            "kind": "MULTI_DISC",
+            "optional": true,
+            "role": "discs"
+          },
+          {
+            "cardinality": "ONE",
+            "kind": "EXTERNAL_FILE_SET",
+            "optional": true,
+            "role": "external"
+          }
+        ],
+        "targetOptionsSchema": {
+          "additionalProperties": false,
+          "properties": {
+            "dosEntryPath": {
+              "format": "safe-path",
+              "maxLength": 240,
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "initialDiscIndex": {
+              "minimum": 0,
+              "type": [
+                "integer",
+                "null"
+              ]
+            }
+          },
+          "required": [
+            "dosEntryPath",
+            "initialDiscIndex"
+          ],
+          "type": "object"
+        }
+      },
+      {
+        "assetPaths": [
           "assets/4.2.3/data/compression/extract7z.js",
           "assets/4.2.3/data/compression/extractzip.js",
           "assets/4.2.3/data/cores/cores.json",

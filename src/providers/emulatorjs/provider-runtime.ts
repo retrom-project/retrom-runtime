@@ -35,6 +35,8 @@ import {captureEmulatorJsScreenshot} from "./screenshot.js";
 import {createStartBarrier, startWhenAvailable, type StartBarrier} from "./lifecycle.js";
 import {installEmulatorJsRetroArchConfig} from "./retroarch-config.js";
 import {installEmulatorJs423StateRestoreCompatibility} from "./state-restore.js";
+import {installSupermodelState} from "./supermodel-state.js";
+import {installSupermodelRestore} from "./supermodel-restore.js";
 import {createRetromDefaultControls, emulatorControlScheme} from "./default-controls.js";
 import {initializeEmulatorJsGamepads} from "./startup-gamepads.js";
 import {
@@ -82,6 +84,8 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
   private outputViewport: ReturnType<typeof installEmulatorJsOutputViewport> | null = null;
   private videoModeController: ReturnType<typeof createEmulatorJsVideoModeController> | null = null;
   private cleanupStateRestore: (() => void) | null = null;
+  private cleanupSupermodelState: (() => void) | null = null;
+  private supermodelRestore: ReturnType<typeof installSupermodelRestore> | null = null;
   private cleanupExternalFiles: (() => void) | null = null;
   private cleanupInputFilter: (() => void) | null = null;
   private inputFilter: RuntimeGamepadFilter | null = null;
@@ -303,6 +307,10 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
           runtimeWindow, this.implementation.runtimeCore === "mame2003_plus",
         );
       }
+      if (this.restorePayload && this.implementation.runtimeCore === "supermodel") {
+        this.supermodelRestore = installSupermodelRestore(runtimeWindow);
+        this.cleanupStateRestore = this.supermodelRestore.cleanup;
+      }
       if (this.implementation.release === "4.3.0-pre" && this.implementation.runtimeCore === "dosbox_pure") {
         this.dosboxCompatibility = installDOSBoxPureStateCompatibility(runtimeWindow);
       }
@@ -341,6 +349,9 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
     const releaseBase = runtimeBase(this.envelope, this.implementation.release);
     const deferredDOSStart = this.implementation.release === "4.3.0-pre" &&
       this.implementation.runtimeCore === "dosbox_pure";
+    const deferredArchiveStart = this.implementation.release === "4.3.0-pre" &&
+      this.implementation.runtimeCore === "supermodel";
+    const deferredStart = deferredDOSStart || deferredArchiveStart;
     runtimeWindow.EJS_player = "#retrom-emulator";
     runtimeWindow.EJS_core = this.implementation.runtimeCore;
     runtimeWindow.EJS_controlScheme = emulatorControlScheme(this.implementation.runtimeCore, this.implementation.release, game.url);
@@ -350,8 +361,8 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
     runtimeWindow.EJS_pathtodata = releaseBase;
     runtimeWindow.EJS_biosUrl = biosFile(bios);
     runtimeWindow.EJS_gameParentUrl = parent?.url;
-    runtimeWindow.EJS_startOnLoaded = !deferredDOSStart;
-    runtimeWindow.EJS_dontExtractRom = deferredDOSStart || ["flycast", "neocd"].includes(this.implementation.runtimeCore);
+    runtimeWindow.EJS_startOnLoaded = !deferredStart;
+    runtimeWindow.EJS_dontExtractRom = deferredStart || ["flycast", "neocd"].includes(this.implementation.runtimeCore);
     runtimeWindow.EJS_disableBatchBootup = deferredDOSStart;
     runtimeWindow.EJS_disableCue = ["cap32", "quasi88"].includes(this.implementation.runtimeCore) ? true : undefined;
     runtimeWindow.EJS_language = "zh-CN";
@@ -388,19 +399,30 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
         try {initializeEmulatorJsDiscs(this.instance);}
         catch (error) {this.fail("PLAYER_DISC_RUNTIME_INVALID", error); return;}
       }
-      if (deferredDOSStart && this.instance) {
+      if (deferredStart && this.instance) {
         const excluded = this.instance.downloadType?.rom?.dontExtractIfCore;
-        if (!Array.isArray(excluded)) {this.fail("PLAYER_DOS_ARCHIVE_MODE_UNAVAILABLE"); return;}
+        if (!Array.isArray(excluded)) {this.fail("PLAYER_ROM_ARCHIVE_MODE_UNAVAILABLE"); return;}
         if (!excluded.includes(this.implementation.runtimeCore)) {excluded.push(this.implementation.runtimeCore);}
         try {
           this.cleanupDeferredStart = startWhenAvailable(runtimeWindow);
         } catch (error) {
-          this.fail("PLAYER_DOS_STATE_COMPATIBILITY_UNAVAILABLE", error);
+          this.fail("PLAYER_ROM_START_UNAVAILABLE", error);
         }
       }
       if (this.instance) {this.updateCheckpointAvailability(this.currentCheckpointAvailability());}
     };
     runtimeWindow.EJS_onGameStart = () => {
+      if (this.implementation.runtimeCore === "supermodel" && !this.cleanupSupermodelState) {
+        try {
+          const manager = this.instance?.gameManager;
+          if (!manager) {throw new Error("PLAYER_STATE_COMPATIBILITY_UNAVAILABLE");}
+          const cleanupState = installSupermodelState(manager);
+          try {
+            const cleanupRestore = this.supermodelRestore?.attach(manager);
+            this.cleanupSupermodelState = () => {cleanupRestore?.(); cleanupState();};
+          } catch (error) {cleanupState(); throw error;}
+        } catch (error) {this.fail("PLAYER_STATE_COMPATIBILITY_UNAVAILABLE", error); return;}
+      }
       void this.completeStart(runtimeWindow);
     };
   }
@@ -501,6 +523,9 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
     this.cleanupSurface();
     this.cleanupStateRestore?.();
     this.cleanupStateRestore = null;
+    this.supermodelRestore = null;
+    this.cleanupSupermodelState?.();
+    this.cleanupSupermodelState = null;
     this.cleanupDeferredStart?.();
     this.cleanupDeferredStart = null;
     this.dosboxCompatibility?.cleanup();

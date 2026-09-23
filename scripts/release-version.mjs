@@ -6,5 +6,14 @@ export function versionFromTag(tag) {
   return tag.slice(1);
 }
 export function buildVersion(environment = process.env) {
-  return environment.GITHUB_REF_TYPE === "tag" ? versionFromTag(environment.GITHUB_REF_NAME) : "0.0.0-dev";
+  if (environment.GITHUB_REF_TYPE === "tag") {return versionFromTag(environment.GITHUB_REF_NAME);}
+  const candidate = environment.RETROM_PFB_CANDIDATE_VERSION;
+  if (candidate !== undefined) {
+    if (environment.RETROM_PFB_CANDIDATE_BUILD !== "1" ||
+      !/^(?:0|[1-9][0-9]*)\.(?:0|[1-9][0-9]*)\.(?:0|[1-9][0-9]*)-dev\.[1-9][0-9]*$/u.test(candidate)) {
+      throw new Error("PFB_CANDIDATE_VERSION_INVALID");
+    }
+    return candidate;
+  }
+  return "0.0.0-dev";
 }

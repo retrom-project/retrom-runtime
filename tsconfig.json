@@ -4,6 +4,7 @@
     "lib": ["DOM", "DOM.Iterable", "ES2022"],
     "module": "ESNext",
     "moduleResolution": "Bundler",
+    "rewriteRelativeImportExtensions": true,
     "resolveJsonModule": true,
     "strict": true,
     "isolatedModules": true,

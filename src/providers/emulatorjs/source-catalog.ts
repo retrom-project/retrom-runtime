@@ -1,4 +1,4 @@
-import {emulatorJsDevelopmentForks} from "./development-source-catalog.js";
+import {emulatorJsDevelopmentForks} from "./development-source-catalog.ts";
 
 export const emulatorJsSourceCatalog = {
   schemaVersion: 1,

@@ -32,6 +32,7 @@ const gamePolicies: Readonly<Record<string, ContentInputPolicyV1>> = {
   nxengine: eagerPolicy(limits.nxengineFile),
   "onscripter-yuri": eagerPolicy(limits.indexedFile, {mode: "ON_OPEN"}),
   openbor: eagerPolicy(limits.openborPak),
+  samcoupe: eagerPolicy(16 * 1024 * 1024),
   "rpgmaker-2000": upstream("easyrpg-loader"),
   "rpgmaker-2003": upstream("easyrpg-loader"),
   "rpgmaker-mv": native("native-web"),

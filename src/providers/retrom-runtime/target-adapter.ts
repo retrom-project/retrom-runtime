@@ -6,6 +6,7 @@ import {mountOpenBOR} from "../../openbor/adapter.js";
 import {mountPx68k} from "../../px68k/adapter.js";
 import {mountWebMSX} from "../../webmsx/adapter.js";
 import {mountJsbeeb} from "../../jsbeeb/adapter.js";
+import {mountSamCoupe} from "../../samcoupe/adapter.js";
 import {mountScummvm} from "../../scummvm/adapter.js";
 import {mountRuffle} from "../../ruffle/adapter.js";
 import {mountPSP} from "../../psp/adapter.js";
@@ -133,6 +134,9 @@ function mountMachineAdapter(kind: string, envelope: LaunchEnvelopeV1, target: H
   case "JSBEEB_WEB":
     return mountJsbeeb(parameters.jsbeeb(envelope), target, frameWindow, restorePayload, reportProgress,
       requireContentSession(context.contentSession), context.signal);
+  case "SAMCOUPE_WEB":
+    return mountSamCoupe(parameters.samcoupe(envelope), target, frameWindow, restorePayload, reportProgress,
+      requireContentSession(context.contentSession), reportFailure, context.signal);
   default: throw new Error("PROVIDER_LAUNCH_REQUEST_INVALID");
   }
 }

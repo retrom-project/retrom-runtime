@@ -1181,6 +1181,62 @@
       },
       {
         "assetPaths": [
+          "assets/samcoupeweb/samcoupeweb.data",
+          "assets/samcoupeweb/samcoupeweb.js",
+          "assets/samcoupeweb/samcoupeweb.wasm"
+        ],
+        "capabilities": {
+          "checkpoint": true,
+          "discSwitch": false,
+          "frameCounter": false,
+          "frameMode": "SAME_ORIGIN_BLANK",
+          "inputFilter": true,
+          "nativeSettings": false,
+          "pause": true,
+          "requiresThreads": false,
+          "screenshot": true,
+          "standardGamepad": true,
+          "videoModes": [
+            "original",
+            "pixel",
+            "smooth"
+          ],
+          "volume": false
+        },
+        "checkpoint": {
+          "maxBytes": 17825792,
+          "readFormats": [
+            "samcoupe-disk-save-v1",
+            "samcoupe-disk-save-v1-storage-v1"
+          ],
+          "writeFormat": "samcoupe-disk-save-v1-storage-v1",
+          "semantics": "GAME_SAVE"
+        },
+        "displayName": "SAM Coupé (SamCoupeWeb)",
+        "id": "samcoupe",
+        "inputs": [
+          {
+            "cardinality": "ONE",
+            "kind": "ROM_BLOB",
+            "optional": false,
+            "role": "game"
+          },
+          {
+            "cardinality": "ONE",
+            "kind": "EXTERNAL_FILE_SET",
+            "optional": false,
+            "role": "external"
+          }
+        ],
+        "targetOptionsSchema": {
+          "additionalProperties": false,
+          "properties": {},
+          "required": [],
+          "type": "object"
+        }
+      },
+      {
+        "assetPaths": [
           "assets/scummvm/data/access.dat",
           "assets/scummvm/data/achievements.dat",
           "assets/scummvm/data/bagel.dat",

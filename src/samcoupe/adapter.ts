@@ -158,6 +158,16 @@ function createFrame(target: HTMLElement, frameWindow: Window) {
   canvas.id = "canvas";
   canvas.width = 512; canvas.height = 192; canvas.tabIndex = 0;
   canvas.style.cssText = "width:100%;height:100%;object-fit:contain;image-rendering:pixelated";
+  // SDL creates a WebGL context even with its software renderer. Keep the
+  // completed frame readable so the Provider screenshot is not black.
+  const getContext = canvas.getContext;
+  Object.defineProperty(canvas, "getContext", {
+    configurable: true,
+    value(type: string, options?: object) {
+      const capture = type === "webgl" || type === "webgl2" || type === "experimental-webgl";
+      return Reflect.apply(getContext, canvas, [type, capture ? {...options, preserveDrawingBuffer: true} : options]);
+    },
+  });
   realm.document.body.style.cssText = "margin:0;background:#000;overflow:hidden";
   realm.document.body.append(canvas);
   return {iframe, realm, canvas};

@@ -16,6 +16,12 @@ it("derives both formal Provider versions solely from the GitHub tag", () => {
 it("keeps untagged builds explicitly developmental and never reads a branch as a release", () => {
   expect(buildVersion({})).toBe("0.0.0-dev");
   expect(buildVersion({GITHUB_REF_TYPE: "branch", GITHUB_REF_NAME: "v0.46.0"})).toBe("0.0.0-dev");
+  expect(buildVersion({RETROM_PFB_CANDIDATE_BUILD: "1", RETROM_PFB_CANDIDATE_VERSION: "0.48.1-dev.1"}))
+    .toBe("0.48.1-dev.1");
+  expect(() => buildVersion({RETROM_PFB_CANDIDATE_VERSION: "0.48.1-dev.1"}))
+    .toThrow("PFB_CANDIDATE_VERSION_INVALID");
+  expect(() => buildVersion({RETROM_PFB_CANDIDATE_BUILD: "1", RETROM_PFB_CANDIDATE_VERSION: "0.48.1"}))
+    .toThrow("PFB_CANDIDATE_VERSION_INVALID");
   expect(retromRuntimeProviderDefinition.providerVersion).toBe("0.0.0-dev");
   expect(emulatorJsProviderDefinition.providerVersion).toBe("0.0.0-dev");
 });

@@ -2383,6 +2383,76 @@
       "tag": "retrom-core-g338d2029f169-r4",
       "commit": "917a99e3fbe6af78c92bbb7c444c83e74616f194",
       "metadataUrl": "https://github.com/retrom-project/kirikiroid2-web/releases/download/retrom-core-g338d2029f169-r4/rpg-runtime-release.json"
+    },
+    {
+      "id": "jsbeeb",
+      "repository": "https://github.com/retrom-project/jsbeeb",
+      "upstreamCommit": "c4839b888af29777390a5534f69d8ef8189bbed9",
+      "adapterAbi": "jsbeeb-web-v1",
+      "assets": [
+        {
+          "filename": "LICENSE",
+          "output": "licenses/jsbeeb/LICENSE",
+          "maxSizeBytes": 1048576,
+          "sizeBytes": 35147,
+          "sha256": "8ceb4b9ee5adedde47b31e975c1d90c73ad27b6b165a1dcd80c7c545eb65b903",
+          "url": "https://github.com/retrom-project/jsbeeb/releases/download/retrom-core-gc4839b888af2-r1/LICENSE"
+        },
+        {
+          "filename": "jsbeeb-site.tar.gz",
+          "output": "runtime/jsbeeb/jsbeeb-site.tar.gz",
+          "maxSizeBytes": 8388608,
+          "sizeBytes": 1136454,
+          "sha256": "3d895fcc9a26f7a2b2a48f39d3acef7cf9dbf8c0c610db2762d51aaa66eed8cb",
+          "url": "https://github.com/retrom-project/jsbeeb/releases/download/retrom-core-gc4839b888af2-r1/jsbeeb-site.tar.gz"
+        },
+        {
+          "filename": "source.tar.gz",
+          "output": "licenses/jsbeeb/source.tar.gz",
+          "maxSizeBytes": 8388608,
+          "sizeBytes": 2405245,
+          "sha256": "b02dd339b40731d9660838c7240d13c4a4bb4680021ee85983e301d4e3ceaeca",
+          "url": "https://github.com/retrom-project/jsbeeb/releases/download/retrom-core-gc4839b888af2-r1/source.tar.gz"
+        }
+      ],
+      "tag": "retrom-core-gc4839b888af2-r1",
+      "commit": "dd159f1053473bb0e0b21f2b4bf44684ab2129bb",
+      "metadataUrl": "https://github.com/retrom-project/jsbeeb/releases/download/retrom-core-gc4839b888af2-r1/rpg-runtime-release.json"
+    },
+    {
+      "id": "samcoupeweb",
+      "repository": "https://github.com/retrom-project/SamCoupeWeb",
+      "upstreamCommit": "6593bda819830c07bd48e0dffd32d3b3ef525fb0",
+      "adapterAbi": "samcoupe-web-v1",
+      "assets": [
+        {
+          "filename": "LICENSE",
+          "output": "licenses/samcoupeweb/LICENSE",
+          "maxSizeBytes": 1048576,
+          "sizeBytes": 17987,
+          "sha256": "ab15fd526bd8dd18a9e77ebc139656bf4d33e97fc7238cd11bf60e2b9b8666c6",
+          "url": "https://github.com/retrom-project/SamCoupeWeb/releases/download/retrom-core-g6593bda81983-r1/LICENSE"
+        },
+        {
+          "filename": "samcoupeweb-wasm.data",
+          "output": "runtime/samcoupeweb/samcoupeweb-wasm.data",
+          "maxSizeBytes": 4194304,
+          "sizeBytes": 686910,
+          "sha256": "b2df895833783039f6e2f6314cc90e6ead5358c22ed99a0ab390044a548137a2",
+          "url": "https://github.com/retrom-project/SamCoupeWeb/releases/download/retrom-core-g6593bda81983-r1/samcoupeweb-wasm.data"
+        },
+        {
+          "filename": "source.tar.gz",
+          "output": "licenses/samcoupeweb/source.tar.gz",
+          "maxSizeBytes": 8388608,
+          "sizeBytes": 1242106,
+          "sha256": "9d2f39a00636f72e146aa3e36b578eeabde04126ba0fd8319911e050991e4869",
+          "url": "https://github.com/retrom-project/SamCoupeWeb/releases/download/retrom-core-g6593bda81983-r1/source.tar.gz"
+        }
+      ],
+      "tag": "retrom-core-g6593bda81983-r1",
+      "commit": "8ff3c5279514a26b747d1ac55718fd2c28c96eea",
+      "metadataUrl": "https://github.com/retrom-project/SamCoupeWeb/releases/download/retrom-core-g6593bda81983-r1/rpg-runtime-release.json"
     }
   ],
   "localAssets": [

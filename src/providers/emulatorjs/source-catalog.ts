@@ -1,7 +1,11 @@
+import {emulatorJsPlatformCoreForks} from "./released-platform-core-catalog.js";
+import type {DevelopmentFork} from "../../../scripts/emulatorjs-development-forks.mjs";
+
 export const emulatorJsSourceCatalog = {
   schemaVersion: 1,
-  developmentForks: [],
+  developmentForks: [] as readonly DevelopmentFork[],
   forks: [
+    ...emulatorJsPlatformCoreForks,
 {
   "repository": "https://github.com/retrom-project/libretro-o2em",
   "tag": "retrom-core-g679d6fec0496-r2",

@@ -78,6 +78,7 @@ type StartupAction = {
 
 type CoreSource = {
   id: string;
+  targetId?: string;
   release: RuntimeRelease;
   coreBundleVersion: string;
   artifactFlavor: "WASM" | "THREAD_WASM" | "OVERRIDE";
@@ -100,7 +101,18 @@ declare const __RETROM_PFB_CORE_INPUTS__: Readonly<Record<string, {
   sha256: string; sizeBytes: number; artifactSetSha256: string;
 }>>;
 
+const atari800 = core("atari800", "4.2.3", "atari800-wasm.data", 996285, "6bb6df1de70f4b71e3b382a0a238522b6d0fe7bb860c7e8e8292f055ed46fda5", "716cfb25c012e2ce682608f532b543a423514f7e029027b291fb6b48df189c47", {artifactFlavor: "OVERRIDE", coreBundleVersion: "retrom-core-g4e7fbc73765c-r1", defaultOptions: {keyboardInput: "enabled", atari800_system: "800XL (64K)", atari800_os_xl: "AltirraOS"}});
+
 const cores: readonly CoreSource[] = [
+  atari800,
+  {...atari800, targetId: "atari800-xegs", defaultOptions: {...atari800.defaultOptions, atari800_system: "XEGS"}},
+  core("ardens", "4.2.3", "ardens-wasm.data", 965293, "1b883e1a62ae706dfaef7ab3156bf9c025ed65d65f9502fecb1a1e1c225899e7", "aa223f998ab2f0e5b978aa6c980a948e8f37a9e4c06ee87a4d24e01c9e2d4737", {artifactFlavor: "OVERRIDE", coreBundleVersion: "retrom-core-g661a7dd4febc-r1"}),
+  core("freechaf", "4.2.3", "freechaf-wasm.data", 849285, "473218ad1fe7ad1f11cc75233c63a559159f5f2963c40ceddd5934ce77d71342", "17d5d8826d41396878a3a92787078d3463a9436f97d990063997ebddc64e9a5a", {artifactFlavor: "OVERRIDE", coreBundleVersion: "retrom-core-g76c7a84f1f7e-r1"}),
+  core("hatarib", "4.2.3", "hatarib-wasm.data", 2530718, "0ceb17f4b4748585e0456fbde3ad23fc91ea5d4bad87e1e8876c5790b72c1e0d", "e07426660c57958568b18addc75034e38bd28cae739148bc7efbcbaf574022ad", {artifactFlavor: "OVERRIDE", coreBundleVersion: "retrom-core-gcceb40a9c054-r1", defaultOptions: {keyboardInput: "enabled"}}),
+  core("sameduck", "4.2.3", "sameduck-wasm.data", 859071, "a4e3bc0064e2947119317ce074e4c7b4585e418312e1756705861794e3fc4542", "6c4497a706a8f0d04cdcfbb1d786cded4e9d1d66e21a5664c715f8468fa1771f", {artifactFlavor: "OVERRIDE", coreBundleVersion: "retrom-core-g5619abdb01ce-r1"}),
+  core("potator", "4.2.3", "potator-wasm.data", 847829, "30e9c3b6eabe768ae2df0c272463de183bf000f668d1cb3e8c4d207dd3eaa485", "94e8b577640ebb7e86f28682c0f564ce38639b852de68fd35ff2dc8798d4be2e", {artifactFlavor: "OVERRIDE", coreBundleVersion: "retrom-core-g227c5f6f3ce7-r1"}),
+  core("supermodel", "4.3.0-pre", "supermodel-wasm.data", 1365789, "16e2f956d579a1eaefc9766d1106d9bc1b9b0ad21bea267d76b07d764a307577", "292a206abdb1a6bf12c5c1f15363aa4412af3c8741ce5934a47cd3a793da4758", {artifactFlavor: "OVERRIDE", coreBundleVersion: "retrom-core-g84bc106b45b2-r1", defaultOptions: {supermodel_emulation_threading: "single", supermodel_resolution: "half", webgl2Enabled: "enabled"}}),
+  core("theodore", "4.2.3", "theodore-wasm.data", 1374537, "82139675dfed5dc13116f3babf3938f814da2e10fcf1bdf32f410289b4e3a474", "facce19b44b59fc3882f2dc50173bfc3ff4eeb997d709b74b7c006b3110809ad", {artifactFlavor: "OVERRIDE", coreBundleVersion: "retrom-core-g4d469ce0f71e-r1", defaultOptions: {keyboardInput: "enabled"}}),
   core("gam4980", "4.2.3", "gam4980-wasm.data", 852549, "4b05e77e91c28a87fbf3c71880df2d06fa3dd39dacc587147c29ecaec0a9f791", "f2d8aeca9848f86afdec7cd86d06eebeae4194dd30ac725bd1a1a905bce7957c", {artifactFlavor: "OVERRIDE", coreBundleVersion: "retrom-core-geeaa531b55e7-r1", defaultOptions: {gam4980_lcd_color: "grey", gam4980_lcd_ghosting: "0"}}),
   core("neocd", "4.2.3", "neocd-wasm.data", 1080566, "3702540c38faab7d3eadae748791364d61e043b16d937b5bbae05c9c0134ec0c", "ae9dddaebf459deb11ab689c69b4f964efbf560e73a51788d9095cf24f8fec7c", {artifactFlavor: "OVERRIDE", coreBundleVersion: "retrom-core-g3118c6901787-r1", defaultOptions: {neocd_region: "Japan", neocd_cdspeedhack: "On", neocd_loadskip: "On"}}),
   core("uzem", "4.2.3", "uzem-wasm.data", 852642, "c9f0e7d66f00fdb51c82b81c1d20269689b87e7f68d82267c31e2c03a54b221c", "6cba9cc2c184cb56033f76af19c911e79d5355aa6a0afa1b25b949ff962af123", {artifactFlavor: "OVERRIDE", coreBundleVersion: "retrom-core-gd991ee94547c-r1"}),
@@ -174,9 +186,9 @@ const targets = cores.map((entry) => {
   ].sort(compareUtf8),
   checkpointMaxBytes: 256 * 1024 * 1024,
   discSwitch: entry.id === "yabause",
-  displayName: displayName(entry.id),
+  displayName: displayName(entry.targetId ?? entry.id),
   frameMode: "SAME_ORIGIN_BLANK",
-  id: providerTargetId(entry.id),
+  id: providerTargetId(entry.targetId ?? entry.id),
   implementation: {
     artifactFlavor: entry.artifactFlavor,
     artifactSetSha256: entry.artifactSetSha256,

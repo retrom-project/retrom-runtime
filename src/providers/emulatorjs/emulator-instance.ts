@@ -10,7 +10,11 @@ type EjsManager = {
     UTF8ToString?: (pointer: number) => string;
     _free?: (pointer: number) => void;
     _save_state_info?: () => number;
-    cwrap?: (name: string, type: "number", args: string[], options: {async: true}) => (...args: (string | number)[]) => Promise<number>;
+    EmulatorJSGetState?: () => Uint8Array;
+    cwrap?: {
+      (name: string, type: "number", args: string[], options: {async: true}): (...args: (string | number)[]) => Promise<number>;
+      (name: string, type: "string", args: string[]): () => string;
+    };
   };
   FS?: {
     readFile?: (path: string) => ArrayBufferView;

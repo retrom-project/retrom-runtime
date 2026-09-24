@@ -3,6 +3,22 @@ import {lstat, readFile, readdir, writeFile, mkdir} from "node:fs/promises";
 import {dirname, isAbsolute, join} from "node:path";
 
 const sources = new Map([
+  ["ardens", {repository: "https://github.com/retrom-project/Ardens",
+    upstreamCommit: "661a7dd4febc8d00e790a4ecde44b936295adf97", license: "LICENSE"}],
+  ["atari800", {repository: "https://github.com/retrom-project/libretro-atari800",
+    upstreamCommit: "4e7fbc73765c1a9670c7506616046ad1d4ccda51", license: "LICENSE"}],
+  ["freechaf", {repository: "https://github.com/retrom-project/FreeChaF",
+    upstreamCommit: "76c7a84f1f7e80f3e6f2bba96fe100cb24e99124", license: "LICENSE"}],
+  ["hatarib", {repository: "https://github.com/retrom-project/hatariB",
+    upstreamCommit: "cceb40a9c054ad867c62834e1cd3a9547b207178", license: "LICENSE"}],
+  ["sameduck", {repository: "https://github.com/retrom-project/SameBoy",
+    upstreamCommit: "5619abdb01cee6bedb47599cdb5532c318443b52", license: "LICENSE"}],
+  ["potator", {repository: "https://github.com/retrom-project/potator",
+    upstreamCommit: "227c5f6f3ce74d32e9002ce24c1420288559a860", license: "LICENSE"}],
+  ["supermodel", {repository: "https://github.com/retrom-project/Libretro-Supermodel",
+    upstreamCommit: "84bc106b45b279bf868a53b9232897c8dc10ca17", license: "LICENSE", release: "4.3.0-pre"}],
+  ["theodore", {repository: "https://github.com/retrom-project/theodore",
+    upstreamCommit: "4d469ce0f71ee046ceb78cdbf8e9f18364aaa918", license: "LICENSE"}],
   ["gam4980", {repository: "https://github.com/retrom-project/gam4980",
     upstreamCommit: "eeaa531b55e7127ab4b5e0bdc5ceba686df59c6a", license: "LICENSE"}],
   ["uzem", {repository: "https://github.com/retrom-project/libretro-uzem",
@@ -59,7 +75,8 @@ export function developmentForkFiles(catalog) {
       fork.assets.map((file) => file.filename).sort().join("\0") !== names(fork.runtimeCore).join("\0")) {invalid();}
     return fork.assets.map((file) => {
       if (!exact(file, ["filename", "sha256", "sizeBytes"]) || !digest(file.sha256) ||
-        !Number.isSafeInteger(file.sizeBytes) || file.sizeBytes < 1 || file.sizeBytes > 16 * 1024 * 1024) {invalid();}
+      !Number.isSafeInteger(file.sizeBytes) || file.sizeBytes < 1 ||
+      file.sizeBytes > (file.filename === "source.tar.gz" ? 64 : 16) * 1024 * 1024) {invalid();}
       const release = sources.get(fork.runtimeCore).release ?? "4.2.3";
       const destination = file.filename === `${fork.runtimeCore}-wasm.data` ? `${release}/data/cores/${file.filename}`
         : file.filename === "retrom-core-candidate.json" ? `${release}/data/cores/reports/${fork.runtimeCore}.json`

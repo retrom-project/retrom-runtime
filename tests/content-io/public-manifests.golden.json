@@ -8,6 +8,82 @@
     "targets": [
       {
         "assetPaths": [
+          "assets/jsbeeb/site/assets/__vite-browser-external-CmSenmEo.js",
+          "assets/jsbeeb/site/assets/audio-renderer-C6Qrquvd.js",
+          "assets/jsbeeb/site/assets/index-CTLpmXe1.css",
+          "assets/jsbeeb/site/assets/index-LHy1YyJL.js",
+          "assets/jsbeeb/site/assets/music5000-worklet-CSF9gjEY.js",
+          "assets/jsbeeb/site/assets/smoothie-RiKtNkm-.js",
+          "assets/jsbeeb/site/favicon.ico",
+          "assets/jsbeeb/site/images/botbar.png",
+          "assets/jsbeeb/site/images/cub-monitor.png",
+          "assets/jsbeeb/site/images/jsbeeb-example.png",
+          "assets/jsbeeb/site/images/placeholder.png",
+          "assets/jsbeeb/site/images/sb/CD-left.jpg",
+          "assets/jsbeeb/site/images/sb/CD-right.jpg",
+          "assets/jsbeeb/site/images/sidebar.png",
+          "assets/jsbeeb/site/images/tv.png",
+          "assets/jsbeeb/site/index.html",
+          "assets/jsbeeb/site/jsbeeb-icon.png",
+          "assets/jsbeeb/site/sounds/disc525/motor.wav",
+          "assets/jsbeeb/site/sounds/disc525/motoroff.wav",
+          "assets/jsbeeb/site/sounds/disc525/motoron.wav",
+          "assets/jsbeeb/site/sounds/disc525/seek3.wav",
+          "assets/jsbeeb/site/sounds/disc525/step.wav",
+          "assets/jsbeeb/site/sounds/tape/motor_off.mp3",
+          "assets/jsbeeb/site/sounds/tape/motor_on.mp3"
+        ],
+        "capabilities": {
+          "checkpoint": true,
+          "discSwitch": false,
+          "frameCounter": false,
+          "frameMode": "SAME_ORIGIN_BLANK",
+          "inputFilter": true,
+          "nativeSettings": false,
+          "pause": true,
+          "requiresThreads": false,
+          "screenshot": true,
+          "standardGamepad": true,
+          "videoModes": [
+            "original",
+            "pixel",
+            "smooth"
+          ],
+          "volume": false
+        },
+        "checkpoint": {
+          "maxBytes": 33554432,
+          "readFormats": [
+            "jsbeeb-snapshot-gzip-v1",
+            "jsbeeb-snapshot-gzip-v1-storage-v1"
+          ],
+          "writeFormat": "jsbeeb-snapshot-gzip-v1-storage-v1"
+        },
+        "displayName": "BBC Micro (jsbeeb)",
+        "id": "bbc-jsbeeb",
+        "inputs": [
+          {
+            "cardinality": "ONE",
+            "kind": "ROM_BLOB",
+            "optional": false,
+            "role": "game"
+          },
+          {
+            "cardinality": "ONE",
+            "kind": "EXTERNAL_FILE_SET",
+            "optional": false,
+            "role": "external"
+          }
+        ],
+        "targetOptionsSchema": {
+          "additionalProperties": false,
+          "properties": {},
+          "required": [],
+          "type": "object"
+        }
+      },
+      {
+        "assetPaths": [
           "assets/butterscotch/butterscotch.mjs",
           "assets/butterscotch/butterscotch.wasm",
           "assets/butterscotch/worker.mjs"
@@ -1105,6 +1181,62 @@
       },
       {
         "assetPaths": [
+          "assets/samcoupeweb/samcoupeweb.data",
+          "assets/samcoupeweb/samcoupeweb.js",
+          "assets/samcoupeweb/samcoupeweb.wasm"
+        ],
+        "capabilities": {
+          "checkpoint": true,
+          "discSwitch": false,
+          "frameCounter": false,
+          "frameMode": "SAME_ORIGIN_BLANK",
+          "inputFilter": true,
+          "nativeSettings": false,
+          "pause": true,
+          "requiresThreads": false,
+          "screenshot": true,
+          "standardGamepad": true,
+          "videoModes": [
+            "original",
+            "pixel",
+            "smooth"
+          ],
+          "volume": false
+        },
+        "checkpoint": {
+          "maxBytes": 17825792,
+          "readFormats": [
+            "samcoupe-disk-save-v1",
+            "samcoupe-disk-save-v1-storage-v1"
+          ],
+          "writeFormat": "samcoupe-disk-save-v1-storage-v1",
+          "semantics": "GAME_SAVE"
+        },
+        "displayName": "SAM Coupé (SamCoupeWeb)",
+        "id": "samcoupe",
+        "inputs": [
+          {
+            "cardinality": "ONE",
+            "kind": "ROM_BLOB",
+            "optional": false,
+            "role": "game"
+          },
+          {
+            "cardinality": "ONE",
+            "kind": "EXTERNAL_FILE_SET",
+            "optional": false,
+            "role": "external"
+          }
+        ],
+        "targetOptionsSchema": {
+          "additionalProperties": false,
+          "properties": {},
+          "required": [],
+          "type": "object"
+        }
+      },
+      {
+        "assetPaths": [
           "assets/scummvm/data/access.dat",
           "assets/scummvm/data/achievements.dat",
           "assets/scummvm/data/bagel.dat",
@@ -1819,6 +1951,342 @@
         },
         "displayName": "A5200",
         "id": "a5200",
+        "inputs": [
+          {
+            "cardinality": "ONE",
+            "kind": "ROM_BLOB",
+            "optional": false,
+            "role": "game"
+          },
+          {
+            "cardinality": "ONE",
+            "kind": "BIOS_BUNDLE",
+            "optional": true,
+            "role": "bios"
+          },
+          {
+            "cardinality": "ONE",
+            "kind": "PARENT_ARCHIVE",
+            "optional": true,
+            "role": "parent"
+          },
+          {
+            "cardinality": "ONE",
+            "kind": "MULTI_DISC",
+            "optional": true,
+            "role": "discs"
+          },
+          {
+            "cardinality": "ONE",
+            "kind": "EXTERNAL_FILE_SET",
+            "optional": true,
+            "role": "external"
+          }
+        ],
+        "targetOptionsSchema": {
+          "additionalProperties": false,
+          "properties": {
+            "dosEntryPath": {
+              "format": "safe-path",
+              "maxLength": 240,
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "initialDiscIndex": {
+              "minimum": 0,
+              "type": [
+                "integer",
+                "null"
+              ]
+            }
+          },
+          "required": [
+            "dosEntryPath",
+            "initialDiscIndex"
+          ],
+          "type": "object"
+        }
+      },
+      {
+        "assetPaths": [
+          "assets/4.2.3/data/compression/extract7z.js",
+          "assets/4.2.3/data/compression/extractzip.js",
+          "assets/4.2.3/data/cores/ardens-wasm.data",
+          "assets/4.2.3/data/cores/cores.json",
+          "assets/4.2.3/data/cores/ppsspp-assets.zip",
+          "assets/4.2.3/data/cores/reports/ardens.json",
+          "assets/4.2.3/data/emulator.css",
+          "assets/4.2.3/data/emulator.min.css",
+          "assets/4.2.3/data/emulator.min.js",
+          "assets/4.2.3/data/loader.js",
+          "assets/4.2.3/data/localization/en-US.json",
+          "assets/4.2.3/data/localization/retroarch.json",
+          "assets/4.2.3/data/localization/zh-CN.json",
+          "assets/4.2.3/data/src/GameManager.js",
+          "assets/4.2.3/data/src/compression.js",
+          "assets/4.2.3/data/src/emulator.js",
+          "assets/4.2.3/data/src/gamepad.js",
+          "assets/4.2.3/data/src/nipplejs.js",
+          "assets/4.2.3/data/src/shaders.js",
+          "assets/4.2.3/data/src/socket.io.min.js",
+          "assets/4.2.3/data/src/storage.js"
+        ],
+        "capabilities": {
+          "checkpoint": true,
+          "discSwitch": false,
+          "frameCounter": true,
+          "frameMode": "SAME_ORIGIN_BLANK",
+          "inputFilter": true,
+          "nativeSettings": true,
+          "pause": true,
+          "requiresThreads": false,
+          "screenshot": true,
+          "standardGamepad": true,
+          "videoModes": [
+            "adaptive-sharpen",
+            "original",
+            "pixel",
+            "sharp-bilinear",
+            "smooth"
+          ],
+          "volume": true
+        },
+        "checkpoint": {
+          "maxBytes": 268435456,
+          "readFormats": [
+            "emulatorjs-state-v1",
+            "emulatorjs-state-v1-storage-v1"
+          ],
+          "writeFormat": "emulatorjs-state-v1-storage-v1"
+        },
+        "displayName": "Ardens",
+        "id": "ardens",
+        "inputs": [
+          {
+            "cardinality": "ONE",
+            "kind": "ROM_BLOB",
+            "optional": false,
+            "role": "game"
+          },
+          {
+            "cardinality": "ONE",
+            "kind": "BIOS_BUNDLE",
+            "optional": true,
+            "role": "bios"
+          },
+          {
+            "cardinality": "ONE",
+            "kind": "PARENT_ARCHIVE",
+            "optional": true,
+            "role": "parent"
+          },
+          {
+            "cardinality": "ONE",
+            "kind": "MULTI_DISC",
+            "optional": true,
+            "role": "discs"
+          },
+          {
+            "cardinality": "ONE",
+            "kind": "EXTERNAL_FILE_SET",
+            "optional": true,
+            "role": "external"
+          }
+        ],
+        "targetOptionsSchema": {
+          "additionalProperties": false,
+          "properties": {
+            "dosEntryPath": {
+              "format": "safe-path",
+              "maxLength": 240,
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "initialDiscIndex": {
+              "minimum": 0,
+              "type": [
+                "integer",
+                "null"
+              ]
+            }
+          },
+          "required": [
+            "dosEntryPath",
+            "initialDiscIndex"
+          ],
+          "type": "object"
+        }
+      },
+      {
+        "assetPaths": [
+          "assets/4.2.3/data/compression/extract7z.js",
+          "assets/4.2.3/data/compression/extractzip.js",
+          "assets/4.2.3/data/cores/atari800-wasm.data",
+          "assets/4.2.3/data/cores/cores.json",
+          "assets/4.2.3/data/cores/ppsspp-assets.zip",
+          "assets/4.2.3/data/cores/reports/atari800.json",
+          "assets/4.2.3/data/emulator.css",
+          "assets/4.2.3/data/emulator.min.css",
+          "assets/4.2.3/data/emulator.min.js",
+          "assets/4.2.3/data/loader.js",
+          "assets/4.2.3/data/localization/en-US.json",
+          "assets/4.2.3/data/localization/retroarch.json",
+          "assets/4.2.3/data/localization/zh-CN.json",
+          "assets/4.2.3/data/src/GameManager.js",
+          "assets/4.2.3/data/src/compression.js",
+          "assets/4.2.3/data/src/emulator.js",
+          "assets/4.2.3/data/src/gamepad.js",
+          "assets/4.2.3/data/src/nipplejs.js",
+          "assets/4.2.3/data/src/shaders.js",
+          "assets/4.2.3/data/src/socket.io.min.js",
+          "assets/4.2.3/data/src/storage.js"
+        ],
+        "capabilities": {
+          "checkpoint": true,
+          "discSwitch": false,
+          "frameCounter": true,
+          "frameMode": "SAME_ORIGIN_BLANK",
+          "inputFilter": true,
+          "nativeSettings": true,
+          "pause": true,
+          "requiresThreads": false,
+          "screenshot": true,
+          "standardGamepad": true,
+          "videoModes": [
+            "adaptive-sharpen",
+            "original",
+            "pixel",
+            "sharp-bilinear",
+            "smooth"
+          ],
+          "volume": true
+        },
+        "checkpoint": {
+          "maxBytes": 268435456,
+          "readFormats": [
+            "emulatorjs-state-v1",
+            "emulatorjs-state-v1-storage-v1"
+          ],
+          "writeFormat": "emulatorjs-state-v1-storage-v1"
+        },
+        "displayName": "Atari800",
+        "id": "atari800",
+        "inputs": [
+          {
+            "cardinality": "ONE",
+            "kind": "ROM_BLOB",
+            "optional": false,
+            "role": "game"
+          },
+          {
+            "cardinality": "ONE",
+            "kind": "BIOS_BUNDLE",
+            "optional": true,
+            "role": "bios"
+          },
+          {
+            "cardinality": "ONE",
+            "kind": "PARENT_ARCHIVE",
+            "optional": true,
+            "role": "parent"
+          },
+          {
+            "cardinality": "ONE",
+            "kind": "MULTI_DISC",
+            "optional": true,
+            "role": "discs"
+          },
+          {
+            "cardinality": "ONE",
+            "kind": "EXTERNAL_FILE_SET",
+            "optional": true,
+            "role": "external"
+          }
+        ],
+        "targetOptionsSchema": {
+          "additionalProperties": false,
+          "properties": {
+            "dosEntryPath": {
+              "format": "safe-path",
+              "maxLength": 240,
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "initialDiscIndex": {
+              "minimum": 0,
+              "type": [
+                "integer",
+                "null"
+              ]
+            }
+          },
+          "required": [
+            "dosEntryPath",
+            "initialDiscIndex"
+          ],
+          "type": "object"
+        }
+      },
+      {
+        "assetPaths": [
+          "assets/4.2.3/data/compression/extract7z.js",
+          "assets/4.2.3/data/compression/extractzip.js",
+          "assets/4.2.3/data/cores/atari800-wasm.data",
+          "assets/4.2.3/data/cores/cores.json",
+          "assets/4.2.3/data/cores/ppsspp-assets.zip",
+          "assets/4.2.3/data/cores/reports/atari800.json",
+          "assets/4.2.3/data/emulator.css",
+          "assets/4.2.3/data/emulator.min.css",
+          "assets/4.2.3/data/emulator.min.js",
+          "assets/4.2.3/data/loader.js",
+          "assets/4.2.3/data/localization/en-US.json",
+          "assets/4.2.3/data/localization/retroarch.json",
+          "assets/4.2.3/data/localization/zh-CN.json",
+          "assets/4.2.3/data/src/GameManager.js",
+          "assets/4.2.3/data/src/compression.js",
+          "assets/4.2.3/data/src/emulator.js",
+          "assets/4.2.3/data/src/gamepad.js",
+          "assets/4.2.3/data/src/nipplejs.js",
+          "assets/4.2.3/data/src/shaders.js",
+          "assets/4.2.3/data/src/socket.io.min.js",
+          "assets/4.2.3/data/src/storage.js"
+        ],
+        "capabilities": {
+          "checkpoint": true,
+          "discSwitch": false,
+          "frameCounter": true,
+          "frameMode": "SAME_ORIGIN_BLANK",
+          "inputFilter": true,
+          "nativeSettings": true,
+          "pause": true,
+          "requiresThreads": false,
+          "screenshot": true,
+          "standardGamepad": true,
+          "videoModes": [
+            "adaptive-sharpen",
+            "original",
+            "pixel",
+            "sharp-bilinear",
+            "smooth"
+          ],
+          "volume": true
+        },
+        "checkpoint": {
+          "maxBytes": 268435456,
+          "readFormats": [
+            "emulatorjs-state-v1",
+            "emulatorjs-state-v1-storage-v1"
+          ],
+          "writeFormat": "emulatorjs-state-v1-storage-v1"
+        },
+        "displayName": "Atari800-xegs",
+        "id": "atari800-xegs",
         "inputs": [
           {
             "cardinality": "ONE",
@@ -3345,6 +3813,118 @@
       },
       {
         "assetPaths": [
+          "assets/4.2.3/data/compression/extract7z.js",
+          "assets/4.2.3/data/compression/extractzip.js",
+          "assets/4.2.3/data/cores/cores.json",
+          "assets/4.2.3/data/cores/freechaf-wasm.data",
+          "assets/4.2.3/data/cores/ppsspp-assets.zip",
+          "assets/4.2.3/data/cores/reports/freechaf.json",
+          "assets/4.2.3/data/emulator.css",
+          "assets/4.2.3/data/emulator.min.css",
+          "assets/4.2.3/data/emulator.min.js",
+          "assets/4.2.3/data/loader.js",
+          "assets/4.2.3/data/localization/en-US.json",
+          "assets/4.2.3/data/localization/retroarch.json",
+          "assets/4.2.3/data/localization/zh-CN.json",
+          "assets/4.2.3/data/src/GameManager.js",
+          "assets/4.2.3/data/src/compression.js",
+          "assets/4.2.3/data/src/emulator.js",
+          "assets/4.2.3/data/src/gamepad.js",
+          "assets/4.2.3/data/src/nipplejs.js",
+          "assets/4.2.3/data/src/shaders.js",
+          "assets/4.2.3/data/src/socket.io.min.js",
+          "assets/4.2.3/data/src/storage.js"
+        ],
+        "capabilities": {
+          "checkpoint": true,
+          "discSwitch": false,
+          "frameCounter": true,
+          "frameMode": "SAME_ORIGIN_BLANK",
+          "inputFilter": true,
+          "nativeSettings": true,
+          "pause": true,
+          "requiresThreads": false,
+          "screenshot": true,
+          "standardGamepad": true,
+          "videoModes": [
+            "adaptive-sharpen",
+            "original",
+            "pixel",
+            "sharp-bilinear",
+            "smooth"
+          ],
+          "volume": true
+        },
+        "checkpoint": {
+          "maxBytes": 268435456,
+          "readFormats": [
+            "emulatorjs-state-v1",
+            "emulatorjs-state-v1-storage-v1"
+          ],
+          "writeFormat": "emulatorjs-state-v1-storage-v1"
+        },
+        "displayName": "Freechaf",
+        "id": "freechaf",
+        "inputs": [
+          {
+            "cardinality": "ONE",
+            "kind": "ROM_BLOB",
+            "optional": false,
+            "role": "game"
+          },
+          {
+            "cardinality": "ONE",
+            "kind": "BIOS_BUNDLE",
+            "optional": true,
+            "role": "bios"
+          },
+          {
+            "cardinality": "ONE",
+            "kind": "PARENT_ARCHIVE",
+            "optional": true,
+            "role": "parent"
+          },
+          {
+            "cardinality": "ONE",
+            "kind": "MULTI_DISC",
+            "optional": true,
+            "role": "discs"
+          },
+          {
+            "cardinality": "ONE",
+            "kind": "EXTERNAL_FILE_SET",
+            "optional": true,
+            "role": "external"
+          }
+        ],
+        "targetOptionsSchema": {
+          "additionalProperties": false,
+          "properties": {
+            "dosEntryPath": {
+              "format": "safe-path",
+              "maxLength": 240,
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "initialDiscIndex": {
+              "minimum": 0,
+              "type": [
+                "integer",
+                "null"
+              ]
+            }
+          },
+          "required": [
+            "dosEntryPath",
+            "initialDiscIndex"
+          ],
+          "type": "object"
+        }
+      },
+      {
+        "assetPaths": [
           "assets/4.3.0-pre/data/compression/extract7z.js",
           "assets/4.3.0-pre/data/cores/freeintv-wasm.data",
           "assets/4.3.0-pre/data/cores/reports/freeintv.json",
@@ -4189,6 +4769,118 @@
         },
         "displayName": "Handy",
         "id": "handy",
+        "inputs": [
+          {
+            "cardinality": "ONE",
+            "kind": "ROM_BLOB",
+            "optional": false,
+            "role": "game"
+          },
+          {
+            "cardinality": "ONE",
+            "kind": "BIOS_BUNDLE",
+            "optional": true,
+            "role": "bios"
+          },
+          {
+            "cardinality": "ONE",
+            "kind": "PARENT_ARCHIVE",
+            "optional": true,
+            "role": "parent"
+          },
+          {
+            "cardinality": "ONE",
+            "kind": "MULTI_DISC",
+            "optional": true,
+            "role": "discs"
+          },
+          {
+            "cardinality": "ONE",
+            "kind": "EXTERNAL_FILE_SET",
+            "optional": true,
+            "role": "external"
+          }
+        ],
+        "targetOptionsSchema": {
+          "additionalProperties": false,
+          "properties": {
+            "dosEntryPath": {
+              "format": "safe-path",
+              "maxLength": 240,
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "initialDiscIndex": {
+              "minimum": 0,
+              "type": [
+                "integer",
+                "null"
+              ]
+            }
+          },
+          "required": [
+            "dosEntryPath",
+            "initialDiscIndex"
+          ],
+          "type": "object"
+        }
+      },
+      {
+        "assetPaths": [
+          "assets/4.2.3/data/compression/extract7z.js",
+          "assets/4.2.3/data/compression/extractzip.js",
+          "assets/4.2.3/data/cores/cores.json",
+          "assets/4.2.3/data/cores/hatarib-wasm.data",
+          "assets/4.2.3/data/cores/ppsspp-assets.zip",
+          "assets/4.2.3/data/cores/reports/hatarib.json",
+          "assets/4.2.3/data/emulator.css",
+          "assets/4.2.3/data/emulator.min.css",
+          "assets/4.2.3/data/emulator.min.js",
+          "assets/4.2.3/data/loader.js",
+          "assets/4.2.3/data/localization/en-US.json",
+          "assets/4.2.3/data/localization/retroarch.json",
+          "assets/4.2.3/data/localization/zh-CN.json",
+          "assets/4.2.3/data/src/GameManager.js",
+          "assets/4.2.3/data/src/compression.js",
+          "assets/4.2.3/data/src/emulator.js",
+          "assets/4.2.3/data/src/gamepad.js",
+          "assets/4.2.3/data/src/nipplejs.js",
+          "assets/4.2.3/data/src/shaders.js",
+          "assets/4.2.3/data/src/socket.io.min.js",
+          "assets/4.2.3/data/src/storage.js"
+        ],
+        "capabilities": {
+          "checkpoint": true,
+          "discSwitch": false,
+          "frameCounter": true,
+          "frameMode": "SAME_ORIGIN_BLANK",
+          "inputFilter": true,
+          "nativeSettings": true,
+          "pause": true,
+          "requiresThreads": false,
+          "screenshot": true,
+          "standardGamepad": true,
+          "videoModes": [
+            "adaptive-sharpen",
+            "original",
+            "pixel",
+            "sharp-bilinear",
+            "smooth"
+          ],
+          "volume": true
+        },
+        "checkpoint": {
+          "maxBytes": 268435456,
+          "readFormats": [
+            "emulatorjs-state-v1",
+            "emulatorjs-state-v1-storage-v1"
+          ],
+          "writeFormat": "emulatorjs-state-v1-storage-v1"
+        },
+        "displayName": "Hatarib",
+        "id": "hatarib",
         "inputs": [
           {
             "cardinality": "ONE",
@@ -6153,6 +6845,118 @@
       },
       {
         "assetPaths": [
+          "assets/4.2.3/data/compression/extract7z.js",
+          "assets/4.2.3/data/compression/extractzip.js",
+          "assets/4.2.3/data/cores/cores.json",
+          "assets/4.2.3/data/cores/potator-wasm.data",
+          "assets/4.2.3/data/cores/ppsspp-assets.zip",
+          "assets/4.2.3/data/cores/reports/potator.json",
+          "assets/4.2.3/data/emulator.css",
+          "assets/4.2.3/data/emulator.min.css",
+          "assets/4.2.3/data/emulator.min.js",
+          "assets/4.2.3/data/loader.js",
+          "assets/4.2.3/data/localization/en-US.json",
+          "assets/4.2.3/data/localization/retroarch.json",
+          "assets/4.2.3/data/localization/zh-CN.json",
+          "assets/4.2.3/data/src/GameManager.js",
+          "assets/4.2.3/data/src/compression.js",
+          "assets/4.2.3/data/src/emulator.js",
+          "assets/4.2.3/data/src/gamepad.js",
+          "assets/4.2.3/data/src/nipplejs.js",
+          "assets/4.2.3/data/src/shaders.js",
+          "assets/4.2.3/data/src/socket.io.min.js",
+          "assets/4.2.3/data/src/storage.js"
+        ],
+        "capabilities": {
+          "checkpoint": true,
+          "discSwitch": false,
+          "frameCounter": true,
+          "frameMode": "SAME_ORIGIN_BLANK",
+          "inputFilter": true,
+          "nativeSettings": true,
+          "pause": true,
+          "requiresThreads": false,
+          "screenshot": true,
+          "standardGamepad": true,
+          "videoModes": [
+            "adaptive-sharpen",
+            "original",
+            "pixel",
+            "sharp-bilinear",
+            "smooth"
+          ],
+          "volume": true
+        },
+        "checkpoint": {
+          "maxBytes": 268435456,
+          "readFormats": [
+            "emulatorjs-state-v1",
+            "emulatorjs-state-v1-storage-v1"
+          ],
+          "writeFormat": "emulatorjs-state-v1-storage-v1"
+        },
+        "displayName": "Potator",
+        "id": "potator",
+        "inputs": [
+          {
+            "cardinality": "ONE",
+            "kind": "ROM_BLOB",
+            "optional": false,
+            "role": "game"
+          },
+          {
+            "cardinality": "ONE",
+            "kind": "BIOS_BUNDLE",
+            "optional": true,
+            "role": "bios"
+          },
+          {
+            "cardinality": "ONE",
+            "kind": "PARENT_ARCHIVE",
+            "optional": true,
+            "role": "parent"
+          },
+          {
+            "cardinality": "ONE",
+            "kind": "MULTI_DISC",
+            "optional": true,
+            "role": "discs"
+          },
+          {
+            "cardinality": "ONE",
+            "kind": "EXTERNAL_FILE_SET",
+            "optional": true,
+            "role": "external"
+          }
+        ],
+        "targetOptionsSchema": {
+          "additionalProperties": false,
+          "properties": {
+            "dosEntryPath": {
+              "format": "safe-path",
+              "maxLength": 240,
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "initialDiscIndex": {
+              "minimum": 0,
+              "type": [
+                "integer",
+                "null"
+              ]
+            }
+          },
+          "required": [
+            "dosEntryPath",
+            "initialDiscIndex"
+          ],
+          "type": "object"
+        }
+      },
+      {
+        "assetPaths": [
           "assets/4.3.0-pre/data/compression/extract7z.js",
           "assets/4.3.0-pre/data/compression/extractzip.js",
           "assets/4.3.0-pre/data/cores/ppsspp-assets.zip",
@@ -6835,6 +7639,118 @@
           "assets/4.2.3/data/compression/extractzip.js",
           "assets/4.2.3/data/cores/cores.json",
           "assets/4.2.3/data/cores/ppsspp-assets.zip",
+          "assets/4.2.3/data/cores/reports/sameduck.json",
+          "assets/4.2.3/data/cores/sameduck-wasm.data",
+          "assets/4.2.3/data/emulator.css",
+          "assets/4.2.3/data/emulator.min.css",
+          "assets/4.2.3/data/emulator.min.js",
+          "assets/4.2.3/data/loader.js",
+          "assets/4.2.3/data/localization/en-US.json",
+          "assets/4.2.3/data/localization/retroarch.json",
+          "assets/4.2.3/data/localization/zh-CN.json",
+          "assets/4.2.3/data/src/GameManager.js",
+          "assets/4.2.3/data/src/compression.js",
+          "assets/4.2.3/data/src/emulator.js",
+          "assets/4.2.3/data/src/gamepad.js",
+          "assets/4.2.3/data/src/nipplejs.js",
+          "assets/4.2.3/data/src/shaders.js",
+          "assets/4.2.3/data/src/socket.io.min.js",
+          "assets/4.2.3/data/src/storage.js"
+        ],
+        "capabilities": {
+          "checkpoint": true,
+          "discSwitch": false,
+          "frameCounter": true,
+          "frameMode": "SAME_ORIGIN_BLANK",
+          "inputFilter": true,
+          "nativeSettings": true,
+          "pause": true,
+          "requiresThreads": false,
+          "screenshot": true,
+          "standardGamepad": true,
+          "videoModes": [
+            "adaptive-sharpen",
+            "original",
+            "pixel",
+            "sharp-bilinear",
+            "smooth"
+          ],
+          "volume": true
+        },
+        "checkpoint": {
+          "maxBytes": 268435456,
+          "readFormats": [
+            "emulatorjs-state-v1",
+            "emulatorjs-state-v1-storage-v1"
+          ],
+          "writeFormat": "emulatorjs-state-v1-storage-v1"
+        },
+        "displayName": "Sameduck",
+        "id": "sameduck",
+        "inputs": [
+          {
+            "cardinality": "ONE",
+            "kind": "ROM_BLOB",
+            "optional": false,
+            "role": "game"
+          },
+          {
+            "cardinality": "ONE",
+            "kind": "BIOS_BUNDLE",
+            "optional": true,
+            "role": "bios"
+          },
+          {
+            "cardinality": "ONE",
+            "kind": "PARENT_ARCHIVE",
+            "optional": true,
+            "role": "parent"
+          },
+          {
+            "cardinality": "ONE",
+            "kind": "MULTI_DISC",
+            "optional": true,
+            "role": "discs"
+          },
+          {
+            "cardinality": "ONE",
+            "kind": "EXTERNAL_FILE_SET",
+            "optional": true,
+            "role": "external"
+          }
+        ],
+        "targetOptionsSchema": {
+          "additionalProperties": false,
+          "properties": {
+            "dosEntryPath": {
+              "format": "safe-path",
+              "maxLength": 240,
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "initialDiscIndex": {
+              "minimum": 0,
+              "type": [
+                "integer",
+                "null"
+              ]
+            }
+          },
+          "required": [
+            "dosEntryPath",
+            "initialDiscIndex"
+          ],
+          "type": "object"
+        }
+      },
+      {
+        "assetPaths": [
+          "assets/4.2.3/data/compression/extract7z.js",
+          "assets/4.2.3/data/compression/extractzip.js",
+          "assets/4.2.3/data/cores/cores.json",
+          "assets/4.2.3/data/cores/ppsspp-assets.zip",
           "assets/4.2.3/data/cores/reports/smsplus.json",
           "assets/4.2.3/data/cores/smsplus-wasm.data",
           "assets/4.2.3/data/emulator.css",
@@ -7107,6 +8023,233 @@
         },
         "displayName": "Stella2014",
         "id": "stella2014",
+        "inputs": [
+          {
+            "cardinality": "ONE",
+            "kind": "ROM_BLOB",
+            "optional": false,
+            "role": "game"
+          },
+          {
+            "cardinality": "ONE",
+            "kind": "BIOS_BUNDLE",
+            "optional": true,
+            "role": "bios"
+          },
+          {
+            "cardinality": "ONE",
+            "kind": "PARENT_ARCHIVE",
+            "optional": true,
+            "role": "parent"
+          },
+          {
+            "cardinality": "ONE",
+            "kind": "MULTI_DISC",
+            "optional": true,
+            "role": "discs"
+          },
+          {
+            "cardinality": "ONE",
+            "kind": "EXTERNAL_FILE_SET",
+            "optional": true,
+            "role": "external"
+          }
+        ],
+        "targetOptionsSchema": {
+          "additionalProperties": false,
+          "properties": {
+            "dosEntryPath": {
+              "format": "safe-path",
+              "maxLength": 240,
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "initialDiscIndex": {
+              "minimum": 0,
+              "type": [
+                "integer",
+                "null"
+              ]
+            }
+          },
+          "required": [
+            "dosEntryPath",
+            "initialDiscIndex"
+          ],
+          "type": "object"
+        }
+      },
+      {
+        "assetPaths": [
+          "assets/4.3.0-pre/data/compression/extract7z.js",
+          "assets/4.3.0-pre/data/cores/supermodel-wasm.data",
+          "assets/4.3.0-pre/data/cores/reports/supermodel.json",
+          "assets/4.3.0-pre/data/emulator.css",
+          "assets/4.3.0-pre/data/emulator.min.css",
+          "assets/4.3.0-pre/data/emulator.min.js",
+          "assets/4.3.0-pre/data/loader.js",
+          "assets/4.3.0-pre/data/localization/en.json",
+          "assets/4.3.0-pre/data/localization/retroarch.json",
+          "assets/4.3.0-pre/data/localization/zh.json",
+          "assets/4.3.0-pre/data/src/GameManager.js",
+          "assets/4.3.0-pre/data/src/cache.js",
+          "assets/4.3.0-pre/data/src/compression.js",
+          "assets/4.3.0-pre/data/src/consts.js",
+          "assets/4.3.0-pre/data/src/emulator.js",
+          "assets/4.3.0-pre/data/src/gamepad.js",
+          "assets/4.3.0-pre/data/src/license.js",
+          "assets/4.3.0-pre/data/src/netplay.js",
+          "assets/4.3.0-pre/data/src/setup.js",
+          "assets/4.3.0-pre/data/src/shaders.js",
+          "assets/4.3.0-pre/data/src/storage.js",
+          "assets/4.3.0-pre/data/src/utils.js",
+          "assets/4.3.0-pre/data/src/vendor/nipplejs.js",
+          "assets/4.3.0-pre/data/src/vendor/socket.io.min.js"
+        ],
+        "capabilities": {
+          "checkpoint": true,
+          "discSwitch": false,
+          "frameCounter": true,
+          "frameMode": "SAME_ORIGIN_BLANK",
+          "inputFilter": true,
+          "nativeSettings": true,
+          "pause": true,
+          "requiresThreads": false,
+          "screenshot": true,
+          "standardGamepad": true,
+          "videoModes": [
+            "adaptive-sharpen",
+            "original",
+            "pixel",
+            "sharp-bilinear",
+            "smooth"
+          ],
+          "volume": true
+        },
+        "checkpoint": {
+          "maxBytes": 268435456,
+          "readFormats": [
+            "emulatorjs-state-v1",
+            "emulatorjs-state-v1-storage-v1"
+          ],
+          "writeFormat": "emulatorjs-state-v1-storage-v1"
+        },
+        "displayName": "Supermodel",
+        "id": "supermodel",
+        "inputs": [
+          {
+            "cardinality": "ONE",
+            "kind": "ROM_BLOB",
+            "optional": false,
+            "role": "game"
+          },
+          {
+            "cardinality": "ONE",
+            "kind": "BIOS_BUNDLE",
+            "optional": true,
+            "role": "bios"
+          },
+          {
+            "cardinality": "ONE",
+            "kind": "PARENT_ARCHIVE",
+            "optional": true,
+            "role": "parent"
+          },
+          {
+            "cardinality": "ONE",
+            "kind": "MULTI_DISC",
+            "optional": true,
+            "role": "discs"
+          },
+          {
+            "cardinality": "ONE",
+            "kind": "EXTERNAL_FILE_SET",
+            "optional": true,
+            "role": "external"
+          }
+        ],
+        "targetOptionsSchema": {
+          "additionalProperties": false,
+          "properties": {
+            "dosEntryPath": {
+              "format": "safe-path",
+              "maxLength": 240,
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "initialDiscIndex": {
+              "minimum": 0,
+              "type": [
+                "integer",
+                "null"
+              ]
+            }
+          },
+          "required": [
+            "dosEntryPath",
+            "initialDiscIndex"
+          ],
+          "type": "object"
+        }
+      },
+      {
+        "assetPaths": [
+          "assets/4.2.3/data/compression/extract7z.js",
+          "assets/4.2.3/data/compression/extractzip.js",
+          "assets/4.2.3/data/cores/cores.json",
+          "assets/4.2.3/data/cores/ppsspp-assets.zip",
+          "assets/4.2.3/data/cores/reports/theodore.json",
+          "assets/4.2.3/data/cores/theodore-wasm.data",
+          "assets/4.2.3/data/emulator.css",
+          "assets/4.2.3/data/emulator.min.css",
+          "assets/4.2.3/data/emulator.min.js",
+          "assets/4.2.3/data/loader.js",
+          "assets/4.2.3/data/localization/en-US.json",
+          "assets/4.2.3/data/localization/retroarch.json",
+          "assets/4.2.3/data/localization/zh-CN.json",
+          "assets/4.2.3/data/src/GameManager.js",
+          "assets/4.2.3/data/src/compression.js",
+          "assets/4.2.3/data/src/emulator.js",
+          "assets/4.2.3/data/src/gamepad.js",
+          "assets/4.2.3/data/src/nipplejs.js",
+          "assets/4.2.3/data/src/shaders.js",
+          "assets/4.2.3/data/src/socket.io.min.js",
+          "assets/4.2.3/data/src/storage.js"
+        ],
+        "capabilities": {
+          "checkpoint": true,
+          "discSwitch": false,
+          "frameCounter": true,
+          "frameMode": "SAME_ORIGIN_BLANK",
+          "inputFilter": true,
+          "nativeSettings": true,
+          "pause": true,
+          "requiresThreads": false,
+          "screenshot": true,
+          "standardGamepad": true,
+          "videoModes": [
+            "adaptive-sharpen",
+            "original",
+            "pixel",
+            "sharp-bilinear",
+            "smooth"
+          ],
+          "volume": true
+        },
+        "checkpoint": {
+          "maxBytes": 268435456,
+          "readFormats": [
+            "emulatorjs-state-v1",
+            "emulatorjs-state-v1-storage-v1"
+          ],
+          "writeFormat": "emulatorjs-state-v1-storage-v1"
+        },
+        "displayName": "Theodore",
+        "id": "theodore",
         "inputs": [
           {
             "cardinality": "ONE",

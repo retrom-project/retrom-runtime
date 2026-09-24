@@ -20,7 +20,9 @@ describe("deterministic provider bundle", () => {
       ["asset.webp", "image/webp"], ["asset.svg", "image/svg+xml"], ["asset.ico", "image/x-icon"],
       ["asset.ogg", "audio/ogg"], ["asset.mp3", "audio/mpeg"], ["asset.wav", "audio/wav"],
       ["asset.woff", "font/woff"], ["asset.woff2", "font/woff2"],
-    ].map(([path, expected]) => providerMediaType(path) === expected)).toEqual(Array(13).fill(true));
+      ["assets/jsbeeb/site/index.html", "text/html; charset=utf-8"],
+      ["assets/other/index.html", "application/octet-stream"],
+    ].map(([path, expected]) => providerMediaType(path) === expected)).toEqual(Array(15).fill(true));
   });
 
   it("registers every file and emits identical archives for identical inputs", async () => {

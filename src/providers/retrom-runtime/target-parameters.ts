@@ -13,6 +13,25 @@ export function play(envelope: LaunchEnvelopeV1, assetIndex: AssetIndexV1): Play
   const game = resource(envelope, "game", "SEEKABLE_BLOB");
   return {disc: seekableSource(game), runtimeBaseUrl: assetBase(envelope, "play"), assetIndex};
 }
+
+export function jsbeeb(envelope: LaunchEnvelopeV1) {
+  const game = resource(envelope, "game", "ROM_BLOB");
+  const bios = resource(envelope, "external", "EXTERNAL_FILE_SET");
+  return {
+    game: {url: game.url, sha256: game.sha256, sizeBytes: game.sizeBytes},
+    bios: bios.files,
+    runtimeBaseUrl: assetBase(envelope, "jsbeeb/site"),
+  };
+}
+export function samcoupe(envelope: LaunchEnvelopeV1) {
+  const game = resource(envelope, "game", "ROM_BLOB");
+  const bios = resource(envelope, "external", "EXTERNAL_FILE_SET");
+  return {
+    game: {url: game.url, sha256: game.sha256, sizeBytes: game.sizeBytes},
+    bios: bios.files,
+    runtimeBaseUrl: assetBase(envelope, "samcoupeweb"),
+  };
+}
 import type {FantasyParameters} from "../../fantasy-console/core.js";
 import type {J2meParameters} from "../../j2me/parameters.js";
 import type {FileTreeSource, SeekableBlobSource} from "../../contract.js";

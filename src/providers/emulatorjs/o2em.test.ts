@@ -5,7 +5,7 @@ import {emulatorJsSourceCatalog} from "./source-catalog.js";
 
 describe("O2EM cartridge runtime", () => {
   it("pins the published fork release rather than a development candidate", () => {
-    expect(emulatorJsSourceCatalog.developmentForks).toEqual([]);
+    expect(emulatorJsSourceCatalog.developmentForks.map((fork) => String(fork.runtimeCore))).not.toContain("o2em");
     expect(emulatorJsSourceCatalog.forks.find((fork) => fork.runtimeCore === "o2em"))
       .toMatchObject({repository: "https://github.com/retrom-project/libretro-o2em",
         tag: "retrom-core-g679d6fec0496-r2",

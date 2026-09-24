@@ -32,6 +32,21 @@ describe("EmulatorJS archive worker compatibility", () => {
     expect(window.fetch).toBe(original);
   });
 
+  it("keeps Model 3's report and version check inside the pinned provider", async () => {
+    const original = vi.fn<typeof fetch>(async () => new Response("{}"));
+    window.fetch = original;
+    const base = "/runtime/providers/emulatorjs/digest/assets/4.3.0-pre/data/";
+    const report = new URL(base + "cores/reports/supermodel.json", location.href).href;
+    const cleanup = installArchiveWorkerCompatibility(window, "4.3.0-pre", base, "supermodel");
+    try {
+      await window.fetch(report + "?v=497021");
+      expect(original).toHaveBeenLastCalledWith(report, undefined);
+      const version = await window.fetch("https://cdn.emulatorjs.org/stable/data/version.json");
+      expect(await version.json()).toEqual({version: "4.3.0-pre", current_version: "4.3.0-pre"});
+      expect(original).toHaveBeenCalledTimes(1);
+    } finally {cleanup();}
+  });
+
   it("rewrites the 4.3 response worker without eval and restores fetch", async () => {
     const runtimeWindow = window as Window & {fetch: typeof fetch};
     const original = vi.fn(async () => new Response([

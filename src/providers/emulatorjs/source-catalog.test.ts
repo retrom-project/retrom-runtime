@@ -19,7 +19,7 @@ describe("EmulatorJS Provider source catalog", () => {
     const overrides = emulatorJsProviderDefinition.targets.filter((target) =>
       target.implementation.artifactFlavor === "OVERRIDE");
     expect([...emulatorJsSourceCatalog.overrides, ...emulatorJsSourceCatalog.forks, ...emulatorJsSourceCatalog.developmentForks].map((override) => override.runtimeCore).sort())
-      .toEqual(overrides.map((target) => target.implementation.runtimeCore).sort());
+      .toEqual([...new Set(overrides.map((target) => target.implementation.runtimeCore))].sort());
     for (const override of emulatorJsSourceCatalog.overrides) {
       expect(override.sha256).toMatch(/^[0-9a-f]{64}$/u);
       expect(override.url).toMatch(/^https:\/\//u);

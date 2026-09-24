@@ -1,4 +1,12 @@
 const identities = {
+  ardens: {repository: "https://github.com/retrom-project/Ardens", baseline: "g661a7dd4febc", license: "LICENSE", source: "source.tar.gz"},
+  atari800: {repository: "https://github.com/retrom-project/libretro-atari800", baseline: "g4e7fbc73765c", license: "LICENSE", source: "source.tar.gz"},
+  freechaf: {repository: "https://github.com/retrom-project/FreeChaF", baseline: "g76c7a84f1f7e", license: "LICENSE", source: "source.tar.gz"},
+  hatarib: {repository: "https://github.com/retrom-project/hatariB", baseline: "gcceb40a9c054", license: "LICENSE", source: "source.tar.gz"},
+  sameduck: {repository: "https://github.com/retrom-project/SameBoy", baseline: "g5619abdb01ce", license: "LICENSE", source: "source.tar.gz"},
+  potator: {repository: "https://github.com/retrom-project/potator", baseline: "g227c5f6f3ce7", license: "LICENSE", source: "source.tar.gz"},
+  supermodel: {repository: "https://github.com/retrom-project/Libretro-Supermodel", baseline: "g84bc106b45b2", license: "LICENSE", source: "source.tar.gz", release: "4.3.0-pre"},
+  theodore: {repository: "https://github.com/retrom-project/theodore", baseline: "g4d469ce0f71e", license: "LICENSE", source: "source.tar.gz"},
   gam4980: {repository: "https://github.com/retrom-project/gam4980", baseline: "geeaa531b55e7", license: "LICENSE", source: "source.tar.gz"},
   uzem: {repository: "https://github.com/retrom-project/libretro-uzem", baseline: "gd991ee94547c", license: "LICENSE", source: "source.tar.gz"},
   o2em: {repository: "https://github.com/retrom-project/libretro-o2em", baseline: "g679d6fec0496", license: "LICENSE", source: "source.tar.gz"},

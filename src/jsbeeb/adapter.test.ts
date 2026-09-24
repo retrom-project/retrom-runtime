@@ -38,6 +38,8 @@ it("boots with verified external ROM bytes and restores a checkpoint in a new fr
     const adapter = await mounted;
     expect(iframe.src).toContain("retrom=1");
     expect(iframe.src).toContain("disc1=blob");
+    expect(new URL(iframe.src).search).toBe("");
+    expect(new URL(iframe.src).hash).toContain("retrom=1");
     expect(restore).toHaveBeenCalledWith(new Uint8Array([5, 6]));
     expect((frameWindow as Window & {RetromJsbeebBios?: object}).RetromJsbeebBios).toBeDefined();
     expect(await adapter.checkpoint()).toEqual({format: "jsbeeb-snapshot-gzip-v1", bytes: new Uint8Array([31, 139])});

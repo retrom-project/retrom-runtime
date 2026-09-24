@@ -44,9 +44,11 @@ export async function mountJsbeeb(config: JsbeebParameters, target: HTMLElement,
   iframe.style.cssText = "width:100%;height:100%;border:0";
   iframe.setAttribute("allow", "autoplay; gamepad");
   const entry = new URL("index.html", new URL(config.runtimeBaseUrl, frameWindow.document.baseURI));
-  entry.searchParams.set("retrom", "1");
-  entry.searchParams.set("disc1", `${url}#game.${extension.toLowerCase()}`);
-  entry.searchParams.set("autoboot", "1");
+  const startup = new URLSearchParams();
+  startup.set("retrom", "1");
+  startup.set("disc1", `${url}#game.${extension.toLowerCase()}`);
+  startup.set("autoboot", "1");
+  entry.hash = startup.toString();
   let bridge: Bridge;
   let exited = false;
   const cleanup = () => {

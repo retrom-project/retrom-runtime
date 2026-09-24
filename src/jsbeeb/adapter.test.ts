@@ -10,8 +10,10 @@ it("boots with verified external ROM bytes and restores a checkpoint in a new fr
   URL.createObjectURL = vi.fn(() => "blob:http://localhost/game");
   URL.revokeObjectURL = vi.fn();
   try {
-    const target = document.createElement("div");
-    document.body.append(target);
+    const runtimeFrame = document.createElement("iframe"); document.body.append(runtimeFrame);
+    const frameWindow = runtimeFrame.contentWindow!;
+    expect(frameWindow.location.href).toBe("about:blank");
+    const target = frameWindow.document.createElement("div"); frameWindow.document.body.append(target);
     const bios = ["os.rom", "BASIC.ROM", "DFS-1.2.rom"].map((logicalName) => ({
       logicalName, virtualPath: `roms/${logicalName === "DFS-1.2.rom" ? "b/" : ""}${logicalName}`,
       url: `https://example.test/${logicalName}`, sha256: "a".repeat(64), sizeBytes: 3,
@@ -21,8 +23,8 @@ it("boots with verified external ROM bytes and restores a checkpoint in a new fr
       materialize: async () => ({kind: "BYTES" as const, bytes: new Uint8Array([1, 2, 3])}),
       closeFile: async () => undefined,
     };
-    const mounted = mountJsbeeb({game: {url: "https://example.test/game.ssd", sha256: "b".repeat(64), sizeBytes: 3},
-      bios, runtimeBaseUrl: "http://localhost/assets/jsbeeb/site/"}, target, window,
+    const mounted = mountJsbeeb({game: {url: "/runtime/content/game/game.ssd", sha256: "b".repeat(64), sizeBytes: 3},
+      bios, runtimeBaseUrl: "http://localhost/assets/jsbeeb/site/"}, target, frameWindow,
       new Uint8Array([5, 6]), () => undefined, session as never);
     await vi.waitFor(() => expect(target.querySelector("iframe")).not.toBeNull());
     const iframe = target.querySelector("iframe")!;
@@ -37,12 +39,12 @@ it("boots with verified external ROM bytes and restores a checkpoint in a new fr
     expect(iframe.src).toContain("retrom=1");
     expect(iframe.src).toContain("disc1=blob");
     expect(restore).toHaveBeenCalledWith(new Uint8Array([5, 6]));
-    expect((window as Window & {RetromJsbeebBios?: object}).RetromJsbeebBios).toBeDefined();
+    expect((frameWindow as Window & {RetromJsbeebBios?: object}).RetromJsbeebBios).toBeDefined();
     expect(await adapter.checkpoint()).toEqual({format: "jsbeeb-snapshot-gzip-v1", bytes: new Uint8Array([31, 139])});
     expect((await adapter.screenshot()).type).toBe("image/png");
     await adapter.exit();
     expect(stop).toHaveBeenCalledOnce();
-    expect((window as Window & {RetromJsbeebBios?: object}).RetromJsbeebBios).toBeUndefined();
+    expect((frameWindow as Window & {RetromJsbeebBios?: object}).RetromJsbeebBios).toBeUndefined();
     expect(target.querySelector("iframe")).toBeNull();
   } finally {
     URL.createObjectURL = originalCreate;

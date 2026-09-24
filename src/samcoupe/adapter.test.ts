@@ -11,7 +11,10 @@ it("loads the supplied ROM and restored disk, then checkpoints flushed disk writ
   const files = new Map<string, Uint8Array>();
   let modified = true;
   const calls: string[] = [];
-  const target = document.createElement("div"); document.body.append(target);
+  const runtimeFrame = document.createElement("iframe"); document.body.append(runtimeFrame);
+  const frameWindow = runtimeFrame.contentWindow!;
+  expect(frameWindow.location.href).toBe("about:blank");
+  const target = frameWindow.document.createElement("div"); frameWindow.document.body.append(target);
   const replace = target.replaceChildren.bind(target);
   vi.spyOn(target, "replaceChildren").mockImplementation((...nodes) => {
     replace(...nodes);
@@ -45,11 +48,11 @@ it("loads the supplied ROM and restored disk, then checkpoints flushed disk writ
     closeFile: async () => undefined,
   };
   const adapter = await mountSamCoupe({
-    game: {url: "http://localhost/game.mgt", sha256: gameSha256, sizeBytes: 3},
+    game: {url: "/runtime/content/game/game.mgt", sha256: gameSha256, sizeBytes: 3},
     bios: [{url: "http://localhost/samcoupe.rom", sha256: "b".repeat(64), sizeBytes: 32768,
       logicalName: "samcoupe.rom", virtualPath: "Resource/samcoupe.rom"}],
     runtimeBaseUrl: "http://localhost/assets/samcoupeweb/",
-  }, target, window, encodeSamDisk(gameSha256, restored), () => undefined, session as never,
+  }, target, frameWindow, encodeSamDisk(gameSha256, restored), () => undefined, session as never,
     () => undefined);
   expect(files.get("/Resource/samcoupe.rom")?.byteLength).toBe(32768);
   expect(files.get("/media/game.mgt")).toEqual(restored);

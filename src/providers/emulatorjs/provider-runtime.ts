@@ -368,9 +368,9 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
     runtimeWindow.EJS_disableCue = ["cap32", "quasi88"].includes(this.implementation.runtimeCore) ? true : undefined;
     runtimeWindow.EJS_language = "zh-CN";
     runtimeWindow.EJS_disableAutoLang = false;
-    // PSP's native load receipt is emitted only with RetroArch's -v flag.
-    // The restore barrier must observe that receipt before admitting gameplay.
-    runtimeWindow.EJS_DEBUG_XX = (this.implementation.runtimeCore === "ppsspp" && this.envelope.restore !== null);
+    // RetroArch emits native load receipts only in verbose mode. The PSP and
+    // Model 3 restore barriers must observe a receipt before admitting gameplay.
+    runtimeWindow.EJS_DEBUG_XX = needsVerboseRestore(this.implementation.runtimeCore, this.envelope.restore !== null);
     runtimeWindow.EJS_EXPERIMENTAL_NETPLAY = false;
     runtimeWindow.EJS_threads = this.envelope.runtime.capabilities.requiresThreads;
     runtimeWindow.EJS_fullscreenOnLoaded = false;
@@ -623,6 +623,10 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
   }
 
   private emit(event: RuntimeEventV1) {for (const listener of this.listeners) {listener(event);}}
+}
+
+function needsVerboseRestore(core: string, restoring: boolean) {
+  return restoring && (core === "ppsspp" || core === "supermodel");
 }
 
 function runtimeStartTimeout(core: string, restoring: boolean) {

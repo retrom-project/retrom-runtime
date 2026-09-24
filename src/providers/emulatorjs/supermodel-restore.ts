@@ -27,7 +27,7 @@ async function waitForNativeReady(manager: Manager, serialize: () => string, tar
       const [length, , success] = String(serialize()).split("|");
       if (success === "1" && Number(length) > 0 && (manager.getFrameNum?.() ?? 0) > 0) {return;}
     } catch { /* GPU and native serializer may still be initializing. */ }
-    if (target.performance.now() >= deadline) {throw new Error("PLAYER_SAVE_STATE_RESTORE_TIMEOUT");}
+    if (target.performance.now() >= deadline) {throw new Error("PLAYER_SUPERMODEL_NATIVE_READY_TIMEOUT");}
     toggleMainLoop(true);
     await new Promise(resolve => target.setTimeout(resolve, 50));
   }
@@ -88,7 +88,7 @@ export function installSupermodelRestore(playerWindow: Window) {
       toggleMainLoop(false);
       let timer = 0;
       const completion = new Promise<void>((resolve, reject) => {
-        timer = target.setTimeout(() => pending?.finish(new Error("PLAYER_SAVE_STATE_RESTORE_TIMEOUT")),
+        timer = target.setTimeout(() => pending?.finish(new Error("PLAYER_SUPERMODEL_LOAD_RECEIPT_TIMEOUT")),
           Math.max(1, deadline - target.performance.now()));
         pending = {observed: false, finish: error => {
           target.clearTimeout(timer);

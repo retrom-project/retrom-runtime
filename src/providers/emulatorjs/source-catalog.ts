@@ -1,4 +1,4 @@
-import {emulatorJsPlatformCoreForks} from "./released-platform-core-catalog.js";
+import {emulatorJsPlatformCoreForks} from "./released-platform-core-catalog.ts";
 import type {DevelopmentFork} from "../../../scripts/emulatorjs-development-forks.mjs";
 
 export const emulatorJsSourceCatalog = {

@@ -1,9 +1,16 @@
+import {spawnSync} from "node:child_process";
 import {describe, expect, it} from "vitest";
 
 import {emulatorJsProviderDefinition} from "./catalog.js";
 import {emulatorJsSourceCatalog} from "./source-catalog.js";
 
 describe("EmulatorJS Provider source catalog", () => {
+  it("loads directly in Node for the PFB provider watcher", () => {
+    const result = spawnSync(process.execPath, ["--input-type=module", "-e",
+      'import("./src/providers/emulatorjs/source-catalog.ts")'], {cwd: process.cwd(), encoding: "utf8"});
+    expect(result.status, result.stderr).toBe(0);
+  });
+
   it("pins every internal release used by the provider without host selection data", () => {
     const declared = [...new Set(emulatorJsProviderDefinition.targets.map((target) =>
       String(target.implementation.release)))].sort();

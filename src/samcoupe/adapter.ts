@@ -135,7 +135,7 @@ function createFrame(target: HTMLElement, frameWindow: Window) {
   const canvas = realm.document.createElement("canvas");
   canvas.id = "canvas";
   canvas.width = 512; canvas.height = 192; canvas.tabIndex = 0;
-  canvas.style.cssText = "width:100%;height:auto;image-rendering:pixelated";
+  canvas.style.cssText = "width:100%;height:100%;object-fit:contain;image-rendering:pixelated";
   realm.document.body.style.cssText = "margin:0;background:#000;overflow:hidden";
   realm.document.body.append(canvas);
   return {iframe, realm, canvas};

@@ -84,8 +84,13 @@ const nativeFaceGamepad: Readonly<Record<number, string>> = {...playerOneGamepad
 // each physical button still sends exactly one native control.
 const pc88Gamepad: Readonly<Record<number, string>> = {...playerOneGamepad, 3: "BUTTON_1", 8: "START"};
 
+// Theodore's native A button types Space for games that require it at their
+// title screen. Keep the bottom face button mapped to joystick fire.
+const thomsonGamepad: Readonly<Record<number, string>> = {...playerOneGamepad, 1: "BUTTON_1", 8: "BUTTON_4"};
+
 export function createRetromDefaultControls(core?: string): EmulatorDefaultControls {
-  const gamepad = ["flycast", "neocd", "o2em"].includes(core ?? "") ? nativeFaceGamepad : core === "quasi88" ? pc88Gamepad : playerOneGamepad;
+  const gamepad = ["flycast", "neocd", "o2em"].includes(core ?? "") ? nativeFaceGamepad
+    : core === "quasi88" ? pc88Gamepad : core === "theodore" ? thomsonGamepad : playerOneGamepad;
   const controllers: EmulatorDefaultControls = {};
   for (let player = 0; player < 4; player += 1) {
     const keyboard: Readonly<Record<number, string>> = player === 0
@@ -104,4 +109,12 @@ export function createRetromDefaultControls(core?: string): EmulatorDefaultContr
     controllers[player] = controls;
   }
   return controllers;
+}
+
+export function thomsonMachineOption(core: string, title: string): Record<string, string> {
+  if (core !== "theodore") {return {};}
+  // Retrom content URLs do not retain the uploaded filename that Theodore's
+  // Auto option uses to identify the computer model.
+  const model = /(?:^|[^A-Z0-9])(TO7\/70|TO9\+|TO8D|PC128|MO5|MO6|TO7|TO8|TO9)(?=$|[^A-Z0-9])/iu.exec(title)?.[1];
+  return model ? {theodore_rom: model.toUpperCase()} : {};
 }

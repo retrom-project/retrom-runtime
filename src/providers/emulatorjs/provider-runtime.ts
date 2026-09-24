@@ -37,7 +37,7 @@ import {installEmulatorJsRetroArchConfig} from "./retroarch-config.js";
 import {installEmulatorJs423StateRestoreCompatibility} from "./state-restore.js";
 import {installSupermodelState} from "./supermodel-state.js";
 import {installSupermodelRestore} from "./supermodel-restore.js";
-import {createRetromDefaultControls, emulatorControlScheme} from "./default-controls.js";
+import {createRetromDefaultControls, emulatorControlScheme, thomsonMachineOption} from "./default-controls.js";
 import {initializeEmulatorJsGamepads} from "./startup-gamepads.js";
 import {
   closeEmulatorJsNativeSettings,
@@ -88,6 +88,7 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
   private supermodelRestore: ReturnType<typeof installSupermodelRestore> | null = null;
   private cleanupExternalFiles: (() => void) | null = null;
   private cleanupInputFilter: (() => void) | null = null;
+  private cleanupGamepadIndex: (() => void) | null = null;
   private inputFilter: RuntimeGamepadFilter | null = null;
   private cleanupRetroArchConfig: () => void = () => undefined;
   private dosboxCompatibility: ReturnType<typeof installDOSBoxPureStateCompatibility> | null = null;
@@ -379,7 +380,7 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
     runtimeWindow.EJS_CacheLimit = 0;
     runtimeWindow.EJS_Buttons = {exitEmulation: false};
     runtimeWindow.EJS_defaultControls = createRetromDefaultControls(this.implementation.runtimeCore);
-    runtimeWindow.EJS_defaultOptions = {...this.implementation.defaultOptions,
+    runtimeWindow.EJS_defaultOptions = {...this.implementation.defaultOptions, ...thomsonMachineOption(this.implementation.runtimeCore, this.envelope.session.title),
       ...(this.implementation.runtimeCore === "cap32" && new URL(game.url, "http://runtime.invalid").pathname.toLowerCase().endsWith(".cpr")
         ? {cap32_model: "6128+ (experimental)", cap32_gfx_colors: "24bit"} : {}),
     };
@@ -390,7 +391,7 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
     runtimeWindow.EJS_ready = () => {
       this.instance = runtimeWindow.EJS_emulator ?? null;
       if (this.instance) {
-        initializeEmulatorJsGamepads(this.instance);
+        this.cleanupGamepadIndex = initializeEmulatorJsGamepads(this.instance);
         if (this.neoCDRange) {installNeoCDStartup(this.instance, this.neoCDRange);}
       }
       if (!this.instance) {this.fail("PLAYER_RUNTIME_UNAVAILABLE");}
@@ -536,8 +537,8 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
     this.stopInputDiagnostics();
     this.cleanupRetroArchConfig();
     this.cleanupRetroArchConfig = () => undefined;
-    this.cleanupInputFilter?.();
-    this.cleanupInputFilter = null;
+    this.cleanupInputFilter?.(); this.cleanupInputFilter = null;
+    this.cleanupGamepadIndex?.(); this.cleanupGamepadIndex = null;
     this.inputFilter = null;
     this.pspRestore?.cleanup(); this.pspRestore = null;
     this.cleanupArchiveWorker?.();

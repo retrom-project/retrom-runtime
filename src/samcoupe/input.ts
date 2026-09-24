@@ -21,6 +21,7 @@ export function samGamepadKeys(pad: Pick<Gamepad, "connected" | "mapping" | "axe
 
 export function installSamGamepad(runtimeWindow: Window, gameWindow: Window, canvas: HTMLCanvasElement) {
   let held = new Set<Key>(), paused = false, stopped = false, frame = 0;
+  let selectedIndex: number | null = null;
   const dispatch = (code: Key, type: "keydown" | "keyup") => {
     const [key, keyCode] = keyDetails[code];
     const realm = gameWindow as Window & {KeyboardEvent: typeof KeyboardEvent};
@@ -34,7 +35,18 @@ export function installSamGamepad(runtimeWindow: Window, gameWindow: Window, can
   const poll = () => {
     if (stopped) {return;}
     let pad: Gamepad | null | undefined;
-    try {pad = [...runtimeWindow.navigator.getGamepads?.() ?? []].find(value => value?.connected && value.mapping === "standard");}
+    try {
+      const pads = [...runtimeWindow.navigator.getGamepads?.() ?? []];
+      pad = pads.find(value => value?.connected && value.mapping === "standard" && value.index === selectedIndex);
+      if (!pad) {
+        // Browser indices may be sparse, and an idle pad can enumerate first.
+        // Claim the first controller with an intentional button or direction.
+        pad = pads.find(value => value?.connected && value.mapping === "standard" &&
+          (value.buttons.some(button => button.pressed || button.value >= 0.5) ||
+            value.axes.slice(0, 2).some(axis => Math.abs(axis) >= 0.6)));
+        selectedIndex = pad?.index ?? null;
+      }
+    }
     catch { /* The browser may deny Gamepad access. */ }
     change(paused || runtimeWindow.document.hidden ? new Set() : samGamepadKeys(pad ?? null));
     frame = runtimeWindow.requestAnimationFrame(poll);

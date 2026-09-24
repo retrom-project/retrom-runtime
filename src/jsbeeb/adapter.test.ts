@@ -28,7 +28,9 @@ it("boots with verified external ROM bytes and restores a checkpoint in a new fr
       new Uint8Array([5, 6]), () => undefined, session as never);
     await vi.waitFor(() => expect(target.querySelector("iframe")).not.toBeNull());
     const iframe = target.querySelector("iframe")!;
+    const focus = vi.spyOn(iframe, "focus");
     const child = iframe.contentWindow as Window & {RetromJsbeeb?: object};
+    const siteDocument = child.document;
     const canvas = document.createElement("canvas");
     canvas.toBlob = (callback) => callback(new Blob(["png"], {type: "image/png"}));
     const restore = vi.fn(async () => undefined);
@@ -41,10 +43,17 @@ it("boots with verified external ROM bytes and restores a checkpoint in a new fr
     expect(new URL(iframe.src).search).toBe("");
     expect(new URL(iframe.src).hash).toContain("retrom=1");
     expect(restore).toHaveBeenCalledWith(new Uint8Array([5, 6]));
+    expect(focus).toHaveBeenCalledOnce();
+    siteDocument.dispatchEvent(new Event("pointerdown", {bubbles: true}));
+    expect(focus).toHaveBeenCalledTimes(2);
+    await adapter.resume();
+    expect(focus).toHaveBeenCalledTimes(3);
     expect((frameWindow as Window & {RetromJsbeebBios?: object}).RetromJsbeebBios).toBeDefined();
     expect(await adapter.checkpoint()).toEqual({format: "jsbeeb-snapshot-gzip-v1", bytes: new Uint8Array([31, 139])});
     expect((await adapter.screenshot()).type).toBe("image/png");
     await adapter.exit();
+    siteDocument.dispatchEvent(new Event("pointerdown", {bubbles: true}));
+    expect(focus).toHaveBeenCalledTimes(3);
     expect(stop).toHaveBeenCalledOnce();
     expect((frameWindow as Window & {RetromJsbeebBios?: object}).RetromJsbeebBios).toBeUndefined();
     expect(target.querySelector("iframe")).toBeNull();

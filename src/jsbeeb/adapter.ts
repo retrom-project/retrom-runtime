@@ -51,10 +51,13 @@ export async function mountJsbeeb(config: JsbeebParameters, target: HTMLElement,
   entry.hash = startup.toString();
   let bridge: Bridge;
   let exited = false;
+  let siteDocument: Document | null = null;
+  const focusGame = () => iframe.focus();
   const cleanup = () => {
     if (exited) {return;}
     exited = true;
     try {bridge?.stop();} finally {
+      siteDocument?.removeEventListener("pointerdown", focusGame, true);
       iframe.remove();
       delete host.RetromJsbeebBios;
       URL.revokeObjectURL(url);
@@ -67,6 +70,9 @@ export async function mountJsbeeb(config: JsbeebParameters, target: HTMLElement,
     bridge = await ready(iframe, signal);
     if (restore) {await bridge.restore(new Uint8Array(restore));}
     signal?.throwIfAborted();
+    siteDocument = iframe.contentDocument;
+    siteDocument?.addEventListener("pointerdown", focusGame, true);
+    focusGame();
   } catch (error) {cleanup(); throw error;}
   const active = () => {if (exited) {throw new Error("JSBEEB_STOPPED");}};
   return {
@@ -81,7 +87,7 @@ export async function mountJsbeeb(config: JsbeebParameters, target: HTMLElement,
     getCanvas: () => exited ? null : bridge.canvas,
     getFrameCount: () => null,
     pause: async () => {active(); bridge.pause();},
-    resume: async () => {active(); bridge.resume();},
+    resume: async () => {active(); bridge.resume(); focusGame();},
     screenshot: async () => {
       active();
       const blob = await new Promise<Blob | null>((resolve) => bridge.canvas.toBlob(resolve, "image/png"));

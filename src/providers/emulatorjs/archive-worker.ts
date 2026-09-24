@@ -106,7 +106,7 @@ function installResponseCompatibility(runtimeWindow: CompressionWindow, runtimeB
   if (typeof originalFetch !== "function") {throw unavailable();}
   const baseURL = httpBase(runtimeWindow);
   const runtimeURL = new runtimeWindow.URL(runtimeBaseUrl, baseURL);
-  const reportURL = core === "freeintv" ? new runtimeWindow.URL("cores/reports/freeintv.json", runtimeURL).href : null;
+  const reportURL = core ? new runtimeWindow.URL(`cores/reports/${core}.json`, runtimeURL).href : null;
   const workerURLs = new Map<string, ArchiveType>([
     [new runtimeWindow.URL("compression/extract7z.js", runtimeURL).href, "7z"],
     [new runtimeWindow.URL("compression/extractzip.js", runtimeURL).href, "zip"],
@@ -115,9 +115,12 @@ function installResponseCompatibility(runtimeWindow: CompressionWindow, runtimeB
     const requestURL = requestUrl(runtimeWindow, input, baseURL);
     const archiveType = workerURLs.get(requestURL.href);
     const method = init?.method ?? (typeof input === "string" || input instanceof URL ? "GET" : input.method);
-    // The pinned FreeIntv loader adds an hourly query to this immutable report.
+    // Pinned 4.3 loaders append a changing query to their immutable core report.
     const report = method.toUpperCase() === "GET" && requestURL.origin + requestURL.pathname === reportURL &&
       /^\?v=\d+$/.test(requestURL.search) && !requestURL.hash;
+    if (method.toUpperCase() === "GET" && requestURL.href === "https://cdn.emulatorjs.org/stable/data/version.json") {
+      return Response.json({version: "4.3.0-pre", current_version: "4.3.0-pre"});
+    }
     const forwarded = report && reportURL ? typeof input === "string" || input instanceof URL
       ? reportURL : new Request(reportURL, input) : input;
     const response = await originalFetch.call(runtimeWindow, forwarded, init);

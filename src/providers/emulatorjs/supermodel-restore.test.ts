@@ -12,8 +12,10 @@ it("waits for the native Model 3 state load after a new Launch", async () => {
   playerWindow.EJS_Runtime({print: vi.fn(), postMainLoop: vi.fn()});
   const files = new Map<string, Uint8Array>();
   const toggleMainLoop = vi.fn();
+  let failLoad = false;
   const loadState = vi.fn(function (this: {print: typeof nativeConfig.print}) {
-    this.print("[INFO] [State]: Loading state \"game.state\", 4 bytes.");
+    this.print(failLoad ? "[ERROR] [State]: 加载状态失败于 \"game.state\"."
+      : "[INFO] [State]: 正在加载状态 \"game.state\", 4 字节.");
   });
   const manager = {
     FS: {unlink: (path: string) => {files.delete(path);}, writeFile: (path: string, bytes: Uint8Array) => {files.set(path, bytes);}},
@@ -35,5 +37,8 @@ it("waits for the native Model 3 state load after a new Launch", async () => {
   expect(files.has("/game.state")).toBe(false);
   expect(toggleMainLoop).toHaveBeenLastCalledWith(false);
   expect(loadState).toHaveBeenCalledOnce();
+  failLoad = true;
+  await expect(restoreManager.loadExplicitStateAndWait(Uint8Array.of(1, 2, 3, 4)))
+    .rejects.toThrow("PLAYER_SAVE_STATE_RESTORE_FAILED");
   detach(); hook.cleanup(); frame.remove();
 });

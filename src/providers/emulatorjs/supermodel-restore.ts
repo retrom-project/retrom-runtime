@@ -46,8 +46,8 @@ export function installSupermodelRestore(playerWindow: Window) {
   const observe = (args: unknown[]) => {
     const message = args.map(String).join(" ");
     if (!message.includes("[State]") || !message.includes("game.state")) {return;}
-    if (/fail|error/iu.test(message)) {pending?.finish(new Error("PLAYER_SAVE_STATE_RESTORE_FAILED"));}
-    else if (/loading state/iu.test(message) && pending) {pending.observed = true;}
+    if (/fail|error|失败|错误/iu.test(message)) {pending?.finish(new Error("PLAYER_SAVE_STATE_RESTORE_FAILED"));}
+    else if (/loading state|正在加载状态/iu.test(message) && pending) {pending.observed = true;}
   };
   const wrap = (factory: RuntimeFactory | undefined): RuntimeFactory | undefined => {
     if (!factory) {return undefined;}

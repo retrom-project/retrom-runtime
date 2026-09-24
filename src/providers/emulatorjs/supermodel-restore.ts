@@ -78,7 +78,7 @@ export function installSupermodelRestore(playerWindow: Window) {
       throw new Error("PLAYER_STATE_RESTORE_COMPATIBILITY_UNAVAILABLE");
     }
     const original = manager.loadExplicitStateAndWait;
-    manager.loadExplicitStateAndWait = async (state: Uint8Array, timeoutMs = 30_000) => {
+    manager.loadExplicitStateAndWait = async (state: Uint8Array, timeoutMs = 90_000) => {
       if (!active) {throw new Error("PLAYER_SESSION_ENDED");}
       if (!(state instanceof Uint8Array) || !state.byteLength || pending) {
         throw new Error("PLAYER_STATE_RESTORE_COMPATIBILITY_UNAVAILABLE");

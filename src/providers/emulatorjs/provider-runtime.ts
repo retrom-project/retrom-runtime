@@ -324,7 +324,8 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
       runtimeWindow.document.head.append(loader);
       this.loader = loader;
       loader.addEventListener("error", () => this.fail("PLAYER_RUNTIME_LOADER_FAILED"), {once: true});
-      this.startTimeout = runtimeWindow.setTimeout(() => this.fail("PLAYER_RUNTIME_START_TIMEOUT"), 30_000);
+      const startTimeoutMs = runtimeStartTimeout(this.implementation.runtimeCore, this.restorePayload !== null);
+      this.startTimeout = runtimeWindow.setTimeout(() => this.fail("PLAYER_RUNTIME_START_TIMEOUT"), startTimeoutMs);
       await this.startBarrier.promise;
       this.checkMountActive();
       this.clearStartBarrier();
@@ -622,6 +623,10 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
   }
 
   private emit(event: RuntimeEventV1) {for (const listener of this.listeners) {listener(event);}}
+}
+
+function runtimeStartTimeout(core: string, restoring: boolean) {
+  return core === "supermodel" && restoring ? 120_000 : 30_000;
 }
 
 function validInputFilterPolicy(value: RuntimeInputFilterPolicyV1 | null) {

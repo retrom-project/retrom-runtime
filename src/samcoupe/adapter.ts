@@ -24,6 +24,7 @@ export async function mountSamCoupe(config: SamCoupeParameters, target: HTMLElem
   const {bios, game, restoredDisk, extension} = await loadMedia(config, target, frameWindow, restore, progress, contentSession, signal);
   const diskPath = `/media/game.${extension}`;
   const writableDisk = extension !== "sbt";
+  let checkpointBaseline = new Uint8Array(restoredDisk ?? game);
   const {iframe, realm, canvas} = createFrame(target, frameWindow);
   const base = new URL(config.runtimeBaseUrl, frameWindow.document.baseURI);
   const ByteArray = realm.Uint8Array;
@@ -72,7 +73,9 @@ export async function mountSamCoupe(config: SamCoupeParameters, target: HTMLElem
 
   const availability = () => {
     if (stopped || engineError) {return {available: false, blocker: "NOT_READY", save} as const;}
-    return writableDisk && active().ccall("EMS_IsDiskModified", "number", ["number"], [0])
+    const module = active();
+    return writableDisk && (module.ccall("EMS_IsDiskModified", "number", ["number"], [0]) ||
+      !sameBytes(module.FS.readFile(diskPath), checkpointBaseline))
       ? {available: true, blocker: null, save} as const
       : {available: false, blocker: "UNCHANGED", save} as const;
   };
@@ -86,7 +89,7 @@ export async function mountSamCoupe(config: SamCoupeParameters, target: HTMLElem
     },
     acknowledgeCheckpoint: async checkpoint => {
       if (checkpoint.format !== saveFormat) {invalid();}
-      decodeSamDisk(config.game.sha256, checkpoint.bytes);
+      checkpointBaseline = decodeSamDisk(config.game.sha256, checkpoint.bytes);
       active().ccall("EMS_ClearDiskModified", null, ["number"], [0]);
     },
     getCheckpointAvailability: availability,
@@ -106,6 +109,10 @@ export async function mountSamCoupe(config: SamCoupeParameters, target: HTMLElem
 }
 
 function invalid(): never {throw new Error("SAMCOUPE_CONFIG_INVALID");}
+
+function sameBytes(left: Uint8Array, right: Uint8Array) {
+  return left.byteLength === right.byteLength && left.every((value, index) => value === right[index]);
+}
 
 async function loadMedia(config: SamCoupeParameters, target: HTMLElement, frameWindow: Window,
   restore: Uint8Array | null, progress: RuntimeProgressReporter, contentSession: AdapterContentSession,

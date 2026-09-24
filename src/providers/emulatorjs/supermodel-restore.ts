@@ -71,10 +71,10 @@ export function installSupermodelRestore(playerWindow: Window) {
   const attach = (manager: Manager) => {
     const {FS, functions, Module} = manager;
     const serialize = Module?.cwrap?.("save_state_info", "string", []);
-    const loadState = functions?.loadState;
-    const toggleMainLoop = manager.toggleMainLoop;
-    const writeFile = FS?.writeFile;
-    if (!writeFile || !loadState || !toggleMainLoop || !serialize) {
+    const loadState = functions?.loadState?.bind(functions);
+    const toggleMainLoop = manager.toggleMainLoop?.bind(manager);
+    const writeFile = FS?.writeFile?.bind(FS);
+    if (!FS || !writeFile || !loadState || !toggleMainLoop || !serialize) {
       throw new Error("PLAYER_STATE_RESTORE_COMPATIBILITY_UNAVAILABLE");
     }
     const original = manager.loadExplicitStateAndWait;

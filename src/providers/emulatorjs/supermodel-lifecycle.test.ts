@@ -18,7 +18,7 @@ it("keeps the Model 3 ZIP intact and reads its native state through the 4.3 fron
     reportDiagnostic: vi.fn(), signal: new AbortController().signal,
   }, {
     "assets/4.3.0-pre/data/cores/supermodel-wasm.data": {
-      sha256: "0fec2c536500685b0a9456f7c3ad3d01c3214696cbf7ef3c218b42dc7e3b2355", sizeBytes: 1365895,
+      sha256: "16e2f956d579a1eaefc9766d1106d9bc1b9b0ad21bea267d76b07d764a307577", sizeBytes: 1365789,
     },
   });
   try {

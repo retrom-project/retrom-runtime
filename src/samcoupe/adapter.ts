@@ -1,3 +1,5 @@
+import {sha256} from "@noble/hashes/sha2.js";
+
 import {eagerPolicy} from "../provider/content-policies.js";
 import {materializeFileBytes, type AdapterContentSession} from "../provider/content-inputs.js";
 import type {MountedRuntimeAdapter, RuntimeProgressReporter} from "../internal-adapter.js";
@@ -25,6 +27,8 @@ export async function mountSamCoupe(config: SamCoupeParameters, target: HTMLElem
   const diskPath = `/media/game.${extension}`;
   const writableDisk = extension !== "sbt";
   let checkpointBaseline = new Uint8Array(restoredDisk ?? game);
+  let observedDisk = new Uint8Array(checkpointBaseline);
+  let observedRevision: string | null = null;
   const {iframe, realm, canvas} = createFrame(target, frameWindow);
   const base = new URL(config.runtimeBaseUrl, frameWindow.document.baseURI);
   const ByteArray = realm.Uint8Array;
@@ -73,11 +77,20 @@ export async function mountSamCoupe(config: SamCoupeParameters, target: HTMLElem
 
   const availability = () => {
     if (stopped || engineError) {return {available: false, blocker: "NOT_READY", save} as const;}
+    if (!writableDisk) {return {available: false, blocker: "UNCHANGED", save} as const;}
     const module = active();
-    return writableDisk && (module.ccall("EMS_IsDiskModified", "number", ["number"], [0]) ||
-      !sameBytes(module.FS.readFile(diskPath), checkpointBaseline))
-      ? {available: true, blocker: null, save} as const
-      : {available: false, blocker: "UNCHANGED", save} as const;
+    // SimCoupe clears its dirty bit when the floppy motor stops and flushes
+    // sectors. Wait for that flush, then compare the durable disk file.
+    if (module.ccall("EMS_IsDiskModified", "number", ["number"], [0])) {
+      return {available: false, blocker: "BUSY", save} as const;
+    }
+    const disk = module.FS.readFile(diskPath);
+    if (sameBytes(disk, checkpointBaseline)) {return {available: false, blocker: "UNCHANGED", save} as const;}
+    if (!sameBytes(disk, observedDisk)) {
+      observedDisk = new Uint8Array(disk);
+      observedRevision = Array.from(sha256(disk), value => value.toString(16).padStart(2, "0")).join("");
+    }
+    return {available: true, blocker: null, revision: observedRevision!, save} as const;
   };
   return {
     canvasLayout: "CORE",
@@ -90,6 +103,8 @@ export async function mountSamCoupe(config: SamCoupeParameters, target: HTMLElem
     acknowledgeCheckpoint: async checkpoint => {
       if (checkpoint.format !== saveFormat) {invalid();}
       checkpointBaseline = decodeSamDisk(config.game.sha256, checkpoint.bytes);
+      observedDisk = new Uint8Array(checkpointBaseline);
+      observedRevision = null;
       active().ccall("EMS_ClearDiskModified", null, ["number"], [0]);
     },
     getCheckpointAvailability: availability,

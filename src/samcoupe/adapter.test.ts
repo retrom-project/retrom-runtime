@@ -59,9 +59,13 @@ it("loads the supplied ROM and restored disk, then checkpoints flushed disk writ
   expect(target.querySelector("iframe")?.contentDocument?.querySelector("canvas")?.id).toBe("canvas");
   expect(calls).toContain("EMS_InsertDisk");
   files.set("/media/game.mgt", new Uint8Array([4, 5, 6]));
+  expect(adapter.getCheckpointAvailability()).toMatchObject({available: false, blocker: "BUSY"});
   // SimCoupe flushes a disk when its motor stops, clearing its dirty flag.
   modified = false;
-  expect(adapter.getCheckpointAvailability().available).toBe(true);
+  const availability = adapter.getCheckpointAvailability();
+  expect(availability).toMatchObject({available: true, blocker: null, revision: expect.any(String)});
+  if (!availability.available) {throw new Error("SAM_SAVE_SHOULD_BE_AVAILABLE");}
+  expect(adapter.getCheckpointAvailability()).toMatchObject({revision: availability.revision});
   const checkpoint = await adapter.checkpoint();
   expect(checkpoint.format).toBe(saveFormat);
   expect(decodeSamDisk(gameSha256, checkpoint.bytes)).toEqual(new Uint8Array([4, 5, 6]));

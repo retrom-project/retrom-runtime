@@ -200,6 +200,7 @@ function deterministicGzip(bytes) {
 }
 
 export function providerMediaType(path) {
+  if (path === "assets/jsbeeb/site/index.html") {return "text/html; charset=utf-8";}
   if (path.endsWith(".js") || path.endsWith(".mjs")) {return "text/javascript; charset=utf-8";}
   if (path.endsWith(".css")) {return "text/css; charset=utf-8";}
   if (path.endsWith(".json")) {return "application/json; charset=utf-8";}

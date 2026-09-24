@@ -36,14 +36,14 @@ export async function mountJsbeeb(config: JsbeebParameters, target: HTMLElement,
   const game = await materializeFileBytes(contentSession, config.game, eagerPolicy(32 * 1024 * 1024), "GAME", signal,
     value => progress({phase: "PROJECT_CONTENT", loadedBytes: value.readyBytes, totalBytes: config.game.sizeBytes}));
   signal?.throwIfAborted();
-  const extension = /\.(ssd|dsd|adf|hfe)$/iu.exec(new URL(config.game.url, config.runtimeBaseUrl).pathname)?.[1];
+  const extension = /\.(ssd|dsd|adf|hfe)$/iu.exec(new URL(config.game.url, frameWindow.document.baseURI).pathname)?.[1];
   if (!extension) {invalid();}
   const url = URL.createObjectURL(new Blob([new Uint8Array(game)]));
   const host = frameWindow as JsbeebWindow;
   const iframe = frameWindow.document.createElement("iframe");
   iframe.style.cssText = "width:100%;height:100%;border:0";
   iframe.setAttribute("allow", "autoplay; gamepad");
-  const entry = new URL("index.html", config.runtimeBaseUrl);
+  const entry = new URL("index.html", new URL(config.runtimeBaseUrl, frameWindow.document.baseURI));
   entry.searchParams.set("retrom", "1");
   entry.searchParams.set("disc1", `${url}#game.${extension.toLowerCase()}`);
   entry.searchParams.set("autoboot", "1");

@@ -25,7 +25,7 @@ export async function mountSamCoupe(config: SamCoupeParameters, target: HTMLElem
   const diskPath = `/media/game.${extension}`;
   const writableDisk = extension !== "sbt";
   const {iframe, realm, canvas} = createFrame(target, frameWindow);
-  const base = new URL(config.runtimeBaseUrl, frameWindow.location.href);
+  const base = new URL(config.runtimeBaseUrl, frameWindow.document.baseURI);
   const ByteArray = realm.Uint8Array;
   let stopped = false, startedAt = 0, engineError: Error | null = null;
   let input: ReturnType<typeof installSamGamepad> | null = null;
@@ -113,7 +113,7 @@ async function loadMedia(config: SamCoupeParameters, target: HTMLElement, frameW
   if (target.ownerDocument !== frameWindow.document || config.bios.length !== 1 ||
     config.bios[0].logicalName !== "samcoupe.rom" ||
     config.bios[0].virtualPath !== "Resource/samcoupe.rom") {invalid();}
-  const extension = /\.(dsk|mgt|sad|sbt)$/iu.exec(new URL(config.game.url, config.runtimeBaseUrl).pathname)?.[1]?.toLowerCase();
+  const extension = /\.(dsk|mgt|sad|sbt)$/iu.exec(new URL(config.game.url, frameWindow.document.baseURI).pathname)?.[1]?.toLowerCase();
   if (!extension || config.game.sizeBytes > maxDiskBytes) {invalid();}
   const restoredDisk = restore ? decodeSamDisk(config.game.sha256, restore) : null;
   const bios = await materializeFileBytes(contentSession, config.bios[0], eagerPolicy(32768), "FIRMWARE", signal);

@@ -24,7 +24,7 @@ it("boots with verified external ROM bytes and restores a checkpoint in a new fr
       closeFile: async () => undefined,
     };
     const mounted = mountJsbeeb({game: {url: "/runtime/content/game/game.ssd", sha256: "b".repeat(64), sizeBytes: 3},
-      bios, runtimeBaseUrl: "http://localhost/assets/jsbeeb/site/"}, target, frameWindow,
+      bios, runtimeBaseUrl: "/assets/jsbeeb/site/"}, target, frameWindow,
       new Uint8Array([5, 6]), () => undefined, session as never);
     await vi.waitFor(() => expect(target.querySelector("iframe")).not.toBeNull());
     const iframe = target.querySelector("iframe")!;

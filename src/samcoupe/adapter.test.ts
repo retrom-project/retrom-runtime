@@ -51,7 +51,7 @@ it("loads the supplied ROM and restored disk, then checkpoints flushed disk writ
     game: {url: "/runtime/content/game/game.mgt", sha256: gameSha256, sizeBytes: 3},
     bios: [{url: "http://localhost/samcoupe.rom", sha256: "b".repeat(64), sizeBytes: 32768,
       logicalName: "samcoupe.rom", virtualPath: "Resource/samcoupe.rom"}],
-    runtimeBaseUrl: "http://localhost/assets/samcoupeweb/",
+    runtimeBaseUrl: "/assets/samcoupeweb/",
   }, target, frameWindow, encodeSamDisk(gameSha256, restored), () => undefined, session as never,
     () => undefined);
   expect(files.get("/Resource/samcoupe.rom")?.byteLength).toBe(32768);

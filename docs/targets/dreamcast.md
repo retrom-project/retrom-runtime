@@ -11,7 +11,7 @@ WinCE/MMU games and disc switching are outside this target. NAOMI, NAOMI 2,
 and Atomiswave cartridges use separate Flycast Targets described in
 [`flycast-arcade.md`](./flycast-arcade.md).
 
-The core comes from `retrom-project/flycast-wasm` release `retrom-core-1.0-r1`.
+The core comes from `retrom-project/flycast-wasm` release `retrom-core-1.0-r2`.
 `src/providers/emulatorjs/source-catalog.ts` pins its repository, tag commit, asset digests,
 sizes and adapter ABI. Provider builds verify the published release metadata and license texts.
 

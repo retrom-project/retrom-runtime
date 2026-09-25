@@ -49,6 +49,8 @@ const promotedCores = [
   ["uzem", "libretro-uzem", "gd991ee94547c", "LICENSE"],
   ["bsnes", "bsnes-libretro", "g4b344745e387", "LICENSE.txt"],
   ["neocd", "neocd_libretro", "g3118c6901787", "LICENSE.md"],
+  ["puae", "libretro-uae", "g2245d3443cc1", "COPYING"],
+  ["genesis_plus_gx", "Genesis-Plus-GX", "g63f0c6870601", "LICENSE.txt"],
   ["vecx", "libretro-vecx", "g8f671cc9d737", "LICENSE.md"],
   ["81", "81-libretro", "g86decf3ee61e", "LICENSE"],
   ["cap32", "libretro-cap32", "g310cc579b79b", "COPYING"],
@@ -60,17 +62,21 @@ const promotedCores = [
 it.each(promotedCores)("verifies the published %s core, source archive and variant metadata", (core, repo, baseline, license) => {
   const repository = `https://github.com/retrom-project/${repo}`, tag = `retrom-core-${baseline}-r1`;
   const variant = core.startsWith("vice_");
+  const release = core === "bsnes" ? "4.3.0-pre" : "4.2.3";
   const report = variant ? `${core}-release.json` : "rpg-runtime-release.json";
   const source = variant ? `${core}-source.tar.gz` : "source.tar.gz";
-  const assets = [`${core}-wasm.data`, license, source, report].map(filename => ({filename,
+  const coreAsset = core === "puae" ? "puae-thread-wasm.data" : `${core}-wasm.data`;
+  const assets = [coreAsset, license, source, report].map(filename => ({filename,
     sha256: "b".repeat(64), sizeBytes: 12, url: `${repository}/releases/download/${tag}/${filename}`}));
   const fork = {runtimeCore: core, repository, tag, commit: "a".repeat(40), adapterAbi: "emulatorjs-state-v1", assets};
   const metadata = {...fork, schemaVersion: 1, assets: assets.filter(a => a.filename !== report).map(a => ({
     filename: a.filename, observedSha256: a.sha256, sizeBytes: a.sizeBytes,
   }))};
-  expect(forkMetadataPath(fork)).toBe(`${core === "bsnes" ? "4.3.0-pre" : "4.2.3"}/data/cores/reports/${core}.json`);
+  expect(forkMetadataPath(fork)).toBe(`${release}/data/cores/reports/${core}.json`);
   expect(forkReleaseFiles({forks: [fork]}).map((f: {destination: string}) => f.destination))
-    .toContain(`${core === "bsnes" ? "4.3.0-pre" : "4.2.3"}/licenses/forks/${core}/${source}`);
+    .toContain(`${release}/data/cores/${coreAsset}`);
+  expect(forkReleaseFiles({forks: [fork]}).map((f: {destination: string}) => f.destination))
+    .toContain(`${release}/licenses/forks/${core}/${source}`);
   expect(() => verifyForkMetadata(fork, metadata)).not.toThrow();
   expect(() => forkReleaseFiles({forks: [{...fork, assets: assets.filter(a => a.filename !== source)}]})).toThrow();
   expect(() => verifyForkMetadata(fork, {...metadata, assets: metadata.assets.slice(1)})).toThrow();

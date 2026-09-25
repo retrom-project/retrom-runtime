@@ -1,7 +1,7 @@
 import {buildContentAssets} from "./content-io/build-assets.mjs";
 import {developmentForkFiles, requireDevelopmentForkMode, verifyDevelopmentForkMetadata} from "./emulatorjs-development-forks.mjs";
 import {createHash} from "node:crypto";
-import {lstat, mkdir, mkdtemp, readFile, readdir, rm} from "node:fs/promises";
+import {lstat, mkdir, mkdtemp, readFile, readdir, rm, writeFile} from "node:fs/promises";
 import {fileURLToPath} from "node:url";
 import {isAbsolute, join, parse, relative} from "node:path";
 
@@ -65,8 +65,13 @@ export async function buildEmulatorJsProviderBundle(input) {
   const assetIndex = {};
   for (const assetPath of uniqueAssetPaths(input.manifest)) {
     const source = generated.has(assetPath) ? join(generatedRoot,assetPath.split("/").at(-1)) : join(input.sourceRoot, assetPath.replace(/^assets\//u, ""));
-    const contents = await readRegularFile(source);
-    assetSources.set(assetPath, source);
+    let contents = await readRegularFile(source);
+    if (assetPath === "assets/4.2.3/data/src/emulator.js") {
+      contents = patchSeekableStartup(contents);
+      const patched = join(temporaryRoot, "emulatorjs-seekable-startup.js");
+      await writeFile(patched, contents);
+      assetSources.set(assetPath, patched);
+    } else {assetSources.set(assetPath, source);}
     assetIndex[assetPath] = {sha256: sha256(contents), sizeBytes: contents.byteLength};
   }
   verifyEmulatorJsImplementationAssets(input.definition, assetIndex);
@@ -106,6 +111,27 @@ export async function buildEmulatorJsProviderBundle(input) {
   } finally {
     await rm(temporaryRoot, {force: true, recursive: true});
   }
+}
+
+/** Asyncify may suspend callMain while the shared FS obtains a Content I/O range.
+ * EJS must not resume the frame loop until that same call has finished rewinding. */
+export function patchSeekableStartup(contents) {
+  const source = contents.toString("utf8");
+  const oldDeclaration = "    startGame() {";
+  const oldCall = "            this.Module.callMain(args);\n            if (typeof this.config.softLoad";
+  if (source.split(oldDeclaration).length !== 2 || source.split(oldCall).length !== 2) {
+    throw new Error("PROVIDER_RELEASE_BUILD_ASSET_MISMATCH");
+  }
+  return Buffer.from(source.replace(oldDeclaration, "    async startGame() {").replace(oldCall,
+    "            const contentIOAsyncify = this.Module.retromContentIOAsyncify?.();\n" +
+    "            if (contentIOAsyncify) this.Module.retromContentIOStartupPending = true;\n" +
+    "            try {\n" +
+    "                this.Module.callMain(args);\n" +
+    "                if (contentIOAsyncify?.currData) await contentIOAsyncify.whenDone();\n" +
+    "            } finally {\n" +
+    "                this.Module.retromContentIOStartupPending = false;\n" +
+    "            }\n" +
+    "            if (typeof this.config.softLoad"));
 }
 
 function verifyEmulatorJsImplementationAssets(definition, assetIndex) {

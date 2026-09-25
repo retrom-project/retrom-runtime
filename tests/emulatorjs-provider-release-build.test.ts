@@ -15,13 +15,16 @@ import type {DevelopmentFork} from "../scripts/emulatorjs-development-forks.mjs"
 import {forkReleaseFiles} from "../scripts/emulatorjs-fork-releases.mjs";
 
 describe("EmulatorJS Provider release build", () => {
-  it("builds all 71 targets from one verified materialized input without downloads", {timeout: 30_000}, async () => {
+  it("builds all 72 targets from one verified materialized input without downloads", {timeout: 30_000}, async () => {
     const root = await temporaryRoot();
     try {
       const sourceRoot = join(root, "source");
       const manifest = projectProviderManifest(emulatorJsProviderDefinition);
       for (const assetPath of new Set(manifest.targets.flatMap((target) => target.assetPaths))) {
-        await write(join(sourceRoot, assetPath.replace(/^assets\//u, "")), `fixture:${assetPath}\n`);
+        const contents = assetPath === "assets/4.2.3/data/src/emulator.js"
+          ? "    startGame() {\n            this.Module.callMain(args);\n            if (typeof this.config.softLoad) {}\n    }\n"
+          : `fixture:${assetPath}\n`;
+        await write(join(sourceRoot, assetPath.replace(/^assets\//u, "")), contents);
       }
       for (const release of emulatorJsSourceCatalog.releases) {
         for (const path of release.licenseRoots.filter((path) => path.startsWith("licenses/"))) {
@@ -60,7 +63,7 @@ describe("EmulatorJS Provider release build", () => {
         providerId: string; targets: unknown[];
       };
       expect(provider.providerId).toBe("emulatorjs");
-      expect(provider.targets).toHaveLength(71);
+      expect(provider.targets).toHaveLength(72);
       const provenance = JSON.parse(await readFile(join(result.bundleRoot, "provenance.json"), "utf8"));
       expect(provenance.forks).toEqual(sourceCatalog.forks);
       expect(await readFile(join(result.bundleRoot,

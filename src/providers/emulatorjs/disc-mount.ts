@@ -29,6 +29,19 @@ export async function mountNeoCDRange(runtimeWindow: EjsWindow, disc: {url: stri
   return range;
 }
 
+export async function mountSeekableContentRange(runtimeWindow: EjsWindow, disc: {url: string; sha256: string; sizeBytes: number},
+  signal: AbortSignal, fail: (error: Error) => void, session: ContentSessionClient): Promise<ReturnType<typeof createNeoCDRange>> {
+  const policy = rangePolicy("ASYNC", contentLimits.signedDisc);
+  const reader = await session.open(fileContentSource(disc, policy), policy, signal);
+  const range = createNeoCDRange(disc, reader, fail);
+  // The emulator may inspect both ends of a disc before its first frame.
+  try {await Promise.all([range.read(0, 1), range.read(disc.sizeBytes - 1, 1)]);}
+  catch (error) {await range.dispose(); throw error;}
+  const FileConstructor = (runtimeWindow as Window & typeof globalThis).File;
+  runtimeWindow.EJS_gameUrl = new FileConstructor(["RETROM_CONTENT_IO_FILE_V1"], range.filename);
+  return range;
+}
+
 export async function mountFlycastRange(runtimeWindow: EjsWindow,
   disc: {url: string; sha256: string; sizeBytes: number}, targetId: string,
   signal: AbortSignal, fail: (error: Error) => void, session: ContentSessionClient) {
@@ -53,11 +66,17 @@ export function flycastContentName(url: string, sha256: string, targetId: string
   return name;
 }
 
+export function hasSeekableGame(envelope: LaunchEnvelopeV1): boolean {
+  return envelope.resources.some(entry => entry.role === "game" && entry.kind === "SEEKABLE_BLOB");
+}
+
 export async function configureContentDisc(runtimeWindow: EjsWindow, envelope: LaunchEnvelopeV1, core: string,
   signal: AbortSignal, session: ContentSessionClient | null, fail: (error: Error) => void) {
-  if (core !== "flycast" && core !== "neocd") {return {range: null, cleanup: null};}
+  const seekable = hasSeekableGame(envelope);
+  if (!seekable) {return {range: null, cleanup: null};}
   const game = resource(envelope, "game", "SEEKABLE_BLOB");
   if (core === "neocd") {return {range: await mountNeoCDRange(runtimeWindow, game, signal, fail, requireContentSession(session)), cleanup: null};}
+  if (core !== "flycast") {return {range: await mountSeekableContentRange(runtimeWindow, game, signal, fail, requireContentSession(session)), cleanup: null};}
   const cleanup = installFlycastCompatibility(runtimeWindow);
   try {
     return {range: await mountFlycastRange(runtimeWindow, game, envelope.runtime.targetId,

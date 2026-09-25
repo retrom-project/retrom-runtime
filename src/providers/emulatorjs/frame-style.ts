@@ -1,7 +1,8 @@
 import {PlayerRuntimeError} from "../../provider/errors.js";
 const frameStyleText = `
 html,body,#retrom-emulator,.ejs_parent,.ejs_game,.ejs_canvas_parent{width:100%!important;height:100%!important;margin:0!important;overflow:hidden;background:#05060a}
-.ejs_canvas_parent{display:grid!important;place-items:center!important}
+.ejs_canvas_parent{display:grid!important;grid-template-columns:minmax(0,1fr)!important;grid-template-rows:minmax(0,1fr)!important;place-items:center!important}
+.ejs_canvas_parent>.ejs_canvas{min-width:0!important;min-height:0!important}
 canvas{display:block;max-width:none!important;max-height:none!important;margin:auto!important;image-rendering:pixelated!important}
 .ejs_virtualGamepad_open{display:none!important}
 .ejs_virtualGamepad_left,.ejs_virtualGamepad_right{bottom:20px!important}

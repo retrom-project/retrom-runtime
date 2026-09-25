@@ -65,13 +65,13 @@ describe("EmulatorJS Provider declarations", () => {
       expect(target.checkpoint?.writeFormat).toBe("emulatorjs-state-v1-storage-v1");
     }
   });
-  it("uses last declaration wins for exactly seventy-one current core targets", () => {
+  it("uses last declaration wins for exactly seventy-two current core targets", () => {
     const manifest = projectProviderManifest(emulatorJsProviderDefinition);
     expect(validateProviderManifest(manifest)).toBe(manifest);
     expect(manifest.providerId).toBe("emulatorjs");
     expect(manifest.providerVersion).toBe("0.0.0-dev");
-    expect(manifest.targets).toHaveLength(71);
-    expect(new Set(manifest.targets.map((target) => target.id)).size).toBe(71);
+    expect(manifest.targets).toHaveLength(72);
+    expect(new Set(manifest.targets.map((target) => target.id)).size).toBe(72);
     for (const targetId of ["dosbox-pure", "genesis-plus-gx-wide", "azahar", "freeintv"]) {
       const target = emulatorJsProviderDefinition.targets.find((entry) => entry.id === targetId);
       expect(target?.implementation.release).toBe("4.3.0-pre");
@@ -88,10 +88,11 @@ describe("EmulatorJS Provider declarations", () => {
       const target = emulatorJsProviderDefinition.targets.find((entry) => entry.id === targetId);
       expect(target, targetId).toBeDefined();
       expect(target?.implementation).toMatchObject({
-        artifactFlavor: ["vice-xvic", "virtualjaguar"].includes(targetId) ? "OVERRIDE" : "WASM", contentKinds: ["SINGLE_FILE"], release: "4.2.3",
+        artifactFlavor: targetId === "puae" ? "THREAD_WASM" : ["vice-xvic", "virtualjaguar"].includes(targetId) ? "OVERRIDE" : "WASM",
+        contentKinds: ["SINGLE_FILE"], release: "4.2.3",
       });
       expect(target?.discSwitch, targetId).toBe(false);
-      expect(target?.requiresThreads, targetId).toBe(false);
+      expect(target?.requiresThreads, targetId).toBe(targetId === "puae");
     }
     expect(emulatorJsProviderDefinition.targets.find((entry) => entry.id === "fuse")?.implementation.defaultOptions)
       .toMatchObject({keyboardInput: "enabled"});

@@ -60,6 +60,10 @@ const adapters = [
     checkpoint: {readFormats: ["lutro-native-v1"], writeFormat: "lutro-native-v1", semantics: "GAME_SAVE"},
     id: "emulatorjs-lutro", kind: "EMULATORJS_4_2_3",
   }),
+  defineAdapter({
+    abi: "emulatorjs-state-v1", capabilities: {...capabilities, checkpoint: false},
+    checkpoint: null, id: "emulatorjs-daphne", kind: "EMULATORJS_4_2_3", saveSemantics: "NO_SAVE",
+  }),
 ] as const;
 
 const inputs = [

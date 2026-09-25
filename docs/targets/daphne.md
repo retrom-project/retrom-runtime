@@ -1,0 +1,7 @@
+# Daphne admission status
+
+The Daphne fork has a browser core candidate, but no public Provider Target is registered yet. Its libretro implementation reports `retro_serialize_size() == 0` and rejects serialize/unserialize. The user explicitly allowed Daphne, and only Daphne, to ship without save support. The staged adapter therefore declares `saveSemantics: "NO_SAVE"`, `checkpoint: null`, and `capabilities.checkpoint: false`. This does not relax any other Target's save requirement.
+
+The remaining admission boundary is content loading. A Daphne game needs its ROM ZIP, a framefile, and laserdisc video/audio files in the paths expected by the core. These media files can be hundreds of MiB and the video reader seeks by offset. The ordinary EmulatorJS external-file loader materializes files before boot, so it is not an acceptable final path for Daphne. Connect the core's read/seek operations to the shared Content I/O Range reader and validate bounded requests without a whole-media download before registering the Target.
+
+After content loading is in place, verify the standard gamepad, Review Preview, Product Launch, video/audio, exit cleanup, and the Host's explicit no-save controls with an authorized game. Do not publish a Target or claim product support from the core build or adapter declaration alone. If native progress save support becomes available later, replace NO_SAVE only after a distinct Launch restore has been demonstrated.

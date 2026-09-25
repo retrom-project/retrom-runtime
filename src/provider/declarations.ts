@@ -80,6 +80,7 @@ export type AdapterDeclaration = {
   id: string;
   kind: string;
   abi: string;
+  saveSemantics?: "NO_SAVE";
   checkpoint: {
     writeFormat: string;
     readFormats: readonly string[];
@@ -122,6 +123,11 @@ export type ProviderDefinition = {
 };
 
 export function defineAdapter<const Definition extends AdapterDeclaration>(definition: Definition): Definition {
+  const hasCheckpoint = definition.checkpoint !== null;
+  const noSave = definition.saveSemantics === "NO_SAVE";
+  if (noSave === hasCheckpoint || definition.capabilities.checkpoint !== hasCheckpoint) {
+    throw new Error("PROVIDER_NO_SAVE_INVALID");
+  }
   return definition;
 }
 
@@ -134,6 +140,7 @@ export function defineTarget<const Definition extends TargetDeclaration>(definit
 }
 
 export function defineProvider<const Definition extends ProviderDefinition>(definition: Definition): Definition {
+  for (const adapter of definition.adapters) {defineAdapter(adapter);}
   const adapterIds = new Set(definition.adapters.map((adapter) => adapter.id));
   if (adapterIds.size !== definition.adapters.length) {throw new Error("PROVIDER_ADAPTER_DUPLICATE");}
   const targetIds = new Set(definition.targets.map((target) => target.id));

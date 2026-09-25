@@ -56,10 +56,7 @@ import {decodeStoredCheckpoint, encodeStoredCheckpoint} from "../../provider/che
 import {installEmulatorJsOutputViewport} from "./output-viewport.js";
 import {acknowledgeLutroStoredSave, installLutroNativeRestore, LutroNativeSaveTracker} from "./lutro-native-save.js";
 
-import {configuredGlobals} from "./emulator-instance.js";
-import type {EjsInstance, EjsWindow} from "./emulator-instance.js";
-
-
+import {configuredGlobals, type EjsInstance, type EjsWindow} from "./emulator-instance.js";
 
 export async function createEmulatorJsPlayer(
   envelope: LaunchEnvelopeV1,
@@ -156,6 +153,7 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
   }
 
   async checkpoint() {
+    if (!this.envelope.runtime.capabilities.checkpoint) {throw capabilityError();}
     if (this.neoCDRange) {await this.neoCDRange.idle();}
     const manager = this.requireInstance().gameManager;
     const maximum = this.envelope.runtime.checkpoint?.maxBytes ?? 0;

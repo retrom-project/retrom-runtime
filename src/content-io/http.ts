@@ -44,8 +44,8 @@ async function fetchRangeRegion(source: ContentSourceV1, state: ContentObjectSta
       try {return await rangeAttempt(source, state, generation, range, scope.signal, dependencies, destination, attempt > 0);}
       catch (error) {
         checkSignal(scope.signal);
-        if (!(error instanceof ContentIOError) || !error.retryable || attempt >= 1) {throw error;}
-        const waitMs = error instanceof RetryResponse ? error.waitMs : 250;
+        if (!(error instanceof ContentIOError) || !error.retryable || attempt >= 7) {throw error;}
+        const waitMs = error instanceof RetryResponse && error.waitMs !== null ? error.waitMs : Math.min(250 * 2 ** attempt, 2000);
         if (waitMs >= remainingMs - (dependencies.now() - started)) {throw error;}
         await dependencies.wait(waitMs, scope.signal);
       }
@@ -110,8 +110,8 @@ async function wholeResponse(source: ContentSourceV1, state: ContentObjectState,
     } catch (error) {
       void response?.body?.cancel().catch(() => undefined);
       checkSignal(signal);
-      if (!(error instanceof ContentIOError) || !error.retryable || attempt >= 1) {throw error;}
-      const waitMs = error instanceof RetryResponse ? error.waitMs : 250;
+      if (!(error instanceof ContentIOError) || !error.retryable || attempt >= 7) {throw error;}
+      const waitMs = error instanceof RetryResponse && error.waitMs !== null ? error.waitMs : Math.min(250 * 2 ** attempt, 2000);
       if (waitMs >= 20000 - (dependencies.now() - started)) {throw error;}
       await dependencies.wait(waitMs, signal);
     }
@@ -144,12 +144,12 @@ function commonHeaders(response: Response, source: ContentSourceV1, signal: Abor
   if (response.status === 412) {fail("IDENTITY_CHANGED");}
   if ([408, 429, 502, 503, 504].includes(response.status)) {
     const value = response.headers.get("Retry-After");
-    const retry = value === null ? 250 : /^\d+$/u.test(value) ? Number(value) * 1000 : Date.parse(value) - dependencies.wallNow();
-    throw new RetryResponse(Number.isFinite(retry) ? Math.max(250, retry) : 250);
+    const retry = value === null ? null : /^\d+$/u.test(value) ? Number(value) * 1000 : Date.parse(value) - dependencies.wallNow();
+    throw new RetryResponse(retry === null || !Number.isFinite(retry) ? null : Math.max(250, retry));
   }
 }
 class RetryResponse extends ContentIOError {
-  constructor(readonly waitMs: number) {super("NETWORK_FAILED", {retryable: true});}
+  constructor(readonly waitMs: number | null) {super("NETWORK_FAILED", {retryable: true});}
 }
 function validateRepresentation(response: Response) {
   const encoding = response.headers.get("Content-Encoding");

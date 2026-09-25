@@ -40,7 +40,7 @@ export async function buildPFBProviderDev(input) {
       .map(({path, contents}) => fileDescriptor(path, contents));
     const pfbCoreInputs = Object.fromEntries(coreFiles.filter((file) => file.path.endsWith("-wasm.data"))
       .map((file) => {
-        const id = file.path.split("/").at(-1).replace(/-wasm\.data$/u, "");
+        const id = file.path.split("/").at(-1).replace(/(?:-thread)?-wasm\.data$/u, "");
         const report = coreFiles.find((entry) => entry.path === `assets/4.2.3/data/cores/reports/${id}.json`);
         return [id, {sha256: file.sha256, sizeBytes: file.sizeBytes, artifactSetSha256: report.sha256}];
       }));

@@ -50,7 +50,7 @@ export function runtimeGamePolicy(id: string): ContentInputPolicyV1 {
   return {...policy};
 }
 export function emulatorContentPolicies(core: string): Readonly<Record<string, ContentInputPolicyV1>> {
-  const game = core === "neocd" ? rangePolicy("ASYNC", limits.signedDisc) :
+  const game = ["neocd", "genesis_plus_gx_cd"].includes(core) ? rangePolicy("ASYNC", limits.signedDisc) :
     core === "flycast" ? eagerPolicy(limits.signedDisc, {result: "BLOB"}) : upstream("emulatorjs-loader");
   return {game, discs: {...game}, bios: upstream("emulatorjs-loader"), parent: upstream("emulatorjs-loader"), external: upstream("emulatorjs-loader")};
 }

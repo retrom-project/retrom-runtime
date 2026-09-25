@@ -1,6 +1,12 @@
 import {inputObserver} from "./input-observations.js";
 import type {RuntimeInputFilterPolicyV1} from "./module-api.js";
 
+export function validInputFilterPolicy(value: RuntimeInputFilterPolicyV1 | null) {
+  return value === null || typeof value.suppressInput === "boolean" &&
+    (value.activeGamepadIndex === null || Number.isSafeInteger(value.activeGamepadIndex) &&
+      value.activeGamepadIndex >= 0 && value.activeGamepadIndex <= 255);
+}
+
 type ReservedButton = "select" | "start";
 type Candidate = {first: ReservedButton; secondChord: boolean; startedAtMs: number};
 type GamepadSnapshot = Pick<Gamepad, "axes" | "buttons" | "connected" | "id" | "index" | "mapping" | "timestamp">;

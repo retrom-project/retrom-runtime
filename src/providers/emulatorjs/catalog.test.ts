@@ -26,6 +26,17 @@ describe("EmulatorJS Provider declarations", () => {
       discSwitch: false, requiresThreads: false});
   });
 
+  it("routes Sega CD CHD through a separate bounded Content I/O target", () => {
+    const cart = emulatorJsProviderDefinition.targets.find(entry => entry.id === "genesis-plus-gx")!;
+    const disc = emulatorJsProviderDefinition.targets.find(entry => entry.id === "genesis-plus-gx-cd")!;
+    expect(cart.inputs.find(input => input.role === "game")?.kind).toBe("ROM_BLOB");
+    expect(disc.inputs.find(input => input.role === "game")?.kind).toBe("SEEKABLE_BLOB");
+    expect(disc.contentIO.game).toMatchObject({mode: "RANGE", bridge: "ASYNC", result: "READER"});
+    expect(disc.implementation.runtimeCore).toBe("genesis_plus_gx");
+    expect(disc.implementation.coreSha256).toBe(cart.implementation.coreSha256);
+    expect(disc.implementation.defaultOptions.genesis_plus_gx_cd_precache).toBe("disabled");
+  });
+
   it("gives Flycast a bounded, distinct instant checkpoint contract and single-disc target", () => {
     const manifest = projectProviderManifest(emulatorJsProviderDefinition);
     const target = manifest.targets.find((entry) => entry.id === "flycast")!;
@@ -48,13 +59,13 @@ describe("EmulatorJS Provider declarations", () => {
       expect(target.checkpoint?.writeFormat).toBe("emulatorjs-state-v1-storage-v1");
     }
   });
-  it("uses last declaration wins for exactly sixty-eight current core targets", () => {
+  it("uses last declaration wins for exactly sixty-nine current core targets", () => {
     const manifest = projectProviderManifest(emulatorJsProviderDefinition);
     expect(validateProviderManifest(manifest)).toBe(manifest);
     expect(manifest.providerId).toBe("emulatorjs");
     expect(manifest.providerVersion).toBe("0.0.0-dev");
-    expect(manifest.targets).toHaveLength(68);
-    expect(new Set(manifest.targets.map((target) => target.id)).size).toBe(68);
+    expect(manifest.targets).toHaveLength(69);
+    expect(new Set(manifest.targets.map((target) => target.id)).size).toBe(69);
     for (const targetId of ["dosbox-pure", "genesis-plus-gx-wide", "azahar", "freeintv"]) {
       const target = emulatorJsProviderDefinition.targets.find((entry) => entry.id === targetId);
       expect(target?.implementation.release).toBe("4.3.0-pre");
@@ -71,10 +82,10 @@ describe("EmulatorJS Provider declarations", () => {
       const target = emulatorJsProviderDefinition.targets.find((entry) => entry.id === targetId);
       expect(target, targetId).toBeDefined();
       expect(target?.implementation).toMatchObject({
-        artifactFlavor: ["vice-xvic", "virtualjaguar"].includes(targetId) ? "OVERRIDE" : "WASM", contentKinds: ["SINGLE_FILE"], release: "4.2.3",
+        artifactFlavor: targetId === "puae" ? "THREAD_WASM" : ["vice-xvic", "virtualjaguar"].includes(targetId) ? "OVERRIDE" : "WASM", contentKinds: ["SINGLE_FILE"], release: "4.2.3",
       });
       expect(target?.discSwitch, targetId).toBe(false);
-      expect(target?.requiresThreads, targetId).toBe(false);
+      expect(target?.requiresThreads, targetId).toBe(targetId === "puae");
     }
     expect(emulatorJsProviderDefinition.targets.find((entry) => entry.id === "fuse")?.implementation.defaultOptions)
       .toMatchObject({keyboardInput: "enabled"});

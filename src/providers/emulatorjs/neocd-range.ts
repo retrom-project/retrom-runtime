@@ -10,6 +10,7 @@ export function createNeoCDRange(disc: Disc, reader: ContentReaderV1, fail: (err
 }
 export class NeoCDRange {
   readonly filename: string;
+  readonly sizeBytes: number;
   private readonly waiters = new Set<() => void>();
   private suspended = 0;
   private closing: Promise<void> | undefined;
@@ -19,6 +20,7 @@ export class NeoCDRange {
       throw new ContentIOError("SOURCE_INVALID");
     }
     this.filename = `${disc.sha256}.chd`;
+    this.sizeBytes = disc.sizeBytes;
   }
   fail(error: Error) {if (!this.closing) {this.onError(error);}}
   begin() {if (this.closing) {throw new ContentIOError("ABORTED");} ++this.suspended;}

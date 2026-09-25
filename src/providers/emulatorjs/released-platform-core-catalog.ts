@@ -1,4 +1,70 @@
 export const emulatorJsPlatformCoreForks = [
+  {
+    "repository": "https://github.com/retrom-project/libretro-uae",
+    "tag": "retrom-core-g2245d3443cc1-r3",
+    "commit": "59f7420f5d80c8747a5f2b0097dbce1cbbffb7db",
+    "adapterAbi": "emulatorjs-state-v1",
+    "runtimeCore": "puae",
+    "assets": [
+      {
+        "filename": "COPYING",
+        "sha256": "865e1b7f9aaf5dbdb65ea4af487475d7e252331805375abbdaa8ab4cc25f39ac",
+        "sizeBytes": 53228,
+        "url": "https://github.com/retrom-project/libretro-uae/releases/download/retrom-core-g2245d3443cc1-r3/COPYING"
+      },
+      {
+        "filename": "puae-thread-wasm.data",
+        "sha256": "d06a26d1954db82c9ba9b8e16de9aed4190ef051db2d401982b728167929e006",
+        "sizeBytes": 4177580,
+        "url": "https://github.com/retrom-project/libretro-uae/releases/download/retrom-core-g2245d3443cc1-r3/puae-thread-wasm.data"
+      },
+      {
+        "filename": "rpg-runtime-release.json",
+        "sha256": "19ae54ea4a0ec3ec44e1e29984b8abf41f1d8e876d8ae96642c81f17bf5383f9",
+        "sizeBytes": 798,
+        "url": "https://github.com/retrom-project/libretro-uae/releases/download/retrom-core-g2245d3443cc1-r3/rpg-runtime-release.json"
+      },
+      {
+        "filename": "source.tar.gz",
+        "sha256": "6ab56b1eab7988891651df34d70ac750d6470be46dc35eca899bbd6ed5985b10",
+        "sizeBytes": 17620740,
+        "url": "https://github.com/retrom-project/libretro-uae/releases/download/retrom-core-g2245d3443cc1-r3/source.tar.gz"
+      }
+    ]
+  },
+  {
+    "repository": "https://github.com/retrom-project/Genesis-Plus-GX",
+    "tag": "retrom-core-g63f0c6870601-r2",
+    "commit": "09bff8874e0043e2bab596db29a3bced4abf65cd",
+    "adapterAbi": "emulatorjs-state-v1",
+    "runtimeCore": "genesis_plus_gx",
+    "assets": [
+      {
+        "filename": "LICENSE.txt",
+        "sha256": "f0554c33999df90b0ee851df286a9de3ae190d0e8bf74283f01f37d2b1d09025",
+        "sizeBytes": 87771,
+        "url": "https://github.com/retrom-project/Genesis-Plus-GX/releases/download/retrom-core-g63f0c6870601-r2/LICENSE.txt"
+      },
+      {
+        "filename": "genesis_plus_gx-wasm.data",
+        "sha256": "3caf013fe2d778f2f112d07d1aa8c98178e47a76148ff87bee1de0eca06099bc",
+        "sizeBytes": 1278689,
+        "url": "https://github.com/retrom-project/Genesis-Plus-GX/releases/download/retrom-core-g63f0c6870601-r2/genesis_plus_gx-wasm.data"
+      },
+      {
+        "filename": "rpg-runtime-release.json",
+        "sha256": "baf9aa4753a6960df773317a59be71ed38288753cfc627dcd1ab4d8ca076a14f",
+        "sizeBytes": 809,
+        "url": "https://github.com/retrom-project/Genesis-Plus-GX/releases/download/retrom-core-g63f0c6870601-r2/rpg-runtime-release.json"
+      },
+      {
+        "filename": "source.tar.gz",
+        "sha256": "8a5b10e0f180ebf5d5a3d6239e718f51bec530ecc9b81c1dcf6f11fd3556d2da",
+        "sizeBytes": 16871470,
+        "url": "https://github.com/retrom-project/Genesis-Plus-GX/releases/download/retrom-core-g63f0c6870601-r2/source.tar.gz"
+      }
+    ]
+  },
     {
       "repository": "https://github.com/retrom-project/Ardens",
       "tag": "retrom-core-g661a7dd4febc-r1",

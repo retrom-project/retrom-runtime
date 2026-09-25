@@ -27,6 +27,14 @@ export function startWhenAvailable(runtimeWindow: Window) {
   return () => {observer.disconnect(); runtimeWindow.clearTimeout(timeout);};
 }
 
+export function configureDeferredStart(runtimeWindow: Window,
+  instance: {downloadType?: {rom?: {dontExtractIfCore?: string[]}}}, core: string): () => void {
+  const excluded = instance.downloadType?.rom?.dontExtractIfCore;
+  if (!Array.isArray(excluded)) {throw new Error("PLAYER_ROM_ARCHIVE_MODE_UNAVAILABLE");}
+  if (!excluded.includes(core)) {excluded.push(core);}
+  return startWhenAvailable(runtimeWindow);
+}
+
 export function createStartBarrier(): StartBarrier {
   let rejectPromise: (error: Error) => void = () => undefined;
   let resolvePromise: () => void = () => undefined;

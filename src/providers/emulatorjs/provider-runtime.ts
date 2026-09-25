@@ -5,18 +5,9 @@ import {stopNativeInstance} from "./native-exit.js";
 import {startEmulatorInputDiagnostics} from "./input-diagnostics.js";
 import type {RuntimeInputDiagnosticsV1} from "../../provider/module-api.js";
 import type {
-  AssetIndexV1,
-  LaunchEnvelopeV1,
-  PlayerRuntimeV1,
-  RuntimeDiscStateV1,
-  RuntimeCheckpointAvailabilityV1,
-  RuntimeCheckpointV1,
-  RuntimeEventV1,
-  RuntimeHostV1,
-  RuntimeInputFilterPolicyV1,
-  RuntimeMultiDiscResourceV1,
-  RuntimeStateV1,
-  RuntimeVideoModeV1,
+  AssetIndexV1, LaunchEnvelopeV1, PlayerRuntimeV1, RuntimeDiscStateV1, RuntimeCheckpointAvailabilityV1,
+  RuntimeCheckpointV1, RuntimeEventV1, RuntimeHostV1, RuntimeInputFilterPolicyV1,
+  RuntimeMultiDiscResourceV1, RuntimeStateV1, RuntimeVideoModeV1,
 } from "../../provider/module-api.js";
 import {PlayerRuntimeError} from "../../provider/errors.js";
 import {focusRuntimeInput} from "../../provider/input-focus.js";
@@ -24,15 +15,12 @@ import {emulatorJsProviderDefinition, type EmulatorImplementation} from "./catal
 import {installAsyncRangeStartup} from "./async-range-startup.js";
 import {registerSeekableContentFS, type VirtualContentFile} from "./virtual-content-fs.js";
 import {configureContentDisc, emulatorJsDisableCue, hasSeekableGame} from "./disc-mount.js";
+import {daphneGameFile, daphneVideo, maybeInstallDaphneProject, maybePrepareDaphneProject, type DaphneProject} from "./daphne-project.js";
 import {installArchiveWorkerCompatibility} from "./archive-worker.js";
 import {installDOSBoxPureStateCompatibility} from "./dosbox-state.js";
 import {installExternalFileCompatibility} from "./external-files.js";
 import {RuntimeGamepadFilter, installRuntimeGamepadFilter, validInputFilterPolicy} from "../../provider/gamepad-filter.js";
-import {
-  initializeEmulatorJsDiscs,
-  readEmulatorJsDiscState,
-  switchEmulatorJsDisc,
-} from "./discs.js";
+import {initializeEmulatorJsDiscs, readEmulatorJsDiscState, switchEmulatorJsDisc} from "./discs.js";
 import {captureEmulatorJsScreenshot} from "./screenshot.js";
 import {configureDeferredStart, createStartBarrier, emulatorCheckpointAvailability, needsVerboseRestore, runtimeStartTimeout, type StartBarrier} from "./lifecycle.js";
 import {installEmulatorJsRetroArchConfig} from "./retroarch-config.js";
@@ -41,10 +29,7 @@ import {installSupermodelState} from "./supermodel-state.js";
 import {installSupermodelRestore} from "./supermodel-restore.js";
 import {createRetromDefaultControls, emulatorControlScheme, thomsonMachineOption} from "./default-controls.js";
 import {initializeEmulatorJsGamepads} from "./startup-gamepads.js";
-import {
-  closeEmulatorJsNativeSettings,
-  openEmulatorJsNativeSettings,
-} from "./native-settings.js";
+import {closeEmulatorJsNativeSettings, openEmulatorJsNativeSettings} from "./native-settings.js";
 import {retromShaders} from "./shaders.js";
 import {createEmulatorJsVideoModeController} from "./video-mode.js";
 import {biosFile, externalFiles, fileName, optionalResource, resource, runtimeBase} from "./resources.js";
@@ -79,6 +64,8 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
   private pspRestore: ReturnType<typeof installPspRestoreObserver> | null = null;
   private cleanupArchiveWorker: (() => void) | null = null;
   private discRange: VirtualContentFile | null = null;
+  private daphneProject: DaphneProject | null = null;
+  private cleanupDaphneProject: (() => void) | null = null;
   private cleanupFlycast: (() => void) | null = null;
   private cleanupSeekableFS: (() => void) | null = null;
   private cleanupFrameStyle: (() => void) | null = null;
@@ -202,6 +189,13 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
 
   async setVideoMode(mode: RuntimeVideoModeV1) {
     if (!this.envelope.runtime.capabilities.videoModes.includes(mode)) {throw capabilityError();}
+    if (this.implementation.runtimeCore === "daphne") {
+      const canvas = this.requireInstance().canvas;
+      if (!canvas || (mode !== "original" && mode !== "pixel")) {throw contractError();}
+      canvas.style.setProperty("image-rendering", mode === "pixel" ? "pixelated" : "auto", "important");
+      this.outputViewport?.setVideoMode(mode);
+      return;
+    }
     this.videoModeController ??= createEmulatorJsVideoModeController(this.requireInstance(), this.runtimeWindow!);
     if (!this.videoModeController.setVideoMode(mode)) {throw contractError();}
     this.outputViewport?.setVideoMode(mode);
@@ -270,6 +264,27 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
       this.implementation.runtimeCore, Boolean(this.restorePayload) && this.implementation.release === "4.2.3");
   }
 
+  private installPreloaderCompatibility(runtimeWindow: EjsWindow) {
+    this.prepareRetroArchConfig(runtimeWindow);
+    this.cleanupArchiveWorker = installArchiveWorkerCompatibility(runtimeWindow, this.implementation.release,
+      runtimeBase(this.envelope, this.implementation.release), this.implementation.runtimeCore);
+    if (this.implementation.release === "4.2.3" && Object.keys(externalFiles(this.envelope)).length) {
+      this.cleanupExternalFiles = installExternalFileCompatibility(runtimeWindow);
+    }
+    if (this.restorePayload && this.implementation.release === "4.2.3") {
+      this.cleanupStateRestore = installEmulatorJs423StateRestoreCompatibility(runtimeWindow,
+        this.implementation.runtimeCore === "mame2003_plus");
+    }
+    if (this.restorePayload && this.implementation.runtimeCore === "supermodel") {
+      this.supermodelRestore = installSupermodelRestore(runtimeWindow);
+      this.cleanupStateRestore = this.supermodelRestore.cleanup;
+    }
+    if (this.implementation.release === "4.3.0-pre" && this.implementation.runtimeCore === "dosbox_pure") {
+      this.dosboxCompatibility = installDOSBoxPureStateCompatibility(runtimeWindow);
+    }
+    if (this.inputFilter) {this.cleanupInputFilter = installRuntimeGamepadFilter(runtimeWindow, this.inputFilter);}
+  }
+
   private async performMount(target: HTMLElement) {
     this.transition("MOUNTING");
     this.host.signal.addEventListener("abort", this.hostAbort, {once: true});
@@ -290,40 +305,22 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
       const declaration = emulatorJsProviderDefinition.targets.find(entry => entry.id === this.envelope.runtime.targetId)!;
       this.contentSession = await this.contentOwner.start(declaration, this.envelope, this.assetIndex);
       this.checkMountActive();
-      this.createMountPoint(runtimeWindow);
+      this.daphneProject = await maybePrepareDaphneProject(this.implementation.runtimeCore, this.envelope,
+        this.contentSession, this.host.signal, error => this.fail(error.message, error),
+        (loadedBytes, totalBytes) => this.emit({type: "LOAD_PROGRESS", loadedBytes, totalBytes}));
+      this.discRange = daphneVideo(this.daphneProject);
+      this.checkMountActive();
+      this.cleanupFrameStyle = createEmulatorJsMountPoint(runtimeWindow);
       this.startBarrier = createStartBarrier();
       this.configure(runtimeWindow);
       const disc = await configureContentDisc(runtimeWindow, this.envelope, this.implementation.runtimeCore, this.host.signal,
         this.contentSession, error => this.fail(error.message, error), this.eagerContentGame,
         (loadedBytes, totalBytes) => this.emit({type: "LOAD_PROGRESS", loadedBytes, totalBytes}));
-      this.discRange = disc.range; this.cleanupFlycast = disc.cleanup;
+      if (disc.range) {this.discRange = disc.range;}
+      this.cleanupFlycast = disc.cleanup;
       this.checkMountActive();
 
-      this.prepareRetroArchConfig(runtimeWindow);
-      this.cleanupArchiveWorker = installArchiveWorkerCompatibility(
-        runtimeWindow,
-        this.implementation.release,
-        runtimeBase(this.envelope, this.implementation.release),
-        this.implementation.runtimeCore,
-      );
-      if (this.implementation.release === "4.2.3" && Object.keys(externalFiles(this.envelope)).length) {
-        this.cleanupExternalFiles = installExternalFileCompatibility(runtimeWindow);
-      }
-      if (this.restorePayload && this.implementation.release === "4.2.3") {
-        this.cleanupStateRestore = installEmulatorJs423StateRestoreCompatibility(
-          runtimeWindow, this.implementation.runtimeCore === "mame2003_plus",
-        );
-      }
-      if (this.restorePayload && this.implementation.runtimeCore === "supermodel") {
-        this.supermodelRestore = installSupermodelRestore(runtimeWindow);
-        this.cleanupStateRestore = this.supermodelRestore.cleanup;
-      }
-      if (this.implementation.release === "4.3.0-pre" && this.implementation.runtimeCore === "dosbox_pure") {
-        this.dosboxCompatibility = installDOSBoxPureStateCompatibility(runtimeWindow);
-      }
-      if (this.inputFilter) {
-        this.cleanupInputFilter = installRuntimeGamepadFilter(runtimeWindow, this.inputFilter);
-      }
+      this.installPreloaderCompatibility(runtimeWindow);
       const loader = runtimeWindow.document.createElement("script");
       loader.async = true;
       loader.dataset.retromLoader = "true";
@@ -345,13 +342,11 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
     }
   }
 
-  private createMountPoint(runtimeWindow: Window) {
-    this.cleanupFrameStyle = createEmulatorJsMountPoint(runtimeWindow);
-  }
-
   private configure(runtimeWindow: EjsWindow) {
     if (this.implementation.runtimeCore === "ppsspp") {this.pspRestore = installPspRestoreObserver(runtimeWindow);}
-    const seekable = hasSeekableGame(this.envelope), game = resource(this.envelope, "game", seekable ? "SEEKABLE_BLOB" : "ROM_BLOB");
+    const seekable = hasSeekableGame(this.envelope);
+    const gameURL = this.daphneProject ? `/roms/${this.daphneProject.romName}` :
+      resource(this.envelope, "game", seekable ? "SEEKABLE_BLOB" : "ROM_BLOB").url;
     const bios = optionalResource(this.envelope, "bios", "BIOS_BUNDLE");
     const parent = optionalResource(this.envelope, "parent", "PARENT_ARCHIVE");
     const releaseBase = runtimeBase(this.envelope, this.implementation.release);
@@ -362,15 +357,15 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
     const deferredStart = deferredDOSStart || deferredArchiveStart;
     runtimeWindow.EJS_player = "#retrom-emulator";
     runtimeWindow.EJS_core = this.implementation.runtimeCore;
-    runtimeWindow.EJS_controlScheme = emulatorControlScheme(this.implementation.runtimeCore, this.implementation.release, game.url);
-    runtimeWindow.EJS_gameUrl = game.url;
+    runtimeWindow.EJS_controlScheme = emulatorControlScheme(this.implementation.runtimeCore, this.implementation.release, gameURL);
+    runtimeWindow.EJS_gameUrl = daphneGameFile(runtimeWindow, this.daphneProject, gameURL);
     runtimeWindow.EJS_gameName = this.envelope.session.title;
     runtimeWindow.EJS_gameID = 0;
     runtimeWindow.EJS_pathtodata = releaseBase;
     runtimeWindow.EJS_biosUrl = biosFile(bios);
     runtimeWindow.EJS_gameParentUrl = parent?.url;
     runtimeWindow.EJS_startOnLoaded = !deferredStart;
-    runtimeWindow.EJS_dontExtractRom = deferredStart || this.implementation.runtimeCore === "flycast" || seekable || this.eagerContentGame;
+    runtimeWindow.EJS_dontExtractRom = deferredStart || this.implementation.runtimeCore === "flycast" || seekable || this.eagerContentGame || !!this.daphneProject;
     runtimeWindow.EJS_disableBatchBootup = deferredDOSStart;
     runtimeWindow.EJS_disableCue = emulatorJsDisableCue(this.implementation.runtimeCore, this.envelope.runtime.targetId) ? true : undefined;
     runtimeWindow.EJS_language = "zh-CN";
@@ -387,7 +382,8 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
     runtimeWindow.EJS_Buttons = {exitEmulation: false};
     runtimeWindow.EJS_defaultControls = createRetromDefaultControls(this.implementation.runtimeCore);
     runtimeWindow.EJS_defaultOptions = {...this.implementation.defaultOptions, ...thomsonMachineOption(this.implementation.runtimeCore, this.envelope.session.title),
-      ...(this.implementation.runtimeCore === "cap32" && new URL(game.url, "http://runtime.invalid").pathname.toLowerCase().endsWith(".cpr")
+      ...(this.implementation.runtimeCore === "daphne" ? {shader: "disabled"} : {}),
+      ...(this.implementation.runtimeCore === "cap32" && new URL(gameURL, "http://runtime.invalid").pathname.toLowerCase().endsWith(".cpr")
         ? {cap32_model: "6128+ (experimental)", cap32_gfx_colors: "24bit"} : {}),
     };
     runtimeWindow.EJS_shaders = retromShaders;
@@ -400,12 +396,14 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
       if (!this.instance) {this.fail("PLAYER_RUNTIME_UNAVAILABLE"); return;}
       const instance = this.instance;
       this.cleanupGamepadIndex = initializeEmulatorJsGamepads(instance);
-      if (["neocd", "flycast"].includes(this.implementation.runtimeCore) && this.discRange) {installAsyncRangeStartup(instance, this.discRange);}
-      if ((seekable || this.eagerContentGame) && !["neocd", "flycast"].includes(this.implementation.runtimeCore) && this.discRange) {
+      if (["neocd", "flycast", "daphne"].includes(this.implementation.runtimeCore) && this.discRange) {installAsyncRangeStartup(instance, this.discRange);}
+      if ((seekable || this.eagerContentGame || this.daphneProject) && !["neocd", "flycast"].includes(this.implementation.runtimeCore) && this.discRange) {
         try {this.cleanupSeekableFS = registerSeekableContentFS(instance, this.discRange,
-          error => this.fail("EMULATORJS_CONTENT_FS_UNAVAILABLE", error));}
+          error => this.fail("EMULATORJS_CONTENT_FS_UNAVAILABLE", error), this.implementation.runtimeCore === "daphne");}
         catch (error) {this.fail("EMULATORJS_CONTENT_FS_UNAVAILABLE", error); return;}
       }
+      this.cleanupDaphneProject = maybeInstallDaphneProject(instance, this.daphneProject,
+        error => this.fail("DAPHNE_MOUNT_FAILED", error));
       installLutroNativeRestore(this.implementation.runtimeCore, instance, this.restorePayload,
         checkpointMaximum, () => {this.restorePayload = null;},
         error => this.fail("PLAYER_STATE_RESTORE_FAILED", error));
@@ -572,6 +570,7 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
   private async closeContent() {
     await this.contentOwner.close(); this.contentSession = null;
     await this.discRange?.dispose(); this.discRange = null;
+    this.daphneProject = null;
   }
 
   private requireInstance() {
@@ -586,6 +585,7 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
   }
 
   private cleanupSurface() {
+    this.cleanupDaphneProject?.(); this.cleanupDaphneProject = null;
     this.lutroNativeSave?.stop(); this.lutroNativeSave = null;
     this.cleanupSeekableFS?.(); this.cleanupSeekableFS = null;
     this.videoModeController?.cleanup();

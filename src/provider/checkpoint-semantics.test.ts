@@ -9,12 +9,13 @@ import {targetEnvelope} from "../../tests/provider-fixtures.js";
 import {defineAdapter, defineProvider} from "./declarations.js";
 
 describe("checkpoint restore semantics", () => {
-  it("keeps Daphne explicitly NO_SAVE until its content Target passes product acceptance", () => {
+  it("keeps Daphne explicitly NO_SAVE with a project Content I/O Target", () => {
     const daphne = emulatorJsProviderDefinition.adapters.find((adapter) => adapter.id === "emulatorjs-daphne");
     expect(daphne).toMatchObject({saveSemantics: "NO_SAVE", checkpoint: null,
       capabilities: {checkpoint: false}});
-    expect(emulatorJsProviderDefinition.targets.some((target) => target.adapterId === "emulatorjs-daphne"))
-      .toBe(false);
+    const target = emulatorJsProviderDefinition.targets.find((entry) => entry.adapterId === "emulatorjs-daphne");
+    expect(target?.inputs.find(input => input.role === "game")?.kind).toBe("FILE_TREE");
+    expect(target?.contentIO.game).toMatchObject({mode: "RANGE", bridge: "ASYNC"});
   });
   it("projects an explicitly declared NO_SAVE target without a checkpoint contract", () => {
     const base = retromRuntimeProviderDefinition;

@@ -3,6 +3,9 @@ import {lstat, readFile, readdir, writeFile, mkdir} from "node:fs/promises";
 import {dirname, isAbsolute, join} from "node:path";
 
 const sources = new Map([
+  ["daphne", {repository: "https://github.com/retrom-project/daphne",
+    upstreamCommit: "6f1695dd1f376060666eec0a416ff56bb6c9cccc", license: "LICENSE", threaded: true,
+    resources: "daphne-resources.zip"}],
   ["ardens", {repository: "https://github.com/retrom-project/Ardens",
     upstreamCommit: "661a7dd4febc8d00e790a4ecde44b936295adf97", license: "LICENSE"}],
   ["atari800", {repository: "https://github.com/retrom-project/libretro-atari800",
@@ -56,7 +59,8 @@ const sources = new Map([
     upstreamCommit: "be00fb904da08d66221017f6708508298f17ff07", license: "LICENSE"}],
 ]);
 const coreAssetName = (core) => `${core}${sources.get(core)?.threaded ? "-thread" : ""}-wasm.data`;
-const names = (core) => [sources.get(core)?.license, coreAssetName(core), "retrom-core-candidate.json", "source.tar.gz"].sort();
+const names = (core) => [sources.get(core)?.license, coreAssetName(core),
+  ...(sources.get(core)?.resources ? [sources.get(core).resources] : []), "retrom-core-candidate.json", "source.tar.gz"].sort();
 const hash = (bytes) => createHash("sha256").update(bytes).digest("hex");
 const digest = (value) => typeof value === "string" && /^[0-9a-f]{64}$/u.test(value);
 const exact = (value, keys) => value && typeof value === "object" && !Array.isArray(value) &&
@@ -90,7 +94,8 @@ export function developmentForkFiles(catalog) {
       !Number.isSafeInteger(file.sizeBytes) || file.sizeBytes < 1 ||
       file.sizeBytes > (file.filename === "source.tar.gz" ? 64 : 16) * 1024 * 1024) {invalid();}
       const release = sources.get(fork.runtimeCore).release ?? "4.2.3";
-      const destination = file.filename === coreAssetName(fork.runtimeCore) ? `${release}/data/cores/${file.filename}`
+      const destination = file.filename === coreAssetName(fork.runtimeCore) ||
+        file.filename === sources.get(fork.runtimeCore).resources ? `${release}/data/cores/${file.filename}`
         : file.filename === "retrom-core-candidate.json" ? `${release}/data/cores/reports/${fork.runtimeCore}.json`
           : `${release}/licenses/forks/${fork.runtimeCore}/${file.filename}`;
       return {...file, destination, runtimeCore: fork.runtimeCore};
@@ -109,7 +114,7 @@ export function verifyDevelopmentForkMetadata(fork, metadata) {
     metadata.repository !== fork.repository || metadata.adapterAbi !== fork.adapterAbi ||
     metadata.commit !== fork.commit || metadata.sourceTreeSha256 !== fork.sourceTreeSha256 ||
     typeof metadata.dirty !== "boolean" || !/^(?:feat|fix|build)\/[a-z0-9-]+$/u.test(metadata.branch) ||
-    !Array.isArray(metadata.files) || metadata.files.length !== 3) {invalid();}
+    !Array.isArray(metadata.files) || metadata.files.length !== fork.assets.length - 1) {invalid();}
   for (const asset of fork.assets.filter((file) => file.filename !== "retrom-core-candidate.json")) {
     const file = metadata.files.find((entry) => entry.filename === asset.filename);
     if (!exact(file, ["filename", "sha256", "sizeBytes"]) || file.sha256 !== asset.sha256 ||

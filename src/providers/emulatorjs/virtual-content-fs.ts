@@ -13,29 +13,32 @@ type VirtualNode = {usedBytes: number; contents?: Uint8Array; stream_ops: {
   [key: string]: unknown;
 }};
 type VirtualFS = {
+  streams?: Array<{node: VirtualNode; position: number} | null>;
   writeFile(path: string, data: Uint8Array, ...options: unknown[]): void;
   lookupPath(path: string): {node: VirtualNode};
 };
 type Asyncify = {state: number; State: {Normal: number; Rewinding: number};
   handleSleep(start: (wake: (value: number) => void) => void): number};
-type VirtualModule = {FS?: VirtualFS; retromContentIOAsyncify?: () => Asyncify};
+type VirtualModule = {FS?: VirtualFS; HEAPU8?: Uint8Array; retromContentIOAsyncify?: () => Asyncify;
+  retromDaphneFdRead?: (fd: number, iov: number, iovcnt: number, pnum: number) => Promise<number | null>};
 type Instance = {Module?: unknown; on?: (event: string, callback: (...args: unknown[]) => void) => void};
 
 /** Attach the shared FS mount before EmulatorJS copies the game into its FS. */
-export function registerSeekableContentFS(instance: Instance, range: VirtualContentFile, fail: (error: unknown) => void): () => void {
+export function registerSeekableContentFS(instance: Instance, range: VirtualContentFile, fail: (error: unknown) => void,
+  workerReadBridge = false): () => void {
   if (!instance.on) {throw new Error("EMULATORJS_CONTENT_FS_UNAVAILABLE");}
   let cleanup: (() => void) | null = null;
   let closed = false;
   instance.on("saveDatabaseLoaded", () => {
     if (closed) {return;}
-    try {cleanup = installSeekableContentFS(instance, range);}
+    try {cleanup = installSeekableContentFS(instance, range, workerReadBridge);}
     catch (error) {fail(error);}
   });
   return () => {closed = true; cleanup?.(); cleanup = null;};
 }
 
 /** Mount a Content I/O reader at the shared EmulatorJS FS write boundary. */
-export function installSeekableContentFS(instance: Instance, range: VirtualContentFile): () => void {
+export function installSeekableContentFS(instance: Instance, range: VirtualContentFile, workerReadBridge = false): () => void {
   const module = instance.Module as VirtualModule | undefined;
   const fs = module?.FS, asyncify = module?.retromContentIOAsyncify?.();
   if (!fs || range.canSuspend && (!asyncify || typeof asyncify.handleSleep !== "function")) {
@@ -46,6 +49,50 @@ export function installSeekableContentFS(instance: Instance, range: VirtualConte
   let originalOps: VirtualNode["stream_ops"] | null = null;
   let originalSize = 0;
   let originalContents: Uint8Array | undefined;
+  const originalWorkerRead = module?.retromDaphneFdRead;
+  if (workerReadBridge) {
+    if (!module || !fs.streams || !module.HEAPU8) {throw new Error("EMULATORJS_CONTENT_FS_UNAVAILABLE");}
+    let pending: Promise<unknown> = Promise.resolve();
+    module.retromDaphneFdRead = (fd, iov, iovcnt, pnum) => {
+      const stream = fs.streams?.[fd];
+      if (!mounted || !stream || stream.node !== mounted) {return Promise.resolve(null);}
+      const next = pending.then(async () => {
+        range.begin();
+        try {
+          if (!Number.isSafeInteger(stream.position) || stream.position < 0 ||
+            !Number.isSafeInteger(iovcnt) || iovcnt < 0 || iovcnt > 1024) {throw new Error("EMULATORJS_CONTENT_FS_BOUNDS");}
+          let total = 0;
+          for (let index = 0; index < iovcnt; index++) {
+            const heap = module.HEAPU8!;
+            const view = new DataView(heap.buffer);
+            const vector = iov + index * 8;
+            if (vector < 0 || vector + 8 > heap.byteLength) {throw new Error("EMULATORJS_CONTENT_FS_BOUNDS");}
+            const pointer = view.getUint32(vector, true);
+            const length = view.getUint32(vector + 4, true);
+            const count = Math.min(length, Math.max(0, range.sizeBytes - stream.position));
+            if (pointer + count > heap.byteLength) {throw new Error("EMULATORJS_CONTENT_FS_BOUNDS");}
+            for (let done = 0; done < count;) {
+              const size = Math.min(neoCDRangeBlockSize, count - done);
+              const bytes = await range.read(stream.position, size);
+              if (bytes.byteLength !== size) {throw new Error("EMULATORJS_CONTENT_FS_SHORT_READ");}
+              module.HEAPU8!.set(bytes, pointer + done);
+              stream.position += size; total += size; done += size;
+            }
+            if (count < length) {break;}
+          }
+          const heap = module.HEAPU8!;
+          if (pnum < 0 || pnum + 4 > heap.byteLength) {throw new Error("EMULATORJS_CONTENT_FS_BOUNDS");}
+          new DataView(heap.buffer).setUint32(pnum, total, true);
+          return 0;
+        } catch (error) {
+          range.fail(error instanceof Error ? error : new Error("EMULATORJS_CONTENT_FS_READ_FAILED"));
+          return 29; // EIO in the pinned Emscripten libc.
+        } finally {range.end();}
+      });
+      pending = next;
+      return next;
+    };
+  }
   fs.writeFile = function(path, data, ...options) {
     if (path.split("/").pop() !== range.filename) {return writeFile.call(fs, path, data, ...options);}
     if (mounted) {throw new Error("EMULATORJS_CONTENT_FS_DUPLICATE");}
@@ -62,6 +109,7 @@ export function installSeekableContentFS(instance: Instance, range: VirtualConte
   };
   return () => {
     fs.writeFile = writeFile;
+    if (workerReadBridge && module) {module.retromDaphneFdRead = originalWorkerRead;}
     if (mounted && originalOps) {
       mounted.stream_ops = originalOps; mounted.usedBytes = originalSize;
       if (range.contents) {mounted.contents = originalContents;}

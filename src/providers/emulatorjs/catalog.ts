@@ -101,7 +101,7 @@ type CoreSource = {
   defaultOptions: Readonly<Record<string, string>>;
   inputMode: InputMode;
   startupActions: readonly StartupAction[];
-  contentKinds: readonly ("SINGLE_FILE" | "DOS_BUNDLE" | "MULTI_DISC")[];
+  contentKinds: readonly ("SINGLE_FILE" | "DOS_BUNDLE" | "MULTI_DISC" | "DAPHNE_PROJECT")[];
 };
 
 // Replaced with an empty object by formal builds. PFB supplies only verified,
@@ -152,6 +152,7 @@ const cores: readonly CoreSource[] = [
   core("gambatte", "4.2.3", "gambatte-wasm.data", 967156, "ad67c7bf57f8f8b62606048e6ea498afac5b5abc76ad8de5f9dfc2a6719374bb", "c1d7561f109647715f8795c8fa977318dc78bfc847cd8879bb029d62c55fa605"),
   core("gearboy", "4.2.3", "gearboy-wasm.data", 939318, "ca08e4936a9f8b62f198f8df30fed48c5e68f06db9dd91115a2c44863054661e", "389000f4810c30180889fa6d39eb5d21b3520594c01935523f363e9fd6211248", {artifactFlavor: "OVERRIDE", defaultOptions: {gearboy_sgb: "Enabled", gearboy_sgb_border: "Enabled"}}),
   core("lutro", "4.2.3", "lutro-wasm.data", 997735, "78a74af63f9ef4a576ccff17f7e6c8c2f62a2cbf833a2ccb0d6d298653bca5bd", "405bdeb3f1b7dc57f20b32f25c3fdd1a038bd20b55f9d3b0065979c1d8cba63d", {artifactFlavor: "OVERRIDE"}),
+  core("daphne", "4.2.3", "daphne-thread-wasm.data", 1220383, "4b3311536376b9d913483226bab9dc1d4dfa674ab76be93c464d99cc489b9fa4", "3e5996d9205b63fafbbcecb3b29b0918c789fe7a4a4e257e4eef8d15b85f352c", {artifactFlavor: "THREAD_WASM", contentKinds: ["DAPHNE_PROJECT"]}),
   core("gearcoleco", "4.2.3", "gearcoleco-wasm.data", 891907, "164e213e4d5f2c14a0f2b55da973ed5a54ef7601cb352e64c9a73ace1a7ba606", "1c377b55d252fc7133bb99b845c1bc1931a3f9989fd1410659c50bd3b2a78a4d"),
   genesisPlusGX,
   {...genesisPlusGX, targetId: "genesis_plus_gx_cd", defaultOptions: {...genesisPlusGX.defaultOptions, genesis_plus_gx_cd_precache: "disabled"}},
@@ -194,10 +195,11 @@ const cores: readonly CoreSource[] = [
 
 const targets = cores.map((entry) => {
   return defineTarget({
-  adapterId: entry.id === "gam4980" ? "emulatorjs-gam4980" : entry.id === "bsnes" ? "emulatorjs-bsnes" : entry.id === "flycast" ? "emulatorjs-flycast" : entry.id === "ppsspp" ? "emulatorjs-psp" : entry.id === "lutro" ? "emulatorjs-lutro" : `emulatorjs-${entry.release}`,
+  adapterId: entry.id === "gam4980" ? "emulatorjs-gam4980" : entry.id === "bsnes" ? "emulatorjs-bsnes" : entry.id === "flycast" ? "emulatorjs-flycast" : entry.id === "ppsspp" ? "emulatorjs-psp" : entry.id === "lutro" ? "emulatorjs-lutro" : entry.id === "daphne" ? "emulatorjs-daphne" : `emulatorjs-${entry.release}`,
   assetPaths: [
     ...commonAssets(entry.release),
     entry.asset,
+    ...(entry.id === "daphne" ? [`assets/${entry.release}/data/cores/daphne-resources.zip`] : []),
     ...(entry.id === "ppsspp" ? [`assets/${entry.release}/data/cores/ppsspp-assets.zip`, `assets/${entry.release}/data/compression/extractzip.js`] : []),
     `assets/${entry.release}/data/cores/reports/${entry.id}.json`,
   ].sort(compareUtf8),
@@ -222,14 +224,16 @@ const targets = cores.map((entry) => {
     runtimeCore: entry.id,
     startupActions: entry.startupActions,
   },
-  inputs: ["neocd", "genesis_plus_gx_cd", "flycast"].includes(entry.targetId ?? entry.id) || entry.id === "flycast"
-    ? inputs.map(input => input.role === "game" ? {...input, kind: "SEEKABLE_BLOB" as const} : input) : inputs,
+  inputs: entry.id === "daphne" ? inputs.map(input => input.role === "game" ? {...input, kind: "FILE_TREE" as const} : input) :
+    ["neocd", "genesis_plus_gx_cd", "flycast"].includes(entry.targetId ?? entry.id) || entry.id === "flycast"
+      ? inputs.map(input => input.role === "game" ? {...input, kind: "SEEKABLE_BLOB" as const} : input) : inputs,
   contentIO: emulatorContentPolicies(entry.targetId ?? entry.id),
   inputFilter: true,
-  nativeSettings: true,
+  nativeSettings: entry.id !== "daphne",
   targetOptionsSchema: emulatorJsOptionsSchema,
   requiresThreads: entry.requiresThreads,
-  videoModes: ["adaptive-sharpen", "original", "pixel", "sharp-bilinear", "smooth"],
+  videoModes: entry.id === "daphne" ? ["original", "pixel"] :
+    ["adaptive-sharpen", "original", "pixel", "sharp-bilinear", "smooth"],
   });
 });
 

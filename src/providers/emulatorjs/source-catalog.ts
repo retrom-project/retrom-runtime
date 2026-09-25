@@ -4,6 +4,20 @@ import type {DevelopmentFork} from "../../../scripts/emulatorjs-development-fork
 export const emulatorJsSourceCatalog = {
   schemaVersion: 1,
   developmentForks: [{
+    runtimeCore: "daphne",
+    repository: "https://github.com/retrom-project/daphne",
+    upstreamCommit: "6f1695dd1f376060666eec0a416ff56bb6c9cccc",
+    commit: "9942763310d06f614295700efdb89618301f5274",
+    sourceTreeSha256: "2ed384bc4b15361731eeeca0d6568c9dea0ae6c225e9927a35352cafc899706b",
+    adapterAbi: "emulatorjs-state-v1",
+    assets: [
+      {filename: "LICENSE", sha256: "96830b8b594d928deb82efce6faf42e1df808941f819d96381d26cc618793ea6", sizeBytes: 35530},
+      {filename: "daphne-resources.zip", sha256: "3b71e39985ec3e39e8acb12fdbf5604fb52748682fbc205f106fd6a8482dd063", sizeBytes: 1856321},
+      {filename: "daphne-thread-wasm.data", sha256: "4b3311536376b9d913483226bab9dc1d4dfa674ab76be93c464d99cc489b9fa4", sizeBytes: 1220383},
+      {filename: "retrom-core-candidate.json", sha256: "3e5996d9205b63fafbbcecb3b29b0918c789fe7a4a4e257e4eef8d15b85f352c", sizeBytes: 874},
+      {filename: "source.tar.gz", sha256: "df4d53784f1abf3bcef7d10922c22a154cd8ca4eedf2d64af8e3d1733a48a667", sizeBytes: 3182263},
+    ],
+  }, {
     runtimeCore: "gearboy",
     repository: "https://github.com/retrom-project/Gearboy",
     upstreamCommit: "340ebe3c258846560cc93d93ca4359f506fafb70",

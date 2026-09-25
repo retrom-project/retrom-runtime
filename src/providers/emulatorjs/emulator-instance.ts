@@ -5,6 +5,7 @@ import type {EmulatorDefaultControls} from "./default-controls.js";
 import type {retromShaders} from "./shaders.js";
 
 type EjsManager = {
+  writeFile?: (path: string, bytes: Uint8Array) => void;
   Module?: {
     HEAPU8?: Uint8Array;
     UTF8ToString?: (pointer: number) => string;
@@ -40,6 +41,7 @@ export type EjsInstance = EmulatorDiscInstance & EmulatorNativeSettingsInstance 
   debug?: boolean;
   Module?: {callMain?: (args: string[]) => unknown};
   startGame?: () => unknown;
+  downloadRom?: () => Promise<void>;
   checkCompression?: (data: Uint8Array, message: string | undefined,
     callback?: (name: string, data: Uint8Array) => void) => Promise<unknown>;
   canvas?: HTMLCanvasElement;

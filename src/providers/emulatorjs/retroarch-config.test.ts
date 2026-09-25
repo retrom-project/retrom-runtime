@@ -67,6 +67,17 @@ describe("EmulatorJS RetroArch configuration", () => {
     expect(Manager.prototype.getRetroArchCfg).toBe(original);
   });
 
+  it("avoids a Daphne history entry without a native core path", () => {
+    class Manager {getRetroArchCfg() {return "video_vsync = true\n";}}
+    const original = Manager.prototype.getRetroArchCfg;
+    const cleanup = installEmulatorJsRetroArchConfig(window, "daphne", false);
+    Reflect.set(window, "EJS_GameManager", Manager);
+    try {
+      expect(new Manager().getRetroArchCfg()).toContain("history_list_enable = false");
+    } finally {cleanup(); Reflect.deleteProperty(window, "EJS_GameManager");}
+    expect(Manager.prototype.getRetroArchCfg).toBe(original);
+  });
+
   it("leaves ordinary launches untouched", () => {
     const cleanup = installEmulatorJsRetroArchConfig(window, "fceumm", false);
     expect(Reflect.has(window, "EJS_GameManager")).toBe(false);

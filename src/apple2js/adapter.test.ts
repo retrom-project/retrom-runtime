@@ -39,6 +39,18 @@ it.each([
   const adapter = await mounted;
   expect(restore).toHaveBeenCalledWith(state);
   expect(await adapter.checkpoint()).toEqual({format: "apple2js-state-v1", bytes: new TextEncoder().encode(state)});
+  const buttons = Array.from({length: 17}, () => ({pressed: false, value: 0}));
+  const getGamepads = vi.fn(() => [{connected: true, index: 0, axes: [], buttons}]);
+  Object.defineProperty(child.navigator, "getGamepads", {configurable: true, value: getGamepads});
+  const diagnostics = adapter.startInputDiagnostics?.();
+  expect(diagnostics?.read().gamepad).toBe(true);
+  buttons[8] = {pressed: true, value: 1};
+  child.navigator.getGamepads();
+  expect(diagnostics?.read().events).toEqual(expect.arrayContaining([
+    expect.objectContaining({device: "gamepad:0", control: "Button 8", value: 1, stage: "RUNTIME"}),
+  ]));
+  diagnostics?.stop();
+  expect(child.navigator.getGamepads).toBe(getGamepads);
   await adapter.exit();
   expect(exit).toHaveBeenCalledOnce();
 });

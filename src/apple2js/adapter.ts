@@ -1,6 +1,7 @@
 import {eagerPolicy} from "../provider/content-policies.js";
 import {materializeFileBytes, type AdapterContentSession} from "../provider/content-inputs.js";
 import {checkpointSize, transformCheckpoint} from "../provider/checkpoint-compression.js";
+import {startInputDiagnostics} from "../provider/input-diagnostics.js";
 import type {MountedRuntimeAdapter, RuntimeProgressReporter} from "../internal-adapter.js";
 
 type File = {url: string; sha256: string; sizeBytes: number};
@@ -71,6 +72,10 @@ export async function mountApple2(config: Apple2Parameters, target: HTMLElement,
     getCheckpointAvailability: () => exited ? {available: false, blocker: "NOT_READY"} : {available: true, blocker: null},
     getCanvas: () => exited ? null : canvas,
     getFrameCount: () => null,
+    startInputDiagnostics: () => {
+      active();
+      return startInputDiagnostics(iframe.contentWindow!, () => exited ? null : canvas);
+    },
     pause: async () => {active(); session!.pause();},
     resume: async () => {active(); session!.resume(); focus();},
     screenshot: async () => {

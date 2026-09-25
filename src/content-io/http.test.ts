@@ -92,7 +92,7 @@ it("[IO-21] UNIT/transport keeps project pins separate from expected file hashes
   expect(await read(response({ETag: '"opaque-server-revision"'}), input, object)).toEqual(new Uint8Array([17]));
   expect(object.pinnedEtag).toBe('"opaque-server-revision"');
 });
-it("[IO-24] UNIT/transport retries temporary failures at most once within the original budget", async () => {
+it("[IO-24] UNIT/transport retries temporary failures within the original budget", async () => {
   const fetch = vi.fn<typeof globalThis.fetch>().mockResolvedValueOnce(response({}, 503)).mockResolvedValueOnce(response());
   let now = 0;
   const wait = vi.fn(async (ms: number) => {now += ms;});
@@ -100,10 +100,23 @@ it("[IO-24] UNIT/transport retries temporary failures at most once within the or
   expect(fetch).toHaveBeenCalledTimes(2); expect(wait.mock.calls[0][0]).toBe(250);
   const failFetch = vi.fn(async () => response({}, 503));
   await expect(fetchRangeBlock(source(), state(), 0, undefined, 1000, {fetch: failFetch, now: () => now, wait})).rejects.toThrow("CONTENT_IO_NETWORK_FAILED");
-  expect(failFetch).toHaveBeenCalledTimes(2);
+  expect(failFetch).toHaveBeenCalledTimes(3);
   const delayed = vi.fn(async () => response({"Retry-After": "10"}, 429));
   await expect(fetchRangeBlock(source(), state(), 0, undefined, 1000, {fetch: delayed, now: () => now, wait})).rejects.toThrow("CONTENT_IO_NETWORK_FAILED");
   expect(delayed).toHaveBeenCalledOnce();
+});
+it("[IO-24] UNIT/transport keeps a bounded Range read alive through a short service restart", async () => {
+  const fetch = vi.fn<typeof globalThis.fetch>()
+    .mockResolvedValueOnce(response({}, 503))
+    .mockRejectedValueOnce(new TypeError("connection reset"))
+    .mockResolvedValueOnce(response({}, 503))
+    .mockResolvedValueOnce(response());
+  let now = 0;
+  const wait = vi.fn(async (ms: number) => {now += ms;});
+  await expect(fetchRangeBlock(source(), state(), 0, undefined, 15000, {fetch, now: () => now, wait}))
+    .resolves.toEqual(new Uint8Array([17]));
+  expect(fetch).toHaveBeenCalledTimes(4);
+  expect(wait.mock.calls.map(([ms]) => ms)).toEqual([250, 500, 1000]);
 });
 it("rejects failed headers without reading a response body", async () => {
   for (const [status, error] of [[401, "AUTHORIZATION_FAILED"], [403, "AUTHORIZATION_FAILED"], [412, "IDENTITY_CHANGED"]] as const) {

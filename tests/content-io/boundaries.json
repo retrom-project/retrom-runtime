@@ -592,10 +592,10 @@
     {
       "id": "F-FLY",
       "repository": "runtime",
-      "path": "src/providers/emulatorjs/disc-cache.ts",
-      "symbol": "loadDisc",
+      "path": "src/providers/emulatorjs/neocd-range.ts",
+      "symbol": "createFlycastRange",
       "classification": "CORE_BRIDGE",
-      "reason": "Preserves Promise<Blob> delivery/EOF semantics; source acquisition delegates to the common Reader/materializer.",
+      "reason": "Flycast CHD and ZIP reads use the shared bounded Range reader through the native Asyncify bridge.",
       "ownerStage": "S16",
       "tests": [
         "runtime:scripts/content-io/boundaries.test.mjs"

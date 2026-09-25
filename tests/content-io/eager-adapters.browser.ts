@@ -5,7 +5,7 @@ import {fileURLToPath} from "node:url";
 import {startFixtureServer} from "./fixture-server.mjs";
 const bundle = async (path: string) => (await build({entryPoints: [fileURLToPath(new URL(path, import.meta.url))], bundle: true,
   format: "esm", platform: "browser", write: false, target: "es2022"})).outputFiles[0].text;
-for (const name of ["tic80", "fake08", "gbe", "px68k", "np2kai", "openbor", "ruffle", "webmsx", "wasm4", "flycast", "nxengine"]) {
+for (const name of ["tic80", "fake08", "gbe", "px68k", "np2kai", "openbor", "ruffle", "webmsx", "wasm4", "nxengine"]) {
   test(`[X-26] BROWSER/${name} [ST-03] BROWSER/${name} [IO-22] BROWSER/${name} cold then independent-session OPFS reuse and MEMORY-only materialization @S16`, async ({page}) => {
     const bytes = new Uint8Array(16); bytes.set(name === "ruffle" ? [70,87,83,9,16,0,0,0] : name === "wasm4" ? [0,97,115,109,1,0,0,0] : [80,65,67,75]);
     const sha256 = createHash("sha256").update(bytes).digest("hex");
@@ -35,7 +35,6 @@ for (const name of ["tic80", "fake08", "gbe", "px68k", "np2kai", "openbor", "ruf
               case "ruffle": value = await eager.fetchSwf({swfUrl:source.url,swfSizeBytes:16,contentDigest:sha256},report,session); break;
               case "webmsx": value = await eager.fetchMedia({mediaUrl:source.url,mediaSizeBytes:16,contentDigest:sha256},report,session); break;
               case "wasm4": value = await eager.fetchCart({cartUrl:source.url,cartSizeBytes:16,contentDigest:sha256,runtimeBaseUrl:location.origin},report,{contentSession:session,assetIndex:{}}); break;
-              case "flycast": value = await eager.loadFlycastDisc(source,new AbortController().signal,n=>reported.push(n),session); break;
               case "nxengine": value = await eager.fetchContent({...source,path:"game.bin"},n=>reported.push(n),undefined,session,"a".repeat(64)); break;
               default: throw new Error("fixture");
             }
@@ -48,7 +47,7 @@ for (const name of ["tic80", "fake08", "gbe", "px68k", "np2kai", "openbor", "ruf
       expect(result.outputs).toEqual([Array.from(bytes),Array.from(bytes),Array.from(bytes)]);
       expect(result.backends).toEqual(["OPFS","OPFS","MEMORY"]);
       expect(server.fileRequests).toEqual([{name:"game",method:"GET",range:null},{name:"game",method:"GET",range:null}]);
-      expect(result.namespaces.every(ns => !/retrom-(gbe|px68k|np2kai|openbor|ruffle|webmsx|flycast|nxengine)/u.test(ns))).toBe(true);
+      expect(result.namespaces.every(ns => !/retrom-(gbe|px68k|np2kai|openbor|ruffle|webmsx|nxengine)/u.test(ns))).toBe(true);
       if (!["tic80","fake08"].includes(name)) {expect(result.progress.every(values => values.filter(n=>n===16).length===1)).toBe(true);}
     } finally {await server.close();}
   });

@@ -57,6 +57,7 @@ export type EjsInstance = EmulatorDiscInstance & EmulatorNativeSettingsInstance 
 
 export type EjsWindow = Window & {
   RETROM_NEOCD_RANGE?: ReturnType<typeof import("./neocd-range.js").createNeoCDRange>;
+  RETROM_FLYCAST_RANGE?: ReturnType<typeof import("./neocd-range.js").createFlycastRange>;
   EJS_player?: string;
   EJS_core?: string;
   EJS_controlScheme?: string;
@@ -92,6 +93,7 @@ export type EjsWindow = Window & {
 
 export const configuredGlobals = [
   "RETROM_NEOCD_RANGE",
+  "RETROM_FLYCAST_RANGE",
   "EJS_player", "EJS_core", "EJS_controlScheme", "EJS_gameUrl", "EJS_gameName", "EJS_gameID", "EJS_pathtodata",
   "EJS_biosUrl", "EJS_gameParentUrl", "EJS_startOnLoaded", "EJS_dontExtractRom",
   "EJS_disableBatchBootup", "EJS_disableCue", "EJS_language", "EJS_disableAutoLang", "EJS_DEBUG_XX",

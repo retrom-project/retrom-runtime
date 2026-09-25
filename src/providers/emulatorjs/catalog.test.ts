@@ -26,24 +26,29 @@ describe("EmulatorJS Provider declarations", () => {
       discSwitch: false, requiresThreads: false});
   });
 
-  it("routes Sega CD CHD through a separate bounded Content I/O target", () => {
-    const cart = emulatorJsProviderDefinition.targets.find(entry => entry.id === "genesis-plus-gx")!;
-    const disc = emulatorJsProviderDefinition.targets.find(entry => entry.id === "genesis-plus-gx-cd")!;
-    expect(cart.inputs.find(input => input.role === "game")?.kind).toBe("ROM_BLOB");
-    expect(disc.inputs.find(input => input.role === "game")?.kind).toBe("SEEKABLE_BLOB");
-    expect(disc.contentIO.game).toMatchObject({mode: "RANGE", bridge: "ASYNC", result: "READER"});
-    expect(disc.implementation.runtimeCore).toBe("genesis_plus_gx");
-    expect(disc.implementation.coreSha256).toBe(cart.implementation.coreSha256);
-    expect(disc.implementation.defaultOptions.genesis_plus_gx_cd_precache).toBe("disabled");
-  });
-
   it("gives Flycast a bounded, distinct instant checkpoint contract and single-disc target", () => {
     const manifest = projectProviderManifest(emulatorJsProviderDefinition);
     const target = manifest.targets.find((entry) => entry.id === "flycast")!;
+    const declaration = emulatorJsProviderDefinition.targets.find((entry) => entry.id === "flycast")!;
+    expect(declaration.inputs.find(input => input.role === "game")?.kind).toBe("SEEKABLE_BLOB");
+    expect(declaration.contentIO.game).toMatchObject({mode: "RANGE", bridge: "ASYNC", result: "READER"});
     expect(target.checkpoint).toEqual({maxBytes: 268435456,
       readFormats: ["flycast-state-gzip-v1", "flycast-state-v1", "flycast-state-v1-storage-v1"], writeFormat: "flycast-state-v1-storage-v1"});
     expect(target.capabilities).toMatchObject({standardGamepad: true, pause: true, screenshot: true,
       discSwitch: false, requiresThreads: false});
+  });
+  it("declares separate arcade targets backed by the same Flycast bytes", () => {
+    const dreamcast = emulatorJsProviderDefinition.targets.find((entry) => entry.id === "flycast")!;
+    for (const id of ["flycast-naomi", "flycast-naomi2", "flycast-atomiswave"]) {
+      const target = emulatorJsProviderDefinition.targets.find((entry) => entry.id === id);
+      expect(target?.implementation).toMatchObject({
+        runtimeCore: "flycast", coreSha256: dreamcast.implementation.coreSha256,
+        contentKinds: ["SINGLE_FILE"],
+      });
+      expect(target?.adapterId).toBe("emulatorjs-flycast");
+      expect(target?.inputs.find(input => input.role === "game")?.kind).toBe("SEEKABLE_BLOB");
+      expect(target?.contentIO.game).toMatchObject({mode: "RANGE", bridge: "ASYNC", result: "READER"});
+    }
   });
   it("limits PSP output and writes compressed states while retaining raw saves", () => {
     const manifest = projectProviderManifest(emulatorJsProviderDefinition);
@@ -55,17 +60,18 @@ describe("EmulatorJS Provider declarations", () => {
     const pspAssets = emulatorJsProviderDefinition.targets.find((target) => target.id === "ppsspp")!.assetPaths;
     expect(pspAssets).toContain("assets/4.3.0-pre/data/cores/ppsspp-assets.zip");
     expect(pspAssets).toContain("assets/4.3.0-pre/data/compression/extractzip.js");
-    for (const target of manifest.targets.filter((target) => !["ppsspp", "flycast", "bsnes", "gam4980"].includes(target.id))) {
+    for (const target of manifest.targets.filter((target) =>
+      !target.id.startsWith("flycast") && !["ppsspp", "bsnes", "gam4980"].includes(target.id))) {
       expect(target.checkpoint?.writeFormat).toBe("emulatorjs-state-v1-storage-v1");
     }
   });
-  it("uses last declaration wins for exactly sixty-nine current core targets", () => {
+  it("uses last declaration wins for exactly seventy-two current core targets", () => {
     const manifest = projectProviderManifest(emulatorJsProviderDefinition);
     expect(validateProviderManifest(manifest)).toBe(manifest);
     expect(manifest.providerId).toBe("emulatorjs");
     expect(manifest.providerVersion).toBe("0.0.0-dev");
-    expect(manifest.targets).toHaveLength(69);
-    expect(new Set(manifest.targets.map((target) => target.id)).size).toBe(69);
+    expect(manifest.targets).toHaveLength(72);
+    expect(new Set(manifest.targets.map((target) => target.id)).size).toBe(72);
     for (const targetId of ["dosbox-pure", "genesis-plus-gx-wide", "azahar", "freeintv"]) {
       const target = emulatorJsProviderDefinition.targets.find((entry) => entry.id === targetId);
       expect(target?.implementation.release).toBe("4.3.0-pre");
@@ -82,7 +88,8 @@ describe("EmulatorJS Provider declarations", () => {
       const target = emulatorJsProviderDefinition.targets.find((entry) => entry.id === targetId);
       expect(target, targetId).toBeDefined();
       expect(target?.implementation).toMatchObject({
-        artifactFlavor: targetId === "puae" ? "THREAD_WASM" : ["vice-xvic", "virtualjaguar"].includes(targetId) ? "OVERRIDE" : "WASM", contentKinds: ["SINGLE_FILE"], release: "4.2.3",
+        artifactFlavor: targetId === "puae" ? "THREAD_WASM" : ["vice-xvic", "virtualjaguar"].includes(targetId) ? "OVERRIDE" : "WASM",
+        contentKinds: ["SINGLE_FILE"], release: "4.2.3",
       });
       expect(target?.discSwitch, targetId).toBe(false);
       expect(target?.requiresThreads, targetId).toBe(targetId === "puae");

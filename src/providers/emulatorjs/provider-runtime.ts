@@ -20,9 +20,9 @@ import type {
 import {PlayerRuntimeError} from "../../provider/errors.js";
 import {focusRuntimeInput} from "../../provider/input-focus.js";
 import {emulatorJsProviderDefinition, type EmulatorImplementation} from "./catalog.js";
-import {installNeoCDStartup} from "./neocd-startup.js";
+import {installAsyncRangeStartup} from "./async-range-startup.js";
 import {registerSeekableContentFS} from "./virtual-content-fs.js";
-import {mountNeoCDRange, configureContentDisc, hasSeekableGame} from "./disc-mount.js";
+import {mountNeoCDRange, configureContentDisc, emulatorJsDisableCue, hasSeekableGame} from "./disc-mount.js";
 import {installArchiveWorkerCompatibility} from "./archive-worker.js";
 import {installDOSBoxPureStateCompatibility} from "./dosbox-state.js";
 import {installExternalFileCompatibility} from "./external-files.js";
@@ -291,7 +291,7 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
       this.startBarrier = createStartBarrier();
       this.configure(runtimeWindow);
       const disc = await configureContentDisc(runtimeWindow, this.envelope, this.implementation.runtimeCore, this.host.signal,
-        this.contentSession, error => this.fail(error.message, error), event => this.emit({type: "LOAD_PROGRESS", ...event}));
+        this.contentSession, error => this.fail(error.message, error));
       this.discRange = disc.range; this.cleanupFlycast = disc.cleanup;
       this.checkMountActive();
 
@@ -368,7 +368,7 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
     runtimeWindow.EJS_startOnLoaded = !deferredStart;
     runtimeWindow.EJS_dontExtractRom = deferredStart || this.implementation.runtimeCore === "flycast" || seekable;
     runtimeWindow.EJS_disableBatchBootup = deferredDOSStart;
-    runtimeWindow.EJS_disableCue = ["cap32", "quasi88"].includes(this.implementation.runtimeCore) ? true : undefined;
+    runtimeWindow.EJS_disableCue = emulatorJsDisableCue(this.implementation.runtimeCore, this.envelope.runtime.targetId) ? true : undefined;
     runtimeWindow.EJS_language = "zh-CN";
     runtimeWindow.EJS_disableAutoLang = false;
     // RetroArch emits native load receipts only in verbose mode. The PSP and
@@ -395,8 +395,8 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
       if (!this.instance) {this.fail("PLAYER_RUNTIME_UNAVAILABLE"); return;}
       const instance = this.instance;
       this.cleanupGamepadIndex = initializeEmulatorJsGamepads(instance);
-      if (this.implementation.runtimeCore === "neocd" && this.discRange) {installNeoCDStartup(instance, this.discRange);}
-      if (seekable && this.implementation.runtimeCore !== "neocd" && this.discRange) {
+      if (["neocd", "flycast"].includes(this.implementation.runtimeCore) && this.discRange) {installAsyncRangeStartup(instance, this.discRange);}
+      if (seekable && !["neocd", "flycast"].includes(this.implementation.runtimeCore) && this.discRange) {
         try {this.cleanupSeekableFS = registerSeekableContentFS(instance, this.discRange,
           error => this.fail("EMULATORJS_CONTENT_FS_UNAVAILABLE", error));}
         catch (error) {this.fail("EMULATORJS_CONTENT_FS_UNAVAILABLE", error); return;}

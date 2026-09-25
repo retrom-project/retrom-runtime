@@ -16,6 +16,19 @@ export const emulatorJsSourceCatalog = {
       {filename: "retrom-core-candidate.json", sha256: "389000f4810c30180889fa6d39eb5d21b3520594c01935523f363e9fd6211248", sizeBytes: 736},
       {filename: "source.tar.gz", sha256: "a65895c0f7b32ee69821862cb70fb49cff1922cb0133dedd2831f9c4d8a19472", sizeBytes: 5625236},
     ],
+  }, {
+    runtimeCore: "lutro",
+    repository: "https://github.com/retrom-project/libretro-lutro",
+    upstreamCommit: "6224157a615b18507bc0b117a3398c7a324cd3e5",
+    commit: "bea6639d7eba4e9f60ff2763d6716eb2d848b34d",
+    sourceTreeSha256: "f35662bdab2f78d066c965f25ed721ce4d22679053b96af9b5de12ae6f0f6a12",
+    adapterAbi: "emulatorjs-lutro-native-v1",
+    assets: [
+      {filename: "LICENSE", sha256: "8bba80897b25869e242b4b98d6f7de07dbde4b84758636f15c70cb75be4bc16c", sizeBytes: 36275},
+      {filename: "lutro-wasm.data", sha256: "78a74af63f9ef4a576ccff17f7e6c8c2f62a2cbf833a2ccb0d6d298653bca5bd", sizeBytes: 997735},
+      {filename: "retrom-core-candidate.json", sha256: "405bdeb3f1b7dc57f20b32f25c3fdd1a038bd20b55f9d3b0065979c1d8cba63d", sizeBytes: 747},
+      {filename: "source.tar.gz", sha256: "027ac6d8dd2ca0c8ff493c17ccea173e9253b67b0bb6fe43924236ac0fdc3b77", sizeBytes: 2632359},
+    ],
   }] as readonly DevelopmentFork[],
   forks: [
     ...emulatorJsPlatformCoreForks,

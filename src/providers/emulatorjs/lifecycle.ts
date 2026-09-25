@@ -1,8 +1,30 @@
+import type {LaunchEnvelopeV1, RuntimeCheckpointAvailabilityV1} from "../../provider/module-api.js";
+import type {EjsInstance} from "./emulator-instance.js";
+import type {LutroNativeSaveTracker} from "./lutro-native-save.js";
+
+export function emulatorCheckpointAvailability(envelope: LaunchEnvelopeV1, instance: EjsInstance | null,
+  runtimeCore: string, lutroSave: LutroNativeSaveTracker | null): RuntimeCheckpointAvailabilityV1 {
+  if (!envelope.runtime.capabilities.checkpoint) {return {available: false, reason: "UNSUPPORTED"};}
+  if (runtimeCore === "lutro") {return lutroSave?.getAvailability() ?? {available: false, reason: "NOT_READY"};}
+  if (!instance?.gameManager || envelope.runtime.targetId === "dosbox-pure" && !envelope.targetOptions.dosEntryPath) {
+    return {available: false, reason: "NOT_READY"};
+  }
+  return {available: true, reason: null};
+}
+
 export type StartBarrier = {
   promise: Promise<void>;
   reject(error: Error): void;
   resolve(): void;
 };
+
+export function needsVerboseRestore(core: string, restoring: boolean) {
+  return restoring && (core === "ppsspp" || core === "supermodel");
+}
+
+export function runtimeStartTimeout(core: string, restoring: boolean) {
+  return core === "supermodel" && restoring ? 120_000 : 30_000;
+}
 
 export function startWhenAvailable(runtimeWindow: Window) {
   const click = () => {

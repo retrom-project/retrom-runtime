@@ -10,6 +10,8 @@ import type {
   LaunchEnvelopeV1,
   PlayerRuntimeV1,
   RuntimeDiscStateV1,
+  RuntimeCheckpointAvailabilityV1,
+  RuntimeCheckpointV1,
   RuntimeEventV1,
   RuntimeHostV1,
   RuntimeInputFilterPolicyV1,
@@ -25,14 +27,14 @@ import {mountNeoCDRange, configureContentDisc} from "./disc-mount.js";
 import {installArchiveWorkerCompatibility} from "./archive-worker.js";
 import {installDOSBoxPureStateCompatibility} from "./dosbox-state.js";
 import {installExternalFileCompatibility} from "./external-files.js";
-import {RuntimeGamepadFilter, installRuntimeGamepadFilter} from "../../provider/gamepad-filter.js";
+import {RuntimeGamepadFilter, installRuntimeGamepadFilter, validInputFilterPolicy} from "../../provider/gamepad-filter.js";
 import {
   initializeEmulatorJsDiscs,
   readEmulatorJsDiscState,
   switchEmulatorJsDisc,
 } from "./discs.js";
 import {captureEmulatorJsScreenshot} from "./screenshot.js";
-import {createStartBarrier, startWhenAvailable, type StartBarrier} from "./lifecycle.js";
+import {createStartBarrier, emulatorCheckpointAvailability, needsVerboseRestore, runtimeStartTimeout, startWhenAvailable, type StartBarrier} from "./lifecycle.js";
 import {installEmulatorJsRetroArchConfig} from "./retroarch-config.js";
 import {installEmulatorJs423StateRestoreCompatibility} from "./state-restore.js";
 import {installSupermodelState} from "./supermodel-state.js";
@@ -52,6 +54,7 @@ import {installPspRestoreObserver} from "./psp-restore.js";
 import {createEmulatorJsMountPoint} from "./frame-style.js";
 import {decodeStoredCheckpoint, encodeStoredCheckpoint} from "../../provider/checkpoint-storage.js";
 import {installEmulatorJsOutputViewport} from "./output-viewport.js";
+import {acknowledgeLutroStoredSave, installLutroNativeRestore, LutroNativeSaveTracker} from "./lutro-native-save.js";
 
 import {configuredGlobals} from "./emulator-instance.js";
 import type {EjsInstance, EjsWindow} from "./emulator-instance.js";
@@ -93,12 +96,13 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
   private cleanupRetroArchConfig: () => void = () => undefined;
   private dosboxCompatibility: ReturnType<typeof installDOSBoxPureStateCompatibility> | null = null;
   private cleanupDeferredStart: (() => void) | null = null;
+  private lutroNativeSave: LutroNativeSaveTracker | null = null;
   private startBarrier: StartBarrier | null = null;
   private startTimeout: number | null = null;
   private readonly startupTimers = new Set<number>();
   private startObserved = false;
   private exitRequestedEmitted = false;
-  private checkpointAvailability = {available: false, reason: "NOT_READY" as string | null};
+  private checkpointAvailability: RuntimeCheckpointAvailabilityV1 = {available: false, reason: "NOT_READY"};
   private readonly implementation: EmulatorImplementation;
   private readonly contentOwner = new ProviderContentOwner(error => this.fail(error.message, error), diagnostic => this.host.reportDiagnostic({code: "CONTENT_IO_METRICS", message: JSON.stringify(diagnostic)}));
   private contentSession: ContentSessionClient | null = null;
@@ -157,12 +161,19 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
     const maximum = this.envelope.runtime.checkpoint?.maxBytes ?? 0;
     const bytes = this.implementation.runtimeCore === "ppsspp"
       ? await readPspCheckpoint(manager, maximum, this.state === "PAUSED")
+      : this.implementation.runtimeCore === "lutro"
+        ? await this.lutroNativeSave?.capture()
       : await readEmulatorJsCheckpoint(manager, this.state === "PAUSED");
     if (!bytes || bytes.byteLength < 1 || bytes.byteLength > maximum) {
       throw contractError();
     }
     const format = this.envelope.runtime.checkpoint!.writeFormat;
     return {bytes: await encodeStoredCheckpoint(bytes, format, maximum, this.host.signal), format, metadata: null};
+  }
+
+  async acknowledgeCheckpoint(checkpoint: RuntimeCheckpointV1) {
+    if (this.implementation.runtimeCore !== "lutro" || !this.lutroNativeSave) {throw capabilityError();}
+    await acknowledgeLutroStoredSave(this.lutroNativeSave, checkpoint, this.envelope.runtime.checkpoint, this.host.signal);
   }
 
   async screenshot() {
@@ -388,11 +399,15 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
     runtimeWindow.EJS_paths = {[fileName(this.implementation.coreAssetPath)]:
       `${this.envelope.runtime.runtimeBaseUrl}${this.implementation.coreAssetPath}`};
     runtimeWindow.EJS_externalFiles = externalFiles(this.envelope);
+    const checkpointMaximum = this.envelope.runtime.checkpoint?.maxBytes ?? 0;
     runtimeWindow.EJS_ready = () => {
       this.instance = runtimeWindow.EJS_emulator ?? null;
       if (this.instance) {
         this.cleanupGamepadIndex = initializeEmulatorJsGamepads(this.instance);
         if (this.neoCDRange) {installNeoCDStartup(this.instance, this.neoCDRange);}
+        installLutroNativeRestore(this.implementation.runtimeCore, this.instance, this.restorePayload,
+          checkpointMaximum, () => {this.restorePayload = null;},
+          error => this.fail("PLAYER_STATE_RESTORE_FAILED", error));
       }
       if (!this.instance) {this.fail("PLAYER_RUNTIME_UNAVAILABLE");}
       this.instance?.on?.("exit", () => this.requestExit());
@@ -411,9 +426,14 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
           this.fail("PLAYER_ROM_START_UNAVAILABLE", error);
         }
       }
-      if (this.instance) {this.updateCheckpointAvailability(this.currentCheckpointAvailability());}
+      this.updateCheckpointAvailability(this.currentCheckpointAvailability());
     };
     runtimeWindow.EJS_onGameStart = () => {
+      if (this.implementation.runtimeCore === "lutro" && this.instance && !this.lutroNativeSave) {
+        this.lutroNativeSave = new LutroNativeSaveTracker(this.instance, checkpointMaximum,
+          Boolean(this.envelope.restore), value => this.updateCheckpointAvailability(value));
+        this.lutroNativeSave.start();
+      }
       if (this.implementation.runtimeCore === "supermodel" && !this.cleanupSupermodelState) {
         try {
           const manager = this.instance?.gameManager;
@@ -569,6 +589,7 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
   }
 
   private cleanupSurface() {
+    this.lutroNativeSave?.stop(); this.lutroNativeSave = null;
     this.videoModeController?.cleanup();
     this.videoModeController = null;
     this.cleanupFlycast?.(); this.cleanupFlycast = null;
@@ -581,6 +602,7 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
   private fail(code: string, error?: unknown) {
     if (this.state === "FAILED" || this.state === "EXITED") {return;}
     this.transition("FAILED");
+    this.lutroNativeSave?.stop();
     this.contentOwner.force(error instanceof ContentIOError ? error : new ContentIOError("INTERNAL"));
     this.updateCheckpointAvailability({available: false, reason: "FAILED"});
     this.host.reportDiagnostic({code, message: error instanceof Error ? error.message : code});
@@ -601,44 +623,21 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
     this.emit({type: "STATE_CHANGED", previous, state: next});
   }
 
-  private currentCheckpointAvailability() {
-    if (!this.envelope.runtime.capabilities.checkpoint) {return {available: false, reason: "UNSUPPORTED"};}
-    if (!this.instance?.gameManager || this.envelope.runtime.targetId === "dosbox-pure" &&
-      !this.envelope.targetOptions.dosEntryPath) {
-      return {available: false, reason: "NOT_READY"};
-    }
-    return {available: true, reason: null};
-  }
+  private currentCheckpointAvailability() {return emulatorCheckpointAvailability(this.envelope, this.instance, this.implementation.runtimeCore, this.lutroNativeSave);}
 
-  private updateCheckpointAvailability(availability: {available: boolean; reason: string | null}) {
-    if (availability.available === this.checkpointAvailability.available &&
-      availability.reason === this.checkpointAvailability.reason) {return;}
-    this.checkpointAvailability = availability;
-    this.emit({type: "CHECKPOINT_AVAILABILITY_CHANGED", availability});
+  private updateCheckpointAvailability(availability: RuntimeCheckpointAvailabilityV1) {
+    if (JSON.stringify(availability) === JSON.stringify(this.checkpointAvailability)) {return;}
+    this.checkpointAvailability = availability; this.emit({type: "CHECKPOINT_AVAILABILITY_CHANGED", availability});
   }
 
   private requestExit() {
     if (this.exitRequestedEmitted || this.state === "FAILED" || this.state === "EXITED") {return;}
-    this.exitRequestedEmitted = true;
-    this.emit({type: "EXIT_REQUESTED"});
+    this.exitRequestedEmitted = true; this.emit({type: "EXIT_REQUESTED"});
   }
 
   private emit(event: RuntimeEventV1) {for (const listener of this.listeners) {listener(event);}}
 }
 
-function needsVerboseRestore(core: string, restoring: boolean) {
-  return restoring && (core === "ppsspp" || core === "supermodel");
-}
-
-function runtimeStartTimeout(core: string, restoring: boolean) {
-  return core === "supermodel" && restoring ? 120_000 : 30_000;
-}
-
-function validInputFilterPolicy(value: RuntimeInputFilterPolicyV1 | null) {
-  return value === null || typeof value.suppressInput === "boolean" &&
-    (value.activeGamepadIndex === null || Number.isSafeInteger(value.activeGamepadIndex) &&
-      value.activeGamepadIndex >= 0 && value.activeGamepadIndex <= 255);
-}
 function invalid(): never {throw new Error("PROVIDER_LAUNCH_REQUEST_INVALID");}
 function contractError(cause?: unknown) {return new PlayerRuntimeError("PLAYER_RUNTIME_CONTRACT_INVALID", {cause});}
 function capabilityError() {return new PlayerRuntimeError("PLAYER_RUNTIME_CAPABILITY_UNSUPPORTED");}

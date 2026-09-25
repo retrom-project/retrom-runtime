@@ -44,17 +44,22 @@ describe("EmulatorJS Provider declarations", () => {
     const pspAssets = emulatorJsProviderDefinition.targets.find((target) => target.id === "ppsspp")!.assetPaths;
     expect(pspAssets).toContain("assets/4.3.0-pre/data/cores/ppsspp-assets.zip");
     expect(pspAssets).toContain("assets/4.3.0-pre/data/compression/extractzip.js");
-    for (const target of manifest.targets.filter((target) => !["ppsspp", "flycast", "bsnes", "gam4980"].includes(target.id))) {
+    for (const target of manifest.targets.filter((target) => !["ppsspp", "flycast", "bsnes", "gam4980", "lutro"].includes(target.id))) {
       expect(target.checkpoint?.writeFormat).toBe("emulatorjs-state-v1-storage-v1");
     }
   });
-  it("uses last declaration wins for exactly sixty-nine current core targets", () => {
+  it("declares Lutro native game saves with a separate bounded format", () => {
+    const target = projectProviderManifest(emulatorJsProviderDefinition).targets.find(entry => entry.id === "lutro")!;
+    expect(target.checkpoint).toEqual({maxBytes: 16 * 1024 * 1024, semantics: "GAME_SAVE",
+      readFormats: ["lutro-native-v1", "lutro-native-v1-storage-v1"], writeFormat: "lutro-native-v1-storage-v1"});
+  });
+  it("uses last declaration wins for exactly seventy current core targets", () => {
     const manifest = projectProviderManifest(emulatorJsProviderDefinition);
     expect(validateProviderManifest(manifest)).toBe(manifest);
     expect(manifest.providerId).toBe("emulatorjs");
     expect(manifest.providerVersion).toBe("0.0.0-dev");
-    expect(manifest.targets).toHaveLength(69);
-    expect(new Set(manifest.targets.map((target) => target.id)).size).toBe(69);
+    expect(manifest.targets).toHaveLength(70);
+    expect(new Set(manifest.targets.map((target) => target.id)).size).toBe(70);
     for (const targetId of ["dosbox-pure", "genesis-plus-gx-wide", "azahar", "freeintv"]) {
       const target = emulatorJsProviderDefinition.targets.find((entry) => entry.id === targetId);
       expect(target?.implementation.release).toBe("4.3.0-pre");

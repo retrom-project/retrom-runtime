@@ -27,6 +27,9 @@ const sources = new Map([
     upstreamCommit: "679d6fec04963f6e70a7ec217e3d0ebb1fe472fc", license: "LICENSE"}],
   ["gearboy", {repository: "https://github.com/retrom-project/Gearboy",
     upstreamCommit: "340ebe3c258846560cc93d93ca4359f506fafb70", license: "LICENSE"}],
+  ["lutro", {repository: "https://github.com/retrom-project/libretro-lutro",
+    upstreamCommit: "6224157a615b18507bc0b117a3398c7a324cd3e5", license: "LICENSE",
+    adapterAbi: "emulatorjs-lutro-native-v1"}],
   ["vecx", {repository: "https://github.com/retrom-project/libretro-vecx",
     upstreamCommit: "8f671cc9d737f2890c3ce19e177e2984dcae121f", license: "LICENSE.md"}],
 
@@ -57,13 +60,15 @@ const exact = (value, keys) => value && typeof value === "object" && !Array.isAr
 export function developmentForkSource(id) {
   const source = sources.get(id);
   if (!source) {invalid();}
-  return {id, repository: source.repository, upstreamCommit: source.upstreamCommit, adapterAbi: "emulatorjs-state-v1"};
+  return {id, repository: source.repository, upstreamCommit: source.upstreamCommit,
+    adapterAbi: source.adapterAbi ?? "emulatorjs-state-v1"};
 }
 
 export function validEmulatorJsDevelopmentSource(value) {
   const source = sources.get(value?.id);
   return !!source && exact(value, ["id", "repository", "upstreamCommit", "adapterAbi"]) &&
-    value.repository === source.repository && value.upstreamCommit === source.upstreamCommit && value.adapterAbi === "emulatorjs-state-v1";
+    value.repository === source.repository && value.upstreamCommit === source.upstreamCommit &&
+    value.adapterAbi === (source.adapterAbi ?? "emulatorjs-state-v1");
 }
 
 export function developmentForkFiles(catalog) {

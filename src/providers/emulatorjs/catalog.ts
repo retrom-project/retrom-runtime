@@ -55,6 +55,11 @@ const adapters = [
     checkpoint: {readFormats: ["bsnes-state-v1"], writeFormat: "bsnes-state-v1"},
     id: "emulatorjs-bsnes", kind: "EMULATORJS_4_3_0_PRE",
   }),
+  defineAdapter({
+    abi: "emulatorjs-lutro-native-v1", capabilities,
+    checkpoint: {readFormats: ["lutro-native-v1"], writeFormat: "lutro-native-v1", semantics: "GAME_SAVE"},
+    id: "emulatorjs-lutro", kind: "EMULATORJS_4_2_3",
+  }),
 ] as const;
 
 const inputs = [
@@ -137,6 +142,7 @@ const cores: readonly CoreSource[] = [
   core("fuse", "4.2.3", "fuse-wasm.data", 1218229, "791fe40dfba9ac236c5c14d629d555133c5fe3c36d1dbdc2a48ced487da51373", "0f2dee6ecd4bd57fe793239ec42bd6efa4b4b8696aae4f62a2a469cad2a22f32", {defaultOptions: {keyboardInput: "enabled"}}),
   core("gambatte", "4.2.3", "gambatte-wasm.data", 967156, "ad67c7bf57f8f8b62606048e6ea498afac5b5abc76ad8de5f9dfc2a6719374bb", "c1d7561f109647715f8795c8fa977318dc78bfc847cd8879bb029d62c55fa605"),
   core("gearboy", "4.2.3", "gearboy-wasm.data", 939318, "ca08e4936a9f8b62f198f8df30fed48c5e68f06db9dd91115a2c44863054661e", "389000f4810c30180889fa6d39eb5d21b3520594c01935523f363e9fd6211248", {artifactFlavor: "OVERRIDE", defaultOptions: {gearboy_sgb: "Enabled", gearboy_sgb_border: "Enabled"}}),
+  core("lutro", "4.2.3", "lutro-wasm.data", 997735, "78a74af63f9ef4a576ccff17f7e6c8c2f62a2cbf833a2ccb0d6d298653bca5bd", "405bdeb3f1b7dc57f20b32f25c3fdd1a038bd20b55f9d3b0065979c1d8cba63d", {artifactFlavor: "OVERRIDE"}),
   core("gearcoleco", "4.2.3", "gearcoleco-wasm.data", 891907, "164e213e4d5f2c14a0f2b55da973ed5a54ef7601cb352e64c9a73ace1a7ba606", "1c377b55d252fc7133bb99b845c1bc1931a3f9989fd1410659c50bd3b2a78a4d"),
   core("genesis_plus_gx", "4.2.3", "genesis_plus_gx-wasm.data", 1203661, "190297a6f86757405090f1a2266f67dfe1a570a528c583434ed3641a5664f768", "a102b02756ca10a97e87bddc85228ca466ab75ba4b1fa6f6938e59e8343c4b4b"),
   core("genesis_plus_gx_wide", "4.3.0-pre", "genesis_plus_gx_wide-wasm.data", 1007775, "653b59f5b4c3147c6786313ecd60c6657b1bc0d465814919d363728afa93b2e0", "76fc52778209b88d6e7c22aa921d735c9bb8dbf53fea08e74ec08ce3c26b6d60"),
@@ -178,14 +184,14 @@ const cores: readonly CoreSource[] = [
 
 const targets = cores.map((entry) => {
   return defineTarget({
-  adapterId: entry.id === "gam4980" ? "emulatorjs-gam4980" : entry.id === "bsnes" ? "emulatorjs-bsnes" : entry.id === "flycast" ? "emulatorjs-flycast" : entry.id === "ppsspp" ? "emulatorjs-psp" : `emulatorjs-${entry.release}`,
+  adapterId: entry.id === "gam4980" ? "emulatorjs-gam4980" : entry.id === "bsnes" ? "emulatorjs-bsnes" : entry.id === "flycast" ? "emulatorjs-flycast" : entry.id === "ppsspp" ? "emulatorjs-psp" : entry.id === "lutro" ? "emulatorjs-lutro" : `emulatorjs-${entry.release}`,
   assetPaths: [
     ...commonAssets(entry.release),
     entry.asset,
     ...(entry.id === "ppsspp" ? [`assets/${entry.release}/data/cores/ppsspp-assets.zip`, `assets/${entry.release}/data/compression/extractzip.js`] : []),
     `assets/${entry.release}/data/cores/reports/${entry.id}.json`,
   ].sort(compareUtf8),
-  checkpointMaxBytes: 256 * 1024 * 1024,
+  checkpointMaxBytes: entry.id === "lutro" ? 16 * 1024 * 1024 : 256 * 1024 * 1024,
   discSwitch: entry.id === "yabause",
   displayName: displayName(entry.targetId ?? entry.id),
   frameMode: "SAME_ORIGIN_BLANK",

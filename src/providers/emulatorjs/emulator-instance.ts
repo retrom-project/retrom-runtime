@@ -40,6 +40,8 @@ export type EjsInstance = EmulatorDiscInstance & EmulatorNativeSettingsInstance 
   debug?: boolean;
   Module?: {callMain?: (args: string[]) => unknown};
   startGame?: () => unknown;
+  checkCompression?: (data: Uint8Array, message: string | undefined,
+    callback?: (name: string, data: Uint8Array) => void) => Promise<unknown>;
   canvas?: HTMLCanvasElement;
   capture?: {photo?: {source?: string; format?: string; upscale?: number}};
   gameManager?: EjsManager;

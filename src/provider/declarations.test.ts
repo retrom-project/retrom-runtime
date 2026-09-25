@@ -4,6 +4,7 @@ import { projectProviderManifest } from "./manifest.js";
 import { retromRuntimeProviderDefinition } from "../providers/retrom-runtime/catalog.js";
 
 const targetIds = [
+  "apple2-apple2js",
   "bbc-jsbeeb",
   "butterscotch-gamemaker",
   "fake08",
@@ -26,6 +27,7 @@ const targetIds = [
   "wasm4",
 ];
 const sameOriginFrameTargetIds = [
+  "apple2-apple2js",
   "bbc-jsbeeb",
   "butterscotch-gamemaker",
   "fake08",
@@ -48,7 +50,7 @@ describe("retrom-runtime provider declarations", () => {
   it("declares the complete target closure in one source", () => {
     expect(retromRuntimeProviderDefinition.providerVersion).toBe("0.0.0-dev");
     expect(retromRuntimeProviderDefinition.targets.map((target) => target.id)).toEqual(targetIds);
-    expect(retromRuntimeProviderDefinition.adapters).toHaveLength(23);
+    expect(retromRuntimeProviderDefinition.adapters).toHaveLength(24);
   });
 
   it("projects a public manifest without internal adapter identities", () => {

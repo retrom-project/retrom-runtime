@@ -2465,5 +2465,29 @@
       "output": "runtime/butterscotch/worker.mjs"
     }
   ],
-  "developmentInputs": []
+  "developmentInputs": [
+    {
+      "id": "apple2js",
+      "repository": "https://github.com/retrom-project/apple2js",
+      "upstreamCommit": "ee0aed25f73c69d0245e86a2a5fccb3324c3056c",
+      "adapterAbi": "apple2js-web-v1",
+      "assets": [
+        {
+          "filename": "LICENSE",
+          "output": "licenses/apple2js/LICENSE",
+          "maxSizeBytes": 1048576
+        },
+        {
+          "filename": "apple2js-site.tar.gz",
+          "output": "runtime/apple2js/apple2js-site.tar.gz",
+          "maxSizeBytes": 1048576
+        },
+        {
+          "filename": "source.tar.gz",
+          "output": "licenses/apple2js/source.tar.gz",
+          "maxSizeBytes": 8388608
+        }
+      ]
+    }
+  ]
 }

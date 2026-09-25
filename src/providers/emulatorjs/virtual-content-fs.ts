@@ -1,6 +1,14 @@
-import {neoCDRangeBlockSize, type NeoCDRange} from "./neocd-range.js";
+import {neoCDRangeBlockSize} from "./neocd-range.js";
 
-type VirtualNode = {usedBytes: number; stream_ops: {
+export type VirtualContentFile = {
+  filename: string; sizeBytes: number; canSuspend: boolean;
+  contents?: Uint8Array;
+  read(position: number, length: number): Uint8Array | Promise<Uint8Array>;
+  begin(): void; end(): void; fail(error: Error): void;
+  idle(): Promise<void>; dispose(): Promise<void>;
+};
+
+type VirtualNode = {usedBytes: number; contents?: Uint8Array; stream_ops: {
   read?: (stream: unknown, buffer: Uint8Array, offset: number, length: number, position: number) => number;
   [key: string]: unknown;
 }};
@@ -14,7 +22,7 @@ type VirtualModule = {FS?: VirtualFS; retromContentIOAsyncify?: () => Asyncify};
 type Instance = {Module?: unknown; on?: (event: string, callback: (...args: unknown[]) => void) => void};
 
 /** Attach the shared FS mount before EmulatorJS copies the game into its FS. */
-export function registerSeekableContentFS(instance: Instance, range: NeoCDRange, fail: (error: unknown) => void): () => void {
+export function registerSeekableContentFS(instance: Instance, range: VirtualContentFile, fail: (error: unknown) => void): () => void {
   if (!instance.on) {throw new Error("EMULATORJS_CONTENT_FS_UNAVAILABLE");}
   let cleanup: (() => void) | null = null;
   let closed = false;
@@ -27,16 +35,17 @@ export function registerSeekableContentFS(instance: Instance, range: NeoCDRange,
 }
 
 /** Mount a Content I/O reader at the shared EmulatorJS FS write boundary. */
-export function installSeekableContentFS(instance: Instance, range: NeoCDRange): () => void {
+export function installSeekableContentFS(instance: Instance, range: VirtualContentFile): () => void {
   const module = instance.Module as VirtualModule | undefined;
   const fs = module?.FS, asyncify = module?.retromContentIOAsyncify?.();
-  if (!fs || !asyncify || typeof asyncify.handleSleep !== "function") {
+  if (!fs || range.canSuspend && (!asyncify || typeof asyncify.handleSleep !== "function")) {
     throw new Error("EMULATORJS_CONTENT_FS_UNAVAILABLE");
   }
   const writeFile = fs.writeFile;
   let mounted: VirtualNode | null = null;
   let originalOps: VirtualNode["stream_ops"] | null = null;
   let originalSize = 0;
+  let originalContents: Uint8Array | undefined;
   fs.writeFile = function(path, data, ...options) {
     if (path.split("/").pop() !== range.filename) {return writeFile.call(fs, path, data, ...options);}
     if (mounted) {throw new Error("EMULATORJS_CONTENT_FS_DUPLICATE");}
@@ -44,25 +53,42 @@ export function installSeekableContentFS(instance: Instance, range: NeoCDRange):
     const node = fs.lookupPath(path).node;
     originalOps = node.stream_ops;
     originalSize = node.usedBytes;
+    originalContents = node.contents;
     node.usedBytes = range.sizeBytes;
+    if (range.contents) {node.contents = range.contents;}
     node.stream_ops = {...originalOps, read: (_stream: unknown, buffer: Uint8Array, offset: number,
       length: number, position: number) => readContent(range, asyncify, buffer, offset, length, position)};
     mounted = node;
   };
   return () => {
     fs.writeFile = writeFile;
-    if (mounted && originalOps) {mounted.stream_ops = originalOps; mounted.usedBytes = originalSize;}
+    if (mounted && originalOps) {
+      mounted.stream_ops = originalOps; mounted.usedBytes = originalSize;
+      if (range.contents) {mounted.contents = originalContents;}
+    }
     mounted = null;
   };
 }
 
-function readContent(range: NeoCDRange, asyncify: Asyncify, buffer: Uint8Array,
+function readContent(range: VirtualContentFile, asyncify: Asyncify | undefined, buffer: Uint8Array,
   offset: number, length: number, position: number): number {
   if (!Number.isSafeInteger(position) || !Number.isSafeInteger(length) || position < 0 || length < 0) {
     throw new Error("EMULATORJS_CONTENT_FS_BOUNDS");
   }
   const count = Math.min(length, Math.max(0, range.sizeBytes - position));
   if (count === 0) {return 0;}
+  if (!range.canSuspend) {
+    let done = 0;
+    while (done < count) {
+      const size = Math.min(neoCDRangeBlockSize, count - done);
+      const result = range.read(position + done, size);
+      if (!(result instanceof Uint8Array)) {throw new Error("EMULATORJS_CONTENT_FS_UNEXPECTED_ASYNC_READ");}
+      buffer.set(result, offset + done);
+      done += size;
+    }
+    return done;
+  }
+  if (!asyncify) {throw new Error("EMULATORJS_CONTENT_FS_UNAVAILABLE");}
   // On rewind the original read has already filled the Wasm buffer. Asyncify
   // must consume its saved return value before any new Content I/O work.
   if (asyncify.state === asyncify.State.Rewinding) {return asyncify.handleSleep(() => {});}

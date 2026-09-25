@@ -7,3 +7,4 @@ export {fetchSwf} from "../../src/ruffle/fetch.js";
 export {fetchMedia} from "../../src/webmsx/fetch.js";
 export {fetchCart} from "../../src/wasm4/content.js";
 export {fetchContent} from "../../src/nxengine/project.js";
+export {mountEagerContentFile} from "../../src/providers/emulatorjs/disc-mount.js";

@@ -21,8 +21,8 @@ import {PlayerRuntimeError} from "../../provider/errors.js";
 import {focusRuntimeInput} from "../../provider/input-focus.js";
 import {emulatorJsProviderDefinition, type EmulatorImplementation} from "./catalog.js";
 import {installAsyncRangeStartup} from "./async-range-startup.js";
-import {registerSeekableContentFS} from "./virtual-content-fs.js";
-import {mountNeoCDRange, configureContentDisc, emulatorJsDisableCue, hasSeekableGame} from "./disc-mount.js";
+import {registerSeekableContentFS, type VirtualContentFile} from "./virtual-content-fs.js";
+import {configureContentDisc, emulatorJsDisableCue, hasSeekableGame} from "./disc-mount.js";
 import {installArchiveWorkerCompatibility} from "./archive-worker.js";
 import {installDOSBoxPureStateCompatibility} from "./dosbox-state.js";
 import {installExternalFileCompatibility} from "./external-files.js";
@@ -57,8 +57,6 @@ import {installEmulatorJsOutputViewport} from "./output-viewport.js";
 import {configuredGlobals} from "./emulator-instance.js";
 import type {EjsInstance, EjsWindow} from "./emulator-instance.js";
 
-
-
 export async function createEmulatorJsPlayer(
   envelope: LaunchEnvelopeV1,
   host: RuntimeHostV1,
@@ -79,7 +77,7 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
   private exitPromise: Promise<void> | null = null;
   private pspRestore: ReturnType<typeof installPspRestoreObserver> | null = null;
   private cleanupArchiveWorker: (() => void) | null = null;
-  private discRange: Awaited<ReturnType<typeof mountNeoCDRange>> | null = null;
+  private discRange: VirtualContentFile | null = null;
   private cleanupFlycast: (() => void) | null = null;
   private cleanupSeekableFS: (() => void) | null = null;
   private cleanupFrameStyle: (() => void) | null = null;
@@ -102,6 +100,7 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
   private exitRequestedEmitted = false;
   private checkpointAvailability = {available: false, reason: "NOT_READY" as string | null};
   private readonly implementation: EmulatorImplementation;
+  private readonly eagerContentGame: boolean;
   private readonly contentOwner = new ProviderContentOwner(error => this.fail(error.message, error), diagnostic => this.host.reportDiagnostic({code: "CONTENT_IO_METRICS", message: JSON.stringify(diagnostic)}));
   private contentSession: ContentSessionClient | null = null;
   private readonly hostAbort = () => {this.contentOwner.force(); void this.exit();};
@@ -114,6 +113,7 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
     const target = emulatorJsProviderDefinition.targets.find((entry) => entry.id === envelope.runtime.targetId);
     if (!target) {invalid();}
     this.implementation = target.implementation;
+    this.eagerContentGame = target.contentIO.game.mode === "EAGER";
     const core = assetIndex[this.implementation.coreAssetPath];
     if (!core || core.sha256 !== this.implementation.coreSha256 ||
       core.sizeBytes !== this.implementation.coreSizeBytes) {
@@ -291,7 +291,8 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
       this.startBarrier = createStartBarrier();
       this.configure(runtimeWindow);
       const disc = await configureContentDisc(runtimeWindow, this.envelope, this.implementation.runtimeCore, this.host.signal,
-        this.contentSession, error => this.fail(error.message, error));
+        this.contentSession, error => this.fail(error.message, error), this.eagerContentGame,
+        (loadedBytes, totalBytes) => this.emit({type: "LOAD_PROGRESS", loadedBytes, totalBytes}));
       this.discRange = disc.range; this.cleanupFlycast = disc.cleanup;
       this.checkMountActive();
 
@@ -366,7 +367,7 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
     runtimeWindow.EJS_biosUrl = biosFile(bios);
     runtimeWindow.EJS_gameParentUrl = parent?.url;
     runtimeWindow.EJS_startOnLoaded = !deferredStart;
-    runtimeWindow.EJS_dontExtractRom = deferredStart || this.implementation.runtimeCore === "flycast" || seekable;
+    runtimeWindow.EJS_dontExtractRom = deferredStart || this.implementation.runtimeCore === "flycast" || seekable || this.eagerContentGame;
     runtimeWindow.EJS_disableBatchBootup = deferredDOSStart;
     runtimeWindow.EJS_disableCue = emulatorJsDisableCue(this.implementation.runtimeCore, this.envelope.runtime.targetId) ? true : undefined;
     runtimeWindow.EJS_language = "zh-CN";
@@ -396,7 +397,7 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
       const instance = this.instance;
       this.cleanupGamepadIndex = initializeEmulatorJsGamepads(instance);
       if (["neocd", "flycast"].includes(this.implementation.runtimeCore) && this.discRange) {installAsyncRangeStartup(instance, this.discRange);}
-      if (seekable && !["neocd", "flycast"].includes(this.implementation.runtimeCore) && this.discRange) {
+      if ((seekable || this.eagerContentGame) && !["neocd", "flycast"].includes(this.implementation.runtimeCore) && this.discRange) {
         try {this.cleanupSeekableFS = registerSeekableContentFS(instance, this.discRange,
           error => this.fail("EMULATORJS_CONTENT_FS_UNAVAILABLE", error));}
         catch (error) {this.fail("EMULATORJS_CONTENT_FS_UNAVAILABLE", error); return;}
@@ -631,13 +632,9 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
   private emit(event: RuntimeEventV1) {for (const listener of this.listeners) {listener(event);}}
 }
 
-function needsVerboseRestore(core: string, restoring: boolean) {
-  return restoring && (core === "ppsspp" || core === "supermodel");
-}
+function needsVerboseRestore(core: string, restoring: boolean) {return restoring && (core === "ppsspp" || core === "supermodel");}
 
-function runtimeStartTimeout(core: string, restoring: boolean) {
-  return core === "supermodel" && restoring ? 120_000 : 30_000;
-}
+function runtimeStartTimeout(core: string, restoring: boolean) {return core === "supermodel" && restoring ? 120_000 : 30_000;}
 
 function invalid(): never {throw new Error("PROVIDER_LAUNCH_REQUEST_INVALID");}
 function contractError(cause?: unknown) {return new PlayerRuntimeError("PLAYER_RUNTIME_CONTRACT_INVALID", {cause});}

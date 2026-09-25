@@ -9,10 +9,14 @@ the right platform and firmware snapshot.
 Each Target accepts one MAME-style cartridge ZIP as opaque game content.
 The filename must be the Flycast machine name, such as `pstone2.zip`,
 `wldrider.zip`, or `ggisuka.zip`. The adapter keeps that filename when handing
-the validated game Blob to EmulatorJS; using a content digest as the filename
+a small placeholder to EmulatorJS; using a content digest as the filename
 would make Flycast's cartridge table lookup fail. The adapter bypasses
 EmulatorJS 4.2.3's automatic ROM extraction for these ZIPs, and the Target
-disables automatic CUE generation so Flycast receives the ZIP itself.
+disables automatic CUE generation. Flycast opens the ZIP through the same
+seekable Content I/O bridge as Dreamcast CHDs. Native ZIP reads request blocks
+of at most 256 KiB. Cartridge initialization may still read most or all ZIP
+members; the Range policy limits each request rather than promising a fixed
+total transfer size.
 
 Required firmware is mounted through the external-file resource:
 

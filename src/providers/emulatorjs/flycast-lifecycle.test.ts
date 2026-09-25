@@ -6,7 +6,6 @@ import {emulatorJsProviderDefinition} from "./catalog.js";
 import {createEmulatorJsPlayer} from "./provider-runtime.js";
 import {launchEnvelope} from "../../../tests/emulatorjs-provider-fixtures.js";
 import type {RuntimeHostV1} from "../../provider/module-api.js";
-vi.mock("./flycast-cache.js", () => ({loadFlycastDisc: async () => new Blob(["disc"])}));
 afterEach(() => {document.body.replaceChildren();});
 
 describe("Flycast player lifecycle", () => {
@@ -52,6 +51,7 @@ async function mount(restore: Uint8Array | null, state: Uint8Array, format = "fl
   const target = emulatorJsProviderDefinition.targets.find((entry) => entry.id === "flycast")!;
   const manifest = projectProviderManifest(emulatorJsProviderDefinition).targets.find((entry) => entry.id === "flycast")!;
   const envelope = launchEnvelope();
+  Object.assign(envelope.resources[0], {kind: "SEEKABLE_BLOB", rangeRequired: true});
   Object.assign(envelope.runtime, {targetId: "flycast", capabilities: manifest.capabilities, checkpoint: manifest.checkpoint});
   if (restore) {envelope.restore = {format, sha256: "a".repeat(64), sizeBytes: restore.length, url: "/restore"};}
   const frame = document.createElement("iframe"); document.body.append(frame);
@@ -66,7 +66,8 @@ async function mount(restore: Uint8Array | null, state: Uint8Array, format = "fl
   const load = vi.fn(async () => {}), toggle = vi.fn();
   const mounting = player.mount(document.createElement("div"));
   await vi.waitFor(() => expect(runtimeWindow.document.querySelector("script[data-retrom-loader]")).not.toBeNull());
-  runtimeWindow.EJS_emulator = {gameManager: {getState: () => state, loadExplicitStateAndWait: load, toggleMainLoop: toggle}};
+  runtimeWindow.EJS_emulator = {fileName: "game.chd", Module: {callMain: vi.fn()}, startGame: vi.fn(),
+    gameManager: {getState: () => state, loadExplicitStateAndWait: load, toggleMainLoop: toggle}};
   (runtimeWindow.EJS_ready as () => void)();
   (runtimeWindow.EJS_onGameStart as () => void)();
   await mounting;

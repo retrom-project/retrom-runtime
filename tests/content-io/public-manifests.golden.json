@@ -3756,7 +3756,7 @@
         "inputs": [
           {
             "cardinality": "ONE",
-            "kind": "ROM_BLOB",
+            "kind": "SEEKABLE_BLOB",
             "optional": false,
             "role": "game"
           },
@@ -3869,7 +3869,7 @@
         "inputs": [
           {
             "cardinality": "ONE",
-            "kind": "ROM_BLOB",
+            "kind": "SEEKABLE_BLOB",
             "optional": false,
             "role": "game"
           },
@@ -3982,7 +3982,7 @@
         "inputs": [
           {
             "cardinality": "ONE",
-            "kind": "ROM_BLOB",
+            "kind": "SEEKABLE_BLOB",
             "optional": false,
             "role": "game"
           },
@@ -4095,7 +4095,7 @@
         "inputs": [
           {
             "cardinality": "ONE",
-            "kind": "ROM_BLOB",
+            "kind": "SEEKABLE_BLOB",
             "optional": false,
             "role": "game"
           },

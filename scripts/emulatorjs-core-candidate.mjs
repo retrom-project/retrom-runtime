@@ -39,8 +39,9 @@ export async function readEmulatorJsCoreCandidate(source, directory, candidate) 
   for (const file of source.files) {
     const pinned = descriptor.files.find((entry) => entry.filename === file.filename);
     const bytes = await regular(join(directory, file.filename));
-    if (pinned?.sha256 !== file.sha256 || pinned?.sizeBytes !== file.sizeBytes ||
-      bytes.length !== file.sizeBytes || hash(bytes) !== file.sha256) {throw invalid();}
+    if (!pinned || !Number.isSafeInteger(pinned.sizeBytes) || pinned.sizeBytes < 1 ||
+      pinned.sizeBytes > 32 * 1024 * 1024 || !/^[a-f0-9]{64}$/u.test(pinned.sha256) ||
+      bytes.length !== pinned.sizeBytes || hash(bytes) !== pinned.sha256) {throw invalid();}
     result.set(file.output, bytes);
   }
   return result;

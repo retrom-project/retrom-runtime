@@ -108,18 +108,18 @@
     {
       "id": "F-FLY",
       "repository": "runtime",
-      "path": "src/providers/emulatorjs/disc-cache.ts",
-      "symbol": "loadDisc",
+      "path": "src/providers/emulatorjs/neocd-range.ts",
+      "symbol": "createFlycastRange",
       "stage": "S16",
-      "mode": "EAGER",
-      "result": "Promise<Blob>",
+      "mode": "RANGE",
+      "result": "Uint8Array | Promise<Uint8Array>",
       "maxFileBytes": 2147483647,
-      "caller": "flycast-cache.ts -> disc-mount.ts",
+      "caller": "disc-mount.ts",
       "roles": [
         "game"
       ],
       "identity": "FILE_SHA256",
-      "baselineBehavior": "whole 200; OPFS optional; loaded/total; signal; File facade"
+      "baselineBehavior": "SYNC_HIT_ASYNC_MISS; exact read <=256KiB; native CHD/ZIP seek and lifecycle barrier"
     },
     {
       "id": "F-NP2",

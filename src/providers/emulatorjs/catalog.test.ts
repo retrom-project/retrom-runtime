@@ -29,6 +29,9 @@ describe("EmulatorJS Provider declarations", () => {
   it("gives Flycast a bounded, distinct instant checkpoint contract and single-disc target", () => {
     const manifest = projectProviderManifest(emulatorJsProviderDefinition);
     const target = manifest.targets.find((entry) => entry.id === "flycast")!;
+    const declaration = emulatorJsProviderDefinition.targets.find((entry) => entry.id === "flycast")!;
+    expect(declaration.inputs.find(input => input.role === "game")?.kind).toBe("SEEKABLE_BLOB");
+    expect(declaration.contentIO.game).toMatchObject({mode: "RANGE", bridge: "ASYNC", result: "READER"});
     expect(target.checkpoint).toEqual({maxBytes: 268435456,
       readFormats: ["flycast-state-gzip-v1", "flycast-state-v1", "flycast-state-v1-storage-v1"], writeFormat: "flycast-state-v1-storage-v1"});
     expect(target.capabilities).toMatchObject({standardGamepad: true, pause: true, screenshot: true,
@@ -43,6 +46,8 @@ describe("EmulatorJS Provider declarations", () => {
         contentKinds: ["SINGLE_FILE"],
       });
       expect(target?.adapterId).toBe("emulatorjs-flycast");
+      expect(target?.inputs.find(input => input.role === "game")?.kind).toBe("SEEKABLE_BLOB");
+      expect(target?.contentIO.game).toMatchObject({mode: "RANGE", bridge: "ASYNC", result: "READER"});
     }
   });
   it("limits PSP output and writes compressed states while retaining raw saves", () => {

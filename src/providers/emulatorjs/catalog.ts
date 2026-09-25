@@ -102,7 +102,7 @@ declare const __RETROM_PFB_CORE_INPUTS__: Readonly<Record<string, {
 }>>;
 
 const atari800 = core("atari800", "4.2.3", "atari800-wasm.data", 996285, "6bb6df1de70f4b71e3b382a0a238522b6d0fe7bb860c7e8e8292f055ed46fda5", "716cfb25c012e2ce682608f532b543a423514f7e029027b291fb6b48df189c47", {artifactFlavor: "OVERRIDE", coreBundleVersion: "retrom-core-g4e7fbc73765c-r1", defaultOptions: {keyboardInput: "enabled", atari800_system: "800XL (64K)", atari800_os_xl: "AltirraOS"}});
-const flycast = core("flycast", "4.2.3", "flycast-wasm.data", 3546095, "7fc71d7f39e87d05eda494e86e3158dc78561874badf03e42ee9f70f56f14b26", "f3c6762e6ea597791a223215982f291674cf5afafa294fcc4fdec57ac0de6e30", {artifactFlavor: "OVERRIDE", coreBundleVersion: "1.0", defaultOptions: {reicast_hle_bios: "disabled", reicast_boot_to_bios: "disabled", reicast_internal_resolution: "640x480", reicast_threaded_rendering: "disabled", reicast_alpha_sorting: "per-strip (fast, least accurate)"}});
+const flycast = core("flycast", "4.2.3", "flycast-wasm.data", 3546766, "63e90f085405249d02bd8018a624b28ea01cf94454de1089001caa9afa1a1519", "f3c6762e6ea597791a223215982f291674cf5afafa294fcc4fdec57ac0de6e30", {artifactFlavor: "OVERRIDE", coreBundleVersion: "1.0", defaultOptions: {reicast_hle_bios: "disabled", reicast_boot_to_bios: "disabled", reicast_internal_resolution: "640x480", reicast_threaded_rendering: "disabled", reicast_alpha_sorting: "per-strip (fast, least accurate)"}});
 
 const cores: readonly CoreSource[] = [
   atari800,

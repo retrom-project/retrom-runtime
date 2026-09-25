@@ -23,6 +23,8 @@ it("accepts only declared candidate bytes and rejects release mode and digest dr
     }));
     expect((await readEmulatorJsCoreCandidate(source, root, true)).get(source.files[0]!.output)).toEqual(bytes);
     await expect(readEmulatorJsCoreCandidate(source, root, false)).rejects.toThrow("UNPUBLISHED_CORE_INPUT");
+    const previousRelease = {...source, files: [{...source.files[0]!, sha256: "c".repeat(64), sizeBytes: 42}]};
+    expect((await readEmulatorJsCoreCandidate(previousRelease, root, true)).get(source.files[0]!.output)).toEqual(bytes);
     await writeFile(join(root, file.filename), "bad bytes!");
     await expect(readEmulatorJsCoreCandidate(source, root, true)).rejects.toThrow("EMULATORJS_CORE_CANDIDATE_INVALID");
   } finally {await rm(root, {recursive: true, force: true});}

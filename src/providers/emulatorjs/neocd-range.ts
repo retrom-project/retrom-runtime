@@ -8,17 +8,24 @@ type Disc = {sizeBytes: number; sha256: string};
 export function createNeoCDRange(disc: Disc, reader: ContentReaderV1, fail: (error: Error) => void) {
   return new NeoCDRange(disc, reader, fail);
 }
+export function createFlycastRange(disc: Disc, filename: string, reader: ContentReaderV1,
+  fail: (error: Error) => void) {
+  return new NeoCDRange(disc, reader, fail, filename);
+}
 export class NeoCDRange {
   readonly filename: string;
+  readonly sizeBytes: number;
   private readonly waiters = new Set<() => void>();
   private suspended = 0;
   private closing: Promise<void> | undefined;
-  constructor(disc: Disc, private readonly reader: ContentReaderV1, private readonly onError: (error: Error) => void) {
+  constructor(disc: Disc, private readonly reader: ContentReaderV1, private readonly onError: (error: Error) => void,
+    filename = `${disc.sha256}.chd`) {
     if (!/^[a-f0-9]{64}$/u.test(disc.sha256) || !Number.isSafeInteger(disc.sizeBytes) ||
       disc.sizeBytes < 1 || disc.sizeBytes > contentLimits.signedDisc || reader.sizeBytes !== disc.sizeBytes || reader.abi !== "content-io-v1") {
       throw new ContentIOError("SOURCE_INVALID");
     }
-    this.filename = `${disc.sha256}.chd`;
+    this.filename = filename;
+    this.sizeBytes = disc.sizeBytes;
   }
   fail(error: Error) {if (!this.closing) {this.onError(error);}}
   begin() {if (this.closing) {throw new ContentIOError("ABORTED");} ++this.suspended;}

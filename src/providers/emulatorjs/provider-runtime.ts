@@ -20,8 +20,8 @@ import type {
 import {PlayerRuntimeError} from "../../provider/errors.js";
 import {focusRuntimeInput} from "../../provider/input-focus.js";
 import {emulatorJsProviderDefinition, type EmulatorImplementation} from "./catalog.js";
-import {installNeoCDStartup} from "./neocd-startup.js";
-import {mountNeoCDRange, configureContentDisc} from "./disc-mount.js";
+import {installAsyncRangeStartup} from "./async-range-startup.js";
+import {mountNeoCDRange, configureContentDisc, emulatorJsDisableCue} from "./disc-mount.js";
 import {installArchiveWorkerCompatibility} from "./archive-worker.js";
 import {installDOSBoxPureStateCompatibility} from "./dosbox-state.js";
 import {installExternalFileCompatibility} from "./external-files.js";
@@ -78,7 +78,7 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
   private exitPromise: Promise<void> | null = null;
   private pspRestore: ReturnType<typeof installPspRestoreObserver> | null = null;
   private cleanupArchiveWorker: (() => void) | null = null;
-  private neoCDRange: Awaited<ReturnType<typeof mountNeoCDRange>> | null = null;
+  private contentRange: Awaited<ReturnType<typeof mountNeoCDRange>> | null = null;
   private cleanupFlycast: (() => void) | null = null;
   private cleanupFrameStyle: (() => void) | null = null;
   private outputViewport: ReturnType<typeof installEmulatorJsOutputViewport> | null = null;
@@ -132,7 +132,7 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
     const instance = this.requireInstance();
     const toggle = instance.gameManager?.toggleMainLoop;
     if (!toggle) {throw contractError();}
-    if (this.neoCDRange) {await this.neoCDRange.idle();}
+    if (this.contentRange) {await this.contentRange.idle();}
     toggle.call(instance.gameManager, false);
     instance.paused = true;
     this.transition("PAUSED");
@@ -152,7 +152,7 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
   }
 
   async checkpoint() {
-    if (this.neoCDRange) {await this.neoCDRange.idle();}
+    if (this.contentRange) {await this.contentRange.idle();}
     const manager = this.requireInstance().gameManager;
     const maximum = this.envelope.runtime.checkpoint?.maxBytes ?? 0;
     const bytes = this.implementation.runtimeCore === "ppsspp"
@@ -166,7 +166,7 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
   }
 
   async screenshot() {
-    if (this.neoCDRange) {await this.neoCDRange.idle();}
+    if (this.contentRange) {await this.contentRange.idle();}
     return captureEmulatorJsScreenshot(this.requireInstance());
   }
 
@@ -289,8 +289,8 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
       this.startBarrier = createStartBarrier();
       this.configure(runtimeWindow);
       const disc = await configureContentDisc(runtimeWindow, this.envelope, this.implementation.runtimeCore, this.host.signal,
-        this.contentSession, error => this.fail(error.message, error), event => this.emit({type: "LOAD_PROGRESS", ...event}));
-      this.neoCDRange = disc.range; this.cleanupFlycast = disc.cleanup;
+        this.contentSession, error => this.fail(error.message, error));
+      this.contentRange = disc.range; this.cleanupFlycast = disc.cleanup;
       this.checkMountActive();
 
       this.prepareRetroArchConfig(runtimeWindow);
@@ -345,7 +345,7 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
 
   private configure(runtimeWindow: EjsWindow) {
     if (this.implementation.runtimeCore === "ppsspp") {this.pspRestore = installPspRestoreObserver(runtimeWindow);}
-    const game = resource(this.envelope, "game", this.implementation.runtimeCore === "neocd" ? "SEEKABLE_BLOB" : "ROM_BLOB");
+    const game = resource(this.envelope, "game", ["neocd", "flycast"].includes(this.implementation.runtimeCore) ? "SEEKABLE_BLOB" : "ROM_BLOB");
     const bios = optionalResource(this.envelope, "bios", "BIOS_BUNDLE");
     const parent = optionalResource(this.envelope, "parent", "PARENT_ARCHIVE");
     const releaseBase = runtimeBase(this.envelope, this.implementation.release);
@@ -366,7 +366,7 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
     runtimeWindow.EJS_startOnLoaded = !deferredStart;
     runtimeWindow.EJS_dontExtractRom = deferredStart || ["flycast", "neocd"].includes(this.implementation.runtimeCore);
     runtimeWindow.EJS_disableBatchBootup = deferredDOSStart;
-    runtimeWindow.EJS_disableCue = ["cap32", "quasi88"].includes(this.implementation.runtimeCore) ? true : undefined;
+    runtimeWindow.EJS_disableCue = emulatorJsDisableCue(this.implementation.runtimeCore, this.envelope.runtime.targetId) ? true : undefined;
     runtimeWindow.EJS_language = "zh-CN";
     runtimeWindow.EJS_disableAutoLang = false;
     // RetroArch emits native load receipts only in verbose mode. The PSP and
@@ -392,7 +392,7 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
       this.instance = runtimeWindow.EJS_emulator ?? null;
       if (this.instance) {
         this.cleanupGamepadIndex = initializeEmulatorJsGamepads(this.instance);
-        if (this.neoCDRange) {installNeoCDStartup(this.instance, this.neoCDRange);}
+        if (this.contentRange) {installAsyncRangeStartup(this.instance, this.contentRange);}
       }
       if (!this.instance) {this.fail("PLAYER_RUNTIME_UNAVAILABLE");}
       this.instance?.on?.("exit", () => this.requestExit());
@@ -474,7 +474,7 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
   }
 
   private async restore(bytes: Uint8Array) {
-    if (this.neoCDRange) {await this.neoCDRange.idle();}
+    if (this.contentRange) {await this.contentRange.idle();}
     const manager = this.instance?.gameManager;
     if (this.implementation.runtimeCore === "ppsspp") {
       await restorePspCheckpoint(manager, bytes, this.envelope.runtime.checkpoint?.maxBytes ?? 0,
@@ -514,7 +514,7 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
     this.clearStartBarrier();
     this.host.signal.removeEventListener("abort", this.hostAbort);
     const nativeExitAlreadyRequested = this.exitRequestedEmitted; this.exitRequestedEmitted = true;
-    await stopNativeInstance(this.runtimeWindow, this.instance, this.implementation.runtimeCore, nativeExitAlreadyRequested, this.neoCDRange);
+    await stopNativeInstance(this.runtimeWindow, this.instance, this.implementation.runtimeCore, nativeExitAlreadyRequested, this.contentRange);
     await this.closeContent();
     if (this.runtimeWindow) {
       for (const timer of this.startupTimers) {this.runtimeWindow.clearTimeout(timer);}
@@ -554,7 +554,7 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
 
   private async closeContent() {
     await this.contentOwner.close(); this.contentSession = null;
-    await this.neoCDRange?.dispose(); this.neoCDRange = null;
+    await this.contentRange?.dispose(); this.contentRange = null;
   }
 
   private requireInstance() {

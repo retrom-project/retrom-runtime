@@ -13,6 +13,7 @@ export function createFlycastRange(disc: Disc, filename: string, reader: Content
   return new NeoCDRange(disc, reader, fail, filename);
 }
 export class NeoCDRange {
+  readonly canSuspend = true;
   readonly filename: string;
   readonly sizeBytes: number;
   private readonly waiters = new Set<() => void>();

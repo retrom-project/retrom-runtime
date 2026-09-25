@@ -52,3 +52,43 @@ for (const name of ["tic80", "fake08", "gbe", "px68k", "np2kai", "openbor", "ruf
     } finally {await server.close();}
   });
 }
+
+test("[IO-22] BROWSER/PUAE eager Content I/O reuses one full download across independent sessions", async ({page}) => {
+  const bytes = new Uint8Array(1024 * 1024 + 13);
+  bytes.set(new TextEncoder().encode("MComprHD"));
+  bytes.fill(47, 8);
+  const sha256 = createHash("sha256").update(bytes).digest("hex");
+  const server = await startFixtureServer({contentModule: await bundle("../../src/content-io/client.ts"),
+    staticFiles: {"game.chd": bytes}, modules: {"worker.mjs": await bundle("../../src/content-io/worker.ts"),
+      "eager.mjs": await bundle("./eager-entry.ts")}});
+  try {
+    await page.goto(`${server.origin}/__test__/page`);
+    const result = await page.evaluate(async ({sha256, sizeBytes}) => {
+      const clientUrl = "/__test__/content.mjs", eagerUrl = "/__test__/eager.mjs";
+      const {createContentSession} = await import(clientUrl) as typeof import("../../src/content-io/client.js");
+      const {mountEagerContentFile} = await import(eagerUrl) as typeof import("./eager-entry.js");
+      const results = [];
+      for (let run = 0; run < 2; run++) {
+        const session = await createContentSession(new Worker("/__test__/worker.mjs", {type: "module"}),
+          {storageOrigin: location.origin, allowedOrigins: [location.origin]});
+        const progress: number[] = [];
+        try {
+          const file = await mountEagerContentFile(window,
+            {url: `${location.origin}/files/game.chd`, sha256, sizeBytes}, new AbortController().signal,
+            () => {}, session, ready => progress.push(ready));
+          results.push({filename: file.filename, first: [...file.read(0, 8)], last: [...file.read(sizeBytes - 1, 1)],
+            progress, backend: session.stats.backend});
+          await file.dispose();
+        } finally {await session.close();}
+      }
+      return results;
+    }, {sha256, sizeBytes: bytes.length});
+    expect(result).toHaveLength(2);
+    expect(result.map(run => run.backend)).toEqual(["OPFS", "OPFS"]);
+    expect(result.map(run => run.filename)).toEqual(["game.chd", "game.chd"]);
+    expect(result.map(run => run.first)).toEqual([[77, 67, 111, 109, 112, 114, 72, 68], [77, 67, 111, 109, 112, 114, 72, 68]]);
+    expect(result.map(run => run.last)).toEqual([[47], [47]]);
+    expect(result.every(run => run.progress.at(-1) === bytes.length)).toBe(true);
+    expect(server.fileRequests).toEqual([{name: "game.chd", method: "GET", range: null}]);
+  } finally {await server.close();}
+});

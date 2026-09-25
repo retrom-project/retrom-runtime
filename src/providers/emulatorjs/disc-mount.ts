@@ -1,12 +1,13 @@
 import type {LaunchEnvelopeV1} from "../../provider/module-api.js";
-import {requireContentSession} from "../../provider/content-inputs.js";
+import {materializeFileBytes, requireContentSession} from "../../provider/content-inputs.js";
 import {installFlycastCompatibility} from "./flycast.js";
 import {resource} from "./resources.js";
 import type {ContentSessionClient} from "../../content-io/client.js";
 import {fileContentSource} from "../../provider/content-inputs.js";
-import {rangePolicy} from "../../provider/content-policies.js";
+import {eagerPolicy, rangePolicy} from "../../provider/content-policies.js";
 import {contentLimits} from "../../content-io/limits.js";
 import {createFlycastRange, createNeoCDRange} from "./neocd-range.js";
+import {EagerContentFile} from "./eager-content-file.js";
 import type {EjsWindow} from "./emulator-instance.js";
 
 export function emulatorJsDisableCue(core: string, targetId: string): boolean {
@@ -42,6 +43,18 @@ export async function mountSeekableContentRange(runtimeWindow: EjsWindow, disc: 
   return range;
 }
 
+export async function mountEagerContentFile(runtimeWindow: EjsWindow, disc: {url: string; sha256: string; sizeBytes: number},
+  signal: AbortSignal, fail: (error: Error) => void, session: ContentSessionClient,
+  report: (readyBytes: number, totalBytes: number) => void = () => {}) {
+  const bytes = await materializeFileBytes(session, disc, eagerPolicy(contentLimits.signedDisc), "GAME", signal,
+    progress => report(progress.readyBytes, progress.totalBytes));
+  if (bytes.byteLength !== disc.sizeBytes) {throw new Error("EMULATORJS_CONTENT_FILE_LENGTH_MISMATCH");}
+  const file = new EagerContentFile(disc.url, disc.sha256, bytes, fail);
+  const FileConstructor = (runtimeWindow as Window & typeof globalThis).File;
+  runtimeWindow.EJS_gameUrl = new FileConstructor(["RETROM_CONTENT_IO_FILE_V1"], file.filename);
+  return file;
+}
+
 export async function mountFlycastRange(runtimeWindow: EjsWindow,
   disc: {url: string; sha256: string; sizeBytes: number}, targetId: string,
   signal: AbortSignal, fail: (error: Error) => void, session: ContentSessionClient) {
@@ -71,7 +84,12 @@ export function hasSeekableGame(envelope: LaunchEnvelopeV1): boolean {
 }
 
 export async function configureContentDisc(runtimeWindow: EjsWindow, envelope: LaunchEnvelopeV1, core: string,
-  signal: AbortSignal, session: ContentSessionClient | null, fail: (error: Error) => void) {
+  signal: AbortSignal, session: ContentSessionClient | null, fail: (error: Error) => void,
+  eager = false, report: (readyBytes: number, totalBytes: number) => void = () => {}) {
+  if (eager) {
+    const game = resource(envelope, "game", "ROM_BLOB");
+    return {range: await mountEagerContentFile(runtimeWindow, game, signal, fail, requireContentSession(session), report), cleanup: null};
+  }
   const seekable = hasSeekableGame(envelope);
   if (!seekable) {return {range: null, cleanup: null};}
   const game = resource(envelope, "game", "SEEKABLE_BLOB");

@@ -15,7 +15,7 @@ it("[PK-01] CONTRACT/private-policies covers every input role without changing t
     expected.providerVersion="0.0.0-dev";
     const external=["j2me","rpgmaker-2000","rpgmaker-2003","rpgmaker-mv","rpgmaker-mz","tyranoscript"];
     for(const target of expected.targets){
-      const managed=provider.providerId==="emulatorjs"?["flycast","neocd"].includes(target.id):!external.includes(target.id);
+      const managed=provider.providerId==="emulatorjs"?target.id.startsWith("flycast")||target.id==="neocd":!external.includes(target.id);
       if(managed){target.assetPaths.push("assets/content-io/worker.mjs");}
       if(provider.providerId==="retrom-runtime"&&target.id==="ppsspp"){
         target.assetPaths=target.assetPaths.filter(path=>path!=="assets/ppsspp/ppsspp-io.worker.mjs");target.assetPaths.push("assets/content-io/sync-client.mjs");

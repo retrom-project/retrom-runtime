@@ -21,7 +21,7 @@ import {PlayerRuntimeError} from "../../provider/errors.js";
 import {focusRuntimeInput} from "../../provider/input-focus.js";
 import {emulatorJsProviderDefinition, type EmulatorImplementation} from "./catalog.js";
 import {installNeoCDStartup} from "./neocd-startup.js";
-import {mountNeoCDRange, configureContentDisc} from "./disc-mount.js";
+import {mountNeoCDRange, configureContentDisc, emulatorJsDisableCue} from "./disc-mount.js";
 import {installArchiveWorkerCompatibility} from "./archive-worker.js";
 import {installDOSBoxPureStateCompatibility} from "./dosbox-state.js";
 import {installExternalFileCompatibility} from "./external-files.js";
@@ -366,7 +366,7 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
     runtimeWindow.EJS_startOnLoaded = !deferredStart;
     runtimeWindow.EJS_dontExtractRom = deferredStart || ["flycast", "neocd"].includes(this.implementation.runtimeCore);
     runtimeWindow.EJS_disableBatchBootup = deferredDOSStart;
-    runtimeWindow.EJS_disableCue = ["cap32", "quasi88"].includes(this.implementation.runtimeCore) ? true : undefined;
+    runtimeWindow.EJS_disableCue = emulatorJsDisableCue(this.implementation.runtimeCore, this.envelope.runtime.targetId) ? true : undefined;
     runtimeWindow.EJS_language = "zh-CN";
     runtimeWindow.EJS_disableAutoLang = false;
     // RetroArch emits native load receipts only in verbose mode. The PSP and

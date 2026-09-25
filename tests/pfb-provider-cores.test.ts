@@ -39,15 +39,17 @@ it.each(["cap32", "gam4980"] as const)("binds %s candidate bytes without changin
   expect(payload.files.find((file: {path: string}) => file.path === corePath).mediaType).toBe("application/octet-stream");
 });
 
-it("verifies an explicitly selected, declared fork candidate including sources and license", async () => {
+it("verifies all fork candidate files and embeds only runtime bytes and provenance", async () => {
   const {root, directory, index} = await fixture();
   const files = await readPFBProviderCoreFiles(root, "emulatorjs", join(root, "staging"), index);
   expect(files.map((file) => file.path).sort()).toEqual([
     corePath, "assets/4.2.3/data/cores/reports/cap32.json",
-    "licenses/emulatorjs/4.2.3/licenses/forks/cap32/COPYING",
-    "licenses/emulatorjs/4.2.3/licenses/forks/cap32/source.tar.gz",
   ]);
   expect(files.find((file) => file.path === corePath)?.contents.toString()).toBe("owned core fixture");
+  await writeFile(join(directory, "COPYING"), "tampered license");
+  await expect(readPFBProviderCoreFiles(root, "emulatorjs", join(root, "tampered-license"), index))
+    .rejects.toThrow("EMULATORJS_DEVELOPMENT_FORK_INVALID");
+  await writeFile(join(directory, "COPYING"), "owned license fixture");
   await writeFile(join(directory, "cap32-wasm.data"), "tampered core data");
   await expect(readPFBProviderCoreFiles(root, "emulatorjs", join(root, "tampered"), index))
     .rejects.toThrow("EMULATORJS_DEVELOPMENT_FORK_INVALID");

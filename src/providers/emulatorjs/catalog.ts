@@ -111,6 +111,8 @@ declare const __RETROM_PFB_CORE_INPUTS__: Readonly<Record<string, {
 }>>;
 
 const atari800 = core("atari800", "4.2.3", "atari800-wasm.data", 996285, "6bb6df1de70f4b71e3b382a0a238522b6d0fe7bb860c7e8e8292f055ed46fda5", "716cfb25c012e2ce682608f532b543a423514f7e029027b291fb6b48df189c47", {artifactFlavor: "OVERRIDE", coreBundleVersion: "retrom-core-g4e7fbc73765c-r1", defaultOptions: {keyboardInput: "enabled", atari800_system: "800XL (64K)", atari800_os_xl: "AltirraOS"}});
+const genesisPlusGX = core("genesis_plus_gx", "4.2.3", "genesis_plus_gx-wasm.data", 1278689, "3caf013fe2d778f2f112d07d1aa8c98178e47a76148ff87bee1de0eca06099bc", "baf9aa4753a6960df773317a59be71ed38288753cfc627dcd1ab4d8ca076a14f", {artifactFlavor: "OVERRIDE", coreBundleVersion: "retrom-core-g63f0c6870601-r2"});
+const flycast = core("flycast", "4.2.3", "flycast-wasm.data", 3546423, "4e2d15a35d7a28e094465ff69fe040ee428bac04f9dd955e329430ce7ebecc2f", "586230f5d991b542b7c7c14477a5fb08fb532daf6da2f69739b6ad4b4a1531cb", {artifactFlavor: "OVERRIDE", coreBundleVersion: "1.0", defaultOptions: {reicast_hle_bios: "disabled", reicast_boot_to_bios: "disabled", reicast_internal_resolution: "640x480", reicast_threaded_rendering: "disabled", reicast_alpha_sorting: "per-strip (fast, least accurate)"}});
 
 const cores: readonly CoreSource[] = [
   atari800,
@@ -127,7 +129,10 @@ const cores: readonly CoreSource[] = [
   core("uzem", "4.2.3", "uzem-wasm.data", 852642, "c9f0e7d66f00fdb51c82b81c1d20269689b87e7f68d82267c31e2c03a54b221c", "6cba9cc2c184cb56033f76af19c911e79d5355aa6a0afa1b25b949ff962af123", {artifactFlavor: "OVERRIDE", coreBundleVersion: "retrom-core-gd991ee94547c-r1"}),
   core("o2em", "4.2.3", "o2em-wasm.data", 905816, "051bc1b257966ef15bc255df3ea70aadec8a25a4ddb0b846a3f399db1859479d", "502ca7b9f5ed3fdedf01d98b3b5d8bce85eee79f47b01c46dc8d1f40fb06c42b", {artifactFlavor: "OVERRIDE", coreBundleVersion: "retrom-core-g679d6fec0496-r2", defaultOptions: {keyboardInput: "enabled", o2em_bios: "o2rom.bin"}}),
   core("81", "4.2.3", "81-wasm.data", 888668, "b78716a9566f7b31ad82f3d3250ba882af284294df4ec84b80012906aa1da417", "01c76aa09d95022d001e16f80e8ff32c0a62088da9445c6b321be06872943cf2", {artifactFlavor: "OVERRIDE", coreBundleVersion: "retrom-core-g86decf3ee61e-r1", defaultOptions: {keyboardInput: "enabled", "81_joypad_b": "new line"}}),
-  core("flycast", "4.2.3", "flycast-wasm.data", 3530713, "c4e848767db6ad58e8aad665970ae6760ffbe2db3426bb27deec0396cbac44d6", "f3c6762e6ea597791a223215982f291674cf5afafa294fcc4fdec57ac0de6e30", {artifactFlavor: "OVERRIDE", coreBundleVersion: "1.0", defaultOptions: {reicast_hle_bios: "disabled", reicast_boot_to_bios: "disabled", reicast_internal_resolution: "640x480", reicast_threaded_rendering: "disabled", reicast_alpha_sorting: "per-strip (fast, least accurate)"}}),
+  flycast,
+  {...flycast, targetId: "flycast-atomiswave"},
+  {...flycast, targetId: "flycast-naomi"},
+  {...flycast, targetId: "flycast-naomi2"},
 
   core("a5200", "4.2.3", "a5200-wasm.data", 881560, "c82476478d6b70b9da80cccc27ca06a5fd85acf7cdd5643f230cc4d6777990ef", "c402648f858a8a566b39c8d0949470eeeda5f0346b8dfc6228dad312a0af295d"),
   core("azahar", "4.3.0-pre", "azahar-thread-wasm.data", 3985011, "d90696e6ea68c4fc00ef147411ad399962777f07b6c7e73d5537da0eaffc2e3b", "77bf9b92bdc0f55b5d2dc5c2394971fe40b80b10b79fc40501db07d199bed94c", {inputMode: "POINTER", defaultOptions: {webgl2Enabled: "enabled"}}),
@@ -148,7 +153,8 @@ const cores: readonly CoreSource[] = [
   core("gearboy", "4.2.3", "gearboy-wasm.data", 939318, "ca08e4936a9f8b62f198f8df30fed48c5e68f06db9dd91115a2c44863054661e", "389000f4810c30180889fa6d39eb5d21b3520594c01935523f363e9fd6211248", {artifactFlavor: "OVERRIDE", defaultOptions: {gearboy_sgb: "Enabled", gearboy_sgb_border: "Enabled"}}),
   core("lutro", "4.2.3", "lutro-wasm.data", 997735, "78a74af63f9ef4a576ccff17f7e6c8c2f62a2cbf833a2ccb0d6d298653bca5bd", "405bdeb3f1b7dc57f20b32f25c3fdd1a038bd20b55f9d3b0065979c1d8cba63d", {artifactFlavor: "OVERRIDE"}),
   core("gearcoleco", "4.2.3", "gearcoleco-wasm.data", 891907, "164e213e4d5f2c14a0f2b55da973ed5a54ef7601cb352e64c9a73ace1a7ba606", "1c377b55d252fc7133bb99b845c1bc1931a3f9989fd1410659c50bd3b2a78a4d"),
-  core("genesis_plus_gx", "4.2.3", "genesis_plus_gx-wasm.data", 1203661, "190297a6f86757405090f1a2266f67dfe1a570a528c583434ed3641a5664f768", "a102b02756ca10a97e87bddc85228ca466ab75ba4b1fa6f6938e59e8343c4b4b"),
+  genesisPlusGX,
+  {...genesisPlusGX, targetId: "genesis_plus_gx_cd", defaultOptions: {...genesisPlusGX.defaultOptions, genesis_plus_gx_cd_precache: "disabled"}},
   core("genesis_plus_gx_wide", "4.3.0-pre", "genesis_plus_gx_wide-wasm.data", 1007775, "653b59f5b4c3147c6786313ecd60c6657b1bc0d465814919d363728afa93b2e0", "76fc52778209b88d6e7c22aa921d735c9bb8dbf53fea08e74ec08ce3c26b6d60"),
   core("handy", "4.2.3", "handy-wasm.data", 862304, "ab49f61338fcc3b79a945b02005815066c4d9aadb8de6ab59c408dc158aaeeff", "7fdd80119886994285f34905a38b7159d6c807539d0533bbd786ec442023a810"),
   core("mame2003", "4.2.3", "mame2003-wasm.data", 4993110, "1d8283ce042f71607b9b55656cd4068f703c52faa7a3d0940855c9dd21d542df", "92a7d5f005aa6667fb712e1bedd1cd5864780e4854f6a5dd620ffb955ed87e3e", {artifactFlavor: "OVERRIDE", canvasResizePolicy: "ON_GAME_START_TO_CSS_PIXELS", coreBundleVersion: "4.2.1"}),
@@ -169,7 +175,7 @@ const cores: readonly CoreSource[] = [
   core("ppsspp", "4.3.0-pre", "ppsspp-thread-wasm.data", 4548468, "b75f51aa9c66bfb20c3b056b0dc5f9246516648786d0f0e73d636f224ff9080f", "d3c58abe2b9a375044ea03ceca1cfd4bb035507e8c7eff5c52401a21c3bc130d", {outputSizeLimit: {width: 960, height: 544}, startupActions: [press(2000, 0), press(5000, 0)]}),
   core("prboom", "4.2.3", "prboom-wasm.data", 1091036, "830686c3b5176de25de45846f8cad9153803478718e6a487dda938437ecd0c0e", "5468d3146d11438aed17c6e7b93357912cf7638a6352edd9386ef4c2c4b8b38c"),
   core("prosystem", "4.2.3", "prosystem-wasm.data", 852864, "d3483e1c155c8d26e6b7b299c8ecc58c5abcfa0c5af5f03b75a55d219e71c3c8", "5ab7fa94d4cc9da68fff24911d76a32d3fba8ffbecd3fec740a1992670df809e"),
-  core("puae", "4.2.3", "puae-wasm.data", 4140232, "8b58d776244c650c872dcaaf8693a2d75fd92a5219c7250cf5be5f517b11f1b5", "e833cb9a0d942770a2bd841dfe92decd069dd5a5bad817270d113f66ab239485", {inputMode: "POINTER"}),
+  core("puae", "4.2.3", "puae-thread-wasm.data", 4177580, "d06a26d1954db82c9ba9b8e16de9aed4190ef051db2d401982b728167929e006", "19ae54ea4a0ec3ec44e1e29984b8abf41f1d8e876d8ae96642c81f17bf5383f9", {coreBundleVersion: "retrom-core-g2245d3443cc1-r3", inputMode: "POINTER"}),
   core("quasi88", "4.2.3", "quasi88-wasm.data", 1041569, "c23c7f390bc5a8071a13e3c9e860c1ab96f34792bd531ca79ee12cff6a67c57d", "e3f7752189bac0b364e2fc4daf6a3a69176ccddf87c0177a30b7bc99d1621e8a", {artifactFlavor: "OVERRIDE", coreBundleVersion: "retrom-core-g459bbc6e90ca-r1", defaultOptions: {keyboardInput: "enabled", q88_basic_mode: "N88 V2"}}),
   core("same_cdi", "4.2.3", "same_cdi-wasm.data", 3492455, "4a0d2829af998d4066a12294a0ecfd1d23371bdea95906a48ef726298826a03c", "c4450a15fe43d5253ab2593a3f51d249332b92e5921ba0875cc40a9d33fda663", {artifactFlavor: "OVERRIDE", coreBundleVersion: "retrom-core-gcfb05d803f54-r1"}),
   core("smsplus", "4.2.3", "smsplus-wasm.data", 855876, "0f197c5e0000f17b2d072122a72b3f8fc1693514c4014fcd9694eec78584aa08", "a09612f1d088bffe8d9c107caf196b023710ed4aaeaa24f05caee7eec8591ff0"),
@@ -216,8 +222,9 @@ const targets = cores.map((entry) => {
     runtimeCore: entry.id,
     startupActions: entry.startupActions,
   },
-  inputs: entry.id === "neocd" ? inputs.map(input => input.role === "game" ? {...input, kind: "SEEKABLE_BLOB" as const} : input) : inputs,
-  contentIO: emulatorContentPolicies(entry.id),
+  inputs: ["neocd", "genesis_plus_gx_cd", "flycast"].includes(entry.targetId ?? entry.id) || entry.id === "flycast"
+    ? inputs.map(input => input.role === "game" ? {...input, kind: "SEEKABLE_BLOB" as const} : input) : inputs,
+  contentIO: emulatorContentPolicies(entry.targetId ?? entry.id),
   inputFilter: true,
   nativeSettings: true,
   targetOptionsSchema: emulatorJsOptionsSchema,
@@ -293,6 +300,9 @@ function commonAssets(release: RuntimeRelease) {
 }
 
 function displayName(value: string) {
+  if (value === "flycast-atomiswave") {return "Flycast Atomiswave";}
+  if (value === "flycast-naomi") {return "Flycast NAOMI";}
+  if (value === "flycast-naomi2") {return "Flycast NAOMI 2";}
   if (value === "bsnes") {return value;}
   if (value === "o2em") {return "O2EM";}
   return value.split("_").map((part) => part.length <= 3 ? part.toUpperCase() :

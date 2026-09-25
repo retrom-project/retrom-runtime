@@ -3813,7 +3813,346 @@
         "inputs": [
           {
             "cardinality": "ONE",
-            "kind": "ROM_BLOB",
+            "kind": "SEEKABLE_BLOB",
+            "optional": false,
+            "role": "game"
+          },
+          {
+            "cardinality": "ONE",
+            "kind": "BIOS_BUNDLE",
+            "optional": true,
+            "role": "bios"
+          },
+          {
+            "cardinality": "ONE",
+            "kind": "PARENT_ARCHIVE",
+            "optional": true,
+            "role": "parent"
+          },
+          {
+            "cardinality": "ONE",
+            "kind": "MULTI_DISC",
+            "optional": true,
+            "role": "discs"
+          },
+          {
+            "cardinality": "ONE",
+            "kind": "EXTERNAL_FILE_SET",
+            "optional": true,
+            "role": "external"
+          }
+        ],
+        "targetOptionsSchema": {
+          "additionalProperties": false,
+          "properties": {
+            "dosEntryPath": {
+              "format": "safe-path",
+              "maxLength": 240,
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "initialDiscIndex": {
+              "minimum": 0,
+              "type": [
+                "integer",
+                "null"
+              ]
+            }
+          },
+          "required": [
+            "dosEntryPath",
+            "initialDiscIndex"
+          ],
+          "type": "object"
+        }
+      },
+      {
+        "assetPaths": [
+          "assets/4.2.3/data/compression/extract7z.js",
+          "assets/4.2.3/data/compression/extractzip.js",
+          "assets/4.2.3/data/cores/cores.json",
+          "assets/4.2.3/data/cores/flycast-wasm.data",
+          "assets/4.2.3/data/cores/ppsspp-assets.zip",
+          "assets/4.2.3/data/cores/reports/flycast.json",
+          "assets/4.2.3/data/emulator.css",
+          "assets/4.2.3/data/emulator.min.css",
+          "assets/4.2.3/data/emulator.min.js",
+          "assets/4.2.3/data/loader.js",
+          "assets/4.2.3/data/localization/en-US.json",
+          "assets/4.2.3/data/localization/retroarch.json",
+          "assets/4.2.3/data/localization/zh-CN.json",
+          "assets/4.2.3/data/src/GameManager.js",
+          "assets/4.2.3/data/src/compression.js",
+          "assets/4.2.3/data/src/emulator.js",
+          "assets/4.2.3/data/src/gamepad.js",
+          "assets/4.2.3/data/src/nipplejs.js",
+          "assets/4.2.3/data/src/shaders.js",
+          "assets/4.2.3/data/src/socket.io.min.js",
+          "assets/4.2.3/data/src/storage.js"
+        ],
+        "capabilities": {
+          "checkpoint": true,
+          "discSwitch": false,
+          "frameCounter": true,
+          "frameMode": "SAME_ORIGIN_BLANK",
+          "inputFilter": true,
+          "nativeSettings": true,
+          "pause": true,
+          "requiresThreads": false,
+          "screenshot": true,
+          "standardGamepad": true,
+          "videoModes": [
+            "adaptive-sharpen",
+            "original",
+            "pixel",
+            "sharp-bilinear",
+            "smooth"
+          ],
+          "volume": true
+        },
+        "checkpoint": {
+          "maxBytes": 268435456,
+          "readFormats": [
+            "flycast-state-gzip-v1",
+            "flycast-state-v1",
+            "flycast-state-v1-storage-v1"
+          ],
+          "writeFormat": "flycast-state-v1-storage-v1"
+        },
+        "displayName": "Flycast Atomiswave",
+        "id": "flycast-atomiswave",
+        "inputs": [
+          {
+            "cardinality": "ONE",
+            "kind": "SEEKABLE_BLOB",
+            "optional": false,
+            "role": "game"
+          },
+          {
+            "cardinality": "ONE",
+            "kind": "BIOS_BUNDLE",
+            "optional": true,
+            "role": "bios"
+          },
+          {
+            "cardinality": "ONE",
+            "kind": "PARENT_ARCHIVE",
+            "optional": true,
+            "role": "parent"
+          },
+          {
+            "cardinality": "ONE",
+            "kind": "MULTI_DISC",
+            "optional": true,
+            "role": "discs"
+          },
+          {
+            "cardinality": "ONE",
+            "kind": "EXTERNAL_FILE_SET",
+            "optional": true,
+            "role": "external"
+          }
+        ],
+        "targetOptionsSchema": {
+          "additionalProperties": false,
+          "properties": {
+            "dosEntryPath": {
+              "format": "safe-path",
+              "maxLength": 240,
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "initialDiscIndex": {
+              "minimum": 0,
+              "type": [
+                "integer",
+                "null"
+              ]
+            }
+          },
+          "required": [
+            "dosEntryPath",
+            "initialDiscIndex"
+          ],
+          "type": "object"
+        }
+      },
+      {
+        "assetPaths": [
+          "assets/4.2.3/data/compression/extract7z.js",
+          "assets/4.2.3/data/compression/extractzip.js",
+          "assets/4.2.3/data/cores/cores.json",
+          "assets/4.2.3/data/cores/flycast-wasm.data",
+          "assets/4.2.3/data/cores/ppsspp-assets.zip",
+          "assets/4.2.3/data/cores/reports/flycast.json",
+          "assets/4.2.3/data/emulator.css",
+          "assets/4.2.3/data/emulator.min.css",
+          "assets/4.2.3/data/emulator.min.js",
+          "assets/4.2.3/data/loader.js",
+          "assets/4.2.3/data/localization/en-US.json",
+          "assets/4.2.3/data/localization/retroarch.json",
+          "assets/4.2.3/data/localization/zh-CN.json",
+          "assets/4.2.3/data/src/GameManager.js",
+          "assets/4.2.3/data/src/compression.js",
+          "assets/4.2.3/data/src/emulator.js",
+          "assets/4.2.3/data/src/gamepad.js",
+          "assets/4.2.3/data/src/nipplejs.js",
+          "assets/4.2.3/data/src/shaders.js",
+          "assets/4.2.3/data/src/socket.io.min.js",
+          "assets/4.2.3/data/src/storage.js"
+        ],
+        "capabilities": {
+          "checkpoint": true,
+          "discSwitch": false,
+          "frameCounter": true,
+          "frameMode": "SAME_ORIGIN_BLANK",
+          "inputFilter": true,
+          "nativeSettings": true,
+          "pause": true,
+          "requiresThreads": false,
+          "screenshot": true,
+          "standardGamepad": true,
+          "videoModes": [
+            "adaptive-sharpen",
+            "original",
+            "pixel",
+            "sharp-bilinear",
+            "smooth"
+          ],
+          "volume": true
+        },
+        "checkpoint": {
+          "maxBytes": 268435456,
+          "readFormats": [
+            "flycast-state-gzip-v1",
+            "flycast-state-v1",
+            "flycast-state-v1-storage-v1"
+          ],
+          "writeFormat": "flycast-state-v1-storage-v1"
+        },
+        "displayName": "Flycast NAOMI",
+        "id": "flycast-naomi",
+        "inputs": [
+          {
+            "cardinality": "ONE",
+            "kind": "SEEKABLE_BLOB",
+            "optional": false,
+            "role": "game"
+          },
+          {
+            "cardinality": "ONE",
+            "kind": "BIOS_BUNDLE",
+            "optional": true,
+            "role": "bios"
+          },
+          {
+            "cardinality": "ONE",
+            "kind": "PARENT_ARCHIVE",
+            "optional": true,
+            "role": "parent"
+          },
+          {
+            "cardinality": "ONE",
+            "kind": "MULTI_DISC",
+            "optional": true,
+            "role": "discs"
+          },
+          {
+            "cardinality": "ONE",
+            "kind": "EXTERNAL_FILE_SET",
+            "optional": true,
+            "role": "external"
+          }
+        ],
+        "targetOptionsSchema": {
+          "additionalProperties": false,
+          "properties": {
+            "dosEntryPath": {
+              "format": "safe-path",
+              "maxLength": 240,
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "initialDiscIndex": {
+              "minimum": 0,
+              "type": [
+                "integer",
+                "null"
+              ]
+            }
+          },
+          "required": [
+            "dosEntryPath",
+            "initialDiscIndex"
+          ],
+          "type": "object"
+        }
+      },
+      {
+        "assetPaths": [
+          "assets/4.2.3/data/compression/extract7z.js",
+          "assets/4.2.3/data/compression/extractzip.js",
+          "assets/4.2.3/data/cores/cores.json",
+          "assets/4.2.3/data/cores/flycast-wasm.data",
+          "assets/4.2.3/data/cores/ppsspp-assets.zip",
+          "assets/4.2.3/data/cores/reports/flycast.json",
+          "assets/4.2.3/data/emulator.css",
+          "assets/4.2.3/data/emulator.min.css",
+          "assets/4.2.3/data/emulator.min.js",
+          "assets/4.2.3/data/loader.js",
+          "assets/4.2.3/data/localization/en-US.json",
+          "assets/4.2.3/data/localization/retroarch.json",
+          "assets/4.2.3/data/localization/zh-CN.json",
+          "assets/4.2.3/data/src/GameManager.js",
+          "assets/4.2.3/data/src/compression.js",
+          "assets/4.2.3/data/src/emulator.js",
+          "assets/4.2.3/data/src/gamepad.js",
+          "assets/4.2.3/data/src/nipplejs.js",
+          "assets/4.2.3/data/src/shaders.js",
+          "assets/4.2.3/data/src/socket.io.min.js",
+          "assets/4.2.3/data/src/storage.js"
+        ],
+        "capabilities": {
+          "checkpoint": true,
+          "discSwitch": false,
+          "frameCounter": true,
+          "frameMode": "SAME_ORIGIN_BLANK",
+          "inputFilter": true,
+          "nativeSettings": true,
+          "pause": true,
+          "requiresThreads": false,
+          "screenshot": true,
+          "standardGamepad": true,
+          "videoModes": [
+            "adaptive-sharpen",
+            "original",
+            "pixel",
+            "sharp-bilinear",
+            "smooth"
+          ],
+          "volume": true
+        },
+        "checkpoint": {
+          "maxBytes": 268435456,
+          "readFormats": [
+            "flycast-state-gzip-v1",
+            "flycast-state-v1",
+            "flycast-state-v1-storage-v1"
+          ],
+          "writeFormat": "flycast-state-v1-storage-v1"
+        },
+        "displayName": "Flycast NAOMI 2",
+        "id": "flycast-naomi2",
+        "inputs": [
+          {
+            "cardinality": "ONE",
+            "kind": "SEEKABLE_BLOB",
             "optional": false,
             "role": "game"
           },
@@ -4715,6 +5054,118 @@
           {
             "cardinality": "ONE",
             "kind": "ROM_BLOB",
+            "optional": false,
+            "role": "game"
+          },
+          {
+            "cardinality": "ONE",
+            "kind": "BIOS_BUNDLE",
+            "optional": true,
+            "role": "bios"
+          },
+          {
+            "cardinality": "ONE",
+            "kind": "PARENT_ARCHIVE",
+            "optional": true,
+            "role": "parent"
+          },
+          {
+            "cardinality": "ONE",
+            "kind": "MULTI_DISC",
+            "optional": true,
+            "role": "discs"
+          },
+          {
+            "cardinality": "ONE",
+            "kind": "EXTERNAL_FILE_SET",
+            "optional": true,
+            "role": "external"
+          }
+        ],
+        "targetOptionsSchema": {
+          "additionalProperties": false,
+          "properties": {
+            "dosEntryPath": {
+              "format": "safe-path",
+              "maxLength": 240,
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "initialDiscIndex": {
+              "minimum": 0,
+              "type": [
+                "integer",
+                "null"
+              ]
+            }
+          },
+          "required": [
+            "dosEntryPath",
+            "initialDiscIndex"
+          ],
+          "type": "object"
+        }
+      },
+      {
+        "assetPaths": [
+          "assets/4.2.3/data/compression/extract7z.js",
+          "assets/4.2.3/data/compression/extractzip.js",
+          "assets/4.2.3/data/cores/cores.json",
+          "assets/4.2.3/data/cores/genesis_plus_gx-wasm.data",
+          "assets/4.2.3/data/cores/ppsspp-assets.zip",
+          "assets/4.2.3/data/cores/reports/genesis_plus_gx.json",
+          "assets/4.2.3/data/emulator.css",
+          "assets/4.2.3/data/emulator.min.css",
+          "assets/4.2.3/data/emulator.min.js",
+          "assets/4.2.3/data/loader.js",
+          "assets/4.2.3/data/localization/en-US.json",
+          "assets/4.2.3/data/localization/retroarch.json",
+          "assets/4.2.3/data/localization/zh-CN.json",
+          "assets/4.2.3/data/src/GameManager.js",
+          "assets/4.2.3/data/src/compression.js",
+          "assets/4.2.3/data/src/emulator.js",
+          "assets/4.2.3/data/src/gamepad.js",
+          "assets/4.2.3/data/src/nipplejs.js",
+          "assets/4.2.3/data/src/shaders.js",
+          "assets/4.2.3/data/src/socket.io.min.js",
+          "assets/4.2.3/data/src/storage.js"
+        ],
+        "capabilities": {
+          "checkpoint": true,
+          "discSwitch": false,
+          "frameCounter": true,
+          "frameMode": "SAME_ORIGIN_BLANK",
+          "inputFilter": true,
+          "nativeSettings": true,
+          "pause": true,
+          "requiresThreads": false,
+          "screenshot": true,
+          "standardGamepad": true,
+          "videoModes": [
+            "adaptive-sharpen",
+            "original",
+            "pixel",
+            "sharp-bilinear",
+            "smooth"
+          ],
+          "volume": true
+        },
+        "checkpoint": {
+          "maxBytes": 268435456,
+          "readFormats": [
+            "emulatorjs-state-v1",
+            "emulatorjs-state-v1-storage-v1"
+          ],
+          "writeFormat": "emulatorjs-state-v1-storage-v1"
+        },
+        "displayName": "Genesis Plus GX CD",
+        "id": "genesis-plus-gx-cd",
+        "inputs": [
+          {
+            "cardinality": "ONE",
+            "kind": "SEEKABLE_BLOB",
             "optional": false,
             "role": "game"
           },
@@ -7585,7 +8036,7 @@
           "assets/4.2.3/data/compression/extractzip.js",
           "assets/4.2.3/data/cores/cores.json",
           "assets/4.2.3/data/cores/ppsspp-assets.zip",
-          "assets/4.2.3/data/cores/puae-wasm.data",
+          "assets/4.2.3/data/cores/puae-thread-wasm.data",
           "assets/4.2.3/data/cores/reports/puae.json",
           "assets/4.2.3/data/emulator.css",
           "assets/4.2.3/data/emulator.min.css",
@@ -7611,7 +8062,7 @@
           "inputFilter": true,
           "nativeSettings": true,
           "pause": true,
-          "requiresThreads": false,
+          "requiresThreads": true,
           "screenshot": true,
           "standardGamepad": true,
           "videoModes": [

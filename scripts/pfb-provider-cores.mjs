@@ -36,6 +36,8 @@ export async function readPFBProviderCoreFiles(outputRoot, providerId, staging, 
     // Reuse the candidate pipeline's exact metadata, filenames, regular-file and SHA checks.
     await stageDevelopmentForks(catalog, new Map([[core.id, core.directory]]), destination);
     for (const file of developmentForkFiles(catalog)) {
+      if (file.filename !== `${core.id}-thread-wasm.data` && file.filename !== `${core.id}-wasm.data` &&
+        file.filename !== "retrom-core-candidate.json") {continue;}
       const path = file.destination.includes("/licenses/") ? `licenses/emulatorjs/${file.destination}` : `assets/${file.destination}`;
       result.push({path, contents: await readFile(join(destination, file.destination))});
     }

@@ -2,8 +2,7 @@ import {ProviderContentOwner} from "../../provider/content-owner.js";
 import type {ContentSessionClient} from "../../content-io/client.js";
 import {ContentIOError} from "../../content-io/errors.js";
 import {stopNativeInstance} from "./native-exit.js";
-import {observeEmulatorInput} from "./input-diagnostics.js";
-import {startInputDiagnostics} from "../../provider/input-diagnostics.js";
+import {startEmulatorInputDiagnostics} from "./input-diagnostics.js";
 import type {RuntimeInputDiagnosticsV1} from "../../provider/module-api.js";
 import type {
   AssetIndexV1,
@@ -22,8 +21,9 @@ import type {
 import {PlayerRuntimeError} from "../../provider/errors.js";
 import {focusRuntimeInput} from "../../provider/input-focus.js";
 import {emulatorJsProviderDefinition, type EmulatorImplementation} from "./catalog.js";
-import {installNeoCDStartup} from "./neocd-startup.js";
-import {mountNeoCDRange, configureContentDisc} from "./disc-mount.js";
+import {installAsyncRangeStartup} from "./async-range-startup.js";
+import {registerSeekableContentFS, type VirtualContentFile} from "./virtual-content-fs.js";
+import {configureContentDisc, emulatorJsDisableCue, hasSeekableGame} from "./disc-mount.js";
 import {installArchiveWorkerCompatibility} from "./archive-worker.js";
 import {installDOSBoxPureStateCompatibility} from "./dosbox-state.js";
 import {installExternalFileCompatibility} from "./external-files.js";
@@ -34,7 +34,7 @@ import {
   switchEmulatorJsDisc,
 } from "./discs.js";
 import {captureEmulatorJsScreenshot} from "./screenshot.js";
-import {createStartBarrier, emulatorCheckpointAvailability, needsVerboseRestore, runtimeStartTimeout, startWhenAvailable, type StartBarrier} from "./lifecycle.js";
+import {configureDeferredStart, createStartBarrier, emulatorCheckpointAvailability, needsVerboseRestore, runtimeStartTimeout, type StartBarrier} from "./lifecycle.js";
 import {installEmulatorJsRetroArchConfig} from "./retroarch-config.js";
 import {installEmulatorJs423StateRestoreCompatibility} from "./state-restore.js";
 import {installSupermodelState} from "./supermodel-state.js";
@@ -78,8 +78,9 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
   private exitPromise: Promise<void> | null = null;
   private pspRestore: ReturnType<typeof installPspRestoreObserver> | null = null;
   private cleanupArchiveWorker: (() => void) | null = null;
-  private neoCDRange: Awaited<ReturnType<typeof mountNeoCDRange>> | null = null;
+  private discRange: VirtualContentFile | null = null;
   private cleanupFlycast: (() => void) | null = null;
+  private cleanupSeekableFS: (() => void) | null = null;
   private cleanupFrameStyle: (() => void) | null = null;
   private outputViewport: ReturnType<typeof installEmulatorJsOutputViewport> | null = null;
   private videoModeController: ReturnType<typeof createEmulatorJsVideoModeController> | null = null;
@@ -101,6 +102,7 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
   private exitRequestedEmitted = false;
   private checkpointAvailability: RuntimeCheckpointAvailabilityV1 = {available: false, reason: "NOT_READY"};
   private readonly implementation: EmulatorImplementation;
+  private readonly eagerContentGame: boolean;
   private readonly contentOwner = new ProviderContentOwner(error => this.fail(error.message, error), diagnostic => this.host.reportDiagnostic({code: "CONTENT_IO_METRICS", message: JSON.stringify(diagnostic)}));
   private contentSession: ContentSessionClient | null = null;
   private readonly hostAbort = () => {this.contentOwner.force(); void this.exit();};
@@ -113,6 +115,7 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
     const target = emulatorJsProviderDefinition.targets.find((entry) => entry.id === envelope.runtime.targetId);
     if (!target) {invalid();}
     this.implementation = target.implementation;
+    this.eagerContentGame = target.contentIO.game.mode === "EAGER";
     const core = assetIndex[this.implementation.coreAssetPath];
     if (!core || core.sha256 !== this.implementation.coreSha256 ||
       core.sizeBytes !== this.implementation.coreSizeBytes) {
@@ -133,7 +136,7 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
     const instance = this.requireInstance();
     const toggle = instance.gameManager?.toggleMainLoop;
     if (!toggle) {throw contractError();}
-    if (this.neoCDRange) {await this.neoCDRange.idle();}
+    if (this.discRange) {await this.discRange.idle();}
     toggle.call(instance.gameManager, false);
     instance.paused = true;
     this.transition("PAUSED");
@@ -154,7 +157,7 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
 
   async checkpoint() {
     if (!this.envelope.runtime.capabilities.checkpoint) {throw capabilityError();}
-    if (this.neoCDRange) {await this.neoCDRange.idle();}
+    if (this.discRange) {await this.discRange.idle();}
     const manager = this.requireInstance().gameManager;
     const maximum = this.envelope.runtime.checkpoint?.maxBytes ?? 0;
     const bytes = this.implementation.runtimeCore === "ppsspp"
@@ -175,7 +178,7 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
   }
 
   async screenshot() {
-    if (this.neoCDRange) {await this.neoCDRange.idle();}
+    if (this.discRange) {await this.discRange.idle();}
     return captureEmulatorJsScreenshot(this.requireInstance());
   }
 
@@ -257,17 +260,10 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
   }
   startInputDiagnostics() {
     this.inputDiagnostics?.stop();
-    this.inputDiagnostics = startInputDiagnostics(this.runtimeWindow ?? window, () => this.getCanvas());
-    if (this.runtimeWindow) {
-      this.inputDiagnostics = observeEmulatorInput(this.runtimeWindow, this.instance, this.inputDiagnostics);
-    }
-    return this.inputDiagnostics;
+    return this.inputDiagnostics = startEmulatorInputDiagnostics(this.runtimeWindow, this.instance, () => this.getCanvas());
   }
 
-  subscribe(listener: (event: RuntimeEventV1) => void) {
-    this.listeners.add(listener);
-    return () => this.listeners.delete(listener);
-  }
+  subscribe(listener: (event: RuntimeEventV1) => void) {this.listeners.add(listener); return () => this.listeners.delete(listener);}
 
   private prepareRetroArchConfig(runtimeWindow: Window) {
     this.cleanupRetroArchConfig = installEmulatorJsRetroArchConfig(runtimeWindow,
@@ -298,8 +294,9 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
       this.startBarrier = createStartBarrier();
       this.configure(runtimeWindow);
       const disc = await configureContentDisc(runtimeWindow, this.envelope, this.implementation.runtimeCore, this.host.signal,
-        this.contentSession, error => this.fail(error.message, error), event => this.emit({type: "LOAD_PROGRESS", ...event}));
-      this.neoCDRange = disc.range; this.cleanupFlycast = disc.cleanup;
+        this.contentSession, error => this.fail(error.message, error), this.eagerContentGame,
+        (loadedBytes, totalBytes) => this.emit({type: "LOAD_PROGRESS", loadedBytes, totalBytes}));
+      this.discRange = disc.range; this.cleanupFlycast = disc.cleanup;
       this.checkMountActive();
 
       this.prepareRetroArchConfig(runtimeWindow);
@@ -354,7 +351,7 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
 
   private configure(runtimeWindow: EjsWindow) {
     if (this.implementation.runtimeCore === "ppsspp") {this.pspRestore = installPspRestoreObserver(runtimeWindow);}
-    const game = resource(this.envelope, "game", this.implementation.runtimeCore === "neocd" ? "SEEKABLE_BLOB" : "ROM_BLOB");
+    const seekable = hasSeekableGame(this.envelope), game = resource(this.envelope, "game", seekable ? "SEEKABLE_BLOB" : "ROM_BLOB");
     const bios = optionalResource(this.envelope, "bios", "BIOS_BUNDLE");
     const parent = optionalResource(this.envelope, "parent", "PARENT_ARCHIVE");
     const releaseBase = runtimeBase(this.envelope, this.implementation.release);
@@ -373,16 +370,16 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
     runtimeWindow.EJS_biosUrl = biosFile(bios);
     runtimeWindow.EJS_gameParentUrl = parent?.url;
     runtimeWindow.EJS_startOnLoaded = !deferredStart;
-    runtimeWindow.EJS_dontExtractRom = deferredStart || ["flycast", "neocd"].includes(this.implementation.runtimeCore);
+    runtimeWindow.EJS_dontExtractRom = deferredStart || this.implementation.runtimeCore === "flycast" || seekable || this.eagerContentGame;
     runtimeWindow.EJS_disableBatchBootup = deferredDOSStart;
-    runtimeWindow.EJS_disableCue = ["cap32", "quasi88"].includes(this.implementation.runtimeCore) ? true : undefined;
+    runtimeWindow.EJS_disableCue = emulatorJsDisableCue(this.implementation.runtimeCore, this.envelope.runtime.targetId) ? true : undefined;
     runtimeWindow.EJS_language = "zh-CN";
     runtimeWindow.EJS_disableAutoLang = false;
     // RetroArch emits native load receipts only in verbose mode. The PSP and
     // Model 3 restore barriers must observe a receipt before admitting gameplay.
     runtimeWindow.EJS_DEBUG_XX = needsVerboseRestore(this.implementation.runtimeCore, this.envelope.restore !== null);
     runtimeWindow.EJS_EXPERIMENTAL_NETPLAY = false;
-    runtimeWindow.EJS_threads = this.envelope.runtime.capabilities.requiresThreads;
+    runtimeWindow.EJS_threads = this.implementation.artifactFlavor === "THREAD_WASM";
     runtimeWindow.EJS_fullscreenOnLoaded = false;
     runtimeWindow.EJS_disableDatabases = true;
     runtimeWindow.EJS_disableLocalStorage = true;
@@ -400,28 +397,30 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
     const checkpointMaximum = this.envelope.runtime.checkpoint?.maxBytes ?? 0;
     runtimeWindow.EJS_ready = () => {
       this.instance = runtimeWindow.EJS_emulator ?? null;
-      if (this.instance) {
-        this.cleanupGamepadIndex = initializeEmulatorJsGamepads(this.instance);
-        if (this.neoCDRange) {installNeoCDStartup(this.instance, this.neoCDRange);}
-        installLutroNativeRestore(this.implementation.runtimeCore, this.instance, this.restorePayload,
-          checkpointMaximum, () => {this.restorePayload = null;},
-          error => this.fail("PLAYER_STATE_RESTORE_FAILED", error));
+      if (!this.instance) {this.fail("PLAYER_RUNTIME_UNAVAILABLE"); return;}
+      const instance = this.instance;
+      this.cleanupGamepadIndex = initializeEmulatorJsGamepads(instance);
+      if (["neocd", "flycast"].includes(this.implementation.runtimeCore) && this.discRange) {installAsyncRangeStartup(instance, this.discRange);}
+      if ((seekable || this.eagerContentGame) && !["neocd", "flycast"].includes(this.implementation.runtimeCore) && this.discRange) {
+        try {this.cleanupSeekableFS = registerSeekableContentFS(instance, this.discRange,
+          error => this.fail("EMULATORJS_CONTENT_FS_UNAVAILABLE", error));}
+        catch (error) {this.fail("EMULATORJS_CONTENT_FS_UNAVAILABLE", error); return;}
       }
-      if (!this.instance) {this.fail("PLAYER_RUNTIME_UNAVAILABLE");}
-      this.instance?.on?.("exit", () => this.requestExit());
+      installLutroNativeRestore(this.implementation.runtimeCore, instance, this.restorePayload,
+        checkpointMaximum, () => {this.restorePayload = null;},
+        error => this.fail("PLAYER_STATE_RESTORE_FAILED", error));
+      instance.on?.("exit", () => this.requestExit());
       const discs = optionalResource(this.envelope, "discs", "MULTI_DISC");
-      if (discs && this.instance) {
-        try {initializeEmulatorJsDiscs(this.instance);}
+      if (discs) {
+        try {initializeEmulatorJsDiscs(instance);}
         catch (error) {this.fail("PLAYER_DISC_RUNTIME_INVALID", error); return;}
       }
-      if (deferredStart && this.instance) {
-        const excluded = this.instance.downloadType?.rom?.dontExtractIfCore;
-        if (!Array.isArray(excluded)) {this.fail("PLAYER_ROM_ARCHIVE_MODE_UNAVAILABLE"); return;}
-        if (!excluded.includes(this.implementation.runtimeCore)) {excluded.push(this.implementation.runtimeCore);}
+      if (deferredStart) {
         try {
-          this.cleanupDeferredStart = startWhenAvailable(runtimeWindow);
+          this.cleanupDeferredStart = configureDeferredStart(runtimeWindow, instance, this.implementation.runtimeCore);
         } catch (error) {
-          this.fail("PLAYER_ROM_START_UNAVAILABLE", error);
+          this.fail(error instanceof Error && error.message === "PLAYER_ROM_ARCHIVE_MODE_UNAVAILABLE"
+            ? error.message : "PLAYER_ROM_START_UNAVAILABLE", error);
         }
       }
       this.updateCheckpointAvailability(this.currentCheckpointAvailability());
@@ -492,7 +491,7 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
   }
 
   private async restore(bytes: Uint8Array) {
-    if (this.neoCDRange) {await this.neoCDRange.idle();}
+    if (this.discRange) {await this.discRange.idle();}
     const manager = this.instance?.gameManager;
     if (this.implementation.runtimeCore === "ppsspp") {
       await restorePspCheckpoint(manager, bytes, this.envelope.runtime.checkpoint?.maxBytes ?? 0,
@@ -532,7 +531,7 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
     this.clearStartBarrier();
     this.host.signal.removeEventListener("abort", this.hostAbort);
     const nativeExitAlreadyRequested = this.exitRequestedEmitted; this.exitRequestedEmitted = true;
-    await stopNativeInstance(this.runtimeWindow, this.instance, this.implementation.runtimeCore, nativeExitAlreadyRequested, this.neoCDRange);
+    await stopNativeInstance(this.runtimeWindow, this.instance, this.implementation.runtimeCore, nativeExitAlreadyRequested, this.discRange);
     await this.closeContent();
     if (this.runtimeWindow) {
       for (const timer of this.startupTimers) {this.runtimeWindow.clearTimeout(timer);}
@@ -572,7 +571,7 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
 
   private async closeContent() {
     await this.contentOwner.close(); this.contentSession = null;
-    await this.neoCDRange?.dispose(); this.neoCDRange = null;
+    await this.discRange?.dispose(); this.discRange = null;
   }
 
   private requireInstance() {
@@ -588,6 +587,7 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
 
   private cleanupSurface() {
     this.lutroNativeSave?.stop(); this.lutroNativeSave = null;
+    this.cleanupSeekableFS?.(); this.cleanupSeekableFS = null;
     this.videoModeController?.cleanup();
     this.videoModeController = null;
     this.cleanupFlycast?.(); this.cleanupFlycast = null;

@@ -40,6 +40,10 @@ const sources = new Map([
 
   ["neocd", {repository: "https://github.com/retrom-project/neocd_libretro",
     upstreamCommit: "3118c6901787e863e80e79170d02d47657b3b0ab", license: "LICENSE.md"}],
+  ["puae", {repository: "https://github.com/retrom-project/libretro-uae",
+    upstreamCommit: "2245d3443cc12447c2c36c591ec50d6ed934fe69", license: "COPYING", threaded: true}],
+  ["genesis_plus_gx", {repository: "https://github.com/retrom-project/Genesis-Plus-GX",
+    upstreamCommit: "63f0c6870601c4bde3836519cb80d79b5798677f", license: "LICENSE.txt"}],
   ["same_cdi", {repository: "https://github.com/retrom-project/same_cdi",
     upstreamCommit: "cfb05d803f54130adf94efef88edd816d01df7a3", license: "COPYING"}],
   ...["vice_xpet", "vice_xplus4"].map((core) => [core, {repository: "https://github.com/retrom-project/vice-libretro",
@@ -51,7 +55,8 @@ const sources = new Map([
   ["crocods", {repository: "https://github.com/retrom-project/libretro-crocods",
     upstreamCommit: "be00fb904da08d66221017f6708508298f17ff07", license: "LICENSE"}],
 ]);
-const names = (core) => [sources.get(core)?.license, `${core}-wasm.data`, "retrom-core-candidate.json", "source.tar.gz"].sort();
+const coreAssetName = (core) => `${core}${sources.get(core)?.threaded ? "-thread" : ""}-wasm.data`;
+const names = (core) => [sources.get(core)?.license, coreAssetName(core), "retrom-core-candidate.json", "source.tar.gz"].sort();
 const hash = (bytes) => createHash("sha256").update(bytes).digest("hex");
 const digest = (value) => typeof value === "string" && /^[0-9a-f]{64}$/u.test(value);
 const exact = (value, keys) => value && typeof value === "object" && !Array.isArray(value) &&
@@ -85,7 +90,7 @@ export function developmentForkFiles(catalog) {
       !Number.isSafeInteger(file.sizeBytes) || file.sizeBytes < 1 ||
       file.sizeBytes > (file.filename === "source.tar.gz" ? 64 : 16) * 1024 * 1024) {invalid();}
       const release = sources.get(fork.runtimeCore).release ?? "4.2.3";
-      const destination = file.filename === `${fork.runtimeCore}-wasm.data` ? `${release}/data/cores/${file.filename}`
+      const destination = file.filename === coreAssetName(fork.runtimeCore) ? `${release}/data/cores/${file.filename}`
         : file.filename === "retrom-core-candidate.json" ? `${release}/data/cores/reports/${fork.runtimeCore}.json`
           : `${release}/licenses/forks/${fork.runtimeCore}/${file.filename}`;
       return {...file, destination, runtimeCore: fork.runtimeCore};

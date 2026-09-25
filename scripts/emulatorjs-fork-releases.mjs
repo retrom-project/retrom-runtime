@@ -12,6 +12,10 @@ const identities = {
   o2em: {repository: "https://github.com/retrom-project/libretro-o2em", baseline: "g679d6fec0496", license: "LICENSE", source: "source.tar.gz"},
   bsnes: {repository: "https://github.com/retrom-project/bsnes-libretro", baseline: "g4b344745e387", license: "LICENSE.txt", source: "source.tar.gz", release: "4.3.0-pre"},
   neocd: {repository: "https://github.com/retrom-project/neocd_libretro", baseline: "g3118c6901787", license: "LICENSE.md", source: "source.tar.gz"},
+  puae: {repository: "https://github.com/retrom-project/libretro-uae", baseline: "g2245d3443cc1", license: "COPYING",
+    source: "source.tar.gz", coreAsset: "puae-thread-wasm.data"},
+  genesis_plus_gx: {repository: "https://github.com/retrom-project/Genesis-Plus-GX", baseline: "g63f0c6870601",
+    license: "LICENSE.txt", source: "source.tar.gz"},
   quasi88: {repository: "https://github.com/retrom-project/quasi88-libretro", baseline: "g459bbc6e90ca", license: "LICENSE", source: "source.tar.gz"},
   vecx: {repository: "https://github.com/retrom-project/libretro-vecx", baseline: "g8f671cc9d737", license: "LICENSE.md", source: "source.tar.gz"},
   "81": {repository: "https://github.com/retrom-project/81-libretro", baseline: "g86decf3ee61e", license: "LICENSE", source: "source.tar.gz"},
@@ -36,8 +40,9 @@ export function forkReleaseFiles(catalog) {
       !new RegExp(`^retrom-core-${identity.baseline.replaceAll(".", "\\.")}-r[1-9][0-9]*(-rc\\.[1-9][0-9]*)?$`, "u")
         .test(fork.tag)) {invalid();}
     const release = identity.release ?? "4.2.3";
+    const coreAsset = identity.coreAsset ?? `${fork.runtimeCore}-wasm.data`;
     const expected = [
-      [`${fork.runtimeCore}-wasm.data`, `${release}/data/cores/${fork.runtimeCore}-wasm.data`],
+      [coreAsset, `${release}/data/cores/${coreAsset}`],
       [identity.metadata ?? "rpg-runtime-release.json", forkMetadataPath(fork)],
       [identity.license, `${release}/licenses/forks/${fork.runtimeCore}/${identity.license}`],
       ...(identity.source ? [[identity.source, `${release}/licenses/forks/${fork.runtimeCore}/${identity.source}`]] : []),

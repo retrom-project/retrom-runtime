@@ -1,6 +1,13 @@
 import type {RuntimeInputDiagnosticsV1} from "../../provider/module-api.js";
+import {startInputDiagnostics} from "../../provider/input-diagnostics.js";
 import {inputObserver} from "../../provider/input-observations.js";
 import type {EjsInstance} from "./emulator-instance.js";
+
+export function startEmulatorInputDiagnostics(runtimeWindow: Window | null, instance: EjsInstance | null,
+  getCanvas: () => HTMLCanvasElement | null): RuntimeInputDiagnosticsV1 {
+  const session = startInputDiagnostics(runtimeWindow ?? window, getCanvas);
+  return runtimeWindow ? observeEmulatorInput(runtimeWindow, instance, session) : session;
+}
 
 export function observeEmulatorInput(window: Window, instance: EjsInstance | null, session: RuntimeInputDiagnosticsV1): RuntimeInputDiagnosticsV1 {
   const manager = instance?.gameManager;

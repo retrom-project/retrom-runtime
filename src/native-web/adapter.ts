@@ -1,4 +1,5 @@
 import {NativeInputDiagnostics} from "./input-diagnostics.js";
+import {createNativeGameEditor} from "./editor.js";
 import {
   decodeRpgCheckpoint,
   encodeRpgCheckpoint,
@@ -66,6 +67,7 @@ export async function mountNativeRpg(
 
   return {
     checkpoint: async () => ({ bytes: await channel.save(expectedEngine), format: "native-save-bundle-v1" }),
+    gameEditor: createNativeGameEditor(channel),
     exit: async () => {
       channel.prepareCleanup();
       await channel.request("CLEANUP", {}, cleanupTimeoutMs).catch(() => undefined);

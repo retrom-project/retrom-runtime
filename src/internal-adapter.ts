@@ -4,7 +4,7 @@ import type {
   RuntimeCheckpoint,
   RuntimeLoadProgress,
 } from "./contract.js";
-import type {RuntimeVideoModeV1, RuntimeInputDiagnosticsV1} from "./provider/module-api.js";
+import type {RuntimeVideoModeV1, RuntimeInputDiagnosticsV1, RuntimeGameEditorV1} from "./provider/module-api.js";
 
 import type {GamepadCursor} from "./provider/gamepad-cursor.js";
 
@@ -19,6 +19,7 @@ export type MountedRuntimeAdapter = {
   getCheckpointAvailability(): CheckpointAvailability;
   getFrameCount(): number | null;
   startInputDiagnostics?(): RuntimeInputDiagnosticsV1;
+  gameEditor?: RuntimeGameEditorV1;
   pause(): Promise<void>;
   resume(): Promise<void>;
   screenshot(): Promise<Blob>;

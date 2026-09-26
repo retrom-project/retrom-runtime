@@ -194,6 +194,11 @@ class RetromRuntimePlayer implements PlayerRuntimeV1 {
     return value !== null && Number.isSafeInteger(value) && value >= 0 ? value : null;
   }
 
+  getGameEditor() {
+    if (this.state !== "RUNNING" && this.state !== "PAUSED") {return null;}
+    return this.adapter?.gameEditor ?? null;
+  }
+
   setVolume(value: number) {
     return this.enqueue(async () => {
       this.requireCapability("volume");

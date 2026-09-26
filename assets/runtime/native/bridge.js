@@ -5,6 +5,18 @@
   const MAX_CONTROL_BYTES = 64 * 1024;
   const MAX_ENTRY_BYTES = 64 * 1024 * 1024;
   const MAX_SCREENSHOT_BYTES = 10 * 1024 * 1024;
+  const EDITOR_CATEGORIES = Object.freeze([
+    {id: "gold", label: "金币"}, {id: "items", label: "道具"},
+    {id: "weapons", label: "武器"}, {id: "armors", label: "护甲"},
+    {id: "variables", label: "变量"}, {id: "switches", label: "开关"},
+    {id: "actors", label: "角色"},
+  ]);
+  const ACTOR_FIELDS = Object.freeze([
+    ["hp", "生命"], ["mp", "魔法"], ["tp", "TP"], ["level", "等级"], ["exp", "经验"],
+    ["mhp", "最大生命"], ["mmp", "最大魔法"], ["atk", "攻击"],
+    ["def", "防御"], ["mat", "魔法攻击"], ["mdf", "魔法防御"],
+    ["agi", "敏捷"], ["luk", "幸运"],
+  ]);
   const encoder = new TextEncoder();
   const decoder = new TextDecoder("utf-8", { fatal: true });
   let launchId = null;
@@ -356,6 +368,150 @@
     }
   }
 
+  function editorReady() {
+    return engineRuntimeReady() && global.$gameParty && global.$gameVariables &&
+      global.$gameSwitches && global.$dataSystem && global.$gameMap &&
+      typeof global.$gameMap.mapId === "function" && global.$gameMap.mapId() > 0;
+  }
+
+  function editorEntry(id, label, value, min, max) {
+    const name = String(label || id).slice(0, 160);
+    if (typeof value === "number" && Number.isSafeInteger(value)) {
+      return {id, label: name, value, valueType: "number", min, max};
+    }
+    if (typeof value === "boolean") return {id, label: name, value, valueType: "boolean"};
+    if (typeof value === "string" && value.length <= 500) {
+      return {id, label: name, value, valueType: "text"};
+    }
+    return {id, label: name, value: null, valueType: "unsupported"};
+  }
+
+  function editorArrayRows(category) {
+    const sources = {items: global.$dataItems, weapons: global.$dataWeapons, armors: global.$dataArmors};
+    const source = sources[category];
+    if (!Array.isArray(source)) throw new Error("RPG_GAME_EDITOR_UNAVAILABLE");
+    const items = source.slice(1).filter((item) => item && Number.isSafeInteger(item.id) && item.id > 0);
+    items.sort((left, right) => Number(Boolean(right.name && String(right.name).trim())) -
+      Number(Boolean(left.name && String(left.name).trim())));
+    return items.map((item) => {
+      const name = String(item.name || "").trim();
+      const fallback = category === "items" ? "道具" : category === "weapons" ? "武器" : "护甲";
+      const maximum = global.$gameParty.maxItems(item);
+      return editorEntry(String(item.id), name || `${fallback} ${item.id}`,
+        global.$gameParty.numItems(item), 0, Number.isSafeInteger(maximum) ? maximum : 99);
+    });
+  }
+
+  function editorActorRows() {
+    const party = global.$gameParty;
+    if (typeof party.members !== "function") throw new Error("RPG_GAME_EDITOR_UNAVAILABLE");
+    return party.members().flatMap((actor) => {
+      if (!actor || typeof actor.actorId !== "function") return [];
+      const actorId = actor.actorId();
+      if (!Number.isSafeInteger(actorId) || actorId < 1) return [];
+      const actorName = typeof actor.name === "function" ? actor.name() : `#${actorId}`;
+      return ACTOR_FIELDS.map(([field, name]) => {
+        const parameter = ACTOR_FIELDS.findIndex(([candidate]) => candidate === field) - 5;
+        const value = parameter >= 0 ? actor.param(parameter)
+          : field === "exp" ? actor.currentExp() : actor[field];
+        const maximum = parameter >= 0 ? actor.paramMax(parameter)
+          : field === "hp" ? actor.mhp : field === "mp" ? actor.mmp
+            : field === "tp" ? actor.maxTp() : field === "level" ? actor.maxLevel() : 999999999;
+        return editorEntry(`${actorId}:${field}`, `${actorName} · ${name}`,
+          value, field === "level" ? 1 : 0, Number.isSafeInteger(maximum) ? maximum : 999999999);
+      });
+    });
+  }
+
+  function editorRows(category) {
+    if (!editorReady()) throw new Error("RPG_GAME_EDITOR_NOT_READY");
+    if (!EDITOR_CATEGORIES.some((entry) => entry.id === category)) {
+      throw new Error("RPG_GAME_EDITOR_INVALID");
+    }
+    if (category === "gold") {
+      const party = global.$gameParty;
+      return [editorEntry("gold", "金币", party.gold(), 0, party.maxGold())];
+    }
+    if (category === "items" || category === "weapons" || category === "armors") {
+      return editorArrayRows(category);
+    }
+    if (category === "variables" || category === "switches") {
+      const names = category === "variables" ? global.$dataSystem.variables : global.$dataSystem.switches;
+      const owner = category === "variables" ? global.$gameVariables : global.$gameSwitches;
+      if (!Array.isArray(names) || typeof owner.value !== "function") {
+        throw new Error("RPG_GAME_EDITOR_UNAVAILABLE");
+      }
+      const named = [];
+      const unnamed = [];
+      names.slice(1).forEach((name, index) => {
+        const id = index + 1;
+        const value = owner.value(id);
+        const fallback = category === "variables" ? "变量" : "开关";
+        const displayName = String(name || "").trim();
+        const row = editorEntry(String(id), displayName || `${fallback} ${id}`, value,
+          category === "variables" && typeof value === "number" ? -999999999 : undefined,
+          category === "variables" && typeof value === "number" ? 999999999 : undefined);
+        (displayName ? named : unnamed).push(row);
+      });
+      return [...named, ...unnamed];
+    }
+    return editorActorRows();
+  }
+
+  function editorList(body) {
+    if (!body || typeof body.category !== "string" || typeof body.query !== "string" ||
+      body.query.length > 80 || !Number.isSafeInteger(body.offset) || body.offset < 0 ||
+      !Number.isSafeInteger(body.limit) || body.limit < 1 || body.limit > 40) {
+      throw new Error("RPG_GAME_EDITOR_INVALID");
+    }
+    const query = body.query.trim().toLowerCase();
+    const rows = editorRows(body.category).filter((row) =>
+      !query || row.id.includes(query) || row.label.toLowerCase().includes(query));
+    return {entries: rows.slice(body.offset, body.offset + body.limit),
+      nextOffset: body.offset + body.limit < rows.length ? body.offset + body.limit : null};
+  }
+
+  function editorSet(body) {
+    if (!body || typeof body.category !== "string" || typeof body.id !== "string" ||
+      !/^[a-z0-9:_-]{1,60}$/u.test(body.id)) throw new Error("RPG_GAME_EDITOR_INVALID");
+    const entry = editorRows(body.category).find((row) => row.id === body.id);
+    if (!entry || entry.valueType === "unsupported" ||
+      (entry.valueType === "text" ? typeof body.value !== "string"
+        : entry.valueType !== typeof body.value) ||
+      entry.valueType === "number" && (!Number.isSafeInteger(body.value) ||
+        body.value < entry.min || body.value > entry.max) ||
+      entry.valueType === "text" && body.value.length > 500) {
+      throw new Error("RPG_GAME_EDITOR_INVALID");
+    }
+    const value = body.value;
+    if (body.category === "gold") {
+      global.$gameParty.gainGold(value - global.$gameParty.gold());
+    } else if (["items", "weapons", "armors"].includes(body.category)) {
+      const source = {items: global.$dataItems, weapons: global.$dataWeapons, armors: global.$dataArmors}[body.category];
+      const item = source[Number(body.id)];
+      global.$gameParty.gainItem(item, value - global.$gameParty.numItems(item), false);
+    } else if (body.category === "variables") {
+      global.$gameVariables.setValue(Number(body.id), value);
+    } else if (body.category === "switches") {
+      global.$gameSwitches.setValue(Number(body.id), value);
+    } else {
+      const [actorId, field] = body.id.split(":");
+      const actor = global.$gameParty.members().find((candidate) => candidate.actorId() === Number(actorId));
+      if (!actor) throw new Error("RPG_GAME_EDITOR_INVALID");
+      const parameter = ACTOR_FIELDS.findIndex(([candidate]) => candidate === field) - 5;
+      if (parameter >= 0) actor.addParam(parameter, value - actor.param(parameter));
+      else if (field === "hp") actor.setHp(value);
+      else if (field === "mp") actor.setMp(value);
+      else if (field === "tp") actor.setTp(value);
+      else if (field === "level") actor.changeLevel(value, false);
+      else if (field === "exp") actor.changeExp(value, false);
+      else throw new Error("RPG_GAME_EDITOR_INVALID");
+    }
+    const updated = editorRows(body.category).find((row) => row.id === body.id);
+    if (!updated) throw new Error("RPG_GAME_EDITOR_UNAVAILABLE");
+    return {entry: updated};
+  }
+
   // Optional diagnostics observe engine-bound events; they never poll or synthesize inputs.
   function startInputDiagnostics() {
     let active = true;
@@ -442,6 +598,10 @@
     case "RESUME": setPaused(false); return { type: "RESUME_RESULT", body: {} };
     case "SET_VIDEO_MODE": setVideoMode(message.body.mode); return { type: "SET_VIDEO_MODE_RESULT", body: {} };
     case "SET_VOLUME": setVolume(message.body.value); return { type: "SET_VOLUME_RESULT", body: {} };
+    case "EDITOR_CATEGORIES": return {type: "EDITOR_CATEGORIES_RESULT",
+      body: {categories: EDITOR_CATEGORIES.map((category) => ({...category}))}};
+    case "EDITOR_ENTRIES": return {type: "EDITOR_ENTRIES_RESULT", body: editorList(message.body)};
+    case "EDITOR_SET": return {type: "EDITOR_SET_RESULT", body: editorSet(message.body)};
     case "CLEANUP":
       if (inputDiagnostics) inputDiagnostics.stop();
       inputDiagnostics = null;

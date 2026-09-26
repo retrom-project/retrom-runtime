@@ -17,6 +17,81 @@ type FakePort = {
 };
 
 describe("native-web RPG Maker bridge", () => {
+  it.each(["MV", "MZ"] as const)("edits standard %s values through the isolated protocol and rejects invalid writes", async (edition) => {
+    const source = readFileSync(resolve(process.cwd(), "assets/runtime/native/bridge.js"), "utf8");
+    const listeners = new Map<string, Array<(event: BridgeEvent) => void>>();
+    const replies: Array<{type: string; requestId: number; body: Record<string, unknown>}> = [];
+    const sceneManager = {_scene: null, updateMain: () => undefined};
+    const actor = {
+      hp: 10, mp: 4, tp: 2, level: 1, mhp: 20, mmp: 10,
+      actorId: () => 1, name: () => "Hero", currentExp: () => 0,
+      maxTp: () => 100, maxLevel: () => 99, param: (id: number) => id === 2 ? 5 : 10,
+      paramMax: () => 999, addParam: vi.fn(), setHp: vi.fn(), setMp: vi.fn(),
+      setTp: vi.fn(), changeLevel: vi.fn(), changeExp: vi.fn(),
+    };
+    let gold = 10;
+    let count = 1;
+    let variable = 3;
+    let enabled = false;
+    let mapId = 0;
+    const item = {id: 2, name: "Potion"};
+    const runtime = {
+      DataManager: {}, StorageManager: {}, Utils: {RPGMAKER_NAME: edition}, SceneManager: sceneManager,
+      $dataItems: [null, {id: 1, name: ""}, item], $dataWeapons: [null], $dataArmors: [null],
+      $dataSystem: {variables: ["", "", "Quest"], switches: ["", "", "Gate"]},
+      $gameParty: {
+        gold: () => gold, maxGold: () => 100, gainGold: (delta: number) => {gold += delta;},
+        numItems: () => count, maxItems: () => 99, gainItem: (_item: unknown, delta: number) => {count += delta;},
+        members: () => [actor],
+      },
+      $gameVariables: {value: () => variable, setValue: (_id: number, value: number) => {variable = value;}},
+      $gameSwitches: {value: () => enabled, setValue: (_id: number, value: boolean) => {enabled = value;}},
+      $gameMap: {mapId: () => mapId},
+      addEventListener: (name: string, callback: (event: BridgeEvent) => void) => {
+        listeners.set(name, [...(listeners.get(name) ?? []), callback]);
+      },
+      parent: {postMessage: () => undefined}, requestAnimationFrame: () => 1,
+    };
+    runInNewContext(source, {TextDecoder, TextEncoder, window: runtime});
+    const port: FakePort = {onmessage: null, postMessage: (message) => replies.push(message as typeof replies[number]),
+      start: () => undefined};
+    const identity = {launchId: "01980000-0000-7000-8000-000000000001", nonce: "test-nonce", protocolVersion: 1};
+    listeners.get("message")?.[0]?.({
+      data: {...identity, cleanupUrl: null, parentOrigin: "https://host.example",
+        profile: `RPG${edition}`, type: "RPG_RUNTIME_NATIVE_CONNECT"},
+      origin: "https://host.example", ports: [port], stopImmediatePropagation: () => undefined,
+    });
+    async function request(requestId: number, type: string, body: Record<string, unknown>) {
+      port.onmessage?.({data: {...identity, requestId, type, body}});
+      await vi.waitFor(() => expect(replies.some((reply) => reply.requestId === requestId)).toBe(true));
+      return replies.find((reply) => reply.requestId === requestId)!;
+    }
+    expect((await request(1, "EDITOR_CATEGORIES", {})).body.categories).toEqual(expect.arrayContaining([
+      {id: "gold", label: "金币"}, {id: "actors", label: "角色"},
+    ]));
+    expect((await request(2, "EDITOR_ENTRIES", {category: "gold", query: "", offset: 0, limit: 20})).type)
+      .toBe("ERROR");
+    mapId = 1;
+    expect((await request(3, "EDITOR_ENTRIES", {category: "items", query: "", offset: 0, limit: 20})).body)
+      .toMatchObject({entries: [{id: "2", label: "Potion", value: 1}, {id: "1", value: 1}], nextOffset: null});
+    expect((await request(4, "EDITOR_SET", {category: "gold", id: "gold", value: 50})).body)
+      .toMatchObject({entry: {value: 50}});
+    expect((await request(5, "EDITOR_SET", {category: "items", id: "2", value: 5})).body)
+      .toMatchObject({entry: {value: 5}});
+    expect((await request(6, "EDITOR_SET", {category: "variables", id: "1", value: 8})).body)
+      .toMatchObject({entry: {value: 8}});
+    expect((await request(7, "EDITOR_SET", {category: "switches", id: "1", value: true})).body)
+      .toMatchObject({entry: {value: true}});
+    await request(8, "EDITOR_SET", {category: "actors", id: "1:hp", value: 15});
+    expect(actor.setHp).toHaveBeenCalledWith(15);
+    expect((await request(9, "EDITOR_SET", {category: "gold", id: "gold", value: 101})).type).toBe("ERROR");
+    expect(gold).toBe(50);
+    expect((await request(10, "EDITOR_ENTRIES", {category: "variables", query: "", offset: 0, limit: 20})).body)
+      .toMatchObject({entries: [{id: "2", label: "Quest"}, {id: "1", label: "变量 1"}]});
+    expect((await request(11, "EDITOR_ENTRIES", {category: "switches", query: "", offset: 0, limit: 20})).body)
+      .toMatchObject({entries: [{id: "2", label: "Gate"}, {id: "1", label: "开关 1"}]});
+  });
+
   it("reports readiness without fixture-variable proofs and applies video modes inside the isolated frame", async () => {
     const source = readFileSync(
       resolve(process.cwd(), "assets/runtime/native/bridge.js"),

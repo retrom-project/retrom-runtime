@@ -135,6 +135,8 @@ screenshots contain the displayed frame instead of a cleared black buffer.
 ## Optional Input Diagnostics
 
 Provider Module V1 exposes optional `startInputDiagnostics()` with bounded `read`, `clear` and idempotent `stop`.
+
+RPG Maker MV/MZ optionally expose `getGameEditor()` on `PlayerRuntimeV1`. It returns a host-neutral editor with `categories()`, paginated `entries(category, query, offset, limit)`, and `set(category, id, value)`. The native iframe bridge reads and writes the engine's live `$gameParty`, `$gameVariables`, `$gameSwitches`, and party actor APIs through the existing isolated MessageChannel. The first release supports gold, item/weapon/armor counts, variables, switches, and common actor attributes. Unsupported variable values are read-only. Edits affect the current game state; persistence follows the game's normal save flow.
 It observes existing input events, gamepad reads and adapter delivery boundaries only while enabled. It never polls
 extra gamepad frames, synthesizes inputs or pauses/resumes a game. The Host may refresh snapshots at up to 10 Hz.
 The history retains 64 transitions; gamepad values are quantized for diagnostics only. Unsupported observation points

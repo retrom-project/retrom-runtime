@@ -1,0 +1,70 @@
+import type {RuntimeGameEditEntryV1, RuntimeGameEditorV1} from "../provider/module-api.js";
+import type {NativeChannel} from "./adapter.js";
+
+type EditorChannel = Pick<NativeChannel, "request">;
+const token = /^[a-z0-9:_-]{1,60}$/u;
+
+export function createNativeGameEditor(channel: EditorChannel): RuntimeGameEditorV1 {
+  return {
+    async categories() {
+      const reply = await channel.request("EDITOR_CATEGORIES", {});
+      if (reply.type !== "EDITOR_CATEGORIES_RESULT" || !Array.isArray(reply.body.categories) ||
+        reply.body.categories.length > 8) {throw invalid();}
+      return reply.body.categories.map((raw) => {
+        if (!record(raw) || typeof raw.id !== "string" || !token.test(raw.id) || !label(raw.label, 40)) {throw invalid();}
+        return {id: raw.id, label: raw.label};
+      });
+    },
+    async entries(category, query, offset, limit) {
+      if (!token.test(category) || query.length > 80 || !Number.isSafeInteger(offset) || offset < 0 ||
+        !Number.isSafeInteger(limit) || limit < 1 || limit > 40) {throw invalid();}
+      const reply = await channel.request("EDITOR_ENTRIES", {category, query, offset, limit});
+      if (reply.type !== "EDITOR_ENTRIES_RESULT" || !Array.isArray(reply.body.entries) ||
+        reply.body.entries.length > limit) {throw invalid();}
+      const next = reply.body.nextOffset;
+      if (next !== null && (!Number.isSafeInteger(next) || Number(next) <= offset)) {throw invalid();}
+      return {entries: reply.body.entries.map(readEntry), nextOffset: next as number | null};
+    },
+    async set(category, id, value) {
+      if (!token.test(category) || !token.test(id) || !scalar(value)) {throw invalid();}
+      const reply = await channel.request("EDITOR_SET", {category, id, value});
+      if (reply.type !== "EDITOR_SET_RESULT") {throw invalid();}
+      return readEntry(reply.body.entry);
+    },
+  };
+}
+
+function readEntry(raw: unknown): RuntimeGameEditEntryV1 {
+  if (!record(raw) || typeof raw.id !== "string" || !token.test(raw.id) || !label(raw.label, 160) ||
+    !["number", "text", "boolean", "unsupported"].includes(String(raw.valueType))) {throw invalid();}
+  if (!validValue(raw.valueType, raw.value) || !validBounds(raw.valueType, raw.min, raw.max)) {throw invalid();}
+  return raw as RuntimeGameEditEntryV1;
+}
+
+function validValue(kind: unknown, value: unknown) {
+  if (kind === "number") {return typeof value === "number" && Number.isSafeInteger(value);}
+  if (kind === "text") {return typeof value === "string" && value.length <= 500;}
+  if (kind === "boolean") {return typeof value === "boolean";}
+  return kind === "unsupported" && value === null;
+}
+
+function validBounds(kind: unknown, minimum: unknown, maximum: unknown) {
+  if (kind !== "number") {return minimum === undefined && maximum === undefined;}
+  return (minimum === undefined || typeof minimum === "number" && Number.isSafeInteger(minimum)) &&
+    (maximum === undefined || typeof maximum === "number" && Number.isSafeInteger(maximum));
+}
+
+function record(value: unknown): value is Record<string, unknown> {
+  return Boolean(value) && typeof value === "object" && !Array.isArray(value);
+}
+
+function label(value: unknown, maximum: number): value is string {
+  return typeof value === "string" && value.length > 0 && value.length <= maximum;
+}
+
+function scalar(value: unknown) {
+  return typeof value === "boolean" || typeof value === "string" && value.length <= 500 ||
+    typeof value === "number" && Number.isSafeInteger(value);
+}
+
+function invalid() {return new Error("RPG_GAME_EDITOR_INVALID");}

@@ -26,7 +26,7 @@ describe("EmulatorJS Provider source catalog", () => {
     const overrides = emulatorJsProviderDefinition.targets.filter((target) =>
       target.implementation.artifactFlavor === "OVERRIDE" ||
       target.implementation.runtimeCore === "puae" && target.implementation.artifactFlavor === "THREAD_WASM" ||
-      target.implementation.runtimeCore === "daphne" ||
+      ["daphne", "dosbox_pure"].includes(target.implementation.runtimeCore) ||
       target.implementation.runtimeCore === "genesis_plus_gx");
     expect([...emulatorJsSourceCatalog.overrides, ...emulatorJsSourceCatalog.forks, ...emulatorJsSourceCatalog.developmentForks].map((override) => override.runtimeCore).sort())
       .toEqual([...new Set(overrides.map((target) => target.implementation.runtimeCore))].sort());

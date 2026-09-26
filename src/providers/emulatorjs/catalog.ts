@@ -142,7 +142,7 @@ const cores: readonly CoreSource[] = [
   core("crocods", "4.2.3", "crocods-wasm.data", 976148, "8c70df810436f225c5a2b40f31555636d6e12eacd41968f28b7dc708a9c6db10", "51e5f77fbcd99f13c49efae470290e4d1215ad10bc992e4a3332da72568119c9", {artifactFlavor: "OVERRIDE", coreBundleVersion: "retrom-core-gbe00fb904da0-r1", defaultOptions: {keyboardInput: "enabled"}}),
   core("desmume", "4.2.3", "desmume-wasm.data", 1172604, "a9fddaa4bd742e558dfe5095fa4eaf074493b591a7bc18c5f7c65d64b9fa7572", "970284459eedf8f7345d2b02d564dc7d32e7029aa8009011a8474df94244d57c", {inputMode: "POINTER"}),
   core("desmume2015", "4.2.3", "desmume2015-wasm.data", 1043573, "6f45da7f37007c0a69b7d91490b43e8294d4d642d1cc4ac999b341416f1ce13f", "5fc49392b5b73cd59446bf2ff6e01f4a2a9a7c07761cdb724ac1712bcc69ac0f", {inputMode: "POINTER"}),
-  core("dosbox_pure", "4.3.0-pre", "dosbox_pure-thread-wasm.data", 1827779, "89b0e89b03ced9ba07c5fe27bc789fd0f42bd5378b399f93befa2edc3571a70a", "da9d4f66147c00ad9a9f75b6c0e4dc26fa779c425739c7835067574a9612d72e", {contentKinds: ["DOS_BUNDLE"]}),
+  core("dosbox_pure", "4.3.0-pre", "dosbox_pure-thread-wasm.data", 1811731, "7ad877800b9a817384e82fba1615c7d65fc2e09ffcaeda85942d71337789f768", "0a25bf1ef778fa9c05ea5e5a7d4fc6db4563fc9782fb9296bf1d4b1261927c9e", {contentKinds: ["DOS_BUNDLE"]}),
   core("fbalpha2012_cps1", "4.2.3", "fbalpha2012_cps1-wasm.data", 1031240, "15b47667eb3c3746649c79e997b9f8c463f83bed9f61f51322cbe4db3d6e078e", "8e95c25731ad4868449f5bb6f8b238c8fa6ea2352e117817b124764354465da9"),
   core("fbalpha2012_cps2", "4.2.3", "fbalpha2012_cps2-wasm.data", 992866, "432c2dd513603b04ccbf4e81f282f012763d2435311805443e2bd0cc9021d8d1", "73ac6fc4b1a2030701471b630e658118486e99c6c7349663dadcde4abeab6e5d"),
   core("fbneo", "4.2.3", "fbneo-wasm.data", 8273551, "315a25e0bcd61d58ee0d9e8b1dbf3740b9e0ca4b7d0726f848ce1068de73437c", "cbd006664ec1c76f6bdad7747d487ee137ae70d15390ec479e11f8e17f01bc84"),
@@ -224,15 +224,15 @@ const targets = cores.map((entry) => {
     runtimeCore: entry.id,
     startupActions: entry.startupActions,
   },
-  inputs: entry.id === "daphne" ? inputs.map(input => input.role === "game" ? {...input, kind: "FILE_TREE" as const} : input) :
+  inputs: ["daphne", "dosbox_pure"].includes(entry.id) ? inputs.map(input => input.role === "game" ? {...input, kind: "FILE_TREE" as const} : input) :
     ["neocd", "genesis_plus_gx_cd", "flycast"].includes(entry.targetId ?? entry.id) || entry.id === "flycast"
       ? inputs.map(input => input.role === "game" ? {...input, kind: "SEEKABLE_BLOB" as const} : input) : inputs,
   contentIO: emulatorContentPolicies(entry.targetId ?? entry.id),
   inputFilter: true,
-  nativeSettings: entry.id !== "daphne",
+  nativeSettings: !["daphne", "dosbox_pure"].includes(entry.id),
   targetOptionsSchema: emulatorJsOptionsSchema,
   requiresThreads: entry.requiresThreads,
-  videoModes: entry.id === "daphne" ? ["original", "pixel"] :
+  videoModes: ["daphne", "dosbox_pure"].includes(entry.id) ? ["original", "pixel"] :
     ["adaptive-sharpen", "original", "pixel", "sharp-bilinear", "smooth"],
   });
 });

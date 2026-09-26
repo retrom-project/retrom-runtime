@@ -31,14 +31,14 @@ describe("DOSBox Pure state compatibility", () => {
       .toThrow("PLAYER_DOS_STATE_COMPATIBILITY_UNAVAILABLE");
   });
 
-  it("copies state bytes and frees only the heap allocation", () => {
+  it("copies state bytes without freeing the allocation owned by native save_state_info", () => {
     const heap = new Uint8Array(128);
     heap.set([7, 8, 9], 64);
     const free = vi.fn();
     expect(readDOSBoxPureState({
       HEAPU8: heap, UTF8ToString: () => "3|64|1", _free: free, _save_state_info: () => 24,
     })).toEqual(Uint8Array.of(7, 8, 9));
-    expect(free).toHaveBeenCalledExactlyOnceWith(64);
+    expect(free).not.toHaveBeenCalled();
   });
 
   it("installs and completely removes the pinned WebAssembly hook", async () => {
@@ -48,6 +48,99 @@ describe("DOSBox Pure state compatibility", () => {
     await window.WebAssembly.instantiate(wasm([...linked, ...marker, ...linked]));
     installation.cleanup();
     expect(window.WebAssembly.instantiate).toBe(original);
+  });
+
+  it("uses the native state export when the new core needs no stack patch", () => {
+    const heap = new Uint8Array(128);
+    heap.set([7, 8, 9], 64);
+    const free = vi.fn();
+    class Manager {getState() {return Uint8Array.of(1);}}
+    const original = Manager.prototype.getState;
+    const installation = installDOSBoxPureStateCompatibility(window);
+    (window as Window & {EJS_GameManager?: typeof Manager}).EJS_GameManager = Manager;
+    const manager = new Manager() as Manager & {Module: object};
+    manager.Module = {HEAPU8: heap, UTF8ToString: () => "3|64|1", _free: free, _save_state_info: () => 24};
+    expect(manager.getState()).toEqual(Uint8Array.of(7, 8, 9));
+    expect(free).not.toHaveBeenCalled();
+    installation.cleanup();
+    expect(Manager.prototype.getState).toBe(original);
+  });
+
+  it("waits for a native frame before probing restore serialization", async () => {
+    const saveStateInfo = vi.fn(() => 24);
+    const stateReady = vi.fn(() => 0);
+    class Manager {toggleMainLoop = vi.fn(); FS = {unlink: vi.fn(), writeFile: vi.fn()};
+      functions = {loadState: vi.fn()}; Module = {HEAPU8: new Uint8Array(128),
+        UTF8ToString: () => "1|64|1", _free: vi.fn(), _save_state_info: saveStateInfo,
+        _retrom_dos_state_ready: stateReady, _retrom_state_load_status: () => 0};}
+    const installation = installDOSBoxPureStateCompatibility(window);
+    (window as Window & {EJS_GameManager?: typeof Manager}).EJS_GameManager = Manager;
+    let postMainLoop: (() => void) | undefined;
+    (window as Window & {EJS_Runtime?: (config: {postMainLoop?: () => void}) => object}).EJS_Runtime =
+      config => {postMainLoop = config.postMainLoop; return {};};
+    (window as unknown as {EJS_Runtime: (config: object) => object}).EJS_Runtime({});
+    const manager = new Manager() as Manager & {loadExplicitStateAndWait: (bytes: Uint8Array) => Promise<void>};
+    const state = Uint8Array.of(...new TextEncoder().encode("RASTATE"), 1,
+      ...new TextEncoder().encode("MEM "), 1, 0, 0, 0, 5);
+    const restore = manager.loadExplicitStateAndWait(state);
+    expect(manager.toggleMainLoop).toHaveBeenCalledExactlyOnceWith(true);
+    expect(saveStateInfo).not.toHaveBeenCalled();
+    postMainLoop?.();
+    await vi.waitFor(() => expect(stateReady).toHaveBeenCalled());
+    expect(saveStateInfo).not.toHaveBeenCalled();
+    installation.cleanup();
+    await expect(restore).rejects.toThrow("PLAYER_SESSION_ENDED");
+  });
+
+  it("waits for Content I/O to settle even after the native core reports state ready", async () => {
+    const saveStateInfo = vi.fn(() => 24);
+    const stateReady = vi.fn(() => 1);
+    class Manager {toggleMainLoop = vi.fn(); FS = {unlink: vi.fn(), writeFile: vi.fn()};
+      functions = {loadState: vi.fn()}; Module = {HEAPU8: new Uint8Array(128),
+        UTF8ToString: () => "1|64|1", _free: vi.fn(), _save_state_info: saveStateInfo,
+        _retrom_dos_state_ready: stateReady, _retrom_state_load_status: () => 0};}
+    const installation = installDOSBoxPureStateCompatibility(window, () => false);
+    (window as Window & {EJS_GameManager?: typeof Manager}).EJS_GameManager = Manager;
+    let postMainLoop: (() => void) | undefined;
+    (window as Window & {EJS_Runtime?: (config: {postMainLoop?: () => void}) => object}).EJS_Runtime =
+      config => {postMainLoop = config.postMainLoop; return {};};
+    (window as unknown as {EJS_Runtime: (config: object) => object}).EJS_Runtime({});
+    const manager = new Manager() as Manager & {loadExplicitStateAndWait: (bytes: Uint8Array) => Promise<void>};
+    const state = Uint8Array.of(...new TextEncoder().encode("RASTATE"), 1,
+      ...new TextEncoder().encode("MEM "), 1, 0, 0, 0, 5);
+    const restore = manager.loadExplicitStateAndWait(state);
+    postMainLoop?.();
+    await vi.waitFor(() => expect(manager.toggleMainLoop).toHaveBeenCalledTimes(2));
+    expect(stateReady).not.toHaveBeenCalled();
+    expect(saveStateInfo).not.toHaveBeenCalled();
+    installation.cleanup();
+    await expect(restore).rejects.toThrow("PLAYER_SESSION_ENDED");
+  });
+
+  it("restores while the native main loop keeps advancing", async () => {
+    let status = 0;
+    class Manager {toggleMainLoop = vi.fn(); FS = {unlink: vi.fn(), writeFile: vi.fn()};
+      functions = {loadState: vi.fn()}; Module = {_retrom_dos_state_ready: () => 1,
+        _retrom_state_load_status: () => status};}
+    const installation = installDOSBoxPureStateCompatibility(window);
+    (window as Window & {EJS_GameManager?: typeof Manager}).EJS_GameManager = Manager;
+    let postMainLoop: (() => void) | undefined;
+    (window as Window & {EJS_Runtime?: (config: {postMainLoop?: () => void}) => object}).EJS_Runtime =
+      config => {postMainLoop = config.postMainLoop; return {};};
+    (window as unknown as {EJS_Runtime: (config: object) => object}).EJS_Runtime({});
+    const manager = new Manager() as Manager & {loadExplicitStateAndWait: (bytes: Uint8Array) => Promise<void>};
+    const state = Uint8Array.of(...new TextEncoder().encode("RASTATE"), 1,
+      ...new TextEncoder().encode("MEM "), 1, 0, 0, 0, 5);
+    const restore = manager.loadExplicitStateAndWait(state);
+    postMainLoop?.();
+    await vi.waitFor(() => expect(manager.functions.loadState).toHaveBeenCalledWith("game.state", 0));
+    expect(manager.toggleMainLoop).not.toHaveBeenCalledWith(false);
+    status = 1;
+    await new Promise(resolve => setTimeout(resolve, 60));
+    postMainLoop?.();
+    await expect(restore).resolves.toBeUndefined();
+    expect(manager.toggleMainLoop).not.toHaveBeenCalledWith(false);
+    installation.cleanup();
   });
 });
 

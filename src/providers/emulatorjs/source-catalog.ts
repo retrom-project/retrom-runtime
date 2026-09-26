@@ -3,7 +3,20 @@ import type {DevelopmentFork} from "../../../scripts/emulatorjs-development-fork
 
 export const emulatorJsSourceCatalog = {
   schemaVersion: 1,
-  developmentForks: [] as readonly DevelopmentFork[],
+  developmentForks: [{
+    runtimeCore: "dosbox_pure",
+    repository: "https://github.com/retrom-project/dosbox-pure",
+    upstreamCommit: "3a5222c97456e8df90983eb546f4d866b0feb848",
+    commit: "7e2e609f98d182261ee49abbb98dabe5e146fe8d",
+    sourceTreeSha256: "bfbec98256b66b35e966c045e580231b7d7d2c33ca2f4c1dee6748c758989220",
+    adapterAbi: "emulatorjs-content-io-v1",
+    assets: [
+      {filename: "LICENSE.md", sha256: "ad61238f3cfa92f48483e471e857fa6020299b9032ab8b80e3cd12a8904d5769", sizeBytes: 53142},
+      {filename: "dosbox_pure-thread-wasm.data", sha256: "7ad877800b9a817384e82fba1615c7d65fc2e09ffcaeda85942d71337789f768", sizeBytes: 1811731},
+      {filename: "retrom-core-candidate.json", sha256: "0a25bf1ef778fa9c05ea5e5a7d4fc6db4563fc9782fb9296bf1d4b1261927c9e", sizeBytes: 759},
+      {filename: "source.tar.gz", sha256: "b8a3a70223e07b49ab94ed530b2e1f3d0b8a49cf0a264362e9947b34d61aef6a", sizeBytes: 2257657},
+    ],
+  }] as readonly DevelopmentFork[],
   forks: [
     ...emulatorJsPlatformCoreForks,
 {

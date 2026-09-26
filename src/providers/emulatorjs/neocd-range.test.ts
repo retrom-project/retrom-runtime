@@ -61,6 +61,21 @@ describe("NeoCD public Reader facade", () => {
     expect(pool.stats.lruBytes).toBeLessThanOrEqual(16 * 1024 * 1024);
     expect(() => reader.read(0, B + 1)).toThrow("BOUNDS"); await reader.dispose();
   });
+  it("keeps state capture behind a quiet period after native Content I/O", async () => {
+    const {make} = setup(), reader = make();
+    expect(reader.quietFor(1000)).toBe(false);
+    reader.begin();
+    await reader.read(0, 8);
+    reader.end();
+    expect(reader.quietFor(1000)).toBe(false);
+    expect(reader.quietFor(0)).toBe(true);
+    reader.begin();
+    expect(reader.read(0, 8)).toBeInstanceOf(Uint8Array);
+    expect(reader.quietFor(0)).toBe(true);
+    reader.end();
+    await reader.dispose();
+    expect(reader.quietFor(0)).toBe(false);
+  });
   it("[BR-08] UNIT/neocd [BR-09] UNIT/neocd disposal cancels pending I/O then waits for native finally/end", async () => {
     const {fetcher, make} = setup(); let started!: () => void; const ready = new Promise<void>(resolve => {started = resolve;});
     fetcher.mockImplementation(async (_url, options) => new Promise((_resolve, reject) => {

@@ -3,6 +3,9 @@ import {lstat, readFile, readdir, writeFile, mkdir} from "node:fs/promises";
 import {dirname, isAbsolute, join} from "node:path";
 
 const sources = new Map([
+  ["dosbox_pure", {repository: "https://github.com/retrom-project/dosbox-pure",
+    upstreamCommit: "3a5222c97456e8df90983eb546f4d866b0feb848", license: "LICENSE.md",
+    threaded: true, release: "4.3.0-pre", adapterAbi: "emulatorjs-content-io-v1"}],
   ["daphne", {repository: "https://github.com/retrom-project/daphne",
     upstreamCommit: "6f1695dd1f376060666eec0a416ff56bb6c9cccc", license: "LICENSE", threaded: true,
     resources: "daphne-resources.zip"}],

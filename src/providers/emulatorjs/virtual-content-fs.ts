@@ -6,6 +6,7 @@ export type VirtualContentFile = {
   read(position: number, length: number): Uint8Array | Promise<Uint8Array>;
   begin(): void; end(): void; fail(error: Error): void;
   idle(): Promise<void>; dispose(): Promise<void>;
+  quietFor?: (milliseconds: number) => boolean;
 };
 
 type VirtualNode = {usedBytes: number; contents?: Uint8Array; stream_ops: {
@@ -20,7 +21,8 @@ type VirtualFS = {
 type Asyncify = {state: number; State: {Normal: number; Rewinding: number};
   handleSleep(start: (wake: (value: number) => void) => void): number};
 type VirtualModule = {FS?: VirtualFS; HEAPU8?: Uint8Array; retromContentIOAsyncify?: () => Asyncify;
-  retromDaphneFdRead?: (fd: number, iov: number, iovcnt: number, pnum: number) => Promise<number | null>};
+  retromDaphneFdRead?: (fd: number, iov: number, iovcnt: number, pnum: number) => Promise<number | null>;
+  retromContentFdRead?: (fd: number, iov: number, iovcnt: number, pnum: number) => Promise<number | null>};
 type Instance = {Module?: unknown; on?: (event: string, callback: (...args: unknown[]) => void) => void};
 
 /** Attach the shared FS mount before EmulatorJS copies the game into its FS. */
@@ -50,10 +52,11 @@ export function installSeekableContentFS(instance: Instance, range: VirtualConte
   let originalSize = 0;
   let originalContents: Uint8Array | undefined;
   const originalWorkerRead = module?.retromDaphneFdRead;
+  const originalContentWorkerRead = module?.retromContentFdRead;
   if (workerReadBridge) {
     if (!module || !fs.streams || !module.HEAPU8) {throw new Error("EMULATORJS_CONTENT_FS_UNAVAILABLE");}
     let pending: Promise<unknown> = Promise.resolve();
-    module.retromDaphneFdRead = (fd, iov, iovcnt, pnum) => {
+    const readWorker = (fd: number, iov: number, iovcnt: number, pnum: number) => {
       const stream = fs.streams?.[fd];
       if (!mounted || !stream || stream.node !== mounted) {return Promise.resolve(null);}
       const next = pending.then(async () => {
@@ -92,6 +95,8 @@ export function installSeekableContentFS(instance: Instance, range: VirtualConte
       pending = next;
       return next;
     };
+    module.retromDaphneFdRead = readWorker;
+    module.retromContentFdRead = readWorker;
   }
   fs.writeFile = function(path, data, ...options) {
     if (path.split("/").pop() !== range.filename) {return writeFile.call(fs, path, data, ...options);}
@@ -109,7 +114,10 @@ export function installSeekableContentFS(instance: Instance, range: VirtualConte
   };
   return () => {
     fs.writeFile = writeFile;
-    if (workerReadBridge && module) {module.retromDaphneFdRead = originalWorkerRead;}
+    if (workerReadBridge && module) {
+      module.retromDaphneFdRead = originalWorkerRead;
+      module.retromContentFdRead = originalContentWorkerRead;
+    }
     if (mounted && originalOps) {
       mounted.stream_ops = originalOps; mounted.usedBytes = originalSize;
       if (range.contents) {mounted.contents = originalContents;}

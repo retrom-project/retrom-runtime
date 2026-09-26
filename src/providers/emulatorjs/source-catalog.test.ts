@@ -5,6 +5,14 @@ import {emulatorJsProviderDefinition} from "./catalog.js";
 import {emulatorJsSourceCatalog} from "./source-catalog.js";
 
 describe("EmulatorJS Provider source catalog", () => {
+  it("pins DOSBox Pure to the published Content I/O core release", () => {
+    expect(emulatorJsSourceCatalog.developmentForks.map(fork => fork.runtimeCore)).not.toContain("dosbox_pure");
+    expect(emulatorJsSourceCatalog.forks.find(fork => fork.runtimeCore === "dosbox_pure"))
+      .toMatchObject({repository: "https://github.com/retrom-project/dosbox-pure",
+        tag: "retrom-core-g3a5222c97456-r1", commit: "a1ad67f90714c445fec56ed24d1e0525b37e4ecf",
+        adapterAbi: "emulatorjs-content-io-v1"});
+  });
+
   it("loads directly in Node for the PFB provider watcher", () => {
     const result = spawnSync(process.execPath, ["--input-type=module", "-e",
       'import("./src/providers/emulatorjs/source-catalog.ts")'], {cwd: process.cwd(), encoding: "utf8"});

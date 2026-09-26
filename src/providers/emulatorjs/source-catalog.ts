@@ -3,47 +3,7 @@ import type {DevelopmentFork} from "../../../scripts/emulatorjs-development-fork
 
 export const emulatorJsSourceCatalog = {
   schemaVersion: 1,
-  developmentForks: [{
-    runtimeCore: "daphne",
-    repository: "https://github.com/retrom-project/daphne",
-    upstreamCommit: "6f1695dd1f376060666eec0a416ff56bb6c9cccc",
-    commit: "b8a9e2da56d8c3e3f169cef15e43a2bc0ef9acbc",
-    sourceTreeSha256: "4d2bba3784f9b453e1e34b151efb1ef7000c3f3df1145c24ce0a750ecdda9a33",
-    adapterAbi: "emulatorjs-state-v1",
-    assets: [
-      {filename: "LICENSE", sha256: "96830b8b594d928deb82efce6faf42e1df808941f819d96381d26cc618793ea6", sizeBytes: 35530},
-      {filename: "daphne-resources.zip", sha256: "3b71e39985ec3e39e8acb12fdbf5604fb52748682fbc205f106fd6a8482dd063", sizeBytes: 1856321},
-      {filename: "daphne-thread-wasm.data", sha256: "cc4d1c4b4fbdd8c8a5b3c6e9800a466886fbe62268118a54cc8fa78361edcf1c", sizeBytes: 1220109},
-      {filename: "retrom-core-candidate.json", sha256: "fac68f32610759b906b996ccd04ea969f5d7f998aba6bc2d6f5c509716a1fa66", sizeBytes: 874},
-      {filename: "source.tar.gz", sha256: "8c83c3ea762350ed02a3ba562d88fd4653cece17ac8ed646fdb8f59e957ab7a7", sizeBytes: 3182668},
-    ],
-  }, {
-    runtimeCore: "gearboy",
-    repository: "https://github.com/retrom-project/Gearboy",
-    upstreamCommit: "340ebe3c258846560cc93d93ca4359f506fafb70",
-    commit: "1dd754819270216afdfa6783a217fe6301aa9a11",
-    sourceTreeSha256: "9465fc2c6caa7f4899c5b1b9354e61497c798553e0257bb8cb885d5f3e64221d",
-    adapterAbi: "emulatorjs-state-v1",
-    assets: [
-      {filename: "LICENSE", sha256: "dafc393710f9004fc9de3d51c8f9907594f8a61cb4c3f1c73becbb8c40ca24e5", sizeBytes: 70294},
-      {filename: "gearboy-wasm.data", sha256: "d129ca8dc45365915d8f4443d34f4c341acab48adc190237ebafb752cca6fb5b", sizeBytes: 939366},
-      {filename: "retrom-core-candidate.json", sha256: "84bcf3e65641e1c1cc66eee85ee320d62400dec302387e11491941791f030d56", sizeBytes: 737},
-      {filename: "source.tar.gz", sha256: "a65895c0f7b32ee69821862cb70fb49cff1922cb0133dedd2831f9c4d8a19472", sizeBytes: 5625236},
-    ],
-  }, {
-    runtimeCore: "lutro",
-    repository: "https://github.com/retrom-project/libretro-lutro",
-    upstreamCommit: "6224157a615b18507bc0b117a3398c7a324cd3e5",
-    commit: "bea6639d7eba4e9f60ff2763d6716eb2d848b34d",
-    sourceTreeSha256: "f35662bdab2f78d066c965f25ed721ce4d22679053b96af9b5de12ae6f0f6a12",
-    adapterAbi: "emulatorjs-lutro-native-v1",
-    assets: [
-      {filename: "LICENSE", sha256: "8bba80897b25869e242b4b98d6f7de07dbde4b84758636f15c70cb75be4bc16c", sizeBytes: 36275},
-      {filename: "lutro-wasm.data", sha256: "78a74af63f9ef4a576ccff17f7e6c8c2f62a2cbf833a2ccb0d6d298653bca5bd", sizeBytes: 997735},
-      {filename: "retrom-core-candidate.json", sha256: "405bdeb3f1b7dc57f20b32f25c3fdd1a038bd20b55f9d3b0065979c1d8cba63d", sizeBytes: 747},
-      {filename: "source.tar.gz", sha256: "027ac6d8dd2ca0c8ff493c17ccea173e9253b67b0bb6fe43924236ac0fdc3b77", sizeBytes: 2632359},
-    ],
-  }] as readonly DevelopmentFork[],
+  developmentForks: [] as readonly DevelopmentFork[],
   forks: [
     ...emulatorJsPlatformCoreForks,
 {

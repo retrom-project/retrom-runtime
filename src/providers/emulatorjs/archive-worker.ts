@@ -116,8 +116,7 @@ function installResponseCompatibility(runtimeWindow: CompressionWindow, runtimeB
     const archiveType = workerURLs.get(requestURL.href);
     const method = init?.method ?? (typeof input === "string" || input instanceof URL ? "GET" : input.method);
     // Pinned 4.3 loaders append a changing query to their immutable core report.
-    const report = method.toUpperCase() === "GET" && requestURL.origin + requestURL.pathname === reportURL &&
-      /^\?v=\d+$/.test(requestURL.search) && !requestURL.hash;
+    const report = isReportRequest(requestURL, method, reportURL);
     if (method.toUpperCase() === "GET" && requestURL.href === "https://cdn.emulatorjs.org/stable/data/version.json") {
       return Response.json({version: "4.3.0-pre", current_version: "4.3.0-pre"});
     }
@@ -134,6 +133,11 @@ function installResponseCompatibility(runtimeWindow: CompressionWindow, runtimeB
   };
   runtimeWindow.fetch = compatibleFetch;
   return () => {if (runtimeWindow.fetch === compatibleFetch) {runtimeWindow.fetch = originalFetch;}};
+}
+
+function isReportRequest(requestURL: URL, method: string, reportURL: string | null) {
+  return method.toUpperCase() === "GET" && requestURL.origin + requestURL.pathname === reportURL &&
+    /^\?v=\d+$/.test(requestURL.search) && !requestURL.hash;
 }
 
 function httpBase(runtimeWindow: Window) {

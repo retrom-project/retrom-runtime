@@ -21,15 +21,14 @@ export class KirikiriContent {
   }
   async assets(base: URL) {
     const files = ["vlfs.js", "index.js", "index.wasm"];
-    const blobs: string[] = []; let wasm: Uint8Array = new Uint8Array();
+    const blobs: string[] = [];
     for (const file of files) {
       const identity = this.identity(file);
       const bytes = await materializeFileBytes(this.options.contentSession, {...identity, url: new URL(file, base).href},
         eagerPolicy(64 * 1024 * 1024), "CORE_ASSET", this.signal);
-      if (file === "index.wasm") {wasm = bytes;} else {
-        const url = URL.createObjectURL(new Blob([bytes as Uint8Array<ArrayBuffer>], {type: "text/javascript"}));
-        this.urls.add(url); blobs.push(url);
-      }
+      const type = file === "index.wasm" ? "application/wasm" : "text/javascript";
+      const url = URL.createObjectURL(new Blob([bytes as Uint8Array<ArrayBuffer>], {type}));
+      this.urls.add(url); blobs.push(url);
     }
     const policy = eagerPolicy(16 * 1024 * 1024, {result: "BLOB"});
     const reader = await this.options.contentSession.open(fileContentSource({...this.identity("assets.zip"),
@@ -38,7 +37,7 @@ export class KirikiriContent {
       const result = await this.options.contentSession.materialize(reader.id, {kind: "BLOB", maxBytes: policy.maxFileBytes}, this.signal);
       if (result.kind !== "BLOB") {throw new ContentIOError("INTERNAL");}
       this.releases.add(result.release);
-      return {vlfsUrl: blobs[0], scriptUrl: blobs[1], wasm, archive: result.blob};
+      return {vlfsUrl: blobs[0], scriptUrl: blobs[1], wasmUrl: blobs[2], archive: result.blob};
     } finally {await reader.close();}
   }
   async close() {

@@ -23,10 +23,14 @@ function fixture() {
 }
 it("[X-27] UNIT/kirikiri verified bytes feed scripts, wasm and resource ZIP without executable refetch", async () => {
   const f = fixture(), assets = await f.content.assets(new URL("http://localhost/core/"));
-  expect(assets.wasm).toEqual(new Uint8Array([3, 5, 7])); expect(assets.archive.size).toBe(3);
+  expect(assets.archive.size).toBe(3);
   expect(assets.scriptUrl).toMatch(/^blob:/u); expect(assets.vlfsUrl).toMatch(/^blob:/u);
+  expect(assets.wasmUrl).toMatch(/^blob:/u);
+  const wasmBlob = vi.mocked(URL.createObjectURL).mock.calls[2][0] as Blob;
+  expect(wasmBlob.type).toBe("application/wasm");
+  expect(new Uint8Array(await wasmBlob.arrayBuffer())).toEqual(new Uint8Array([3, 5, 7]));
   expect(f.fetcher).toHaveBeenCalledTimes(4); expect(f.owner.files.size).toBe(0);
-  await f.content.close(); expect(URL.revokeObjectURL).toHaveBeenCalledTimes(2);
+  await f.content.close(); expect(URL.revokeObjectURL).toHaveBeenCalledTimes(3);
 });
 it("[X-27] UNIT/kirikiri rejects corrupt executable before script creation", async () => {
   const f = fixture(); f.assetIndex["assets/kirikiri/vlfs.js"].sha256 = "f".repeat(64);

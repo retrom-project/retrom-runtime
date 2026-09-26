@@ -23,7 +23,6 @@ type KirikiriVlfs = {
 type KirikiriModule = {
   arguments: string[];
   retromContentBridge: {abi: string; contractSha256: string};
-  wasmBinary: Uint8Array;
   PThread?: {terminateAllThreads(): void};
   canvas: HTMLCanvasElement;
   locateFile(path: string): string;
@@ -115,12 +114,12 @@ export async function mountKirikiri2(
   };
   try {
     const base = new URL(normalizedBase(config.runtimeBaseUrl), document.baseURI);
+    const assets = await content.assets(base);
     runtimeTerminationCleanup = installKirikiriRuntimeTermination(
       frameWindow,
-      new URL("index.wasm", base).href,
+      assets.wasmUrl,
       reportRuntimeExit,
     );
-    const assets = await content.assets(base);
     scripts.push(await loadClassicScript(document, assets.vlfsUrl));
     const vlfs = host.VLFS;
     requireVlfs(vlfs);
@@ -148,9 +147,8 @@ export async function mountKirikiri2(
     const options: Partial<KirikiriModule> = {
       arguments: [],
       retromContentBridge: {abi: content.abi, contractSha256: content.contractSha256},
-      wasmBinary: assets.wasm,
       canvas,
-      locateFile: (path) => new URL(path, base).href,
+      locateFile: (path) => path === "index.wasm" ? assets.wasmUrl : new URL(path, base).href,
       mainScriptUrlOrBlob: runtimeUrl,
       onAbort: () => {ready.reject(new Error("KIRIKIRI_RUNTIME_ABORTED"));},
       onExit: reportRuntimeExit,

@@ -11,12 +11,13 @@ vi.mock("./content.js", async importOriginal => {
   return {...actual, KirikiriContent: class extends actual.KirikiriContent {
     override async assets(base: URL) {
       return {vlfsUrl: new URL("vlfs.js", base).href, scriptUrl: new URL("index.js", base).href,
-        wasm: new Uint8Array([0]), archive: new Blob([Uint8Array.of(1)])};
+        wasmUrl: "blob:kirikiri-verified-wasm", archive: new Blob([Uint8Array.of(1)])};
     }
   }};
 });
 
 type FakeModule = {
+  locateFile: (path: string) => string;
   onExit?: (status: number) => void;
   postRun: Array<() => void>;
   pauseMainLoop: ReturnType<typeof vi.fn>;
@@ -42,6 +43,21 @@ afterEach(() => {
 });
 
 describe("KiriKiri2 KAG runtime", () => {
+  it("loads the verified Wasm Blob through the SDK loader without a network fallback", async () => {
+    enableRuntimeFeatures();
+    const vlfs = fakeVlfs();
+    mockDownloads();
+    const runtime = await createRuntime(config(), currentWindowHost(null));
+    const mounting = runtime.mount(document.createElement("div"));
+    await loadVlfs(vlfs);
+    const module = await loadCore(vlfs);
+    await mounting;
+    try {
+      expect(module.locateFile("index.wasm")).toBe("blob:kirikiri-verified-wasm");
+      expect(module.wasmBinary).toBeUndefined();
+      expect(fetch).toHaveBeenCalledTimes(1);
+    } finally {await runtime.exit();}
+  });
   const runtimeTerminationCases: ReadonlyArray<readonly [string, "error" | "unhandledrejection"]> = [
     "null function",
     "function signature mismatch",
@@ -64,7 +80,7 @@ describe("KiriKiri2 KAG runtime", () => {
     await loadCore(vlfs);
     await mounting;
     const unrelated = new WebAssembly.RuntimeError("null function");
-    Object.defineProperty(unrelated, "stack", { value: "RuntimeError: null function\n at app.ts:1:1" });
+    Object.defineProperty(unrelated, "stack", { value: "RuntimeError: null function\n at blob:another-wasm:wasm-function[1852]:0x90236" });
 
     expect(window.dispatchEvent(runtimeFailureEvent(transport, unrelated))).toBe(true);
     expect(runtime.getState()).toBe("RUNNING");
@@ -72,7 +88,7 @@ describe("KiriKiri2 KAG runtime", () => {
     const actualCrash = new WebAssembly.RuntimeError("unreachable");
     Object.defineProperty(actualCrash, "stack", {
       value: "RuntimeError: unreachable\n" +
-        " at http://localhost:3000/runtime/providers/retrom-runtime/bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb/assets/kirikiri/index.wasm:wasm-function[3000]:0x1334f5",
+        " at blob:kirikiri-verified-wasm:wasm-function[3000]:0x1334f5",
     });
     expect(window.dispatchEvent(runtimeFailureEvent(transport, actualCrash))).toBe(true);
     expect(runtime.getState()).toBe("RUNNING");
@@ -80,7 +96,7 @@ describe("KiriKiri2 KAG runtime", () => {
     const termination = new WebAssembly.RuntimeError(terminationMessage);
     Object.defineProperty(termination, "stack", {
       value: `RuntimeError: ${terminationMessage}\n` +
-        " at http://localhost:3000/runtime/providers/retrom-runtime/bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb/assets/kirikiri/index.wasm:wasm-function[1852]:0x90236",
+        " at blob:kirikiri-verified-wasm:wasm-function[1852]:0x90236",
     });
     expect(window.dispatchEvent(runtimeFailureEvent(transport, termination))).toBe(false);
 

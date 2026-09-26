@@ -11,7 +11,8 @@ describe("native-web game editor", () => {
   });
   it("validates paged maps, events and writes for event self switches", async () => {
     const event = {id: 2, label: "宝箱", x: 4, y: 5,
-      switches: {A: true, B: false, C: false, D: false}};
+      switches: {A: true, B: false, C: false, D: false},
+      pageUses: [{key: "A", page: 2, summary: "无图像、无事件指令"}]};
     const editor = createNativeGameEditor({request: async (type: string) => type === "EDITOR_SELF_SWITCH_MAPS"
       ? {type: "EDITOR_SELF_SWITCH_MAPS_RESULT", body: {currentMapId: 1, currentMapName: "村庄",
         maps: [{id: 1, label: "村庄"}], nextOffset: null}}

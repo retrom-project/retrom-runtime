@@ -646,9 +646,25 @@
     for (const key of SELF_SWITCH_KEYS) {
       switches[key] = Boolean(global.$gameSelfSwitches.value([mapId, id, key]));
     }
+    const pageUses = (Array.isArray(event.pages) ? event.pages : []).flatMap((page, index) => {
+      const conditions = page && page.conditions;
+      return conditions && conditions.selfSwitchValid && SELF_SWITCH_KEYS.includes(conditions.selfSwitchCh)
+        ? [{key: conditions.selfSwitchCh, page: index + 1, summary: editorPageSummary(page)}] : [];
+    });
     return {id, label: String(event.name || "").trim().slice(0, 160) || `事件 ${id}`,
       x: Number.isSafeInteger(event.x) ? event.x : 0,
-      y: Number.isSafeInteger(event.y) ? event.y : 0, switches};
+      y: Number.isSafeInteger(event.y) ? event.y : 0, switches, pageUses};
+  }
+
+  function editorPageSummary(page) {
+    const commands = (Array.isArray(page.list) ? page.list : []).filter((command) => command && command.code > 0);
+    const firstText = commands.find((command) => (command.code === 401 || command.code === 405) &&
+      typeof command.parameters?.[0] === "string");
+    const text = firstText && firstText.parameters[0].replace(/\s+/gu, " ").trim();
+    if (text) return `首句：${text.slice(0, 100)}`;
+    const hasImage = Boolean(page.image && (page.image.tileId > 0 || page.image.characterName));
+    if (!commands.length) return hasImage ? "有图像，无事件指令" : "无图像、无事件指令";
+    return hasImage ? "有图像和事件指令" : "无图像，有事件指令";
   }
 
   async function editorEventRows(mapId) {
@@ -656,8 +672,11 @@
       throw new Error("RPG_GAME_EDITOR_UNAVAILABLE");
     }
     const data = await editorMapData(mapId);
-    return data.events.slice(1).flatMap((event, index) =>
-      event && event.id === index + 1 ? [editorEventRow(mapId, event)] : []);
+    return data.events.slice(1).flatMap((event, index) => {
+      if (!event || event.id !== index + 1) return [];
+      const row = editorEventRow(mapId, event);
+      return row.pageUses.length ? [row] : [];
+    });
   }
 
   async function editorEventPage(body) {
@@ -676,7 +695,7 @@
       typeof global.$gameSelfSwitches?.setValue !== "function") throw new Error("RPG_GAME_EDITOR_INVALID");
     const rows = await editorEventRows(body.mapId);
     const event = rows.find((row) => row.id === body.eventId);
-    if (!event) throw new Error("RPG_GAME_EDITOR_INVALID");
+    if (!event || !event.pageUses.some((use) => use.key === body.key)) throw new Error("RPG_GAME_EDITOR_INVALID");
     global.$gameSelfSwitches.setValue([body.mapId, body.eventId, body.key], body.value);
     const actual = (await editorEventRows(body.mapId)).find((row) => row.id === body.eventId);
     if (actual.switches[body.key] !== body.value) throw new Error("RPG_GAME_EDITOR_UNAVAILABLE");

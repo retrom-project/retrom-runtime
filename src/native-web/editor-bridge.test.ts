@@ -61,9 +61,12 @@ describe("native-web RPG Maker game editor bridge", () => {
     let enabled = false;
     let mapId = 0;
     const selfSwitches = new Map<string, boolean>();
-    const currentMap = {events: [null, {id: 1, name: "Chest", x: 4, y: 5, pages: []},
-      {id: 2, name: "", x: 7, y: 8, pages: []}]};
-    const otherMap = {events: [null, {id: 1, name: "Gate", x: 1, y: 2, pages: []}]};
+    const pageWithSwitch = (key: string, text?: string) => ({conditions: {selfSwitchValid: true, selfSwitchCh: key},
+      image: {tileId: 0, characterName: ""}, list: text ? [{code: 401, parameters: [text]}] : [{code: 0}]});
+    const currentMap = {events: [null, {id: 1, name: "Chest", x: 4, y: 5, pages: [pageWithSwitch("A")]},
+      {id: 2, name: "Unused", x: 7, y: 8, pages: []},
+      {id: 3, name: "Torch", x: 9, y: 3, pages: [pageWithSwitch("B", "The torch is lit.")]}]};
+    const otherMap = {events: [null, {id: 1, name: "Gate", x: 1, y: 2, pages: [pageWithSwitch("D")]}]};
     const fetchMap = vi.fn(async (path: string) => ({ok: path === "data/Map002.json",
       json: async () => otherMap}));
     const item = {id: 2, name: "Potion"};
@@ -203,12 +206,14 @@ describe("native-web RPG Maker game editor bridge", () => {
       .toMatchObject({maps: [{id: 2, label: "Forest"}], nextOffset: null});
     expect((await request(40, "EDITOR_SELF_SWITCH_EVENTS", {mapId: 1, query: "", offset: 0, limit: 1})).body)
       .toMatchObject({events: [{id: 1, label: "Chest", x: 4, y: 5,
-        switches: {A: false, B: false, C: false, D: false}}], nextOffset: 1});
+        switches: {A: false, B: false, C: false, D: false},
+        pageUses: [{key: "A", page: 1, summary: "无图像、无事件指令"}]}], nextOffset: 1});
     expect((await request(41, "EDITOR_SELF_SWITCH_SET", {mapId: 1, eventId: 1, key: "A", value: true})).body)
       .toMatchObject({event: {id: 1, switches: {A: true, B: false, C: false, D: false}}});
     expect(selfSwitches.get("1,1,A")).toBe(true);
     expect((await request(42, "EDITOR_SELF_SWITCH_EVENTS", {mapId: 2, query: "gate", offset: 0, limit: 40})).body)
-      .toMatchObject({events: [{id: 1, label: "Gate", switches: {A: false}}], nextOffset: null});
+      .toMatchObject({events: [{id: 1, label: "Gate", switches: {A: false},
+        pageUses: [{key: "D", page: 1}]}], nextOffset: null});
     expect(fetchMap).toHaveBeenCalledWith("data/Map002.json", {credentials: "same-origin"});
     expect((await request(43, "EDITOR_SELF_SWITCH_SET", {mapId: 2, eventId: 1, key: "D", value: true})).body)
       .toMatchObject({event: {id: 1, switches: {D: true}}});
@@ -217,6 +222,12 @@ describe("native-web RPG Maker game editor bridge", () => {
     expect((await request(45, "EDITOR_SELF_SWITCH_SET", {mapId: 1, eventId: 1, key: "E", value: true})).type)
       .toBe("ERROR");
     expect((await request(46, "EDITOR_SELF_SWITCH_EVENTS", {mapId: 3, query: "", offset: 0, limit: 40})).type)
+      .toBe("ERROR");
+    expect((await request(47, "EDITOR_SELF_SWITCH_EVENTS", {mapId: 1, query: "unused", offset: 0, limit: 40})).body)
+      .toMatchObject({events: [], nextOffset: null});
+    expect((await request(48, "EDITOR_SELF_SWITCH_EVENTS", {mapId: 1, query: "torch", offset: 0, limit: 40})).body)
+      .toMatchObject({events: [{id: 3, pageUses: [{key: "B", page: 1, summary: "首句：The torch is lit."}]}]});
+    expect((await request(49, "EDITOR_SELF_SWITCH_SET", {mapId: 1, eventId: 1, key: "B", value: true})).type)
       .toBe("ERROR");
   });
 

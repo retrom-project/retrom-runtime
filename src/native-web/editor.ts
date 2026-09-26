@@ -92,9 +92,12 @@ function readMap(raw: unknown): RuntimeGameEditMapV1 {
 function readEvent(raw: unknown): RuntimeGameEditEventV1 {
   if (!record(raw) || !positiveId(raw.id) || !label(raw.label, 160) ||
     !Number.isSafeInteger(raw.x) || !Number.isSafeInteger(raw.y) || !record(raw.switches) ||
-    Object.keys(raw.switches).sort().join("") !== "ABCD") {throw invalid();}
+    Object.keys(raw.switches).sort().join("") !== "ABCD" || !Array.isArray(raw.pageUses) ||
+    !raw.pageUses.length) {throw invalid();}
   const keys: RuntimeGameEditSelfSwitchKeyV1[] = ["A", "B", "C", "D"];
   if (keys.some((key) => typeof (raw.switches as Record<string, unknown>)[key] !== "boolean")) {throw invalid();}
+  if (raw.pageUses.some((use) => !record(use) || !keys.includes(use.key as RuntimeGameEditSelfSwitchKeyV1) ||
+    !positiveId(use.page) || !label(use.summary, 160))) {throw invalid();}
   return raw as RuntimeGameEditEventV1;
 }
 

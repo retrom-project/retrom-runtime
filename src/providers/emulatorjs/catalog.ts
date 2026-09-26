@@ -152,7 +152,7 @@ const cores: readonly CoreSource[] = [
   core("gambatte", "4.2.3", "gambatte-wasm.data", 967156, "ad67c7bf57f8f8b62606048e6ea498afac5b5abc76ad8de5f9dfc2a6719374bb", "c1d7561f109647715f8795c8fa977318dc78bfc847cd8879bb029d62c55fa605"),
   core("gearboy", "4.2.3", "gearboy-wasm.data", 939318, "ca08e4936a9f8b62f198f8df30fed48c5e68f06db9dd91115a2c44863054661e", "389000f4810c30180889fa6d39eb5d21b3520594c01935523f363e9fd6211248", {artifactFlavor: "OVERRIDE", defaultOptions: {gearboy_sgb: "Enabled", gearboy_sgb_border: "Enabled"}}),
   core("lutro", "4.2.3", "lutro-wasm.data", 997735, "78a74af63f9ef4a576ccff17f7e6c8c2f62a2cbf833a2ccb0d6d298653bca5bd", "405bdeb3f1b7dc57f20b32f25c3fdd1a038bd20b55f9d3b0065979c1d8cba63d", {artifactFlavor: "OVERRIDE"}),
-  core("daphne", "4.2.3", "daphne-thread-wasm.data", 1220068, "61076f0b75162b5fc5794a0fcc2f8869babc4b518ee8899c1f68b55ae6550470", "78b8ac587bdbb0f2b374b68c00a05555bbdbd003979dcf3ddd268054d074f610", {artifactFlavor: "THREAD_WASM", contentKinds: ["DAPHNE_PROJECT"]}),
+  core("daphne", "4.2.3", "daphne-thread-wasm.data", 1220109, "cc4d1c4b4fbdd8c8a5b3c6e9800a466886fbe62268118a54cc8fa78361edcf1c", "fac68f32610759b906b996ccd04ea969f5d7f998aba6bc2d6f5c509716a1fa66", {artifactFlavor: "THREAD_WASM", contentKinds: ["DAPHNE_PROJECT"]}),
   core("gearcoleco", "4.2.3", "gearcoleco-wasm.data", 891907, "164e213e4d5f2c14a0f2b55da973ed5a54ef7601cb352e64c9a73ace1a7ba606", "1c377b55d252fc7133bb99b845c1bc1931a3f9989fd1410659c50bd3b2a78a4d"),
   genesisPlusGX,
   {...genesisPlusGX, targetId: "genesis_plus_gx_cd", defaultOptions: {...genesisPlusGX.defaultOptions, genesis_plus_gx_cd_precache: "disabled"}},

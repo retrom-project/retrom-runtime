@@ -6,6 +6,7 @@ import {fileURLToPath} from "node:url";
 
 import {buildProviderClient} from "./provider-client-build.mjs";
 import {readPFBProviderCoreFiles} from "./pfb-provider-cores.mjs";
+import {providerMediaType} from "./provider-bundle.mjs";
 
 const runtimeRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 
@@ -24,10 +25,11 @@ export async function buildPFBProviderDev(input) {
   if (manifest?.providerId !== providerId || !Array.isArray(integrity?.files)) {
     throw new Error("PFB_PROVIDER_BASE_INVALID");
   }
-  const assetIndex = Object.fromEntries(integrity.files
-    .filter((file) => file?.path?.startsWith("assets/") && digest(file.sha256) &&
+  const baseFileIndex = Object.fromEntries(integrity.files
+    .filter((file) => safeRelative(file?.path) && digest(file.sha256) &&
       Number.isSafeInteger(file.sizeBytes) && file.sizeBytes > 0)
     .map((file) => [file.path, {sha256: file.sha256, sizeBytes: file.sizeBytes}]));
+  const assetIndex = Object.fromEntries(Object.entries(baseFileIndex).filter(([path]) => path.startsWith("assets/")));
   if (provider.targets.some((target) => !validActiveTarget(target))) {
     throw new Error("PFB_PROVIDER_BASE_INVALID");
   }
@@ -36,7 +38,7 @@ export async function buildPFBProviderDev(input) {
   const staging = await mkdtemp(join(parent, ".provider-dev-"));
   try {
     const clientPath = join(staging, "client.mjs");
-    const coreFiles = (await readPFBProviderCoreFiles(input.outputRoot, providerId, staging, assetIndex))
+    const coreFiles = (await readPFBProviderCoreFiles(input.outputRoot, providerId, staging, baseFileIndex))
       .map(({path, contents}) => fileDescriptor(path, contents));
     const pfbCoreInputs = Object.fromEntries(coreFiles.filter((file) => file.path.endsWith("-wasm.data"))
       .map((file) => {
@@ -120,8 +122,7 @@ function fileDescriptor(path, contents) {
     path,
     sizeBytes: contents.byteLength,
     sha256: sha256(contents),
-    mediaType: /\.[cm]?js$/u.test(path) ? "text/javascript; charset=utf-8"
-      : path.endsWith(".json") ? "application/json; charset=utf-8" : /\.(?:data|gz)$/u.test(path) ? "application/octet-stream" : "text/plain; charset=utf-8",
+    mediaType: providerMediaType(path),
     contentBase64: contents.toString("base64"),
   };
 }

@@ -30,6 +30,9 @@ export async function* iterateExact(body: ReadableStream<Uint8Array> | null, exp
       if (isBytes(next.value)) {consumed?.(next.value.byteLength);}
       if (!isBytes(next.value) || next.value.byteLength > expected - read) {fail("LENGTH_MISMATCH");}
       read += next.value.byteLength;
+      // Drain EOF before storage or another consumer can suspend this final
+      // network chunk, which may contain more than one internal cache block.
+      if (read === expected) {await confirmEnd(reader, signal, idleMs, consumed);}
       let offset = 0;
       while (offset < next.value.byteLength) {
         const count = Math.min(block.length - used, next.value.byteLength - offset);
@@ -39,12 +42,22 @@ export async function* iterateExact(body: ReadableStream<Uint8Array> | null, exp
           used = 0; block = new Uint8Array(Math.min(BLOCK_BYTES, expected - (read - next.value.byteLength + offset)));
         }
       }
+      if (read === expected) {break;}
     }
     if (read !== expected || used !== 0) {fail("LENGTH_MISMATCH");}
     checkSignal(signal);
   } finally {
     void reader.cancel().catch(() => undefined);
     reader.releaseLock();
+  }
+}
+async function confirmEnd(reader: ReadableStreamDefaultReader<Uint8Array>, signal?: AbortSignal,
+  idleMs?: number, consumed?: (bytes: number) => void): Promise<void> {
+  for (;;) {
+    const next = await nextChunk(reader, signal, idleMs);
+    if (next.done) {return;}
+    if (isBytes(next.value)) {consumed?.(next.value.byteLength);}
+    if (!isBytes(next.value) || next.value.byteLength !== 0) {fail("LENGTH_MISMATCH");}
   }
 }
 async function nextChunk(reader: ReadableStreamDefaultReader<Uint8Array>, signal?: AbortSignal, idleMs?: number) {

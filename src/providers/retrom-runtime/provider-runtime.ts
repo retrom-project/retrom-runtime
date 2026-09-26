@@ -35,6 +35,7 @@ class RetromRuntimePlayer implements PlayerRuntimeV1 {
   private inputDiagnostics: RuntimeInputDiagnosticsV1 | null = null;
   private runtimeWindow: Window | null = null;
   private inputFilter: RuntimeGamepadFilter | null = null;
+  private inputPolicy: RuntimeInputFilterPolicyV1 | null = null;
   private cleanupInputFilter: (() => void) | null = null;
   private frameSurface: RuntimeFrameSurface | null = null;
 
@@ -64,7 +65,7 @@ class RetromRuntimePlayer implements PlayerRuntimeV1 {
         ? (this.frameSurface = installRuntimeFrameSurface(runtimeWindow, () => this.adapter?.getCanvas() ?? null,
           () => this.adapter?.canvasLayout === "CORE")).target
         : target;
-      if (this.inputFilter) {this.cleanupInputFilter = installRuntimeGamepadFilter(runtimeWindow, this.inputFilter);}
+      this.installInputFilter(runtimeWindow, frameMode);
       const declaration = retromRuntimeProviderDefinition.targets.find((entry) => entry.id === this.envelope.runtime.targetId);
       if (!declaration) {throw contractError();}
       const contentSession = await this.contentOwner.start(declaration, this.envelope, this.assetIndex);
@@ -87,6 +88,7 @@ class RetromRuntimePlayer implements PlayerRuntimeV1 {
         this.assertActive();
       }
       this.adapter = adapter;
+      adapter.gamepadCursor?.setInputPolicy(this.inputPolicy);
       this.frameSurface?.refresh();
       this.transition("RUNNING");
       this.refreshAvailability();
@@ -95,6 +97,13 @@ class RetromRuntimePlayer implements PlayerRuntimeV1 {
       if (isAbort(error)) {await this.exit();} else {await this.fail(error);}
       throw stableError(error);
     }
+  }
+
+  private installInputFilter(runtimeWindow: Window, frameMode: string) {
+    if (frameMode === "SAME_ORIGIN_BLANK" && typeof runtimeWindow.navigator.getGamepads === "function") {
+      this.inputFilter ??= new RuntimeGamepadFilter(this.inputPolicy);
+    }
+    if (this.inputFilter) {this.cleanupInputFilter = installRuntimeGamepadFilter(runtimeWindow, this.inputFilter);}
   }
 
   private async loadRestore() {
@@ -178,6 +187,7 @@ class RetromRuntimePlayer implements PlayerRuntimeV1 {
   getCapabilities() {return this.envelope.runtime.capabilities;}
   getCheckpointAvailability() {return this.refreshAvailability();}
   getCanvas() {return this.adapter?.getCanvas() ?? null;}
+  getGamepadCursor() {return this.adapter?.gamepadCursor ?? null;}
   getFrameCount() {
     if (!this.envelope.runtime.capabilities.frameCounter) {return null;}
     const value = this.adapter?.getFrameCount() ?? null;
@@ -219,12 +229,8 @@ class RetromRuntimePlayer implements PlayerRuntimeV1 {
     this.requireCapability("inputFilter");
     this.assertActive();
     if (!validInputFilterPolicy(policy)) {throw contractError();}
-    if (policy === null) {
-      this.cleanupInputFilter?.();
-      this.cleanupInputFilter = null;
-      this.inputFilter = null;
-      return;
-    }
+    this.inputPolicy = policy ? {...policy} : null;
+    this.adapter?.gamepadCursor?.setInputPolicy(policy);
     if (this.inputFilter) {this.inputFilter.setPolicy(policy);}
     else {this.inputFilter = new RuntimeGamepadFilter(policy);}
     if (this.runtimeWindow && !this.cleanupInputFilter) {
@@ -398,6 +404,7 @@ class RetromRuntimePlayer implements PlayerRuntimeV1 {
     if (next === this.state) {return;}
     const previous = this.state;
     this.state = next;
+    this.adapter?.gamepadCursor?.setSuspended(next !== "RUNNING");
     this.emit({type: "STATE_CHANGED", previous, state: next});
   }
 

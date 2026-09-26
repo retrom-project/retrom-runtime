@@ -6,7 +6,7 @@ import {abi, contractSha256} from "../content-io/identity.js";
 import { decodeKirikiriCheckpoint, encodeKirikiriCheckpoint, type KirikiriCheckpointEntry } from "./checkpoint.js";
 import type { MountedRuntimeAdapter, RuntimeExitReporter } from "../internal-adapter.js";
 import type {KirikiriParameters} from "./parameters.js";
-import { installKirikiriStandardGamepad } from "./gamepad-input.js";
+import {installGamepadCursor, type GamepadCursor} from "../provider/gamepad-cursor.js";
 
 type ProjectFile = { path: string; url: string; sizeBytes: number };
 type ProjectIndex = { schemaVersion: 1; files: ProjectFile[] };
@@ -23,7 +23,6 @@ type KirikiriVlfs = {
 type KirikiriModule = {
   arguments: string[];
   retromContentBridge: {abi: string; contractSha256: string};
-  wasmBinary: Uint8Array;
   PThread?: {terminateAllThreads(): void};
   canvas: HTMLCanvasElement;
   locateFile(path: string): string;
@@ -93,7 +92,8 @@ export async function mountKirikiri2(
   const focusCanvas = () => {canvas.focus({ preventScroll: true });};
   canvas.addEventListener("pointerdown", focusCanvas, true);
   const startupKeyboardCleanup = blockStartupKeyboardInput(frameWindow);
-  let gamepadCleanup: () => void = () => undefined;
+  let gamepadCursor: GamepadCursor | undefined;
+  const gamepadCleanup = () => gamepadCursor?.dispose();
 
   const previousModule = host.Module;
   const previousVlfs = host.VLFS;
@@ -114,12 +114,12 @@ export async function mountKirikiri2(
   };
   try {
     const base = new URL(normalizedBase(config.runtimeBaseUrl), document.baseURI);
+    const assets = await content.assets(base);
     runtimeTerminationCleanup = installKirikiriRuntimeTermination(
       frameWindow,
-      new URL("index.wasm", base).href,
+      assets.wasmUrl,
       reportRuntimeExit,
     );
-    const assets = await content.assets(base);
     scripts.push(await loadClassicScript(document, assets.vlfsUrl));
     const vlfs = host.VLFS;
     requireVlfs(vlfs);
@@ -147,9 +147,8 @@ export async function mountKirikiri2(
     const options: Partial<KirikiriModule> = {
       arguments: [],
       retromContentBridge: {abi: content.abi, contractSha256: content.contractSha256},
-      wasmBinary: assets.wasm,
       canvas,
-      locateFile: (path) => new URL(path, base).href,
+      locateFile: (path) => path === "index.wasm" ? assets.wasmUrl : new URL(path, base).href,
       mainScriptUrlOrBlob: runtimeUrl,
       onAbort: () => {ready.reject(new Error("KIRIKIRI_RUNTIME_ABORTED"));},
       onExit: reportRuntimeExit,
@@ -170,7 +169,7 @@ export async function mountKirikiri2(
       await restoreBookmark(module, config.checkpointSlot);
     }
     startupKeyboardCleanup();
-    gamepadCleanup = installKirikiriStandardGamepad(frameWindow, surface, canvas);
+    gamepadCursor = installGamepadCursor(frameWindow, canvas, {defaultEnabled: true});
     focusCanvas();
   } catch (error) {
     startupKeyboardCleanup();
@@ -231,6 +230,7 @@ export async function mountKirikiri2(
         gamepadCleanup, runtimeTerminationCleanup, scripts,
       );
     },
+    gamepadCursor,
     getCanvas: () => canvas,
     getCheckpointAvailability: () => activeModule._krkr2_host_bookmark_is_ready() === 1
       ? { available: true, blocker: null }

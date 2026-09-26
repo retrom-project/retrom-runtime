@@ -1,6 +1,7 @@
 import type {LaunchEnvelopeV1, RuntimeCheckpointAvailabilityV1} from "../../provider/module-api.js";
 import type {EjsInstance} from "./emulator-instance.js";
 import type {LutroNativeSaveTracker} from "./lutro-native-save.js";
+import {installDOSBoxReportCompatibility, type ReportInstance} from "./dosbox-report.js";
 
 export function emulatorCheckpointAvailability(envelope: LaunchEnvelopeV1, instance: EjsInstance | null,
   runtimeCore: string, lutroSave: LutroNativeSaveTracker | null): RuntimeCheckpointAvailabilityV1 {
@@ -23,7 +24,7 @@ export function needsVerboseRestore(core: string, restoring: boolean) {
 }
 
 export function runtimeStartTimeout(core: string, restoring: boolean) {
-  return core === "supermodel" && restoring ? 120_000 : 30_000;
+  return (core === "supermodel" || core === "dosbox_pure") && restoring ? 120_000 : 30_000;
 }
 
 export function startWhenAvailable(runtimeWindow: Window) {
@@ -50,11 +51,16 @@ export function startWhenAvailable(runtimeWindow: Window) {
 }
 
 export function configureDeferredStart(runtimeWindow: Window,
-  instance: {downloadType?: {rom?: {dontExtractIfCore?: string[]}}}, core: string): () => void {
+  instance: {downloadType?: {rom?: {dontExtractIfCore?: string[]}}} & ReportInstance,
+  core: string, coreSha256: string): () => void {
   const excluded = instance.downloadType?.rom?.dontExtractIfCore;
   if (!Array.isArray(excluded)) {throw new Error("PLAYER_ROM_ARCHIVE_MODE_UNAVAILABLE");}
   if (!excluded.includes(core)) {excluded.push(core);}
-  return startWhenAvailable(runtimeWindow);
+  const reportCleanup = core === "dosbox_pure" ? installDOSBoxReportCompatibility(instance, coreSha256) : () => undefined;
+  try {
+    const startCleanup = startWhenAvailable(runtimeWindow);
+    return () => {startCleanup(); reportCleanup();};
+  } catch (error) {reportCleanup(); throw error;}
 }
 
 export function createStartBarrier(): StartBarrier {

@@ -3328,17 +3328,14 @@
           "frameCounter": true,
           "frameMode": "SAME_ORIGIN_BLANK",
           "inputFilter": true,
-          "nativeSettings": true,
+          "nativeSettings": false,
           "pause": true,
           "requiresThreads": true,
           "screenshot": true,
           "standardGamepad": true,
           "videoModes": [
-            "adaptive-sharpen",
             "original",
-            "pixel",
-            "sharp-bilinear",
-            "smooth"
+            "pixel"
           ],
           "volume": true
         },
@@ -3355,7 +3352,7 @@
         "inputs": [
           {
             "cardinality": "ONE",
-            "kind": "ROM_BLOB",
+            "kind": "FILE_TREE",
             "optional": false,
             "role": "game"
           },

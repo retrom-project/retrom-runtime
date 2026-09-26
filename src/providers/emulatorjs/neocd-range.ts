@@ -19,6 +19,8 @@ export class NeoCDRange {
   private readonly waiters = new Set<() => void>();
   private suspended = 0;
   private closing: Promise<void> | undefined;
+  private pendingAsyncReads = 0;
+  private lastAsyncActivityAt = performance.now();
   constructor(disc: Disc, private readonly reader: ContentReaderV1, private readonly onError: (error: Error) => void,
     filename = `${disc.sha256}.chd`) {
     if (!/^[a-f0-9]{64}$/u.test(disc.sha256) || !Number.isSafeInteger(disc.sizeBytes) ||
@@ -35,6 +37,9 @@ export class NeoCDRange {
     if (--this.suspended === 0) {for (const resolve of this.waiters) {resolve();} this.waiters.clear();}
   }
   idle() {return this.suspended ? new Promise<void>(resolve => this.waiters.add(resolve)) : Promise.resolve();}
+  quietFor(milliseconds: number) {
+    return !this.closing && this.pendingAsyncReads === 0 && performance.now() - this.lastAsyncActivityAt >= milliseconds;
+  }
   dispose(): Promise<void> {
     // Closing the Reader settles pending reads; native finally/end remains its own barrier.
     this.closing ??= Promise.resolve().then(async () => {await this.reader.close(); await this.idle();});
@@ -46,6 +51,11 @@ export class NeoCDRange {
       length > neoCDRangeBlockSize || position > this.reader.sizeBytes - length) {throw new ContentIOError("BOUNDS");}
     const output = new Uint8Array(length);
     if (this.reader.tryReadInto(position, output) !== null) {return output;}
-    return this.reader.readInto(position, output).then(() => output);
+    this.pendingAsyncReads += 1;
+    this.lastAsyncActivityAt = performance.now();
+    return this.reader.readInto(position, output).then(() => output).finally(() => {
+      this.pendingAsyncReads -= 1;
+      this.lastAsyncActivityAt = performance.now();
+    });
   }
 }

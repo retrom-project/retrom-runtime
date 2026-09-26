@@ -6,6 +6,23 @@ export const emulatorJsSourceCatalog = {
   developmentForks: [] as readonly DevelopmentFork[],
   forks: [
     ...emulatorJsPlatformCoreForks,
+    {
+      repository: "https://github.com/retrom-project/dosbox-pure",
+      tag: "retrom-core-g3a5222c97456-r1",
+      commit: "a1ad67f90714c445fec56ed24d1e0525b37e4ecf",
+      adapterAbi: "emulatorjs-content-io-v1",
+      runtimeCore: "dosbox_pure",
+      assets: [
+        {filename: "LICENSE.md", sha256: "ad61238f3cfa92f48483e471e857fa6020299b9032ab8b80e3cd12a8904d5769", sizeBytes: 53142,
+          url: "https://github.com/retrom-project/dosbox-pure/releases/download/retrom-core-g3a5222c97456-r1/LICENSE.md"},
+        {filename: "dosbox_pure-thread-wasm.data", sha256: "7ad877800b9a817384e82fba1615c7d65fc2e09ffcaeda85942d71337789f768", sizeBytes: 1811731,
+          url: "https://github.com/retrom-project/dosbox-pure/releases/download/retrom-core-g3a5222c97456-r1/dosbox_pure-thread-wasm.data"},
+        {filename: "rpg-runtime-release.json", sha256: "bf6f1eec50f1a2480199d1a82b1bdb53325b6c4043a39a7d492be5daf2a84741", sizeBytes: 811,
+          url: "https://github.com/retrom-project/dosbox-pure/releases/download/retrom-core-g3a5222c97456-r1/rpg-runtime-release.json"},
+        {filename: "source.tar.gz", sha256: "02ee90da9c51fba4961920fe2e56b7b55a933920247d8e1bbcda6a638c59e0cd", sizeBytes: 2259338,
+          url: "https://github.com/retrom-project/dosbox-pure/releases/download/retrom-core-g3a5222c97456-r1/source.tar.gz"},
+      ],
+    },
 {
   "repository": "https://github.com/retrom-project/libretro-o2em",
   "tag": "retrom-core-g679d6fec0496-r2",

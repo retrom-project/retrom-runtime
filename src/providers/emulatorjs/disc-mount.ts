@@ -9,6 +9,7 @@ import {contentLimits} from "../../content-io/limits.js";
 import {createFlycastRange, createNeoCDRange} from "./neocd-range.js";
 import {EagerContentFile} from "./eager-content-file.js";
 import type {EjsWindow} from "./emulator-instance.js";
+import {dosGameURL, prepareDOSBundle} from "./dosbox-range.js";
 
 export function emulatorJsDisableCue(core: string, targetId: string): boolean {
   return ["cap32", "quasi88"].includes(core) || core === "flycast" &&
@@ -83,9 +84,27 @@ export function hasSeekableGame(envelope: LaunchEnvelopeV1): boolean {
   return envelope.resources.some(entry => entry.role === "game" && entry.kind === "SEEKABLE_BLOB");
 }
 
+export function gameResourceURL(envelope: LaunchEnvelopeV1, core: string, seekable: boolean) {
+  return core === "dosbox_pure" ? dosGameURL(resource(envelope, "game", "FILE_TREE")) :
+    resource(envelope, "game", seekable ? "SEEKABLE_BLOB" : "ROM_BLOB").url;
+}
+
+export function asyncRangeCore(core: string) {return ["neocd", "flycast", "daphne", "dosbox_pure"].includes(core);}
+
+export function mountRangeFS(core: string, seekable: boolean, eager: boolean, daphne: boolean) {
+  return (seekable || eager || daphne || core === "dosbox_pure") && !["neocd", "flycast"].includes(core);
+}
+
 export async function configureContentDisc(runtimeWindow: EjsWindow, envelope: LaunchEnvelopeV1, core: string,
   signal: AbortSignal, session: ContentSessionClient | null, fail: (error: Error) => void,
   eager = false, report: (readyBytes: number, totalBytes: number) => void = () => {}) {
+  if (core === "dosbox_pure") {
+    const game = resource(envelope, "game", "FILE_TREE");
+    const bundle = await prepareDOSBundle(game, requireContentSession(session), signal, fail);
+    const FileConstructor = (runtimeWindow as Window & typeof globalThis).File;
+    runtimeWindow.EJS_gameUrl = new FileConstructor(["RETROM_DOSBOX_RANGE_V1"], bundle.range.filename);
+    return {range: bundle.range, cleanup: null};
+  }
   if (eager) {
     const game = resource(envelope, "game", "ROM_BLOB");
     return {range: await mountEagerContentFile(runtimeWindow, game, signal, fail, requireContentSession(session), report), cleanup: null};

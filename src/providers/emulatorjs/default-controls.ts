@@ -76,7 +76,7 @@ const playerOneGamepad: Readonly<Record<number, string>> = {
   23: "RIGHT_STICK_Y:-1",
 };
 
-// Flycast, NeoCD and PUAE use libretro B as their primary native action.
+// Daphne, Flycast, NeoCD and PUAE use libretro B as their primary native action.
 // Keep that action on the bottom standard gamepad button.
 const nativeFaceGamepad: Readonly<Record<number, string>> = {...playerOneGamepad, 0: "BUTTON_1", 8: "BUTTON_2", 1: "BUTTON_3", 9: "BUTTON_4"};
 
@@ -89,7 +89,7 @@ const pc88Gamepad: Readonly<Record<number, string>> = {...playerOneGamepad, 3: "
 const thomsonGamepad: Readonly<Record<number, string>> = {...playerOneGamepad, 1: "BUTTON_1", 8: "BUTTON_4"};
 
 export function createRetromDefaultControls(core?: string): EmulatorDefaultControls {
-  const gamepad = ["flycast", "neocd", "o2em", "puae"].includes(core ?? "") ? nativeFaceGamepad
+  const gamepad = ["daphne", "flycast", "neocd", "o2em", "puae"].includes(core ?? "") ? nativeFaceGamepad
     : core === "quasi88" ? pc88Gamepad : core === "theodore" ? thomsonGamepad : playerOneGamepad;
   const controllers: EmulatorDefaultControls = {};
   for (let player = 0; player < 4; player += 1) {

@@ -10,6 +10,11 @@ const identities = {
   gam4980: {repository: "https://github.com/retrom-project/gam4980", baseline: "geeaa531b55e7", license: "LICENSE", source: "source.tar.gz"},
   uzem: {repository: "https://github.com/retrom-project/libretro-uzem", baseline: "gd991ee94547c", license: "LICENSE", source: "source.tar.gz"},
   o2em: {repository: "https://github.com/retrom-project/libretro-o2em", baseline: "g679d6fec0496", license: "LICENSE", source: "source.tar.gz"},
+  gearboy: {repository: "https://github.com/retrom-project/Gearboy", baseline: "g340ebe3c2588", license: "LICENSE", source: "source.tar.gz"},
+  lutro: {repository: "https://github.com/retrom-project/libretro-lutro", baseline: "g6224157a615b", license: "LICENSE",
+    source: "source.tar.gz", adapterAbi: "emulatorjs-lutro-native-v1"},
+  daphne: {repository: "https://github.com/retrom-project/daphne", baseline: "g6f1695dd1f37", license: "LICENSE",
+    source: "source.tar.gz", coreAsset: "daphne-thread-wasm.data", resources: ["daphne-resources.zip"]},
   bsnes: {repository: "https://github.com/retrom-project/bsnes-libretro", baseline: "g4b344745e387", license: "LICENSE.txt", source: "source.tar.gz", release: "4.3.0-pre"},
   neocd: {repository: "https://github.com/retrom-project/neocd_libretro", baseline: "g3118c6901787", license: "LICENSE.md", source: "source.tar.gz"},
   puae: {repository: "https://github.com/retrom-project/libretro-uae", baseline: "g2245d3443cc1", license: "COPYING",
@@ -46,6 +51,7 @@ export function forkReleaseFiles(catalog) {
       [identity.metadata ?? "rpg-runtime-release.json", forkMetadataPath(fork)],
       [identity.license, `${release}/licenses/forks/${fork.runtimeCore}/${identity.license}`],
       ...(identity.source ? [[identity.source, `${release}/licenses/forks/${fork.runtimeCore}/${identity.source}`]] : []),
+      ...(identity.resources ?? []).map((filename) => [filename, `${release}/data/cores/${filename}`]),
       ...(fork.runtimeCore === "flycast" ? [["flycast.json", "4.2.3/data/cores/reports/flycast.json"]] : []),
     ];
     if (!Array.isArray(fork.assets) || fork.assets.length !== expected.length) {invalid();}

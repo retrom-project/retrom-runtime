@@ -1,6 +1,7 @@
 import {providerVersion} from "../../provider/version.js";
 import {eagerPolicy, runtimeGamePolicy} from "../../provider/content-policies.js";
 import jsbeebSiteAssets from "../../jsbeeb/site-assets.json" with {type: "json"};
+import apple2SiteAssets from "../../apple2js/site-assets.json" with {type: "json"};
 import {pspAdapter, pspTarget} from "./psp-declaration.js";
 import {gbeAdapter, gbeTarget} from "./gbe-pokemini-declaration.js";
 import {storageAdapters} from "../../provider/checkpoint-storage.js";
@@ -52,6 +53,11 @@ const adapters = [
   px68kAdapter,
   adapter("webmsx-web", "WEBMSX_WEB", "webmsx-host-v1", "webmsx-state-v1", standardCapabilities),
   adapter("jsbeeb-web", "JSBEEB_WEB", "jsbeeb-web-v1", "jsbeeb-snapshot-gzip-v1", capabilities(true, false, false)),
+  defineAdapter({id: "apple2js-web", kind: "APPLE2JS_WEB", abi: "apple2js-web-v1",
+    capabilities: capabilities(true, false, false),
+    checkpoint: {writeFormat: "apple2js-state-v1", readFormats: [
+      "apple2js-state-gzip-v1", "apple2js-state-gzip-v1-storage-v1", "apple2js-state-v1",
+    ]}}),
   defineAdapter({id: "samcoupe-web", kind: "SAMCOUPE_WEB", abi: "samcoupe-web-v1",
     capabilities: capabilities(true, false, false),
     checkpoint: {writeFormat: "samcoupe-disk-save-v1", readFormats: ["samcoupe-disk-save-v1"], semantics: "GAME_SAVE"}}),
@@ -85,6 +91,16 @@ const adapters = [
 ] as const;
 
 const targets = [
+  defineTarget({
+    ...target("apple2-apple2js", "Apple IIe (Apple2JS)", "apple2js-web", noOptionsSchema, false,
+      "SAME_ORIGIN_BLANK", "ROM_BLOB", 32 * 1024 * 1024,
+      apple2SiteAssets.map((path) => `assets/apple2js/site/${path}`)),
+    inputs: [
+      {cardinality: "ONE", kind: "ROM_BLOB", optional: false, role: "game"},
+      {cardinality: "ONE", kind: "EXTERNAL_FILE_SET", optional: false, role: "external"},
+    ],
+    contentIO: {game: runtimeGamePolicy("apple2-apple2js"), external: eagerPolicy(16 * 1024)},
+  }),
   defineTarget({
     ...target("bbc-jsbeeb", "BBC Micro (jsbeeb)", "jsbeeb-web", noOptionsSchema, false,
       "SAME_ORIGIN_BLANK", "ROM_BLOB", 32 * 1024 * 1024,

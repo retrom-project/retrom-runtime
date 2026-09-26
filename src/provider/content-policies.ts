@@ -27,6 +27,7 @@ const gamePolicies: Readonly<Record<string, ContentInputPolicyV1>> = {
   "flash-ruffle": eagerPolicy(limits.ruffleSwf),
   j2me: upstream("j2me-loader"),
   "bbc-jsbeeb": eagerPolicy(32 * 1024 * 1024),
+  "apple2-apple2js": eagerPolicy(32 * 1024 * 1024),
   "kirikiri2-kag": rangePolicy("VLFS", limits.indexedFile, { writes: "SESSION_OVERLAY"}),
   "msx-webmsx": eagerPolicy(limits.webmsxMedia),
   nxengine: eagerPolicy(limits.nxengineFile),
@@ -50,7 +51,7 @@ export function runtimeGamePolicy(id: string): ContentInputPolicyV1 {
   return {...policy};
 }
 export function emulatorContentPolicies(core: string): Readonly<Record<string, ContentInputPolicyV1>> {
-  const game = ["neocd", "genesis_plus_gx_cd"].includes(core) || core.startsWith("flycast") ? rangePolicy("ASYNC", limits.signedDisc) :
+  const game = ["neocd", "genesis_plus_gx_cd", "daphne"].includes(core) || core.startsWith("flycast") ? rangePolicy("ASYNC", limits.signedDisc) :
     core === "puae" ? eagerPolicy(limits.signedDisc) : upstream("emulatorjs-loader");
   return {game, discs: {...game}, bios: upstream("emulatorjs-loader"), parent: upstream("emulatorjs-loader"), external: upstream("emulatorjs-loader")};
 }

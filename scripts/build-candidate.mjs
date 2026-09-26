@@ -7,6 +7,7 @@ import { fileURLToPath } from "node:url";
 import {loadProviderSources} from "./provider-sources.mjs";
 import {sourceTreeSha256} from "./provider-release.mjs";
 import {forkReleaseFiles} from "./emulatorjs-fork-releases.mjs";
+import {selectedPfbCoreIds} from "./pfb-core-selection.mjs";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const args = parseArgs(process.argv.slice(2));
@@ -21,7 +22,9 @@ if (!exactKeys(spec, ["schemaVersion", "name", "id", "hostMode", "retrom", "runt
 const coreRoot = resolve(args.output, "..", "cores");
 const overrides = {};
 const branchInputs = new Map();
+const selectedCores = selectedPfbCoreIds(process.env.RETROM_PFB_BUILD_CORES, spec.cores);
 for (const core of spec.cores) {
+  if (!selectedCores.has(core.id)) continue;
   if (!exactKeys(core, ["id", "mode", "root", "branch"]) || core.mode !== "branch" ||
     !/^[a-z0-9_]{1,64}$/u.test(core.id)) {throw new Error("PFB_SPEC_INVALID");}
   const directory = join(coreRoot, core.id);

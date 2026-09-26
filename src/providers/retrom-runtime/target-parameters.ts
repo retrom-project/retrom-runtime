@@ -23,6 +23,12 @@ export function jsbeeb(envelope: LaunchEnvelopeV1) {
     runtimeBaseUrl: assetBase(envelope, "jsbeeb/site"),
   };
 }
+export function apple2js(envelope: LaunchEnvelopeV1) {
+  const game = resource(envelope, "game", "ROM_BLOB");
+  const bios = resource(envelope, "external", "EXTERNAL_FILE_SET");
+  return {game: {url: game.url, sha256: game.sha256, sizeBytes: game.sizeBytes},
+    bios: bios.files, runtimeBaseUrl: assetBase(envelope, "apple2js/site")};
+}
 export function samcoupe(envelope: LaunchEnvelopeV1) {
   const game = resource(envelope, "game", "ROM_BLOB");
   const bios = resource(envelope, "external", "EXTERNAL_FILE_SET");

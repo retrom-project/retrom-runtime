@@ -56,6 +56,9 @@ const promotedCores = [
   ["cap32", "libretro-cap32", "g310cc579b79b", "COPYING"],
   ["crocods", "libretro-crocods", "gbe00fb904da0", "LICENSE"],
   ["same_cdi", "same_cdi", "gcfb05d803f54", "COPYING"],
+  ["gearboy", "Gearboy", "g340ebe3c2588", "LICENSE"],
+  ["lutro", "libretro-lutro", "g6224157a615b", "LICENSE"],
+  ["daphne", "daphne", "g6f1695dd1f37", "LICENSE"],
   ["vice_xpet", "vice-libretro", "g1b4309f4d56d", "COPYING"],
   ["vice_xplus4", "vice-libretro", "g1b4309f4d56d", "COPYING"],
 ];
@@ -65,10 +68,11 @@ it.each(promotedCores)("verifies the published %s core, source archive and varia
   const release = core === "bsnes" ? "4.3.0-pre" : "4.2.3";
   const report = variant ? `${core}-release.json` : "rpg-runtime-release.json";
   const source = variant ? `${core}-source.tar.gz` : "source.tar.gz";
-  const coreAsset = core === "puae" ? "puae-thread-wasm.data" : `${core}-wasm.data`;
-  const assets = [coreAsset, license, source, report].map(filename => ({filename,
+  const coreAsset = ["puae", "daphne"].includes(core) ? `${core}-thread-wasm.data` : `${core}-wasm.data`;
+  const assets = [coreAsset, license, source, report, ...(core === "daphne" ? ["daphne-resources.zip"] : [])].map(filename => ({filename,
     sha256: "b".repeat(64), sizeBytes: 12, url: `${repository}/releases/download/${tag}/${filename}`}));
-  const fork = {runtimeCore: core, repository, tag, commit: "a".repeat(40), adapterAbi: "emulatorjs-state-v1", assets};
+  const fork = {runtimeCore: core, repository, tag, commit: "a".repeat(40),
+    adapterAbi: core === "lutro" ? "emulatorjs-lutro-native-v1" : "emulatorjs-state-v1", assets};
   const metadata = {...fork, schemaVersion: 1, assets: assets.filter(a => a.filename !== report).map(a => ({
     filename: a.filename, observedSha256: a.sha256, sizeBytes: a.sizeBytes,
   }))};
@@ -77,6 +81,10 @@ it.each(promotedCores)("verifies the published %s core, source archive and varia
     .toContain(`${release}/data/cores/${coreAsset}`);
   expect(forkReleaseFiles({forks: [fork]}).map((f: {destination: string}) => f.destination))
     .toContain(`${release}/licenses/forks/${core}/${source}`);
+  if (core === "daphne") {
+    expect(forkReleaseFiles({forks: [fork]}).map((f: {destination: string}) => f.destination))
+      .toContain(`${release}/data/cores/daphne-resources.zip`);
+  }
   expect(() => verifyForkMetadata(fork, metadata)).not.toThrow();
   expect(() => forkReleaseFiles({forks: [{...fork, assets: assets.filter(a => a.filename !== source)}]})).toThrow();
   expect(() => verifyForkMetadata(fork, {...metadata, assets: metadata.assets.slice(1)})).toThrow();

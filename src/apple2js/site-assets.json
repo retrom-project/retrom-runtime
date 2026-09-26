@@ -1,0 +1,5 @@
+[
+  "dist/audio_worker.bundle.js",
+  "dist/retrom.bundle.js",
+  "index.html"
+]

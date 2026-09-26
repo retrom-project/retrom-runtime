@@ -2453,6 +2453,41 @@
       "tag": "retrom-core-g6593bda81983-r1",
       "commit": "8ff3c5279514a26b747d1ac55718fd2c28c96eea",
       "metadataUrl": "https://github.com/retrom-project/SamCoupeWeb/releases/download/retrom-core-g6593bda81983-r1/rpg-runtime-release.json"
+    },
+    {
+      "id": "apple2js",
+      "repository": "https://github.com/retrom-project/apple2js",
+      "upstreamCommit": "ee0aed25f73c69d0245e86a2a5fccb3324c3056c",
+      "adapterAbi": "apple2js-web-v1",
+      "assets": [
+        {
+          "filename": "LICENSE",
+          "output": "licenses/apple2js/LICENSE",
+          "maxSizeBytes": 1048576,
+          "sizeBytes": 20294,
+          "sha256": "d3e0d52fb6d3208e98c315694b93400a53e942f7be201300f64877d143ffb808",
+          "url": "https://github.com/retrom-project/apple2js/releases/download/retrom-core-gee0aed25f73c-r1/LICENSE"
+        },
+        {
+          "filename": "apple2js-site.tar.gz",
+          "output": "runtime/apple2js/apple2js-site.tar.gz",
+          "maxSizeBytes": 1048576,
+          "sizeBytes": 51867,
+          "sha256": "7b6b2c6445c2859b154e543f6e15535172deb268e0510022609978a3361d0a6e",
+          "url": "https://github.com/retrom-project/apple2js/releases/download/retrom-core-gee0aed25f73c-r1/apple2js-site.tar.gz"
+        },
+        {
+          "filename": "source.tar.gz",
+          "output": "licenses/apple2js/source.tar.gz",
+          "maxSizeBytes": 8388608,
+          "sizeBytes": 1010082,
+          "sha256": "2204465f5566295402cd56cb05fbe40767d7196fb48b36071a1c540db6767ebc",
+          "url": "https://github.com/retrom-project/apple2js/releases/download/retrom-core-gee0aed25f73c-r1/source.tar.gz"
+        }
+      ],
+      "tag": "retrom-core-gee0aed25f73c-r1",
+      "commit": "bd97253542832d07cfbfbd121359ea85023bd1e6",
+      "metadataUrl": "https://github.com/retrom-project/apple2js/releases/download/retrom-core-gee0aed25f73c-r1/rpg-runtime-release.json"
     }
   ],
   "localAssets": [
@@ -2464,6 +2499,5 @@
       "source": "assets/runtime/butterscotch/worker.mjs",
       "output": "runtime/butterscotch/worker.mjs"
     }
-  ],
-  "developmentInputs": []
+  ]
 }

@@ -5,6 +5,7 @@ import {asOpenBORCandidateSource, stageOpenBORCandidate} from "./openbor-candida
 import {stagePinnedCoreIfNeeded} from "./pinned-core-release.mjs";
 import {stageCoreDevelopmentInput} from "./core-development-input.mjs";
 import {expandJsbeebSite} from "./jsbeeb-site.mjs";
+import {expandApple2Site} from "./apple2js-site.mjs";
 import {expandSamCoupeSite} from "./samcoupe-site.mjs";
 import {stageWebMSXRelease} from "./webmsx-release.mjs";
 import {asWebMSXCandidateSource, stageWebMSXCandidate} from "./webmsx-candidate.mjs";
@@ -122,6 +123,9 @@ for (const input of developmentInputs) {
 }
 if ([...sources.upstreamReleases, ...developmentInputs].some((source) => source.id === "jsbeeb")) {
   await expandJsbeebSite(fileURLToPath(stage));
+}
+if ([...sources.upstreamReleases, ...developmentInputs].some((source) => source.id === "apple2js")) {
+  await expandApple2Site(fileURLToPath(stage));
 }
 if ([...sources.upstreamReleases, ...developmentInputs].some((source) => source.id === "samcoupeweb")) {
   await expandSamCoupeSite(fileURLToPath(stage));

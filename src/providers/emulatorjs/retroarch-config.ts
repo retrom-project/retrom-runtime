@@ -10,6 +10,7 @@ export function installEmulatorJsRetroArchConfig(playerWindow: Window, core: str
     ...(core === "quasi88" ? ['system_directory = "/retroarch/userdata/system"'] : []),
     ...(core === "fuse" ? ['input_libretro_device_p1 = "513"', 'input_libretro_device_p2 = "0"'] : []),
     ...(core === "81" ? ['input_libretro_device_p1 = "257"', 'input_libretro_device_p2 = "259"'] : []),
+    ...(core === "daphne" ? ["history_list_enable = false"] : []),
     ...(restoring ? ["log_verbosity = true"] : []),
   ];
   if (!settings.length && core !== "same_cdi") {return () => undefined;}

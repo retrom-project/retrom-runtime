@@ -11,8 +11,9 @@
     {id: "variables", label: "变量"}, {id: "switches", label: "开关"},
     {id: "actors", label: "角色"}, {id: "skills", label: "技能"},
     {id: "states", label: "状态"}, {id: "classes", label: "职业"},
-    {id: "party", label: "队伍成员"},
+    {id: "party", label: "队伍成员"}, {id: "self_switches", label: "事件独立开关"},
   ]);
+  const SELF_SWITCH_KEYS = Object.freeze(["A", "B", "C", "D"]);
   const ACTOR_FIELDS = Object.freeze([
     ["hp", "生命"], ["mp", "魔法"], ["tp", "TP"], ["level", "等级"], ["exp", "经验"],
     ["mhp", "最大生命"], ["mmp", "最大魔法"], ["atk", "攻击"],
@@ -34,6 +35,7 @@
   let sceneManagerHooked = false;
   let exitRequested = false;
   let inputDiagnostics = null;
+  const editorMapCache = new Map();
 
   function ownKeys(value, expected) {
     if (!value || typeof value !== "object" || Array.isArray(value)) return false;
@@ -590,6 +592,97 @@
       nextOffset: body.offset + body.limit < rows.length ? body.offset + body.limit : null};
   }
 
+  function editorPageRequest(body, withMap) {
+    if (!body || typeof body.query !== "string" || body.query.length > 80 ||
+      !Number.isSafeInteger(body.offset) || body.offset < 0 ||
+      !Number.isSafeInteger(body.limit) || body.limit < 1 || body.limit > 40 ||
+      withMap && !editorMapInfo(body.mapId)) throw new Error("RPG_GAME_EDITOR_INVALID");
+    return body.query.trim().toLowerCase();
+  }
+
+  function editorMapInfo(mapId) {
+    const infos = global.$dataMapInfos;
+    return Number.isSafeInteger(mapId) && mapId > 0 && Array.isArray(infos) &&
+      infos[mapId] && infos[mapId].id === mapId ? infos[mapId] : null;
+  }
+
+  function editorMapLabel(info) {
+    return String(info.name || "").trim().slice(0, 160) || `地图 ${info.id}`;
+  }
+
+  function editorMapPage(body) {
+    if (!editorReady()) throw new Error("RPG_GAME_EDITOR_NOT_READY");
+    const query = editorPageRequest(body, false);
+    const currentMapId = global.$gameMap.mapId();
+    const current = editorMapInfo(currentMapId);
+    if (!current) throw new Error("RPG_GAME_EDITOR_UNAVAILABLE");
+    const maps = global.$dataMapInfos.slice(1).filter((info) => info && editorMapInfo(info.id))
+      .map((info) => ({id: info.id, label: editorMapLabel(info)}))
+      .filter((map) => !query || map.label.toLowerCase().includes(query) || String(map.id).includes(query));
+    return {currentMapId, currentMapName: editorMapLabel(current),
+      maps: maps.slice(body.offset, body.offset + body.limit),
+      nextOffset: body.offset + body.limit < maps.length ? body.offset + body.limit : null};
+  }
+
+  async function editorMapData(mapId) {
+    if (!editorMapInfo(mapId)) throw new Error("RPG_GAME_EDITOR_INVALID");
+    if (global.$gameMap.mapId() === mapId && Array.isArray(global.$dataMap && global.$dataMap.events)) {
+      return global.$dataMap;
+    }
+    if (editorMapCache.has(mapId)) return editorMapCache.get(mapId);
+    const path = `data/Map${String(mapId).padStart(3, "0")}.json`;
+    const response = await global.fetch(path, {credentials: "same-origin"});
+    if (!response.ok) throw new Error("RPG_GAME_EDITOR_UNAVAILABLE");
+    const data = await response.json();
+    if (!data || !Array.isArray(data.events)) throw new Error("RPG_GAME_EDITOR_UNAVAILABLE");
+    if (editorMapCache.size >= 3) editorMapCache.delete(editorMapCache.keys().next().value);
+    editorMapCache.set(mapId, data);
+    return data;
+  }
+
+  function editorEventRow(mapId, event) {
+    const id = event.id;
+    const switches = {};
+    for (const key of SELF_SWITCH_KEYS) {
+      switches[key] = Boolean(global.$gameSelfSwitches.value([mapId, id, key]));
+    }
+    return {id, label: String(event.name || "").trim().slice(0, 160) || `事件 ${id}`,
+      x: Number.isSafeInteger(event.x) ? event.x : 0,
+      y: Number.isSafeInteger(event.y) ? event.y : 0, switches};
+  }
+
+  async function editorEventRows(mapId) {
+    if (!global.$gameSelfSwitches || typeof global.$gameSelfSwitches.value !== "function") {
+      throw new Error("RPG_GAME_EDITOR_UNAVAILABLE");
+    }
+    const data = await editorMapData(mapId);
+    return data.events.slice(1).flatMap((event, index) =>
+      event && event.id === index + 1 ? [editorEventRow(mapId, event)] : []);
+  }
+
+  async function editorEventPage(body) {
+    if (!editorReady()) throw new Error("RPG_GAME_EDITOR_NOT_READY");
+    const query = editorPageRequest(body, true);
+    const rows = (await editorEventRows(body.mapId)).filter((event) =>
+      !query || event.label.toLowerCase().includes(query) || String(event.id).includes(query));
+    return {events: rows.slice(body.offset, body.offset + body.limit),
+      nextOffset: body.offset + body.limit < rows.length ? body.offset + body.limit : null};
+  }
+
+  async function editorSetSelfSwitch(body) {
+    if (!editorReady()) throw new Error("RPG_GAME_EDITOR_NOT_READY");
+    if (!body || !editorMapInfo(body.mapId) || !Number.isSafeInteger(body.eventId) || body.eventId < 1 ||
+      !SELF_SWITCH_KEYS.includes(body.key) || typeof body.value !== "boolean" ||
+      typeof global.$gameSelfSwitches?.setValue !== "function") throw new Error("RPG_GAME_EDITOR_INVALID");
+    const rows = await editorEventRows(body.mapId);
+    const event = rows.find((row) => row.id === body.eventId);
+    if (!event) throw new Error("RPG_GAME_EDITOR_INVALID");
+    global.$gameSelfSwitches.setValue([body.mapId, body.eventId, body.key], body.value);
+    const actual = (await editorEventRows(body.mapId)).find((row) => row.id === body.eventId);
+    if (actual.switches[body.key] !== body.value) throw new Error("RPG_GAME_EDITOR_UNAVAILABLE");
+    return {event: actual};
+  }
+
   function editorSet(body) {
     if (!body || typeof body.category !== "string" || typeof body.id !== "string" ||
       !/^[a-z0-9:_-]{1,60}$/u.test(body.id)) throw new Error("RPG_GAME_EDITOR_INVALID");
@@ -759,6 +852,9 @@
         : {...category})}};
     case "EDITOR_ENTRIES": return {type: "EDITOR_ENTRIES_RESULT", body: editorList(message.body)};
     case "EDITOR_SET": return {type: "EDITOR_SET_RESULT", body: editorSet(message.body)};
+    case "EDITOR_SELF_SWITCH_MAPS": return {type: "EDITOR_SELF_SWITCH_MAPS_RESULT", body: editorMapPage(message.body)};
+    case "EDITOR_SELF_SWITCH_EVENTS": return {type: "EDITOR_SELF_SWITCH_EVENTS_RESULT", body: await editorEventPage(message.body)};
+    case "EDITOR_SELF_SWITCH_SET": return {type: "EDITOR_SELF_SWITCH_SET_RESULT", body: await editorSetSelfSwitch(message.body)};
     case "CLEANUP":
       if (inputDiagnostics) inputDiagnostics.stop();
       inputDiagnostics = null;

@@ -1,4 +1,5 @@
-import type {RuntimeGameEditEntryV1, RuntimeGameEditorV1} from "../provider/module-api.js";
+import type {RuntimeGameEditEntryV1, RuntimeGameEditEventV1, RuntimeGameEditMapV1,
+  RuntimeGameEditSelfSwitchKeyV1, RuntimeGameEditorV1} from "../provider/module-api.js";
 import type {NativeChannel} from "./adapter.js";
 
 type EditorChannel = Pick<NativeChannel, "request">;
@@ -39,7 +40,62 @@ export function createNativeGameEditor(channel: EditorChannel): RuntimeGameEdito
       if (reply.type !== "EDITOR_SET_RESULT") {throw invalid();}
       return readEntry(reply.body.entry);
     },
+    selfSwitches: {
+      async maps(query, offset, limit) {
+        pageRequest(query, offset, limit);
+        const reply = await channel.request("EDITOR_SELF_SWITCH_MAPS", {query, offset, limit});
+        const body = reply.body;
+        if (reply.type !== "EDITOR_SELF_SWITCH_MAPS_RESULT" || !positiveId(body.currentMapId) ||
+          !label(body.currentMapName, 160) || !Array.isArray(body.maps) || body.maps.length > limit) {throw invalid();}
+        const maps = body.maps.map(readMap);
+        return {currentMapId: body.currentMapId, currentMapName: body.currentMapName,
+          maps, nextOffset: readNext(body.nextOffset, offset)};
+      },
+      async events(mapId, query, offset, limit) {
+        if (!positiveId(mapId)) {throw invalid();}
+        pageRequest(query, offset, limit);
+        const reply = await channel.request("EDITOR_SELF_SWITCH_EVENTS", {mapId, query, offset, limit});
+        if (reply.type !== "EDITOR_SELF_SWITCH_EVENTS_RESULT" || !Array.isArray(reply.body.events) ||
+          reply.body.events.length > limit) {throw invalid();}
+        return {events: reply.body.events.map(readEvent), nextOffset: readNext(reply.body.nextOffset, offset)};
+      },
+      async set(mapId, eventId, key, value) {
+        if (!positiveId(mapId) || !positiveId(eventId) || !["A", "B", "C", "D"].includes(key) ||
+          typeof value !== "boolean") {throw invalid();}
+        const reply = await channel.request("EDITOR_SELF_SWITCH_SET", {mapId, eventId, key, value});
+        if (reply.type !== "EDITOR_SELF_SWITCH_SET_RESULT") {throw invalid();}
+        return readEvent(reply.body.event);
+      },
+    },
   };
+}
+
+function pageRequest(query: string, offset: number, limit: number) {
+  if (query.length > 80 || !Number.isSafeInteger(offset) || offset < 0 ||
+    !Number.isSafeInteger(limit) || limit < 1 || limit > 40) {throw invalid();}
+}
+
+function readNext(raw: unknown, offset: number) {
+  if (raw !== null && (!Number.isSafeInteger(raw) || Number(raw) <= offset)) {throw invalid();}
+  return raw as number | null;
+}
+
+function positiveId(value: unknown): value is number {
+  return typeof value === "number" && Number.isSafeInteger(value) && value > 0;
+}
+
+function readMap(raw: unknown): RuntimeGameEditMapV1 {
+  if (!record(raw) || !positiveId(raw.id) || !label(raw.label, 160)) {throw invalid();}
+  return {id: raw.id, label: raw.label};
+}
+
+function readEvent(raw: unknown): RuntimeGameEditEventV1 {
+  if (!record(raw) || !positiveId(raw.id) || !label(raw.label, 160) ||
+    !Number.isSafeInteger(raw.x) || !Number.isSafeInteger(raw.y) || !record(raw.switches) ||
+    Object.keys(raw.switches).sort().join("") !== "ABCD") {throw invalid();}
+  const keys: RuntimeGameEditSelfSwitchKeyV1[] = ["A", "B", "C", "D"];
+  if (keys.some((key) => typeof (raw.switches as Record<string, unknown>)[key] !== "boolean")) {throw invalid();}
+  return raw as RuntimeGameEditEventV1;
 }
 
 function readEntry(raw: unknown): RuntimeGameEditEntryV1 {

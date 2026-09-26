@@ -12,7 +12,15 @@ export function createNativeGameEditor(channel: EditorChannel): RuntimeGameEdito
         reply.body.categories.length > 8) {throw invalid();}
       return reply.body.categories.map((raw) => {
         if (!record(raw) || typeof raw.id !== "string" || !token.test(raw.id) || !label(raw.label, 40)) {throw invalid();}
-        return {id: raw.id, label: raw.label};
+        if (raw.groups === undefined) {return {id: raw.id, label: raw.label};}
+        if (!Array.isArray(raw.groups) || raw.groups.length > 64) {throw invalid();}
+        const groups = raw.groups.map((group) => {
+          if (!record(group) || typeof group.id !== "string" || !token.test(group.id) ||
+            !group.id.startsWith(`${raw.id}:`) || !label(group.label, 160)) {throw invalid();}
+          return {id: group.id, label: group.label};
+        });
+        if (new Set(groups.map((group) => group.id)).size !== groups.length) {throw invalid();}
+        return {id: raw.id, label: raw.label, groups};
       });
     },
     async entries(category, query, offset, limit) {

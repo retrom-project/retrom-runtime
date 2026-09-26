@@ -22,12 +22,23 @@ describe("native-web RPG Maker bridge", () => {
     const listeners = new Map<string, Array<(event: BridgeEvent) => void>>();
     const replies: Array<{type: string; requestId: number; body: Record<string, unknown>}> = [];
     const sceneManager = {_scene: null, updateMain: () => undefined};
+    const learnedSkills = new Set<number>();
     const actor = {
       hp: 10, mp: 4, tp: 2, level: 1, mhp: 20, mmp: 10,
       actorId: () => 1, name: () => "Hero", currentExp: () => 0,
       maxTp: () => 100, maxLevel: () => 99, param: (id: number) => id === 2 ? 5 : 10,
       paramMax: () => 999, addParam: vi.fn(), setHp: vi.fn(), setMp: vi.fn(),
       setTp: vi.fn(), changeLevel: vi.fn(), changeExp: vi.fn(),
+      isLearnedSkill: (id: number) => learnedSkills.has(id),
+      learnSkill: vi.fn((id: number) => learnedSkills.add(id)),
+      forgetSkill: vi.fn((id: number) => learnedSkills.delete(id)),
+    };
+    const otherLearnedSkills = new Set<number>();
+    const otherActor = {
+      ...actor,
+      actorId: () => 2, name: () => "Mage", isLearnedSkill: (id: number) => otherLearnedSkills.has(id),
+      learnSkill: vi.fn((id: number) => otherLearnedSkills.add(id)),
+      forgetSkill: vi.fn((id: number) => otherLearnedSkills.delete(id)),
     };
     let gold = 10;
     let count = 1;
@@ -38,11 +49,12 @@ describe("native-web RPG Maker bridge", () => {
     const runtime = {
       DataManager: {}, StorageManager: {}, Utils: {RPGMAKER_NAME: edition}, SceneManager: sceneManager,
       $dataItems: [null, {id: 1, name: ""}, item], $dataWeapons: [null], $dataArmors: [null],
+      $dataSkills: [null, {id: 1, name: ""}, {id: 2, name: "Fire"}],
       $dataSystem: {variables: ["", "", "Quest"], switches: ["", "", "Gate"]},
       $gameParty: {
         gold: () => gold, maxGold: () => 100, gainGold: (delta: number) => {gold += delta;},
         numItems: () => count, maxItems: () => 99, gainItem: (_item: unknown, delta: number) => {count += delta;},
-        members: () => [actor],
+        members: () => [actor, otherActor],
       },
       $gameVariables: {value: () => variable, setValue: (_id: number, value: number) => {variable = value;}},
       $gameSwitches: {value: () => enabled, setValue: (_id: number, value: boolean) => {enabled = value;}},
@@ -68,6 +80,7 @@ describe("native-web RPG Maker bridge", () => {
     }
     expect((await request(1, "EDITOR_CATEGORIES", {})).body.categories).toEqual(expect.arrayContaining([
       {id: "gold", label: "金币"}, {id: "actors", label: "角色"},
+      {id: "skills", label: "技能", groups: [{id: "skills:1", label: "Hero"}, {id: "skills:2", label: "Mage"}]},
     ]));
     expect((await request(2, "EDITOR_ENTRIES", {category: "gold", query: "", offset: 0, limit: 20})).type)
       .toBe("ERROR");
@@ -90,6 +103,22 @@ describe("native-web RPG Maker bridge", () => {
       .toMatchObject({entries: [{id: "2", label: "Quest"}, {id: "1", label: "变量 1"}]});
     expect((await request(11, "EDITOR_ENTRIES", {category: "switches", query: "", offset: 0, limit: 20})).body)
       .toMatchObject({entries: [{id: "2", label: "Gate"}, {id: "1", label: "开关 1"}]});
+    expect((await request(12, "EDITOR_ENTRIES", {category: "skills:1", query: "Fire", offset: 0, limit: 20})).body)
+      .toMatchObject({entries: [{id: "1:2", label: "Fire", value: false, valueType: "boolean"}], nextOffset: null});
+    expect((await request(13, "EDITOR_SET", {category: "skills:1", id: "1:2", value: true})).body)
+      .toMatchObject({entry: {id: "1:2", label: "Fire", value: true}});
+    expect(actor.learnSkill).toHaveBeenCalledWith(2);
+    expect((await request(14, "EDITOR_SET", {category: "skills:1", id: "1:2", value: false})).body)
+      .toMatchObject({entry: {id: "1:2", value: false}});
+    expect(actor.forgetSkill).toHaveBeenCalledWith(2);
+    expect((await request(15, "EDITOR_SET", {category: "skills:1", id: "1:999", value: true})).type).toBe("ERROR");
+    expect((await request(16, "EDITOR_SET", {category: "skills:2", id: "1:2", value: true})).type).toBe("ERROR");
+    expect((await request(17, "EDITOR_ENTRIES", {category: "skills:2", query: "", offset: 0, limit: 20})).body)
+      .toMatchObject({entries: [{id: "2:2", label: "Fire", value: false}], nextOffset: null});
+    expect((await request(18, "EDITOR_SET", {category: "skills:2", id: "2:2", value: true})).body)
+      .toMatchObject({entry: {id: "2:2", label: "Fire", value: true}});
+    expect(otherActor.learnSkill).toHaveBeenCalledWith(2);
+    expect(actor.learnSkill).toHaveBeenCalledTimes(1);
   });
 
   it("reports readiness without fixture-variable proofs and applies video modes inside the isolated frame", async () => {

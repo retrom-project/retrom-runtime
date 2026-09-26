@@ -21,13 +21,13 @@ export const emulatorJsSourceCatalog = {
     runtimeCore: "gearboy",
     repository: "https://github.com/retrom-project/Gearboy",
     upstreamCommit: "340ebe3c258846560cc93d93ca4359f506fafb70",
-    commit: "340ebe3c258846560cc93d93ca4359f506fafb70",
+    commit: "1dd754819270216afdfa6783a217fe6301aa9a11",
     sourceTreeSha256: "9465fc2c6caa7f4899c5b1b9354e61497c798553e0257bb8cb885d5f3e64221d",
     adapterAbi: "emulatorjs-state-v1",
     assets: [
       {filename: "LICENSE", sha256: "dafc393710f9004fc9de3d51c8f9907594f8a61cb4c3f1c73becbb8c40ca24e5", sizeBytes: 70294},
-      {filename: "gearboy-wasm.data", sha256: "ca08e4936a9f8b62f198f8df30fed48c5e68f06db9dd91115a2c44863054661e", sizeBytes: 939318},
-      {filename: "retrom-core-candidate.json", sha256: "389000f4810c30180889fa6d39eb5d21b3520594c01935523f363e9fd6211248", sizeBytes: 736},
+      {filename: "gearboy-wasm.data", sha256: "d129ca8dc45365915d8f4443d34f4c341acab48adc190237ebafb752cca6fb5b", sizeBytes: 939366},
+      {filename: "retrom-core-candidate.json", sha256: "84bcf3e65641e1c1cc66eee85ee320d62400dec302387e11491941791f030d56", sizeBytes: 737},
       {filename: "source.tar.gz", sha256: "a65895c0f7b32ee69821862cb70fb49cff1922cb0133dedd2831f9c4d8a19472", sizeBytes: 5625236},
     ],
   }, {

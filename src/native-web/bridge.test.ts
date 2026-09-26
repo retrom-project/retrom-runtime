@@ -36,6 +36,7 @@ describe("native-web RPG Maker bridge", () => {
     const otherLearnedSkills = new Set<number>();
     const otherActor = {
       ...actor,
+      hp: 8, setHp: vi.fn(),
       actorId: () => 2, name: () => "Mage", isLearnedSkill: (id: number) => otherLearnedSkills.has(id),
       learnSkill: vi.fn((id: number) => otherLearnedSkills.add(id)),
       forgetSkill: vi.fn((id: number) => otherLearnedSkills.delete(id)),
@@ -79,7 +80,8 @@ describe("native-web RPG Maker bridge", () => {
       return replies.find((reply) => reply.requestId === requestId)!;
     }
     expect((await request(1, "EDITOR_CATEGORIES", {})).body.categories).toEqual(expect.arrayContaining([
-      {id: "gold", label: "金币"}, {id: "actors", label: "角色"},
+      {id: "gold", label: "金币"},
+      {id: "actors", label: "角色", groups: [{id: "actors:1", label: "Hero"}, {id: "actors:2", label: "Mage"}]},
       {id: "skills", label: "技能", groups: [{id: "skills:1", label: "Hero"}, {id: "skills:2", label: "Mage"}]},
     ]));
     expect((await request(2, "EDITOR_ENTRIES", {category: "gold", query: "", offset: 0, limit: 20})).type)
@@ -119,6 +121,13 @@ describe("native-web RPG Maker bridge", () => {
       .toMatchObject({entry: {id: "2:2", label: "Fire", value: true}});
     expect(otherActor.learnSkill).toHaveBeenCalledWith(2);
     expect(actor.learnSkill).toHaveBeenCalledTimes(1);
+    expect((await request(19, "EDITOR_ENTRIES", {category: "actors:2", query: "2:hp", offset: 0, limit: 20})).body)
+      .toMatchObject({entries: [{id: "2:hp", label: "生命", value: 8}], nextOffset: null});
+    expect((await request(20, "EDITOR_SET", {category: "actors:2", id: "1:hp", value: 12})).type).toBe("ERROR");
+    expect((await request(21, "EDITOR_SET", {category: "actors:2", id: "2:hp", value: 12})).body)
+      .toMatchObject({entry: {id: "2:hp", label: "生命"}});
+    expect(otherActor.setHp).toHaveBeenCalledWith(12);
+    expect(actor.setHp).toHaveBeenCalledTimes(1);
   });
 
   it("reports readiness without fixture-variable proofs and applies video modes inside the isolated frame", async () => {

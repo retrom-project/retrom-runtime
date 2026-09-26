@@ -164,6 +164,9 @@ class GamepadCursorController implements GamepadCursor {
     const mask = button === 0 ? 1 : 2;
     if (Boolean(this.held & mask) === next) {return;}
     this.surface.reveal(this.position);
+    // SDL and other consumers cache position from motion events. A physical
+    // pointer may have moved since the last pad movement, including at startup.
+    this.surface.send("mousemove", 0, this.held, this.position);
     this.held = next ? this.held | mask : this.held & ~mask;
     this.surface.send(next ? "mousedown" : "mouseup", button, this.held, this.position);
     if (next) {this.downAt.set(button, {...this.position}); return;}

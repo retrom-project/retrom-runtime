@@ -135,6 +135,9 @@ other gamepads and host menu chords remain available. Host input policy selects 
 Closing, pausing, checkpointing, losing focus, disconnecting or exiting releases held mouse buttons without clicks.
 Resuming waits for neutral input. Disabling gates held controls before returning them to native mappings. Drag
 movement carries the full buttons mask and release after movement exceeding 4 CSS pixels does not emit click.
+Each normal button edge first sends motion at the virtual position with the previous buttons mask. Consumers
+that cache coordinates from motion (including SDL) must not click at a stale physical mouse position after
+startup, restoration, or toolbar use. Cancellation still releases without movement or activation.
 Cursor polling reads the raw gamepad source without advancing the stateful host chord detector.
 The shared gamepad filter remains installed until exit so cursor and host filtering have one stable lifecycle.
 Hosts own per-game preferences; adapters never persist user settings. Relative mouse/pointer lock is not supported.

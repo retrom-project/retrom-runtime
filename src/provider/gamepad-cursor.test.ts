@@ -27,6 +27,25 @@ function setup(defaultEnabled = true, protocol: "mouse" | "pointer" = "mouse", f
 afterEach(() => {vi.restoreAllMocks(); document.body.replaceChildren(); Reflect.deleteProperty(navigator, "getGamepads");});
 
 describe("shared gamepad cursor", () => {
+  it.each(["mouse", "pointer"] as const)("synchronizes cached %s position before stationary clicks after physical pointer use", protocol => {
+    const f = setup(true, protocol);
+    let position = [0, 0];
+    const clickedAt: number[][] = [];
+    const prefix = protocol === "mouse" ? "mouse" : "pointer";
+    f.canvas.addEventListener(`${prefix}move`, event => {
+      const mouse = event as MouseEvent; position = [mouse.clientX, mouse.clientY];
+    });
+    for (const edge of ["down", "up"]) {
+      f.canvas.addEventListener(`${prefix}${edge}`, () => clickedAt.push([...position]));
+    }
+    f.tick(0); f.press(0); f.tick(16);
+    expect(clickedAt).toEqual([[500, 350]]);
+    const EventType = protocol === "mouse" ? MouseEvent : PointerEvent;
+    f.canvas.dispatchEvent(new EventType(`${prefix}move`, {clientX: 8, clientY: 950}));
+    f.press(0, false); f.tick(32);
+    expect(clickedAt).toEqual([[500, 350], [500, 350]]);
+    f.cursor.dispose();
+  });
   it("never advances the host's stateful chord filter while polling cursor input", () => {
     const filter = new RuntimeGamepadFilter({activeGamepadIndex: 2, suppressInput: false});
     const filtering = vi.spyOn(filter, "filter");
@@ -57,7 +76,7 @@ describe("shared gamepad cursor", () => {
     expect(game.axes[0]).toBe(0);
     expect(game.buttons[0].pressed).toBe(false);
     expect(game.buttons[8].pressed && game.buttons[9].pressed).toBe(true);
-    expect(f.events.find(event => event.type === "mousemove")?.buttons).toBe(1);
+    expect(f.events.filter(event => event.type === "mousemove").at(-1)?.buttons).toBe(1);
     expect(f.events.at(-1)?.clientX).toBeGreaterThan(500);
     f.press(0, false); f.tick(48);
     expect(f.events.filter(event => event.type === "mouseup")).toHaveLength(1);
@@ -69,12 +88,12 @@ describe("shared gamepad cursor", () => {
   it("disabling releases without clicking and gates held controls before returning to native mapping", () => {
     const f = setup(); f.tick(0); f.press(0); f.tick(16);
     f.cursor.setEnabled(false);
-    expect(f.events.map(event => event.type)).toEqual(["mousedown", "mouseup"]);
+    expect(f.events.map(event => event.type)).toEqual(["mousemove", "mousedown", "mouseup"]);
     expect(navigator.getGamepads()[1]?.buttons[0].pressed).toBe(false);
     expect(document.querySelector<HTMLElement>("[data-gamepad-cursor]")?.hidden).toBe(true);
     f.press(0, false); f.tick(32); f.press(0); f.tick(48);
     expect(navigator.getGamepads()[1]?.buttons[0].pressed).toBe(true);
-    expect(f.events).toHaveLength(2); f.cursor.dispose();
+    expect(f.events).toHaveLength(3); f.cursor.dispose();
   });
 
   it("suspension, input suppression and disconnect release without activation, then require neutral input", () => {
@@ -83,7 +102,7 @@ describe("shared gamepad cursor", () => {
     f.tick(32);
     f.cursor.setInputPolicy({activeGamepadIndex: 2, suppressInput: false});
     f.tick(48);
-    expect(f.events.map(event => event.type)).toEqual(["mousedown", "mouseup"]);
+    expect(f.events.map(event => event.type)).toEqual(["mousemove", "mousedown", "mouseup"]);
     f.press(0, false); f.tick(64); f.press(1); f.tick(80);
     f.cursor.setSuspended(true); f.cursor.setSuspended(false); f.tick(96);
     expect(f.events.filter(event => event.type === "contextmenu")).toHaveLength(0);
@@ -96,10 +115,10 @@ describe("shared gamepad cursor", () => {
     const f = setup(false); f.press(0); f.cursor.setEnabled(true); f.tick(0);
     expect(f.events).toHaveLength(0);
     f.press(0, false); f.tick(16); f.press(0); f.tick(32); f.press(0, false); f.tick(48);
-    expect(f.events.map(event => event.type)).toEqual(["mousedown", "mouseup", "click"]);
+    expect(f.events.map(event => event.type)).toEqual(["mousemove", "mousedown", "mousemove", "mouseup", "click"]);
     f.cursor.setInputPolicy({activeGamepadIndex: 7, suppressInput: false});
     f.press(0); f.tick(64);
-    expect(f.events).toHaveLength(3);
+    expect(f.events).toHaveLength(5);
     expect(navigator.getGamepads()[1]?.buttons[0].pressed).toBe(true);
     f.cursor.dispose();
   });

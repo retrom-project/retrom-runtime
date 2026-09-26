@@ -1,8 +1,11 @@
 import {createHash} from "node:crypto";
 import {lstat, readFile} from "node:fs/promises";
 import {isAbsolute, join} from "node:path";
+import {pathToFileURL} from "node:url";
 import {emulatorJsSourceCatalog} from "../src/providers/emulatorjs/source-catalog.ts";
 import {developmentForkFiles, developmentForkSource, stageDevelopmentForks} from "./emulatorjs-development-forks.mjs";
+import {loadProviderSources} from "./provider-sources.mjs";
+import {stageCoreDevelopmentInput, validCoreDevelopmentInput} from "./core-development-input.mjs";
 
 // Explicit, already-built candidates only. This path never compiles a core or changes a catalog.
 export async function readPFBProviderCoreFiles(outputRoot, providerId, staging, assetIndex) {
@@ -13,12 +16,16 @@ export async function readPFBProviderCoreFiles(outputRoot, providerId, staging, 
     if (error.code === "ENOENT") {return [];}
     throw error;
   }
-  if (providerId !== "emulatorjs" || !exact(selection, ["schemaVersion", "cores"]) ||
+  if (!["emulatorjs", "retrom-runtime"].includes(providerId) || !exact(selection, ["schemaVersion", "cores"]) ||
     selection.schemaVersion !== 1 || !Array.isArray(selection.cores) || selection.cores.length === 0 ||
     new Set(selection.cores.map((core) => core?.id)).size !== selection.cores.length) {invalid();}
   const result = [];
   for (const core of selection.cores) {
     if (!exact(core, ["id", "directory"]) || typeof core.directory !== "string" || !isAbsolute(core.directory)) {invalid();}
+    if (providerId === "retrom-runtime") {
+      result.push(...await readRuntimeCore(core, staging, assetIndex));
+      continue;
+    }
     const declared = [...emulatorJsSourceCatalog.forks, ...emulatorJsSourceCatalog.developmentForks]
       .find((fork) => fork.runtimeCore === core.id);
     const source = developmentForkSource(core.id);
@@ -43,6 +50,25 @@ export async function readPFBProviderCoreFiles(outputRoot, providerId, staging, 
     }
   }
   return result;
+}
+
+async function readRuntimeCore(core, staging, baseFiles) {
+  const catalog = await loadProviderSources(new URL("../", import.meta.url));
+  const declared = [...catalog.upstreamReleases, ...catalog.developmentInputs ?? []].find(source => source.id === core.id);
+  if (!declared) {invalid();}
+  const source = {id: declared.id, repository: declared.repository,
+    upstreamCommit: declared.upstreamCommit ?? declared.commit, adapterAbi: declared.adapterAbi,
+    assets: declared.assets.map(({filename, output, maxSizeBytes}) => ({filename, output, maxSizeBytes}))};
+  if (!validCoreDevelopmentInput(source)) {invalid();}
+  const publicPath = output => output.replace(/^runtime\//u, "assets/");
+  if (source.assets.some(asset => !Object.hasOwn(baseFiles, publicPath(asset.output)))) {invalid();}
+  const destination = join(staging, core.id);
+  // Validate the complete candidate, including the license, with the same
+  // closed file set, ABI, sizes and hashes used by candidate aggregation.
+  await stageCoreDevelopmentInput(source, core.directory, pathToFileURL(`${destination}/`));
+  return Promise.all(source.assets.map(async asset => ({
+    path: publicPath(asset.output), contents: await readFile(join(destination, asset.output)),
+  })));
 }
 
 async function regular(path) {

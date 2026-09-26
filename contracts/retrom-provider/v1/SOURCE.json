@@ -1,7 +1,7 @@
 {
   "authorityPath": "api/runtime-provider/v1",
   "authorityRepository": "https://github.com/retrom-project/retrom",
-  "contractSha256": "42eebc49430e0d3424eacad6ad263c2033c4039954fe4c2f49734a935b51df17",
+  "contractSha256": "612224ff9abb945357f213fe8a2d7fe5c83bcacc1271db204053c362fc0be0b7",
   "contractVersion": "runtime-provider-v1",
   "files": [
     {
@@ -14,7 +14,7 @@
     },
     {
       "path": "api/runtime-provider/v1/provider-integrity.schema.json",
-      "sha256": "e8cc41a9de94a1209a56a0b38570e67da4fe3044c46fddd18b0347399810fa10"
+      "sha256": "8b3e46033d2c7981bfd3d5c974bf3e0ef3541ad532eb743584018c448c344eb6"
     },
     {
       "path": "api/runtime-provider/v1/provider-lock.schema.json",
@@ -26,7 +26,7 @@
     },
     {
       "path": "api/runtime-provider/v1/provider-module-v1.d.ts",
-      "sha256": "597dfd1cffe2f0307e6e4bd0aa524cf9c6de8e9d0a4dcd9124fb9a8d2940fcc1"
+      "sha256": "faf2159acf9e5db959af944d9cdfd8949d6d95710541eb0797e74346aef2c736"
     },
     {
       "path": "api/runtime-provider/v1/runtime-resource.schema.json",

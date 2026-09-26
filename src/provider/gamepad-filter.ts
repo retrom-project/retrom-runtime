@@ -1,6 +1,15 @@
 import {inputObserver} from "./input-observations.js";
 import type {RuntimeInputFilterPolicyV1} from "./module-api.js";
 
+const gamepadSources = new WeakMap<Navigator, () => (Gamepad | null)[]>();
+
+/** Cursor polling must not consume single-tap pulses from the stateful host chord filter. */
+export function captureGamepadSource(runtimeWindow: Window) {
+  const navigator = runtimeWindow.navigator;
+  const getGamepads = navigator.getGamepads;
+  return gamepadSources.get(navigator) ?? (() => Array.from(getGamepads?.call(navigator) ?? []));
+}
+
 export function validInputFilterPolicy(value: RuntimeInputFilterPolicyV1 | null) {
   return value === null || typeof value.suppressInput === "boolean" &&
     (value.activeGamepadIndex === null || Number.isSafeInteger(value.activeGamepadIndex) &&
@@ -113,25 +122,26 @@ class ChordDetector {
 
 export class RuntimeGamepadFilter {
   private readonly detector = new ChordDetector();
-  private policy: RuntimeInputFilterPolicyV1;
+  private policy: RuntimeInputFilterPolicyV1 | null;
 
-  constructor(policy: RuntimeInputFilterPolicyV1) {this.policy = {...policy};}
+  constructor(policy: RuntimeInputFilterPolicyV1 | null) {this.policy = policy ? {...policy} : null;}
 
-  setPolicy(policy: RuntimeInputFilterPolicyV1) {
-    if (policy.activeGamepadIndex !== this.policy.activeGamepadIndex ||
-      policy.suppressInput !== this.policy.suppressInput) {this.detector.reset();}
-    this.policy = {...policy};
+  setPolicy(policy: RuntimeInputFilterPolicyV1 | null) {
+    if (policy?.activeGamepadIndex !== this.policy?.activeGamepadIndex ||
+      policy?.suppressInput !== this.policy?.suppressInput) {this.detector.reset();}
+    this.policy = policy ? {...policy} : null;
   }
 
   filter(gamepads: readonly (GamepadSnapshot | null)[], nowMs: number): (Gamepad | null)[] {
+    if (!this.policy) {return [...gamepads] as (Gamepad | null)[];}
     if (this.policy.suppressInput) {return gamepads.map((gamepad) => gamepad ? zeroGamepad(gamepad) : null);}
     const active = this.policy.activeGamepadIndex === null ? null :
-      gamepads.find((gamepad) => gamepad?.index === this.policy.activeGamepadIndex) ?? null;
+      gamepads.find((gamepad) => gamepad?.index === this.policy?.activeGamepadIndex) ?? null;
     if (!active) {this.detector.reset(); return [...gamepads] as (Gamepad | null)[];}
     const output = this.detector.update(pressed(active.buttons[8]), pressed(active.buttons[9]), nowMs);
     if (output.openMenu) {return gamepads.map((gamepad) => gamepad ? zeroGamepad(gamepad) : null);}
     return gamepads.map((gamepad) => {
-      if (!gamepad || gamepad.index !== this.policy.activeGamepadIndex) {return gamepad as Gamepad | null;}
+      if (!gamepad || gamepad.index !== this.policy?.activeGamepadIndex) {return gamepad as Gamepad | null;}
       const buttons = [...gamepad.buttons];
       buttons[8] = filteredButton(buttons[8], output.select);
       buttons[9] = filteredButton(buttons[9], output.start);
@@ -146,6 +156,8 @@ export function installRuntimeGamepadFilter(runtimeWindow: Window, filter: Runti
   if (ownDescriptor && !ownDescriptor.configurable) {throw new Error("PLAYER_INPUT_FILTER_UNAVAILABLE");}
   const nativeGetGamepads = gamepadNavigator.getGamepads;
   if (typeof nativeGetGamepads !== "function") {throw new Error("PLAYER_INPUT_FILTER_UNAVAILABLE");}
+  const previousSource = gamepadSources.get(gamepadNavigator);
+  const source = previousSource ?? (() => Array.from(nativeGetGamepads.call(gamepadNavigator)));
   const filteredGetGamepads = () => {
     const raw = Array.from(nativeGetGamepads.call(gamepadNavigator));
     const filtered = filter.filter(raw, runtimeWindow.performance.now());
@@ -170,10 +182,13 @@ export function installRuntimeGamepadFilter(runtimeWindow: Window, filter: Runti
     configurable: true, enumerable: ownDescriptor?.enumerable ?? false,
     value: filteredGetGamepads, writable: true,
   });
+  gamepadSources.set(gamepadNavigator, source);
   return () => {
     if (gamepadNavigator.getGamepads !== filteredGetGamepads) {return;}
     if (ownDescriptor) {Object.defineProperty(gamepadNavigator, "getGamepads", ownDescriptor);}
     else {Reflect.deleteProperty(gamepadNavigator, "getGamepads");}
+    if (previousSource) {gamepadSources.set(gamepadNavigator, previousSource);}
+    else {gamepadSources.delete(gamepadNavigator);}
   };
 }
 

@@ -3,6 +3,7 @@ import type {MountedRuntimeAdapter, RuntimeProgressReporter} from "../internal-a
 import {fetchSwf, type SwfSource} from "./fetch.js";
 import {boundedLoad, loadRuffle, waitReady, type RuffleLoader} from "./player.js";
 import {RuffleStorage} from "./storage.js";
+import {installGamepadCursor, type GamepadCursor} from "../provider/gamepad-cursor.js";
 import {installRuffleGamepad} from "./input.js";
 
 export type RuffleParameters = SwfSource & {runtimeBaseUrl: string};
@@ -19,11 +20,13 @@ export async function mountRuffle(config: RuffleParameters, target: HTMLElement,
   const player = await loader(base, frameWindow, signal);
   const api = player.ruffle();
   let exited = false;
+  let gamepadCursor: GamepadCursor | undefined;
   let input: ReturnType<typeof installRuffleGamepad> | undefined;
   const exit = async () => {
     if (exited) {return;}
     exited = true;
     input?.dispose();
+    gamepadCursor?.dispose();
     try {api.destroy();} finally {player.remove();}
   };
   try {
@@ -50,12 +53,13 @@ export async function mountRuffle(config: RuffleParameters, target: HTMLElement,
     const canvas = api.getCanvas();
     if (!canvas) {throw new Error("RUFFLE_SURFACE_UNAVAILABLE");}
     canvas.tabIndex = 0; canvas.focus();
+    gamepadCursor = installGamepadCursor(frameWindow, canvas, {defaultEnabled: false, protocol: "pointer"});
     input = installRuffleGamepad(frameWindow, canvas);
   } catch (error) {await exit(); throw error;}
 
   const active = () => {if (exited) {throw new Error("RUFFLE_RUNTIME_STOPPED");}};
   return {
-    canvasLayout: "CORE",
+    canvasLayout: "CORE", gamepadCursor,
     checkpoint: async () => {active(); return storage.checkpoint();},
     acknowledgeCheckpoint: async (checkpoint) => {active(); await storage.acknowledge(checkpoint);},
     getCheckpointAvailability: () => exited ? {available: false, blocker: "NOT_READY"} : storage.availability(),

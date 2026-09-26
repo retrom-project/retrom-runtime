@@ -6,7 +6,7 @@ import {abi, contractSha256} from "../content-io/identity.js";
 import { decodeKirikiriCheckpoint, encodeKirikiriCheckpoint, type KirikiriCheckpointEntry } from "./checkpoint.js";
 import type { MountedRuntimeAdapter, RuntimeExitReporter } from "../internal-adapter.js";
 import type {KirikiriParameters} from "./parameters.js";
-import { installKirikiriStandardGamepad } from "./gamepad-input.js";
+import {installGamepadCursor, type GamepadCursor} from "../provider/gamepad-cursor.js";
 
 type ProjectFile = { path: string; url: string; sizeBytes: number };
 type ProjectIndex = { schemaVersion: 1; files: ProjectFile[] };
@@ -93,7 +93,8 @@ export async function mountKirikiri2(
   const focusCanvas = () => {canvas.focus({ preventScroll: true });};
   canvas.addEventListener("pointerdown", focusCanvas, true);
   const startupKeyboardCleanup = blockStartupKeyboardInput(frameWindow);
-  let gamepadCleanup: () => void = () => undefined;
+  let gamepadCursor: GamepadCursor | undefined;
+  const gamepadCleanup = () => gamepadCursor?.dispose();
 
   const previousModule = host.Module;
   const previousVlfs = host.VLFS;
@@ -170,7 +171,7 @@ export async function mountKirikiri2(
       await restoreBookmark(module, config.checkpointSlot);
     }
     startupKeyboardCleanup();
-    gamepadCleanup = installKirikiriStandardGamepad(frameWindow, surface, canvas);
+    gamepadCursor = installGamepadCursor(frameWindow, canvas, {defaultEnabled: true});
     focusCanvas();
   } catch (error) {
     startupKeyboardCleanup();
@@ -231,6 +232,7 @@ export async function mountKirikiri2(
         gamepadCleanup, runtimeTerminationCleanup, scripts,
       );
     },
+    gamepadCursor,
     getCanvas: () => canvas,
     getCheckpointAvailability: () => activeModule._krkr2_host_bookmark_is_ready() === 1
       ? { available: true, blocker: null }

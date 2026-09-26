@@ -142,7 +142,7 @@ describe("KiriKiri2 KAG runtime", () => {
     buttons[0] = gamepadButton(true);
     Object.defineProperty(window.navigator, "getGamepads", {
       configurable: true,
-      value: vi.fn(() => [{ axes: [0, 0], buttons, connected: true, mapping: "standard" }]),
+      value: vi.fn(() => [{ index: 0, axes: [0, 0], buttons, connected: true, mapping: "standard" }]),
     });
     const vlfs = fakeVlfs();
     mockDownloads();
@@ -190,7 +190,7 @@ describe("KiriKiri2 KAG runtime", () => {
     const buttons = Array.from({ length: 16 }, () => gamepadButton());
     Object.defineProperty(window.navigator, "getGamepads", {
       configurable: true,
-      value: vi.fn(() => [{ axes, buttons, connected: true, mapping: "standard" }]),
+      value: vi.fn(() => [{ index: 0, axes, buttons, connected: true, mapping: "standard" }]),
     });
     const vlfs = fakeVlfs();
     mockDownloads();
@@ -233,7 +233,7 @@ describe("KiriKiri2 KAG runtime", () => {
     expect(inputs.some((value) => value.startsWith("mousedown:2:"))).toBe(true);
     expect(inputs.some((value) => value.startsWith("mouseup:2:"))).toBe(true);
     expect(inputs.some((value) => value.startsWith("contextmenu:2:"))).toBe(true);
-    const cursor = document.querySelector("#game")!.querySelector<HTMLElement>("[data-kirikiri-gamepad-cursor]");
+    const cursor = document.querySelector<HTMLElement>("[data-gamepad-cursor]");
     expect(cursor?.hidden).toBe(false);
     expect(cursor?.style.transform).toContain("translate");
     await runtime.exit();

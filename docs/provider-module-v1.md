@@ -122,10 +122,22 @@ set. This also supports KAG games that override the default `data1999.ksd` filen
 bookmark API. If the host paused the runtime before asking for a checkpoint, the adapter resumes it before waiting
 for the next stable KAG save point and restores the paused state after capture.
 
-The KiriKiri Web core does not expose its native pad-key conversion in Emscripten builds. The adapter therefore
-provides a visible virtual pointer: a standard gamepad's D-pad and left stick move it, A performs a left click and
-B performs a right-click cancel. Runtime cleanup releases every held button. The same runtime path is used by host
-review previews and product players.
+The KiriKiri Web core does not expose its native pad-key conversion in Emscripten builds. It uses the shared
+Provider gamepad cursor (enabled by default); Ruffle uses the same implementation with PointerEvents (disabled
+by default). Adapters expose `gamepadCursor` with an actual input surface and event protocol, without private
+polling or drawing implementations. After mount, optional `PlayerRuntimeV1.getGamepadCursor()` returns a public
+controller (`getState(): {enabled, defaultEnabled}`, `setEnabled(boolean)`), or null for unsupported adapters.
+This instance capability does not change the manifest or checkpoint contract.
+
+D-pad/left stick move the pointer inside the game surface, A/B hold and release left/right mouse buttons, and LB
+reduces speed to 20%. These controls are consumed before native gamepad/keyboard mappings; other controls,
+other gamepads and host menu chords remain available. Host input policy selects the claimed Gamepad.index.
+Closing, pausing, checkpointing, losing focus, disconnecting or exiting releases held mouse buttons without clicks.
+Resuming waits for neutral input. Disabling gates held controls before returning them to native mappings. Drag
+movement carries the full buttons mask and release after movement exceeding 4 CSS pixels does not emit click.
+Cursor polling reads the raw gamepad source without advancing the stateful host chord detector.
+The shared gamepad filter remains installed until exit so cursor and host filtering have one stable lifecycle.
+Hosts own per-game preferences; adapters never persist user settings. Relative mouse/pointer lock is not supported.
 
 ONScripterYuri receives its native standard-gamepad D-pad and face-button events through SDL. The adapter adds
 only the missing standard left-stick direction mapping, with dead-zone hysteresis and complete key release on

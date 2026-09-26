@@ -6,7 +6,10 @@ import type {
 } from "./contract.js";
 import type {RuntimeVideoModeV1, RuntimeInputDiagnosticsV1} from "./provider/module-api.js";
 
+import type {GamepadCursor} from "./provider/gamepad-cursor.js";
+
 export type MountedRuntimeAdapter = {
+  gamepadCursor?: GamepadCursor;
   /** CORE owns responsive canvas sizing; otherwise the Provider fits a fixed-resolution canvas. */
   canvasLayout?: "CORE";
   checkpoint(request?: CheckpointRequest): Promise<RuntimeCheckpoint>;

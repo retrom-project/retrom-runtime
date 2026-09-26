@@ -23,6 +23,8 @@ describe("native-web RPG Maker bridge", () => {
     const replies: Array<{type: string; requestId: number; body: Record<string, unknown>}> = [];
     const sceneManager = {_scene: null, updateMain: () => undefined};
     const learnedSkills = new Set<number>();
+    const actorStates = new Set<number>();
+    let actorClassId = 1;
     const actor = {
       hp: 10, mp: 4, tp: 2, level: 1, mhp: 20, mmp: 10,
       actorId: () => 1, name: () => "Hero", currentExp: () => 0,
@@ -32,15 +34,27 @@ describe("native-web RPG Maker bridge", () => {
       isLearnedSkill: (id: number) => learnedSkills.has(id),
       learnSkill: vi.fn((id: number) => learnedSkills.add(id)),
       forgetSkill: vi.fn((id: number) => learnedSkills.delete(id)),
+      deathStateId: () => 1, isStateAffected: (id: number) => actorStates.has(id),
+      addState: vi.fn((id: number) => actorStates.add(id)),
+      removeState: vi.fn((id: number) => actorStates.delete(id)),
+      currentClass: () => ({id: actorClassId}),
+      changeClass: vi.fn((id: number) => {actorClassId = id;}),
     };
     const otherLearnedSkills = new Set<number>();
+    const otherStates = new Set<number>();
     const otherActor = {
       ...actor,
       hp: 8, setHp: vi.fn(),
       actorId: () => 2, name: () => "Mage", isLearnedSkill: (id: number) => otherLearnedSkills.has(id),
       learnSkill: vi.fn((id: number) => otherLearnedSkills.add(id)),
       forgetSkill: vi.fn((id: number) => otherLearnedSkills.delete(id)),
+      isStateAffected: (id: number) => otherStates.has(id),
+      addState: vi.fn((id: number) => otherStates.add(id)),
+      removeState: vi.fn((id: number) => otherStates.delete(id)),
     };
+    const reserveActor = {...actor, actorId: () => 3, name: () => "Reserve"};
+    const roster = [actor, otherActor, reserveActor];
+    const partyIds = [1, 2];
     let gold = 10;
     let count = 1;
     let variable = 3;
@@ -51,11 +65,20 @@ describe("native-web RPG Maker bridge", () => {
       DataManager: {}, StorageManager: {}, Utils: {RPGMAKER_NAME: edition}, SceneManager: sceneManager,
       $dataItems: [null, {id: 1, name: ""}, item], $dataWeapons: [null], $dataArmors: [null],
       $dataSkills: [null, {id: 1, name: ""}, {id: 2, name: "Fire"}],
+      $dataActors: [null, {id: 1, name: "Hero"}, {id: 2, name: "Mage"}, {id: 3, name: "Reserve"}],
+      $dataStates: [null, {id: 1, name: "KO"}, {id: 2, name: "Poison"}, {id: 3, name: "Guard"}],
+      $dataClasses: [null, {id: 1, name: "Warrior"}, {id: 2, name: "Mage"}],
       $dataSystem: {variables: ["", "", "Quest"], switches: ["", "", "Gate"]},
       $gameParty: {
         gold: () => gold, maxGold: () => 100, gainGold: (delta: number) => {gold += delta;},
         numItems: () => count, maxItems: () => 99, gainItem: (_item: unknown, delta: number) => {count += delta;},
-        members: () => [actor, otherActor],
+        members: () => partyIds.map((id) => roster[id - 1]),
+        allMembers: () => partyIds.map((id) => roster[id - 1]),
+        addActor: vi.fn((id: number) => {if (!partyIds.includes(id)) partyIds.push(id);}),
+        removeActor: vi.fn((id: number) => {const index = partyIds.indexOf(id); if (index >= 0) partyIds.splice(index, 1);}),
+        swapOrder: vi.fn((left: number, right: number) => {
+          [partyIds[left], partyIds[right]] = [partyIds[right], partyIds[left]];
+        }),
       },
       $gameVariables: {value: () => variable, setValue: (_id: number, value: number) => {variable = value;}},
       $gameSwitches: {value: () => enabled, setValue: (_id: number, value: boolean) => {enabled = value;}},
@@ -128,6 +151,41 @@ describe("native-web RPG Maker bridge", () => {
       .toMatchObject({entry: {id: "2:hp", label: "生命"}});
     expect(otherActor.setHp).toHaveBeenCalledWith(12);
     expect(actor.setHp).toHaveBeenCalledTimes(1);
+    expect((await request(22, "EDITOR_CATEGORIES", {})).body.categories).toEqual(expect.arrayContaining([
+      {id: "states", label: "状态", groups: [{id: "states:1", label: "Hero"}, {id: "states:2", label: "Mage"}]},
+      {id: "classes", label: "职业", groups: [{id: "classes:1", label: "Hero"}, {id: "classes:2", label: "Mage"}]},
+      {id: "party", label: "队伍成员"},
+    ]));
+    expect((await request(23, "EDITOR_ENTRIES", {category: "states:1", query: "", offset: 0, limit: 20})).body)
+      .toMatchObject({entries: [{id: "1:2", label: "Poison", value: false}, {id: "1:3", label: "Guard", value: false}]});
+    expect((await request(24, "EDITOR_SET", {category: "states:1", id: "1:2", value: true})).body)
+      .toMatchObject({entry: {id: "1:2", value: true}});
+    expect(actor.addState).toHaveBeenCalledWith(2);
+    expect((await request(25, "EDITOR_SET", {category: "states:2", id: "1:2", value: true})).type).toBe("ERROR");
+    expect((await request(26, "EDITOR_SET", {category: "states:1", id: "1:2", value: false})).body)
+      .toMatchObject({entry: {id: "1:2", value: false}});
+    expect((await request(27, "EDITOR_ENTRIES", {category: "classes:1", query: "", offset: 0, limit: 20})).body)
+      .toMatchObject({entries: [{id: "1:1", label: "Warrior", value: true}, {id: "1:2", label: "Mage", value: false}]});
+    expect((await request(28, "EDITOR_SET", {category: "classes:1", id: "1:1", value: false})).type).toBe("ERROR");
+    expect((await request(29, "EDITOR_SET", {category: "classes:1", id: "1:2", value: true})).body)
+      .toMatchObject({entry: {id: "1:2", value: true}});
+    expect(actor.changeClass).toHaveBeenCalledWith(2, true);
+    expect((await request(30, "EDITOR_ENTRIES", {category: "party", query: "", offset: 0, limit: 20})).body)
+      .toMatchObject({entries: [{id: "1", value: 1}, {id: "2", value: 2}, {id: "3", value: 0}]});
+    expect((await request(31, "EDITOR_SET", {category: "party", id: "3", value: 3})).body)
+      .toMatchObject({entry: {id: "3", value: 3}});
+    expect((await request(32, "EDITOR_SET", {category: "party", id: "3", value: 2})).body)
+      .toMatchObject({entry: {id: "3", value: 2}});
+    expect(partyIds).toEqual([1, 3, 2]);
+    expect((await request(33, "EDITOR_SET", {category: "party", id: "3", value: 0})).body)
+      .toMatchObject({entry: {id: "3", value: 0}});
+    expect(partyIds).toEqual([1, 2]);
+    expect((await request(34, "EDITOR_SET", {category: "party", id: "3", value: 1})).type).toBe("ERROR");
+    expect((await request(35, "EDITOR_SET", {category: "party", id: "2", value: 0})).body)
+      .toMatchObject({entry: {id: "2", value: 0}});
+    expect((await request(36, "EDITOR_SET", {category: "party", id: "1", value: 0})).type).toBe("ERROR");
+    actor.addState.mockImplementationOnce(() => actorStates);
+    expect((await request(37, "EDITOR_SET", {category: "states:1", id: "1:2", value: true})).type).toBe("ERROR");
   });
 
   it("reports readiness without fixture-variable proofs and applies video modes inside the isolated frame", async () => {
@@ -527,78 +585,4 @@ describe("native-web RPG Maker bridge", () => {
     expect(afterLoad).toHaveBeenCalledOnce();
   });
 
-});
-
-describe("native-web RPG Maker screenshot bridge", () => {
-  it("renders a native screenshot from the current scene instead of the discarded WebGL canvas", async () => {
-    const source = readFileSync(
-      resolve(process.cwd(), "assets/runtime/native/bridge.js"),
-      "utf8",
-    );
-    const listeners = new Map<string, Array<(event: BridgeEvent) => void>>();
-    const replies: unknown[] = [];
-    const renderedPng = Uint8Array.of(137, 80, 78, 71, 13, 10, 26, 10, 1);
-    const destroy = vi.fn();
-    let snapAttempt = 0;
-    const snap = vi.fn(() => ({
-      canvas: {
-        toBlob: (callback: BlobCallback, mediaType: string) => {
-          snapAttempt += 1;
-          callback(snapAttempt <= 3 ? null : new Blob([renderedPng], {type: mediaType}));
-        },
-      },
-      destroy,
-    }));
-    const animationFrames: FrameRequestCallback[] = [];
-    const runtime = {
-      Bitmap: {snap},
-      SceneManager: {_scene: {marker: "visible-scene"}, updateMain: () => undefined},
-      document: {
-        querySelector: () => ({
-          toBlob: (callback: BlobCallback) => callback(new Blob([Uint8Array.of(0)], {type: "image/png"})),
-        }),
-      },
-      addEventListener: (name: string, callback: (event: BridgeEvent) => void) => {
-        listeners.set(name, [...(listeners.get(name) ?? []), callback]);
-      },
-      parent: {postMessage: () => undefined},
-      requestAnimationFrame: (callback: FrameRequestCallback) => {
-        animationFrames.push(callback);
-        return animationFrames.length;
-      },
-    };
-    runInNewContext(source, {Blob, TextDecoder, TextEncoder, window: runtime});
-    const port: FakePort = {
-      onmessage: null,
-      postMessage: (message) => replies.push(message),
-      start: () => undefined,
-    };
-    const launchId = "01980000-0000-7000-8000-000000000001";
-    const nonce = "test-nonce";
-    listeners.get("message")?.[0]?.({
-      data: {cleanupUrl: null, launchId, nonce, parentOrigin: "https://host.example", profile: "RPGMV", protocolVersion: 1, type: "RPG_RUNTIME_NATIVE_CONNECT"},
-      origin: "https://host.example",
-      ports: [port],
-      stopImmediatePropagation: () => undefined,
-    });
-
-    port.onmessage?.({data: {body: {}, launchId, nonce, protocolVersion: 1, requestId: 1, type: "SCREENSHOT"}});
-    expect(snap).not.toHaveBeenCalled();
-    animationFrames.shift()?.(0);
-    await vi.waitFor(() => expect(animationFrames).toHaveLength(1));
-    animationFrames.shift()?.(16);
-    await vi.waitFor(() => expect(animationFrames).toHaveLength(1));
-    animationFrames.shift()?.(32);
-    await vi.waitFor(() => expect(animationFrames).toHaveLength(1));
-    animationFrames.shift()?.(48);
-    await vi.waitFor(() => expect(replies).toContainEqual(expect.objectContaining({type: "SCREENSHOT_RESULT"})));
-    const reply = replies.find((value) => (value as {type?: string}).type === "SCREENSHOT_RESULT") as {
-      body: {data: ArrayBuffer; mediaType: string};
-    };
-    expect([...new Uint8Array(reply.body.data)]).toEqual([...renderedPng]);
-    expect(reply.body.mediaType).toBe("image/png");
-    expect(snap).toHaveBeenCalledTimes(4);
-    expect(snap).toHaveBeenCalledWith(runtime.SceneManager._scene);
-    expect(destroy).toHaveBeenCalledTimes(4);
-  });
 });

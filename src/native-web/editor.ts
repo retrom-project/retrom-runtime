@@ -9,7 +9,7 @@ export function createNativeGameEditor(channel: EditorChannel): RuntimeGameEdito
     async categories() {
       const reply = await channel.request("EDITOR_CATEGORIES", {});
       if (reply.type !== "EDITOR_CATEGORIES_RESULT" || !Array.isArray(reply.body.categories) ||
-        reply.body.categories.length > 8) {throw invalid();}
+        reply.body.categories.length > 16) {throw invalid();}
       return reply.body.categories.map((raw) => {
         if (!record(raw) || typeof raw.id !== "string" || !token.test(raw.id) || !label(raw.label, 40)) {throw invalid();}
         if (raw.groups === undefined) {return {id: raw.id, label: raw.label};}

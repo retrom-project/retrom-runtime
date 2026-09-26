@@ -10,6 +10,8 @@
     {id: "weapons", label: "武器"}, {id: "armors", label: "护甲"},
     {id: "variables", label: "变量"}, {id: "switches", label: "开关"},
     {id: "actors", label: "角色"}, {id: "skills", label: "技能"},
+    {id: "states", label: "状态"}, {id: "classes", label: "职业"},
+    {id: "party", label: "队伍成员"},
   ]);
   const ACTOR_FIELDS = Object.freeze([
     ["hp", "生命"], ["mp", "魔法"], ["tp", "TP"], ["level", "等级"], ["exp", "经验"],
@@ -458,14 +460,85 @@
     });
   }
 
+  function editorStateRows(selectedActorId = null) {
+    const party = global.$gameParty;
+    const source = global.$dataStates;
+    if (typeof party.members !== "function" || !Array.isArray(source)) {
+      throw new Error("RPG_GAME_EDITOR_UNAVAILABLE");
+    }
+    return party.members().flatMap((actor) => {
+      if (!actor || typeof actor.actorId !== "function" ||
+        typeof actor.isStateAffected !== "function") return [];
+      const actorId = actor.actorId();
+      if (!Number.isSafeInteger(actorId) || actorId < 1 ||
+        selectedActorId !== null && actorId !== selectedActorId) return [];
+      const deathStateId = typeof actor.deathStateId === "function" ? actor.deathStateId() : 1;
+      const actorName = typeof actor.name === "function" ? actor.name() : `角色 ${actorId}`;
+      return source.slice(1).filter((state) => state && Number.isSafeInteger(state.id) &&
+        state.id > 0 && state.id !== deathStateId).map((state) => {
+        const name = String(state.name || "").trim() || `状态 ${state.id}`;
+        return editorEntry(`${actorId}:${state.id}`,
+          selectedActorId === null ? `${actorName} · ${name}` : name,
+          Boolean(actor.isStateAffected(state.id)));
+      });
+    });
+  }
+
+  function editorClassRows(selectedActorId = null) {
+    const party = global.$gameParty;
+    const source = global.$dataClasses;
+    if (typeof party.members !== "function" || !Array.isArray(source)) {
+      throw new Error("RPG_GAME_EDITOR_UNAVAILABLE");
+    }
+    return party.members().flatMap((actor) => {
+      if (!actor || typeof actor.actorId !== "function" ||
+        typeof actor.currentClass !== "function") return [];
+      const actorId = actor.actorId();
+      if (!Number.isSafeInteger(actorId) || actorId < 1 ||
+        selectedActorId !== null && actorId !== selectedActorId) return [];
+      const actorName = typeof actor.name === "function" ? actor.name() : `角色 ${actorId}`;
+      const currentId = actor.currentClass()?.id;
+      return source.slice(1).filter((gameClass) => gameClass &&
+        Number.isSafeInteger(gameClass.id) && gameClass.id > 0).map((gameClass) => {
+        const name = String(gameClass.name || "").trim() || `职业 ${gameClass.id}`;
+        return editorEntry(`${actorId}:${gameClass.id}`,
+          selectedActorId === null ? `${actorName} · ${name}` : name, gameClass.id === currentId);
+      });
+    });
+  }
+
+  function editorPartyMembers() {
+    const party = global.$gameParty;
+    const members = typeof party.allMembers === "function" ? party.allMembers() : party.members();
+    if (!Array.isArray(members)) throw new Error("RPG_GAME_EDITOR_UNAVAILABLE");
+    return members;
+  }
+
+  function editorPartyRows() {
+    const source = global.$dataActors;
+    if (!Array.isArray(source)) throw new Error("RPG_GAME_EDITOR_UNAVAILABLE");
+    const members = editorPartyMembers();
+    const positions = new Map(members.map((actor, index) => [actor.actorId(), index + 1]));
+    return source.slice(1).filter((actor) => actor && Number.isSafeInteger(actor.id) && actor.id > 0)
+      .map((actor) => {
+        const position = positions.get(actor.id) || 0;
+        const member = members.find((candidate) => candidate.actorId() === actor.id);
+        const name = String(member && typeof member.name === "function" ? member.name() : actor.name || "").trim();
+        return editorEntry(String(actor.id), name || `角色 ${actor.id}`, position, 0,
+          position ? members.length : members.length + 1);
+      }).sort((left, right) => Number(Boolean(right.value)) - Number(Boolean(left.value)) ||
+        Number(left.value || 0) - Number(right.value || 0));
+  }
+
   function editorRows(category) {
     if (!editorReady()) throw new Error("RPG_GAME_EDITOR_NOT_READY");
-    const group = /^(actors|skills):([1-9]\d*)$/u.exec(category);
+    const group = /^(actors|skills|states|classes):([1-9]\d*)$/u.exec(category);
     const groupCategory = group ? group[1] : null;
     const selectedActorId = group ? Number(group[2]) : null;
     if (!EDITOR_CATEGORIES.some((entry) => entry.id === category) &&
       (!group || !Number.isSafeInteger(selectedActorId) ||
-        !editorPartyGroups(groupCategory, groupCategory === "skills" ? "isLearnedSkill" : null)
+        !editorPartyGroups(groupCategory, {skills: "isLearnedSkill", states: "isStateAffected",
+          classes: "currentClass"}[groupCategory] || null)
           .some((entry) => entry.id === category))) {
       throw new Error("RPG_GAME_EDITOR_INVALID");
     }
@@ -478,6 +551,9 @@
     }
     if (category === "skills" || groupCategory === "skills") return editorSkillRows(selectedActorId);
     if (category === "actors" || groupCategory === "actors") return editorActorRows(selectedActorId);
+    if (category === "states" || groupCategory === "states") return editorStateRows(selectedActorId);
+    if (category === "classes" || groupCategory === "classes") return editorClassRows(selectedActorId);
+    if (category === "party") return editorPartyRows();
     if (category === "variables" || category === "switches") {
       const names = category === "variables" ? global.$dataSystem.variables : global.$dataSystem.switches;
       const owner = category === "variables" ? global.$gameVariables : global.$gameSwitches;
@@ -544,6 +620,30 @@
         typeof actor.forgetSkill !== "function") throw new Error("RPG_GAME_EDITOR_UNAVAILABLE");
       if (value) actor.learnSkill(skillId);
       else actor.forgetSkill(skillId);
+    } else if (body.category === "states" || body.category.startsWith("states:")) {
+      const [actorId, stateId] = body.id.split(":").map(Number);
+      const actor = global.$gameParty.members().find((candidate) => candidate.actorId() === actorId);
+      if (!actor || typeof actor.addState !== "function" ||
+        typeof actor.removeState !== "function") throw new Error("RPG_GAME_EDITOR_UNAVAILABLE");
+      if (value) actor.addState(stateId);
+      else actor.removeState(stateId);
+    } else if (body.category === "classes" || body.category.startsWith("classes:")) {
+      if (value !== true) throw new Error("RPG_GAME_EDITOR_INVALID");
+      const [actorId, classId] = body.id.split(":").map(Number);
+      const actor = global.$gameParty.members().find((candidate) => candidate.actorId() === actorId);
+      if (!actor || typeof actor.changeClass !== "function") throw new Error("RPG_GAME_EDITOR_UNAVAILABLE");
+      actor.changeClass(classId, true);
+    } else if (body.category === "party") {
+      const actorId = Number(body.id);
+      const members = editorPartyMembers();
+      const position = members.findIndex((actor) => actor.actorId() === actorId);
+      if (position < 0 && value === members.length + 1 &&
+        typeof global.$gameParty.addActor === "function") global.$gameParty.addActor(actorId);
+      else if (position >= 0 && value === 0 && members.length > 1 &&
+        typeof global.$gameParty.removeActor === "function") global.$gameParty.removeActor(actorId);
+      else if (position >= 0 && value >= 1 && Math.abs(value - position - 1) === 1 &&
+        typeof global.$gameParty.swapOrder === "function") global.$gameParty.swapOrder(position, value - 1);
+      else throw new Error("RPG_GAME_EDITOR_INVALID");
     } else {
       const [actorId, field] = body.id.split(":");
       const actor = global.$gameParty.members().find((candidate) => candidate.actorId() === Number(actorId));
@@ -558,7 +658,10 @@
       else throw new Error("RPG_GAME_EDITOR_INVALID");
     }
     const updated = editorRows(body.category).find((row) => row.id === body.id);
-    if (!updated) throw new Error("RPG_GAME_EDITOR_UNAVAILABLE");
+    if (!updated || (["states", "classes", "party"].some((category) =>
+      body.category === category || body.category.startsWith(`${category}:`)) && updated.value !== value)) {
+      throw new Error("RPG_GAME_EDITOR_UNAVAILABLE");
+    }
     return {entry: updated};
   }
 
@@ -649,9 +752,11 @@
     case "SET_VIDEO_MODE": setVideoMode(message.body.mode); return { type: "SET_VIDEO_MODE_RESULT", body: {} };
     case "SET_VOLUME": setVolume(message.body.value); return { type: "SET_VOLUME_RESULT", body: {} };
     case "EDITOR_CATEGORIES": return {type: "EDITOR_CATEGORIES_RESULT",
-      body: {categories: EDITOR_CATEGORIES.map((category) => category.id === "skills" || category.id === "actors"
+      body: {categories: EDITOR_CATEGORIES.map((category) =>
+        ["actors", "skills", "states", "classes"].includes(category.id)
         ? {...category, groups: editorPartyGroups(category.id,
-          category.id === "skills" ? "isLearnedSkill" : null)} : {...category})}};
+          {skills: "isLearnedSkill", states: "isStateAffected", classes: "currentClass"}[category.id] || null)}
+        : {...category})}};
     case "EDITOR_ENTRIES": return {type: "EDITOR_ENTRIES_RESULT", body: editorList(message.body)};
     case "EDITOR_SET": return {type: "EDITOR_SET_RESULT", body: editorSet(message.body)};
     case "CLEANUP":

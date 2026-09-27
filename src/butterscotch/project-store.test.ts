@@ -9,10 +9,14 @@ it("maps immutable project entries into a public workspace generation and preser
  vi.stubGlobal("fetch",vi.fn(async()=>Response.json({schemaVersion:1,files:[{path:"Data.win",sizeBytes:4,url:"/data.win"}]})));
  const getDirectoryHandle=vi.fn(async()=>({getDirectoryHandle:vi.fn()}));
  const realm={document:{baseURI:location.href},navigator:{storage:{getDirectory:async()=>({getDirectoryHandle})}}} as unknown as Window;
- const content=managedAdapterFixture("butterscotch-gamemaker", config),result=await prepareButterscotchProject(config,realm,vi.fn(),content);
+ const content=managedAdapterFixture("butterscotch-gamemaker", config);
+ const policy={...content.contentSession.inputPolicy("game"),contentLengthPolicy:"REQUIRED_EXACT" as const};
+ vi.spyOn(content.contentSession,"inputPolicy").mockReturnValue(policy);
+ const result=await prepareButterscotchProject(config,realm,vi.fn(),content);
  expect(result.gamePath).toBe("/butterscotch/projects/project/generation/data/Data.win");expect(result.savePath).toBe("/butterscotch/saves/launch-one");
  expect(vi.mocked(prepareWorkspaceProject).mock.calls.at(-1)?.[2]).toEqual([{path:"Data.win",source:{
    identity:{kind:"INDEX_ENTRY",projectDigest:"b".repeat(64),logicalPath:"Data.win"},url:"https://content.example/data.win",sizeBytes:4,
-   purpose:"GAME",transport:"WHOLE_ALLOWED",etagPolicy:"PIN_STRONG",contentLengthPolicy:"EXACT_IF_PRESENT",}}]);
+   purpose:"GAME",transport:"WHOLE_ALLOWED",etagPolicy:"PIN_STRONG",contentLengthPolicy:"REQUIRED_EXACT",}}]);
+ expect(vi.mocked(prepareWorkspaceProject).mock.calls.at(-1)?.[4]).toBe(policy);
  expect(getDirectoryHandle).toHaveBeenCalledWith("saves",{create:true});result.release();
 });

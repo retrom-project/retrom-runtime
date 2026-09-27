@@ -87,21 +87,21 @@ export async function prepareDaphneProject(resource: ProjectResource, session: A
   const eagerTotal = files.filter(file => file !== video).reduce((sum, file) => sum + file.sizeBytes, 0);
   if (eagerTotal > 128 * 1024 * 1024) {throw new Error("DAPHNE_PROJECT_INVALID");}
   let ready = 0;
-  const source = (file: ProjectFile, range: boolean) => {
+  const source = (file: ProjectFile, policy: ReturnType<AdapterContentSession["inputPolicy"]>) => {
     const url = new URL(file.url, indexUrl);
     if (url.origin !== indexUrl.origin || !url.pathname.startsWith(indexUrl.pathname.slice(0, -"index.json".length))) {
       throw new Error("DAPHNE_PROJECT_INVALID");
     }
     return {identity: {kind: "INDEX_ENTRY" as const, projectDigest: resource.contentDigest, logicalPath: file.path},
       url: url.href, sizeBytes: file.sizeBytes, purpose: "GAME" as const,
-      transport: range ? "RANGE_REQUIRED" as const : "WHOLE_ALLOWED" as const,
-      etagPolicy: "PIN_STRONG" as const, contentLengthPolicy: "EXACT_IF_PRESENT" as const};
+      transport: policy.mode === "RANGE" ? "RANGE_REQUIRED" as const : "WHOLE_ALLOWED" as const,
+      etagPolicy: "PIN_STRONG" as const, contentLengthPolicy: policy.contentLengthPolicy};
   };
   for (const file of files) {
     if (file === video) {continue;}
     if (file.sizeBytes > contentLimits.firmwareFile) {throw new Error("DAPHNE_PROJECT_INVALID");}
     const policy = session.inputPolicy("game", "support");
-    const reader = await session.open(source(file, false), policy, signal);
+    const reader = await session.open(source(file, policy), policy, signal);
     try {
       const result = await session.materialize(reader.id, {kind: "BYTES", maxBytes: policy.maxFileBytes}, signal,
         progress => report(ready + progress.readyBytes, eagerTotal));
@@ -110,7 +110,7 @@ export async function prepareDaphneProject(resource: ProjectResource, session: A
     } finally {await reader.close();}
   }
   const policy = session.inputPolicy("game");
-  const reader = await session.open(source(video, true), policy, signal);
+  const reader = await session.open(source(video, policy), policy, signal);
   const videoRange = new NeoCDRange({sha256: resource.contentDigest, sizeBytes: video.sizeBytes}, reader, fail, video.path);
   try {await Promise.all([videoRange.read(0, 1), videoRange.read(video.sizeBytes - 1, 1)]);}
   catch (error) {await videoRange.dispose(); throw error;}

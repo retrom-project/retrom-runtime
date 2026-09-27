@@ -28,8 +28,14 @@ describe("Daphne Content I/O project", () => {
       }),
       materialize: vi.fn(async (_id: string, request: {maxBytes: number}) => ({kind: "BYTES", bytes: new Uint8Array(Math.min(4, request.maxBytes))})),
     } as unknown as ContentSessionClient;
+    const content = targetContentFixture(session, "daphne"), declaredPolicy = content.inputPolicy.bind(content);
+    vi.spyOn(content, "inputPolicy").mockImplementation((role, member) => ({...declaredPolicy(role, member), contentLengthPolicy: "REQUIRED_EXACT"}));
     const project = await prepareDaphneProject({indexUrl: "/runtime/content/project/digest/index.json", contentDigest: "a".repeat(64)},
-      targetContentFixture(session, "daphne"), new AbortController().signal, () => {});
+      content, new AbortController().signal, () => {});
+    for (const [source, policy] of vi.mocked(session.open).mock.calls) {
+      expect(source.contentLengthPolicy).toBe("REQUIRED_EXACT");
+      expect(source.contentLengthPolicy).toBe(policy.contentLengthPolicy);
+    }
     expect(opened).toEqual([
       {path: "interstellar.zip", transport: "WHOLE_ALLOWED"},
       {path: "interstellar.txt", transport: "WHOLE_ALLOWED"},

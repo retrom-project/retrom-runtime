@@ -18,7 +18,7 @@ test("[X-07] BROWSER/scummvm-channel-groups a large lazy file tree keeps pending
       const {createContentSession, targetContentFixture} = await import(clientPath) as typeof import("./target-session.js");
       const {ScummvmFiles} = await import(filesPath) as typeof import("../../src/scummvm/files.js");
       const session = await createContentSession(new Worker("/__test__/worker.mjs", {type: "module"}),
-        {storageOrigin: location.origin, allowedOrigins: [location.origin]}, {fetchPolicy: {smallFileThresholdBytes: 0, networkWindowBytes: 262144}});
+        {storageOrigin: location.origin, allowedOrigins: [location.origin]}, {fetchPolicy: {smallFileThresholdBytes: 0, networkWindowBytes: 524288}});
       const files = new ScummvmFiles({schemaVersion: 1, files: Array.from({length: 1025}, (_, index) => ({path: `file${index}.bin`, sizeBytes,
         url: `${location.origin}/objects/multi-tail/${Math.floor(index / 128)}`}))}, "a".repeat(64), targetContentFixture(session, "scummvm"));
       try {
@@ -30,7 +30,8 @@ test("[X-07] BROWSER/scummvm-channel-groups a large lazy file tree keeps pending
         for (let group = 1; group < 9; group++) {values.push((await files.read(`/game/file${group * 128}.bin`, 0, 1))[0]); channels.push(session.stats.channels);}
         const retained = !firstDone;
         await (globalThis as unknown as {releasePending: () => Promise<void>}).releasePending(); values.push(await first);
-        await files.read("/game/file128.bin", 262144, 1); channels.push(session.stats.channels);
+        // Read the first block of a new two-block window: force channel reuse without authorizing adjacent-window prefetch.
+        await files.read("/game/file128.bin", 524288, 1); channels.push(session.stats.channels);
         await files.close();
         return {before, names: names.length, sizesMatch: sizes.every(size => size === sizeBytes), retained, values, channels, files: session.stats.files};
       } finally {await files.close(); await session.close();}

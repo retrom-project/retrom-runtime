@@ -40,9 +40,13 @@ test("Sega CD mount uses bounded Range requests and reuses blocks in a new runti
       }
       return counts;
     }, {identity});
-    expect(result[0].length).toBeGreaterThan(0);
-    expect(result[0].length).toBeLessThanOrEqual(3);
-    expect(result[0].every(range => typeof range === "string" && /^bytes=\d+-\d+$/u.test(range))).toBe(true);
+    // Reading block 1 authorizes the immediately adjacent block-2 prefetch.
+    // Scheduling may finish that optional request before the Reader closes.
+    const required = ["bytes=0-262143", "bytes=262144-524287", `bytes=786432-${identity.sizeBytes - 1}`];
+    const allowed = new Set([...required, "bytes=524288-786431"]);
+    expect(result[0]).toEqual(expect.arrayContaining(required));
+    expect(new Set(result[0]).size).toBe(result[0].length);
+    expect(result[0].every(range => typeof range === "string" && allowed.has(range))).toBe(true);
     expect(result[1]).toEqual([]);
   } finally {await server.close();}
 });

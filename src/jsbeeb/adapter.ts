@@ -1,4 +1,3 @@
-import {eagerPolicy} from "../provider/content-policies.js";
 import {materializeFileBytes, type AdapterContentSession} from "../provider/content-inputs.js";
 import type {MountedRuntimeAdapter, RuntimeProgressReporter} from "../internal-adapter.js";
 
@@ -31,9 +30,9 @@ export async function mountJsbeeb(config: JsbeebParameters, target: HTMLElement,
   for (const file of config.bios) {
     const path = biosPaths.get(file.logicalName);
     if (!path || file.virtualPath !== path || bios[path]) {invalid();}
-    bios[path] = await materializeFileBytes(contentSession, file, eagerPolicy(1024 * 1024), "FIRMWARE", signal);
+    bios[path] = await materializeFileBytes(contentSession, file, contentSession.inputPolicy("external"), "FIRMWARE", signal);
   }
-  const game = await materializeFileBytes(contentSession, config.game, eagerPolicy(32 * 1024 * 1024), "GAME", signal,
+  const game = await materializeFileBytes(contentSession, config.game, contentSession.inputPolicy("game"), "GAME", signal,
     value => progress({phase: "PROJECT_CONTENT", loadedBytes: value.readyBytes, totalBytes: config.game.sizeBytes}));
   signal?.throwIfAborted();
   const extension = /\.(ssd|dsd|adf|hfe)$/iu.exec(new URL(config.game.url, frameWindow.document.baseURI).pathname)?.[1];

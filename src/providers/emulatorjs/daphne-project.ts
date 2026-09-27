@@ -1,7 +1,6 @@
-import type {ContentSessionClient} from "../../content-io/client.js";
+import type {AdapterContentSession} from "../../provider/content-inputs.js";
 import {unzipSync} from "fflate";
 import {contentLimits} from "../../content-io/limits.js";
-import {eagerPolicy, rangePolicy} from "../../provider/content-policies.js";
 import {fetchMetadataJson} from "../../provider/metadata.js";
 import {NeoCDRange} from "./neocd-range.js";
 import {loadCoreAsset} from "../../provider/core-assets.js";
@@ -20,7 +19,7 @@ export function daphneGameFile(runtimeWindow: Window, project: DaphneProject | n
 }
 
 export async function maybePrepareDaphneProject(target: TargetDeclaration, envelope: LaunchEnvelopeV1,
-  session: ContentSessionClient | null, assetIndex: AssetIndexV1, signal: AbortSignal, fail: (error: Error) => void,
+  session: AdapterContentSession | null, assetIndex: AssetIndexV1, signal: AbortSignal, fail: (error: Error) => void,
   report: (readyBytes: number, totalBytes: number) => void): Promise<DaphneProject | null> {
   if (target.implementation.runtimeCore !== "daphne") {return null;}
   const resource = envelope.resources.find(entry => entry.role === "game");
@@ -77,7 +76,7 @@ function projectFiles(value: unknown, romDigest: string): ProjectFile[] {
   return files;
 }
 
-export async function prepareDaphneProject(resource: ProjectResource, session: ContentSessionClient,
+export async function prepareDaphneProject(resource: ProjectResource, session: AdapterContentSession,
   signal: AbortSignal, fail: (error: Error) => void,
   report: (readyBytes: number, totalBytes: number) => void = () => {}): Promise<DaphneProject> {
   const indexUrl = new URL(resource.indexUrl, location.href);
@@ -101,7 +100,7 @@ export async function prepareDaphneProject(resource: ProjectResource, session: C
   for (const file of files) {
     if (file === video) {continue;}
     if (file.sizeBytes > contentLimits.firmwareFile) {throw new Error("DAPHNE_PROJECT_INVALID");}
-    const policy = eagerPolicy(contentLimits.firmwareFile);
+    const policy = session.inputPolicy("game", "support");
     const reader = await session.open(source(file, false), policy, signal);
     try {
       const result = await session.materialize(reader.id, {kind: "BYTES", maxBytes: policy.maxFileBytes}, signal,
@@ -110,7 +109,7 @@ export async function prepareDaphneProject(resource: ProjectResource, session: C
       bytes.set(file.path, result.bytes); ready += result.bytes.byteLength; report(ready, eagerTotal);
     } finally {await reader.close();}
   }
-  const policy = rangePolicy("ASYNC", contentLimits.signedDisc);
+  const policy = session.inputPolicy("game");
   const reader = await session.open(source(video, true), policy, signal);
   const videoRange = new NeoCDRange({sha256: resource.contentDigest, sizeBytes: video.sizeBytes}, reader, fail, video.path);
   try {await Promise.all([videoRange.read(0, 1), videoRange.read(video.sizeBytes - 1, 1)]);}

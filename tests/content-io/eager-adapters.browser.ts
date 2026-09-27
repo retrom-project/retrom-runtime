@@ -9,7 +9,7 @@ for (const name of ["tic80", "fake08", "gbe", "px68k", "np2kai", "openbor", "ruf
   test(`[X-26] BROWSER/${name} [ST-03] BROWSER/${name} [IO-22] BROWSER/${name} cold then independent-session OPFS reuse and MEMORY-only materialization @S16`, async ({page}) => {
     const bytes = new Uint8Array(16); bytes.set(name === "ruffle" ? [70,87,83,9,16,0,0,0] : name === "wasm4" ? [0,97,115,109,1,0,0,0] : [80,65,67,75]);
     const sha256 = createHash("sha256").update(bytes).digest("hex");
-    const server = await startFixtureServer({contentModule: await bundle("../../src/content-io/client.ts"), staticFiles: {game: bytes}, modules: {
+    const server = await startFixtureServer({contentModule: await bundle("./target-session.ts"), staticFiles: {game: bytes}, modules: {
       "worker.mjs": await bundle("../../src/content-io/worker.ts"), "eager.mjs": await bundle("./eager-entry.ts"),
       "memory.mjs": `import './worker.mjs'; Object.defineProperty(globalThis, 'indexedDB', {value: undefined});`,
     }});
@@ -17,7 +17,7 @@ for (const name of ["tic80", "fake08", "gbe", "px68k", "np2kai", "openbor", "ruf
       await page.goto(`${server.origin}/__test__/page`);
       const result = await page.evaluate(async ({name, sha256}) => {
         const clientUrl = "/__test__/content.mjs", eagerUrl = "/__test__/eager.mjs";
-        const {createContentSession} = await import(clientUrl) as typeof import("../../src/content-io/client.js");
+        const {createContentSession, targetContentFixture} = await import(clientUrl) as typeof import("./target-session.js");
         const eager = await import(eagerUrl) as typeof import("./eager-entry.js");
         const outputs = [], backends = [], progress: number[][] = [];
         for (const worker of ["worker.mjs", "worker.mjs", "memory.mjs"]) {
@@ -26,16 +26,18 @@ for (const name of ["tic80", "fake08", "gbe", "px68k", "np2kai", "openbor", "ruf
           const report = (v: {loadedBytes: number}) => reported.push(v.loadedBytes);
           try {
             let value: Uint8Array | Blob;
+            const targetId = ({gbe: "gbe-pokemini", np2kai: "np2kai-pc98", ruffle: "flash-ruffle", webmsx: "msx-webmsx"} as Record<string,string>)[name] ?? name;
+            const content = targetContentFixture(session, targetId);
             switch (name) {
-              case "tic80": case "fake08": value = await eager.verifiedFetch(source.url, 16, sha256, undefined, session); break;
-              case "gbe": value = await eager.gbe(source, n => reported.push(n), undefined, session); break;
-              case "px68k": value = await eager.px68k(source, n => reported.push(n), undefined, session); break;
-              case "np2kai": value = await eager.loadDisk(source, report, session); break;
-              case "openbor": value = await eager.fetchPak(source, report, session); break;
-              case "ruffle": value = await eager.fetchSwf({swfUrl:source.url,swfSizeBytes:16,contentDigest:sha256},report,session); break;
-              case "webmsx": value = await eager.fetchMedia({mediaUrl:source.url,mediaSizeBytes:16,contentDigest:sha256},report,session); break;
-              case "wasm4": value = await eager.fetchCart({cartUrl:source.url,cartSizeBytes:16,contentDigest:sha256,runtimeBaseUrl:location.origin},report,{contentSession:session,assetIndex:{}}); break;
-              case "nxengine": value = await eager.fetchContent({...source,path:"game.bin"},n=>reported.push(n),undefined,session,"a".repeat(64)); break;
+              case "tic80": case "fake08": value = await eager.verifiedFetch(source.url, 16, sha256, undefined, content); break;
+              case "gbe": value = await eager.gbe(source, n => reported.push(n), undefined, content); break;
+              case "px68k": value = await eager.px68k(source, n => reported.push(n), undefined, content); break;
+              case "np2kai": value = await eager.loadDisk(source, report, content); break;
+              case "openbor": value = await eager.fetchPak(source, report, content); break;
+              case "ruffle": value = await eager.fetchSwf({swfUrl:source.url,swfSizeBytes:16,contentDigest:sha256},report,content); break;
+              case "webmsx": value = await eager.fetchMedia({mediaUrl:source.url,mediaSizeBytes:16,contentDigest:sha256},report,content); break;
+              case "wasm4": value = await eager.fetchCart({cartUrl:source.url,cartSizeBytes:16,contentDigest:sha256,runtimeBaseUrl:location.origin},report,{contentSession:content,assetIndex:{}}); break;
+              case "nxengine": value = await eager.fetchContent({...source,path:"game.bin"},n=>reported.push(n),undefined,content,"a".repeat(64)); break;
               default: throw new Error("fixture");
             }
             outputs.push(Array.from(value instanceof Blob ? new Uint8Array(await value.arrayBuffer()) : value));
@@ -58,14 +60,14 @@ test("[IO-22] BROWSER/PUAE eager Content I/O reuses one full download across ind
   bytes.set(new TextEncoder().encode("MComprHD"));
   bytes.fill(47, 8);
   const sha256 = createHash("sha256").update(bytes).digest("hex");
-  const server = await startFixtureServer({contentModule: await bundle("../../src/content-io/client.ts"),
+  const server = await startFixtureServer({contentModule: await bundle("./target-session.ts"),
     staticFiles: {"game.chd": bytes}, modules: {"worker.mjs": await bundle("../../src/content-io/worker.ts"),
       "eager.mjs": await bundle("./eager-entry.ts")}});
   try {
     await page.goto(`${server.origin}/__test__/page`);
     const result = await page.evaluate(async ({sha256, sizeBytes}) => {
       const clientUrl = "/__test__/content.mjs", eagerUrl = "/__test__/eager.mjs";
-      const {createContentSession} = await import(clientUrl) as typeof import("../../src/content-io/client.js");
+      const {createContentSession, targetContentFixture} = await import(clientUrl) as typeof import("./target-session.js");
       const {mountEagerContentFile} = await import(eagerUrl) as typeof import("./eager-entry.js");
       const results = [];
       for (let run = 0; run < 2; run++) {
@@ -75,7 +77,7 @@ test("[IO-22] BROWSER/PUAE eager Content I/O reuses one full download across ind
         try {
           const file = await mountEagerContentFile(window,
             {url: `${location.origin}/files/game.chd`, sha256, sizeBytes}, new AbortController().signal,
-            () => {}, session, ready => progress.push(ready));
+            () => {}, targetContentFixture(session, "puae"), ready => progress.push(ready));
           results.push({filename: file.filename, first: [...file.read(0, 8)], last: [...file.read(sizeBytes - 1, 1)],
             progress, backend: session.stats.backend});
           await file.dispose();

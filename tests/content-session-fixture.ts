@@ -1,3 +1,6 @@
+import {retromRuntimeProviderDefinition} from "../src/providers/retrom-runtime/catalog.js";
+import {emulatorJsProviderDefinition} from "../src/providers/emulatorjs/catalog.js";
+import {bindTargetContent} from "../src/provider/target-content.js";
 import type {ContentSourceV1, ManagedInputPolicyV1} from "../contracts/content-io/v1/content-io.js";
 import {BlockPool, type BlockObject} from "../src/content-io/block-pool.js";
 import {ContentStoreManager} from "../src/content-io/store/manager.js";
@@ -8,7 +11,7 @@ import {validateManagedPolicy, validateSourcePolicy} from "../src/content-io/pol
 import {ContentIOError} from "../src/content-io/errors.js";
 import type {AdapterContentSession} from "../src/provider/content-inputs.js";
 /** Node integration harness using production reader/HTTP/materializer, without pretending to test Workers. */
-export function contentSessionFixture(origin: string, allowedOrigins = [origin]) {
+export function contentSessionFixture(origin: string, allowedOrigins = [origin], targetId?: string) {
   const context = {storageOrigin: origin, allowedOrigins};
   const files = new Map<string, {reader: RangeReader; object: BlockObject; policy: ManagedInputPolicyV1}>();
   const objects = new Map<string, BlockObject>();
@@ -16,6 +19,11 @@ export function contentSessionFixture(origin: string, allowedOrigins = [origin])
     (object, signal) => store.prepare(object, signal));
   const store = new ContentStoreManager(origin, pool.credits), materializer = new ContentMaterializer(pool, store);
   const session: AdapterContentSession = {
+    inputPolicy(role, member) {
+      const target = [...retromRuntimeProviderDefinition.targets, ...emulatorJsProviderDefinition.targets].find(entry => entry.id === targetId);
+      if (!target) {throw new Error(`Fixture requires a Target declaration: ${targetId}`);}
+      return bindTargetContent(session, target).inputPolicy(role, member);
+    },
     async open(input: ContentSourceV1, inputPolicy: ManagedInputPolicyV1, signal?: AbortSignal) {
       signal?.throwIfAborted(); const source = validateSource(input, context), policy = validateManagedPolicy(inputPolicy); validateSourcePolicy(source, policy);
       const key = contentObjectKey(source, origin);

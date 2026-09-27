@@ -121,7 +121,7 @@ describe("ONS Yuri runtime", () => {
     });
     vi.stubGlobal("fetch", fetchMock);
     const bootstrap = contentBootstrap, previous = bootstrap.getMockImplementation()!;
-    const session = managedAdapterFixture({url: "https://content.example"}).contentSession;
+    const session = managedAdapterFixture("onscripter-yuri", {url: "https://content.example"}).contentSession;
     bootstrap.mockImplementation(async () => ({...session, close: vi.fn(async () => {}), fail: vi.fn()}) as unknown as ContentSessionClient);
     try {
 

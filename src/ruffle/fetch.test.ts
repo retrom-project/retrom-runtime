@@ -12,7 +12,7 @@ describe("Ruffle SWF semantics after public materialization", () => {
     vi.stubGlobal("crypto", webcrypto);
     for (const data of [new Uint8Array(8), new Uint8Array([67, 87, 83, 9, 255, 255, 255, 255])]) {
       vi.stubGlobal("fetch", async () => new Response(data));
-      await expect(fetchSwf({...source, contentDigest: createHash("sha256").update(data).digest("hex")}, () => undefined, managedAdapterFixture(source).contentSession))
+      await expect(fetchSwf({...source, contentDigest: createHash("sha256").update(data).digest("hex")}, () => undefined, managedAdapterFixture("flash-ruffle", source).contentSession))
         .rejects.toThrow("RUFFLE_CONTENT_INVALID");
     }
   });

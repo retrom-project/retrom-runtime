@@ -69,5 +69,5 @@ describe("Ruffle adapter", () => {
 });
 
 const mountRuffle: typeof mount = (...args) => {
-  args[7] ??= managedAdapterFixture(args[0]); return mount(...args);
+  args[7] ??= managedAdapterFixture("flash-ruffle", args[0]); return mount(...args);
 };

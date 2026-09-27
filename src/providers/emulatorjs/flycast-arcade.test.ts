@@ -1,3 +1,4 @@
+import {targetContentFixture} from "../../../tests/target-content-fixture.js";
 import {describe, expect, it, vi} from "vitest";
 import {flycastContentName, emulatorJsDisableCue, configureContentDisc} from "./disc-mount.js";
 import {launchEnvelope} from "../../../tests/emulatorjs-provider-fixtures.js";
@@ -47,7 +48,7 @@ describe("Flycast seekable content", () => {
       document.body.append(frame);
       const runtimeWindow = frame.contentWindow as EjsWindow;
       const mounted = await configureContentDisc(runtimeWindow, envelope, "flycast", new AbortController().signal,
-        session, vi.fn());
+        targetContentFixture(session, "flycast-naomi"), vi.fn());
       expect((runtimeWindow.EJS_gameUrl as File).name).toBe(filename);
       expect((runtimeWindow.EJS_gameUrl as File).size).toBeLessThan(64);
       expect(runtimeWindow.RETROM_FLYCAST_RANGE).toBe(mounted.range);

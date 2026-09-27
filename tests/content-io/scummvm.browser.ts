@@ -5,7 +5,7 @@ const compile = async (path: string, banner = "") => (await build({entryPoints: 
   format: "esm", platform: "browser", write: false, target: "es2022", banner: {js: banner}})).outputFiles[0].text;
 
 test("[ST-01] BROWSER/scummvm [ST-03] BROWSER/scummvm [IO-21] BROWSER/scummvm two identities reuse across Sessions and survive denied storage", async ({page}) => {
-  const server = await startFixtureServer({contentModule: await compile("content-io/client"), modules: {
+  const server = await startFixtureServer({contentModule: await compile("../tests/content-io/target-session"), modules: {
     "files.mjs": await compile("scummvm/files"), "worker.mjs": await compile("content-io/worker"),
     "memory.mjs": await compile("content-io/worker", "Object.defineProperty(globalThis, 'indexedDB', {value: undefined});"),
   }});
@@ -15,14 +15,14 @@ test("[ST-01] BROWSER/scummvm [ST-03] BROWSER/scummvm [IO-21] BROWSER/scummvm tw
     await page.goto(`${server.origin}/__test__/page`);
     const results = await page.evaluate(async ({sizeBytes}) => {
       const clientPath = "/__test__/content.mjs", facadePath = "/__test__/files.mjs";
-      const {createContentSession} = await import(clientPath) as typeof import("../../src/content-io/client.js");
+      const {createContentSession, targetContentFixture} = await import(clientPath) as typeof import("./target-session.js");
       const {ScummvmFiles} = await import(facadePath) as typeof import("../../src/scummvm/files.js");
       const records = [];
       const requests = async () => (await Promise.all([0, 1].map(async index => (await (await fetch(`/__test__/requests/game${index}`)).json() as unknown[]).length)));
       for (const worker of ["worker.mjs", "worker.mjs", "memory.mjs"]) {
         const session = await createContentSession(new Worker(`/__test__/${worker}`, {type: "module"}), {storageOrigin: location.origin, allowedOrigins: [location.origin]});
         const files = new ScummvmFiles({schemaVersion: 1, files: [0, 1].map(index => ({path: `Folder/game${index}.bin`, sizeBytes,
-          url: `${location.origin}/objects/multi-tail/game${index}`}))}, "a".repeat(64), session);
+          url: `${location.origin}/objects/multi-tail/game${index}`}))}, "a".repeat(64), targetContentFixture(session, "scummvm"));
         try {
           const before = await requests();
           const stats = [files.stat("/game/Folder"), files.stat("/game/Folder/game0.bin"), files.stat("/game/missing")];

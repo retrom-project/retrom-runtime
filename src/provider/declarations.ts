@@ -1,5 +1,5 @@
-import type {ContentInputPolicyV1} from "../../contracts/content-io/v1/content-io.js";
-import {validateContentPolicies} from "../content-io/policy.js";
+import type {ContentInputPolicyV1, ManagedInputPolicyV1} from "../../contracts/content-io/v1/content-io.js";
+import {validateContentPolicies, validateManagedPolicy} from "../content-io/policy.js";
 import {contentBoundaries} from "./content-policies.js";
 export type ResourceKind =
   | "ROM_BLOB"
@@ -109,6 +109,7 @@ export type TargetDeclaration = {
   videoModes: readonly VideoMode[];
   inputs: readonly TargetInputDeclaration[];
   contentIO: Readonly<Record<string, ContentInputPolicyV1>>;
+  contentMembers?: Readonly<Record<string, Readonly<Record<string, ManagedInputPolicyV1>>>>;
   checkpointMaxBytes: number | null;
   assetPaths: readonly string[];
   implementation: Readonly<Record<string, unknown>>;
@@ -133,10 +134,14 @@ export function defineAdapter<const Definition extends AdapterDeclaration>(defin
 
 export function defineTarget<const Definition extends TargetDeclaration>(definition: Definition): Definition {
   const contentIO = validateContentPolicies(definition.inputs.map((input) => input.role), definition.contentIO, Object.keys(contentBoundaries));
+  const contentMembers = Object.fromEntries(Object.entries(definition.contentMembers ?? {}).map(([role, members]) => {
+    if (!(role in contentIO) || !("bridge" in contentIO[role])) {throw new Error("PROVIDER_CONTENT_POLICY_INVALID");}
+    return [role, Object.freeze(Object.fromEntries(Object.entries(members).map(([name, policy]) => [name, validateManagedPolicy(policy)])))];
+  }));
   const policies=Object.values(contentIO), assets=[...definition.assetPaths];
   if(policies.some(policy=>"bridge" in policy)){assets.push("assets/content-io/worker.mjs");}
   if(policies.some(policy=>"bridge" in policy && policy.bridge==="SYNC_WORKER")){assets.push("assets/content-io/sync-client.mjs");}
-  return {...definition, contentIO, assetPaths:Object.freeze([...new Set(assets)])};
+  return {...definition, contentIO, contentMembers: Object.freeze(contentMembers), assetPaths:Object.freeze([...new Set(assets)])};
 }
 
 export function defineProvider<const Definition extends ProviderDefinition>(definition: Definition): Definition {

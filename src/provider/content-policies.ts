@@ -2,7 +2,7 @@ import type {ContentInputPolicyV1, ManagedInputPolicyV1} from "../../contracts/c
 import {contentLimits as limits} from "../content-io/limits.js";
 
 export const contentBoundaries = Object.freeze({
-  "native-web": "src/native/adapter.ts",
+  "native-web": "src/native-web/adapter.ts",
   "tyranoscript-frame": "src/tyranoscript/adapter.ts",
   "easyrpg-loader": "src/easyrpg/adapter.ts",
   "j2me-loader": "src/j2me/adapter.ts",

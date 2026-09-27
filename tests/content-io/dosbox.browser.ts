@@ -15,7 +15,7 @@ const bundle = async (path: string) => (await build({
 })).outputFiles[0].text;
 
 test("DOS virtual ZIP uses bounded Range requests and reuses blocks in a second runtime instance", async ({page, context}) => {
-  const server = await startFixtureServer({contentModule: await bundle("content-io/client"), modules: {
+  const server = await startFixtureServer({contentModule: await bundle("../tests/content-io/target-session"), modules: {
     "dosbox.mjs": await bundle("providers/emulatorjs/dosbox-range"),
     "worker.mjs": await bundle("content-io/worker"),
   }});
@@ -43,7 +43,7 @@ test("DOS virtual ZIP uses bounded Range requests and reuses blocks in a second 
     await page.goto(`${server.origin}/__test__/page`);
     const results = await page.evaluate(async ({indexPath, digest, block}) => {
       const modulePaths = {content: "/__test__/content.mjs", dosbox: "/__test__/dosbox.mjs"};
-      const {createContentSession} = await import(modulePaths.content) as typeof import("../../src/content-io/client.js");
+      const {createContentSession, targetContentFixture} = await import(modulePaths.content) as typeof import("./target-session.js");
       const {prepareDOSBundle} = await import(modulePaths.dosbox) as typeof import("../../src/providers/emulatorjs/dosbox-range.js");
       const outputs = [];
       for (let instance = 0; instance < 2; instance++) {
@@ -54,7 +54,7 @@ test("DOS virtual ZIP uses bounded Range requests and reuses blocks in a second 
           {fetchPolicy: {smallFileThresholdBytes: 0, networkWindowBytes: block}});
         let bytes: number[] = [], backend = "", filename = "";
         try {
-          const {range} = await prepareDOSBundle({indexUrl: indexPath, contentDigest: digest}, session,
+          const {range} = await prepareDOSBundle({indexUrl: indexPath, contentDigest: digest}, targetContentFixture(session, "dosbox-pure"),
             new AbortController().signal, () => {});
           try {filename = range.filename; bytes = Array.from(await range.read(block + 11, 4)); backend = session.stats.backend;}
           finally {await range.dispose();}

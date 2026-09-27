@@ -51,5 +51,5 @@ it('preserves bounded error codes thrown by the iframe realm', async () => {
 });
 
 const mountWebMSX: typeof mount = (...args) => {
-  args[7] ??= managedAdapterFixture(args[0]); return mount(...args);
+  args[7] ??= managedAdapterFixture("msx-webmsx", args[0]); return mount(...args);
 };

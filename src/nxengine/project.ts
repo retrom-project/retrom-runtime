@@ -1,5 +1,4 @@
 import type {AdapterContentSession} from "../provider/content-inputs.js";
-import {eagerPolicy} from "../provider/content-policies.js";
 import {ContentIOError} from "../content-io/errors.js";
 import {contentLimits} from "../content-io/limits.js";
 import type {RuntimeProgressReporter} from "../internal-adapter.js";
@@ -46,7 +45,7 @@ export async function loadProject(indexUrl: string, progress: RuntimeProgressRep
 export async function fetchContent(file: ProjectFile, progress: (loaded: number) => void, signal?: AbortSignal,
   session?: AdapterContentSession, projectDigest?: string) {
   if (!session || !projectDigest) {throw new ContentIOError("ABI_MISMATCH");}
-  const policy = eagerPolicy(maximumFileBytes);
+  const policy = session.inputPolicy("game");
   const reader = await session.open({identity: {kind: "INDEX_ENTRY", projectDigest, logicalPath: file.path},
     url: file.url, sizeBytes: file.sizeBytes, purpose: "GAME", transport: "WHOLE_ALLOWED", etagPolicy: "PIN_STRONG",
     contentLengthPolicy: policy.contentLengthPolicy, }, policy, signal);

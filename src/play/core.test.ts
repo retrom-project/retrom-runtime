@@ -20,7 +20,7 @@ it("resolves relative Provider assets in a blank child frame", async () => {
   });
   const target=retromRuntimeProviderDefinition.targets.find(target=>target.id==="play-ps2")!;
   const assetIndex=Object.fromEntries(target.assetPaths.filter(path=>path.startsWith("assets/play/")).map(path=>[path,{sizeBytes:1,sha256:"a".repeat(64)}]));
-  const owner = contentSessionFixture(location.origin);
+  const owner = contentSessionFixture(location.origin, undefined, "play-ps2");
   const result = await loadPlay({runtimeBaseUrl: "/provider/assets/play/", assetIndex,
     disc: {kind: "SEEKABLE_BLOB", rangeRequired: true, url: "/disc.chd", sizeBytes: 10, sha256: "b".repeat(64)}}, win, undefined, owner.session);
   expect(result.module).toBe(module); expect(append).toHaveBeenCalledOnce();

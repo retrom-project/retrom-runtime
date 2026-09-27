@@ -98,5 +98,5 @@ it("cleans up if cancellation arrives during module construction", async () => {
 });
 
 const mountPx68k: typeof mount = (...args) => {
-  args[8] ??= managedAdapterFixture(args[0]); return mount(...args);
+  args[8] ??= managedAdapterFixture("px68k", args[0]); return mount(...args);
 };

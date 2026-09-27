@@ -9,7 +9,7 @@ const path = "assets/release/data/cores/daphne-resources.zip";
 const owners: ReturnType<typeof contentSessionFixture>[] = [];
 afterEach(async () => {await Promise.all(owners.splice(0).map(owner => owner.close())); vi.unstubAllGlobals();});
 function fixture(bytes: Uint8Array) {
-  const owner = contentSessionFixture(location.origin); owners.push(owner);
+  const owner = contentSessionFixture(location.origin, undefined, "daphne"); owners.push(owner);
   return {contentSession: owner.session, assetIndex: {[path]: {
     sizeBytes: bytes.length, sha256: createHash("sha256").update(bytes).digest("hex"),
   }}};

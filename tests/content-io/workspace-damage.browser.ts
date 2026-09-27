@@ -7,7 +7,7 @@ const bundle = async (path: string) => (await build({entryPoints: [fileURLToPath
 for (const damage of ["receipt", "incomplete", "same-size"]) {
   test(`[X-17] BROWSER/workspace-${damage} [ST-05] BROWSER/workspace-${damage} [ST-16] BROWSER/workspace-${damage} rejects damaged generations and preserves native saves`, async ({page}) => {
     const index = new TextEncoder().encode(JSON.stringify({schemaVersion: 1, files: [{path: "data.win", sizeBytes: 4, url: "/files/game"}]}));
-    const server = await startFixtureServer({contentModule: await bundle("../../src/content-io/client.ts"),
+    const server = await startFixtureServer({contentModule: await bundle("./target-session.ts"),
       staticFiles: {index, game: new Uint8Array([1, 2, 3, 4])}, modules: {
         "worker.mjs": await bundle("../../src/content-io/worker.ts"), "project.mjs": await bundle("../../src/butterscotch/project-store.ts"),
       }});
@@ -15,12 +15,12 @@ for (const damage of ["receipt", "incomplete", "same-size"]) {
       await page.goto(`${server.origin}/__test__/page`);
       const result = await page.evaluate(async damage => {
         const clientUrl = "/__test__/content.mjs", projectUrl = "/__test__/project.mjs";
-        const {createContentSession} = await import(clientUrl) as typeof import("../../src/content-io/client.js");
+        const {createContentSession, targetContentFixture} = await import(clientUrl) as typeof import("./target-session.js");
         const {prepareButterscotchProject} = await import(projectUrl) as typeof import("../../src/butterscotch/project-store.js");
         const session = await createContentSession(new Worker("/__test__/worker.mjs", {type: "module"}), {storageOrigin: location.origin, allowedOrigins: [location.origin]});
         const config = {contentDigest: "a".repeat(64), projectIndexUrl: "/files/index"}, projects: Awaited<ReturnType<typeof prepareButterscotchProject>>[] = [];
         const prepare = async (id: string) => {
-          const project = await prepareButterscotchProject({...config, sessionId: id}, window, () => {}, {contentSession: session, assetIndex: {}});
+          const project = await prepareButterscotchProject({...config, sessionId: id}, window, () => {}, {contentSession: targetContentFixture(session, "butterscotch-gamemaker"), assetIndex: {}});
           projects.push(project); return project;
         };
         const write = async (handle: FileSystemFileHandle, value: string | Uint8Array<ArrayBuffer>) => {

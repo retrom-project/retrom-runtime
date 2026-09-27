@@ -6,7 +6,7 @@ const digest = "a".repeat(64);
 const index = {schemaVersion: 1, files: [{path: "Folder/Game.dat", sizeBytes: 3 * B, url: "https://games.test/content/data"}]};
 const cleanups: (() => Promise<void>)[] = [];
 function fixture() {
-  const content = contentSessionFixture("https://games.test"); cleanups.push(content.close);
+  const content = contentSessionFixture("https://games.test", undefined, "scummvm"); cleanups.push(content.close);
   const fetcher = vi.fn<typeof fetch>(async (url, options) => {
     const [start, end] = new Headers(options?.headers).get("Range")!.slice(6).split("-").map(Number);
     const response = new Response(new Uint8Array(end - start + 1).fill(start / B + 1), {status: 206, headers: {

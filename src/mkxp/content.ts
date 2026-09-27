@@ -1,7 +1,7 @@
 import type {AdapterContentOptions} from "../provider/content-inputs.js";
 import {fileContentSource, materializeFileBytes} from "../provider/content-inputs.js";
 import {LazyContentReader} from "../provider/lazy-reader.js";
-import {eagerPolicy, rangePolicy} from "../provider/content-policies.js";
+import {eagerPolicy} from "../provider/content-policies.js";
 import {abi,contractSha256} from "../content-io/identity.js";
 import {ContentIOError,errorNumbers, type ContentErrorName} from "../content-io/errors.js";
 import {checkSignal} from "../content-io/abort.js";
@@ -35,7 +35,7 @@ export class MkxpContent {
     if(this.readers.size>=128 || !path.startsWith("/") || ([...path].some(char=>char.charCodeAt(0)<32 || char.charCodeAt(0)===127) || path.includes("\\")) ||
       path.split("/").slice(1).some(part=>!part || part==="." || part==="..") ||
       [...this.readers.values()].some(entry=>entry.path===path)) {throw new ContentIOError("SOURCE_INVALID");}
-    const policy=rangePolicy("WASMFS",Number.MAX_SAFE_INTEGER,{writes:"SESSION_OVERLAY"}),source=fileContentSource(file,policy,purpose);
+    const policy=this.options.contentSession.inputPolicy(purpose === "FIRMWARE" ? "rtp" : "game"),source=fileContentSource(file,policy,purpose);
     validateSource(source,{storageOrigin:location.origin,allowedOrigins:[new URL(source.url).origin]});
     const reader=new LazyContentReader(this.options.contentSession,source,policy,this.signal);
     this.readers.set(reader.id,{reader,path});return reader;

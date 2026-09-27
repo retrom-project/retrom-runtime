@@ -1,3 +1,4 @@
+import {targetContentFixture} from "../../tests/target-content-fixture.js";
 // @vitest-environment jsdom
 import {afterEach, expect, it, vi} from "vitest";
 import {gzipSync} from "fflate";
@@ -27,7 +28,7 @@ it.each([
   const mounted = mountApple2({game: {url: "https://example.test/game.dsk", sha256: "b".repeat(64), sizeBytes: 3},
     bios, runtimeBaseUrl: "https://example.test/apple2js/site/"}, target, frameWindow,
     legacy ? gzipSync(new TextEncoder().encode(state)) : new TextEncoder().encode(state),
-    () => undefined, session as never, undefined, format);
+    () => undefined, targetContentFixture(session as never, "apple2-apple2js"), undefined, format);
   await vi.waitFor(() => expect(target.querySelector("iframe")).not.toBeNull());
   const iframe = target.querySelector("iframe")!;
   const child = iframe.contentWindow as Window & {RetromApple2?: object};

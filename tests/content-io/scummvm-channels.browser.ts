@@ -5,7 +5,7 @@ const compile = async (path: string) => (await build({entryPoints: [`src/${path}
   format: "esm", platform: "browser", write: false, target: "es2022"})).outputFiles[0].text;
 
 test("[X-07] BROWSER/scummvm-channel-groups a large lazy file tree keeps pending reads while recycling idle channels", async ({page}) => {
-  const server = await startFixtureServer({contentModule: await compile("content-io/client"), modules: {
+  const server = await startFixtureServer({contentModule: await compile("../tests/content-io/target-session"), modules: {
     "files.mjs": await compile("scummvm/files"), "worker.mjs": await compile("content-io/worker"),
   }});
   const scenarios = Array.from({length: 9}, (_, index) => server.register({id: String(index), fixtureId: "multi-tail", behavior: "NORMAL", seed: 17,
@@ -15,12 +15,12 @@ test("[X-07] BROWSER/scummvm-channel-groups a large lazy file tree keeps pending
     await page.goto(`${server.origin}/__test__/page`);
     const result = await page.evaluate(async ({sizeBytes}) => {
       const clientPath = "/__test__/content.mjs", filesPath = "/__test__/files.mjs";
-      const {createContentSession} = await import(clientPath) as typeof import("../../src/content-io/client.js");
+      const {createContentSession, targetContentFixture} = await import(clientPath) as typeof import("./target-session.js");
       const {ScummvmFiles} = await import(filesPath) as typeof import("../../src/scummvm/files.js");
       const session = await createContentSession(new Worker("/__test__/worker.mjs", {type: "module"}),
         {storageOrigin: location.origin, allowedOrigins: [location.origin]}, {fetchPolicy: {smallFileThresholdBytes: 0, networkWindowBytes: 262144}});
       const files = new ScummvmFiles({schemaVersion: 1, files: Array.from({length: 1025}, (_, index) => ({path: `file${index}.bin`, sizeBytes,
-        url: `${location.origin}/objects/multi-tail/${Math.floor(index / 128)}`}))}, "a".repeat(64), session);
+        url: `${location.origin}/objects/multi-tail/${Math.floor(index / 128)}`}))}, "a".repeat(64), targetContentFixture(session, "scummvm"));
       try {
         const names = files.list("/game"), sizes = names.map(name => files.stat(`/game/${name}`));
         const before = session.stats, channels = [], values = [];

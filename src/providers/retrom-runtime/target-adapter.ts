@@ -1,3 +1,4 @@
+import {bindTargetContent} from "../../provider/target-content.js";
 import {requireContentSession} from "../../provider/content-inputs.js";
 import {mountGBE} from "../../gbe-pokemini/adapter.js";
 import {mountNXEngine} from "../../nxengine/adapter.js";
@@ -45,9 +46,14 @@ export type TargetMountContext = {
 export function mountTargetAdapter(
   envelope: LaunchEnvelopeV1,
   target: HTMLElement,
-  context: TargetMountContext,
+  input: TargetMountContext,
 ): Promise<MountedRuntimeAdapter> {
   const {declaration, adapter} = resolveAdapter(envelope.runtime.targetId);
+  const contentSession = input.contentSession ? bindTargetContent(input.contentSession, declaration) : null;
+  const context = {...input, contentSession, content: contentSession ? {
+    contentSession, assetIndex: input.assetIndex, signal: input.signal,
+    reportProgress: input.reportProgress, onFailure: failureReporter(input), runtimeBaseURL: envelope.runtime.runtimeBaseUrl,
+  } : null};
   const {frameWindow, restorePayload, reportProgress, reportExitRequested} = context;
   const reportFailure = failureReporter(context);
   switch (adapter.kind) {
@@ -72,7 +78,7 @@ export function mountTargetAdapter(
       {...contentOptions(context), signal: context.signal, onFailure: reportFailure});
   case "KIRIKIRI2_WEB":
     return mountKirikiri2(parameters.kirikiri(envelope), target, frameWindow, restorePayload, reportExitRequested,
-      {contentSession: requireContentSession(context.contentSession), assetIndex: context.assetIndex, signal: context.signal});
+      contentOptions(context));
   case "BUTTERSCOTCH_WEB":
     return mountButterscotch(parameters.butterscotch(envelope), target, frameWindow, restorePayload,
       reportProgress, reportExitRequested, {...contentOptions(context), signal: context.signal});
@@ -83,7 +89,7 @@ export function mountTargetAdapter(
       reportExitRequested, reportFailure, context.signal);
   case "SCUMMVM_WEB":
     return mountScummvm(parameters.scummvm(envelope), target, frameWindow, restorePayload, reportProgress,
-      reportExitRequested, reportFailure, context.signal, undefined, {contentSession: requireContentSession(context.contentSession), assetIndex: context.assetIndex});
+      reportExitRequested, reportFailure, context.signal, undefined, contentOptions(context));
 
   case "TIC80_WEB":
   case "FAKE08_WEB":
@@ -95,11 +101,11 @@ export function mountTargetAdapter(
   }
 }
 
-function failureReporter(context: TargetMountContext) {
+function failureReporter(context: Pick<TargetMountContext, "reportFailure">) {
   return context.reportFailure ?? (() => undefined);
 }
 
-function requireFrame(context: TargetMountContext) {
+function requireFrame(context: Pick<TargetMountContext, "frame">) {
   if (!context.frame) {throw new Error("PROVIDER_HOST_INVALID");}
   return context.frame;
 }
@@ -111,7 +117,7 @@ function resolveAdapter(targetId: string) {
   return {declaration, adapter};
 }
 
-function mountMachineAdapter(kind: string, envelope: LaunchEnvelopeV1, target: HTMLElement, context: TargetMountContext) {
+function mountMachineAdapter(kind: string, envelope: LaunchEnvelopeV1, target: HTMLElement, context: BoundMountContext) {
   const {frameWindow, restorePayload, reportProgress} = context;
   const reportFailure = context.reportFailure ?? (() => undefined);
   switch (kind) {
@@ -127,10 +133,10 @@ function mountMachineAdapter(kind: string, envelope: LaunchEnvelopeV1, target: H
     return mountWebMSX(parameters.webmsx(envelope), target, frameWindow, restorePayload, reportProgress, context.signal, undefined, contentOptions(context));
   case "PPSSPP_WEB":
     return mountPSP(parameters.psp(envelope, context.assetIndex), target, frameWindow, restorePayload,
-      reportProgress, reportFailure, context.signal, {}, {contentSession: requireContentSession(context.contentSession), runtimeBaseURL: envelope.runtime.runtimeBaseUrl});
+      reportProgress, reportFailure, context.signal, {}, contentOptions(context));
   case "PLAY_WEB":
     return mountPlay(parameters.play(envelope, context.assetIndex), target, frameWindow, restorePayload,
-      reportFailure, context.signal, undefined, {contentSession: requireContentSession(context.contentSession), assetIndex: context.assetIndex});
+      reportFailure, context.signal, undefined, contentOptions(context));
 
   case "JSBEEB_WEB":
     return mountJsbeeb(parameters.jsbeeb(envelope), target, frameWindow, restorePayload, reportProgress,
@@ -145,6 +151,14 @@ function mountMachineAdapter(kind: string, envelope: LaunchEnvelopeV1, target: H
   }
 }
 
-function contentOptions(context: TargetMountContext) {
-  return {contentSession: requireContentSession(context.contentSession), assetIndex: context.assetIndex};
+type BoundMountContext = Omit<TargetMountContext, "contentSession"> & {
+  contentSession: BoundSession | null;
+  content: (import("../../provider/content-inputs.js").AdapterContentOptions & {
+    contentSession: BoundSession; runtimeBaseURL: string;
+  }) | null;
+};
+type BoundSession = import("../../provider/content-inputs.js").AdapterContentSession & Pick<ContentSessionClient, "createSyncChannel">;
+function contentOptions(context: BoundMountContext) {
+  if (!context.content) {throw new Error("CONTENT_IO_ABI_MISMATCH");}
+  return context.content;
 }

@@ -1,13 +1,11 @@
 import {verifiedContentAsset} from "../content-io/bootstrap.js";
 import {abi, contractSha256} from "../content-io/identity.js";
 import {fileContentSource} from "../provider/content-inputs.js";
-import {rangePolicy} from "../provider/content-policies.js";
-import {contentLimits} from "../content-io/limits.js";
 import {validPSPCore, type PSPModule, type PSPParameters, type PSPContentOptions} from "./core.js";
 export async function startPSP(module: PSPModule, assets: Readonly<Record<string, string>>, config: PSPParameters, target: HTMLElement,
   restorePayload: Uint8Array | null, reportFailure: (error: Error) => void, signal?: AbortSignal, content?: PSPContentOptions) {
   if (!content || !config.assetIndex) {throw new Error("CONTENT_IO_ABI_MISMATCH");}
-  const session = content.contentSession, policy = rangePolicy("SYNC_WORKER", contentLimits.signedDisc, {contentLengthPolicy: "REQUIRED_EXACT"});
+  const session = content.contentSession, policy = session.inputPolicy("game");
   const reader = await session.open(fileContentSource(config.game, policy), policy, signal);
   let core: unknown, syncClientUrl: string | undefined;
   try {

@@ -1,15 +1,14 @@
 import type {ContentSourceV1} from "../../../contracts/content-io/v1/content-io.js";
-import type {ContentSessionClient} from "../../content-io/client.js";
+import type {AdapterContentSession} from "../../provider/content-inputs.js";
 import {contentLimits} from "../../content-io/limits.js";
 import {exact, integer, isDigest, validateSource} from "../../content-io/source.js";
-import {rangePolicy} from "../../provider/content-policies.js";
 import {fetchMetadataJson} from "../../provider/metadata.js";
 import {NeoCDRange} from "./neocd-range.js";
 
 type DOSIndexResource = {indexUrl: string; contentDigest: string};
 
 /** The index declares the size of the virtual ZIP emitted by the server, not the source ZIP. */
-export async function prepareDOSBundle(resource: DOSIndexResource, session: ContentSessionClient,
+export async function prepareDOSBundle(resource: DOSIndexResource, session: AdapterContentSession,
   signal: AbortSignal, fail: (error: Error) => void) {
   if (!isDigest(resource.contentDigest)) {throw new Error("DOSBOX_CONTENT_INDEX_INVALID");}
   const indexURL = new URL(resource.indexUrl, location.href);
@@ -23,7 +22,7 @@ export async function prepareDOSBundle(resource: DOSIndexResource, session: Cont
     throw new Error("DOSBOX_CONTENT_INDEX_INVALID");
   }
   const gameURL = new URL(file.url, indexURL).href;
-  const policy = rangePolicy("ASYNC", contentLimits.signedDisc);
+  const policy = session.inputPolicy("game");
   const source: ContentSourceV1 = {
     identity: {kind: "INDEX_ENTRY", projectDigest: resource.contentDigest, logicalPath: "game.zip"},
     url: gameURL, sizeBytes: file.sizeBytes, purpose: "GAME", transport: "RANGE_REQUIRED",

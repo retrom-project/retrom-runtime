@@ -5,7 +5,7 @@ afterEach(() => vi.unstubAllGlobals());
 it("materializes indexed bytes through the public session with project/path identity", async () => {
   const fetch = vi.fn(async () => new Response(Uint8Array.of(1, 2, 3))); vi.stubGlobal("fetch", fetch);
   const file = {path: "data/game", url: "https://host/content/hash/game", sizeBytes: 3};
-  const content = managedAdapterFixture(file), opened = vi.spyOn(content.contentSession, "open");
+  const content = managedAdapterFixture("nxengine", file), opened = vi.spyOn(content.contentSession, "open");
   expect(await fetchContent(file, () => undefined, undefined, content.contentSession, "a".repeat(64))).toEqual(Uint8Array.of(1, 2, 3));
   expect(opened.mock.calls[0][0]).toMatchObject({identity: {kind: "INDEX_ENTRY", projectDigest: "a".repeat(64), logicalPath: file.path}, etagPolicy: "PIN_STRONG"});
   await expect(fetchContent({...file, sizeBytes: 2}, () => undefined, undefined, content.contentSession, "a".repeat(64))).rejects.toThrow("CONTENT_IO_LENGTH_MISMATCH");

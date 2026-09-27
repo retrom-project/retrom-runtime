@@ -1,5 +1,5 @@
 import type {ContentReaderV1, ContentSourceV1, ManagedInputPolicyV1} from "../../contracts/content-io/v1/content-io.js";
-import type {AdapterContentSession} from "./content-inputs.js";
+import type {ContentSessionAccess} from "./content-inputs.js";
 import {abi} from "../content-io/identity.js";
 import {checkSignal, combineSignals, abortable} from "../content-io/abort.js";
 import {validateReadBounds, BLOCK_BYTES, integer} from "../content-io/source.js";
@@ -13,7 +13,7 @@ export class LazyContentReader implements ContentReaderV1 {
   private pending?: Promise<ContentReaderV1>;
   private current?: ContentReaderV1;
   private closing?: Promise<void>;
-  constructor(private readonly session: AdapterContentSession, private readonly source: ContentSourceV1,
+  constructor(private readonly session: ContentSessionAccess, private readonly source: ContentSourceV1,
     private readonly policy: ManagedInputPolicyV1, private readonly signal?: AbortSignal) {this.sizeBytes = source.sizeBytes;}
   async readInto(offset: number, destination: Uint8Array, signal?: AbortSignal): Promise<number> {
     this.check(); validateReadBounds(this.sizeBytes, offset, destination.byteLength); checkSignal(signal);

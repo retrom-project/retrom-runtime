@@ -1,6 +1,5 @@
 import {contentLimits} from "../content-io/limits.js";
 import {materializeFileBytes, type AdapterContentSession} from "../provider/content-inputs.js";
-import {eagerPolicy} from "../provider/content-policies.js";
 import {ContentIOError} from "../content-io/errors.js";
 import type {RuntimeProgressReporter} from "../internal-adapter.js";
 export type SwfSource = {swfUrl: string; swfSizeBytes: number; contentDigest: string};
@@ -11,7 +10,7 @@ export async function fetchSwf(source: SwfSource, progress: RuntimeProgressRepor
     !/^[a-f0-9]{64}$/u.test(source.contentDigest)) {throw invalid();}
   if (!session) {throw new ContentIOError("ABI_MISMATCH");}
   const bytes = await materializeFileBytes(session, {url: source.swfUrl, sizeBytes: source.swfSizeBytes, sha256: source.contentDigest},
-    eagerPolicy(maximumSwfBytes), "GAME", signal,
+    session.inputPolicy("game"), "GAME", signal,
     value => progress({phase: "PROJECT_CONTENT", loadedBytes: value.readyBytes, totalBytes: source.swfSizeBytes}));
   validateHeader(bytes);
   return bytes;

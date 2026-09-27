@@ -8,5 +8,5 @@ export async function fetchFile(source: FileSource, progress: (loaded: number) =
   if (!Number.isSafeInteger(source.sizeBytes) || source.sizeBytes < 1 || source.sizeBytes > maximum ||
     !/^[0-9a-f]{64}$/u.test(source.sha256)) {throw new Error("PX68K_FILE_INVALID");}
   if (!session) {throw new ContentIOError("ABI_MISMATCH");}
-  return materializeFileBytes(session, source, eagerPolicy(maximum), purpose, signal, value => progress(value.readyBytes));
+  return materializeFileBytes(session, source, purpose === "CORE_ASSET" ? eagerPolicy(maximum) : session.inputPolicy(purpose === "FIRMWARE" ? "external" : "game"), purpose, signal, value => progress(value.readyBytes));
 }

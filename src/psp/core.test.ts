@@ -29,7 +29,7 @@ it("verifies PSP WASM assets larger than 8 MiB before registering the core", asy
     expect((nodes[0] as HTMLScriptElement).src).toBe("blob:http://localhost/verified");
     queueMicrotask(() => (nodes[0] as HTMLScriptElement).dispatchEvent(new Event("load")));
   });
-  const owner = contentSessionFixture("https://core.test"); owners.push(owner);
+  const owner = contentSessionFixture("https://core.test", undefined, "ppsspp"); owners.push(owner);
   const value = await loadPSP({runtimeBaseUrl: "https://core.test/", assetIndex: index,
     game: {kind: "SEEKABLE_BLOB" as const, rangeRequired: true as const, url: "https://game.test/", sizeBytes: 1, sha256: "0".repeat(64)}}, win, undefined, owner.session);
   expect(value.module).toBe(registration);
@@ -39,7 +39,7 @@ it("verifies PSP WASM assets larger than 8 MiB before registering the core", asy
 
 it("rejects oversized asset declarations before allocating or fetching", async () => {
   const fetcher = vi.fn(); vi.stubGlobal("fetch", fetcher);
-  const owner = contentSessionFixture("https://core.test"); owners.push(owner);
+  const owner = contentSessionFixture("https://core.test", undefined, "ppsspp"); owners.push(owner);
   await expect(loadPSP({runtimeBaseUrl: "https://core.test/", game: {kind: "SEEKABLE_BLOB" as const, rangeRequired: true as const, url: "https://game.test/", sizeBytes: 1, sha256: "0".repeat(64)},
     assetIndex: {"assets/ppsspp/ppsspp.js": {sizeBytes: 128 * 1024 * 1024 + 1, sha256: "0".repeat(64)}}}, window, undefined, owner.session))
     .rejects.toThrow("CONTENT_IO_SOURCE_INVALID");

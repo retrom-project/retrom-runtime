@@ -30,7 +30,7 @@ describe("WASM-4 Web adapter", () => {
     const progress = vi.fn();
 
     const adapter = await mountWasm4(
-      runtimeConfig, target, window, restore, progress, loader, managedAdapterFixture(runtimeConfig),
+      runtimeConfig, target, window, restore, progress, loader, managedAdapterFixture("wasm4", runtimeConfig),
     );
 
     expect(loader).toHaveBeenCalledWith(
@@ -67,7 +67,7 @@ describe("WASM-4 Web adapter", () => {
 
     await expect(mountWasm4(
       config("f".repeat(64), cart.byteLength), document.createElement("div"), window, null,
-      () => undefined, async () => core.module, managedAdapterFixture(config("f".repeat(64), cart.byteLength)),
+      () => undefined, async () => core.module, managedAdapterFixture("wasm4", config("f".repeat(64), cart.byteLength)),
     )).rejects.toThrow("CONTENT_IO_IDENTITY_CHANGED");
     expect(core.create).not.toHaveBeenCalled();
   });
@@ -80,7 +80,7 @@ describe("WASM-4 Web adapter", () => {
     incompatible.module.RETROM_WASM4_ADAPTER_ABI = "unknown";
     await expect(mountWasm4(
       config(digest, cart.byteLength), document.createElement("div"), window, null,
-      () => undefined, async () => incompatible.module, managedAdapterFixture(config(digest, cart.byteLength)),
+      () => undefined, async () => incompatible.module, managedAdapterFixture("wasm4", config(digest, cart.byteLength)),
     )).rejects.toThrow("WASM4_CORE_ABI_MISMATCH");
 
     const oversized = fakeCore(
@@ -88,7 +88,7 @@ describe("WASM-4 Web adapter", () => {
     );
     const adapter = await mountWasm4(
       config(digest, cart.byteLength), document.createElement("div"), window, null,
-      () => undefined, async () => oversized.module, managedAdapterFixture(config(digest, cart.byteLength)),
+      () => undefined, async () => oversized.module, managedAdapterFixture("wasm4", config(digest, cart.byteLength)),
     );
     await expect(adapter.checkpoint()).rejects.toThrow("WASM4_CHECKPOINT_CREATE_FAILED");
     await adapter.exit();
@@ -105,7 +105,7 @@ describe("WASM-4 Web adapter", () => {
 
     await expect(mountWasm4(
       config(digest, cart.byteLength), document.createElement("div"), window, null,
-      () => undefined, async () => core.module, managedAdapterFixture(config(digest, cart.byteLength)),
+      () => undefined, async () => core.module, managedAdapterFixture("wasm4", config(digest, cart.byteLength)),
     )).rejects.toThrow("WASM4_CHECKPOINT_RESTORE_FAILED");
   });
 });

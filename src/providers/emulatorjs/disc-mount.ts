@@ -2,10 +2,8 @@ import type {LaunchEnvelopeV1} from "../../provider/module-api.js";
 import {materializeFileBytes, requireContentSession} from "../../provider/content-inputs.js";
 import {installFlycastCompatibility} from "./flycast.js";
 import {resource} from "./resources.js";
-import type {ContentSessionClient} from "../../content-io/client.js";
+import type {AdapterContentSession} from "../../provider/content-inputs.js";
 import {fileContentSource} from "../../provider/content-inputs.js";
-import {eagerPolicy, rangePolicy} from "../../provider/content-policies.js";
-import {contentLimits} from "../../content-io/limits.js";
 import {createFlycastRange, createNeoCDRange} from "./neocd-range.js";
 import {EagerContentFile} from "./eager-content-file.js";
 import type {EjsWindow} from "./emulator-instance.js";
@@ -21,8 +19,8 @@ export function isFlycastArcadeTarget(targetId: string) {
 }
 
 export async function mountNeoCDRange(runtimeWindow: EjsWindow, disc: {url: string; sha256: string; sizeBytes: number},
-  signal: AbortSignal, fail: (error: Error) => void, session: ContentSessionClient): Promise<ReturnType<typeof createNeoCDRange>> {
-  const policy = rangePolicy("ASYNC", contentLimits.signedDisc);
+  signal: AbortSignal, fail: (error: Error) => void, session: AdapterContentSession): Promise<ReturnType<typeof createNeoCDRange>> {
+  const policy = session.inputPolicy("game");
   const reader = await session.open(fileContentSource(disc, policy), policy, signal);
   const range = createNeoCDRange(disc, reader, fail);
   runtimeWindow.RETROM_NEOCD_RANGE = range;
@@ -32,8 +30,8 @@ export async function mountNeoCDRange(runtimeWindow: EjsWindow, disc: {url: stri
 }
 
 export async function mountSeekableContentRange(runtimeWindow: EjsWindow, disc: {url: string; sha256: string; sizeBytes: number},
-  signal: AbortSignal, fail: (error: Error) => void, session: ContentSessionClient): Promise<ReturnType<typeof createNeoCDRange>> {
-  const policy = rangePolicy("ASYNC", contentLimits.signedDisc);
+  signal: AbortSignal, fail: (error: Error) => void, session: AdapterContentSession): Promise<ReturnType<typeof createNeoCDRange>> {
+  const policy = session.inputPolicy("game");
   const reader = await session.open(fileContentSource(disc, policy), policy, signal);
   const range = createNeoCDRange(disc, reader, fail);
   // The emulator may inspect both ends of a disc before its first frame.
@@ -45,9 +43,9 @@ export async function mountSeekableContentRange(runtimeWindow: EjsWindow, disc: 
 }
 
 export async function mountEagerContentFile(runtimeWindow: EjsWindow, disc: {url: string; sha256: string; sizeBytes: number},
-  signal: AbortSignal, fail: (error: Error) => void, session: ContentSessionClient,
+  signal: AbortSignal, fail: (error: Error) => void, session: AdapterContentSession,
   report: (readyBytes: number, totalBytes: number) => void = () => {}) {
-  const bytes = await materializeFileBytes(session, disc, eagerPolicy(contentLimits.signedDisc), "GAME", signal,
+  const bytes = await materializeFileBytes(session, disc, session.inputPolicy("game"), "GAME", signal,
     progress => report(progress.readyBytes, progress.totalBytes));
   if (bytes.byteLength !== disc.sizeBytes) {throw new Error("EMULATORJS_CONTENT_FILE_LENGTH_MISMATCH");}
   const file = new EagerContentFile(disc.url, disc.sha256, bytes, fail);
@@ -58,8 +56,8 @@ export async function mountEagerContentFile(runtimeWindow: EjsWindow, disc: {url
 
 export async function mountFlycastRange(runtimeWindow: EjsWindow,
   disc: {url: string; sha256: string; sizeBytes: number}, targetId: string,
-  signal: AbortSignal, fail: (error: Error) => void, session: ContentSessionClient) {
-  const policy = rangePolicy("ASYNC", contentLimits.signedDisc);
+  signal: AbortSignal, fail: (error: Error) => void, session: AdapterContentSession) {
+  const policy = session.inputPolicy("game");
   const reader = await session.open(fileContentSource(disc, policy), policy, signal);
   const range = createFlycastRange(disc, flycastContentName(disc.url, disc.sha256, targetId), reader, fail);
   runtimeWindow.RETROM_FLYCAST_RANGE = range;
@@ -97,7 +95,7 @@ export function mountRangeFS(core: string, seekable: boolean, eager: boolean, da
 }
 
 export async function configureContentDisc(runtimeWindow: EjsWindow, envelope: LaunchEnvelopeV1, core: string,
-  signal: AbortSignal, session: ContentSessionClient | null, fail: (error: Error) => void,
+  signal: AbortSignal, session: AdapterContentSession | null, fail: (error: Error) => void,
   eager = false, report: (readyBytes: number, totalBytes: number) => void = () => {}) {
   if (core === "dosbox_pure") {
     const game = resource(envelope, "game", "FILE_TREE");

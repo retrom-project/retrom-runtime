@@ -1,3 +1,4 @@
+import {targetContentFixture} from "../../tests/target-content-fixture.js";
 // @vitest-environment jsdom
 import {afterEach, expect, it, vi} from "vitest";
 import {mountSamCoupe} from "./adapter.js";
@@ -52,7 +53,7 @@ it("loads the supplied ROM and restored disk, then checkpoints flushed disk writ
     bios: [{url: "http://localhost/samcoupe.rom", sha256: "b".repeat(64), sizeBytes: 32768,
       logicalName: "samcoupe.rom", virtualPath: "Resource/samcoupe.rom"}],
     runtimeBaseUrl: "/assets/samcoupeweb/",
-  }, target, frameWindow, encodeSamDisk(gameSha256, restored), () => undefined, session as never,
+  }, target, frameWindow, encodeSamDisk(gameSha256, restored), () => undefined, targetContentFixture(session as never, "samcoupe"),
     () => undefined);
   expect(files.get("/Resource/samcoupe.rom")?.byteLength).toBe(32768);
   expect(files.get("/media/game.mgt")).toEqual(restored);

@@ -1,3 +1,4 @@
+import {targetContentFixture} from "../../../tests/target-content-fixture.js";
 // @vitest-environment jsdom
 import {afterEach, describe, expect, it, vi} from "vitest";
 import {zipSync} from "fflate";
@@ -28,7 +29,7 @@ describe("Daphne Content I/O project", () => {
       materialize: vi.fn(async (_id: string, request: {maxBytes: number}) => ({kind: "BYTES", bytes: new Uint8Array(Math.min(4, request.maxBytes))})),
     } as unknown as ContentSessionClient;
     const project = await prepareDaphneProject({indexUrl: "/runtime/content/project/digest/index.json", contentDigest: "a".repeat(64)},
-      session, new AbortController().signal, () => {});
+      targetContentFixture(session, "daphne"), new AbortController().signal, () => {});
     expect(opened).toEqual([
       {path: "interstellar.zip", transport: "WHOLE_ALLOWED"},
       {path: "interstellar.txt", transport: "WHOLE_ALLOWED"},
@@ -80,7 +81,7 @@ describe("Daphne Content I/O project", () => {
     vi.stubGlobal("fetch", vi.fn(async () => new Response(bytes, {headers: {"content-length": String(bytes.length)}})));
     const base = "http://localhost:3000/runtime/providers/emulatorjs/";
     const path = "assets/4.2.3/data/cores/daphne-resources.zip";
-    const content = {...managedAdapterFixture(base), assetIndex: {[path]: {
+    const content = {...managedAdapterFixture("daphne", base), assetIndex: {[path]: {
       sha256: createHash("sha256").update(bytes).digest("hex"), sizeBytes: bytes.length,
     }}};
     const assets = await prepareDaphneAssets(base, new AbortController().signal, content, path);

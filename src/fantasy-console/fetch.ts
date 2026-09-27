@@ -7,5 +7,5 @@ export async function verifiedFetch(url: string, size: number, digest: string, s
   session?: AdapterContentSession, purpose: "GAME" | "CORE_ASSET" = "GAME", report?: (value: PreparationProgress) => void) {
   if (!Number.isSafeInteger(size) || size < 1 || size > contentLimits.fantasyFile) {throw new Error("FANTASY_CONTENT_SIZE_INVALID");}
   if (!session) {throw new ContentIOError("ABI_MISMATCH");}
-  return materializeFileBytes(session, {url, sizeBytes: size, sha256: digest}, eagerPolicy(contentLimits.fantasyFile), purpose, signal, report);
+  return materializeFileBytes(session, {url, sizeBytes: size, sha256: digest}, purpose === "CORE_ASSET" ? eagerPolicy(contentLimits.fantasyFile) : session.inputPolicy("game"), purpose, signal, report);
 }

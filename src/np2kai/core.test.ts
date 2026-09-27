@@ -14,7 +14,7 @@ it("resolves provider asset paths against the frame document before loading the 
     expect(script.src).toBe(new URL("/provider/assets/np2kai/np2kai-register.mjs", location.href).href);
     queueMicrotask(() => script.dispatchEvent(new Event("error")));
   });
-  await expect(loadCore({runtimeBaseUrl: "/provider/assets/np2kai/", assetIndex}, win, win.document.createElement("canvas"), undefined, managedAdapterFixture({}).contentSession))
+  await expect(loadCore({runtimeBaseUrl: "/provider/assets/np2kai/", assetIndex}, win, win.document.createElement("canvas"), undefined, managedAdapterFixture("np2kai-pc98", {}).contentSession))
     .rejects.toThrow("NP2KAI_MODULE_LOAD_FAILED");
   expect(fetcher).toHaveBeenCalledTimes(4);
 });

@@ -9,6 +9,6 @@ export async function loadDisk(source: DiskSource, progress: RuntimeProgressRepo
   if (!Number.isSafeInteger(source.sizeBytes) || source.sizeBytes < 1 || source.sizeBytes > contentLimits.np2kaiDisk ||
     !/^[0-9a-f]{64}$/u.test(source.sha256)) {throw new Error("NP2KAI_DISK_INVALID");}
   if (!session) {throw new ContentIOError("ABI_MISMATCH");}
-  return materializeFileBytes(session, source, eagerPolicy(contentLimits.np2kaiDisk), purpose, signal,
+  return materializeFileBytes(session, source, purpose === "CORE_ASSET" ? eagerPolicy(contentLimits.np2kaiDisk) : session.inputPolicy("game"), purpose, signal,
     value => progress({phase: purpose === "GAME" ? "PROJECT_CONTENT" : "RUNTIME_ASSET", loadedBytes: value.readyBytes, totalBytes: source.sizeBytes}));
 }

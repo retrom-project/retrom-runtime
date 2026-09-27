@@ -1,3 +1,5 @@
+import {eagerPolicy} from "../../provider/content-policies.js";
+import {contentLimits} from "../../content-io/limits.js";
 import {providerVersion} from "../../provider/version.js";
 import {emulatorContentPolicies} from "../../provider/content-policies.js";
 import {storageAdapters} from "../../provider/checkpoint-storage.js";
@@ -228,6 +230,7 @@ const targets = cores.map((entry) => {
     ["neocd", "genesis_plus_gx_cd", "flycast"].includes(entry.targetId ?? entry.id) || entry.id === "flycast"
       ? inputs.map(input => input.role === "game" ? {...input, kind: "SEEKABLE_BLOB" as const} : input) : inputs,
   contentIO: emulatorContentPolicies(entry.targetId ?? entry.id),
+  contentMembers: emulatorContentMembers(entry.id),
   inputFilter: true,
   nativeSettings: !["daphne", "dosbox_pure"].includes(entry.id),
   targetOptionsSchema: emulatorJsOptionsSchema,
@@ -325,4 +328,8 @@ function compareUtf8(left: string, right: string) {
     if (difference !== 0) return difference;
   }
   return leftBytes.length - rightBytes.length;
+}
+
+function emulatorContentMembers(core: string): NonNullable<import("../../provider/declarations.js").TargetDeclaration["contentMembers"]> {
+  return core === "daphne" ? {game: {support: eagerPolicy(contentLimits.firmwareFile)}} : {};
 }

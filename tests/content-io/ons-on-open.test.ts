@@ -4,7 +4,7 @@ import {contentSessionFixture} from "../content-session-fixture.js";
 const owners: ReturnType<typeof contentSessionFixture>[]=[];
 afterEach(async()=>{await Promise.all(owners.splice(0).map(owner=>owner.close()));vi.unstubAllGlobals();});
 function fixture() {
- const owner=contentSessionFixture(location.origin);owners.push(owner);const progress=vi.fn(),failed=vi.fn();
+ const owner=contentSessionFixture(location.origin, undefined, "onscripter-yuri");owners.push(owner);const progress=vi.fn(),failed=vi.fn();
  const fetcher=vi.fn(async(url:string)=>{const response=new Response(new Uint8Array([1,2,3]),{headers:{ETag:'"index-v1"'}});Object.defineProperty(response,"url",{value:url});return response;});vi.stubGlobal("fetch",fetcher);
  const files=[{path:"arc.nsa",sizeBytes:3,url:new URL("/arc",location.href).href},{path:"later.png",sizeBytes:3,url:new URL("/later",location.href).href}];
  const project=createOnsProjectFileMap(files,window,progress,{contentSession:owner.session,projectDigest:"a".repeat(64),onFailure:failed});

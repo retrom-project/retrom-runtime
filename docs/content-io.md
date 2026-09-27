@@ -156,8 +156,14 @@ S12–S15 execute each fork's own Node/Python protocol tests as UNIT and validat
 
 S16 enumerates every eager adapter separately and reruns original adapter suites plus materialization failure, resume, limit and real 512 MiB tests. S17 runs original ONS/Butterscotch/NXEngine suites and browser checks for lazy file sets, independent-session reuse, progress, missing workspace storage, receipt corruption, unfinished generations, concurrent pointer publication, absent Web Locks and save isolation.
 
-S19 invokes the Host protocol/observer/Web suites in its existing PFB toolchain and separately runs Chrome diagnostic retention across iframe removal. S20 invokes the Host's full 21-target product runner; a successful legacy product report alone cannot satisfy its required scenario and performance evidence. S21 revalidates all 21 preceding stage results and every owning case/level/subcase, then runs complete Runtime quality gates and Host backend/integration/Web build gates. It does not authorize release.
+S19 invokes the Host protocol/observer/Web suites in its existing PFB toolchain and separately runs Chrome diagnostic retention across iframe removal. S20 invokes the Host's generated managed-Target product matrix; a successful legacy product report alone cannot satisfy its required scenario and performance evidence. S21 revalidates all 21 preceding stage results and every owning case/level/subcase, then runs complete Runtime quality gates and Host backend/integration/Web build gates. It does not authorize release.
 
 Each stage retains its nested Host commands, reports and captures in the run directory. Playwright commands use distinct per-command output directories. These additional artifacts are hashed by streaming, including large binary evidence, and form a closed inventory: changed, missing, unlisted or symbolic-link evidence is rejected. Original machine reports and assertions retain their independent checks; an auxiliary artifact cannot substitute for a runner report.
 
 KiriKiri executes only verified Content I/O assets. JavaScript and Wasm are exposed as session-owned Blob URLs; the Wasm URL uses `application/wasm` and is supplied through `Module.locateFile`. This keeps SDK loaders that omit the optional `wasmBinary` input on the same verified bytes, without a second HTTP download. Exit-trap provenance is bound to that exact Wasm URL, and closing the adapter revokes every asset URL.
+
+Provider 在一次挂载中创建 Target 内容上下文，保留同一 Session、资产清单、取消信号和进度/错误回调。游戏与外部 BIOS/RTP 的策略只从声明读取；适配器不能自行重建或放宽大小、写入与桥接策略。Daphne 的 `game.support` 声明只用于 ROM、framefile、音频等辅助文件，视频沿用 game 的 RANGE 策略。公共工作区交付也接收声明策略。
+
+PSP 与 Play! 的共享模块加载器校验每份资产后创建 Blob URL，核心桥接、Worker 与 Emscripten 只使用这组 URL。自包含入口不再根据原始网络地址重复导入；退出、失败及取消会释放这些 URL。
+
+验收清单由 `node scripts/content-io/target-catalog.mjs --output <Retrom>/tests/fixtures/content-io/target-declarations.json` 从两个 Provider 声明生成。`--check` 对比现有清单并拒绝漂移；清单只用于开发验收，不扩展 Host 的 Launch 协议。常规 `npm test` 扫描当前 Runtime 的 I/O 边界并校验已注册外部加载器路径。完整 fork 边界检查仍由 Content I/O 阶段门禁执行。

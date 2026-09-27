@@ -1,3 +1,4 @@
+import {targetContentFixture} from "../target-content-fixture.js";
 import {createContentSession} from "../../src/content-io/client.js";
 import {createNeoCDRange} from "../../src/providers/emulatorjs/neocd-range.js";
 import {ScummvmFiles} from "../../src/scummvm/files.js";
@@ -19,7 +20,7 @@ export async function facadeTrace(kind: "neocd" | "scummvm", source: ContentSour
     const facade = kind === "neocd" ? createNeoCDRange({sizeBytes: source.sizeBytes, sha256: "a".repeat(64)},
       await session.open(source, {mode: "RANGE", bridge: "ASYNC", result: "READER", maxFileBytes: 2147483647,
         contentLengthPolicy: "EXACT_IF_PRESENT", workspace: "NONE", writes: "DENY"}), error => {throw error;}) :
-      new ScummvmFiles({schemaVersion: 1, files: [{path: "game.bin", sizeBytes: source.sizeBytes, url: source.url}]}, "a".repeat(64), session);
+      new ScummvmFiles({schemaVersion: 1, files: [{path: "game.bin", sizeBytes: source.sizeBytes, url: source.url}]}, "a".repeat(64), targetContentFixture(session, "scummvm"));
     const read = (offset: number, length: number) => facade instanceof ScummvmFiles ? facade.read("/game/game.bin", offset, length) : facade.read(offset, length);
     snapshots.push({read: 0, l1: session.stats.lruBytes, service: await stats()});
     if (facade instanceof ScummvmFiles && (facade.stat("/game/game.bin") !== source.sizeBytes || facade.list("/game")[0] !== "game.bin")) {throw new Error("TRACE_STAT");}

@@ -1,5 +1,5 @@
+import {bindOptionalTargetContent} from "../../provider/target-content.js";
 import {ProviderContentOwner} from "../../provider/content-owner.js";
-import type {ContentSessionClient} from "../../content-io/client.js";
 import {ContentIOError} from "../../content-io/errors.js";
 import {stopNativeInstance} from "./native-exit.js";
 import {startEmulatorInputDiagnostics} from "./input-diagnostics.js";
@@ -91,7 +91,7 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
   private readonly implementation: EmulatorImplementation;
   private readonly eagerContentGame: boolean;
   private readonly contentOwner = new ProviderContentOwner(error => this.fail(error.message, error), diagnostic => this.host.reportDiagnostic({code: "CONTENT_IO_METRICS", message: JSON.stringify(diagnostic)}));
-  private contentSession: ContentSessionClient | null = null;
+  private contentSession: ReturnType<typeof bindOptionalTargetContent> = null;
   private readonly hostAbort = () => {this.contentOwner.force(); void this.exit();};
 
   constructor(
@@ -303,7 +303,7 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
       this.runtimeWindow = runtimeWindow;
       this.checkMountActive();
       const declaration = emulatorJsProviderDefinition.targets.find(entry => entry.id === this.envelope.runtime.targetId)!;
-      this.contentSession = await this.contentOwner.start(declaration, this.envelope, this.assetIndex);
+      this.contentSession = bindOptionalTargetContent(await this.contentOwner.start(declaration, this.envelope, this.assetIndex), declaration);
       this.checkMountActive();
       this.daphneProject = await maybePrepareDaphneProject(declaration, this.envelope,
         this.contentSession, this.assetIndex, this.host.signal, error => this.fail(error.message, error),

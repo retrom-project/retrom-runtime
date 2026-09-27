@@ -1,6 +1,5 @@
 import {sha256} from "@noble/hashes/sha2.js";
 
-import {eagerPolicy} from "../provider/content-policies.js";
 import {materializeFileBytes, type AdapterContentSession} from "../provider/content-inputs.js";
 import type {MountedRuntimeAdapter, RuntimeProgressReporter} from "../internal-adapter.js";
 import {installSamGamepad} from "./input.js";
@@ -138,9 +137,9 @@ async function loadMedia(config: SamCoupeParameters, target: HTMLElement, frameW
   const extension = /\.(dsk|mgt|sad|sbt)$/iu.exec(new URL(config.game.url, frameWindow.document.baseURI).pathname)?.[1]?.toLowerCase();
   if (!extension || config.game.sizeBytes > maxDiskBytes) {invalid();}
   const restoredDisk = restore ? decodeSamDisk(config.game.sha256, restore) : null;
-  const bios = await materializeFileBytes(contentSession, config.bios[0], eagerPolicy(32768), "FIRMWARE", signal);
+  const bios = await materializeFileBytes(contentSession, config.bios[0], contentSession.inputPolicy("external"), "FIRMWARE", signal);
   if (bios.byteLength !== 32768) {invalid();}
-  const game = await materializeFileBytes(contentSession, config.game, eagerPolicy(maxDiskBytes), "GAME", signal,
+  const game = await materializeFileBytes(contentSession, config.game, contentSession.inputPolicy("game"), "GAME", signal,
     value => progress({phase: "PROJECT_CONTENT", loadedBytes: value.readyBytes, totalBytes: config.game.sizeBytes}));
   if (!game.byteLength || game.byteLength > maxDiskBytes) {invalid();}
   signal?.throwIfAborted();

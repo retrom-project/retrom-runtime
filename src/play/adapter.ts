@@ -1,6 +1,4 @@
 import {abi, contractSha256} from "../content-io/identity.js";
-import {contentLimits} from "../content-io/limits.js";
-import {rangePolicy} from "../provider/content-policies.js";
 import {fileContentSource, type AdapterContentOptions} from "../provider/content-inputs.js";
 import type {PlayModule} from "./core.js";
 import type {MountedRuntimeAdapter} from "../internal-adapter.js";
@@ -13,7 +11,7 @@ export async function mountPlay(config: PlayParameters, target: HTMLElement, fra
   if (target.ownerDocument !== frameWindow.document || restorePayload &&
       (restorePayload.byteLength < 1 || restorePayload.byteLength > 268435456)) {throw new Error("PLAY_RUNTIME_CONFIG_INVALID");}
   signal?.throwIfAborted();
-  const loaded = await loader(config, frameWindow, signal, content?.contentSession);
+  const loaded = await loader(config, frameWindow, signal, content?.contentSession, content?.reportProgress);
   let started: Awaited<ReturnType<typeof startPlay>>;
   try {
     if (!validPlayModule(loaded.module)) {throw new Error("PLAY_CORE_ABI_MISMATCH");}
@@ -60,7 +58,7 @@ export async function mountPlay(config: PlayParameters, target: HTMLElement, fra
 async function startPlay(module: PlayModule, assets: Readonly<Record<string, string>>, config: PlayParameters, target: HTMLElement, restorePayload: Uint8Array | null,
   reportFailure: (error: Error) => void, signal?: AbortSignal, content?: AdapterContentOptions) {
   if (!content) {throw new Error("CONTENT_IO_ABI_MISMATCH");}
-  const policy = rangePolicy("POLLING", contentLimits.indexedFile);
+  const policy = content.contentSession.inputPolicy("game");
   const reader = await content.contentSession.open(fileContentSource(config.disc, policy), policy, signal);
   try {
     const core = await module.createRetromPlay({disc: {sha256: config.disc.sha256, sizeBytes: config.disc.sizeBytes},

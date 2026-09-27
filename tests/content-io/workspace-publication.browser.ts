@@ -9,7 +9,7 @@ for (const locks of [true, false]) {
     const index = new TextEncoder().encode(JSON.stringify({schemaVersion: 1, files: [
       {path: "data.win", sizeBytes: 4, url: "/files/game"}, {path: "meta/complete-v1.json", sizeBytes: 3, url: "/files/legal"},
     ]}));
-    const server = await startFixtureServer({contentModule: await bundle("../../src/content-io/client.ts"),
+    const server = await startFixtureServer({contentModule: await bundle("./target-session.ts"),
       staticFiles: {index, game: new Uint8Array([1, 2, 3, 4]), legal: new Uint8Array([5, 6, 7])}, modules: {
         "worker.mjs": await bundle("../../src/content-io/worker.ts"), "project.mjs": await bundle("../../src/butterscotch/project-store.ts"),
       }});
@@ -17,7 +17,7 @@ for (const locks of [true, false]) {
       await page.goto(`${server.origin}/__test__/page`);
       const result = await page.evaluate(async locks => {
         const clientUrl = "/__test__/content.mjs", projectUrl = "/__test__/project.mjs";
-        const {createContentSession} = await import(clientUrl) as typeof import("../../src/content-io/client.js");
+        const {createContentSession, targetContentFixture} = await import(clientUrl) as typeof import("./target-session.js");
         const {prepareButterscotchProject} = await import(projectUrl) as typeof import("../../src/butterscotch/project-store.js");
         if (!locks) {Object.defineProperty(navigator, "locks", {value: undefined});}
         const sessions = await Promise.all([0, 1, 2].map(() => createContentSession(new Worker("/__test__/worker.mjs", {type: "module"}),
@@ -25,7 +25,7 @@ for (const locks of [true, false]) {
         const projects: Awaited<ReturnType<typeof prepareButterscotchProject>>[] = [];
         const config = {contentDigest: "a".repeat(64), projectIndexUrl: "/files/index"};
         const prepare = async (n: number) => {
-          const project = await prepareButterscotchProject({...config, sessionId: `instance-${n}`}, window, () => {}, {contentSession: sessions[n], assetIndex: {}});
+          const project = await prepareButterscotchProject({...config, sessionId: `instance-${n}`}, window, () => {}, {contentSession: targetContentFixture(sessions[n], "butterscotch-gamemaker"), assetIndex: {}});
           projects.push(project); return project;
         };
         try {
@@ -57,7 +57,7 @@ for (const locks of [true, false]) {
 }
 test("[X-17] BROWSER/workspace-published-abort keeps a completed generation after its pointer becomes visible", async ({page}) => {
   const index = new TextEncoder().encode(JSON.stringify({schemaVersion: 1, files: [{path: "data.win", sizeBytes: 4, url: "/files/game"}]}));
-  const server = await startFixtureServer({contentModule: await bundle("../../src/content-io/client.ts"),
+  const server = await startFixtureServer({contentModule: await bundle("./target-session.ts"),
     staticFiles: {index, game: new Uint8Array([1, 2, 3, 4])}, modules: {
       "worker.mjs": await bundle("../../src/content-io/worker.ts"), "project.mjs": await bundle("../../src/butterscotch/project-store.ts"),
     }});
@@ -65,7 +65,7 @@ test("[X-17] BROWSER/workspace-published-abort keeps a completed generation afte
     await page.goto(`${server.origin}/__test__/page`);
     const result = await page.evaluate(async () => {
       const clientUrl = "/__test__/content.mjs", projectUrl = "/__test__/project.mjs";
-      const {createContentSession} = await import(clientUrl) as typeof import("../../src/content-io/client.js");
+      const {createContentSession, targetContentFixture} = await import(clientUrl) as typeof import("./target-session.js");
       const {prepareButterscotchProject} = await import(projectUrl) as typeof import("../../src/butterscotch/project-store.js");
       const session = await createContentSession(new Worker("/__test__/worker.mjs", {type: "module"}), {storageOrigin: location.origin, allowedOrigins: [location.origin]});
       const controller = new AbortController(), original = FileSystemFileHandle.prototype.createWritable;
@@ -77,14 +77,14 @@ test("[X-17] BROWSER/workspace-published-abort keeps a completed generation afte
       const config = {contentDigest: "a".repeat(64), projectIndexUrl: "/files/index", sessionId: "aborted"};
       let failure = "", restored: Awaited<ReturnType<typeof prepareButterscotchProject>> | undefined;
       try {
-        try {await prepareButterscotchProject(config, window, () => {}, {contentSession: session, assetIndex: {}, signal: controller.signal});}
+        try {await prepareButterscotchProject(config, window, () => {}, {contentSession: targetContentFixture(session, "butterscotch-gamemaker"), assetIndex: {}, signal: controller.signal});}
         catch (error) {failure = (error as Error).message;}
         FileSystemFileHandle.prototype.createWritable = original;
         const root = await navigator.storage.getDirectory(), project = await (await root.getDirectoryHandle("projects")).getDirectoryHandle(config.contentDigest);
         const pointer = JSON.parse(await (await (await project.getFileHandle(".content-io-current-v1.json")).getFile()).text()) as {generation: string};
         const generation = await project.getDirectoryHandle(pointer.generation), data = await generation.getDirectoryHandle("data");
         const bytes = Array.from(new Uint8Array(await (await (await data.getFileHandle("data.win")).getFile()).arrayBuffer()));
-        restored = await prepareButterscotchProject({...config, sessionId: "survivor"}, window, () => {}, {contentSession: session, assetIndex: {}});
+        restored = await prepareButterscotchProject({...config, sessionId: "survivor"}, window, () => {}, {contentSession: targetContentFixture(session, "butterscotch-gamemaker"), assetIndex: {}});
         return {failure, bytes, path: restored.gamePath, generation: pointer.generation};
       } finally {FileSystemFileHandle.prototype.createWritable = original; restored?.release(); await session.close();}
     });

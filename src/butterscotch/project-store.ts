@@ -22,7 +22,7 @@ export async function prepareButterscotchProject(config: ProjectConfig, frameWin
   const inputs:WorkspaceInput[]=value.files.map(file=>({path:file.path,source:{
     identity:{kind:"INDEX_ENTRY",projectDigest:config.contentDigest,logicalPath:file.path},url:new URL(file.url,base).href,
     sizeBytes:file.sizeBytes,purpose:"GAME",transport:"WHOLE_ALLOWED",etagPolicy:"PIN_STRONG",contentLengthPolicy:"EXACT_IF_PRESENT",}}));
-  const project=await prepareWorkspaceProject(root,config.contentDigest,inputs,content.contentSession,location.origin,budget,content.signal,
+  const project=await prepareWorkspaceProject(root,config.contentDigest,inputs,content.contentSession,content.contentSession.inputPolicy("game"),location.origin,budget,content.signal,
     (loadedBytes,totalBytes)=>reportProgress({phase:"PROJECT_CONTENT",loadedBytes,totalBytes}));
   try {
     await(await root.getDirectoryHandle("saves",{create:true})).getDirectoryHandle(config.sessionId,{create:true});

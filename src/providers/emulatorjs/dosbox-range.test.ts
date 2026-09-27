@@ -1,3 +1,4 @@
+import {targetContentFixture} from "../../../tests/target-content-fixture.js";
 // @vitest-environment jsdom
 import {afterEach, expect, it, vi} from "vitest";
 import {prepareDOSBundle} from "./dosbox-range.js";
@@ -18,7 +19,7 @@ it.each([
     tryReadInto: (offset: number, buffer: Uint8Array) => {reads.push(offset); buffer.fill(1); return buffer.byteLength;},
     readInto: vi.fn(), close: vi.fn(async () => {}),
   }))} as unknown as ContentSessionClient;
-  const bundle = await prepareDOSBundle({indexUrl, contentDigest: digest}, session,
+  const bundle = await prepareDOSBundle({indexUrl, contentDigest: digest}, targetContentFixture(session, "dosbox-pure"),
     new AbortController().signal, () => {});
   expect(session.open).toHaveBeenCalledWith(expect.objectContaining({
     identity: {kind: "INDEX_ENTRY", projectDigest: digest, logicalPath: "game.zip"},

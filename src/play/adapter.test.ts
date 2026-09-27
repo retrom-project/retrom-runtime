@@ -20,7 +20,7 @@ describe("Play! adapter", () => {
     const release = vi.fn();
   const loader = async () => ({module: {RETROM_PLAY_ABI: "play-host-v2", contentAbi, contractSha256, RETROM_PLAY_CHECKPOINT_MAX_BYTES: 268435456, createRetromPlay: create}, assets: {}, close: release});
     const restore = new Uint8Array([3]);
-    const owner = contentSessionFixture(location.origin, [location.origin, "http://localhost"]); owners.push(owner);
+    const owner = contentSessionFixture(location.origin, [location.origin, "http://localhost"], "play-ps2"); owners.push(owner);
     const adapter = await mountPlay(config, target, window, restore, vi.fn(), undefined, loader, {contentSession: owner.session, assetIndex: {}});
     expect(create.mock.calls[0]?.[0]).toMatchObject({disc: {sha256: config.disc.sha256, sizeBytes: config.disc.sizeBytes}, content: {abi: contentAbi, contractSha256}, restorePayload: restore});
     expect(create.mock.calls[0]?.[0]).not.toHaveProperty("disc.url");

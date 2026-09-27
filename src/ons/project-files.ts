@@ -1,9 +1,7 @@
 import type {RuntimeProgressReporter} from "../internal-adapter.js";
 import type {AdapterContentSession} from "../provider/content-inputs.js";
-import {eagerPolicy} from "../provider/content-policies.js";
 import {checkSignal, combineSignals} from "../content-io/abort.js";
 import {ContentIOError} from "../content-io/errors.js";
-import {contentLimits} from "../content-io/limits.js";
 export type OnsProjectFile = {path: string; sizeBytes: number; url: string};
 export type OnsProjectFileNode = OnsProjectFile & {loaded: boolean; loading?: Promise<void>};
 type Writer = {writeFile(path: string, bytes: Uint8Array): void};
@@ -39,7 +37,7 @@ export function createOnsProjectFileMap(files: OnsProjectFile[], frameWindow: Wi
   };
 }
 async function loadProjectFile(node: OnsProjectFileNode, base: string, content: Content, signal: AbortSignal) {
-  checkSignal(signal); const policy = eagerPolicy(contentLimits.indexedFile, {mode: "ON_OPEN"});
+  checkSignal(signal); const policy = content.contentSession.inputPolicy("game");
   const reader = await content.contentSession.open({identity: {kind: "INDEX_ENTRY", projectDigest: content.projectDigest, logicalPath: node.path.slice(6)},
     url: new URL(node.url, base).href, sizeBytes: node.sizeBytes, purpose: "GAME", transport: "WHOLE_ALLOWED", etagPolicy: "PIN_STRONG",
     contentLengthPolicy: policy.contentLengthPolicy, }, policy, signal);

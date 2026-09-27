@@ -6,7 +6,7 @@ import {startFixtureServer} from "./fixture-server.mjs";
 test("Sega CD mount uses bounded Range requests and reuses blocks in a new runtime session", async ({page}) => {
   const bundle = async (path: string) => (await build({entryPoints: [fileURLToPath(new URL(`../../src/${path}.ts`, import.meta.url))],
     bundle: true, format: "esm", platform: "browser", write: false, target: "es2022"})).outputFiles[0].text;
-  const server = await startFixtureServer({contentModule: await bundle("content-io/client"), modules: {
+  const server = await startFixtureServer({contentModule: await bundle("../tests/content-io/target-session"), modules: {
     "disc.mjs": await bundle("providers/emulatorjs/disc-mount"), "worker.mjs": await bundle("content-io/worker"),
   }});
   const identity = server.register({id: "game", fixtureId: "multi-tail", behavior: "NORMAL", seed: 17,
@@ -15,7 +15,7 @@ test("Sega CD mount uses bounded Range requests and reuses blocks in a new runti
     await page.goto(`${server.origin}/__test__/page`);
     const result = await page.evaluate(async ({identity}) => {
       const clientPath = "/__test__/content.mjs", discPath = "/__test__/disc.mjs";
-      const {createContentSession} = await import(clientPath) as typeof import("../../src/content-io/client.js");
+      const {createContentSession, targetContentFixture} = await import(clientPath) as typeof import("./target-session.js");
       const {mountSeekableContentRange} = await import(discPath) as typeof import("../../src/providers/emulatorjs/disc-mount.js");
       if (identity.identity.kind !== "FILE_SHA256") {throw new Error("fixture identity");}
       const counts = [];
@@ -28,7 +28,7 @@ test("Sega CD mount uses bounded Range requests and reuses blocks in a new runti
           const before = (await (await fetch("/__test__/requests/game")).json() as unknown[]).length;
           const range = await mountSeekableContentRange(frame as never,
             {url: `${location.origin}/objects/multi-tail/game`, sha256: identity.identity.sha256, sizeBytes: identity.sizeBytes},
-            new AbortController().signal, error => {throw error;}, session);
+            new AbortController().signal, error => {throw error;}, targetContentFixture(session, "genesis-plus-gx-cd"));
           const marker = (frame as Record<string, unknown>).EJS_gameUrl;
           if (!(marker instanceof File) || marker.size > 64) {throw new Error("whole disc mounted");}
           const bytes = await range.read(262140, 19);

@@ -83,16 +83,17 @@ async function kirikiriFixture() {
   return {root, directory, index, descriptor};
 }
 
-it.each(["cap32", "gam4980"] as const)("binds %s candidate bytes without changing public targets", async (core) => {
+it.each(["cap32", "gam4980", "dosbox_pure"] as const)("binds %s candidate bytes without changing public targets", async (core) => {
   const {root, index, corePath} = await fixture(core);
+  const targetId = core === "dosbox_pure" ? "dosbox-pure" : core;
   const bundle = "d".repeat(64), installedRoot = join(root, "installed");
   const installation = join(installedRoot, "emulatorjs", bundle);
   await mkdir(installation, {recursive: true});
-  await writeFile(join(installation, "provider.json"), JSON.stringify({providerId: "emulatorjs",targets:[{id:core,assetPaths:[corePath]}]}));
+  await writeFile(join(installation, "provider.json"), JSON.stringify({providerId: "emulatorjs",targets:[{id:targetId,assetPaths:[corePath]}]}));
   await writeFile(join(installation, "integrity.json"), JSON.stringify({files: [{path: corePath, ...index[corePath]}]}));
   const activePath = join(root, "active.json"), entryPoint = join(root, "entry.ts");
   await writeFile(activePath, JSON.stringify({providers: [{providerId: "emulatorjs", bundleSha256: bundle,
-    installationPath: `emulatorjs/${bundle}`, targets: [{id: core, checkpoint: null}]}]}));
+    installationPath: `emulatorjs/${bundle}`, targets: [{id: targetId, checkpoint: null}]}]}));
   const catalogPath = new URL("../src/providers/emulatorjs/catalog.ts", import.meta.url).pathname;
   await writeFile(entryPoint, `export {emulatorJsProviderDefinition as definition} from ${JSON.stringify(catalogPath)};`);
   await buildPFBProviderDev({activePath, entryPoint, installedRoot, providerId: "emulatorjs", localAssets: [], outputRoot: root});
@@ -102,7 +103,7 @@ it.each(["cap32", "gam4980"] as const)("binds %s candidate bytes without changin
   expect(definition.targets).toHaveLength(emulatorJsProviderDefinition.targets.length);
   for (const original of emulatorJsProviderDefinition.targets) {
     const selected = definition.targets.find((target: {id: string}) => target.id === original.id);
-    if (original.id !== core) {expect(selected).toEqual(original); continue;}
+    if (original.implementation.runtimeCore !== core) {expect(selected).toEqual(original); continue;}
     expect(selected.implementation).toMatchObject({coreSha256: digest("owned core fixture"), coreSizeBytes: 18});
     expect({...selected, implementation: original.implementation}).toEqual(original);
   }
@@ -138,21 +139,23 @@ it("rejects an undeclared core, a missing base asset, a foreign provider and mis
   await expect(readPFBProviderCoreFiles(root, "emulatorjs", join(root, "staging"), index)).rejects.toThrow();
 });
 
-async function fixture(core: "cap32" | "gam4980" = "cap32") {
-  const corePath = `assets/4.2.3/data/cores/${core}-wasm.data`;
-  const license = core === "gam4980" ? "LICENSE" : "COPYING";
-  const repository = core === "gam4980" ? "gam4980" : "libretro-cap32";
+async function fixture(core: "cap32" | "gam4980" | "dosbox_pure" = "cap32") {
+  const dos = core === "dosbox_pure";
+  const filename = `${core}${dos ? "-thread" : ""}-wasm.data`;
+  const corePath = `assets/${dos ? "4.3.0-pre" : "4.2.3"}/data/cores/${filename}`;
+  const license = dos ? "LICENSE.md" : core === "gam4980" ? "LICENSE" : "COPYING";
+  const repository = dos ? "dosbox-pure" : core === "gam4980" ? "gam4980" : "libretro-cap32";
   const root = await mkdtemp(join(tmpdir(), "pfb-core-input-"));
   roots.push(root);
   const directory = join(root, "candidate");
   await mkdir(directory);
   expect(await readPFBProviderCoreFiles(root, "emulatorjs", join(root, "empty"), {})).toEqual([]);
-  const contents = {[license]: "owned license fixture", [`${core}-wasm.data`]: "owned core fixture", "source.tar.gz": "owned source fixture"};
+  const contents = {[license]: "owned license fixture", [filename]: "owned core fixture", "source.tar.gz": "owned source fixture"};
   const files = Object.entries(contents).map(([filename, value]) => ({filename, sizeBytes: Buffer.byteLength(value), sha256: digest(value)}));
   await Promise.all(Object.entries(contents).map(([name, value]) => writeFile(join(directory, name), value)));
   const descriptor = {schemaVersion: 1, kind: "RETROM_CORE_CANDIDATE_V1", coreId: core,
     repository: `https://github.com/retrom-project/${repository}`, branch: "fix/plus-snapshot", commit: "a".repeat(40),
-    sourceTreeSha256: "b".repeat(64), dirty: true, adapterAbi: "emulatorjs-state-v1", files};
+    sourceTreeSha256: "b".repeat(64), dirty: true, adapterAbi: dos ? "emulatorjs-content-io-v1" : "emulatorjs-state-v1", files};
   await writeFile(join(directory, "retrom-core-candidate.json"), JSON.stringify(descriptor));
   await writeFile(join(root, "core-inputs.json"), JSON.stringify({schemaVersion: 1, cores: [{id: core, directory}]}));
   return {root, directory, descriptor, corePath, index: {[corePath]: {sha256: "c".repeat(64), sizeBytes: 10}}};

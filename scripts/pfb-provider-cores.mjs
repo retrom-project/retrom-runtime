@@ -29,8 +29,7 @@ export async function readPFBProviderCoreFiles(outputRoot, providerId, staging, 
     const declared = [...emulatorJsSourceCatalog.forks, ...emulatorJsSourceCatalog.developmentForks]
       .find((fork) => fork.runtimeCore === core.id);
     const source = developmentForkSource(core.id);
-    if (!declared || declared.repository !== source.repository || declared.adapterAbi !== source.adapterAbi ||
-      !Object.hasOwn(assetIndex, `assets/4.2.3/data/cores/${core.id}-wasm.data`)) {invalid();}
+    if (!declared || declared.repository !== source.repository || declared.adapterAbi !== source.adapterAbi) {invalid();}
     const descriptorBytes = await regular(join(core.directory, "retrom-core-candidate.json"));
     const descriptor = JSON.parse(descriptorBytes.toString("utf8"));
     if (!Array.isArray(descriptor.files)) {invalid();}
@@ -39,10 +38,13 @@ export async function readPFBProviderCoreFiles(outputRoot, providerId, staging, 
       assets: [...descriptor.files, {filename: "retrom-core-candidate.json", sizeBytes: descriptorBytes.length,
         sha256: createHash("sha256").update(descriptorBytes).digest("hex")}]};
     const catalog = {developmentForks: [fork]};
+    const candidateFiles = developmentForkFiles(catalog);
+    const runtimeFiles = candidateFiles.filter(file => file.filename.endsWith("-wasm.data"));
+    if (!runtimeFiles.length || runtimeFiles.some(file => !Object.hasOwn(assetIndex, `assets/${file.destination}`))) {invalid();}
     const destination = join(staging, core.id);
     // Reuse the candidate pipeline's exact metadata, filenames, regular-file and SHA checks.
     await stageDevelopmentForks(catalog, new Map([[core.id, core.directory]]), destination);
-    for (const file of developmentForkFiles(catalog)) {
+    for (const file of candidateFiles) {
       if (file.filename !== `${core.id}-thread-wasm.data` && file.filename !== `${core.id}-wasm.data` &&
         file.filename !== "retrom-core-candidate.json") {continue;}
       const path = file.destination.includes("/licenses/") ? `licenses/emulatorjs/${file.destination}` : `assets/${file.destination}`;

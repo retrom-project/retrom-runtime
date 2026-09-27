@@ -4,6 +4,10 @@ import {contentLimits} from "../../content-io/limits.js";
 import {eagerPolicy, rangePolicy} from "../../provider/content-policies.js";
 import {fetchMetadataJson} from "../../provider/metadata.js";
 import {NeoCDRange} from "./neocd-range.js";
+import {loadCoreAsset} from "../../provider/core-assets.js";
+import type {AssetIndexV1} from "../../provider/module-api.js";
+import type {AdapterContentOptions} from "../../provider/content-inputs.js";
+import type {TargetDeclaration} from "../../provider/declarations.js";
 import type {LaunchEnvelopeV1} from "../../provider/module-api.js";
 
 type ProjectFile = {path: string; url: string; sizeBytes: number};
@@ -15,35 +19,34 @@ export function daphneGameFile(runtimeWindow: Window, project: DaphneProject | n
   return project ? new (runtimeWindow as Window & typeof globalThis).File(["RETROM_DAPHNE_PROJECT_V1"], project.romName) : fallback;
 }
 
-export async function maybePrepareDaphneProject(core: string, envelope: LaunchEnvelopeV1,
-  session: ContentSessionClient | null, signal: AbortSignal, fail: (error: Error) => void,
+export async function maybePrepareDaphneProject(target: TargetDeclaration, envelope: LaunchEnvelopeV1,
+  session: ContentSessionClient | null, assetIndex: AssetIndexV1, signal: AbortSignal, fail: (error: Error) => void,
   report: (readyBytes: number, totalBytes: number) => void): Promise<DaphneProject | null> {
-  if (core !== "daphne") {return null;}
+  if (target.implementation.runtimeCore !== "daphne") {return null;}
   const resource = envelope.resources.find(entry => entry.role === "game");
   if (!session || resource?.kind !== "FILE_TREE") {throw new Error("DAPHNE_PROJECT_INVALID");}
   const project = await prepareDaphneProject(resource, session, signal, fail, report);
-  try {project.assets = await prepareDaphneAssets(envelope.runtime.runtimeBaseUrl, signal);}
+  try {project.assets = await prepareDaphneAssets(envelope.runtime.runtimeBaseUrl, signal,
+    {contentSession: session, assetIndex}, target.assetPaths.find(path => path.endsWith("/daphne-resources.zip")) ?? "");}
   catch (error) {await project.video.dispose(); throw error;}
   return project;
 }
 
-export async function prepareDaphneAssets(runtimeBaseUrl: string, signal: AbortSignal): Promise<ReadonlyMap<string, Uint8Array>> {
-  const url = new URL(`${runtimeBaseUrl}assets/4.2.3/data/cores/daphne-resources.zip`, location.href);
-  if (url.origin !== location.origin) {throw new Error("DAPHNE_ASSETS_INVALID");}
-  const response = await fetch(url, {credentials: "same-origin", redirect: "error", signal});
-  const length = Number(response.headers.get("content-length"));
-  if (!response.ok || length > 8 * 1024 * 1024) {throw new Error("DAPHNE_ASSETS_INVALID");}
-  const bytes = new Uint8Array(await response.arrayBuffer());
-  if (bytes.byteLength < 1 || bytes.byteLength > 8 * 1024 * 1024) {throw new Error("DAPHNE_ASSETS_INVALID");}
-  const entries = Object.entries(unzipSync(bytes));
-  if (entries.length < 20 || entries.length > 200) {throw new Error("DAPHNE_ASSETS_INVALID");}
+export async function prepareDaphneAssets(runtimeBaseUrl: string, signal: AbortSignal,
+  content: AdapterContentOptions, assetPath: string): Promise<ReadonlyMap<string, Uint8Array>> {
+  const bytes = await loadCoreAsset(content, runtimeBaseUrl, assetPath, 8 * 1024 * 1024, signal);
   let total = 0;
-  for (const [path, contents] of entries) {
+  const paths = new Set<string>();
+  const entries = Object.entries(unzipSync(bytes, {filter: entry => {
+    const path = entry.name;
+    total += entry.originalSize;
     if (!/^(?:pics\/[a-z0-9._-]+\.bmp|sound\/[a-z0-9._-]+\.(?:wav|ogg))$/iu.test(path) ||
-      path.includes("..")) {throw new Error("DAPHNE_ASSETS_INVALID");}
-    total += contents.byteLength;
-    if (total > 8 * 1024 * 1024) {throw new Error("DAPHNE_ASSETS_INVALID");}
-  }
+      path.includes("..") || paths.has(path) || total > 8 * 1024 * 1024 || paths.size >= 200) {
+      throw new Error("DAPHNE_ASSETS_INVALID");
+    }
+    paths.add(path); return true;
+  }}));
+  if (entries.length < 20) {throw new Error("DAPHNE_ASSETS_INVALID");}
   return new Map(entries);
 }
 

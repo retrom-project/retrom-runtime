@@ -9,7 +9,7 @@ import {contentLimits} from "../../content-io/limits.js";
 import {createFlycastRange, createNeoCDRange} from "./neocd-range.js";
 import {EagerContentFile} from "./eager-content-file.js";
 import type {EjsWindow} from "./emulator-instance.js";
-import {dosGameURL, prepareDOSBundle} from "./dosbox-range.js";
+import {prepareDOSBundle} from "./dosbox-range.js";
 
 export function emulatorJsDisableCue(core: string, targetId: string): boolean {
   return ["cap32", "quasi88"].includes(core) || core === "flycast" &&
@@ -85,7 +85,8 @@ export function hasSeekableGame(envelope: LaunchEnvelopeV1): boolean {
 }
 
 export function gameResourceURL(envelope: LaunchEnvelopeV1, core: string, seekable: boolean) {
-  return core === "dosbox_pure" ? dosGameURL(resource(envelope, "game", "FILE_TREE")) :
+  // DOS receives its virtual File in configureContentDisc before the EJS loader starts.
+  return core === "dosbox_pure" ? "game.zip" :
     resource(envelope, "game", seekable ? "SEEKABLE_BLOB" : "ROM_BLOB").url;
 }
 

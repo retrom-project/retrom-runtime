@@ -305,8 +305,8 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
       const declaration = emulatorJsProviderDefinition.targets.find(entry => entry.id === this.envelope.runtime.targetId)!;
       this.contentSession = await this.contentOwner.start(declaration, this.envelope, this.assetIndex);
       this.checkMountActive();
-      this.daphneProject = await maybePrepareDaphneProject(this.implementation.runtimeCore, this.envelope,
-        this.contentSession, this.host.signal, error => this.fail(error.message, error),
+      this.daphneProject = await maybePrepareDaphneProject(declaration, this.envelope,
+        this.contentSession, this.assetIndex, this.host.signal, error => this.fail(error.message, error),
         (loadedBytes, totalBytes) => this.emit({type: "LOAD_PROGRESS", loadedBytes, totalBytes}));
       this.discRange = daphneVideo(this.daphneProject);
       this.checkMountActive();

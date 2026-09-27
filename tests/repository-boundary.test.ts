@@ -106,11 +106,11 @@ describe("independent package boundary", () => {
       tag: "retrom-core-gca2600db8de4-r1",
     })]));
     const releaseIds = sources.upstreamReleases.map((release: { id: string }) => release.id).sort();
-    expect(releaseIds).toEqual(["apple2js", "butterscotch", "easyrpg", "fake08", "gbe_plus", "j2me", "jsbeeb", "kirikiri2", "mkxp", "np2kai", "nxengine", "onsyuri", "openbor", "px68k", "ruffle", "samcoupeweb", "scummvm", "tic80", "tyranoscript", "wasm4", "webmsx"]);
+    expect(releaseIds).toEqual(["apple2js", "butterscotch", "easyrpg", "fake08", "gbe_plus", "j2me", "jsbeeb", "kirikiri2", "mkxp", "np2kai", "nxengine", "onsyuri", "openbor", "play", "ppsspp", "px68k", "ruffle", "samcoupeweb", "scummvm", "tic80", "tyranoscript", "wasm4", "webmsx"]);
     expect(sources.upstreamReleases).toContainEqual(expect.objectContaining({
       id: "apple2js", tag: "retrom-core-gee0aed25f73c-r1", adapterAbi: "apple2js-web-v1",
     }));
-    expect(sources.developmentInputs.map((input: {id: string}) => input.id).sort()).toEqual(["play", "ppsspp"]);
+    expect(sources.developmentInputs.map((input: {id: string}) => input.id).sort()).toEqual([]);
     expect(await readdir(join(root, "scripts"))).not.toEqual(expect.arrayContaining([
       "build-kirikiri-core.sh", "build-ons-core.sh",
     ]));

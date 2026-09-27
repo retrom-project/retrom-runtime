@@ -2362,6 +2362,132 @@
       "tag": "retrom-core-gee0aed25f73c-r1",
       "commit": "bd97253542832d07cfbfbd121359ea85023bd1e6",
       "metadataUrl": "https://github.com/retrom-project/apple2js/releases/download/retrom-core-gee0aed25f73c-r1/rpg-runtime-release.json"
+    },
+    {
+      "id": "play",
+      "repository": "https://github.com/retrom-project/Play-",
+      "upstreamCommit": "83700b2c31e593bc94e845b4b31b797be84dda59",
+      "adapterAbi": "play-host-v3",
+      "assets": [
+        {
+          "filename": "LICENSE",
+          "output": "licenses/play/LICENSE",
+          "maxSizeBytes": 131072,
+          "sizeBytes": 21716,
+          "sha256": "4d70d64a44292e8025f170a22d3d73dc6867ad9dec3899b964718e2925ce7120",
+          "url": "https://github.com/retrom-project/Play-/releases/download/retrom-core-g83700b2c31e5-r4/LICENSE"
+        },
+        {
+          "filename": "Play.js",
+          "output": "runtime/play/Play.js",
+          "maxSizeBytes": 8388608,
+          "sizeBytes": 200838,
+          "sha256": "89ffec63fb842ef9f30ee67c4dc776d15cc3bfcd911794059254de4daf4fac15",
+          "url": "https://github.com/retrom-project/Play-/releases/download/retrom-core-g83700b2c31e5-r4/Play.js"
+        },
+        {
+          "filename": "Play.wasm",
+          "output": "runtime/play/Play.wasm",
+          "maxSizeBytes": 8388608,
+          "sizeBytes": 2693660,
+          "sha256": "b718adbd519228571fa224fec1d5889ecfa05f4878bed08b0aa5ce6487753f3e",
+          "url": "https://github.com/retrom-project/Play-/releases/download/retrom-core-g83700b2c31e5-r4/Play.wasm"
+        },
+        {
+          "filename": "checkpoint.mjs",
+          "output": "runtime/play/checkpoint.mjs",
+          "maxSizeBytes": 65536,
+          "sizeBytes": 3452,
+          "sha256": "baa9085e28a11787476d501a22046ec832a0b0ec5814ccfd6f2f262a9631d6b9",
+          "url": "https://github.com/retrom-project/Play-/releases/download/retrom-core-g83700b2c31e5-r4/checkpoint.mjs"
+        },
+        {
+          "filename": "input.mjs",
+          "output": "runtime/play/input.mjs",
+          "maxSizeBytes": 65536,
+          "sizeBytes": 1922,
+          "sha256": "23d0fd16d445efd1e8101f28fa7435736d5fabe6f07a5f19c613b8ac0b103962",
+          "url": "https://github.com/retrom-project/Play-/releases/download/retrom-core-g83700b2c31e5-r4/input.mjs"
+        },
+        {
+          "filename": "play-retrom.mjs",
+          "output": "runtime/play/play-retrom.mjs",
+          "maxSizeBytes": 65536,
+          "sizeBytes": 13911,
+          "sha256": "775ccab26d99a575249ee949a2a783efd7f76444f9b81db04f90942eb52b2f67",
+          "url": "https://github.com/retrom-project/Play-/releases/download/retrom-core-g83700b2c31e5-r4/play-retrom.mjs"
+        },
+        {
+          "filename": "disc-device.mjs",
+          "output": "runtime/play/disc-device.mjs",
+          "maxSizeBytes": 65536,
+          "sizeBytes": 3182,
+          "sha256": "20071980d1ed1e0dfe4009b7549a79cf848880b43af6e8eb8d0c0fd68ee96eba",
+          "url": "https://github.com/retrom-project/Play-/releases/download/retrom-core-g83700b2c31e5-r4/disc-device.mjs"
+        }
+      ],
+      "tag": "retrom-core-g83700b2c31e5-r4",
+      "commit": "44cf4d84d075e57faeddb763084d9b0dfe821018",
+      "metadataUrl": "https://github.com/retrom-project/Play-/releases/download/retrom-core-g83700b2c31e5-r4/rpg-runtime-release.json"
+    },
+    {
+      "id": "ppsspp",
+      "repository": "https://github.com/retrom-project/ppsspp",
+      "upstreamCommit": "2e6fd06ed6c77db467dea5fb3f67abd93457da20",
+      "adapterAbi": "ppsspp-host-v4",
+      "assets": [
+        {
+          "filename": "LICENSE",
+          "output": "licenses/ppsspp/LICENSE",
+          "maxSizeBytes": 1048576,
+          "sizeBytes": 196408,
+          "sha256": "0ba2010cfdc104197b72ce506552b35721199b655fbf5b1d2ca79ac98b1bc6d6",
+          "url": "https://github.com/retrom-project/ppsspp/releases/download/retrom-core-g2e6fd06ed6c7-r4/LICENSE"
+        },
+        {
+          "filename": "ppsspp.js",
+          "output": "runtime/ppsspp/ppsspp.js",
+          "maxSizeBytes": 1048576,
+          "sizeBytes": 229785,
+          "sha256": "1e28280a4b56aea2d85caefefa55b899407ef61d9a2e021d3423ab9f72866c69",
+          "url": "https://github.com/retrom-project/ppsspp/releases/download/retrom-core-g2e6fd06ed6c7-r4/ppsspp.js"
+        },
+        {
+          "filename": "ppsspp.wasm",
+          "output": "runtime/ppsspp/ppsspp.wasm",
+          "maxSizeBytes": 134217728,
+          "sizeBytes": 12031437,
+          "sha256": "755d779305a055abbf2f254171147e91b77e5ea1ceef83af90d3f7c63ccc237f",
+          "url": "https://github.com/retrom-project/ppsspp/releases/download/retrom-core-g2e6fd06ed6c7-r4/ppsspp.wasm"
+        },
+        {
+          "filename": "ppsspp.data",
+          "output": "runtime/ppsspp/ppsspp.data",
+          "maxSizeBytes": 134217728,
+          "sizeBytes": 19686927,
+          "sha256": "ab748793b4b4458d217cd37fa777cd4c81e34876cc8ca163bbfaf7f3c2b0df22",
+          "url": "https://github.com/retrom-project/ppsspp/releases/download/retrom-core-g2e6fd06ed6c7-r4/ppsspp.data"
+        },
+        {
+          "filename": "ppsspp.worker.mjs",
+          "output": "runtime/ppsspp/ppsspp.worker.mjs",
+          "maxSizeBytes": 1048576,
+          "sizeBytes": 11399,
+          "sha256": "5bc64c40c35af59e0c8cc2820689de21bfc3043ac41c3306ec94366af301b261",
+          "url": "https://github.com/retrom-project/ppsspp/releases/download/retrom-core-g2e6fd06ed6c7-r4/ppsspp.worker.mjs"
+        },
+        {
+          "filename": "ppsspp-host.mjs",
+          "output": "runtime/ppsspp/ppsspp-host.mjs",
+          "maxSizeBytes": 1048576,
+          "sizeBytes": 8858,
+          "sha256": "f06528947ebd7d4c71e6a733c4a06beba2834da81f5e069b921c1cac5648fa93",
+          "url": "https://github.com/retrom-project/ppsspp/releases/download/retrom-core-g2e6fd06ed6c7-r4/ppsspp-host.mjs"
+        }
+      ],
+      "tag": "retrom-core-g2e6fd06ed6c7-r4",
+      "commit": "0107382fc31ce958da09d4ec4a9f9e3047803aae",
+      "metadataUrl": "https://github.com/retrom-project/ppsspp/releases/download/retrom-core-g2e6fd06ed6c7-r4/rpg-runtime-release.json"
     }
   ],
   "localAssets": [
@@ -2374,87 +2500,5 @@
       "output": "runtime/butterscotch/worker.mjs"
     }
   ],
-  "developmentInputs": [
-    {
-      "id": "play",
-      "repository": "https://github.com/retrom-project/Play-",
-      "upstreamCommit": "83700b2c31e593bc94e845b4b31b797be84dda59",
-      "adapterAbi": "play-host-v3",
-      "assets": [
-        {
-          "filename": "LICENSE",
-          "output": "licenses/play/LICENSE",
-          "maxSizeBytes": 131072
-        },
-        {
-          "filename": "Play.js",
-          "output": "runtime/play/Play.js",
-          "maxSizeBytes": 8388608
-        },
-        {
-          "filename": "Play.wasm",
-          "output": "runtime/play/Play.wasm",
-          "maxSizeBytes": 8388608
-        },
-        {
-          "filename": "checkpoint.mjs",
-          "output": "runtime/play/checkpoint.mjs",
-          "maxSizeBytes": 65536
-        },
-        {
-          "filename": "input.mjs",
-          "output": "runtime/play/input.mjs",
-          "maxSizeBytes": 65536
-        },
-        {
-          "filename": "play-retrom.mjs",
-          "output": "runtime/play/play-retrom.mjs",
-          "maxSizeBytes": 65536
-        },
-        {
-          "filename": "disc-device.mjs",
-          "output": "runtime/play/disc-device.mjs",
-          "maxSizeBytes": 65536
-        }
-      ]
-    },
-    {
-      "id": "ppsspp",
-      "repository": "https://github.com/retrom-project/ppsspp",
-      "upstreamCommit": "2e6fd06ed6c77db467dea5fb3f67abd93457da20",
-      "adapterAbi": "ppsspp-host-v4",
-      "assets": [
-        {
-          "filename": "LICENSE",
-          "output": "licenses/ppsspp/LICENSE",
-          "maxSizeBytes": 1048576
-        },
-        {
-          "filename": "ppsspp.js",
-          "output": "runtime/ppsspp/ppsspp.js",
-          "maxSizeBytes": 1048576
-        },
-        {
-          "filename": "ppsspp.wasm",
-          "output": "runtime/ppsspp/ppsspp.wasm",
-          "maxSizeBytes": 134217728
-        },
-        {
-          "filename": "ppsspp.data",
-          "output": "runtime/ppsspp/ppsspp.data",
-          "maxSizeBytes": 134217728
-        },
-        {
-          "filename": "ppsspp.worker.mjs",
-          "output": "runtime/ppsspp/ppsspp.worker.mjs",
-          "maxSizeBytes": 1048576
-        },
-        {
-          "filename": "ppsspp-host.mjs",
-          "output": "runtime/ppsspp/ppsspp-host.mjs",
-          "maxSizeBytes": 1048576
-        }
-      ]
-    }
-  ]
+  "developmentInputs": []
 }

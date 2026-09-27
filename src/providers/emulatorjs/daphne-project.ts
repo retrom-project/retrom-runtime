@@ -34,7 +34,8 @@ export async function maybePrepareDaphneProject(target: TargetDeclaration, envel
 
 export async function prepareDaphneAssets(runtimeBaseUrl: string, signal: AbortSignal,
   content: AdapterContentOptions, assetPath: string): Promise<ReadonlyMap<string, Uint8Array>> {
-  const bytes = await loadCoreAsset(content, runtimeBaseUrl, assetPath, 8 * 1024 * 1024, signal);
+  const url = new URL(assetPath, new URL(runtimeBaseUrl, location.href)).href;
+  const bytes = await loadCoreAsset(content, url, assetPath, 8 * 1024 * 1024, signal);
   let total = 0;
   const paths = new Set<string>();
   const entries = Object.entries(unzipSync(bytes, {filter: entry => {

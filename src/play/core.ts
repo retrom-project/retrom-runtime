@@ -1,10 +1,12 @@
+import {loadCoreModule, type LoadedCoreModule} from "../provider/core-module.js";
+import type {RuntimeProgressReporter} from "../internal-adapter.js";
 import type {SeekableBlobSource} from "../contract.js";
 import type {AssetIndexV1} from "../provider/module-api.js";
 import {abi as contentAbi, contractSha256} from "../content-io/identity.js";
 import type {ContentReaderV1} from "../../contracts/content-io/v1/content-io.js";
-import {materializeFileBytes, type AdapterContentSession} from "../provider/content-inputs.js";
-import {eagerPolicy} from "../provider/content-policies.js";
-import {contentLimits} from "../content-io/limits.js";
+import type {AdapterContentSession} from "../provider/content-inputs.js";
+
+
 
 export type PlayParameters = {
   disc: SeekableBlobSource;
@@ -32,36 +34,17 @@ export type PlayModule = {
     target: HTMLElement;
     onFailure: (error: Error) => void;
     signal?: AbortSignal;
+    assets: Readonly<Record<string, string>>;
   }): Promise<unknown>;
 };
-export type PlayLoader = (config: PlayParameters, win: Window, signal?: AbortSignal, content?: AdapterContentSession) => Promise<unknown>;
-const registration = "__RETROM_PLAY_CORE_MODULE_V1__";
-
-export const loadPlay: PlayLoader = async (config, win, signal, content) => {
-  const base = new URL(config.runtimeBaseUrl, window.location.href);
-  const files = ["Play.js", "Play.wasm", "checkpoint.mjs", "input.mjs", "play-retrom.mjs", "disc-device.mjs"];
-  for (const file of files) {
-    const identity = config.assetIndex?.[`assets/play/${file}`];
-    if (!identity) {throw new Error("PLAY_ASSET_MISSING");}
-    if (!content) {throw new Error("CONTENT_IO_ABI_MISMATCH");}
-    await materializeFileBytes(content, {...identity, url: new URL(file, base).href}, eagerPolicy(contentLimits.fantasyFile), "CORE_ASSET", signal);
-  }
-  signal?.throwIfAborted();
-  const url = new URL("play-retrom.mjs", base).href;
-  if (win === window) {return import(/* webpackIgnore: true */ /* @vite-ignore */ url) as Promise<unknown>;}
-  return new Promise<unknown>((resolve, reject) => {
-    const global = win as unknown as Record<string, unknown>;
-    const script = win.document.createElement("script");
-    script.type = "module"; script.src = url;
-    const cleanup = () => {win.clearTimeout(timeout); signal?.removeEventListener("abort", abort); script.remove();};
-    const fail = () => {cleanup(); reject(new Error("PLAY_CORE_LOAD_FAILED"));};
-    const abort = () => {cleanup(); reject(new Error("PLAY_RUNTIME_EXITED"));};
-    const timeout = win.setTimeout(fail, 30000);
-    script.addEventListener("error", fail, {once: true});
-    script.addEventListener("load", () => {cleanup(); resolve(global[registration]);}, {once: true});
-    signal?.addEventListener("abort", abort, {once: true});
-    win.document.head.append(script);
-  });
+export type PlayLoader = (config: PlayParameters, win: Window, signal?: AbortSignal,
+  content?: AdapterContentSession, report?: RuntimeProgressReporter) => Promise<LoadedCoreModule>;
+export const loadPlay: PlayLoader = async (config, win, signal, session, report) => {
+  if (!session || !config.assetIndex) {throw new Error("CONTENT_IO_ABI_MISMATCH");}
+  return loadCoreModule({content: {contentSession: session, assetIndex: config.assetIndex},
+    runtimeBaseURL: config.runtimeBaseUrl,
+    assetDirectory: "assets/play/", files: ["Play.js", "Play.wasm", "play-retrom.mjs"],
+    entry: "play-retrom.mjs", registration: "__RETROM_PLAY_CORE_MODULE_V1__", maximum: 128 * 1024 * 1024, window: win, signal, report});
 };
 
 export function validPlayModule(value: unknown): value is PlayModule {

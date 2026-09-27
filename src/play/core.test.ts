@@ -11,10 +11,11 @@ it("resolves relative Provider assets in a blank child frame", async () => {
   const win = frame.contentWindow;
   if (!win) {throw Error("frame missing");}
   const module = {RETROM_PLAY_ABI: "play-host-v2"};
+  Object.assign(URL, {createObjectURL: vi.fn(() => "blob:http://localhost/verified"), revokeObjectURL: vi.fn()});
   Object.assign(win, {__RETROM_PLAY_CORE_MODULE_V1__: module});
   const append = vi.spyOn(win.document.head, "append").mockImplementation((...nodes) => {
     const script = nodes[0] as HTMLScriptElement;
-    expect(script.src).toBe(new URL("/provider/assets/play/play-retrom.mjs", window.location.href).href);
+    expect(script.src).toBe("blob:http://localhost/verified");
     queueMicrotask(() => script.dispatchEvent(new Event("load")));
   });
   const target=retromRuntimeProviderDefinition.targets.find(target=>target.id==="play-ps2")!;
@@ -22,8 +23,10 @@ it("resolves relative Provider assets in a blank child frame", async () => {
   const owner = contentSessionFixture(location.origin);
   const result = await loadPlay({runtimeBaseUrl: "/provider/assets/play/", assetIndex,
     disc: {kind: "SEEKABLE_BLOB", rangeRequired: true, url: "/disc.chd", sizeBytes: 10, sha256: "b".repeat(64)}}, win, undefined, owner.session);
-  expect(result).toBe(module); expect(append).toHaveBeenCalledOnce();
+  expect(result.module).toBe(module); expect(append).toHaveBeenCalledOnce();
+  expect(URL.revokeObjectURL).not.toHaveBeenCalled();
+  result.close(); result.close(); expect(URL.revokeObjectURL).toHaveBeenCalledTimes(3);
   expect(materializeFileBytes).toHaveBeenCalledWith(owner.session, {url: new URL("/provider/assets/play/Play.wasm", window.location.href).href,
-    sizeBytes: 1, sha256: "a".repeat(64)}, expect.objectContaining({mode: "EAGER", result: "BYTES"}), "CORE_ASSET", undefined);
+    sizeBytes: 1, sha256: "a".repeat(64)}, expect.objectContaining({mode: "EAGER", result: "BYTES"}), "CORE_ASSET", undefined, expect.any(Function));
   await owner.close();
 });

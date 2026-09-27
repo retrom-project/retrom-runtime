@@ -13,15 +13,19 @@ export async function mountPlay(config: PlayParameters, target: HTMLElement, fra
   if (target.ownerDocument !== frameWindow.document || restorePayload &&
       (restorePayload.byteLength < 1 || restorePayload.byteLength > 268435456)) {throw new Error("PLAY_RUNTIME_CONFIG_INVALID");}
   signal?.throwIfAborted();
-  const module = await loader(config, frameWindow, signal, content?.contentSession);
-  if (!validPlayModule(module)) {throw new Error("PLAY_CORE_ABI_MISMATCH");}
-  signal?.throwIfAborted();
-  const {core, reader} = await startPlay(module, config, target, restorePayload, reportFailure, signal, content);
+  const loaded = await loader(config, frameWindow, signal, content?.contentSession);
+  let started: Awaited<ReturnType<typeof startPlay>>;
+  try {
+    if (!validPlayModule(loaded.module)) {throw new Error("PLAY_CORE_ABI_MISMATCH");}
+    signal?.throwIfAborted();
+    started = await startPlay(loaded.module, loaded.assets, config, target, restorePayload, reportFailure, signal, content);
+  } catch (error) {loaded.close(); throw error;}
+  const {core, reader} = started;
   let exited = false;
   const exit = async () => {
     if (exited) {return;}
     exited = true; signal?.removeEventListener("abort", abort);
-    try {await core.stop();} finally {await reader.close();}
+    try {await core.stop();} finally {try {await reader.close();} finally {loaded.close();}}
   };
   const abort = () => {void exit();};
   if (signal?.aborted) {await exit(); signal.throwIfAborted();}
@@ -53,14 +57,14 @@ export async function mountPlay(config: PlayParameters, target: HTMLElement, fra
   };
 }
 
-async function startPlay(module: PlayModule, config: PlayParameters, target: HTMLElement, restorePayload: Uint8Array | null,
+async function startPlay(module: PlayModule, assets: Readonly<Record<string, string>>, config: PlayParameters, target: HTMLElement, restorePayload: Uint8Array | null,
   reportFailure: (error: Error) => void, signal?: AbortSignal, content?: AdapterContentOptions) {
   if (!content) {throw new Error("CONTENT_IO_ABI_MISMATCH");}
   const policy = rangePolicy("POLLING", contentLimits.indexedFile);
   const reader = await content.contentSession.open(fileContentSource(config.disc, policy), policy, signal);
   try {
     const core = await module.createRetromPlay({disc: {sha256: config.disc.sha256, sizeBytes: config.disc.sizeBytes},
-      content: {abi, contractSha256, disc: reader}, restorePayload: restorePayload?.slice() ?? null, target, onFailure: reportFailure, signal});
+      content: {abi, contractSha256, disc: reader}, assets, restorePayload: restorePayload?.slice() ?? null, target, onFailure: reportFailure, signal});
     if (!validPlayCore(core)) {throw new Error("PLAY_CORE_ABI_MISMATCH");} return {core, reader};
   } catch (error) {await reader.close(); throw error;}
 }

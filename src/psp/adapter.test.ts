@@ -12,14 +12,15 @@ function setup() {
   const core = {canvas: document.createElement("canvas"), checkpoint: vi.fn(async () => new Uint8Array([1, 2])),
     frameCount: () => 10, pause: vi.fn(), resume: vi.fn(), screenshot: vi.fn(), stop: vi.fn(), setVolume: vi.fn()};
   const create = vi.fn(async (_options: unknown) => core);
-  const loader = async () => ({abi: "ppsspp-host-v3", contentAbi, contractSha256, createPPSSPPHost: create});
+  const release = vi.fn();
+  const loader = async () => ({module: {abi: "ppsspp-host-v3", contentAbi, contractSha256, createPPSSPPHost: create}, assets: {}, close: release});
   const owner = contentSessionFixture(location.origin, [location.origin, "http://localhost"]); owners.push(owner);
   const content = {contentSession: {...owner.session, createSyncChannel: vi.fn(async (fileId: string) => ({
     fileId, objectKey: "a".repeat(64), sizeBytes: config.game.sizeBytes, port: {postMessage() {}, close() {}} as unknown as MessagePort,
     buffer: new SharedArrayBuffer(262208), sessionId: crypto.randomUUID(), channelId: crypto.randomUUID(), epoch: 1 as const, l1BudgetBytes: 2097152,
   }))}, runtimeBaseURL: "http://localhost/"};
   Object.assign(URL, {createObjectURL: vi.fn(() => "blob:http://localhost/verified-client"), revokeObjectURL: vi.fn()});
-  return {core, create, loader, content, owner};
+  return {core, create, loader, content, owner, release};
 }
 afterEach(async () => {await Promise.all(owners.splice(0).map(owner => owner.close())); vi.unstubAllGlobals();});
 describe("independent PSP adapter", () => {
@@ -46,20 +47,20 @@ describe("independent PSP adapter", () => {
     await adapter.exit();
   });
   it("[BR-07] UNIT/ppsspp-lifecycle restores into a new core, propagates controls and owns cleanup", async () => {
-    const {core, create, loader, content} = setup(), target = document.createElement("div"), restore = new Uint8Array([3]);
+    const {core, create, loader, content, release} = setup(), target = document.createElement("div"), restore = new Uint8Array([3]);
     const adapter = await mountPSP(config, target, window, restore, vi.fn(), vi.fn(), undefined, {loader}, content);
     expect(create.mock.calls[0]?.[0]).toMatchObject({restore, target, source: {sha256: config.game.sha256, sizeBytes: config.game.sizeBytes}});
     await adapter.pause(); await adapter.resume(); adapter.setVolume?.(0.4);
     expect(core.pause).toHaveBeenCalledOnce(); expect(core.resume).toHaveBeenCalledOnce();
     expect(core.setVolume).toHaveBeenCalledWith(0.4);
     expect(await adapter.checkpoint()).toEqual({format: "ppsspp-state-v1", bytes: new Uint8Array([1, 2])});
-    await adapter.exit(); await adapter.exit(); expect(core.stop).toHaveBeenCalledOnce();
+    await adapter.exit(); await adapter.exit(); expect(core.stop).toHaveBeenCalledOnce(); expect(release).toHaveBeenCalledOnce();
     expect(adapter.getCheckpointAvailability().available).toBe(false);
     await expect(adapter.checkpoint()).rejects.toThrow("PPSSPP_RUNTIME_EXITED");
   });
   it("[BR-12] UNIT/ppsspp-abi rejects an incompatible ABI and empty checkpoints", async () => {
     const args = [config, document.createElement("div"), window, null, vi.fn(), vi.fn(), undefined] as const;
-    await expect(mountPSP(...args, {loader: async () => ({abi: "old"})})).rejects.toThrow("PPSSPP_CORE_ABI_MISMATCH");
+    await expect(mountPSP(...args, {loader: async () => ({module: {abi: "old"}, assets: {}, close() {}})})).rejects.toThrow("PPSSPP_CORE_ABI_MISMATCH");
     const {core, loader, content} = setup(); core.checkpoint.mockResolvedValue(new Uint8Array());
     const adapter = await mountPSP(...args, {loader}, content);
     await expect(adapter.checkpoint()).rejects.toThrow("PPSSPP_CHECKPOINT_INVALID");

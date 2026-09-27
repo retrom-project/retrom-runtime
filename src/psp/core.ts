@@ -1,9 +1,11 @@
+import {loadCoreModule, type LoadedCoreModule} from "../provider/core-module.js";
+import type {RuntimeProgressReporter} from "../internal-adapter.js";
 import {abi as contentAbi, contractSha256} from "../content-io/identity.js";
 import type {ContentSessionClient} from "../content-io/client.js";
 import type {AdapterContentSession} from "../provider/content-inputs.js";
 import type {SeekableBlobSource} from "../contract.js";
 import type {AssetIndexV1} from "../provider/module-api.js";
-import {loadPSPFile} from "./content.js";
+
 
 export type PSPParameters = {
   game: SeekableBlobSource;
@@ -31,41 +33,19 @@ export type PSPModule = {
     target: HTMLElement;
     onFailure: (error: Error) => void;
     signal?: AbortSignal;
+    assets: Readonly<Record<string, string>>;
   }): Promise<unknown>;
 };
 export type PSPContent = Awaited<ReturnType<ContentSessionClient["createSyncChannel"]>> & {abi: "content-io-v1"; contractSha256: string; syncClientUrl: string};
 export type PSPContentOptions = {contentSession: AdapterContentSession & Pick<ContentSessionClient, "createSyncChannel">; runtimeBaseURL: string};
-export type PSPLoader = (config: PSPParameters, win: Window, signal?: AbortSignal, content?: AdapterContentSession) => Promise<unknown>;
-const registration = "__RETROM_PPSSPP_V1__";
-
-export const loadPSP: PSPLoader = async (config, win, signal, content) => {
-  const base = new URL(config.runtimeBaseUrl, window.location.href);
-  const files = ["ppsspp.js", "ppsspp.wasm", "ppsspp.data", "ppsspp.worker.mjs", "ppsspp-host.mjs"];
-  for (const file of files) {
-    const identity = config.assetIndex?.[`assets/ppsspp/${file}`];
-    if (!identity) {throw new Error("PPSSPP_ASSET_MISSING");}
-    if (!Number.isSafeInteger(identity.sizeBytes) || identity.sizeBytes < 1 || identity.sizeBytes > 128 * 1024 * 1024) {
-      throw new Error("PPSSPP_ASSET_SIZE_INVALID");
-    }
-    await loadPSPFile({url: new URL(file, base).href, sizeBytes: identity.sizeBytes, sha256: identity.sha256},
-      signal, content);
-  }
-  signal?.throwIfAborted();
-  const url = new URL("ppsspp-host.mjs", base).href;
-  if (win === window) {return import(/* webpackIgnore: true */ /* @vite-ignore */ url) as Promise<unknown>;}
-  return new Promise<unknown>((resolve, reject) => {
-    const global = win as unknown as Record<string, unknown>;
-    const script = win.document.createElement("script");
-    script.type = "module"; script.src = url;
-    const cleanup = () => {win.clearTimeout(timeout); signal?.removeEventListener("abort", abort); script.remove();};
-    const fail = () => {cleanup(); reject(new Error("PPSSPP_CORE_LOAD_FAILED"));};
-    const abort = () => {cleanup(); reject(new Error("PPSSPP_RUNTIME_EXITED"));};
-    const timeout = win.setTimeout(fail, 30000);
-    script.addEventListener("error", fail, {once: true});
-    script.addEventListener("load", () => {cleanup(); resolve(global[registration]);}, {once: true});
-    signal?.addEventListener("abort", abort, {once: true});
-    win.document.head.append(script);
-  });
+export type PSPLoader = (config: PSPParameters, win: Window, signal?: AbortSignal,
+  content?: AdapterContentSession, report?: RuntimeProgressReporter) => Promise<LoadedCoreModule>;
+export const loadPSP: PSPLoader = async (config, win, signal, session, report) => {
+  if (!session || !config.assetIndex) {throw new Error("CONTENT_IO_ABI_MISMATCH");}
+  return loadCoreModule({content: {contentSession: session, assetIndex: config.assetIndex},
+    runtimeBaseURL: config.runtimeBaseUrl,
+    assetDirectory: "assets/ppsspp/", files: ["ppsspp.js", "ppsspp.wasm", "ppsspp.data", "ppsspp.worker.mjs", "ppsspp-host.mjs"],
+    entry: "ppsspp-host.mjs", registration: "__RETROM_PPSSPP_V1__", maximum: 128 * 1024 * 1024, window: win, signal, report});
 };
 
 export function validPSPModule(value: unknown): value is PSPModule {

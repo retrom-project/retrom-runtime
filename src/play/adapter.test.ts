@@ -17,7 +17,8 @@ describe("Play! adapter", () => {
     const core = {canvas, checkpoint: vi.fn(async () => new Uint8Array([1, 2])),
       frameCount: () => 10, pause: vi.fn(), resume: vi.fn(), screenshot: vi.fn(), stop: vi.fn()};
     const create = vi.fn(async (_options: unknown) => core);
-    const loader = async () => ({RETROM_PLAY_ABI: "play-host-v2", contentAbi, contractSha256, RETROM_PLAY_CHECKPOINT_MAX_BYTES: 268435456, createRetromPlay: create});
+    const release = vi.fn();
+  const loader = async () => ({module: {RETROM_PLAY_ABI: "play-host-v2", contentAbi, contractSha256, RETROM_PLAY_CHECKPOINT_MAX_BYTES: 268435456, createRetromPlay: create}, assets: {}, close: release});
     const restore = new Uint8Array([3]);
     const owner = contentSessionFixture(location.origin, [location.origin, "http://localhost"]); owners.push(owner);
     const adapter = await mountPlay(config, target, window, restore, vi.fn(), undefined, loader, {contentSession: owner.session, assetIndex: {}});
@@ -27,13 +28,13 @@ describe("Play! adapter", () => {
     expect(core.pause).toHaveBeenCalledOnce(); expect(core.resume).toHaveBeenCalledOnce();
     expect(await adapter.checkpoint()).toEqual({format: "play-state-v1", bytes: new Uint8Array([1, 2])});
     await adapter.exit(); await adapter.exit();
-    expect(core.stop).toHaveBeenCalledOnce(); expect(owner.files.size).toBe(0);
+    expect(core.stop).toHaveBeenCalledOnce(); expect(release).toHaveBeenCalledOnce(); expect(owner.files.size).toBe(0);
     expect(adapter.getCheckpointAvailability().available).toBe(false);
     await expect(adapter.checkpoint()).rejects.toThrow("PLAY_RUNTIME_EXITED");
   });
 
   it("[BR-12] UNIT/play-abi rejects an incompatible core before starting", async () => {
     await expect(mountPlay(config, document.createElement("div"), window, null, vi.fn(), undefined,
-      async () => ({RETROM_PLAY_ABI: "unknown"}))).rejects.toThrow("PLAY_CORE_ABI_MISMATCH");
+      async () => ({module: {RETROM_PLAY_ABI: "unknown"}, assets: {}, close() {}}))).rejects.toThrow("PLAY_CORE_ABI_MISMATCH");
   });
 });

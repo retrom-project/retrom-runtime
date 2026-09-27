@@ -7,10 +7,17 @@ import {emulatorJsSourceCatalog} from "./source-catalog.js";
 describe("EmulatorJS Provider source catalog", () => {
   it("pins DOSBox Pure to the published Content I/O core release", () => {
     expect(emulatorJsSourceCatalog.developmentForks.map(fork => fork.runtimeCore)).not.toContain("dosbox_pure");
-    expect(emulatorJsSourceCatalog.forks.find(fork => fork.runtimeCore === "dosbox_pure"))
+    const release = emulatorJsSourceCatalog.forks.find(fork => fork.runtimeCore === "dosbox_pure");
+    expect(release)
       .toMatchObject({repository: "https://github.com/retrom-project/dosbox-pure",
-        tag: "retrom-core-g3a5222c97456-r1", commit: "a1ad67f90714c445fec56ed24d1e0525b37e4ecf",
+        tag: "retrom-core-g3a5222c97456-r2", commit: "49c837589408822773374a951254aafad35a3026",
         adapterAbi: "emulatorjs-content-io-v1"});
+    const target = emulatorJsProviderDefinition.targets.find(value => value.id === "dosbox-pure");
+    const core = release?.assets.find(value => value.filename === "dosbox_pure-thread-wasm.data");
+    const report = release?.assets.find(value => value.filename === "rpg-runtime-release.json");
+    expect(target?.implementation).toMatchObject({
+      coreSha256: core?.sha256, coreSizeBytes: core?.sizeBytes, artifactSetSha256: report?.sha256,
+    });
   });
 
   it("loads directly in Node for the PFB provider watcher", () => {

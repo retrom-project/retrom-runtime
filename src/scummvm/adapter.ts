@@ -1,4 +1,4 @@
-import {scummvmJson} from "./json.js";
+import {fetchMetadataJson} from "../provider/metadata.js";
 import type {MountedRuntimeAdapter, RuntimeExitReporter, RuntimeProgressReporter} from "../internal-adapter.js";
 import {coreAssets} from "./assets.js";
 import {ScummvmBridge, type NativeStatus} from "./bridge.js";
@@ -95,7 +95,7 @@ export async function mountScummvm(config: ScummvmParameters, target: HTMLElemen
     frameWindow.removeEventListener("error", coreError); canvas.remove();
   };
   try {
-    const index = await scummvmJson(config.projectIndexUrl, 16 * 1024 * 1024, abort.signal, "SCUMMVM_INDEX_FETCH_FAILED");
+    const index = await fetchMetadataJson(config.projectIndexUrl, 16 * 1024 * 1024, abort.signal);
     const game = new ScummvmFiles(index, config.contentDigest, content.contentSession, abort.signal);
     fileSystems.push(game);
     const assets = await coreAssets(base, config.selection.engineId, content, abort.signal, reportProgress);

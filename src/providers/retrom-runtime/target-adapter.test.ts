@@ -42,7 +42,7 @@ describe("Provider to core-private parameters", () => {
     await mountTargetAdapter(request, target, options);
     expect(mountFantasyConsole).toHaveBeenCalledWith({core: id, contentDigest: "a".repeat(64),
       cartSizeBytes: 128, cartUrl: "/runtime/content/game/game.jar", runtimeBaseUrl: request.runtime.runtimeBaseUrl,
-      assetIndex}, target, window, null, options.reportProgress, options.reportFailure, options.signal, undefined, {contentSession:options.contentSession,assetIndex});
+      assetIndex}, target, window, null, options.reportProgress, options.reportFailure, options.signal, undefined, expect.objectContaining({contentSession: expect.objectContaining({inputPolicy: expect.any(Function)}),assetIndex}));
   });
   it.each([["rpgmaker-2000", "rpg2k"], ["rpgmaker-2003", "rpg2k3"]])(
     "constructs only the EasyRPG parameters for %s", async (id, engineMode) => {
@@ -138,7 +138,7 @@ describe("Provider to core-private parameters", () => {
     expect(mountWasm4).toHaveBeenCalledWith({
       contentDigest: "a".repeat(64), cartSizeBytes: 128, cartUrl: "/runtime/content/game/cart.wasm",
       runtimeBaseUrl: request.runtime.runtimeBaseUrl + "assets/wasm4/",
-    }, target, window, null, options.reportProgress, undefined, {contentSession:options.contentSession,assetIndex,signal:undefined});
+    }, target, window, null, options.reportProgress, undefined, expect.objectContaining({contentSession: expect.objectContaining({inputPolicy: expect.any(Function)}),assetIndex,signal:undefined}));
   });
 
   it("does not initialize a threaded core without its verified asset inventory", () => {

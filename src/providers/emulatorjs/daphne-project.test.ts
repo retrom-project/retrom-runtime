@@ -1,6 +1,9 @@
+import {targetContentFixture} from "../../../tests/target-content-fixture.js";
 // @vitest-environment jsdom
 import {afterEach, describe, expect, it, vi} from "vitest";
 import {zipSync} from "fflate";
+import {createHash} from "node:crypto";
+import {managedAdapterFixture} from "../../../tests/managed-adapter-fixture.js";
 import {prepareDaphneProject, prepareDaphneAssets, installDaphneProject} from "./daphne-project.js";
 import {registerSeekableContentFS} from "./virtual-content-fs.js";
 import type {ContentSessionClient} from "../../content-io/client.js";
@@ -25,8 +28,14 @@ describe("Daphne Content I/O project", () => {
       }),
       materialize: vi.fn(async (_id: string, request: {maxBytes: number}) => ({kind: "BYTES", bytes: new Uint8Array(Math.min(4, request.maxBytes))})),
     } as unknown as ContentSessionClient;
+    const content = targetContentFixture(session, "daphne"), declaredPolicy = content.inputPolicy.bind(content);
+    vi.spyOn(content, "inputPolicy").mockImplementation((role, member) => ({...declaredPolicy(role, member), contentLengthPolicy: "REQUIRED_EXACT"}));
     const project = await prepareDaphneProject({indexUrl: "/runtime/content/project/digest/index.json", contentDigest: "a".repeat(64)},
-      session, new AbortController().signal, () => {});
+      content, new AbortController().signal, () => {});
+    for (const [source, policy] of vi.mocked(session.open).mock.calls) {
+      expect(source.contentLengthPolicy).toBe("REQUIRED_EXACT");
+      expect(source.contentLengthPolicy).toBe(policy.contentLengthPolicy);
+    }
     expect(opened).toEqual([
       {path: "interstellar.zip", transport: "WHOLE_ALLOWED"},
       {path: "interstellar.txt", transport: "WHOLE_ALLOWED"},
@@ -76,7 +85,12 @@ describe("Daphne Content I/O project", () => {
       [`pics/led${index}.bmp`, new Uint8Array([index])]));
     const bytes = zipSync(files);
     vi.stubGlobal("fetch", vi.fn(async () => new Response(bytes, {headers: {"content-length": String(bytes.length)}})));
-    const assets = await prepareDaphneAssets("http://localhost:3000/runtime/providers/emulatorjs/", new AbortController().signal);
+    const base = "http://localhost:3000/runtime/providers/emulatorjs/";
+    const path = "assets/4.2.3/data/cores/daphne-resources.zip";
+    const content = {...managedAdapterFixture("daphne", base), assetIndex: {[path]: {
+      sha256: createHash("sha256").update(bytes).digest("hex"), sizeBytes: bytes.length,
+    }}};
+    const assets = await prepareDaphneAssets(base, new AbortController().signal, content, path);
     expect(assets.size).toBe(20);
     expect(assets.get("pics/led0.bmp")).toEqual(new Uint8Array([0]));
   });

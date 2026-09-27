@@ -1,3 +1,4 @@
+import {targetContentFixture} from "../../../tests/target-content-fixture.js";
 import {describe, expect, it, vi} from "vitest";
 import type {ContentSessionClient} from "../../content-io/client.js";
 import {mountEagerContentFile} from "./disc-mount.js";
@@ -19,7 +20,7 @@ describe("eager EmulatorJS content file", () => {
     const report = vi.fn();
     const file = await mountEagerContentFile(runtimeWindow,
       {url: `/games/opaque-id/Deluxe%20Game%20(AGA).${extension}`, sha256, sizeBytes: bytes.length}, new AbortController().signal,
-      () => {}, session, report);
+      () => {}, targetContentFixture(session, "puae"), report);
     expect(open).toHaveBeenCalledWith(expect.objectContaining({transport: "WHOLE_ALLOWED", purpose: "GAME"}),
       expect.objectContaining({mode: "EAGER", result: "BYTES"}), expect.any(AbortSignal));
     expect(materialize).toHaveBeenCalledWith("reader", {kind: "BYTES", maxBytes: 2 ** 31 - 1},

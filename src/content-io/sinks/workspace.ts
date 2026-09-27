@@ -1,6 +1,5 @@
-import type {ContentSourceV1, MaterializationReceiptV1, MaterializeSinkV1} from "../../../contracts/content-io/v1/content-io.js";
-import type {AdapterContentSession} from "../../provider/content-inputs.js";
-import {eagerPolicy} from "../../provider/content-policies.js";
+import type {ManagedInputPolicyV1, ContentSourceV1, MaterializationReceiptV1, MaterializeSinkV1} from "../../../contracts/content-io/v1/content-io.js";
+import type {ContentSessionAccess} from "../../provider/content-inputs.js";
 import {boundedJson} from "../../provider/metadata.js";
 import {checkSignal} from "../abort.js";
 import {createContentHasher} from "../bounded-stream.js";
@@ -14,9 +13,10 @@ export type WorkspaceProject = {generation: string; dataPath: string; release():
 const generationPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/u;
 /** A workspace is a required native delivery copy, with no downloader or separate raw cache. */
 export async function prepareWorkspaceProject(root: FileSystemDirectoryHandle, digest: string, inputs: readonly WorkspaceInput[],
-  session: AdapterContentSession, storageOrigin: string, metadataBudget: number, signal?: AbortSignal,
+  session: ContentSessionAccess, policy: ManagedInputPolicyV1, storageOrigin: string, metadataBudget: number, signal?: AbortSignal,
   report: (ready: number, total: number) => void = () => {}, locks: ContentLocks | null = navigator.locks ? new ContentLocks() : null): Promise<WorkspaceProject> {
   validateInputs(digest, inputs, storageOrigin); checkSignal(signal);
+  if (policy.result !== "WORKSPACE_FILE" || policy.workspace !== "OPFS_REQUIRED" || inputs.some(input => input.source.sizeBytes > policy.maxFileBytes)) {fail("SOURCE_INVALID");}
   const sorted = [...inputs].sort((a,b) => utf8Order(a.path,b.path)), total = sorted.reduce((sum, file) => sum + file.source.sizeBytes, 0);
   if (!Number.isSafeInteger(total)) {fail("BOUNDS");}
   try {
@@ -28,7 +28,7 @@ export async function prepareWorkspaceProject(root: FileSystemDirectoryHandle, d
     let complete = false;
     try {
       const directory = await project.getDirectoryHandle(generation,{create:true});
-      await buildWorkspace(directory,digest,generation,sorted,session,storageOrigin,total,signal,report); complete = true;
+      await buildWorkspace(directory,digest,generation,sorted,session,policy,storageOrigin,total,signal,report); complete = true;
       if (locks) {await publishWorkspace(project,digest,generation,storageOrigin,locks,signal);}
       checkSignal(signal); report(total,total);
       return {generation,dataPath:`projects/${digest}/${generation}/data`,release};
@@ -36,12 +36,11 @@ export async function prepareWorkspaceProject(root: FileSystemDirectoryHandle, d
   } catch(cause) {checkSignal(signal);if(cause instanceof ContentIOError){throw cause;}throw new ContentIOError("WORKSPACE_UNAVAILABLE",{cause});}
 }
 async function buildWorkspace(directory: FileSystemDirectoryHandle,digest: string,generation: string,inputs: WorkspaceInput[],
-  session: AdapterContentSession,storageOrigin: string,total: number,signal: AbortSignal | undefined,report: (ready:number,total:number)=>void) {
+  session: ContentSessionAccess,policy: ManagedInputPolicyV1,storageOrigin: string,total: number,signal: AbortSignal | undefined,report: (ready:number,total:number)=>void) {
   const data = await directory.getDirectoryHandle("data",{create:true}), meta = await directory.getDirectoryHandle("meta",{create:true});
   const receipts: FileReceipt[]=[];let ready=0;report(0,total);
   for (const input of inputs) {
     checkSignal(signal);const target=await fileTarget(data,input.path,true);
-    const policy=eagerPolicy(input.source.sizeBytes,{result:"WORKSPACE_FILE",workspace:"OPFS_REQUIRED",writes:"SESSION_OVERLAY"});
     const reader=await session.open(input.source,policy,signal);
     try {
       const result=await session.materialize(reader.id,{kind:"SINK",maxBytes:input.source.sizeBytes,

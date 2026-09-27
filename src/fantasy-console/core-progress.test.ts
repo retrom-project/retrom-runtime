@@ -8,7 +8,7 @@ import type {RuntimeLoadProgress} from "../contract.js";
 afterEach(() => vi.unstubAllGlobals());
 it.each(["tic80", "fake08"] as const)("%s reports all preparation totals before bytes arrive and completes only after verification", async core => {
   const bytes = new Uint8Array([1, 2, 3]), sha256 = createHash("sha256").update(bytes).digest("hex");
-  const owner = contentSessionFixture(location.origin), started = deferred<void>(), release = deferred<void>();
+  const owner = contentSessionFixture(location.origin, undefined, "tic80"), started = deferred<void>(), release = deferred<void>();
   const progress: RuntimeLoadProgress[] = [], loader = vi.fn(async () => {throw new Error("STOP_AFTER_CONTENT");});
   let requests = 0;
   const asset = new Uint8Array([4, 5, 6]), script = new Uint8Array([7, 8, 9]);

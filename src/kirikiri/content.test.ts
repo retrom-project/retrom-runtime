@@ -5,7 +5,7 @@ import {contentSessionFixture} from "../../tests/content-session-fixture.js";
 const owners: ReturnType<typeof contentSessionFixture>[] = [];
 afterEach(async () => {await Promise.all(owners.splice(0).map(owner => owner.close())); vi.restoreAllMocks(); vi.unstubAllGlobals();});
 function fixture() {
-  const owner = contentSessionFixture("http://localhost"); owners.push(owner);
+  const owner = contentSessionFixture("http://localhost", undefined, "kirikiri2-kag"); owners.push(owner);
   const bytes = new Uint8Array([3, 5, 7]);
   const sha256 = createHash("sha256").update(bytes).digest("hex");
   const assetIndex = Object.fromEntries(["vlfs.js", "index.js", "index.wasm", "assets.zip"]

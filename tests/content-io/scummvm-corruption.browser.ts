@@ -14,12 +14,12 @@ test("[IO-18] BROWSER/scummvm-corrupt-block verifies local bytes and replaces on
     await page.goto(`${server.origin}/__test__/page`);
     const result = await page.evaluate(async ({sizeBytes}) => {
       const clientPath = "/__test__/content.mjs", filesPath = "/__test__/files.mjs";
-      const {createContentSession, workerStats} = await import(clientPath) as typeof import("./scummvm-metrics-entry.js");
+      const {createContentSession, workerStats, targetContentFixture} = await import(clientPath) as typeof import("./scummvm-metrics-entry.js");
       const {ScummvmFiles} = await import(filesPath) as typeof import("../../src/scummvm/files.js");
       const read = async () => {
         const worker = new Worker("/__test__/worker.mjs", {type: "module"});
         const session = await createContentSession(worker, {storageOrigin: location.origin, allowedOrigins: [location.origin]});
-        const files = new ScummvmFiles({schemaVersion: 1, files: [{path: "game.bin", sizeBytes, url: `${location.origin}/objects/multi-tail/game`}]}, "a".repeat(64), session);
+        const files = new ScummvmFiles({schemaVersion: 1, files: [{path: "game.bin", sizeBytes, url: `${location.origin}/objects/multi-tail/game`}]}, "a".repeat(64), targetContentFixture(session, "scummvm"));
         try {
           const bytes = new Uint8Array(sizeBytes);
           for (let offset = 0; offset < sizeBytes; offset += 262144) {bytes.set(await files.read("/game/game.bin", offset, Math.min(262144, sizeBytes - offset)), offset);}

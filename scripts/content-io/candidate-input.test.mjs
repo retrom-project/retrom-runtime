@@ -34,7 +34,7 @@ for (const [coreId, files] of [["ppsspp", ["ppsspp-host.mjs", "ppsspp.worker.mjs
 test(`[PK-05] CONTRACT/core-contract-fingerprint-${coreId} [X-20] CONTRACT/core-contract-fingerprint-${coreId} rejects correctly hashed artifacts exporting an obsolete content contract`, async () => {
   const directory = await mkdtemp(join(tmpdir(), "content-io-old-contract-"));
   const identity = {commit: "a".repeat(40), branch: "feat/content", dirty: true, sourceTreeSha256: "b".repeat(64)};
-  const source = {repository: "https://github.com/retrom-project/ppsspp", adapterAbi: "ppsspp-host-v3",
+  const source = {repository: "https://github.com/retrom-project/ppsspp", adapterAbi: "ppsspp-host-v4",
     assets: files.map(filename => ({filename, maxSizeBytes: 1000}))};
   const old = Buffer.from(`export const contractSha256 = '${"c".repeat(64)}';`), current = "d".repeat(64);
   const descriptor = {schemaVersion: 1, kind: "RETROM_CORE_CANDIDATE_V1", coreId, ...identity,

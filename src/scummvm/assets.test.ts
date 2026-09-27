@@ -13,7 +13,7 @@ function fixture() {
   assetIndex["assets/scummvm/manifest.json"] = {sha256: digest(manifest), sizeBytes: manifest.length};
   const fetcher = vi.fn(async (url: string) => {const response = new Response(url.endsWith("manifest.json") ? manifest : bytes); Object.defineProperty(response, "url", {value: url}); return response;});
   vi.stubGlobal("fetch", fetcher);
-  const owner = contentSessionFixture("http://localhost"); owners.push(owner);
+  const owner = contentSessionFixture("http://localhost", undefined, "scummvm"); owners.push(owner);
   return {content: {contentSession: owner.session, assetIndex}, fetcher};
 }
 it("[X-27] UNIT/scummvm-manifest refuses a manifest not authenticated by Provider AssetIndex", async () => {

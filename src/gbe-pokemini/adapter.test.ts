@@ -56,5 +56,5 @@ it("requires BIOS and aborts without starting a core", async () => {
 });
 
 const mountGBE: typeof mount = (...args) => {
-  args[7] ??= managedAdapterFixture(args[0]); return mount(...args);
+  args[7] ??= managedAdapterFixture("gbe-pokemini", args[0]); return mount(...args);
 };

@@ -254,18 +254,6 @@
       ]
     },
     {
-      "id": "B-022",
-      "repository": "runtime",
-      "path": "src/nxengine/project.ts",
-      "symbol": "readBounded",
-      "classification": "METADATA",
-      "reason": "Bounded project index JSON; all declared game bodies use the public materializer.",
-      "ownerStage": "S17",
-      "tests": [
-        "runtime:scripts/content-io/boundaries.test.mjs"
-      ]
-    },
-    {
       "id": "B-023",
       "repository": "runtime",
       "path": "src/openbor/adapter.ts",
@@ -405,18 +393,6 @@
       "classification": "SAVE_OR_OVERLAY",
       "reason": "Checkpoint/screenshot bytes or runtime-session cleanup POST, independent of immutable game content acquisition.",
       "ownerStage": "S09",
-      "tests": [
-        "runtime:scripts/content-io/boundaries.test.mjs"
-      ]
-    },
-    {
-      "id": "B-036",
-      "repository": "runtime",
-      "path": "src/scummvm/json.ts",
-      "symbol": "scummvmJson",
-      "classification": "METADATA",
-      "reason": "Bounded project indexes and core manifests; no game data bodies.",
-      "ownerStage": "S17",
       "tests": [
         "runtime:scripts/content-io/boundaries.test.mjs"
       ]
@@ -719,6 +695,54 @@
       "ownerStage": "S12",
       "tests": [
         "runtime:scripts/content-io/boundaries.test.mjs"
+      ]
+    },
+    {
+      "id": "B-TARGET-1",
+      "repository": "runtime",
+      "path": "assets/runtime/native/bridge.js",
+      "symbol": "editorMapData",
+      "classification": "BROWSER_NATIVE",
+      "reason": "Map event metadata read inside the isolated native browser game boundary.",
+      "ownerStage": "S21",
+      "tests": [
+        "runtime:src/native-web/editor-bridge.test.ts"
+      ]
+    },
+    {
+      "id": "B-TARGET-2",
+      "repository": "runtime",
+      "path": "src/apple2js/adapter.ts",
+      "symbol": "screenshot",
+      "classification": "SAVE_OR_OVERLAY",
+      "reason": "Copies a native screenshot result; does not acquire game content.",
+      "ownerStage": "S21",
+      "tests": [
+        "runtime:src/apple2js/adapter.test.ts"
+      ]
+    },
+    {
+      "id": "B-TARGET-3",
+      "repository": "runtime",
+      "path": "src/jsbeeb/adapter.ts",
+      "symbol": "screenshot",
+      "classification": "SAVE_OR_OVERLAY",
+      "reason": "Copies a native screenshot result; does not acquire game content.",
+      "ownerStage": "S21",
+      "tests": [
+        "runtime:src/jsbeeb/adapter.test.ts"
+      ]
+    },
+    {
+      "id": "B-TARGET-4",
+      "repository": "runtime",
+      "path": "src/samcoupe/adapter.ts",
+      "symbol": "screenshot",
+      "classification": "SAVE_OR_OVERLAY",
+      "reason": "Copies a native screenshot result; does not acquire game content.",
+      "ownerStage": "S21",
+      "tests": [
+        "runtime:src/samcoupe/adapter.test.ts"
       ]
     }
   ]

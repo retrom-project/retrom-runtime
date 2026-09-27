@@ -1,8 +1,8 @@
 import type {AdapterContentSession} from "../provider/content-inputs.js";
-import {eagerPolicy} from "../provider/content-policies.js";
 import {ContentIOError} from "../content-io/errors.js";
 import {contentLimits} from "../content-io/limits.js";
 import type {RuntimeProgressReporter} from "../internal-adapter.js";
+import {fetchMetadataJson} from "../provider/metadata.js";
 
 export type ProjectFile = {path: string; sizeBytes: number; url: string};
 const maximumFileBytes = contentLimits.nxengineFile;
@@ -29,9 +29,7 @@ export function parseIndex(value: unknown): ProjectFile[] {
 }
 export async function loadProject(indexUrl: string, progress: RuntimeProgressReporter, signal?: AbortSignal, session?: AdapterContentSession, projectDigest?: string) {
   indexUrl = new URL(indexUrl, window.location.href).href;
-  const response = await fetch(indexUrl, {credentials: "same-origin", redirect: "error", signal});
-  const raw = await readBounded(response, 2 * 1024 * 1024, signal);
-  const files = parseIndex(JSON.parse(new TextDecoder("utf-8", {fatal: true}).decode(raw)));
+  const files = parseIndex(await fetchMetadataJson(indexUrl, 2 * 1024 * 1024, signal));
   const totalBytes = files.reduce((total, file) => total + file.sizeBytes, 0);
   const result: {path: string; bytes: Uint8Array}[] = [];
   let loadedBytes = 0;
@@ -47,7 +45,7 @@ export async function loadProject(indexUrl: string, progress: RuntimeProgressRep
 export async function fetchContent(file: ProjectFile, progress: (loaded: number) => void, signal?: AbortSignal,
   session?: AdapterContentSession, projectDigest?: string) {
   if (!session || !projectDigest) {throw new ContentIOError("ABI_MISMATCH");}
-  const policy = eagerPolicy(maximumFileBytes);
+  const policy = session.inputPolicy("game");
   const reader = await session.open({identity: {kind: "INDEX_ENTRY", projectDigest, logicalPath: file.path},
     url: file.url, sizeBytes: file.sizeBytes, purpose: "GAME", transport: "WHOLE_ALLOWED", etagPolicy: "PIN_STRONG",
     contentLengthPolicy: policy.contentLengthPolicy, }, policy, signal);
@@ -55,19 +53,6 @@ export async function fetchContent(file: ProjectFile, progress: (loaded: number)
     const result = await session.materialize(reader.id, {kind: "BYTES", maxBytes: maximumFileBytes}, signal, value => progress(value.readyBytes));
     if (result.kind !== "BYTES") {throw new ContentIOError("INTERNAL");} return result.bytes;
   } finally {await reader.close();}
-}
-async function readBounded(response: Response, maximum: number, signal?: AbortSignal) {
-  if (!response.ok || !response.body) {throw new Error("NXENGINE_FETCH_FAILED");}
-  const reader = response.body.getReader(), chunks: Uint8Array[] = [];
-  let size = 0;
-  try {
-    for (;;) {
-      signal?.throwIfAborted(); const next = await reader.read(); if (next.done) {break;}
-      size += next.value.length; if (size > maximum) {throw invalid();} chunks.push(next.value);
-    }
-  } finally {void reader.cancel().catch(() => undefined); reader.releaseLock();}
-  const bytes = new Uint8Array(size); let offset = 0;
-  for (const chunk of chunks) {bytes.set(chunk, offset); offset += chunk.length;} return bytes;
 }
 function safePath(path: string) {
   return path.length <= 1024 && !/[\\:]/u.test(path) && !Array.from(path).some((character) => character.charCodeAt(0) < 32) &&

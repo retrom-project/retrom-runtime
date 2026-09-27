@@ -19,10 +19,11 @@ export async function prepareButterscotchProject(config: ProjectConfig, frameWin
   let root:FileSystemDirectoryHandle;
   try {root=await frameWindow.navigator.storage.getDirectory();}
   catch(cause){throw new ContentIOError("WORKSPACE_UNAVAILABLE",{cause});}
+  const policy=content.contentSession.inputPolicy("game");
   const inputs:WorkspaceInput[]=value.files.map(file=>({path:file.path,source:{
     identity:{kind:"INDEX_ENTRY",projectDigest:config.contentDigest,logicalPath:file.path},url:new URL(file.url,base).href,
-    sizeBytes:file.sizeBytes,purpose:"GAME",transport:"WHOLE_ALLOWED",etagPolicy:"PIN_STRONG",contentLengthPolicy:"EXACT_IF_PRESENT",}}));
-  const project=await prepareWorkspaceProject(root,config.contentDigest,inputs,content.contentSession,location.origin,budget,content.signal,
+    sizeBytes:file.sizeBytes,purpose:"GAME",transport:"WHOLE_ALLOWED",etagPolicy:"PIN_STRONG",contentLengthPolicy:policy.contentLengthPolicy,}}));
+  const project=await prepareWorkspaceProject(root,config.contentDigest,inputs,content.contentSession,policy,location.origin,budget,content.signal,
     (loadedBytes,totalBytes)=>reportProgress({phase:"PROJECT_CONTENT",loadedBytes,totalBytes}));
   try {
     await(await root.getDirectoryHandle("saves",{create:true})).getDirectoryHandle(config.sessionId,{create:true});

@@ -1,4 +1,3 @@
-import {eagerPolicy} from "../provider/content-policies.js";
 import {materializeFileBytes, type AdapterContentSession} from "../provider/content-inputs.js";
 import {checkpointSize, transformCheckpoint} from "../provider/checkpoint-compression.js";
 import {startInputDiagnostics} from "../provider/input-diagnostics.js";
@@ -28,7 +27,7 @@ export async function mountApple2(config: Apple2Parameters, target: HTMLElement,
   if (target.ownerDocument !== frameWindow.document ||
     restore && (!restore.length || restore.length > maxCheckpointBytes)) {invalid();}
   const bios = await loadBios(config.bios, contentSession, signal);
-  const game = await materializeFileBytes(contentSession, config.game, eagerPolicy(32 * 1024 * 1024), "GAME", signal,
+  const game = await materializeFileBytes(contentSession, config.game, contentSession.inputPolicy("game"), "GAME", signal,
     value => progress({phase: "PROJECT_CONTENT", loadedBytes: value.readyBytes, totalBytes: config.game.sizeBytes}));
   const diskName = decodeURIComponent(new URL(config.game.url, frameWindow.document.baseURI).pathname.split("/").at(-1) ?? "game.dsk");
   const extension = diskName.split(".").at(-1)?.toLowerCase();
@@ -108,7 +107,7 @@ async function loadBios(files: BiosFile[], contentSession: AdapterContentSession
   for (const file of files) {
     const expected = biosPaths.get(file.logicalName);
     if (!expected || file.virtualPath !== expected.path || file.sizeBytes !== expected.size || bios[file.logicalName]) {invalid();}
-    bios[file.logicalName] = await materializeFileBytes(contentSession, file, eagerPolicy(expected.size), "FIRMWARE", signal);
+    bios[file.logicalName] = await materializeFileBytes(contentSession, file, contentSession.inputPolicy("external"), "FIRMWARE", signal);
   }
   return bios;
 }

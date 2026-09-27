@@ -2,7 +2,7 @@ import {rangePolicy} from "../../provider/content-policies.js";
 import {contentLimits as limits} from "../../content-io/limits.js";
 import {defineAdapter, defineTarget} from "../../provider/declarations.js";
 
-export const pspAdapter = defineAdapter({id: "ppsspp-web", kind: "PPSSPP_WEB", abi: "ppsspp-host-v3",
+export const pspAdapter = defineAdapter({id: "ppsspp-web", kind: "PPSSPP_WEB", abi: "ppsspp-host-v4",
   capabilities: {checkpoint: true, pause: true, screenshot: true, standardGamepad: true, frameCounter: true, volume: true},
   checkpoint: {writeFormat: "ppsspp-state-v1", readFormats: ["ppsspp-state-v1"]},
 });

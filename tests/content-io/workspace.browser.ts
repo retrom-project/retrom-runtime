@@ -6,19 +6,19 @@ const bundle=async(path:string)=>(await build({entryPoints:[fileURLToPath(new UR
 test("[X-18] BROWSER/workspace [HP-02] BROWSER/workspace-progress complete generations verify every byte, preserve active instances and isolate saves @S17",async({page})=>{
   const index=new TextEncoder().encode(JSON.stringify({schemaVersion:1,files:[{path:"data.win",sizeBytes:4,url:"/files/game"},
     {path:".content-io-complete-v1.json",sizeBytes:2,url:"/files/legal"}]}));
-  const server=await startFixtureServer({contentModule:await bundle("../../src/content-io/client.ts"),staticFiles:{index,game:new Uint8Array([1,2,3,4]),legal:new Uint8Array([5,6])},
+  const server=await startFixtureServer({contentModule:await bundle("./target-session.ts"),staticFiles:{index,game:new Uint8Array([1,2,3,4]),legal:new Uint8Array([5,6])},
     modules:{"worker.mjs":await bundle("../../src/content-io/worker.ts"),"project.mjs":await bundle("../../src/butterscotch/project-store.ts")}});
   try{
     await page.goto(`${server.origin}/__test__/page`);
     const result=await page.evaluate(async()=>{
       const clientUrl="/__test__/content.mjs",projectUrl="/__test__/project.mjs";
-      const {createContentSession}=await import(clientUrl) as typeof import("../../src/content-io/client.js");
+      const {createContentSession, targetContentFixture}=await import(clientUrl) as typeof import("./target-session.js");
       const {prepareButterscotchProject}=await import(projectUrl) as typeof import("../../src/butterscotch/project-store.js");
       const root=await navigator.storage.getDirectory(), config={contentDigest:"a".repeat(64),sessionId:"launch-one",projectIndexUrl:"/files/index"};
       const releases:(()=>void)[]=[],sessions:Awaited<ReturnType<typeof createContentSession>>[]=[],progress:number[]=[];
       const make=async(id:string)=>{
         const session=await createContentSession(new Worker("/__test__/worker.mjs",{type:"module"}),{storageOrigin:location.origin,allowedOrigins:[location.origin]});sessions.push(session);
-        const project=await prepareButterscotchProject({...config,sessionId:id},window,v=>{if(v.phase==="PROJECT_CONTENT"){progress.push(v.loadedBytes);}}, {contentSession:session,assetIndex:{}});
+        const project=await prepareButterscotchProject({...config,sessionId:id},window,v=>{if(v.phase==="PROJECT_CONTENT"){progress.push(v.loadedBytes);}}, {contentSession: targetContentFixture(session, "butterscotch-gamemaker"),assetIndex:{}});
         releases.push(project.release);return project;
       };
       const handle=async(path:string)=>{const parts=path.replace(/^\/butterscotch\//u,"").split("/"),name=parts.pop()!;let dir=root;for(const part of parts){dir=await dir.getDirectoryHandle(part);}return dir.getFileHandle(name);};
@@ -44,7 +44,7 @@ test("[X-18] BROWSER/workspace [HP-02] BROWSER/workspace-progress complete gener
 
 test("[ST-04] BROWSER/workspace-denied keeps optional cache separate from the required workspace @S06", async ({page}) => {
   const index = new TextEncoder().encode(JSON.stringify({schemaVersion: 1, files: [{path: "data.win", sizeBytes: 4, url: "/files/game"}]}));
-  const server = await startFixtureServer({contentModule: await bundle("../../src/content-io/client.ts"),
+  const server = await startFixtureServer({contentModule: await bundle("./target-session.ts"),
     staticFiles: {index, game: new Uint8Array([1, 2, 3, 4])}, modules: {
       "worker.mjs": await bundle("../../src/content-io/worker.ts"), "project.mjs": await bundle("../../src/butterscotch/project-store.ts"),
     }});
@@ -52,7 +52,7 @@ test("[ST-04] BROWSER/workspace-denied keeps optional cache separate from the re
     await page.goto(`${server.origin}/__test__/page`);
     const result = await page.evaluate(async () => {
       const clientUrl = "/__test__/content.mjs", projectUrl = "/__test__/project.mjs";
-      const {createContentSession} = await import(clientUrl) as typeof import("../../src/content-io/client.js");
+      const {createContentSession, targetContentFixture} = await import(clientUrl) as typeof import("./target-session.js");
       const {prepareButterscotchProject} = await import(projectUrl) as typeof import("../../src/butterscotch/project-store.js");
       const session = await createContentSession(new Worker("/__test__/worker.mjs", {type: "module"}), {storageOrigin: location.origin, allowedOrigins: [location.origin]});
       const sha256 = Array.from(new Uint8Array(await crypto.subtle.digest("SHA-256", new Uint8Array([1, 2, 3, 4])))).map(n => n.toString(16).padStart(2, "0")).join("");
@@ -64,7 +64,7 @@ test("[ST-04] BROWSER/workspace-denied keeps optional cache separate from the re
         navigator.storage.getDirectory = async () => {throw new DOMException("denied", "NotAllowedError");};
         let failure = "";
         try {await prepareButterscotchProject({contentDigest: "a".repeat(64), sessionId: "denied", projectIndexUrl: "/files/index"},
-          window, () => {}, {contentSession: session, assetIndex: {}});}
+          window, () => {}, {contentSession: targetContentFixture(session, "butterscotch-gamemaker"), assetIndex: {}});}
         catch (error) {failure = (error as Error).message;}
         return {failure, backend: session.stats.backend};
       } finally {await session.close();}

@@ -9,7 +9,7 @@ for (const engine of ["ons", "nxengine"] as const) {
     const names = engine === "ons" ? ["0.txt"] : ["Doukutsu.exe", "data/npc.tbl", "data/Stage/Start.pxm", "data/Stage/Start.tsc"];
     const index = new TextEncoder().encode(JSON.stringify({schemaVersion: 1, files: names.map((path, i) => ({path, sizeBytes: 4, url: `/files/game${i}`}))}));
     const staticFiles = {index, unrelated: new Uint8Array([99]), ...Object.fromEntries(names.map((_, i) => [`game${i}`, new Uint8Array([i, 1, 2, 3])]))};
-    const server = await startFixtureServer({contentModule: await bundle("../../src/content-io/client.ts"), staticFiles, modules: {
+    const server = await startFixtureServer({contentModule: await bundle("./target-session.ts"), staticFiles, modules: {
       "worker.mjs": await bundle("../../src/content-io/worker.ts"),
       "project.mjs": await bundle(engine === "ons" ? "../../src/ons/project-files.ts" : "../../src/nxengine/project.ts"),
     }});
@@ -17,7 +17,7 @@ for (const engine of ["ons", "nxengine"] as const) {
       await page.goto(`${server.origin}/__test__/page`);
       const result = await page.evaluate(async engine => {
         const clientUrl = "/__test__/content.mjs", projectUrl = "/__test__/project.mjs";
-        const {createContentSession} = await import(clientUrl) as typeof import("../../src/content-io/client.js");
+        const {createContentSession, targetContentFixture} = await import(clientUrl) as typeof import("./target-session.js");
         const outputs = [], progress: {loadedBytes: number; totalBytes: number | null}[][] = [], writes: number[] = [];
         for (let n = 0; n < 2; n++) {
           const session = await createContentSession(new Worker("/__test__/worker.mjs", {type: "module"}), {storageOrigin: location.origin, allowedOrigins: [location.origin]});
@@ -27,7 +27,7 @@ for (const engine of ["ons", "nxengine"] as const) {
               const {createOnsProjectFileMap} = await import(projectUrl) as typeof import("../../src/ons/project-files.js");
               const map = createOnsProjectFileMap([{path: "0.txt", sizeBytes: 4, url: "/files/game0"},
                 {path: "unopened.nsa", sizeBytes: 512 * 1024 * 1024, url: "/files/unrelated"}], window, value => events.push(value),
-              {contentSession: session, projectDigest: "a".repeat(64)});
+              {contentSession: targetContentFixture(session, "onscripter-yuri"), projectDigest: "a".repeat(64)});
               const written: number[][] = [], fs = {writeFile: (_path: string, bytes: Uint8Array) => {written.push(Array.from(bytes)); bytes.fill(99);}};
               try {
                 const read = await Promise.all([map.fetchFile(fs, "/game/0.txt"), map.fetchFile(fs, "/GAME/0.TXT")]);
@@ -37,7 +37,7 @@ for (const engine of ["ons", "nxengine"] as const) {
               } finally {await map.close();}
             } else {
               const {loadProject} = await import(projectUrl) as typeof import("../../src/nxengine/project.js");
-              const files = await loadProject("/files/index", value => events.push(value), undefined, session, "b".repeat(64));
+              const files = await loadProject("/files/index", value => events.push(value), undefined, targetContentFixture(session, "nxengine"), "b".repeat(64));
               outputs.push(files.map(file => ({path: file.path, bytes: Array.from(file.bytes)})));
             }
             progress.push(events);

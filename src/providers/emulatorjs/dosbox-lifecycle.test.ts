@@ -3,6 +3,7 @@ import {expect, it, vi} from "vitest";
 import {launchEnvelope} from "../../../tests/emulatorjs-provider-fixtures.js";
 import {ProviderContentOwner} from "../../provider/content-owner.js";
 import type {ContentSessionClient} from "../../content-io/client.js";
+import {emulatorJsProviderDefinition} from "./catalog.js";
 import {createEmulatorJsPlayer} from "./provider-runtime.js";
 
 it("starts DOS before requiring the game manager created by that startup", async () => {
@@ -26,14 +27,13 @@ it("starts DOS before requiring the game manager created by that startup", async
   vi.stubGlobal("fetch", vi.fn(async () => new Response(JSON.stringify({schemaVersion: 1, files: [{
     path: "game.zip", url: `/runtime/content/game/${digest}/game.zip`, sizeBytes: 1024,
   }]}))));
+  const implementation = emulatorJsProviderDefinition.targets.find(target => target.id === "dosbox-pure")!.implementation;
   const player = await createEmulatorJsPlayer(envelope, {
     loadRestore: vi.fn(async () => null),
     mountFrame: vi.fn(async () => ({contentWindow: runtimeWindow, element: frame, origin: location.origin})),
     reportDiagnostic: vi.fn(), signal: new AbortController().signal,
   }, {
-    "assets/4.3.0-pre/data/cores/dosbox_pure-thread-wasm.data": {
-      sha256: "7ad877800b9a817384e82fba1615c7d65fc2e09ffcaeda85942d71337789f768", sizeBytes: 1811731,
-    },
+    [implementation.coreAssetPath]: {sha256: implementation.coreSha256, sizeBytes: implementation.coreSizeBytes},
   });
   try {
     const mounting = player.mount(document.createElement("div"));

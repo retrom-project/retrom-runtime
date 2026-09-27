@@ -1,9 +1,10 @@
+import {targetContentFixture} from "../../tests/target-content-fixture.js";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import {mountMkxp as mountMkxpImplementation} from "./adapter";
 import {fetchVerified} from "./content.js";
 import {managedAdapterFixture} from "../../tests/managed-adapter-fixture.js";
 const mountMkxp: typeof mountMkxpImplementation = (...args) => {
- args[7] ??= {contentSession: {open: vi.fn(),materialize:vi.fn(),closeFile:vi.fn()},assetIndex:{}};
+ args[7] ??= {contentSession: targetContentFixture({open: vi.fn(),materialize:vi.fn(),closeFile:vi.fn()}, "rpgmaker-xp"),assetIndex:{}};
  return mountMkxpImplementation(...args);
 };
 import { encodeMkxpRastate } from "./state";
@@ -173,7 +174,7 @@ describe("mkxp runtime mount", () => {
     const url = new URL("/runtime/mkxp/core.js", window.location.href).href;
     const fetchMock=vi.fn(async()=>new Response(Uint8Array.of(1)));
     vi.stubGlobal("fetch",fetchMock);
-    const content=managedAdapterFixture({url});
+    const content=managedAdapterFixture("rpgmaker-xp", {url});
     await expect(fetchVerified(url,1,"4bf5122f344554c53bde2ebb8cd2b7e3d1600ad631c385a5d7cce23c7785459a",content)).resolves.toEqual(Uint8Array.of(1));
     expect(fetchMock).toHaveBeenCalledOnce();
   });

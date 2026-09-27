@@ -1,9 +1,12 @@
-import type {ContentSessionClient} from "../../content-io/client.js";
+import type {AdapterContentSession} from "../../provider/content-inputs.js";
 import {unzipSync} from "fflate";
 import {contentLimits} from "../../content-io/limits.js";
-import {eagerPolicy, rangePolicy} from "../../provider/content-policies.js";
 import {fetchMetadataJson} from "../../provider/metadata.js";
 import {NeoCDRange} from "./neocd-range.js";
+import {loadCoreAsset} from "../../provider/core-assets.js";
+import type {AssetIndexV1} from "../../provider/module-api.js";
+import type {AdapterContentOptions} from "../../provider/content-inputs.js";
+import type {TargetDeclaration} from "../../provider/declarations.js";
 import type {LaunchEnvelopeV1} from "../../provider/module-api.js";
 
 type ProjectFile = {path: string; url: string; sizeBytes: number};
@@ -15,35 +18,35 @@ export function daphneGameFile(runtimeWindow: Window, project: DaphneProject | n
   return project ? new (runtimeWindow as Window & typeof globalThis).File(["RETROM_DAPHNE_PROJECT_V1"], project.romName) : fallback;
 }
 
-export async function maybePrepareDaphneProject(core: string, envelope: LaunchEnvelopeV1,
-  session: ContentSessionClient | null, signal: AbortSignal, fail: (error: Error) => void,
+export async function maybePrepareDaphneProject(target: TargetDeclaration, envelope: LaunchEnvelopeV1,
+  session: AdapterContentSession | null, assetIndex: AssetIndexV1, signal: AbortSignal, fail: (error: Error) => void,
   report: (readyBytes: number, totalBytes: number) => void): Promise<DaphneProject | null> {
-  if (core !== "daphne") {return null;}
+  if (target.implementation.runtimeCore !== "daphne") {return null;}
   const resource = envelope.resources.find(entry => entry.role === "game");
   if (!session || resource?.kind !== "FILE_TREE") {throw new Error("DAPHNE_PROJECT_INVALID");}
   const project = await prepareDaphneProject(resource, session, signal, fail, report);
-  try {project.assets = await prepareDaphneAssets(envelope.runtime.runtimeBaseUrl, signal);}
+  try {project.assets = await prepareDaphneAssets(envelope.runtime.runtimeBaseUrl, signal,
+    {contentSession: session, assetIndex}, target.assetPaths.find(path => path.endsWith("/daphne-resources.zip")) ?? "");}
   catch (error) {await project.video.dispose(); throw error;}
   return project;
 }
 
-export async function prepareDaphneAssets(runtimeBaseUrl: string, signal: AbortSignal): Promise<ReadonlyMap<string, Uint8Array>> {
-  const url = new URL(`${runtimeBaseUrl}assets/4.2.3/data/cores/daphne-resources.zip`, location.href);
-  if (url.origin !== location.origin) {throw new Error("DAPHNE_ASSETS_INVALID");}
-  const response = await fetch(url, {credentials: "same-origin", redirect: "error", signal});
-  const length = Number(response.headers.get("content-length"));
-  if (!response.ok || length > 8 * 1024 * 1024) {throw new Error("DAPHNE_ASSETS_INVALID");}
-  const bytes = new Uint8Array(await response.arrayBuffer());
-  if (bytes.byteLength < 1 || bytes.byteLength > 8 * 1024 * 1024) {throw new Error("DAPHNE_ASSETS_INVALID");}
-  const entries = Object.entries(unzipSync(bytes));
-  if (entries.length < 20 || entries.length > 200) {throw new Error("DAPHNE_ASSETS_INVALID");}
+export async function prepareDaphneAssets(runtimeBaseUrl: string, signal: AbortSignal,
+  content: AdapterContentOptions, assetPath: string): Promise<ReadonlyMap<string, Uint8Array>> {
+  const url = new URL(assetPath, new URL(runtimeBaseUrl, location.href)).href;
+  const bytes = await loadCoreAsset(content, url, assetPath, 8 * 1024 * 1024, signal);
   let total = 0;
-  for (const [path, contents] of entries) {
+  const paths = new Set<string>();
+  const entries = Object.entries(unzipSync(bytes, {filter: entry => {
+    const path = entry.name;
+    total += entry.originalSize;
     if (!/^(?:pics\/[a-z0-9._-]+\.bmp|sound\/[a-z0-9._-]+\.(?:wav|ogg))$/iu.test(path) ||
-      path.includes("..")) {throw new Error("DAPHNE_ASSETS_INVALID");}
-    total += contents.byteLength;
-    if (total > 8 * 1024 * 1024) {throw new Error("DAPHNE_ASSETS_INVALID");}
-  }
+      path.includes("..") || paths.has(path) || total > 8 * 1024 * 1024 || paths.size >= 200) {
+      throw new Error("DAPHNE_ASSETS_INVALID");
+    }
+    paths.add(path); return true;
+  }}));
+  if (entries.length < 20) {throw new Error("DAPHNE_ASSETS_INVALID");}
   return new Map(entries);
 }
 
@@ -73,7 +76,7 @@ function projectFiles(value: unknown, romDigest: string): ProjectFile[] {
   return files;
 }
 
-export async function prepareDaphneProject(resource: ProjectResource, session: ContentSessionClient,
+export async function prepareDaphneProject(resource: ProjectResource, session: AdapterContentSession,
   signal: AbortSignal, fail: (error: Error) => void,
   report: (readyBytes: number, totalBytes: number) => void = () => {}): Promise<DaphneProject> {
   const indexUrl = new URL(resource.indexUrl, location.href);
@@ -84,21 +87,21 @@ export async function prepareDaphneProject(resource: ProjectResource, session: C
   const eagerTotal = files.filter(file => file !== video).reduce((sum, file) => sum + file.sizeBytes, 0);
   if (eagerTotal > 128 * 1024 * 1024) {throw new Error("DAPHNE_PROJECT_INVALID");}
   let ready = 0;
-  const source = (file: ProjectFile, range: boolean) => {
+  const source = (file: ProjectFile, policy: ReturnType<AdapterContentSession["inputPolicy"]>) => {
     const url = new URL(file.url, indexUrl);
     if (url.origin !== indexUrl.origin || !url.pathname.startsWith(indexUrl.pathname.slice(0, -"index.json".length))) {
       throw new Error("DAPHNE_PROJECT_INVALID");
     }
     return {identity: {kind: "INDEX_ENTRY" as const, projectDigest: resource.contentDigest, logicalPath: file.path},
       url: url.href, sizeBytes: file.sizeBytes, purpose: "GAME" as const,
-      transport: range ? "RANGE_REQUIRED" as const : "WHOLE_ALLOWED" as const,
-      etagPolicy: "PIN_STRONG" as const, contentLengthPolicy: "EXACT_IF_PRESENT" as const};
+      transport: policy.mode === "RANGE" ? "RANGE_REQUIRED" as const : "WHOLE_ALLOWED" as const,
+      etagPolicy: "PIN_STRONG" as const, contentLengthPolicy: policy.contentLengthPolicy};
   };
   for (const file of files) {
     if (file === video) {continue;}
     if (file.sizeBytes > contentLimits.firmwareFile) {throw new Error("DAPHNE_PROJECT_INVALID");}
-    const policy = eagerPolicy(contentLimits.firmwareFile);
-    const reader = await session.open(source(file, false), policy, signal);
+    const policy = session.inputPolicy("game", "support");
+    const reader = await session.open(source(file, policy), policy, signal);
     try {
       const result = await session.materialize(reader.id, {kind: "BYTES", maxBytes: policy.maxFileBytes}, signal,
         progress => report(ready + progress.readyBytes, eagerTotal));
@@ -106,8 +109,8 @@ export async function prepareDaphneProject(resource: ProjectResource, session: C
       bytes.set(file.path, result.bytes); ready += result.bytes.byteLength; report(ready, eagerTotal);
     } finally {await reader.close();}
   }
-  const policy = rangePolicy("ASYNC", contentLimits.signedDisc);
-  const reader = await session.open(source(video, true), policy, signal);
+  const policy = session.inputPolicy("game");
+  const reader = await session.open(source(video, policy), policy, signal);
   const videoRange = new NeoCDRange({sha256: resource.contentDigest, sizeBytes: video.sizeBytes}, reader, fail, video.path);
   try {await Promise.all([videoRange.read(0, 1), videoRange.read(video.sizeBytes - 1, 1)]);}
   catch (error) {await videoRange.dispose(); throw error;}

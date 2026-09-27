@@ -5,7 +5,7 @@ import {contentLimits} from "../content-io/limits.js";
 import {rangePolicy} from "../provider/content-policies.js";
 export const blockSize = 256 * 1024;
 type Entry = {path: string; sizeBytes: number; url: string};
-export type ScummvmFileSession = Pick<AdapterContentSession, "open">;
+export type ScummvmFileSession = Pick<AdapterContentSession, "open" | "inputPolicy">;
 /** Index/FS semantics only. Reader handles are lazy; stat/list never fetch or open content. */
 export class ScummvmFiles {
   private readonly entries = new Map<string, Entry>();
@@ -42,7 +42,7 @@ export class ScummvmFiles {
   private check() {if (this.closed || this.signal?.aborted) {throw new ContentIOError("ABORTED");}}
   private reader(entry: Entry): Promise<ContentReaderV1> {
     const found = this.readers.get(entry.path); if (found) {return found;}
-    const policy = rangePolicy("ASYNC", contentLimits.indexedFile, {});
+    const policy = this.verifiedAssets ? rangePolicy("ASYNC", contentLimits.indexedFile) : this.session.inputPolicy("game");
     const sha256 = this.verifiedAssets?.get(entry.path);
     const pending = this.session.open({identity: sha256 ? {kind: "FILE_SHA256", sha256} :
       {kind: "INDEX_ENTRY", projectDigest: this.contentDigest, logicalPath: entry.path},

@@ -1,8 +1,7 @@
 import type {AdapterContentOptions} from "../provider/content-inputs.js";
 import {fileContentSource, materializeFileBytes} from "../provider/content-inputs.js";
-import {eagerPolicy, rangePolicy} from "../provider/content-policies.js";
+import {eagerPolicy} from "../provider/content-policies.js";
 import {LazyContentReader} from "../provider/lazy-reader.js";
-import {contentLimits} from "../content-io/limits.js";
 import {abi, contractSha256} from "../content-io/identity.js";
 import {ContentIOError} from "../content-io/errors.js";
 export class KirikiriContent {
@@ -13,7 +12,7 @@ export class KirikiriContent {
   private readonly urls = new Set<string>();
   constructor(private readonly options: AdapterContentOptions, private readonly signal?: AbortSignal) {}
   register(projectDigest: string, path: string, url: string, sizeBytes: number) {
-    const policy = rangePolicy("VLFS", contentLimits.indexedFile, { writes: "SESSION_OVERLAY"});
+    const policy = this.options.contentSession.inputPolicy("game");
     const reader = new LazyContentReader(this.options.contentSession, {identity: {kind: "INDEX_ENTRY", projectDigest, logicalPath: path},
       url, sizeBytes, purpose: "GAME", transport: "RANGE_REQUIRED", etagPolicy: "PIN_STRONG",
       contentLengthPolicy: policy.contentLengthPolicy, }, policy, this.signal);

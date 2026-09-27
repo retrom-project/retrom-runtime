@@ -4,7 +4,7 @@ import {startFixtureServer} from "./fixture-server.mjs";
 const compile = async (path: string) => (await build({entryPoints: [`src/${path}.ts`], bundle: true,
   format: "esm", platform: "browser", write: false, target: "es2022"})).outputFiles[0].text;
 test("[BR-10] BROWSER/scummvm-cross-realm iframe destinations cross the public Reader and retain consumer ownership", async ({page}) => {
-  const server = await startFixtureServer({contentModule: await compile("content-io/client"), modules: {
+  const server = await startFixtureServer({contentModule: await compile("../tests/content-io/target-session"), modules: {
     "files.mjs": await compile("scummvm/files"), "worker.mjs": await compile("content-io/worker"),
   }});
   const identity = server.register({id: "game", fixtureId: "multi-tail", behavior: "NORMAL", seed: 17,
@@ -12,14 +12,14 @@ test("[BR-10] BROWSER/scummvm-cross-realm iframe destinations cross the public R
   try {
     await page.goto(`${server.origin}/__test__/page`);
     const result = await page.evaluate(async ({sizeBytes}) => {
-      const url = "/__test__/content.mjs", {createContentSession} = await import(url) as typeof import("../../src/content-io/client.js");
+      const url = "/__test__/content.mjs", {createContentSession, targetContentFixture} = await import(url) as typeof import("./target-session.js");
       const session = await createContentSession(new Worker("/__test__/worker.mjs", {type: "module"}), {storageOrigin: location.origin, allowedOrigins: [location.origin]});
       const iframe = document.createElement("iframe");
       try {
         await new Promise<void>(resolve => {iframe.onload = () => resolve(); iframe.src = "/__test__/page"; document.body.append(iframe);});
         const frame = iframe.contentWindow as Window & typeof globalThis;
         const {ScummvmFiles} = await frame.eval("import('/__test__/files.mjs')") as typeof import("../../src/scummvm/files.js");
-        const files = new ScummvmFiles({schemaVersion: 1, files: [{path: "game.bin", sizeBytes, url: `${location.origin}/objects/multi-tail/game`}]}, "a".repeat(64), session);
+        const files = new ScummvmFiles({schemaVersion: 1, files: [{path: "game.bin", sizeBytes, url: `${location.origin}/objects/multi-tail/game`}]}, "a".repeat(64), targetContentFixture(session, "scummvm"));
         try {
           const bytes = await files.read("/game/game.bin", 0, 3), foreign = bytes instanceof frame.Uint8Array && !(bytes instanceof Uint8Array);
           const first = Array.from(bytes); bytes.fill(255); structuredClone(bytes, {transfer: [bytes.buffer]});

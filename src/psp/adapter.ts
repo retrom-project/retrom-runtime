@@ -5,21 +5,25 @@ import type {MountedRuntimeAdapter} from "../internal-adapter.js";
 import {loadPSP, validPSPModule, type PSPLoader, type PSPParameters} from "./core.js";
 
 export async function mountPSP(config: PSPParameters, target: HTMLElement, frameWindow: Window,
-  restorePayload: Uint8Array | null, _reportProgress: RuntimeProgressReporter, reportFailure: (error: Error) => void, signal?: AbortSignal,
+  restorePayload: Uint8Array | null, reportProgress: RuntimeProgressReporter, reportFailure: (error: Error) => void, signal?: AbortSignal,
   dependencies: {loader?: PSPLoader} = {}, content?: PSPContentOptions,
 ): Promise<MountedRuntimeAdapter> {
   if (target.ownerDocument !== frameWindow.document || restorePayload &&
       (restorePayload.byteLength < 1 || restorePayload.byteLength > 268435456)) {throw new Error("PPSSPP_RUNTIME_CONFIG_INVALID");}
   signal?.throwIfAborted();
-  const module = await (dependencies.loader ?? loadPSP)(config, frameWindow, signal, content?.contentSession);
-  if (!validPSPModule(module)) {throw new Error("PPSSPP_CORE_ABI_MISMATCH");}
-  signal?.throwIfAborted();
-  const {instance, reader} = await startPSP(module, config, target, restorePayload, reportFailure, signal, content);
+  const loaded = await (dependencies.loader ?? loadPSP)(config, frameWindow, signal, content?.contentSession, reportProgress);
+  let started: Awaited<ReturnType<typeof startPSP>>;
+  try {
+    if (!validPSPModule(loaded.module)) {throw new Error("PPSSPP_CORE_ABI_MISMATCH");}
+    signal?.throwIfAborted();
+    started = await startPSP(loaded.module, loaded.assets, config, target, restorePayload, reportFailure, signal, content);
+  } catch (error) {loaded.close(); throw error;}
+  const {instance, reader} = started;
   let exited = false;
   const exit = async () => {
     if (exited) {return;}
     exited = true; signal?.removeEventListener("abort", abort);
-    try {await instance.stop();} finally {await reader.close();}
+    try {await instance.stop();} finally {try {await reader.close();} finally {loaded.close();}}
   };
   const abort = () => {void exit();};
   if (signal?.aborted) {await exit(); signal.throwIfAborted();}

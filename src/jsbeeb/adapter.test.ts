@@ -1,3 +1,4 @@
+import {targetContentFixture} from "../../tests/target-content-fixture.js";
 // @vitest-environment jsdom
 import {afterEach, expect, it, vi} from "vitest";
 import {mountJsbeeb} from "./adapter.js";
@@ -25,7 +26,7 @@ it("boots with verified external ROM bytes and restores a checkpoint in a new fr
     };
     const mounted = mountJsbeeb({game: {url: "/runtime/content/game/game.ssd", sha256: "b".repeat(64), sizeBytes: 3},
       bios, runtimeBaseUrl: "/assets/jsbeeb/site/"}, target, frameWindow,
-      new Uint8Array([5, 6]), () => undefined, session as never);
+      new Uint8Array([5, 6]), () => undefined, targetContentFixture(session as never, "bbc-jsbeeb"));
     await vi.waitFor(() => expect(target.querySelector("iframe")).not.toBeNull());
     const iframe = target.querySelector("iframe")!;
     const focus = vi.spyOn(iframe, "focus");

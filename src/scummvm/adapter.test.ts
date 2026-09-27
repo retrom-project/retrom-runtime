@@ -31,7 +31,7 @@ async function fixture(earlyExit = false, reportRestore = true) {
     const response = new Response(data); Object.defineProperty(response, "url", {value: url}); return response;
   });
   vi.stubGlobal("fetch", fetcher);
-  const content = contentSessionFixture("http://localhost");
+  const content = contentSessionFixture("http://localhost", undefined, "scummvm");
   cleanups.push(content.close);
   const assetIndex = Object.fromEntries(assets.map(file => [`assets/scummvm/${file.path}`, {sha256: file.sha256, sizeBytes: file.sizeBytes}]));
   assetIndex["assets/scummvm/manifest.json"] = {sha256: await saveDigest(manifestBytes), sizeBytes: manifestBytes.length};

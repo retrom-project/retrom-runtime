@@ -37,5 +37,5 @@ it("transfers execution state and disk writes into a different runtime instance 
 });
 
 const mountNP2: typeof mount = (...args) => {
-  args[8] ??= managedAdapterFixture(args[0]); return mount(...args);
+  args[8] ??= managedAdapterFixture("np2kai-pc98", args[0]); return mount(...args);
 };

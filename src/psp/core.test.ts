@@ -22,7 +22,7 @@ it("verifies PSP WASM assets larger than 8 MiB before registering the core", asy
   const frame = document.createElement("iframe"); document.body.append(frame);
   const win = frame.contentWindow!;
   Object.assign(URL, {createObjectURL: vi.fn(() => "blob:http://localhost/verified"), revokeObjectURL: vi.fn()});
-  const registration = {abi: "ppsspp-host-v3", contentAbi, contractSha256, createPPSSPPHost: () => {}};
+  const registration = {abi: "ppsspp-host-v4", contentAbi, contractSha256, createPPSSPPHost: () => {}};
   Object.assign(win, {__RETROM_PPSSPP_V1__: registration});
   vi.spyOn(win.document.head, "append").mockImplementation((...nodes) => {
     expect(fetched).toHaveLength(5);

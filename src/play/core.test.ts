@@ -10,7 +10,7 @@ it("resolves relative Provider assets in a blank child frame", async () => {
   const frame = document.createElement("iframe"); document.body.append(frame);
   const win = frame.contentWindow;
   if (!win) {throw Error("frame missing");}
-  const module = {RETROM_PLAY_ABI: "play-host-v2"};
+  const module = {RETROM_PLAY_ABI: "play-host-v3"};
   Object.assign(URL, {createObjectURL: vi.fn(() => "blob:http://localhost/verified"), revokeObjectURL: vi.fn()});
   Object.assign(win, {__RETROM_PLAY_CORE_MODULE_V1__: module});
   const append = vi.spyOn(win.document.head, "append").mockImplementation((...nodes) => {

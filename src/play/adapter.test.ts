@@ -18,7 +18,7 @@ describe("Play! adapter", () => {
       frameCount: () => 10, pause: vi.fn(), resume: vi.fn(), screenshot: vi.fn(), stop: vi.fn()};
     const create = vi.fn(async (_options: unknown) => core);
     const release = vi.fn();
-  const loader = async () => ({module: {RETROM_PLAY_ABI: "play-host-v2", contentAbi, contractSha256, RETROM_PLAY_CHECKPOINT_MAX_BYTES: 268435456, createRetromPlay: create}, assets: {}, close: release});
+  const loader = async () => ({module: {RETROM_PLAY_ABI: "play-host-v3", contentAbi, contractSha256, RETROM_PLAY_CHECKPOINT_MAX_BYTES: 268435456, createRetromPlay: create}, assets: {}, close: release});
     const restore = new Uint8Array([3]);
     const owner = contentSessionFixture(location.origin, [location.origin, "http://localhost"], "play-ps2"); owners.push(owner);
     const adapter = await mountPlay(config, target, window, restore, vi.fn(), undefined, loader, {contentSession: owner.session, assetIndex: {}});

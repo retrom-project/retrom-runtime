@@ -166,4 +166,6 @@ Provider 在一次挂载中创建 Target 内容上下文，保留同一 Session�
 
 PSP 与 Play! 的共享模块加载器校验每份资产后创建 Blob URL，核心桥接、Worker 与 Emscripten 只使用这组 URL。自包含入口不再根据原始网络地址重复导入；退出、失败及取消会释放这些 URL。
 
+这项接口调整使用 `ppsspp-host-v4` 与 `play-host-v3`。两项核心在 `provider-sources.json` 中显式声明为 development inputs，PFB 必须提供对应的已构建候选目录；旧发布包不能满足新接口。正式发布前，先发布两个核心，再用真实 tag、commit 与资产摘要替换为 upstream releases。现有发布门禁会拒绝未发布的 development inputs，不能把候选验证当成正式发布完成。
+
 验收清单由 `node scripts/content-io/target-catalog.mjs --output <Retrom>/tests/fixtures/content-io/target-declarations.json` 从两个 Provider 声明生成。`--check` 对比现有清单并拒绝漂移；清单只用于开发验收，不扩展 Host 的 Launch 协议。常规 `npm test` 扫描当前 Runtime 的 I/O 边界并校验已注册外部加载器路径。完整 fork 边界检查仍由 Content I/O 阶段门禁执行。

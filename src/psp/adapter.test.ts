@@ -13,7 +13,7 @@ function setup() {
     frameCount: () => 10, pause: vi.fn(), resume: vi.fn(), screenshot: vi.fn(), stop: vi.fn(), setVolume: vi.fn()};
   const create = vi.fn(async (_options: unknown) => core);
   const release = vi.fn();
-  const loader = async () => ({module: {abi: "ppsspp-host-v3", contentAbi, contractSha256, createPPSSPPHost: create}, assets: {}, close: release});
+  const loader = async () => ({module: {abi: "ppsspp-host-v4", contentAbi, contractSha256, createPPSSPPHost: create}, assets: {}, close: release});
   const owner = contentSessionFixture(location.origin, [location.origin, "http://localhost"], "ppsspp"); owners.push(owner);
   const content = {contentSession: {...owner.session, createSyncChannel: vi.fn(async (fileId: string) => ({
     fileId, objectKey: "a".repeat(64), sizeBytes: config.game.sizeBytes, port: {postMessage() {}, close() {}} as unknown as MessagePort,

@@ -51,7 +51,7 @@ export const loadPSP: PSPLoader = async (config, win, signal, session, report) =
 export function validPSPModule(value: unknown): value is PSPModule {
   if (!value || typeof value !== "object") {return false;}
   const module = value as Partial<PSPModule>;
-  return module.abi === "ppsspp-host-v3" && module.contentAbi === contentAbi && module.contractSha256 === contractSha256 && typeof module.createPPSSPPHost === "function";
+  return module.abi === "ppsspp-host-v4" && module.contentAbi === contentAbi && module.contractSha256 === contractSha256 && typeof module.createPPSSPPHost === "function";
 }
 
 export function validPSPCore(value: unknown): value is PSPCore {

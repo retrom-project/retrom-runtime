@@ -2,7 +2,7 @@ import {rangePolicy} from "../../provider/content-policies.js";
 import {contentLimits as limits} from "../../content-io/limits.js";
 import {defineAdapter, defineTarget} from "../../provider/declarations.js";
 
-export const playAdapter = defineAdapter({id: "play-web", kind: "PLAY_WEB", abi: "play-host-v2",
+export const playAdapter = defineAdapter({id: "play-web", kind: "PLAY_WEB", abi: "play-host-v3",
   capabilities: {checkpoint: true, pause: true, screenshot: true, standardGamepad: true, frameCounter: true, volume: false},
   checkpoint: {writeFormat: "play-state-v1", readFormats: ["play-state-v1"]},
 });

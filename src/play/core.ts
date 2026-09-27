@@ -50,7 +50,7 @@ export const loadPlay: PlayLoader = async (config, win, signal, session, report)
 export function validPlayModule(value: unknown): value is PlayModule {
   if (!value || typeof value !== "object") {return false;}
   const module = value as Partial<PlayModule>;
-  return module.RETROM_PLAY_ABI === "play-host-v2" && module.contentAbi === contentAbi && module.contractSha256 === contractSha256 && module.RETROM_PLAY_CHECKPOINT_MAX_BYTES === 268435456 &&
+  return module.RETROM_PLAY_ABI === "play-host-v3" && module.contentAbi === contentAbi && module.contractSha256 === contractSha256 && module.RETROM_PLAY_CHECKPOINT_MAX_BYTES === 268435456 &&
     typeof module.createRetromPlay === "function";
 }
 

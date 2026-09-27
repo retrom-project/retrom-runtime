@@ -9,7 +9,7 @@ describe("EmulatorJS Provider source catalog", () => {
     expect(emulatorJsSourceCatalog.developmentForks.map(fork => fork.runtimeCore)).not.toContain("dosbox_pure");
     expect(emulatorJsSourceCatalog.forks.find(fork => fork.runtimeCore === "dosbox_pure"))
       .toMatchObject({repository: "https://github.com/retrom-project/dosbox-pure",
-        tag: "retrom-core-g3a5222c97456-r1", commit: "a1ad67f90714c445fec56ed24d1e0525b37e4ecf",
+        tag: "retrom-core-g3a5222c97456-r2", commit: "49c837589408822773374a951254aafad35a3026",
         adapterAbi: "emulatorjs-content-io-v1"});
   });
 

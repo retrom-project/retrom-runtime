@@ -3,6 +3,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { mountButterscotch } from "./adapter.js";
 import type {ButterscotchParameters} from "./parameters.js";
+import {deferred} from "../../tests/provider-adapter-fixture.js";
 
 vi.mock("./project-store.js", () => ({prepareButterscotchProject: vi.fn(async (config: ButterscotchParameters) => ({
   gamePath: `/butterscotch/projects/${config.contentDigest}/00000000-0000-4000-8000-000000000000/data/data.win`,
@@ -42,6 +43,76 @@ it("[ST-04] UNIT/workspace-denied never starts native code and releases the cons
 });
 
 describe("Butterscotch Web adapter", () => {
+  it.each(["host", "core"])("awaits project cleanup on %s exit before resolving the adapter", async source => {
+    installIsolatedBrowserGlobals();
+    const workers: FakeWorker[] = [];
+    Object.defineProperty(window, "Worker", {configurable: true,
+      value: class extends FakeWorker {constructor(url: URL) {super(url); workers.push(this);}}});
+    Object.defineProperty(HTMLCanvasElement.prototype, "transferControlToOffscreen", {configurable: true, value: () => ({})});
+    Object.defineProperty(window.navigator, "storage", {configurable: true, value: {getDirectory: async () => new MemoryDirectory()}});
+    const released = deferred<void>(), release = vi.fn(() => released.promise);
+    vi.mocked(prepareButterscotchProject).mockResolvedValueOnce({gamePath: "/content/data.win", savePath: "/saves/launch-one",
+      persistentSaves: false, files: [], connect: vi.fn(), release});
+    const target = document.createElement("div");
+    const adapter = await mountButterscotch(config(), target, window, null);
+    if (source === "core") {workers[0].emit({type: "runnerExit"});}
+    let finished = false;
+    const exiting = adapter.exit().then(() => {finished = true;});
+    try {
+      await vi.waitFor(() => expect(release).toHaveBeenCalledOnce());
+      expect(finished).toBe(false);
+    } finally {released.resolve(); await exiting;}
+    expect(workers[0].terminated).toBe(true); expect(target.childElementCount).toBe(0);
+  });
+
+  it.each(["canvas-blur", "window-blur", "hidden", "pause"])("releases held directions on %s after restore", async boundary => {
+    installIsolatedBrowserGlobals();
+    const workers: FakeWorker[] = [];
+    Object.defineProperty(window, "Worker", {configurable: true,
+      value: class extends FakeWorker {constructor(url: URL) {super(url); workers.push(this);}}});
+    Object.defineProperty(HTMLCanvasElement.prototype, "transferControlToOffscreen", {configurable: true, value: () => ({})});
+    Object.defineProperty(window.navigator, "storage", {configurable: true, value: {getDirectory: async () => new MemoryDirectory()}});
+    vi.spyOn(window, "requestAnimationFrame").mockReturnValue(1);
+    vi.spyOn(window, "cancelAnimationFrame").mockImplementation(() => undefined);
+    const target = document.createElement("div");
+    document.body.append(target);
+    const adapter = await mountButterscotch(config(), target, window, Uint8Array.of(66, 83, 67, 80, 2, 0, 0, 0, 0, 0, 0, 0));
+    const canvas = adapter.getCanvas()!;
+    const key = (type: string) => new KeyboardEvent(type, {bubbles: true, code: "ArrowDown"});
+    canvas.dispatchEvent(key("keydown"));
+    const releases = () => workers[0].messages.filter(m => m.type === "KEY" && m.keyCode === 40 && m.pressed === false);
+    expect(releases()).toHaveLength(0);
+    if (boundary === "canvas-blur") {canvas.blur();}
+    if (boundary === "window-blur") {window.dispatchEvent(new Event("blur"));}
+    if (boundary === "hidden") {
+      vi.spyOn(document, "visibilityState", "get").mockReturnValue("hidden");
+      document.dispatchEvent(new Event("visibilitychange"));
+    }
+    if (boundary === "pause") {await adapter.pause();}
+    // The real keyup may go to the host menu/body, never back to this canvas.
+    document.body.dispatchEvent(key("keyup"));
+    expect(releases()).toHaveLength(1);
+    window.dispatchEvent(new Event("blur"));
+    expect(releases()).toHaveLength(1);
+    if (boundary === "pause") {
+      const presses = () => workers[0].messages.filter(m => m.type === "KEY" && m.pressed === true).length;
+      const count = presses();
+      canvas.dispatchEvent(key("keydown"));
+      expect(presses()).toBe(count);
+      await adapter.resume();
+    }
+    canvas.focus();
+    canvas.dispatchEvent(key("keydown"));
+    canvas.dispatchEvent(key("keyup"));
+    expect(releases()).toHaveLength(2);
+    await adapter.exit();
+    const count = workers[0].messages.length;
+    window.dispatchEvent(new Event("blur"));
+    document.dispatchEvent(new Event("visibilitychange"));
+    canvas.dispatchEvent(key("keydown"));
+    expect(workers[0].messages).toHaveLength(count);
+  });
+
   it("mounts cached project bytes, restores, maps input and creates a bounded core checkpoint", async () => {
     installIsolatedBrowserGlobals();
     const workers: FakeWorker[] = [];
@@ -63,7 +134,8 @@ describe("Butterscotch Web adapter", () => {
     });
     vi.spyOn(window, "cancelAnimationFrame").mockImplementation(() => undefined);
     const gamepad = { axes: [0.75, 0], buttons: [{ pressed: true, value: 1 }], connected: true, mapping: "standard" };
-    Object.defineProperty(window.navigator, "getGamepads", { configurable: true, value: () => [gamepad] });
+    let gamepads: Array<typeof gamepad | null> = [null, gamepad];
+    Object.defineProperty(window.navigator, "getGamepads", { configurable: true, value: () => gamepads });
     mockProject();
     const target = document.createElement("div");
     document.body.append(target);
@@ -74,6 +146,19 @@ describe("Butterscotch Web adapter", () => {
     if (!canvas) {throw new Error("test canvas missing");}
     canvas.dispatchEvent(new KeyboardEvent("keydown", { bubbles: true, code: "ArrowUp" }));
     animationFrames.shift()?.(16);
+    const snapshot = {axes: [0.75, 0], buttons: [1]};
+    expect(workers[0]?.messages.at(-1)).toEqual({type: "GAMEPAD", gamepads: [null, snapshot]});
+    // Discovering slot zero must not move the already active slot one.
+    gamepads = [{...gamepad, axes: [-0.5, 0]}, gamepad];
+    animationFrames.shift()?.(32);
+    expect(workers[0]?.messages.at(-1)).toEqual({type: "GAMEPAD",
+      gamepads: [{...snapshot, axes: [-0.5, 0]}, snapshot]});
+    // A disconnected or unsupported controller must leave a hole, including after restore.
+    for (const first of [null, {...gamepad, connected: false}, {...gamepad, mapping: ""}]) {
+      gamepads = [first, gamepad];
+      animationFrames.shift()?.(48);
+      expect(workers[0]?.messages.at(-1)).toEqual({type: "GAMEPAD", gamepads: [null, snapshot]});
+    }
     const checkpoint = await adapter.checkpoint();
     await expect(adapter.screenshot()).resolves.toEqual(expect.objectContaining({type: "image/png"}));
 
@@ -82,6 +167,11 @@ describe("Butterscotch Web adapter", () => {
       format: "butterscotch-checkpoint-v2",
     });
     expect(workers[0]?.commands).toContain("RESTORE");
+    // Restore must publish all currently connected slots while the runner is
+    // still paused. Waiting for the first RAF exposes a false disconnect to GML.
+    const resumeIndex = workers[0].messages.findIndex(message => message.command === "RESUME");
+    const restoredIndex = workers[0].messages.findIndex(message => message.command === "RESTORE");
+    expect(workers[0].messages.slice(restoredIndex + 1, resumeIndex)).toContainEqual({type: "GAMEPAD", gamepads: [null, snapshot]});
     expect(workers[0]?.url.pathname).toBe("/runtime/retrom-runtime/v0.8.0/worker.mjs");
     expect(workers[0]?.messages).toContainEqual(expect.objectContaining({ keyCode: 38, pressed: true, type: "KEY" }));
     expect(workers[0]?.messages).toContainEqual(expect.objectContaining({ type: "GAMEPAD" }));
@@ -91,6 +181,7 @@ describe("Butterscotch Web adapter", () => {
     expect(Number.parseFloat(canvas.style.height)).toBeCloseTo(1_000, 2);
 
     await adapter.exit();
+    expect(workers[0]?.messages).toContainEqual({type: "GAMEPAD", gamepads: []});
     expect(workers[0]?.terminated).toBe(true);
     expect(target.childElementCount).toBe(0);
   });

@@ -22,7 +22,7 @@ const upstream = (boundaryId: keyof typeof contentBoundaries): ContentInputPolic
 const native = (boundaryId: keyof typeof contentBoundaries): ContentInputPolicyV1 => ({mode: "BROWSER_NATIVE", boundaryId});
 const mkxp = rangePolicy("WASMFS", limits.indexedFile, {writes: "SESSION_OVERLAY"});
 const gamePolicies: Readonly<Record<string, ContentInputPolicyV1>> = {
-  "butterscotch-gamemaker": eagerPolicy(limits.indexedFile, {result: "WORKSPACE_FILE", workspace: "OPFS_REQUIRED", writes: "SESSION_OVERLAY"}),
+  "butterscotch-gamemaker": rangePolicy("WASMFS", limits.indexedFile, {writes: "SESSION_OVERLAY"}),
   fake08: eagerPolicy(limits.fantasyFile),
   "flash-ruffle": eagerPolicy(limits.ruffleSwf),
   j2me: upstream("j2me-loader"),

@@ -4,6 +4,10 @@ let availabilityTimer = null;
 let audioTimer = null;
 let runtimeCanvas = null;
 const audioFramesPerPull = 2048;
+// Four browser slots, each containing connected + 17 buttons + 4 axes.
+const gamepadStride = 22;
+const gamepadFrame = new Float32Array(4 * gamepadStride);
+let gamepadPointer = 0;
 
 self.addEventListener("message", ({ data }) => {
   if (data?.type === "START") {void start(data); return;}
@@ -27,9 +31,20 @@ async function start(data) {
     stage = "CANVAS";
     registerCanvas(runtime, data.canvas);
     stage = "PROJECT_STORE";
-    if (runtime._mountOpfs() !== 0) {throw new Error("BUTTERSCOTCH_PROJECT_STORE_FAILED");}
+    if (data.persistentSaves && runtime._mountOpfs() !== 0) {throw new Error("BUTTERSCOTCH_PROJECT_STORE_FAILED");}
+    stage = "CONTENT_ABI";
+    if (!runtime._getContentReadSlot || !runtime._registerContentFile) {throw new Error("content ABI required");}
+    const offset = runtime._getContentReadSlot();
+    postMessage({type: "CONTENT_READY", buffer: runtime.HEAPU8.buffer, offset});
+    for (const file of data.files) {
+      if (runtime.ccall("registerContentFile", "number", ["string", "number", "number"], [file.path, file.id, file.sizeBytes]) !== 0) {
+        throw new Error("content registration failed");
+      }
+    }
     stage = "AUDIO";
     runtime._setAudioSampleRate(data.audioSampleRate);
+    stage = "GAMEPAD_ABI";
+    if (typeof runtime._setGamepads !== "function") {throw new Error("gamepad snapshot ABI required");}
     if (data.restore) {runtime._setRunnerPaused(1); paused = true;}
     stage = "RUNNER";
     runtime.ccall("startRunner", null, ["string", "string"], [data.gamePath, data.savePath]);
@@ -81,6 +96,7 @@ async function command(data) {
       availabilityTimer = null;
       audioTimer = null;
       runtime._stopRunner();
+      if (gamepadPointer) {runtime._free(gamepadPointer); gamepadPointer = 0;}
       respond(data);
       return;
     default:
@@ -160,16 +176,23 @@ function setKey(keyCode, pressed) {
 }
 
 function setGamepads(gamepads) {
+  gamepadFrame.fill(0);
   for (let device = 0; device < 4; device += 1) {
     const gamepad = gamepads[device];
-    runtime._setGamepadConnected(device, gamepad ? 1 : 0);
-    for (let button = 0; button < 16; button += 1) {
-      runtime._setGamepadButton(device, button, gamepad?.buttons[button] ?? 0);
+    if (!gamepad) {continue;}
+    const offset = device * gamepadStride;
+    gamepadFrame[offset] = 1;
+    for (let button = 0; button < 17; button += 1) {
+      gamepadFrame[offset + 1 + button] = gamepad.buttons[button] ?? 0;
     }
     for (let axis = 0; axis < 4; axis += 1) {
-      runtime._setGamepadAxis(device, axis, gamepad?.axes[axis] ?? 0);
+      gamepadFrame[offset + 18 + axis] = gamepad.axes[axis] ?? 0;
     }
   }
+  gamepadPointer ||= runtime._malloc(gamepadFrame.byteLength);
+  runtime.HEAPF32.set(gamepadFrame, gamepadPointer / 4);
+  // Publish once: the runner thread must never see only half of this frame.
+  runtime._setGamepads(gamepadPointer, 4);
 }
 
 function reportAvailability() {

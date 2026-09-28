@@ -15,7 +15,10 @@ export function validCoreDevelopmentInput(value) {
       names.has(asset.filename) || outputs.has(asset.output)) {return false;}
     names.add(asset.filename); outputs.add(asset.output);
   }
-  return value.assets.some((asset) => asset.output.startsWith("licenses/")) || value.id === "mkxp" && value.repository === "https://github.com/retrom-project/mkxp-z-libretro-emscripten";
+  const separatelyLicensed = value.id === "mkxp" && value.repository === "https://github.com/retrom-project/mkxp-z-libretro-emscripten" ||
+    value.id === "easyrpg" && value.repository === "https://github.com/retrom-project/Player" && value.adapterAbi === "easyrpg-save" &&
+    value.assets.length === 2 && ["easyrpg-player.js", "easyrpg-player.wasm"].every(filename => names.has(filename));
+  return value.assets.some((asset) => asset.output.startsWith("licenses/")) || separatelyLicensed;
 }
 export async function stageCoreDevelopmentInput(source, directory, stage) {
   if (!validCoreDevelopmentInput(source) || !directory) {throw new Error("UNPUBLISHED_CORE_INPUT");}

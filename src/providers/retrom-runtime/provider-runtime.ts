@@ -68,7 +68,8 @@ class RetromRuntimePlayer implements PlayerRuntimeV1 {
       this.installInputFilter(runtimeWindow, frameMode);
       const declaration = retromRuntimeProviderDefinition.targets.find((entry) => entry.id === this.envelope.runtime.targetId);
       if (!declaration) {throw contractError();}
-      const contentSession = await this.contentOwner.start(declaration, this.envelope, this.assetIndex);
+      const contentSession = await this.contentOwner.start(declaration, this.envelope, this.assetIndex, this.host.contentLoading,
+        (loadedBytes, totalBytes) => this.emit({type: "LOAD_PROGRESS", loadedBytes, totalBytes}));
       this.assertActive();
       const adapter = await mountTargetAdapter(this.envelope, runtimeTarget, {
         assetIndex: this.assetIndex, contentSession,

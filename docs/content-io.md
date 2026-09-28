@@ -24,6 +24,33 @@ Only actual reads trigger fetching. A valid cache hit is returned directly. A mi
 
 Each response retains origin, ETag/If-Match, exact length and applicable full SHA verification. A small-file authorization does not permit a large-file or partial-range 200 response. Fetched bytes split into the existing internal block layout, within the shared network and memory budgets. Fetch configuration never enters source identity or persistent keys; a new Session with different settings reuses old verified blocks. Tests cover non-default thresholds/windows, boundaries, partial cache, concurrency, cancellation and unavailable storage. Product evidence records configuration, requests, bytes and first availability together.
 
+## Explicit download before startup
+
+`RuntimeHostV1.contentLoading` defaults to `ON_DEMAND`. With `PRELOAD`, the
+Provider resolves all managed Envelope resources before native startup: every
+indexed member, disc, parent and firmware file, plus explicitly declared lazy
+core data assets. It uses the same immutable identities and verified block
+namespace as ordinary readers. Native/upstream loaders outside Content I/O keep
+their existing behavior; this option is not an offline application shell.
+
+A private preparation Worker sequentially fills storage using bounded 2 MiB
+Range windows (whole streams only for WHOLE_ALLOWED inputs), reuses committed
+blocks, verifies complete content, and requires a durable completion receipt.
+It never holds a whole game in a JavaScript buffer. `LOAD_PROGRESS` covers the
+complete managed set; 100% is emitted only after the last validated commit.
+The preparation worker retains cache-generation leases until the runtime exits,
+including files the core has not opened. Ordinary readers then use these local
+blocks without changing the native Content I/O ABI. Exiting or cancelling
+terminates the preparation worker; committed partial blocks remain reusable.
+
+Unlike optional caching in ON_DEMAND mode, missing storage or a failed durable
+write is a startup error in PRELOAD. The Host can retry or explicitly choose
+ON_DEMAND. There is no silent fallback claiming a completed download. Leases
+end at exit: this is not a permanent cache pin, download manager, or guarantee
+of launching a fresh session without network authorization. ONS video in this
+mode materializes a leased local Blob when opened and releases it at playback
+end or exit; default ONS video continues to use the native media URL.
+
 ## Sequential prefetch
 
 Prefetch is a fixed internal runtime strategy, not a `ContentFetchPolicyV1` field; it does not change the ABI, messages, contract digest or core range reads. After a successful nonempty demand copy touches a window's final 256 KiB block (including the exact block boundary), the IO Worker Reader may submit the immediately following network window. Successful memory-cache reads also qualify. Empty reads, failed cache probes, materialization and prefetch completion do not trigger speculation. Whole-small-file windows and EOF have no successor. Windows of any validated size use the same alignment and EOF clipping as demand reads.
@@ -46,7 +73,7 @@ Workspace consumers require OPFS and publish immutable generations only after va
 
 ## Consumer boundaries
 
-Private Provider policies choose RANGE, EAGER or ON_OPEN independently for each input role. They are not added to the public Host manifest. PSP, Play, NeoCD, ScummVM, KiriKiri, mkxp and Butterscotch preserve their native read semantics through thin facades. ONS files materialize when opened; its video URL remains a browser media boundary. Small eager adapters preserve their own size and format limits.
+Private Provider policies choose RANGE, EAGER or ON_OPEN independently for each input role. They are not added to the public Host manifest. PSP, Play, NeoCD, ScummVM, KiriKiri, mkxp and Butterscotch preserve their native read semantics through thin facades. ONS files materialize when opened; its default video URL remains a browser media boundary. Small eager adapters preserve their own size and format limits.
 
 Butterscotch registers the project index as read-only WasmFS file metadata without opening content sources. A single bounded shared-memory slot connects native reads to lazy public Content I/O readers. Network requests, identity validation and persistent block reuse remain in Content I/O. Only native saves optionally use OPFS; unavailable storage leaves a session memory overlay. The core accepts paths, sizes and opaque file IDs, never a Host index, URL or game-specific preload list. The Web parser lazily reads GameMaker TXTR payloads and AUDO size headers/payloads, including external audio groups. Other parsed chunks retain their existing eager parsing. This requires a core with the content-read ABI version 1 in addition to the unchanged checkpoint version 2; old core assets fail the explicit content ABI check and must be replaced together with this adapter when releasing.
 

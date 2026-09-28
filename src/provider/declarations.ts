@@ -112,6 +112,8 @@ export type TargetDeclaration = {
   contentMembers?: Readonly<Record<string, Readonly<Record<string, ManagedInputPolicyV1>>>>;
   checkpointMaxBytes: number | null;
   assetPaths: readonly string[];
+  /** Assets read lazily during gameplay, prepared with game content when requested by the Host. */
+  preloadAssetPaths?: readonly string[];
   implementation: Readonly<Record<string, unknown>>;
 };
 

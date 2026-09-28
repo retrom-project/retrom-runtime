@@ -12,12 +12,30 @@ export function createOnsProjectFileMap(files: OnsProjectFile[], frameWindow: Wi
   const map: Record<string, OnsProjectFileNode> = Object.create(null) as Record<string, OnsProjectFileNode>;
   for (const file of files) {map[`/game/${file.path}`.toLowerCase()] = {...file, path: `/game/${file.path}`, loaded: false};}
   const pending = new Set<Promise<unknown>>();
-  const read = (node: OnsProjectFileNode) => {
-    const task = loadProjectFile(node, frameWindow.document.baseURI, content, scope.signal);
+  const track = <T>(task: Promise<T>) => {
     pending.add(task); void task.finally(() => pending.delete(task)).catch(() => {}); return task;
+  };
+  const read = (node: OnsProjectFileNode) => {
+    return track(loadProjectFile(node, frameWindow.document.baseURI, content, scope.signal));
   };
   return {
     fileMap: map,
+    videoSource: content.contentSession.preloaded ? (node: OnsProjectFileNode) => track((async () => {
+      checkSignal(scope.signal);
+      const policy = {...content.contentSession.inputPolicy("game"), result: "BLOB" as const};
+      const reader = await content.contentSession.open({identity: {kind: "INDEX_ENTRY", projectDigest: content.projectDigest, logicalPath: node.path.slice(6)},
+        url: new URL(node.url, frameWindow.document.baseURI).href, sizeBytes: node.sizeBytes, purpose: "GAME", transport: "WHOLE_ALLOWED",
+        etagPolicy: "PIN_STRONG", contentLengthPolicy: policy.contentLengthPolicy}, policy, scope.signal);
+      try {
+        const result = await content.contentSession.materialize(reader.id, {kind: "BLOB", maxBytes: policy.maxFileBytes}, scope.signal);
+        if (result.kind !== "BLOB") {throw new ContentIOError("INTERNAL");}
+        try {
+          checkSignal(scope.signal);
+          const url = URL.createObjectURL(result.blob);
+          return {url, release: () => {URL.revokeObjectURL(url); void result.release();}};
+        } catch (error) {await result.release(); throw error;}
+      } finally {await reader.close();}
+    })()) : undefined,
     async readBytes(key: string) {
       checkSignal(scope.signal); const node = map[key.toLowerCase()]; if (!node) {throw new ContentIOError("SOURCE_INVALID");}
       const bytes = await read(node); checkSignal(scope.signal); return bytes;

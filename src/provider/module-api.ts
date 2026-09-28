@@ -60,6 +60,9 @@ export function validateTargetOptionsAgainstSchema(
 export function validateRuntimeHost(value: unknown): RuntimeHostV1 {
   const host = isRecord(value) ? value : null;
   const signal = host && isRecord(host.signal) ? host.signal : null;
+  if (host?.contentLoading !== undefined && host.contentLoading !== "ON_DEMAND" && host.contentLoading !== "PRELOAD") {
+    throw new Error("PROVIDER_HOST_INVALID");
+  }
   if (!host || typeof host.mountFrame !== "function" || typeof host.loadRestore !== "function" ||
     typeof host.reportDiagnostic !== "function" || !signal || typeof signal.aborted !== "boolean" ||
     typeof signal.addEventListener !== "function" || typeof signal.removeEventListener !== "function") {

@@ -2,6 +2,8 @@ import { describe, expect, it } from "vitest";
 
 import { projectProviderManifest } from "./manifest.js";
 import { retromRuntimeProviderDefinition } from "../providers/retrom-runtime/catalog.js";
+import {validateTargetOptionsAgainstSchema} from "./module-api.js";
+import {validateProviderManifest} from "./contract.js";
 
 const targetIds = [
   "apple2-apple2js",
@@ -47,6 +49,17 @@ const sameOriginFrameTargetIds = [
 ];
 
 describe("retrom-runtime provider declarations", () => {
+  it("declares optional shared or independent Butterscotch gamepads without game-specific selectors", () => {
+    const manifest = projectProviderManifest(retromRuntimeProviderDefinition);
+    expect(validateProviderManifest(manifest)).toBe(manifest);
+    const target = manifest.targets.find(target => target.id === "butterscotch-gamemaker")!;
+    for (const value of [{}, {gamepadMode: "shared"}, {gamepadMode: "independent"}]) {
+      expect(validateTargetOptionsAgainstSchema(value, target.targetOptionsSchema)).toBe(value);
+    }
+    for (const value of [{gamepadMode: "random"}, {gamepadMode: null}, {gamepadMode: true}, {gameName: "fixture"}]) {
+      expect(() => validateTargetOptionsAgainstSchema(value, target.targetOptionsSchema)).toThrow("PROVIDER_LAUNCH_REQUEST_INVALID");
+    }
+  });
   it("declares the complete target closure in one source", () => {
     expect(retromRuntimeProviderDefinition.providerVersion).toBe("0.0.0-dev");
     expect(retromRuntimeProviderDefinition.targets.map((target) => target.id)).toEqual(targetIds);

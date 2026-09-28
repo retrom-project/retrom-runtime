@@ -42,6 +42,42 @@ it("[ST-04] UNIT/workspace-denied never starts native code and releases the cons
 });
 
 describe("Butterscotch Web adapter", () => {
+  it.each([false, true])("shares both controllers through one slot, including restored sessions: %s", async (restore) => {
+    installIsolatedBrowserGlobals();
+    const workers: FakeWorker[] = [];
+    Object.defineProperty(window, "Worker", {configurable: true,
+      value: class extends FakeWorker {constructor(url: URL) {super(url); workers.push(this);}}});
+    Object.defineProperty(HTMLCanvasElement.prototype, "transferControlToOffscreen", {configurable: true, value: () => ({})});
+    Object.defineProperty(window.navigator, "storage", {configurable: true, value: {getDirectory: async () => new MemoryDirectory()}});
+    const frames: FrameRequestCallback[] = [];
+    vi.spyOn(window, "requestAnimationFrame").mockImplementation(callback => {frames.push(callback); return frames.length;});
+    vi.spyOn(window, "cancelAnimationFrame").mockImplementation(() => undefined);
+    const pad = (horizontal: number, value: number) => ({connected: true, mapping: "standard", axes: [horizontal, 0, 0, 0],
+      buttons: Array.from({length: 17}, (_, index) => ({value: index === 0 ? value : 0}))});
+    let gamepads: Array<ReturnType<typeof pad> | null> = [pad(0, 0), pad(1, 1)];
+    Object.defineProperty(window.navigator, "getGamepads", {configurable: true, value: () => gamepads});
+    const adapter = await mountButterscotch(config(), document.createElement("div"), window,
+      restore ? Uint8Array.of(66, 83, 67, 80, 2, 0, 0, 0, 0, 0, 0, 0) : null);
+    const sample = () => {frames.shift()?.(16); return workers[0].messages.at(-1);};
+    const snapshot = {axes: [1, 0, 0, 0], buttons: pad(0, 1).buttons.map(button => button.value)};
+    expect(sample()).toEqual({type: "GAMEPAD", gamepads: [snapshot]});
+    // Either physical device can drive the same virtual slot without reconnecting.
+    gamepads = [pad(1, 1), pad(0, 0)];
+    expect(sample()).toEqual({type: "GAMEPAD", gamepads: [snapshot]});
+    gamepads = [pad(0, 1), pad(0, 1)];
+    expect(sample()).toEqual({type: "GAMEPAD", gamepads: [{...snapshot, axes: [0, 0, 0, 0]}]});
+    gamepads = [null, pad(0, 1)];
+    expect(sample()).toEqual({type: "GAMEPAD", gamepads: [{...snapshot, axes: [0, 0, 0, 0]}]});
+    gamepads = [null, pad(0, 0)];
+    expect(sample()).toEqual({type: "GAMEPAD", gamepads: [{axes: [0, 0, 0, 0], buttons: Array(17).fill(0)}]});
+    gamepads = [null, null];
+    expect(sample()).toEqual({type: "GAMEPAD", gamepads: []});
+    if (restore) {expect(workers[0].commands).toContain("RESTORE");}
+    await adapter.exit();
+    expect(workers[0].messages.at(-1)).toEqual({type: "GAMEPAD", gamepads: []});
+    expect(workers[0].terminated).toBe(true);
+  });
+
   it("mounts cached project bytes, restores, maps input and creates a bounded core checkpoint", async () => {
     installIsolatedBrowserGlobals();
     const workers: FakeWorker[] = [];
@@ -70,7 +106,8 @@ describe("Butterscotch Web adapter", () => {
     document.body.append(target);
     const restore = Uint8Array.of(66, 83, 67, 80, 2, 0, 0, 0, 0, 0, 0, 0);
 
-    const adapter = await mountButterscotch(config(), target, window, restore, () => undefined, () => undefined);
+    const adapter = await mountButterscotch({...config(), gamepadMode: "independent"}, target, window, restore,
+      () => undefined, () => undefined);
     const canvas = adapter.getCanvas();
     if (!canvas) {throw new Error("test canvas missing");}
     canvas.dispatchEvent(new KeyboardEvent("keydown", { bubbles: true, code: "ArrowUp" }));

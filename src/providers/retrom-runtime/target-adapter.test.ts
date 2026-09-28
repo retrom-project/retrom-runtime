@@ -110,11 +110,13 @@ describe("Provider to core-private parameters", () => {
     });
   });
 
-  it("preserves Butterscotch project identity and session-local saves", async () => {
+  it.each([undefined, "shared", "independent"])("preserves Butterscotch identity, saves and gamepad mode %s", async mode => {
     const request = targetEnvelope("butterscotch-gamemaker");
+    if (mode) {request.targetOptions.gamepadMode = mode;}
     await mountTargetAdapter(request, document.createElement("div"), context());
     expect(vi.mocked(mountButterscotch).mock.calls[0][0]).toEqual({
       sessionId: request.session.id, contentDigest: "a".repeat(64),
+      gamepadMode: mode ?? "shared",
       projectIndexUrl: `/runtime/content/project/${"a".repeat(64)}/index.json`,
       runtimeBaseUrl: request.runtime.runtimeBaseUrl + "assets/butterscotch/",
     });

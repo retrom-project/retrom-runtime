@@ -247,12 +247,13 @@ function sendKey(worker: Worker, pressedKeys: Set<number>, event: KeyboardEvent,
 }
 
 function sendGamepads(frameWindow: Window, worker: Worker) {
+  // Browser array positions are device slots; compacting holes changes controller identity.
   const gamepads = typeof frameWindow.navigator.getGamepads === "function"
-    ? [...frameWindow.navigator.getGamepads()].filter((value): value is Gamepad => Boolean(value?.connected && value.mapping === "standard"))
-      .slice(0, 4).map((gamepad) => ({
+    ? Array.from(frameWindow.navigator.getGamepads()).slice(0, 4)
+      .map((gamepad) => gamepad?.connected && gamepad.mapping === "standard" ? ({
         axes: [...gamepad.axes].slice(0, 4),
-        buttons: [...gamepad.buttons].slice(0, 16).map((button) => button.value),
-      }))
+        buttons: [...gamepad.buttons].slice(0, 17).map((button) => button.value),
+      }) : null)
     : [];
   worker.postMessage({ gamepads, type: "GAMEPAD" });
 }

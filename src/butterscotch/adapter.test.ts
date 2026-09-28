@@ -63,7 +63,8 @@ describe("Butterscotch Web adapter", () => {
     });
     vi.spyOn(window, "cancelAnimationFrame").mockImplementation(() => undefined);
     const gamepad = { axes: [0.75, 0], buttons: [{ pressed: true, value: 1 }], connected: true, mapping: "standard" };
-    Object.defineProperty(window.navigator, "getGamepads", { configurable: true, value: () => [gamepad] });
+    let gamepads: Array<typeof gamepad | null> = [null, gamepad];
+    Object.defineProperty(window.navigator, "getGamepads", { configurable: true, value: () => gamepads });
     mockProject();
     const target = document.createElement("div");
     document.body.append(target);
@@ -74,6 +75,19 @@ describe("Butterscotch Web adapter", () => {
     if (!canvas) {throw new Error("test canvas missing");}
     canvas.dispatchEvent(new KeyboardEvent("keydown", { bubbles: true, code: "ArrowUp" }));
     animationFrames.shift()?.(16);
+    const snapshot = {axes: [0.75, 0], buttons: [1]};
+    expect(workers[0]?.messages.at(-1)).toEqual({type: "GAMEPAD", gamepads: [null, snapshot]});
+    // Discovering slot zero must not move the already active slot one.
+    gamepads = [{...gamepad, axes: [-0.5, 0]}, gamepad];
+    animationFrames.shift()?.(32);
+    expect(workers[0]?.messages.at(-1)).toEqual({type: "GAMEPAD",
+      gamepads: [{...snapshot, axes: [-0.5, 0]}, snapshot]});
+    // A disconnected or unsupported controller must leave a hole, including after restore.
+    for (const first of [null, {...gamepad, connected: false}, {...gamepad, mapping: ""}]) {
+      gamepads = [first, gamepad];
+      animationFrames.shift()?.(48);
+      expect(workers[0]?.messages.at(-1)).toEqual({type: "GAMEPAD", gamepads: [null, snapshot]});
+    }
     const checkpoint = await adapter.checkpoint();
     await expect(adapter.screenshot()).resolves.toEqual(expect.objectContaining({type: "image/png"}));
 
@@ -91,6 +105,7 @@ describe("Butterscotch Web adapter", () => {
     expect(Number.parseFloat(canvas.style.height)).toBeCloseTo(1_000, 2);
 
     await adapter.exit();
+    expect(workers[0]?.messages).toContainEqual({type: "GAMEPAD", gamepads: []});
     expect(workers[0]?.terminated).toBe(true);
     expect(target.childElementCount).toBe(0);
   });

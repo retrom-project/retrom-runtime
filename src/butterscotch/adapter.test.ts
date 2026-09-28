@@ -42,6 +42,54 @@ it("[ST-04] UNIT/workspace-denied never starts native code and releases the cons
 });
 
 describe("Butterscotch Web adapter", () => {
+  it.each(["canvas-blur", "window-blur", "hidden", "pause"])("releases held directions on %s after restore", async boundary => {
+    installIsolatedBrowserGlobals();
+    const workers: FakeWorker[] = [];
+    Object.defineProperty(window, "Worker", {configurable: true,
+      value: class extends FakeWorker {constructor(url: URL) {super(url); workers.push(this);}}});
+    Object.defineProperty(HTMLCanvasElement.prototype, "transferControlToOffscreen", {configurable: true, value: () => ({})});
+    Object.defineProperty(window.navigator, "storage", {configurable: true, value: {getDirectory: async () => new MemoryDirectory()}});
+    vi.spyOn(window, "requestAnimationFrame").mockReturnValue(1);
+    vi.spyOn(window, "cancelAnimationFrame").mockImplementation(() => undefined);
+    const target = document.createElement("div");
+    document.body.append(target);
+    const adapter = await mountButterscotch(config(), target, window, Uint8Array.of(66, 83, 67, 80, 2, 0, 0, 0, 0, 0, 0, 0));
+    const canvas = adapter.getCanvas()!;
+    const key = (type: string) => new KeyboardEvent(type, {bubbles: true, code: "ArrowDown"});
+    canvas.dispatchEvent(key("keydown"));
+    const releases = () => workers[0].messages.filter(m => m.type === "KEY" && m.keyCode === 40 && m.pressed === false);
+    expect(releases()).toHaveLength(0);
+    if (boundary === "canvas-blur") {canvas.blur();}
+    if (boundary === "window-blur") {window.dispatchEvent(new Event("blur"));}
+    if (boundary === "hidden") {
+      vi.spyOn(document, "visibilityState", "get").mockReturnValue("hidden");
+      document.dispatchEvent(new Event("visibilitychange"));
+    }
+    if (boundary === "pause") {await adapter.pause();}
+    // The real keyup may go to the host menu/body, never back to this canvas.
+    document.body.dispatchEvent(key("keyup"));
+    expect(releases()).toHaveLength(1);
+    window.dispatchEvent(new Event("blur"));
+    expect(releases()).toHaveLength(1);
+    if (boundary === "pause") {
+      const presses = () => workers[0].messages.filter(m => m.type === "KEY" && m.pressed === true).length;
+      const count = presses();
+      canvas.dispatchEvent(key("keydown"));
+      expect(presses()).toBe(count);
+      await adapter.resume();
+    }
+    canvas.focus();
+    canvas.dispatchEvent(key("keydown"));
+    canvas.dispatchEvent(key("keyup"));
+    expect(releases()).toHaveLength(2);
+    await adapter.exit();
+    const count = workers[0].messages.length;
+    window.dispatchEvent(new Event("blur"));
+    document.dispatchEvent(new Event("visibilitychange"));
+    canvas.dispatchEvent(key("keydown"));
+    expect(workers[0].messages).toHaveLength(count);
+  });
+
   it("mounts cached project bytes, restores, maps input and creates a bounded core checkpoint", async () => {
     installIsolatedBrowserGlobals();
     const workers: FakeWorker[] = [];

@@ -92,6 +92,7 @@ export async function mountButterscotch(
   let checkpointAvailable = false;
   let checkpointStatus = 1;
   let exited = false;
+  let paused = false;
   let exitReported = false;
   let gamepadFrame = 0;
   const pollGamepadFrame = () => {
@@ -133,8 +134,19 @@ export async function mountButterscotch(
   worker.addEventListener("error", onError);
   const command = createCommandSender(worker, pending);
   const focusCanvas = () => {canvas.focus({ preventScroll: true }); void audio?.resume();};
-  const onKeyDown = (event: KeyboardEvent) => {void audio?.resume(); sendKey(worker, pressedKeys, event, true);};
+  const releaseKeys = () => {
+    for (const keyCode of pressedKeys) {worker.postMessage({ keyCode, pressed: false, type: "KEY" });}
+    pressedKeys.clear();
+  };
+  const onVisibilityChange = () => {if (frameWindow.document.visibilityState === "hidden") {releaseKeys();}};
+  const onKeyDown = (event: KeyboardEvent) => {
+    if (paused || exited) {return;}
+    void audio?.resume(); sendKey(worker, pressedKeys, event, true);
+  };
   const onKeyUp = (event: KeyboardEvent) => {sendKey(worker, pressedKeys, event, false);};
+  canvas.addEventListener("blur", releaseKeys);
+  frameWindow.addEventListener("blur", releaseKeys);
+  frameWindow.document.addEventListener("visibilitychange", onVisibilityChange);
   canvas.addEventListener("pointerdown", focusCanvas, true);
   canvas.addEventListener("keydown", onKeyDown);
   canvas.addEventListener("keyup", onKeyUp);
@@ -175,8 +187,7 @@ export async function mountButterscotch(
     resizeObserver?.disconnect();
     frameWindow.removeEventListener("resize", fitCanvasToSurface);
     frameWindow.cancelAnimationFrame(gamepadFrame);
-    for (const keyCode of pressedKeys) {worker.postMessage({ keyCode, pressed: false, type: "KEY" });}
-    pressedKeys.clear();
+    releaseKeys();
     worker.postMessage({ gamepads: [], type: "GAMEPAD" });
     worker.removeEventListener("message", onMessage as EventListener);
     worker.removeEventListener("error", onError);
@@ -188,6 +199,9 @@ export async function mountButterscotch(
     canvas.removeEventListener("pointerdown", focusCanvas, true);
     canvas.removeEventListener("keydown", onKeyDown);
     canvas.removeEventListener("keyup", onKeyUp);
+    canvas.removeEventListener("blur", releaseKeys);
+    frameWindow.removeEventListener("blur", releaseKeys);
+    frameWindow.document.removeEventListener("visibilitychange", onVisibilityChange);
     target.replaceChildren();
   }
 
@@ -214,8 +228,14 @@ export async function mountButterscotch(
       ? { available: false, blocker: "NOT_READY" }
       : checkpointAvailability(checkpointAvailable, checkpointStatus),
     getFrameCount: () => null,
-    pause: async () => {if (exited) {throw new Error("BUTTERSCOTCH_RUNTIME_INVALID_STATE");} await command("PAUSE"); await audio?.pause();},
-    resume: async () => {if (exited) {throw new Error("BUTTERSCOTCH_RUNTIME_INVALID_STATE");} await command("RESUME"); await audio?.resume();},
+    pause: async () => {
+      if (exited) {throw new Error("BUTTERSCOTCH_RUNTIME_INVALID_STATE");}
+      paused = true; releaseKeys(); await command("PAUSE"); await audio?.pause();
+    },
+    resume: async () => {
+      if (exited) {throw new Error("BUTTERSCOTCH_RUNTIME_INVALID_STATE");}
+      await command("RESUME"); paused = false; await audio?.resume();
+    },
     screenshot: async () => {
       if (exited) {throw new Error("BUTTERSCOTCH_RUNTIME_INVALID_STATE");}
       const bytes = copyBytes((await command("SCREENSHOT")).bytes);

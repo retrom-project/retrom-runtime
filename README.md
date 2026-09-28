@@ -52,6 +52,13 @@ npm run provider:check
 npm run release:build
 ```
 
+For PFB upstream-sync validation, Butterscotch candidates include their metadata
+parser pair for integrity verification, but only the game runner and license
+override the installed Provider. The metadata tools are outside its public asset
+closure. EasyRPG candidates use the existing two-file JS/Wasm release contract;
+the installed Provider retains its separately collected license notices. These
+local inputs do not change release pins or Target declarations.
+
 ## License
 
 MIT

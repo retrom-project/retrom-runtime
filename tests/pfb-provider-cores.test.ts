@@ -57,7 +57,30 @@ it("publishes KiriKiri bytes, binary MIME types and the matching client asset in
   expect(await readFile(join(root, "dev-provider.json"), "utf8")).toBe(published);
 });
 
-async function kirikiriFixture() {
+it("validates Butterscotch metadata tools without publishing them as runtime assets", async () => {
+  const {root, directory, index} = await kirikiriFixture("butterscotch");
+  delete index["assets/butterscotch/butterscotch-meta.mjs"];
+  delete index["assets/butterscotch/butterscotch-meta.wasm"];
+  const files = await readPFBProviderCoreFiles(root, "retrom-runtime", join(root, "staging"), index);
+  expect(files.map(file => file.path).sort()).toEqual(Object.keys(index).sort());
+  await writeFile(join(directory, "butterscotch-meta.wasm"), "tampered metadata tool");
+  await expect(readPFBProviderCoreFiles(root, "retrom-runtime", join(root, "tampered"), index))
+    .rejects.toThrow("CORE_CANDIDATE_INVALID");
+  delete index["assets/butterscotch/butterscotch.wasm"];
+  await expect(readPFBProviderCoreFiles(root, "retrom-runtime", join(root, "missing"), index))
+    .rejects.toThrow("PFB_PROVIDER_CORE_INPUT_INVALID");
+});
+
+it("accepts the declared EasyRPG release pair and still validates every byte", async () => {
+  const {root, directory, index} = await kirikiriFixture("easyrpg");
+  const files = await readPFBProviderCoreFiles(root, "retrom-runtime", join(root, "staging"), index);
+  expect(files.map(file => file.path).sort()).toEqual(Object.keys(index).sort());
+  await writeFile(join(directory, "easyrpg-player.wasm"), "tampered core");
+  await expect(readPFBProviderCoreFiles(root, "retrom-runtime", join(root, "tampered"), index))
+    .rejects.toThrow("CORE_CANDIDATE_INVALID");
+});
+
+async function kirikiriFixture(coreId = "kirikiri2") {
   const root = await mkdtemp(join(tmpdir(), "pfb-kirikiri-input-"));
   roots.push(root);
   const directory = join(root, "candidate");
@@ -65,7 +88,7 @@ async function kirikiriFixture() {
   const sources = await loadProviderSources(new URL("../", import.meta.url)) as {upstreamReleases: {
     id: string; repository: string; adapterAbi: string; assets: {filename: string; output: string}[];
   }[]};
-  const source = sources.upstreamReleases.find(source => source.id === "kirikiri2");
+  const source = sources.upstreamReleases.find(source => source.id === coreId);
   if (!source) {throw new Error("KIRIKIRI_SOURCE_MISSING");}
   const files = [];
   const index: Record<string, {sha256: string; sizeBytes: number}> = {};

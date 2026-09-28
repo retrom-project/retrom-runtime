@@ -1,7 +1,7 @@
 import type {MameCore} from "./core.js";
-export function createVideo(win: Window, core: MameCore) {
+export function createVideo(win: Window, core: MameCore, label: string) {
   const canvas = win.document.createElement("canvas"); canvas.tabIndex = 0;
-  canvas.setAttribute("aria-label", "Apple II (MAME)");
+  canvas.setAttribute("aria-label", label);
   const graphics = canvas.getContext("2d", {alpha: false, willReadFrequently: true});
   if (!graphics) {throw new Error("MAME_CANVAS_UNAVAILABLE");}
   let bitmap: ImageData | null = null;

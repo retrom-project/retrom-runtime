@@ -27,3 +27,13 @@ it("translates physical keyboard keys independently of the controller layout", (
   expect(keyboardKey("Enter")).toBe(13); expect(keyboardKey("ArrowLeft")).toBe(276);
   expect(keyboardKey("Unknown")).toBeNull();
 });
+it("maps Atom directions and action to separate keyboard keys without joystick input", () => {
+  expect(padState([pad([14, 12, 0])], "atom")).toEqual({axes: [0, 0], buttons: [], keys: [32, 59, 122]});
+  expect(padState([pad([], [.8, .8])], "atom")).toEqual({axes: [0, 0], buttons: [], keys: [46, 120]});
+});
+it("maps PV-1000 directions, fire and start to native digital controls only", () => {
+  expect(padState([pad([15, 0, 9])], "pv1000")).toEqual({axes: [0, 0], buttons: [0, 3, 7], keys: []});
+  const core = {_retrom_mame_key: vi.fn(), _retrom_mame_button: vi.fn(), _retrom_mame_axis: vi.fn()};
+  const input = new MameInput(core, "pv1000"); input.poll([pad([15, 0])]); input.clear();
+  expect(core._retrom_mame_button.mock.calls).toEqual([[0, 1], [7, 1], [0, 0], [7, 0]]);
+});

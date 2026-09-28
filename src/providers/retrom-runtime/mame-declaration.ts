@@ -16,3 +16,13 @@ export const mameAppleTarget = defineTarget({id: "mame-apple2", displayName: "Ap
   assetPaths: ["mame-build.json", "mame-common.mjs", "mame-common.mjs.br", "mame-common.wasm", "mame-common.wasm.br",
     "mame-apple.wasm", "mame-apple.wasm.br"].map(file => `assets/mame/${file}`),
 });
+
+export const mameAtomTarget = defineTarget({...mameAppleTarget, id: "mame-atom", displayName: "Acorn Atom (MAME)",
+  contentIO: {game: eagerPolicy(65557), external: eagerPolicy(8192)},
+  assetPaths: mameAppleTarget.assetPaths.map(path => path.replace("mame-apple.wasm", "mame-acorn.wasm")),
+});
+export const mamePV1000Target = defineTarget({...mameAppleTarget, id: "mame-pv1000", displayName: "Casio PV-1000 (MAME)",
+  contentIO: {game: eagerPolicy(32768)},
+  inputs: [{role: "game", kind: "ROM_BLOB", cardinality: "ONE", optional: false}],
+  assetPaths: mameAppleTarget.assetPaths.map(path => path.replace("mame-apple.wasm", "mame-vintage.wasm")),
+});

@@ -518,6 +518,118 @@
       },
       {
         "assetPaths": [
+          "assets/mame/mame-acorn.wasm",
+          "assets/mame/mame-acorn.wasm.br",
+          "assets/mame/mame-build.json",
+          "assets/mame/mame-common.mjs",
+          "assets/mame/mame-common.mjs.br",
+          "assets/mame/mame-common.wasm",
+          "assets/mame/mame-common.wasm.br"
+        ],
+        "capabilities": {
+          "checkpoint": true,
+          "discSwitch": false,
+          "frameCounter": true,
+          "frameMode": "SAME_ORIGIN_BLANK",
+          "inputFilter": true,
+          "nativeSettings": false,
+          "pause": true,
+          "requiresThreads": false,
+          "screenshot": true,
+          "standardGamepad": true,
+          "videoModes": [
+            "original",
+            "pixel",
+            "smooth"
+          ],
+          "volume": true
+        },
+        "checkpoint": {
+          "maxBytes": 67108864,
+          "readFormats": [
+            "mame-state-v1",
+            "mame-state-v1-storage-v1"
+          ],
+          "writeFormat": "mame-state-v1-storage-v1"
+        },
+        "displayName": "Acorn Atom (MAME)",
+        "id": "mame-atom",
+        "inputs": [
+          {
+            "role": "game",
+            "kind": "ROM_BLOB",
+            "cardinality": "ONE",
+            "optional": false
+          },
+          {
+            "role": "external",
+            "kind": "EXTERNAL_FILE_SET",
+            "cardinality": "ONE",
+            "optional": false
+          }
+        ],
+        "targetOptionsSchema": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {},
+          "required": []
+        }
+      },
+      {
+        "assetPaths": [
+          "assets/mame/mame-build.json",
+          "assets/mame/mame-common.mjs",
+          "assets/mame/mame-common.mjs.br",
+          "assets/mame/mame-common.wasm",
+          "assets/mame/mame-common.wasm.br",
+          "assets/mame/mame-vintage.wasm",
+          "assets/mame/mame-vintage.wasm.br"
+        ],
+        "capabilities": {
+          "checkpoint": true,
+          "discSwitch": false,
+          "frameCounter": true,
+          "frameMode": "SAME_ORIGIN_BLANK",
+          "inputFilter": true,
+          "nativeSettings": false,
+          "pause": true,
+          "requiresThreads": false,
+          "screenshot": true,
+          "standardGamepad": true,
+          "videoModes": [
+            "original",
+            "pixel",
+            "smooth"
+          ],
+          "volume": true
+        },
+        "checkpoint": {
+          "maxBytes": 67108864,
+          "readFormats": [
+            "mame-state-v1",
+            "mame-state-v1-storage-v1"
+          ],
+          "writeFormat": "mame-state-v1-storage-v1"
+        },
+        "displayName": "Casio PV-1000 (MAME)",
+        "id": "mame-pv1000",
+        "inputs": [
+          {
+            "role": "game",
+            "kind": "ROM_BLOB",
+            "cardinality": "ONE",
+            "optional": false
+          }
+        ],
+        "targetOptionsSchema": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {},
+          "required": []
+        }
+      },
+      {
+        "assetPaths": [
           "assets/webmsx/webmsx.js"
         ],
         "capabilities": {

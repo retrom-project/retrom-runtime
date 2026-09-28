@@ -295,7 +295,11 @@ export function nxengine(envelope: LaunchEnvelopeV1, assetIndex: AssetIndexV1): 
   return {projectIndexUrl: game.indexUrl, contentDigest: game.contentDigest, runtimeBaseUrl: assetBase(envelope, "nxengine"), assetIndex};
 }
 
-export function mame(envelope: LaunchEnvelopeV1) {
-  const game = resource(envelope, "game", "ROM_BLOB"), bios = resource(envelope, "external", "EXTERNAL_FILE_SET");
-  return {game, bios: bios.files, runtimeBaseUrl: envelope.runtime.runtimeBaseUrl};
+export function mame(envelope: LaunchEnvelopeV1): import("../../mame/core.js").MameParameters {
+  const target = envelope.runtime.targetId;
+  const machine = target === "mame-apple2" ? "apple2p" : target === "mame-atom" ? "atom" : target === "mame-pv1000" ? "pv1000" : null;
+  if (!machine) {invalidRequest();}
+  const game = resource(envelope, "game", "ROM_BLOB");
+  const bios = machine === "pv1000" ? [] : resource(envelope, "external", "EXTERNAL_FILE_SET").files;
+  return {machine, game, bios, runtimeBaseUrl: envelope.runtime.runtimeBaseUrl};
 }

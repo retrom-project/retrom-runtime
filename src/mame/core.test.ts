@@ -1,15 +1,16 @@
+import {loadCoreAsset} from "../provider/core-assets.js";
 import {afterEach, beforeEach, expect, test, vi} from "vitest";
 import {loadCore, type MameCore} from "./core.js";
 import {eagerPolicy} from "../provider/content-policies.js";
-const state = vi.hoisted(() => ({build: "a".repeat(64), assetHash: "b".repeat(64)}));
+const state = vi.hoisted(() => ({build: "a".repeat(64), assetHash: "b".repeat(64), atomMachine: "atom"}));
 vi.mock("../provider/core-assets.js", () => ({loadCoreAsset: vi.fn(async (_options, _url, path: string) => {
   if (!path.endsWith(".json")) {return new Uint8Array(8);}
-  const assets = Object.fromEntries(["mame-common.mjs", "mame-common.wasm", "mame-apple.wasm"].map(name =>
+  const assets = Object.fromEntries(["mame-common.mjs", "mame-common.wasm", "mame-apple.wasm", "mame-acorn.wasm", "mame-vintage.wasm"].map(name =>
     [name, {sha256: state.assetHash, sizeBytes: 8}]));
-  return new TextEncoder().encode(JSON.stringify({schemaVersion: 1, adapterAbi: "retrom-mame-dylink-v1", buildId: state.build, assets}));
+  return new TextEncoder().encode(JSON.stringify({schemaVersion: 1, adapterAbi: "retrom-mame-dylink-v1", buildId: state.build, assets, families: {apple: {module: "mame-apple.wasm", machines: ["apple2p"]}, acorn: {module: "mame-acorn.wasm", machines: [state.atomMachine]}, vintage: {module: "mame-vintage.wasm", machines: ["pv1000"]}}}));
 })}));
-const config = {runtimeBaseUrl: "https://example.test/runtime/", game: {url: "/game", sha256: "a".repeat(64), sizeBytes: 143360}, bios: []};
-const content = {assetIndex: Object.fromEntries(["mame-build.json", "mame-common.mjs", "mame-common.wasm", "mame-apple.wasm"].map(name =>
+const config = {machine: "apple2p" as const, runtimeBaseUrl: "https://example.test/runtime/", game: {url: "/game", sha256: "a".repeat(64), sizeBytes: 143360}, bios: []};
+const content = {assetIndex: Object.fromEntries(["mame-build.json", "mame-common.mjs", "mame-common.wasm", "mame-apple.wasm", "mame-acorn.wasm", "mame-vintage.wasm"].map(name =>
   [`assets/mame/${name}`, {sha256: "b".repeat(64), sizeBytes: 8}])),
 contentSession: {inputPolicy: () => eagerPolicy(143360), open: async () => {throw Error("unused");},
   materialize: async () => {throw Error("unused");}, closeFile: async () => {}}};
@@ -26,7 +27,7 @@ function fixture(): MameCore {
     _retrom_mame_save_size: () => 8, _retrom_mame_save: () => 1, _retrom_mame_restore: () => 1};
 }
 beforeEach(() => {
-  state.build = "a".repeat(64); state.assetHash = "b".repeat(64);
+  state.build = "a".repeat(64); state.assetHash = "b".repeat(64); state.atomMachine = "atom";
   vi.stubGlobal("URL", class extends URL {static createObjectURL = vi.fn(() => "blob:verified"); static revokeObjectURL = vi.fn();});
 });
 afterEach(() => vi.unstubAllGlobals());
@@ -57,4 +58,20 @@ test("cancellation during module initialization prevents registration and cleans
   const loader = async () => ({default: async () => {controller.abort(); return core;}});
   await expect(loadCore(config, {...content, signal: controller.signal}, loader)).rejects.toThrow();
   expect(core._retrom_mame_stop).toHaveBeenCalledOnce(); expect(core._retrom_mame_attach).not.toHaveBeenCalled();
+});
+
+test.each([['atom', 'acorn'], ['pv1000', 'vintage']] as const)("loads only the selected %s family alongside the common runtime", async (machine, family) => {
+  vi.mocked(loadCoreAsset).mockClear();
+  const core = fixture();
+  await loadCore({...config, machine}, content, async () => ({default: async () => core}));
+  expect(vi.mocked(loadCoreAsset).mock.calls.map(call => call[2])).toEqual([
+    "assets/mame/mame-build.json", "assets/mame/mame-common.mjs", "assets/mame/mame-common.wasm", `assets/mame/mame-${family}.wasm`,
+  ]);
+});
+
+test("rejects a selected machine missing from family metadata before executing JS", async () => {
+  state.atomMachine = "apple2p";
+  const loader = vi.fn();
+  await expect(loadCore({...config, machine: "atom"}, content, loader)).rejects.toThrow("MAME_CORE_ABI_MISMATCH");
+  expect(loader).not.toHaveBeenCalled();
 });

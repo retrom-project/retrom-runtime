@@ -2546,6 +2546,26 @@
           "filename": "LICENSES.txt",
           "output": "licenses/mame/LICENSES.txt",
           "maxSizeBytes": 2097152
+        },
+        {
+          "filename": "mame-acorn.wasm",
+          "output": "runtime/mame/mame-acorn.wasm",
+          "maxSizeBytes": 134217728
+        },
+        {
+          "filename": "mame-acorn.wasm.br",
+          "output": "runtime/mame/mame-acorn.wasm.br",
+          "maxSizeBytes": 134217728
+        },
+        {
+          "filename": "mame-vintage.wasm",
+          "output": "runtime/mame/mame-vintage.wasm",
+          "maxSizeBytes": 134217728
+        },
+        {
+          "filename": "mame-vintage.wasm.br",
+          "output": "runtime/mame/mame-vintage.wasm.br",
+          "maxSizeBytes": 134217728
         }
       ]
     }

@@ -6,6 +6,7 @@ import {installInput} from "./input.js";
 import {checkpointFormat, checkpointLimit, decodeState, encodeState} from "./state.js";
 import {MameAudio} from "./audio.js";
 import {createVideo, captureVideo} from "./video.js";
+import {profiles} from "./profiles.js";
 export async function mountMame(config: MameParameters, target: HTMLElement, win: Window,
   restorePayload: Uint8Array | null, content: AdapterContentOptions, loader?: ModuleLoader): Promise<MountedRuntimeAdapter> {
   const {core, build} = await loadCore(config, content, loader);
@@ -29,7 +30,7 @@ export async function mountMame(config: MameParameters, target: HTMLElement, win
     const rate = core._retrom_mame_sample_rate(), fps = core._retrom_mame_fps(), aspect = core._retrom_mame_aspect_ratio();
     if (!Number.isFinite(aspect) || aspect <= 0 || aspect > 10) {throw new Error("MAME_AV_INVALID");}
     if (!Number.isFinite(fps) || fps < 20 || fps > 120 || !Number.isFinite(rate) || rate < 8000 || rate > 96000) {throw new Error("MAME_AV_INVALID");}
-    const {canvas, draw} = createVideo(win, core), keyboard = installInput(win, core), audio = new MameAudio(rate);
+    const {canvas, draw} = createVideo(win, core, profiles[config.machine].label), keyboard = installInput(win, core, config.machine), audio = new MameAudio(rate);
     let stopped = false, paused = false, request = 0, previous = 0, accumulator = 0, frames = 1;
     const active = () => {if (stopped) {throw new Error("MAME_RUNTIME_STOPPED");}};
     const unlock = () => {if (!stopped && !paused) {void audio.resume().catch(() => undefined);}};

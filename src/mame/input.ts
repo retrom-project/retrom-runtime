@@ -1,3 +1,4 @@
+import type {MameMachine} from "./profiles.js";
 type InputCore = {
   _retrom_mame_key(id: number, down: number): void;
   _retrom_mame_button(id: number, down: number): void;
@@ -5,7 +6,7 @@ type InputCore = {
 };
 const nativeButtons = [[0, 0], [1, 8]] as const;
 const nativeKeys = [[2, 32], [3, 13], [8, 27], [9, 49]] as const;
-export function padState(pads: readonly (Gamepad | null)[]) {
+export function padState(pads: readonly (Gamepad | null)[], machine: MameMachine = "apple2p") {
   const pad = pads.find(p => p?.connected && p.mapping === "standard");
   const pressed = (id: number) => pad?.buttons[id]?.pressed === true;
   const axis = (index: number, negative: number, positive: number) => {
@@ -13,7 +14,19 @@ export function padState(pads: readonly (Gamepad | null)[]) {
     const value = pad?.axes[index] ?? 0;
     return Number.isFinite(value) && Math.abs(value) >= .2 ? Math.round(Math.max(-1, Math.min(1, value)) * 32767) : 0;
   };
-  return {axes: [axis(0, 14, 15), axis(1, 12, 13)],
+  const axes = [axis(0, 14, 15), axis(1, 12, 13)];
+  const direction = [axes[1] < 0, axes[1] > 0, axes[0] < 0, axes[0] > 0];
+  if (machine === "atom") {
+    const keys = [[0, 32], [1, 13], [8, 27], [9, 13]].filter(([id]) => pressed(id)).map(([, key]) => key);
+    direction.forEach((down, index) => {if (down) {keys.push([59, 46, 122, 120][index]);}});
+    return {axes: [0, 0], buttons: [], keys: [...new Set(keys)].sort((a, b) => a - b)};
+  }
+  if (machine === "pv1000") {
+    const buttons = [[0, 0], [1, 8], [8, 2], [9, 3]].filter(([id]) => pressed(id)).map(([, button]) => button);
+    direction.forEach((down, index) => {if (down) {buttons.push(4 + index);}});
+    return {axes: [0, 0], keys: [], buttons: buttons.sort((a, b) => a - b)};
+  }
+  return {axes,
     buttons: nativeButtons.filter(([id]) => pressed(id)).map(([, native]) => native),
     keys: nativeKeys.filter(([id]) => pressed(id)).map(([, native]) => native)};
 }
@@ -21,9 +34,9 @@ export class MameInput {
   readonly keyboard = new Set<number>();
   private keys = new Set<number>();
   private buttons = new Set<number>();
-  constructor(private readonly core: InputCore) {}
+  constructor(private readonly core: InputCore, private readonly machine: MameMachine = "apple2p") {}
   poll(pads: readonly (Gamepad | null)[]) {
-    const state = padState(pads), keys = new Set([...this.keyboard, ...state.keys]), buttons = new Set(state.buttons);
+    const state = padState(pads, this.machine), keys = new Set([...this.keyboard, ...state.keys]), buttons = new Set(state.buttons);
     this.update(this.keys, keys, (id, value) => this.core._retrom_mame_key(id, value));
     this.update(this.buttons, buttons, (id, value) => this.core._retrom_mame_button(id, value));
     this.keys = keys; this.buttons = buttons;
@@ -45,8 +58,8 @@ export function keyboardKey(code: string): number | null {
   if (/^Digit[0-9]$/u.test(code)) {return code.charCodeAt(5);}
   return keys[code] ?? null;
 }
-export function installInput(win: Window, core: InputCore) {
-  const input = new MameInput(core);
+export function installInput(win: Window, core: InputCore, machine: MameMachine) {
+  const input = new MameInput(core, machine);
   const down = (e: KeyboardEvent) => {const key = keyboardKey(e.code); if (key !== null) {e.preventDefault(); input.keyboard.add(key);}};
   const up = (e: KeyboardEvent) => {const key = keyboardKey(e.code); if (key !== null) {e.preventDefault(); input.keyboard.delete(key);}};
   const clear = () => input.clear();

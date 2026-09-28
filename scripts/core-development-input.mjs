@@ -5,7 +5,7 @@ export function validCoreDevelopmentInput(value) {
   if (!exact(value, ["id", "repository", "upstreamCommit", "adapterAbi", "assets"]) ||
     !/^[a-z0-9_]{1,64}$/u.test(value.id) || !/^https:\/\/github\.com\/retrom-project\/[A-Za-z0-9._-]+$/u.test(value.repository) ||
     !/^[0-9a-f]{40}$/u.test(value.upstreamCommit) || !/^[a-z0-9-]+$/u.test(value.adapterAbi) ||
-    !Array.isArray(value.assets) || value.assets.length < 2 || value.assets.length > 8) {return false;}
+    !Array.isArray(value.assets) || value.assets.length < 2 || value.assets.length > 12) {return false;}
   const names = new Set(), outputs = new Set();
   const runtimeDirectory=value.id === "kirikiri2" ? "kirikiri" : value.id;
   for (const asset of value.assets) {

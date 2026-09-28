@@ -20,7 +20,7 @@ describe("independent package boundary", () => {
     const sources = JSON.parse(await readFile(join(root, "provider-sources.json"), "utf8"));
     expect(retromRuntimeProviderDefinition.providerId).toBe("retrom-runtime");
     expect(retromRuntimeProviderDefinition.targets.map((target) => target.id)).toEqual([
-      "apple2-apple2js", "bbc-jsbeeb", "butterscotch-gamemaker", "fake08", "flash-ruffle", "gbe-pokemini", "j2me", "kirikiri2-kag", "mame-apple2", "msx-webmsx", "np2kai-pc98", "nxengine", "onscripter-yuri", "openbor", "play-ps2", "ppsspp", "px68k", "rpgmaker-2000", "rpgmaker-2003",
+      "apple2-apple2js", "bbc-jsbeeb", "butterscotch-gamemaker", "fake08", "flash-ruffle", "gbe-pokemini", "j2me", "kirikiri2-kag", "mame-apple2", "mame-atom", "mame-pv1000", "msx-webmsx", "np2kai-pc98", "nxengine", "onscripter-yuri", "openbor", "play-ps2", "ppsspp", "px68k", "rpgmaker-2000", "rpgmaker-2003",
       "rpgmaker-mv", "rpgmaker-mz", "rpgmaker-vx", "rpgmaker-vx-ace", "rpgmaker-xp", "samcoupe", "scummvm", "tic80", "tyranoscript", "wasm4",
     ]);
     expect(sources.localAssets.map((asset: { output: string }) => asset.output).sort()).toEqual([

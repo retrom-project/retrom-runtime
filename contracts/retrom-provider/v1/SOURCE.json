@@ -1,7 +1,7 @@
 {
   "authorityPath": "api/runtime-provider/v1",
   "authorityRepository": "https://github.com/retrom-project/retrom",
-  "contractSha256": "ef804d18e0f5032413d6789bf1e08347467fd6fa19f2d05a71654c8ef42714c5",
+  "contractSha256": "b60c00386ce62469f6936dcd3e88db59255df0c1fe99a165287c049ab0e78913",
   "contractVersion": "runtime-provider-v1",
   "files": [
     {
@@ -26,11 +26,11 @@
     },
     {
       "path": "api/runtime-provider/v1/provider-module-v1.d.ts",
-      "sha256": "a4bb0c57690c0e6f2e21ed0daa05addb000e6284644f2219afc4b9716bdaa177"
+      "sha256": "5c93d69464fc52ec00287ee505052d000f3b885ced2e4385a10ef55f4e3cbc48"
     },
     {
       "path": "api/runtime-provider/v1/runtime-resource.schema.json",
-      "sha256": "130a0d6cca5da95e1ee2d7030346d9170fcc568ea58a82357128ada19c4c4fbf"
+      "sha256": "13d100341ee9bcde90e7c99aa208890568406c37019a89db83caea21aff1c983"
     },
     {
       "path": "api/runtime-provider/v1/fixtures/invalid/checkpoint-missing-read-formats.json",

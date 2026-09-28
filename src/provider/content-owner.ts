@@ -14,6 +14,7 @@ export class ProviderContentOwner {
   private stopped = false;
   private closing: Promise<void> | undefined;
   constructor(private readonly failure: (error: Error) => void, private readonly diagnostic: (diagnostic: ContentDiagnostic) => void = () => {}) {}
+  get signal(): AbortSignal {return this.controller.signal;}
   async start(target: TargetDeclaration, envelope: LaunchEnvelopeV1, index: AssetIndexV1,
     loading: "ON_DEMAND" | "PRELOAD" = "ON_DEMAND", report: PreloadProgress = () => {}): Promise<ContentSessionClient | null> {
     const managed = Object.values(target.contentIO).some((policy) => policy.mode !== "BROWSER_NATIVE" && policy.mode !== "UPSTREAM_LOADER");
@@ -53,7 +54,7 @@ export class ProviderContentOwner {
 function resourceURLs(resource: RuntimeResourceV1): string[] {
   switch (resource.kind) {
     case "ROM_BLOB": case "SEEKABLE_BLOB": case "PARENT_ARCHIVE": case "WASM4_CART": return [resource.url];
-    case "FILE_TREE": return [resource.indexUrl];
+    case "FILE_TREE": case "NATIVE_WEB": case "ISOLATED_WEB": return [resource.indexUrl];
     case "BIOS_BUNDLE": case "EXTERNAL_FILE_SET": return resource.files.map((file) => file.url);
     case "MULTI_DISC": return resource.entries.map((entry) => entry.url);
     default: return [];

@@ -30,7 +30,8 @@ Each response retains origin, ETag/If-Match, exact length and applicable full SH
 Provider resolves all managed Envelope resources before native startup: every
 indexed member, disc, parent and firmware file, plus explicitly declared lazy
 core data assets. It uses the same immutable identities and verified block
-namespace as ordinary readers. Native/upstream loaders outside Content I/O keep
+namespace as ordinary readers. MV/MZ and TyranoScript web resources include a stable `indexUrl` and use this
+same managed cache. Other upstream loaders outside Content I/O keep
 their existing behavior; this option is not an offline application shell.
 
 A private preparation Worker sequentially fills storage using bounded 2 MiB
@@ -200,3 +201,23 @@ PSP 与 Play! 的共享模块加载器校验每份资产后创建 Blob URL，核
 这项接口调整使用 `ppsspp-host-v4` 与 `play-host-v3`。正式 Provider 分别固定 PPSSPP `retrom-core-g2e6fd06ed6c7-r4` 和 Play! `retrom-core-g83700b2c31e5-r4` 的 tag、commit 与逐资产摘要。PFB 可用已验证的本地核心候选覆盖对应来源；正式发布门禁仍拒绝未发布的 development inputs。
 
 验收清单由 `node scripts/content-io/target-catalog.mjs --output <Retrom>/tests/fixtures/content-io/target-declarations.json` 从两个 Provider 声明生成。`--check` 对比现有清单并拒绝漂移；清单只用于开发验收，不扩展 Host 的 Launch 协议。常规 `npm test` 扫描当前 Runtime 的 I/O 边界并校验已注册外部加载器路径。完整 fork 边界检查仍由 Content I/O 阶段门禁执行。
+
+## Isolated native web content
+
+MV/MZ and TyranoScript keep their unique execution origin. The adapter exposes
+only STAT and bounded READ for the current immutable web index through an
+exact-origin, exact-frame MessagePort. The Host-owned Service Worker projects
+these bytes into native resource responses, including media ranges, while the
+cache remains on the application origin. No arbitrary URL or cache API crosses
+the bridge. The index allows empty files and unique ASCII case aliases.
+
+PRELOAD authenticates the isolated bootstrap before downloading, while its
+host page waits for an explicit start signal without running game code. This
+keeps short-lived tickets from expiring during a large download. It fills and
+leases every indexed file before the game starts. ON_DEMAND
+uses the same INDEX_ENTRY identities and reads existing blocks, including after
+a different Launch. Missing storage remains an explicit PRELOAD failure. A
+Host without Service Worker support may retain HTTP loading in ON_DEMAND only.
+Exit and abort close ports and readers; worker restart may reconnect only
+through the still-mounted game frame. Runtime code does not own Host routes,
+authorization, MIME projection or Service Worker installation.

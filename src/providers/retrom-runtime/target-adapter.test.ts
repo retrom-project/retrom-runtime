@@ -21,6 +21,9 @@ vi.mock("../../butterscotch/adapter.js", () => ({mountButterscotch: vi.fn()}));
 vi.mock("../../tyranoscript/adapter.js", () => ({mountTyranoScript: vi.fn()}));
 vi.mock("../../wasm4/adapter.js", () => ({mountWasm4: vi.fn()}));
 vi.mock("../../fantasy-console/adapter.js", () => ({mountFantasyConsole: vi.fn()}));
+vi.mock("../../native-web/content-bridge.js", () => ({
+  mountWithNativeContent: vi.fn((_envelope: unknown, _frame: unknown, _session: unknown, mount: () => Promise<unknown>) => mount()),
+}));
 beforeEach(() => {vi.clearAllMocks();});
 
 const assetIndex = {

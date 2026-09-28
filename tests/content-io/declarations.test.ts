@@ -13,7 +13,7 @@ it("[PK-01] CONTRACT/private-policies covers every input role without changing t
     const manifest = projectProviderManifest(provider);
     const expected=structuredClone(golden.find(entry=>entry.providerId===provider.providerId)!);
     expected.providerVersion="0.0.0-dev";
-    const external=["j2me","rpgmaker-2000","rpgmaker-2003","rpgmaker-mv","rpgmaker-mz","tyranoscript"];
+    const external=["j2me","rpgmaker-2000","rpgmaker-2003"];
     for(const target of expected.targets){
       const managed=provider.providerId==="emulatorjs"?target.id.startsWith("flycast")||["neocd","genesis-plus-gx-cd","puae","daphne","dosbox-pure"].includes(target.id):!external.includes(target.id);
       if(managed){target.assetPaths.push("assets/content-io/worker.mjs");}

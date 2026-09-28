@@ -209,8 +209,8 @@ function validFileTreeResource(resource: RuntimeFileTreeResourceV1) {
 }
 function validWebResource(resource: RuntimeWebResourceV1) {
   return exactKeys(resource, [
-    "bootstrapTicket", "cleanupUrl", "contentDigest", "entryUrl", "kind", "ordinal", "origin", "role",
-  ]) && validDigest(resource.contentDigest) && validOrigin(resource.origin) &&
+    "bootstrapTicket", "cleanupUrl", "contentDigest", "entryUrl", "indexUrl", "kind", "ordinal", "origin", "role",
+  ]) && relativeURL(resource.indexUrl) && validDigest(resource.contentDigest) && validOrigin(resource.origin) &&
     sameOrigin(resource.entryUrl, resource.origin) && (resource.cleanupUrl === null ||
       sameOrigin(resource.cleanupUrl, resource.origin)) && /^[A-Za-z0-9_-]{43,128}$/u.test(resource.bootstrapTicket);
 }

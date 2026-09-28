@@ -42,6 +42,52 @@ it("[ST-04] UNIT/workspace-denied never starts native code and releases the cons
 });
 
 describe("Butterscotch Web adapter", () => {
+  it.each([false, true])("filters idle stick drift without merging slots or changing buttons (restore=%s)", async restored => {
+    installIsolatedBrowserGlobals();
+    const workers: FakeWorker[] = [];
+    Object.defineProperty(window, "Worker", {configurable: true,
+      value: class extends FakeWorker {constructor(url: URL) {super(url); workers.push(this);}}});
+    Object.defineProperty(HTMLCanvasElement.prototype, "transferControlToOffscreen", {configurable: true, value: () => ({})});
+    Object.defineProperty(window.navigator, "storage", {configurable: true, value: {getDirectory: async () => new MemoryDirectory()}});
+    const frames: FrameRequestCallback[] = [];
+    vi.spyOn(window, "requestAnimationFrame").mockImplementation(callback => {frames.push(callback); return frames.length;});
+    vi.spyOn(window, "cancelAnimationFrame").mockImplementation(() => undefined);
+    const buttons = Array.from({length: 17}, (_, index) => ({value: [0, 12, 13].includes(index) ? 1 : 0}));
+    const first = {connected: true, mapping: "standard", axes: [0.3, -0.3, 0.45, -0.45], buttons};
+    const second = {...first, axes: [0, 0.34, -0.4, 0.4]};
+    const gamepads = [first, second, null, null];
+    Object.defineProperty(window.navigator, "getGamepads", {configurable: true, value: () => gamepads});
+    const adapter = await mountButterscotch(config(), document.createElement("div"), window,
+      restored ? Uint8Array.of(66, 83, 67, 80, 2, 0, 0, 0, 0, 0, 0, 0) : null);
+    const snapshot = (axes: number[]) => ({axes, buttons: buttons.map(button => button.value)});
+    const idle = {type: "GAMEPAD", gamepads: [snapshot([0, 0, 0, 0]), snapshot([0, 0, 0, 0]), null, null]};
+    const sample = () => {frames.shift()?.(16); return workers[0].messages.at(-1);};
+    if (restored) {
+      const restoreIndex = workers[0].messages.findIndex(message => message.command === "RESTORE");
+      const resumeIndex = workers[0].messages.findIndex(message => message.command === "RESUME");
+      expect(workers[0].messages.slice(restoreIndex + 1, resumeIndex)).toContainEqual(idle);
+    }
+    expect(sample()).toEqual(idle);
+    // Outside the dead zone the core keeps its own response curve; neither
+    // stick values nor the independent D-pad/face buttons are rescaled here.
+    first.axes = [0.46, -0.46, 1, -1];
+    second.axes = [-0.6, 0.6, 0, 0];
+    expect(sample()).toEqual({type: "GAMEPAD", gamepads: [
+      snapshot([0.46, -0.46, 1, -1]), snapshot([-0.6, 0.6, 0, 0]), null, null,
+    ]});
+    first.axes = [0.3, -0.3, 0.45, -0.45];
+    second.axes = [0, 0.34, -0.4, 0.4];
+    buttons.forEach(button => {button.value = 0;});
+    const released = snapshot([0, 0, 0, 0]);
+    expect(sample()).toEqual({type: "GAMEPAD", gamepads: [released, released, null, null]});
+    first.connected = false;
+    expect(sample()).toEqual({type: "GAMEPAD", gamepads: [null, released, null, null]});
+    // Sampling must not alter the browser state used by other consumers.
+    expect(second.axes).toEqual([0, 0.34, -0.4, 0.4]);
+    await adapter.exit();
+    expect(workers[0].messages).toContainEqual({type: "GAMEPAD", gamepads: []});
+  });
+
   it.each(["canvas-blur", "window-blur", "hidden", "pause"])("releases held directions on %s after restore", async boundary => {
     installIsolatedBrowserGlobals();
     const workers: FakeWorker[] = [];

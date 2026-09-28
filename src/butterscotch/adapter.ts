@@ -26,6 +26,7 @@ type WorkerWindow = Window & {
 
 const checkpointFormat = "butterscotch-checkpoint-v2";
 const commandTimeoutMs = 30_000;
+const gamepadAxisDeadzone = 0.45;
 const keyCodes = new Map([
   ["ArrowLeft", 37], ["ArrowUp", 38], ["ArrowRight", 39], ["ArrowDown", 40],
   ["Enter", 13], ["Escape", 27], ["Space", 32], ["KeyA", 65], ["KeyB", 66],
@@ -274,7 +275,8 @@ function sendGamepads(frameWindow: Window, worker: Worker) {
   const gamepads = typeof frameWindow.navigator.getGamepads === "function"
     ? Array.from(frameWindow.navigator.getGamepads()).slice(0, 4)
       .map((gamepad) => gamepad?.connected && gamepad.mapping === "standard" ? ({
-        axes: [...gamepad.axes].slice(0, 4),
+        // Suppress idle drift without rescaling the core's own response curve.
+        axes: [...gamepad.axes].slice(0, 4).map(value => Math.abs(value) <= gamepadAxisDeadzone ? 0 : value),
         buttons: [...gamepad.buttons].slice(0, 17).map((button) => button.value),
       }) : null)
     : [];

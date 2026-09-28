@@ -171,6 +171,9 @@ export async function mountButterscotch(
     if (restorePayload) {
       const restore = restorePayload.slice();
       await command("RESTORE", { bytes: restore }, [restore.buffer]);
+      // The runner must see connected devices on its first restored frame.
+      // Worker messages are ordered, so publish the whole snapshot before RESUME.
+      sendGamepads(frameWindow, worker);
       await command("RESUME");
     }
     const status = await command("STATUS");

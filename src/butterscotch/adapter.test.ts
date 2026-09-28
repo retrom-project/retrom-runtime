@@ -144,6 +144,11 @@ describe("Butterscotch Web adapter", () => {
       format: "butterscotch-checkpoint-v2",
     });
     expect(workers[0]?.commands).toContain("RESTORE");
+    // Restore must publish all currently connected slots while the runner is
+    // still paused. Waiting for the first RAF exposes a false disconnect to GML.
+    const resumeIndex = workers[0].messages.findIndex(message => message.command === "RESUME");
+    const restoredIndex = workers[0].messages.findIndex(message => message.command === "RESTORE");
+    expect(workers[0].messages.slice(restoredIndex + 1, resumeIndex)).toContainEqual({type: "GAMEPAD", gamepads: [null, snapshot]});
     expect(workers[0]?.url.pathname).toBe("/runtime/retrom-runtime/v0.8.0/worker.mjs");
     expect(workers[0]?.messages).toContainEqual(expect.objectContaining({ keyCode: 38, pressed: true, type: "KEY" }));
     expect(workers[0]?.messages).toContainEqual(expect.objectContaining({ type: "GAMEPAD" }));

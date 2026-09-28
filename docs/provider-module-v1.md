@@ -77,6 +77,8 @@ checkpoint status reports as supported.
 The first four browser gamepad slots retain their indices, including disconnected or unsupported holes.
 Each input frame requires the core's atomic `setGamepads` export; the adapter and core must be released together.
 Game code owns controller selection and multiplayer behavior. The adapter does not merge devices or select by game name.
+Checkpoint restore submits the current complete gamepad snapshot before resuming the runner, so a delayed first
+animation-frame poll cannot make already connected controllers appear temporarily disconnected to restored game code.
 Keyboard holds are released when the canvas or window loses focus, the document becomes hidden, or the adapter
 pauses. A key released outside the game therefore cannot remain stuck; paused sessions ignore new key presses.
 

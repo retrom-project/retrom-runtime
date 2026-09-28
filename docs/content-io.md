@@ -2,6 +2,8 @@
 
 The Provider owns one Content Session per mounted runtime. Managed adapters register immutable sources and use the shared Reader or materializer; core forks receive opaque file IDs and the versioned bridge. No Host route, user, database or game-import knowledge enters this layer.
 
+Normal exit stops the native consumer and awaits every adapter-owned reader close before the Provider closes the Content Session. Butterscotch project release returns one shared completion promise and disconnects its read bridge immediately. Host abort handles expected `CONTENT_IO_ABORTED` close results; other close errors remain observable. Background cancellation must not leave rejected cleanup promises unhandled.
+
 Project indexes use the shared bounded metadata reader, including idle timeouts, cancellation and redirect rejection. Adapters validate their own project formats. DOS consumes the projected ZIP URL declared by its index; neither index nor payload URLs encode a required Host route. Its single logical member remains `game.zip`, with immutable project identity and Range-only transport. Daphne auxiliary assets use the Provider asset index and shared materializer before bounded archive extraction; their location comes from the Target asset declaration.
 
 The machine contracts are in [`contracts/content-io/v1`](../contracts/content-io/v1/). ABI and contract digest must match before native startup. Worker and synchronous-client modules are self-contained Provider assets covered by the Bundle asset index. A changed native ABI requires a complete verified core candidate and a new Provider base; a loose client overlay alone cannot replace old native assets.

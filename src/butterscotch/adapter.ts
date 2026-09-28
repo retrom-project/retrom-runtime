@@ -182,11 +182,11 @@ export async function mountButterscotch(
     gamepadFrame = frameWindow.requestAnimationFrame(pollGamepadFrame);
     focusCanvas();
   } catch (error) {
-    cleanup();
+    await cleanup().catch(() => undefined);
     throw stableMountError(error);
   }
 
-  function cleanup() {
+  async function cleanup() {
     resizeObserver?.disconnect();
     frameWindow.removeEventListener("resize", fitCanvasToSurface);
     frameWindow.cancelAnimationFrame(gamepadFrame);
@@ -194,7 +194,7 @@ export async function mountButterscotch(
     worker.postMessage({ gamepads: [], type: "GAMEPAD" });
     worker.removeEventListener("message", onMessage as EventListener);
     worker.removeEventListener("error", onError);
-    project?.release();
+    const released = project?.release();
     worker.terminate();
     void audio?.close();
     for (const waiter of pending.values()) {waiter.reject(new DOMException("Aborted", "AbortError") as unknown as Error);}
@@ -206,6 +206,7 @@ export async function mountButterscotch(
     frameWindow.removeEventListener("blur", releaseKeys);
     frameWindow.document.removeEventListener("visibilitychange", onVisibilityChange);
     target.replaceChildren();
+    await released;
   }
 
   return {
@@ -224,7 +225,7 @@ export async function mountButterscotch(
       checkpointAvailable = false;
       if (!exited) {await command("STOP").catch(() => undefined);}
       exited = true;
-      cleanup();
+      await cleanup();
     },
     getCanvas: () => canvas,
     getCheckpointAvailability: (): CheckpointAvailability => exited

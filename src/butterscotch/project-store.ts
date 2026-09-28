@@ -30,20 +30,31 @@ export async function prepareButterscotchProject(config: ProjectConfig, frameWin
     persistentSaves=true;
   } catch { /* Native saves can use the session overlay when browser storage is unavailable. */ }
   const game=value.files.find(file=>file.path.toLowerCase()==="data.win")!;
-  let disconnect:(()=>void)|undefined, released=false;
+  let disconnect:(()=>void)|undefined, released=false, closing:Promise<void>|undefined;
   const release=()=>{
-    if(released){return;} released=true; disconnect?.();
-    content.signal?.removeEventListener("abort",release);
-    void Promise.all(readers.map(reader=>reader.close()));
+    if(closing){return closing;} released=true; disconnect?.();
+    content.signal?.removeEventListener("abort",abortRelease);
+    closing=Promise.allSettled(readers.map(reader=>reader.close())).then(results=>{
+      for(const result of results){
+        if(result.status!=="rejected"){continue;}
+        if(content.signal?.aborted&&result.reason instanceof ContentIOError&&result.reason.code==="CONTENT_IO_ABORTED"){continue;}
+        throw result.reason;
+      }
+    });
+    return closing;
   };
-  content.signal?.addEventListener("abort",release,{once:true});
-  if(content.signal?.aborted){release();content.signal.throwIfAborted();}
+  const abortRelease=()=>{void release().catch(error=>content.onFailure?.(error));};
+  content.signal?.addEventListener("abort",abortRelease,{once:true});
+  if(content.signal?.aborted){await release();content.signal.throwIfAborted();}
   return {
     gamePath:`/content/${game.path}`,savePath:`${persistentSaves?"/butterscotch":""}/saves/${config.sessionId}`,persistentSaves,
     files:value.files.map((file,id)=>({id,path:`/content/${file.path}`,sizeBytes:file.sizeBytes})),
     connect(buffer:SharedArrayBuffer,offset:number){
       if(released||disconnect){throw new ContentIOError("ABORTED");}
-      disconnect=serveContentReads(buffer,offset,readers,error=>{release();content.onFailure?.(error);});
+      disconnect=serveContentReads(buffer,offset,readers,error=>{
+        // The read failure owns this forced teardown; retain that original error.
+        void release().catch(()=>undefined);content.onFailure?.(error);
+      });
     },release,
   };
 }

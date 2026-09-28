@@ -3,6 +3,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { mountButterscotch } from "./adapter.js";
 import type {ButterscotchParameters} from "./parameters.js";
+import {deferred} from "../../tests/provider-adapter-fixture.js";
 
 vi.mock("./project-store.js", () => ({prepareButterscotchProject: vi.fn(async (config: ButterscotchParameters) => ({
   gamePath: `/butterscotch/projects/${config.contentDigest}/00000000-0000-4000-8000-000000000000/data/data.win`,
@@ -42,6 +43,28 @@ it("[ST-04] UNIT/workspace-denied never starts native code and releases the cons
 });
 
 describe("Butterscotch Web adapter", () => {
+  it.each(["host", "core"])("awaits project cleanup on %s exit before resolving the adapter", async source => {
+    installIsolatedBrowserGlobals();
+    const workers: FakeWorker[] = [];
+    Object.defineProperty(window, "Worker", {configurable: true,
+      value: class extends FakeWorker {constructor(url: URL) {super(url); workers.push(this);}}});
+    Object.defineProperty(HTMLCanvasElement.prototype, "transferControlToOffscreen", {configurable: true, value: () => ({})});
+    Object.defineProperty(window.navigator, "storage", {configurable: true, value: {getDirectory: async () => new MemoryDirectory()}});
+    const released = deferred<void>(), release = vi.fn(() => released.promise);
+    vi.mocked(prepareButterscotchProject).mockResolvedValueOnce({gamePath: "/content/data.win", savePath: "/saves/launch-one",
+      persistentSaves: false, files: [], connect: vi.fn(), release});
+    const target = document.createElement("div");
+    const adapter = await mountButterscotch(config(), target, window, null);
+    if (source === "core") {workers[0].emit({type: "runnerExit"});}
+    let finished = false;
+    const exiting = adapter.exit().then(() => {finished = true;});
+    try {
+      await vi.waitFor(() => expect(release).toHaveBeenCalledOnce());
+      expect(finished).toBe(false);
+    } finally {released.resolve(); await exiting;}
+    expect(workers[0].terminated).toBe(true); expect(target.childElementCount).toBe(0);
+  });
+
   it.each(["canvas-blur", "window-blur", "hidden", "pause"])("releases held directions on %s after restore", async boundary => {
     installIsolatedBrowserGlobals();
     const workers: FakeWorker[] = [];

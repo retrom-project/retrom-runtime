@@ -75,10 +75,6 @@ checkpoints, restores them in a new Worker instance and reports a core-initiated
 The Target accepts only GameMaker data versions supported by the pinned Butterscotch core and runtime states its
 checkpoint status reports as supported.
 The first four browser gamepad slots retain their indices, including disconnected or unsupported holes.
-For each slot's first four axes, browser values within ±0.45 are sent as zero to suppress idle stick drift;
-values outside this dead zone are forwarded unchanged, preserving the core's response curve. Buttons, including
-the D-pad, are unchanged. This filtering applies to ordinary polling and the initial restore snapshot. Host input
-diagnostics may still show the raw browser offset because they sample before this Butterscotch adapter filter.
 Each input frame requires the core's atomic `setGamepads` export; the adapter and core must be released together.
 Game code owns controller selection and multiplayer behavior. The adapter does not merge devices or select by game name.
 Checkpoint restore submits the current complete gamepad snapshot before resuming the runner, so a delayed first

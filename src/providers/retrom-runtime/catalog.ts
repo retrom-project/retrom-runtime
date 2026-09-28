@@ -35,11 +35,6 @@ const kirikiriOptionsSchema = {
   required: ["startupXp3Path"],
   type: "object",
 } as const satisfies TargetOptionsSchema;
-const butterscotchOptionsSchema = {
-  additionalProperties: false,
-  properties: {gamepadMode: {type: "string", enum: ["independent", "shared"]}},
-  required: [], type: "object",
-} as const satisfies TargetOptionsSchema;
 
 const rpgCapabilities = capabilities(true, true, false);
 const nativeCapabilities = capabilities(true, true, true);
@@ -117,7 +112,7 @@ const targets = [
     contentIO: {game: runtimeGamePolicy("bbc-jsbeeb"), external: eagerPolicy(1024 * 1024)},
   }),
   target(
-    "butterscotch-gamemaker", "GameMaker (Butterscotch)", "butterscotch-web", butterscotchOptionsSchema,
+    "butterscotch-gamemaker", "GameMaker (Butterscotch)", "butterscotch-web", noOptionsSchema,
     true, "SAME_ORIGIN_BLANK", "FILE_TREE", 16 * 1024 * 1024,
     ["assets/butterscotch/butterscotch.mjs", "assets/butterscotch/butterscotch.wasm",
       "assets/butterscotch/worker.mjs"],

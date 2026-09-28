@@ -183,15 +183,7 @@
         ],
         "targetOptionsSchema": {
           "additionalProperties": false,
-          "properties": {
-            "gamepadMode": {
-              "type": "string",
-              "enum": [
-                "independent",
-                "shared"
-              ]
-            }
-          },
+          "properties": {},
           "required": [],
           "type": "object"
         }

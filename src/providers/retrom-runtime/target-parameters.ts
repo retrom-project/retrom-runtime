@@ -147,10 +147,7 @@ export function kirikiri(envelope: LaunchEnvelopeV1): KirikiriParameters {
 
 export function butterscotch(envelope: LaunchEnvelopeV1): ButterscotchParameters {
   const game = resource(envelope, "game", "FILE_TREE");
-  const gamepadMode = envelope.targetOptions.gamepadMode;
-  if (gamepadMode !== undefined && gamepadMode !== "shared" && gamepadMode !== "independent") {invalidRequest();}
   return {
-    gamepadMode: gamepadMode ?? "shared",
     contentDigest: game.contentDigest,
     sessionId: envelope.session.id,
     projectIndexUrl: game.indexUrl,

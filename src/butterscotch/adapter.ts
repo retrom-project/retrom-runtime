@@ -4,7 +4,6 @@ import type { CheckpointAvailability } from "../contract.js";
 import type {ButterscotchParameters} from "./parameters.js";
 import { prepareButterscotchProject } from "./project-store.js";
 import { createButterscotchAudio } from "./audio.js";
-import {readButterscotchGamepads, type ButterscotchGamepadMode} from "./gamepads.js";
 
 type HostMessage = {
   buffer?: SharedArrayBuffer;
@@ -97,7 +96,7 @@ export async function mountButterscotch(
   let gamepadFrame = 0;
   const pollGamepadFrame = () => {
     if (exited) {return;}
-    sendGamepads(frameWindow, worker, config.gamepadMode);
+    sendGamepads(frameWindow, worker);
     gamepadFrame = frameWindow.requestAnimationFrame(pollGamepadFrame);
   };
 
@@ -247,8 +246,15 @@ function sendKey(worker: Worker, pressedKeys: Set<number>, event: KeyboardEvent,
   worker.postMessage({ keyCode, pressed, type: "KEY" });
 }
 
-function sendGamepads(frameWindow: Window, worker: Worker, mode: ButterscotchGamepadMode = "shared") {
-  const gamepads = readButterscotchGamepads(frameWindow.navigator.getGamepads?.() ?? [], mode);
+function sendGamepads(frameWindow: Window, worker: Worker) {
+  // Browser array positions are device slots; compacting holes changes controller identity.
+  const gamepads = typeof frameWindow.navigator.getGamepads === "function"
+    ? Array.from(frameWindow.navigator.getGamepads()).slice(0, 4)
+      .map((gamepad) => gamepad?.connected && gamepad.mapping === "standard" ? ({
+        axes: [...gamepad.axes].slice(0, 4),
+        buttons: [...gamepad.buttons].slice(0, 17).map((button) => button.value),
+      }) : null)
+    : [];
   worker.postMessage({ gamepads, type: "GAMEPAD" });
 }
 

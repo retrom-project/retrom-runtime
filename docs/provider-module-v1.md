@@ -74,15 +74,9 @@ optionally use OPFS. The adapter renders on a centered 640×480
 checkpoints, restores them in a new Worker instance and reports a core-initiated exit through the common lifecycle.
 The Target accepts only GameMaker data versions supported by the pinned Butterscotch core and runtime states its
 checkpoint status reports as supported.
-By default, `targetOptions.gamepadMode` is `"shared"`: the first four standard browser controllers feed one
-virtual player in slot zero. Either controller can act without disconnecting the other. Buttons use the largest
-held value; releasing or disconnecting one device does not release a button still held on another. Aligned axes
-use the strongest value; opposing axes and D-pad directions cancel by strength. With no connected controllers,
-the virtual device disconnects. Merging happens after the Host input filter, preserving menu suppression.
-Hosts can explicitly set `gamepadMode: "independent"` for multiplayer: browser indices and empty slots are preserved.
+The first four browser gamepad slots retain their indices, including disconnected or unsupported holes.
 Each input frame requires the core's atomic `setGamepads` export; the adapter and core must be released together.
-This is a generic target policy with no game-name checks or game-state rewriting. Existing checkpoint v2 bytes
-remain unchanged; game code may reselect a connected slot when restoring a checkpoint made in independent mode.
+Game code owns controller selection and multiplayer behavior. The adapter does not merge devices or select by game name.
 
 TyranoScript projects use the engine already present in the imported game and run in a per-Launch isolated origin.
 The host injects the small, independently licensed bridge aggregated from the maintained fork; the aggregate runtime

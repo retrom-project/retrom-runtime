@@ -2500,5 +2500,54 @@
       "output": "runtime/butterscotch/worker.mjs"
     }
   ],
-  "developmentInputs": []
+  "developmentInputs": [
+    {
+      "id": "mame",
+      "repository": "https://github.com/retrom-project/mame",
+      "upstreamCommit": "f65d5ba9bc42febea7cd76d4559827d0e1271581",
+      "adapterAbi": "retrom-mame-dylink-v1",
+      "assets": [
+        {
+          "filename": "mame-build.json",
+          "output": "runtime/mame/mame-build.json",
+          "maxSizeBytes": 2097152
+        },
+        {
+          "filename": "mame-common.mjs",
+          "output": "runtime/mame/mame-common.mjs",
+          "maxSizeBytes": 2097152
+        },
+        {
+          "filename": "mame-common.mjs.br",
+          "output": "runtime/mame/mame-common.mjs.br",
+          "maxSizeBytes": 2097152
+        },
+        {
+          "filename": "mame-common.wasm",
+          "output": "runtime/mame/mame-common.wasm",
+          "maxSizeBytes": 134217728
+        },
+        {
+          "filename": "mame-common.wasm.br",
+          "output": "runtime/mame/mame-common.wasm.br",
+          "maxSizeBytes": 134217728
+        },
+        {
+          "filename": "mame-apple.wasm",
+          "output": "runtime/mame/mame-apple.wasm",
+          "maxSizeBytes": 134217728
+        },
+        {
+          "filename": "mame-apple.wasm.br",
+          "output": "runtime/mame/mame-apple.wasm.br",
+          "maxSizeBytes": 134217728
+        },
+        {
+          "filename": "LICENSES.txt",
+          "output": "licenses/mame/LICENSES.txt",
+          "maxSizeBytes": 2097152
+        }
+      ]
+    }
+  ]
 }

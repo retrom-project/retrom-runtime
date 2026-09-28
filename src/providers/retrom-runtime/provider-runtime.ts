@@ -63,7 +63,7 @@ class RetromRuntimePlayer implements PlayerRuntimeV1 {
       this.runtimeWindow = runtimeWindow;
       const runtimeTarget = frameMode === "SAME_ORIGIN_BLANK"
         ? (this.frameSurface = installRuntimeFrameSurface(runtimeWindow, () => this.adapter?.getCanvas() ?? null,
-          () => this.adapter?.canvasLayout === "CORE")).target
+          () => this.adapter?.canvasLayout === "CORE", () => this.adapter?.getDisplayAspectRatio?.() ?? null)).target
         : target;
       this.installInputFilter(runtimeWindow, frameMode);
       const declaration = retromRuntimeProviderDefinition.targets.find((entry) => entry.id === this.envelope.runtime.targetId);

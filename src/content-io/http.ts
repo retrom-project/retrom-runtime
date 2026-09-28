@@ -103,9 +103,13 @@ async function wholeResponse(source: ContentSourceV1, state: ContentObjectState,
       response = await request(source, state, signal, dependencies, undefined, attempt > 0);
       commonHeaders(response, source, signal, dependencies);
       if (response.status !== 200) {fail("RANGE_INVALID");}
-      validateRepresentation(response);
+      const decoded = source.purpose === "CORE_ASSET" && source.etagPolicy === "NONE_FULL_SHA256" &&
+        ["br", "gzip"].includes(response.headers.get("Content-Encoding")?.toLowerCase() ?? "");
+      validateRepresentation(response, decoded);
       await validateEtag(response, source, state);
-      validateLength(response, source, source.sizeBytes);
+      // Fetch decodes HTTP compression. Content-Length describes wire bytes; the
+      // bounded stream and full SHA-256 below still validate the decoded object.
+      if (!decoded) {validateLength(response, source, source.sizeBytes);}
       return response;
     } catch (error) {
       void response?.body?.cancel().catch(() => undefined);
@@ -151,9 +155,9 @@ function commonHeaders(response: Response, source: ContentSourceV1, signal: Abor
 class RetryResponse extends ContentIOError {
   constructor(readonly waitMs: number | null) {super("NETWORK_FAILED", {retryable: true});}
 }
-function validateRepresentation(response: Response) {
+function validateRepresentation(response: Response, decoded = false) {
   const encoding = response.headers.get("Content-Encoding");
-  if (encoding !== null && encoding.toLowerCase() !== "identity" ||
+  if (!decoded && encoding !== null && encoding.toLowerCase() !== "identity" ||
     response.headers.get("Content-Type")?.toLowerCase().split(";")[0].trim() === "multipart/byteranges") {fail("RANGE_INVALID");}
 }
 function validateRangeHeader(header: string | null, range: ReturnType<typeof blockRange>, size: number) {

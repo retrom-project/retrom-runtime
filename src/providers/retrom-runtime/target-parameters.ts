@@ -294,3 +294,8 @@ export function nxengine(envelope: LaunchEnvelopeV1, assetIndex: AssetIndexV1): 
   const game = resource(envelope, "game", "FILE_TREE");
   return {projectIndexUrl: game.indexUrl, contentDigest: game.contentDigest, runtimeBaseUrl: assetBase(envelope, "nxengine"), assetIndex};
 }
+
+export function mame(envelope: LaunchEnvelopeV1) {
+  const game = resource(envelope, "game", "ROM_BLOB"), bios = resource(envelope, "external", "EXTERNAL_FILE_SET");
+  return {game, bios: bios.files, runtimeBaseUrl: envelope.runtime.runtimeBaseUrl};
+}

@@ -11,7 +11,7 @@ const targetIds = [
   "flash-ruffle",
   "gbe-pokemini",
   "j2me",
-  "kirikiri2-kag", "msx-webmsx", "np2kai-pc98", "nxengine",
+  "kirikiri2-kag", "mame-apple2", "msx-webmsx", "np2kai-pc98", "nxengine",
   "onscripter-yuri", "openbor", "play-ps2", "ppsspp", "px68k",
   "rpgmaker-2000",
   "rpgmaker-2003",
@@ -34,7 +34,7 @@ const sameOriginFrameTargetIds = [
   "flash-ruffle",
   "gbe-pokemini",
   "j2me",
-  "kirikiri2-kag", "msx-webmsx", "np2kai-pc98", "nxengine",
+  "kirikiri2-kag", "mame-apple2", "msx-webmsx", "np2kai-pc98", "nxengine",
   "onscripter-yuri", "openbor", "play-ps2", "ppsspp", "px68k",
   "rpgmaker-2000",
   "rpgmaker-2003",
@@ -50,7 +50,7 @@ describe("retrom-runtime provider declarations", () => {
   it("declares the complete target closure in one source", () => {
     expect(retromRuntimeProviderDefinition.providerVersion).toBe("0.0.0-dev");
     expect(retromRuntimeProviderDefinition.targets.map((target) => target.id)).toEqual(targetIds);
-    expect(retromRuntimeProviderDefinition.adapters).toHaveLength(24);
+    expect(retromRuntimeProviderDefinition.adapters).toHaveLength(25);
   });
 
   it("projects a public manifest without internal adapter identities", () => {

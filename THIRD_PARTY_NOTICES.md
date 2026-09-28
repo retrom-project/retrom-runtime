@@ -110,3 +110,14 @@ notices are bundled in `licenses/ppsspp/LICENSE`. They include PPSSPP, libkirk, 
 libretro-common, libpng, zlib and other compiled dependencies. Retrom's adapter license does not
 relicense these components. No PSP game or firmware image is bundled. Development candidates
 record the exact source tree and generated asset hashes; release inputs must pin immutable fork tags.
+
+## MAME dynamic-linking candidate
+
+The maintained fork <https://github.com/retrom-project/mame> uses the libretro/MAME
+source baseline `f65d5ba9bc42febea7cd76d4559827d0e1271581`. MAME as a whole is GPL-2.0;
+individual files retain their own notices. `licenses/mame/LICENSES.txt` includes
+MAME's COPYING, full `docs/legal` texts, bundled third-party license files and the
+pinned Emscripten 3.1.74 license. The MIT adapter does not relicense the engine.
+No Apple firmware or game content is distributed. The candidate descriptor records
+the exact source tree, ABI and generated asset hashes; stable release inputs must
+replace the development input with an immutable fork release.

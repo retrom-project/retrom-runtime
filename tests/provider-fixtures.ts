@@ -121,7 +121,7 @@ export function targetEnvelope(targetId: string): LaunchEnvelopeV1 {
       contentDigest: digest, entryUrl: "https://runtime.test/__retrom/bootstrap",
       kind: "ISOLATED_WEB", ordinal: 0, origin: "https://runtime.test", role: "game",
     };
-  } else if (["apple2-apple2js", "bbc-jsbeeb", "samcoupe", "gbe-pokemini", "j2me", "tic80", "fake08", "flash-ruffle", "msx-webmsx", "openbor", "px68k", "np2kai-pc98"].includes(targetId)) {
+  } else if (["apple2-apple2js", "mame-apple2", "bbc-jsbeeb", "samcoupe", "gbe-pokemini", "j2me", "tic80", "fake08", "flash-ruffle", "msx-webmsx", "openbor", "px68k", "np2kai-pc98"].includes(targetId)) {
     resource = {kind: "ROM_BLOB", ordinal: 0, rangeRequired: false, role: "game",
       sha256: digest, sizeBytes: 128, url: targetId === "apple2-apple2js" ? "/runtime/content/game/game.dsk" : "/runtime/content/game/game.jar"};
   } else if (targetId === "wasm4") {
@@ -143,7 +143,10 @@ export function targetEnvelope(targetId: string): LaunchEnvelopeV1 {
           ? {engineId: "sky", gameId: "sky", root: "", language: "en", platform: "pc", extra: "", guiOptions: "", filename: null}
           : {};
   return {
-    resources: targetId === "apple2-apple2js" ? [resource, {
+    resources: targetId === "mame-apple2" ? [resource, {
+      kind: "EXTERNAL_FILE_SET", role: "external", ordinal: 0,
+      files: [{logicalName: "341-0011.d0", virtualPath: "content/apple2p/341-0011.d0", sha256: digest, sizeBytes: 2048, url: "/runtime/content/bios/341-0011.d0"}],
+    }] : targetId === "apple2-apple2js" ? [resource, {
       kind: "EXTERNAL_FILE_SET", role: "external", ordinal: 0,
       files: [
         {logicalName: "AppleIIe.rom", virtualPath: "roms/AppleIIe.rom", sizeBytes: 16384},

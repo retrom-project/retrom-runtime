@@ -18,8 +18,11 @@ describe("Butterscotch worker asset", () => {
     const fakeRuntime = {
       GL: { offscreenCanvases: {} as Record<string, unknown> },
       HEAP32: new Int32Array(16), HEAPU32: new Uint32Array(16),
+      HEAPU8: new Uint8Array(new SharedArrayBuffer(262208)),
+      _getContentReadSlot: () => 0, _registerContentFile: () => 0,
       _malloc: () => 4, _mountOpfs: () => 0, _setAudioSampleRate: () => undefined,
-      ccall: () => {
+      ccall: (name: string) => {
+        if (name === "registerContentFile") {return 0;}
         const registered = fakeRuntime.GL.offscreenCanvases.canvas as { offscreenCanvas?: { id?: string } };
         if (registered?.offscreenCanvas?.id !== "canvas") {throw new Error("canvas identity missing");}
         (globalThis.postMessage as (message: WorkerMessage) => void)({ type: "runnerReady" });
@@ -39,10 +42,12 @@ describe("Butterscotch worker asset", () => {
     messageListener?.({ data: {
       audioEnabled: false, audioSampleRate: 48_000, canvas, gamePath: "/game/data.win",
       moduleUrl, restore: false, savePath: "/saves/game", type: "START", wasmUrl: "/runtime.wasm",
+      files: [{id: 0, path: "/game/data.win", sizeBytes: 1024}],
     } as WorkerStart & { type: "START" } });
     await vi.waitFor(() => expect(messages).toContainEqual({ type: "runnerReady" }));
 
     expect(canvas.id).toBe("canvas");
+    expect(messages).toContainEqual({type: "CONTENT_READY", buffer: fakeRuntime.HEAPU8.buffer, offset: 0});
     expect(messages).not.toContainEqual(expect.objectContaining({ type: "FATAL" }));
   });
 });

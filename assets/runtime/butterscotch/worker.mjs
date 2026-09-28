@@ -27,7 +27,16 @@ async function start(data) {
     stage = "CANVAS";
     registerCanvas(runtime, data.canvas);
     stage = "PROJECT_STORE";
-    if (runtime._mountOpfs() !== 0) {throw new Error("BUTTERSCOTCH_PROJECT_STORE_FAILED");}
+    if (data.persistentSaves && runtime._mountOpfs() !== 0) {throw new Error("BUTTERSCOTCH_PROJECT_STORE_FAILED");}
+    stage = "CONTENT_ABI";
+    if (!runtime._getContentReadSlot || !runtime._registerContentFile) {throw new Error("content ABI required");}
+    const offset = runtime._getContentReadSlot();
+    postMessage({type: "CONTENT_READY", buffer: runtime.HEAPU8.buffer, offset});
+    for (const file of data.files) {
+      if (runtime.ccall("registerContentFile", "number", ["string", "number", "number"], [file.path, file.id, file.sizeBytes]) !== 0) {
+        throw new Error("content registration failed");
+      }
+    }
     stage = "AUDIO";
     runtime._setAudioSampleRate(data.audioSampleRate);
     if (data.restore) {runtime._setRunnerPaused(1); paused = true;}

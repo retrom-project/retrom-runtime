@@ -12,5 +12,5 @@ it("exports all current declarations, including mixed media and explicit no-save
   }
   expect(catalog.targets.find(row => row.targetId === "flycast")).toMatchObject({mode: "RANGE", delivery: "READER"});
   expect(catalog.targets.find(row => row.targetId === "daphne")).toMatchObject({gameKind: "FILE_TREE", checkpointSemantics: "NO_SAVE"});
-  expect(catalog.targets.find(row => row.targetId === "butterscotch-gamemaker")).toMatchObject({delivery: "WORKSPACE_FILE"});
+  expect(catalog.targets.find(row => row.targetId === "butterscotch-gamemaker")).toMatchObject({mode: "RANGE", delivery: "READER"});
 });

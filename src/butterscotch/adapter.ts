@@ -6,6 +6,8 @@ import { prepareButterscotchProject } from "./project-store.js";
 import { createButterscotchAudio } from "./audio.js";
 
 type HostMessage = {
+  buffer?: SharedArrayBuffer;
+  offset?: number;
   available?: boolean;
   bytes?: Uint8Array;
   code?: string;
@@ -98,8 +100,13 @@ export async function mountButterscotch(
     gamepadFrame = frameWindow.requestAnimationFrame(pollGamepadFrame);
   };
 
+  const connectContent = (message: HostMessage) => {
+    try {project!.connect(message.buffer!,message.offset!);}
+    catch(error){ready.reject(error as Error);content?.onFailure?.(error as Error);}
+  };
   const onMessage = (event: MessageEvent<HostMessage>) => {
     const message = event.data;
+    if (message.type === "CONTENT_READY") {connectContent(message);return;}
     if (message.type === "AUDIO") {if (message.samples) {audio?.enqueue(message.samples);} return;}
     if (message.type === "runnerReady") {ready.resolve(); return;}
     if (message.type === "runnerExit") {
@@ -140,6 +147,8 @@ export async function mountButterscotch(
       audioEnabled: audio !== null,
       audioSampleRate: audio?.sampleRate ?? 48_000,
       gamePath: project.gamePath,
+      files: project.files,
+      persistentSaves: project.persistentSaves,
       moduleUrl: new URL("butterscotch.mjs", runtimeBase).href,
       restore: restorePayload !== null,
       savePath: project.savePath,
@@ -171,8 +180,8 @@ export async function mountButterscotch(
     worker.postMessage({ gamepads: [], type: "GAMEPAD" });
     worker.removeEventListener("message", onMessage as EventListener);
     worker.removeEventListener("error", onError);
-    worker.terminate();
     project?.release();
+    worker.terminate();
     void audio?.close();
     for (const waiter of pending.values()) {waiter.reject(new DOMException("Aborted", "AbortError") as unknown as Error);}
     pending.clear();

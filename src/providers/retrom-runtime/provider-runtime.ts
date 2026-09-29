@@ -1,3 +1,4 @@
+import {authorizeNativePreload} from "../../native-web/preload-bootstrap.js";
 import {ProviderContentOwner} from "../../provider/content-owner.js";
 import {retromRuntimeProviderDefinition} from "./catalog.js";
 import {ContentIOError} from "../../content-io/errors.js";
@@ -68,7 +69,10 @@ class RetromRuntimePlayer implements PlayerRuntimeV1 {
       this.installInputFilter(runtimeWindow, frameMode);
       const declaration = retromRuntimeProviderDefinition.targets.find((entry) => entry.id === this.envelope.runtime.targetId);
       if (!declaration) {throw contractError();}
-      const contentSession = await this.contentOwner.start(declaration, this.envelope, this.assetIndex);
+      if (this.host.contentLoading === "PRELOAD") {await authorizeNativePreload(this.envelope, frame?.element, this.contentOwner.signal);}
+      this.assertActive();
+      const contentSession = await this.contentOwner.start(declaration, this.envelope, this.assetIndex, this.host.contentLoading,
+        (loadedBytes, totalBytes) => this.emit({type: "LOAD_PROGRESS", loadedBytes, totalBytes}));
       this.assertActive();
       const adapter = await mountTargetAdapter(this.envelope, runtimeTarget, {
         assetIndex: this.assetIndex, contentSession,

@@ -19,6 +19,7 @@ export function wasmEnvelope(): LaunchEnvelopeV1 {
     runtime: {
       bundleSha256: bundleDigest,
       capabilities: {
+        contentLoading: "PRELOAD_ONLY",
         checkpoint: true,
         discSwitch: false,
         frameCounter: true,
@@ -63,7 +64,7 @@ export function rpgMvEnvelope(): LaunchEnvelopeV1 {
   if (!target || !target.checkpoint) {throw new Error("RPG Maker MV target fixture missing");}
   return {
     resources: [{
-      bootstrapTicket: "t".repeat(48),
+      indexUrl: `/runtime/content/web/${digest}/index.json`, bootstrapTicket: "t".repeat(48),
       cleanupUrl: "https://runtime.test/__retrom/cleanup",
       contentDigest: digest,
       entryUrl: "https://runtime.test/__retrom/bootstrap",
@@ -111,13 +112,13 @@ export function targetEnvelope(targetId: string): LaunchEnvelopeV1 {
     };
   } else if (["rpgmaker-mv", "rpgmaker-mz"].includes(targetId)) {
     resource = {
-      bootstrapTicket: "t".repeat(48), cleanupUrl: "https://runtime.test/__retrom/cleanup",
+      indexUrl: `/runtime/content/web/${digest}/index.json`, bootstrapTicket: "t".repeat(48), cleanupUrl: "https://runtime.test/__retrom/cleanup",
       contentDigest: digest, entryUrl: "https://runtime.test/__retrom/bootstrap",
       kind: "NATIVE_WEB", ordinal: 0, origin: "https://runtime.test", role: "game",
     };
   } else if (targetId === "tyranoscript") {
     resource = {
-      bootstrapTicket: "t".repeat(48), cleanupUrl: "https://runtime.test/__retrom/cleanup",
+      indexUrl: `/runtime/content/web/${digest}/index.json`, bootstrapTicket: "t".repeat(48), cleanupUrl: "https://runtime.test/__retrom/cleanup",
       contentDigest: digest, entryUrl: "https://runtime.test/__retrom/bootstrap",
       kind: "ISOLATED_WEB", ordinal: 0, origin: "https://runtime.test", role: "game",
     };

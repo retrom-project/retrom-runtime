@@ -4,6 +4,7 @@ import {wasmEnvelope} from "../../../tests/provider-fixtures.js";
 import {bootstrapContentSession} from "../../content-io/bootstrap.js";
 import type {ContentSessionClient} from "../../content-io/client.js";
 import {ContentIOError} from "../../content-io/errors.js";
+import {ProviderContentPreload} from "../../provider/content-preload.js";
 import {createRuntime} from "./module.js";
 import {mountTargetAdapter} from "./target-adapter.js";
 vi.mock("./target-adapter.js", () => ({mountTargetAdapter: vi.fn()}));
@@ -16,6 +17,34 @@ function sessionFixture() {
     fail: vi.fn(() => {closed = true;}), close: vi.fn(async () => {closed = true;})};
   vi.mocked(bootstrapContentSession).mockResolvedValue(session as unknown as ContentSessionClient); return session;
 }
+it("waits for complete persistent preparation before mounting the game and releases preparation on exit", async () => {
+  sessionFixture();
+  const prepared = deferred<void>();
+  const prepare = vi.spyOn(ProviderContentPreload.prototype, "prepare").mockReturnValue(prepared.promise);
+  const close = vi.spyOn(ProviderContentPreload.prototype, "close").mockImplementation(() => {});
+  vi.mocked(mountTargetAdapter).mockResolvedValue(adapterFixture());
+  const player = await createRuntime(wasmEnvelope(), hostFixture({contentLoading: "PRELOAD"}));
+  const mounting = player.mount(document.createElement("div"));
+  await vi.waitFor(() => expect(prepare).toHaveBeenCalledOnce());
+  expect(mountTargetAdapter).not.toHaveBeenCalled();
+  expect(bootstrapContentSession).not.toHaveBeenCalled();
+  prepared.resolve();
+  await mounting;
+  expect(mountTargetAdapter).toHaveBeenCalledOnce();
+  expect(close).not.toHaveBeenCalled();
+  await player.exit();
+  expect(close).toHaveBeenCalledOnce();
+});
+
+it("does not start the core after persistent preparation fails", async () => {
+  sessionFixture();
+  vi.spyOn(ProviderContentPreload.prototype, "prepare").mockRejectedValue(new ContentIOError("CACHE_UNAVAILABLE"));
+  const player = await createRuntime(wasmEnvelope(), hostFixture({contentLoading: "PRELOAD"}));
+  await expect(player.mount(document.createElement("div"))).rejects.toThrow("CONTENT_IO_CACHE_UNAVAILABLE");
+  expect(mountTargetAdapter).not.toHaveBeenCalled();
+  expect(bootstrapContentSession).not.toHaveBeenCalled();
+  await player.exit();
+});
 it("[BR-08] UNIT/provider-normal [X-15] UNIT/provider-normal preserves content while native stop is pending, then closes once", async () => {
   const session = sessionFixture(), stop = deferred<void>();
   const adapter = adapterFixture({exit: vi.fn(async () => {expect(session.read()).toBe(17); await stop.promise; expect(session.read()).toBe(17);})});

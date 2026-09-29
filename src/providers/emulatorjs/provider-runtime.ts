@@ -259,13 +259,9 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
 
   subscribe(listener: (event: RuntimeEventV1) => void) {this.listeners.add(listener); return () => this.listeners.delete(listener);}
 
-  private prepareRetroArchConfig(runtimeWindow: Window) {
+  private installPreloaderCompatibility(runtimeWindow: EjsWindow) {
     this.cleanupRetroArchConfig = installEmulatorJsRetroArchConfig(runtimeWindow,
       this.implementation.runtimeCore, Boolean(this.restorePayload) && this.implementation.release === "4.2.3");
-  }
-
-  private installPreloaderCompatibility(runtimeWindow: EjsWindow) {
-    this.prepareRetroArchConfig(runtimeWindow);
     this.cleanupArchiveWorker = installArchiveWorkerCompatibility(runtimeWindow, this.implementation.release,
       runtimeBase(this.envelope, this.implementation.release), this.implementation.runtimeCore);
     if (this.implementation.release === "4.2.3" && Object.keys(externalFiles(this.envelope)).length) {
@@ -303,7 +299,8 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
       this.runtimeWindow = runtimeWindow;
       this.checkMountActive();
       const declaration = emulatorJsProviderDefinition.targets.find(entry => entry.id === this.envelope.runtime.targetId)!;
-      this.contentSession = bindOptionalTargetContent(await this.contentOwner.start(declaration, this.envelope, this.assetIndex), declaration);
+      this.contentSession = bindOptionalTargetContent(await this.contentOwner.start(declaration, this.envelope, this.assetIndex,
+        this.host.contentLoading, (loadedBytes, totalBytes) => this.emit({type: "LOAD_PROGRESS", loadedBytes, totalBytes})), declaration);
       this.checkMountActive();
       this.daphneProject = await maybePrepareDaphneProject(declaration, this.envelope,
         this.contentSession, this.assetIndex, this.host.signal, error => this.fail(error.message, error),

@@ -141,7 +141,10 @@ function schemaKeys(type: string): Set<string> {
 
 function validateCapabilities(value: unknown): void {
   const capabilities = record(value);
-  if (!capabilities || !exactKeys(capabilities, capabilityKeys)) {invalidManifest();}
+  if (!capabilities) {invalidManifest();}
+  const keys = Object.hasOwn(capabilities, "contentLoading") ? [...capabilityKeys, "contentLoading"].sort() : capabilityKeys;
+  if (!exactKeys(capabilities, keys) || Object.hasOwn(capabilities, "contentLoading") &&
+    capabilities.contentLoading !== "ON_DEMAND_AND_PRELOAD" && capabilities.contentLoading !== "PRELOAD_ONLY") {invalidManifest();}
   for (const key of [
     "checkpoint", "discSwitch", "frameCounter", "inputFilter", "nativeSettings", "pause",
     "requiresThreads", "screenshot", "standardGamepad", "volume",

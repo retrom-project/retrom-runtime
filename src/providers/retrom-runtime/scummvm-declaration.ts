@@ -27,4 +27,5 @@ export const scummvmTarget = defineTarget({id: "scummvm", displayName: "ScummVM"
   targetOptionsSchema: options, implementation: {}, inputFilter: true, discSwitch: false, nativeSettings: false,
   videoModes: ["original", "pixel", "smooth"],
   assetPaths: layout.files.filter((file) => !file.path.startsWith("licenses/")).map((file) => `assets/scummvm/${file.path}`),
+  preloadAssetPaths: layout.files.filter(file => file.path.startsWith("data/")).map(file => `assets/scummvm/${file.path}`),
 });

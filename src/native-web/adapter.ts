@@ -1,5 +1,6 @@
 import {NativeInputDiagnostics} from "./input-diagnostics.js";
 import {createNativeGameEditor} from "./editor.js";
+import {nativeReadyDeadline, type NativeReadyOptions} from "./startup-timeout.js";
 import {
   decodeRpgCheckpoint,
   encodeRpgCheckpoint,
@@ -34,7 +35,6 @@ const maximumControlBytes = 64 * 1024;
 const maximumCheckpointBytes = 64 * 1024 * 1024;
 const maximumScreenshotBytes = 10 * 1024 * 1024;
 const bootstrapTimeoutMs = 10_000;
-const channelReadyTimeoutMs = 10_000;
 const cleanupTimeoutMs = 2_000;
 
 export async function mountNativeRpg(
@@ -42,14 +42,15 @@ export async function mountNativeRpg(
   frame: HTMLIFrameElement,
   restorePayload: Uint8Array | null,
   reportExitRequested: RuntimeExitReporter = () => undefined,
+  readyOptions: NativeReadyOptions = {},
 ) {
   const channel = new NativeChannel(config, reportExitRequested);
   frame.setAttribute("sandbox", "allow-scripts allow-same-origin allow-pointer-lock");
   frame.referrerPolicy = "no-referrer";
   let expectedEngine: "RPGMV" | "RPGMZ";
   try {
-    await bootstrapNativeFrame(config, frame, channel);
-    const ready = await channel.ready();
+    await bootstrapNativeFrame(config, frame, channel, readyOptions.signal);
+    const ready = await channel.ready(readyOptions);
     expectedEngine = config.bridgeProfile;
     if (ready.engine !== expectedEngine || ready.engineProfile !== config.bridgeProfile) {
       throw new Error("RPG_ENGINE_PROFILE_MISMATCH");
@@ -102,7 +103,7 @@ export class NativeChannel {
   private pending: Pending | null = null;
   private requestTail: Promise<void> = Promise.resolve();
   private readyValue: { engine: string; engineProfile: string } | null = null;
-  private readyWaiter: Pending | null = null;
+  private readyWaiter: {resolve: (reply: Reply) => void; reject: (reason: Error) => void; dispose: () => void} | null = null;
   private frameCount = 0;
   private available = false;
   private statusTimer: number | null = null;
@@ -125,14 +126,17 @@ export class NativeChannel {
     }, this.config.uniqueOrigin, [this.port.port2]);
   }
 
-  ready() {
+  ready(options: NativeReadyOptions = {}) {
+    if (options.signal?.aborted) {return Promise.reject(new DOMException("Aborted", "AbortError"));}
+    if (this.closed) {return Promise.reject(new Error("RPG_NATIVE_CHANNEL_CLOSED"));}
     if (this.readyValue) {return Promise.resolve(this.readyValue);}
     return new Promise<{ engine: string; engineProfile: string }>((resolve, reject) => {
-      const timer = window.setTimeout(() => {
+      const waiter = {resolve: (reply: Reply) => resolve(readReady(reply.body)), reject, dispose: () => {}};
+      this.readyWaiter = waiter;
+      waiter.dispose = nativeReadyDeadline(options, error => {
         this.readyWaiter = null;
-        reject(new Error("RPG_RUNTIME_TIMEOUT"));
-      }, channelReadyTimeoutMs);
-      this.readyWaiter = { resolve: (reply) => resolve(readReady(reply.body)), reject, timer };
+        reject(error);
+      });
     });
   }
 
@@ -243,7 +247,7 @@ export class NativeChannel {
       this.pending = null;
     }
     if (this.readyWaiter) {
-      window.clearTimeout(this.readyWaiter.timer);
+      this.readyWaiter.dispose();
       this.readyWaiter.reject(new Error("RPG_NATIVE_CHANNEL_CLOSED"));
       this.readyWaiter = null;
     }
@@ -274,7 +278,7 @@ export class NativeChannel {
       if (this.readyWaiter) {
         const waiter = this.readyWaiter;
         this.readyWaiter = null;
-        window.clearTimeout(waiter.timer);
+        waiter.dispose();
         waiter.resolve(reply);
       }
 
@@ -290,7 +294,8 @@ export class NativeChannel {
 
 }
 
-async function bootstrapNativeFrame(config: NativeRpgParameters, frame: HTMLIFrameElement, channel: NativeChannel) {
+async function bootstrapNativeFrame(config: NativeRpgParameters, frame: HTMLIFrameElement, channel: NativeChannel, signal?: AbortSignal) {
+  if (signal?.aborted) {throw new DOMException("Aborted", "AbortError");}
   const target = frame.contentWindow;
   if (!target) {throw new Error("PLAYER_FRAME_UNAVAILABLE");}
   const runtimeWindow: Window = target;
@@ -300,11 +305,13 @@ async function bootstrapNativeFrame(config: NativeRpgParameters, frame: HTMLIFra
     const timer = window.setTimeout(() => finish(new Error("RPG_NATIVE_BOOTSTRAP_TIMEOUT")), bootstrapTimeoutMs);
     const ticketTimer = window.setTimeout(() => {bootstrapTicket = "";}, 60_000);
     let stage: NativeBootstrapStage = "BOOTSTRAP";
+    const abort = () => finish(new DOMException("Aborted", "AbortError"));
     function finish(error?: Error) {
       window.clearTimeout(timer);
       window.clearTimeout(ticketTimer);
       bootstrapTicket = "";
       window.removeEventListener("message", receive, true);
+      signal?.removeEventListener("abort", abort);
       if (error) {reject(error);} else {resolve();}
     }
     function receive(event: MessageEvent) {
@@ -321,6 +328,7 @@ async function bootstrapNativeFrame(config: NativeRpgParameters, frame: HTMLIFra
       }
     }
     window.addEventListener("message", receive, true);
+    signal?.addEventListener("abort", abort, {once: true});
     frame.src = config.bootstrapUrl;
   });
 }

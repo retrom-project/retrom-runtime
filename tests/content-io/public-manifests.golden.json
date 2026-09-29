@@ -28,7 +28,8 @@
             "pixel",
             "smooth"
           ],
-          "volume": false
+          "volume": false,
+          "contentLoading": "PRELOAD_ONLY"
         },
         "checkpoint": {
           "maxBytes": 33554432,
@@ -106,7 +107,8 @@
             "pixel",
             "smooth"
           ],
-          "volume": false
+          "volume": false,
+          "contentLoading": "PRELOAD_ONLY"
         },
         "checkpoint": {
           "maxBytes": 33554432,
@@ -161,7 +163,8 @@
             "pixel",
             "smooth"
           ],
-          "volume": false
+          "volume": false,
+          "contentLoading": "ON_DEMAND_AND_PRELOAD"
         },
         "checkpoint": {
           "maxBytes": 16777216,
@@ -209,7 +212,8 @@
             "pixel",
             "smooth"
           ],
-          "volume": true
+          "volume": true,
+          "contentLoading": "PRELOAD_ONLY"
         },
         "checkpoint": {
           "maxBytes": 4194380,
@@ -258,7 +262,8 @@
             "pixel",
             "smooth"
           ],
-          "volume": true
+          "volume": true,
+          "contentLoading": "PRELOAD_ONLY"
         },
         "checkpoint": {
           "maxBytes": 8388608,
@@ -308,7 +313,8 @@
             "pixel",
             "smooth"
           ],
-          "volume": true
+          "volume": true,
+          "contentLoading": "PRELOAD_ONLY"
         },
         "checkpoint": {
           "maxBytes": 1048576,
@@ -419,7 +425,8 @@
             "pixel",
             "smooth"
           ],
-          "volume": false
+          "volume": false,
+          "contentLoading": "ON_DEMAND_AND_PRELOAD"
         },
         "checkpoint": {
           "maxBytes": 67108864,
@@ -466,6 +473,7 @@
         ],
         "capabilities": {
           "checkpoint": true,
+          "contentLoading": "PRELOAD_ONLY",
           "discSwitch": false,
           "frameCounter": true,
           "frameMode": "SAME_ORIGIN_BLANK",
@@ -522,6 +530,7 @@
         ],
         "capabilities": {
           "checkpoint": true,
+          "contentLoading": "PRELOAD_ONLY",
           "discSwitch": false,
           "frameCounter": true,
           "frameMode": "SAME_ORIGIN_BLANK",
@@ -661,6 +670,7 @@
         ],
         "capabilities": {
           "checkpoint": true,
+          "contentLoading": "PRELOAD_ONLY",
           "discSwitch": false,
           "frameCounter": true,
           "frameMode": "SAME_ORIGIN_BLANK",
@@ -737,6 +747,7 @@
         ],
         "capabilities": {
           "checkpoint": true,
+          "contentLoading": "PRELOAD_ONLY",
           "discSwitch": false,
           "frameCounter": true,
           "frameMode": "SAME_ORIGIN_BLANK",
@@ -793,6 +804,7 @@
         ],
         "capabilities": {
           "checkpoint": true,
+          "contentLoading": "PRELOAD_ONLY",
           "discSwitch": false,
           "frameCounter": true,
           "frameMode": "SAME_ORIGIN_BLANK",
@@ -849,6 +861,7 @@
         ],
         "capabilities": {
           "checkpoint": true,
+          "contentLoading": "PRELOAD_ONLY",
           "discSwitch": false,
           "frameCounter": true,
           "frameMode": "SAME_ORIGIN_BLANK",
@@ -899,6 +912,7 @@
         ],
         "capabilities": {
           "checkpoint": true,
+          "contentLoading": "PRELOAD_ONLY",
           "discSwitch": false,
           "frameCounter": true,
           "frameMode": "SAME_ORIGIN_BLANK",
@@ -960,7 +974,8 @@
             "pixel",
             "smooth"
           ],
-          "volume": false
+          "volume": false,
+          "contentLoading": "PRELOAD_ONLY"
         },
         "checkpoint": {
           "maxBytes": 33554432,
@@ -1010,7 +1025,8 @@
             "pixel",
             "smooth"
           ],
-          "volume": false
+          "volume": false,
+          "contentLoading": "PRELOAD_ONLY"
         },
         "checkpoint": {
           "maxBytes": 402653184,
@@ -1058,7 +1074,8 @@
             "pixel",
             "smooth"
           ],
-          "volume": true
+          "volume": true,
+          "contentLoading": "PRELOAD_ONLY"
         },
         "checkpoint": {
           "maxBytes": 16384,
@@ -1107,7 +1124,8 @@
             "pixel",
             "smooth"
           ],
-          "volume": false
+          "volume": false,
+          "contentLoading": "ON_DEMAND_AND_PRELOAD"
         },
         "checkpoint": {
           "maxBytes": 67108864,
@@ -1166,7 +1184,8 @@
             "pixel",
             "smooth"
           ],
-          "volume": false
+          "volume": false,
+          "contentLoading": "PRELOAD_ONLY"
         },
         "checkpoint": {
           "maxBytes": 16777216,
@@ -1219,7 +1238,8 @@
             "pixel",
             "smooth"
           ],
-          "volume": false
+          "volume": false,
+          "contentLoading": "ON_DEMAND_AND_PRELOAD"
         },
         "checkpoint": {
           "maxBytes": 268435456,
@@ -1271,7 +1291,8 @@
             "pixel",
             "smooth"
           ],
-          "volume": true
+          "volume": true,
+          "contentLoading": "ON_DEMAND_AND_PRELOAD"
         },
         "checkpoint": {
           "maxBytes": 268435456,
@@ -1319,7 +1340,8 @@
             "pixel",
             "smooth"
           ],
-          "volume": true
+          "volume": true,
+          "contentLoading": "PRELOAD_ONLY"
         },
         "checkpoint": {
           "maxBytes": 100663296,
@@ -1480,7 +1502,8 @@
             "pixel",
             "smooth"
           ],
-          "volume": true
+          "volume": true,
+          "contentLoading": "ON_DEMAND_AND_PRELOAD"
         },
         "checkpoint": {
           "maxBytes": 67108864,
@@ -1527,7 +1550,8 @@
             "pixel",
             "smooth"
           ],
-          "volume": true
+          "volume": true,
+          "contentLoading": "ON_DEMAND_AND_PRELOAD"
         },
         "checkpoint": {
           "maxBytes": 67108864,
@@ -1575,7 +1599,8 @@
             "pixel",
             "smooth"
           ],
-          "volume": false
+          "volume": false,
+          "contentLoading": "ON_DEMAND_AND_PRELOAD"
         },
         "checkpoint": {
           "maxBytes": 268435456,
@@ -1630,7 +1655,8 @@
             "pixel",
             "smooth"
           ],
-          "volume": false
+          "volume": false,
+          "contentLoading": "ON_DEMAND_AND_PRELOAD"
         },
         "checkpoint": {
           "maxBytes": 268435456,
@@ -1685,7 +1711,8 @@
             "pixel",
             "smooth"
           ],
-          "volume": false
+          "volume": false,
+          "contentLoading": "ON_DEMAND_AND_PRELOAD"
         },
         "checkpoint": {
           "maxBytes": 268435456,
@@ -1741,7 +1768,8 @@
             "pixel",
             "smooth"
           ],
-          "volume": false
+          "volume": false,
+          "contentLoading": "PRELOAD_ONLY"
         },
         "checkpoint": {
           "maxBytes": 17825792,
@@ -2097,7 +2125,8 @@
             "pixel",
             "smooth"
           ],
-          "volume": false
+          "volume": false,
+          "contentLoading": "ON_DEMAND_AND_PRELOAD"
         },
         "checkpoint": {
           "maxBytes": 67108864,
@@ -2194,7 +2223,8 @@
             "pixel",
             "smooth"
           ],
-          "volume": true
+          "volume": true,
+          "contentLoading": "PRELOAD_ONLY"
         },
         "checkpoint": {
           "maxBytes": 1100,
@@ -2242,7 +2272,8 @@
             "pixel",
             "smooth"
           ],
-          "volume": true
+          "volume": true,
+          "contentLoading": "ON_DEMAND_AND_PRELOAD"
         },
         "checkpoint": {
           "maxBytes": 33554432,
@@ -2289,7 +2320,8 @@
             "pixel",
             "smooth"
           ],
-          "volume": false
+          "volume": false,
+          "contentLoading": "PRELOAD_ONLY"
         },
         "checkpoint": {
           "maxBytes": 132144,
@@ -3491,7 +3523,8 @@
             "original",
             "pixel"
           ],
-          "volume": true
+          "volume": true,
+          "contentLoading": "ON_DEMAND_AND_PRELOAD"
         },
         "checkpoint": null,
         "displayName": "Daphne",
@@ -3820,7 +3853,8 @@
             "original",
             "pixel"
           ],
-          "volume": true
+          "volume": true,
+          "contentLoading": "ON_DEMAND_AND_PRELOAD"
         },
         "checkpoint": {
           "maxBytes": 268435456,
@@ -4380,7 +4414,8 @@
             "sharp-bilinear",
             "smooth"
           ],
-          "volume": true
+          "volume": true,
+          "contentLoading": "ON_DEMAND_AND_PRELOAD"
         },
         "checkpoint": {
           "maxBytes": 268435456,
@@ -4493,7 +4528,8 @@
             "sharp-bilinear",
             "smooth"
           ],
-          "volume": true
+          "volume": true,
+          "contentLoading": "ON_DEMAND_AND_PRELOAD"
         },
         "checkpoint": {
           "maxBytes": 268435456,
@@ -4606,7 +4642,8 @@
             "sharp-bilinear",
             "smooth"
           ],
-          "volume": true
+          "volume": true,
+          "contentLoading": "ON_DEMAND_AND_PRELOAD"
         },
         "checkpoint": {
           "maxBytes": 268435456,
@@ -4719,7 +4756,8 @@
             "sharp-bilinear",
             "smooth"
           ],
-          "volume": true
+          "volume": true,
+          "contentLoading": "ON_DEMAND_AND_PRELOAD"
         },
         "checkpoint": {
           "maxBytes": 268435456,
@@ -5733,7 +5771,8 @@
             "sharp-bilinear",
             "smooth"
           ],
-          "volume": true
+          "volume": true,
+          "contentLoading": "ON_DEMAND_AND_PRELOAD"
         },
         "checkpoint": {
           "maxBytes": 268435456,
@@ -7417,7 +7456,8 @@
             "sharp-bilinear",
             "smooth"
           ],
-          "volume": true
+          "volume": true,
+          "contentLoading": "ON_DEMAND_AND_PRELOAD"
         },
         "checkpoint": {
           "maxBytes": 268435456,
@@ -8655,7 +8695,8 @@
             "sharp-bilinear",
             "smooth"
           ],
-          "volume": true
+          "volume": true,
+          "contentLoading": "PRELOAD_ONLY"
         },
         "checkpoint": {
           "maxBytes": 268435456,

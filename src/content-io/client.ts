@@ -18,6 +18,7 @@ import {contentObjectKey, type SourceContext, validateSource} from "./source.js"
 import {validateManagedPolicy, validateSourcePolicy} from "./policy.js";
 type ClientFile = {object: BlockObject; reader: RangeReader; policy: ManagedInputPolicyV1};
 export class ContentSessionClient {
+  preloaded = false;
   readonly fetchPolicy: FetchPolicy;
   private readonly accounting = new ReadAccounting();
   private readonly diagnostic: (diagnostic: ContentDiagnostic) => void;

@@ -60,6 +60,9 @@ export function validateTargetOptionsAgainstSchema(
 export function validateRuntimeHost(value: unknown): RuntimeHostV1 {
   const host = isRecord(value) ? value : null;
   const signal = host && isRecord(host.signal) ? host.signal : null;
+  if (host?.contentLoading !== undefined && host.contentLoading !== "ON_DEMAND" && host.contentLoading !== "PRELOAD") {
+    throw new Error("PROVIDER_HOST_INVALID");
+  }
   if (!host || typeof host.mountFrame !== "function" || typeof host.loadRestore !== "function" ||
     typeof host.reportDiagnostic !== "function" || !signal || typeof signal.aborted !== "boolean" ||
     typeof signal.addEventListener !== "function" || typeof signal.removeEventListener !== "function") {
@@ -112,9 +115,12 @@ function validSession(value: unknown) {
 
 function validCapabilities(value: unknown): value is RuntimeCapabilitiesV1 {
   if (!isRecord(value) || !exactKeys(value, [
-    "checkpoint", "discSwitch", "frameCounter", "frameMode", "inputFilter", "nativeSettings",
+    "checkpoint", ...(Object.hasOwn(value, "contentLoading") ? ["contentLoading"] : []),
+    "discSwitch", "frameCounter", "frameMode", "inputFilter", "nativeSettings",
     "pause", "requiresThreads", "screenshot", "standardGamepad", "videoModes", "volume",
   ])) {return false;}
+  if (Object.hasOwn(value, "contentLoading") && value.contentLoading !== "ON_DEMAND_AND_PRELOAD" &&
+    value.contentLoading !== "PRELOAD_ONLY") {return false;}
   for (const key of [
     "checkpoint", "discSwitch", "frameCounter", "inputFilter", "nativeSettings", "pause",
     "requiresThreads", "screenshot", "standardGamepad", "volume",
@@ -138,7 +144,7 @@ function validCheckpointShape(value: unknown): value is RuntimeCheckpointContrac
 }
 
 function sameCapabilities(actual: RuntimeCapabilitiesV1, expected: RuntimeCapabilitiesV1) {
-  return actual.checkpoint === expected.checkpoint && actual.frameCounter === expected.frameCounter &&
+  return actual.contentLoading === expected.contentLoading && actual.checkpoint === expected.checkpoint && actual.frameCounter === expected.frameCounter &&
     actual.discSwitch === expected.discSwitch && actual.frameMode === expected.frameMode &&
     actual.inputFilter === expected.inputFilter && actual.nativeSettings === expected.nativeSettings &&
     actual.pause === expected.pause &&
@@ -206,8 +212,8 @@ function validFileTreeResource(resource: RuntimeFileTreeResourceV1) {
 }
 function validWebResource(resource: RuntimeWebResourceV1) {
   return exactKeys(resource, [
-    "bootstrapTicket", "cleanupUrl", "contentDigest", "entryUrl", "kind", "ordinal", "origin", "role",
-  ]) && validDigest(resource.contentDigest) && validOrigin(resource.origin) &&
+    "bootstrapTicket", "cleanupUrl", "contentDigest", "entryUrl", "indexUrl", "kind", "ordinal", "origin", "role",
+  ]) && relativeURL(resource.indexUrl) && validDigest(resource.contentDigest) && validOrigin(resource.origin) &&
     sameOrigin(resource.entryUrl, resource.origin) && (resource.cleanupUrl === null ||
       sameOrigin(resource.cleanupUrl, resource.origin)) && /^[A-Za-z0-9_-]{43,128}$/u.test(resource.bootstrapTicket);
 }

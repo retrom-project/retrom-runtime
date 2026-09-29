@@ -2,8 +2,6 @@ import type {ContentInputPolicyV1, ManagedInputPolicyV1} from "../../contracts/c
 import {contentLimits as limits} from "../content-io/limits.js";
 
 export const contentBoundaries = Object.freeze({
-  "native-web": "src/native-web/adapter.ts",
-  "tyranoscript-frame": "src/tyranoscript/adapter.ts",
   "easyrpg-loader": "src/easyrpg/adapter.ts",
   "j2me-loader": "src/j2me/adapter.ts",
   "emulatorjs-loader": "src/providers/emulatorjs/provider-runtime.ts",
@@ -20,7 +18,6 @@ export function eagerPolicy(maxFileBytes: number,
     contentLengthPolicy: "EXACT_IF_PRESENT",  ...overrides};
 }
 const upstream = (boundaryId: keyof typeof contentBoundaries): ContentInputPolicyV1 => ({mode: "UPSTREAM_LOADER", boundaryId});
-const native = (boundaryId: keyof typeof contentBoundaries): ContentInputPolicyV1 => ({mode: "BROWSER_NATIVE", boundaryId});
 const mkxp = rangePolicy("WASMFS", limits.indexedFile, {writes: "SESSION_OVERLAY"});
 const gamePolicies: Readonly<Record<string, ContentInputPolicyV1>> = {
   "butterscotch-gamemaker": rangePolicy("WASMFS", limits.indexedFile, {writes: "SESSION_OVERLAY"}),
@@ -37,13 +34,13 @@ const gamePolicies: Readonly<Record<string, ContentInputPolicyV1>> = {
   samcoupe: eagerPolicy(16 * 1024 * 1024),
   "rpgmaker-2000": upstream("easyrpg-loader"),
   "rpgmaker-2003": upstream("easyrpg-loader"),
-  "rpgmaker-mv": native("native-web"),
-  "rpgmaker-mz": native("native-web"),
+  "rpgmaker-mv": rangePolicy("ASYNC", limits.indexedFile),
+  "rpgmaker-mz": rangePolicy("ASYNC", limits.indexedFile),
   "rpgmaker-vx": mkxp,
   "rpgmaker-vx-ace": mkxp,
   "rpgmaker-xp": mkxp,
   tic80: eagerPolicy(limits.fantasyFile),
-  tyranoscript: native("tyranoscript-frame"),
+  tyranoscript: rangePolicy("ASYNC", limits.indexedFile),
   wasm4: eagerPolicy(limits.wasm4Cart),
 };
 export function runtimeGamePolicy(id: string): ContentInputPolicyV1 {

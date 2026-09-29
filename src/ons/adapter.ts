@@ -124,7 +124,7 @@ export async function mountOnsYuri(
     if (typeof host.onsyuri !== "function") {throw new Error("ONS_RUNTIME_ARTIFACT_INVALID");}
     module = await host.onsyuri(moduleOptions);
     host.g_onsyuri_module = module;
-    videoCleanup = installVideo(host, module, video, canvas, fileMap);
+    videoCleanup = installVideo(host, module, video, canvas, fileMap, projectFiles.videoSource);
     module._onsyuri_host_set_restore_slot(restore?.resumeSlot ?? -1);
     const started = module.callMain(runtimeArgs(config, index));
     if (started instanceof Promise) {void started.catch(() => ready.reject(new Error("ONS_RUNTIME_START_FAILED")));}
@@ -258,13 +258,18 @@ function installVideo(
   video: HTMLVideoElement,
   canvas: HTMLCanvasElement,
   fileMap: Record<string, OnsProjectFileNode>,
+  source?: (node: OnsProjectFileNode) => Promise<{url: string; release(): void}>,
 ) {
+  let generation = 0;
+  let release: (() => void) | undefined;
   const finish = () => {
+    generation++;
     module.wait_video = false;
     video.pause();
     video.hidden = true;
     canvas.hidden = false;
     video.removeAttribute("src");
+    release?.(); release = undefined;
   };
   video.addEventListener("ended", finish);
   video.addEventListener("error", finish);
@@ -273,12 +278,17 @@ function installVideo(
     const node = fileMap[path.toLowerCase()];
     if (!node) {return;}
     module.wait_video = true;
-    video.src = node.url;
     video.loop = loop;
     video.onclick = click ? finish : null;
     video.hidden = false;
     canvas.hidden = true;
-    void video.play().catch(finish);
+    const current = generation;
+    if (source) {
+      void source(node).then(result => {
+        if (current !== generation) {result.release(); return;}
+        release = result.release; video.src = result.url; void video.play().catch(finish);
+      }).catch(() => {if (current === generation) {finish();}});
+    } else {video.src = node.url; void video.play().catch(finish);}
   };
   return () => {
     video.removeEventListener("ended", finish);

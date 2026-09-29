@@ -42,7 +42,7 @@ cross-origin messages retain their own trust-boundary validation.
 Content sources are also host-independent. Directory-oriented adapters consume
 `FILE_TREE`; mkxp consumes `SEEKABLE_BLOB`; native Web projects retain
 their isolated entry model. A seekable blob supplies a URL, size, diagnostic
-digest and `rangeRequired: true`. The mkxp adapter registers that URL in
+digest and `rangeRequired: true`. In default ON_DEMAND mode, mkxp registers that URL in
 WasmFS and passes only a virtual path to the core—it does not turn the project
 or RTP archives into JavaScript `Blob`s or download them before the first
 frame. Its pinned fork rejects a missing Range contract, a non-206 response,
@@ -56,7 +56,7 @@ scripts and images on the same file-on-first-open path. Exact-size immutable res
 Emscripten file system and an origin-private file one at a time, so concurrent multi-hundred-megabyte writes cannot
 evict or drop one another and archives larger than Chromium's ordinary HTTP or Cache Storage entry limits are still
 reused by a later runtime instance. Cache Storage is only the fallback when OPFS is unavailable. Aggregate project
-bytes are reported through `LOAD_PROGRESS`; persistent storage being unavailable or full falls back to the normal fetch without
+bytes are reported through `LOAD_PROGRESS`; in default ON_DEMAND mode, persistent storage being unavailable or full falls back to the normal fetch without
 blocking the game. Large videos are handed to the browser media pipeline by URL so it can issue Range requests
 instead of copying the complete movie into the Emscripten file system. KiriKiri keeps its 256 KiB-block VLFS Range
 reader and refuses a large response that ignores a requested range rather than silently buffering the whole file.
@@ -165,3 +165,26 @@ The history retains 64 transitions; gamepad values are quantized for diagnostics
 remain unavailable and `coreRead` is always false: an input API call is not evidence that a game acted on it.
 EmulatorJS delivery observation applies to single-player; MV/MZ use the existing isolated bridge STATUS cadence.
 Other inaccessible isolated frames explicitly remain unavailable. Sessions are cleaned up on disable and exit.
+
+## Optional content loading preference
+
+`RuntimeHostV1.contentLoading?: "ON_DEMAND" | "PRELOAD"` is a device preference,
+not an Envelope resource or Target transport policy. Missing means ON_DEMAND.
+PRELOAD prepares the entire managed content set in persistent storage before
+mounting the native consumer, emits LOAD_PROGRESS, and holds generation leases
+until exit. Storage failure is explicit in this mode; the Host may offer retry
+or a switch back to ON_DEMAND. Default optional-cache fallback remains unchanged.
+See [Content I/O](content-io.md#explicit-download-before-startup) for source coverage,
+validation, cancellation and native-loader boundaries. This optional Host field
+does not change the core Reader/bridge ABI or checkpoint formats.
+
+The optional public Target capability `contentLoading` is projected from the
+private game input policy: RANGE / ON_OPEN expose `ON_DEMAND_AND_PRELOAD`, EAGER
+exposes `PRELOAD_ONLY`, and unmanaged loaders omit it. It is part of the exact
+manifest/Envelope/runtime capability comparison; private bridges and limits
+remain private. Hosts show a choice only for dual-mode Targets, a fixed full
+loading indication for preload-only Targets, and no cache controls otherwise.
+Product starts resolve device preferences against the actual Launch Target,
+including restores and quick starts; unsupported Targets receive no preference.
+Preview retains default on-demand behavior. A streaming fallback action is only
+valid for dual-mode Targets; fixed/hidden modes must not overwrite device preferences.

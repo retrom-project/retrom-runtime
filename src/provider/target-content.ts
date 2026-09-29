@@ -9,6 +9,7 @@ export function bindTargetContent(session: ContentSessionAccess, target: Policie
 /** A Target owns its policies. The Provider retains ownership of the underlying session. */
 export function bindTargetContent(session: ContentSessionAccess, target: Policies): AdapterContentSession {
   return {
+    preloaded: session.preloaded,
     open: (...args) => session.open(...args), materialize: (...args) => session.materialize(...args), closeFile: (...args) => session.closeFile(...args),
     ...("createSyncChannel" in session && typeof session.createSyncChannel === "function" ? {createSyncChannel: session.createSyncChannel.bind(session)} : {}),
     inputPolicy(role, member) {

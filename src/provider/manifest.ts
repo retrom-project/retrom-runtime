@@ -1,3 +1,4 @@
+import {contentLoadingCapability} from "./content-loading.js";
 import type { ProviderDefinition } from "./declarations.js";
 
 export type ProviderManifest = ReturnType<typeof projectProviderManifest>;
@@ -21,6 +22,7 @@ export function projectProviderManifest(definition: ProviderDefinition) {
     return {
       assetPaths: sorted(target.assetPaths),
       capabilities: {
+        ...contentLoadingCapability(target),
         checkpoint: adapter.capabilities.checkpoint,
         discSwitch: target.discSwitch,
         frameCounter: adapter.capabilities.frameCounter,

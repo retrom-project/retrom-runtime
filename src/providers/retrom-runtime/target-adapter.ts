@@ -1,3 +1,4 @@
+import {mountWithNativeContent} from "../../native-web/content-bridge.js";
 import {mountMame} from "../../mame/adapter.js";
 import {bindTargetContent} from "../../provider/target-content.js";
 import {requireContentSession} from "../../provider/content-inputs.js";
@@ -72,8 +73,9 @@ export function mountTargetAdapter(
       restorePayload, undefined, context.onDiagnostic, reportProgress, reportExitRequested,
       {...contentOptions(context), signal: context.signal, onFailure: reportFailure});
   case "NATIVE_WEB":
-    return mountNativeRpg(parameters.nativeRpg(envelope, declaration.implementation), requireFrame(context),
-      restorePayload, reportExitRequested);
+    return mountWithNativeContent(envelope, requireFrame(context), requireContentSession(contentSession),
+      loading => mountNativeRpg(parameters.nativeRpg(envelope, declaration.implementation), requireFrame(context),
+        restorePayload, reportExitRequested, {loading, signal: context.signal}), context.signal, reportFailure);
   case "ONS_YURI_WEB":
     return mountOnsYuri(parameters.ons(envelope), target, frameWindow, restorePayload, reportProgress, reportExitRequested,
       {...contentOptions(context), signal: context.signal, onFailure: reportFailure});
@@ -84,7 +86,9 @@ export function mountTargetAdapter(
     return mountButterscotch(parameters.butterscotch(envelope), target, frameWindow, restorePayload,
       reportProgress, reportExitRequested, {...contentOptions(context), signal: context.signal});
   case "TYRANOSCRIPT_WEB":
-    return mountTyranoScript(parameters.tyranoScript(envelope), requireFrame(context), restorePayload, reportExitRequested);
+    return mountWithNativeContent(envelope, requireFrame(context), requireContentSession(contentSession),
+      () => mountTyranoScript(parameters.tyranoScript(envelope), requireFrame(context), restorePayload, reportExitRequested),
+      context.signal, reportFailure);
   case "J2ME_MINIJVM_WEB":
     return mountJ2me(parameters.j2me(envelope), target, frameWindow, restorePayload, reportProgress,
       reportExitRequested, reportFailure, context.signal);

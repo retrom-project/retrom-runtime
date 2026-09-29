@@ -14,8 +14,8 @@ export const mameAppleTarget = defineTarget({id: "mame-apple2", displayName: "Ap
   targetOptionsSchema: {type: "object", additionalProperties: false, properties: {}, required: []},
   implementation: {}, inputFilter: true, discSwitch: false, nativeSettings: false,
   videoModes: ["original", "pixel", "smooth"],
-  assetPaths: ["mame-build.json", "mame-common.mjs", "mame-common.mjs.br", "mame-common.wasm", "mame-common.wasm.br",
-    "mame-apple.wasm", "mame-apple.wasm.br"].map(file => `assets/mame/${file}`),
+  assetPaths: ["mame-build.json", "mame-common.mjs", "mame-common.wasm",
+    "mame-apple.wasm"].map(file => `assets/mame/${file}`),
 });
 
 export const mameAtomTarget = defineTarget({...mameAppleTarget, id: "mame-atom", displayName: "Acorn Atom (MAME)",
@@ -50,6 +50,6 @@ export const mameArcadeTarget = defineTarget({...mameAppleTarget, id: "mame-arca
     {role: "external", kind: "EXTERNAL_FILE_SET", cardinality: "ONE", optional: true}],
   targetOptionsSchema: {type: "object", additionalProperties: false,
     properties: {machine: {type: "string", minLength: 1, maxLength: 32}}, required: ["machine"]},
-  assetPaths: ["mame-build.json", "mame-common.mjs", "mame-common.mjs.br", "mame-common.wasm", "mame-common.wasm.br",
-    ...arcadeFamilies.flatMap(family => [`mame-${family}.wasm`, `mame-${family}.wasm.br`])].map(file => `assets/mame/${file}`),
+  assetPaths: ["mame-build.json", "mame-common.mjs", "mame-common.wasm",
+    ...arcadeFamilies.map(family => `mame-${family}.wasm`)].map(file => `assets/mame/${file}`),
 });

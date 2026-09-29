@@ -1,5 +1,5 @@
 import {validEmulatorJsDevelopmentSource} from "./emulatorjs-development-forks.mjs";
-import {usesPinnedCoreAssets, validPinnedCoreAssets} from "./pinned-core-release.mjs";
+import {usesPinnedCoreAssets, validMameRelease, validPinnedCoreAssets} from "./pinned-core-release.mjs";
 import {validCoreDevelopmentInput} from "./core-development-input.mjs";
 import {validWebMSXRelease} from "./webmsx-release.mjs";
 import {validScummvmSource} from "./scummvm-release.mjs";
@@ -32,7 +32,8 @@ export function validateProviderSources(sources) {
     if (!release?.id || releases.has(release.id) ||
       !/^https:\/\/github\.com\/retrom-project\/[A-Za-z0-9._-]+$/u.test(release.repository) ||
       !/^[0-9a-f]{40}$/u.test(release.commit) ||
-      !(release.id === "webmsx" ? validWebMSXRelease(release) : release.id === "scummvm" ? validScummvmRelease(release) : release.archive ? validJ2meRelease(release) : validCoreRelease(release))) {
+      !(release.id === "webmsx" ? validWebMSXRelease(release) : release.id === "scummvm" ? validScummvmRelease(release) :
+        release.id === "mame" ? validMameRelease(release) : release.archive ? validJ2meRelease(release) : validCoreRelease(release))) {
       throw new Error("PROVIDER_SOURCES_INVALID");
     }
     if (usesPinnedCoreAssets(release.id) && !validPinnedCoreAssets(release)) {throw new Error("PROVIDER_SOURCES_INVALID");}
@@ -71,5 +72,5 @@ function validCoreRelease(release) {
   return /^retrom-core-[0-9A-Za-z][0-9A-Za-z._-]*-r[1-9][0-9]*(?:-rc\.[1-9][0-9]*)?$/u.test(release.tag) &&
     release.metadataUrl === `${release.repository}/releases/download/${release.tag}/rpg-runtime-release.json` &&
     Array.isArray(release.assets) && release.assets.length >= 2 &&
-    release.assets.length <= (release.id === "mame" ? 256 : 8);
+    release.assets.length <= 8;
 }

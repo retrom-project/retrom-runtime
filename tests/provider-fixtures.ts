@@ -19,6 +19,7 @@ export function wasmEnvelope(): LaunchEnvelopeV1 {
     runtime: {
       bundleSha256: bundleDigest,
       capabilities: {
+        contentLoading: "PRELOAD_ONLY",
         checkpoint: true,
         discSwitch: false,
         frameCounter: true,

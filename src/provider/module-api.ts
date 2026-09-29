@@ -115,9 +115,12 @@ function validSession(value: unknown) {
 
 function validCapabilities(value: unknown): value is RuntimeCapabilitiesV1 {
   if (!isRecord(value) || !exactKeys(value, [
-    "checkpoint", "discSwitch", "frameCounter", "frameMode", "inputFilter", "nativeSettings",
+    "checkpoint", ...(Object.hasOwn(value, "contentLoading") ? ["contentLoading"] : []),
+    "discSwitch", "frameCounter", "frameMode", "inputFilter", "nativeSettings",
     "pause", "requiresThreads", "screenshot", "standardGamepad", "videoModes", "volume",
   ])) {return false;}
+  if (Object.hasOwn(value, "contentLoading") && value.contentLoading !== "ON_DEMAND_AND_PRELOAD" &&
+    value.contentLoading !== "PRELOAD_ONLY") {return false;}
   for (const key of [
     "checkpoint", "discSwitch", "frameCounter", "inputFilter", "nativeSettings", "pause",
     "requiresThreads", "screenshot", "standardGamepad", "volume",
@@ -141,7 +144,7 @@ function validCheckpointShape(value: unknown): value is RuntimeCheckpointContrac
 }
 
 function sameCapabilities(actual: RuntimeCapabilitiesV1, expected: RuntimeCapabilitiesV1) {
-  return actual.checkpoint === expected.checkpoint && actual.frameCounter === expected.frameCounter &&
+  return actual.contentLoading === expected.contentLoading && actual.checkpoint === expected.checkpoint && actual.frameCounter === expected.frameCounter &&
     actual.discSwitch === expected.discSwitch && actual.frameMode === expected.frameMode &&
     actual.inputFilter === expected.inputFilter && actual.nativeSettings === expected.nativeSettings &&
     actual.pause === expected.pause &&

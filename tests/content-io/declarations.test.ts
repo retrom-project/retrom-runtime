@@ -4,7 +4,7 @@ import {emulatorJsProviderDefinition} from "../../src/providers/emulatorjs/catal
 import {retromRuntimeProviderDefinition} from "../../src/providers/retrom-runtime/catalog.js";
 import {projectProviderManifest} from "../../src/provider/manifest.js";
 import {defineTarget} from "../../src/provider/declarations.js";
-it("[PK-01] CONTRACT/private-policies covers every input role without changing the public manifest shape", () => {
+it("[PK-01] CONTRACT/private-policies covers every input role and publishes only public capabilities", () => {
   for (const provider of [emulatorJsProviderDefinition, retromRuntimeProviderDefinition]) {
     for (const target of provider.targets) {
       expect(Object.keys(target.contentIO).sort()).toEqual(target.inputs.map((input) => input.role).sort());

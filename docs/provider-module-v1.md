@@ -177,3 +177,14 @@ or a switch back to ON_DEMAND. Default optional-cache fallback remains unchanged
 See [Content I/O](content-io.md#explicit-download-before-startup) for source coverage,
 validation, cancellation and native-loader boundaries. This optional Host field
 does not change the core Reader/bridge ABI or checkpoint formats.
+
+The optional public Target capability `contentLoading` is projected from the
+private game input policy: RANGE / ON_OPEN expose `ON_DEMAND_AND_PRELOAD`, EAGER
+exposes `PRELOAD_ONLY`, and unmanaged loaders omit it. It is part of the exact
+manifest/Envelope/runtime capability comparison; private bridges and limits
+remain private. Hosts show a choice only for dual-mode Targets, a fixed full
+loading indication for preload-only Targets, and no cache controls otherwise.
+Product starts resolve device preferences against the actual Launch Target,
+including restores and quick starts; unsupported Targets receive no preference.
+Preview retains default on-demand behavior. A streaming fallback action is only
+valid for dual-mode Targets; fixed/hidden modes must not overwrite device preferences.

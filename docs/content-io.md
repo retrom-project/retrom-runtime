@@ -221,3 +221,9 @@ Host without Service Worker support may retain HTTP loading in ON_DEMAND only.
 Exit and abort close ports and readers; worker restart may reconnect only
 through the still-mounted game frame. Runtime code does not own Host routes,
 authorization, MIME projection or Service Worker installation.
+
+The public `capabilities.contentLoading` declaration describes game-content
+loading, not full application offline availability. `ON_DEMAND_AND_PRELOAD`
+permits both modes; `PRELOAD_ONLY` keeps whole-file loading and allows a Host to
+require persistent preparation. An omitted capability keeps the upstream loader.
+Other inputs are prepared only when their own policies are managed.

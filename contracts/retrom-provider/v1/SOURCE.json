@@ -1,7 +1,7 @@
 {
   "authorityPath": "api/runtime-provider/v1",
   "authorityRepository": "https://github.com/retrom-project/retrom",
-  "contractSha256": "b60c00386ce62469f6936dcd3e88db59255df0c1fe99a165287c049ab0e78913",
+  "contractSha256": "afd6af7994ef40fbad060b2aa93e1af3e2bb3b1457c75003f4eb5d3f517f8ae1",
   "contractVersion": "runtime-provider-v1",
   "files": [
     {
@@ -22,11 +22,11 @@
     },
     {
       "path": "api/runtime-provider/v1/provider-manifest.schema.json",
-      "sha256": "1be2ca33bc09f578ad2ffd0e013580b152244aaaed233ee6d4af1358c4e3af76"
+      "sha256": "80c87c8d0cff98d9c0b10b45b70821640e5c40e85d9ecc02e8e812b38400ad3e"
     },
     {
       "path": "api/runtime-provider/v1/provider-module-v1.d.ts",
-      "sha256": "5c93d69464fc52ec00287ee505052d000f3b885ced2e4385a10ef55f4e3cbc48"
+      "sha256": "78f782c61b3e83afd45a6c929175209dcd04b31c61a2cea03907b0a4fe667d44"
     },
     {
       "path": "api/runtime-provider/v1/runtime-resource.schema.json",
@@ -70,11 +70,11 @@
     },
     {
       "path": "api/runtime-provider/v1/fixtures/valid/checkpoint-restore.json",
-      "sha256": "5ddd28365f91466eb4d9384c959b0fddf9ee44b29a79094cd908982c9294bf91"
+      "sha256": "fb50cca8c85545a8c2388449866e04db4f412cd64474fec134a6eeec10256706"
     },
     {
       "path": "api/runtime-provider/v1/fixtures/valid/single-minimal.json",
-      "sha256": "b29aec8f4a9b1adab8c3a31e007c6ac4527d60dee20349cb660994de6352237f"
+      "sha256": "187a3e29cde764ef90899932771c3b8314e52b8444781d01d6d083b065d1b17f"
     }
   ],
   "schemaVersion": 1

@@ -22,6 +22,10 @@ export class BytesSink extends SinkPosition implements ResultSink {
     try {this.bytes = new Uint8Array(size);} catch (cause) {throw new ContentIOError("RESOURCE_UNAVAILABLE", {cause});}
   }
   async write(offset: number, chunk: Uint8Array): Promise<void> {this.check(offset, chunk); this.bytes!.set(chunk, offset);}
+  viewForDigest(): Uint8Array<ArrayBuffer> {
+    if (this.aborted || this.committed || !this.bytes || this.written !== this.size) {fail("LENGTH_MISMATCH");}
+    return this.bytes;
+  }
   async abort(_reason?: "CANCELLED" | "FAILED" | "RESTART"): Promise<void> {if (!this.committed) {this.aborted = true; this.bytes = null;}}
   result(): Uint8Array<ArrayBuffer> {if (!this.committed || !this.bytes) {fail("RESOURCE_UNAVAILABLE");} const bytes = this.bytes; this.bytes = null; return bytes;}
 }

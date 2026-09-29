@@ -1,3 +1,4 @@
+import {mountMame} from "../../mame/adapter.js";
 import {bindTargetContent} from "../../provider/target-content.js";
 import {requireContentSession} from "../../provider/content-inputs.js";
 import {mountGBE} from "../../gbe-pokemini/adapter.js";
@@ -121,6 +122,8 @@ function mountMachineAdapter(kind: string, envelope: LaunchEnvelopeV1, target: H
   const {frameWindow, restorePayload, reportProgress} = context;
   const reportFailure = context.reportFailure ?? (() => undefined);
   switch (kind) {
+  case "MAME_DYLINK":
+    return mountMame(parameters.mame(envelope), target, frameWindow, restorePayload, {...contentOptions(context), signal: context.signal, reportProgress, onFailure: reportFailure});
   case "GBE_POKEMINI_WEB":
     return mountGBE(parameters.gbePokemini(envelope, context.assetIndex), target, frameWindow, restorePayload, reportProgress, context.signal, undefined, contentOptions(context));
   case "NP2KAI_WEB":

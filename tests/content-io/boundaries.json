@@ -494,6 +494,30 @@
       ]
     },
     {
+      "id": "B-045",
+      "repository": "runtime",
+      "path": "src/mame/files.ts",
+      "symbol": "addArcadeBundle",
+      "classification": "UPSTREAM_LOADER",
+      "reason": "Fetches the Host-generated bounded parent or BIOS ZIP bundle; game bytes use shared Content I/O and the bundle has no independent cache.",
+      "ownerStage": "S21",
+      "tests": [
+        "runtime:src/mame/files.test.ts"
+      ]
+    },
+    {
+      "id": "B-046",
+      "repository": "runtime",
+      "path": "src/mame/files.ts",
+      "symbol": "boundedBytes",
+      "classification": "UPSTREAM_LOADER",
+      "reason": "Bounds the one Host-generated parent or BIOS bundle response before unzip, without storing a second game-content cache.",
+      "ownerStage": "S21",
+      "tests": [
+        "runtime:src/mame/files.test.ts"
+      ]
+    },
+    {
       "id": "R-NCD",
       "repository": "runtime",
       "path": "src/providers/emulatorjs/neocd-range.ts",

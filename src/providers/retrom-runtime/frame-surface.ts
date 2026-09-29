@@ -19,6 +19,7 @@ export function installRuntimeFrameSurface(
   frameWindow: Window,
   getCanvas: () => HTMLCanvasElement | null,
   ownsCanvasLayout: () => boolean = () => false,
+  getDisplayAspectRatio: () => number | null = () => null,
 ): RuntimeFrameSurface {
   const runtimeWindow = frameWindow as RuntimeFrameWindow;
   const frameDocument = frameWindow.document;
@@ -35,7 +36,7 @@ export function installRuntimeFrameSurface(
     if (ownsCanvasLayout()) {return;}
     const canvas = getCanvas() ?? frameDocument.querySelector<HTMLCanvasElement>("canvas");
     if (!canvas) {return;}
-    fitCanvasToViewport(canvas, frameWindow.innerWidth, frameWindow.innerHeight);
+    fitCanvasToViewport(canvas, frameWindow.innerWidth, frameWindow.innerHeight, getDisplayAspectRatio());
   };
   const mutationObserver = new runtimeWindow.MutationObserver(refresh);
   mutationObserver.observe(frameDocument.documentElement, {
@@ -66,10 +67,12 @@ function fitCanvasToViewport(
   canvas: HTMLCanvasElement,
   viewportWidth: number,
   viewportHeight: number,
+  aspectRatio: number | null,
 ) {
   if (![viewportWidth, viewportHeight, canvas.width, canvas.height]
     .every((value) => Number.isFinite(value) && value > 0)) {return;}
-  const contentRatio = canvas.width / canvas.height;
+  const contentRatio = aspectRatio !== null && Number.isFinite(aspectRatio) && aspectRatio > 0
+    ? aspectRatio : canvas.width / canvas.height;
   const viewportRatio = viewportWidth / viewportHeight;
   const width = contentRatio >= viewportRatio ? viewportWidth : viewportHeight * contentRatio;
   const height = contentRatio >= viewportRatio ? viewportWidth / contentRatio : viewportHeight;

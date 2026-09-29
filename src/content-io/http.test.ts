@@ -22,6 +22,21 @@ const read = (result: Response, input = source(), object = state()) => fetchRang
   {fetch: async () => result});
 afterEach(() => vi.useRealTimers());
 
+it.each(["br", "gzip"])("accepts browser-decoded %s only for fully hashed whole core assets", async (encoding) => {
+  const input = source({purpose: "CORE_ASSET", etagPolicy: "NONE_FULL_SHA256", transport: "WHOLE_ALLOWED"});
+  const fetch = async () => response({"Content-Encoding": encoding, "Content-Length": "19"}, 200);
+  expect(await hashStream(fetchWholeStream(input, state(), undefined, {fetch}))).toMatchObject({sizeBytes: 1});
+  await expect(hashStream(fetchWholeStream(source({transport: "WHOLE_ALLOWED"}), state(), undefined, {fetch})))
+    .rejects.toThrow("CONTENT_IO_RANGE_INVALID");
+  await expect(read(response({"Content-Encoding": encoding}), source({purpose: "CORE_ASSET", etagPolicy: "IMMUTABLE_ASSET"})))
+    .rejects.toThrow("CONTENT_IO_RANGE_INVALID");
+  for (const body of [new Uint8Array(), new Uint8Array(2)]) {
+    await expect(hashStream(fetchWholeStream(input, state(), undefined,
+      {fetch: async () => response({"Content-Encoding": encoding, "Content-Length": "19"}, 200, body)})))
+      .rejects.toThrow("CONTENT_IO_LENGTH_MISMATCH");
+  }
+});
+
 it("[IO-14] UNIT/transport rejects missing strong ETag before accepting project bytes", async () => {
   const result = response({ETag: null}), getReader = vi.spyOn(result.body!, "getReader");
   await expect(read(result, source({identity: {kind: "INDEX_ENTRY", projectDigest: sha, logicalPath: "game.dat"}, etagPolicy: "PIN_STRONG"})))

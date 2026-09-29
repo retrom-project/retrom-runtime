@@ -74,6 +74,15 @@ export function createContentHasher() {
   const hash = sha256.create();
   return {update: (bytes: Uint8Array) => {hash.update(bytes);}, digest: () => bytesToHex(hash.digest()), destroy: () => hash.destroy()};
 }
+/** Native SHA-256 avoids a long JavaScript loop for fully materialized assets. */
+export async function hashBytes(bytes: Uint8Array<ArrayBuffer>): Promise<string> {
+  try {
+    if (globalThis.crypto?.subtle) {
+      return bytesToHex(new Uint8Array(await globalThis.crypto.subtle.digest("SHA-256", bytes)));
+    }
+  } catch { /* Keep full verification when WebCrypto cannot digest this buffer. */ }
+  return bytesToHex(sha256(bytes));
+}
 export async function hashStream(stream: AsyncIterable<Uint8Array>, consume?: (chunk: Uint8Array) => Promise<void>) {
   const hash = createContentHasher();
   let sizeBytes = 0;

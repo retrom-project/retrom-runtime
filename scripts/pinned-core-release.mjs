@@ -2,7 +2,7 @@ import {mkdir, writeFile} from "node:fs/promises";
 import {sha256} from "./provider-sources.mjs";
 
 export function usesPinnedCoreAssets(id) {
-  return ["np2kai", "px68k", "tyranoscript", "openbor", "gbe_plus", "nxengine", "ppsspp"].includes(id);
+  return ["np2kai", "px68k", "tyranoscript", "openbor", "gbe_plus", "nxengine", "ppsspp", "mame"].includes(id);
 }
 export async function stagePinnedCoreIfNeeded(release, metadata, download, stage) {
   if (!usesPinnedCoreAssets(release.id)) {return false;}

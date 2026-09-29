@@ -43,3 +43,12 @@ it.each(["digest", "extra", "abi"])("rejects %s mismatches before a candidate ca
   }
   await expect(stageCoreDevelopmentInput(source, f.input, f.stage)).rejects.toThrow("CORE_CANDIDATE_INVALID");
 });
+
+it("admits a bounded family package while rejecting a thirteenth asset and duplicate identities", () => {
+  const assets = [...source.assets, ...Array.from({length: 10}, (_, i) => ({
+    filename: `family-${i}.wasm`, output: `runtime/px68k/family-${i}.wasm`, maxSizeBytes: 32,
+  }))];
+  expect(validCoreDevelopmentInput({...source, assets})).toBe(true);
+  expect(validCoreDevelopmentInput({...source, assets: [...assets, {...assets[2], filename: "extra.wasm", output: "runtime/px68k/extra.wasm"}]})).toBe(false);
+  expect(validCoreDevelopmentInput({...source, assets: [source.assets[0], source.assets[1], source.assets[0]]})).toBe(false);
+});

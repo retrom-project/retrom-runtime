@@ -5,6 +5,7 @@ export const contentBoundaries = Object.freeze({
   "easyrpg-loader": "src/easyrpg/adapter.ts",
   "j2me-loader": "src/j2me/adapter.ts",
   "emulatorjs-loader": "src/providers/emulatorjs/provider-runtime.ts",
+  "mame-loader": "src/mame/files.ts",
 });
 export function rangePolicy(bridge: Exclude<ManagedInputPolicyV1["bridge"], "NONE">, maxFileBytes: number,
   overrides: Partial<Pick<ManagedInputPolicyV1, "contentLengthPolicy" | "writes">> = {}): ManagedInputPolicyV1 {

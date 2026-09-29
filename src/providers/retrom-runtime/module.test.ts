@@ -13,6 +13,24 @@ beforeEach(() => {vi.mocked(mountTargetAdapter).mockReset();});
 afterEach(() => {document.body.replaceChildren(); vi.useRealTimers();});
 
 describe("retrom-runtime Provider Module V1", () => {
+  it("fits a non-square-pixel core to its display aspect without changing its frame buffer", async () => {
+    const frame = document.createElement("iframe"); document.body.append(frame);
+    const realm = frame.contentWindow!;
+    const canvas = realm.document.createElement("canvas"); canvas.width = 560; canvas.height = 192;
+    const adapter = Object.assign(adapterFixture({getCanvas: () => canvas}), {getDisplayAspectRatio: () => 4 / 3});
+    vi.mocked(mountTargetAdapter).mockImplementation(async (_request, target) => {target.append(canvas); return adapter;});
+    const host = hostFixture({mountFrame: vi.fn(async () => ({contentWindow: realm, element: frame, origin: location.origin}))});
+    const player = createRetromRuntimePlayer(wasmEnvelope(), host, {});
+    try {
+      await player.mount(document.createElement("div"));
+      for (const [width, height, expectedWidth, expectedHeight] of [[1000, 900, 1000, 750], [600, 600, 600, 450], [1200, 900, 1200, 900]]) {
+        Object.defineProperties(realm, {innerWidth: {configurable: true, value: width}, innerHeight: {configurable: true, value: height}});
+        realm.dispatchEvent(new Event("resize"));
+        expect(canvas.style.width).toBe(`${expectedWidth}px`); expect(canvas.style.height).toBe(`${expectedHeight}px`);
+        expect([canvas.width, canvas.height]).toEqual([560, 192]);
+      }
+    } finally {await player.exit();}
+  });
   it("leaves a core-owned responsive canvas untouched across buffer and viewport resizes", async () => {
     const frame = document.createElement("iframe"); document.body.append(frame);
     const realm = frame.contentWindow!;

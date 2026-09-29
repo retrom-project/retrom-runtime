@@ -1,6 +1,13 @@
 // @vitest-environment node
 import {expect, it, vi} from "vitest";
-import {iterateExact, readExact} from "./bounded-stream.js";
+import {hashBytes, iterateExact, readExact} from "./bounded-stream.js";
+it("keeps complete SHA-256 verification when native digest is unavailable", async () => {
+  const bytes = Uint8Array.of(1, 2, 3), digest = vi.spyOn(crypto.subtle, "digest").mockRejectedValueOnce(new Error("unavailable"));
+  try {
+    expect(await hashBytes(bytes)).toBe("039058c6f2c0cb492c533b0a4d14ef77cc0f78abccced5287d84a1a2011cfb81");
+    expect(digest).toHaveBeenCalledOnce();
+  } finally {digest.mockRestore();}
+});
 it("[IO-13] UNIT/transport preserves the first failure when cancel itself fails", async () => {
   const body = new ReadableStream<Uint8Array>({start(controller) {controller.enqueue(new Uint8Array(2));}, cancel() {throw new Error("cancel failure");}});
   await expect(readExact(body, 1)).rejects.toThrow("CONTENT_IO_LENGTH_MISMATCH"); expect(body.locked).toBe(false);

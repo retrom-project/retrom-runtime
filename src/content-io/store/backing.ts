@@ -1,6 +1,7 @@
 import {sha256} from "@noble/hashes/sha2.js";
 import {bytesToHex} from "@noble/hashes/utils.js";
 import {checkSignal} from "../abort.js";
+import {hashBytes} from "../bounded-stream.js";
 import type {BlockObject} from "../block-pool.js";
 import {ContentIOError, fail} from "../errors.js";
 import {BLOCK_BYTES, integer, isDigest} from "../source.js";
@@ -39,20 +40,23 @@ export class PersistentBacking {
         return this.corrupt(current, receipt);
       }
       checkSignal(signal);
-      if (bytes.length !== receipt.length || localDigest(bytes) !== receipt.localSha256) {return this.corrupt(current, receipt);}
+      if (bytes.length !== receipt.length) {return this.corrupt(current, receipt);}
+      const digest = await hashBytes(bytes); checkSignal(signal);
+      if (digest !== receipt.localSha256) {return this.corrupt(current, receipt);}
       return bytes;
     });
   }
   async write(index: number, bytes: Uint8Array<ArrayBuffer>, signal: AbortSignal, provenance: BlockReceipt["provenance"] = "RANGE_VALIDATED"): Promise<void> {
     const {locks, metadata, data} = this.resources;
-    const digest = localDigest(bytes);
+    const digest = await hashBytes(bytes); checkSignal(signal);
     await locks.data(this.key, signal, async () => {
       const current = requireGeneration(await metadata.generation(this.key, this.generation)); this.matchPin(current);
       const found = await metadata.block(this.key, this.generation, index);
       const existing = found && this.validReceipt(found, index, current) ? found : undefined;
       if (existing && this.validReceipt(existing, index, current)) {
         const actual = await data.read(existing, current.state === "COMPLETE"); checkSignal(signal);
-        if (localDigest(actual) !== existing.localSha256) {await this.corrupt(current, existing); return;}
+        const actualDigest = await hashBytes(actual); checkSignal(signal);
+        if (actualDigest !== existing.localSha256) {await this.corrupt(current, existing); return;}
         if (existing.localSha256 !== digest) {fail("IDENTITY_CHANGED");}
         if (current.state === "COMPLETE" || existing.provenance !== "STAGED_FULL" || provenance === "STAGED_FULL") {return;}
       } else if (current.state === "COMPLETE") {fail("IDENTITY_CHANGED");}

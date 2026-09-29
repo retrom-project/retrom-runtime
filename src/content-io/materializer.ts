@@ -4,7 +4,7 @@ import type {MaterializationReceiptV1, MaterializeRequestV1, MaterializeResultV1
 import {PersistentBlobSink, BlobReplayRequired} from "./blob-sink.js";
 import {checkSignal, combineSignals} from "./abort.js";
 import {BlockPool, type BlockObject} from "./block-pool.js";
-import {createContentHasher} from "./bounded-stream.js";
+import {createContentHasher, hashBytes} from "./bounded-stream.js";
 import {ContentIOError, fail} from "./errors.js";
 import {SerialGate} from "./gate.js";
 import {fetchWholeStream} from "./http.js";
@@ -50,9 +50,10 @@ export class ContentMaterializer {
   }
   private async run(object: BlockObject, request: MaterializeRequestV1, signal: AbortSignal, progress: ContentProgress, recovery?: "BLOCKS" | "WHOLE"): Promise<MaterializeResultV1> {
     const size = object.source.sizeBytes, sink = await this.sink(object,request,signal,!!recovery);
-    const hash = createContentHasher(); let written = 0;
+    const nativeBytesHash = request.kind === "BYTES" && size > 10 * 1024 * 1024;
+    const hash = nativeBytesHash ? null : createContentHasher(); let written = 0;
     const consume = async (chunk: Uint8Array<ArrayBuffer>) => {
-      this.pool.check(object); checkSignal(signal); hash.update(chunk);
+      this.pool.check(object); checkSignal(signal); hash?.update(chunk);
       try {await (request.kind === "SINK" ? sinkOperation(()=>sink.write(written,chunk),signal) : sink.write(written,chunk));} catch (cause) {checkSignal(signal);if(request.kind!=="SINK"){throw cause;}throw new ContentIOError("WORKSPACE_UNAVAILABLE", {cause});}
       written += chunk.length; progress.position(written);
     };
@@ -60,8 +61,9 @@ export class ContentMaterializer {
       if (recovery === "BLOCKS") {await this.blocks(object,signal,consume);}
       else {await this.acquire(object, signal, consume, recovery === "WHOLE");}
       this.pool.check(object); checkSignal(signal);
-      const digest = hash.digest();
       if (written !== size) {fail("LENGTH_MISMATCH");}
+      const digest = nativeBytesHash ? await hashBytes((sink as BytesSink).viewForDigest()) : hash!.digest();
+      checkSignal(signal);
       if (object.source.identity.kind === "FILE_SHA256" && digest !== object.source.identity.sha256) {fail("CHECKSUM_MISMATCH");}
       const receipt: MaterializationReceiptV1 = {objectKey: object.key, storageGeneration: this.store.persistent(object)?.generation ?? object.state.generation,
         sizeBytes: size, localSha256: digest, assurance: object.source.identity.kind === "FILE_SHA256" ? "EXPECTED_SHA256" : "TRUSTED_IMMUTABLE_INDEX", pinnedEtag: object.state.pinnedEtag};
@@ -73,7 +75,7 @@ export class ContentMaterializer {
       await sinkOperation(()=>sink.abort(signal.aborted ? "CANCELLED" : this.canRestart(object,error) ? "RESTART" : "FAILED"),new AbortController().signal).catch(() => {});
       if (error instanceof ContentIOError && error.scope === "OBJECT") {object.state.revoked = true; this.pool.cache.deletePrefix(`${object.key}:`);}
       throw error;
-    } finally {hash.destroy();}
+    } finally {hash?.destroy();}
   }
   private async sink(object: BlockObject, request: MaterializeRequestV1, signal: AbortSignal, recovery: boolean): Promise<MaterializeSinkV1> {
     if(request.kind === "SINK"){return await createRequiredSink(request.createSink,signal);}

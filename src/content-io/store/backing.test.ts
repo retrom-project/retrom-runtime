@@ -40,6 +40,11 @@ it("[IO-18] UNIT/published-corruption quarantines confirmed byte corruption", as
   await expect(backing.read(0, new AbortController().signal)).rejects.toThrow("IDENTITY_CHANGED");
   expect(update).toHaveBeenCalledOnce(); expect(corrupt).toHaveBeenCalledOnce();
 });
+it("verifies a cached block with native SHA-256 before returning it", async () => {
+  const {backing} = fixture(), digest = vi.spyOn(crypto.subtle, "digest");
+  await expect(backing.read(0, new AbortController().signal)).resolves.toEqual(Uint8Array.of(17, 31));
+  expect(digest).toHaveBeenCalledWith("SHA-256", expect.any(Uint8Array));
+});
 
 for (const invalid of [{etag: '"other"'}, {sourceAssurance: "FULL_SHA256" as const}, {commitRevision: 0}, {commitRevision: 2}]) {
   it(`[ST-07] UNIT/receipt rejects mismatched identity or uncommitted metadata ${JSON.stringify(invalid)}`, async () => {

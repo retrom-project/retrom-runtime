@@ -324,7 +324,7 @@
           ],
           "writeFormat": "gbe-pokemini-state-v1-storage-v1"
         },
-        "displayName": "Pokémon Mini (GBE+)",
+        "displayName": "Pok\u00e9mon Mini (GBE+)",
         "id": "gbe-pokemini",
         "inputs": [
           {
@@ -462,6 +462,489 @@
             "startupXp3Path"
           ],
           "type": "object"
+        }
+      },
+      {
+        "assetPaths": [
+          "assets/mame/mame-apple.wasm",
+          "assets/mame/mame-build.json",
+          "assets/mame/mame-common.mjs",
+          "assets/mame/mame-common.wasm"
+        ],
+        "capabilities": {
+          "checkpoint": true,
+          "discSwitch": false,
+          "frameCounter": true,
+          "frameMode": "SAME_ORIGIN_BLANK",
+          "inputFilter": true,
+          "nativeSettings": false,
+          "pause": true,
+          "requiresThreads": false,
+          "screenshot": true,
+          "standardGamepad": true,
+          "videoModes": [
+            "original",
+            "pixel",
+            "smooth"
+          ],
+          "volume": true
+        },
+        "checkpoint": {
+          "maxBytes": 67108864,
+          "readFormats": [
+            "mame-state-v1",
+            "mame-state-v1-storage-v1"
+          ],
+          "writeFormat": "mame-state-v1-storage-v1"
+        },
+        "displayName": "Apple II+ (MAME)",
+        "id": "mame-apple2",
+        "inputs": [
+          {
+            "role": "game",
+            "kind": "ROM_BLOB",
+            "cardinality": "ONE",
+            "optional": false
+          },
+          {
+            "role": "external",
+            "kind": "EXTERNAL_FILE_SET",
+            "cardinality": "ONE",
+            "optional": false
+          }
+        ],
+        "targetOptionsSchema": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {},
+          "required": []
+        }
+      },
+      {
+        "assetPaths": [
+          "assets/mame/mame-apple.wasm",
+          "assets/mame/mame-build.json",
+          "assets/mame/mame-common.mjs",
+          "assets/mame/mame-common.wasm"
+        ],
+        "capabilities": {
+          "checkpoint": true,
+          "discSwitch": false,
+          "frameCounter": true,
+          "frameMode": "SAME_ORIGIN_BLANK",
+          "inputFilter": true,
+          "nativeSettings": false,
+          "pause": true,
+          "requiresThreads": false,
+          "screenshot": true,
+          "standardGamepad": true,
+          "videoModes": [
+            "original",
+            "pixel",
+            "smooth"
+          ],
+          "volume": true
+        },
+        "checkpoint": {
+          "maxBytes": 67108864,
+          "readFormats": [
+            "mame-state-v1",
+            "mame-state-v1-storage-v1"
+          ],
+          "writeFormat": "mame-state-v1-storage-v1"
+        },
+        "displayName": "Apple IIe (MAME)",
+        "id": "mame-apple2e",
+        "inputs": [
+          {
+            "role": "game",
+            "kind": "ROM_BLOB",
+            "cardinality": "ONE",
+            "optional": false
+          },
+          {
+            "role": "external",
+            "kind": "EXTERNAL_FILE_SET",
+            "cardinality": "ONE",
+            "optional": false
+          }
+        ],
+        "targetOptionsSchema": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {},
+          "required": []
+        }
+      },
+      {
+        "assetPaths": [
+          "assets/mame/mame-arcade_alliedleisure.wasm",
+          "assets/mame/mame-arcade_alpha.wasm",
+          "assets/mame/mame-arcade_arcadia.wasm",
+          "assets/mame/mame-arcade_atari.wasm",
+          "assets/mame/mame-arcade_atlus.wasm",
+          "assets/mame/mame-arcade_bally.wasm",
+          "assets/mame/mame-arcade_capcom.wasm",
+          "assets/mame/mame-arcade_cinematronics.wasm",
+          "assets/mame/mame-arcade_comad.wasm",
+          "assets/mame/mame-arcade_dataeast.wasm",
+          "assets/mame/mame-arcade_ddr.wasm",
+          "assets/mame/mame-arcade_dec.wasm",
+          "assets/mame/mame-arcade_dooyong.wasm",
+          "assets/mame/mame-arcade_dynax.wasm",
+          "assets/mame/mame-arcade_edevices.wasm",
+          "assets/mame/mame-arcade_eolith.wasm",
+          "assets/mame/mame-arcade_excellent.wasm",
+          "assets/mame/mame-arcade_exidy.wasm",
+          "assets/mame/mame-arcade_f32.wasm",
+          "assets/mame/mame-arcade_fuuki.wasm",
+          "assets/mame/mame-arcade_gaelco.wasm",
+          "assets/mame/mame-arcade_galaxian.wasm",
+          "assets/mame/mame-arcade_gametron.wasm",
+          "assets/mame/mame-arcade_gottlieb.wasm",
+          "assets/mame/mame-arcade_ice.wasm",
+          "assets/mame/mame-arcade_igs.wasm",
+          "assets/mame/mame-arcade_irem.wasm",
+          "assets/mame/mame-arcade_itech.wasm",
+          "assets/mame/mame-arcade_jaleco.wasm",
+          "assets/mame/mame-arcade_kaneko.wasm",
+          "assets/mame/mame-arcade_konami.wasm",
+          "assets/mame/mame-arcade_meadows.wasm",
+          "assets/mame/mame-arcade_metro.wasm",
+          "assets/mame/mame-arcade_midcoin.wasm",
+          "assets/mame/mame-arcade_midw8080.wasm",
+          "assets/mame/mame-arcade_misc.wasm",
+          "assets/mame/mame-arcade_model2.wasm",
+          "assets/mame/mame-arcade_modelracing.wasm",
+          "assets/mame/mame-arcade_namco.wasm",
+          "assets/mame/mame-arcade_nasco.wasm",
+          "assets/mame/mame-arcade_nichibutsu.wasm",
+          "assets/mame/mame-arcade_nintendo.wasm",
+          "assets/mame/mame-arcade_nix.wasm",
+          "assets/mame/mame-arcade_nmk.wasm",
+          "assets/mame/mame-arcade_novag.wasm",
+          "assets/mame/mame-arcade_olympia.wasm",
+          "assets/mame/mame-arcade_omori.wasm",
+          "assets/mame/mame-arcade_orca.wasm",
+          "assets/mame/mame-arcade_pacific.wasm",
+          "assets/mame/mame-arcade_phoenix.wasm",
+          "assets/mame/mame-arcade_playmark.wasm",
+          "assets/mame/mame-arcade_promat.wasm",
+          "assets/mame/mame-arcade_psikyo.wasm",
+          "assets/mame/mame-arcade_ramtek.wasm",
+          "assets/mame/mame-arcade_rare.wasm",
+          "assets/mame/mame-arcade_sanritsu.wasm",
+          "assets/mame/mame-arcade_sega.wasm",
+          "assets/mame/mame-arcade_seibu.wasm",
+          "assets/mame/mame-arcade_seta.wasm",
+          "assets/mame/mame-arcade_sigma.wasm",
+          "assets/mame/mame-arcade_skeleton.wasm",
+          "assets/mame/mame-arcade_snk.wasm",
+          "assets/mame/mame-arcade_sony.wasm",
+          "assets/mame/mame-arcade_stern.wasm",
+          "assets/mame/mame-arcade_suna.wasm",
+          "assets/mame/mame-arcade_sunelectronics.wasm",
+          "assets/mame/mame-arcade_taito.wasm",
+          "assets/mame/mame-arcade_tatsumi.wasm",
+          "assets/mame/mame-arcade_tch.wasm",
+          "assets/mame/mame-arcade_tecfri.wasm",
+          "assets/mame/mame-arcade_technos.wasm",
+          "assets/mame/mame-arcade_tecmo.wasm",
+          "assets/mame/mame-arcade_toaplan.wasm",
+          "assets/mame/mame-arcade_unico.wasm",
+          "assets/mame/mame-arcade_universal.wasm",
+          "assets/mame/mame-arcade_upl.wasm",
+          "assets/mame/mame-arcade_valadon.wasm",
+          "assets/mame/mame-arcade_videogames.wasm",
+          "assets/mame/mame-arcade_vsystem.wasm",
+          "assets/mame/mame-arcade_williams.wasm",
+          "assets/mame/mame-arcade_yachiyo.wasm",
+          "assets/mame/mame-arcade_yunsung.wasm",
+          "assets/mame/mame-arcade_zaccaria.wasm",
+          "assets/mame/mame-build.json",
+          "assets/mame/mame-common.mjs",
+          "assets/mame/mame-common.wasm",
+          "assets/mame/mame-pacman.wasm"
+        ],
+        "capabilities": {
+          "checkpoint": true,
+          "discSwitch": false,
+          "frameCounter": true,
+          "frameMode": "SAME_ORIGIN_BLANK",
+          "inputFilter": true,
+          "nativeSettings": false,
+          "pause": true,
+          "requiresThreads": false,
+          "screenshot": true,
+          "standardGamepad": true,
+          "videoModes": [
+            "original",
+            "pixel",
+            "smooth"
+          ],
+          "volume": true
+        },
+        "checkpoint": {
+          "maxBytes": 67108864,
+          "readFormats": [
+            "mame-state-v1",
+            "mame-state-v1-storage-v1"
+          ],
+          "writeFormat": "mame-state-v1-storage-v1"
+        },
+        "displayName": "MAME Current Arcade",
+        "id": "mame-arcade",
+        "inputs": [
+          {
+            "role": "game",
+            "kind": "ROM_BLOB",
+            "cardinality": "ONE",
+            "optional": false
+          },
+          {
+            "role": "parent",
+            "kind": "PARENT_ARCHIVE",
+            "cardinality": "ONE",
+            "optional": true
+          },
+          {
+            "role": "bios",
+            "kind": "BIOS_BUNDLE",
+            "cardinality": "ONE",
+            "optional": true
+          },
+          {
+            "role": "external",
+            "kind": "EXTERNAL_FILE_SET",
+            "cardinality": "ONE",
+            "optional": true
+          }
+        ],
+        "targetOptionsSchema": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "machine": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 32
+            }
+          },
+          "required": [
+            "machine"
+          ]
+        }
+      },
+      {
+        "assetPaths": [
+          "assets/mame/mame-acorn.wasm",
+          "assets/mame/mame-build.json",
+          "assets/mame/mame-common.mjs",
+          "assets/mame/mame-common.wasm"
+        ],
+        "capabilities": {
+          "checkpoint": true,
+          "discSwitch": false,
+          "frameCounter": true,
+          "frameMode": "SAME_ORIGIN_BLANK",
+          "inputFilter": true,
+          "nativeSettings": false,
+          "pause": true,
+          "requiresThreads": false,
+          "screenshot": true,
+          "standardGamepad": true,
+          "videoModes": [
+            "original",
+            "pixel",
+            "smooth"
+          ],
+          "volume": true
+        },
+        "checkpoint": {
+          "maxBytes": 67108864,
+          "readFormats": [
+            "mame-state-v1",
+            "mame-state-v1-storage-v1"
+          ],
+          "writeFormat": "mame-state-v1-storage-v1"
+        },
+        "displayName": "Acorn Atom (MAME)",
+        "id": "mame-atom",
+        "inputs": [
+          {
+            "role": "game",
+            "kind": "ROM_BLOB",
+            "cardinality": "ONE",
+            "optional": false
+          },
+          {
+            "role": "external",
+            "kind": "EXTERNAL_FILE_SET",
+            "cardinality": "ONE",
+            "optional": false
+          }
+        ],
+        "targetOptionsSchema": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {},
+          "required": []
+        }
+      },
+      {
+        "assetPaths": [
+          "assets/mame/mame-coleco.wasm",
+          "assets/mame/mame-build.json",
+          "assets/mame/mame-common.mjs",
+          "assets/mame/mame-common.wasm"
+        ],
+        "capabilities": {
+          "checkpoint": true,
+          "discSwitch": false,
+          "frameCounter": true,
+          "frameMode": "SAME_ORIGIN_BLANK",
+          "inputFilter": true,
+          "nativeSettings": false,
+          "pause": true,
+          "requiresThreads": false,
+          "screenshot": true,
+          "standardGamepad": true,
+          "videoModes": [
+            "original",
+            "pixel",
+            "smooth"
+          ],
+          "volume": true
+        },
+        "checkpoint": {
+          "maxBytes": 67108864,
+          "readFormats": [
+            "mame-state-v1",
+            "mame-state-v1-storage-v1"
+          ],
+          "writeFormat": "mame-state-v1-storage-v1"
+        },
+        "displayName": "ColecoVision (MAME)",
+        "id": "mame-coleco",
+        "inputs": [
+          {
+            "role": "game",
+            "kind": "ROM_BLOB",
+            "cardinality": "ONE",
+            "optional": false
+          },
+          {
+            "role": "external",
+            "kind": "EXTERNAL_FILE_SET",
+            "cardinality": "ONE",
+            "optional": false
+          }
+        ],
+        "targetOptionsSchema": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {},
+          "required": []
+        }
+      },
+      {
+        "assetPaths": [
+          "assets/mame/mame-build.json",
+          "assets/mame/mame-common.mjs",
+          "assets/mame/mame-common.wasm",
+          "assets/mame/mame-vintage.wasm"
+        ],
+        "capabilities": {
+          "checkpoint": true,
+          "discSwitch": false,
+          "frameCounter": true,
+          "frameMode": "SAME_ORIGIN_BLANK",
+          "inputFilter": true,
+          "nativeSettings": false,
+          "pause": true,
+          "requiresThreads": false,
+          "screenshot": true,
+          "standardGamepad": true,
+          "videoModes": [
+            "original",
+            "pixel",
+            "smooth"
+          ],
+          "volume": true
+        },
+        "checkpoint": {
+          "maxBytes": 67108864,
+          "readFormats": [
+            "mame-state-v1",
+            "mame-state-v1-storage-v1"
+          ],
+          "writeFormat": "mame-state-v1-storage-v1"
+        },
+        "displayName": "Casio PV-1000 (MAME)",
+        "id": "mame-pv1000",
+        "inputs": [
+          {
+            "role": "game",
+            "kind": "ROM_BLOB",
+            "cardinality": "ONE",
+            "optional": false
+          }
+        ],
+        "targetOptionsSchema": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {},
+          "required": []
+        }
+      },
+      {
+        "assetPaths": [
+          "assets/mame/mame-build.json",
+          "assets/mame/mame-common.mjs",
+          "assets/mame/mame-common.wasm",
+          "assets/mame/mame-sg1000.wasm"
+        ],
+        "capabilities": {
+          "checkpoint": true,
+          "discSwitch": false,
+          "frameCounter": true,
+          "frameMode": "SAME_ORIGIN_BLANK",
+          "inputFilter": true,
+          "nativeSettings": false,
+          "pause": true,
+          "requiresThreads": false,
+          "screenshot": true,
+          "standardGamepad": true,
+          "videoModes": [
+            "original",
+            "pixel",
+            "smooth"
+          ],
+          "volume": true
+        },
+        "checkpoint": {
+          "maxBytes": 67108864,
+          "readFormats": [
+            "mame-state-v1",
+            "mame-state-v1-storage-v1"
+          ],
+          "writeFormat": "mame-state-v1-storage-v1"
+        },
+        "displayName": "SG-1000 (MAME)",
+        "id": "mame-sg1000",
+        "inputs": [
+          {
+            "role": "game",
+            "kind": "ROM_BLOB",
+            "cardinality": "ONE",
+            "optional": false
+          }
+        ],
+        "targetOptionsSchema": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {},
+          "required": []
         }
       },
       {
@@ -1290,7 +1773,7 @@
           "writeFormat": "samcoupe-disk-save-v1-storage-v1",
           "semantics": "GAME_SAVE"
         },
-        "displayName": "SAM Coupé (SamCoupeWeb)",
+        "displayName": "SAM Coup\u00e9 (SamCoupeWeb)",
         "id": "samcoupe",
         "inputs": [
           {

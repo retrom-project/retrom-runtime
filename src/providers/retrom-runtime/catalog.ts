@@ -1,3 +1,5 @@
+import {mameAdapter, mameAppleTarget, mameApple2eTarget, mameAtomTarget, mameColecoTarget,
+  mamePV1000Target, mameSG1000Target, mameArcadeTarget} from "./mame-declaration.js";
 import {providerVersion} from "../../provider/version.js";
 import {eagerPolicy, runtimeGamePolicy} from "../../provider/content-policies.js";
 import jsbeebSiteAssets from "../../jsbeeb/site-assets.json" with {type: "json"};
@@ -43,6 +45,7 @@ const isolatedCapabilities = capabilities(true, true, true);
 const wasm4Capabilities = capabilities(true, true, false);
 
 const adapters = [
+  mameAdapter,
   defineAdapter({id: "nxengine-web", kind: "NXENGINE_WEB", abi: "nxengine-host-v1",
     capabilities: capabilities(true, true, true),
     checkpoint: {writeFormat: "nxengine-game-save-v1", readFormats: ["nxengine-game-save-v1"], semantics: "GAME_SAVE"}}),
@@ -135,6 +138,8 @@ const targets = [
     ["assets/kirikiri/assets.zip", "assets/kirikiri/index.js", "assets/kirikiri/index.wasm",
       "assets/kirikiri/vlfs.js"],
   ),
+  mameAppleTarget, mameApple2eTarget, mameArcadeTarget, mameAtomTarget, mameColecoTarget,
+  mamePV1000Target, mameSG1000Target,
   target("msx-webmsx", "MSX (WebMSX)", "webmsx-web", noOptionsSchema, false, "SAME_ORIGIN_BLANK", "ROM_BLOB",
     32 * 1024 * 1024, ["assets/webmsx/webmsx.js"]),
   np2kaiTarget,

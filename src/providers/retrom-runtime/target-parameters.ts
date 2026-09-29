@@ -294,3 +294,29 @@ export function nxengine(envelope: LaunchEnvelopeV1, assetIndex: AssetIndexV1): 
   const game = resource(envelope, "game", "FILE_TREE");
   return {projectIndexUrl: game.indexUrl, contentDigest: game.contentDigest, runtimeBaseUrl: assetBase(envelope, "nxengine"), assetIndex};
 }
+
+export function mame(envelope: LaunchEnvelopeV1): import("../../mame/core.js").MameParameters {
+  const target = envelope.runtime.targetId;
+  if (target === "mame-arcade") {
+    return mameArcade(envelope);
+  }
+  const machine = target === "mame-apple2" ? "apple2p" : target === "mame-apple2e" ? "apple2e" :
+    target === "mame-atom" ? "atom" : target === "mame-pv1000" ? "pv1000" :
+    target === "mame-sg1000" ? "sg1000" : target === "mame-coleco" ? "coleco" : null;
+  if (!machine) {invalidRequest();}
+  const game = resource(envelope, "game", "ROM_BLOB");
+  const bios = machine === "pv1000" || machine === "sg1000" ? [] : resource(envelope, "external", "EXTERNAL_FILE_SET").files;
+  return {machine, game, bios, runtimeBaseUrl: envelope.runtime.runtimeBaseUrl};
+}
+
+function mameArcade(envelope: LaunchEnvelopeV1): Extract<import("../../mame/core.js").MameParameters, {arcade: true}> {
+  const machine = envelope.targetOptions.machine;
+  if (typeof machine !== "string" || !/^[a-z0-9_]{1,32}$/u.test(machine)) {invalidRequest();}
+  const game = resource(envelope, "game", "ROM_BLOB");
+  const parent = optionalResource(envelope, "parent", "PARENT_ARCHIVE");
+  const bios = optionalResource(envelope, "bios", "BIOS_BUNDLE");
+  const external = optionalResource(envelope, "external", "EXTERNAL_FILE_SET");
+  if (bios && (bios.files.length !== 1 || bios.files[0].logicalName !== "bundle.zip")) {invalidRequest();}
+  return {machine, arcade: true, game, parent, bios: bios?.files[0] ?? null,
+    deviceBios: external?.files ?? [], runtimeBaseUrl: envelope.runtime.runtimeBaseUrl};
+}

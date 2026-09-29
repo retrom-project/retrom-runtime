@@ -122,7 +122,7 @@ export function targetEnvelope(targetId: string): LaunchEnvelopeV1 {
       contentDigest: digest, entryUrl: "https://runtime.test/__retrom/bootstrap",
       kind: "ISOLATED_WEB", ordinal: 0, origin: "https://runtime.test", role: "game",
     };
-  } else if (["apple2-apple2js", "bbc-jsbeeb", "samcoupe", "gbe-pokemini", "j2me", "tic80", "fake08", "flash-ruffle", "msx-webmsx", "openbor", "px68k", "np2kai-pc98"].includes(targetId)) {
+  } else if (["apple2-apple2js", "mame-apple2", "mame-apple2e", "mame-arcade", "mame-atom", "mame-coleco", "mame-pv1000", "mame-sg1000", "bbc-jsbeeb", "samcoupe", "gbe-pokemini", "j2me", "tic80", "fake08", "flash-ruffle", "msx-webmsx", "openbor", "px68k", "np2kai-pc98"].includes(targetId)) {
     resource = {kind: "ROM_BLOB", ordinal: 0, rangeRequired: false, role: "game",
       sha256: digest, sizeBytes: 128, url: targetId === "apple2-apple2js" ? "/runtime/content/game/game.dsk" : "/runtime/content/game/game.jar"};
   } else if (targetId === "wasm4") {
@@ -136,15 +136,21 @@ export function targetEnvelope(targetId: string): LaunchEnvelopeV1 {
       kind: "FILE_TREE", ordinal: 0, role: "game",
     };
   }
-  const targetOptions: LaunchEnvelopeV1["targetOptions"] = targetId === "onscripter-yuri"
-      ? {scriptEncoding: "utf8"}
-      : targetId === "kirikiri2-kag"
-        ? {startupXp3Path: null}
-        : targetId === "scummvm"
-          ? {engineId: "sky", gameId: "sky", root: "", language: "en", platform: "pc", extra: "", guiOptions: "", filename: null}
-          : {};
+  const targetOptions = fixtureTargetOptions(targetId);
   return {
-    resources: targetId === "apple2-apple2js" ? [resource, {
+    resources: ["mame-apple2", "mame-apple2e", "mame-atom", "mame-coleco"].includes(targetId) ? [resource, {
+      kind: "EXTERNAL_FILE_SET", role: "external", ordinal: 0,
+      files: targetId === "mame-atom" ? [
+        {logicalName: "abasic.ic20", virtualPath: "content/atom/abasic.ic20", sha256: digest, sizeBytes: 8192, url: "/runtime/content/bios/abasic.ic20"},
+        {logicalName: "afloat.ic21", virtualPath: "content/atom/afloat.ic21", sha256: digest, sizeBytes: 4096, url: "/runtime/content/bios/afloat.ic21"},
+      ] : targetId === "mame-coleco" ? [
+        {logicalName: "313_10031-4005_73108a.u2", virtualPath: "content/coleco/313_10031-4005_73108a.u2",
+          sha256: digest, sizeBytes: 8192, url: "/runtime/content/bios/313_10031-4005_73108a.u2"},
+      ] : targetId === "mame-apple2e" ? [
+        {logicalName: "342-0133-a.chr", virtualPath: "content/apple2e/342-0133-a.chr",
+          sha256: digest, sizeBytes: 4096, url: "/runtime/content/bios/342-0133-a.chr"},
+      ] : [{logicalName: "341-0011.d0", virtualPath: "content/apple2p/341-0011.d0", sha256: digest, sizeBytes: 2048, url: "/runtime/content/bios/341-0011.d0"}],
+    }] : targetId === "apple2-apple2js" ? [resource, {
       kind: "EXTERNAL_FILE_SET", role: "external", ordinal: 0,
       files: [
         {logicalName: "AppleIIe.rom", virtualPath: "roms/AppleIIe.rom", sizeBytes: 16384},
@@ -191,6 +197,16 @@ export function targetEnvelope(targetId: string): LaunchEnvelopeV1 {
     },
     targetOptions,
   };
+}
+
+function fixtureTargetOptions(targetId: string): LaunchEnvelopeV1["targetOptions"] {
+  if (targetId === "onscripter-yuri") {return {scriptEncoding: "utf8"};}
+  if (targetId === "kirikiri2-kag") {return {startupXp3Path: null};}
+  if (targetId === "scummvm") {
+    return {engineId: "sky", gameId: "sky", root: "", language: "en", platform: "pc", extra: "", guiOptions: "", filename: null};
+  }
+  if (targetId === "mame-arcade") {return {machine: "mspacman"};}
+  return {};
 }
 
 export function gamepad() {

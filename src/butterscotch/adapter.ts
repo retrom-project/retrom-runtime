@@ -6,6 +6,8 @@ import { prepareButterscotchProject } from "./project-store.js";
 import { createButterscotchAudio } from "./audio.js";
 
 type HostMessage = {
+  buffer?: SharedArrayBuffer;
+  offset?: number;
   available?: boolean;
   bytes?: Uint8Array;
   code?: string;
@@ -90,6 +92,7 @@ export async function mountButterscotch(
   let checkpointAvailable = false;
   let checkpointStatus = 1;
   let exited = false;
+  let paused = false;
   let exitReported = false;
   let gamepadFrame = 0;
   const pollGamepadFrame = () => {
@@ -98,8 +101,13 @@ export async function mountButterscotch(
     gamepadFrame = frameWindow.requestAnimationFrame(pollGamepadFrame);
   };
 
+  const connectContent = (message: HostMessage) => {
+    try {project!.connect(message.buffer!,message.offset!);}
+    catch(error){ready.reject(error as Error);content?.onFailure?.(error as Error);}
+  };
   const onMessage = (event: MessageEvent<HostMessage>) => {
     const message = event.data;
+    if (message.type === "CONTENT_READY") {connectContent(message);return;}
     if (message.type === "AUDIO") {if (message.samples) {audio?.enqueue(message.samples);} return;}
     if (message.type === "runnerReady") {ready.resolve(); return;}
     if (message.type === "runnerExit") {
@@ -126,8 +134,19 @@ export async function mountButterscotch(
   worker.addEventListener("error", onError);
   const command = createCommandSender(worker, pending);
   const focusCanvas = () => {canvas.focus({ preventScroll: true }); void audio?.resume();};
-  const onKeyDown = (event: KeyboardEvent) => {void audio?.resume(); sendKey(worker, pressedKeys, event, true);};
+  const releaseKeys = () => {
+    for (const keyCode of pressedKeys) {worker.postMessage({ keyCode, pressed: false, type: "KEY" });}
+    pressedKeys.clear();
+  };
+  const onVisibilityChange = () => {if (frameWindow.document.visibilityState === "hidden") {releaseKeys();}};
+  const onKeyDown = (event: KeyboardEvent) => {
+    if (paused || exited) {return;}
+    void audio?.resume(); sendKey(worker, pressedKeys, event, true);
+  };
   const onKeyUp = (event: KeyboardEvent) => {sendKey(worker, pressedKeys, event, false);};
+  canvas.addEventListener("blur", releaseKeys);
+  frameWindow.addEventListener("blur", releaseKeys);
+  frameWindow.document.addEventListener("visibilitychange", onVisibilityChange);
   canvas.addEventListener("pointerdown", focusCanvas, true);
   canvas.addEventListener("keydown", onKeyDown);
   canvas.addEventListener("keyup", onKeyUp);
@@ -140,6 +159,8 @@ export async function mountButterscotch(
       audioEnabled: audio !== null,
       audioSampleRate: audio?.sampleRate ?? 48_000,
       gamePath: project.gamePath,
+      files: project.files,
+      persistentSaves: project.persistentSaves,
       moduleUrl: new URL("butterscotch.mjs", runtimeBase).href,
       restore: restorePayload !== null,
       savePath: project.savePath,
@@ -150,6 +171,9 @@ export async function mountButterscotch(
     if (restorePayload) {
       const restore = restorePayload.slice();
       await command("RESTORE", { bytes: restore }, [restore.buffer]);
+      // The runner must see connected devices on its first restored frame.
+      // Worker messages are ordered, so publish the whole snapshot before RESUME.
+      sendGamepads(frameWindow, worker);
       await command("RESUME");
     }
     const status = await command("STATUS");
@@ -158,28 +182,31 @@ export async function mountButterscotch(
     gamepadFrame = frameWindow.requestAnimationFrame(pollGamepadFrame);
     focusCanvas();
   } catch (error) {
-    cleanup();
+    await cleanup().catch(() => undefined);
     throw stableMountError(error);
   }
 
-  function cleanup() {
+  async function cleanup() {
     resizeObserver?.disconnect();
     frameWindow.removeEventListener("resize", fitCanvasToSurface);
     frameWindow.cancelAnimationFrame(gamepadFrame);
-    for (const keyCode of pressedKeys) {worker.postMessage({ keyCode, pressed: false, type: "KEY" });}
-    pressedKeys.clear();
+    releaseKeys();
     worker.postMessage({ gamepads: [], type: "GAMEPAD" });
     worker.removeEventListener("message", onMessage as EventListener);
     worker.removeEventListener("error", onError);
+    const released = project?.release();
     worker.terminate();
-    project?.release();
     void audio?.close();
     for (const waiter of pending.values()) {waiter.reject(new DOMException("Aborted", "AbortError") as unknown as Error);}
     pending.clear();
     canvas.removeEventListener("pointerdown", focusCanvas, true);
     canvas.removeEventListener("keydown", onKeyDown);
     canvas.removeEventListener("keyup", onKeyUp);
+    canvas.removeEventListener("blur", releaseKeys);
+    frameWindow.removeEventListener("blur", releaseKeys);
+    frameWindow.document.removeEventListener("visibilitychange", onVisibilityChange);
     target.replaceChildren();
+    await released;
   }
 
   return {
@@ -198,15 +225,21 @@ export async function mountButterscotch(
       checkpointAvailable = false;
       if (!exited) {await command("STOP").catch(() => undefined);}
       exited = true;
-      cleanup();
+      await cleanup();
     },
     getCanvas: () => canvas,
     getCheckpointAvailability: (): CheckpointAvailability => exited
       ? { available: false, blocker: "NOT_READY" }
       : checkpointAvailability(checkpointAvailable, checkpointStatus),
     getFrameCount: () => null,
-    pause: async () => {if (exited) {throw new Error("BUTTERSCOTCH_RUNTIME_INVALID_STATE");} await command("PAUSE"); await audio?.pause();},
-    resume: async () => {if (exited) {throw new Error("BUTTERSCOTCH_RUNTIME_INVALID_STATE");} await command("RESUME"); await audio?.resume();},
+    pause: async () => {
+      if (exited) {throw new Error("BUTTERSCOTCH_RUNTIME_INVALID_STATE");}
+      paused = true; releaseKeys(); await command("PAUSE"); await audio?.pause();
+    },
+    resume: async () => {
+      if (exited) {throw new Error("BUTTERSCOTCH_RUNTIME_INVALID_STATE");}
+      await command("RESUME"); paused = false; await audio?.resume();
+    },
     screenshot: async () => {
       if (exited) {throw new Error("BUTTERSCOTCH_RUNTIME_INVALID_STATE");}
       const bytes = copyBytes((await command("SCREENSHOT")).bytes);
@@ -238,12 +271,13 @@ function sendKey(worker: Worker, pressedKeys: Set<number>, event: KeyboardEvent,
 }
 
 function sendGamepads(frameWindow: Window, worker: Worker) {
+  // Browser array positions are device slots; compacting holes changes controller identity.
   const gamepads = typeof frameWindow.navigator.getGamepads === "function"
-    ? [...frameWindow.navigator.getGamepads()].filter((value): value is Gamepad => Boolean(value?.connected && value.mapping === "standard"))
-      .slice(0, 4).map((gamepad) => ({
+    ? Array.from(frameWindow.navigator.getGamepads()).slice(0, 4)
+      .map((gamepad) => gamepad?.connected && gamepad.mapping === "standard" ? ({
         axes: [...gamepad.axes].slice(0, 4),
-        buttons: [...gamepad.buttons].slice(0, 16).map((button) => button.value),
-      }))
+        buttons: [...gamepad.buttons].slice(0, 17).map((button) => button.value),
+      }) : null)
     : [];
   worker.postMessage({ gamepads, type: "GAMEPAD" });
 }

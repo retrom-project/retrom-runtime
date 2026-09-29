@@ -68,12 +68,19 @@ without inventing host-specific playback behavior. EasyRPG, mkxp, ONS and KiriKi
 or native save APIs and do not use these RPG Maker Web hooks.
 
 Butterscotch is an independent GameMaker runtime. Its host config points to an exact project index containing one
-root `data.win`. Files stream into an OPFS directory keyed by the host content digest, so later runtime instances
-reuse exact-sized bytes without another network transfer. The adapter renders on a centered 640×480
+root `data.win`. Read-only WasmFS files use Content I/O Range reads and persistent block reuse; only native saves
+optionally use OPFS. The adapter renders on a centered 640×480
 `OffscreenCanvas`, forwards keyboard and standard gamepad state, emits load progress, captures bounded direct
 checkpoints, restores them in a new Worker instance and reports a core-initiated exit through the common lifecycle.
 The Target accepts only GameMaker data versions supported by the pinned Butterscotch core and runtime states its
 checkpoint status reports as supported.
+The first four browser gamepad slots retain their indices, including disconnected or unsupported holes.
+Each input frame requires the core's atomic `setGamepads` export; the adapter and core must be released together.
+Game code owns controller selection and multiplayer behavior. The adapter does not merge devices or select by game name.
+Checkpoint restore submits the current complete gamepad snapshot before resuming the runner, so a delayed first
+animation-frame poll cannot make already connected controllers appear temporarily disconnected to restored game code.
+Keyboard holds are released when the canvas or window loses focus, the document becomes hidden, or the adapter
+pauses. A key released outside the game therefore cannot remain stuck; paused sessions ignore new key presses.
 
 TyranoScript projects use the engine already present in the imported game and run in a per-Launch isolated origin.
 The host injects the small, independently licensed bridge aggregated from the maintained fork; the aggregate runtime

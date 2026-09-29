@@ -4,6 +4,7 @@ import {beforeEach, describe, expect, it, vi} from "vitest";
 import {mountEasyRpg} from "../../easyrpg/adapter.js";
 import {mountMkxp} from "../../mkxp/adapter.js";
 import {mountNativeRpg} from "../../native-web/adapter.js";
+import {NativeContentActivity} from "../../native-web/startup-timeout.js";
 import {mountOnsYuri} from "../../ons/adapter.js";
 import {mountKirikiri2} from "../../kirikiri/adapter.js";
 import {mountButterscotch} from "../../butterscotch/adapter.js";
@@ -22,7 +23,7 @@ vi.mock("../../tyranoscript/adapter.js", () => ({mountTyranoScript: vi.fn()}));
 vi.mock("../../wasm4/adapter.js", () => ({mountWasm4: vi.fn()}));
 vi.mock("../../fantasy-console/adapter.js", () => ({mountFantasyConsole: vi.fn()}));
 vi.mock("../../native-web/content-bridge.js", () => ({
-  mountWithNativeContent: vi.fn((_envelope: unknown, _frame: unknown, _session: unknown, mount: () => Promise<unknown>) => mount()),
+  mountWithNativeContent: vi.fn((_envelope: unknown, _frame: unknown, _session: unknown, mount: (loading: NativeContentActivity) => Promise<unknown>) => mount(new NativeContentActivity())),
 }));
 beforeEach(() => {vi.clearAllMocks();});
 
@@ -86,13 +87,13 @@ describe("Provider to core-private parameters", () => {
   it.each([["rpgmaker-mv", "RPGMV"], ["rpgmaker-mz", "RPGMZ"]])(
     "passes an isolated RPG bridge %s only its own parameters", async (id, bridgeProfile) => {
       const request = targetEnvelope(id);
-      const options = context();
+      const options = {...context(), signal: new AbortController().signal};
       await mountTargetAdapter(request, document.createElement("div"), options);
       expect(mountNativeRpg).toHaveBeenCalledWith({
         sessionId: request.session.id, bridgeProfile, bootstrapTicket: "t".repeat(48),
         bootstrapUrl: "https://runtime.test/__retrom/bootstrap", cleanupUrl: "https://runtime.test/__retrom/cleanup",
         uniqueOrigin: "https://runtime.test",
-      }, options.frame, null, options.reportExitRequested);
+      }, options.frame, null, options.reportExitRequested, {loading: expect.any(NativeContentActivity), signal: options.signal});
     },
   );
 

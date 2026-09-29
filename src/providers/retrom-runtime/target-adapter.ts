@@ -73,8 +73,8 @@ export function mountTargetAdapter(
       {...contentOptions(context), signal: context.signal, onFailure: reportFailure});
   case "NATIVE_WEB":
     return mountWithNativeContent(envelope, requireFrame(context), requireContentSession(contentSession),
-      () => mountNativeRpg(parameters.nativeRpg(envelope, declaration.implementation), requireFrame(context),
-        restorePayload, reportExitRequested), context.signal, reportFailure);
+      loading => mountNativeRpg(parameters.nativeRpg(envelope, declaration.implementation), requireFrame(context),
+        restorePayload, reportExitRequested, {loading, signal: context.signal}), context.signal, reportFailure);
   case "ONS_YURI_WEB":
     return mountOnsYuri(parameters.ons(envelope), target, frameWindow, restorePayload, reportProgress, reportExitRequested,
       {...contentOptions(context), signal: context.signal, onFailure: reportFailure});

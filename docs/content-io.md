@@ -44,6 +44,25 @@ including files the core has not opened. Ordinary readers then use these local
 blocks without changing the native Content I/O ABI. Exiting or cancelling
 terminates the preparation worker; committed partial blocks remain reusable.
 
+MV/MZ engine readiness starts after this preparation. In both loading modes,
+the engine's 30-second readiness deadline runs only while no managed content
+read is pending. A new read suspends it; completion of the last concurrent read
+starts a fresh window. Content I/O retains ownership of read deadlines and
+failures. Metadata queries do not extend engine readiness. READY, abort and
+channel close release the activity subscription and timer; abort also cancels
+the bootstrap handshake immediately.
+
+The Native Web content bridge admits at most four reads before calling Content
+I/O. Concurrent plugin or asset requests wait in a bounded FIFO, so queueing
+does not consume an individual Reader's 15-second deadline. An isolated Worker
+opts into admission notifications on each READ; READ_STARTED begins its own
+read deadline. Successful nonempty content replies renew only queued waits;
+metadata and repeated notifications cannot keep an active read alive. A stalled
+queue still fails after 15 seconds without content completion. Exit closes the
+queue and readers, and read failures reach startup before Host abort cleanup.
+This transport is shared by MV/MZ and TyranoScript and does not change the
+Content I/O native ABI or synchronous-core read contract.
+
 Unlike optional caching in ON_DEMAND mode, missing storage or a failed durable
 write is a startup error in PRELOAD. The Host can retry or explicitly choose
 ON_DEMAND. There is no silent fallback claiming a completed download. Leases

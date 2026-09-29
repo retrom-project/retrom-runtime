@@ -41,6 +41,13 @@ it("[ST-11] UNIT/whole [IO-21] UNIT/materialize one full GET verifies and hands 
   expect(materializer.stats).toMatchObject({materializedBytes: bytes.length, materializedBytesByKind: {BYTES: bytes.length, BLOB: 0, SINK: 0}, wholeRestartCount: 0});
   expect((fetcher.mock.calls as unknown[][])[0][1]).toMatchObject({headers: {}});
 });
+it("verifies the middle of a large byte asset with native SHA-256 before handing it to the core", async () => {
+  const bytes = new Uint8Array(10 * 1024 * 1024 + 1), declared = bytes.slice();
+  bytes[5 * 1024 * 1024] = 1;
+  const {materializer, object} = setup(bytes, declared), digest = vi.spyOn(crypto.subtle, "digest");
+  await expect(materializer.prepare(object, {kind: "BYTES", maxBytes: bytes.length})).rejects.toThrow("CHECKSUM_MISMATCH");
+  expect(digest).toHaveBeenCalledWith("SHA-256", expect.any(Uint8Array));
+});
 it("[IO-20] UNIT/materialize [X-01] UNIT/materialize equal-length wrong body never commits or escapes", async () => {
   const {materializer, object} = setup(new Uint8Array([9, 2, 3]), new Uint8Array([1, 2, 3]));
   const sink = {write: vi.fn(async () => {}), commit: vi.fn(async () => {}), abort: vi.fn(async () => {})};

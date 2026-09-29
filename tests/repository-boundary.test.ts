@@ -20,7 +20,7 @@ describe("independent package boundary", () => {
     const sources = JSON.parse(await readFile(join(root, "provider-sources.json"), "utf8"));
     expect(retromRuntimeProviderDefinition.providerId).toBe("retrom-runtime");
     expect(retromRuntimeProviderDefinition.targets.map((target) => target.id)).toEqual([
-      "apple2-apple2js", "bbc-jsbeeb", "butterscotch-gamemaker", "fake08", "flash-ruffle", "gbe-pokemini", "j2me", "kirikiri2-kag", "mame-apple2", "mame-atom", "mame-pv1000", "msx-webmsx", "np2kai-pc98", "nxengine", "onscripter-yuri", "openbor", "play-ps2", "ppsspp", "px68k", "rpgmaker-2000", "rpgmaker-2003",
+      "apple2-apple2js", "bbc-jsbeeb", "butterscotch-gamemaker", "fake08", "flash-ruffle", "gbe-pokemini", "j2me", "kirikiri2-kag", "mame-apple2", "mame-apple2e", "mame-arcade", "mame-atom", "mame-coleco", "mame-pv1000", "mame-sg1000", "msx-webmsx", "np2kai-pc98", "nxengine", "onscripter-yuri", "openbor", "play-ps2", "ppsspp", "px68k", "rpgmaker-2000", "rpgmaker-2003",
       "rpgmaker-mv", "rpgmaker-mz", "rpgmaker-vx", "rpgmaker-vx-ace", "rpgmaker-xp", "samcoupe", "scummvm", "tic80", "tyranoscript", "wasm4",
     ]);
     expect(sources.localAssets.map((asset: { output: string }) => asset.output).sort()).toEqual([
@@ -106,11 +106,11 @@ describe("independent package boundary", () => {
       tag: "retrom-core-gca2600db8de4-r1",
     })]));
     const releaseIds = sources.upstreamReleases.map((release: { id: string }) => release.id).sort();
-    expect(releaseIds).toEqual(["apple2js", "butterscotch", "easyrpg", "fake08", "gbe_plus", "j2me", "jsbeeb", "kirikiri2", "mkxp", "np2kai", "nxengine", "onsyuri", "openbor", "play", "ppsspp", "px68k", "ruffle", "samcoupeweb", "scummvm", "tic80", "tyranoscript", "wasm4", "webmsx"]);
+    expect(releaseIds).toEqual(["apple2js", "butterscotch", "easyrpg", "fake08", "gbe_plus", "j2me", "jsbeeb", "kirikiri2", "mame", "mkxp", "np2kai", "nxengine", "onsyuri", "openbor", "play", "ppsspp", "px68k", "ruffle", "samcoupeweb", "scummvm", "tic80", "tyranoscript", "wasm4", "webmsx"]);
     expect(sources.upstreamReleases).toContainEqual(expect.objectContaining({
       id: "apple2js", tag: "retrom-core-gee0aed25f73c-r1", adapterAbi: "apple2js-web-v1",
     }));
-    expect(sources.developmentInputs.map((input: {id: string}) => input.id).sort()).toEqual(["mame"]);
+    expect(sources.developmentInputs.map((input: {id: string}) => input.id).sort()).toEqual([]);
     expect(await readdir(join(root, "scripts"))).not.toEqual(expect.arrayContaining([
       "build-kirikiri-core.sh", "build-ons-core.sh",
     ]));

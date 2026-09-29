@@ -25,6 +25,7 @@ it("keeps keyboard and gamepad ownership independent, releases held inputs on cl
 it("translates physical keyboard keys independently of the controller layout", () => {
   expect(keyboardKey("KeyA")).toBe(97); expect(keyboardKey("Digit1")).toBe(49);
   expect(keyboardKey("Enter")).toBe(13); expect(keyboardKey("ArrowLeft")).toBe(276);
+  expect(keyboardKey("Numpad1")).toBe(257);
   expect(keyboardKey("Unknown")).toBeNull();
 });
 it("maps Atom directions and action to separate keyboard keys without joystick input", () => {
@@ -36,4 +37,14 @@ it("maps PV-1000 directions, fire and start to native digital controls only", ()
   const core = {_retrom_mame_key: vi.fn(), _retrom_mame_button: vi.fn(), _retrom_mame_axis: vi.fn()};
   const input = new MameInput(core, "pv1000"); input.poll([pad([15, 0])]); input.clear();
   expect(core._retrom_mame_button.mock.calls).toEqual([[0, 1], [7, 1], [0, 0], [7, 0]]);
+});
+it("maps six Arcade actions plus coin and start to distinct native buttons", () => {
+  expect(padState([pad([0, 1, 2, 3, 4, 5, 8, 9, 12, 15])], "mspacman", true)).toEqual({
+    axes: [0, 0], keys: [], buttons: [0, 1, 2, 3, 4, 7, 8, 9, 10, 11],
+  });
+});
+it("keeps IIe analog controls and maps Coleco keypad start separately from fire", () => {
+  expect(padState([pad([0, 9, 15])], "apple2e")).toEqual({axes: [32767, 0], buttons: [0], keys: [49]});
+  expect(padState([pad([0, 9, 15])], "coleco")).toEqual({axes: [0, 0], buttons: [0, 7], keys: [257]});
+  expect(padState([pad([0, 1, 15])], "sg1000")).toEqual({axes: [0, 0], buttons: [0, 7, 8], keys: []});
 });

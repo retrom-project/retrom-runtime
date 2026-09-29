@@ -2,7 +2,9 @@ import {loadCoreAsset} from "../provider/core-assets.js";
 import type {AdapterContentOptions} from "../provider/content-inputs.js";
 import {profiles, type MameMachine} from "./profiles.js";
 export type FileSource = {url: string; sha256: string; sizeBytes: number};
-export type MameParameters = {machine: MameMachine; game: FileSource; bios: (FileSource & {logicalName: string})[]; runtimeBaseUrl: string};
+export type MameParameters = {machine: MameMachine; arcade?: false; game: FileSource; bios: (FileSource & {logicalName: string})[]; runtimeBaseUrl: string} |
+  {machine: string; arcade: true; game: FileSource; parent: FileSource | null; bios: FileSource | null;
+    deviceBios: (FileSource & {logicalName: string; virtualPath: string})[]; runtimeBaseUrl: string};
 export type MameCore = {
   HEAPU8: Uint8Array; HEAP16: Int16Array;
   FS: {mkdirTree(path: string): void; writeFile(path: string, bytes: Uint8Array): void; chmod(path: string, mode: number): void; ignorePermissions: boolean};
@@ -23,26 +25,29 @@ export type MameCore = {
 export type ModuleLoader = (url: string) => Promise<unknown>;
 export async function loadCore(config: MameParameters, content: AdapterContentOptions,
   loader: ModuleLoader = url => import(/* webpackIgnore: true */ /* @vite-ignore */ url)) {
-  const family = profiles[config.machine].family;
-  const files = ["mame-build.json", "mame-common.mjs", "mame-common.wasm", `mame-${family}.wasm`];
+  const arcade = config.arcade === true;
+  const metadata = await loadCoreAsset(content, new URL("mame-build.json", new URL("assets/mame/", new URL(config.runtimeBaseUrl, globalThis.location?.href))).href,
+    "assets/mame/mame-build.json", 2 * 1024 * 1024, content.signal);
+  const manifest = parseManifest(metadata, content, config.machine, arcade);
+  const files = ["mame-common.mjs", "mame-common.wasm", manifest.module];
   const base = new URL("assets/mame/", new URL(config.runtimeBaseUrl, globalThis.location?.href));
   const sizes = files.map(name => content.assetIndex[`assets/mame/${name}`]?.sizeBytes ?? 0);
   const total = sizes.reduce((a, b) => a + b, 0), ready = sizes.map(() => 0);
   const loaded = await Promise.all(files.map((name, i) => loadCoreAsset(content, new URL(name, base).href,
-    `assets/mame/${name}`, name.endsWith(".wasm") ? 128 * 1024 * 1024 : 2 * 1024 * 1024, content.signal,
+    `assets/mame/${name}`, name.endsWith(".wasm") ? 256 * 1024 * 1024 : 2 * 1024 * 1024, content.signal,
     progress => {ready[i] = progress.readyBytes; content.reportProgress?.({phase: "RUNTIME_ASSET", loadedBytes: ready.reduce((a, b) => a + b, 0), totalBytes: total});})));
-  const build = parseBuild(loaded[0], content, files, family, config.machine);
-  const moduleURL = URL.createObjectURL(new Blob([Uint8Array.from(loaded[1])], {type: "text/javascript"}));
+  const build = manifest.build;
+  const moduleURL = URL.createObjectURL(new Blob([Uint8Array.from(loaded[0])], {type: "text/javascript"}));
   let core: MameCore | undefined;
   try {
     const module = await loader(moduleURL);
     if (!module || typeof module !== "object" || !("default" in module) || typeof module.default !== "function") {invalid();}
     content.signal?.throwIfAborted();
-    const value: unknown = await module.default({wasmBinary: loaded[2], locateFile: (name: string) => new URL(name, base).href,
+    const value: unknown = await module.default({wasmBinary: loaded[1], locateFile: (name: string) => new URL(name, base).href,
       print: () => undefined, printErr: nativeLog});
     if (!validCore(value)) {invalid();} core = value;
     if (core.UTF8ToString(core._retrom_mame_build_id()) !== build) {invalid();}
-    const familyURL = URL.createObjectURL(new Blob([Uint8Array.from(loaded[3])], {type: "application/wasm"}));
+    const familyURL = URL.createObjectURL(new Blob([Uint8Array.from(loaded[2])], {type: "application/wasm"}));
     try {await core.loadDynamicLibrary(familyURL, {global: true, nodelete: true, loadAsync: true});}
     finally {URL.revokeObjectURL(familyURL);}
     content.signal?.throwIfAborted();
@@ -62,18 +67,27 @@ function validCore(value: unknown): value is MameCore {
     [core.FS.mkdirTree, core.FS.writeFile, core.FS.chmod].every(method => typeof method === "function") &&
     methods.every(key => typeof core[key] === "function") && core._retrom_mame_abi?.() === 1;
 }
-function parseBuild(bytes: Uint8Array, content: AdapterContentOptions, files: string[], family: string, machine: MameMachine): string {
+function parseManifest(bytes: Uint8Array, content: AdapterContentOptions, machine: string, arcade: boolean): {build: string; module: string} {
   const value: unknown = JSON.parse(new TextDecoder().decode(bytes));
   if (!record(value) || value.schemaVersion !== 1 || value.adapterAbi !== "retrom-mame-dylink-v1" ||
     typeof value.buildId !== "string" || !/^[0-9a-f]{64}$/u.test(value.buildId) || !record(value.assets)) {invalid();}
   if (!record(value.families)) {invalid();}
-  const selected = value.families[family];
-  if (!record(selected) || selected.module !== files[3] || !Array.isArray(selected.machines) || !selected.machines.includes(machine)) {invalid();}
-  for (const name of files.slice(1)) {
+  const selected = selectFamily(value.families, machine, arcade);
+  const files = ["mame-common.mjs", "mame-common.wasm", selected.module];
+  for (const name of files) {
     const asset: unknown = Reflect.get(value.assets, name), expected = content.assetIndex[`assets/mame/${name}`];
     if (!record(asset) || !expected || asset.sha256 !== expected.sha256 || asset.sizeBytes !== expected.sizeBytes) {invalid();}
   }
-  return value.buildId;
+  return {build: value.buildId, module: selected.module};
+}
+function selectFamily(catalog: Record<string, unknown>, machine: string, arcade: boolean): {module: string} {
+  const families = Object.entries(catalog).filter(([, family]) => record(family) && Array.isArray(family.machines) && family.machines.includes(machine));
+  if (families.length !== 1) {invalid();}
+  const selected = families[0][1];
+  if (!record(selected) || (arcade ? selected.arcade !== true :
+    selected.arcade === true || families[0][0] !== profiles[machine as MameMachine]?.family) ||
+    typeof selected.module !== "string" || !/^mame-[a-z0-9_-]+\.wasm$/u.test(selected.module)) {invalid();}
+  return {module: selected.module};
 }
 export function withMemory<T>(core: MameCore, size: number, use: (pointer: number) => T): T {
   const pointer = core._malloc(size);

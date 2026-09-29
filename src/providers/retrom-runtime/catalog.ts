@@ -1,4 +1,5 @@
-import {mameAdapter, mameAppleTarget, mameAtomTarget, mamePV1000Target} from "./mame-declaration.js";
+import {mameAdapter, mameAppleTarget, mameApple2eTarget, mameAtomTarget, mameColecoTarget,
+  mamePV1000Target, mameSG1000Target, mameArcadeTarget} from "./mame-declaration.js";
 import {providerVersion} from "../../provider/version.js";
 import {eagerPolicy, runtimeGamePolicy} from "../../provider/content-policies.js";
 import jsbeebSiteAssets from "../../jsbeeb/site-assets.json" with {type: "json"};
@@ -137,7 +138,8 @@ const targets = [
     ["assets/kirikiri/assets.zip", "assets/kirikiri/index.js", "assets/kirikiri/index.wasm",
       "assets/kirikiri/vlfs.js"],
   ),
-  mameAppleTarget, mameAtomTarget, mamePV1000Target,
+  mameAppleTarget, mameApple2eTarget, mameArcadeTarget, mameAtomTarget, mameColecoTarget,
+  mamePV1000Target, mameSG1000Target,
   target("msx-webmsx", "MSX (WebMSX)", "webmsx-web", noOptionsSchema, false, "SAME_ORIGIN_BLANK", "ROM_BLOB",
     32 * 1024 * 1024, ["assets/webmsx/webmsx.js"]),
   np2kaiTarget,

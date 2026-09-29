@@ -2488,6 +2488,1497 @@
       "tag": "retrom-core-g2e6fd06ed6c7-r4",
       "commit": "0107382fc31ce958da09d4ec4a9f9e3047803aae",
       "metadataUrl": "https://github.com/retrom-project/ppsspp/releases/download/retrom-core-g2e6fd06ed6c7-r4/rpg-runtime-release.json"
+    },
+    {
+      "id": "mame",
+      "repository": "https://github.com/retrom-project/mame",
+      "upstreamCommit": "f65d5ba9bc42febea7cd76d4559827d0e1271581",
+      "adapterAbi": "retrom-mame-dylink-v1",
+      "tag": "retrom-core-gf65d5ba9bc42-r1",
+      "commit": "5821fe17512a0f04290834bbcac4fb35adc086df",
+      "metadataUrl": "https://github.com/retrom-project/mame/releases/download/retrom-core-gf65d5ba9bc42-r1/rpg-runtime-release.json",
+      "assets": [
+        {
+          "filename": "mame-build.json",
+          "output": "runtime/mame/mame-build.json",
+          "maxSizeBytes": 2097152,
+          "sizeBytes": 225972,
+          "sha256": "d6bb05b4424ffb24023c806aca4f5e43f5ea5ec34eec015f52ba0ae55d99c1fe",
+          "url": "https://github.com/retrom-project/mame/releases/download/retrom-core-gf65d5ba9bc42-r1/mame-build.json"
+        },
+        {
+          "filename": "mame-arcade.xml",
+          "output": "runtime/mame/mame-arcade.xml",
+          "maxSizeBytes": 67108864,
+          "sizeBytes": 27015149,
+          "sha256": "db3e67df32ba9becae005050a948e75222f37940c5754c3833ed38d617efc2c4",
+          "url": "https://github.com/retrom-project/mame/releases/download/retrom-core-gf65d5ba9bc42-r1/mame-arcade.xml"
+        },
+        {
+          "filename": "mame-common.mjs",
+          "output": "runtime/mame/mame-common.mjs",
+          "maxSizeBytes": 2097152,
+          "sizeBytes": 2045172,
+          "sha256": "d47e59aeec549c42a01721c45fb6bc1b44fc1428f4463197900bd71f60da9450",
+          "url": "https://github.com/retrom-project/mame/releases/download/retrom-core-gf65d5ba9bc42-r1/mame-common.mjs"
+        },
+        {
+          "filename": "mame-common.mjs.br",
+          "output": "runtime/mame/mame-common.mjs.br",
+          "maxSizeBytes": 2097152,
+          "sizeBytes": 159450,
+          "sha256": "f7a689c76c6661719694baba1ac78dbab525bbb2d9bc8b39842afa0f514d5f10",
+          "url": "https://github.com/retrom-project/mame/releases/download/retrom-core-gf65d5ba9bc42-r1/mame-common.mjs.br"
+        },
+        {
+          "filename": "mame-common.wasm",
+          "output": "runtime/mame/mame-common.wasm",
+          "maxSizeBytes": 268435456,
+          "sizeBytes": 131528676,
+          "sha256": "944eb12ce5573f5abfb055ee7b7acae4214aeba94fd062d45a82a48eb2bd1271",
+          "url": "https://github.com/retrom-project/mame/releases/download/retrom-core-gf65d5ba9bc42-r1/mame-common.wasm"
+        },
+        {
+          "filename": "mame-common.wasm.br",
+          "output": "runtime/mame/mame-common.wasm.br",
+          "maxSizeBytes": 134217728,
+          "sizeBytes": 6471723,
+          "sha256": "94f0a5f173251d17c2157250d91ead42bcb0fbede7d8880e7c72feb87f3ad124",
+          "url": "https://github.com/retrom-project/mame/releases/download/retrom-core-gf65d5ba9bc42-r1/mame-common.wasm.br"
+        },
+        {
+          "filename": "mame-apple.wasm",
+          "output": "runtime/mame/mame-apple.wasm",
+          "maxSizeBytes": 134217728,
+          "sizeBytes": 2140106,
+          "sha256": "33ac93be911ad67e48da670cb297a478032f6f4daae31704eefe472460f4d550",
+          "url": "https://github.com/retrom-project/mame/releases/download/retrom-core-gf65d5ba9bc42-r1/mame-apple.wasm"
+        },
+        {
+          "filename": "mame-apple.wasm.br",
+          "output": "runtime/mame/mame-apple.wasm.br",
+          "maxSizeBytes": 134217728,
+          "sizeBytes": 281558,
+          "sha256": "c080f578de32b6a00cc2a57e2ebabf64df71551d02f3cb819367e8b886380948",
+          "url": "https://github.com/retrom-project/mame/releases/download/retrom-core-gf65d5ba9bc42-r1/mame-apple.wasm.br"
+        },
+        {
+          "filename": "LICENSES.txt",
+          "output": "licenses/mame/LICENSES.txt",
+          "maxSizeBytes": 2097152,
+          "sizeBytes": 421554,
+          "sha256": "31ce5e003aef3eeea725309dcd625b453277a3292732269e9ec63d03667774c3",
+          "url": "https://github.com/retrom-project/mame/releases/download/retrom-core-gf65d5ba9bc42-r1/LICENSES.txt"
+        },
+        {
+          "filename": "mame-acorn.wasm",
+          "output": "runtime/mame/mame-acorn.wasm",
+          "maxSizeBytes": 134217728,
+          "sizeBytes": 855833,
+          "sha256": "8ff7102d10e7da0f3b3e80ae1f802871fa6c5a58207b1f70ecb9bca554e22950",
+          "url": "https://github.com/retrom-project/mame/releases/download/retrom-core-gf65d5ba9bc42-r1/mame-acorn.wasm"
+        },
+        {
+          "filename": "mame-acorn.wasm.br",
+          "output": "runtime/mame/mame-acorn.wasm.br",
+          "maxSizeBytes": 134217728,
+          "sizeBytes": 151648,
+          "sha256": "075ba7097d5feb65ec3d9f50abf7039cef890d4a928f4c18c66411d6b26542ff",
+          "url": "https://github.com/retrom-project/mame/releases/download/retrom-core-gf65d5ba9bc42-r1/mame-acorn.wasm.br"
+        },
+        {
+          "filename": "mame-coleco.wasm",
+          "output": "runtime/mame/mame-coleco.wasm",
+          "maxSizeBytes": 134217728,
+          "sizeBytes": 129685,
+          "sha256": "cf514bd11601f242a2b3261ad65aac133afbd073fbb6205a242e1d3904f2074c",
+          "url": "https://github.com/retrom-project/mame/releases/download/retrom-core-gf65d5ba9bc42-r1/mame-coleco.wasm"
+        },
+        {
+          "filename": "mame-coleco.wasm.br",
+          "output": "runtime/mame/mame-coleco.wasm.br",
+          "maxSizeBytes": 134217728,
+          "sizeBytes": 24662,
+          "sha256": "6fc6c6c14b028be6f08157a89edbe6e136c7407c518c30671133bd099a019f7d",
+          "url": "https://github.com/retrom-project/mame/releases/download/retrom-core-gf65d5ba9bc42-r1/mame-coleco.wasm.br"
+        },
+        {
+          "filename": "mame-sg1000.wasm",
+          "output": "runtime/mame/mame-sg1000.wasm",
+          "maxSizeBytes": 134217728,
+          "sizeBytes": 717214,
+          "sha256": "7c527ceb42cc2fada4db2bd074102570166d243b4e8426d1d3a53cfa22bc05f3",
+          "url": "https://github.com/retrom-project/mame/releases/download/retrom-core-gf65d5ba9bc42-r1/mame-sg1000.wasm"
+        },
+        {
+          "filename": "mame-sg1000.wasm.br",
+          "output": "runtime/mame/mame-sg1000.wasm.br",
+          "maxSizeBytes": 134217728,
+          "sizeBytes": 92136,
+          "sha256": "71813fbc76444ad0fd0087708710569d16798539cfc50b909f5edfcc9652c22c",
+          "url": "https://github.com/retrom-project/mame/releases/download/retrom-core-gf65d5ba9bc42-r1/mame-sg1000.wasm.br"
+        },
+        {
+          "filename": "mame-vintage.wasm",
+          "output": "runtime/mame/mame-vintage.wasm",
+          "maxSizeBytes": 134217728,
+          "sizeBytes": 43035,
+          "sha256": "9999ae2b22cf99cd211a7651f199419461080d7d5a68aa14141f6e66f4b93539",
+          "url": "https://github.com/retrom-project/mame/releases/download/retrom-core-gf65d5ba9bc42-r1/mame-vintage.wasm"
+        },
+        {
+          "filename": "mame-vintage.wasm.br",
+          "output": "runtime/mame/mame-vintage.wasm.br",
+          "maxSizeBytes": 134217728,
+          "sizeBytes": 10919,
+          "sha256": "6b4e320a0ac8f142abbc74cbbecceb717eba1bf55b123c1ec23c7ceeeace1885",
+          "url": "https://github.com/retrom-project/mame/releases/download/retrom-core-gf65d5ba9bc42-r1/mame-vintage.wasm.br"
+        },
+        {
+          "filename": "mame-pacman.wasm",
+          "output": "runtime/mame/mame-pacman.wasm",
+          "maxSizeBytes": 134217728,
+          "sizeBytes": 454510,
+          "sha256": "6f5fdb7f23513a07251f33ec8288f864a2865d5191cb8b34640be9a3fd06c774",
+          "url": "https://github.com/retrom-project/mame/releases/download/retrom-core-gf65d5ba9bc42-r1/mame-pacman.wasm"
+        },
+        {
+          "filename": "mame-pacman.wasm.br",
+          "output": "runtime/mame/mame-pacman.wasm.br",
+          "maxSizeBytes": 134217728,
+          "sizeBytes": 91375,
+          "sha256": "c7f53fb4068b70401c0cf71f44ec8ebf5d0c7766bed487a13069f7d0ea00e84d",
+          "url": "https://github.com/retrom-project/mame/releases/download/retrom-core-gf65d5ba9bc42-r1/mame-pacman.wasm.br"
+        },
+        {
+          "filename": "mame-arcade_alliedleisure.wasm",
+          "output": "runtime/mame/mame-arcade_alliedleisure.wasm",
+          "maxSizeBytes": 134217728,
+          "sizeBytes": 148147,
+          "sha256": "292a726261b6eb57eaa7aaa3a9be8c0f12c36ebe3c3a47d997ce78aac271307c",
+          "url": "https://github.com/retrom-project/mame/releases/download/retrom-core-gf65d5ba9bc42-r1/mame-arcade_alliedleisure.wasm"
+        },
+        {
+          "filename": "mame-arcade_alliedleisure.wasm.br",
+          "output": "runtime/mame/mame-arcade_alliedleisure.wasm.br",
+          "maxSizeBytes": 134217728,
+          "sizeBytes": 31198,
+          "sha256": "dbf82f147ec4b3c609f380a62b7d3f1355a76886124dcfe4b89e54a3108c0601",
+          "url": "https://github.com/retrom-project/mame/releases/download/retrom-core-gf65d5ba9bc42-r1/mame-arcade_alliedleisure.wasm.br"
+        },
+        {
+          "filename": "mame-arcade_alpha.wasm",
+          "output": "runtime/mame/mame-arcade_alpha.wasm",
+          "maxSizeBytes": 134217728,
+          "sizeBytes": 610591,
+          "sha256": "53fd9962688c819962ce988c8e167f0208cbf421198431922b150426c44372c6",
+          "url": "https://github.com/retrom-project/mame/releases/download/retrom-core-gf65d5ba9bc42-r1/mame-arcade_alpha.wasm"
+        },
+        {
+          "filename": "mame-arcade_alpha.wasm.br",
+          "output": "runtime/mame/mame-arcade_alpha.wasm.br",
+          "maxSizeBytes": 134217728,
+          "sizeBytes": 113070,
+          "sha256": "5cb4062a79b18bc4333afadb74f34678c29c7e8bb663351ab89770eae60e7403",
+          "url": "https://github.com/retrom-project/mame/releases/download/retrom-core-gf65d5ba9bc42-r1/mame-arcade_alpha.wasm.br"
+        },
+        {
+          "filename": "mame-arcade_arcadia.wasm",
+          "output": "runtime/mame/mame-arcade_arcadia.wasm",
+          "maxSizeBytes": 134217728,
+          "sizeBytes": 83493,
+          "sha256": "fa1ed1205a100e4f3a2a891c9724ec6f00149a64fdd619dd1a013be321c61e67",
+          "url": "https://github.com/retrom-project/mame/releases/download/retrom-core-gf65d5ba9bc42-r1/mame-arcade_arcadia.wasm"
+        },
+        {
+          "filename": "mame-arcade_arcadia.wasm.br",
+          "output": "runtime/mame/mame-arcade_arcadia.wasm.br",
+          "maxSizeBytes": 134217728,
+          "sizeBytes": 18240,
+          "sha256": "b3539bf2fd0e5e83d5e12f386ea8aa48947b75cb99e018bf3e6e8ab592637c38",
+          "url": "https://github.com/retrom-project/mame/releases/download/retrom-core-gf65d5ba9bc42-r1/mame-arcade_arcadia.wasm.br"
+        },
+        {
+          "filename": "mame-arcade_atari.wasm",
+          "output": "runtime/mame/mame-arcade_atari.wasm",
+          "maxSizeBytes": 134217728,
+          "sizeBytes": 4018033,
+          "sha256": "6f7670bc376c36dc2af1e974d411949df9a210d4e2022ca564bf7cac20c65c6e",
+          "url": "https://github.com/retrom-project/mame/releases/download/retrom-core-gf65d5ba9bc42-r1/mame-arcade_atari.wasm"
+        },
+        {
+          "filename": "mame-arcade_atari.wasm.br",
+          "output": "runtime/mame/mame-arcade_atari.wasm.br",
+          "maxSizeBytes": 134217728,
+          "sizeBytes": 647817,
+          "sha256": "d83a8c8dfddcc96d32ef5aaaa522cad1597096e17c04b87373e653c78fd8dba0",
+          "url": "https://github.com/retrom-project/mame/releases/download/retrom-core-gf65d5ba9bc42-r1/mame-arcade_atari.wasm.br"
+        },
+        {
+          "filename": "mame-arcade_atlus.wasm",
+          "output": "runtime/mame/mame-arcade_atlus.wasm",
+          "maxSizeBytes": 134217728,
+          "sizeBytes": 340309,
+          "sha256": "cf4a94136815e9bab251682d09c984eacdcf7075163d09f639694fa5835c62a4",
+          "url": "https://github.com/retrom-project/mame/releases/download/retrom-core-gf65d5ba9bc42-r1/mame-arcade_atlus.wasm"
+        },
+        {
+          "filename": "mame-arcade_atlus.wasm.br",
+          "output": "runtime/mame/mame-arcade_atlus.wasm.br",
+          "maxSizeBytes": 134217728,
+          "sizeBytes": 60795,
+          "sha256": "e7173738e756ec5cc2f1605c1f39323a5e9021cfc62b18d6a8f789942ca6c1e5",
+          "url": "https://github.com/retrom-project/mame/releases/download/retrom-core-gf65d5ba9bc42-r1/mame-arcade_atlus.wasm.br"
+        },
+        {
+          "filename": "mame-arcade_bally.wasm",
+          "output": "runtime/mame/mame-arcade_bally.wasm",
+          "maxSizeBytes": 134217728,
+          "sizeBytes": 939475,
+          "sha256": "f8958065dbf1286466f0ebf91f326bf7dfab98bb826e56c028ccbbec8a369937",
+          "url": "https://github.com/retrom-project/mame/releases/download/retrom-core-gf65d5ba9bc42-r1/mame-arcade_bally.wasm"
+        },
+        {
+          "filename": "mame-arcade_bally.wasm.br",
+          "output": "runtime/mame/mame-arcade_bally.wasm.br",
+          "maxSizeBytes": 134217728,
+          "sizeBytes": 183824,
+          "sha256": "22e3e85a1248d907fc75db34411806b0487395d9f07e23da1fc6a3a8bd1d7d2b",
+          "url": "https://github.com/retrom-project/mame/releases/download/retrom-core-gf65d5ba9bc42-r1/mame-arcade_bally.wasm.br"
+        },
+        {
+          "filename": "mame-arcade_capcom.wasm",
+          "output": "runtime/mame/mame-arcade_capcom.wasm",
+          "maxSizeBytes": 134217728,
+          "sizeBytes": 2721071,
+          "sha256": "2c2d8648e55cc420f21f5f092dbc42ca8f975be5288b3e10a131646d9b3f9ba9",
+          "url": "https://github.com/retrom-project/mame/releases/download/retrom-core-gf65d5ba9bc42-r1/mame-arcade_capcom.wasm"
+        },
+        {
+          "filename": "mame-arcade_capcom.wasm.br",
+          "output": "runtime/mame/mame-arcade_capcom.wasm.br",
+          "maxSizeBytes": 134217728,
+          "sizeBytes": 466505,
+          "sha256": "40615c49798b72b61be066b028c37e7efc9574782d9eea1e3851d6f954e30f76",
+          "url": "https://github.com/retrom-project/mame/releases/download/retrom-core-gf65d5ba9bc42-r1/mame-arcade_capcom.wasm.br"
+        },
+        {
+          "filename": "mame-arcade_cinematronics.wasm",
+          "output": "runtime/mame/mame-arcade_cinematronics.wasm",
+          "maxSizeBytes": 134217728,
+          "sizeBytes": 2575486,
+          "sha256": "07645d7359d4cb8fd0e56fcf61bb53404b2c108a46274a0c2c8b40cf2bb22363",
+          "url": "https://github.com/retrom-project/mame/releases/download/retrom-core-gf65d5ba9bc42-r1/mame-arcade_cinematronics.wasm"
+        },
+        {
+          "filename": "mame-arcade_cinematronics.wasm.br",
+          "output": "runtime/mame/mame-arcade_cinematronics.wasm.br",
+          "maxSizeBytes": 134217728,
+          "sizeBytes": 201362,
+          "sha256": "fb026370ff83bd765784c35ca3c119c26c72c89efc5949d20792491825e7b889",
+          "url": "https://github.com/retrom-project/mame/releases/download/retrom-core-gf65d5ba9bc42-r1/mame-arcade_cinematronics.wasm.br"
+        },
+        {
+          "filename": "mame-arcade_comad.wasm",
+          "output": "runtime/mame/mame-arcade_comad.wasm",
+          "maxSizeBytes": 134217728,
+          "sizeBytes": 74481,
+          "sha256": "2fba6266fc33d705d6f78c96da79c29689b6ba0e2fb1c293e60b3a8ac3e18d28",
+          "url": "https://github.com/retrom-project/mame/releases/download/retrom-core-gf65d5ba9bc42-r1/mame-arcade_comad.wasm"
+        },
+        {
+          "filename": "mame-arcade_comad.wasm.br",
+          "output": "runtime/mame/mame-arcade_comad.wasm.br",
+          "maxSizeBytes": 134217728,
+          "sizeBytes": 19574,
+          "sha256": "5f276036d43ac874bb0573c1b9b553855f9adcea29bd9834fbd557fd5c7a9edf",
+          "url": "https://github.com/retrom-project/mame/releases/download/retrom-core-gf65d5ba9bc42-r1/mame-arcade_comad.wasm.br"
+        },
+        {
+          "filename": "mame-arcade_dataeast.wasm",
+          "output": "runtime/mame/mame-arcade_dataeast.wasm",
+          "maxSizeBytes": 134217728,
+          "sizeBytes": 3045820,
+          "sha256": "bb0f6ce157cba9547b6840bcda4e54012594ae02f3f0ff083c88d935d9c6631f",
+          "url": "https://github.com/retrom-project/mame/releases/download/retrom-core-gf65d5ba9bc42-r1/mame-arcade_dataeast.wasm"
+        },
+        {
+          "filename": "mame-arcade_dataeast.wasm.br",
+          "output": "runtime/mame/mame-arcade_dataeast.wasm.br",
+          "maxSizeBytes": 134217728,
+          "sizeBytes": 492616,
+          "sha256": "742c50aa92305d1237f74d3e2f662f64a2ce4a394f92a923ebd3ef0ba0273506",
+          "url": "https://github.com/retrom-project/mame/releases/download/retrom-core-gf65d5ba9bc42-r1/mame-arcade_dataeast.wasm.br"
+        },
+        {
+          "filename": "mame-arcade_ddr.wasm",
+          "output": "runtime/mame/mame-arcade_ddr.wasm",
+          "maxSizeBytes": 134217728,
+          "sizeBytes": 44915,
+          "sha256": "5a3503cb4dafaae301475567ef5bf455eb3dd10fffc0c477eb1aa5480315c1ae",
+          "url": "https://github.com/retrom-project/mame/releases/download/retrom-core-gf65d5ba9bc42-r1/mame-arcade_ddr.wasm"
+        },
+        {
+          "filename": "mame-arcade_ddr.wasm.br",
+          "output": "runtime/mame/mame-arcade_ddr.wasm.br",
+          "maxSizeBytes": 134217728,
+          "sizeBytes": 12482,
+          "sha256": "59ab4b1c5aa6befc28f18eaf1737769a9dca3861655f1c64cb05ed838bae33e6",
+          "url": "https://github.com/retrom-project/mame/releases/download/retrom-core-gf65d5ba9bc42-r1/mame-arcade_ddr.wasm.br"
+        },
+        {
+          "filename": "mame-arcade_dec.wasm",
+          "output": "runtime/mame/mame-arcade_dec.wasm",
+          "maxSizeBytes": 134217728,
+          "sizeBytes": 211717,
+          "sha256": "ab10cd8b331a0d7fdaeb7fc44da5dc64144677c3b7169fdc4d51200d062260d1",
+          "url": "https://github.com/retrom-project/mame/releases/download/retrom-core-gf65d5ba9bc42-r1/mame-arcade_dec.wasm"
+        },
+        {
+          "filename": "mame-arcade_dec.wasm.br",
+          "output": "runtime/mame/mame-arcade_dec.wasm.br",
+          "maxSizeBytes": 134217728,
+          "sizeBytes": 43026,
+          "sha256": "0788f4289ed973a05289993419027113c18cfbef10a23c469e6a9b3aea9574e2",
+          "url": "https://github.com/retrom-project/mame/releases/download/retrom-core-gf65d5ba9bc42-r1/mame-arcade_dec.wasm.br"
+        },
+        {
+          "filename": "mame-arcade_dooyong.wasm",
+          "output": "runtime/mame/mame-arcade_dooyong.wasm",
+          "maxSizeBytes": 134217728,
+          "sizeBytes": 187990,
+          "sha256": "7ce6705d89afeab08dca374fcb2043eb372622f491458708977535d101549d32",
+          "url": "https://github.com/retrom-project/mame/releases/download/retrom-core-gf65d5ba9bc42-r1/mame-arcade_dooyong.wasm"
+        },
+        {
+          "filename": "mame-arcade_dooyong.wasm.br",
+          "output": "runtime/mame/mame-arcade_dooyong.wasm.br",
+          "maxSizeBytes": 134217728,
+          "sizeBytes": 39819,
+          "sha256": "a1e8b1b8a413f59127738c28c95766c4545f57777ef6ba785faabedde8164655",
+          "url": "https://github.com/retrom-project/mame/releases/download/retrom-core-gf65d5ba9bc42-r1/mame-arcade_dooyong.wasm.br"
+        },
+        {
+          "filename": "mame-arcade_dynax.wasm",
+          "output": "runtime/mame/mame-arcade_dynax.wasm",
+          "maxSizeBytes": 134217728,
+          "sizeBytes": 1194223,
+          "sha256": "06503a58742c5805dacfcf535578337398c6e2740023ad7707b4e33872cbd65d",
+          "url": "https://github.com/retrom-project/mame/releases/download/retrom-core-gf65d5ba9bc42-r1/mame-arcade_dynax.wasm"
+        },
+        {
+          "filename": "mame-arcade_dynax.wasm.br",
+          "output": "runtime/mame/mame-arcade_dynax.wasm.br",
+          "maxSizeBytes": 134217728,
+          "sizeBytes": 218318,
+          "sha256": "85035278f68b6338c1f00d8769f96bd90eb2193bf4c9e7d718fac6c3f1beb6aa",
+          "url": "https://github.com/retrom-project/mame/releases/download/retrom-core-gf65d5ba9bc42-r1/mame-arcade_dynax.wasm.br"
+        },
+        {
+          "filename": "mame-arcade_edevices.wasm",
+          "output": "runtime/mame/mame-arcade_edevices.wasm",
+          "maxSizeBytes": 134217728,
+          "sizeBytes": 184984,
+          "sha256": "f035d2030bf637cafa5d2d97c024e9a913e8eb1cc58091ef3b42732b8e4d555e",
+          "url": "https://github.com/retrom-project/mame/releases/download/retrom-core-gf65d5ba9bc42-r1/mame-arcade_edevices.wasm"
+        },
+        {
+          "filename": "mame-arcade_edevices.wasm.br",
+          "output": "runtime/mame/mame-arcade_edevices.wasm.br",
+          "maxSizeBytes": 134217728,
+          "sizeBytes": 41975,
+          "sha256": "16c49754ccf4958344c1c4138fd6fe9ad6ee01c75eed477f35b3e887d767072c",
+          "url": "https://github.com/retrom-project/mame/releases/download/retrom-core-gf65d5ba9bc42-r1/mame-arcade_edevices.wasm.br"
+        },
+        {
+          "filename": "mame-arcade_eolith.wasm",
+          "output": "runtime/mame/mame-arcade_eolith.wasm",
+          "maxSizeBytes": 134217728,
+          "sizeBytes": 92646,
+          "sha256": "e55514d3de0916812660e3db32eb3eaa29377bf89b22fcc7f1bb3fd4a21cc9ed",
+          "url": "https://github.com/retrom-project/mame/releases/download/retrom-core-gf65d5ba9bc42-r1/mame-arcade_eolith.wasm"
+        },
+        {
+          "filename": "mame-arcade_eolith.wasm.br",
+          "output": "runtime/mame/mame-arcade_eolith.wasm.br",
+          "maxSizeBytes": 134217728,
+          "sizeBytes": 24678,
+          "sha256": "8dbace923889825430398e80b509dc6a634f1273126bb58e66a4962bbd754ef9",
+          "url": "https://github.com/retrom-project/mame/releases/download/retrom-core-gf65d5ba9bc42-r1/mame-arcade_eolith.wasm.br"
+        },
+        {
+          "filename": "mame-arcade_excellent.wasm",
+          "output": "runtime/mame/mame-arcade_excellent.wasm",
+          "maxSizeBytes": 134217728,
+          "sizeBytes": 85644,
+          "sha256": "ed405fe05db0f9b7e076623278af4aa7ae4ca6e8db967fcce020ece7a7520761",
+          "url": "https://github.com/retrom-project/mame/releases/download/retrom-core-gf65d5ba9bc42-r1/mame-arcade_excellent.wasm"
+        },
+        {
+          "filename": "mame-arcade_excellent.wasm.br",
+          "output": "runtime/mame/mame-arcade_excellent.wasm.br",
+          "maxSizeBytes": 134217728,
+          "sizeBytes": 19838,
+          "sha256": "191ad737e3f9533a53a17a11856a87c58a09bf3f068e941ec8fd5eef9264f8bb",
+          "url": "https://github.com/retrom-project/mame/releases/download/retrom-core-gf65d5ba9bc42-r1/mame-arcade_excellent.wasm.br"
+        },
+        {
+          "filename": "mame-arcade_exidy.wasm",
+          "output": "runtime/mame/mame-arcade_exidy.wasm",
+          "maxSizeBytes": 134217728,
+          "sizeBytes": 846691,
+          "sha256": "f65ac80bec97184d7bf6df12fa0815bf2541f62f99ea098e6516046c6e272a37",
+          "url": "https://github.com/retrom-project/mame/releases/download/retrom-core-gf65d5ba9bc42-r1/mame-arcade_exidy.wasm"
+        },
+        {
+          "filename": "mame-arcade_exidy.wasm.br",
+          "output": "runtime/mame/mame-arcade_exidy.wasm.br",
+          "maxSizeBytes": 134217728,
+          "sizeBytes": 127818,
+          "sha256": "f9c939d9e6976cd9d362e562515036afecf88ff285335f068335b2c77c00f170",
+          "url": "https://github.com/retrom-project/mame/releases/download/retrom-core-gf65d5ba9bc42-r1/mame-arcade_exidy.wasm.br"
+        },
+        {
+          "filename": "mame-arcade_f32.wasm",
+          "output": "runtime/mame/mame-arcade_f32.wasm",
+          "maxSizeBytes": 134217728,
+          "sizeBytes": 65712,
+          "sha256": "7c939864606d7fea74a25bcc90252d78c82f36bbd7b6352868b7cbbc4bbbd3e5",
+          "url": "https://github.com/retrom-project/mame/releases/download/retrom-core-gf65d5ba9bc42-r1/mame-arcade_f32.wasm"
+        },
+        {
+          "filename": "mame-arcade_f32.wasm.br",
+          "output": "runtime/mame/mame-arcade_f32.wasm.br",
+          "maxSizeBytes": 134217728,
+          "sizeBytes": 16423,
+          "sha256": "8a8075abf021981e35809d7b41726dc4e65fc8f771bf7934b287c2bb91f873b4",
+          "url": "https://github.com/retrom-project/mame/releases/download/retrom-core-gf65d5ba9bc42-r1/mame-arcade_f32.wasm.br"
+        },
+        {
+          "filename": "mame-arcade_fuuki.wasm",
+          "output": "runtime/mame/mame-arcade_fuuki.wasm",
+          "maxSizeBytes": 134217728,
+          "sizeBytes": 113811,
+          "sha256": "6c8a6e89c1ab85d265e1f2dc97ed7e672aec52acd6a761903127e854f1d0cf41",
+          "url": "https://github.com/retrom-project/mame/releases/download/retrom-core-gf65d5ba9bc42-r1/mame-arcade_fuuki.wasm"
+        },
+        {
+          "filename": "mame-arcade_fuuki.wasm.br",
+          "output": "runtime/mame/mame-arcade_fuuki.wasm.br",
+          "maxSizeBytes": 134217728,
+          "sizeBytes": 25695,
+          "sha256": "bd0828c18e2dc13d35f37d198f3bd93cadb81892fc936000be6691d9fff6947e",
+          "url": "https://github.com/retrom-project/mame/releases/download/retrom-core-gf65d5ba9bc42-r1/mame-arcade_fuuki.wasm.br"
+        },
+        {
+          "filename": "mame-arcade_gaelco.wasm",
+          "output": "runtime/mame/mame-arcade_gaelco.wasm",
+          "maxSizeBytes": 134217728,
+          "sizeBytes": 563598,
+          "sha256": "ac14f7a04f573c234140f97b60533daffe61529f485e1925bd6c26dea5846551",
+          "url": "https://github.com/retrom-project/mame/releases/download/retrom-core-gf65d5ba9bc42-r1/mame-arcade_gaelco.wasm"
+        },
+        {
+          "filename": "mame-arcade_gaelco.wasm.br",
+          "output": "runtime/mame/mame-arcade_gaelco.wasm.br",
+          "maxSizeBytes": 134217728,
+          "sizeBytes": 104762,
+          "sha256": "ad75493e6be49ae58e12dfee08bbd3681cdfaccd940bedcc474fa10efa21e08b",
+          "url": "https://github.com/retrom-project/mame/releases/download/retrom-core-gf65d5ba9bc42-r1/mame-arcade_gaelco.wasm.br"
+        },
+        {
+          "filename": "mame-arcade_galaxian.wasm",
+          "output": "runtime/mame/mame-arcade_galaxian.wasm",
+          "maxSizeBytes": 134217728,
+          "sizeBytes": 1387264,
+          "sha256": "5ec86b3a5918cf246434d1df21e9e58f818515eea165278e268643dd89c2eade",
+          "url": "https://github.com/retrom-project/mame/releases/download/retrom-core-gf65d5ba9bc42-r1/mame-arcade_galaxian.wasm"
+        },
+        {
+          "filename": "mame-arcade_galaxian.wasm.br",
+          "output": "runtime/mame/mame-arcade_galaxian.wasm.br",
+          "maxSizeBytes": 134217728,
+          "sizeBytes": 263880,
+          "sha256": "ff03ee158214859fdd0fd6836111d818b5d195fdff3b220c507b824aecea1979",
+          "url": "https://github.com/retrom-project/mame/releases/download/retrom-core-gf65d5ba9bc42-r1/mame-arcade_galaxian.wasm.br"
+        },
+        {
+          "filename": "mame-arcade_gametron.wasm",
+          "output": "runtime/mame/mame-arcade_gametron.wasm",
+          "maxSizeBytes": 134217728,
+          "sizeBytes": 50658,
+          "sha256": "d02c7a177aea2e5a7b2707954d273b2aec1b97badb2774d74d3eed7995eec1c2",
+          "url": "https://github.com/retrom-project/mame/releases/download/retrom-core-gf65d5ba9bc42-r1/mame-arcade_gametron.wasm"
+        },
+        {
+          "filename": "mame-arcade_gametron.wasm.br",
+          "output": "runtime/mame/mame-arcade_gametron.wasm.br",
+          "maxSizeBytes": 134217728,
+          "sizeBytes": 13968,
+          "sha256": "19c5b42a6ed1ce0b8eb392a25880aab541f7b2d80c68a79912a712ae34a5fe46",
+          "url": "https://github.com/retrom-project/mame/releases/download/retrom-core-gf65d5ba9bc42-r1/mame-arcade_gametron.wasm.br"
+        },
+        {
+          "filename": "mame-arcade_gottlieb.wasm",
+          "output": "runtime/mame/mame-arcade_gottlieb.wasm",
+          "maxSizeBytes": 134217728,
+          "sizeBytes": 276909,
+          "sha256": "e4a436e445f8b6749f63e4562cd5e023c813427c47d8f6d68c0986454cc66683",
+          "url": "https://github.com/retrom-project/mame/releases/download/retrom-core-gf65d5ba9bc42-r1/mame-arcade_gottlieb.wasm"
+        },
+        {
+          "filename": "mame-arcade_gottlieb.wasm.br",
+          "output": "runtime/mame/mame-arcade_gottlieb.wasm.br",
+          "maxSizeBytes": 134217728,
+          "sizeBytes": 57218,
+          "sha256": "cff0b728799fa3cf52cce71c05324a283d05c90b56ac246082a8af37ce3d2ea5",
+          "url": "https://github.com/retrom-project/mame/releases/download/retrom-core-gf65d5ba9bc42-r1/mame-arcade_gottlieb.wasm.br"
+        },
+        {
+          "filename": "mame-arcade_ice.wasm",
+          "output": "runtime/mame/mame-arcade_ice.wasm",
+          "maxSizeBytes": 134217728,
+          "sizeBytes": 64957,
+          "sha256": "8153b54f473d7f87bfcc526c2c4220106e2082e58d4a3e0e68e508c558b71c32",
+          "url": "https://github.com/retrom-project/mame/releases/download/retrom-core-gf65d5ba9bc42-r1/mame-arcade_ice.wasm"
+        },
+        {
+          "filename": "mame-arcade_ice.wasm.br",
+          "output": "runtime/mame/mame-arcade_ice.wasm.br",
+          "maxSizeBytes": 134217728,
+          "sizeBytes": 17008,
+          "sha256": "08c2761a24182c6ea6a385324815b85862387696cc0c9c9248e7620d1f07b7c7",
+          "url": "https://github.com/retrom-project/mame/releases/download/retrom-core-gf65d5ba9bc42-r1/mame-arcade_ice.wasm.br"
+        },
+        {
+          "filename": "mame-arcade_igs.wasm",
+          "output": "runtime/mame/mame-arcade_igs.wasm",
+          "maxSizeBytes": 134217728,
+          "sizeBytes": 768837,
+          "sha256": "56330a8ebf30a6438ec719014e1c38d74a1bc2b3a45e372408cf236bae7ec796",
+          "url": "https://github.com/retrom-project/mame/releases/download/retrom-core-gf65d5ba9bc42-r1/mame-arcade_igs.wasm"
+        },
+        {
+          "filename": "mame-arcade_igs.wasm.br",
+          "output": "runtime/mame/mame-arcade_igs.wasm.br",
+          "maxSizeBytes": 134217728,
+          "sizeBytes": 130348,
+          "sha256": "754289785a02f953de289559535c59978b81024fae5eac0354c6e530d45c29ca",
+          "url": "https://github.com/retrom-project/mame/releases/download/retrom-core-gf65d5ba9bc42-r1/mame-arcade_igs.wasm.br"
+        },
+        {
+          "filename": "mame-arcade_irem.wasm",
+          "output": "runtime/mame/mame-arcade_irem.wasm",
+          "maxSizeBytes": 134217728,
+          "sizeBytes": 1195710,
+          "sha256": "5a742c283cb3475c35bb34bb9ff339d689958714bdb94793d5c8c1a162d8b60e",
+          "url": "https://github.com/retrom-project/mame/releases/download/retrom-core-gf65d5ba9bc42-r1/mame-arcade_irem.wasm"
+        },
+        {
+          "filename": "mame-arcade_irem.wasm.br",
+          "output": "runtime/mame/mame-arcade_irem.wasm.br",
+          "maxSizeBytes": 134217728,
+          "sizeBytes": 216884,
+          "sha256": "f1800a93eaa749244689adf5d471801c2db7d23ab1662430cdc808301d10562b",
+          "url": "https://github.com/retrom-project/mame/releases/download/retrom-core-gf65d5ba9bc42-r1/mame-arcade_irem.wasm.br"
+        },
+        {
+          "filename": "mame-arcade_itech.wasm",
+          "output": "runtime/mame/mame-arcade_itech.wasm",
+          "maxSizeBytes": 134217728,
+          "sizeBytes": 546126,
+          "sha256": "db651a758f28bf7ab6b6d078e856798fe32d7658ab81666b15954319d2f93226",
+          "url": "https://github.com/retrom-project/mame/releases/download/retrom-core-gf65d5ba9bc42-r1/mame-arcade_itech.wasm"
+        },
+        {
+          "filename": "mame-arcade_itech.wasm.br",
+          "output": "runtime/mame/mame-arcade_itech.wasm.br",
+          "maxSizeBytes": 134217728,
+          "sizeBytes": 99060,
+          "sha256": "80dd1fa5b2337afb0043567d9de53d739fdd7e46a6f6406e4582c056135b8a07",
+          "url": "https://github.com/retrom-project/mame/releases/download/retrom-core-gf65d5ba9bc42-r1/mame-arcade_itech.wasm.br"
+        },
+        {
+          "filename": "mame-arcade_jaleco.wasm",
+          "output": "runtime/mame/mame-arcade_jaleco.wasm",
+          "maxSizeBytes": 134217728,
+          "sizeBytes": 1366876,
+          "sha256": "b70faffb55ffbe1c014cdc42b7a469ee42bdba6c346f61aa28d2b10e1aca8899",
+          "url": "https://github.com/retrom-project/mame/releases/download/retrom-core-gf65d5ba9bc42-r1/mame-arcade_jaleco.wasm"
+        },
+        {
+          "filename": "mame-arcade_jaleco.wasm.br",
+          "output": "runtime/mame/mame-arcade_jaleco.wasm.br",
+          "maxSizeBytes": 134217728,
+          "sizeBytes": 262152,
+          "sha256": "c7b2a5f5ba12f361a6724509ba665fd8f77e6ed6f84a6e4459befa90345e4698",
+          "url": "https://github.com/retrom-project/mame/releases/download/retrom-core-gf65d5ba9bc42-r1/mame-arcade_jaleco.wasm.br"
+        },
+        {
+          "filename": "mame-arcade_kaneko.wasm",
+          "output": "runtime/mame/mame-arcade_kaneko.wasm",
+          "maxSizeBytes": 134217728,
+          "sizeBytes": 902137,
+          "sha256": "e92516858751a189a27d6229e25c77fde22947fda988ab4f2b7ad38c1e28f948",
+          "url": "https://github.com/retrom-project/mame/releases/download/retrom-core-gf65d5ba9bc42-r1/mame-arcade_kaneko.wasm"
+        },
+        {
+          "filename": "mame-arcade_kaneko.wasm.br",
+          "output": "runtime/mame/mame-arcade_kaneko.wasm.br",
+          "maxSizeBytes": 134217728,
+          "sizeBytes": 163269,
+          "sha256": "7122c9b76818fe08ce6b67d965b6f141d7e98a02cc83c0ea56b393127ccca64f",
+          "url": "https://github.com/retrom-project/mame/releases/download/retrom-core-gf65d5ba9bc42-r1/mame-arcade_kaneko.wasm.br"
+        },
+        {
+          "filename": "mame-arcade_konami.wasm",
+          "output": "runtime/mame/mame-arcade_konami.wasm",
+          "maxSizeBytes": 134217728,
+          "sizeBytes": 3325625,
+          "sha256": "123516cea5e2ca2ea396e800d8a9a4b786f4c3215fc88dba5bcccef33614a817",
+          "url": "https://github.com/retrom-project/mame/releases/download/retrom-core-gf65d5ba9bc42-r1/mame-arcade_konami.wasm"
+        },
+        {
+          "filename": "mame-arcade_konami.wasm.br",
+          "output": "runtime/mame/mame-arcade_konami.wasm.br",
+          "maxSizeBytes": 134217728,
+          "sizeBytes": 559917,
+          "sha256": "da2b804cf6ab807ea1a458ed8fb7fe7d4bc218f9ffa85bf7b21ce4eb92ad4c96",
+          "url": "https://github.com/retrom-project/mame/releases/download/retrom-core-gf65d5ba9bc42-r1/mame-arcade_konami.wasm.br"
+        },
+        {
+          "filename": "mame-arcade_meadows.wasm",
+          "output": "runtime/mame/mame-arcade_meadows.wasm",
+          "maxSizeBytes": 134217728,
+          "sizeBytes": 74016,
+          "sha256": "03f9f108c17273208bc1b8f3f865b12b5e40622bc75539132c557f4b1f17fef3",
+          "url": "https://github.com/retrom-project/mame/releases/download/retrom-core-gf65d5ba9bc42-r1/mame-arcade_meadows.wasm"
+        },
+        {
+          "filename": "mame-arcade_meadows.wasm.br",
+          "output": "runtime/mame/mame-arcade_meadows.wasm.br",
+          "maxSizeBytes": 134217728,
+          "sizeBytes": 21255,
+          "sha256": "8d7346ade26e9c15cb5afd9454c7ab282f132bc2d0429685eb595451936ebf76",
+          "url": "https://github.com/retrom-project/mame/releases/download/retrom-core-gf65d5ba9bc42-r1/mame-arcade_meadows.wasm.br"
+        },
+        {
+          "filename": "mame-arcade_metro.wasm",
+          "output": "runtime/mame/mame-arcade_metro.wasm",
+          "maxSizeBytes": 134217728,
+          "sizeBytes": 451131,
+          "sha256": "fda13209be8055dba8a1cb161a27643c8db31e7d8dd32813eb90779513056a97",
+          "url": "https://github.com/retrom-project/mame/releases/download/retrom-core-gf65d5ba9bc42-r1/mame-arcade_metro.wasm"
+        },
+        {
+          "filename": "mame-arcade_metro.wasm.br",
+          "output": "runtime/mame/mame-arcade_metro.wasm.br",
+          "maxSizeBytes": 134217728,
+          "sizeBytes": 81236,
+          "sha256": "acf378b4e5b08d7893d1591ad9bd8ae6922d16a1d4795b0e86f4029da2a70a1a",
+          "url": "https://github.com/retrom-project/mame/releases/download/retrom-core-gf65d5ba9bc42-r1/mame-arcade_metro.wasm.br"
+        },
+        {
+          "filename": "mame-arcade_midcoin.wasm",
+          "output": "runtime/mame/mame-arcade_midcoin.wasm",
+          "maxSizeBytes": 134217728,
+          "sizeBytes": 41347,
+          "sha256": "c94266c42773c0cc74e545b39c022ba3536253c61a466414c070faf080a0b000",
+          "url": "https://github.com/retrom-project/mame/releases/download/retrom-core-gf65d5ba9bc42-r1/mame-arcade_midcoin.wasm"
+        },
+        {
+          "filename": "mame-arcade_midcoin.wasm.br",
+          "output": "runtime/mame/mame-arcade_midcoin.wasm.br",
+          "maxSizeBytes": 134217728,
+          "sizeBytes": 12087,
+          "sha256": "ed98187893b019260537d261f4bab7820c9eb909423143d2787e6fceb2df8284",
+          "url": "https://github.com/retrom-project/mame/releases/download/retrom-core-gf65d5ba9bc42-r1/mame-arcade_midcoin.wasm.br"
+        },
+        {
+          "filename": "mame-arcade_midw8080.wasm",
+          "output": "runtime/mame/mame-arcade_midw8080.wasm",
+          "maxSizeBytes": 134217728,
+          "sizeBytes": 1118632,
+          "sha256": "7d758b9509a4345bc93809c239c6b3af4db1a643915d7aae83a1c63d1f3f2fa4",
+          "url": "https://github.com/retrom-project/mame/releases/download/retrom-core-gf65d5ba9bc42-r1/mame-arcade_midw8080.wasm"
+        },
+        {
+          "filename": "mame-arcade_midw8080.wasm.br",
+          "output": "runtime/mame/mame-arcade_midw8080.wasm.br",
+          "maxSizeBytes": 134217728,
+          "sizeBytes": 147611,
+          "sha256": "7d43a2c207a889b2ce410edeba0c1242e013b26b6d4af08575b8699223957036",
+          "url": "https://github.com/retrom-project/mame/releases/download/retrom-core-gf65d5ba9bc42-r1/mame-arcade_midw8080.wasm.br"
+        },
+        {
+          "filename": "mame-arcade_misc.wasm",
+          "output": "runtime/mame/mame-arcade_misc.wasm",
+          "maxSizeBytes": 134217728,
+          "sizeBytes": 1768021,
+          "sha256": "ee6265a975c3e940d8e6b46a7587bff082cccdfc490651becf14a0ee57bb7c68",
+          "url": "https://github.com/retrom-project/mame/releases/download/retrom-core-gf65d5ba9bc42-r1/mame-arcade_misc.wasm"
+        },
+        {
+          "filename": "mame-arcade_misc.wasm.br",
+          "output": "runtime/mame/mame-arcade_misc.wasm.br",
+          "maxSizeBytes": 134217728,
+          "sizeBytes": 346657,
+          "sha256": "a98c5c4d61225220ef76ad28ffaa861edcb8787227c7e390b4613ea4d9c626ad",
+          "url": "https://github.com/retrom-project/mame/releases/download/retrom-core-gf65d5ba9bc42-r1/mame-arcade_misc.wasm.br"
+        },
+        {
+          "filename": "mame-arcade_modelracing.wasm",
+          "output": "runtime/mame/mame-arcade_modelracing.wasm",
+          "maxSizeBytes": 134217728,
+          "sizeBytes": 190247,
+          "sha256": "8b65bba43b31a5411e92e9a6b84efd25142279044f24391183d03e26c50a9134",
+          "url": "https://github.com/retrom-project/mame/releases/download/retrom-core-gf65d5ba9bc42-r1/mame-arcade_modelracing.wasm"
+        },
+        {
+          "filename": "mame-arcade_model2.wasm",
+          "output": "runtime/mame/mame-arcade_model2.wasm",
+          "maxSizeBytes": 134217728,
+          "sizeBytes": 1496053,
+          "sha256": "870314c249b1aff5977394bc736f806c6d8915dee4c0da70fecca6e1a81d5340",
+          "url": "https://github.com/retrom-project/mame/releases/download/retrom-core-gf65d5ba9bc42-r1/mame-arcade_model2.wasm"
+        },
+        {
+          "filename": "mame-arcade_model2.wasm.br",
+          "output": "runtime/mame/mame-arcade_model2.wasm.br",
+          "maxSizeBytes": 134217728,
+          "sizeBytes": 248510,
+          "sha256": "88d5c9b1428a440e076c616ee4ade4eb065eaf78e818984f75b40d38594e8e37",
+          "url": "https://github.com/retrom-project/mame/releases/download/retrom-core-gf65d5ba9bc42-r1/mame-arcade_model2.wasm.br"
+        },
+        {
+          "filename": "mame-arcade_modelracing.wasm.br",
+          "output": "runtime/mame/mame-arcade_modelracing.wasm.br",
+          "maxSizeBytes": 134217728,
+          "sizeBytes": 22780,
+          "sha256": "b9d0a434dd886b9bdb85b9e2ea4b3a4d6a2008ec98e230e0a1c3e5b8da5fe58b",
+          "url": "https://github.com/retrom-project/mame/releases/download/retrom-core-gf65d5ba9bc42-r1/mame-arcade_modelracing.wasm.br"
+        },
+        {
+          "filename": "mame-arcade_namco.wasm",
+          "output": "runtime/mame/mame-arcade_namco.wasm",
+          "maxSizeBytes": 134217728,
+          "sizeBytes": 4465793,
+          "sha256": "71f85f06d6be407bf889d755ddaac9275dbd242429fcc17ad52dc89d03c50ffb",
+          "url": "https://github.com/retrom-project/mame/releases/download/retrom-core-gf65d5ba9bc42-r1/mame-arcade_namco.wasm"
+        },
+        {
+          "filename": "mame-arcade_namco.wasm.br",
+          "output": "runtime/mame/mame-arcade_namco.wasm.br",
+          "maxSizeBytes": 134217728,
+          "sizeBytes": 703199,
+          "sha256": "d793a7d97c0fbc0614d84d27069eca1f731ef10f9ae79673716814c425a1596a",
+          "url": "https://github.com/retrom-project/mame/releases/download/retrom-core-gf65d5ba9bc42-r1/mame-arcade_namco.wasm.br"
+        },
+        {
+          "filename": "mame-arcade_nasco.wasm",
+          "output": "runtime/mame/mame-arcade_nasco.wasm",
+          "maxSizeBytes": 134217728,
+          "sizeBytes": 61441,
+          "sha256": "c35934449f9aefc981c8eaa5c79144bbcc2a0ecfd2bbf09351e9a40cff115dfe",
+          "url": "https://github.com/retrom-project/mame/releases/download/retrom-core-gf65d5ba9bc42-r1/mame-arcade_nasco.wasm"
+        },
+        {
+          "filename": "mame-arcade_nasco.wasm.br",
+          "output": "runtime/mame/mame-arcade_nasco.wasm.br",
+          "maxSizeBytes": 134217728,
+          "sizeBytes": 16526,
+          "sha256": "1b96b136a3776d181017d430231c831433e3a964a69c568e984f4044c66d468b",
+          "url": "https://github.com/retrom-project/mame/releases/download/retrom-core-gf65d5ba9bc42-r1/mame-arcade_nasco.wasm.br"
+        },
+        {
+          "filename": "mame-arcade_nichibutsu.wasm",
+          "output": "runtime/mame/mame-arcade_nichibutsu.wasm",
+          "maxSizeBytes": 134217728,
+          "sizeBytes": 1235588,
+          "sha256": "3853a7c8ea3bea53a9580ef9c5cf926499816aba5ebb9cea896445e25471c219",
+          "url": "https://github.com/retrom-project/mame/releases/download/retrom-core-gf65d5ba9bc42-r1/mame-arcade_nichibutsu.wasm"
+        },
+        {
+          "filename": "mame-arcade_nichibutsu.wasm.br",
+          "output": "runtime/mame/mame-arcade_nichibutsu.wasm.br",
+          "maxSizeBytes": 134217728,
+          "sizeBytes": 244084,
+          "sha256": "2f7ea0e6a8c000df6aedfad778ab23c328d31fbe5b9ef5ae55934c2a9730ae77",
+          "url": "https://github.com/retrom-project/mame/releases/download/retrom-core-gf65d5ba9bc42-r1/mame-arcade_nichibutsu.wasm.br"
+        },
+        {
+          "filename": "mame-arcade_nintendo.wasm",
+          "output": "runtime/mame/mame-arcade_nintendo.wasm",
+          "maxSizeBytes": 134217728,
+          "sizeBytes": 1512794,
+          "sha256": "58ade6c9d09f2fb836e464fb9a6c04c97eb7dc24f6bdbec7f41405fc871ce3e0",
+          "url": "https://github.com/retrom-project/mame/releases/download/retrom-core-gf65d5ba9bc42-r1/mame-arcade_nintendo.wasm"
+        },
+        {
+          "filename": "mame-arcade_nintendo.wasm.br",
+          "output": "runtime/mame/mame-arcade_nintendo.wasm.br",
+          "maxSizeBytes": 134217728,
+          "sizeBytes": 250342,
+          "sha256": "6506b61580874f5bec1933002f7919137aceef45225c97e8a1b705d80066b8f2",
+          "url": "https://github.com/retrom-project/mame/releases/download/retrom-core-gf65d5ba9bc42-r1/mame-arcade_nintendo.wasm.br"
+        },
+        {
+          "filename": "mame-arcade_nix.wasm",
+          "output": "runtime/mame/mame-arcade_nix.wasm",
+          "maxSizeBytes": 134217728,
+          "sizeBytes": 89074,
+          "sha256": "8bd0d64c0278da54460c5f6dac5468f323b0e652f85473ffaafbcfb52c3689a4",
+          "url": "https://github.com/retrom-project/mame/releases/download/retrom-core-gf65d5ba9bc42-r1/mame-arcade_nix.wasm"
+        },
+        {
+          "filename": "mame-arcade_nix.wasm.br",
+          "output": "runtime/mame/mame-arcade_nix.wasm.br",
+          "maxSizeBytes": 134217728,
+          "sizeBytes": 21696,
+          "sha256": "351d1514ce6a2b29eb1c9c5482f138289ee02aa6a7917a6457194362d4209c70",
+          "url": "https://github.com/retrom-project/mame/releases/download/retrom-core-gf65d5ba9bc42-r1/mame-arcade_nix.wasm.br"
+        },
+        {
+          "filename": "mame-arcade_nmk.wasm",
+          "output": "runtime/mame/mame-arcade_nmk.wasm",
+          "maxSizeBytes": 134217728,
+          "sizeBytes": 584155,
+          "sha256": "3f9b9825982cd52864b126237ed0277474fad5aa24ededfa049cc8b3784a1677",
+          "url": "https://github.com/retrom-project/mame/releases/download/retrom-core-gf65d5ba9bc42-r1/mame-arcade_nmk.wasm"
+        },
+        {
+          "filename": "mame-arcade_nmk.wasm.br",
+          "output": "runtime/mame/mame-arcade_nmk.wasm.br",
+          "maxSizeBytes": 134217728,
+          "sizeBytes": 110493,
+          "sha256": "003aa5b7ad764bc4d7bef4432aeee9c04cc6a4f071c7de2432d770b7550cf19f",
+          "url": "https://github.com/retrom-project/mame/releases/download/retrom-core-gf65d5ba9bc42-r1/mame-arcade_nmk.wasm.br"
+        },
+        {
+          "filename": "mame-arcade_novag.wasm",
+          "output": "runtime/mame/mame-arcade_novag.wasm",
+          "maxSizeBytes": 134217728,
+          "sizeBytes": 71549,
+          "sha256": "2db4193739f5893b7c79d97ec37d3ec763dc97a36435939cc003b348419037d8",
+          "url": "https://github.com/retrom-project/mame/releases/download/retrom-core-gf65d5ba9bc42-r1/mame-arcade_novag.wasm"
+        },
+        {
+          "filename": "mame-arcade_novag.wasm.br",
+          "output": "runtime/mame/mame-arcade_novag.wasm.br",
+          "maxSizeBytes": 134217728,
+          "sizeBytes": 20717,
+          "sha256": "32604d3a33dadcf21bed8c6b4742877f607b8659222d86c059b2660b892ede86",
+          "url": "https://github.com/retrom-project/mame/releases/download/retrom-core-gf65d5ba9bc42-r1/mame-arcade_novag.wasm.br"
+        },
+        {
+          "filename": "mame-arcade_olympia.wasm",
+          "output": "runtime/mame/mame-arcade_olympia.wasm",
+          "maxSizeBytes": 134217728,
+          "sizeBytes": 60373,
+          "sha256": "9b904575195f1cfd621df93035b68047163ac90205d5e2af6b8c029c73382483",
+          "url": "https://github.com/retrom-project/mame/releases/download/retrom-core-gf65d5ba9bc42-r1/mame-arcade_olympia.wasm"
+        },
+        {
+          "filename": "mame-arcade_olympia.wasm.br",
+          "output": "runtime/mame/mame-arcade_olympia.wasm.br",
+          "maxSizeBytes": 134217728,
+          "sizeBytes": 16091,
+          "sha256": "b109d29ab156f7beab52ffab35d03210a53a51ef2b48039f50c9d3a031760baa",
+          "url": "https://github.com/retrom-project/mame/releases/download/retrom-core-gf65d5ba9bc42-r1/mame-arcade_olympia.wasm.br"
+        },
+        {
+          "filename": "mame-arcade_omori.wasm",
+          "output": "runtime/mame/mame-arcade_omori.wasm",
+          "maxSizeBytes": 134217728,
+          "sizeBytes": 68067,
+          "sha256": "407c00228ab5244aeb0e431ff0d31ed3b3b8c1e70e9f11d33d81eace285059d9",
+          "url": "https://github.com/retrom-project/mame/releases/download/retrom-core-gf65d5ba9bc42-r1/mame-arcade_omori.wasm"
+        },
+        {
+          "filename": "mame-arcade_omori.wasm.br",
+          "output": "runtime/mame/mame-arcade_omori.wasm.br",
+          "maxSizeBytes": 134217728,
+          "sizeBytes": 18606,
+          "sha256": "6454442698743b832f6a724d46d0b21e5a3be9734517bdcb971678ef1beaaa87",
+          "url": "https://github.com/retrom-project/mame/releases/download/retrom-core-gf65d5ba9bc42-r1/mame-arcade_omori.wasm.br"
+        },
+        {
+          "filename": "mame-arcade_orca.wasm",
+          "output": "runtime/mame/mame-arcade_orca.wasm",
+          "maxSizeBytes": 134217728,
+          "sizeBytes": 265161,
+          "sha256": "e8b6182304ebeaf47fb5430d87f4ba52702114ed0076291bd90edc2f04f7107d",
+          "url": "https://github.com/retrom-project/mame/releases/download/retrom-core-gf65d5ba9bc42-r1/mame-arcade_orca.wasm"
+        },
+        {
+          "filename": "mame-arcade_orca.wasm.br",
+          "output": "runtime/mame/mame-arcade_orca.wasm.br",
+          "maxSizeBytes": 134217728,
+          "sizeBytes": 57437,
+          "sha256": "ce3350f03a3f95f332a23c5a518806b2797a7fc85d239f5083462243e4f7e771",
+          "url": "https://github.com/retrom-project/mame/releases/download/retrom-core-gf65d5ba9bc42-r1/mame-arcade_orca.wasm.br"
+        },
+        {
+          "filename": "mame-arcade_pacific.wasm",
+          "output": "runtime/mame/mame-arcade_pacific.wasm",
+          "maxSizeBytes": 134217728,
+          "sizeBytes": 89227,
+          "sha256": "4b10704563d905ad78ec8fc4af4661cf3f26c7bf93cd1b3629c93e4d1ad1522f",
+          "url": "https://github.com/retrom-project/mame/releases/download/retrom-core-gf65d5ba9bc42-r1/mame-arcade_pacific.wasm"
+        },
+        {
+          "filename": "mame-arcade_pacific.wasm.br",
+          "output": "runtime/mame/mame-arcade_pacific.wasm.br",
+          "maxSizeBytes": 134217728,
+          "sizeBytes": 20532,
+          "sha256": "9735fe896e6deb8c23614d6bf1d1ce7c3726fb87abf99da171e89c59ada42845",
+          "url": "https://github.com/retrom-project/mame/releases/download/retrom-core-gf65d5ba9bc42-r1/mame-arcade_pacific.wasm.br"
+        },
+        {
+          "filename": "mame-arcade_phoenix.wasm",
+          "output": "runtime/mame/mame-arcade_phoenix.wasm",
+          "maxSizeBytes": 134217728,
+          "sizeBytes": 245516,
+          "sha256": "a7e2f98fff876ba0b438c6fe84fab0eb3107fc0001e8a10b2c480c307c2ce527",
+          "url": "https://github.com/retrom-project/mame/releases/download/retrom-core-gf65d5ba9bc42-r1/mame-arcade_phoenix.wasm"
+        },
+        {
+          "filename": "mame-arcade_phoenix.wasm.br",
+          "output": "runtime/mame/mame-arcade_phoenix.wasm.br",
+          "maxSizeBytes": 134217728,
+          "sizeBytes": 52643,
+          "sha256": "8e8f03ac1cfa07870346fa18c65ef7ddee49408a02eed68de30ca4681940e9b5",
+          "url": "https://github.com/retrom-project/mame/releases/download/retrom-core-gf65d5ba9bc42-r1/mame-arcade_phoenix.wasm.br"
+        },
+        {
+          "filename": "mame-arcade_playmark.wasm",
+          "output": "runtime/mame/mame-arcade_playmark.wasm",
+          "maxSizeBytes": 134217728,
+          "sizeBytes": 216341,
+          "sha256": "e0249151a9a92f1e86ab571ac22c4c4298352aefbad0c13bc853f011c3430e2e",
+          "url": "https://github.com/retrom-project/mame/releases/download/retrom-core-gf65d5ba9bc42-r1/mame-arcade_playmark.wasm"
+        },
+        {
+          "filename": "mame-arcade_playmark.wasm.br",
+          "output": "runtime/mame/mame-arcade_playmark.wasm.br",
+          "maxSizeBytes": 134217728,
+          "sizeBytes": 40754,
+          "sha256": "51f9c6d9b85a288a6b5dd4823d730f0adb653501b0d3b4b09e94506a5e6f9001",
+          "url": "https://github.com/retrom-project/mame/releases/download/retrom-core-gf65d5ba9bc42-r1/mame-arcade_playmark.wasm.br"
+        },
+        {
+          "filename": "mame-arcade_promat.wasm",
+          "output": "runtime/mame/mame-arcade_promat.wasm",
+          "maxSizeBytes": 134217728,
+          "sizeBytes": 53009,
+          "sha256": "15cb42791ee35f5ca8813a9c3c808d47a4e6aa764ae7d3027e4cf444ca33f2f4",
+          "url": "https://github.com/retrom-project/mame/releases/download/retrom-core-gf65d5ba9bc42-r1/mame-arcade_promat.wasm"
+        },
+        {
+          "filename": "mame-arcade_promat.wasm.br",
+          "output": "runtime/mame/mame-arcade_promat.wasm.br",
+          "maxSizeBytes": 134217728,
+          "sizeBytes": 14827,
+          "sha256": "7a56e3b6072b1dd02e8a1624909eaa0e6ffacc25c0e61482b8ca460bcf9e9244",
+          "url": "https://github.com/retrom-project/mame/releases/download/retrom-core-gf65d5ba9bc42-r1/mame-arcade_promat.wasm.br"
+        },
+        {
+          "filename": "mame-arcade_psikyo.wasm",
+          "output": "runtime/mame/mame-arcade_psikyo.wasm",
+          "maxSizeBytes": 134217728,
+          "sizeBytes": 254669,
+          "sha256": "0a48666cb03b0c659f555cf896ad6267761210876477bf99d4726ff5bceb2ca8",
+          "url": "https://github.com/retrom-project/mame/releases/download/retrom-core-gf65d5ba9bc42-r1/mame-arcade_psikyo.wasm"
+        },
+        {
+          "filename": "mame-arcade_psikyo.wasm.br",
+          "output": "runtime/mame/mame-arcade_psikyo.wasm.br",
+          "maxSizeBytes": 134217728,
+          "sizeBytes": 54784,
+          "sha256": "3843f60521c84f5a91cdefde4f1d48da19b335b732f48487c80938c2b59eb1fa",
+          "url": "https://github.com/retrom-project/mame/releases/download/retrom-core-gf65d5ba9bc42-r1/mame-arcade_psikyo.wasm.br"
+        },
+        {
+          "filename": "mame-arcade_ramtek.wasm",
+          "output": "runtime/mame/mame-arcade_ramtek.wasm",
+          "maxSizeBytes": 134217728,
+          "sizeBytes": 202996,
+          "sha256": "22a7be6a7f6007c4ab275005becf01ddc225e6f037e584d53f8fb3e1e55f67c5",
+          "url": "https://github.com/retrom-project/mame/releases/download/retrom-core-gf65d5ba9bc42-r1/mame-arcade_ramtek.wasm"
+        },
+        {
+          "filename": "mame-arcade_ramtek.wasm.br",
+          "output": "runtime/mame/mame-arcade_ramtek.wasm.br",
+          "maxSizeBytes": 134217728,
+          "sizeBytes": 29211,
+          "sha256": "b2c6e594c3af30ceedc327c94c7a98627d1c81226bedadbccf021ed3af043d92",
+          "url": "https://github.com/retrom-project/mame/releases/download/retrom-core-gf65d5ba9bc42-r1/mame-arcade_ramtek.wasm.br"
+        },
+        {
+          "filename": "mame-arcade_rare.wasm",
+          "output": "runtime/mame/mame-arcade_rare.wasm",
+          "maxSizeBytes": 134217728,
+          "sizeBytes": 160808,
+          "sha256": "18a3df6ea6b4676f909daa9183a5f4a1808c3514cf377d2a6a07c581748c69f8",
+          "url": "https://github.com/retrom-project/mame/releases/download/retrom-core-gf65d5ba9bc42-r1/mame-arcade_rare.wasm"
+        },
+        {
+          "filename": "mame-arcade_rare.wasm.br",
+          "output": "runtime/mame/mame-arcade_rare.wasm.br",
+          "maxSizeBytes": 134217728,
+          "sizeBytes": 34801,
+          "sha256": "55c84eb16b7c1d6d3f93559d44d9d8537b580211db3a7c2c2d56e707c7c515d8",
+          "url": "https://github.com/retrom-project/mame/releases/download/retrom-core-gf65d5ba9bc42-r1/mame-arcade_rare.wasm.br"
+        },
+        {
+          "filename": "mame-arcade_sanritsu.wasm",
+          "output": "runtime/mame/mame-arcade_sanritsu.wasm",
+          "maxSizeBytes": 134217728,
+          "sizeBytes": 236422,
+          "sha256": "1fb811b19976aca8b15f1fd824366a483a8d9c9996b1db1b83fe4b0aee0c7d13",
+          "url": "https://github.com/retrom-project/mame/releases/download/retrom-core-gf65d5ba9bc42-r1/mame-arcade_sanritsu.wasm"
+        },
+        {
+          "filename": "mame-arcade_sanritsu.wasm.br",
+          "output": "runtime/mame/mame-arcade_sanritsu.wasm.br",
+          "maxSizeBytes": 134217728,
+          "sizeBytes": 50947,
+          "sha256": "e216f50db92a14c649fe961e4564f2ded235658e9d1fdd23d5cd40017fda0125",
+          "url": "https://github.com/retrom-project/mame/releases/download/retrom-core-gf65d5ba9bc42-r1/mame-arcade_sanritsu.wasm.br"
+        },
+        {
+          "filename": "mame-arcade_sega.wasm",
+          "output": "runtime/mame/mame-arcade_sega.wasm",
+          "maxSizeBytes": 134217728,
+          "sizeBytes": 6594805,
+          "sha256": "c68ab0832e31234d8ace11419e1a8a2467ce1988bff6916f3dea3f73097874b8",
+          "url": "https://github.com/retrom-project/mame/releases/download/retrom-core-gf65d5ba9bc42-r1/mame-arcade_sega.wasm"
+        },
+        {
+          "filename": "mame-arcade_sega.wasm.br",
+          "output": "runtime/mame/mame-arcade_sega.wasm.br",
+          "maxSizeBytes": 134217728,
+          "sizeBytes": 941151,
+          "sha256": "72e211a6a348b82473dd46d2d73af90290ce460f3abb3165e72e9e6f4e9f14e0",
+          "url": "https://github.com/retrom-project/mame/releases/download/retrom-core-gf65d5ba9bc42-r1/mame-arcade_sega.wasm.br"
+        },
+        {
+          "filename": "mame-arcade_seibu.wasm",
+          "output": "runtime/mame/mame-arcade_seibu.wasm",
+          "maxSizeBytes": 134217728,
+          "sizeBytes": 990026,
+          "sha256": "d4cab0a9fd78a9e9b005fecf00bd58451b4bddf3b94ae3b7648f951bd5bc0bc1",
+          "url": "https://github.com/retrom-project/mame/releases/download/retrom-core-gf65d5ba9bc42-r1/mame-arcade_seibu.wasm"
+        },
+        {
+          "filename": "mame-arcade_seibu.wasm.br",
+          "output": "runtime/mame/mame-arcade_seibu.wasm.br",
+          "maxSizeBytes": 134217728,
+          "sizeBytes": 174535,
+          "sha256": "d0341ea98199e5ad2eacff983bd26d6ab711472071bd34e80b9fa302778fa130",
+          "url": "https://github.com/retrom-project/mame/releases/download/retrom-core-gf65d5ba9bc42-r1/mame-arcade_seibu.wasm.br"
+        },
+        {
+          "filename": "mame-arcade_seta.wasm",
+          "output": "runtime/mame/mame-arcade_seta.wasm",
+          "maxSizeBytes": 134217728,
+          "sizeBytes": 1201213,
+          "sha256": "0566b4ef430b0feaca4d18efb7ba89eae1f9ead68bfccf19e747b3b53f3b005c",
+          "url": "https://github.com/retrom-project/mame/releases/download/retrom-core-gf65d5ba9bc42-r1/mame-arcade_seta.wasm"
+        },
+        {
+          "filename": "mame-arcade_seta.wasm.br",
+          "output": "runtime/mame/mame-arcade_seta.wasm.br",
+          "maxSizeBytes": 134217728,
+          "sizeBytes": 232776,
+          "sha256": "6040de0f715b64a7e669d5186a6873a8c9f330367e524fd18c93832559755df0",
+          "url": "https://github.com/retrom-project/mame/releases/download/retrom-core-gf65d5ba9bc42-r1/mame-arcade_seta.wasm.br"
+        },
+        {
+          "filename": "mame-arcade_sigma.wasm",
+          "output": "runtime/mame/mame-arcade_sigma.wasm",
+          "maxSizeBytes": 134217728,
+          "sizeBytes": 120712,
+          "sha256": "6f567880affedbdb4de38f13cdde405bae0e553a9bd8dff6d623ce39fc908384",
+          "url": "https://github.com/retrom-project/mame/releases/download/retrom-core-gf65d5ba9bc42-r1/mame-arcade_sigma.wasm"
+        },
+        {
+          "filename": "mame-arcade_sigma.wasm.br",
+          "output": "runtime/mame/mame-arcade_sigma.wasm.br",
+          "maxSizeBytes": 134217728,
+          "sizeBytes": 26767,
+          "sha256": "adc68c4e102f4ab9b436ac3c998a7812c83fb924cf8631a8cc50beaefa0fadbc",
+          "url": "https://github.com/retrom-project/mame/releases/download/retrom-core-gf65d5ba9bc42-r1/mame-arcade_sigma.wasm.br"
+        },
+        {
+          "filename": "mame-arcade_skeleton.wasm",
+          "output": "runtime/mame/mame-arcade_skeleton.wasm",
+          "maxSizeBytes": 134217728,
+          "sizeBytes": 78123,
+          "sha256": "c87e36da43e09b249930ccd20d049dc1bab6b6498097650a8b86384d57893164",
+          "url": "https://github.com/retrom-project/mame/releases/download/retrom-core-gf65d5ba9bc42-r1/mame-arcade_skeleton.wasm"
+        },
+        {
+          "filename": "mame-arcade_skeleton.wasm.br",
+          "output": "runtime/mame/mame-arcade_skeleton.wasm.br",
+          "maxSizeBytes": 134217728,
+          "sizeBytes": 17655,
+          "sha256": "02a5ce73a44d95bf03fb82060d49f27cdf22fb2bc514f414c9215a95969474d6",
+          "url": "https://github.com/retrom-project/mame/releases/download/retrom-core-gf65d5ba9bc42-r1/mame-arcade_skeleton.wasm.br"
+        },
+        {
+          "filename": "mame-arcade_snk.wasm",
+          "output": "runtime/mame/mame-arcade_snk.wasm",
+          "maxSizeBytes": 134217728,
+          "sizeBytes": 2898911,
+          "sha256": "83736bc7f531142ef00fb7708b64551eabc87018c385c43e967915bd9685ed81",
+          "url": "https://github.com/retrom-project/mame/releases/download/retrom-core-gf65d5ba9bc42-r1/mame-arcade_snk.wasm"
+        },
+        {
+          "filename": "mame-arcade_snk.wasm.br",
+          "output": "runtime/mame/mame-arcade_snk.wasm.br",
+          "maxSizeBytes": 134217728,
+          "sizeBytes": 380373,
+          "sha256": "0039988fd0fc583c7a004c5acdaf5c3d7f60f83c69a98ba633ce48ba6a61995c",
+          "url": "https://github.com/retrom-project/mame/releases/download/retrom-core-gf65d5ba9bc42-r1/mame-arcade_snk.wasm.br"
+        },
+        {
+          "filename": "mame-arcade_sony.wasm",
+          "output": "runtime/mame/mame-arcade_sony.wasm",
+          "maxSizeBytes": 134217728,
+          "sizeBytes": 535467,
+          "sha256": "c770e2c25e1c0d64d4e93e741849d66d650ce7db1b3a05436d09d890f1693b3b",
+          "url": "https://github.com/retrom-project/mame/releases/download/retrom-core-gf65d5ba9bc42-r1/mame-arcade_sony.wasm"
+        },
+        {
+          "filename": "mame-arcade_sony.wasm.br",
+          "output": "runtime/mame/mame-arcade_sony.wasm.br",
+          "maxSizeBytes": 134217728,
+          "sizeBytes": 92551,
+          "sha256": "747d6f166cd832358f1b625f89945743e9777f6715b106ec8671983939a918e4",
+          "url": "https://github.com/retrom-project/mame/releases/download/retrom-core-gf65d5ba9bc42-r1/mame-arcade_sony.wasm.br"
+        },
+        {
+          "filename": "mame-arcade_stern.wasm",
+          "output": "runtime/mame/mame-arcade_stern.wasm",
+          "maxSizeBytes": 134217728,
+          "sizeBytes": 234592,
+          "sha256": "89531964f823086dac5a98e55bcaaddf5bfff10ec5d980a55bc07188a6ba45db",
+          "url": "https://github.com/retrom-project/mame/releases/download/retrom-core-gf65d5ba9bc42-r1/mame-arcade_stern.wasm"
+        },
+        {
+          "filename": "mame-arcade_stern.wasm.br",
+          "output": "runtime/mame/mame-arcade_stern.wasm.br",
+          "maxSizeBytes": 134217728,
+          "sizeBytes": 52512,
+          "sha256": "99ad083acf39ca91878b37c6e7f536ed3ec268702af41ce66208c58474264c27",
+          "url": "https://github.com/retrom-project/mame/releases/download/retrom-core-gf65d5ba9bc42-r1/mame-arcade_stern.wasm.br"
+        },
+        {
+          "filename": "mame-arcade_suna.wasm",
+          "output": "runtime/mame/mame-arcade_suna.wasm",
+          "maxSizeBytes": 134217728,
+          "sizeBytes": 235995,
+          "sha256": "9ba57cdec41dee9b66ea919990378901dcabfb632257ff9b9f88f99d336a1c11",
+          "url": "https://github.com/retrom-project/mame/releases/download/retrom-core-gf65d5ba9bc42-r1/mame-arcade_suna.wasm"
+        },
+        {
+          "filename": "mame-arcade_suna.wasm.br",
+          "output": "runtime/mame/mame-arcade_suna.wasm.br",
+          "maxSizeBytes": 134217728,
+          "sizeBytes": 46420,
+          "sha256": "10684650ed7b7bf3b7b58ca01763915a5867a7f4bc7f40519d49dfbd98bc9b90",
+          "url": "https://github.com/retrom-project/mame/releases/download/retrom-core-gf65d5ba9bc42-r1/mame-arcade_suna.wasm.br"
+        },
+        {
+          "filename": "mame-arcade_sunelectronics.wasm",
+          "output": "runtime/mame/mame-arcade_sunelectronics.wasm",
+          "maxSizeBytes": 134217728,
+          "sizeBytes": 277503,
+          "sha256": "0c3e35ac55d54be7655bc3171cf45196cda83e46792894d80783c60df89bdef9",
+          "url": "https://github.com/retrom-project/mame/releases/download/retrom-core-gf65d5ba9bc42-r1/mame-arcade_sunelectronics.wasm"
+        },
+        {
+          "filename": "mame-arcade_sunelectronics.wasm.br",
+          "output": "runtime/mame/mame-arcade_sunelectronics.wasm.br",
+          "maxSizeBytes": 134217728,
+          "sizeBytes": 61438,
+          "sha256": "67c1f1575238771af99df4f8bcb739ec6accf08d4d9475cf8ec9e1dd229b714b",
+          "url": "https://github.com/retrom-project/mame/releases/download/retrom-core-gf65d5ba9bc42-r1/mame-arcade_sunelectronics.wasm.br"
+        },
+        {
+          "filename": "mame-arcade_taito.wasm",
+          "output": "runtime/mame/mame-arcade_taito.wasm",
+          "maxSizeBytes": 134217728,
+          "sizeBytes": 4352687,
+          "sha256": "917afc0be2df4248bdd717147781021c752c6577e88240ffa73fa0b72c7f2ca3",
+          "url": "https://github.com/retrom-project/mame/releases/download/retrom-core-gf65d5ba9bc42-r1/mame-arcade_taito.wasm"
+        },
+        {
+          "filename": "mame-arcade_taito.wasm.br",
+          "output": "runtime/mame/mame-arcade_taito.wasm.br",
+          "maxSizeBytes": 134217728,
+          "sizeBytes": 730442,
+          "sha256": "e6801fb6badffe6221810f4409bf1b7a760867d6e5062662f7fdbffa1fc0239f",
+          "url": "https://github.com/retrom-project/mame/releases/download/retrom-core-gf65d5ba9bc42-r1/mame-arcade_taito.wasm.br"
+        },
+        {
+          "filename": "mame-arcade_tatsumi.wasm",
+          "output": "runtime/mame/mame-arcade_tatsumi.wasm",
+          "maxSizeBytes": 134217728,
+          "sizeBytes": 121268,
+          "sha256": "c8e4952d8cbb1a939a25efb1b72498002329ed8104f77eba3cb25336cf83061c",
+          "url": "https://github.com/retrom-project/mame/releases/download/retrom-core-gf65d5ba9bc42-r1/mame-arcade_tatsumi.wasm"
+        },
+        {
+          "filename": "mame-arcade_tatsumi.wasm.br",
+          "output": "runtime/mame/mame-arcade_tatsumi.wasm.br",
+          "maxSizeBytes": 134217728,
+          "sizeBytes": 30180,
+          "sha256": "109f383564049a7618f4cdd53ce9f7ff52a1dee12e6b4a3a5c10a27a02b02a74",
+          "url": "https://github.com/retrom-project/mame/releases/download/retrom-core-gf65d5ba9bc42-r1/mame-arcade_tatsumi.wasm.br"
+        },
+        {
+          "filename": "mame-arcade_tch.wasm",
+          "output": "runtime/mame/mame-arcade_tch.wasm",
+          "maxSizeBytes": 134217728,
+          "sizeBytes": 84452,
+          "sha256": "bafcbcf75b95f4f864c75e78263e4d88904a6268e1653819016e82ae099a9488",
+          "url": "https://github.com/retrom-project/mame/releases/download/retrom-core-gf65d5ba9bc42-r1/mame-arcade_tch.wasm"
+        },
+        {
+          "filename": "mame-arcade_tch.wasm.br",
+          "output": "runtime/mame/mame-arcade_tch.wasm.br",
+          "maxSizeBytes": 134217728,
+          "sizeBytes": 19880,
+          "sha256": "53d94fcb8e3a7d1ae7c58881169ab5b26bdae53c446185d18eaec2fcfc3758c9",
+          "url": "https://github.com/retrom-project/mame/releases/download/retrom-core-gf65d5ba9bc42-r1/mame-arcade_tch.wasm.br"
+        },
+        {
+          "filename": "mame-arcade_tecfri.wasm",
+          "output": "runtime/mame/mame-arcade_tecfri.wasm",
+          "maxSizeBytes": 134217728,
+          "sizeBytes": 164761,
+          "sha256": "1eefa96c0db1ae36bd9a6208426774f72be05bf094f16570085cca98814f240d",
+          "url": "https://github.com/retrom-project/mame/releases/download/retrom-core-gf65d5ba9bc42-r1/mame-arcade_tecfri.wasm"
+        },
+        {
+          "filename": "mame-arcade_tecfri.wasm.br",
+          "output": "runtime/mame/mame-arcade_tecfri.wasm.br",
+          "maxSizeBytes": 134217728,
+          "sizeBytes": 37872,
+          "sha256": "f6faa15013eece9a77b8c7ecb9b779a03bcba8950b4643254dd791bfc590c91f",
+          "url": "https://github.com/retrom-project/mame/releases/download/retrom-core-gf65d5ba9bc42-r1/mame-arcade_tecfri.wasm.br"
+        },
+        {
+          "filename": "mame-arcade_technos.wasm",
+          "output": "runtime/mame/mame-arcade_technos.wasm",
+          "maxSizeBytes": 134217728,
+          "sizeBytes": 626513,
+          "sha256": "4cbf9aef86fc9d40d6c076c6fc5e4b4d337fa77043d650210f164c34bbd3c15f",
+          "url": "https://github.com/retrom-project/mame/releases/download/retrom-core-gf65d5ba9bc42-r1/mame-arcade_technos.wasm"
+        },
+        {
+          "filename": "mame-arcade_technos.wasm.br",
+          "output": "runtime/mame/mame-arcade_technos.wasm.br",
+          "maxSizeBytes": 134217728,
+          "sizeBytes": 121178,
+          "sha256": "f8d7a4bae0b3497d88d49cc1e1422b2b4b5965574fdd314af21e96227ca64f31",
+          "url": "https://github.com/retrom-project/mame/releases/download/retrom-core-gf65d5ba9bc42-r1/mame-arcade_technos.wasm.br"
+        },
+        {
+          "filename": "mame-arcade_tecmo.wasm",
+          "output": "runtime/mame/mame-arcade_tecmo.wasm",
+          "maxSizeBytes": 134217728,
+          "sizeBytes": 531152,
+          "sha256": "6c79b7680070abdf35d14dd3426df76d91fc11f6b53e56fdd0ead49a10c3b515",
+          "url": "https://github.com/retrom-project/mame/releases/download/retrom-core-gf65d5ba9bc42-r1/mame-arcade_tecmo.wasm"
+        },
+        {
+          "filename": "mame-arcade_tecmo.wasm.br",
+          "output": "runtime/mame/mame-arcade_tecmo.wasm.br",
+          "maxSizeBytes": 134217728,
+          "sizeBytes": 105675,
+          "sha256": "995d18d2d2f4735f76df21283dfcbae370950d83e3c3275a38c83283267495f1",
+          "url": "https://github.com/retrom-project/mame/releases/download/retrom-core-gf65d5ba9bc42-r1/mame-arcade_tecmo.wasm.br"
+        },
+        {
+          "filename": "mame-arcade_toaplan.wasm",
+          "output": "runtime/mame/mame-arcade_toaplan.wasm",
+          "maxSizeBytes": 134217728,
+          "sizeBytes": 884144,
+          "sha256": "a3ca52538c3bfd92e0462d1e64891b9d7fc01de20feacb9dbb297fb87c80d20a",
+          "url": "https://github.com/retrom-project/mame/releases/download/retrom-core-gf65d5ba9bc42-r1/mame-arcade_toaplan.wasm"
+        },
+        {
+          "filename": "mame-arcade_toaplan.wasm.br",
+          "output": "runtime/mame/mame-arcade_toaplan.wasm.br",
+          "maxSizeBytes": 134217728,
+          "sizeBytes": 153328,
+          "sha256": "eb335573061fb7143977e5879d1919af1977c262f2832f8bac79356ca1a4dbc2",
+          "url": "https://github.com/retrom-project/mame/releases/download/retrom-core-gf65d5ba9bc42-r1/mame-arcade_toaplan.wasm.br"
+        },
+        {
+          "filename": "mame-arcade_unico.wasm",
+          "output": "runtime/mame/mame-arcade_unico.wasm",
+          "maxSizeBytes": 134217728,
+          "sizeBytes": 134264,
+          "sha256": "ca330f073b7b9c5d718af4652e047af5a182d661b4e9c8d1f86a18fb544d7b0f",
+          "url": "https://github.com/retrom-project/mame/releases/download/retrom-core-gf65d5ba9bc42-r1/mame-arcade_unico.wasm"
+        },
+        {
+          "filename": "mame-arcade_unico.wasm.br",
+          "output": "runtime/mame/mame-arcade_unico.wasm.br",
+          "maxSizeBytes": 134217728,
+          "sizeBytes": 30151,
+          "sha256": "137f9ce6b3cc14c1f32a2eb19989a42406e7aa3a1fe20d2d788be832881b52c7",
+          "url": "https://github.com/retrom-project/mame/releases/download/retrom-core-gf65d5ba9bc42-r1/mame-arcade_unico.wasm.br"
+        },
+        {
+          "filename": "mame-arcade_universal.wasm",
+          "output": "runtime/mame/mame-arcade_universal.wasm",
+          "maxSizeBytes": 134217728,
+          "sizeBytes": 434170,
+          "sha256": "9f5e5419c280bd6173572041e3d29f773844ea69bd7d31342451ddea440c005c",
+          "url": "https://github.com/retrom-project/mame/releases/download/retrom-core-gf65d5ba9bc42-r1/mame-arcade_universal.wasm"
+        },
+        {
+          "filename": "mame-arcade_universal.wasm.br",
+          "output": "runtime/mame/mame-arcade_universal.wasm.br",
+          "maxSizeBytes": 134217728,
+          "sizeBytes": 79802,
+          "sha256": "fedd39a9c359e489ebf4ae95c84f7057189834eccaa8fd867caa41ca3a00bda6",
+          "url": "https://github.com/retrom-project/mame/releases/download/retrom-core-gf65d5ba9bc42-r1/mame-arcade_universal.wasm.br"
+        },
+        {
+          "filename": "mame-arcade_upl.wasm",
+          "output": "runtime/mame/mame-arcade_upl.wasm",
+          "maxSizeBytes": 134217728,
+          "sizeBytes": 195540,
+          "sha256": "aec910806baffa5eaa75eb32fa795f0a9601427c2431c9625428b57d044475ec",
+          "url": "https://github.com/retrom-project/mame/releases/download/retrom-core-gf65d5ba9bc42-r1/mame-arcade_upl.wasm"
+        },
+        {
+          "filename": "mame-arcade_upl.wasm.br",
+          "output": "runtime/mame/mame-arcade_upl.wasm.br",
+          "maxSizeBytes": 134217728,
+          "sizeBytes": 42648,
+          "sha256": "3e888ffbb201c5634e2ea1163547f3b37a959f32af57e8130cb6476a01856678",
+          "url": "https://github.com/retrom-project/mame/releases/download/retrom-core-gf65d5ba9bc42-r1/mame-arcade_upl.wasm.br"
+        },
+        {
+          "filename": "mame-arcade_valadon.wasm",
+          "output": "runtime/mame/mame-arcade_valadon.wasm",
+          "maxSizeBytes": 134217728,
+          "sizeBytes": 135494,
+          "sha256": "aaa2f2f2e7b5996eaa61470165fb1a78cfd2e52c22470e9a3f98e451765d5894",
+          "url": "https://github.com/retrom-project/mame/releases/download/retrom-core-gf65d5ba9bc42-r1/mame-arcade_valadon.wasm"
+        },
+        {
+          "filename": "mame-arcade_valadon.wasm.br",
+          "output": "runtime/mame/mame-arcade_valadon.wasm.br",
+          "maxSizeBytes": 134217728,
+          "sizeBytes": 30668,
+          "sha256": "847ddd932002f9b0a90b67825ce553be229d2639614215bbe9a4ba0c9838ea85",
+          "url": "https://github.com/retrom-project/mame/releases/download/retrom-core-gf65d5ba9bc42-r1/mame-arcade_valadon.wasm.br"
+        },
+        {
+          "filename": "mame-arcade_videogames.wasm",
+          "output": "runtime/mame/mame-arcade_videogames.wasm",
+          "maxSizeBytes": 134217728,
+          "sizeBytes": 295677,
+          "sha256": "366c9e28aed5cdd918345197ab70a98d923ae98ffae78d0aa03470fcb152bb53",
+          "url": "https://github.com/retrom-project/mame/releases/download/retrom-core-gf65d5ba9bc42-r1/mame-arcade_videogames.wasm"
+        },
+        {
+          "filename": "mame-arcade_videogames.wasm.br",
+          "output": "runtime/mame/mame-arcade_videogames.wasm.br",
+          "maxSizeBytes": 134217728,
+          "sizeBytes": 41857,
+          "sha256": "cac8ee954f0ee44860a48c40f30b83db67f74cf08d4c168997c6430d786c6529",
+          "url": "https://github.com/retrom-project/mame/releases/download/retrom-core-gf65d5ba9bc42-r1/mame-arcade_videogames.wasm.br"
+        },
+        {
+          "filename": "mame-arcade_vsystem.wasm",
+          "output": "runtime/mame/mame-arcade_vsystem.wasm",
+          "maxSizeBytes": 134217728,
+          "sizeBytes": 748091,
+          "sha256": "a4c8d91e134e20fe696dabb2f3295f1f3ce9c85d9241e2aa84b7fe17c6c75717",
+          "url": "https://github.com/retrom-project/mame/releases/download/retrom-core-gf65d5ba9bc42-r1/mame-arcade_vsystem.wasm"
+        },
+        {
+          "filename": "mame-arcade_vsystem.wasm.br",
+          "output": "runtime/mame/mame-arcade_vsystem.wasm.br",
+          "maxSizeBytes": 134217728,
+          "sizeBytes": 136062,
+          "sha256": "c667cf712de5a56fc26e894b26c7feccac0cbd21a5fe091d1c0c383cd6fcdfaf",
+          "url": "https://github.com/retrom-project/mame/releases/download/retrom-core-gf65d5ba9bc42-r1/mame-arcade_vsystem.wasm.br"
+        },
+        {
+          "filename": "mame-arcade_williams.wasm",
+          "output": "runtime/mame/mame-arcade_williams.wasm",
+          "maxSizeBytes": 134217728,
+          "sizeBytes": 2458737,
+          "sha256": "594129f9cb8d6249532723c4d1b301786bc5fd8ef5cfd1fc29eb7e1fd8dfe49f",
+          "url": "https://github.com/retrom-project/mame/releases/download/retrom-core-gf65d5ba9bc42-r1/mame-arcade_williams.wasm"
+        },
+        {
+          "filename": "mame-arcade_williams.wasm.br",
+          "output": "runtime/mame/mame-arcade_williams.wasm.br",
+          "maxSizeBytes": 134217728,
+          "sizeBytes": 336360,
+          "sha256": "594758a5505b50a0d2610624a1ad890d5370e8d3b4b6146371ae33b21de6baf2",
+          "url": "https://github.com/retrom-project/mame/releases/download/retrom-core-gf65d5ba9bc42-r1/mame-arcade_williams.wasm.br"
+        },
+        {
+          "filename": "mame-arcade_yachiyo.wasm",
+          "output": "runtime/mame/mame-arcade_yachiyo.wasm",
+          "maxSizeBytes": 134217728,
+          "sizeBytes": 38276,
+          "sha256": "a81b151cdaa0e2896a9b83d248c51ca5cbc1318d6ea730eaf90dbe799cddc21d",
+          "url": "https://github.com/retrom-project/mame/releases/download/retrom-core-gf65d5ba9bc42-r1/mame-arcade_yachiyo.wasm"
+        },
+        {
+          "filename": "mame-arcade_yachiyo.wasm.br",
+          "output": "runtime/mame/mame-arcade_yachiyo.wasm.br",
+          "maxSizeBytes": 134217728,
+          "sizeBytes": 11760,
+          "sha256": "56640e767b491c1779affca3c1b8d535ad81b3ba0d1bddc06dbeaa8cee14b5bf",
+          "url": "https://github.com/retrom-project/mame/releases/download/retrom-core-gf65d5ba9bc42-r1/mame-arcade_yachiyo.wasm.br"
+        },
+        {
+          "filename": "mame-arcade_yunsung.wasm",
+          "output": "runtime/mame/mame-arcade_yunsung.wasm",
+          "maxSizeBytes": 134217728,
+          "sizeBytes": 150519,
+          "sha256": "05cc11a7f7e0b7bcc7e1500e4d44b11bc9baf909f48401f59d29a9a86c5f342b",
+          "url": "https://github.com/retrom-project/mame/releases/download/retrom-core-gf65d5ba9bc42-r1/mame-arcade_yunsung.wasm"
+        },
+        {
+          "filename": "mame-arcade_yunsung.wasm.br",
+          "output": "runtime/mame/mame-arcade_yunsung.wasm.br",
+          "maxSizeBytes": 134217728,
+          "sizeBytes": 34290,
+          "sha256": "b7fca6ece30fb2def94cf33ef164f9db678e750e47a9882934b096f26361993a",
+          "url": "https://github.com/retrom-project/mame/releases/download/retrom-core-gf65d5ba9bc42-r1/mame-arcade_yunsung.wasm.br"
+        },
+        {
+          "filename": "mame-arcade_zaccaria.wasm",
+          "output": "runtime/mame/mame-arcade_zaccaria.wasm",
+          "maxSizeBytes": 134217728,
+          "sizeBytes": 253662,
+          "sha256": "dd870cbd355c439c675bd3aab971c6375b2da012f0eb7a92cbc5c0ad97257e9b",
+          "url": "https://github.com/retrom-project/mame/releases/download/retrom-core-gf65d5ba9bc42-r1/mame-arcade_zaccaria.wasm"
+        },
+        {
+          "filename": "mame-arcade_zaccaria.wasm.br",
+          "output": "runtime/mame/mame-arcade_zaccaria.wasm.br",
+          "maxSizeBytes": 134217728,
+          "sizeBytes": 35924,
+          "sha256": "d3c6b8186c76d6b1031f7ca72629c9b4661923f0a95f51df6fdbc70de0dc81a5",
+          "url": "https://github.com/retrom-project/mame/releases/download/retrom-core-gf65d5ba9bc42-r1/mame-arcade_zaccaria.wasm.br"
+        }
+      ]
     }
   ],
   "localAssets": [
@@ -2500,74 +3991,5 @@
       "output": "runtime/butterscotch/worker.mjs"
     }
   ],
-  "developmentInputs": [
-    {
-      "id": "mame",
-      "repository": "https://github.com/retrom-project/mame",
-      "upstreamCommit": "f65d5ba9bc42febea7cd76d4559827d0e1271581",
-      "adapterAbi": "retrom-mame-dylink-v1",
-      "assets": [
-        {
-          "filename": "mame-build.json",
-          "output": "runtime/mame/mame-build.json",
-          "maxSizeBytes": 2097152
-        },
-        {
-          "filename": "mame-common.mjs",
-          "output": "runtime/mame/mame-common.mjs",
-          "maxSizeBytes": 2097152
-        },
-        {
-          "filename": "mame-common.mjs.br",
-          "output": "runtime/mame/mame-common.mjs.br",
-          "maxSizeBytes": 2097152
-        },
-        {
-          "filename": "mame-common.wasm",
-          "output": "runtime/mame/mame-common.wasm",
-          "maxSizeBytes": 134217728
-        },
-        {
-          "filename": "mame-common.wasm.br",
-          "output": "runtime/mame/mame-common.wasm.br",
-          "maxSizeBytes": 134217728
-        },
-        {
-          "filename": "mame-apple.wasm",
-          "output": "runtime/mame/mame-apple.wasm",
-          "maxSizeBytes": 134217728
-        },
-        {
-          "filename": "mame-apple.wasm.br",
-          "output": "runtime/mame/mame-apple.wasm.br",
-          "maxSizeBytes": 134217728
-        },
-        {
-          "filename": "LICENSES.txt",
-          "output": "licenses/mame/LICENSES.txt",
-          "maxSizeBytes": 2097152
-        },
-        {
-          "filename": "mame-acorn.wasm",
-          "output": "runtime/mame/mame-acorn.wasm",
-          "maxSizeBytes": 134217728
-        },
-        {
-          "filename": "mame-acorn.wasm.br",
-          "output": "runtime/mame/mame-acorn.wasm.br",
-          "maxSizeBytes": 134217728
-        },
-        {
-          "filename": "mame-vintage.wasm",
-          "output": "runtime/mame/mame-vintage.wasm",
-          "maxSizeBytes": 134217728
-        },
-        {
-          "filename": "mame-vintage.wasm.br",
-          "output": "runtime/mame/mame-vintage.wasm.br",
-          "maxSizeBytes": 134217728
-        }
-      ]
-    }
-  ]
+  "developmentInputs": []
 }

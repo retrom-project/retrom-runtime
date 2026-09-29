@@ -21,7 +21,7 @@ it("rejects metadata and downloaded byte changes before publishing any asset", a
   } finally {await rm(root, {recursive: true, force: true});}
 });
 
-it.each(["nxengine", "ppsspp"])("verifies %s download bytes before the release build publishes assets", async id => {
+it.each(["nxengine", "ppsspp", "mame"])("verifies %s download bytes before the release build publishes assets", async id => {
   const root = await mkdtemp(join(tmpdir(), "pinned-route-")), stage = pathToFileURL(root + "/");
   const bytes = new Uint8Array([1, 2, 3]);
   const asset = {filename: "core.wasm", output: "runtime/core.wasm", url: "https://example.com/core.wasm",

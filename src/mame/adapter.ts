@@ -18,6 +18,12 @@ export async function mountMame(config: MameParameters, target: HTMLElement, win
     const loaded = withMemory(core, command.length, pointer => {core.HEAPU8.set(command, pointer); return core._retrom_mame_start(pointer);});
     if (loaded !== 1 || core._retrom_mame_step() !== 1) {throw new Error("MAME_BOOT_FAILED");}
     if (restorePayload) {
+      if (config.machine === "sg1000") {
+        // A state loaded on the first boot step leaves Bank Panic's video frozen.
+        for (let frame = 0; frame < 60; frame++) {
+          if (core._retrom_mame_step() !== 1) {throw new Error("MAME_BOOT_FAILED");}
+        }
+      }
       const native = await decodeState(identity, build, restorePayload);
       const restored = withMemory(core, native.length, pointer => {core.HEAPU8.set(native, pointer); return core._retrom_mame_restore(pointer, native.length);});
       if (restored !== 1) {throw new Error("MAME_CHECKPOINT_RESTORE_FAILED");}
@@ -30,7 +36,8 @@ export async function mountMame(config: MameParameters, target: HTMLElement, win
     const rate = core._retrom_mame_sample_rate(), fps = core._retrom_mame_fps(), aspect = core._retrom_mame_aspect_ratio();
     if (!Number.isFinite(aspect) || aspect <= 0 || aspect > 10) {throw new Error("MAME_AV_INVALID");}
     if (!Number.isFinite(fps) || fps < 20 || fps > 120 || !Number.isFinite(rate) || rate < 8000 || rate > 96000) {throw new Error("MAME_AV_INVALID");}
-    const {canvas, draw} = createVideo(win, core, profiles[config.machine].label), keyboard = installInput(win, core, config.machine), audio = new MameAudio(rate);
+    const label = config.arcade === true ? `MAME Arcade (${config.machine})` : profiles[config.machine].label;
+    const {canvas, draw} = createVideo(win, core, label), keyboard = installInput(win, core, config.machine, config.arcade === true), audio = new MameAudio(rate);
     let stopped = false, paused = false, request = 0, previous = 0, accumulator = 0, frames = 1;
     const active = () => {if (stopped) {throw new Error("MAME_RUNTIME_STOPPED");}};
     const unlock = () => {if (!stopped && !paused) {void audio.resume().catch(() => undefined);}};
@@ -59,7 +66,8 @@ export async function mountMame(config: MameParameters, target: HTMLElement, win
     return {
       exit, getCanvas: () => stopped ? null : canvas, getFrameCount: () => frames,
       getDisplayAspectRatio: () => core._retrom_mame_aspect_ratio(),
-      getCheckpointAvailability: () => !stopped && core._retrom_mame_save_size() > 0 ? {available: true, blocker: null} : {available: false, blocker: "NOT_READY"},
+      getCheckpointAvailability: () => stopped ? {available: false, blocker: "NOT_READY"} :
+        core._retrom_mame_save_size() > 0 ? {available: true, blocker: null} : {available: false, blocker: "UNSUPPORTED"},
       checkpoint: async () => {
         active(); const size = core._retrom_mame_save_size();
         if (size < 1 || size > checkpointLimit - 108) {throw new Error("MAME_CHECKPOINT_UNAVAILABLE");}

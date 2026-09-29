@@ -5,12 +5,12 @@ import {eagerPolicy} from "../provider/content-policies.js";
 const state = vi.hoisted(() => ({build: "a".repeat(64), assetHash: "b".repeat(64), atomMachine: "atom"}));
 vi.mock("../provider/core-assets.js", () => ({loadCoreAsset: vi.fn(async (_options, _url, path: string) => {
   if (!path.endsWith(".json")) {return new Uint8Array(8);}
-  const assets = Object.fromEntries(["mame-common.mjs", "mame-common.wasm", "mame-apple.wasm", "mame-acorn.wasm", "mame-vintage.wasm"].map(name =>
+  const assets = Object.fromEntries(["mame-common.mjs", "mame-common.wasm", "mame-apple.wasm", "mame-acorn.wasm", "mame-vintage.wasm", "mame-pacman.wasm", "mame-arcade_capcom.wasm"].map(name =>
     [name, {sha256: state.assetHash, sizeBytes: 8}]));
-  return new TextEncoder().encode(JSON.stringify({schemaVersion: 1, adapterAbi: "retrom-mame-dylink-v1", buildId: state.build, assets, families: {apple: {module: "mame-apple.wasm", machines: ["apple2p"]}, acorn: {module: "mame-acorn.wasm", machines: [state.atomMachine]}, vintage: {module: "mame-vintage.wasm", machines: ["pv1000"]}}}));
+  return new TextEncoder().encode(JSON.stringify({schemaVersion: 1, adapterAbi: "retrom-mame-dylink-v1", buildId: state.build, assets, families: {apple: {module: "mame-apple.wasm", machines: ["apple2p"], arcade: false}, acorn: {module: "mame-acorn.wasm", machines: [state.atomMachine], arcade: false}, vintage: {module: "mame-vintage.wasm", machines: ["pv1000"], arcade: false}, pacman: {module: "mame-pacman.wasm", machines: ["mspacman", "puckman"], arcade: true}, arcade_capcom: {module: "mame-arcade_capcom.wasm", machines: ["1942"], arcade: true}}}));
 })}));
 const config = {machine: "apple2p" as const, runtimeBaseUrl: "https://example.test/runtime/", game: {url: "/game", sha256: "a".repeat(64), sizeBytes: 143360}, bios: []};
-const content = {assetIndex: Object.fromEntries(["mame-build.json", "mame-common.mjs", "mame-common.wasm", "mame-apple.wasm", "mame-acorn.wasm", "mame-vintage.wasm"].map(name =>
+const content = {assetIndex: Object.fromEntries(["mame-build.json", "mame-common.mjs", "mame-common.wasm", "mame-apple.wasm", "mame-acorn.wasm", "mame-vintage.wasm", "mame-pacman.wasm", "mame-arcade_capcom.wasm"].map(name =>
   [`assets/mame/${name}`, {sha256: "b".repeat(64), sizeBytes: 8}])),
 contentSession: {inputPolicy: () => eagerPolicy(143360), open: async () => {throw Error("unused");},
   materialize: async () => {throw Error("unused");}, closeFile: async () => {}}};
@@ -66,6 +66,23 @@ test.each([['atom', 'acorn'], ['pv1000', 'vintage']] as const)("loads only the s
   await loadCore({...config, machine}, content, async () => ({default: async () => core}));
   expect(vi.mocked(loadCoreAsset).mock.calls.map(call => call[2])).toEqual([
     "assets/mame/mame-build.json", "assets/mame/mame-common.mjs", "assets/mame/mame-common.wasm", `assets/mame/mame-${family}.wasm`,
+  ]);
+});
+test("selects the verified Arcade side module by DAT machine", async () => {
+  vi.mocked(loadCoreAsset).mockClear();
+  const arcade = {arcade: true as const, machine: "mspacman", runtimeBaseUrl: config.runtimeBaseUrl,
+    game: config.game, parent: null, bios: null, deviceBios: []};
+  await loadCore(arcade, content, async () => ({default: async () => fixture()}));
+  expect(vi.mocked(loadCoreAsset).mock.calls.map(call => call[2])).toEqual([
+    "assets/mame/mame-build.json", "assets/mame/mame-common.mjs", "assets/mame/mame-common.wasm", "assets/mame/mame-pacman.wasm",
+  ]);
+});
+test("selects a 2003-family machine from its Current Arcade module", async () => {
+  vi.mocked(loadCoreAsset).mockClear();
+  await loadCore({arcade: true, machine: "1942", runtimeBaseUrl: config.runtimeBaseUrl,
+    game: config.game, parent: null, bios: null, deviceBios: []}, content, async () => ({default: async () => fixture()}));
+  expect(vi.mocked(loadCoreAsset).mock.calls.map(call => call[2])).toEqual([
+    "assets/mame/mame-build.json", "assets/mame/mame-common.mjs", "assets/mame/mame-common.wasm", "assets/mame/mame-arcade_capcom.wasm",
   ]);
 });
 

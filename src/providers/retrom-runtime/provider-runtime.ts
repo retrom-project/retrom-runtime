@@ -13,6 +13,7 @@ import type {
 } from "../../provider/module-api.js";
 import {PlayerRuntimeError} from "../../provider/errors.js";
 import {focusRuntimeInput} from "../../provider/input-focus.js";
+import {providerInputCapabilities} from "../../provider/input-capabilities.js";
 import {RuntimeGamepadFilter, installRuntimeGamepadFilter} from "../../provider/gamepad-filter.js";
 import {installRuntimeFrameSurface, type RuntimeFrameSurface} from "./frame-surface.js";
 import {mountTargetAdapter} from "./target-adapter.js";
@@ -189,6 +190,7 @@ class RetromRuntimePlayer implements PlayerRuntimeV1 {
 
   getState() {return this.state;}
   getCapabilities() {return this.envelope.runtime.capabilities;}
+  getInputCapabilities() {return providerInputCapabilities(retromRuntimeProviderDefinition, this.envelope.runtime.targetId);}
   getCheckpointAvailability() {return this.refreshAvailability();}
   getCanvas() {return this.adapter?.getCanvas() ?? null;}
   getGamepadCursor() {return this.adapter?.gamepadCursor ?? null;}

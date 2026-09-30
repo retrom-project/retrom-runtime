@@ -62,3 +62,12 @@ local inputs do not change release pins or Target declarations.
 ## License
 
 MIT
+
+### Host keyboard and program selection
+
+Each Target owns its host shortcut policy through `hostKeyboardShortcuts`. The public
+`PlayerRuntimeV1.getInputCapabilities()` exposes the allowed `PAUSE` / `MENU` shortcuts;
+hosts leave game keys untouched when this optional method is absent on an older Provider.
+A checkpoint availability with `requiredAction: "SELECT_PROGRAM"` tells the host to show
+program selection guidance. Provider-private Target options are interpreted only inside
+the Provider.

@@ -105,6 +105,7 @@ const targets = [
     contentIO: {game: runtimeGamePolicy("apple2-apple2js"), external: eagerPolicy(16 * 1024)},
   }),
   defineTarget({
+    hostKeyboardShortcuts: ["MENU"],
     ...target("bbc-jsbeeb", "BBC Micro (jsbeeb)", "jsbeeb-web", noOptionsSchema, false,
       "SAME_ORIGIN_BLANK", "ROM_BLOB", 32 * 1024 * 1024,
       jsbeebSiteAssets.map((path) => `assets/jsbeeb/site/${path}`)),
@@ -163,6 +164,7 @@ const targets = [
   mkxpTarget("rpgmaker-vx-ace", "RPG Maker VX Ace", 3),
   mkxpTarget("rpgmaker-xp", "RPG Maker XP", 1),
   defineTarget({
+    hostKeyboardShortcuts: ["MENU"],
     ...target("samcoupe", "SAM Coupé (SamCoupeWeb)", "samcoupe-web", noOptionsSchema, false,
       "SAME_ORIGIN_BLANK", "ROM_BLOB", 17 * 1024 * 1024,
       ["assets/samcoupeweb/samcoupeweb.js", "assets/samcoupeweb/samcoupeweb.wasm",

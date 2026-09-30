@@ -195,7 +195,12 @@ const cores: readonly CoreSource[] = [
   core("yabause", "4.2.3", "yabause-wasm.data", 991166, "ab253ac263bd98e3124e2ca45ff581e97673426ed06ecec0025333060cd8127c", "1fc177e7be4923208b92755bcfae66ac35ba6e395c3b7ea48df581806ebdf6a6", {contentKinds: ["SINGLE_FILE", "MULTI_DISC"]}),
 ] as const;
 
+function hostKeyboardShortcuts(targetId: string): ("PAUSE" | "MENU")[] {
+  return ["atari800", "atari800-xegs", "hatarib", "theodore"].includes(targetId) ? ["MENU"] : ["PAUSE", "MENU"];
+}
+
 const targets = cores.map((entry) => {
+  const targetId = entry.targetId ?? entry.id;
   return defineTarget({
   adapterId: entry.id === "gam4980" ? "emulatorjs-gam4980" : entry.id === "bsnes" ? "emulatorjs-bsnes" : entry.id === "flycast" ? "emulatorjs-flycast" : entry.id === "ppsspp" ? "emulatorjs-psp" : entry.id === "lutro" ? "emulatorjs-lutro" : entry.id === "daphne" ? "emulatorjs-daphne" : `emulatorjs-${entry.release}`,
   assetPaths: [
@@ -207,9 +212,9 @@ const targets = cores.map((entry) => {
   ].sort(compareUtf8),
   checkpointMaxBytes: entry.id === "lutro" ? 16 * 1024 * 1024 : 256 * 1024 * 1024,
   discSwitch: entry.id === "yabause",
-  displayName: displayName(entry.targetId ?? entry.id),
+  displayName: displayName(targetId),
   frameMode: "SAME_ORIGIN_BLANK",
-  id: providerTargetId(entry.targetId ?? entry.id),
+  id: providerTargetId(targetId),
   implementation: {
     artifactFlavor: entry.artifactFlavor,
     artifactSetSha256: entry.artifactSetSha256,
@@ -227,11 +232,12 @@ const targets = cores.map((entry) => {
     startupActions: entry.startupActions,
   },
   inputs: ["daphne", "dosbox_pure"].includes(entry.id) ? inputs.map(input => input.role === "game" ? {...input, kind: "FILE_TREE" as const} : input) :
-    ["neocd", "genesis_plus_gx_cd", "flycast"].includes(entry.targetId ?? entry.id) || entry.id === "flycast"
+    ["neocd", "genesis_plus_gx_cd", "flycast"].includes(targetId) || entry.id === "flycast"
       ? inputs.map(input => input.role === "game" ? {...input, kind: "SEEKABLE_BLOB" as const} : input) : inputs,
-  contentIO: emulatorContentPolicies(entry.targetId ?? entry.id),
+  contentIO: emulatorContentPolicies(targetId),
   contentMembers: emulatorContentMembers(entry.id),
   inputFilter: true,
+  hostKeyboardShortcuts: hostKeyboardShortcuts(targetId),
   nativeSettings: !["daphne", "dosbox_pure"].includes(entry.id),
   targetOptionsSchema: emulatorJsOptionsSchema,
   requiresThreads: entry.requiresThreads,

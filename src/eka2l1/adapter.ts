@@ -47,7 +47,7 @@ export async function mountEKA2L1(config:EKA2L1Parameters,target:HTMLElement,win
       if(failed)return {available:false,blocker:"FAILED",save};
       if(!core.saveAvailable())return {available:false,blocker:"NO_SAVE",save};
       if(!core.saveDirty())return {available:false,blocker:"UNCHANGED",save};
-      return {available:true,blocker:null,save};
+      return {available:true,blocker:null,revision:String(core.journal.generation),save};
     },
     async checkpoint(){active();if(!core.saveAvailable())throw new Error("EKA2L1_NO_NATIVE_SAVE");
       controls?.pause(true);

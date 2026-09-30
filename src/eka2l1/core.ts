@@ -6,6 +6,7 @@ export type BrowserSession={
   start():Promise<void>;stop():Promise<void>;pause():Promise<void>;resume():Promise<void>;
   importSave(bytes:Uint8Array):Promise<void>;exportSave():Promise<Uint8Array>;acknowledgeSave(bytes:Uint8Array):Promise<void>;
   saveAvailable():boolean;saveDirty():boolean;frames():number;
+  journal:{readonly generation:number};
   key(code:number,pressed:boolean):void;reply(id:number,choice:number,text?:string):void;setRotation(value:number):void;
 };
 export type Dialog={id:number;text?:string;kind:string;buttons?:string[];maximum?:number};

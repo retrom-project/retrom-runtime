@@ -6,18 +6,26 @@ const parameters={rotation:0,confirmKey:"ENTER",uid:0} as EKA2L1Parameters;
 const cleanups:(()=>Promise<void>)[]=[];
 afterEach(async()=>{await Promise.all(cleanups.splice(0).map(cleanup=>cleanup()));document.body.replaceChildren();vi.restoreAllMocks();});
 function fixture(){
-  const order:string[]=[],native=new Uint8Array([69,75,65,50]);let available=false,dirty=false;
+  const order:string[]=[],native=new Uint8Array([69,75,65,50]);let available=false,dirty=false,generation=0;
   const session:BrowserSession={
     start:vi.fn(async()=>{order.push("start");}),stop:vi.fn(async()=>{order.push("stop");}),
     importSave:vi.fn(async bytes=>{expect(bytes).toEqual(native);order.push("restore");available=true;}),
     exportSave:vi.fn(async()=>native),acknowledgeSave:vi.fn(async()=>{dirty=false;}),
     saveAvailable:()=>available,saveDirty:()=>dirty,frames:()=>23,
+    journal:{get generation(){return generation;}},
     pause:vi.fn(async()=>{}),resume:vi.fn(async()=>{}),key:vi.fn(),reply:vi.fn(),setRotation:vi.fn(),
   };
   const loader:SessionLoader=vi.fn(async()=>session),target=document.createElement("div");document.body.append(target);
-  return {session,loader,target,native,order,write(){available=true;dirty=true;}};
+  return {session,loader,target,native,order,write(){available=true;dirty=true;generation++;}};
 }
 describe("Symbian native save lifecycle",()=>{
+  it("reports every native write revision while a previous save remains unacknowledged",async()=>{
+    const f=fixture(),adapter=await mountEKA2L1(parameters,f.target,window,null,vi.fn(),undefined,f.loader);cleanups.push(adapter.exit);
+    f.write();expect(adapter.getCheckpointAvailability()).toMatchObject({available:true,revision:"1"});
+    await adapter.checkpoint();
+    expect(adapter.getCheckpointAvailability()).toMatchObject({available:true,revision:"1"});
+    f.write();expect(adapter.getCheckpointAvailability()).toMatchObject({available:true,revision:"2"});
+  });
   it("imports before application start and acknowledges only successful persistence",async()=>{
     const f=fixture(),adapter=await mountEKA2L1(parameters,f.target,window,f.native,vi.fn(),undefined,f.loader);cleanups.push(adapter.exit);
     expect(f.order).toEqual(["restore","start"]);

@@ -7,7 +7,9 @@ export const pspAdapter = defineAdapter({id: "ppsspp-web", kind: "PPSSPP_WEB", a
   checkpoint: {writeFormat: "ppsspp-state-v1", readFormats: ["ppsspp-state-v1"]},
 });
 
-export const pspTarget = defineTarget({id: "ppsspp", displayName: "PPSSPP (PSP)", adapterId: pspAdapter.id,
+export const pspTarget = defineTarget({
+  hostKeyboardShortcuts: ["PAUSE", "MENU"],
+  id: "ppsspp", displayName: "PPSSPP (PSP)", adapterId: pspAdapter.id,
   checkpointMaxBytes: 268435456, frameMode: "SAME_ORIGIN_BLANK", requiresThreads: true,
   contentIO: {game: rangePolicy("SYNC_WORKER", limits.signedDisc, {contentLengthPolicy: "REQUIRED_EXACT"})},
   inputs: [{role: "game", kind: "SEEKABLE_BLOB", cardinality: "ONE", optional: false}],

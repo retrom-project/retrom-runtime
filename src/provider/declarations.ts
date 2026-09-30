@@ -107,7 +107,7 @@ export type TargetDeclaration = {
   nativeSettings: boolean;
   inputFilter: boolean;
   /** Runtime-owned input policy, consumed through getInputCapabilities(). */
-  hostKeyboardShortcuts?: readonly ("PAUSE" | "MENU")[];
+  hostKeyboardShortcuts: readonly ("PAUSE" | "MENU")[];
   videoModes: readonly VideoMode[];
   inputs: readonly TargetInputDeclaration[];
   contentIO: Readonly<Record<string, ContentInputPolicyV1>>;

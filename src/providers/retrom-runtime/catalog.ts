@@ -105,7 +105,6 @@ const targets = [
     contentIO: {game: runtimeGamePolicy("apple2-apple2js"), external: eagerPolicy(16 * 1024)},
   }),
   defineTarget({
-    hostKeyboardShortcuts: ["MENU"],
     ...target("bbc-jsbeeb", "BBC Micro (jsbeeb)", "jsbeeb-web", noOptionsSchema, false,
       "SAME_ORIGIN_BLANK", "ROM_BLOB", 32 * 1024 * 1024,
       jsbeebSiteAssets.map((path) => `assets/jsbeeb/site/${path}`)),
@@ -114,6 +113,7 @@ const targets = [
       {cardinality: "ONE", kind: "EXTERNAL_FILE_SET", optional: false, role: "external"},
     ],
     contentIO: {game: runtimeGamePolicy("bbc-jsbeeb"), external: eagerPolicy(1024 * 1024)},
+    hostKeyboardShortcuts: ["MENU"],
   }),
   target(
     "butterscotch-gamemaker", "GameMaker (Butterscotch)", "butterscotch-web", noOptionsSchema,
@@ -164,7 +164,6 @@ const targets = [
   mkxpTarget("rpgmaker-vx-ace", "RPG Maker VX Ace", 3),
   mkxpTarget("rpgmaker-xp", "RPG Maker XP", 1),
   defineTarget({
-    hostKeyboardShortcuts: ["MENU"],
     ...target("samcoupe", "SAM Coupé (SamCoupeWeb)", "samcoupe-web", noOptionsSchema, false,
       "SAME_ORIGIN_BLANK", "ROM_BLOB", 17 * 1024 * 1024,
       ["assets/samcoupeweb/samcoupeweb.js", "assets/samcoupeweb/samcoupeweb.wasm",
@@ -174,6 +173,7 @@ const targets = [
       {cardinality: "ONE", kind: "EXTERNAL_FILE_SET", optional: false, role: "external"},
     ],
     contentIO: {game: runtimeGamePolicy("samcoupe"), external: eagerPolicy(32768)},
+    hostKeyboardShortcuts: ["MENU"],
   }),
   scummvmTarget,
   target("tic80", "TIC-80", "tic80-web", noOptionsSchema, false, "SAME_ORIGIN_BLANK", "ROM_BLOB",
@@ -250,6 +250,7 @@ function target(
     id,
     implementation,
     inputFilter: true,
+    hostKeyboardShortcuts: ["PAUSE", "MENU"],
     inputs: [{cardinality: "ONE", kind: resourceKind, optional: false, role: "game"}],
     contentIO: {game: runtimeGamePolicy(id)},
     nativeSettings: false,

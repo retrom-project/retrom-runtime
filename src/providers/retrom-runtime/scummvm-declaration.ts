@@ -20,7 +20,9 @@ export const scummvmAdapter = defineAdapter({id: "scummvm-web", kind: "SCUMMVM_W
   capabilities: {checkpoint: true, pause: true, screenshot: true, standardGamepad: true, frameCounter: false, volume: false},
   checkpoint: {writeFormat: "scummvm-save-bundle-v1", readFormats: ["scummvm-save-bundle-v1"], semantics: "GAME_SAVE"},
 });
-export const scummvmTarget = defineTarget({id: "scummvm", displayName: "ScummVM", adapterId: scummvmAdapter.id,
+export const scummvmTarget = defineTarget({
+  hostKeyboardShortcuts: ["PAUSE", "MENU"],
+  id: "scummvm", displayName: "ScummVM", adapterId: scummvmAdapter.id,
   checkpointMaxBytes: 64 * 1024 * 1024, frameMode: "SAME_ORIGIN_BLANK", requiresThreads: false,
   contentIO: {game: rangePolicy("ASYNC", limits.indexedFile, {})},
   inputs: [{role: "game", kind: "FILE_TREE", cardinality: "ONE", optional: false}],

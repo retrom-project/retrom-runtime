@@ -1,3 +1,4 @@
+import {eka2l1Adapter,eka2l1Target} from "./eka2l1-declaration.js";
 import {mameAdapter, mameAppleTarget, mameApple2eTarget, mameAtomTarget, mameColecoTarget,
   mamePV1000Target, mameSG1000Target, mameArcadeTarget} from "./mame-declaration.js";
 import {providerVersion} from "../../provider/version.js";
@@ -45,6 +46,7 @@ const isolatedCapabilities = capabilities(true, true, true);
 const wasm4Capabilities = capabilities(true, true, false);
 
 const adapters = [
+  eka2l1Adapter,
   mameAdapter,
   defineAdapter({id: "nxengine-web", kind: "NXENGINE_WEB", abi: "nxengine-host-v1",
     capabilities: capabilities(true, true, true),
@@ -173,7 +175,7 @@ const targets = [
     ],
     contentIO: {game: runtimeGamePolicy("samcoupe"), external: eagerPolicy(32768)},
   }),
-  scummvmTarget,
+  scummvmTarget, eka2l1Target,
   target("tic80", "TIC-80", "tic80-web", noOptionsSchema, false, "SAME_ORIGIN_BLANK", "ROM_BLOB",
     1100, ["assets/tic80/tic80-retrom.mjs", "assets/tic80/tic80-retrom.wasm"]),
   target(

@@ -122,7 +122,7 @@ export function targetEnvelope(targetId: string): LaunchEnvelopeV1 {
       contentDigest: digest, entryUrl: "https://runtime.test/__retrom/bootstrap",
       kind: "ISOLATED_WEB", ordinal: 0, origin: "https://runtime.test", role: "game",
     };
-  } else if (["apple2-apple2js", "mame-apple2", "mame-apple2e", "mame-arcade", "mame-atom", "mame-coleco", "mame-pv1000", "mame-sg1000", "bbc-jsbeeb", "samcoupe", "gbe-pokemini", "j2me", "tic80", "fake08", "flash-ruffle", "msx-webmsx", "openbor", "px68k", "np2kai-pc98"].includes(targetId)) {
+  } else if (["apple2-apple2js", "mame-apple2", "mame-apple2e", "mame-arcade", "mame-atom", "mame-coleco", "mame-pv1000", "mame-sg1000", "bbc-jsbeeb", "samcoupe", "gbe-pokemini", "j2me", "symbian-eka2l1", "tic80", "fake08", "flash-ruffle", "msx-webmsx", "openbor", "px68k", "np2kai-pc98"].includes(targetId)) {
     resource = {kind: "ROM_BLOB", ordinal: 0, rangeRequired: false, role: "game",
       sha256: digest, sizeBytes: 128, url: targetId === "apple2-apple2js" ? "/runtime/content/game/game.dsk" : "/runtime/content/game/game.jar"};
   } else if (targetId === "wasm4") {
@@ -138,7 +138,8 @@ export function targetEnvelope(targetId: string): LaunchEnvelopeV1 {
   }
   const targetOptions = fixtureTargetOptions(targetId);
   return {
-    resources: ["mame-apple2", "mame-apple2e", "mame-atom", "mame-coleco"].includes(targetId) ? [resource, {
+    resources: targetId === "symbian-eka2l1" ? [resource,{kind:"EXTERNAL_FILE_SET",role:"external",ordinal:0,
+      files:["Nokia5320.rom","Nokia5320.rpkg"].map(name=>({logicalName:name,virtualPath:name,url:`/runtime/content/bios/${name}`,sha256:digest,sizeBytes:128}))}] : ["mame-apple2", "mame-apple2e", "mame-atom", "mame-coleco"].includes(targetId) ? [resource, {
       kind: "EXTERNAL_FILE_SET", role: "external", ordinal: 0,
       files: targetId === "mame-atom" ? [
         {logicalName: "abasic.ic20", virtualPath: "content/atom/abasic.ic20", sha256: digest, sizeBytes: 8192, url: "/runtime/content/bios/abasic.ic20"},
@@ -200,6 +201,7 @@ export function targetEnvelope(targetId: string): LaunchEnvelopeV1 {
 }
 
 function fixtureTargetOptions(targetId: string): LaunchEnvelopeV1["targetOptions"] {
+  if (targetId === "symbian-eka2l1") {return {uid:0,rotation:"0",confirmKey:"ENTER"};}
   if (targetId === "onscripter-yuri") {return {scriptEncoding: "utf8"};}
   if (targetId === "kirikiri2-kag") {return {startupXp3Path: null};}
   if (targetId === "scummvm") {

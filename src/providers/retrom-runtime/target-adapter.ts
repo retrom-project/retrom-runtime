@@ -1,3 +1,4 @@
+import {mountEKA2L1} from "../../eka2l1/adapter.js";
 import {mountWithNativeContent} from "../../native-web/content-bridge.js";
 import {mountMame} from "../../mame/adapter.js";
 import {bindTargetContent} from "../../provider/target-content.js";
@@ -126,6 +127,8 @@ function mountMachineAdapter(kind: string, envelope: LaunchEnvelopeV1, target: H
   const {frameWindow, restorePayload, reportProgress} = context;
   const reportFailure = context.reportFailure ?? (() => undefined);
   switch (kind) {
+  case "EKA2L1_WEB":
+    return mountEKA2L1(parameters.eka2l1(envelope),target,frameWindow,restorePayload,reportFailure,context.signal,undefined,contentOptions(context),message=>context.onDiagnostic({runtime:"eka2l1",message}));
   case "MAME_DYLINK":
     return mountMame(parameters.mame(envelope), target, frameWindow, restorePayload, {...contentOptions(context), signal: context.signal, reportProgress, onFailure: reportFailure});
   case "GBE_POKEMINI_WEB":

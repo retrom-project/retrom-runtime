@@ -50,7 +50,7 @@ export async function loadCoreModule(request: CoreModuleRequest): Promise<Loaded
   } catch (error) {close(); throw error;}
 }
 
-function importCoreModule(win: Window, url: string, registration: string, signal?: AbortSignal): Promise<unknown> {
+export function importCoreModule(win: Window, url: string, registration: string, signal?: AbortSignal): Promise<unknown> {
   checkSignal(signal);
   if (win === window) {return abortable(import(/* webpackIgnore: true */ /* @vite-ignore */ url), signal);}
   return new Promise((resolve, reject) => {

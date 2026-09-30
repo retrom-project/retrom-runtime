@@ -23,6 +23,7 @@ const targetIds = [
   "rpgmaker-xp",
   "samcoupe",
   "scummvm",
+  "symbian-eka2l1",
   "tic80",
   "tyranoscript",
   "wasm4",
@@ -44,6 +45,7 @@ const sameOriginFrameTargetIds = [
   "rpgmaker-vx-ace",
   "rpgmaker-xp",
   "samcoupe",
+  "symbian-eka2l1",
   "tic80",
   "wasm4",
 ];
@@ -52,7 +54,7 @@ describe("retrom-runtime provider declarations", () => {
   it("declares the complete target closure in one source", () => {
     expect(retromRuntimeProviderDefinition.providerVersion).toBe("0.0.0-dev");
     expect(retromRuntimeProviderDefinition.targets.map((target) => target.id)).toEqual(targetIds);
-    expect(retromRuntimeProviderDefinition.adapters).toHaveLength(25);
+    expect(retromRuntimeProviderDefinition.adapters).toHaveLength(26);
   });
 
   it("projects a public manifest without internal adapter identities", () => {

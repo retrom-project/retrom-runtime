@@ -3176,5 +3176,24 @@
       "output": "runtime/butterscotch/worker.mjs"
     }
   ],
-  "developmentInputs": []
+  "developmentInputs": [
+    {
+      "id": "eka2l1",
+      "repository": "https://github.com/retrom-project/EKA2L1",
+      "upstreamCommit": "709e3e3293e7d3c5b545ad647a4b6473d63aaeb1",
+      "adapterAbi": "eka2l1-browser-v1",
+      "assets": [
+        {
+          "filename": "LICENSE",
+          "output": "licenses/eka2l1/LICENSE",
+          "maxSizeBytes": 1048576
+        },
+        {
+          "filename": "eka2l1-runtime.zip",
+          "output": "runtime/eka2l1/eka2l1-runtime.zip",
+          "maxSizeBytes": 67108864
+        }
+      ]
+    }
+  ]
 }

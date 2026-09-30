@@ -1,3 +1,4 @@
+import type {EKA2L1Parameters} from "../../eka2l1/core.js";
 import type {PSPParameters} from "../../psp/core.js";
 import type {GBEParameters} from "../../gbe-pokemini/core.js";
 import type {NXEngineParameters} from "../../nxengine/core.js";
@@ -319,4 +320,14 @@ function mameArcade(envelope: LaunchEnvelopeV1): Extract<import("../../mame/core
   if (bios && (bios.files.length !== 1 || bios.files[0].logicalName !== "bundle.zip")) {invalidRequest();}
   return {machine, arcade: true, game, parent, bios: bios?.files[0] ?? null,
     deviceBios: external?.files ?? [], runtimeBaseUrl: envelope.runtime.runtimeBaseUrl};
+}
+
+export function eka2l1(envelope:LaunchEnvelopeV1):EKA2L1Parameters {
+  const game=resource(envelope,"game","ROM_BLOB"),external=resource(envelope,"external","EXTERNAL_FILE_SET");
+  const {uid,rotation,confirmKey}=envelope.targetOptions;
+  if(typeof uid!=="number"||!Number.isInteger(uid)||uid<0||uid>4294967295||
+    !["0","90","180","270"].includes(String(rotation))||typeof rotation!=="string"||
+    (confirmKey!=="ENTER"&&confirmKey!=="CENTER"&&confirmKey!=="NUM5"))invalidRequest();
+  return {game:{url:game.url,sha256:game.sha256,sizeBytes:game.sizeBytes},firmware:external.files.map(file=>({...file,path:file.virtualPath})),
+    uid,rotation:Number(rotation),confirmKey,runtimeBaseUrl:assetBase(envelope,"eka2l1")};
 }

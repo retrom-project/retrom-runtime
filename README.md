@@ -62,3 +62,24 @@ local inputs do not change release pins or Target declarations.
 ## License
 
 MIT
+
+## Symbian development candidate
+
+The `symbian-eka2l1` Target uses the independent official EKA2L1 browser fork,
+ABI `eka2l1-browser-v1`. It consumes an intact SIS/SISX plus the declared Nokia
+5320 ROM/RPKG pair through common verified full-cache materialization. The core
+installs the firmware and package. Games and firmware are operator inputs.
+The source is intentionally in `developmentInputs` until a fixed core release
+and the following Provider release are authorized; existing formal pins stay intact.
+
+GAME_SAVE exports changed C/E files and tombstones, bounded to 64 MiB, and restores
+before the application starts. Public storage performs one gzip layer. This is
+native file storage, not RAM or do_state; system settings can create storage
+changes, and users must save progress in their game's own menu before exiting.
+
+The first acceptance scope is a Nokia 5320 S60v3 FP2 native 2D game using ARM
+interpretation, pthreads, WebGL2 OffscreenCanvas and PCM audio. General guest
+3D, compressed media, MIDI banks, other devices and mobile performance remain
+unverified. Retrom's ACC-EKA2L1-001 exercises real import/preview/publish/launch,
+standard direction/confirm/jump, native save/readback, offline input, persistent
+cache reuse, preload cancellation/failure and desktop gameplay performance.

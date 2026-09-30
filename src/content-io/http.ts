@@ -103,7 +103,7 @@ async function wholeResponse(source: ContentSourceV1, state: ContentObjectState,
       response = await request(source, state, signal, dependencies, undefined, attempt > 0);
       commonHeaders(response, source, signal, dependencies);
       if (response.status !== 200) {fail("RANGE_INVALID");}
-      const decoded = source.purpose === "CORE_ASSET" && source.etagPolicy === "NONE_FULL_SHA256" &&
+      const decoded = source.etagPolicy === "NONE_FULL_SHA256" &&
         ["br", "gzip"].includes(response.headers.get("Content-Encoding")?.toLowerCase() ?? "");
       validateRepresentation(response, decoded);
       await validateEtag(response, source, state);

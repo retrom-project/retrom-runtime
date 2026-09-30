@@ -7,7 +7,7 @@ export function fileContentSource(file: {url: string; sha256: string; sizeBytes:
   return {identity: {kind: "FILE_SHA256", sha256: file.sha256}, sizeBytes: file.sizeBytes,
     url: new URL(file.url, globalThis.location?.href).href, purpose,
     transport: policy.mode === "RANGE" ? "RANGE_REQUIRED" : "WHOLE_ALLOWED",
-    etagPolicy: purpose === "CORE_ASSET" && policy.mode !== "RANGE" ? "NONE_FULL_SHA256" : "EXPECTED_SHA256",
+    etagPolicy: policy.mode === "EAGER" ? "NONE_FULL_SHA256" : "EXPECTED_SHA256",
     contentLengthPolicy: policy.contentLengthPolicy, };
 }
 export function requireContentSession<T extends ContentSessionAccess>(session?: T | null): T {

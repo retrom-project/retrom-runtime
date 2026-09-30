@@ -57,7 +57,7 @@ function validateProfile(identity: ContentIdentityV1, purpose: ContentSourceV1["
   if (identity.kind === "INDEX_ENTRY") {
     if (etag !== "PIN_STRONG" || purpose === "CORE_ASSET") {fail("SOURCE_INVALID");}
   } else if (purpose !== "CORE_ASSET") {
-    if (etag !== "EXPECTED_SHA256") {fail("SOURCE_INVALID");}
+    if (etag !== "EXPECTED_SHA256" && !(transport === "WHOLE_ALLOWED" && etag === "NONE_FULL_SHA256")) {fail("SOURCE_INVALID");}
   } else if (!((transport === "WHOLE_ALLOWED" && etag === "NONE_FULL_SHA256") ||
       (transport === "RANGE_REQUIRED" && etag === "IMMUTABLE_ASSET"))) {fail("SOURCE_INVALID");}
 }

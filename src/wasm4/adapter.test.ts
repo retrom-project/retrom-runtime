@@ -68,7 +68,7 @@ describe("WASM-4 Web adapter", () => {
     await expect(mountWasm4(
       config("f".repeat(64), cart.byteLength), document.createElement("div"), window, null,
       () => undefined, async () => core.module, managedAdapterFixture("wasm4", config("f".repeat(64), cart.byteLength)),
-    )).rejects.toThrow("CONTENT_IO_IDENTITY_CHANGED");
+    )).rejects.toThrow("CONTENT_IO_CHECKSUM_MISMATCH");
     expect(core.create).not.toHaveBeenCalled();
   });
 

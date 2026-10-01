@@ -1,3 +1,4 @@
+import {StartupTasks} from "../../provider/startup.js";
 import {authorizeNativePreload} from "../../native-web/preload-bootstrap.js";
 import {ProviderContentOwner} from "../../provider/content-owner.js";
 import {retromRuntimeProviderDefinition} from "./catalog.js";
@@ -26,6 +27,7 @@ export function createRetromRuntimePlayer(
 
 class RetromRuntimePlayer implements PlayerRuntimeV1 {
   private readonly contentOwner = new ProviderContentOwner((error) => {void this.fail(error);}, diagnostic => this.host.reportDiagnostic({code: "CONTENT_IO_METRICS", message: JSON.stringify(diagnostic)}));
+  private readonly startup: StartupTasks;
   private readonly listeners = new Set<(event: RuntimeEventV1) => void>();
   private state: RuntimeStateV1 = "CREATED";
   private adapter: MountedRuntimeAdapter | null = null;
@@ -46,6 +48,7 @@ class RetromRuntimePlayer implements PlayerRuntimeV1 {
     private readonly host: RuntimeHostV1,
     private readonly assetIndex: AssetIndexV1,
   ) {
+    this.startup = new StartupTasks(event => this.emit(event), host.signal);
     host.signal.addEventListener("abort", this.abort, {once: true});
   }
 
@@ -54,12 +57,12 @@ class RetromRuntimePlayer implements PlayerRuntimeV1 {
     try {
       this.assertActive();
       this.transition("MOUNTING");
-      const restorePayload = await this.loadRestore();
+      const restorePayload = await (this.envelope.restore ? this.startup.run("RESTORE_LOAD", () => this.loadRestore()) : this.loadRestore());
       this.assertActive();
       const frameMode = this.envelope.runtime.capabilities.frameMode;
       const frame = frameMode === "NONE"
         ? null
-        : await this.host.mountFrame(target, {resourceRole: frameMode === "SAME_ORIGIN_BLANK" ? null : "game"});
+        : await this.startup.run("ENVIRONMENT", () => this.host.mountFrame(target, {resourceRole: frameMode === "SAME_ORIGIN_BLANK" ? null : "game"}));
       this.assertActive();
       const runtimeWindow = frame?.contentWindow as Window | undefined ?? window;
       this.runtimeWindow = runtimeWindow;
@@ -73,9 +76,10 @@ class RetromRuntimePlayer implements PlayerRuntimeV1 {
       if (this.host.contentLoading === "PRELOAD") {await authorizeNativePreload(this.envelope, frame?.element, this.contentOwner.signal);}
       this.assertActive();
       const contentSession = await this.contentOwner.start(declaration, this.envelope, this.assetIndex, this.host.contentLoading,
-        (loadedBytes, totalBytes) => this.emit({type: "LOAD_PROGRESS", loadedBytes, totalBytes}));
+        (loadedBytes, totalBytes) => this.emit({type: "LOAD_PROGRESS", loadedBytes, totalBytes}), this.startup);
       this.assertActive();
-      const adapter = await mountTargetAdapter(this.envelope, runtimeTarget, {
+      const adapter = await this.startup.run("GAME_START", () => mountTargetAdapter(this.envelope, runtimeTarget, {
+        startup: this.startup,
         assetIndex: this.assetIndex, contentSession,
         signal: this.host.signal,
         reportFailure: (error) => {void this.fail(error);},
@@ -87,7 +91,7 @@ class RetromRuntimePlayer implements PlayerRuntimeV1 {
         }),
         reportProgress: this.reportProgress,
         reportExitRequested: this.reportExitRequested,
-      });
+      }));
       if (this.stopping() || this.host.signal.aborted) {
         try {await adapter.exit();} catch (error) {this.reportCleanupFailure(error);}
         this.assertActive();
@@ -95,6 +99,7 @@ class RetromRuntimePlayer implements PlayerRuntimeV1 {
       this.adapter = adapter;
       adapter.gamepadCursor?.setInputPolicy(this.inputPolicy);
       this.frameSurface?.refresh();
+      this.startup.stop();
       this.transition("RUNNING");
       this.refreshAvailability();
       this.availabilityTimer = window.setInterval(this.pollAvailability, 250);
@@ -179,6 +184,7 @@ class RetromRuntimePlayer implements PlayerRuntimeV1 {
   }
 
   exit() {
+    this.startup.stop(this.state === "FAILED");
     if (this.exitPromise) {return this.exitPromise;}
     const failed = this.state === "FAILED";
     // Store the shared promise before publishing a state event: a Host listener may reenter exit.

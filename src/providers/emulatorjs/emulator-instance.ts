@@ -60,6 +60,7 @@ export type EjsInstance = EmulatorDiscInstance & EmulatorNativeSettingsInstance 
 };
 
 export type EjsWindow = Window & {
+  XMLHttpRequest?: typeof XMLHttpRequest;
   RETROM_NEOCD_RANGE?: ReturnType<typeof import("./neocd-range.js").createNeoCDRange>;
   RETROM_FLYCAST_RANGE?: ReturnType<typeof import("./neocd-range.js").createFlycastRange>;
   EJS_player?: string;

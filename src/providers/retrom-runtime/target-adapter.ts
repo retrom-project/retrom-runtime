@@ -1,3 +1,4 @@
+import {withStartupTask} from "../../provider/startup.js";
 import {mountWithNativeContent} from "../../native-web/content-bridge.js";
 import {mountMame} from "../../mame/adapter.js";
 import {bindTargetContent} from "../../provider/target-content.js";
@@ -33,6 +34,7 @@ import * as parameters from "./target-parameters.js";
 
 import type {ContentSessionClient} from "../../content-io/client.js";
 export type TargetMountContext = {
+  startup?: import("../../provider/startup.js").StartupTasks;
   contentSession?: ContentSessionClient | null;
   signal?: AbortSignal;
   reportFailure?: (error: Error) => void;
@@ -50,10 +52,14 @@ export function mountTargetAdapter(
   target: HTMLElement,
   input: TargetMountContext,
 ): Promise<MountedRuntimeAdapter> {
+  return withStartupTask(input.startup, "CORE_INITIALIZATION", () => mountAdapter(envelope, target, input));
+}
+
+function mountAdapter(envelope: LaunchEnvelopeV1, target: HTMLElement, input: TargetMountContext): Promise<MountedRuntimeAdapter> {
   const {declaration, adapter} = resolveAdapter(envelope.runtime.targetId);
-  const contentSession = input.contentSession ? bindTargetContent(input.contentSession, declaration) : null;
+  const contentSession = input.contentSession ? bindTargetContent(input.contentSession, declaration, input.startup) : null;
   const context = {...input, contentSession, content: contentSession ? {
-    contentSession, assetIndex: input.assetIndex, signal: input.signal,
+    contentSession, assetIndex: input.assetIndex, signal: input.signal, startup: input.startup,
     reportProgress: input.reportProgress, onFailure: failureReporter(input), runtimeBaseURL: envelope.runtime.runtimeBaseUrl,
   } : null};
   const {frameWindow, restorePayload, reportProgress, reportExitRequested} = context;
@@ -91,7 +97,7 @@ export function mountTargetAdapter(
       context.signal, reportFailure);
   case "J2ME_MINIJVM_WEB":
     return mountJ2me(parameters.j2me(envelope), target, frameWindow, restorePayload, reportProgress,
-      reportExitRequested, reportFailure, context.signal);
+      reportExitRequested, reportFailure, context.signal, undefined, input.startup);
   case "SCUMMVM_WEB":
     return mountScummvm(parameters.scummvm(envelope), target, frameWindow, restorePayload, reportProgress,
       reportExitRequested, reportFailure, context.signal, undefined, contentOptions(context));

@@ -2,15 +2,18 @@ import type {ContentSessionClient} from "../content-io/client.js";
 import {ContentIOError} from "../content-io/errors.js";
 import type {TargetDeclaration} from "./declarations.js";
 import type {AdapterContentSession, ContentSessionAccess} from "./content-inputs.js";
+import {startupContent} from "./startup-content.js";
+import type {StartupTasks} from "./startup.js";
 
 type Policies = Pick<TargetDeclaration, "contentIO" | "contentMembers">;
-export function bindTargetContent(session: ContentSessionClient, target: Policies): AdapterContentSession & Pick<ContentSessionClient, "createSyncChannel">;
-export function bindTargetContent(session: ContentSessionAccess, target: Policies): AdapterContentSession;
+export function bindTargetContent(session: ContentSessionClient, target: Policies, startup?: StartupTasks): AdapterContentSession & Pick<ContentSessionClient, "createSyncChannel">;
+export function bindTargetContent(session: ContentSessionAccess, target: Policies, startup?: StartupTasks): AdapterContentSession;
 /** A Target owns its policies. The Provider retains ownership of the underlying session. */
-export function bindTargetContent(session: ContentSessionAccess, target: Policies): AdapterContentSession {
+export function bindTargetContent(session: ContentSessionAccess, target: Policies, startup?: StartupTasks): AdapterContentSession {
+  const observed = startup ? startupContent(session, startup) : session;
   return {
     preloaded: session.preloaded,
-    open: (...args) => session.open(...args), materialize: (...args) => session.materialize(...args), closeFile: (...args) => session.closeFile(...args),
+    open: (...args) => observed.open(...args), materialize: (...args) => observed.materialize(...args), closeFile: (...args) => observed.closeFile(...args),
     ...("createSyncChannel" in session && typeof session.createSyncChannel === "function" ? {createSyncChannel: session.createSyncChannel.bind(session)} : {}),
     inputPolicy(role, member) {
       const policy = member ? target.contentMembers?.[role]?.[member] : target.contentIO[role];
@@ -20,6 +23,6 @@ export function bindTargetContent(session: ContentSessionAccess, target: Policie
   };
 }
 
-export function bindOptionalTargetContent(session: ContentSessionClient | null, target: Policies) {
-  return session ? bindTargetContent(session, target) : null;
+export function bindOptionalTargetContent(session: ContentSessionClient | null, target: Policies, startup?: StartupTasks) {
+  return session ? bindTargetContent(session, target, startup) : null;
 }

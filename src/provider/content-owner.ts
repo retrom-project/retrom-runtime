@@ -6,6 +6,7 @@ import type {ContentSessionClient} from "../content-io/client.js";
 import {ContentIOError} from "../content-io/errors.js";
 import {ProviderContentPreload, type PreloadProgress} from "./content-preload.js";
 import {preloadSources} from "./preload-sources.js";
+import {withStartupTask, type StartupTasks} from "./startup.js";
 /** Provider lifecycle owns the service; adapters own only file/consumer references. */
 export class ProviderContentOwner {
   private readonly controller = new AbortController();
@@ -16,7 +17,7 @@ export class ProviderContentOwner {
   constructor(private readonly failure: (error: Error) => void, private readonly diagnostic: (diagnostic: ContentDiagnostic) => void = () => {}) {}
   get signal(): AbortSignal {return this.controller.signal;}
   async start(target: TargetDeclaration, envelope: LaunchEnvelopeV1, index: AssetIndexV1,
-    loading: "ON_DEMAND" | "PRELOAD" = "ON_DEMAND", report: PreloadProgress = () => {}): Promise<ContentSessionClient | null> {
+    loading: "ON_DEMAND" | "PRELOAD" = "ON_DEMAND", report: PreloadProgress = () => {}, startup?: StartupTasks): Promise<ContentSessionClient | null> {
     const managed = Object.values(target.contentIO).some((policy) => policy.mode !== "BROWSER_NATIVE" && policy.mode !== "UPSTREAM_LOADER");
     if (!managed) {return null;}
     if (this.stopped) {throw new DOMException("Aborted", "AbortError");}
@@ -29,10 +30,11 @@ export class ProviderContentOwner {
         const context = {storageOrigin: location.origin, allowedOrigins: [...origins]};
         const sources = await preloadSources(target, envelope, index, context, this.controller.signal);
         this.preload = new ProviderContentPreload();
-        await this.preload.prepare(sources, context, runtimeBaseURL, index, this.controller.signal, report);
+        await withStartupTask(startup, "GAME_CONTENT", task => this.preload!.prepare(sources, context, runtimeBaseURL, index, this.controller.signal,
+          (loaded, total) => {task?.progress(loaded, total); report(loaded, total);}));
       }
-      session = await bootstrapContentSession({runtimeBaseURL, assetIndex: index, storageOrigin: location.origin,
-        allowedOrigins: [...origins], signal: this.controller.signal, onFailure: this.failure, onDiagnostic: this.diagnostic});
+      session = await withStartupTask(startup, "ENVIRONMENT", () => bootstrapContentSession({runtimeBaseURL, assetIndex: index, storageOrigin: location.origin,
+        allowedOrigins: [...origins], signal: this.controller.signal, onFailure: this.failure, onDiagnostic: this.diagnostic}));
     } catch (error) {if (this.stopped) {throw new DOMException("Aborted", "AbortError");} throw error;}
     if (this.stopped) {await session.close(); throw new DOMException("Aborted", "AbortError");}
     session.preloaded = loading === "PRELOAD";

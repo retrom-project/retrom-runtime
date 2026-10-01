@@ -13,7 +13,7 @@ type Frontend = {prototype: FrontendInstance & {
 export function installFlycastCompatibility(runtimeWindow: Window) {
   const target = runtimeWindow as Window & {EmulatorJS?: Frontend};
   const previous = Object.getOwnPropertyDescriptor(target, "EmulatorJS");
-  const restorations: Array<() => void> = [retainDisplayedFrame(runtimeWindow)];
+  const restorations: Array<() => void> = [];
   let current = target.EmulatorJS;
   const configure = (frontend: Frontend | undefined) => {
     if (!frontend) {return;}
@@ -49,21 +49,4 @@ export function installFlycastCompatibility(runtimeWindow: Window) {
       Object.defineProperty(target, "EmulatorJS", {configurable: true, writable: true, value: current});
     } else {Reflect.deleteProperty(target, "EmulatorJS");}
   };
-}
-
-// Capture can run after pause and after the browser has presented the last frame.
-// Retain this iframe's drawing buffer so the canvas fallback reads that frame.
-function retainDisplayedFrame(runtimeWindow: Window) {
-  const prototype = (runtimeWindow as Window & typeof globalThis).HTMLCanvasElement.prototype;
-  const previous = Object.getOwnPropertyDescriptor(prototype, "getContext")!;
-  const getContext = prototype.getContext;
-  Object.defineProperty(prototype, "getContext", {
-    ...previous,
-    value(this: HTMLCanvasElement, kind: string, options?: unknown) {
-      const webgl = kind === "webgl" || kind === "webgl2" || kind === "experimental-webgl";
-      const attributes = options && typeof options === "object" ? options : {};
-      return Reflect.apply(getContext, this, [kind, webgl ? {...attributes, preserveDrawingBuffer: true} : options]);
-    },
-  });
-  return () => Object.defineProperty(prototype, "getContext", previous);
 }

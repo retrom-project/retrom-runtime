@@ -1,4 +1,5 @@
 import {PlayerRuntimeError} from "../../provider/errors.js";
+import {retainEmulatorJsDisplayedFrame} from "./displayed-frame.js";
 const frameStyleText = `
 html,body,#retrom-emulator,.ejs_parent,.ejs_game,.ejs_canvas_parent{width:100%!important;height:100%!important;margin:0!important;overflow:hidden;background:#05060a}
 .ejs_canvas_parent{display:grid!important;grid-template-columns:minmax(0,1fr)!important;grid-template-rows:minmax(0,1fr)!important;place-items:center!important}
@@ -27,7 +28,7 @@ export function installEmulatorJsFrameStyle(frameDocument: Document) {
   };
 }
 
-export function createEmulatorJsMountPoint(runtimeWindow: Window) {
+export function createEmulatorJsSurface(runtimeWindow: Window) {
   const body = runtimeWindow.document.body;
   if (!body) {throw new PlayerRuntimeError("PLAYER_RUNTIME_CONTRACT_INVALID");}
   const mountPoint = runtimeWindow.document.createElement("div");
@@ -39,5 +40,7 @@ export function createEmulatorJsMountPoint(runtimeWindow: Window) {
   body.style.width = "100vw";
   body.style.height = "100vh";
   body.style.overflow = "hidden";
-  return installEmulatorJsFrameStyle(runtimeWindow.document);
+  const restoreFrame = retainEmulatorJsDisplayedFrame(runtimeWindow);
+  const removeStyle = installEmulatorJsFrameStyle(runtimeWindow.document);
+  return () => {removeStyle(); restoreFrame();};
 }

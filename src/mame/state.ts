@@ -4,6 +4,16 @@ export const checkpointLimit = 64 * 1024 * 1024;
 export const checkpointFormat = "mame-state-v1";
 const headerSize = 108;
 const magic = new TextEncoder().encode("RTMAME01");
+export function parentStateIdentity(entries: Record<string, Uint8Array>): string {
+  // Frozen v1 checkpoint encoding: identity follows validated archive members,
+  // independently of the outer ZIP's transport digest or compression.
+  const encoder = new TextEncoder(), digest = sha256.create();
+  digest.update(encoder.encode("RETROM_LAUNCH_BUNDLE_V1\0"));
+  for (const name of Object.keys(entries).sort()) {
+    digest.update(encoder.encode(`${name.length}\0${name}\0${bytesToHex(sha256(entries[name]))}\0`));
+  }
+  return bytesToHex(digest.digest());
+}
 export async function encodeState(identity: string, build: string, payload: Uint8Array) {
   validateSize(payload.length); validateIdentity(identity); validateIdentity(build);
   const result = new Uint8Array(headerSize + payload.length);

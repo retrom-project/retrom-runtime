@@ -4,7 +4,7 @@ import type {MaterializationReceiptV1, MaterializeRequestV1, MaterializeResultV1
 import {PersistentBlobSink, BlobReplayRequired} from "./blob-sink.js";
 import {checkSignal, combineSignals} from "./abort.js";
 import {BlockPool, type BlockObject} from "./block-pool.js";
-import {createContentHasher, hashBytes} from "./bounded-stream.js";
+import {createStreamingContentHasher, hashBytes} from "./bounded-stream.js";
 import {ContentIOError, fail} from "./errors.js";
 import {SerialGate} from "./gate.js";
 import {fetchWholeStream} from "./http.js";
@@ -51,7 +51,7 @@ export class ContentMaterializer {
   private async run(object: BlockObject, request: MaterializeRequestV1, signal: AbortSignal, progress: ContentProgress, recovery?: "BLOCKS" | "WHOLE"): Promise<MaterializeResultV1> {
     const size = object.source.sizeBytes, sink = await this.sink(object,request,signal,!!recovery);
     const nativeBytesHash = request.kind === "BYTES" && size > 10 * 1024 * 1024;
-    const hash = nativeBytesHash ? null : createContentHasher(); let written = 0;
+    const hash = nativeBytesHash ? null : await createStreamingContentHasher(size); let written = 0;
     const consume = async (chunk: Uint8Array<ArrayBuffer>) => {
       this.pool.check(object); checkSignal(signal); hash?.update(chunk);
       try {await (request.kind === "SINK" ? sinkOperation(()=>sink.write(written,chunk),signal) : sink.write(written,chunk));} catch (cause) {checkSignal(signal);if(request.kind!=="SINK"){throw cause;}throw new ContentIOError("WORKSPACE_UNAVAILABLE", {cause});}

@@ -13,10 +13,11 @@ it.each([false, true])("fully hashes decoded core bytes before publishing a comp
   const materializer = new ContentMaterializer(pool, store);
   const response = new Response(received, {headers: {"Content-Encoding": "br", "Content-Length": "7"}});
   Object.defineProperty(response, "url", {value: object.source.url});
-  vi.stubGlobal("fetch", vi.fn(async () => response));
+  const fetcher = vi.fn(async () => response); vi.stubGlobal("fetch", fetcher);
   try {
     const pending = materializer.prepare(object, {kind: "BYTES", maxBytes: 3});
     if (corrupt) {await expect(pending).rejects.toThrow("CHECKSUM_MISMATCH"); expect(object.state.revoked).toBe(true);}
     else {expect(await pending).toMatchObject({kind: "BYTES", bytes: expected});}
+    expect(fetcher).toHaveBeenCalledWith(object.source.url, expect.objectContaining({cache: "no-cache"}));
   } finally {materializer.close(); store.close(); pool.close(); vi.unstubAllGlobals();}
 });

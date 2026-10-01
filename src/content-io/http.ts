@@ -130,7 +130,9 @@ async function request(source: ContentSourceV1, state: ContentObjectState, signa
   try {
     dependencies.dispatched?.(range ? "RANGE" : "WHOLE", retry);
     const pending = dependencies.fetch(source.url, {credentials: "same-origin", redirect: "error", headers, signal,
-      cache: source.purpose === "CORE_ASSET" ? "default" : "no-store"});
+      // Revalidate HTTP representations if a dev overlay replaces this path.
+      // Verified COMPLETE content remains reusable from the durable store.
+      cache: source.purpose === "CORE_ASSET" ? "no-cache" : "no-store"});
     void pending.then((response) => {if (signal.aborted) {void response.body?.cancel().catch(() => undefined);}}, () => {});
     return await abortable(pending, signal);
   } catch (cause) {

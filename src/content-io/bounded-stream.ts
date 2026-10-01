@@ -1,5 +1,6 @@
 import {sha256} from "@noble/hashes/sha2.js";
 import {bytesToHex} from "@noble/hashes/utils.js";
+import {createSHA256} from "hash-wasm";
 import {abortable, checkSignal, requestScope} from "./abort.js";
 import {ContentIOError, fail} from "./errors.js";
 import {BLOCK_BYTES, integer} from "./source.js";
@@ -73,6 +74,21 @@ async function nextChunk(reader: ReadableStreamDefaultReader<Uint8Array>, signal
 export function createContentHasher() {
   const hash = sha256.create();
   return {update: (bytes: Uint8Array) => {hash.update(bytes);}, digest: () => bytesToHex(hash.digest()), destroy: () => hash.destroy()};
+}
+/** A small, private Wasm scratch buffer accelerates large streaming hashes.
+ * Content is still verified in full; caller buffers can be reused immediately. */
+export async function createStreamingContentHasher(sizeBytes: number): Promise<ReturnType<typeof createContentHasher>> {
+  if (sizeBytes > 10 * 1024 * 1024) {
+    try {
+      let hash: Awaited<ReturnType<typeof createSHA256>> | undefined = await createSHA256();
+      return {
+        update: bytes => {if (!hash) {throw new Error("Hasher released");} hash.update(bytes);},
+        digest: () => {if (!hash) {throw new Error("Hasher released");} return hash.digest("hex");},
+        destroy: () => {hash?.init(); hash = undefined;},
+      };
+    } catch { /* Browser/CSP restrictions must never disable integrity checks. */ }
+  }
+  return createContentHasher();
 }
 /** Native SHA-256 avoids a long JavaScript loop for fully materialized assets. */
 export async function hashBytes(bytes: Uint8Array<ArrayBuffer>): Promise<string> {

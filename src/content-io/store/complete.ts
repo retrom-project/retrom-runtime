@@ -1,6 +1,6 @@
 import type {MaterializationReceiptV1} from "../../../contracts/content-io/v1/content-io.js";
 import {abortable, checkSignal, requestScope} from "../abort.js";
-import {createContentHasher} from "../bounded-stream.js";
+import {createStreamingContentHasher} from "../bounded-stream.js";
 import {BufferCredits} from "../credits.js";
 import {fail} from "../errors.js";
 import {BLOCK_BYTES} from "../source.js";
@@ -10,7 +10,7 @@ export async function completeBacking(backing: PersistentBacking, receipt: Mater
   const {metadata, locks} = backing.resources;
   const before = requireGeneration(await metadata.generation(backing.key, backing.generation));
   if (before.state === "COMPLETE") {return before.localSha256 === receipt.localSha256;}
-  const hash = createContentHasher();
+  const hash = await createStreamingContentHasher(receipt.sizeBytes);
   try {
     for (let position = 0; position < receipt.sizeBytes; position += BLOCK_BYTES) {
       const release = await credits.reserve(2 * BLOCK_BYTES, "SCRATCH", signal);

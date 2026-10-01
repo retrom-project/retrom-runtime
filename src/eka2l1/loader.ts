@@ -21,7 +21,8 @@ export const loadSession:SessionLoader=async(config,win,canvas,signal,content,on
     const factory=(win as unknown as Record<string,unknown>).createEKA2L1;
     if(typeof factory!=="function")throw new Error("EKA2L1_ABI_MISMATCH");
     const session=await api.createSession({factory,canvas,files,assets:Object.entries(bundle).filter(([path])=>path.startsWith("resources/")||path.startsWith("patch/")).map(([path,bytes])=>({path:"/"+path,bytes})),
-      uid:config.uid,rotation:config.rotation,wasmBinary:bundle["eka2l1.wasm"],mainScriptURL:urls["eka2l1.js"],audioWorkletURL:urls["audio-worklet.mjs"],signal,onEvent,onDialog});
+      uid:config.uid,rotation:config.rotation,wasmBinary:bundle["eka2l1.wasm"],installationBuildId:JSON.parse(new TextDecoder().decode(bundle["build.json"])).sourceTreeSha256,
+      mainScriptURL:urls["eka2l1.js"],audioWorkletURL:urls["audio-worklet.mjs"],signal,onEvent,onDialog});
     const stop=session.stop.bind(session);let stopped=false;
     session.stop=async()=>{if(stopped)return;stopped=true;try{await stop();}finally{cleanup();}};
     return session;

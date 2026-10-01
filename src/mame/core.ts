@@ -1,3 +1,4 @@
+import {withStartupTask} from "../provider/startup.js";
 import {loadCoreAsset} from "../provider/core-assets.js";
 import type {AdapterContentOptions} from "../provider/content-inputs.js";
 import {profiles, type MameMachine} from "./profiles.js";
@@ -36,25 +37,27 @@ export async function loadCore(config: MameParameters, content: AdapterContentOp
   const loaded = await Promise.all(files.map((name, i) => loadCoreAsset(content, new URL(name, base).href,
     `assets/mame/${name}`, name.endsWith(".wasm") ? 256 * 1024 * 1024 : 2 * 1024 * 1024, content.signal,
     progress => {ready[i] = progress.readyBytes; content.reportProgress?.({phase: "RUNTIME_ASSET", loadedBytes: ready.reduce((a, b) => a + b, 0), totalBytes: total});})));
-  const build = manifest.build;
-  const moduleURL = URL.createObjectURL(new Blob([Uint8Array.from(loaded[0])], {type: "text/javascript"}));
-  let core: MameCore | undefined;
-  try {
-    const module = await loader(moduleURL);
-    if (!module || typeof module !== "object" || !("default" in module) || typeof module.default !== "function") {invalid();}
-    content.signal?.throwIfAborted();
-    const value: unknown = await module.default({wasmBinary: loaded[1], locateFile: (name: string) => new URL(name, base).href,
-      print: () => undefined, printErr: nativeLog});
-    if (!validCore(value)) {invalid();} core = value;
-    if (core.UTF8ToString(core._retrom_mame_build_id()) !== build) {invalid();}
-    const familyURL = URL.createObjectURL(new Blob([Uint8Array.from(loaded[2])], {type: "application/wasm"}));
-    try {await core.loadDynamicLibrary(familyURL, {global: true, nodelete: true, loadAsync: true});}
-    finally {URL.revokeObjectURL(familyURL);}
-    content.signal?.throwIfAborted();
-    if (core._retrom_mame_attach() !== 0) {invalid();}
-    return {core, build};
-  } catch (error) {core?._retrom_mame_stop(); throw error;}
-  finally {URL.revokeObjectURL(moduleURL);}
+  return withStartupTask(content.startup, "CORE_INITIALIZATION", async () => {
+    const build = manifest.build;
+    const moduleURL = URL.createObjectURL(new Blob([Uint8Array.from(loaded[0])], {type: "text/javascript"}));
+    let core: MameCore | undefined;
+    try {
+      const module = await loader(moduleURL);
+      if (!module || typeof module !== "object" || !("default" in module) || typeof module.default !== "function") {invalid();}
+      content.signal?.throwIfAborted();
+      const value: unknown = await module.default({wasmBinary: loaded[1], locateFile: (name: string) => new URL(name, base).href,
+        print: () => undefined, printErr: nativeLog});
+      if (!validCore(value)) {invalid();} core = value;
+      if (core.UTF8ToString(core._retrom_mame_build_id()) !== build) {invalid();}
+      const familyURL = URL.createObjectURL(new Blob([Uint8Array.from(loaded[2])], {type: "application/wasm"}));
+      try {await core.loadDynamicLibrary(familyURL, {global: true, nodelete: true, loadAsync: true});}
+      finally {URL.revokeObjectURL(familyURL);}
+      content.signal?.throwIfAborted();
+      if (core._retrom_mame_attach() !== 0) {invalid();}
+      return {core, build};
+    } catch (error) {core?._retrom_mame_stop(); throw error;}
+    finally {URL.revokeObjectURL(moduleURL);}
+  });
 }
 function validCore(value: unknown): value is MameCore {
   if (!value || typeof value !== "object") {return false;}

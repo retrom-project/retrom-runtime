@@ -5,7 +5,7 @@ import {fail} from "./errors.js";
 import {ContentMaterializer} from "./materializer.js";
 import {contentObjectKey, validateSource, type SourceContext} from "./source.js";
 import {ContentStoreManager} from "./store/manager.js";
-import {completeBacking} from "./store/complete.js";
+import {completeBacking, completedBacking} from "./store/complete.js";
 import {WindowLoader} from "./window-loader.js";
 
 /** Preparation owns cache leases until the game exits, including files not opened by the core yet. */
@@ -62,7 +62,9 @@ export class ContentPreloader {
   private async prepareFile(object: BlockObject, report: (ready: number) => void) {
     const signal = this.controller.signal;
     await this.store.prepare(object, signal);
-    if (!this.store.persistent(object)) {fail("CACHE_UNAVAILABLE");}
+    const backing = this.store.persistent(object);
+    if (!backing) {fail("CACHE_UNAVAILABLE");}
+    if (await completedBacking(backing, signal)) {report(object.source.sizeBytes); return;}
     await this.materializer.prepare(object, {
       kind: "SINK", maxBytes: object.source.sizeBytes,
       createSink: async () => ({

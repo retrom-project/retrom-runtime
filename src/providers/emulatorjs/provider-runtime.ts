@@ -1,3 +1,7 @@
+import {loadStartupRestore} from "../../provider/startup-restore.js";
+import {requireEmulatorImplementation} from "./implementation.js";
+import {StartupTasks} from "../../provider/startup.js";
+import {installStartupDownloads} from "./startup-downloads.js";
 import {bindOptionalTargetContent} from "../../provider/target-content.js";
 import {ProviderContentOwner} from "../../provider/content-owner.js";
 import {ContentIOError} from "../../content-io/errors.js";
@@ -35,10 +39,11 @@ import {retromShaders} from "./shaders.js";
 import {createEmulatorJsVideoModeController} from "./video-mode.js";
 import {biosFile, externalFiles, fileName, optionalResource, runtimeBase} from "./resources.js";
 import {readEmulatorJsCheckpoint} from "./bytes.js";
-import {readPspCheckpoint, restorePspCheckpoint} from "./psp-state.js";
+import {restoreEmulatorCheckpoint} from "./restore-checkpoint.js";
+import {readPspCheckpoint} from "./psp-state.js";
 import {installPspRestoreObserver} from "./psp-restore.js";
 import {createEmulatorJsSurface} from "./surface.js";
-import {decodeStoredCheckpoint, encodeStoredCheckpoint} from "../../provider/checkpoint-storage.js";
+import {encodeStoredCheckpoint} from "../../provider/checkpoint-storage.js";
 import {installEmulatorJsOutputViewport} from "./output-viewport.js";
 import {acknowledgeLutroStoredSave, installLutroNativeRestore, LutroNativeSaveTracker} from "./lutro-native-save.js";
 
@@ -53,6 +58,8 @@ export async function createEmulatorJsPlayer(
 }
 
 class EmulatorJsPlayer implements PlayerRuntimeV1 {
+  private readonly startup: StartupTasks;
+  private cleanupStartupDownloads: (() => void) | null = null;
   private readonly listeners = new Set<(event: RuntimeEventV1) => void>();
   private state: RuntimeStateV1 = "CREATED";
   private inputDiagnostics: RuntimeInputDiagnosticsV1 | null = null;
@@ -100,15 +107,10 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
     private readonly host: RuntimeHostV1,
     private readonly assetIndex: AssetIndexV1,
   ) {
-    const target = emulatorJsProviderDefinition.targets.find((entry) => entry.id === envelope.runtime.targetId);
-    if (!target) {invalid();}
+    this.startup = new StartupTasks(event => this.emit(event), host.signal);
+    const target = requireEmulatorImplementation(envelope.runtime.targetId, assetIndex);
     this.implementation = target.implementation;
     this.eagerContentGame = target.contentIO.game.mode === "EAGER";
-    const core = assetIndex[this.implementation.coreAssetPath];
-    if (!core || core.sha256 !== this.implementation.coreSha256 ||
-      core.sizeBytes !== this.implementation.coreSizeBytes) {
-      invalid();
-    }
   }
 
   mount(target: HTMLElement) {
@@ -171,6 +173,8 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
   }
 
   exit() {
+    this.startup.stop(this.state === "FAILED");
+    this.cleanupStartupDownloads?.();
     this.exitPromise ??= Promise.resolve().then(() => this.performExit());
     return this.exitPromise;
   }
@@ -288,12 +292,8 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
     this.host.signal.addEventListener("abort", this.hostAbort, {once: true});
     try {
       this.checkMountActive();
-      this.restorePayload = await this.host.loadRestore(this.envelope.restore);
-      if (this.restorePayload && this.envelope.restore) {
-        this.restorePayload = await decodeStoredCheckpoint(this.restorePayload, this.envelope.restore.format,
-          this.envelope.runtime.checkpoint?.maxBytes ?? 0, this.host.signal);
-      }
-      const frame = await this.host.mountFrame(target, {resourceRole: null});
+      this.restorePayload = await loadStartupRestore(this.envelope, this.host, this.startup);
+      const frame = await this.startup.run("ENVIRONMENT", () => this.host.mountFrame(target, {resourceRole: null}));
       if (this.implementation.outputSizeLimit) {
         this.outputViewport = installEmulatorJsOutputViewport(frame.element, target, this.implementation.outputSizeLimit);
       }
@@ -302,7 +302,7 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
       this.checkMountActive();
       const declaration = emulatorJsProviderDefinition.targets.find(entry => entry.id === this.envelope.runtime.targetId)!;
       this.contentSession = bindOptionalTargetContent(await this.contentOwner.start(declaration, this.envelope, this.assetIndex,
-        this.host.contentLoading, (loadedBytes, totalBytes) => this.emit({type: "LOAD_PROGRESS", loadedBytes, totalBytes})), declaration);
+        this.host.contentLoading, (loadedBytes, totalBytes) => this.emit({type: "LOAD_PROGRESS", loadedBytes, totalBytes}), this.startup), declaration, this.startup);
       this.checkMountActive();
       this.daphneProject = await maybePrepareDaphneProject(declaration, this.envelope,
         this.contentSession, this.assetIndex, this.host.signal, error => this.fail(error.message, error),
@@ -329,9 +329,12 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
       loader.addEventListener("error", () => this.fail("PLAYER_RUNTIME_LOADER_FAILED"), {once: true});
       const startTimeoutMs = runtimeStartTimeout(this.implementation.runtimeCore, this.restorePayload !== null);
       this.startTimeout = runtimeWindow.setTimeout(() => this.fail("PLAYER_RUNTIME_START_TIMEOUT"), startTimeoutMs);
-      await this.startBarrier.promise;
+      await this.startup.run("GAME_START", () => this.startBarrier!.promise, {summary: true});
       this.checkMountActive();
       this.clearStartBarrier();
+      this.cleanupStartupDownloads?.();
+      this.startup.completePreparations();
+      this.startup.stop();
       this.transition("RUNNING");
     } catch (error) {
       if (this.state !== "FAILED" && this.state !== "EXITED") {this.transition("FAILED");}
@@ -393,6 +396,8 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
       this.instance = runtimeWindow.EJS_emulator ?? null;
       if (!this.instance) {this.fail("PLAYER_RUNTIME_UNAVAILABLE"); return;}
       const instance = this.instance;
+      this.cleanupStartupDownloads = installStartupDownloads(instance, this.implementation.release, this.startup,
+        runtimeWindow.XMLHttpRequest, this.envelope.resources);
       this.cleanupGamepadIndex = initializeEmulatorJsGamepads(instance);
       if (asyncRangeCore(this.implementation.runtimeCore) && this.discRange) {installAsyncRangeStartup(instance, this.discRange);}
       if (mountRangeFS(this.implementation.runtimeCore, seekable, this.eagerContentGame, !!this.daphneProject) && this.discRange) {
@@ -452,7 +457,7 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
       const discs = optionalResource(this.envelope, "discs", "MULTI_DISC");
       if (discs) {await this.prepareInitialDisc(discs);}
       else if (this.restorePayload) {
-        await this.restore(this.restorePayload);
+        await this.startup.run("RESTORE_APPLY", () => this.restore(this.restorePayload!));
         if (!this.instance.gameManager?.toggleMainLoop) {throw new Error("PLAYER_STATE_RESTORE_FAILED");}
         this.instance.gameManager.toggleMainLoop(true);
         this.instance.paused = false;
@@ -489,14 +494,8 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
 
   private async restore(bytes: Uint8Array) {
     if (this.discRange) {await this.discRange.idle();}
-    const manager = this.instance?.gameManager;
-    if (this.implementation.runtimeCore === "ppsspp") {
-      await restorePspCheckpoint(manager, bytes, this.envelope.runtime.checkpoint?.maxBytes ?? 0,
-        () => this.pspRestore!.wait(this.host.signal), this.host.signal);
-    } else if (manager?.loadExplicitStateAndWait) {await manager.loadExplicitStateAndWait(bytes);}
-    else if (manager?.loadStateAndWait) {await manager.loadStateAndWait(bytes);}
-    else if (manager?.loadState) {manager.loadState(bytes);}
-    else {throw new Error("PLAYER_STATE_RESTORE_FAILED");}
+    await restoreEmulatorCheckpoint(this.instance?.gameManager, this.implementation.runtimeCore, bytes,
+      this.envelope.runtime.checkpoint?.maxBytes ?? 0, () => this.pspRestore!.wait(this.host.signal), this.host.signal);
     this.restorePayload = null;
   }
 
@@ -635,6 +634,5 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
   private emit(event: RuntimeEventV1) {for (const listener of this.listeners) {listener(event);}}
 }
 
-function invalid(): never {throw new Error("PROVIDER_LAUNCH_REQUEST_INVALID");}
 function contractError(cause?: unknown) {return new PlayerRuntimeError("PLAYER_RUNTIME_CONTRACT_INVALID", {cause});}
 function capabilityError() {return new PlayerRuntimeError("PLAYER_RUNTIME_CAPABILITY_UNSUPPORTED");}

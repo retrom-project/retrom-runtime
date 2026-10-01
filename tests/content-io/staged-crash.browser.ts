@@ -6,7 +6,9 @@ const bundle = async (contents: string) => (await build({stdin: {contents, resol
 for (const corrupt of [false, true]) {
   test(`[ST-06] BROWSER/staged-crash-${corrupt ? "bad-hash" : "resume"} never publishes an unchecked whole response @S06`, async ({page}) => {
     const modules = {
-      "worker.mjs": await bundle('import "./src/content-io/worker.ts";'),
+      // Keep the unfinished blocks fixed; speculative reads have separate prefetch coverage.
+      "worker.mjs": await bundle(`import {BlockPool} from './src/content-io/block-pool.ts';
+import './src/content-io/worker.ts'; BlockPool.prototype.prefetchAfter = () => {};`),
       "crash.mjs": await bundle(`import {ContentStoreManager} from './src/content-io/store/manager.ts';
 import './src/content-io/worker.ts';
 const stage = ContentStoreManager.prototype.stage;

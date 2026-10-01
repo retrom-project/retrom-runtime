@@ -1,6 +1,7 @@
 import type {CheckpointAvailability, RuntimeCheckpoint, RuntimeLoadProgress} from "../contract.js";
 import type {MountedRuntimeAdapter, RuntimeProgressReporter, RuntimeExitReporter} from "../internal-adapter.js";
 import type {J2meParameters} from "./parameters.js";
+import {withStartupTask, type StartupTasks, type StartupTask} from "../provider/startup.js";
 
 type J2meRuntime = Omit<MountedRuntimeAdapter, "setVolume"> & {
   mount(target: HTMLElement): Promise<void>;
@@ -26,6 +27,7 @@ export async function mountJ2me(
   reportFailure: (error: Error) => void,
   signal?: AbortSignal,
   loadModule: J2meModuleLoader = (url) => import(/* webpackIgnore: true */ /* @vite-ignore */ url),
+  startup?: StartupTasks,
 ): Promise<MountedRuntimeAdapter> {
   if (target.ownerDocument !== frameWindow.document || restorePayload &&
     (!restorePayload.byteLength || restorePayload.byteLength > maximum)) {
@@ -33,7 +35,7 @@ export async function mountJ2me(
   }
   signal?.throwIfAborted();
   const runtimeBaseUrl = new URL(config.runtimeBaseUrl, window.location.href).href;
-  const module = await loadModule(new URL("j2me-runtime.js", runtimeBaseUrl).href);
+  const module = await withStartupTask(startup, "CORE_ASSETS", () => loadModule(new URL("j2me-runtime.js", runtimeBaseUrl).href));
   if (!validModule(module)) {throw new Error("J2ME_CORE_ABI_MISMATCH");}
   signal?.throwIfAborted();
   const runtime = module.createRuntime({
@@ -47,9 +49,20 @@ export async function mountJ2me(
   }, {frameWindow, restorePayload, signal});
   let exited = false;
   let exitReported = false;
+  const progressTasks = new Map<string, StartupTask>();
   const unsubscribe = runtime.subscribe((event) => {
     if (exited) {return;}
-    if (event.type === "LOAD_PROGRESS") {reportProgress(event);}
+    if (event.type === "LOAD_PROGRESS") {
+      if (startup) {
+        let task = progressTasks.get(event.phase);
+        if (!task) {
+          task = startup.begin(event.phase === "RUNTIME_ASSET" ? "CORE_ASSETS" : event.phase === "RESTORE" ? "RESTORE_APPLY" : "GAME_CONTENT");
+          progressTasks.set(event.phase, task);
+        }
+        task.progress(event.loadedBytes, event.totalBytes);
+      }
+      reportProgress(event);
+    }
     if (event.type === "FATAL_ERROR") {reportFailure(new Error(event.code ?? "J2ME_RUNTIME_FAILED"));}
     if (event.type === "EXIT_REQUESTED" && !exitReported) {exitReported = true; reportExitRequested();}
   });
@@ -62,7 +75,8 @@ export async function mountJ2me(
   try {
     if (typeof runtime.acknowledgeCheckpoint !== "function") {throw new Error("J2ME_CORE_ABI_MISMATCH");}
     await runtime.mount(target);
-  } catch (error) {await exit(); throw error;}
+    for (const task of progressTasks.values()) {task.complete();}
+  } catch (error) {for (const task of progressTasks.values()) {task.fail();} await exit(); throw error;}
   return {
     acknowledgeCheckpoint: (checkpoint) => {
       if (!runtime.acknowledgeCheckpoint) {throw new Error("J2ME_CORE_ABI_MISMATCH");}

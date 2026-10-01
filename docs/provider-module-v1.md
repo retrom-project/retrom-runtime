@@ -171,6 +171,32 @@ remain unavailable and `coreRead` is always false: an input API call is not evid
 EmulatorJS delivery observation applies to single-player; MV/MZ use the existing isolated bridge STATUS cadence.
 Other inaccessible isolated frames explicitly remain unavailable. Sessions are cleaned up on disable and exit.
 
+## Startup tasks
+
+`LOAD_TASK` reports an invocation-local unique `id`, a public `kind`, explicit
+`RUNNING`, `COMPLETED` or `FAILED` state, and optional exact byte progress.
+All declared Targets pass through shared environment and mount barriers. Content I/O
+preparation and materialization add byte-aware tasks; EmulatorJS and independent
+loaders bridge their own promises through the same event contract. Only present
+BIOS, parent and restore inputs create their corresponding tasks.
+
+An operation completes only when its preparation promise returns, including cache
+commit, extraction, native mounting or restore work at that boundary. A byte counter
+at 100 percent is still RUNNING. Unknown totals remain indeterminate. Parallel tasks
+keep independent identities. Failure never reports completion; aborted or exited
+instances suppress late events while retaining cleanup ownership of late resources.
+Task reporting stops after startup and does not observe ordinary gameplay reads.
+The optional `summary: true` marks an overall span. Hosts show only the latest active
+summary when no specific running step is visible; independent BIOS and ROM tasks
+remain concurrent. Completed rows move above running work in a bounded display.
+Indexed project entries share one preparation task per category across successive
+file reads, including idle gaps. Adapter readiness closes this phase; completing
+one file never announces that the project is ready. File progress still reaches
+content consumers unchanged and is not reported as project-wide byte progress.
+Hosts may retain a three-row display but must retain hidden active tasks internally.
+Readiness remains the mount/restore lifecycle boundary, not a screenshot or title screen.
+`LOAD_PROGRESS` remains available for existing consumers.
+
 ## Optional content loading preference
 
 `RuntimeHostV1.contentLoading?: "ON_DEMAND" | "PRELOAD"` is a device preference,

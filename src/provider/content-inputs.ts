@@ -22,6 +22,7 @@ export type AdapterContentSession = ContentSessionAccess & {
   inputPolicy(role: string, member?: string): ManagedInputPolicyV1;
 };
 export type AdapterContentOptions = {
+  startup?: import("./startup.js").StartupTasks;
   contentSession: AdapterContentSession;
   assetIndex: import("./module-api.js").AssetIndexV1;
   signal?: AbortSignal;

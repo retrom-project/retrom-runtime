@@ -3,7 +3,7 @@ import {build} from "esbuild";
 import {startFixtureServer} from "./fixture-server.mjs";
 const bundle = async (contents: string) => (await build({stdin: {contents, resolveDir: process.cwd(), loader: "ts"},
   bundle: true, format: "esm", platform: "browser", write: false})).outputFiles[0].text;
-test("[X-10] BROWSER/published-corruption notifies once and preserves leased bytes while a new generation is prepared @S06", async ({page}) => {
+test("[X-10] BROWSER/published-cache trusts the first validation across readers and sessions without detecting later local changes @S06", async ({page}) => {
   const broken = await bundle(`import {OPFSStore} from './src/content-io/store/opfs.ts'; import './src/content-io/worker.ts';
 const read = OPFSStore.prototype.read;
 OPFSStore.prototype.read = async function(receipt, complete) {
@@ -34,24 +34,27 @@ OPFSStore.prototype.read = async function(receipt, complete) {
         if (leased.kind !== "BLOB") throw new Error("fixture kind");
         await file.close();
         const reader = await first.open({...source, transport: "RANGE_REQUIRED"}, {...policy, mode: "RANGE", bridge: "ASYNC", result: "READER"});
-        const failures = [];
+        const reads = [], expected = (new Uint8Array(await leased.blob.arrayBuffer()))[0] ^ 1;
         for (let attempt = 0; attempt < 2; attempt++) {
-          try {await reader.readInto(0, new Uint8Array(1)); failures.push("unexpected");}
-          catch (error) {failures.push((error as Error).message);}
+          const bytes = new Uint8Array(1); await reader.readInto(0, bytes); reads.push(bytes[0]);
         }
+        const cachedFile = await first.open(source, {...policy, result: "BYTES"}), cached = await first.materialize(cachedFile.id, {kind: "BYTES", maxBytes: identity.sizeBytes});
+        if (cached.kind !== "BYTES") throw new Error("fixture kind");
         const nextFile = await second.open(source, policy), next = await second.materialize(nextFile.id, {kind: "BLOB", maxBytes: identity.sizeBytes});
         if (next.kind !== "BLOB") throw new Error("fixture kind");
         const hashes = [await digest(leased.blob), await digest(next.blob)];
         const generations = [leased.receipt.storageGeneration, next.receipt.storageGeneration];
         await leased.release(); await next.release();
-        return {failures, notifications, hashes, generations};
+        return {reads, expected, notifications, hashes, generations, cachedByte: cached.bytes[0], cachedReceipt: cached.receipt.localSha256};
       } finally {await first.close(); await second.close();}
     }, {identity});
-    expect(result.failures).toEqual(["CONTENT_IO_IDENTITY_CHANGED", "CONTENT_IO_IDENTITY_CHANGED"]);
-    expect(result.notifications).toEqual(["CONTENT_IO_IDENTITY_CHANGED"]);
-    expect(result.generations[0]).not.toBe(result.generations[1]);
+    expect(result.reads).toEqual([result.expected, result.expected]);
+    expect(result.cachedByte).toBe(result.expected);
+    expect(result.notifications).toEqual([]);
+    expect(result.generations[0]).toBe(result.generations[1]);
     if (identity.identity.kind !== "FILE_SHA256") throw new Error("fixture identity");
+    expect(result.cachedReceipt).toBe(identity.identity.sha256);
     expect(result.hashes).toEqual([identity.identity.sha256, identity.identity.sha256]);
-    expect(server.requests("game").map(request => request.range)).toEqual([null, null]);
+    expect(server.requests("game").map(request => request.range)).toEqual([null]);
   } finally {await server.close();}
 });

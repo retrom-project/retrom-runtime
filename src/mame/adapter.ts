@@ -1,3 +1,4 @@
+import {withStartupTask} from "../provider/startup.js";
 import type {MountedRuntimeAdapter} from "../internal-adapter.js";
 import type {AdapterContentOptions} from "../provider/content-inputs.js";
 import {loadCore, withMemory, type MameParameters, type ModuleLoader} from "./core.js";
@@ -12,21 +13,27 @@ export async function mountMame(config: MameParameters, target: HTMLElement, win
   const {core, build} = await loadCore(config, content, loader);
   let identity: string;
   try {
-    identity = await mountFiles(core, config, content);
+    identity = await withStartupTask(content.startup, "CONTENT_MOUNT", () => mountFiles(core, config, content));
     content.signal?.throwIfAborted();
-    const command = new TextEncoder().encode("/content/boot.cmd\0");
-    const loaded = withMemory(core, command.length, pointer => {core.HEAPU8.set(command, pointer); return core._retrom_mame_start(pointer);});
-    if (loaded !== 1 || core._retrom_mame_step() !== 1) {throw new Error("MAME_BOOT_FAILED");}
+    await withStartupTask(content.startup, "CORE_INITIALIZATION", async () => {
+      if (content.startup) {await new Promise<void>(resolve => win.setTimeout(resolve, 0));}
+      content.signal?.throwIfAborted();
+      const command = new TextEncoder().encode("/content/boot.cmd\0");
+      const loaded = withMemory(core, command.length, pointer => {core.HEAPU8.set(command, pointer); return core._retrom_mame_start(pointer);});
+      if (loaded !== 1 || core._retrom_mame_step() !== 1) {throw new Error("MAME_BOOT_FAILED");}
+    });
     if (restorePayload) {
-      if (config.machine === "sg1000") {
-        // A state loaded on the first boot step leaves Bank Panic's video frozen.
-        for (let frame = 0; frame < 60; frame++) {
-          if (core._retrom_mame_step() !== 1) {throw new Error("MAME_BOOT_FAILED");}
+      await withStartupTask(content.startup, "RESTORE_APPLY", async () => {
+        if (config.machine === "sg1000") {
+          // A state loaded on the first boot step leaves Bank Panic's video frozen.
+          for (let frame = 0; frame < 60; frame++) {
+            if (core._retrom_mame_step() !== 1) {throw new Error("MAME_BOOT_FAILED");}
+          }
         }
-      }
-      const native = await decodeState(identity, build, restorePayload);
-      const restored = withMemory(core, native.length, pointer => {core.HEAPU8.set(native, pointer); return core._retrom_mame_restore(pointer, native.length);});
-      if (restored !== 1) {throw new Error("MAME_CHECKPOINT_RESTORE_FAILED");}
+        const native = await decodeState(identity, build, restorePayload);
+        const restored = withMemory(core, native.length, pointer => {core.HEAPU8.set(native, pointer); return core._retrom_mame_restore(pointer, native.length);});
+        if (restored !== 1) {throw new Error("MAME_CHECKPOINT_RESTORE_FAILED");}
+      });
     }
     content.signal?.throwIfAborted();
     return startLoop();

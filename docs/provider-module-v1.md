@@ -149,6 +149,11 @@ Cursor polling reads the raw gamepad source without advancing the stateful host 
 The shared gamepad filter remains installed until exit so cursor and host filtering have one stable lifecycle.
 Hosts own per-game preferences; adapters never persist user settings. Relative mouse/pointer lock is not supported.
 
+EmulatorJS creates WebGL contexts with a retained drawing buffer in its isolated runtime iframe, before loading
+the frontend or core. This keeps the displayed frame available for review and save screenshots after pause when
+native framebuffer capture is unavailable or has a different orientation. The override leaves 2D contexts and
+the host window unchanged and is restored when the runtime exits. Native framebuffer capture remains preferred.
+
 ONScripterYuri receives its native standard-gamepad D-pad and face-button events through SDL. The adapter adds
 only the missing standard left-stick direction mapping, with dead-zone hysteresis and complete key release on
 exit. It also creates the core's WebGL context with a retained drawing buffer so host-requested review and save

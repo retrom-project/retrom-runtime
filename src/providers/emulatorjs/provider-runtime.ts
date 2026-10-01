@@ -42,7 +42,7 @@ import {readEmulatorJsCheckpoint} from "./bytes.js";
 import {restoreEmulatorCheckpoint} from "./restore-checkpoint.js";
 import {readPspCheckpoint} from "./psp-state.js";
 import {installPspRestoreObserver} from "./psp-restore.js";
-import {createEmulatorJsMountPoint} from "./frame-style.js";
+import {createEmulatorJsSurface} from "./surface.js";
 import {encodeStoredCheckpoint} from "../../provider/checkpoint-storage.js";
 import {installEmulatorJsOutputViewport} from "./output-viewport.js";
 import {acknowledgeLutroStoredSave, installLutroNativeRestore, LutroNativeSaveTracker} from "./lutro-native-save.js";
@@ -309,7 +309,7 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
         (loadedBytes, totalBytes) => this.emit({type: "LOAD_PROGRESS", loadedBytes, totalBytes}));
       this.discRange = daphneVideo(this.daphneProject);
       this.checkMountActive();
-      this.cleanupFrameStyle = createEmulatorJsMountPoint(runtimeWindow);
+      this.cleanupFrameStyle = createEmulatorJsSurface(runtimeWindow);
       this.startBarrier = createStartBarrier();
       this.configure(runtimeWindow);
       const disc = await configureContentDisc(runtimeWindow, this.envelope, this.implementation.runtimeCore, this.host.signal,

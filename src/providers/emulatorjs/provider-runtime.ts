@@ -1,3 +1,4 @@
+import {scheduleStartupActions} from "./startup-actions.js";
 import {loadStartupRestore} from "../../provider/startup-restore.js";
 import {requireEmulatorImplementation} from "./implementation.js";
 import {StartupTasks} from "../../provider/startup.js";
@@ -43,6 +44,7 @@ import {restoreEmulatorCheckpoint} from "./restore-checkpoint.js";
 import {readPspCheckpoint} from "./psp-state.js";
 import {installPspRestoreObserver} from "./psp-restore.js";
 import {createEmulatorJsSurface} from "./surface.js";
+import {prepareParentContent} from "./parent-content.js";
 import {encodeStoredCheckpoint} from "../../provider/checkpoint-storage.js";
 import {installEmulatorJsOutputViewport} from "./output-viewport.js";
 import {acknowledgeLutroStoredSave, installLutroNativeRestore, LutroNativeSaveTracker} from "./lutro-native-save.js";
@@ -75,6 +77,7 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
   private daphneProject: DaphneProject | null = null;
   private cleanupDaphneProject: (() => void) | null = null;
   private cleanupFlycast: (() => void) | null = null;
+  private cleanupParent: (() => Promise<void>) | null = null;
   private cleanupSeekableFS: (() => void) | null = null;
   private cleanupFrameStyle: (() => void) | null = null;
   private outputViewport: ReturnType<typeof installEmulatorJsOutputViewport> | null = null;
@@ -301,8 +304,9 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
       this.runtimeWindow = runtimeWindow;
       this.checkMountActive();
       const declaration = emulatorJsProviderDefinition.targets.find(entry => entry.id === this.envelope.runtime.targetId)!;
-      this.contentSession = bindOptionalTargetContent(await this.contentOwner.start(declaration, this.envelope, this.assetIndex,
-        this.host.contentLoading, (loadedBytes, totalBytes) => this.emit({type: "LOAD_PROGRESS", loadedBytes, totalBytes}), this.startup), declaration, this.startup);
+      const content = await this.contentOwner.start(declaration, this.envelope, this.assetIndex,
+        this.host.contentLoading, (loadedBytes, totalBytes) => this.emit({type: "LOAD_PROGRESS", loadedBytes, totalBytes}), this.startup);
+      this.contentSession = bindOptionalTargetContent(content, declaration, this.startup);
       this.checkMountActive();
       this.daphneProject = await maybePrepareDaphneProject(declaration, this.envelope,
         this.contentSession, this.assetIndex, this.host.signal, error => this.fail(error.message, error),
@@ -312,6 +316,12 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
       this.cleanupFrameStyle = createEmulatorJsSurface(runtimeWindow);
       this.startBarrier = createStartBarrier();
       this.configure(runtimeWindow);
+      if (optionalResource(this.envelope, "parent", "PARENT_ARCHIVE")) {
+        this.cleanupParent = await this.startup.run("DEPENDENCIES", task => prepareParentContent(runtimeWindow, this.envelope,
+          bindOptionalTargetContent(content, declaration), this.contentOwner.signal,
+          (loadedBytes, totalBytes) => {task.progress(loadedBytes, totalBytes); this.emit({type: "LOAD_PROGRESS", loadedBytes, totalBytes});}));
+        this.checkMountActive();
+      }
       const disc = await configureContentDisc(runtimeWindow, this.envelope, this.implementation.runtimeCore, this.host.signal,
         this.contentSession, error => this.fail(error.message, error), this.eagerContentGame,
         (loadedBytes, totalBytes) => this.emit({type: "LOAD_PROGRESS", loadedBytes, totalBytes}));
@@ -349,7 +359,6 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
     const seekable = hasSeekableGame(this.envelope);
     const gameURL = this.daphneProject ? `/roms/${this.daphneProject.romName}` : gameResourceURL(this.envelope, this.implementation.runtimeCore, seekable);
     const bios = optionalResource(this.envelope, "bios", "BIOS_BUNDLE");
-    const parent = optionalResource(this.envelope, "parent", "PARENT_ARCHIVE");
     const releaseBase = runtimeBase(this.envelope, this.implementation.release);
     const deferredDOSStart = this.implementation.release === "4.3.0-pre" &&
       this.implementation.runtimeCore === "dosbox_pure";
@@ -364,7 +373,6 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
     runtimeWindow.EJS_gameID = 0;
     runtimeWindow.EJS_pathtodata = releaseBase;
     runtimeWindow.EJS_biosUrl = biosFile(bios);
-    runtimeWindow.EJS_gameParentUrl = parent?.url;
     runtimeWindow.EJS_startOnLoaded = !deferredStart;
     runtimeWindow.EJS_dontExtractRom = deferredStart || this.implementation.runtimeCore === "flycast" || seekable || this.eagerContentGame || !!this.daphneProject;
     runtimeWindow.EJS_disableBatchBootup = deferredDOSStart;
@@ -462,7 +470,7 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
         this.instance.gameManager.toggleMainLoop(true);
         this.instance.paused = false;
       }
-      if (this.implementation.runtimeCore !== "ppsspp" || !this.envelope.restore) {this.scheduleStartupActions(runtimeWindow);}
+      if (this.implementation.runtimeCore !== "ppsspp" || !this.envelope.restore) {scheduleStartupActions(runtimeWindow, this.implementation, this.instance, this.startupTimers);}
       this.updateCheckpointAvailability(this.currentCheckpointAvailability());
       this.startBarrier?.resolve();
     } catch (error) {
@@ -470,25 +478,6 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
         ? error.message
         : "PLAYER_STATE_RESTORE_FAILED";
       this.fail(code, error);
-    }
-  }
-
-  private scheduleStartupActions(runtimeWindow: Window) {
-    if (!this.implementation.startupActions.length) {return;}
-    const manager = this.instance?.gameManager;
-    const simulate = manager?.simulateInput?.bind(manager);
-    if (!simulate) {throw new Error("PLAYER_STARTUP_ACTION_UNAVAILABLE");}
-    for (const action of this.implementation.startupActions) {
-      const pressTimer = runtimeWindow.setTimeout(() => {
-        this.startupTimers.delete(pressTimer);
-        simulate(action.player, action.control, 1);
-        const releaseTimer = runtimeWindow.setTimeout(() => {
-          this.startupTimers.delete(releaseTimer);
-          simulate(action.player, action.control, 0);
-        }, action.durationMs);
-        this.startupTimers.add(releaseTimer);
-      }, action.delayMs);
-      this.startupTimers.add(pressTimer);
     }
   }
 
@@ -566,6 +555,7 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
   }
 
   private async closeContent() {
+    await this.cleanupParent?.(); this.cleanupParent = null;
     await this.contentOwner.close(); this.contentSession = null;
     await this.discRange?.dispose(); this.discRange = null;
     this.daphneProject = null;

@@ -6,7 +6,9 @@ export const mameAdapter = defineAdapter({id: "mame-dylink", kind: "MAME_DYLINK"
   capabilities: {checkpoint: true, pause: true, screenshot: true, standardGamepad: true, frameCounter: true, volume: true},
   checkpoint: {writeFormat: checkpointFormat, readFormats: [checkpointFormat]},
 });
-export const mameAppleTarget = defineTarget({id: "mame-apple2", displayName: "Apple II+ (MAME)", adapterId: mameAdapter.id,
+export const mameAppleTarget = defineTarget({
+  hostKeyboardShortcuts: ["PAUSE", "MENU"],
+  id: "mame-apple2", displayName: "Apple II+ (MAME)", adapterId: mameAdapter.id,
   checkpointMaxBytes: checkpointLimit, frameMode: "SAME_ORIGIN_BLANK", requiresThreads: false,
   contentIO: {game: eagerPolicy(143360), external: eagerPolicy(2048)},
   inputs: [{role: "game", kind: "ROM_BLOB", cardinality: "ONE", optional: false},

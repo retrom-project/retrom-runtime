@@ -5,7 +5,9 @@ export const np2kaiAdapter = defineAdapter({id: "np2kai-web", kind: "NP2KAI_WEB"
   capabilities: {checkpoint: true, pause: true, screenshot: true, standardGamepad: true, frameCounter: true, volume: false},
   checkpoint: {writeFormat: "np2kai-state-v1", readFormats: ["np2kai-state-v1"]},
 });
-export const np2kaiTarget = defineTarget({id: "np2kai-pc98", displayName: "PC-98 (Neko Project II Kai)", adapterId: np2kaiAdapter.id,
+export const np2kaiTarget = defineTarget({
+  hostKeyboardShortcuts: ["PAUSE", "MENU"],
+  id: "np2kai-pc98", displayName: "PC-98 (Neko Project II Kai)", adapterId: np2kaiAdapter.id,
   checkpointMaxBytes: 402653184, frameMode: "SAME_ORIGIN_BLANK", requiresThreads: false,
   contentIO: {game: eagerPolicy(limits.np2kaiDisk, {writes: "SESSION_OVERLAY"})},
   inputs: [{role: "game", kind: "ROM_BLOB", cardinality: "ONE", optional: false}],

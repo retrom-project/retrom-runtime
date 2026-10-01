@@ -5,7 +5,9 @@ export const gbeAdapter = defineAdapter({id: "gbe-pokemini-web", kind: "GBE_POKE
   capabilities: {checkpoint: true, pause: true, screenshot: true, standardGamepad: true, frameCounter: true, volume: true},
   checkpoint: {writeFormat: "gbe-pokemini-state-v1", readFormats: ["gbe-pokemini-state-v1"]},
 });
-export const gbeTarget = defineTarget({id: "gbe-pokemini", displayName: "Pokémon Mini (GBE+)", adapterId: gbeAdapter.id,
+export const gbeTarget = defineTarget({
+  hostKeyboardShortcuts: ["PAUSE", "MENU"],
+  id: "gbe-pokemini", displayName: "Pokémon Mini (GBE+)", adapterId: gbeAdapter.id,
   checkpointMaxBytes: 1024 * 1024, frameMode: "SAME_ORIGIN_BLANK", requiresThreads: false,
   contentIO: {game: eagerPolicy(limits.gbeRom), external: eagerPolicy(limits.firmwareFile)},
   inputs: [{role: "game", kind: "ROM_BLOB", cardinality: "ONE", optional: false},

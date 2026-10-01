@@ -7,7 +7,9 @@ export const playAdapter = defineAdapter({id: "play-web", kind: "PLAY_WEB", abi:
   checkpoint: {writeFormat: "play-state-v1", readFormats: ["play-state-v1"]},
 });
 
-export const playTarget = defineTarget({id: "play-ps2", displayName: "Play! (PlayStation 2)", adapterId: playAdapter.id,
+export const playTarget = defineTarget({
+  hostKeyboardShortcuts: ["PAUSE", "MENU"],
+  id: "play-ps2", displayName: "Play! (PlayStation 2)", adapterId: playAdapter.id,
   checkpointMaxBytes: 268435456, frameMode: "SAME_ORIGIN_BLANK", requiresThreads: true,
   contentIO: {game: rangePolicy("POLLING", limits.indexedFile)},
   inputs: [{role: "game", kind: "SEEKABLE_BLOB", cardinality: "ONE", optional: false}],

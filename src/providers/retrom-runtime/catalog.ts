@@ -113,6 +113,7 @@ const targets = [
       {cardinality: "ONE", kind: "EXTERNAL_FILE_SET", optional: false, role: "external"},
     ],
     contentIO: {game: runtimeGamePolicy("bbc-jsbeeb"), external: eagerPolicy(1024 * 1024)},
+    hostKeyboardShortcuts: ["MENU"],
   }),
   target(
     "butterscotch-gamemaker", "GameMaker (Butterscotch)", "butterscotch-web", noOptionsSchema,
@@ -172,6 +173,7 @@ const targets = [
       {cardinality: "ONE", kind: "EXTERNAL_FILE_SET", optional: false, role: "external"},
     ],
     contentIO: {game: runtimeGamePolicy("samcoupe"), external: eagerPolicy(32768)},
+    hostKeyboardShortcuts: ["MENU"],
   }),
   scummvmTarget,
   target("tic80", "TIC-80", "tic80-web", noOptionsSchema, false, "SAME_ORIGIN_BLANK", "ROM_BLOB",
@@ -248,6 +250,7 @@ function target(
     id,
     implementation,
     inputFilter: true,
+    hostKeyboardShortcuts: ["PAUSE", "MENU"],
     inputs: [{cardinality: "ONE", kind: resourceKind, optional: false, role: "game"}],
     contentIO: {game: runtimeGamePolicy(id)},
     nativeSettings: false,

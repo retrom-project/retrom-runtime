@@ -11,6 +11,7 @@ import type {
 } from "../../provider/module-api.js";
 import {PlayerRuntimeError} from "../../provider/errors.js";
 import {focusRuntimeInput} from "../../provider/input-focus.js";
+import {providerInputCapabilities} from "../../provider/input-capabilities.js";
 import {emulatorJsProviderDefinition, type EmulatorImplementation} from "./catalog.js";
 import {installAsyncRangeStartup} from "./async-range-startup.js";
 import {registerSeekableContentFS, type VirtualContentFile} from "./virtual-content-fs.js";
@@ -176,6 +177,7 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
 
   getState() {return this.state;}
   getCapabilities() {return this.envelope.runtime.capabilities;}
+  getInputCapabilities() {return providerInputCapabilities(emulatorJsProviderDefinition, this.envelope.runtime.targetId);}
   getCheckpointAvailability() {return {...this.checkpointAvailability};}
   getCanvas() {return this.instance?.canvas ?? null;}
   getFrameCount() {return this.instance?.gameManager?.getFrameNum?.() ?? null;}

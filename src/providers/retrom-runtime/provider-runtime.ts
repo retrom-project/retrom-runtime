@@ -91,7 +91,7 @@ class RetromRuntimePlayer implements PlayerRuntimeV1 {
         }),
         reportProgress: this.reportProgress,
         reportExitRequested: this.reportExitRequested,
-      }));
+      }), {summary: true});
       if (this.stopping() || this.host.signal.aborted) {
         try {await adapter.exit();} catch (error) {this.reportCleanupFailure(error);}
         this.assertActive();
@@ -99,6 +99,7 @@ class RetromRuntimePlayer implements PlayerRuntimeV1 {
       this.adapter = adapter;
       adapter.gamepadCursor?.setInputPolicy(this.inputPolicy);
       this.frameSurface?.refresh();
+      this.startup.completePreparations();
       this.startup.stop();
       this.transition("RUNNING");
       this.refreshAvailability();

@@ -21,7 +21,7 @@ describe("shared startup events cover the complete Target catalog", () => {
     player.subscribe(event => events.push(event));
     const mounting = player.mount(document.createElement("div"));
     await vi.waitFor(() => expect(mountTargetAdapter).toHaveBeenCalledOnce());
-    expect(events).toContainEqual(expect.objectContaining({type: "LOAD_TASK", task: expect.objectContaining({kind: "GAME_START", state: "RUNNING"})}));
+    expect(events).toContainEqual(expect.objectContaining({type: "LOAD_TASK", task: expect.objectContaining({kind: "GAME_START", state: "RUNNING", summary: true})}));
     expect(player.getState()).toBe("MOUNTING");
     pending.resolve(adapterFixture());
     await mounting;

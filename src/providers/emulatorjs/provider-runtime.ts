@@ -329,10 +329,11 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
       loader.addEventListener("error", () => this.fail("PLAYER_RUNTIME_LOADER_FAILED"), {once: true});
       const startTimeoutMs = runtimeStartTimeout(this.implementation.runtimeCore, this.restorePayload !== null);
       this.startTimeout = runtimeWindow.setTimeout(() => this.fail("PLAYER_RUNTIME_START_TIMEOUT"), startTimeoutMs);
-      await this.startup.run("GAME_START", () => this.startBarrier!.promise);
+      await this.startup.run("GAME_START", () => this.startBarrier!.promise, {summary: true});
       this.checkMountActive();
       this.clearStartBarrier();
       this.cleanupStartupDownloads?.();
+      this.startup.completePreparations();
       this.startup.stop();
       this.transition("RUNNING");
     } catch (error) {

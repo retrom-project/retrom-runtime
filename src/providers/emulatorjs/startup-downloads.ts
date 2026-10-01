@@ -14,12 +14,12 @@ export function installStartupDownloads(instance: EjsInstance, release: string, 
   const progress = startupDownloadProgress(downloads, release, xhrClass);
   const kinds = resourceKinds(resources);
   const cleanups: Array<() => void> = [];
-  const wrap = (name: Exclude<keyof Downloads, "config" | "downloader">, kind: RuntimeStartupKindV1 | ((args: unknown[]) => RuntimeStartupKindV1)) => {
+  const wrap = (name: Exclude<keyof Downloads, "config" | "downloader">, kind: RuntimeStartupKindV1 | ((args: unknown[]) => RuntimeStartupKindV1), summary = false) => {
     const original = downloads[name];
     if (!original) {return;}
     const observed: Loader = async (...args) => {
       const url = name === "downloadFile" ? downloadURL(downloads, release, args) : "";
-      const task = tasks.begin(kinds.get(url) ?? (typeof kind === "function" ? kind(args) : kind));
+      const task = tasks.begin(kinds.get(url) ?? (typeof kind === "function" ? kind(args) : kind), {summary});
       const unwatch = name === "downloadFile" ? progress.watch(url, task) : () => {};
       try {
         const result = await original.apply(instance, args);
@@ -33,14 +33,14 @@ export function installStartupDownloads(instance: EjsInstance, release: string, 
     cleanups.push(() => {if (downloads[name] === observed) {downloads[name] = original;}});
   };
   if (release === "4.2.3") {
-    wrap("downloadRom", "GAME_CONTENT");
-    if (downloads.config?.biosUrl) {wrap("downloadBios", "BIOS");}
-    if (downloads.config?.gameParentUrl) {wrap("downloadGameParent", "DEPENDENCIES");}
+    wrap("downloadRom", "GAME_CONTENT", true);
+    if (downloads.config?.biosUrl) {wrap("downloadBios", "BIOS", true);}
+    if (downloads.config?.gameParentUrl) {wrap("downloadGameParent", "DEPENDENCIES", true);}
     wrap("downloadFile", args => legacyDownloadKind(downloads, args[0]));
   } else {
     wrap("downloadFile", args => downloadKind(args[1]));
   }
-  wrap("startGame", "CORE_INITIALIZATION");
+  wrap("startGame", "CORE_INITIALIZATION", true);
   return () => {progress.stop(); for (const cleanup of cleanups.reverse()) {cleanup();}};
 }
 

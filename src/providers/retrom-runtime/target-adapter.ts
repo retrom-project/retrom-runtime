@@ -52,7 +52,7 @@ export function mountTargetAdapter(
   target: HTMLElement,
   input: TargetMountContext,
 ): Promise<MountedRuntimeAdapter> {
-  return withStartupTask(input.startup, "CORE_INITIALIZATION", () => mountAdapter(envelope, target, input));
+  return withStartupTask(input.startup, "CORE_INITIALIZATION", () => mountAdapter(envelope, target, input), {summary: true});
 }
 
 function mountAdapter(envelope: LaunchEnvelopeV1, target: HTMLElement, input: TargetMountContext): Promise<MountedRuntimeAdapter> {

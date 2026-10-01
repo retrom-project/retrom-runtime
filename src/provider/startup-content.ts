@@ -14,12 +14,16 @@ export function startupContent(session: ContentSessionAccess, tasks: StartupTask
         if (tasks.active) {sources.set(reader.id, source);}
         return reader;
       };
+      if (source.identity?.kind === "INDEX_ENTRY") {return tasks.runPreparation(contentKind(source), open);}
       return policy.mode === "EAGER" ? open() : tasks.run(contentKind(source), open);
     },
     async materialize(id, request, signal, report) {
       if (!tasks.active) {sources.clear(); return session.materialize(id, request, signal, report);}
       const source = sources.get(id);
       if (!source) {return session.materialize(id, request, signal, report);}
+      if (source.identity?.kind === "INDEX_ENTRY") {
+        return tasks.runPreparation(contentKind(source), () => session.materialize(id, request, signal, report));
+      }
       return tasks.run(contentKind(source), task => session.materialize(id, request, signal, progress => {
         task.progress(progress.readyBytes, progress.totalBytes);
         report?.(progress);
@@ -30,5 +34,6 @@ export function startupContent(session: ContentSessionAccess, tasks: StartupTask
 }
 
 function contentKind(source: ContentSourceV1) {
-  return source.purpose === "CORE_ASSET" ? "CORE_ASSETS" : source.purpose === "FIRMWARE" ? "BIOS" : "GAME_CONTENT";
+  return source.purpose === "CORE_ASSET" ? "CORE_ASSETS" : source.purpose === "FIRMWARE" ? "BIOS"
+    : source.identity?.kind === "INDEX_ENTRY" ? "CONTENT_MOUNT" : "GAME_CONTENT";
 }

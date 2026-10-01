@@ -10,9 +10,18 @@ it.each(["4.2.3", "4.3.0-pre"])("observes %s preparation and restores upstream m
   const cleanup = installStartupDownloads(instance, release, new StartupTasks(emit, new AbortController().signal));
   const result = release === "4.2.3" ? instance.downloadRom() : instance.downloadFile("game", "rom");
   expect(emit.mock.calls.at(-1)?.[0].task).toMatchObject({kind: "GAME_CONTENT", state: "RUNNING"});
+  expect(emit.mock.calls.at(-1)?.[0].task.summary).toBe(release === "4.2.3" ? true : undefined);
   pending.resolve(); await result;
   expect(emit.mock.calls.at(-1)?.[0].task.state).toBe("COMPLETED");
   cleanup(); expect(instance.downloadFile).toBe(original); expect(instance.startGame).toBe(original);
+});
+
+it.each(["4.2.3", "4.3.0-pre"])("marks %s startGame as a summary while keeping actual downloads independent", async release => {
+  const emit = vi.fn(), instance = {startGame: vi.fn(async () => {}), downloadFile: vi.fn(async () => 1)};
+  const cleanup = installStartupDownloads(instance, release, new StartupTasks(emit, new AbortController().signal));
+  await instance.startGame(); await instance.downloadFile();
+  expect(emit.mock.calls[0][0].task).toMatchObject({kind: "CORE_INITIALIZATION", summary: true});
+  expect(emit.mock.calls[2][0].task.summary).toBeUndefined(); cleanup();
 });
 
 it("does not announce absent BIOS and parent files and classifies legacy ROM downloads", async () => {

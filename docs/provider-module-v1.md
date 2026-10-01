@@ -181,6 +181,13 @@ at 100 percent is still RUNNING. Unknown totals remain indeterminate. Parallel t
 keep independent identities. Failure never reports completion; aborted or exited
 instances suppress late events while retaining cleanup ownership of late resources.
 Task reporting stops after startup and does not observe ordinary gameplay reads.
+The optional `summary: true` marks an overall span. Hosts show only the latest active
+summary when no specific running step is visible; independent BIOS and ROM tasks
+remain concurrent. Completed rows move above running work in a bounded display.
+Indexed project entries share one preparation task per category across successive
+file reads, including idle gaps. Adapter readiness closes this phase; completing
+one file never announces that the project is ready. File progress still reaches
+content consumers unchanged and is not reported as project-wide byte progress.
 Hosts may retain a three-row display but must retain hidden active tasks internally.
 Readiness remains the mount/restore lifecycle boundary, not a screenshot or title screen.
 `LOAD_PROGRESS` remains available for existing consumers.

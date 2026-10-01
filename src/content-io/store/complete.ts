@@ -3,9 +3,23 @@ import {abortable, checkSignal, requestScope} from "../abort.js";
 import {createContentHasher} from "../bounded-stream.js";
 import {BufferCredits} from "../credits.js";
 import {fail} from "../errors.js";
-import {BLOCK_BYTES} from "../source.js";
+import {BLOCK_BYTES, isDigest} from "../source.js";
 import {PersistentBacking} from "./backing.js";
 import {requireGeneration} from "./metadata.js";
+/** Publication already verified these bytes. Reuse its receipt without scanning client storage. */
+export async function completedBacking(backing: PersistentBacking, signal: AbortSignal): Promise<MaterializationReceiptV1 | null> {
+  checkSignal(signal);
+  const current = requireGeneration(await backing.resources.metadata.generation(backing.key, backing.generation));
+  checkSignal(signal);
+  if (current.state !== "COMPLETE") {return null;}
+  const {source} = backing.object;
+  const assurance = source.identity.kind === "FILE_SHA256" ? "EXPECTED_SHA256" : "TRUSTED_IMMUTABLE_INDEX";
+  if (current.objectKey !== backing.key || current.generation !== backing.generation || current.committedBytes !== source.sizeBytes ||
+    !isDigest(current.localSha256) || current.completionAssurance !== assurance ||
+    source.identity.kind === "FILE_SHA256" && current.localSha256 !== source.identity.sha256) {fail("IDENTITY_CHANGED");}
+  return {objectKey: backing.key, storageGeneration: backing.generation, sizeBytes: source.sizeBytes,
+    localSha256: current.localSha256, assurance, pinnedEtag: current.pinnedEtag};
+}
 export async function completeBacking(backing: PersistentBacking, receipt: MaterializationReceiptV1, credits: BufferCredits, signal: AbortSignal): Promise<boolean> {
   const {metadata, locks} = backing.resources;
   const before = requireGeneration(await metadata.generation(backing.key, backing.generation));

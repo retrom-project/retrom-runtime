@@ -7,7 +7,9 @@ for (const scenario of ["holes", "strong-prefix", "unbound-prefix", "weak-prefix
   const tags = scenario === "holes" ? "[ST-09] BROWSER/partial-holes" : scenario === "independent" ? "[X-11] BROWSER/independent-results" : `[ST-12] BROWSER/${scenario}`;
   test(`${tags} @S07`, async ({page}) => {
     const server = await startFixtureServer({contentModule: await compile("export {createContentSession} from './src/content-io/client.ts';"),
-      modules: {"worker.mjs": await compile("import './src/content-io/worker.ts';")}});
+      // Preserve the requested hole layout independently of the prefetch strategy.
+      modules: {"worker.mjs": await compile(`import {BlockPool} from './src/content-io/block-pool.ts';
+import './src/content-io/worker.ts'; BlockPool.prototype.prefetchAfter = () => {};`)}});
     const identity = server.register({id: "resume", fixtureId: "multi-tail", behavior: scenario === "unbound-prefix" ? "MISSING_ETAG" : scenario === "weak-prefix" ? "WEAK_ETAG" : "NORMAL",
       seed: 17, delayBeforeHeadersMs: null, chunkDelayMs: 5, disconnectAfterBytes: null, barrier: null});
     try {

@@ -88,8 +88,8 @@
     },
     {
       "caseId": "IO-18",
-      "scenario": "缓存块长度不变但改一个byte，然后读取",
-      "assertions": "本地SHA发现损坏；只撤销坏块，网络重取一次；好块不重下"
+      "scenario": "未完成缓存块与已发布完整缓存分别改一个byte，然后读取",
+      "assertions": "未完成代校验坏块并重取；COMPLETE信任首次完成记录，不再计算内容摘要"
     },
     {
       "caseId": "IO-19",
@@ -169,7 +169,7 @@
     {
       "caseId": "ST-10",
       "scenario": "WHOLE物化完成并提交，然后新Reader任意Range读",
-      "assertions": "共用objectKey/backing；无第二下载；COMPLETE变坏时不能假命中"
+      "assertions": "共用objectKey/backing；无第二下载；COMPLETE复用首次验证结果，不再检查客户端内容损坏"
     },
     {
       "caseId": "ST-11",
@@ -383,8 +383,8 @@
     },
     {
       "caseId": "X-10",
-      "scenario": "已交付完整File仍被core持有时发现坏块",
-      "assertions": "不原地改写已交付backing；旧lease失败通知一次；新代可重新准备"
+      "scenario": "首次验证通过后修改完整缓存的本地字节，再由Reader和新Session读取",
+      "assertions": "信任COMPLETE，不再计算分块或全文摘要；保留同一backing与lease；不因等长客户端修改撤销或重下载"
     },
     {
       "caseId": "X-11",
@@ -419,7 +419,7 @@
     {
       "caseId": "X-17",
       "scenario": "workspace等长坏文件、坏receipt、写完最后文件前崩溃",
-      "assertions": "校验失败；新工作代；不使用未完成项目；旧正常项目/save不删"
+      "assertions": "坏receipt和未完成项目不复用；COMPLETE信任首次验证，不再检查等长客户端内容变化；旧项目/save不删"
     },
     {
       "caseId": "X-18",

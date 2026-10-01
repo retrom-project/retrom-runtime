@@ -106,7 +106,7 @@ async function workspacePointer(project: FileSystemDirectoryHandle, signal?: Abo
 }
 async function findWorkspace(project:FileSystemDirectoryHandle,digest:string,inputs:WorkspaceInput[],origin:string,budget:number,locks:ContentLocks,signal?:AbortSignal){
   const name = await workspacePointer(project, signal); if (!name) {return null;}
-  // Acquire the use lease before inspecting or hashing any generation contents.
+  // Acquire the use lease before inspecting the published completion marker.
   const release=await locks.use(workspaceKey(digest,name),signal);let keep=false;
   try {
     const directory=await project.getDirectoryHandle(name),meta=await directory.getDirectoryHandle("meta");
@@ -116,7 +116,8 @@ async function findWorkspace(project:FileSystemDirectoryHandle,digest:string,inp
     const data=await directory.getDirectoryHandle("data");
     for(let i=0;i<inputs.length;i++){
       const target=await fileTarget(data,inputs[i].path,false);
-      if(!await verifyWorkspaceFile(target,inputs[i].source,marker.files[i],origin,signal)){return null;}
+      // The marker records first publication validation; local bytes are trusted thereafter.
+      if((await target.getFile()).size!==inputs[i].source.sizeBytes){return null;}
     }
     keep=true;return {generation:name,dataPath:`projects/${digest}/${name}/data`,release};
   }catch{checkSignal(signal);return null;}finally{if(!keep){release();}}

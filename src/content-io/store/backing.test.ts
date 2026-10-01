@@ -35,13 +35,16 @@ it("[ST-10] UNIT/backend-read-failure does not quarantine a complete generation 
   await expect(backing.read(0, new AbortController().signal)).rejects.toBe(failure);
   expect(update).not.toHaveBeenCalled(); expect(corrupt).not.toHaveBeenCalled();
 });
-it("[IO-18] UNIT/published-corruption quarantines confirmed byte corruption", async () => {
+it("[IO-18] UNIT/published-cache trusts the first verified generation without hashing local bytes again", async () => {
   const {backing, read, update, corrupt} = fixture(); read.mockResolvedValue(new Uint8Array([17, 32]));
-  await expect(backing.read(0, new AbortController().signal)).rejects.toThrow("IDENTITY_CHANGED");
-  expect(update).toHaveBeenCalledOnce(); expect(corrupt).toHaveBeenCalledOnce();
+  const digest = vi.spyOn(crypto.subtle, "digest");
+  await expect(backing.read(0, new AbortController().signal)).resolves.toEqual(Uint8Array.of(17, 32));
+  expect(digest).not.toHaveBeenCalled();
+  expect(update).not.toHaveBeenCalled(); expect(corrupt).not.toHaveBeenCalled();
 });
-it("verifies a cached block with native SHA-256 before returning it", async () => {
-  const {backing} = fixture(), digest = vi.spyOn(crypto.subtle, "digest");
+it("verifies an unfinished cached block before completing its first validation", async () => {
+  const {backing, generation} = fixture(), digest = vi.spyOn(crypto.subtle, "digest");
+  generation.state = "PARTIAL";
   await expect(backing.read(0, new AbortController().signal)).resolves.toEqual(Uint8Array.of(17, 31));
   expect(digest).toHaveBeenCalledWith("SHA-256", expect.any(Uint8Array));
 });

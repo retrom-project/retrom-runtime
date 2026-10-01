@@ -872,7 +872,7 @@
       {
         "caseId": "IO-18",
         "level": "UNIT",
-        "subcase": "published-corruption"
+        "subcase": "published-cache"
       },
       {
         "caseId": "IO-18",
@@ -907,7 +907,7 @@
       {
         "caseId": "X-10",
         "level": "BROWSER",
-        "subcase": "published-corruption"
+        "subcase": "published-cache"
       },
       {
         "caseId": "X-22",
@@ -947,7 +947,8 @@
           "src/content-io/limits.test.ts",
           "src/content-io/store/backing.test.ts",
           "src/content-io/client-lifecycle.test.ts",
-          "src/scummvm/assets.test.ts"
+          "src/scummvm/assets.test.ts",
+          "src/content-io/cached-materializer.test.ts"
         ]
       },
       {
@@ -1197,7 +1198,7 @@
       {
         "caseId": "X-10",
         "level": "BROWSER",
-        "subcase": "published-corruption"
+        "subcase": "published-cache"
       },
       {
         "caseId": "X-26",
@@ -1238,6 +1239,36 @@
         "caseId": "X-22",
         "level": "UNIT",
         "subcase": "stream-credit-failure"
+      },
+      {
+        "caseId": "ST-10",
+        "level": "UNIT",
+        "subcase": "cached-BYTES"
+      },
+      {
+        "caseId": "ST-10",
+        "level": "UNIT",
+        "subcase": "cached-BLOB"
+      },
+      {
+        "caseId": "ST-10",
+        "level": "UNIT",
+        "subcase": "cached-SINK"
+      },
+      {
+        "caseId": "ST-10",
+        "level": "UNIT",
+        "subcase": "cached-window"
+      },
+      {
+        "caseId": "ST-11",
+        "level": "UNIT",
+        "subcase": "cached-fallback-false"
+      },
+      {
+        "caseId": "ST-11",
+        "level": "UNIT",
+        "subcase": "cached-fallback-true"
       }
     ]
   },
@@ -2515,7 +2546,7 @@
       {
         "caseId": "X-10",
         "level": "BROWSER",
-        "subcase": "published-corruption"
+        "subcase": "published-cache"
       },
       {
         "caseId": "X-26",
@@ -2793,7 +2824,8 @@
           "workspace-publication.browser.ts",
           "workspace-damage.browser.ts",
           "project-files.browser.ts",
-          "materialize-cache-failure.browser.ts"
+          "materialize-cache-failure.browser.ts",
+          "completed-workspace.browser.ts"
         ]
       }
     ],
@@ -2917,6 +2949,11 @@
         "caseId": "BR-08",
         "level": "UNIT",
         "subcase": "ons"
+      },
+      {
+        "caseId": "X-17",
+        "level": "BROWSER",
+        "subcase": "completed-workspace-cache"
       }
     ]
   },

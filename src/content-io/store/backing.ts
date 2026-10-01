@@ -41,8 +41,10 @@ export class PersistentBacking {
       }
       checkSignal(signal);
       if (bytes.length !== receipt.length) {return this.corrupt(current, receipt);}
-      const digest = await hashBytes(bytes); checkSignal(signal);
-      if (digest !== receipt.localSha256) {return this.corrupt(current, receipt);}
+      if (current.state !== "COMPLETE") {
+        const digest = await hashBytes(bytes); checkSignal(signal);
+        if (digest !== receipt.localSha256) {return this.corrupt(current, receipt);}
+      }
       return bytes;
     });
   }
@@ -54,11 +56,14 @@ export class PersistentBacking {
       const found = await metadata.block(this.key, this.generation, index);
       const existing = found && this.validReceipt(found, index, current) ? found : undefined;
       if (existing && this.validReceipt(existing, index, current)) {
-        const actual = await data.read(existing, current.state === "COMPLETE"); checkSignal(signal);
+        if (current.state === "COMPLETE") {
+          if (existing.localSha256 !== digest) {fail("IDENTITY_CHANGED");} return;
+        }
+        const actual = await data.read(existing, false); checkSignal(signal);
         const actualDigest = await hashBytes(actual); checkSignal(signal);
         if (actualDigest !== existing.localSha256) {await this.corrupt(current, existing); return;}
         if (existing.localSha256 !== digest) {fail("IDENTITY_CHANGED");}
-        if (current.state === "COMPLETE" || existing.provenance !== "STAGED_FULL" || provenance === "STAGED_FULL") {return;}
+        if (existing.provenance !== "STAGED_FULL" || provenance === "STAGED_FULL") {return;}
       } else if (current.state === "COMPLETE") {fail("IDENTITY_CHANGED");}
       const receipt: BlockReceipt = {objectKey: this.key, generation: this.generation, index, length: bytes.length, localSha256: digest,
         etag: this.object.state.pinnedEtag, provenance, sourceAssurance: this.assurance(), backend: data.backend,

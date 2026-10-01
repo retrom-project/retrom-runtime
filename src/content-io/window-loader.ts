@@ -8,13 +8,15 @@ import {fetchRangeInto, fetchWholeStream} from "./http.js";
 import type {ByteLRU} from "./lru.js";
 import {BLOCK_BYTES} from "./source.js";
 import type {ContentStoreManager} from "./store/manager.js";
+import {completedBacking} from "./store/complete.js";
+import type {PersistentBacking} from "./store/backing.js";
 
 /** The caller reserves window.length + two blocks before entering this loader. */
 export class WindowLoader {
   constructor(private readonly store: ContentStoreManager, private readonly cache: ByteLRU,
     private readonly key: (object: BlockObject, index: number) => string) {}
   async load(object: BlockObject, window: FetchWindow, signal: AbortSignal, origins: ReadOrigin[] = []): Promise<Uint8Array<ArrayBuffer>> {
-    const bytes = new Uint8Array(window.length), present = new Set<number>();
+    const bytes = new Uint8Array(window.length), present = new Set<number>(), backing = this.store.persistent(object);
     for (let n = 0; n < window.blockCount; n++) {
       checkSignal(signal);
       origins[n] = "NETWORK";
@@ -35,11 +37,7 @@ export class WindowLoader {
       }
     }
     checkSignal(signal);
-    if (window.start === 0 && window.length === object.source.sizeBytes && object.source.identity.kind === "FILE_SHA256") {
-      const hash = createContentHasher();
-      try {hash.update(bytes); if (hash.digest() !== object.source.identity.sha256) {fail("CHECKSUM_MISMATCH");}}
-      finally {hash.destroy();}
-    }
+    await this.verifyWholeFile(object, window, bytes, present.size, backing, signal);
     for (let n = 0; n < window.blockCount; n++) {
       const index = window.firstBlock + n;
       if (!present.has(index)) {
@@ -47,5 +45,13 @@ export class WindowLoader {
       }
     }
     return bytes;
+  }
+  private async verifyWholeFile(object: BlockObject, window: FetchWindow, bytes: Uint8Array, present: number,
+    backing: PersistentBacking | undefined, signal: AbortSignal) {
+    if (window.start !== 0 || window.length !== object.source.sizeBytes || object.source.identity.kind !== "FILE_SHA256") {return;}
+    if (present === window.blockCount && backing && this.store.persistent(object) === backing && await completedBacking(backing, signal)) {return;}
+    const hash = createContentHasher();
+    try {hash.update(bytes); if (hash.digest() !== object.source.identity.sha256) {fail("CHECKSUM_MISMATCH");}}
+    finally {hash.destroy();}
   }
 }

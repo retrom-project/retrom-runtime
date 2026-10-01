@@ -8,7 +8,16 @@ async function bundle(contents: string) {
 }
 
 async function fixture(workerPrefix = "") {
-  const worker = workerPrefix + await bundle("import './src/content-io/worker.ts';");
+  const worker = workerPrefix + await bundle(`import './src/content-io/worker.ts';
+    import {OPFSStore} from './src/content-io/store/opfs.ts';
+    import {CacheBlockStore} from './src/content-io/store/cache-storage.ts';
+    for (const Store of [OPFSStore, CacheBlockStore]) {
+      const read = Store.prototype.read;
+      Store.prototype.read = async function(receipt, complete) {
+        if (complete && globalThis.name === 'preload') throw new Error('warm preload scanned client bytes');
+        return read.call(this, receipt, complete);
+      };
+    }`);
   const contentModule = await bundle(`
     import {createContentSession} from './src/content-io/client.ts';
     import {ContentMetadata} from './src/content-io/store/metadata.ts';
@@ -19,7 +28,7 @@ async function fixture(workerPrefix = "") {
     let preload, session, reader;
     export const progress = [];
     export async function prepare(source, cancelAfter = Infinity) {
-      preload = new Worker('/__test__/worker.mjs', {type: 'module'});
+      preload = new Worker('/__test__/worker.mjs', {type: 'module', name: 'preload'});
       await new Promise((resolve, reject) => {
         preload.onerror = reject;
         preload.onmessage = ({data}) => {
@@ -69,6 +78,13 @@ test(`${backend}: preload commits the complete file, holds GC leases, and serves
     await page.evaluate(async source => {const path = "/__test__/content.mjs"; await (await import(path)).prepare(source);}, source);
     const downloaded = server.requests("preload").length;
     expect(downloaded).toBeGreaterThan(1);
+    const warmProgress = await page.evaluate(async source => {
+      const path = "/__test__/content.mjs", api = await import(path);
+      await api.release(); const start = api.progress.length;
+      await api.prepare(source); return api.progress.slice(start);
+    }, source);
+    expect(warmProgress).toEqual([0, source.sizeBytes, source.sizeBytes]);
+    expect(server.requests("preload")).toHaveLength(downloaded);
     expect(await page.evaluate(async () => {const path = "/__test__/content.mjs"; return (await import(path)).collect();})).toBe(0);
     await context.setOffline(true);
     expect(await page.evaluate(async () => {const path = "/__test__/content.mjs"; return (await import(path)).read(8 * 1024 * 1024);})).toHaveLength(17);

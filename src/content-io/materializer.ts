@@ -12,7 +12,10 @@ import {ContentProgress, type PreparationProgress} from "./progress.js";
 import {BlobSink, BytesSink, type ResultSink} from "./sinks.js";
 import {BLOCK_BYTES, integer} from "./source.js";
 import {ContentStoreManager} from "./store/manager.js";
-import {completeBacking} from "./store/complete.js";
+import {completeBacking, completedBacking} from "./store/complete.js";
+import type {PersistentBacking} from "./store/backing.js";
+/** A failed cached delivery must verify any replacement downloaded from the server. */
+class CachedReplayRequired extends ContentIOError {constructor() {super("CACHE_UNAVAILABLE");}}
 export class ContentMaterializer {
   private readonly gate = new SerialGate();
   private readonly controller = new AbortController();
@@ -38,7 +41,7 @@ export class ContentMaterializer {
       try {
         try {return await this.run(object, request, combined.signal, progress);}
         catch (error) {
-          if (!(error instanceof BlobReplayRequired) || request.kind !== "BLOB") {throw error;}
+          if (!(error instanceof CachedReplayRequired) && (!(error instanceof BlobReplayRequired) || request.kind !== "BLOB")) {throw error;}
           return await this.run(object, request, combined.signal, progress, "BLOCKS");
         }
       } catch (error) {
@@ -49,25 +52,22 @@ export class ContentMaterializer {
     } finally {release?.(); combined.dispose();}
   }
   private async run(object: BlockObject, request: MaterializeRequestV1, signal: AbortSignal, progress: ContentProgress, recovery?: "BLOCKS" | "WHOLE"): Promise<MaterializeResultV1> {
+    const {backing, completed, nativeBytesHash} = await this.validation(object, request, signal, recovery);
     const size = object.source.sizeBytes, sink = await this.sink(object,request,signal,!!recovery);
-    const nativeBytesHash = request.kind === "BYTES" && size > 10 * 1024 * 1024;
-    const hash = nativeBytesHash ? null : createContentHasher(); let written = 0;
+    const hash = completed || nativeBytesHash ? null : createContentHasher();
+    let written = 0;
     const consume = async (chunk: Uint8Array<ArrayBuffer>) => {
       this.pool.check(object); checkSignal(signal); hash?.update(chunk);
       try {await (request.kind === "SINK" ? sinkOperation(()=>sink.write(written,chunk),signal) : sink.write(written,chunk));} catch (cause) {checkSignal(signal);if(request.kind!=="SINK"){throw cause;}throw new ContentIOError("WORKSPACE_UNAVAILABLE", {cause});}
       written += chunk.length; progress.position(written);
     };
     try {
-      if (recovery === "BLOCKS") {await this.blocks(object,signal,consume);}
+      if (completed && backing) {await this.blocks(object,signal,consume,backing);}
+      else if (recovery === "BLOCKS") {await this.blocks(object,signal,consume);}
       else {await this.acquire(object, signal, consume, recovery === "WHOLE");}
       this.pool.check(object); checkSignal(signal);
       if (written !== size) {fail("LENGTH_MISMATCH");}
-      const digest = nativeBytesHash ? await hashBytes((sink as BytesSink).viewForDigest()) : hash!.digest();
-      checkSignal(signal);
-      if (object.source.identity.kind === "FILE_SHA256" && digest !== object.source.identity.sha256) {fail("CHECKSUM_MISMATCH");}
-      const receipt: MaterializationReceiptV1 = {objectKey: object.key, storageGeneration: this.store.persistent(object)?.generation ?? object.state.generation,
-        sizeBytes: size, localSha256: digest, assurance: object.source.identity.kind === "FILE_SHA256" ? "EXPECTED_SHA256" : "TRUSTED_IMMUTABLE_INDEX", pinnedEtag: object.state.pinnedEtag};
-      await this.commitBacking(object, receipt, signal);
+      const receipt = completed ?? await this.firstReceipt(object, sink, hash, nativeBytesHash, signal);
       try {await (request.kind === "SINK" ? sinkOperation(()=>sink.commit(receipt),signal,20000) : sink.commit(receipt));} catch (cause) {checkSignal(signal);if(request.kind!=="SINK"){throw cause;}throw new ContentIOError("WORKSPACE_UNAVAILABLE", {cause});}
       checkSignal(signal); const result = this.result(request, sink, receipt);
       this.materializedBytes += size; this.materializedBytesByKind[result.kind] += size; progress.complete(); return result;
@@ -76,6 +76,21 @@ export class ContentMaterializer {
       if (error instanceof ContentIOError && error.scope === "OBJECT") {object.state.revoked = true; this.pool.cache.deletePrefix(`${object.key}:`);}
       throw error;
     } finally {hash?.destroy();}
+  }
+  private async validation(object: BlockObject, request: MaterializeRequestV1, signal: AbortSignal, recovery?: "BLOCKS" | "WHOLE") {
+    const backing = recovery ? null : this.store.persistent(object);
+    const completed = backing ? await completedBacking(backing, signal) : null;
+    const nativeBytesHash = !completed && request.kind === "BYTES" && object.source.sizeBytes > 10 * 1024 * 1024;
+    return {backing, completed, nativeBytesHash};
+  }
+  private async firstReceipt(object: BlockObject, sink: MaterializeSinkV1, hash: ReturnType<typeof createContentHasher> | null,
+    nativeBytesHash: boolean, signal: AbortSignal): Promise<MaterializationReceiptV1> {
+    const digest = nativeBytesHash ? await hashBytes((sink as BytesSink).viewForDigest()) : hash!.digest();
+    checkSignal(signal);
+    if (object.source.identity.kind === "FILE_SHA256" && digest !== object.source.identity.sha256) {fail("CHECKSUM_MISMATCH");}
+    const receipt: MaterializationReceiptV1 = {objectKey: object.key, storageGeneration: this.store.persistent(object)?.generation ?? object.state.generation,
+      sizeBytes: object.source.sizeBytes, localSha256: digest, assurance: object.source.identity.kind === "FILE_SHA256" ? "EXPECTED_SHA256" : "TRUSTED_IMMUTABLE_INDEX", pinnedEtag: object.state.pinnedEtag};
+    await this.commitBacking(object, receipt, signal); return receipt;
   }
   private async sink(object: BlockObject, request: MaterializeRequestV1, signal: AbortSignal, recovery: boolean): Promise<MaterializeSinkV1> {
     if(request.kind === "SINK"){return await createRequiredSink(request.createSink,signal);}
@@ -107,11 +122,12 @@ export class ContentMaterializer {
     }
     await this.blocks(object, signal, consume);
   }
-  private async blocks(object: BlockObject, signal: AbortSignal, consume: (chunk: Uint8Array<ArrayBuffer>) => Promise<void>) {
+  private async blocks(object: BlockObject, signal: AbortSignal, consume: (chunk: Uint8Array<ArrayBuffer>) => Promise<void>, completed?: PersistentBacking) {
     for (let offset = 0; offset < object.source.sizeBytes; offset += BLOCK_BYTES) {
       const count = Math.min(BLOCK_BYTES, object.source.sizeBytes - offset), release = await this.pool.credits.reserve(2 * BLOCK_BYTES, "SCRATCH", signal);
       try {
         const cached = await this.store.local(object, offset / BLOCK_BYTES, signal, true);
+        if (completed && (!cached || this.store.persistent(object) !== completed)) {throw new CachedReplayRequired();}
         if (cached) {await consume(cached); this.accounting.copied("PERSISTENT", cached.length); continue;}
         const bytes = new Uint8Array(count); let origin: ReadOrigin = "NETWORK";
         await this.pool.copy(object, offset / BLOCK_BYTES, 0, bytes, () => this.pool.check(object), {signal, priority: "MATERIALIZE", copied: value => {origin = value;}});

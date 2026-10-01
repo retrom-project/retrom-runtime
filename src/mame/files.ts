@@ -60,9 +60,13 @@ async function mountArcadeFiles(core: Pick<MameCore, "FS">, config: Extract<Mame
   const game = await materializeFileBytes(content.contentSession, config.game, content.contentSession.inputPolicy("game"),
     "GAME", content.signal);
   const archives = new Map<string, Uint8Array>([[`${config.machine}.zip`, game]]);
-  for (const bundle of [config.parent, config.bios]) {
-    if (bundle) {await addArcadeBundle(archives, bundle, content.signal);}
+  if (config.parent) {
+    const parent = await materializeFileBytes(content.contentSession, config.parent, content.contentSession.inputPolicy("parent"),
+      "GAME", content.signal, progress => content.reportProgress?.({phase: "PROJECT_CONTENT",
+        loadedBytes: progress.readyBytes, totalBytes: progress.totalBytes}));
+    addArcadeArchives(archives, parent);
   }
+  if (config.bios) {await addArcadeBundle(archives, config.bios, content.signal);}
   core.FS.mkdirTree("/content/roms");
   for (const [name, bytes] of archives) {core.FS.writeFile(`/content/roms/${name}`, bytes);}
   for (const file of config.deviceBios) {
@@ -81,6 +85,10 @@ async function addArcadeBundle(archives: Map<string, Uint8Array>, bundle: FileSo
   const response = await fetch(new URL(bundle.url, globalThis.location?.href), {signal});
   if (!response.ok || !response.body) {throw new Error("MAME_CONTENT_INVALID");}
   const bytes = await boundedBytes(response, 128 * 1024 * 1024);
+  addArcadeArchives(archives, bytes);
+}
+
+function addArcadeArchives(archives: Map<string, Uint8Array>, bytes: Uint8Array) {
   let entries: Record<string, Uint8Array>, expanded = 0, count = 0;
   try {entries = unzipSync(bytes, {filter: entry => {
     expanded += entry.originalSize; count++;

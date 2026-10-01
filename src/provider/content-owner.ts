@@ -18,7 +18,10 @@ export class ProviderContentOwner {
   get signal(): AbortSignal {return this.controller.signal;}
   async start(target: TargetDeclaration, envelope: LaunchEnvelopeV1, index: AssetIndexV1,
     loading: "ON_DEMAND" | "PRELOAD" = "ON_DEMAND", report: PreloadProgress = () => {}, startup?: StartupTasks): Promise<ContentSessionClient | null> {
-    const managed = Object.values(target.contentIO).some((policy) => policy.mode !== "BROWSER_NATIVE" && policy.mode !== "UPSTREAM_LOADER");
+    const managed = envelope.resources.some(resource => {
+      const policy = target.contentIO[resource.role];
+      return policy && "bridge" in policy;
+    });
     if (!managed) {return null;}
     if (this.stopped) {throw new DOMException("Aborted", "AbortError");}
     const runtimeBaseURL = new URL(envelope.runtime.runtimeBaseUrl, location.href).href;

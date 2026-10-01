@@ -81,7 +81,8 @@ it("rejects malformed cartridge ZIPs and oversized expanded media", async () => 
 });
 it("mounts a MAME arcade machine with the selected game, parent and BIOS archives", async () => {
   const parent = zipSync({"puckman.zip": new Uint8Array(40)}), bios = zipSync({"namco51.zip": new Uint8Array(20)});
-  vi.stubGlobal("fetch", vi.fn().mockResolvedValueOnce(new Response(parent)).mockResolvedValueOnce(new Response(bios)));
+  vi.mocked(materializeFileBytes).mockResolvedValueOnce(new Uint8Array(40)).mockResolvedValueOnce(parent);
+  vi.stubGlobal("fetch", vi.fn().mockResolvedValueOnce(new Response(bios)));
   const core = fixture(), arcade = {arcade: true as const, machine: "mspacman", game: {...source, sizeBytes: 40},
     parent: {...source, url: "/parent"}, bios: {...source, url: "/bios"}, deviceBios: [], runtimeBaseUrl: "/provider/"};
   await mountFiles(core, arcade, content);
@@ -93,7 +94,7 @@ it("mounts a MAME arcade machine with the selected game, parent and BIOS archive
 });
 it("rejects archive names that could escape the MAME ROM directory", async () => {
   const parent = zipSync({"../escape.zip": new Uint8Array(40)});
-  vi.stubGlobal("fetch", vi.fn().mockResolvedValueOnce(new Response(parent)));
+  vi.mocked(materializeFileBytes).mockResolvedValueOnce(new Uint8Array(40)).mockResolvedValueOnce(parent);
   const core = fixture();
   await expect(mountFiles(core, {arcade: true, machine: "mspacman", game: {...source, sizeBytes: 40},
     parent: {...source, url: "/parent"}, bios: null, deviceBios: [], runtimeBaseUrl: "/provider/"}, content)).rejects.toThrow("MAME_CONTENT_INVALID");

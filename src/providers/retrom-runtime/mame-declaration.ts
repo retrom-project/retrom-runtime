@@ -44,7 +44,7 @@ export const mamePV1000Target = defineTarget({...mameAppleTarget, id: "mame-pv10
 export const mameArcadeTarget = defineTarget({...mameAppleTarget, id: "mame-arcade", displayName: "MAME Current Arcade",
   contentIO: {game: eagerPolicy(128 * 1024 * 1024),
     external: eagerPolicy(65536),
-    parent: {mode: "UPSTREAM_LOADER", boundaryId: "mame-loader"},
+    parent: eagerPolicy(128 * 1024 * 1024),
     bios: {mode: "UPSTREAM_LOADER", boundaryId: "mame-loader"}},
   inputs: [{role: "game", kind: "ROM_BLOB", cardinality: "ONE", optional: false},
     {role: "parent", kind: "PARENT_ARCHIVE", cardinality: "ONE", optional: true},

@@ -3,6 +3,7 @@ import {bytesToHex} from "@noble/hashes/utils.js";
 import {materializeFileBytes, type AdapterContentOptions} from "../provider/content-inputs.js";
 import type {FileSource, MameCore, MameParameters} from "./core.js";
 import {profiles, validGameSize, validateGame} from "./profiles.js";
+import {parentStateIdentity} from "./state.js";
 import {unzipSync} from "fflate";
 export async function mountFiles(core: Pick<MameCore, "FS">, config: MameParameters, content: AdapterContentOptions) {
   if (config.arcade) {return mountArcadeFiles(core, config, content);}
@@ -60,11 +61,12 @@ async function mountArcadeFiles(core: Pick<MameCore, "FS">, config: Extract<Mame
   const game = await materializeFileBytes(content.contentSession, config.game, content.contentSession.inputPolicy("game"),
     "GAME", content.signal);
   const archives = new Map<string, Uint8Array>([[`${config.machine}.zip`, game]]);
+  let parentIdentity = "";
   if (config.parent) {
     const parent = await materializeFileBytes(content.contentSession, config.parent, content.contentSession.inputPolicy("parent"),
       "GAME", content.signal, progress => content.reportProgress?.({phase: "PROJECT_CONTENT",
         loadedBytes: progress.readyBytes, totalBytes: progress.totalBytes}));
-    addArcadeArchives(archives, parent);
+    parentIdentity = parentStateIdentity(addArcadeArchives(archives, parent));
   }
   if (config.bios) {await addArcadeBundle(archives, config.bios, content.signal);}
   core.FS.mkdirTree("/content/roms");
@@ -76,7 +78,7 @@ async function mountArcadeFiles(core: Pick<MameCore, "FS">, config: Extract<Mame
     core.FS.writeFile(`/content/roms/segabill/${file.logicalName}`, bytes);
   }
   core.FS.writeFile("/content/boot.cmd", new TextEncoder().encode(`${config.machine} -rompath /content/roms -skip_gameinfo -nothrottle`));
-  const identity = [config.machine, config.game.sha256, config.parent?.sha256 ?? "", config.bios?.sha256 ?? "",
+  const identity = [config.machine, config.game.sha256, parentIdentity, config.bios?.sha256 ?? "",
     ...config.deviceBios.map(file => file.sha256)].join("\n");
   return bytesToHex(sha256(new TextEncoder().encode(identity)));
 }
@@ -101,6 +103,7 @@ function addArcadeArchives(archives: Map<string, Uint8Array>, bytes: Uint8Array)
     }
     archives.set(name, contents);
   }
+  return entries;
 }
 
 async function boundedBytes(response: Response, limit: number): Promise<Uint8Array> {

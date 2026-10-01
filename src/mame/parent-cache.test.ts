@@ -4,6 +4,7 @@ import {zipSync} from "fflate";
 import {contentSessionFixture} from "../../tests/content-session-fixture.js";
 import {mameArcadeTarget} from "../providers/retrom-runtime/mame-declaration.js";
 import {mountFiles} from "./files.js";
+import {decodeState, encodeState} from "./state.js";
 
 const owners: ReturnType<typeof contentSessionFixture>[] = [];
 afterEach(async () => {
@@ -11,12 +12,12 @@ afterEach(async () => {
   vi.unstubAllGlobals();
 });
 
-function fixture() {
-  const game = new Uint8Array(40), member = new Uint8Array([1, 2, 3]);
-  const parent = zipSync({"puckman.zip": member}, {level: 0});
+function fixture(member = new Uint8Array([1, 2, 3]), level: 0 | 9 = 0) {
+  const game = new Uint8Array(40);
+  const parent = zipSync({"puckman.zip": member}, {level});
   const file = (name: string, bytes: Uint8Array) => ({url: `http://localhost/${name}`,
     sha256: createHash("sha256").update(bytes).digest("hex"), sizeBytes: bytes.length});
-  const config = {arcade: true as const, machine: "mspacman", game: file("game", game),
+  const config = {arcade: true as const, machine: "pacman", game: file("game", game),
     parent: file("parent", parent), bios: null, deviceBios: [], runtimeBaseUrl: "/provider/"};
   const owner = contentSessionFixture("http://localhost", undefined, "mame-arcade"); owners.push(owner);
   const fetcher = vi.fn(async (input: string | URL) => {
@@ -60,4 +61,27 @@ it("does not fetch or mount after startup cancellation", async () => {
   await expect(mountFiles(f.core, f.config, {assetIndex: {}, contentSession: f.owner.session, signal: controller.signal})).rejects.toThrow();
   expect(f.fetcher).not.toHaveBeenCalled(); expect(f.core.FS.writeFile).not.toHaveBeenCalled();
   expect(f.owner.files.size).toBe(0);
+});
+
+// Published v1 checkpoint vector: pacman, 40 zero game bytes, puckman.zip=[1,2,3], no BIOS.
+const publishedIdentity = "89271a817bbc1b7ec30402a31e1bb404479d0475e5dc49e6ab2df9586df28ac9";
+const build = "b".repeat(64), native = new Uint8Array([4, 5, 6]);
+
+it("restores published parent checkpoints after correcting the transport ZIP digest", async () => {
+  const f = fixture(), state = await encodeState(publishedIdentity, build, native);
+  const identity = await mountFiles(f.core, f.config, {assetIndex: {}, contentSession: f.owner.session});
+  expect(await decodeState(identity, build, state)).toEqual(native);
+  expect(identity).toBe(publishedIdentity);
+});
+
+it("keeps checkpoint identity independent of parent transport ZIP compression", async () => {
+  const f = fixture(undefined, 9);
+  const identity = await mountFiles(f.core, f.config, {assetIndex: {}, contentSession: f.owner.session});
+  expect(identity).toBe(publishedIdentity);
+});
+
+it("still rejects a checkpoint when parent member content changes", async () => {
+  const f = fixture(new Uint8Array([1, 2, 4])), state = await encodeState(publishedIdentity, build, native);
+  const identity = await mountFiles(f.core, f.config, {assetIndex: {}, contentSession: f.owner.session});
+  await expect(decodeState(identity, build, state)).rejects.toThrow("MAME_CHECKPOINT_INVALID");
 });

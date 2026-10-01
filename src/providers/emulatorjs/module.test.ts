@@ -14,6 +14,43 @@ const bundleDigest = "b".repeat(64);
 afterEach(() => {vi.useRealTimers(); vi.unstubAllGlobals();});
 
 describe("EmulatorJS Provider Module V1", () => {
+  it("retains screenshot buffers before loading any core and restores the iframe on exit", async () => {
+    const frame = document.createElement("iframe"); document.body.append(frame);
+    const target = frame.contentWindow as Window & typeof globalThis & Record<string, unknown>;
+    const original = vi.spyOn(target.HTMLCanvasElement.prototype, "getContext").mockReturnValue(null);
+    const parentContext = HTMLCanvasElement.prototype.getContext;
+    const attributes = {alpha: false, antialias: false, preserveDrawingBuffer: false};
+    const player = await createEmulatorJsPlayer(launchEnvelope(), hostFixture({
+      mountFrame: async () => ({contentWindow: target, element: frame, origin: location.origin}),
+    }), {
+      "assets/4.2.3/data/cores/fceumm-wasm.data": {
+        sha256: "8c449fd5c36646fb0769423ed6ffa9efbdfc21fbfdc9bac7952b559d34d5b493", sizeBytes: 1054015,
+      },
+    });
+    try {
+      const mounting = player.mount(document.createElement("div"));
+      await vi.waitFor(() => expect(target.document.querySelector("script[data-retrom-loader]")).not.toBeNull());
+      const canvas = target.document.createElement("canvas");
+      canvas.getContext("webgl2", attributes);
+      const requestedAttributes = original.mock.calls.at(-1)?.[1];
+      target.EJS_emulator = {gameManager: {}};
+      (target.EJS_ready as () => void)(); (target.EJS_onGameStart as () => void)();
+      await mounting;
+      expect(requestedAttributes).toEqual({...attributes, preserveDrawingBuffer: true});
+      for (const kind of ["webgl", "experimental-webgl"]) {
+        canvas.getContext(kind, attributes);
+        expect(original).toHaveBeenLastCalledWith(kind, {...attributes, preserveDrawingBuffer: true});
+      }
+      expect(attributes.preserveDrawingBuffer).toBe(false);
+      canvas.getContext("2d", {alpha: false});
+      expect(original).toHaveBeenLastCalledWith("2d", {alpha: false});
+      expect(HTMLCanvasElement.prototype.getContext).toBe(parentContext);
+      await player.exit();
+      canvas.getContext("webgl2", attributes);
+      expect(original).toHaveBeenLastCalledWith("webgl2", attributes);
+    } finally {await player.exit(); original.mockRestore(); frame.remove();}
+  });
+
   it("exports one stable Provider identity for both embedded EmulatorJS releases", async () => {
     expect({providerApiVersion, providerId, providerVersion}).toEqual({
       providerApiVersion: 1,

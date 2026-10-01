@@ -1,5 +1,6 @@
 import {PlayerRuntimeError} from "../../provider/errors.js";
 import {retainEmulatorJsDisplayedFrame} from "./displayed-frame.js";
+import {circularDpadStyle, installCircularDpadFeedback} from "./circular-dpad.js";
 const frameStyleText = `
 html,body,#retrom-emulator,.ejs_parent,.ejs_game,.ejs_canvas_parent{width:100%!important;height:100%!important;margin:0!important;overflow:hidden;background:#05060a}
 .ejs_canvas_parent{display:grid!important;grid-template-columns:minmax(0,1fr)!important;grid-template-rows:minmax(0,1fr)!important;place-items:center!important}
@@ -13,6 +14,7 @@ html.retrom-native-menu-locked.retrom-native-settings-open .ejs_menu_bar>*{visib
 html.retrom-native-menu-locked.retrom-native-settings-open .ejs_menu_bar>:has(>.ejs_settings_parent){visibility:visible!important}
 html.retrom-native-menu-locked.retrom-native-settings-open .ejs_menu_bar>:has(>.ejs_settings_parent)>.ejs_menu_button{visibility:hidden!important;pointer-events:none!important}
 html.retrom-native-menu-locked.retrom-native-settings-open .ejs_menu_bar .ejs_settings_parent{visibility:visible!important;pointer-events:auto!important}
+${circularDpadStyle}
 `;
 
 export function installEmulatorJsFrameStyle(frameDocument: Document) {
@@ -42,5 +44,6 @@ export function createEmulatorJsSurface(runtimeWindow: Window) {
   body.style.overflow = "hidden";
   const restoreFrame = retainEmulatorJsDisplayedFrame(runtimeWindow);
   const removeStyle = installEmulatorJsFrameStyle(runtimeWindow.document);
-  return () => {removeStyle(); restoreFrame();};
+  const removeStickFeedback = installCircularDpadFeedback(runtimeWindow.document);
+  return () => {removeStickFeedback(); removeStyle(); restoreFrame();};
 }

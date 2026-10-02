@@ -768,6 +768,30 @@
       "tests": [
         "runtime:src/samcoupe/adapter.test.ts"
       ]
+    },
+    {
+      "id": "B-STARTUP-NETWORK-1",
+      "repository": "runtime",
+      "path": "src/provider/startup-network.ts",
+      "symbol": "observedFetch",
+      "classification": "UPSTREAM_LOADER",
+      "reason": "Observes existing upstream startup transports for byte inactivity and cancellation; preserves content acquisition and storage ownership.",
+      "ownerStage": "S21",
+      "tests": [
+        "runtime:src/provider/startup-deadline.test.ts"
+      ]
+    },
+    {
+      "id": "B-STARTUP-NETWORK-2",
+      "repository": "runtime",
+      "path": "src/provider/startup-network.ts",
+      "symbol": "observeResponse",
+      "classification": "UPSTREAM_LOADER",
+      "reason": "Observes existing upstream startup transports for byte inactivity and cancellation; preserves content acquisition and storage ownership.",
+      "ownerStage": "S21",
+      "tests": [
+        "runtime:src/provider/startup-deadline.test.ts"
+      ]
     }
   ]
 }

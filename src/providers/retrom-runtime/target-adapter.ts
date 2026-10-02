@@ -73,7 +73,7 @@ function mountAdapter(envelope: LaunchEnvelopeV1, target: HTMLElement, input: Ta
     return mountRuffle(parameters.ruffle(envelope), target, frameWindow, restorePayload, reportProgress, context.signal, undefined, contentOptions(context));
   case "EASYRPG_WEB":
     return mountEasyRpg(parameters.easyRpg(envelope, declaration.implementation), target,
-      frameWindow, restorePayload, reportExitRequested);
+      frameWindow, restorePayload, {signal: requireStartupSignal(context), reportExitRequested, tasks: context.startup});
   case "MKXP_LIBRETRO_WEB":
     return mountMkxp(parameters.mkxp(envelope, declaration.implementation, context.assetIndex), target,
       restorePayload, undefined, context.onDiagnostic, reportProgress, reportExitRequested,
@@ -174,4 +174,9 @@ type BoundSession = import("../../provider/content-inputs.js").AdapterContentSes
 function contentOptions(context: BoundMountContext) {
   if (!context.content) {throw new Error("CONTENT_IO_ABI_MISMATCH");}
   return context.content;
+}
+
+function requireStartupSignal(context: {signal?: AbortSignal}): AbortSignal {
+  if (!context.signal) {throw new Error("PLAYER_RUNTIME_CONTRACT_INVALID");}
+  return context.signal;
 }

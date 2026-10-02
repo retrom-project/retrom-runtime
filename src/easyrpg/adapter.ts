@@ -2,6 +2,11 @@ import { decodeRpgCheckpoint, encodeRpgCheckpoint } from "../checkpoint.js";
 import type { MountedRuntimeAdapter, RuntimeExitReporter } from "../internal-adapter.js";
 
 import type {EasyRpgParameters} from "./parameters.js";
+import {StartupDeadline, observeStartupErrors} from "../provider/startup-deadline.js";
+import {observeStartupNetwork} from "../provider/startup-network.js";
+import type {StartupTasks} from "../provider/startup.js";
+
+export type EasyRpgStartup = {signal: AbortSignal; reportExitRequested: RuntimeExitReporter; tasks?: StartupTasks};
 
 type EasyFileSystem = {
   analyzePath(path: string): { exists: boolean };
@@ -58,13 +63,31 @@ export async function mountEasyRpg(
   target: HTMLElement,
   frameWindow: Window,
   restorePayload: Uint8Array | null,
-  reportExitRequested: RuntimeExitReporter = () => undefined,
+  options: EasyRpgStartup,
 ) {
-  try {return await mountEasyRpgUnchecked(config, target, frameWindow, restorePayload, reportExitRequested);}
+  const controller = new AbortController(), signal = AbortSignal.any([options.signal, controller.signal]);
+  let rejectFailure: (error: unknown) => void = () => {};
+  const failure = new Promise<never>((_resolve, reject) => {rejectFailure = reject;});
+  const deadline = new StartupDeadline(frameWindow, signal, error => {rejectFailure(error); controller.abort(error);}, 30_000);
+  const cleanupNetwork = observeStartupNetwork(frameWindow, deadline, options.tasks);
+  const cleanupErrors = observeStartupErrors(frameWindow, deadline);
+  const abort = () => rejectFailure(signal.reason);
+  signal.addEventListener("abort", abort, {once: true});
+  let succeeded = false;
+  try {
+    signal.throwIfAborted();
+    const adapter = await Promise.race([failure,
+      mountEasyRpgUnchecked(config, target, frameWindow, restorePayload, options.reportExitRequested, signal, deadline)]);
+    succeeded = true; return adapter;
+  }
   catch (error) {
+    controller.abort(error);
     target.replaceChildren();
     frameWindow.document.querySelectorAll("script[data-rpg-runtime]").forEach((script) => script.remove());
     throw error;
+  } finally {
+    deadline.stop(); cleanupErrors(); cleanupNetwork(!succeeded);
+    signal.removeEventListener("abort", abort);
   }
 }
 
@@ -74,6 +97,8 @@ async function mountEasyRpgUnchecked(
   frameWindow: Window,
   restorePayload: Uint8Array | null,
   reportExitRequested: RuntimeExitReporter,
+  signal: AbortSignal,
+  deadline: StartupDeadline,
 ) {
   const runtimeWindow = frameWindow as EasyWindow;
   const document = frameWindow.document;
@@ -89,7 +114,9 @@ async function mountEasyRpgUnchecked(
     loadRtp(config),
     decodeRestore(config, restorePayload),
   ]);
-  const script = await loadScript(document, `${config.runtimeBaseUrl}easyrpg-player.js`);
+  signal.throwIfAborted();
+  const script = await loadScript(document, `${config.runtimeBaseUrl}easyrpg-player.js`, signal);
+  deadline.initialize();
   const createPlayer = runtimeWindow.createEasyRpgPlayer;
   if (typeof createPlayer !== "function") {
     script.remove();
@@ -107,9 +134,10 @@ async function mountEasyRpgUnchecked(
     ...(restoreFiles.length ? { runtimeRestoreSlot: config.checkpointSlot } : {}),
     runtimeRestoreFiles: restoreFiles,
   });
+  if (signal.aborted) {playerModule.pauseMainLoop(); signal.throwIfAborted();}
   playerModule.initApi();
   const expectedEngine = config.engineMode === "rpg2k" ? "RPG2000" : "RPG2003";
-  await waitForReady(playerModule, expectedEngine, restoreFiles.length > 0);
+  await waitForReady(playerModule, expectedEngine, restoreFiles.length > 0, signal);
 
   return {
     checkpoint: async () => {
@@ -162,6 +190,7 @@ async function waitForReady(
   module: EasyModule,
   expectedEngine: EasyState["engine"],
   restoring: boolean,
+  signal: AbortSignal,
 ) {
   if (module.runtimeFileSystemReady !== true) {
     throw new Error("RPG_RUNTIME_FILESYSTEM_NOT_READY");
@@ -169,6 +198,7 @@ async function waitForReady(
   const deadline = performance.now() + 30_000;
   let engineMismatch = false;
   while (performance.now() < deadline) {
+    signal.throwIfAborted();
     const state = startupState(module);
     if (state && (state.ready || state.frameCount > 0)) {
       engineMismatch = state.engine !== expectedEngine;
@@ -285,15 +315,18 @@ function exactKeys(value: Record<string, unknown>, keys: string[]) {
   return actual.length === expected.length && actual.every((key, index) => key === expected[index]);
 }
 
-function loadScript(document: Document, url: string) {
+function loadScript(document: Document, url: string, signal: AbortSignal) {
   return new Promise<HTMLScriptElement>((resolve, reject) => {
     const script = document.createElement("script");
     script.dataset.rpgRuntime = "easyrpg";
     script.src = url;
     script.async = true;
-    script.addEventListener("load", () => resolve(script), { once: true });
+    const abort = () => {script.remove(); reject(signal.reason);};
+    signal.addEventListener("abort", abort, {once: true});
+    script.addEventListener("load", () => {signal.removeEventListener("abort", abort); resolve(script);}, { once: true });
     script.addEventListener("error", () => {
       script.remove();
+      signal.removeEventListener("abort", abort);
       reject(new Error("RPG_RUNTIME_ARTIFACT_UNAVAILABLE"));
     }, { once: true });
     document.head.append(script);

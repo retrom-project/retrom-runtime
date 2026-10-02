@@ -171,20 +171,20 @@
     {
       "id": "easyrpg",
       "repository": "https://github.com/retrom-project/Player",
-      "tag": "retrom-core-ge68fff4a13a3-r1",
-      "commit": "6c8c1532d18dad06078f2ca126fc0ff8760532f9",
+      "tag": "retrom-core-ge68fff4a13a3-r2",
+      "commit": "f9f059b78d61dd714aac6becdc6f6d40a2335597",
       "adapterAbi": "easyrpg-save",
-      "metadataUrl": "https://github.com/retrom-project/Player/releases/download/retrom-core-ge68fff4a13a3-r1/rpg-runtime-release.json",
+      "metadataUrl": "https://github.com/retrom-project/Player/releases/download/retrom-core-ge68fff4a13a3-r2/rpg-runtime-release.json",
       "assets": [
         {
           "filename": "easyrpg-player.js",
-          "url": "https://github.com/retrom-project/Player/releases/download/retrom-core-ge68fff4a13a3-r1/easyrpg-player.js",
+          "url": "https://github.com/retrom-project/Player/releases/download/retrom-core-ge68fff4a13a3-r2/easyrpg-player.js",
           "output": "runtime/easyrpg/easyrpg-player.js",
           "maxSizeBytes": 1048576
         },
         {
           "filename": "easyrpg-player.wasm",
-          "url": "https://github.com/retrom-project/Player/releases/download/retrom-core-ge68fff4a13a3-r1/easyrpg-player.wasm",
+          "url": "https://github.com/retrom-project/Player/releases/download/retrom-core-ge68fff4a13a3-r2/easyrpg-player.wasm",
           "output": "runtime/easyrpg/easyrpg-player.wasm",
           "maxSizeBytes": 16777216
         }

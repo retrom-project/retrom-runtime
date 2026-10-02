@@ -35,6 +35,21 @@ the Host separately owns the page, frame and authorization session. The public s
 PAUSED, CHECKPOINTING, EXITING, EXITED or FAILED. Exit preempts pending controls and checkpoints; cancellation is
 checked after each asynchronous startup boundary and a late core is cleaned without returning to RUNNING.
 
+Startup separates transport inactivity from engine initialization. Each observed XHR/fetch has a 30-second
+idle deadline, renewed only by increasing received bytes, including unknown-length responses. Active transfers
+suspend the engine deadline; after the last transfer, initialization receives its own 30 seconds (120 seconds
+for the existing DOS/Supermodel restore path). A stalled parallel request still fails even while another downloads.
+Cancellation aborts pending transports and clears timers. HTTP responses retain upstream fallback semantics.
+The Provider reports `PLAYER_RESOURCE_IDLE_TIMEOUT`, `PLAYER_RESOURCE_NETWORK_FAILED`,
+`PLAYER_CORE_INITIALIZATION_TIMEOUT`, `PLAYER_RUNTIME_INITIALIZATION_FAILED` or `PLAYER_RUNTIME_CSP_BLOCKED`
+through the ordinary FAILED state. The Host can explain the failure and offer a new Launch/retry without guessing
+the core implementation. Startup listeners and transport wrappers are removed when mounting finishes.
+
+EasyRPG requires an explicit startup cancellation signal. Its factory/script errors and enforced eval CSP
+violations fail mounting immediately instead of leaving a pending factory promise. Browser release builds use
+Emscripten `DYNAMIC_EXECUTION=0`; the maintained core's release verifier rejects dynamic JavaScript execution.
+Product CSP continues to allow Wasm compilation without enabling JavaScript `unsafe-eval`.
+
 Only Provider creation validates the external Envelope and Host against the Provider declaration. There is no
 public precheck call or repeated internal Envelope/config validation. File downloads, decoded checkpoints and
 cross-origin messages retain their own trust-boundary validation.

@@ -52,13 +52,13 @@ describe("Provider to core-private parameters", () => {
     "constructs only the EasyRPG parameters for %s", async (id, engineMode) => {
       const request = targetEnvelope(id);
       const target = document.createElement("div");
-      const options = context();
+      const options = {...context(), signal: new AbortController().signal};
       await mountTargetAdapter(request, target, options);
       expect(mountEasyRpg).toHaveBeenCalledWith({
         sessionId: request.session.id, engineMode, checkpointSlot: 100,
         projectRootUrl: `/runtime/content/project/${"a".repeat(64)}/`, rtpSource: null,
         runtimeBaseUrl: request.runtime.runtimeBaseUrl + "assets/easyrpg/",
-      }, target, window, null, options.reportExitRequested);
+      }, target, window, null, {signal: options.signal, reportExitRequested: options.reportExitRequested, tasks: options.startup});
       expect(JSON.stringify(request)).not.toMatch(/adapter|engineMode|generation|validationPurpose/u);
     },
   );

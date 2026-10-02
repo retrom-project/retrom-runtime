@@ -32,7 +32,7 @@ describe("EasyRPG adapter cleanup", () => {
       api: {runtimeState: readRuntimeState},
     });
     Object.defineProperty(window, "createEasyRpgPlayer", {configurable: true, value: createPlayer});
-    const mounting = mountEasyRpg(easyConfig("RPG2003"), target, window, payload);
+    const mounting = mountEasyRpg(easyConfig("RPG2003"), target, window, payload, {signal: new AbortController().signal, reportExitRequested: () => {}});
     await vi.waitFor(() => expect(document.head.querySelector("script[data-rpg-runtime=easyrpg]")).not.toBeNull());
     document.head.querySelector("script[data-rpg-runtime=easyrpg]")?.dispatchEvent(new Event("load"));
     const mounted = await mounting;
@@ -60,7 +60,7 @@ describe("EasyRPG adapter cleanup", () => {
       }),
     });
     let settled = false;
-    const mounting = mountEasyRpg(easyConfig("RPG2003"), target, window, null)
+    const mounting = mountEasyRpg(easyConfig("RPG2003"), target, window, null, {signal: new AbortController().signal, reportExitRequested: () => {}})
       .then((value) => {settled = true; return value;}, (error: unknown) => {settled = true; return error;});
     await vi.advanceTimersByTimeAsync(0);
     const script = document.head.querySelector("script[data-rpg-runtime=easyrpg]");
@@ -72,7 +72,7 @@ describe("EasyRPG adapter cleanup", () => {
     await vi.advanceTimersByTimeAsync(persistent ? 30_000 : 50);
     const result = await mounting;
     if (persistent) {
-      expect(result).toEqual(new Error("RPG_ENGINE_PROFILE_MISMATCH"));
+      expect(result).toMatchObject({code: "PLAYER_CORE_INITIALIZATION_TIMEOUT"});
       expect(target.childElementCount).toBe(0);
     } else {
       expect(result).toHaveProperty("getFrameCount");
@@ -82,7 +82,7 @@ describe("EasyRPG adapter cleanup", () => {
   it("removes the mount DOM and failed loader before rejecting", async () => {
     const target = document.createElement("div");
     document.body.append(target);
-    const mounting = mountEasyRpg(easyConfig(), target, window, null);
+    const mounting = mountEasyRpg(easyConfig(), target, window, null, {signal: new AbortController().signal, reportExitRequested: () => {}});
     await vi.waitFor(() => expect(document.head.querySelector("script[data-rpg-runtime=easyrpg]")).not.toBeNull());
     const script = document.head.querySelector<HTMLScriptElement>("script[data-rpg-runtime=easyrpg]");
     expect(script).not.toBeNull();
@@ -105,7 +105,7 @@ describe("EasyRPG adapter cleanup", () => {
         runtimeFileSystemReady: false, initApi: vi.fn(), pauseMainLoop: vi.fn(), resumeMainLoop: vi.fn(),
       }),
     });
-    const mounting = mountEasyRpg(easyConfig(), target, window, null);
+    const mounting = mountEasyRpg(easyConfig(), target, window, null, {signal: new AbortController().signal, reportExitRequested: () => {}});
     await vi.waitFor(() => expect(document.head.querySelector("script[data-rpg-runtime=easyrpg]")).not.toBeNull());
     document.head.querySelector<HTMLScriptElement>("script[data-rpg-runtime=easyrpg]")
       ?.dispatchEvent(new Event("load"));
@@ -138,7 +138,7 @@ describe("EasyRPG adapter cleanup", () => {
     });
     const config = easyConfig();
     const reportExitRequested = vi.fn();
-    const mounting = mountEasyRpg(config, target, window, null, reportExitRequested);
+    const mounting = mountEasyRpg(config, target, window, null, {signal: new AbortController().signal, reportExitRequested});
     await vi.waitFor(() => expect(document.head.querySelector("script[data-rpg-runtime=easyrpg]")).not.toBeNull());
     document.head.querySelector<HTMLScriptElement>("script[data-rpg-runtime=easyrpg]")
       ?.dispatchEvent(new Event("load"));
@@ -177,7 +177,7 @@ describe("EasyRPG adapter cleanup", () => {
         initApi: vi.fn(), pauseMainLoop: vi.fn(), resumeMainLoop: vi.fn(),
       }),
     });
-    const mounting = mountEasyRpg(easyConfig("RPG2003"), target, window, null);
+    const mounting = mountEasyRpg(easyConfig("RPG2003"), target, window, null, {signal: new AbortController().signal, reportExitRequested: () => {}});
     await vi.waitFor(() => expect(document.head.querySelector("script[data-rpg-runtime=easyrpg]")).not.toBeNull());
     document.head.querySelector<HTMLScriptElement>("script[data-rpg-runtime=easyrpg]")
       ?.dispatchEvent(new Event("load"));
@@ -218,7 +218,7 @@ describe("EasyRPG adapter cleanup", () => {
     Object.defineProperty(window, "createEasyRpgPlayer", { configurable: true, value: createPlayer });
     const config = easyConfig();
     config.rtpSource = { kind: "FILE_TREE", indexUrl };
-    const mounting = mountEasyRpg(config, target, window, null);
+    const mounting = mountEasyRpg(config, target, window, null, {signal: new AbortController().signal, reportExitRequested: () => {}});
     await vi.waitFor(() => expect(document.head.querySelector("script[data-rpg-runtime=easyrpg]")).not.toBeNull());
     document.head.querySelector<HTMLScriptElement>("script[data-rpg-runtime=easyrpg]")
       ?.dispatchEvent(new Event("load"));
@@ -227,6 +227,7 @@ describe("EasyRPG adapter cleanup", () => {
     expect(fetchMock).toHaveBeenCalledTimes(1);
     expect(fetchMock).toHaveBeenCalledWith(indexUrl, {
       cache: "default", credentials: "same-origin", redirect: "error",
+      signal: expect.any(AbortSignal),
     });
     expect(createPlayer).toHaveBeenCalledWith(expect.objectContaining({
       runtimeRtpRemoteFiles: [
@@ -260,7 +261,7 @@ describe("EasyRPG adapter cleanup", () => {
       };
     });
     Object.defineProperty(window, "createEasyRpgPlayer", { configurable: true, value: createPlayer });
-    const mounting = mountEasyRpg(easyConfig(), target, window, null);
+    const mounting = mountEasyRpg(easyConfig(), target, window, null, {signal: new AbortController().signal, reportExitRequested: () => {}});
     await vi.waitFor(() => expect(document.head.querySelector("script[data-rpg-runtime=easyrpg]")).not.toBeNull());
     document.head.querySelector<HTMLScriptElement>("script[data-rpg-runtime=easyrpg]")
       ?.dispatchEvent(new Event("load"));
@@ -330,7 +331,7 @@ describe("EasyRPG adapter cleanup", () => {
         };
       }),
     });
-    const mounting = mountEasyRpg(easyConfig(), target, window, null);
+    const mounting = mountEasyRpg(easyConfig(), target, window, null, {signal: new AbortController().signal, reportExitRequested: () => {}});
     await vi.waitFor(() => expect(document.head.querySelector("script[data-rpg-runtime=easyrpg]")).not.toBeNull());
     document.head.querySelector<HTMLScriptElement>("script[data-rpg-runtime=easyrpg]")
       ?.dispatchEvent(new Event("load"));
@@ -358,7 +359,7 @@ describe("EasyRPG adapter cleanup", () => {
         runtimeFileSystemReady: true, initApi: vi.fn(), pauseMainLoop: vi.fn(), resumeMainLoop: vi.fn(),
       }),
     });
-    const mounting = mountEasyRpg(easyConfig("RPG2003"), target, window, null);
+    const mounting = mountEasyRpg(easyConfig("RPG2003"), target, window, null, {signal: new AbortController().signal, reportExitRequested: () => {}});
     await vi.waitFor(() => expect(document.head.querySelector("script[data-rpg-runtime=easyrpg]")).not.toBeNull());
     document.head.querySelector<HTMLScriptElement>("script[data-rpg-runtime=easyrpg]")
       ?.dispatchEvent(new Event("load"));

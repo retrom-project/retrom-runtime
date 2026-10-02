@@ -112,7 +112,7 @@ describe("EmulatorJS provider lifecycle boundaries", () => {
     const mounting = player.mount(document.createElement("div"));
     await vi.advanceTimersByTimeAsync(29_999);
     expect(player.getState()).toBe("MOUNTING");
-    const failure = expect(mounting).rejects.toMatchObject({code: "PLAYER_RUNTIME_START_TIMEOUT"});
+    const failure = expect(mounting).rejects.toMatchObject({code: "PLAYER_RESOURCE_IDLE_TIMEOUT"});
     await vi.advanceTimersByTimeAsync(1);
     await failure;
     expect(player.getState()).toBe("FAILED");

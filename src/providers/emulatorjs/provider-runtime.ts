@@ -4,8 +4,7 @@ import {loadStartupRestore} from "../../provider/startup-restore.js";
 import {requireEmulatorImplementation} from "./implementation.js";
 import {StartupTasks} from "../../provider/startup.js";
 import {installStartupDownloads} from "./startup-downloads.js";
-import {StartupDeadline, observeStartupErrors} from "../../provider/startup-deadline.js";
-import {observeStartupNetwork} from "../../provider/startup-network.js";
+import {observeEmulatorJsStartup} from "./startup-observer.js";
 import {bindOptionalTargetContent} from "../../provider/target-content.js";
 import {ProviderContentOwner} from "../../provider/content-owner.js";
 import {ContentIOError} from "../../content-io/errors.js";
@@ -31,7 +30,7 @@ import {installExternalFileCompatibility} from "./external-files.js";
 import {RuntimeGamepadFilter, installRuntimeGamepadFilter, validInputFilterPolicy} from "../../provider/gamepad-filter.js";
 import {initializeEmulatorJsDiscs, readEmulatorJsDiscState, switchEmulatorJsDisc} from "./discs.js";
 import {captureEmulatorJsScreenshot} from "./screenshot.js";
-import {configureDeferredStart, createStartBarrier, emulatorCheckpointAvailability, needsVerboseRestore, runtimeStartTimeout, type StartBarrier} from "./lifecycle.js";
+import {configureDeferredStart, createStartBarrier, emulatorCheckpointAvailability, needsVerboseRestore, type StartBarrier} from "./lifecycle.js";
 import {installEmulatorJsRetroArchConfig} from "./retroarch-config.js";
 import {installEmulatorJs423StateRestoreCompatibility} from "./state-restore.js";
 import {installSupermodelState} from "./supermodel-state.js";
@@ -97,9 +96,7 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
   private cleanupDeferredStart: (() => void) | null = null;
   private lutroNativeSave: LutroNativeSaveTracker | null = null;
   private startBarrier: StartBarrier | null = null;
-  private startDeadline: StartupDeadline | null = null;
-  private cleanupStartupNetwork: ((abort: boolean) => void) | null = null;
-  private cleanupStartupErrors: (() => void) | null = null;
+  private startupObserver: ReturnType<typeof observeEmulatorJsStartup> | null = null;
   private readonly startupTimers = new Set<number>();
   private startObserved = false;
   private exitRequestedEmitted = false;
@@ -339,10 +336,8 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
         (loadedBytes, totalBytes) => this.emit({type: "LOAD_PROGRESS", loadedBytes, totalBytes}));
       this.checkMountActive();
       this.installPreloaderCompatibility(runtimeWindow);
-      this.startDeadline = new StartupDeadline(runtimeWindow, this.host.signal,
-        error => this.fail(error.code, error), runtimeStartTimeout(this.implementation.runtimeCore, this.restorePayload !== null));
-      this.cleanupStartupNetwork = observeStartupNetwork(runtimeWindow, this.startDeadline);
-      this.cleanupStartupErrors = observeStartupErrors(runtimeWindow, this.startDeadline);
+      this.startupObserver = observeEmulatorJsStartup(runtimeWindow, this.host.signal,
+        this.implementation.runtimeCore, this.restorePayload !== null, error => this.fail(error.code, error));
       const loader = runtimeWindow.document.createElement("script");
       loader.async = true;
       loader.dataset.retromLoader = "true";
@@ -415,7 +410,7 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
       this.instance = runtimeWindow.EJS_emulator ?? null;
       if (!this.instance) {this.fail("PLAYER_RUNTIME_UNAVAILABLE"); return;}
       const instance = this.instance;
-      this.startDeadline?.initialize();
+      this.startupObserver?.deadline.initialize();
       this.cleanupStartupDownloads = installStartupDownloads(instance, this.implementation.release, this.startup,
         runtimeWindow.XMLHttpRequest, this.envelope.resources);
       this.cleanupGamepadIndex = initializeEmulatorJsGamepads(instance);
@@ -610,9 +605,7 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
   }
 
   private clearStartBarrier() {
-    this.startDeadline?.stop(); this.startDeadline = null;
-    this.cleanupStartupErrors?.(); this.cleanupStartupErrors = null;
-    this.cleanupStartupNetwork?.(this.state !== "MOUNTING"); this.cleanupStartupNetwork = null;
+    this.startupObserver?.stop(this.state !== "MOUNTING"); this.startupObserver = null;
     this.startBarrier = null;
   }
 

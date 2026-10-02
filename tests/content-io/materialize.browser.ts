@@ -66,9 +66,11 @@ test("[ST-08] BROWSER/Blob File keeps the immutable OPFS generation leased after
     {mode:"EAGER",bridge:"NONE",result:"BLOB",maxFileBytes:identity.sizeBytes,workspace:"NONE",writes:"DENY",contentLengthPolicy:"EXACT_IF_PRESENT",});
    const value=await session.materialize(reader.id,{kind:"BLOB",maxBytes:identity.sizeBytes});if(value.kind!=="BLOB"){throw new Error("kind");}
    await reader.close();const gc=new ContentGC(metadata,new ContentLocks(),[await OPFSStore.open()]);
-   const held=await gc.collect(0),tag=Object.prototype.toString.call(value.blob),size=value.blob.size;
+   const object = await metadata.object(value.receipt.objectKey);
+   await metadata.update(object.key, object.generation, object.revision, (record: {state: string}) => {record.state = "QUARANTINED";});
+   const held=await gc.collect(),tag=Object.prototype.toString.call(value.blob),size=value.blob.size;
    const hash=Array.from(new Uint8Array(await crypto.subtle.digest("SHA-256",await value.blob.arrayBuffer())),n=>n.toString(16).padStart(2,"0")).join("");
-   await value.release();await value.release();const released=await gc.collect(0);return{held,released,tag,size,hash,diagnostics};
+   await value.release();await value.release();const released=await gc.collect();return{held,released,tag,size,hash,diagnostics};
   }finally{metadata.close();await session.close();}
  },{identity});
  expect(result).toMatchObject({tag:"[object File]",held:0,released:1,size:identity.sizeBytes});expect(result.hash).toBe(identity.identity.kind==="FILE_SHA256"?identity.identity.sha256:"");

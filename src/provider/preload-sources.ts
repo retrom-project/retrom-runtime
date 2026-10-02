@@ -25,7 +25,7 @@ export async function preloadSources(target: TargetDeclaration, envelope: Launch
   return sources.map(source => validateSource(source, context));
 }
 
-async function resourceSources(resource: RuntimeResourceV1, policy: ManagedInputPolicyV1, signal: AbortSignal): Promise<ContentSourceV1[]> {
+export async function resourceSources(resource: RuntimeResourceV1, policy: ManagedInputPolicyV1, signal: AbortSignal): Promise<ContentSourceV1[]> {
   if (resource.kind === "FILE_TREE" || resource.kind === "NATIVE_WEB" || resource.kind === "ISOLATED_WEB") {
     const base = new URL(resource.indexUrl, location.href);
     const index = await fetchMetadataJson(base, indexByteBudget(100_000, 4096), signal);

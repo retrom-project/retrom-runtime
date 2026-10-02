@@ -56,7 +56,7 @@ async function fixture(workerPrefix = "") {
     export async function collect() {
       const metadata = await ContentMetadata.open();
       const stores = [await OPFSStore.open(), await CacheBlockStore.open(location.origin)];
-      try {return await new ContentGC(metadata, new ContentLocks(), stores).collect(0);}
+      try {return await new ContentGC(metadata, new ContentLocks(), stores).collect();}
       finally {metadata.close();}
     }
     export async function release() {preload.terminate(); await session?.close();}
@@ -95,7 +95,11 @@ test(`${backend}: preload commits the complete file, holds GC leases, and serves
     expect(progress[0]).toBe(0);
     expect(progress.at(-1)).toBe(source.sizeBytes);
     await page.evaluate(async () => {const path = "/__test__/content.mjs"; await (await import(path)).release();});
-    await expect.poll(() => page.evaluate(async () => {const path = "/__test__/content.mjs"; return (await import(path)).collect();})).toBe(1);
+    expect(await page.evaluate(async () => {const path = "/__test__/content.mjs"; return (await import(path)).collect();})).toBe(0);
+    await context.setOffline(true);
+    await page.evaluate(async source => {const path = "/__test__/content.mjs"; const api = await import(path);
+      await api.prepare(source); await api.read(12 * 1024 * 1024); await api.release();}, source);
+    expect(server.requests("preload")).toHaveLength(downloaded);
   } finally {await context.setOffline(false); await server.close();}
 });
 }

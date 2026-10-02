@@ -1,3 +1,4 @@
+import {prepareExternalContent} from "./external-content.js";
 import {prepareEagerBIOS} from "./eager-resources.js";
 import {scheduleStartupActions} from "./startup-actions.js";
 import {loadStartupRestore} from "../../provider/startup-restore.js";
@@ -40,7 +41,7 @@ import {initializeEmulatorJsGamepads} from "./startup-gamepads.js";
 import {closeEmulatorJsNativeSettings, openEmulatorJsNativeSettings} from "./native-settings.js";
 import {retromShaders} from "./shaders.js";
 import {createEmulatorJsVideoModeController} from "./video-mode.js";
-import {biosFile, externalFiles, fileName, optionalResource, runtimeBase} from "./resources.js";
+import {fileName, optionalResource, runtimeBase} from "./resources.js";
 import {readEmulatorJsCheckpoint} from "./bytes.js";
 import {restoreEmulatorCheckpoint} from "./restore-checkpoint.js";
 import {readPspCheckpoint} from "./psp-state.js";
@@ -79,6 +80,7 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
   private daphneProject: DaphneProject | null = null;
   private cleanupDaphneProject: (() => void) | null = null;
   private cleanupFlycast: (() => void) | null = null;
+  private cleanupExternalContent: (() => Promise<void>) | null = null;
   private cleanupParent: (() => Promise<void>) | null = null;
   private cleanupSeekableFS: (() => void) | null = null;
   private cleanupFrameStyle: (() => void) | null = null;
@@ -276,7 +278,7 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
       this.implementation.runtimeCore, Boolean(this.restorePayload) && this.implementation.release === "4.2.3");
     this.cleanupArchiveWorker = installArchiveWorkerCompatibility(runtimeWindow, this.implementation.release,
       runtimeBase(this.envelope, this.implementation.release), this.implementation.runtimeCore);
-    if (this.implementation.release === "4.2.3" && Object.keys(externalFiles(this.envelope)).length) {
+    if (this.implementation.release === "4.2.3" && Object.keys(runtimeWindow.EJS_externalFiles ?? {}).length) {
       this.cleanupExternalFiles = installExternalFileCompatibility(runtimeWindow);
     }
     if (this.restorePayload && this.implementation.release === "4.2.3") {
@@ -335,6 +337,9 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
       this.cleanupBIOS = await prepareEagerBIOS(runtimeWindow, this.envelope, this.contentSession, this.host.signal,
         (loadedBytes, totalBytes) => this.emit({type: "LOAD_PROGRESS", loadedBytes, totalBytes}));
       this.checkMountActive();
+      this.cleanupExternalContent = await prepareExternalContent(runtimeWindow, this.envelope, this.contentSession, this.host.signal,
+        (loadedBytes, totalBytes) => this.emit({type: "LOAD_PROGRESS", loadedBytes, totalBytes}));
+      this.checkMountActive();
       this.installPreloaderCompatibility(runtimeWindow);
       this.startupObserver = observeEmulatorJsStartup(runtimeWindow, this.host.signal,
         this.implementation.runtimeCore, this.restorePayload !== null, error => this.fail(error.code, error));
@@ -364,7 +369,6 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
     if (this.implementation.runtimeCore === "ppsspp") {this.pspRestore = installPspRestoreObserver(runtimeWindow);}
     const seekable = hasSeekableGame(this.envelope);
     const gameURL = this.daphneProject ? `/roms/${this.daphneProject.romName}` : gameResourceURL(this.envelope, this.implementation.runtimeCore, seekable);
-    const bios = optionalResource(this.envelope, "bios", "BIOS_BUNDLE");
     const releaseBase = runtimeBase(this.envelope, this.implementation.release);
     const deferredDOSStart = this.implementation.release === "4.3.0-pre" &&
       this.implementation.runtimeCore === "dosbox_pure";
@@ -378,7 +382,6 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
     runtimeWindow.EJS_gameName = this.envelope.session.title;
     runtimeWindow.EJS_gameID = 0;
     runtimeWindow.EJS_pathtodata = releaseBase;
-    runtimeWindow.EJS_biosUrl = biosFile(bios);
     runtimeWindow.EJS_startOnLoaded = !deferredStart;
     runtimeWindow.EJS_dontExtractRom = deferredStart || this.implementation.runtimeCore === "flycast" || seekable || this.eagerDiskMount || !!this.daphneProject;
     runtimeWindow.EJS_disableBatchBootup = deferredDOSStart;
@@ -404,7 +407,7 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
     runtimeWindow.EJS_shaders = retromShaders;
     runtimeWindow.EJS_paths = {[fileName(this.implementation.coreAssetPath)]:
       `${this.envelope.runtime.runtimeBaseUrl}${this.implementation.coreAssetPath}`};
-    runtimeWindow.EJS_externalFiles = externalFiles(this.envelope);
+
     const checkpointMaximum = this.envelope.runtime.checkpoint?.maxBytes ?? 0;
     runtimeWindow.EJS_ready = () => {
       this.instance = runtimeWindow.EJS_emulator ?? null;
@@ -562,6 +565,7 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
   }
 
   private async closeContent() {
+    await this.cleanupExternalContent?.(); this.cleanupExternalContent = null;
     await this.cleanupParent?.(); this.cleanupParent = null;
     await this.contentOwner.close(); this.contentSession = null;
     await this.discRange?.dispose(); this.discRange = null;

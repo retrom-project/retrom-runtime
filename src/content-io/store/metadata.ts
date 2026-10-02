@@ -95,10 +95,20 @@ export class ContentMetadata {
       };
     });
   }
-  list(limit = 128): Promise<ObjectRecord[]> {
+  list(limit = 128, state?: ObjectRecord["state"]): Promise<ObjectRecord[]> {
     return this.transaction(["objects"], "readonly", (tx, finish) => {
-      const request = tx.objectStore("objects").index("byLastAccess").getAll(undefined, limit);
-      request.onsuccess = () => finish(request.result as ObjectRecord[]);
+      const index = tx.objectStore("objects").index("byLastAccess");
+      if (!state) {
+        const request = index.getAll(undefined, limit);
+        request.onsuccess = () => finish(request.result as ObjectRecord[]); return;
+      }
+      const records: ObjectRecord[] = [], request = index.openCursor();
+      request.onsuccess = () => {
+        const cursor = request.result;
+        if (!cursor) {finish(records); return;}
+        if ((cursor.value as ObjectRecord).state === state) {records.push(cursor.value as ObjectRecord);}
+        if (records.length >= limit) {finish(records);} else {cursor.continue();}
+      };
     });
   }
   generations(key: string): Promise<GenerationRecord[]> {

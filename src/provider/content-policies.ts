@@ -2,10 +2,7 @@ import type {ContentInputPolicyV1, ManagedInputPolicyV1} from "../../contracts/c
 import {contentLimits as limits} from "../content-io/limits.js";
 
 export const contentBoundaries = Object.freeze({
-  "easyrpg-loader": "src/easyrpg/adapter.ts",
   "j2me-loader": "src/j2me/adapter.ts",
-  "emulatorjs-loader": "src/providers/emulatorjs/provider-runtime.ts",
-  "mame-loader": "src/mame/files.ts",
 });
 export function rangePolicy(bridge: Exclude<ManagedInputPolicyV1["bridge"], "NONE">, maxFileBytes: number,
   overrides: Partial<Pick<ManagedInputPolicyV1, "contentLengthPolicy" | "writes">> = {}): ManagedInputPolicyV1 {
@@ -32,8 +29,8 @@ const gamePolicies: Readonly<Record<string, ContentInputPolicyV1>> = {
   "onscripter-yuri": eagerPolicy(limits.indexedFile, {mode: "ON_OPEN"}),
   openbor: eagerPolicy(limits.openborPak),
   samcoupe: eagerPolicy(16 * 1024 * 1024),
-  "rpgmaker-2000": upstream("easyrpg-loader"),
-  "rpgmaker-2003": upstream("easyrpg-loader"),
+  "rpgmaker-2000": eagerPolicy(limits.indexedFile, {mode: "ON_OPEN"}),
+  "rpgmaker-2003": eagerPolicy(limits.indexedFile, {mode: "ON_OPEN"}),
   "rpgmaker-mv": rangePolicy("ASYNC", limits.indexedFile),
   "rpgmaker-mz": rangePolicy("ASYNC", limits.indexedFile),
   "rpgmaker-vx": mkxp,
@@ -51,6 +48,6 @@ export function runtimeGamePolicy(id: string): ContentInputPolicyV1 {
 export function emulatorContentPolicies(core: string): Readonly<Record<string, ContentInputPolicyV1>> {
   const game = ["neocd", "genesis_plus_gx_cd", "daphne", "dosbox_pure"].includes(core) || core.startsWith("flycast") ? rangePolicy("ASYNC", limits.signedDisc) :
     eagerPolicy(limits.signedDisc);
-  return {game, discs: {...game}, bios: eagerPolicy(limits.signedDisc),
-    parent: eagerPolicy(limits.signedDisc, {result: "BLOB"}), external: upstream("emulatorjs-loader")};
+  return {game, discs: eagerPolicy(limits.signedDisc, {result: "BLOB"}), bios: eagerPolicy(limits.signedDisc),
+    parent: eagerPolicy(limits.signedDisc, {result: "BLOB"}), external: eagerPolicy(limits.signedDisc, {result: "BLOB"})};
 }

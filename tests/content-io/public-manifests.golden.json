@@ -1398,6 +1398,7 @@
       },
       {
         "assetPaths": [
+          "assets/content-io/worker.mjs",
           "assets/easyrpg/easyrpg-player.js",
           "assets/easyrpg/easyrpg-player.wasm"
         ],
@@ -1417,7 +1418,8 @@
             "pixel",
             "smooth"
           ],
-          "volume": false
+          "volume": false,
+          "contentLoading": "ON_DEMAND_AND_PRELOAD"
         },
         "checkpoint": {
           "maxBytes": 67108864,
@@ -1452,6 +1454,7 @@
       },
       {
         "assetPaths": [
+          "assets/content-io/worker.mjs",
           "assets/easyrpg/easyrpg-player.js",
           "assets/easyrpg/easyrpg-player.wasm"
         ],
@@ -1471,7 +1474,8 @@
             "pixel",
             "smooth"
           ],
-          "volume": false
+          "volume": false,
+          "contentLoading": "ON_DEMAND_AND_PRELOAD"
         },
         "checkpoint": {
           "maxBytes": 67108864,

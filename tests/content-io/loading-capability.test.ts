@@ -19,8 +19,8 @@ it.each([
   ["mame-coleco", "PRELOAD_ONLY"],
   ["mame-sg1000", "PRELOAD_ONLY"],
   ["mame-arcade", "PRELOAD_ONLY"],
-  ["rpgmaker-2000", undefined],
-  ["rpgmaker-2003", undefined],
+  ["rpgmaker-2000", "ON_DEMAND_AND_PRELOAD"],
+  ["rpgmaker-2003", "ON_DEMAND_AND_PRELOAD"],
   ["j2me", undefined],
 ])("publishes the actual game loading capability for %s", (id, capability) => {
   const target = projectProviderManifest(retromRuntimeProviderDefinition).targets.find(target => target.id === id);

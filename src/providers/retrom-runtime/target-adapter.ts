@@ -20,6 +20,7 @@ import {mountPlay} from "../../play/adapter.js";
 import {mountFantasyConsole} from "../../fantasy-console/adapter.js";
 import {mountJ2me} from "../../j2me/adapter.js";
 import {mountButterscotch} from "../../butterscotch/adapter.js";
+import {mountWithEasyRpgContent} from "./easyrpg-content.js";
 import {mountEasyRpg} from "../../easyrpg/adapter.js";
 import {mountKirikiri2} from "../../kirikiri/adapter.js";
 import {mountMkxp} from "../../mkxp/adapter.js";
@@ -72,8 +73,9 @@ function mountAdapter(envelope: LaunchEnvelopeV1, target: HTMLElement, input: Ta
   case "RUFFLE_WEB":
     return mountRuffle(parameters.ruffle(envelope), target, frameWindow, restorePayload, reportProgress, context.signal, undefined, contentOptions(context));
   case "EASYRPG_WEB":
-    return mountEasyRpg(parameters.easyRpg(envelope, declaration.implementation), target,
-      frameWindow, restorePayload, {signal: requireStartupSignal(context), reportExitRequested, tasks: context.startup});
+    return mountWithEasyRpgContent(envelope, frameWindow, requireContentSession(contentSession), requireStartupSignal(context),
+      () => mountEasyRpg(parameters.easyRpg(envelope, declaration.implementation), target,
+        frameWindow, restorePayload, {signal: requireStartupSignal(context), reportExitRequested, tasks: context.startup}));
   case "MKXP_LIBRETRO_WEB":
     return mountMkxp(parameters.mkxp(envelope, declaration.implementation, context.assetIndex), target,
       restorePayload, undefined, context.onDiagnostic, reportProgress, reportExitRequested,

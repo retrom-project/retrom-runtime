@@ -1,3 +1,4 @@
+import "../../../tests/emulatorjs-content-fixture.js";
 import {decodeStoredCheckpoint} from "../../provider/checkpoint-storage.js";
 import {afterEach, describe, expect, it, vi} from "vitest";
 
@@ -214,7 +215,8 @@ describe("EmulatorJS Provider Module V1", () => {
     const mounting = player.mount(document.createElement("div"));
     await vi.waitFor(() => expect(runtimeWindow.document.querySelector("script[data-retrom-loader]")).not.toBeNull());
     expect(runtimeWindow.EJS_core).toBe("fceumm");
-    expect(runtimeWindow.EJS_gameUrl).toBe("/runtime/content/game/game.nes");
+    expect(runtimeWindow.EJS_gameUrl).toBeInstanceOf(runtimeWindow.File as typeof File);
+    expect((runtimeWindow.EJS_gameUrl as File).name).toBe("game.nes");
     expect(runtimeWindow.EJS_pathtodata).toBe(`/runtime/providers/emulatorjs/${bundleDigest}/assets/4.2.3/data/`);
     expect(runtimeWindow.EJS_paths).toEqual({
       "fceumm-wasm.data": `/runtime/providers/emulatorjs/${bundleDigest}/assets/4.2.3/data/cores/fceumm-wasm.data`,

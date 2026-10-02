@@ -1,3 +1,4 @@
+import {prepareEagerBIOS} from "./eager-resources.js";
 import {scheduleStartupActions} from "./startup-actions.js";
 import {loadStartupRestore} from "../../provider/startup-restore.js";
 import {requireEmulatorImplementation} from "./implementation.js";
@@ -100,7 +101,8 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
   private exitRequestedEmitted = false;
   private checkpointAvailability: RuntimeCheckpointAvailabilityV1 = {available: false, reason: "NOT_READY"};
   private readonly implementation: EmulatorImplementation;
-  private readonly eagerContentGame: boolean;
+  private readonly eagerDiskMount: boolean;
+  private cleanupBIOS?: () => void;
   private readonly contentOwner = new ProviderContentOwner(error => this.fail(error.message, error), diagnostic => this.host.reportDiagnostic({code: "CONTENT_IO_METRICS", message: JSON.stringify(diagnostic)}));
   private contentSession: ReturnType<typeof bindOptionalTargetContent> = null;
   private readonly hostAbort = () => {this.contentOwner.force(); void this.exit();};
@@ -113,7 +115,7 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
     this.startup = new StartupTasks(event => this.emit(event), host.signal);
     const target = requireEmulatorImplementation(envelope.runtime.targetId, assetIndex);
     this.implementation = target.implementation;
-    this.eagerContentGame = target.contentIO.game.mode === "EAGER";
+    this.eagerDiskMount = this.implementation.runtimeCore === "puae";
   }
 
   mount(target: HTMLElement) {
@@ -323,12 +325,15 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
         this.checkMountActive();
       }
       const disc = await configureContentDisc(runtimeWindow, this.envelope, this.implementation.runtimeCore, this.host.signal,
-        this.contentSession, error => this.fail(error.message, error), this.eagerContentGame,
+        this.contentSession, error => this.fail(error.message, error), this.eagerDiskMount,
         (loadedBytes, totalBytes) => this.emit({type: "LOAD_PROGRESS", loadedBytes, totalBytes}));
       if (disc.range) {this.discRange = disc.range;}
       this.cleanupFlycast = disc.cleanup;
       this.checkMountActive();
 
+      this.cleanupBIOS = await prepareEagerBIOS(runtimeWindow, this.envelope, this.contentSession, this.host.signal,
+        (loadedBytes, totalBytes) => this.emit({type: "LOAD_PROGRESS", loadedBytes, totalBytes}));
+      this.checkMountActive();
       this.installPreloaderCompatibility(runtimeWindow);
       const loader = runtimeWindow.document.createElement("script");
       loader.async = true;
@@ -374,7 +379,7 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
     runtimeWindow.EJS_pathtodata = releaseBase;
     runtimeWindow.EJS_biosUrl = biosFile(bios);
     runtimeWindow.EJS_startOnLoaded = !deferredStart;
-    runtimeWindow.EJS_dontExtractRom = deferredStart || this.implementation.runtimeCore === "flycast" || seekable || this.eagerContentGame || !!this.daphneProject;
+    runtimeWindow.EJS_dontExtractRom = deferredStart || this.implementation.runtimeCore === "flycast" || seekable || this.eagerDiskMount || !!this.daphneProject;
     runtimeWindow.EJS_disableBatchBootup = deferredDOSStart;
     runtimeWindow.EJS_disableCue = emulatorJsDisableCue(this.implementation.runtimeCore, this.envelope.runtime.targetId) ? true : undefined;
     runtimeWindow.EJS_language = "zh-CN";
@@ -408,7 +413,7 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
         runtimeWindow.XMLHttpRequest, this.envelope.resources);
       this.cleanupGamepadIndex = initializeEmulatorJsGamepads(instance);
       if (asyncRangeCore(this.implementation.runtimeCore) && this.discRange) {installAsyncRangeStartup(instance, this.discRange);}
-      if (mountRangeFS(this.implementation.runtimeCore, seekable, this.eagerContentGame, !!this.daphneProject) && this.discRange) {
+      if (mountRangeFS(this.implementation.runtimeCore, seekable, this.eagerDiskMount, !!this.daphneProject) && this.discRange) {
         try {this.cleanupSeekableFS = registerSeekableContentFS(instance, this.discRange,
           error => this.fail("EMULATORJS_CONTENT_FS_UNAVAILABLE", error),
           ["daphne", "dosbox_pure"].includes(this.implementation.runtimeCore));}
@@ -578,6 +583,7 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
     this.cleanupSeekableFS?.(); this.cleanupSeekableFS = null;
     this.videoModeController?.cleanup();
     this.videoModeController = null;
+    this.cleanupBIOS?.(); this.cleanupBIOS = undefined;
     this.cleanupFlycast?.(); this.cleanupFlycast = null;
     this.cleanupFrameStyle?.();
     this.cleanupFrameStyle = null;

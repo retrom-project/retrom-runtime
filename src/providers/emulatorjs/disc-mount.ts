@@ -6,6 +6,7 @@ import type {AdapterContentSession} from "../../provider/content-inputs.js";
 import {fileContentSource} from "../../provider/content-inputs.js";
 import {createFlycastRange, createNeoCDRange} from "./neocd-range.js";
 import {EagerContentFile} from "./eager-content-file.js";
+import {prepareEagerROM} from "./eager-resources.js";
 import type {EjsWindow} from "./emulator-instance.js";
 import {prepareDOSBundle} from "./dosbox-range.js";
 
@@ -107,6 +108,11 @@ export async function configureContentDisc(runtimeWindow: EjsWindow, envelope: L
   if (eager) {
     const game = resource(envelope, "game", "ROM_BLOB");
     return {range: await mountEagerContentFile(runtimeWindow, game, signal, fail, requireContentSession(session), report), cleanup: null};
+  }
+  const eagerGame = envelope.resources.find(entry => entry.role === "game" && entry.kind === "ROM_BLOB");
+  if (eagerGame?.kind === "ROM_BLOB" && requireContentSession(session).inputPolicy("game").mode === "EAGER") {
+    await prepareEagerROM(runtimeWindow, eagerGame, requireContentSession(session), signal, report);
+    return {range: null, cleanup: null};
   }
   const seekable = hasSeekableGame(envelope);
   if (!seekable) {return {range: null, cleanup: null};}

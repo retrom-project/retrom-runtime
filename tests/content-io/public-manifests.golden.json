@@ -3,16 +3,18 @@
     "clientModulePath": "client.mjs",
     "providerApiVersion": 1,
     "providerId": "retrom-runtime",
-    "providerVersion": "0.43.2",
+    "providerVersion": "0.0.0-dev",
     "schemaVersion": 1,
     "targets": [
       {
         "assetPaths": [
           "assets/apple2js/site/dist/audio_worker.bundle.js",
           "assets/apple2js/site/dist/retrom.bundle.js",
-          "assets/apple2js/site/index.html"
+          "assets/apple2js/site/index.html",
+          "assets/content-io/worker.mjs"
         ],
         "capabilities": {
+          "contentLoading": "PRELOAD_ONLY",
           "checkpoint": true,
           "discSwitch": false,
           "frameCounter": false,
@@ -28,8 +30,7 @@
             "pixel",
             "smooth"
           ],
-          "volume": false,
-          "contentLoading": "PRELOAD_ONLY"
+          "volume": false
         },
         "checkpoint": {
           "maxBytes": 33554432,
@@ -66,6 +67,7 @@
       },
       {
         "assetPaths": [
+          "assets/content-io/worker.mjs",
           "assets/jsbeeb/site/assets/__vite-browser-external-CmSenmEo.js",
           "assets/jsbeeb/site/assets/audio-renderer-C6Qrquvd.js",
           "assets/jsbeeb/site/assets/index-CTLpmXe1.css",
@@ -92,6 +94,7 @@
           "assets/jsbeeb/site/sounds/tape/motor_on.mp3"
         ],
         "capabilities": {
+          "contentLoading": "PRELOAD_ONLY",
           "checkpoint": true,
           "discSwitch": false,
           "frameCounter": false,
@@ -107,8 +110,7 @@
             "pixel",
             "smooth"
           ],
-          "volume": false,
-          "contentLoading": "PRELOAD_ONLY"
+          "volume": false
         },
         "checkpoint": {
           "maxBytes": 33554432,
@@ -145,9 +147,11 @@
         "assetPaths": [
           "assets/butterscotch/butterscotch.mjs",
           "assets/butterscotch/butterscotch.wasm",
-          "assets/butterscotch/worker.mjs"
+          "assets/butterscotch/worker.mjs",
+          "assets/content-io/worker.mjs"
         ],
         "capabilities": {
+          "contentLoading": "ON_DEMAND_AND_PRELOAD",
           "checkpoint": true,
           "discSwitch": false,
           "frameCounter": false,
@@ -163,8 +167,7 @@
             "pixel",
             "smooth"
           ],
-          "volume": false,
-          "contentLoading": "ON_DEMAND_AND_PRELOAD"
+          "volume": false
         },
         "checkpoint": {
           "maxBytes": 16777216,
@@ -193,10 +196,12 @@
       },
       {
         "assetPaths": [
+          "assets/content-io/worker.mjs",
           "assets/fake08/fake08-retrom.mjs",
           "assets/fake08/fake08-retrom.wasm"
         ],
         "capabilities": {
+          "contentLoading": "PRELOAD_ONLY",
           "checkpoint": true,
           "discSwitch": false,
           "frameCounter": true,
@@ -212,8 +217,7 @@
             "pixel",
             "smooth"
           ],
-          "volume": true,
-          "contentLoading": "PRELOAD_ONLY"
+          "volume": true
         },
         "checkpoint": {
           "maxBytes": 4194380,
@@ -242,11 +246,13 @@
       },
       {
         "assetPaths": [
+          "assets/content-io/worker.mjs",
           "assets/ruffle/core.ruffle.js",
           "assets/ruffle/ruffle.js",
           "assets/ruffle/ruffle.wasm"
         ],
         "capabilities": {
+          "contentLoading": "PRELOAD_ONLY",
           "checkpoint": true,
           "discSwitch": false,
           "frameCounter": false,
@@ -262,8 +268,7 @@
             "pixel",
             "smooth"
           ],
-          "volume": true,
-          "contentLoading": "PRELOAD_ONLY"
+          "volume": true
         },
         "checkpoint": {
           "maxBytes": 8388608,
@@ -293,11 +298,13 @@
       },
       {
         "assetPaths": [
+          "assets/content-io/worker.mjs",
           "assets/gbe_plus/gbe-pokemini-register.mjs",
           "assets/gbe_plus/gbe-pokemini.mjs",
           "assets/gbe_plus/gbe-pokemini.wasm"
         ],
         "capabilities": {
+          "contentLoading": "PRELOAD_ONLY",
           "checkpoint": true,
           "discSwitch": false,
           "frameCounter": true,
@@ -313,8 +320,7 @@
             "pixel",
             "smooth"
           ],
-          "volume": true,
-          "contentLoading": "PRELOAD_ONLY"
+          "volume": true
         },
         "checkpoint": {
           "maxBytes": 1048576,
@@ -324,7 +330,7 @@
           ],
           "writeFormat": "gbe-pokemini-state-v1-storage-v1"
         },
-        "displayName": "Pok\u00e9mon Mini (GBE+)",
+        "displayName": "Pokémon Mini (GBE+)",
         "id": "gbe-pokemini",
         "inputs": [
           {
@@ -404,12 +410,14 @@
       },
       {
         "assetPaths": [
+          "assets/content-io/worker.mjs",
           "assets/kirikiri/assets.zip",
           "assets/kirikiri/index.js",
           "assets/kirikiri/index.wasm",
           "assets/kirikiri/vlfs.js"
         ],
         "capabilities": {
+          "contentLoading": "ON_DEMAND_AND_PRELOAD",
           "checkpoint": true,
           "discSwitch": false,
           "frameCounter": false,
@@ -425,8 +433,7 @@
             "pixel",
             "smooth"
           ],
-          "volume": false,
-          "contentLoading": "ON_DEMAND_AND_PRELOAD"
+          "volume": false
         },
         "checkpoint": {
           "maxBytes": 67108864,
@@ -466,14 +473,15 @@
       },
       {
         "assetPaths": [
+          "assets/content-io/worker.mjs",
           "assets/mame/mame-apple.wasm",
           "assets/mame/mame-build.json",
           "assets/mame/mame-common.mjs",
           "assets/mame/mame-common.wasm"
         ],
         "capabilities": {
-          "checkpoint": true,
           "contentLoading": "PRELOAD_ONLY",
+          "checkpoint": true,
           "discSwitch": false,
           "frameCounter": true,
           "frameMode": "SAME_ORIGIN_BLANK",
@@ -523,14 +531,15 @@
       },
       {
         "assetPaths": [
+          "assets/content-io/worker.mjs",
           "assets/mame/mame-apple.wasm",
           "assets/mame/mame-build.json",
           "assets/mame/mame-common.mjs",
           "assets/mame/mame-common.wasm"
         ],
         "capabilities": {
-          "checkpoint": true,
           "contentLoading": "PRELOAD_ONLY",
+          "checkpoint": true,
           "discSwitch": false,
           "frameCounter": true,
           "frameMode": "SAME_ORIGIN_BLANK",
@@ -580,6 +589,7 @@
       },
       {
         "assetPaths": [
+          "assets/content-io/worker.mjs",
           "assets/mame/mame-arcade_alliedleisure.wasm",
           "assets/mame/mame-arcade_alpha.wasm",
           "assets/mame/mame-arcade_arcadia.wasm",
@@ -669,8 +679,8 @@
           "assets/mame/mame-pacman.wasm"
         ],
         "capabilities": {
-          "checkpoint": true,
           "contentLoading": "PRELOAD_ONLY",
+          "checkpoint": true,
           "discSwitch": false,
           "frameCounter": true,
           "frameMode": "SAME_ORIGIN_BLANK",
@@ -740,14 +750,15 @@
       },
       {
         "assetPaths": [
+          "assets/content-io/worker.mjs",
           "assets/mame/mame-acorn.wasm",
           "assets/mame/mame-build.json",
           "assets/mame/mame-common.mjs",
           "assets/mame/mame-common.wasm"
         ],
         "capabilities": {
-          "checkpoint": true,
           "contentLoading": "PRELOAD_ONLY",
+          "checkpoint": true,
           "discSwitch": false,
           "frameCounter": true,
           "frameMode": "SAME_ORIGIN_BLANK",
@@ -797,14 +808,15 @@
       },
       {
         "assetPaths": [
-          "assets/mame/mame-coleco.wasm",
+          "assets/content-io/worker.mjs",
           "assets/mame/mame-build.json",
+          "assets/mame/mame-coleco.wasm",
           "assets/mame/mame-common.mjs",
           "assets/mame/mame-common.wasm"
         ],
         "capabilities": {
-          "checkpoint": true,
           "contentLoading": "PRELOAD_ONLY",
+          "checkpoint": true,
           "discSwitch": false,
           "frameCounter": true,
           "frameMode": "SAME_ORIGIN_BLANK",
@@ -854,14 +866,15 @@
       },
       {
         "assetPaths": [
+          "assets/content-io/worker.mjs",
           "assets/mame/mame-build.json",
           "assets/mame/mame-common.mjs",
           "assets/mame/mame-common.wasm",
           "assets/mame/mame-vintage.wasm"
         ],
         "capabilities": {
-          "checkpoint": true,
           "contentLoading": "PRELOAD_ONLY",
+          "checkpoint": true,
           "discSwitch": false,
           "frameCounter": true,
           "frameMode": "SAME_ORIGIN_BLANK",
@@ -905,14 +918,15 @@
       },
       {
         "assetPaths": [
+          "assets/content-io/worker.mjs",
           "assets/mame/mame-build.json",
           "assets/mame/mame-common.mjs",
           "assets/mame/mame-common.wasm",
           "assets/mame/mame-sg1000.wasm"
         ],
         "capabilities": {
-          "checkpoint": true,
           "contentLoading": "PRELOAD_ONLY",
+          "checkpoint": true,
           "discSwitch": false,
           "frameCounter": true,
           "frameMode": "SAME_ORIGIN_BLANK",
@@ -956,9 +970,11 @@
       },
       {
         "assetPaths": [
+          "assets/content-io/worker.mjs",
           "assets/webmsx/webmsx.js"
         ],
         "capabilities": {
+          "contentLoading": "PRELOAD_ONLY",
           "checkpoint": true,
           "discSwitch": false,
           "frameCounter": false,
@@ -974,8 +990,7 @@
             "pixel",
             "smooth"
           ],
-          "volume": false,
-          "contentLoading": "PRELOAD_ONLY"
+          "volume": false
         },
         "checkpoint": {
           "maxBytes": 33554432,
@@ -1004,12 +1019,14 @@
       },
       {
         "assetPaths": [
+          "assets/content-io/worker.mjs",
           "assets/np2kai/font.bmp",
           "assets/np2kai/np2kai-register.mjs",
           "assets/np2kai/np2kai.mjs",
           "assets/np2kai/np2kai.wasm"
         ],
         "capabilities": {
+          "contentLoading": "PRELOAD_ONLY",
           "checkpoint": true,
           "discSwitch": false,
           "frameCounter": true,
@@ -1025,8 +1042,7 @@
             "pixel",
             "smooth"
           ],
-          "volume": false,
-          "contentLoading": "PRELOAD_ONLY"
+          "volume": false
         },
         "checkpoint": {
           "maxBytes": 402653184,
@@ -1055,10 +1071,12 @@
       },
       {
         "assetPaths": [
+          "assets/content-io/worker.mjs",
           "assets/nxengine/nxengine-retrom.mjs",
           "assets/nxengine/nxengine-retrom.wasm"
         ],
         "capabilities": {
+          "contentLoading": "PRELOAD_ONLY",
           "checkpoint": true,
           "discSwitch": false,
           "frameCounter": true,
@@ -1074,8 +1092,7 @@
             "pixel",
             "smooth"
           ],
-          "volume": true,
-          "contentLoading": "PRELOAD_ONLY"
+          "volume": true
         },
         "checkpoint": {
           "maxBytes": 16384,
@@ -1105,10 +1122,12 @@
       },
       {
         "assetPaths": [
+          "assets/content-io/worker.mjs",
           "assets/ons/onsyuri.js",
           "assets/ons/onsyuri.wasm"
         ],
         "capabilities": {
+          "contentLoading": "ON_DEMAND_AND_PRELOAD",
           "checkpoint": true,
           "discSwitch": false,
           "frameCounter": false,
@@ -1124,8 +1143,7 @@
             "pixel",
             "smooth"
           ],
-          "volume": false,
-          "contentLoading": "ON_DEMAND_AND_PRELOAD"
+          "volume": false
         },
         "checkpoint": {
           "maxBytes": 67108864,
@@ -1165,10 +1183,12 @@
       },
       {
         "assetPaths": [
+          "assets/content-io/worker.mjs",
           "assets/openbor/openbor.mjs",
           "assets/openbor/openbor.wasm"
         ],
         "capabilities": {
+          "contentLoading": "PRELOAD_ONLY",
           "checkpoint": true,
           "discSwitch": false,
           "frameCounter": true,
@@ -1184,8 +1204,7 @@
             "pixel",
             "smooth"
           ],
-          "volume": false,
-          "contentLoading": "PRELOAD_ONLY"
+          "volume": false
         },
         "checkpoint": {
           "maxBytes": 16777216,
@@ -1215,14 +1234,16 @@
       },
       {
         "assetPaths": [
+          "assets/content-io/worker.mjs",
           "assets/play/Play.js",
           "assets/play/Play.wasm",
           "assets/play/checkpoint.mjs",
+          "assets/play/disc-device.mjs",
           "assets/play/input.mjs",
-          "assets/play/play-retrom.mjs",
-          "assets/play/range-device.mjs"
+          "assets/play/play-retrom.mjs"
         ],
         "capabilities": {
+          "contentLoading": "ON_DEMAND_AND_PRELOAD",
           "checkpoint": true,
           "discSwitch": false,
           "frameCounter": true,
@@ -1238,8 +1259,7 @@
             "pixel",
             "smooth"
           ],
-          "volume": false,
-          "contentLoading": "ON_DEMAND_AND_PRELOAD"
+          "volume": false
         },
         "checkpoint": {
           "maxBytes": 268435456,
@@ -1268,14 +1288,16 @@
       },
       {
         "assetPaths": [
+          "assets/content-io/sync-client.mjs",
+          "assets/content-io/worker.mjs",
           "assets/ppsspp/ppsspp-host.mjs",
-          "assets/ppsspp/ppsspp-io.worker.mjs",
           "assets/ppsspp/ppsspp.data",
           "assets/ppsspp/ppsspp.js",
           "assets/ppsspp/ppsspp.wasm",
           "assets/ppsspp/ppsspp.worker.mjs"
         ],
         "capabilities": {
+          "contentLoading": "ON_DEMAND_AND_PRELOAD",
           "checkpoint": true,
           "discSwitch": false,
           "frameCounter": true,
@@ -1291,8 +1313,7 @@
             "pixel",
             "smooth"
           ],
-          "volume": true,
-          "contentLoading": "ON_DEMAND_AND_PRELOAD"
+          "volume": true
         },
         "checkpoint": {
           "maxBytes": 268435456,
@@ -1321,10 +1342,12 @@
       },
       {
         "assetPaths": [
+          "assets/content-io/worker.mjs",
           "assets/px68k/px68k-retrom.mjs",
           "assets/px68k/px68k-retrom.wasm"
         ],
         "capabilities": {
+          "contentLoading": "PRELOAD_ONLY",
           "checkpoint": true,
           "discSwitch": false,
           "frameCounter": true,
@@ -1340,8 +1363,7 @@
             "pixel",
             "smooth"
           ],
-          "volume": true,
-          "contentLoading": "PRELOAD_ONLY"
+          "volume": true
         },
         "checkpoint": {
           "maxBytes": 100663296,
@@ -1484,9 +1506,11 @@
       },
       {
         "assetPaths": [
+          "assets/content-io/worker.mjs",
           "assets/native/bridge.js"
         ],
         "capabilities": {
+          "contentLoading": "ON_DEMAND_AND_PRELOAD",
           "checkpoint": true,
           "discSwitch": false,
           "frameCounter": true,
@@ -1502,8 +1526,7 @@
             "pixel",
             "smooth"
           ],
-          "volume": true,
-          "contentLoading": "ON_DEMAND_AND_PRELOAD"
+          "volume": true
         },
         "checkpoint": {
           "maxBytes": 67108864,
@@ -1532,9 +1555,11 @@
       },
       {
         "assetPaths": [
+          "assets/content-io/worker.mjs",
           "assets/native/bridge.js"
         ],
         "capabilities": {
+          "contentLoading": "ON_DEMAND_AND_PRELOAD",
           "checkpoint": true,
           "discSwitch": false,
           "frameCounter": true,
@@ -1550,8 +1575,7 @@
             "pixel",
             "smooth"
           ],
-          "volume": true,
-          "contentLoading": "ON_DEMAND_AND_PRELOAD"
+          "volume": true
         },
         "checkpoint": {
           "maxBytes": 67108864,
@@ -1580,10 +1604,12 @@
       },
       {
         "assetPaths": [
+          "assets/content-io/worker.mjs",
           "assets/mkxp/mkxp-z_libretro.js",
           "assets/mkxp/mkxp-z_libretro.wasm"
         ],
         "capabilities": {
+          "contentLoading": "ON_DEMAND_AND_PRELOAD",
           "checkpoint": true,
           "discSwitch": false,
           "frameCounter": true,
@@ -1599,8 +1625,7 @@
             "pixel",
             "smooth"
           ],
-          "volume": false,
-          "contentLoading": "ON_DEMAND_AND_PRELOAD"
+          "volume": false
         },
         "checkpoint": {
           "maxBytes": 268435456,
@@ -1636,10 +1661,12 @@
       },
       {
         "assetPaths": [
+          "assets/content-io/worker.mjs",
           "assets/mkxp/mkxp-z_libretro.js",
           "assets/mkxp/mkxp-z_libretro.wasm"
         ],
         "capabilities": {
+          "contentLoading": "ON_DEMAND_AND_PRELOAD",
           "checkpoint": true,
           "discSwitch": false,
           "frameCounter": true,
@@ -1655,8 +1682,7 @@
             "pixel",
             "smooth"
           ],
-          "volume": false,
-          "contentLoading": "ON_DEMAND_AND_PRELOAD"
+          "volume": false
         },
         "checkpoint": {
           "maxBytes": 268435456,
@@ -1692,10 +1718,12 @@
       },
       {
         "assetPaths": [
+          "assets/content-io/worker.mjs",
           "assets/mkxp/mkxp-z_libretro.js",
           "assets/mkxp/mkxp-z_libretro.wasm"
         ],
         "capabilities": {
+          "contentLoading": "ON_DEMAND_AND_PRELOAD",
           "checkpoint": true,
           "discSwitch": false,
           "frameCounter": true,
@@ -1711,8 +1739,7 @@
             "pixel",
             "smooth"
           ],
-          "volume": false,
-          "contentLoading": "ON_DEMAND_AND_PRELOAD"
+          "volume": false
         },
         "checkpoint": {
           "maxBytes": 268435456,
@@ -1748,11 +1775,13 @@
       },
       {
         "assetPaths": [
+          "assets/content-io/worker.mjs",
           "assets/samcoupeweb/samcoupeweb.data",
           "assets/samcoupeweb/samcoupeweb.js",
           "assets/samcoupeweb/samcoupeweb.wasm"
         ],
         "capabilities": {
+          "contentLoading": "PRELOAD_ONLY",
           "checkpoint": true,
           "discSwitch": false,
           "frameCounter": false,
@@ -1768,8 +1797,7 @@
             "pixel",
             "smooth"
           ],
-          "volume": false,
-          "contentLoading": "PRELOAD_ONLY"
+          "volume": false
         },
         "checkpoint": {
           "maxBytes": 17825792,
@@ -1780,7 +1808,7 @@
           "writeFormat": "samcoupe-disk-save-v1-storage-v1",
           "semantics": "GAME_SAVE"
         },
-        "displayName": "SAM Coup\u00e9 (SamCoupeWeb)",
+        "displayName": "SAM Coupé (SamCoupeWeb)",
         "id": "samcoupe",
         "inputs": [
           {
@@ -1805,6 +1833,7 @@
       },
       {
         "assetPaths": [
+          "assets/content-io/worker.mjs",
           "assets/scummvm/data/access.dat",
           "assets/scummvm/data/achievements.dat",
           "assets/scummvm/data/bagel.dat",
@@ -2110,6 +2139,7 @@
           "assets/scummvm/scummvm.wasm"
         ],
         "capabilities": {
+          "contentLoading": "ON_DEMAND_AND_PRELOAD",
           "checkpoint": true,
           "discSwitch": false,
           "frameCounter": false,
@@ -2125,8 +2155,7 @@
             "pixel",
             "smooth"
           ],
-          "volume": false,
-          "contentLoading": "ON_DEMAND_AND_PRELOAD"
+          "volume": false
         },
         "checkpoint": {
           "maxBytes": 67108864,
@@ -2204,10 +2233,12 @@
       },
       {
         "assetPaths": [
+          "assets/content-io/worker.mjs",
           "assets/tic80/tic80-retrom.mjs",
           "assets/tic80/tic80-retrom.wasm"
         ],
         "capabilities": {
+          "contentLoading": "PRELOAD_ONLY",
           "checkpoint": true,
           "discSwitch": false,
           "frameCounter": true,
@@ -2223,8 +2254,7 @@
             "pixel",
             "smooth"
           ],
-          "volume": true,
-          "contentLoading": "PRELOAD_ONLY"
+          "volume": true
         },
         "checkpoint": {
           "maxBytes": 1100,
@@ -2254,9 +2284,11 @@
       },
       {
         "assetPaths": [
+          "assets/content-io/worker.mjs",
           "assets/tyranoscript/bridge.js"
         ],
         "capabilities": {
+          "contentLoading": "ON_DEMAND_AND_PRELOAD",
           "checkpoint": true,
           "discSwitch": false,
           "frameCounter": true,
@@ -2272,8 +2304,7 @@
             "pixel",
             "smooth"
           ],
-          "volume": true,
-          "contentLoading": "ON_DEMAND_AND_PRELOAD"
+          "volume": true
         },
         "checkpoint": {
           "maxBytes": 33554432,
@@ -2302,9 +2333,11 @@
       },
       {
         "assetPaths": [
+          "assets/content-io/worker.mjs",
           "assets/wasm4/wasm4-retrom.mjs"
         ],
         "capabilities": {
+          "contentLoading": "PRELOAD_ONLY",
           "checkpoint": true,
           "discSwitch": false,
           "frameCounter": true,
@@ -2320,8 +2353,7 @@
             "pixel",
             "smooth"
           ],
-          "volume": false,
-          "contentLoading": "PRELOAD_ONLY"
+          "volume": false
         },
         "checkpoint": {
           "maxBytes": 132144,
@@ -2354,7 +2386,7 @@
     "clientModulePath": "client.mjs",
     "providerApiVersion": 1,
     "providerId": "emulatorjs",
-    "providerVersion": "2.20.0",
+    "providerVersion": "0.0.0-dev",
     "schemaVersion": 1,
     "targets": [
       {
@@ -2379,9 +2411,11 @@
           "assets/4.2.3/data/src/nipplejs.js",
           "assets/4.2.3/data/src/shaders.js",
           "assets/4.2.3/data/src/socket.io.min.js",
-          "assets/4.2.3/data/src/storage.js"
+          "assets/4.2.3/data/src/storage.js",
+          "assets/content-io/worker.mjs"
         ],
         "capabilities": {
+          "contentLoading": "PRELOAD_ONLY",
           "checkpoint": true,
           "discSwitch": false,
           "frameCounter": true,
@@ -2491,9 +2525,11 @@
           "assets/4.2.3/data/src/nipplejs.js",
           "assets/4.2.3/data/src/shaders.js",
           "assets/4.2.3/data/src/socket.io.min.js",
-          "assets/4.2.3/data/src/storage.js"
+          "assets/4.2.3/data/src/storage.js",
+          "assets/content-io/worker.mjs"
         ],
         "capabilities": {
+          "contentLoading": "PRELOAD_ONLY",
           "checkpoint": true,
           "discSwitch": false,
           "frameCounter": true,
@@ -2603,9 +2639,11 @@
           "assets/4.2.3/data/src/nipplejs.js",
           "assets/4.2.3/data/src/shaders.js",
           "assets/4.2.3/data/src/socket.io.min.js",
-          "assets/4.2.3/data/src/storage.js"
+          "assets/4.2.3/data/src/storage.js",
+          "assets/content-io/worker.mjs"
         ],
         "capabilities": {
+          "contentLoading": "PRELOAD_ONLY",
           "checkpoint": true,
           "discSwitch": false,
           "frameCounter": true,
@@ -2715,9 +2753,11 @@
           "assets/4.2.3/data/src/nipplejs.js",
           "assets/4.2.3/data/src/shaders.js",
           "assets/4.2.3/data/src/socket.io.min.js",
-          "assets/4.2.3/data/src/storage.js"
+          "assets/4.2.3/data/src/storage.js",
+          "assets/content-io/worker.mjs"
         ],
         "capabilities": {
+          "contentLoading": "PRELOAD_ONLY",
           "checkpoint": true,
           "discSwitch": false,
           "frameCounter": true,
@@ -2827,9 +2867,11 @@
           "assets/4.2.3/data/src/nipplejs.js",
           "assets/4.2.3/data/src/shaders.js",
           "assets/4.2.3/data/src/socket.io.min.js",
-          "assets/4.2.3/data/src/storage.js"
+          "assets/4.2.3/data/src/storage.js",
+          "assets/content-io/worker.mjs"
         ],
         "capabilities": {
+          "contentLoading": "PRELOAD_ONLY",
           "checkpoint": true,
           "discSwitch": false,
           "frameCounter": true,
@@ -2942,9 +2984,11 @@
           "assets/4.3.0-pre/data/src/storage.js",
           "assets/4.3.0-pre/data/src/utils.js",
           "assets/4.3.0-pre/data/src/vendor/nipplejs.js",
-          "assets/4.3.0-pre/data/src/vendor/socket.io.min.js"
+          "assets/4.3.0-pre/data/src/vendor/socket.io.min.js",
+          "assets/content-io/worker.mjs"
         ],
         "capabilities": {
+          "contentLoading": "PRELOAD_ONLY",
           "checkpoint": true,
           "discSwitch": false,
           "frameCounter": true,
@@ -3054,9 +3098,11 @@
           "assets/4.2.3/data/src/nipplejs.js",
           "assets/4.2.3/data/src/shaders.js",
           "assets/4.2.3/data/src/socket.io.min.js",
-          "assets/4.2.3/data/src/storage.js"
+          "assets/4.2.3/data/src/storage.js",
+          "assets/content-io/worker.mjs"
         ],
         "capabilities": {
+          "contentLoading": "PRELOAD_ONLY",
           "checkpoint": true,
           "discSwitch": false,
           "frameCounter": true,
@@ -3169,9 +3215,11 @@
           "assets/4.3.0-pre/data/src/storage.js",
           "assets/4.3.0-pre/data/src/utils.js",
           "assets/4.3.0-pre/data/src/vendor/nipplejs.js",
-          "assets/4.3.0-pre/data/src/vendor/socket.io.min.js"
+          "assets/4.3.0-pre/data/src/vendor/socket.io.min.js",
+          "assets/content-io/worker.mjs"
         ],
         "capabilities": {
+          "contentLoading": "PRELOAD_ONLY",
           "checkpoint": true,
           "discSwitch": false,
           "frameCounter": true,
@@ -3281,9 +3329,11 @@
           "assets/4.2.3/data/src/nipplejs.js",
           "assets/4.2.3/data/src/shaders.js",
           "assets/4.2.3/data/src/socket.io.min.js",
-          "assets/4.2.3/data/src/storage.js"
+          "assets/4.2.3/data/src/storage.js",
+          "assets/content-io/worker.mjs"
         ],
         "capabilities": {
+          "contentLoading": "PRELOAD_ONLY",
           "checkpoint": true,
           "discSwitch": false,
           "frameCounter": true,
@@ -3393,9 +3443,11 @@
           "assets/4.2.3/data/src/nipplejs.js",
           "assets/4.2.3/data/src/shaders.js",
           "assets/4.2.3/data/src/socket.io.min.js",
-          "assets/4.2.3/data/src/storage.js"
+          "assets/4.2.3/data/src/storage.js",
+          "assets/content-io/worker.mjs"
         ],
         "capabilities": {
+          "contentLoading": "PRELOAD_ONLY",
           "checkpoint": true,
           "discSwitch": false,
           "frameCounter": true,
@@ -3506,9 +3558,11 @@
           "assets/4.2.3/data/src/nipplejs.js",
           "assets/4.2.3/data/src/shaders.js",
           "assets/4.2.3/data/src/socket.io.min.js",
-          "assets/4.2.3/data/src/storage.js"
+          "assets/4.2.3/data/src/storage.js",
+          "assets/content-io/worker.mjs"
         ],
         "capabilities": {
+          "contentLoading": "ON_DEMAND_AND_PRELOAD",
           "checkpoint": false,
           "discSwitch": false,
           "frameCounter": true,
@@ -3523,8 +3577,7 @@
             "original",
             "pixel"
           ],
-          "volume": true,
-          "contentLoading": "ON_DEMAND_AND_PRELOAD"
+          "volume": true
         },
         "checkpoint": null,
         "displayName": "Daphne",
@@ -3609,9 +3662,11 @@
           "assets/4.2.3/data/src/nipplejs.js",
           "assets/4.2.3/data/src/shaders.js",
           "assets/4.2.3/data/src/socket.io.min.js",
-          "assets/4.2.3/data/src/storage.js"
+          "assets/4.2.3/data/src/storage.js",
+          "assets/content-io/worker.mjs"
         ],
         "capabilities": {
+          "contentLoading": "PRELOAD_ONLY",
           "checkpoint": true,
           "discSwitch": false,
           "frameCounter": true,
@@ -3721,9 +3776,11 @@
           "assets/4.2.3/data/src/nipplejs.js",
           "assets/4.2.3/data/src/shaders.js",
           "assets/4.2.3/data/src/socket.io.min.js",
-          "assets/4.2.3/data/src/storage.js"
+          "assets/4.2.3/data/src/storage.js",
+          "assets/content-io/worker.mjs"
         ],
         "capabilities": {
+          "contentLoading": "PRELOAD_ONLY",
           "checkpoint": true,
           "discSwitch": false,
           "frameCounter": true,
@@ -3836,9 +3893,11 @@
           "assets/4.3.0-pre/data/src/storage.js",
           "assets/4.3.0-pre/data/src/utils.js",
           "assets/4.3.0-pre/data/src/vendor/nipplejs.js",
-          "assets/4.3.0-pre/data/src/vendor/socket.io.min.js"
+          "assets/4.3.0-pre/data/src/vendor/socket.io.min.js",
+          "assets/content-io/worker.mjs"
         ],
         "capabilities": {
+          "contentLoading": "ON_DEMAND_AND_PRELOAD",
           "checkpoint": true,
           "discSwitch": false,
           "frameCounter": true,
@@ -3853,8 +3912,7 @@
             "original",
             "pixel"
           ],
-          "volume": true,
-          "contentLoading": "ON_DEMAND_AND_PRELOAD"
+          "volume": true
         },
         "checkpoint": {
           "maxBytes": 268435456,
@@ -3946,9 +4004,11 @@
           "assets/4.2.3/data/src/nipplejs.js",
           "assets/4.2.3/data/src/shaders.js",
           "assets/4.2.3/data/src/socket.io.min.js",
-          "assets/4.2.3/data/src/storage.js"
+          "assets/4.2.3/data/src/storage.js",
+          "assets/content-io/worker.mjs"
         ],
         "capabilities": {
+          "contentLoading": "PRELOAD_ONLY",
           "checkpoint": true,
           "discSwitch": false,
           "frameCounter": true,
@@ -4058,9 +4118,11 @@
           "assets/4.2.3/data/src/nipplejs.js",
           "assets/4.2.3/data/src/shaders.js",
           "assets/4.2.3/data/src/socket.io.min.js",
-          "assets/4.2.3/data/src/storage.js"
+          "assets/4.2.3/data/src/storage.js",
+          "assets/content-io/worker.mjs"
         ],
         "capabilities": {
+          "contentLoading": "PRELOAD_ONLY",
           "checkpoint": true,
           "discSwitch": false,
           "frameCounter": true,
@@ -4170,9 +4232,11 @@
           "assets/4.2.3/data/src/nipplejs.js",
           "assets/4.2.3/data/src/shaders.js",
           "assets/4.2.3/data/src/socket.io.min.js",
-          "assets/4.2.3/data/src/storage.js"
+          "assets/4.2.3/data/src/storage.js",
+          "assets/content-io/worker.mjs"
         ],
         "capabilities": {
+          "contentLoading": "PRELOAD_ONLY",
           "checkpoint": true,
           "discSwitch": false,
           "frameCounter": true,
@@ -4282,9 +4346,11 @@
           "assets/4.2.3/data/src/nipplejs.js",
           "assets/4.2.3/data/src/shaders.js",
           "assets/4.2.3/data/src/socket.io.min.js",
-          "assets/4.2.3/data/src/storage.js"
+          "assets/4.2.3/data/src/storage.js",
+          "assets/content-io/worker.mjs"
         ],
         "capabilities": {
+          "contentLoading": "PRELOAD_ONLY",
           "checkpoint": true,
           "discSwitch": false,
           "frameCounter": true,
@@ -4394,9 +4460,11 @@
           "assets/4.2.3/data/src/nipplejs.js",
           "assets/4.2.3/data/src/shaders.js",
           "assets/4.2.3/data/src/socket.io.min.js",
-          "assets/4.2.3/data/src/storage.js"
+          "assets/4.2.3/data/src/storage.js",
+          "assets/content-io/worker.mjs"
         ],
         "capabilities": {
+          "contentLoading": "ON_DEMAND_AND_PRELOAD",
           "checkpoint": true,
           "discSwitch": false,
           "frameCounter": true,
@@ -4414,8 +4482,7 @@
             "sharp-bilinear",
             "smooth"
           ],
-          "volume": true,
-          "contentLoading": "ON_DEMAND_AND_PRELOAD"
+          "volume": true
         },
         "checkpoint": {
           "maxBytes": 268435456,
@@ -4508,9 +4575,11 @@
           "assets/4.2.3/data/src/nipplejs.js",
           "assets/4.2.3/data/src/shaders.js",
           "assets/4.2.3/data/src/socket.io.min.js",
-          "assets/4.2.3/data/src/storage.js"
+          "assets/4.2.3/data/src/storage.js",
+          "assets/content-io/worker.mjs"
         ],
         "capabilities": {
+          "contentLoading": "ON_DEMAND_AND_PRELOAD",
           "checkpoint": true,
           "discSwitch": false,
           "frameCounter": true,
@@ -4528,8 +4597,7 @@
             "sharp-bilinear",
             "smooth"
           ],
-          "volume": true,
-          "contentLoading": "ON_DEMAND_AND_PRELOAD"
+          "volume": true
         },
         "checkpoint": {
           "maxBytes": 268435456,
@@ -4622,9 +4690,11 @@
           "assets/4.2.3/data/src/nipplejs.js",
           "assets/4.2.3/data/src/shaders.js",
           "assets/4.2.3/data/src/socket.io.min.js",
-          "assets/4.2.3/data/src/storage.js"
+          "assets/4.2.3/data/src/storage.js",
+          "assets/content-io/worker.mjs"
         ],
         "capabilities": {
+          "contentLoading": "ON_DEMAND_AND_PRELOAD",
           "checkpoint": true,
           "discSwitch": false,
           "frameCounter": true,
@@ -4642,8 +4712,7 @@
             "sharp-bilinear",
             "smooth"
           ],
-          "volume": true,
-          "contentLoading": "ON_DEMAND_AND_PRELOAD"
+          "volume": true
         },
         "checkpoint": {
           "maxBytes": 268435456,
@@ -4736,9 +4805,11 @@
           "assets/4.2.3/data/src/nipplejs.js",
           "assets/4.2.3/data/src/shaders.js",
           "assets/4.2.3/data/src/socket.io.min.js",
-          "assets/4.2.3/data/src/storage.js"
+          "assets/4.2.3/data/src/storage.js",
+          "assets/content-io/worker.mjs"
         ],
         "capabilities": {
+          "contentLoading": "ON_DEMAND_AND_PRELOAD",
           "checkpoint": true,
           "discSwitch": false,
           "frameCounter": true,
@@ -4756,8 +4827,7 @@
             "sharp-bilinear",
             "smooth"
           ],
-          "volume": true,
-          "contentLoading": "ON_DEMAND_AND_PRELOAD"
+          "volume": true
         },
         "checkpoint": {
           "maxBytes": 268435456,
@@ -4850,9 +4920,11 @@
           "assets/4.2.3/data/src/nipplejs.js",
           "assets/4.2.3/data/src/shaders.js",
           "assets/4.2.3/data/src/socket.io.min.js",
-          "assets/4.2.3/data/src/storage.js"
+          "assets/4.2.3/data/src/storage.js",
+          "assets/content-io/worker.mjs"
         ],
         "capabilities": {
+          "contentLoading": "PRELOAD_ONLY",
           "checkpoint": true,
           "discSwitch": false,
           "frameCounter": true,
@@ -4965,9 +5037,11 @@
           "assets/4.3.0-pre/data/src/storage.js",
           "assets/4.3.0-pre/data/src/utils.js",
           "assets/4.3.0-pre/data/src/vendor/nipplejs.js",
-          "assets/4.3.0-pre/data/src/vendor/socket.io.min.js"
+          "assets/4.3.0-pre/data/src/vendor/socket.io.min.js",
+          "assets/content-io/worker.mjs"
         ],
         "capabilities": {
+          "contentLoading": "PRELOAD_ONLY",
           "checkpoint": true,
           "discSwitch": false,
           "frameCounter": true,
@@ -5077,9 +5151,11 @@
           "assets/4.2.3/data/src/nipplejs.js",
           "assets/4.2.3/data/src/shaders.js",
           "assets/4.2.3/data/src/socket.io.min.js",
-          "assets/4.2.3/data/src/storage.js"
+          "assets/4.2.3/data/src/storage.js",
+          "assets/content-io/worker.mjs"
         ],
         "capabilities": {
+          "contentLoading": "PRELOAD_ONLY",
           "checkpoint": true,
           "discSwitch": false,
           "frameCounter": true,
@@ -5189,9 +5265,11 @@
           "assets/4.2.3/data/src/nipplejs.js",
           "assets/4.2.3/data/src/shaders.js",
           "assets/4.2.3/data/src/socket.io.min.js",
-          "assets/4.2.3/data/src/storage.js"
+          "assets/4.2.3/data/src/storage.js",
+          "assets/content-io/worker.mjs"
         ],
         "capabilities": {
+          "contentLoading": "PRELOAD_ONLY",
           "checkpoint": true,
           "discSwitch": false,
           "frameCounter": true,
@@ -5303,9 +5381,11 @@
           "assets/4.2.3/data/src/nipplejs.js",
           "assets/4.2.3/data/src/shaders.js",
           "assets/4.2.3/data/src/socket.io.min.js",
-          "assets/4.2.3/data/src/storage.js"
+          "assets/4.2.3/data/src/storage.js",
+          "assets/content-io/worker.mjs"
         ],
         "capabilities": {
+          "contentLoading": "PRELOAD_ONLY",
           "checkpoint": true,
           "discSwitch": false,
           "frameCounter": true,
@@ -5415,9 +5495,11 @@
           "assets/4.2.3/data/src/nipplejs.js",
           "assets/4.2.3/data/src/shaders.js",
           "assets/4.2.3/data/src/socket.io.min.js",
-          "assets/4.2.3/data/src/storage.js"
+          "assets/4.2.3/data/src/storage.js",
+          "assets/content-io/worker.mjs"
         ],
         "capabilities": {
+          "contentLoading": "PRELOAD_ONLY",
           "checkpoint": true,
           "discSwitch": false,
           "frameCounter": true,
@@ -5527,9 +5609,11 @@
           "assets/4.2.3/data/src/nipplejs.js",
           "assets/4.2.3/data/src/shaders.js",
           "assets/4.2.3/data/src/socket.io.min.js",
-          "assets/4.2.3/data/src/storage.js"
+          "assets/4.2.3/data/src/storage.js",
+          "assets/content-io/worker.mjs"
         ],
         "capabilities": {
+          "contentLoading": "PRELOAD_ONLY",
           "checkpoint": true,
           "discSwitch": false,
           "frameCounter": true,
@@ -5639,9 +5723,11 @@
           "assets/4.2.3/data/src/nipplejs.js",
           "assets/4.2.3/data/src/shaders.js",
           "assets/4.2.3/data/src/socket.io.min.js",
-          "assets/4.2.3/data/src/storage.js"
+          "assets/4.2.3/data/src/storage.js",
+          "assets/content-io/worker.mjs"
         ],
         "capabilities": {
+          "contentLoading": "PRELOAD_ONLY",
           "checkpoint": true,
           "discSwitch": false,
           "frameCounter": true,
@@ -5751,9 +5837,11 @@
           "assets/4.2.3/data/src/nipplejs.js",
           "assets/4.2.3/data/src/shaders.js",
           "assets/4.2.3/data/src/socket.io.min.js",
-          "assets/4.2.3/data/src/storage.js"
+          "assets/4.2.3/data/src/storage.js",
+          "assets/content-io/worker.mjs"
         ],
         "capabilities": {
+          "contentLoading": "ON_DEMAND_AND_PRELOAD",
           "checkpoint": true,
           "discSwitch": false,
           "frameCounter": true,
@@ -5771,8 +5859,7 @@
             "sharp-bilinear",
             "smooth"
           ],
-          "volume": true,
-          "contentLoading": "ON_DEMAND_AND_PRELOAD"
+          "volume": true
         },
         "checkpoint": {
           "maxBytes": 268435456,
@@ -5867,9 +5954,11 @@
           "assets/4.3.0-pre/data/src/storage.js",
           "assets/4.3.0-pre/data/src/utils.js",
           "assets/4.3.0-pre/data/src/vendor/nipplejs.js",
-          "assets/4.3.0-pre/data/src/vendor/socket.io.min.js"
+          "assets/4.3.0-pre/data/src/vendor/socket.io.min.js",
+          "assets/content-io/worker.mjs"
         ],
         "capabilities": {
+          "contentLoading": "PRELOAD_ONLY",
           "checkpoint": true,
           "discSwitch": false,
           "frameCounter": true,
@@ -5979,9 +6068,11 @@
           "assets/4.2.3/data/src/nipplejs.js",
           "assets/4.2.3/data/src/shaders.js",
           "assets/4.2.3/data/src/socket.io.min.js",
-          "assets/4.2.3/data/src/storage.js"
+          "assets/4.2.3/data/src/storage.js",
+          "assets/content-io/worker.mjs"
         ],
         "capabilities": {
+          "contentLoading": "PRELOAD_ONLY",
           "checkpoint": true,
           "discSwitch": false,
           "frameCounter": true,
@@ -6091,9 +6182,11 @@
           "assets/4.2.3/data/src/nipplejs.js",
           "assets/4.2.3/data/src/shaders.js",
           "assets/4.2.3/data/src/socket.io.min.js",
-          "assets/4.2.3/data/src/storage.js"
+          "assets/4.2.3/data/src/storage.js",
+          "assets/content-io/worker.mjs"
         ],
         "capabilities": {
+          "contentLoading": "PRELOAD_ONLY",
           "checkpoint": true,
           "discSwitch": false,
           "frameCounter": true,
@@ -6203,9 +6296,11 @@
           "assets/4.2.3/data/src/nipplejs.js",
           "assets/4.2.3/data/src/shaders.js",
           "assets/4.2.3/data/src/socket.io.min.js",
-          "assets/4.2.3/data/src/storage.js"
+          "assets/4.2.3/data/src/storage.js",
+          "assets/content-io/worker.mjs"
         ],
         "capabilities": {
+          "contentLoading": "PRELOAD_ONLY",
           "checkpoint": true,
           "discSwitch": false,
           "frameCounter": true,
@@ -6316,9 +6411,11 @@
           "assets/4.2.3/data/src/nipplejs.js",
           "assets/4.2.3/data/src/shaders.js",
           "assets/4.2.3/data/src/socket.io.min.js",
-          "assets/4.2.3/data/src/storage.js"
+          "assets/4.2.3/data/src/storage.js",
+          "assets/content-io/worker.mjs"
         ],
         "capabilities": {
+          "contentLoading": "PRELOAD_ONLY",
           "checkpoint": true,
           "discSwitch": false,
           "frameCounter": true,
@@ -6428,9 +6525,11 @@
           "assets/4.2.3/data/src/nipplejs.js",
           "assets/4.2.3/data/src/shaders.js",
           "assets/4.2.3/data/src/socket.io.min.js",
-          "assets/4.2.3/data/src/storage.js"
+          "assets/4.2.3/data/src/storage.js",
+          "assets/content-io/worker.mjs"
         ],
         "capabilities": {
+          "contentLoading": "PRELOAD_ONLY",
           "checkpoint": true,
           "discSwitch": false,
           "frameCounter": true,
@@ -6540,9 +6639,11 @@
           "assets/4.2.3/data/src/nipplejs.js",
           "assets/4.2.3/data/src/shaders.js",
           "assets/4.2.3/data/src/socket.io.min.js",
-          "assets/4.2.3/data/src/storage.js"
+          "assets/4.2.3/data/src/storage.js",
+          "assets/content-io/worker.mjs"
         ],
         "capabilities": {
+          "contentLoading": "PRELOAD_ONLY",
           "checkpoint": true,
           "discSwitch": false,
           "frameCounter": true,
@@ -6652,9 +6753,11 @@
           "assets/4.2.3/data/src/nipplejs.js",
           "assets/4.2.3/data/src/shaders.js",
           "assets/4.2.3/data/src/socket.io.min.js",
-          "assets/4.2.3/data/src/storage.js"
+          "assets/4.2.3/data/src/storage.js",
+          "assets/content-io/worker.mjs"
         ],
         "capabilities": {
+          "contentLoading": "PRELOAD_ONLY",
           "checkpoint": true,
           "discSwitch": false,
           "frameCounter": true,
@@ -6764,9 +6867,11 @@
           "assets/4.2.3/data/src/nipplejs.js",
           "assets/4.2.3/data/src/shaders.js",
           "assets/4.2.3/data/src/socket.io.min.js",
-          "assets/4.2.3/data/src/storage.js"
+          "assets/4.2.3/data/src/storage.js",
+          "assets/content-io/worker.mjs"
         ],
         "capabilities": {
+          "contentLoading": "PRELOAD_ONLY",
           "checkpoint": true,
           "discSwitch": false,
           "frameCounter": true,
@@ -6876,9 +6981,11 @@
           "assets/4.2.3/data/src/nipplejs.js",
           "assets/4.2.3/data/src/shaders.js",
           "assets/4.2.3/data/src/socket.io.min.js",
-          "assets/4.2.3/data/src/storage.js"
+          "assets/4.2.3/data/src/storage.js",
+          "assets/content-io/worker.mjs"
         ],
         "capabilities": {
+          "contentLoading": "PRELOAD_ONLY",
           "checkpoint": true,
           "discSwitch": false,
           "frameCounter": true,
@@ -6988,9 +7095,11 @@
           "assets/4.2.3/data/src/nipplejs.js",
           "assets/4.2.3/data/src/shaders.js",
           "assets/4.2.3/data/src/socket.io.min.js",
-          "assets/4.2.3/data/src/storage.js"
+          "assets/4.2.3/data/src/storage.js",
+          "assets/content-io/worker.mjs"
         ],
         "capabilities": {
+          "contentLoading": "PRELOAD_ONLY",
           "checkpoint": true,
           "discSwitch": false,
           "frameCounter": true,
@@ -7100,9 +7209,11 @@
           "assets/4.2.3/data/src/nipplejs.js",
           "assets/4.2.3/data/src/shaders.js",
           "assets/4.2.3/data/src/socket.io.min.js",
-          "assets/4.2.3/data/src/storage.js"
+          "assets/4.2.3/data/src/storage.js",
+          "assets/content-io/worker.mjs"
         ],
         "capabilities": {
+          "contentLoading": "PRELOAD_ONLY",
           "checkpoint": true,
           "discSwitch": false,
           "frameCounter": true,
@@ -7212,9 +7323,11 @@
           "assets/4.2.3/data/src/nipplejs.js",
           "assets/4.2.3/data/src/shaders.js",
           "assets/4.2.3/data/src/socket.io.min.js",
-          "assets/4.2.3/data/src/storage.js"
+          "assets/4.2.3/data/src/storage.js",
+          "assets/content-io/worker.mjs"
         ],
         "capabilities": {
+          "contentLoading": "PRELOAD_ONLY",
           "checkpoint": true,
           "discSwitch": false,
           "frameCounter": true,
@@ -7324,9 +7437,11 @@
           "assets/4.2.3/data/src/nipplejs.js",
           "assets/4.2.3/data/src/shaders.js",
           "assets/4.2.3/data/src/socket.io.min.js",
-          "assets/4.2.3/data/src/storage.js"
+          "assets/4.2.3/data/src/storage.js",
+          "assets/content-io/worker.mjs"
         ],
         "capabilities": {
+          "contentLoading": "PRELOAD_ONLY",
           "checkpoint": true,
           "discSwitch": false,
           "frameCounter": true,
@@ -7436,9 +7551,11 @@
           "assets/4.2.3/data/src/nipplejs.js",
           "assets/4.2.3/data/src/shaders.js",
           "assets/4.2.3/data/src/socket.io.min.js",
-          "assets/4.2.3/data/src/storage.js"
+          "assets/4.2.3/data/src/storage.js",
+          "assets/content-io/worker.mjs"
         ],
         "capabilities": {
+          "contentLoading": "ON_DEMAND_AND_PRELOAD",
           "checkpoint": true,
           "discSwitch": false,
           "frameCounter": true,
@@ -7456,8 +7573,7 @@
             "sharp-bilinear",
             "smooth"
           ],
-          "volume": true,
-          "contentLoading": "ON_DEMAND_AND_PRELOAD"
+          "volume": true
         },
         "checkpoint": {
           "maxBytes": 268435456,
@@ -7549,9 +7665,11 @@
           "assets/4.2.3/data/src/nipplejs.js",
           "assets/4.2.3/data/src/shaders.js",
           "assets/4.2.3/data/src/socket.io.min.js",
-          "assets/4.2.3/data/src/storage.js"
+          "assets/4.2.3/data/src/storage.js",
+          "assets/content-io/worker.mjs"
         ],
         "capabilities": {
+          "contentLoading": "PRELOAD_ONLY",
           "checkpoint": true,
           "discSwitch": false,
           "frameCounter": true,
@@ -7661,9 +7779,11 @@
           "assets/4.2.3/data/src/nipplejs.js",
           "assets/4.2.3/data/src/shaders.js",
           "assets/4.2.3/data/src/socket.io.min.js",
-          "assets/4.2.3/data/src/storage.js"
+          "assets/4.2.3/data/src/storage.js",
+          "assets/content-io/worker.mjs"
         ],
         "capabilities": {
+          "contentLoading": "PRELOAD_ONLY",
           "checkpoint": true,
           "discSwitch": false,
           "frameCounter": true,
@@ -7773,9 +7893,11 @@
           "assets/4.2.3/data/src/nipplejs.js",
           "assets/4.2.3/data/src/shaders.js",
           "assets/4.2.3/data/src/socket.io.min.js",
-          "assets/4.2.3/data/src/storage.js"
+          "assets/4.2.3/data/src/storage.js",
+          "assets/content-io/worker.mjs"
         ],
         "capabilities": {
+          "contentLoading": "PRELOAD_ONLY",
           "checkpoint": true,
           "discSwitch": false,
           "frameCounter": true,
@@ -7885,9 +8007,11 @@
           "assets/4.2.3/data/src/nipplejs.js",
           "assets/4.2.3/data/src/shaders.js",
           "assets/4.2.3/data/src/socket.io.min.js",
-          "assets/4.2.3/data/src/storage.js"
+          "assets/4.2.3/data/src/storage.js",
+          "assets/content-io/worker.mjs"
         ],
         "capabilities": {
+          "contentLoading": "PRELOAD_ONLY",
           "checkpoint": true,
           "discSwitch": false,
           "frameCounter": true,
@@ -7997,9 +8121,11 @@
           "assets/4.2.3/data/src/nipplejs.js",
           "assets/4.2.3/data/src/shaders.js",
           "assets/4.2.3/data/src/socket.io.min.js",
-          "assets/4.2.3/data/src/storage.js"
+          "assets/4.2.3/data/src/storage.js",
+          "assets/content-io/worker.mjs"
         ],
         "capabilities": {
+          "contentLoading": "PRELOAD_ONLY",
           "checkpoint": true,
           "discSwitch": false,
           "frameCounter": true,
@@ -8109,9 +8235,11 @@
           "assets/4.2.3/data/src/nipplejs.js",
           "assets/4.2.3/data/src/shaders.js",
           "assets/4.2.3/data/src/socket.io.min.js",
-          "assets/4.2.3/data/src/storage.js"
+          "assets/4.2.3/data/src/storage.js",
+          "assets/content-io/worker.mjs"
         ],
         "capabilities": {
+          "contentLoading": "PRELOAD_ONLY",
           "checkpoint": true,
           "discSwitch": false,
           "frameCounter": true,
@@ -8221,9 +8349,11 @@
           "assets/4.2.3/data/src/nipplejs.js",
           "assets/4.2.3/data/src/shaders.js",
           "assets/4.2.3/data/src/socket.io.min.js",
-          "assets/4.2.3/data/src/storage.js"
+          "assets/4.2.3/data/src/storage.js",
+          "assets/content-io/worker.mjs"
         ],
         "capabilities": {
+          "contentLoading": "PRELOAD_ONLY",
           "checkpoint": true,
           "discSwitch": false,
           "frameCounter": true,
@@ -8338,9 +8468,11 @@
           "assets/4.3.0-pre/data/src/storage.js",
           "assets/4.3.0-pre/data/src/utils.js",
           "assets/4.3.0-pre/data/src/vendor/nipplejs.js",
-          "assets/4.3.0-pre/data/src/vendor/socket.io.min.js"
+          "assets/4.3.0-pre/data/src/vendor/socket.io.min.js",
+          "assets/content-io/worker.mjs"
         ],
         "capabilities": {
+          "contentLoading": "PRELOAD_ONLY",
           "checkpoint": true,
           "discSwitch": false,
           "frameCounter": true,
@@ -8451,9 +8583,11 @@
           "assets/4.2.3/data/src/nipplejs.js",
           "assets/4.2.3/data/src/shaders.js",
           "assets/4.2.3/data/src/socket.io.min.js",
-          "assets/4.2.3/data/src/storage.js"
+          "assets/4.2.3/data/src/storage.js",
+          "assets/content-io/worker.mjs"
         ],
         "capabilities": {
+          "contentLoading": "PRELOAD_ONLY",
           "checkpoint": true,
           "discSwitch": false,
           "frameCounter": true,
@@ -8563,9 +8697,11 @@
           "assets/4.2.3/data/src/nipplejs.js",
           "assets/4.2.3/data/src/shaders.js",
           "assets/4.2.3/data/src/socket.io.min.js",
-          "assets/4.2.3/data/src/storage.js"
+          "assets/4.2.3/data/src/storage.js",
+          "assets/content-io/worker.mjs"
         ],
         "capabilities": {
+          "contentLoading": "PRELOAD_ONLY",
           "checkpoint": true,
           "discSwitch": false,
           "frameCounter": true,
@@ -8675,9 +8811,11 @@
           "assets/4.2.3/data/src/nipplejs.js",
           "assets/4.2.3/data/src/shaders.js",
           "assets/4.2.3/data/src/socket.io.min.js",
-          "assets/4.2.3/data/src/storage.js"
+          "assets/4.2.3/data/src/storage.js",
+          "assets/content-io/worker.mjs"
         ],
         "capabilities": {
+          "contentLoading": "PRELOAD_ONLY",
           "checkpoint": true,
           "discSwitch": false,
           "frameCounter": true,
@@ -8695,8 +8833,7 @@
             "sharp-bilinear",
             "smooth"
           ],
-          "volume": true,
-          "contentLoading": "PRELOAD_ONLY"
+          "volume": true
         },
         "checkpoint": {
           "maxBytes": 268435456,
@@ -8788,9 +8925,11 @@
           "assets/4.2.3/data/src/nipplejs.js",
           "assets/4.2.3/data/src/shaders.js",
           "assets/4.2.3/data/src/socket.io.min.js",
-          "assets/4.2.3/data/src/storage.js"
+          "assets/4.2.3/data/src/storage.js",
+          "assets/content-io/worker.mjs"
         ],
         "capabilities": {
+          "contentLoading": "PRELOAD_ONLY",
           "checkpoint": true,
           "discSwitch": false,
           "frameCounter": true,
@@ -8900,9 +9039,11 @@
           "assets/4.2.3/data/src/nipplejs.js",
           "assets/4.2.3/data/src/shaders.js",
           "assets/4.2.3/data/src/socket.io.min.js",
-          "assets/4.2.3/data/src/storage.js"
+          "assets/4.2.3/data/src/storage.js",
+          "assets/content-io/worker.mjs"
         ],
         "capabilities": {
+          "contentLoading": "PRELOAD_ONLY",
           "checkpoint": true,
           "discSwitch": false,
           "frameCounter": true,
@@ -9012,9 +9153,11 @@
           "assets/4.2.3/data/src/nipplejs.js",
           "assets/4.2.3/data/src/shaders.js",
           "assets/4.2.3/data/src/socket.io.min.js",
-          "assets/4.2.3/data/src/storage.js"
+          "assets/4.2.3/data/src/storage.js",
+          "assets/content-io/worker.mjs"
         ],
         "capabilities": {
+          "contentLoading": "PRELOAD_ONLY",
           "checkpoint": true,
           "discSwitch": false,
           "frameCounter": true,
@@ -9124,9 +9267,11 @@
           "assets/4.2.3/data/src/nipplejs.js",
           "assets/4.2.3/data/src/shaders.js",
           "assets/4.2.3/data/src/socket.io.min.js",
-          "assets/4.2.3/data/src/storage.js"
+          "assets/4.2.3/data/src/storage.js",
+          "assets/content-io/worker.mjs"
         ],
         "capabilities": {
+          "contentLoading": "PRELOAD_ONLY",
           "checkpoint": true,
           "discSwitch": false,
           "frameCounter": true,
@@ -9236,9 +9381,11 @@
           "assets/4.2.3/data/src/nipplejs.js",
           "assets/4.2.3/data/src/shaders.js",
           "assets/4.2.3/data/src/socket.io.min.js",
-          "assets/4.2.3/data/src/storage.js"
+          "assets/4.2.3/data/src/storage.js",
+          "assets/content-io/worker.mjs"
         ],
         "capabilities": {
+          "contentLoading": "PRELOAD_ONLY",
           "checkpoint": true,
           "discSwitch": false,
           "frameCounter": true,
@@ -9348,9 +9495,11 @@
           "assets/4.2.3/data/src/nipplejs.js",
           "assets/4.2.3/data/src/shaders.js",
           "assets/4.2.3/data/src/socket.io.min.js",
-          "assets/4.2.3/data/src/storage.js"
+          "assets/4.2.3/data/src/storage.js",
+          "assets/content-io/worker.mjs"
         ],
         "capabilities": {
+          "contentLoading": "PRELOAD_ONLY",
           "checkpoint": true,
           "discSwitch": false,
           "frameCounter": true,
@@ -9441,8 +9590,8 @@
       {
         "assetPaths": [
           "assets/4.3.0-pre/data/compression/extract7z.js",
-          "assets/4.3.0-pre/data/cores/supermodel-wasm.data",
           "assets/4.3.0-pre/data/cores/reports/supermodel.json",
+          "assets/4.3.0-pre/data/cores/supermodel-wasm.data",
           "assets/4.3.0-pre/data/emulator.css",
           "assets/4.3.0-pre/data/emulator.min.css",
           "assets/4.3.0-pre/data/emulator.min.js",
@@ -9463,9 +9612,11 @@
           "assets/4.3.0-pre/data/src/storage.js",
           "assets/4.3.0-pre/data/src/utils.js",
           "assets/4.3.0-pre/data/src/vendor/nipplejs.js",
-          "assets/4.3.0-pre/data/src/vendor/socket.io.min.js"
+          "assets/4.3.0-pre/data/src/vendor/socket.io.min.js",
+          "assets/content-io/worker.mjs"
         ],
         "capabilities": {
+          "contentLoading": "PRELOAD_ONLY",
           "checkpoint": true,
           "discSwitch": false,
           "frameCounter": true,
@@ -9575,9 +9726,11 @@
           "assets/4.2.3/data/src/nipplejs.js",
           "assets/4.2.3/data/src/shaders.js",
           "assets/4.2.3/data/src/socket.io.min.js",
-          "assets/4.2.3/data/src/storage.js"
+          "assets/4.2.3/data/src/storage.js",
+          "assets/content-io/worker.mjs"
         ],
         "capabilities": {
+          "contentLoading": "PRELOAD_ONLY",
           "checkpoint": true,
           "discSwitch": false,
           "frameCounter": true,
@@ -9687,9 +9840,11 @@
           "assets/4.2.3/data/src/nipplejs.js",
           "assets/4.2.3/data/src/shaders.js",
           "assets/4.2.3/data/src/socket.io.min.js",
-          "assets/4.2.3/data/src/storage.js"
+          "assets/4.2.3/data/src/storage.js",
+          "assets/content-io/worker.mjs"
         ],
         "capabilities": {
+          "contentLoading": "PRELOAD_ONLY",
           "checkpoint": true,
           "discSwitch": false,
           "frameCounter": true,
@@ -9799,9 +9954,11 @@
           "assets/4.2.3/data/src/nipplejs.js",
           "assets/4.2.3/data/src/shaders.js",
           "assets/4.2.3/data/src/socket.io.min.js",
-          "assets/4.2.3/data/src/storage.js"
+          "assets/4.2.3/data/src/storage.js",
+          "assets/content-io/worker.mjs"
         ],
         "capabilities": {
+          "contentLoading": "PRELOAD_ONLY",
           "checkpoint": true,
           "discSwitch": false,
           "frameCounter": true,
@@ -9911,9 +10068,11 @@
           "assets/4.2.3/data/src/nipplejs.js",
           "assets/4.2.3/data/src/shaders.js",
           "assets/4.2.3/data/src/socket.io.min.js",
-          "assets/4.2.3/data/src/storage.js"
+          "assets/4.2.3/data/src/storage.js",
+          "assets/content-io/worker.mjs"
         ],
         "capabilities": {
+          "contentLoading": "PRELOAD_ONLY",
           "checkpoint": true,
           "discSwitch": false,
           "frameCounter": true,
@@ -10023,9 +10182,11 @@
           "assets/4.2.3/data/src/nipplejs.js",
           "assets/4.2.3/data/src/shaders.js",
           "assets/4.2.3/data/src/socket.io.min.js",
-          "assets/4.2.3/data/src/storage.js"
+          "assets/4.2.3/data/src/storage.js",
+          "assets/content-io/worker.mjs"
         ],
         "capabilities": {
+          "contentLoading": "PRELOAD_ONLY",
           "checkpoint": true,
           "discSwitch": false,
           "frameCounter": true,
@@ -10135,9 +10296,11 @@
           "assets/4.2.3/data/src/nipplejs.js",
           "assets/4.2.3/data/src/shaders.js",
           "assets/4.2.3/data/src/socket.io.min.js",
-          "assets/4.2.3/data/src/storage.js"
+          "assets/4.2.3/data/src/storage.js",
+          "assets/content-io/worker.mjs"
         ],
         "capabilities": {
+          "contentLoading": "PRELOAD_ONLY",
           "checkpoint": true,
           "discSwitch": false,
           "frameCounter": true,
@@ -10247,9 +10410,11 @@
           "assets/4.2.3/data/src/nipplejs.js",
           "assets/4.2.3/data/src/shaders.js",
           "assets/4.2.3/data/src/socket.io.min.js",
-          "assets/4.2.3/data/src/storage.js"
+          "assets/4.2.3/data/src/storage.js",
+          "assets/content-io/worker.mjs"
         ],
         "capabilities": {
+          "contentLoading": "PRELOAD_ONLY",
           "checkpoint": true,
           "discSwitch": false,
           "frameCounter": true,
@@ -10359,9 +10524,11 @@
           "assets/4.2.3/data/src/nipplejs.js",
           "assets/4.2.3/data/src/shaders.js",
           "assets/4.2.3/data/src/socket.io.min.js",
-          "assets/4.2.3/data/src/storage.js"
+          "assets/4.2.3/data/src/storage.js",
+          "assets/content-io/worker.mjs"
         ],
         "capabilities": {
+          "contentLoading": "PRELOAD_ONLY",
           "checkpoint": true,
           "discSwitch": false,
           "frameCounter": true,
@@ -10471,9 +10638,11 @@
           "assets/4.2.3/data/src/nipplejs.js",
           "assets/4.2.3/data/src/shaders.js",
           "assets/4.2.3/data/src/socket.io.min.js",
-          "assets/4.2.3/data/src/storage.js"
+          "assets/4.2.3/data/src/storage.js",
+          "assets/content-io/worker.mjs"
         ],
         "capabilities": {
+          "contentLoading": "PRELOAD_ONLY",
           "checkpoint": true,
           "discSwitch": false,
           "frameCounter": true,
@@ -10583,9 +10752,11 @@
           "assets/4.2.3/data/src/nipplejs.js",
           "assets/4.2.3/data/src/shaders.js",
           "assets/4.2.3/data/src/socket.io.min.js",
-          "assets/4.2.3/data/src/storage.js"
+          "assets/4.2.3/data/src/storage.js",
+          "assets/content-io/worker.mjs"
         ],
         "capabilities": {
+          "contentLoading": "PRELOAD_ONLY",
           "checkpoint": true,
           "discSwitch": false,
           "frameCounter": true,
@@ -10695,9 +10866,11 @@
           "assets/4.2.3/data/src/nipplejs.js",
           "assets/4.2.3/data/src/shaders.js",
           "assets/4.2.3/data/src/socket.io.min.js",
-          "assets/4.2.3/data/src/storage.js"
+          "assets/4.2.3/data/src/storage.js",
+          "assets/content-io/worker.mjs"
         ],
         "capabilities": {
+          "contentLoading": "PRELOAD_ONLY",
           "checkpoint": true,
           "discSwitch": true,
           "frameCounter": true,

@@ -105,7 +105,7 @@ DOSBox Pure receives a `FILE_TREE` game resource whose index names one virtual `
 
 The threaded DOS core uses CSS `original` and `pixel` video modes; its main-thread WebGL shader controls are unavailable. The candidate has enough native stack space for `_save_state_info`, so the adapter copies its native state while retaining the pinned WASM stack patch for older core bytes. Native `save_state_info` owns that allocation and releases it on the next capture. Restore waits for a native frame, the core's `retrom_dos_state_ready` export and a quiet period after asynchronous Content I/O before queuing the native load. It polls the fork's `retrom_state_load_status` export for success or failure, then waits for another frame. The DOS main loop stays active throughout restore; a cold Range launch can take up to 120 seconds.
 
-Browser-native MV/MZ and TyranoScript, EasyRPG/J2ME loaders, and unmodified EmulatorJS upstream loaders keep explicit external boundaries. Metadata JSON, checkpoint transfer, session save overlays, native media and verified core module execution are separate from managed game downloads. Changes to these boundaries require focused tests rather than silently broadening a download exemption.
+Browser-native MV/MZ and TyranoScript, EasyRPG/J2ME loaders, keep explicit external boundaries. Metadata JSON, checkpoint transfer, session save overlays, native media and verified core module execution are separate from managed game downloads. Changes to these boundaries require focused tests rather than silently broadening a download exemption.
 
 ## Validation
 
@@ -250,3 +250,5 @@ loading, not full application offline availability. `ON_DEMAND_AND_PRELOAD`
 permits both modes; `PRELOAD_ONLY` keeps whole-file loading and allows a Host to
 require persistent preparation. An omitted capability keeps the upstream loader.
 Other inputs are prepared only when their own policies are managed.
+
+EmulatorJS ordinary ROM_BLOB and BIOS_BUNDLE inputs use EAGER Content I/O. The core receives a local File retaining its filename/extension or a local BIOS Blob URL after full SHA-256 and length verification. Immutable byte keys exclude Core, Target and Provider revision; authorized envelopes still freeze execution and content grants separately. Range-backed disk, DOS, Daphne and Flycast inputs retain their bounded policies. Failed or aborted reads never hand partial bytes to a core or commit complete cache state. Reader and Blob cleanup runs on exit; committed cache survives across sessions. Public contentLoading capabilities are projected from these current declarations and require a newly built Provider candidate.

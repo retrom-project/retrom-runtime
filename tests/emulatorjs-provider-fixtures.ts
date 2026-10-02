@@ -13,7 +13,7 @@ export function launchEnvelope(): LaunchEnvelopeV1 {
     runtime: {
       bundleSha256: bundleDigest,
       capabilities: {
-        checkpoint: true, discSwitch: false, frameCounter: true, frameMode: "SAME_ORIGIN_BLANK",
+        contentLoading: "PRELOAD_ONLY", checkpoint: true, discSwitch: false, frameCounter: true, frameMode: "SAME_ORIGIN_BLANK",
         inputFilter: true, nativeSettings: true, pause: true, requiresThreads: false,
         screenshot: true, standardGamepad: true,
         videoModes: ["adaptive-sharpen", "original", "pixel", "sharp-bilinear", "smooth"], volume: true,

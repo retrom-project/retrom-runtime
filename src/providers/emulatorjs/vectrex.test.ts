@@ -1,3 +1,4 @@
+import "../../../tests/emulatorjs-content-fixture.js";
 import {gunzipSync} from "fflate";
 import {expect, it, vi} from "vitest";
 import {emulatorJsProviderDefinition} from "./catalog.js";

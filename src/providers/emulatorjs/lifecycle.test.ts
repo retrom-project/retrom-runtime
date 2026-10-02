@@ -1,3 +1,4 @@
+import "../../../tests/emulatorjs-content-fixture.js";
 import {afterEach, beforeEach, describe, expect, it, vi} from "vitest";
 
 import type {RuntimeEventV1, RuntimeHostV1} from "../../provider/module-api.js";

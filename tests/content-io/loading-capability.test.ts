@@ -31,7 +31,7 @@ it.each([
 it.each([
   ["dosbox-pure", "ON_DEMAND_AND_PRELOAD"],
   ["puae", "PRELOAD_ONLY"],
-  ["mgba", undefined],
+  ["mgba", "PRELOAD_ONLY"],
 ])("uses the same capability projection for EmulatorJS %s", (id, capability) => {
   const target = projectProviderManifest(emulatorJsProviderDefinition).targets.find(target => target.id === id);
   expect(target).toBeDefined();

@@ -11,17 +11,7 @@ it("[PK-01] CONTRACT/private-policies covers every input role and publishes only
       expect(() => defineTarget({...target, contentIO: {}})).toThrow();
     }
     const manifest = projectProviderManifest(provider);
-    const expected=structuredClone(golden.find(entry=>entry.providerId===provider.providerId)!);
-    expected.providerVersion="0.0.0-dev";
-    const external=["j2me","rpgmaker-2000","rpgmaker-2003"];
-    for(const target of expected.targets){
-      const managed=provider.providerId==="emulatorjs"?target.inputs.some(input=>input.role==="parent")||target.id.startsWith("flycast")||["neocd","genesis-plus-gx-cd","puae","daphne","dosbox-pure"].includes(target.id):!external.includes(target.id);
-      if(managed){target.assetPaths.push("assets/content-io/worker.mjs");}
-      if(provider.providerId==="retrom-runtime"&&target.id==="ppsspp"){
-        target.assetPaths=target.assetPaths.filter(path=>path!=="assets/ppsspp/ppsspp-io.worker.mjs");target.assetPaths.push("assets/content-io/sync-client.mjs");
-      }
-      target.assetPaths=target.assetPaths.map(path=>path==="assets/play/range-device.mjs"?"assets/play/disc-device.mjs":path).sort();
-    }
+    const expected = golden.find(entry => entry.providerId === provider.providerId);
     expect(manifest).toEqual(expected);
     expect(JSON.stringify(manifest)).not.toContain("contentIO");
     expect(JSON.stringify(manifest)).not.toContain("boundaryId");

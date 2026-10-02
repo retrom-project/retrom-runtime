@@ -1,3 +1,4 @@
+import "../../../tests/emulatorjs-content-fixture.js";
 // @vitest-environment node
 import {afterEach, expect, it, vi} from "vitest";
 import {emulatorJsProviderDefinition} from "./catalog.js";
@@ -7,7 +8,7 @@ import {targetContentFixture} from "../../../tests/target-content-fixture.js";
 import {ProviderContentOwner} from "../../provider/content-owner.js";
 import type {EjsWindow} from "./emulator-instance.js";
 
-afterEach(() => vi.restoreAllMocks());
+afterEach(() => {vi.restoreAllMocks(); vi.unstubAllGlobals();});
 
 function fixture() {
   const envelope = launchEnvelope();
@@ -60,11 +61,12 @@ it.each(["length", "cancel", "download"])("cleans up a %s failure without handin
   if (failure !== "download") {expect(f.release).toHaveBeenCalledOnce();}
 });
 
-it("does not bootstrap a Content I/O worker or create dependency work without a parent", async () => {
+it("bootstraps game content without creating absent parent work", async () => {
   const f = fixture(), envelope = launchEnvelope();
+  vi.stubGlobal("location", new URL("https://host.test/"));
   const owner = new ProviderContentOwner(vi.fn());
   const target = emulatorJsProviderDefinition.targets.find(entry => entry.id === "fbneo")!;
-  expect(await owner.start(target, envelope, {})).toBeNull();
+  expect(await owner.start(target, envelope, {})).not.toBeNull();
   await (await prepareParentContent(f.runtimeWindow, envelope, null, f.controller.signal))();
   expect(f.open).not.toHaveBeenCalled(); expect(f.create).not.toHaveBeenCalled();
   await owner.close();

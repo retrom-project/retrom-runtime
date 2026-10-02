@@ -1,3 +1,4 @@
+import "../../../tests/emulatorjs-content-fixture.js";
 import {expect, it, vi} from "vitest";
 
 import {launchEnvelope} from "../../../tests/emulatorjs-provider-fixtures.js";

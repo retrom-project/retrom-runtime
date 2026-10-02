@@ -1,3 +1,4 @@
+import "../../../tests/emulatorjs-content-fixture.js";
 import {expect, it, vi} from "vitest";
 import {StartupTasks} from "../../provider/startup.js";
 import {installStartupDownloads} from "./startup-downloads.js";

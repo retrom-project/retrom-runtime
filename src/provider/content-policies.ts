@@ -50,7 +50,7 @@ export function runtimeGamePolicy(id: string): ContentInputPolicyV1 {
 }
 export function emulatorContentPolicies(core: string): Readonly<Record<string, ContentInputPolicyV1>> {
   const game = ["neocd", "genesis_plus_gx_cd", "daphne", "dosbox_pure"].includes(core) || core.startsWith("flycast") ? rangePolicy("ASYNC", limits.signedDisc) :
-    core === "puae" ? eagerPolicy(limits.signedDisc) : upstream("emulatorjs-loader");
-  return {game, discs: {...game}, bios: upstream("emulatorjs-loader"),
+    eagerPolicy(limits.signedDisc);
+  return {game, discs: {...game}, bios: eagerPolicy(limits.signedDisc),
     parent: eagerPolicy(limits.signedDisc, {result: "BLOB"}), external: upstream("emulatorjs-loader")};
 }

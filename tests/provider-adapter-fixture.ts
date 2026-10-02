@@ -1,12 +1,9 @@
+import "./emulatorjs-content-fixture.js";
 import {bootstrapContentSession} from "../src/content-io/bootstrap.js";
 import {vi} from "vitest";
 import type {MountedRuntimeAdapter} from "../src/internal-adapter.js";
 import type {RuntimeHostV1} from "../src/provider/module-api.js";
 import {blankFrame} from "./provider-fixtures.js";
-
-vi.mock("../src/content-io/bootstrap.js", () => ({bootstrapContentSession: vi.fn(async () => ({
-  close: vi.fn(async () => {}), fail: vi.fn(),
-}))}));
 
 export const contentBootstrap = vi.mocked(bootstrapContentSession);
 

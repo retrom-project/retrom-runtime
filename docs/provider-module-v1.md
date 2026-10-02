@@ -234,3 +234,7 @@ Product starts resolve device preferences against the actual Launch Target,
 including restores and quick starts; unsupported Targets receive no preference.
 Preview retains default on-demand behavior. A streaming fallback action is only
 valid for dual-mode Targets; fixed/hidden modes must not overwrite device preferences.
+
+### Original content cache ownership
+
+EasyRPG now publishes `contentLoading: ON_DEMAND_AND_PRELOAD`: default game/RTP reads remain lazy and use immutable index identities; explicit PRELOAD commits the complete indexed content before launch. EmulatorJS external BIOS and multi-disc media, and MAME Arcade BIOS bundles, all use the same persistent Content I/O store as ROMs and Parent ROMs. The application does not automatically evict valid original content by age or size. Quota denial follows the existing default-mode fallback and explicit-PRELOAD failure contract.

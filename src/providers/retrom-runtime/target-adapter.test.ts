@@ -13,6 +13,7 @@ import {mountWasm4} from "../../wasm4/adapter.js";
 import {targetEnvelope} from "../../../tests/provider-fixtures.js";
 import {mountTargetAdapter, type TargetMountContext} from "./target-adapter.js";
 
+vi.mock("./easyrpg-content.js", () => ({mountWithEasyRpgContent: (_envelope: unknown, _frame: unknown, _session: unknown, _signal: unknown, mount: () => unknown) => mount()}));
 vi.mock("../../easyrpg/adapter.js", () => ({mountEasyRpg: vi.fn()}));
 vi.mock("../../mkxp/adapter.js", () => ({mountMkxp: vi.fn()}));
 vi.mock("../../native-web/adapter.js", () => ({mountNativeRpg: vi.fn()}));

@@ -45,7 +45,7 @@ export const mameArcadeTarget = defineTarget({...mameAppleTarget, id: "mame-arca
   contentIO: {game: eagerPolicy(128 * 1024 * 1024),
     external: eagerPolicy(65536),
     parent: eagerPolicy(128 * 1024 * 1024),
-    bios: {mode: "UPSTREAM_LOADER", boundaryId: "mame-loader"}},
+    bios: eagerPolicy(128 * 1024 * 1024)},
   inputs: [{role: "game", kind: "ROM_BLOB", cardinality: "ONE", optional: false},
     {role: "parent", kind: "PARENT_ARCHIVE", cardinality: "ONE", optional: true},
     {role: "bios", kind: "BIOS_BUNDLE", cardinality: "ONE", optional: true},

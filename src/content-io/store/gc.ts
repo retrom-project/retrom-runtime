@@ -5,20 +5,17 @@ import type {DataStore} from "./types.js";
 export class ContentGC {
   private running: Promise<number> | undefined;
   constructor(private readonly metadata: ContentMetadata, private readonly locks: ContentLocks, private readonly stores: readonly DataStore[]) {}
-  collect(budgetBytes?: number): Promise<number> {
-    if (!this.running) {this.running = this.run(budgetBytes).finally(() => {this.running = undefined;});} return this.running;
+  collect(): Promise<number> {
+    if (!this.running) {this.running = this.run().finally(() => {this.running = undefined;});} return this.running;
   }
-  private async run(budgetBytes?: number): Promise<number> {
-    const estimate = await navigator.storage.estimate().catch(() => ({} as StorageEstimate));
-    const budget = budgetBytes ?? (estimate.quota === undefined ? 512 * 1024 * 1024 : Math.min(8 * 1024 ** 3, Math.floor(estimate.quota * 0.2)));
-    const candidates = await this.metadata.list(128);
-    let remaining = await this.metadata.totalBytes(), removed = 0;
-    const now = Date.now();
+  private async run(): Promise<number> {
+    const candidates = await this.metadata.list(128, "QUARANTINED");
+    let removed = 0;
     candidates.sort((a, b) => Number(b.state === "QUARANTINED") - Number(a.state === "QUARANTINED") || a.lastAccessMs - b.lastAccessMs);
     for (const candidate of candidates) {
       if (removed >= 64) {break;}
-      const obsolete = candidate.state === "QUARANTINED" || candidate.state !== "COMPLETE" && now - candidate.lastAccessMs > 24 * 60 * 60 * 1000;
-      if (!obsolete && remaining <= budget) {continue;}
+      // Verified complete files and committed partial blocks survive age and quota pressure.
+      if (candidate.state !== "QUARANTINED") {continue;}
       const bytes = await this.locks.gc(candidate.key, () => this.locks.data(candidate.key, undefined, async () => {
         const current = await this.metadata.object(candidate.key);
         if (!current || current.revision !== candidate.revision) {return 0;}
@@ -29,7 +26,7 @@ export class ContentGC {
         await this.metadata.remove(candidate.key);
         return generations.reduce((sum, generation) => sum + generation.committedBytes, 0);
       }));
-      if (bytes !== undefined && bytes > 0) {remaining -= bytes; removed++;}
+      if (bytes !== undefined && bytes > 0) {removed++;}
     }
     return removed;
   }

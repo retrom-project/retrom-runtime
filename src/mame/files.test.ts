@@ -81,11 +81,14 @@ it("rejects malformed cartridge ZIPs and oversized expanded media", async () => 
 });
 it("mounts a MAME arcade machine with the selected game, parent and BIOS archives", async () => {
   const parent = zipSync({"puckman.zip": new Uint8Array(40)}), bios = zipSync({"namco51.zip": new Uint8Array(20)});
-  vi.mocked(materializeFileBytes).mockResolvedValueOnce(new Uint8Array(40)).mockResolvedValueOnce(parent);
-  vi.stubGlobal("fetch", vi.fn().mockResolvedValueOnce(new Response(bios)));
+  vi.mocked(materializeFileBytes).mockResolvedValueOnce(new Uint8Array(40)).mockResolvedValueOnce(parent).mockResolvedValueOnce(bios);
+  const fetch = vi.fn(() => {throw new Error("BIOS bypassed Content I/O");});
+  vi.stubGlobal("fetch", fetch);
   const core = fixture(), arcade = {arcade: true as const, machine: "mspacman", game: {...source, sizeBytes: 40},
     parent: {...source, url: "/parent"}, bios: {...source, url: "/bios"}, deviceBios: [], runtimeBaseUrl: "/provider/"};
   await mountFiles(core, arcade, content);
+  expect(fetch).not.toHaveBeenCalled();
+  expect(materializeFileBytes).toHaveBeenCalledWith(content.contentSession, arcade.bios, expect.any(Object), "FIRMWARE", undefined, expect.any(Function));
   expect(core.FS.writeFile).toHaveBeenCalledWith("/content/roms/mspacman.zip", expect.any(Uint8Array));
   expect(core.FS.writeFile).toHaveBeenCalledWith("/content/roms/puckman.zip", expect.any(Uint8Array));
   expect(core.FS.writeFile).toHaveBeenCalledWith("/content/roms/namco51.zip", expect.any(Uint8Array));

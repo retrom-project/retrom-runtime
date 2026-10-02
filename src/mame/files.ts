@@ -1,7 +1,7 @@
 import {sha256} from "@noble/hashes/sha2.js";
 import {bytesToHex} from "@noble/hashes/utils.js";
 import {materializeFileBytes, type AdapterContentOptions} from "../provider/content-inputs.js";
-import type {FileSource, MameCore, MameParameters} from "./core.js";
+import type {MameCore, MameParameters} from "./core.js";
 import {profiles, validGameSize, validateGame} from "./profiles.js";
 import {parentStateIdentity} from "./state.js";
 import {unzipSync} from "fflate";
@@ -68,7 +68,12 @@ async function mountArcadeFiles(core: Pick<MameCore, "FS">, config: Extract<Mame
         loadedBytes: progress.readyBytes, totalBytes: progress.totalBytes}));
     parentIdentity = parentStateIdentity(addArcadeArchives(archives, parent));
   }
-  if (config.bios) {await addArcadeBundle(archives, config.bios, content.signal);}
+  if (config.bios) {
+    const bios = await materializeFileBytes(content.contentSession, config.bios, content.contentSession.inputPolicy("bios"),
+      "FIRMWARE", content.signal, progress => content.reportProgress?.({phase: "PROJECT_CONTENT",
+        loadedBytes: progress.readyBytes, totalBytes: progress.totalBytes}));
+    addArcadeArchives(archives, bios);
+  }
   core.FS.mkdirTree("/content/roms");
   for (const [name, bytes] of archives) {core.FS.writeFile(`/content/roms/${name}`, bytes);}
   for (const file of config.deviceBios) {
@@ -81,13 +86,6 @@ async function mountArcadeFiles(core: Pick<MameCore, "FS">, config: Extract<Mame
   const identity = [config.machine, config.game.sha256, parentIdentity, config.bios?.sha256 ?? "",
     ...config.deviceBios.map(file => file.sha256)].join("\n");
   return bytesToHex(sha256(new TextEncoder().encode(identity)));
-}
-
-async function addArcadeBundle(archives: Map<string, Uint8Array>, bundle: FileSource, signal?: AbortSignal) {
-  const response = await fetch(new URL(bundle.url, globalThis.location?.href), {signal});
-  if (!response.ok || !response.body) {throw new Error("MAME_CONTENT_INVALID");}
-  const bytes = await boundedBytes(response, 128 * 1024 * 1024);
-  addArcadeArchives(archives, bytes);
 }
 
 function addArcadeArchives(archives: Map<string, Uint8Array>, bytes: Uint8Array) {
@@ -104,20 +102,4 @@ function addArcadeArchives(archives: Map<string, Uint8Array>, bytes: Uint8Array)
     archives.set(name, contents);
   }
   return entries;
-}
-
-async function boundedBytes(response: Response, limit: number): Promise<Uint8Array> {
-  const reader = response.body!.getReader(), chunks: Uint8Array[] = [];
-  let total = 0;
-  try {
-    for (;;) {
-      const result = await reader.read(); if (result.done) {break;}
-      total += result.value.length;
-      if (total > limit) {throw new Error("MAME_CONTENT_INVALID");}
-      chunks.push(result.value);
-    }
-  } finally {reader.releaseLock();}
-  const bytes = new Uint8Array(total); let offset = 0;
-  for (const chunk of chunks) {bytes.set(chunk, offset); offset += chunk.length;}
-  return bytes;
 }

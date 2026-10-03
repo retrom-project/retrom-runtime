@@ -174,6 +174,10 @@ only the missing standard left-stick direction mapping, with dead-zone hysteresi
 exit. It also creates the core's WebGL context with a retained drawing buffer so host-requested review and save
 screenshots contain the displayed frame instead of a cleared black buffer.
 
+## Native settings
+
+When EmulatorJS native settings are open, the Provider hides its virtual gamepad until the settings close. This applies to controls, display and core panels, preserving the current pause state. A missing native panel fails without exposing an empty native menu. The Host owns navigation back to its settings; it must leave the iframe unobstructed while a native panel is active.
+
 ## Optional Input Diagnostics
 
 Provider Module V1 exposes optional `startInputDiagnostics()` with bounded `read`, `clear` and idempotent `stop`.

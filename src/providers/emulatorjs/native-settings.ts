@@ -19,9 +19,10 @@ function hideControlPanel(instance: EmulatorNativeSettingsInstance) {
   if (instance.controlMenu) {instance.controlMenu.style.display = "none";}
 }
 
-function setNativeSettingsVisibility(instance: EmulatorNativeSettingsInstance, visible: boolean) {
+function setNativeSettingsVisibility(instance: EmulatorNativeSettingsInstance, visible: boolean, controls = false) {
   const frameDocument = instance.settingsMenu?.ownerDocument ?? instance.controlMenu?.ownerDocument;
   frameDocument?.documentElement.classList.toggle("retrom-native-settings-open", visible);
+  frameDocument?.documentElement.classList.toggle("retrom-native-panel-open", visible || controls);
 }
 
 function resetNativeSettingsNavigation(instance: EmulatorNativeSettingsInstance) {
@@ -43,25 +44,25 @@ export function openEmulatorJsNativeSettings(
   preservePause = false,
 ) {
   if (panel === "controls") {
-    setNativeSettingsVisibility(instance, false);
+    if (!instance.controlMenu) {return false;}
+    setNativeSettingsVisibility(instance, false, true);
     instance.closeSettingsMenu?.();
     instance.menu?.close?.();
-    if (!instance.controlMenu) {return false;}
     instance.controlMenu.style.display = "";
     preserveNativePause(instance, preservePause);
     return true;
   }
 
-  hideControlPanel(instance);
   if (!instance.settingsMenu) {return false;}
-  setNativeSettingsVisibility(instance, true);
-  instance.menu?.open?.(true);
-  instance.settingsMenuOpen = true;
-  instance.settingsMenu.style.display = "";
   const navigationRoot = resetNativeSettingsNavigation(instance);
   const target = [...(navigationRoot?.querySelectorAll<HTMLElement>(".ejs_settings_main_bar") ?? [])]
     .find((entry) => panelMatchers[panel].test(entry.textContent ?? ""));
   if (!target) {return false;}
+  hideControlPanel(instance);
+  setNativeSettingsVisibility(instance, true);
+  instance.menu?.open?.(true);
+  instance.settingsMenuOpen = true;
+  instance.settingsMenu.style.display = "";
   target.click();
   preserveNativePause(instance, preservePause);
   return true;

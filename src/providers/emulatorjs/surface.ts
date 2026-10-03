@@ -7,6 +7,7 @@ html,body,#retrom-emulator,.ejs_parent,.ejs_game,.ejs_canvas_parent{width:100%!i
 .ejs_canvas_parent>.ejs_canvas{min-width:0!important;min-height:0!important}
 canvas{display:block;max-width:none!important;max-height:none!important;margin:auto!important;image-rendering:pixelated!important}
 .ejs_virtualGamepad_open{display:none!important}
+html.retrom-native-panel-open .ejs_virtualGamepad_parent{display:none!important}
 .ejs_virtualGamepad_left,.ejs_virtualGamepad_right{bottom:20px!important}
 html.retrom-native-menu-locked:not(.retrom-native-settings-open) .ejs_menu_bar{visibility:hidden!important;opacity:0!important;pointer-events:none!important}
 html.retrom-native-menu-locked.retrom-native-settings-open .ejs_menu_bar{border:0!important;background:transparent!important;box-shadow:none!important;pointer-events:none!important}
@@ -26,7 +27,7 @@ export function installEmulatorJsFrameStyle(frameDocument: Document) {
   frameDocument.head.append(style);
   return () => {
     style.remove();
-    frameDocument.documentElement.classList.remove("retrom-native-menu-locked", "retrom-native-settings-open");
+    frameDocument.documentElement.classList.remove("retrom-native-menu-locked", "retrom-native-settings-open", "retrom-native-panel-open");
   };
 }
 

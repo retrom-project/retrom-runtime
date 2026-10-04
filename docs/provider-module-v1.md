@@ -65,7 +65,12 @@ an inexact `Content-Range`, and response-length drift instead of silently
 falling back to a whole-file request. Core JS/Wasm and bridge assets still use
 full-byte validation, while their immutable URLs use the browser cache.
 
-EasyRPG receives both the project and optional RTP as `FILE_TREE` roots. The project wins when it contains a
+EasyRPG and mkxp declare optional `rtp` inputs for hosts that supply external resources. The Provider does not
+install packs, discover a host's installations, or choose them automatically. A host that uses self-contained
+projects omits these inputs; EasyRPG receives no RTP root and mkxp receives no RTP archives. This optional
+runtime resource contract does not require a host application to expose pack management.
+
+EasyRPG receives the project and any supplied RTP as `FILE_TREE` roots. The project wins when it contains a
 resource; only a missing resource that the game actually opens is fetched from the RTP root. ONS keeps ordinary
 scripts and images on the same file-on-first-open path. Exact-size immutable responses are streamed into the
 Emscripten file system and an origin-private file one at a time, so concurrent multi-hundred-megabyte writes cannot

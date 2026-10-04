@@ -14,6 +14,7 @@ The fork's rchd reader suspends through Asyncify only for missing blocks. The
 adapter waits for suspended reads at pause/checkpoint boundaries and aborts them
 on exit. Instant state retains `emulatorjs-state-v1-storage-v1` compatibility.
 Standard bottom/right/left/top buttons map to native A/B/C/D independently.
-The pinned PFB candidate is not a published release. Ordinary release builds
-reject unpublished sources. See `EMULATORJS_THIRD_PARTY_NOTICES.md` for the
+The source catalog pins the published fork release `retrom-core-g3118c6901787-r1`.
+Unpublished overrides remain limited to explicit PFB candidates; ordinary release
+builds reject them. See `EMULATORJS_THIRD_PARTY_NOTICES.md` for the
 bundled Z80 component's non-commercial restriction.

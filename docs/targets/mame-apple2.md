@@ -1,11 +1,14 @@
-# MAME driver-family candidates
+# MAME driver-family targets
 
 `retrom-runtime/mame-apple2` uses `retrom-mame-dylink-v1`: a common JS/WASM runtime
 plus one selected family side module. All bytes go through verified Content I/O assets
 and its persistent cache. Each Launch creates fresh WASM memory and registers one
 family; only immutable bytes are reused. Assets from different native builds
 cannot be combined. Adding another family can change the common module's imports
-and require a new build and download. This candidate is not a stable core release.
+and require a new build and download. The source catalog pins the published fork
+release `retrom-core-gf65d5ba9bc42-r2`; support remains bounded to each declared
+machine, media shape and input profile below. A released asset does not establish
+compatibility with other MAME machines or software.
 
 The first target selects `apple2p`, Disk II in slot 6 and an Apple joystick. It
 accepts one read-only 143360-byte DOS-order `.dsk`/`.do`. Required external firmware:

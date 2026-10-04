@@ -25,7 +25,8 @@ This directory contains detailed documentation for individual runtime targets.
 - [Cave Story / NXEngine](targets/nxengine.md)
 - [PSP / PPSSPP](targets/ppsspp.md)
 
-- [MAME driver-family candidates](targets/mame-apple2.md)
+- [Daphne](targets/daphne.md)
+- [MAME driver-family targets](targets/mame-apple2.md)
 
 ## Architecture
 

@@ -1,3 +1,6 @@
+import {installContentAcceptance} from "./content-acceptance.js";
+import {createRuntimeFailure} from "../../provider/failure.js";
+import {disableEmulatorDownloadCache, retireEmulatorDownloadCaches} from "./download-cache.js";
 import {prepareExternalContent} from "./external-content.js";
 import {prepareEagerBIOS} from "./eager-resources.js";
 import {scheduleStartupActions} from "./startup-actions.js";
@@ -29,11 +32,11 @@ import {installArchiveWorkerCompatibility} from "./archive-worker.js";
 import {installDOSBoxPureStateCompatibility} from "./dosbox-state.js";
 import {installExternalFileCompatibility} from "./external-files.js";
 import {RuntimeGamepadFilter, installRuntimeGamepadFilter, validInputFilterPolicy} from "../../provider/gamepad-filter.js";
-import {initializeEmulatorJsDiscs, readEmulatorJsDiscState, switchEmulatorJsDisc} from "./discs.js";
+import {initializeEmulatorJsDiscs, readEmulatorJsDiscState, switchEmulatorJsDisc, switchEmulatorJsDiscPreservingPause} from "./discs.js";
 import {captureEmulatorJsScreenshot} from "./screenshot.js";
-import {configureDeferredStart, createStartBarrier, emulatorCheckpointAvailability, needsVerboseRestore, type StartBarrier} from "./lifecycle.js";
+import {configureDeferredStart, createStartBarrier, emulatorCheckpointAvailability, needsVerboseRestore, startupCompletionErrorCode, type StartBarrier} from "./lifecycle.js";
 import {installEmulatorJsRetroArchConfig} from "./retroarch-config.js";
-import {installEmulatorJs423StateRestoreCompatibility} from "./state-restore.js";
+import {installStartupStateRestore} from "./startup-state.js";
 import {installSupermodelState} from "./supermodel-state.js";
 import {installSupermodelRestore} from "./supermodel-restore.js";
 import {createRetromDefaultControls, emulatorControlScheme, thomsonMachineOption} from "./default-controls.js";
@@ -93,6 +96,7 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
   private cleanupInputFilter: (() => void) | null = null;
   private cleanupGamepadIndex: (() => void) | null = null;
   private inputFilter: RuntimeGamepadFilter | null = null;
+  private contentAcceptance: ReturnType<typeof installContentAcceptance> | null = null;
   private cleanupRetroArchConfig: () => void = () => undefined;
   private dosboxCompatibility: ReturnType<typeof installDOSBoxPureStateCompatibility> | null = null;
   private cleanupDeferredStart: (() => void) | null = null;
@@ -104,6 +108,7 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
   private exitRequestedEmitted = false;
   private checkpointAvailability: RuntimeCheckpointAvailabilityV1 = {available: false, reason: "NOT_READY"};
   private readonly implementation: EmulatorImplementation;
+  private readonly capabilities: LaunchEnvelopeV1["runtime"]["capabilities"];
   private readonly eagerDiskMount: boolean;
   private cleanupBIOS?: () => void;
   private readonly contentOwner = new ProviderContentOwner(error => this.fail(error.message, error), diagnostic => this.host.reportDiagnostic({code: "CONTENT_IO_METRICS", message: JSON.stringify(diagnostic)}));
@@ -118,6 +123,8 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
     this.startup = new StartupTasks(event => this.emit(event), host.signal);
     const target = requireEmulatorImplementation(envelope.runtime.targetId, assetIndex);
     this.implementation = target.implementation;
+    const declared = envelope.runtime.capabilities;
+    this.capabilities = {...declared, discSwitch: declared.discSwitch && optionalResource(envelope, "discs", "MULTI_DISC") !== null};
     this.eagerDiskMount = this.implementation.runtimeCore === "puae";
   }
 
@@ -188,7 +195,7 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
   }
 
   getState() {return this.state;}
-  getCapabilities() {return this.envelope.runtime.capabilities;}
+  getCapabilities() {return this.capabilities;}
   getInputCapabilities() {return providerInputCapabilities(emulatorJsProviderDefinition, this.envelope.runtime.targetId);}
   getCheckpointAvailability() {return {...this.checkpointAvailability};}
   getCanvas() {return this.instance?.canvas ?? null;}
@@ -223,26 +230,16 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
     closeEmulatorJsNativeSettings(this.requireInstance());
   }
   async getDiscState(): Promise<RuntimeDiscStateV1> {
-    if (!this.envelope.runtime.capabilities.discSwitch) {throw capabilityError();}
+    if (!this.getCapabilities().discSwitch) {throw capabilityError();}
     return readEmulatorJsDiscState(this.requireInstance(), this.requireDiscResource());
   }
   async switchDisc(index: number): Promise<RuntimeDiscStateV1> {
-    if (!this.envelope.runtime.capabilities.discSwitch) {throw capabilityError();}
+    if (!this.getCapabilities().discSwitch) {throw capabilityError();}
     const instance = this.requireInstance();
     const resourceValue = this.requireDiscResource();
     let result: ReturnType<typeof switchEmulatorJsDisc>;
     try {
-      const before = readEmulatorJsDiscState(instance, resourceValue);
-      if (before.currentIndex === index) {return before;}
-      const manager = instance.gameManager;
-      if (!manager?.toggleMainLoop) {throw new Error("PLAYER_DISC_RUNTIME_INVALID");}
-      const wasPaused = this.state === "PAUSED";
-      manager.toggleMainLoop(false);
-      try {result = switchEmulatorJsDisc(instance, resourceValue, index);}
-      finally {
-        manager.toggleMainLoop(!wasPaused);
-        instance.paused = wasPaused;
-      }
+      result = switchEmulatorJsDiscPreservingPause(instance, resourceValue, index, this.state === "PAUSED");
     } catch (error) {throw contractError(error);}
     if (result.changed) {this.emit({type: "DISC_CHANGED", state: result.state});}
     return result.state;
@@ -274,16 +271,16 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
   subscribe(listener: (event: RuntimeEventV1) => void) {this.listeners.add(listener); return () => this.listeners.delete(listener);}
 
   private installPreloaderCompatibility(runtimeWindow: EjsWindow) {
+    if (this.implementation.contentAcceptance === "CORE_RESULT_V1") {this.contentAcceptance = installContentAcceptance(runtimeWindow);}
     this.cleanupRetroArchConfig = installEmulatorJsRetroArchConfig(runtimeWindow,
-      this.implementation.runtimeCore, Boolean(this.restorePayload) && this.implementation.release === "4.2.3");
+      this.implementation.runtimeCore, Boolean(this.restorePayload));
     this.cleanupArchiveWorker = installArchiveWorkerCompatibility(runtimeWindow, this.implementation.release,
       runtimeBase(this.envelope, this.implementation.release), this.implementation.runtimeCore);
     if (this.implementation.release === "4.2.3" && Object.keys(runtimeWindow.EJS_externalFiles ?? {}).length) {
       this.cleanupExternalFiles = installExternalFileCompatibility(runtimeWindow);
     }
-    if (this.restorePayload && this.implementation.release === "4.2.3") {
-      this.cleanupStateRestore = installEmulatorJs423StateRestoreCompatibility(runtimeWindow,
-        this.implementation.runtimeCore === "mame2003_plus");
+    if (this.restorePayload) {
+      this.cleanupStateRestore = installStartupStateRestore(runtimeWindow, this.implementation.runtimeCore, this.implementation.release);
     }
     if (this.restorePayload && this.implementation.runtimeCore === "supermodel") {
       this.supermodelRestore = installSupermodelRestore(runtimeWindow);
@@ -321,6 +318,8 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
       this.cleanupFrameStyle = createEmulatorJsSurface(runtimeWindow);
       this.startBarrier = createStartBarrier();
       this.configure(runtimeWindow);
+      await retireEmulatorDownloadCaches(runtimeWindow.indexedDB, code => this.host.reportDiagnostic({code, message: "Obsolete EmulatorJS download cache could not be fully removed; persistent download caching remains disabled."}));
+      this.checkMountActive();
       if (optionalResource(this.envelope, "parent", "PARENT_ARCHIVE")) {
         this.cleanupParent = await this.startup.run("DEPENDENCIES", task => prepareParentContent(runtimeWindow, this.envelope,
           bindOptionalTargetContent(content, declaration), this.contentOwner.signal,
@@ -352,13 +351,14 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
       loader.addEventListener("error", () => this.fail("PLAYER_RUNTIME_LOADER_FAILED"), {once: true});
       await this.startup.run("GAME_START", () => this.startBarrier!.promise, {summary: true});
       this.checkMountActive();
-      this.clearStartBarrier();
+      this.startupObserver?.ready();
+      this.startBarrier = null;
       this.cleanupStartupDownloads?.();
       this.startup.completePreparations();
       this.startup.stop();
       this.transition("RUNNING");
     } catch (error) {
-      if (this.state !== "FAILED" && this.state !== "EXITED") {this.transition("FAILED");}
+      this.fail(error instanceof Error ? error.message : "PLAYER_RUNTIME_FAILED", error);
       this.contentOwner.force();
       await this.exit();
       throw error;
@@ -394,9 +394,8 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
     runtimeWindow.EJS_EXPERIMENTAL_NETPLAY = false;
     runtimeWindow.EJS_threads = this.implementation.artifactFlavor === "THREAD_WASM";
     runtimeWindow.EJS_fullscreenOnLoaded = false;
-    runtimeWindow.EJS_disableDatabases = true;
+    disableEmulatorDownloadCache(runtimeWindow, this.implementation.release);
     runtimeWindow.EJS_disableLocalStorage = true;
-    runtimeWindow.EJS_CacheLimit = 0;
     runtimeWindow.EJS_Buttons = {exitEmulation: false};
     runtimeWindow.EJS_defaultControls = createRetromDefaultControls(this.implementation.runtimeCore);
     runtimeWindow.EJS_defaultOptions = {...this.implementation.defaultOptions, ...thomsonMachineOption(this.implementation.runtimeCore, this.envelope.session.title),
@@ -471,6 +470,7 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
     this.startObserved = true;
     try {
       if (!this.instance) {throw new Error("PLAYER_RUNTIME_UNAVAILABLE");}
+      await this.contentAcceptance?.wait(this.host.signal);
       this.dosboxCompatibility?.prepare(this.instance);
       const discs = optionalResource(this.envelope, "discs", "MULTI_DISC");
       if (discs) {await this.prepareInitialDisc(discs);}
@@ -484,10 +484,7 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
       this.updateCheckpointAvailability(this.currentCheckpointAvailability());
       this.startBarrier?.resolve();
     } catch (error) {
-      const code = error instanceof Error && error.message.startsWith("PLAYER_")
-        ? error.message
-        : "PLAYER_STATE_RESTORE_FAILED";
-      this.fail(code, error);
+      this.fail(startupCompletionErrorCode(error), error);
     }
   }
 
@@ -584,6 +581,7 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
   }
 
   private cleanupSurface() {
+    this.contentAcceptance?.cleanup(); this.contentAcceptance = null;
     this.cleanupDaphneProject?.(); this.cleanupDaphneProject = null;
     this.lutroNativeSave?.stop(); this.lutroNativeSave = null;
     this.cleanupSeekableFS?.(); this.cleanupSeekableFS = null;
@@ -599,12 +597,13 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
 
   private fail(code: string, error?: unknown) {
     if (this.state === "FAILED" || this.state === "EXITED") {return;}
+    const failure = createRuntimeFailure(code, error, this.state === "RUNNING" || this.state === "PAUSED" ? "PLAYING" : "STARTUP");
     this.transition("FAILED");
     this.lutroNativeSave?.stop();
     this.contentOwner.force(error instanceof ContentIOError ? error : new ContentIOError("INTERNAL"));
     this.updateCheckpointAvailability({available: false, reason: "FAILED"});
     this.host.reportDiagnostic({code, message: error instanceof Error ? error.message : code});
-    this.emit({type: "FATAL_ERROR", code});
+    this.emit({type: "FATAL_ERROR", failure});
     this.startBarrier?.reject(new PlayerRuntimeError(code, {cause: error}));
   }
 

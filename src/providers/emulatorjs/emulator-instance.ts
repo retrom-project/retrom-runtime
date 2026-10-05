@@ -84,7 +84,7 @@ export type EjsWindow = Window & {
   EJS_fullscreenOnLoaded?: boolean;
   EJS_disableDatabases?: boolean;
   EJS_disableLocalStorage?: boolean;
-  EJS_CacheLimit?: number;
+  EJS_cacheConfig?: {enabled: boolean};
   EJS_Buttons?: Record<string, boolean>;
   EJS_defaultControls?: EmulatorDefaultControls;
   EJS_defaultOptions?: Record<string, string>;
@@ -103,7 +103,7 @@ export const configuredGlobals = [
   "EJS_biosUrl", "EJS_gameParentUrl", "EJS_startOnLoaded", "EJS_dontExtractRom",
   "EJS_disableBatchBootup", "EJS_disableCue", "EJS_language", "EJS_disableAutoLang", "EJS_DEBUG_XX",
   "EJS_EXPERIMENTAL_NETPLAY", "EJS_threads", "EJS_fullscreenOnLoaded", "EJS_disableDatabases",
-  "EJS_disableLocalStorage", "EJS_CacheLimit", "EJS_Buttons", "EJS_defaultControls",
+  "EJS_disableLocalStorage", "EJS_cacheConfig", "EJS_Buttons", "EJS_defaultControls",
   "EJS_defaultOptions", "EJS_shaders", "EJS_paths",
   "EJS_externalFiles", "EJS_ready", "EJS_onGameStart",
 ] as const;

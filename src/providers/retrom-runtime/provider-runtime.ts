@@ -1,3 +1,4 @@
+import {createRuntimeFailure} from "../../provider/failure.js";
 import {StartupTasks} from "../../provider/startup.js";
 import {authorizeNativePreload} from "../../native-web/preload-bootstrap.js";
 import {ProviderContentOwner} from "../../provider/content-owner.js";
@@ -349,9 +350,10 @@ class RetromRuntimePlayer implements PlayerRuntimeV1 {
 
   private async fail(error: unknown) {
     if (this.stopping()) {return;}
+    const failure = createRuntimeFailure(stableError(error).message, error, this.state === "RUNNING" || this.state === "PAUSED" ? "PLAYING" : "STARTUP");
     this.transition("FAILED");
     this.contentOwner.force(error instanceof ContentIOError ? error : new ContentIOError("INTERNAL", {cause: error}));
-    this.emit({type: "FATAL_ERROR", code: stableError(error).message});
+    this.emit({type: "FATAL_ERROR", failure});
     try {await this.exit();} catch (cleanupError) {this.reportCleanupFailure(cleanupError);}
   }
 

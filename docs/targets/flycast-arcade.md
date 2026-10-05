@@ -29,3 +29,13 @@ Required firmware is mounted through the external-file resource:
 This cartridge path does not pair GD-ROM ZIPs with CHD images, nor resolve
 parent/clone ROM archives. Those inputs need their own import grouping and
 external-file delivery before they can be declared supported.
+
+Each arcade Target declares `FLYCAST_CARTRIDGE` content requirements with its
+hardware and the SHA-256 identities of the shipped core and ROM requirement
+catalog. The core fork exports that catalog from the pinned native machine table;
+it includes media type, parent, required member names, sizes and available CRCs.
+The Host checks these facts before publishing readiness. GD-ROM, Compact Flash,
+unknown machines, wrong hardware and missing or mismatched required members are
+distinct rejections. A complete ZIP can contain parent members, but the runtime
+does not search for external parent archives. Candidate and formal inputs require
+the complete core, catalog, report and license asset set.

@@ -96,7 +96,14 @@ export type TargetInputDeclaration = {
   optional: boolean;
 };
 
+export type TargetAssetReference = Readonly<{path: string; sha256: string}>;
+export type TargetContentRequirements = Readonly<{kind: "DECRYPTED_NCSD_NCCH"}> |
+ Readonly<{kind: "FLYCAST_CARTRIDGE"; platform: "naomi" | "naomi2" | "atomiswave"; catalog: TargetAssetReference; core: TargetAssetReference}>;
+export type TargetArcadeDAT = Readonly<{format: "ARCADE_XML"; asset: TargetAssetReference; core: TargetAssetReference; provenance: TargetAssetReference}>;
+
 export type TargetDeclaration = {
+  contentRequirements?: TargetContentRequirements;
+  arcadeDAT?: TargetArcadeDAT;
   id: string;
   displayName: string;
   adapterId: string;

@@ -80,7 +80,7 @@ it("[X-16] UNIT/provider-late-worker exiting during Worker bootstrap closes late
 it("[BR-09] UNIT/provider-worker-failure propagates one terminal error and closes native resources", async () => {
   const session = sessionFixture(), adapter = adapterFixture(); vi.mocked(mountTargetAdapter).mockResolvedValue(adapter);
   const player = await createRuntime(wasmEnvelope(), hostFixture()), fatal: string[] = [];
-  player.subscribe(event => {if (event.type === "FATAL_ERROR") {fatal.push(event.code);}}); await player.mount(document.createElement("div"));
+  player.subscribe(event => {if (event.type === "FATAL_ERROR") {fatal.push(event.failure.code);}}); await player.mount(document.createElement("div"));
   const notify = vi.mocked(bootstrapContentSession).mock.calls[0][0].onFailure!;
   notify(new ContentIOError("IDENTITY_CHANGED")); notify(new ContentIOError("INTERNAL")); await player.exit();
   expect(fatal).toEqual(["CONTENT_IO_IDENTITY_CHANGED"]); expect(adapter.exit).toHaveBeenCalledOnce(); expect(session.close).toHaveBeenCalledOnce();

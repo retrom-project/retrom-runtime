@@ -15,6 +15,21 @@ const bundleDigest = "b".repeat(64);
 afterEach(() => {vi.useRealTimers(); vi.unstubAllGlobals();});
 
 describe("EmulatorJS Provider Module V1", () => {
+  it("narrows disc switching to sessions with disc resources", async () => {
+    const target = emulatorJsProviderDefinition.targets.find(entry => entry.id === "yabause")!;
+    const assets = {[target.implementation.coreAssetPath]: {sha256: target.implementation.coreSha256, sizeBytes: target.implementation.coreSizeBytes}};
+    const multi = yabauseEnvelope();
+    const single = {...multi, resources: multi.resources.filter(resource => resource.kind !== "MULTI_DISC")};
+    const player = await createEmulatorJsPlayer(single, hostFixture(), assets);
+    expect(single.runtime.capabilities.discSwitch).toBe(true);
+    expect(player.getCapabilities().discSwitch).toBe(false);
+    expect(player.getCapabilities()).toBe(player.getCapabilities());
+    await expect(player.getDiscState()).rejects.toMatchObject({code: "PLAYER_RUNTIME_CAPABILITY_UNSUPPORTED"});
+    const multiPlayer = await createEmulatorJsPlayer(multi, hostFixture(), assets);
+    expect(multiPlayer.getCapabilities().discSwitch).toBe(true);
+    expect(multiPlayer.getCapabilities()).toBe(multiPlayer.getCapabilities());
+  });
+
   it("retains screenshot buffers before loading any core and restores the iframe on exit", async () => {
     const frame = document.createElement("iframe"); document.body.append(frame);
     const target = frame.contentWindow as Window & typeof globalThis & Record<string, unknown>;

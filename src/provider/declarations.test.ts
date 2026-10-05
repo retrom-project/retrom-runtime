@@ -104,8 +104,8 @@ describe("retrom-runtime provider declarations", () => {
     const manifest = projectProviderManifest(retromRuntimeProviderDefinition);
     for (const id of ["rpgmaker-2000", "rpgmaker-2003"]) {
       expect(manifest.targets.find((target) => target.id === id)?.inputs).toEqual([
-        {cardinality: "ONE", kind: "FILE_TREE", optional: false, role: "game"},
-        {cardinality: "ONE", kind: "FILE_TREE", optional: true, role: "rtp"},
+        {maxFileBytes: Number.MAX_SAFE_INTEGER, cardinality: "ONE", kind: "FILE_TREE", optional: false, role: "game"},
+        {maxFileBytes: Number.MAX_SAFE_INTEGER, cardinality: "ONE", kind: "FILE_TREE", optional: true, role: "rtp"},
       ]);
     }
   });

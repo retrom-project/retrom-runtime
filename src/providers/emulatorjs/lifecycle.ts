@@ -75,3 +75,8 @@ export function createStartBarrier(): StartBarrier {
   });
   return {promise, reject: rejectPromise, resolve: resolvePromise};
 }
+
+export function startupCompletionErrorCode(error: unknown): string {
+  return error instanceof Error && error.message.startsWith("PLAYER_")
+    ? error.message : "PLAYER_STATE_RESTORE_FAILED";
+}

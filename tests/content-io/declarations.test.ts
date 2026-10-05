@@ -15,6 +15,6 @@ it("[PK-01] CONTRACT/private-policies covers every input role and publishes only
     expect(manifest).toEqual(expected);
     expect(JSON.stringify(manifest)).not.toContain("contentIO");
     expect(JSON.stringify(manifest)).not.toContain("boundaryId");
-    expect(JSON.stringify(manifest)).not.toContain("maxFileBytes");
+    expect(JSON.stringify(manifest)).toContain("maxFileBytes");
   }
 });

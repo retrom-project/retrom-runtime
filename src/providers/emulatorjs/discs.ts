@@ -1,6 +1,7 @@
 import type {RuntimeDiscStateV1, RuntimeMultiDiscResourceV1} from "../../provider/module-api.js";
 
 export type EmulatorDiscInstance = {
+  paused?: boolean;
   allSettings?: Record<string, unknown>;
   gameManager?: {
     getDiskCount?: () => number;
@@ -46,6 +47,24 @@ export function switchEmulatorJsDisc(
   const after = readEmulatorJsDiscState(instance, resource);
   if (after.currentIndex !== targetIndex) {throw discError();}
   return {changed: true, state: after};
+}
+
+export function switchEmulatorJsDiscPreservingPause(
+  instance: EmulatorDiscInstance,
+  resource: RuntimeMultiDiscResourceV1,
+  targetIndex: number,
+  wasPaused: boolean,
+) {
+  const before = readEmulatorJsDiscState(instance, resource);
+  if (before.currentIndex === targetIndex) {return {changed: false, state: before};}
+  const manager = instance.gameManager;
+  if (!manager?.toggleMainLoop) {throw discError();}
+  manager.toggleMainLoop(false);
+  try {return switchEmulatorJsDisc(instance, resource, targetIndex);}
+  finally {
+    manager.toggleMainLoop(!wasPaused);
+    instance.paused = wasPaused;
+  }
 }
 
 function discError() {return new Error("PLAYER_DISC_RUNTIME_INVALID");}

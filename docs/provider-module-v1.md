@@ -42,8 +42,15 @@ for the existing DOS/Supermodel restore path). A stalled parallel request still 
 Cancellation aborts pending transports and clears timers. HTTP responses retain upstream fallback semantics.
 The Provider reports `PLAYER_RESOURCE_IDLE_TIMEOUT`, `PLAYER_RESOURCE_NETWORK_FAILED`,
 `PLAYER_CORE_INITIALIZATION_TIMEOUT`, `PLAYER_RUNTIME_INITIALIZATION_FAILED` or `PLAYER_RUNTIME_CSP_BLOCKED`
-through the ordinary FAILED state. The Host can explain the failure and offer a new Launch/retry without guessing
-the core implementation. Startup listeners and transport wrappers are removed when mounting finishes.
+through the ordinary FAILED state. Module V1 reports FATAL_ERROR with a structured failure: stable code, STARTUP/PLAYING phase,
+CONTENT/NETWORK/STORAGE/SECURITY/CORE/CONFIGURATION category, retryable and diagnostics. Only known
+temporary network errors are retryable. Native causes are copied before cleanup, stripped of URLs, paths and
+credentials, and bounded to eight entries of 500 characters. Content I/O length, checksum and immutable-identity
+mismatches are CONTENT failures and are not automatically retried. Hosts retain the failure and return navigation
+after teardown; they never classify errors by parsing native messages. Mount completion removes transport
+wrappers and deadlines; frame error, rejection and CSP listeners survive until exit to observe gameplay failures.
+The browser's message-only Resize Observer deferred-delivery notification does not terminate the runtime;
+it remains observable by browser diagnostics. Script exceptions, Wasm traps and unhandled rejections still fail.
 
 EasyRPG requires an explicit startup cancellation signal. Its factory/script errors and enforced eval CSP
 violations fail mounting immediately instead of leaving a pending factory promise. Browser release builds use
@@ -236,8 +243,9 @@ does not change the core Reader/bridge ABI or checkpoint formats.
 The optional public Target capability `contentLoading` is projected from the
 private game input policy: RANGE / ON_OPEN expose `ON_DEMAND_AND_PRELOAD`, EAGER
 exposes `PRELOAD_ONLY`, and unmanaged loaders omit it. It is part of the exact
-manifest/Envelope/runtime capability comparison; private bridges and limits
-remain private. Hosts show a choice only for dual-mode Targets, a fixed full
+manifest/Envelope/runtime capability comparison. Manifest V2 inputs publish maxFileBytes from the same
+Content I/O policy (null for unmanaged inputs); limits apply to each delivered file, including individual
+FILE_TREE entries. Bridges and workspace implementation details remain private. Hosts show a choice only for dual-mode Targets, a fixed full
 loading indication for preload-only Targets, and no cache controls otherwise.
 Product starts resolve device preferences against the actual Launch Target,
 including restores and quick starts; unsupported Targets receive no preference.
@@ -247,3 +255,36 @@ valid for dual-mode Targets; fixed/hidden modes must not overwrite device prefer
 ### Original content cache ownership
 
 EasyRPG now publishes `contentLoading: ON_DEMAND_AND_PRELOAD`: default game/RTP reads remain lazy and use immutable index identities; explicit PRELOAD commits the complete indexed content before launch. EmulatorJS external BIOS and multi-disc media, and MAME Arcade BIOS bundles, all use the same persistent Content I/O store as ROMs and Parent ROMs. The application does not automatically evict valid original content by age or size. Quota denial follows the existing default-mode fallback and explicit-PRELOAD failure contract.
+
+
+### Session disc availability
+
+Envelope capabilities remain the exact Target declaration. The runtime instance's `getCapabilities()` describes the current session: `discSwitch` is false when no `MULTI_DISC` resource is present, even for a Target supporting multi-disc games. Other capability fields remain equal to the declaration. No instance may grant undeclared capabilities. Single-disc saves omit a disc index; malformed multi-disc inputs still fail validation.
+
+### Content requirements and native acceptance
+
+Manifest V2 optionally declares closed `contentRequirements` rules and paired
+`arcadeDAT` assets. `DECRYPTED_NCSD_NCCH` requires a valid decrypted executable
+3DS container. `FLYCAST_CARTRIDGE` binds hardware and a core-owned ROM catalog to
+the shipped core digest. FBNeo's `arcadeDAT` binds its exported DAT, core archive
+and provenance; the fork exports the DAT from the actual shipped Wasm. Provider
+packaging verifies every declared asset and its pairing. Hosts consume verified
+facts through their content domain without importing runtime source or starting
+a browser during validation. Candidate overrides cannot replace a paired core
+without also replacing and validating its catalog or DAT. Full candidate bundles
+require every core input to match the declared source digest before any cached
+materialization is reused. Loose development overrides remain scoped to the PFB.
+
+Azahar and FBNeo expose a native content-load receipt: zero means pending, one
+means accepted, minus one means rejected and minus two means encrypted content. EmulatorJS startup events and frame
+counters alone do not complete these Targets' startup barriers. FBNeo's native
+error-screen branch returns a failed load. Azahar exposes a separate asynchronous
+state-load receipt; startup restore waits for success and fails on rejection,
+rather than accepting the wrapper's early callback. The adapter owns these native
+details and reports failures through Module V1.
+
+### EmulatorJS download cache retirement
+
+Content I/O is the sole persistent owner of original game, BIOS and Parent content. The pinned 4.2.3 loader uses `EJS_disableDatabases=true`; the pinned 4.3.0-pre loader uses `EJS_cacheConfig.enabled=false`. The obsolete `EJS_CacheLimit` is not configured. These are explicit interfaces of two current releases, not fallback behavior.
+
+Before loading EmulatorJS, its Provider retires only existing `EmulatorJS-Cache`, `EmulatorJS-roms`, `EmulatorJS-bios` and `EmulatorJS-core` download databases. It never deletes native saves, `EmulatorJS-states`, or Content I/O databases. A blocked or unavailable deletion is bounded and reported diagnostically; disabled download caching still prevents old cache contents from being read or duplicated. The Host does not access EmulatorJS storage internals.

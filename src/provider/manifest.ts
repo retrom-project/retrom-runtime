@@ -21,6 +21,8 @@ export function projectProviderManifest(definition: ProviderDefinition) {
     }
     return {
       assetPaths: sorted(target.assetPaths),
+      ...(target.arcadeDAT ? {arcadeDAT: target.arcadeDAT} : {}),
+      ...(target.contentRequirements ? {contentRequirements: target.contentRequirements} : {}),
       capabilities: {
         ...contentLoadingCapability(target),
         checkpoint: adapter.capabilities.checkpoint,
@@ -39,7 +41,10 @@ export function projectProviderManifest(definition: ProviderDefinition) {
       checkpoint,
       displayName: target.displayName,
       id: target.id,
-      inputs: target.inputs.map((input) => ({...input})),
+      inputs: target.inputs.map((input) => {
+        const policy = target.contentIO[input.role];
+        return {...input, maxFileBytes: "maxFileBytes" in policy ? policy.maxFileBytes : null};
+      }),
       targetOptionsSchema: target.targetOptionsSchema,
     };
   }).sort((left, right) => compareUtf8(left.id, right.id));

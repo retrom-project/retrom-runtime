@@ -229,7 +229,7 @@ describe("Provider-owned lifecycle", () => {
     const stable = error === "third-party error" ? "RUNTIME_FAILED" : error;
     await expect(player.pause()).rejects.toThrow(stable);
     expect(player.getState()).toBe("FAILED");
-    expect(events.filter((event) => event.type === "FATAL_ERROR")).toEqual([{type: "FATAL_ERROR", code: stable}]);
+    expect(events.filter((event) => event.type === "FATAL_ERROR")).toEqual([expect.objectContaining({type: "FATAL_ERROR", failure: expect.objectContaining({code: stable})})]);
     await player.exit();
     expect(adapter.exit).toHaveBeenCalledOnce();
     expect(player.getState()).toBe("FAILED");

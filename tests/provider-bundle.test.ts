@@ -120,7 +120,7 @@ function fixtureManifest() {
       checkpoint: null,
       displayName: "Fixture",
       id: "fixture",
-      inputs: [{cardinality: "ONE", kind: "ROM_BLOB", optional: false, role: "game"}],
+      inputs: [{cardinality: "ONE", kind: "ROM_BLOB", optional: false, role: "game", maxFileBytes: 65536}],
       targetOptionsSchema: {
         additionalProperties: false as const, properties: {}, required: [], type: "object" as const,
       },

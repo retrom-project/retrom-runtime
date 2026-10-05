@@ -12,6 +12,7 @@ import {emulatorJsSourceCatalog} from "../src/providers/emulatorjs/source-catalo
 import {buildEmulatorJsProviderBundle} from "../scripts/provider-release-build.mjs";
 import {developmentForkFiles} from "../scripts/emulatorjs-development-forks.mjs";
 import type {DevelopmentFork} from "../scripts/emulatorjs-development-forks.mjs";
+import type {ForkRelease} from "../scripts/emulatorjs-fork-releases.mjs";
 import {forkReleaseFiles} from "../scripts/emulatorjs-fork-releases.mjs";
 
 describe("EmulatorJS Provider release build", () => {
@@ -88,7 +89,7 @@ async function temporaryRoot() {
 
 async function fixtureForks(sourceRoot: string) {
   const forks = [];
-  for (const fork of emulatorJsSourceCatalog.forks) {
+  for (const fork of emulatorJsSourceCatalog.forks as readonly ForkRelease[]) {
     const destinations = new Map(forkReleaseFiles({forks: [fork]}).map((file) => [file.filename, file.destination]));
     const metadataAsset = fork.assets.find((asset) => asset.filename.endsWith("-release.json"))!;
     const assets = fork.assets.filter((asset) => asset !== metadataAsset).map((asset) => {
@@ -97,10 +98,11 @@ async function fixtureForks(sourceRoot: string) {
       return {...asset, contents, sha256: createHash("sha256").update(contents).digest("hex"),
         sizeBytes: Buffer.byteLength(contents)};
     });
+    const hasContentReport = ["flycast", "fbneo", "azahar"].includes(fork.runtimeCore);
     const records = assets.map((asset) => ({filename: asset.filename, sizeBytes: asset.sizeBytes,
-      ...(fork.runtimeCore === "flycast" ? {sha256: asset.sha256} : {observedSha256: asset.sha256})}));
+      ...(hasContentReport ? {sha256: asset.sha256} : {observedSha256: asset.sha256})}));
     const metadata = JSON.stringify({...fork, schemaVersion: 1,
-      ...(fork.runtimeCore === "flycast" ? {files: records} : {assets: records})});
+      ...(hasContentReport ? {files: records} : {assets: records})});
     const all = [...assets, {...metadataAsset, contents: metadata,
       sha256: createHash("sha256").update(metadata).digest("hex"), sizeBytes: Buffer.byteLength(metadata)}];
     for (const file of forkReleaseFiles({forks: [{...fork, assets: all}]})) {

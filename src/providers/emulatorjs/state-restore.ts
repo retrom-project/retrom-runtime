@@ -169,8 +169,8 @@ export function installEmulatorJs423StateRestoreCompatibility(playerWindow: Wind
     const wrapped = function (this: unknown, config: RuntimeConfig) {
       return Reflect.apply(factory, this, [{
         ...config,
-        print: (...args: unknown[]) => {observeNativeLog(args);},
-        printErr: (...args: unknown[]) => {observeNativeLog(args);},
+        print: (...args: unknown[]) => {observeNativeLog(args); config.print?.(...args);},
+        printErr: (...args: unknown[]) => {observeNativeLog(args); config.printErr?.(...args);},
         postMainLoop: (...args: unknown[]) => {
           config?.postMainLoop?.(...args);
           // The native task reads large states over multiple loops. Its loading
@@ -192,7 +192,10 @@ export function installEmulatorJs423StateRestoreCompatibility(playerWindow: Wind
     configurable: true,
     enumerable: runtimeDescriptor?.enumerable ?? true,
     get: () => runtimeFactory,
-    set: (factory: RuntimeFactory | undefined) => {runtimeFactory = wrapRuntime(factory);},
+    set: (factory: RuntimeFactory | undefined) => {
+      runtimeDescriptor?.set?.call(target, factory);
+      runtimeFactory = wrapRuntime(runtimeDescriptor?.get ? runtimeDescriptor.get.call(target) : factory);
+    },
   });
 
   const originalFetch = target.fetch.bind(target);

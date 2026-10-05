@@ -70,7 +70,7 @@ describe("PFB loose provider", () => {
       localAssets: [{source: localAsset, output: "runtime/butterscotch/worker.mjs"}],
       outputRoot,
     });
-    await writeFile(entryPoint, "export const providerVersion=__RETROM_PROVIDER_VERSION__; export const providerApiVersion=2; export const assets=__RETROM_PROVIDER_ASSET_INDEX__;\n");
+    await writeFile(entryPoint, "export const providerVersion=__RETROM_PROVIDER_VERSION__; export const providerApiVersion=1; export const assets=__RETROM_PROVIDER_ASSET_INDEX__;\n");
     await writeFile(localAsset, "export const changed=2;\n");
     const second = await buildPFBProviderDev({
       activePath, entryPoint, installedRoot, providerId,
@@ -89,9 +89,9 @@ describe("PFB loose provider", () => {
     expect(Buffer.from(descriptor.files[0].contentBase64, "base64").toString("utf8"))
       .toBe("export const changed=2;\n");
     const client = Buffer.from(descriptor.files[1].contentBase64, "base64").toString("utf8");
-    expect(client).toMatch(/=2[,;]/u);
     expect(client).toContain("providerApiVersion");
     const module = await import(`data:text/javascript;base64,${Buffer.from(client).toString("base64")}`);
+    expect(module.providerApiVersion).toBe(1);
     expect(module.providerVersion).toBe("0.16.8");
     expect(client).toContain(sha256("export const changed=2;\n"));
     expect(client).not.toContain(sha256(baseAsset));

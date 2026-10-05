@@ -2,3 +2,7 @@ export function readPFBProviderCoreFiles(
   outputRoot: string, providerId: string, staging: string,
   assetIndex: Record<string, {sha256: string; sizeBytes: number}>,
 ): Promise<Array<{path: string; contents: Buffer}>>;
+export function requireBaseContentPairs(
+  targets: readonly Pick<import("../src/provider/declarations.js").TargetDeclaration, "contentRequirements" | "arcadeDAT">[],
+  files: readonly {path: string; sha256: string}[],
+): void;

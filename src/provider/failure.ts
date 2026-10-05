@@ -10,7 +10,7 @@ const network = new Set(["CONTENT_IO_NETWORK_FAILED", "CONTENT_IO_TIMEOUT", "CON
   "PLAYER_RESOURCE_IDLE_TIMEOUT", "PLAYER_RESOURCE_NETWORK_FAILED", "PLAYER_RUNTIME_LOADER_FAILED"]);
 const storage = new Set(["CONTENT_IO_CACHE_UNAVAILABLE", "CONTENT_IO_WORKSPACE_UNAVAILABLE"]);
 const content = new Set(["PLAYER_CONTENT_REJECTED", "CONTENT_IO_CHECKSUM_MISMATCH", "CONTENT_IO_IDENTITY_CHANGED",
-  "CONTENT_IO_SIZE_MISMATCH", "CONTENT_IO_LIMIT_EXCEEDED"]);
+  "CONTENT_IO_LENGTH_MISMATCH"]);
 
 export function createRuntimeFailure(code: string, error: unknown, phase: RuntimeFailureV1["phase"]): RuntimeFailureV1 {
   const category = classifyFailure(code, error);

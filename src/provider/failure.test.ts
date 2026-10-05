@@ -1,4 +1,5 @@
 import {describe, expect, it} from "vitest";
+import {ContentIOError} from "../content-io/errors.js";
 import {createRuntimeFailure, RuntimeFailureError} from "./failure.js";
 
 describe("persistent runtime failure", () => {
@@ -16,6 +17,14 @@ describe("persistent runtime failure", () => {
       expect(createRuntimeFailure(code, undefined, "STARTUP").retryable).toBe(false);
     }
   });
+  it.each(["LENGTH_MISMATCH", "CHECKSUM_MISMATCH", "IDENTITY_CHANGED"] as const)(
+    "classifies the Content I/O %s error as content evidence without retry", name => {
+      const error = new ContentIOError(name);
+      expect(createRuntimeFailure(error.code, error, "STARTUP")).toMatchObject({
+        code: error.code, category: "CONTENT", phase: "STARTUP", retryable: false,
+      });
+    },
+  );
   it("bounds recursive causes and noisy diagnostics", () => {
     const error = new RuntimeFailureError("OPENBOR_CORE_EXITED", "CONTENT", Array(20).fill("x".repeat(2000)));
     error.cause = error;

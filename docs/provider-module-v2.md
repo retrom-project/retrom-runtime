@@ -45,7 +45,8 @@ The Provider reports `PLAYER_RESOURCE_IDLE_TIMEOUT`, `PLAYER_RESOURCE_NETWORK_FA
 through the ordinary FAILED state. Module V2 reports FATAL_ERROR with a structured failure: stable code, STARTUP/PLAYING phase,
 CONTENT/NETWORK/STORAGE/SECURITY/CORE/CONFIGURATION category, retryable and diagnostics. Only known
 temporary network errors are retryable. Native causes are copied before cleanup, stripped of URLs, paths and
-credentials, and bounded to eight entries of 500 characters. Hosts retain the failure and return navigation
+credentials, and bounded to eight entries of 500 characters. Content I/O length, checksum and immutable-identity
+mismatches are CONTENT failures and are not automatically retried. Hosts retain the failure and return navigation
 after teardown; they never classify errors by parsing native messages. Mount completion removes transport
 wrappers and deadlines; frame error, rejection and CSP listeners survive until exit to observe gameplay failures.
 The browser's message-only Resize Observer deferred-delivery notification does not terminate the runtime;

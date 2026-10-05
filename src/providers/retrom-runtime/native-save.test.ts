@@ -1,7 +1,7 @@
 import {decodeStoredCheckpoint} from "../../provider/checkpoint-storage.js";
 import {describe, expect, it, vi} from "vitest";
 import type {CheckpointAvailability} from "../../contract.js";
-import type {RuntimeEventV1} from "../../provider/module-api.js";
+import type {RuntimeEventV2} from "../../provider/module-api.js";
 import {adapterFixture, hostFixture} from "../../../tests/provider-adapter-fixture.js";
 import {wasmEnvelope} from "../../../tests/provider-fixtures.js";
 import {createRetromRuntimePlayer} from "./provider-runtime.js";
@@ -29,7 +29,7 @@ describe("native save persistence boundary", () => {
     vi.mocked(mountTargetAdapter).mockResolvedValue(adapterFixture({getCheckpointAvailability: () => availability}));
     const envelope = wasmEnvelope(); envelope.runtime.checkpoint!.semantics = "GAME_SAVE";
     const player = createRetromRuntimePlayer(envelope, hostFixture(), {});
-    const events: RuntimeEventV1[] = []; player.subscribe((event) => events.push(event));
+    const events: RuntimeEventV2[] = []; player.subscribe((event) => events.push(event));
     try {
       await player.mount(document.createElement("div"));
       events.length = 0;
@@ -51,7 +51,7 @@ describe("native save persistence boundary", () => {
     if (!envelope.runtime.checkpoint) {throw new Error("fixture checkpoint missing");}
     envelope.runtime.checkpoint.semantics = "GAME_SAVE";
     const player = createRetromRuntimePlayer(envelope, hostFixture(), {});
-    const events: RuntimeEventV1[] = [];
+    const events: RuntimeEventV2[] = [];
     player.subscribe((event) => events.push(event));
     try {
       await player.mount(document.createElement("div"));
@@ -73,7 +73,7 @@ describe("native save persistence boundary", () => {
     vi.mocked(mountTargetAdapter).mockResolvedValue(adapter);
     const envelope = wasmEnvelope(); envelope.runtime.checkpoint!.semantics = "GAME_SAVE";
     const player = createRetromRuntimePlayer(envelope, hostFixture(), {});
-    const events: RuntimeEventV1[] = []; player.subscribe((event) => events.push(event));
+    const events: RuntimeEventV2[] = []; player.subscribe((event) => events.push(event));
     try {
       await player.mount(document.createElement("div"));
       expect(player.getCheckpointAvailability()).toMatchObject({save: {captureAvailable: true}});
@@ -93,7 +93,7 @@ describe("native save persistence boundary", () => {
     const adapter = adapterFixture(); vi.mocked(mountTargetAdapter).mockResolvedValue(adapter);
     const envelope = wasmEnvelope(); envelope.runtime.checkpoint!.semantics = "GAME_SAVE";
     const player = createRetromRuntimePlayer(envelope, hostFixture(), {});
-    const events: RuntimeEventV1[] = []; player.subscribe((event) => events.push(event));
+    const events: RuntimeEventV2[] = []; player.subscribe((event) => events.push(event));
     await player.mount(document.createElement("div"));
     const checkpoint = {bytes: new Uint8Array([3, 4]), format: "wasm4-state-v1"};
     const screenshot = new Blob(["image"], {type: "image/png"});
@@ -115,7 +115,7 @@ describe("native save persistence boundary", () => {
     const adapter = adapterFixture(); vi.mocked(mountTargetAdapter).mockResolvedValue(adapter);
     const envelope = wasmEnvelope(); envelope.runtime.checkpoint!.semantics = "GAME_SAVE";
     const host = hostFixture(); const player = createRetromRuntimePlayer(envelope, host, {});
-    const events: RuntimeEventV1[] = []; player.subscribe((event) => events.push(event));
+    const events: RuntimeEventV2[] = []; player.subscribe((event) => events.push(event));
     await player.mount(document.createElement("div"));
     vi.mocked(mountTargetAdapter).mock.calls.at(-1)![2].reportExitRequested({
       checkpoint: {format: "wrong", bytes: new Uint8Array([1])}, screenshot: null,

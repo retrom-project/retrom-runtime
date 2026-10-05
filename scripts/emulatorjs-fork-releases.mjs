@@ -35,7 +35,11 @@ const identities = {
   vice_xvic: {repository: "https://github.com/retrom-project/vice-libretro", baseline: "g1b4309f4d56d", license: "COPYING"},
   virtualjaguar: {repository: "https://github.com/retrom-project/virtualjaguar-libretro", baseline: "3.6.1", license: "LICENSE"},
   flycast: {repository: "https://github.com/retrom-project/flycast-wasm", baseline: "1.0", license: "LICENSE",
-    adapterAbi: "emulatorjs-flycast-state-v1"},
+    adapterAbi: "emulatorjs-flycast-state-v1", resources: ["flycast-rom-requirements.json"], report: "flycast.json"},
+  fbneo: {repository: "https://github.com/retrom-project/FBNeo", baseline: "gd5f072e147cf", license: "LICENSE",
+    adapterAbi: "emulatorjs-content-result-v1", resources: ["fbneo-arcade.dat", "fbneo-content-pair.json"], report: "fbneo.json"},
+  azahar: {repository: "https://github.com/retrom-project/azahar", baseline: "g62cfcfb5e488", license: "LICENSE",
+    adapterAbi: "emulatorjs-content-result-v1", coreAsset: "azahar-thread-wasm.data", release: "4.3.0-pre", report: "azahar.json"},
 };
 
 export function forkReleaseFiles(catalog) {
@@ -55,7 +59,7 @@ export function forkReleaseFiles(catalog) {
       [identity.license, `${release}/licenses/forks/${fork.runtimeCore}/${identity.license}`],
       ...(identity.source ? [[identity.source, `${release}/licenses/forks/${fork.runtimeCore}/${identity.source}`]] : []),
       ...(identity.resources ?? []).map((filename) => [filename, `${release}/data/cores/${filename}`]),
-      ...(fork.runtimeCore === "flycast" ? [["flycast.json", "4.2.3/data/cores/reports/flycast.json"]] : []),
+      ...(identity.report ? [[identity.report, `${release}/data/cores/reports/${identity.report}`]] : []),
     ];
     if (!Array.isArray(fork.assets) || fork.assets.length !== expected.length) {invalid();}
     return expected.map(([filename, destination]) => {
@@ -68,21 +72,21 @@ export function forkReleaseFiles(catalog) {
 }
 
 export function verifyForkMetadata(fork, metadata) {
-  const records = fork.runtimeCore === "flycast" ? metadata.files : metadata.assets;
+  const records = identities[fork.runtimeCore]?.report ? metadata.files : metadata.assets;
   if (metadata.repository !== fork.repository || metadata.commit !== fork.commit || metadata.tag !== fork.tag ||
     metadata.adapterAbi !== fork.adapterAbi || metadata.schemaVersion !== 1 || !Array.isArray(records)) {invalid();}
   const assets = fork.assets.filter((asset) => asset.filename !== (identities[fork.runtimeCore]?.metadata ?? "rpg-runtime-release.json"));
   if (records.length !== assets.length || new Set(records.map((entry) => entry.filename)).size !== records.length) {invalid();}
   for (const asset of assets) {
     const described = records.find((entry) => entry.filename === asset.filename);
-    const digest = fork.runtimeCore === "flycast" ? described?.sha256 : described?.observedSha256;
+    const digest = identities[fork.runtimeCore]?.report ? described?.sha256 : described?.observedSha256;
     if (digest !== asset.sha256 || described.sizeBytes !== asset.sizeBytes) {invalid();}
   }
 }
 
 export function forkMetadataPath(fork) {
   const release = identities[fork.runtimeCore]?.release ?? "4.2.3";
-  return `${release}/data/cores/reports/${fork.runtimeCore}${fork.runtimeCore === "flycast" ? "-release" : ""}.json`;
+  return `${release}/data/cores/reports/${fork.runtimeCore}${identities[fork.runtimeCore]?.report ? "-release" : ""}.json`;
 }
 
 function invalid() {throw new Error("EMULATORJS_FORK_RELEASE_INVALID");}

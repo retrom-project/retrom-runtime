@@ -38,7 +38,7 @@ describe("PFB loose provider", () => {
       schemaVersion: 1,
       providerId,
       providerVersion: "0.16.8",
-      providerApiVersion: 1,
+      providerApiVersion: 2,
       clientModulePath: "client.mjs",
       targets: [{id: "butterscotch", assetPaths: ["assets/butterscotch/worker.mjs"]}],
     }));
@@ -64,7 +64,7 @@ describe("PFB loose provider", () => {
     const localAsset = join(root, "worker.mjs");
     await writeFile(localAsset, "export const changed=1;\n");
     const entryPoint = join(root, "entry.ts");
-    await writeFile(entryPoint, "export const providerApiVersion=1; export const assets=__RETROM_PROVIDER_ASSET_INDEX__;\n");
+    await writeFile(entryPoint, "export const providerApiVersion=2; export const assets=__RETROM_PROVIDER_ASSET_INDEX__;\n");
     const first = await buildPFBProviderDev({
       activePath, entryPoint, installedRoot, providerId,
       localAssets: [{source: localAsset, output: "runtime/butterscotch/worker.mjs"}],

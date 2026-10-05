@@ -1,3 +1,5 @@
+import {openBORFailure} from "./failure.js";
+import {RuntimeFailureError} from "../provider/failure.js";
 import type {AdapterContentOptions} from "../provider/content-inputs.js";
 import {sha256} from "@noble/hashes/sha2.js";
 import type {CheckpointAvailability, RuntimeCheckpoint} from "../contract.js";
@@ -25,10 +27,15 @@ export async function mountOpenBOR(config: OpenBORParameters, target: HTMLElemen
   let stopped = false, started = false, ended = false, core: OpenBOR | undefined, error: Error | undefined;
   let exitTask: Promise<void> | undefined;
   let input: ReturnType<typeof installInput> | undefined;
-  const removeErrors = installCoreErrors(realm, () => {
-    ended = true; error = new Error("OPENBOR_CORE_ABORTED");
-    if (!stopped) {failure(error);}
-  });
+  const reportAbort = (cause: unknown) => {
+    if (stopped || error) {return;}
+    ended = true; error = openBORFailure(core, "OPENBOR_CORE_ABORTED", cause);
+    // Log before failure tears down the iframe and its deferred error event.
+    console.error("OpenBOR core aborted", error);
+    logFailure(error);
+    failure(error);
+  };
+  const removeErrors = installCoreErrors(realm, reportAbort);
   const exit = () => {
     if (exitTask) {return exitTask;}
     stopped = true; input?.dispose(); removeErrors(); signal?.removeEventListener("abort", abort);
@@ -47,8 +54,8 @@ export async function mountOpenBOR(config: OpenBORParameters, target: HTMLElemen
   try {
     core = await factory({canvas, noInitialRun: true, locateFile: (name: string) => new URL(name, base).href,
       print: (message: string) => console.debug("OpenBOR", message), printErr: (message: string) => console.warn("OpenBOR", message),
-      onAbort: () => {ended = true; error = new Error("OPENBOR_CORE_ABORTED"); if (!stopped) {failure(error);}},
-      onExit: () => {ended = true; if (!stopped) {error = new Error("OPENBOR_CORE_EXITED"); logFailure(core); failure(error);}},
+      onAbort: reportAbort,
+      onExit: () => {ended = true; if (!stopped) {error = openBORFailure(core, "OPENBOR_CORE_EXITED"); logFailure(error); failure(error);}},
     });
     if (core.retromAbi !== "openbor-host-v1") {throw new Error("OPENBOR_CORE_ABI_MISMATCH");}
     signal?.throwIfAborted();
@@ -111,12 +118,8 @@ function signature(bytes: Uint8Array) {
   return [...sha256(bytes)].map((value) => value.toString(16).padStart(2, "0")).join("");
 }
 
-function logFailure(core: OpenBOR | undefined) {
-  try {
-    if (core && core.FS.stat("/Logs/OpenBorLog.txt").size <= 4 * 1024 * 1024) {
-      console.warn("OpenBOR engine log", new TextDecoder().decode(core.FS.readFile("/Logs/OpenBorLog.txt")).slice(-4000));
-    }
-  } catch { /* A failure before log initialization has no native log. */ }
+function logFailure(error: Error) {
+  for (const line of error instanceof RuntimeFailureError ? error.diagnostics : []) {console.warn("OpenBOR engine log", line);}
 }
 
 async function awaitTermination(ended: () => boolean) {

@@ -31,7 +31,7 @@ describe("Runtime Provider V1 contract consumer", () => {
       "provider-integrity.schema.json",
       "provider-lock.schema.json",
       "provider-manifest.schema.json",
-      "provider-module-v1.d.ts",
+      "provider-module-v2.d.ts",
       "runtime-resource.schema.json",
     ]);
     for (const entry of source.files) {
@@ -40,8 +40,8 @@ describe("Runtime Provider V1 contract consumer", () => {
       expect(createHash("sha256").update(bytes).digest("hex"), entry.path).toBe(entry.sha256);
     }
     expect(source.contractSha256).toMatch(/^[0-9a-f]{64}$/u);
-    expect(await readFile("src/provider/generated/provider-module-v1.ts", "utf8"))
-      .toBe(await readFile(`${root}/provider-module-v1.d.ts`, "utf8"));
+    expect(await readFile("src/provider/generated/provider-module-v2.ts", "utf8"))
+      .toBe(await readFile(`${root}/provider-module-v2.d.ts`, "utf8"));
   });
 
   it("accepts the generated fourteen-target manifest", () => {

@@ -1,6 +1,6 @@
 import {decodeStoredCheckpoint} from "../../provider/checkpoint-storage.js";
 import {afterEach, beforeEach, describe, expect, it, vi} from "vitest";
-import type {RuntimeEventV1} from "../../provider/module-api.js";
+import type {RuntimeEventV2} from "../../provider/module-api.js";
 import type {MountedRuntimeAdapter} from "../../internal-adapter.js";
 import {adapterFixture, deferred, hostFixture} from "../../../tests/provider-adapter-fixture.js";
 import {wasmEnvelope} from "../../../tests/provider-fixtures.js";
@@ -40,7 +40,7 @@ describe("Provider-owned lifecycle", () => {
     const restore = deferred<Uint8Array | null>();
     const host = hostFixture({loadRestore: vi.fn(() => restore.promise)});
     const player = await createRuntime(wasmEnvelope(), host);
-    const events: RuntimeEventV1[] = [];
+    const events: RuntimeEventV2[] = [];
     player.subscribe((event) => events.push(event));
     const mounting = player.mount(document.createElement("div"));
     const rejected = expect(mounting).rejects.toMatchObject({name: "AbortError"});
@@ -83,7 +83,7 @@ describe("Provider-owned lifecycle", () => {
     vi.mocked(mountTargetAdapter).mockReturnValue(pending.promise);
     const abort = new AbortController();
     const player = await createRuntime(wasmEnvelope(), hostFixture({signal: abort.signal}));
-    const events: RuntimeEventV1[] = [];
+    const events: RuntimeEventV2[] = [];
     player.subscribe((event) => events.push(event));
     const mounting = player.mount(document.createElement("div"));
     const rejected = expect(mounting).rejects.toMatchObject({name: "AbortError"});
@@ -124,7 +124,7 @@ describe("Provider-owned lifecycle", () => {
     const adapter = adapterFixture();
     vi.mocked(mountTargetAdapter).mockResolvedValue(adapter);
     const player = await createRuntime(wasmEnvelope(), hostFixture());
-    const events: RuntimeEventV1[] = [];
+    const events: RuntimeEventV2[] = [];
     player.subscribe((event) => {
       events.push(event);
       if (event.type === "STATE_CHANGED" && event.state === "EXITING") {void player.exit();}
@@ -167,7 +167,7 @@ describe("Provider-owned lifecycle", () => {
     });
     vi.mocked(mountTargetAdapter).mockResolvedValue(adapter);
     const player = await createRuntime(wasmEnvelope(), hostFixture());
-    const events: RuntimeEventV1[] = [];
+    const events: RuntimeEventV2[] = [];
     player.subscribe((event) => events.push(event));
     await player.mount(document.createElement("div"));
     const action = player[operation]();
@@ -223,13 +223,13 @@ describe("Provider-owned lifecycle", () => {
     const adapter = adapterFixture({pause: vi.fn(async () => {throw new Error(error);})});
     vi.mocked(mountTargetAdapter).mockResolvedValue(adapter);
     const player = await createRuntime(wasmEnvelope(), hostFixture());
-    const events: RuntimeEventV1[] = [];
+    const events: RuntimeEventV2[] = [];
     player.subscribe((event) => events.push(event));
     await player.mount(document.createElement("div"));
     const stable = error === "third-party error" ? "RUNTIME_FAILED" : error;
     await expect(player.pause()).rejects.toThrow(stable);
     expect(player.getState()).toBe("FAILED");
-    expect(events.filter((event) => event.type === "FATAL_ERROR")).toEqual([{type: "FATAL_ERROR", code: stable}]);
+    expect(events.filter((event) => event.type === "FATAL_ERROR")).toEqual([expect.objectContaining({type: "FATAL_ERROR", failure: expect.objectContaining({code: stable})})]);
     await player.exit();
     expect(adapter.exit).toHaveBeenCalledOnce();
     expect(player.getState()).toBe("FAILED");
@@ -238,7 +238,7 @@ describe("Provider-owned lifecycle", () => {
   it("cleans frame surfaces and emits one failure if mount fails", async () => {
     vi.mocked(mountTargetAdapter).mockRejectedValue(new Error("RPG_RUNTIME_UNAVAILABLE"));
     const player = await createRuntime(wasmEnvelope(), hostFixture());
-    const events: RuntimeEventV1[] = [];
+    const events: RuntimeEventV2[] = [];
     player.subscribe((event) => events.push(event));
     await expect(player.mount(document.createElement("div"))).rejects.toThrow("RPG_RUNTIME_UNAVAILABLE");
     expect(player.getState()).toBe("FAILED");
@@ -255,7 +255,7 @@ describe("Provider-owned lifecycle", () => {
     const adapter = adapterFixture({getCheckpointAvailability: getAvailability});
     vi.mocked(mountTargetAdapter).mockResolvedValue(adapter);
     const player = await createRuntime(wasmEnvelope(), hostFixture());
-    const events: RuntimeEventV1[] = [];
+    const events: RuntimeEventV2[] = [];
     player.subscribe((event) => events.push(event));
     await player.mount(document.createElement("div"));
     available = true;

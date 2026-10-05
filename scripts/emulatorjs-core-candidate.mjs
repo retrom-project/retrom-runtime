@@ -3,20 +3,19 @@ import {lstat, readFile, readdir} from "node:fs/promises";
 import {isAbsolute, join} from "node:path";
 import {forkReleaseFiles} from "./emulatorjs-fork-releases.mjs";
 
-const outputs = {
-  "flycast-wasm.data": "4.2.3/data/cores/flycast-wasm.data",
-  "flycast.json": "4.2.3/data/cores/reports/flycast.json",
-  LICENSE: "4.2.3/licenses/forks/flycast/LICENSE",
+const sources = {
+"flycast": {"repository": "https://github.com/retrom-project/flycast-wasm", "adapterAbi": "emulatorjs-flycast-state-v1", "outputs": {"LICENSE": "4.2.3/licenses/forks/flycast/LICENSE", "flycast-rom-requirements.json": "4.2.3/data/cores/flycast-rom-requirements.json", "flycast-wasm.data": "4.2.3/data/cores/flycast-wasm.data", "flycast.json": "4.2.3/data/cores/reports/flycast.json"}},
+"fbneo": {"repository": "https://github.com/retrom-project/FBNeo", "adapterAbi": "emulatorjs-content-result-v1", "outputs": {"LICENSE": "4.2.3/licenses/forks/fbneo/LICENSE", "fbneo-arcade.dat": "4.2.3/data/cores/fbneo-arcade.dat", "fbneo-content-pair.json": "4.2.3/data/cores/fbneo-content-pair.json", "fbneo-wasm.data": "4.2.3/data/cores/fbneo-wasm.data", "fbneo.json": "4.2.3/data/cores/reports/fbneo.json"}},
+"azahar": {"repository": "https://github.com/retrom-project/azahar", "adapterAbi": "emulatorjs-content-result-v1", "outputs": {"LICENSE": "4.3.0-pre/licenses/forks/azahar/LICENSE", "azahar-thread-wasm.data": "4.3.0-pre/data/cores/azahar-thread-wasm.data", "azahar.json": "4.3.0-pre/data/cores/reports/azahar.json"}}
 };
 export function validEmulatorJsCoreSource(source) {
-  return exactKeys(source, ["adapterAbi", "files", "id", "repository"]) && source.id === "flycast" && source.repository === "https://github.com/retrom-project/flycast-wasm" &&
-    source.adapterAbi === "emulatorjs-flycast-state-v1" && Array.isArray(source.files) && source.files.length > 0 &&
-    source.files.length <= 3 && source.files.every((file) => exactKeys(file, ["filename", "output", "sha256", "sizeBytes"])) && new Set(source.files.map((file) => file.filename)).size === source.files.length &&
-    new Set(source.files.map((file) => file.output)).size === source.files.length && source.files.every((file) =>
-      exactKeys(file, ["filename", "output", "sha256", "sizeBytes"]) &&
-      Object.hasOwn(outputs, file.filename) && outputs[file.filename] === file.output && safePath(file.output) &&
-      file.output.startsWith("4.2.3/") && Number.isSafeInteger(file.sizeBytes) &&
-      file.sizeBytes > 0 && file.sizeBytes <= 32 * 1024 * 1024 && /^[a-f0-9]{64}$/u.test(file.sha256));
+ const identity = sources[source?.id];
+ return Boolean(identity) && exactKeys(source, ["adapterAbi", "files", "id", "repository"]) && source.repository === identity.repository &&
+  source.adapterAbi === identity.adapterAbi && Array.isArray(source.files) && source.files.length > 0 &&
+  source.files.length === Object.keys(identity.outputs).length && new Set(source.files.map(file => file.filename)).size === source.files.length &&
+  source.files.every(file => exactKeys(file, ["filename", "output", "sha256", "sizeBytes"]) &&
+   Object.hasOwn(identity.outputs, file.filename) && identity.outputs[file.filename] === file.output && safePath(file.output) &&
+   Number.isSafeInteger(file.sizeBytes) && file.sizeBytes > 0 && file.sizeBytes <= 32 * 1024 * 1024 && /^[a-f0-9]{64}$/u.test(file.sha256));
 }
 
 export async function readEmulatorJsCoreCandidate(source, directory, candidate) {
@@ -45,6 +44,19 @@ export async function readEmulatorJsCoreCandidate(source, directory, candidate) 
     result.set(file.output, bytes);
   }
   return result;
+}
+
+// Full bundles pin their declarations and all paired assets. Loose PFB overrides
+// deliberately use readEmulatorJsCoreCandidate instead.
+export async function readPinnedEmulatorJsCoreCandidate(source, directory, candidate) {
+  const files = await readEmulatorJsCoreCandidate(source, directory, candidate);
+  for (const file of source.files) {
+    const bytes = files.get(file.output);
+    if (!bytes || bytes.length !== file.sizeBytes || hash(bytes) !== file.sha256) {
+      throw new Error("EMULATORJS_CORE_CANDIDATE_DECLARATION_MISMATCH");
+    }
+  }
+  return files;
 }
 
 async function regular(path) {

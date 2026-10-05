@@ -61,7 +61,7 @@ describe("Provider client module build", () => {
     ]);
     expect(module.providerId).toBe(providerId);
     expect(module.providerVersion).toBe("0.46.0");
-    expect(module.providerApiVersion).toBe(1);
+    expect(module.providerApiVersion).toBe(2);
     expect(module.createRuntime).toBeTypeOf("function");
   });
 });

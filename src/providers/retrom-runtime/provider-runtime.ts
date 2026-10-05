@@ -1,3 +1,4 @@
+import {createRuntimeFailure} from "../../provider/failure.js";
 import {StartupTasks} from "../../provider/startup.js";
 import {authorizeNativePreload} from "../../native-web/preload-bootstrap.js";
 import {ProviderContentOwner} from "../../provider/content-owner.js";
@@ -8,8 +9,8 @@ import {startInputDiagnostics} from "../../provider/input-diagnostics.js";
 import type {RuntimeInputDiagnosticsV1} from "../../provider/module-api.js";
 import type {MountedRuntimeAdapter, RuntimeProgressReporter, RuntimeExitReporter} from "../../internal-adapter.js";
 import type {
-  AssetIndexV1, LaunchEnvelopeV1, PlayerRuntimeV1, RuntimeCheckpointAvailabilityV1, RuntimeCheckpointV1, RuntimeCheckpointRequestV1, RuntimeFinalSnapshotV1, RuntimeNativeSaveCapabilitiesV1,
-  RuntimeDiscStateV1, RuntimeEventV1, RuntimeHostV1, RuntimeInputFilterPolicyV1,
+  AssetIndexV1, LaunchEnvelopeV1, PlayerRuntimeV2, RuntimeCheckpointAvailabilityV1, RuntimeCheckpointV1, RuntimeCheckpointRequestV1, RuntimeFinalSnapshotV1, RuntimeNativeSaveCapabilitiesV1,
+  RuntimeDiscStateV1, RuntimeEventV2, RuntimeHostV1, RuntimeInputFilterPolicyV1,
   RuntimeStateV1, RuntimeVideoModeV1,
 } from "../../provider/module-api.js";
 import {PlayerRuntimeError} from "../../provider/errors.js";
@@ -21,14 +22,14 @@ import {mountTargetAdapter} from "./target-adapter.js";
 
 export function createRetromRuntimePlayer(
   envelope: LaunchEnvelopeV1, host: RuntimeHostV1, assetIndex: AssetIndexV1,
-): PlayerRuntimeV1 {
+): PlayerRuntimeV2 {
   return new RetromRuntimePlayer(envelope, host, assetIndex);
 }
 
-class RetromRuntimePlayer implements PlayerRuntimeV1 {
+class RetromRuntimePlayer implements PlayerRuntimeV2 {
   private readonly contentOwner = new ProviderContentOwner((error) => {void this.fail(error);}, diagnostic => this.host.reportDiagnostic({code: "CONTENT_IO_METRICS", message: JSON.stringify(diagnostic)}));
   private readonly startup: StartupTasks;
-  private readonly listeners = new Set<(event: RuntimeEventV1) => void>();
+  private readonly listeners = new Set<(event: RuntimeEventV2) => void>();
   private state: RuntimeStateV1 = "CREATED";
   private adapter: MountedRuntimeAdapter | null = null;
   private exitPromise: Promise<void> | null = null;
@@ -264,7 +265,7 @@ class RetromRuntimePlayer implements PlayerRuntimeV1 {
     return this.inputDiagnostics;
   }
 
-  subscribe(listener: (event: RuntimeEventV1) => void) {
+  subscribe(listener: (event: RuntimeEventV2) => void) {
     this.listeners.add(listener);
     return () => this.listeners.delete(listener);
   }
@@ -349,9 +350,10 @@ class RetromRuntimePlayer implements PlayerRuntimeV1 {
 
   private async fail(error: unknown) {
     if (this.stopping()) {return;}
+    const failure = createRuntimeFailure(stableError(error).message, error, this.state === "RUNNING" || this.state === "PAUSED" ? "PLAYING" : "STARTUP");
     this.transition("FAILED");
     this.contentOwner.force(error instanceof ContentIOError ? error : new ContentIOError("INTERNAL", {cause: error}));
-    this.emit({type: "FATAL_ERROR", code: stableError(error).message});
+    this.emit({type: "FATAL_ERROR", failure});
     try {await this.exit();} catch (cleanupError) {this.reportCleanupFailure(cleanupError);}
   }
 
@@ -426,7 +428,7 @@ class RetromRuntimePlayer implements PlayerRuntimeV1 {
     this.emit({type: "STATE_CHANGED", previous, state: next});
   }
 
-  private emit(event: RuntimeEventV1) {for (const listener of this.listeners) {listener(event);}}
+  private emit(event: RuntimeEventV2) {for (const listener of this.listeners) {listener(event);}}
 }
 
 function validNativeSave(value: RuntimeNativeSaveCapabilitiesV1 | undefined, native: boolean) {

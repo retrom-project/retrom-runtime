@@ -1,10 +1,10 @@
 [
   {
     "clientModulePath": "client.mjs",
-    "providerApiVersion": 1,
+    "providerApiVersion": 2,
     "providerId": "retrom-runtime",
     "providerVersion": "0.0.0-dev",
-    "schemaVersion": 1,
+    "schemaVersion": 2,
     "targets": [
       {
         "assetPaths": [
@@ -49,13 +49,15 @@
             "cardinality": "ONE",
             "kind": "ROM_BLOB",
             "optional": false,
-            "role": "game"
+            "role": "game",
+            "maxFileBytes": 33554432
           },
           {
             "cardinality": "ONE",
             "kind": "EXTERNAL_FILE_SET",
             "optional": false,
-            "role": "external"
+            "role": "external",
+            "maxFileBytes": 16384
           }
         ],
         "targetOptionsSchema": {
@@ -127,13 +129,15 @@
             "cardinality": "ONE",
             "kind": "ROM_BLOB",
             "optional": false,
-            "role": "game"
+            "role": "game",
+            "maxFileBytes": 33554432
           },
           {
             "cardinality": "ONE",
             "kind": "EXTERNAL_FILE_SET",
             "optional": false,
-            "role": "external"
+            "role": "external",
+            "maxFileBytes": 1048576
           }
         ],
         "targetOptionsSchema": {
@@ -184,7 +188,8 @@
             "cardinality": "ONE",
             "kind": "FILE_TREE",
             "optional": false,
-            "role": "game"
+            "role": "game",
+            "maxFileBytes": 9007199254740991
           }
         ],
         "targetOptionsSchema": {
@@ -234,7 +239,8 @@
             "cardinality": "ONE",
             "kind": "ROM_BLOB",
             "optional": false,
-            "role": "game"
+            "role": "game",
+            "maxFileBytes": 8388608
           }
         ],
         "targetOptionsSchema": {
@@ -286,7 +292,8 @@
             "cardinality": "ONE",
             "kind": "ROM_BLOB",
             "optional": false,
-            "role": "game"
+            "role": "game",
+            "maxFileBytes": 67108864
           }
         ],
         "targetOptionsSchema": {
@@ -337,13 +344,15 @@
             "role": "game",
             "kind": "ROM_BLOB",
             "cardinality": "ONE",
-            "optional": false
+            "optional": false,
+            "maxFileBytes": 2097152
           },
           {
             "role": "external",
             "kind": "EXTERNAL_FILE_SET",
             "cardinality": "ONE",
-            "optional": false
+            "optional": false,
+            "maxFileBytes": 67108864
           }
         ],
         "targetOptionsSchema": {
@@ -398,7 +407,8 @@
             "cardinality": "ONE",
             "kind": "ROM_BLOB",
             "optional": false,
-            "role": "game"
+            "role": "game",
+            "maxFileBytes": null
           }
         ],
         "targetOptionsSchema": {
@@ -450,7 +460,8 @@
             "cardinality": "ONE",
             "kind": "FILE_TREE",
             "optional": false,
-            "role": "game"
+            "role": "game",
+            "maxFileBytes": 9007199254740991
           }
         ],
         "targetOptionsSchema": {
@@ -513,13 +524,15 @@
             "role": "game",
             "kind": "ROM_BLOB",
             "cardinality": "ONE",
-            "optional": false
+            "optional": false,
+            "maxFileBytes": 143360
           },
           {
             "role": "external",
             "kind": "EXTERNAL_FILE_SET",
             "cardinality": "ONE",
-            "optional": false
+            "optional": false,
+            "maxFileBytes": 2048
           }
         ],
         "targetOptionsSchema": {
@@ -571,13 +584,15 @@
             "role": "game",
             "kind": "ROM_BLOB",
             "cardinality": "ONE",
-            "optional": false
+            "optional": false,
+            "maxFileBytes": 143360
           },
           {
             "role": "external",
             "kind": "EXTERNAL_FILE_SET",
             "cardinality": "ONE",
-            "optional": false
+            "optional": false,
+            "maxFileBytes": 8192
           }
         ],
         "targetOptionsSchema": {
@@ -712,25 +727,29 @@
             "role": "game",
             "kind": "ROM_BLOB",
             "cardinality": "ONE",
-            "optional": false
+            "optional": false,
+            "maxFileBytes": 134217728
           },
           {
             "role": "parent",
             "kind": "PARENT_ARCHIVE",
             "cardinality": "ONE",
-            "optional": true
+            "optional": true,
+            "maxFileBytes": 134217728
           },
           {
             "role": "bios",
             "kind": "BIOS_BUNDLE",
             "cardinality": "ONE",
-            "optional": true
+            "optional": true,
+            "maxFileBytes": 134217728
           },
           {
             "role": "external",
             "kind": "EXTERNAL_FILE_SET",
             "cardinality": "ONE",
-            "optional": true
+            "optional": true,
+            "maxFileBytes": 65536
           }
         ],
         "targetOptionsSchema": {
@@ -790,13 +809,15 @@
             "role": "game",
             "kind": "ROM_BLOB",
             "cardinality": "ONE",
-            "optional": false
+            "optional": false,
+            "maxFileBytes": 65557
           },
           {
             "role": "external",
             "kind": "EXTERNAL_FILE_SET",
             "cardinality": "ONE",
-            "optional": false
+            "optional": false,
+            "maxFileBytes": 8192
           }
         ],
         "targetOptionsSchema": {
@@ -848,13 +869,15 @@
             "role": "game",
             "kind": "ROM_BLOB",
             "cardinality": "ONE",
-            "optional": false
+            "optional": false,
+            "maxFileBytes": 2097152
           },
           {
             "role": "external",
             "kind": "EXTERNAL_FILE_SET",
             "cardinality": "ONE",
-            "optional": false
+            "optional": false,
+            "maxFileBytes": 8192
           }
         ],
         "targetOptionsSchema": {
@@ -906,7 +929,8 @@
             "role": "game",
             "kind": "ROM_BLOB",
             "cardinality": "ONE",
-            "optional": false
+            "optional": false,
+            "maxFileBytes": 32768
           }
         ],
         "targetOptionsSchema": {
@@ -958,7 +982,8 @@
             "role": "game",
             "kind": "ROM_BLOB",
             "cardinality": "ONE",
-            "optional": false
+            "optional": false,
+            "maxFileBytes": 2097152
           }
         ],
         "targetOptionsSchema": {
@@ -1007,7 +1032,8 @@
             "cardinality": "ONE",
             "kind": "ROM_BLOB",
             "optional": false,
-            "role": "game"
+            "role": "game",
+            "maxFileBytes": 16777216
           }
         ],
         "targetOptionsSchema": {
@@ -1059,7 +1085,8 @@
             "role": "game",
             "kind": "ROM_BLOB",
             "cardinality": "ONE",
-            "optional": false
+            "optional": false,
+            "maxFileBytes": 536870912
           }
         ],
         "targetOptionsSchema": {
@@ -1110,7 +1137,8 @@
             "cardinality": "ONE",
             "kind": "FILE_TREE",
             "optional": false,
-            "role": "game"
+            "role": "game",
+            "maxFileBytes": 33554432
           }
         ],
         "targetOptionsSchema": {
@@ -1160,7 +1188,8 @@
             "cardinality": "ONE",
             "kind": "FILE_TREE",
             "optional": false,
-            "role": "game"
+            "role": "game",
+            "maxFileBytes": 9007199254740991
           }
         ],
         "targetOptionsSchema": {
@@ -1222,7 +1251,8 @@
             "cardinality": "ONE",
             "kind": "ROM_BLOB",
             "optional": false,
-            "role": "game"
+            "role": "game",
+            "maxFileBytes": 536870912
           }
         ],
         "targetOptionsSchema": {
@@ -1276,7 +1306,8 @@
             "role": "game",
             "kind": "SEEKABLE_BLOB",
             "cardinality": "ONE",
-            "optional": false
+            "optional": false,
+            "maxFileBytes": 9007199254740991
           }
         ],
         "targetOptionsSchema": {
@@ -1330,7 +1361,8 @@
             "role": "game",
             "kind": "SEEKABLE_BLOB",
             "cardinality": "ONE",
-            "optional": false
+            "optional": false,
+            "maxFileBytes": 2147483647
           }
         ],
         "targetOptionsSchema": {
@@ -1380,13 +1412,15 @@
             "role": "game",
             "kind": "ROM_BLOB",
             "cardinality": "ONE",
-            "optional": false
+            "optional": false,
+            "maxFileBytes": 67108864
           },
           {
             "role": "external",
             "kind": "EXTERNAL_FILE_SET",
             "cardinality": "ONE",
-            "optional": false
+            "optional": false,
+            "maxFileBytes": 67108864
           }
         ],
         "targetOptionsSchema": {
@@ -1403,6 +1437,7 @@
           "assets/easyrpg/easyrpg-player.wasm"
         ],
         "capabilities": {
+          "contentLoading": "ON_DEMAND_AND_PRELOAD",
           "checkpoint": true,
           "discSwitch": false,
           "frameCounter": true,
@@ -1418,8 +1453,7 @@
             "pixel",
             "smooth"
           ],
-          "volume": false,
-          "contentLoading": "ON_DEMAND_AND_PRELOAD"
+          "volume": false
         },
         "checkpoint": {
           "maxBytes": 67108864,
@@ -1436,13 +1470,15 @@
             "cardinality": "ONE",
             "kind": "FILE_TREE",
             "optional": false,
-            "role": "game"
+            "role": "game",
+            "maxFileBytes": 9007199254740991
           },
           {
             "cardinality": "ONE",
             "kind": "FILE_TREE",
             "optional": true,
-            "role": "rtp"
+            "role": "rtp",
+            "maxFileBytes": 9007199254740991
           }
         ],
         "targetOptionsSchema": {
@@ -1459,6 +1495,7 @@
           "assets/easyrpg/easyrpg-player.wasm"
         ],
         "capabilities": {
+          "contentLoading": "ON_DEMAND_AND_PRELOAD",
           "checkpoint": true,
           "discSwitch": false,
           "frameCounter": true,
@@ -1474,8 +1511,7 @@
             "pixel",
             "smooth"
           ],
-          "volume": false,
-          "contentLoading": "ON_DEMAND_AND_PRELOAD"
+          "volume": false
         },
         "checkpoint": {
           "maxBytes": 67108864,
@@ -1492,13 +1528,15 @@
             "cardinality": "ONE",
             "kind": "FILE_TREE",
             "optional": false,
-            "role": "game"
+            "role": "game",
+            "maxFileBytes": 9007199254740991
           },
           {
             "cardinality": "ONE",
             "kind": "FILE_TREE",
             "optional": true,
-            "role": "rtp"
+            "role": "rtp",
+            "maxFileBytes": 9007199254740991
           }
         ],
         "targetOptionsSchema": {
@@ -1547,7 +1585,8 @@
             "cardinality": "ONE",
             "kind": "NATIVE_WEB",
             "optional": false,
-            "role": "game"
+            "role": "game",
+            "maxFileBytes": 9007199254740991
           }
         ],
         "targetOptionsSchema": {
@@ -1596,7 +1635,8 @@
             "cardinality": "ONE",
             "kind": "NATIVE_WEB",
             "optional": false,
-            "role": "game"
+            "role": "game",
+            "maxFileBytes": 9007199254740991
           }
         ],
         "targetOptionsSchema": {
@@ -1647,13 +1687,15 @@
             "cardinality": "ONE",
             "kind": "SEEKABLE_BLOB",
             "optional": false,
-            "role": "game"
+            "role": "game",
+            "maxFileBytes": 9007199254740991
           },
           {
             "cardinality": "MANY",
             "kind": "SEEKABLE_BLOB",
             "optional": true,
-            "role": "rtp"
+            "role": "rtp",
+            "maxFileBytes": 9007199254740991
           }
         ],
         "targetOptionsSchema": {
@@ -1704,13 +1746,15 @@
             "cardinality": "ONE",
             "kind": "SEEKABLE_BLOB",
             "optional": false,
-            "role": "game"
+            "role": "game",
+            "maxFileBytes": 9007199254740991
           },
           {
             "cardinality": "MANY",
             "kind": "SEEKABLE_BLOB",
             "optional": true,
-            "role": "rtp"
+            "role": "rtp",
+            "maxFileBytes": 9007199254740991
           }
         ],
         "targetOptionsSchema": {
@@ -1761,13 +1805,15 @@
             "cardinality": "ONE",
             "kind": "SEEKABLE_BLOB",
             "optional": false,
-            "role": "game"
+            "role": "game",
+            "maxFileBytes": 9007199254740991
           },
           {
             "cardinality": "MANY",
             "kind": "SEEKABLE_BLOB",
             "optional": true,
-            "role": "rtp"
+            "role": "rtp",
+            "maxFileBytes": 9007199254740991
           }
         ],
         "targetOptionsSchema": {
@@ -1819,13 +1865,15 @@
             "cardinality": "ONE",
             "kind": "ROM_BLOB",
             "optional": false,
-            "role": "game"
+            "role": "game",
+            "maxFileBytes": 16777216
           },
           {
             "cardinality": "ONE",
             "kind": "EXTERNAL_FILE_SET",
             "optional": false,
-            "role": "external"
+            "role": "external",
+            "maxFileBytes": 32768
           }
         ],
         "targetOptionsSchema": {
@@ -2177,7 +2225,8 @@
             "role": "game",
             "kind": "FILE_TREE",
             "cardinality": "ONE",
-            "optional": false
+            "optional": false,
+            "maxFileBytes": 9007199254740991
           }
         ],
         "targetOptionsSchema": {
@@ -2276,7 +2325,8 @@
             "cardinality": "ONE",
             "kind": "ROM_BLOB",
             "optional": false,
-            "role": "game"
+            "role": "game",
+            "maxFileBytes": 8388608
           }
         ],
         "targetOptionsSchema": {
@@ -2325,7 +2375,8 @@
             "cardinality": "ONE",
             "kind": "ISOLATED_WEB",
             "optional": false,
-            "role": "game"
+            "role": "game",
+            "maxFileBytes": 9007199254740991
           }
         ],
         "targetOptionsSchema": {
@@ -2374,7 +2425,8 @@
             "cardinality": "ONE",
             "kind": "WASM4_CART",
             "optional": false,
-            "role": "game"
+            "role": "game",
+            "maxFileBytes": 65536
           }
         ],
         "targetOptionsSchema": {
@@ -2388,10 +2440,10 @@
   },
   {
     "clientModulePath": "client.mjs",
-    "providerApiVersion": 1,
+    "providerApiVersion": 2,
     "providerId": "emulatorjs",
     "providerVersion": "0.0.0-dev",
-    "schemaVersion": 1,
+    "schemaVersion": 2,
     "targets": [
       {
         "assetPaths": [
@@ -2454,31 +2506,36 @@
             "cardinality": "ONE",
             "kind": "ROM_BLOB",
             "optional": false,
-            "role": "game"
+            "role": "game",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "BIOS_BUNDLE",
             "optional": true,
-            "role": "bios"
+            "role": "bios",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "PARENT_ARCHIVE",
             "optional": true,
-            "role": "parent"
+            "role": "parent",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "MULTI_DISC",
             "optional": true,
-            "role": "discs"
+            "role": "discs",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "EXTERNAL_FILE_SET",
             "optional": true,
-            "role": "external"
+            "role": "external",
+            "maxFileBytes": 2147483647
           }
         ],
         "targetOptionsSchema": {
@@ -2568,31 +2625,36 @@
             "cardinality": "ONE",
             "kind": "ROM_BLOB",
             "optional": false,
-            "role": "game"
+            "role": "game",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "BIOS_BUNDLE",
             "optional": true,
-            "role": "bios"
+            "role": "bios",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "PARENT_ARCHIVE",
             "optional": true,
-            "role": "parent"
+            "role": "parent",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "MULTI_DISC",
             "optional": true,
-            "role": "discs"
+            "role": "discs",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "EXTERNAL_FILE_SET",
             "optional": true,
-            "role": "external"
+            "role": "external",
+            "maxFileBytes": 2147483647
           }
         ],
         "targetOptionsSchema": {
@@ -2682,31 +2744,36 @@
             "cardinality": "ONE",
             "kind": "ROM_BLOB",
             "optional": false,
-            "role": "game"
+            "role": "game",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "BIOS_BUNDLE",
             "optional": true,
-            "role": "bios"
+            "role": "bios",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "PARENT_ARCHIVE",
             "optional": true,
-            "role": "parent"
+            "role": "parent",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "MULTI_DISC",
             "optional": true,
-            "role": "discs"
+            "role": "discs",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "EXTERNAL_FILE_SET",
             "optional": true,
-            "role": "external"
+            "role": "external",
+            "maxFileBytes": 2147483647
           }
         ],
         "targetOptionsSchema": {
@@ -2796,31 +2863,36 @@
             "cardinality": "ONE",
             "kind": "ROM_BLOB",
             "optional": false,
-            "role": "game"
+            "role": "game",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "BIOS_BUNDLE",
             "optional": true,
-            "role": "bios"
+            "role": "bios",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "PARENT_ARCHIVE",
             "optional": true,
-            "role": "parent"
+            "role": "parent",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "MULTI_DISC",
             "optional": true,
-            "role": "discs"
+            "role": "discs",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "EXTERNAL_FILE_SET",
             "optional": true,
-            "role": "external"
+            "role": "external",
+            "maxFileBytes": 2147483647
           }
         ],
         "targetOptionsSchema": {
@@ -2910,31 +2982,36 @@
             "cardinality": "ONE",
             "kind": "ROM_BLOB",
             "optional": false,
-            "role": "game"
+            "role": "game",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "BIOS_BUNDLE",
             "optional": true,
-            "role": "bios"
+            "role": "bios",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "PARENT_ARCHIVE",
             "optional": true,
-            "role": "parent"
+            "role": "parent",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "MULTI_DISC",
             "optional": true,
-            "role": "discs"
+            "role": "discs",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "EXTERNAL_FILE_SET",
             "optional": true,
-            "role": "external"
+            "role": "external",
+            "maxFileBytes": 2147483647
           }
         ],
         "targetOptionsSchema": {
@@ -2991,6 +3068,9 @@
           "assets/4.3.0-pre/data/src/vendor/socket.io.min.js",
           "assets/content-io/worker.mjs"
         ],
+        "contentRequirements": {
+          "kind": "DECRYPTED_NCSD_NCCH"
+        },
         "capabilities": {
           "contentLoading": "PRELOAD_ONLY",
           "checkpoint": true,
@@ -3027,31 +3107,36 @@
             "cardinality": "ONE",
             "kind": "ROM_BLOB",
             "optional": false,
-            "role": "game"
+            "role": "game",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "BIOS_BUNDLE",
             "optional": true,
-            "role": "bios"
+            "role": "bios",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "PARENT_ARCHIVE",
             "optional": true,
-            "role": "parent"
+            "role": "parent",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "MULTI_DISC",
             "optional": true,
-            "role": "discs"
+            "role": "discs",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "EXTERNAL_FILE_SET",
             "optional": true,
-            "role": "external"
+            "role": "external",
+            "maxFileBytes": 2147483647
           }
         ],
         "targetOptionsSchema": {
@@ -3141,31 +3226,36 @@
             "cardinality": "ONE",
             "kind": "ROM_BLOB",
             "optional": false,
-            "role": "game"
+            "role": "game",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "BIOS_BUNDLE",
             "optional": true,
-            "role": "bios"
+            "role": "bios",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "PARENT_ARCHIVE",
             "optional": true,
-            "role": "parent"
+            "role": "parent",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "MULTI_DISC",
             "optional": true,
-            "role": "discs"
+            "role": "discs",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "EXTERNAL_FILE_SET",
             "optional": true,
-            "role": "external"
+            "role": "external",
+            "maxFileBytes": 2147483647
           }
         ],
         "targetOptionsSchema": {
@@ -3258,31 +3348,36 @@
             "cardinality": "ONE",
             "kind": "ROM_BLOB",
             "optional": false,
-            "role": "game"
+            "role": "game",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "BIOS_BUNDLE",
             "optional": true,
-            "role": "bios"
+            "role": "bios",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "PARENT_ARCHIVE",
             "optional": true,
-            "role": "parent"
+            "role": "parent",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "MULTI_DISC",
             "optional": true,
-            "role": "discs"
+            "role": "discs",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "EXTERNAL_FILE_SET",
             "optional": true,
-            "role": "external"
+            "role": "external",
+            "maxFileBytes": 2147483647
           }
         ],
         "targetOptionsSchema": {
@@ -3372,31 +3467,36 @@
             "cardinality": "ONE",
             "kind": "ROM_BLOB",
             "optional": false,
-            "role": "game"
+            "role": "game",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "BIOS_BUNDLE",
             "optional": true,
-            "role": "bios"
+            "role": "bios",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "PARENT_ARCHIVE",
             "optional": true,
-            "role": "parent"
+            "role": "parent",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "MULTI_DISC",
             "optional": true,
-            "role": "discs"
+            "role": "discs",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "EXTERNAL_FILE_SET",
             "optional": true,
-            "role": "external"
+            "role": "external",
+            "maxFileBytes": 2147483647
           }
         ],
         "targetOptionsSchema": {
@@ -3486,31 +3586,36 @@
             "cardinality": "ONE",
             "kind": "ROM_BLOB",
             "optional": false,
-            "role": "game"
+            "role": "game",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "BIOS_BUNDLE",
             "optional": true,
-            "role": "bios"
+            "role": "bios",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "PARENT_ARCHIVE",
             "optional": true,
-            "role": "parent"
+            "role": "parent",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "MULTI_DISC",
             "optional": true,
-            "role": "discs"
+            "role": "discs",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "EXTERNAL_FILE_SET",
             "optional": true,
-            "role": "external"
+            "role": "external",
+            "maxFileBytes": 2147483647
           }
         ],
         "targetOptionsSchema": {
@@ -3591,31 +3696,36 @@
             "cardinality": "ONE",
             "kind": "FILE_TREE",
             "optional": false,
-            "role": "game"
+            "role": "game",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "BIOS_BUNDLE",
             "optional": true,
-            "role": "bios"
+            "role": "bios",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "PARENT_ARCHIVE",
             "optional": true,
-            "role": "parent"
+            "role": "parent",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "MULTI_DISC",
             "optional": true,
-            "role": "discs"
+            "role": "discs",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "EXTERNAL_FILE_SET",
             "optional": true,
-            "role": "external"
+            "role": "external",
+            "maxFileBytes": 2147483647
           }
         ],
         "targetOptionsSchema": {
@@ -3705,31 +3815,36 @@
             "cardinality": "ONE",
             "kind": "ROM_BLOB",
             "optional": false,
-            "role": "game"
+            "role": "game",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "BIOS_BUNDLE",
             "optional": true,
-            "role": "bios"
+            "role": "bios",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "PARENT_ARCHIVE",
             "optional": true,
-            "role": "parent"
+            "role": "parent",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "MULTI_DISC",
             "optional": true,
-            "role": "discs"
+            "role": "discs",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "EXTERNAL_FILE_SET",
             "optional": true,
-            "role": "external"
+            "role": "external",
+            "maxFileBytes": 2147483647
           }
         ],
         "targetOptionsSchema": {
@@ -3819,31 +3934,36 @@
             "cardinality": "ONE",
             "kind": "ROM_BLOB",
             "optional": false,
-            "role": "game"
+            "role": "game",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "BIOS_BUNDLE",
             "optional": true,
-            "role": "bios"
+            "role": "bios",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "PARENT_ARCHIVE",
             "optional": true,
-            "role": "parent"
+            "role": "parent",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "MULTI_DISC",
             "optional": true,
-            "role": "discs"
+            "role": "discs",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "EXTERNAL_FILE_SET",
             "optional": true,
-            "role": "external"
+            "role": "external",
+            "maxFileBytes": 2147483647
           }
         ],
         "targetOptionsSchema": {
@@ -3933,31 +4053,36 @@
             "cardinality": "ONE",
             "kind": "FILE_TREE",
             "optional": false,
-            "role": "game"
+            "role": "game",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "BIOS_BUNDLE",
             "optional": true,
-            "role": "bios"
+            "role": "bios",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "PARENT_ARCHIVE",
             "optional": true,
-            "role": "parent"
+            "role": "parent",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "MULTI_DISC",
             "optional": true,
-            "role": "discs"
+            "role": "discs",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "EXTERNAL_FILE_SET",
             "optional": true,
-            "role": "external"
+            "role": "external",
+            "maxFileBytes": 2147483647
           }
         ],
         "targetOptionsSchema": {
@@ -4047,31 +4172,36 @@
             "cardinality": "ONE",
             "kind": "ROM_BLOB",
             "optional": false,
-            "role": "game"
+            "role": "game",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "BIOS_BUNDLE",
             "optional": true,
-            "role": "bios"
+            "role": "bios",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "PARENT_ARCHIVE",
             "optional": true,
-            "role": "parent"
+            "role": "parent",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "MULTI_DISC",
             "optional": true,
-            "role": "discs"
+            "role": "discs",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "EXTERNAL_FILE_SET",
             "optional": true,
-            "role": "external"
+            "role": "external",
+            "maxFileBytes": 2147483647
           }
         ],
         "targetOptionsSchema": {
@@ -4161,31 +4291,36 @@
             "cardinality": "ONE",
             "kind": "ROM_BLOB",
             "optional": false,
-            "role": "game"
+            "role": "game",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "BIOS_BUNDLE",
             "optional": true,
-            "role": "bios"
+            "role": "bios",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "PARENT_ARCHIVE",
             "optional": true,
-            "role": "parent"
+            "role": "parent",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "MULTI_DISC",
             "optional": true,
-            "role": "discs"
+            "role": "discs",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "EXTERNAL_FILE_SET",
             "optional": true,
-            "role": "external"
+            "role": "external",
+            "maxFileBytes": 2147483647
           }
         ],
         "targetOptionsSchema": {
@@ -4219,6 +4354,8 @@
           "assets/4.2.3/data/compression/extract7z.js",
           "assets/4.2.3/data/compression/extractzip.js",
           "assets/4.2.3/data/cores/cores.json",
+          "assets/4.2.3/data/cores/fbneo-arcade.dat",
+          "assets/4.2.3/data/cores/fbneo-content-pair.json",
           "assets/4.2.3/data/cores/fbneo-wasm.data",
           "assets/4.2.3/data/cores/ppsspp-assets.zip",
           "assets/4.2.3/data/cores/reports/fbneo.json",
@@ -4239,6 +4376,21 @@
           "assets/4.2.3/data/src/storage.js",
           "assets/content-io/worker.mjs"
         ],
+        "arcadeDAT": {
+          "format": "ARCADE_XML",
+          "asset": {
+            "path": "assets/4.2.3/data/cores/fbneo-arcade.dat",
+            "sha256": "1864074639d42c2b6a7ad407e2df609c8824041408e42421eb7fa58fce5993e7"
+          },
+          "core": {
+            "path": "assets/4.2.3/data/cores/fbneo-wasm.data",
+            "sha256": "4596557fc573bc7d311b249c6957768e03e5498bb83d08aaf7b41d407faf62ae"
+          },
+          "provenance": {
+            "path": "assets/4.2.3/data/cores/fbneo-content-pair.json",
+            "sha256": "61b649cb699e390306ff918b0d7c1e91590485aa38367fabe024c516dfd0b8af"
+          }
+        },
         "capabilities": {
           "contentLoading": "PRELOAD_ONLY",
           "checkpoint": true,
@@ -4275,31 +4427,36 @@
             "cardinality": "ONE",
             "kind": "ROM_BLOB",
             "optional": false,
-            "role": "game"
+            "role": "game",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "BIOS_BUNDLE",
             "optional": true,
-            "role": "bios"
+            "role": "bios",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "PARENT_ARCHIVE",
             "optional": true,
-            "role": "parent"
+            "role": "parent",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "MULTI_DISC",
             "optional": true,
-            "role": "discs"
+            "role": "discs",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "EXTERNAL_FILE_SET",
             "optional": true,
-            "role": "external"
+            "role": "external",
+            "maxFileBytes": 2147483647
           }
         ],
         "targetOptionsSchema": {
@@ -4389,31 +4546,36 @@
             "cardinality": "ONE",
             "kind": "ROM_BLOB",
             "optional": false,
-            "role": "game"
+            "role": "game",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "BIOS_BUNDLE",
             "optional": true,
-            "role": "bios"
+            "role": "bios",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "PARENT_ARCHIVE",
             "optional": true,
-            "role": "parent"
+            "role": "parent",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "MULTI_DISC",
             "optional": true,
-            "role": "discs"
+            "role": "discs",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "EXTERNAL_FILE_SET",
             "optional": true,
-            "role": "external"
+            "role": "external",
+            "maxFileBytes": 2147483647
           }
         ],
         "targetOptionsSchema": {
@@ -4504,31 +4666,36 @@
             "cardinality": "ONE",
             "kind": "SEEKABLE_BLOB",
             "optional": false,
-            "role": "game"
+            "role": "game",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "BIOS_BUNDLE",
             "optional": true,
-            "role": "bios"
+            "role": "bios",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "PARENT_ARCHIVE",
             "optional": true,
-            "role": "parent"
+            "role": "parent",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "MULTI_DISC",
             "optional": true,
-            "role": "discs"
+            "role": "discs",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "EXTERNAL_FILE_SET",
             "optional": true,
-            "role": "external"
+            "role": "external",
+            "maxFileBytes": 2147483647
           }
         ],
         "targetOptionsSchema": {
@@ -4562,6 +4729,7 @@
           "assets/4.2.3/data/compression/extract7z.js",
           "assets/4.2.3/data/compression/extractzip.js",
           "assets/4.2.3/data/cores/cores.json",
+          "assets/4.2.3/data/cores/flycast-rom-requirements.json",
           "assets/4.2.3/data/cores/flycast-wasm.data",
           "assets/4.2.3/data/cores/ppsspp-assets.zip",
           "assets/4.2.3/data/cores/reports/flycast.json",
@@ -4582,6 +4750,18 @@
           "assets/4.2.3/data/src/storage.js",
           "assets/content-io/worker.mjs"
         ],
+        "contentRequirements": {
+          "kind": "FLYCAST_CARTRIDGE",
+          "platform": "atomiswave",
+          "catalog": {
+            "path": "assets/4.2.3/data/cores/flycast-rom-requirements.json",
+            "sha256": "6cf37e6599d56cd555b61807216c1d1ffcd3b430a027940df71dfaa81be892a9"
+          },
+          "core": {
+            "path": "assets/4.2.3/data/cores/flycast-wasm.data",
+            "sha256": "4e2d15a35d7a28e094465ff69fe040ee428bac04f9dd955e329430ce7ebecc2f"
+          }
+        },
         "capabilities": {
           "contentLoading": "ON_DEMAND_AND_PRELOAD",
           "checkpoint": true,
@@ -4619,31 +4799,36 @@
             "cardinality": "ONE",
             "kind": "SEEKABLE_BLOB",
             "optional": false,
-            "role": "game"
+            "role": "game",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "BIOS_BUNDLE",
             "optional": true,
-            "role": "bios"
+            "role": "bios",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "PARENT_ARCHIVE",
             "optional": true,
-            "role": "parent"
+            "role": "parent",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "MULTI_DISC",
             "optional": true,
-            "role": "discs"
+            "role": "discs",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "EXTERNAL_FILE_SET",
             "optional": true,
-            "role": "external"
+            "role": "external",
+            "maxFileBytes": 2147483647
           }
         ],
         "targetOptionsSchema": {
@@ -4677,6 +4862,7 @@
           "assets/4.2.3/data/compression/extract7z.js",
           "assets/4.2.3/data/compression/extractzip.js",
           "assets/4.2.3/data/cores/cores.json",
+          "assets/4.2.3/data/cores/flycast-rom-requirements.json",
           "assets/4.2.3/data/cores/flycast-wasm.data",
           "assets/4.2.3/data/cores/ppsspp-assets.zip",
           "assets/4.2.3/data/cores/reports/flycast.json",
@@ -4697,6 +4883,18 @@
           "assets/4.2.3/data/src/storage.js",
           "assets/content-io/worker.mjs"
         ],
+        "contentRequirements": {
+          "kind": "FLYCAST_CARTRIDGE",
+          "platform": "naomi",
+          "catalog": {
+            "path": "assets/4.2.3/data/cores/flycast-rom-requirements.json",
+            "sha256": "6cf37e6599d56cd555b61807216c1d1ffcd3b430a027940df71dfaa81be892a9"
+          },
+          "core": {
+            "path": "assets/4.2.3/data/cores/flycast-wasm.data",
+            "sha256": "4e2d15a35d7a28e094465ff69fe040ee428bac04f9dd955e329430ce7ebecc2f"
+          }
+        },
         "capabilities": {
           "contentLoading": "ON_DEMAND_AND_PRELOAD",
           "checkpoint": true,
@@ -4734,31 +4932,36 @@
             "cardinality": "ONE",
             "kind": "SEEKABLE_BLOB",
             "optional": false,
-            "role": "game"
+            "role": "game",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "BIOS_BUNDLE",
             "optional": true,
-            "role": "bios"
+            "role": "bios",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "PARENT_ARCHIVE",
             "optional": true,
-            "role": "parent"
+            "role": "parent",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "MULTI_DISC",
             "optional": true,
-            "role": "discs"
+            "role": "discs",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "EXTERNAL_FILE_SET",
             "optional": true,
-            "role": "external"
+            "role": "external",
+            "maxFileBytes": 2147483647
           }
         ],
         "targetOptionsSchema": {
@@ -4792,6 +4995,7 @@
           "assets/4.2.3/data/compression/extract7z.js",
           "assets/4.2.3/data/compression/extractzip.js",
           "assets/4.2.3/data/cores/cores.json",
+          "assets/4.2.3/data/cores/flycast-rom-requirements.json",
           "assets/4.2.3/data/cores/flycast-wasm.data",
           "assets/4.2.3/data/cores/ppsspp-assets.zip",
           "assets/4.2.3/data/cores/reports/flycast.json",
@@ -4812,6 +5016,18 @@
           "assets/4.2.3/data/src/storage.js",
           "assets/content-io/worker.mjs"
         ],
+        "contentRequirements": {
+          "kind": "FLYCAST_CARTRIDGE",
+          "platform": "naomi2",
+          "catalog": {
+            "path": "assets/4.2.3/data/cores/flycast-rom-requirements.json",
+            "sha256": "6cf37e6599d56cd555b61807216c1d1ffcd3b430a027940df71dfaa81be892a9"
+          },
+          "core": {
+            "path": "assets/4.2.3/data/cores/flycast-wasm.data",
+            "sha256": "4e2d15a35d7a28e094465ff69fe040ee428bac04f9dd955e329430ce7ebecc2f"
+          }
+        },
         "capabilities": {
           "contentLoading": "ON_DEMAND_AND_PRELOAD",
           "checkpoint": true,
@@ -4849,31 +5065,36 @@
             "cardinality": "ONE",
             "kind": "SEEKABLE_BLOB",
             "optional": false,
-            "role": "game"
+            "role": "game",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "BIOS_BUNDLE",
             "optional": true,
-            "role": "bios"
+            "role": "bios",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "PARENT_ARCHIVE",
             "optional": true,
-            "role": "parent"
+            "role": "parent",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "MULTI_DISC",
             "optional": true,
-            "role": "discs"
+            "role": "discs",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "EXTERNAL_FILE_SET",
             "optional": true,
-            "role": "external"
+            "role": "external",
+            "maxFileBytes": 2147483647
           }
         ],
         "targetOptionsSchema": {
@@ -4963,31 +5184,36 @@
             "cardinality": "ONE",
             "kind": "ROM_BLOB",
             "optional": false,
-            "role": "game"
+            "role": "game",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "BIOS_BUNDLE",
             "optional": true,
-            "role": "bios"
+            "role": "bios",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "PARENT_ARCHIVE",
             "optional": true,
-            "role": "parent"
+            "role": "parent",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "MULTI_DISC",
             "optional": true,
-            "role": "discs"
+            "role": "discs",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "EXTERNAL_FILE_SET",
             "optional": true,
-            "role": "external"
+            "role": "external",
+            "maxFileBytes": 2147483647
           }
         ],
         "targetOptionsSchema": {
@@ -5080,31 +5306,36 @@
             "cardinality": "ONE",
             "kind": "ROM_BLOB",
             "optional": false,
-            "role": "game"
+            "role": "game",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "BIOS_BUNDLE",
             "optional": true,
-            "role": "bios"
+            "role": "bios",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "PARENT_ARCHIVE",
             "optional": true,
-            "role": "parent"
+            "role": "parent",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "MULTI_DISC",
             "optional": true,
-            "role": "discs"
+            "role": "discs",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "EXTERNAL_FILE_SET",
             "optional": true,
-            "role": "external"
+            "role": "external",
+            "maxFileBytes": 2147483647
           }
         ],
         "targetOptionsSchema": {
@@ -5194,31 +5425,36 @@
             "cardinality": "ONE",
             "kind": "ROM_BLOB",
             "optional": false,
-            "role": "game"
+            "role": "game",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "BIOS_BUNDLE",
             "optional": true,
-            "role": "bios"
+            "role": "bios",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "PARENT_ARCHIVE",
             "optional": true,
-            "role": "parent"
+            "role": "parent",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "MULTI_DISC",
             "optional": true,
-            "role": "discs"
+            "role": "discs",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "EXTERNAL_FILE_SET",
             "optional": true,
-            "role": "external"
+            "role": "external",
+            "maxFileBytes": 2147483647
           }
         ],
         "targetOptionsSchema": {
@@ -5310,31 +5546,36 @@
             "cardinality": "ONE",
             "kind": "ROM_BLOB",
             "optional": false,
-            "role": "game"
+            "role": "game",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "BIOS_BUNDLE",
             "optional": true,
-            "role": "bios"
+            "role": "bios",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "PARENT_ARCHIVE",
             "optional": true,
-            "role": "parent"
+            "role": "parent",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "MULTI_DISC",
             "optional": true,
-            "role": "discs"
+            "role": "discs",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "EXTERNAL_FILE_SET",
             "optional": true,
-            "role": "external"
+            "role": "external",
+            "maxFileBytes": 2147483647
           }
         ],
         "targetOptionsSchema": {
@@ -5424,31 +5665,36 @@
             "cardinality": "ONE",
             "kind": "ROM_BLOB",
             "optional": false,
-            "role": "game"
+            "role": "game",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "BIOS_BUNDLE",
             "optional": true,
-            "role": "bios"
+            "role": "bios",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "PARENT_ARCHIVE",
             "optional": true,
-            "role": "parent"
+            "role": "parent",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "MULTI_DISC",
             "optional": true,
-            "role": "discs"
+            "role": "discs",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "EXTERNAL_FILE_SET",
             "optional": true,
-            "role": "external"
+            "role": "external",
+            "maxFileBytes": 2147483647
           }
         ],
         "targetOptionsSchema": {
@@ -5538,31 +5784,36 @@
             "cardinality": "ONE",
             "kind": "ROM_BLOB",
             "optional": false,
-            "role": "game"
+            "role": "game",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "BIOS_BUNDLE",
             "optional": true,
-            "role": "bios"
+            "role": "bios",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "PARENT_ARCHIVE",
             "optional": true,
-            "role": "parent"
+            "role": "parent",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "MULTI_DISC",
             "optional": true,
-            "role": "discs"
+            "role": "discs",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "EXTERNAL_FILE_SET",
             "optional": true,
-            "role": "external"
+            "role": "external",
+            "maxFileBytes": 2147483647
           }
         ],
         "targetOptionsSchema": {
@@ -5652,31 +5903,36 @@
             "cardinality": "ONE",
             "kind": "ROM_BLOB",
             "optional": false,
-            "role": "game"
+            "role": "game",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "BIOS_BUNDLE",
             "optional": true,
-            "role": "bios"
+            "role": "bios",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "PARENT_ARCHIVE",
             "optional": true,
-            "role": "parent"
+            "role": "parent",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "MULTI_DISC",
             "optional": true,
-            "role": "discs"
+            "role": "discs",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "EXTERNAL_FILE_SET",
             "optional": true,
-            "role": "external"
+            "role": "external",
+            "maxFileBytes": 2147483647
           }
         ],
         "targetOptionsSchema": {
@@ -5766,31 +6022,36 @@
             "cardinality": "ONE",
             "kind": "ROM_BLOB",
             "optional": false,
-            "role": "game"
+            "role": "game",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "BIOS_BUNDLE",
             "optional": true,
-            "role": "bios"
+            "role": "bios",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "PARENT_ARCHIVE",
             "optional": true,
-            "role": "parent"
+            "role": "parent",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "MULTI_DISC",
             "optional": true,
-            "role": "discs"
+            "role": "discs",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "EXTERNAL_FILE_SET",
             "optional": true,
-            "role": "external"
+            "role": "external",
+            "maxFileBytes": 2147483647
           }
         ],
         "targetOptionsSchema": {
@@ -5880,31 +6141,36 @@
             "cardinality": "ONE",
             "kind": "SEEKABLE_BLOB",
             "optional": false,
-            "role": "game"
+            "role": "game",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "BIOS_BUNDLE",
             "optional": true,
-            "role": "bios"
+            "role": "bios",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "PARENT_ARCHIVE",
             "optional": true,
-            "role": "parent"
+            "role": "parent",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "MULTI_DISC",
             "optional": true,
-            "role": "discs"
+            "role": "discs",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "EXTERNAL_FILE_SET",
             "optional": true,
-            "role": "external"
+            "role": "external",
+            "maxFileBytes": 2147483647
           }
         ],
         "targetOptionsSchema": {
@@ -5997,31 +6263,36 @@
             "cardinality": "ONE",
             "kind": "ROM_BLOB",
             "optional": false,
-            "role": "game"
+            "role": "game",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "BIOS_BUNDLE",
             "optional": true,
-            "role": "bios"
+            "role": "bios",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "PARENT_ARCHIVE",
             "optional": true,
-            "role": "parent"
+            "role": "parent",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "MULTI_DISC",
             "optional": true,
-            "role": "discs"
+            "role": "discs",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "EXTERNAL_FILE_SET",
             "optional": true,
-            "role": "external"
+            "role": "external",
+            "maxFileBytes": 2147483647
           }
         ],
         "targetOptionsSchema": {
@@ -6111,31 +6382,36 @@
             "cardinality": "ONE",
             "kind": "ROM_BLOB",
             "optional": false,
-            "role": "game"
+            "role": "game",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "BIOS_BUNDLE",
             "optional": true,
-            "role": "bios"
+            "role": "bios",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "PARENT_ARCHIVE",
             "optional": true,
-            "role": "parent"
+            "role": "parent",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "MULTI_DISC",
             "optional": true,
-            "role": "discs"
+            "role": "discs",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "EXTERNAL_FILE_SET",
             "optional": true,
-            "role": "external"
+            "role": "external",
+            "maxFileBytes": 2147483647
           }
         ],
         "targetOptionsSchema": {
@@ -6225,31 +6501,36 @@
             "cardinality": "ONE",
             "kind": "ROM_BLOB",
             "optional": false,
-            "role": "game"
+            "role": "game",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "BIOS_BUNDLE",
             "optional": true,
-            "role": "bios"
+            "role": "bios",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "PARENT_ARCHIVE",
             "optional": true,
-            "role": "parent"
+            "role": "parent",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "MULTI_DISC",
             "optional": true,
-            "role": "discs"
+            "role": "discs",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "EXTERNAL_FILE_SET",
             "optional": true,
-            "role": "external"
+            "role": "external",
+            "maxFileBytes": 2147483647
           }
         ],
         "targetOptionsSchema": {
@@ -6340,31 +6621,36 @@
             "cardinality": "ONE",
             "kind": "ROM_BLOB",
             "optional": false,
-            "role": "game"
+            "role": "game",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "BIOS_BUNDLE",
             "optional": true,
-            "role": "bios"
+            "role": "bios",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "PARENT_ARCHIVE",
             "optional": true,
-            "role": "parent"
+            "role": "parent",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "MULTI_DISC",
             "optional": true,
-            "role": "discs"
+            "role": "discs",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "EXTERNAL_FILE_SET",
             "optional": true,
-            "role": "external"
+            "role": "external",
+            "maxFileBytes": 2147483647
           }
         ],
         "targetOptionsSchema": {
@@ -6454,31 +6740,36 @@
             "cardinality": "ONE",
             "kind": "ROM_BLOB",
             "optional": false,
-            "role": "game"
+            "role": "game",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "BIOS_BUNDLE",
             "optional": true,
-            "role": "bios"
+            "role": "bios",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "PARENT_ARCHIVE",
             "optional": true,
-            "role": "parent"
+            "role": "parent",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "MULTI_DISC",
             "optional": true,
-            "role": "discs"
+            "role": "discs",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "EXTERNAL_FILE_SET",
             "optional": true,
-            "role": "external"
+            "role": "external",
+            "maxFileBytes": 2147483647
           }
         ],
         "targetOptionsSchema": {
@@ -6568,31 +6859,36 @@
             "cardinality": "ONE",
             "kind": "ROM_BLOB",
             "optional": false,
-            "role": "game"
+            "role": "game",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "BIOS_BUNDLE",
             "optional": true,
-            "role": "bios"
+            "role": "bios",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "PARENT_ARCHIVE",
             "optional": true,
-            "role": "parent"
+            "role": "parent",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "MULTI_DISC",
             "optional": true,
-            "role": "discs"
+            "role": "discs",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "EXTERNAL_FILE_SET",
             "optional": true,
-            "role": "external"
+            "role": "external",
+            "maxFileBytes": 2147483647
           }
         ],
         "targetOptionsSchema": {
@@ -6682,31 +6978,36 @@
             "cardinality": "ONE",
             "kind": "ROM_BLOB",
             "optional": false,
-            "role": "game"
+            "role": "game",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "BIOS_BUNDLE",
             "optional": true,
-            "role": "bios"
+            "role": "bios",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "PARENT_ARCHIVE",
             "optional": true,
-            "role": "parent"
+            "role": "parent",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "MULTI_DISC",
             "optional": true,
-            "role": "discs"
+            "role": "discs",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "EXTERNAL_FILE_SET",
             "optional": true,
-            "role": "external"
+            "role": "external",
+            "maxFileBytes": 2147483647
           }
         ],
         "targetOptionsSchema": {
@@ -6796,31 +7097,36 @@
             "cardinality": "ONE",
             "kind": "ROM_BLOB",
             "optional": false,
-            "role": "game"
+            "role": "game",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "BIOS_BUNDLE",
             "optional": true,
-            "role": "bios"
+            "role": "bios",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "PARENT_ARCHIVE",
             "optional": true,
-            "role": "parent"
+            "role": "parent",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "MULTI_DISC",
             "optional": true,
-            "role": "discs"
+            "role": "discs",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "EXTERNAL_FILE_SET",
             "optional": true,
-            "role": "external"
+            "role": "external",
+            "maxFileBytes": 2147483647
           }
         ],
         "targetOptionsSchema": {
@@ -6910,31 +7216,36 @@
             "cardinality": "ONE",
             "kind": "ROM_BLOB",
             "optional": false,
-            "role": "game"
+            "role": "game",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "BIOS_BUNDLE",
             "optional": true,
-            "role": "bios"
+            "role": "bios",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "PARENT_ARCHIVE",
             "optional": true,
-            "role": "parent"
+            "role": "parent",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "MULTI_DISC",
             "optional": true,
-            "role": "discs"
+            "role": "discs",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "EXTERNAL_FILE_SET",
             "optional": true,
-            "role": "external"
+            "role": "external",
+            "maxFileBytes": 2147483647
           }
         ],
         "targetOptionsSchema": {
@@ -7024,31 +7335,36 @@
             "cardinality": "ONE",
             "kind": "ROM_BLOB",
             "optional": false,
-            "role": "game"
+            "role": "game",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "BIOS_BUNDLE",
             "optional": true,
-            "role": "bios"
+            "role": "bios",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "PARENT_ARCHIVE",
             "optional": true,
-            "role": "parent"
+            "role": "parent",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "MULTI_DISC",
             "optional": true,
-            "role": "discs"
+            "role": "discs",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "EXTERNAL_FILE_SET",
             "optional": true,
-            "role": "external"
+            "role": "external",
+            "maxFileBytes": 2147483647
           }
         ],
         "targetOptionsSchema": {
@@ -7138,31 +7454,36 @@
             "cardinality": "ONE",
             "kind": "ROM_BLOB",
             "optional": false,
-            "role": "game"
+            "role": "game",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "BIOS_BUNDLE",
             "optional": true,
-            "role": "bios"
+            "role": "bios",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "PARENT_ARCHIVE",
             "optional": true,
-            "role": "parent"
+            "role": "parent",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "MULTI_DISC",
             "optional": true,
-            "role": "discs"
+            "role": "discs",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "EXTERNAL_FILE_SET",
             "optional": true,
-            "role": "external"
+            "role": "external",
+            "maxFileBytes": 2147483647
           }
         ],
         "targetOptionsSchema": {
@@ -7252,31 +7573,36 @@
             "cardinality": "ONE",
             "kind": "ROM_BLOB",
             "optional": false,
-            "role": "game"
+            "role": "game",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "BIOS_BUNDLE",
             "optional": true,
-            "role": "bios"
+            "role": "bios",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "PARENT_ARCHIVE",
             "optional": true,
-            "role": "parent"
+            "role": "parent",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "MULTI_DISC",
             "optional": true,
-            "role": "discs"
+            "role": "discs",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "EXTERNAL_FILE_SET",
             "optional": true,
-            "role": "external"
+            "role": "external",
+            "maxFileBytes": 2147483647
           }
         ],
         "targetOptionsSchema": {
@@ -7366,31 +7692,36 @@
             "cardinality": "ONE",
             "kind": "ROM_BLOB",
             "optional": false,
-            "role": "game"
+            "role": "game",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "BIOS_BUNDLE",
             "optional": true,
-            "role": "bios"
+            "role": "bios",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "PARENT_ARCHIVE",
             "optional": true,
-            "role": "parent"
+            "role": "parent",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "MULTI_DISC",
             "optional": true,
-            "role": "discs"
+            "role": "discs",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "EXTERNAL_FILE_SET",
             "optional": true,
-            "role": "external"
+            "role": "external",
+            "maxFileBytes": 2147483647
           }
         ],
         "targetOptionsSchema": {
@@ -7480,31 +7811,36 @@
             "cardinality": "ONE",
             "kind": "ROM_BLOB",
             "optional": false,
-            "role": "game"
+            "role": "game",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "BIOS_BUNDLE",
             "optional": true,
-            "role": "bios"
+            "role": "bios",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "PARENT_ARCHIVE",
             "optional": true,
-            "role": "parent"
+            "role": "parent",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "MULTI_DISC",
             "optional": true,
-            "role": "discs"
+            "role": "discs",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "EXTERNAL_FILE_SET",
             "optional": true,
-            "role": "external"
+            "role": "external",
+            "maxFileBytes": 2147483647
           }
         ],
         "targetOptionsSchema": {
@@ -7594,31 +7930,36 @@
             "cardinality": "ONE",
             "kind": "SEEKABLE_BLOB",
             "optional": false,
-            "role": "game"
+            "role": "game",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "BIOS_BUNDLE",
             "optional": true,
-            "role": "bios"
+            "role": "bios",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "PARENT_ARCHIVE",
             "optional": true,
-            "role": "parent"
+            "role": "parent",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "MULTI_DISC",
             "optional": true,
-            "role": "discs"
+            "role": "discs",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "EXTERNAL_FILE_SET",
             "optional": true,
-            "role": "external"
+            "role": "external",
+            "maxFileBytes": 2147483647
           }
         ],
         "targetOptionsSchema": {
@@ -7708,31 +8049,36 @@
             "cardinality": "ONE",
             "kind": "ROM_BLOB",
             "optional": false,
-            "role": "game"
+            "role": "game",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "BIOS_BUNDLE",
             "optional": true,
-            "role": "bios"
+            "role": "bios",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "PARENT_ARCHIVE",
             "optional": true,
-            "role": "parent"
+            "role": "parent",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "MULTI_DISC",
             "optional": true,
-            "role": "discs"
+            "role": "discs",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "EXTERNAL_FILE_SET",
             "optional": true,
-            "role": "external"
+            "role": "external",
+            "maxFileBytes": 2147483647
           }
         ],
         "targetOptionsSchema": {
@@ -7822,31 +8168,36 @@
             "cardinality": "ONE",
             "kind": "ROM_BLOB",
             "optional": false,
-            "role": "game"
+            "role": "game",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "BIOS_BUNDLE",
             "optional": true,
-            "role": "bios"
+            "role": "bios",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "PARENT_ARCHIVE",
             "optional": true,
-            "role": "parent"
+            "role": "parent",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "MULTI_DISC",
             "optional": true,
-            "role": "discs"
+            "role": "discs",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "EXTERNAL_FILE_SET",
             "optional": true,
-            "role": "external"
+            "role": "external",
+            "maxFileBytes": 2147483647
           }
         ],
         "targetOptionsSchema": {
@@ -7936,31 +8287,36 @@
             "cardinality": "ONE",
             "kind": "ROM_BLOB",
             "optional": false,
-            "role": "game"
+            "role": "game",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "BIOS_BUNDLE",
             "optional": true,
-            "role": "bios"
+            "role": "bios",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "PARENT_ARCHIVE",
             "optional": true,
-            "role": "parent"
+            "role": "parent",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "MULTI_DISC",
             "optional": true,
-            "role": "discs"
+            "role": "discs",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "EXTERNAL_FILE_SET",
             "optional": true,
-            "role": "external"
+            "role": "external",
+            "maxFileBytes": 2147483647
           }
         ],
         "targetOptionsSchema": {
@@ -8050,31 +8406,36 @@
             "cardinality": "ONE",
             "kind": "ROM_BLOB",
             "optional": false,
-            "role": "game"
+            "role": "game",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "BIOS_BUNDLE",
             "optional": true,
-            "role": "bios"
+            "role": "bios",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "PARENT_ARCHIVE",
             "optional": true,
-            "role": "parent"
+            "role": "parent",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "MULTI_DISC",
             "optional": true,
-            "role": "discs"
+            "role": "discs",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "EXTERNAL_FILE_SET",
             "optional": true,
-            "role": "external"
+            "role": "external",
+            "maxFileBytes": 2147483647
           }
         ],
         "targetOptionsSchema": {
@@ -8164,31 +8525,36 @@
             "cardinality": "ONE",
             "kind": "ROM_BLOB",
             "optional": false,
-            "role": "game"
+            "role": "game",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "BIOS_BUNDLE",
             "optional": true,
-            "role": "bios"
+            "role": "bios",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "PARENT_ARCHIVE",
             "optional": true,
-            "role": "parent"
+            "role": "parent",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "MULTI_DISC",
             "optional": true,
-            "role": "discs"
+            "role": "discs",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "EXTERNAL_FILE_SET",
             "optional": true,
-            "role": "external"
+            "role": "external",
+            "maxFileBytes": 2147483647
           }
         ],
         "targetOptionsSchema": {
@@ -8278,31 +8644,36 @@
             "cardinality": "ONE",
             "kind": "ROM_BLOB",
             "optional": false,
-            "role": "game"
+            "role": "game",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "BIOS_BUNDLE",
             "optional": true,
-            "role": "bios"
+            "role": "bios",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "PARENT_ARCHIVE",
             "optional": true,
-            "role": "parent"
+            "role": "parent",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "MULTI_DISC",
             "optional": true,
-            "role": "discs"
+            "role": "discs",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "EXTERNAL_FILE_SET",
             "optional": true,
-            "role": "external"
+            "role": "external",
+            "maxFileBytes": 2147483647
           }
         ],
         "targetOptionsSchema": {
@@ -8392,31 +8763,36 @@
             "cardinality": "ONE",
             "kind": "ROM_BLOB",
             "optional": false,
-            "role": "game"
+            "role": "game",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "BIOS_BUNDLE",
             "optional": true,
-            "role": "bios"
+            "role": "bios",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "PARENT_ARCHIVE",
             "optional": true,
-            "role": "parent"
+            "role": "parent",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "MULTI_DISC",
             "optional": true,
-            "role": "discs"
+            "role": "discs",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "EXTERNAL_FILE_SET",
             "optional": true,
-            "role": "external"
+            "role": "external",
+            "maxFileBytes": 2147483647
           }
         ],
         "targetOptionsSchema": {
@@ -8512,31 +8888,36 @@
             "cardinality": "ONE",
             "kind": "ROM_BLOB",
             "optional": false,
-            "role": "game"
+            "role": "game",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "BIOS_BUNDLE",
             "optional": true,
-            "role": "bios"
+            "role": "bios",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "PARENT_ARCHIVE",
             "optional": true,
-            "role": "parent"
+            "role": "parent",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "MULTI_DISC",
             "optional": true,
-            "role": "discs"
+            "role": "discs",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "EXTERNAL_FILE_SET",
             "optional": true,
-            "role": "external"
+            "role": "external",
+            "maxFileBytes": 2147483647
           }
         ],
         "targetOptionsSchema": {
@@ -8626,31 +9007,36 @@
             "cardinality": "ONE",
             "kind": "ROM_BLOB",
             "optional": false,
-            "role": "game"
+            "role": "game",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "BIOS_BUNDLE",
             "optional": true,
-            "role": "bios"
+            "role": "bios",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "PARENT_ARCHIVE",
             "optional": true,
-            "role": "parent"
+            "role": "parent",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "MULTI_DISC",
             "optional": true,
-            "role": "discs"
+            "role": "discs",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "EXTERNAL_FILE_SET",
             "optional": true,
-            "role": "external"
+            "role": "external",
+            "maxFileBytes": 2147483647
           }
         ],
         "targetOptionsSchema": {
@@ -8740,31 +9126,36 @@
             "cardinality": "ONE",
             "kind": "ROM_BLOB",
             "optional": false,
-            "role": "game"
+            "role": "game",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "BIOS_BUNDLE",
             "optional": true,
-            "role": "bios"
+            "role": "bios",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "PARENT_ARCHIVE",
             "optional": true,
-            "role": "parent"
+            "role": "parent",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "MULTI_DISC",
             "optional": true,
-            "role": "discs"
+            "role": "discs",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "EXTERNAL_FILE_SET",
             "optional": true,
-            "role": "external"
+            "role": "external",
+            "maxFileBytes": 2147483647
           }
         ],
         "targetOptionsSchema": {
@@ -8854,31 +9245,36 @@
             "cardinality": "ONE",
             "kind": "ROM_BLOB",
             "optional": false,
-            "role": "game"
+            "role": "game",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "BIOS_BUNDLE",
             "optional": true,
-            "role": "bios"
+            "role": "bios",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "PARENT_ARCHIVE",
             "optional": true,
-            "role": "parent"
+            "role": "parent",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "MULTI_DISC",
             "optional": true,
-            "role": "discs"
+            "role": "discs",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "EXTERNAL_FILE_SET",
             "optional": true,
-            "role": "external"
+            "role": "external",
+            "maxFileBytes": 2147483647
           }
         ],
         "targetOptionsSchema": {
@@ -8968,31 +9364,36 @@
             "cardinality": "ONE",
             "kind": "ROM_BLOB",
             "optional": false,
-            "role": "game"
+            "role": "game",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "BIOS_BUNDLE",
             "optional": true,
-            "role": "bios"
+            "role": "bios",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "PARENT_ARCHIVE",
             "optional": true,
-            "role": "parent"
+            "role": "parent",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "MULTI_DISC",
             "optional": true,
-            "role": "discs"
+            "role": "discs",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "EXTERNAL_FILE_SET",
             "optional": true,
-            "role": "external"
+            "role": "external",
+            "maxFileBytes": 2147483647
           }
         ],
         "targetOptionsSchema": {
@@ -9082,31 +9483,36 @@
             "cardinality": "ONE",
             "kind": "ROM_BLOB",
             "optional": false,
-            "role": "game"
+            "role": "game",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "BIOS_BUNDLE",
             "optional": true,
-            "role": "bios"
+            "role": "bios",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "PARENT_ARCHIVE",
             "optional": true,
-            "role": "parent"
+            "role": "parent",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "MULTI_DISC",
             "optional": true,
-            "role": "discs"
+            "role": "discs",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "EXTERNAL_FILE_SET",
             "optional": true,
-            "role": "external"
+            "role": "external",
+            "maxFileBytes": 2147483647
           }
         ],
         "targetOptionsSchema": {
@@ -9196,31 +9602,36 @@
             "cardinality": "ONE",
             "kind": "ROM_BLOB",
             "optional": false,
-            "role": "game"
+            "role": "game",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "BIOS_BUNDLE",
             "optional": true,
-            "role": "bios"
+            "role": "bios",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "PARENT_ARCHIVE",
             "optional": true,
-            "role": "parent"
+            "role": "parent",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "MULTI_DISC",
             "optional": true,
-            "role": "discs"
+            "role": "discs",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "EXTERNAL_FILE_SET",
             "optional": true,
-            "role": "external"
+            "role": "external",
+            "maxFileBytes": 2147483647
           }
         ],
         "targetOptionsSchema": {
@@ -9310,31 +9721,36 @@
             "cardinality": "ONE",
             "kind": "ROM_BLOB",
             "optional": false,
-            "role": "game"
+            "role": "game",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "BIOS_BUNDLE",
             "optional": true,
-            "role": "bios"
+            "role": "bios",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "PARENT_ARCHIVE",
             "optional": true,
-            "role": "parent"
+            "role": "parent",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "MULTI_DISC",
             "optional": true,
-            "role": "discs"
+            "role": "discs",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "EXTERNAL_FILE_SET",
             "optional": true,
-            "role": "external"
+            "role": "external",
+            "maxFileBytes": 2147483647
           }
         ],
         "targetOptionsSchema": {
@@ -9424,31 +9840,36 @@
             "cardinality": "ONE",
             "kind": "ROM_BLOB",
             "optional": false,
-            "role": "game"
+            "role": "game",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "BIOS_BUNDLE",
             "optional": true,
-            "role": "bios"
+            "role": "bios",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "PARENT_ARCHIVE",
             "optional": true,
-            "role": "parent"
+            "role": "parent",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "MULTI_DISC",
             "optional": true,
-            "role": "discs"
+            "role": "discs",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "EXTERNAL_FILE_SET",
             "optional": true,
-            "role": "external"
+            "role": "external",
+            "maxFileBytes": 2147483647
           }
         ],
         "targetOptionsSchema": {
@@ -9538,31 +9959,36 @@
             "cardinality": "ONE",
             "kind": "ROM_BLOB",
             "optional": false,
-            "role": "game"
+            "role": "game",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "BIOS_BUNDLE",
             "optional": true,
-            "role": "bios"
+            "role": "bios",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "PARENT_ARCHIVE",
             "optional": true,
-            "role": "parent"
+            "role": "parent",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "MULTI_DISC",
             "optional": true,
-            "role": "discs"
+            "role": "discs",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "EXTERNAL_FILE_SET",
             "optional": true,
-            "role": "external"
+            "role": "external",
+            "maxFileBytes": 2147483647
           }
         ],
         "targetOptionsSchema": {
@@ -9655,31 +10081,36 @@
             "cardinality": "ONE",
             "kind": "ROM_BLOB",
             "optional": false,
-            "role": "game"
+            "role": "game",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "BIOS_BUNDLE",
             "optional": true,
-            "role": "bios"
+            "role": "bios",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "PARENT_ARCHIVE",
             "optional": true,
-            "role": "parent"
+            "role": "parent",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "MULTI_DISC",
             "optional": true,
-            "role": "discs"
+            "role": "discs",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "EXTERNAL_FILE_SET",
             "optional": true,
-            "role": "external"
+            "role": "external",
+            "maxFileBytes": 2147483647
           }
         ],
         "targetOptionsSchema": {
@@ -9769,31 +10200,36 @@
             "cardinality": "ONE",
             "kind": "ROM_BLOB",
             "optional": false,
-            "role": "game"
+            "role": "game",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "BIOS_BUNDLE",
             "optional": true,
-            "role": "bios"
+            "role": "bios",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "PARENT_ARCHIVE",
             "optional": true,
-            "role": "parent"
+            "role": "parent",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "MULTI_DISC",
             "optional": true,
-            "role": "discs"
+            "role": "discs",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "EXTERNAL_FILE_SET",
             "optional": true,
-            "role": "external"
+            "role": "external",
+            "maxFileBytes": 2147483647
           }
         ],
         "targetOptionsSchema": {
@@ -9883,31 +10319,36 @@
             "cardinality": "ONE",
             "kind": "ROM_BLOB",
             "optional": false,
-            "role": "game"
+            "role": "game",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "BIOS_BUNDLE",
             "optional": true,
-            "role": "bios"
+            "role": "bios",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "PARENT_ARCHIVE",
             "optional": true,
-            "role": "parent"
+            "role": "parent",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "MULTI_DISC",
             "optional": true,
-            "role": "discs"
+            "role": "discs",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "EXTERNAL_FILE_SET",
             "optional": true,
-            "role": "external"
+            "role": "external",
+            "maxFileBytes": 2147483647
           }
         ],
         "targetOptionsSchema": {
@@ -9997,31 +10438,36 @@
             "cardinality": "ONE",
             "kind": "ROM_BLOB",
             "optional": false,
-            "role": "game"
+            "role": "game",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "BIOS_BUNDLE",
             "optional": true,
-            "role": "bios"
+            "role": "bios",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "PARENT_ARCHIVE",
             "optional": true,
-            "role": "parent"
+            "role": "parent",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "MULTI_DISC",
             "optional": true,
-            "role": "discs"
+            "role": "discs",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "EXTERNAL_FILE_SET",
             "optional": true,
-            "role": "external"
+            "role": "external",
+            "maxFileBytes": 2147483647
           }
         ],
         "targetOptionsSchema": {
@@ -10111,31 +10557,36 @@
             "cardinality": "ONE",
             "kind": "ROM_BLOB",
             "optional": false,
-            "role": "game"
+            "role": "game",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "BIOS_BUNDLE",
             "optional": true,
-            "role": "bios"
+            "role": "bios",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "PARENT_ARCHIVE",
             "optional": true,
-            "role": "parent"
+            "role": "parent",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "MULTI_DISC",
             "optional": true,
-            "role": "discs"
+            "role": "discs",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "EXTERNAL_FILE_SET",
             "optional": true,
-            "role": "external"
+            "role": "external",
+            "maxFileBytes": 2147483647
           }
         ],
         "targetOptionsSchema": {
@@ -10225,31 +10676,36 @@
             "cardinality": "ONE",
             "kind": "ROM_BLOB",
             "optional": false,
-            "role": "game"
+            "role": "game",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "BIOS_BUNDLE",
             "optional": true,
-            "role": "bios"
+            "role": "bios",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "PARENT_ARCHIVE",
             "optional": true,
-            "role": "parent"
+            "role": "parent",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "MULTI_DISC",
             "optional": true,
-            "role": "discs"
+            "role": "discs",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "EXTERNAL_FILE_SET",
             "optional": true,
-            "role": "external"
+            "role": "external",
+            "maxFileBytes": 2147483647
           }
         ],
         "targetOptionsSchema": {
@@ -10339,31 +10795,36 @@
             "cardinality": "ONE",
             "kind": "ROM_BLOB",
             "optional": false,
-            "role": "game"
+            "role": "game",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "BIOS_BUNDLE",
             "optional": true,
-            "role": "bios"
+            "role": "bios",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "PARENT_ARCHIVE",
             "optional": true,
-            "role": "parent"
+            "role": "parent",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "MULTI_DISC",
             "optional": true,
-            "role": "discs"
+            "role": "discs",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "EXTERNAL_FILE_SET",
             "optional": true,
-            "role": "external"
+            "role": "external",
+            "maxFileBytes": 2147483647
           }
         ],
         "targetOptionsSchema": {
@@ -10453,31 +10914,36 @@
             "cardinality": "ONE",
             "kind": "ROM_BLOB",
             "optional": false,
-            "role": "game"
+            "role": "game",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "BIOS_BUNDLE",
             "optional": true,
-            "role": "bios"
+            "role": "bios",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "PARENT_ARCHIVE",
             "optional": true,
-            "role": "parent"
+            "role": "parent",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "MULTI_DISC",
             "optional": true,
-            "role": "discs"
+            "role": "discs",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "EXTERNAL_FILE_SET",
             "optional": true,
-            "role": "external"
+            "role": "external",
+            "maxFileBytes": 2147483647
           }
         ],
         "targetOptionsSchema": {
@@ -10567,31 +11033,36 @@
             "cardinality": "ONE",
             "kind": "ROM_BLOB",
             "optional": false,
-            "role": "game"
+            "role": "game",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "BIOS_BUNDLE",
             "optional": true,
-            "role": "bios"
+            "role": "bios",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "PARENT_ARCHIVE",
             "optional": true,
-            "role": "parent"
+            "role": "parent",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "MULTI_DISC",
             "optional": true,
-            "role": "discs"
+            "role": "discs",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "EXTERNAL_FILE_SET",
             "optional": true,
-            "role": "external"
+            "role": "external",
+            "maxFileBytes": 2147483647
           }
         ],
         "targetOptionsSchema": {
@@ -10681,31 +11152,36 @@
             "cardinality": "ONE",
             "kind": "ROM_BLOB",
             "optional": false,
-            "role": "game"
+            "role": "game",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "BIOS_BUNDLE",
             "optional": true,
-            "role": "bios"
+            "role": "bios",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "PARENT_ARCHIVE",
             "optional": true,
-            "role": "parent"
+            "role": "parent",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "MULTI_DISC",
             "optional": true,
-            "role": "discs"
+            "role": "discs",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "EXTERNAL_FILE_SET",
             "optional": true,
-            "role": "external"
+            "role": "external",
+            "maxFileBytes": 2147483647
           }
         ],
         "targetOptionsSchema": {
@@ -10795,31 +11271,36 @@
             "cardinality": "ONE",
             "kind": "ROM_BLOB",
             "optional": false,
-            "role": "game"
+            "role": "game",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "BIOS_BUNDLE",
             "optional": true,
-            "role": "bios"
+            "role": "bios",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "PARENT_ARCHIVE",
             "optional": true,
-            "role": "parent"
+            "role": "parent",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "MULTI_DISC",
             "optional": true,
-            "role": "discs"
+            "role": "discs",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "EXTERNAL_FILE_SET",
             "optional": true,
-            "role": "external"
+            "role": "external",
+            "maxFileBytes": 2147483647
           }
         ],
         "targetOptionsSchema": {
@@ -10909,31 +11390,36 @@
             "cardinality": "ONE",
             "kind": "ROM_BLOB",
             "optional": false,
-            "role": "game"
+            "role": "game",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "BIOS_BUNDLE",
             "optional": true,
-            "role": "bios"
+            "role": "bios",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "PARENT_ARCHIVE",
             "optional": true,
-            "role": "parent"
+            "role": "parent",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "MULTI_DISC",
             "optional": true,
-            "role": "discs"
+            "role": "discs",
+            "maxFileBytes": 2147483647
           },
           {
             "cardinality": "ONE",
             "kind": "EXTERNAL_FILE_SET",
             "optional": true,
-            "role": "external"
+            "role": "external",
+            "maxFileBytes": 2147483647
           }
         ],
         "targetOptionsSchema": {

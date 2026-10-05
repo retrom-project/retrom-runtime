@@ -6,6 +6,7 @@ import {emulatorJsSourceCatalog} from "../src/providers/emulatorjs/source-catalo
 import {developmentForkFiles, developmentForkSource, stageDevelopmentForks} from "./emulatorjs-development-forks.mjs";
 import {loadProviderSources} from "./provider-sources.mjs";
 import {stageCoreDevelopmentInput, validCoreDevelopmentInput} from "./core-development-input.mjs";
+import {readEmulatorJsCoreCandidate} from "./emulatorjs-core-candidate.mjs";
 
 // Explicit, already-built candidates only. This path never compiles a core or changes a catalog.
 export async function readPFBProviderCoreFiles(outputRoot, providerId, staging, assetIndex) {
@@ -24,6 +25,16 @@ export async function readPFBProviderCoreFiles(outputRoot, providerId, staging, 
     if (!exact(core, ["id", "directory"]) || typeof core.directory !== "string" || !isAbsolute(core.directory)) {invalid();}
     if (providerId === "retrom-runtime") {
       result.push(...await readRuntimeCore(core, staging, assetIndex));
+      continue;
+    }
+    const candidateSource = emulatorJsSourceCatalog.developmentCores.find(source => source.id === core.id);
+    if (candidateSource) {
+      const files = await readEmulatorJsCoreCandidate(candidateSource, core.directory, true);
+      for (const [output, contents] of files) {
+        const path = output.includes("/licenses/") ? `licenses/emulatorjs/${output}` : `assets/${output}`;
+        if (!Object.hasOwn(assetIndex, path)) {invalid();}
+        result.push({path, contents});
+      }
       continue;
     }
     const declared = [...emulatorJsSourceCatalog.forks, ...emulatorJsSourceCatalog.developmentForks]
@@ -52,6 +63,22 @@ export async function readPFBProviderCoreFiles(outputRoot, providerId, staging, 
     }
   }
   return result;
+}
+
+// A loose core override cannot change the content rules recorded by the base
+// manifest. Paired ROM/DAT/catalog updates require a complete provider candidate.
+export function requireBaseContentPairs(targets, files) {
+  for (const target of targets) {
+    const policy = target.contentRequirements;
+    const references = [...(policy?.kind === "FLYCAST_CARTRIDGE" ? [policy.catalog, policy.core] : []),
+      ...(target.arcadeDAT ? [target.arcadeDAT.asset, target.arcadeDAT.core, target.arcadeDAT.provenance] : [])];
+    for (const reference of references) {
+      const override = files.find(file => file.path === reference.path);
+      if (override && override.sha256 !== reference.sha256) {
+        throw new Error("PFB_PROVIDER_CONTENT_PAIR_REQUIRES_BASE_UPDATE");
+      }
+    }
+  }
 }
 
 async function readRuntimeCore(core, staging, baseFiles) {

@@ -5,7 +5,7 @@ import {dirname, isAbsolute, join, resolve} from "node:path";
 import {fileURLToPath} from "node:url";
 
 import {buildProviderClient} from "./provider-client-build.mjs";
-import {readPFBProviderCoreFiles} from "./pfb-provider-cores.mjs";
+import {readPFBProviderCoreFiles, requireBaseContentPairs} from "./pfb-provider-cores.mjs";
 import {providerMediaType} from "./provider-bundle.mjs";
 
 const runtimeRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..");
@@ -40,6 +40,7 @@ export async function buildPFBProviderDev(input) {
     const clientPath = join(staging, "client.mjs");
     const coreFiles = (await readPFBProviderCoreFiles(input.outputRoot, providerId, staging, baseFileIndex))
       .map(({path, contents}) => fileDescriptor(path, contents));
+    requireBaseContentPairs(manifest.targets, coreFiles);
     const pfbCoreInputs = Object.fromEntries(coreFiles.filter((file) => file.path.endsWith("-wasm.data"))
       .map((file) => {
         const id = file.path.split("/").at(-1).replace(/(?:-thread)?-wasm\.data$/u, "");

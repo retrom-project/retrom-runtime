@@ -1,3 +1,4 @@
+import {emulatorContentRequirements, emulatorArcadeDAT, emulatorRequirementAssets} from "./content-requirements.js";
 import {eagerPolicy} from "../../provider/content-policies.js";
 import {contentLimits} from "../../content-io/limits.js";
 import {providerVersion} from "../../provider/version.js";
@@ -114,7 +115,7 @@ declare const __RETROM_PFB_CORE_INPUTS__: Readonly<Record<string, {
 
 const atari800 = core("atari800", "4.2.3", "atari800-wasm.data", 996285, "6bb6df1de70f4b71e3b382a0a238522b6d0fe7bb860c7e8e8292f055ed46fda5", "716cfb25c012e2ce682608f532b543a423514f7e029027b291fb6b48df189c47", {artifactFlavor: "OVERRIDE", coreBundleVersion: "retrom-core-g4e7fbc73765c-r1", defaultOptions: {keyboardInput: "enabled", atari800_system: "800XL (64K)", atari800_os_xl: "AltirraOS"}});
 const genesisPlusGX = core("genesis_plus_gx", "4.2.3", "genesis_plus_gx-wasm.data", 1278689, "3caf013fe2d778f2f112d07d1aa8c98178e47a76148ff87bee1de0eca06099bc", "baf9aa4753a6960df773317a59be71ed38288753cfc627dcd1ab4d8ca076a14f", {artifactFlavor: "OVERRIDE", coreBundleVersion: "retrom-core-g63f0c6870601-r2"});
-const flycast = core("flycast", "4.2.3", "flycast-wasm.data", 3546423, "4e2d15a35d7a28e094465ff69fe040ee428bac04f9dd955e329430ce7ebecc2f", "586230f5d991b542b7c7c14477a5fb08fb532daf6da2f69739b6ad4b4a1531cb", {artifactFlavor: "OVERRIDE", coreBundleVersion: "1.0", defaultOptions: {reicast_hle_bios: "disabled", reicast_boot_to_bios: "disabled", reicast_internal_resolution: "640x480", reicast_threaded_rendering: "disabled", reicast_alpha_sorting: "per-strip (fast, least accurate)"}});
+const flycast = core("flycast", "4.2.3", "flycast-wasm.data", 3546423, "4e2d15a35d7a28e094465ff69fe040ee428bac04f9dd955e329430ce7ebecc2f", "215107a9bf4af4fd96f89d864b0ad927edb6e878616d851417dcf50a56bde814", {artifactFlavor: "OVERRIDE", coreBundleVersion: "1.0", defaultOptions: {reicast_hle_bios: "disabled", reicast_boot_to_bios: "disabled", reicast_internal_resolution: "640x480", reicast_threaded_rendering: "disabled", reicast_alpha_sorting: "per-strip (fast, least accurate)"}});
 
 const cores: readonly CoreSource[] = [
   atari800,
@@ -137,7 +138,7 @@ const cores: readonly CoreSource[] = [
   {...flycast, targetId: "flycast-naomi2"},
 
   core("a5200", "4.2.3", "a5200-wasm.data", 881560, "c82476478d6b70b9da80cccc27ca06a5fd85acf7cdd5643f230cc4d6777990ef", "c402648f858a8a566b39c8d0949470eeeda5f0346b8dfc6228dad312a0af295d"),
-  core("azahar", "4.3.0-pre", "azahar-thread-wasm.data", 3985011, "d90696e6ea68c4fc00ef147411ad399962777f07b6c7e73d5537da0eaffc2e3b", "77bf9b92bdc0f55b5d2dc5c2394971fe40b80b10b79fc40501db07d199bed94c", {inputMode: "POINTER", defaultOptions: {webgl2Enabled: "enabled"}}),
+  core("azahar", "4.3.0-pre", "azahar-thread-wasm.data", 4033927, "97db19118be320907b78227408fdeb339fc9fdf126ec14e9dcc0ac663a60b6a4", "f15c560df7dc5038d0e8026b45f6ab05e11bb8a5cacbb801059e81e4db586a97", {inputMode: "POINTER", defaultOptions: {webgl2Enabled: "enabled"}}),
   core("beetle_vb", "4.2.3", "beetle_vb-wasm.data", 858313, "3db727a78b6a6551a4024c273069eb39c8e8f33aa78ef16a073ed7460f6ce692", "71604fbf1001fc5d053b08ce5f8396a1da456f176a0b3106eff08f7cac3e5986", {startupActions: [press(2000, 0), press(4000, 3), press(15000, 3), press(25000, 3)]}),
   core("bsnes", "4.3.0-pre", "bsnes-wasm.data", 1226327, "c0384975cf12d2227ccf31a03966ebf677c63fef44fc0852ef574efa2673fec1", "91994d91c9d828d8179936ada920d64b7a28cfb274ef75d560a60b46305fe610", {artifactFlavor: "OVERRIDE", coreBundleVersion: "retrom-core-g4b344745e387-r1"}),
   core("cap32", "4.2.3", "cap32-wasm.data", 1029996, "534321cbb8f3f62fd2d2c8cc01b34ae50f6315869755218f8f6fa6581aa5083b", "2b1bc24a3fef304aca5a1e2a240b3ecde947fe4f72a3af75624953ccfc4e8faf", {artifactFlavor: "OVERRIDE", coreBundleVersion: "retrom-core-g310cc579b79b-r4", defaultOptions: {keyboardInput: "enabled"}}),
@@ -147,7 +148,7 @@ const cores: readonly CoreSource[] = [
   core("dosbox_pure", "4.3.0-pre", "dosbox_pure-thread-wasm.data", 1811506, "ad4368ae51924e23f8a36a2c8fd3dc36d04bd3c1e249e5f4fae782ee78527025", "d7343fb6a79bf35c939f34194dc33ff85d46f198de5a5efe2446cc2ce12048d5", {contentKinds: ["DOS_BUNDLE"]}),
   core("fbalpha2012_cps1", "4.2.3", "fbalpha2012_cps1-wasm.data", 1031240, "15b47667eb3c3746649c79e997b9f8c463f83bed9f61f51322cbe4db3d6e078e", "8e95c25731ad4868449f5bb6f8b238c8fa6ea2352e117817b124764354465da9"),
   core("fbalpha2012_cps2", "4.2.3", "fbalpha2012_cps2-wasm.data", 992866, "432c2dd513603b04ccbf4e81f282f012763d2435311805443e2bd0cc9021d8d1", "73ac6fc4b1a2030701471b630e658118486e99c6c7349663dadcde4abeab6e5d"),
-  core("fbneo", "4.2.3", "fbneo-wasm.data", 8273551, "315a25e0bcd61d58ee0d9e8b1dbf3740b9e0ca4b7d0726f848ce1068de73437c", "cbd006664ec1c76f6bdad7747d487ee137ae70d15390ec479e11f8e17f01bc84"),
+  core("fbneo", "4.2.3", "fbneo-wasm.data", 8684348, "4596557fc573bc7d311b249c6957768e03e5498bb83d08aaf7b41d407faf62ae", "5d3d8d417e49ef7a4268191800fccdf3efcebaff8121d358d5b9c713fff26170"),
   core("fceumm", "4.2.3", "fceumm-wasm.data", 1054015, "8c449fd5c36646fb0769423ed6ffa9efbdfc21fbfdc9bac7952b559d34d5b493", "d1a20a10b27908b6f199ed8d10f7ccf4376065b8a733492aee53b4d4a2c2f26d"),
   core("freeintv", "4.3.0-pre", "freeintv-wasm.data", 1139022, "e5f84b6a322e5b01b077e6e60895f52555af6ddc5838bfc775f946a0d44a8d6e", "9a5045b039305fbc0ed13a679cb6534980f2b2b4e1cb321ba9d109c5cc0c9062"),
   core("fuse", "4.2.3", "fuse-wasm.data", 1218229, "791fe40dfba9ac236c5c14d629d555133c5fe3c36d1dbdc2a48ced487da51373", "0f2dee6ecd4bd57fe793239ec42bd6efa4b4b8696aae4f62a2a469cad2a22f32", {defaultOptions: {keyboardInput: "enabled"}}),
@@ -205,6 +206,7 @@ const targets = cores.map((entry) => {
   adapterId: entry.id === "gam4980" ? "emulatorjs-gam4980" : entry.id === "bsnes" ? "emulatorjs-bsnes" : entry.id === "flycast" ? "emulatorjs-flycast" : entry.id === "ppsspp" ? "emulatorjs-psp" : entry.id === "lutro" ? "emulatorjs-lutro" : entry.id === "daphne" ? "emulatorjs-daphne" : `emulatorjs-${entry.release}`,
   assetPaths: [
     ...commonAssets(entry.release),
+    ...emulatorRequirementAssets(targetId),
     entry.asset,
     ...(entry.id === "daphne" ? [`assets/${entry.release}/data/cores/daphne-resources.zip`] : []),
     ...(entry.id === "ppsspp" ? [`assets/${entry.release}/data/cores/ppsspp-assets.zip`, `assets/${entry.release}/data/compression/extractzip.js`] : []),
@@ -229,12 +231,15 @@ const targets = cores.map((entry) => {
     inputMode: entry.inputMode,
     release: entry.release,
     runtimeCore: entry.id,
+    contentAcceptance: ["azahar", "fbneo"].includes(entry.id) ? "CORE_RESULT_V1" as const : "START_EVENT" as const,
     startupActions: entry.startupActions,
   },
   inputs: ["daphne", "dosbox_pure"].includes(entry.id) ? inputs.map(input => input.role === "game" ? {...input, kind: "FILE_TREE" as const} : input) :
     ["neocd", "genesis_plus_gx_cd", "flycast"].includes(targetId) || entry.id === "flycast"
       ? inputs.map(input => input.role === "game" ? {...input, kind: "SEEKABLE_BLOB" as const} : input) : inputs,
   contentIO: emulatorContentPolicies(targetId),
+  ...(emulatorContentRequirements(targetId) ? {contentRequirements: emulatorContentRequirements(targetId)} : {}),
+  ...(emulatorArcadeDAT(targetId) ? {arcadeDAT: emulatorArcadeDAT(targetId)} : {}),
   contentMembers: emulatorContentMembers(entry.id),
   inputFilter: true,
   hostKeyboardShortcuts: hostKeyboardShortcuts(targetId),
@@ -248,7 +253,7 @@ const targets = cores.map((entry) => {
 
 export const emulatorJsProviderDefinition = defineProvider({
   adapters: storageAdapters(adapters),
-  providerApiVersion: 1,
+  providerApiVersion: 2,
   providerId: "emulatorjs",
   providerVersion,
   targets,

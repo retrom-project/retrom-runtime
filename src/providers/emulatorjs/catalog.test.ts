@@ -126,6 +126,11 @@ describe("EmulatorJS Provider declarations", () => {
     expect(yabause?.discSwitch).toBe(true);
   });
 
+  it.each(["azahar", "fbneo"])("requires a native content receipt for %s", (id) => {
+    const target = emulatorJsProviderDefinition.targets.find(target => target.id === id);
+    expect(target?.implementation.contentAcceptance).toBe("CORE_RESULT_V1");
+  });
+
   it("declares the core compatibility report that EmulatorJS loads at runtime", () => {
     for (const target of emulatorJsProviderDefinition.targets) {
       const {release, runtimeCore} = target.implementation;

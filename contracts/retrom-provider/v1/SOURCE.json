@@ -1,7 +1,7 @@
 {
   "authorityPath": "api/runtime-provider/v1",
   "authorityRepository": "https://github.com/retrom-project/retrom",
-  "contractSha256": "944e8cccf9fccc4af1f93f7e81229fe5ac58601b9ca471573d64f1e9661308ac",
+  "contractSha256": "25b3034564d82fab10bbadc2b71de418fd559167cdab620462052dc431d571c2",
   "contractVersion": "runtime-provider-v1",
   "files": [
     {
@@ -10,7 +10,7 @@
     },
     {
       "path": "api/runtime-provider/v1/launch-envelope.schema.json",
-      "sha256": "8ec8e764548877fa11d194046a892d966394b406f86ce75c9fbe72258050f5bb"
+      "sha256": "fa0c5c285b5edfb4b9b4e7823721b28410680814aed61f001a21d84a52405f21"
     },
     {
       "path": "api/runtime-provider/v1/provider-integrity.schema.json",
@@ -22,11 +22,11 @@
     },
     {
       "path": "api/runtime-provider/v1/provider-manifest.schema.json",
-      "sha256": "80c87c8d0cff98d9c0b10b45b70821640e5c40e85d9ecc02e8e812b38400ad3e"
+      "sha256": "c52cea987b4c2073fb3eb232f67380d2d23a6aad994b1330de07cb662d0deaaf"
     },
     {
-      "path": "api/runtime-provider/v1/provider-module-v1.d.ts",
-      "sha256": "aee05138d792abe526e72a33fe7de3e41b4b957cc80090791e2fa3c70a081602"
+      "path": "api/runtime-provider/v1/provider-module-v2.d.ts",
+      "sha256": "1c66993c60327b7c6c97c77f3a2f9c883aec4255d0c98c55625ab666ef2a4ef5"
     },
     {
       "path": "api/runtime-provider/v1/runtime-resource.schema.json",
@@ -34,35 +34,35 @@
     },
     {
       "path": "api/runtime-provider/v1/fixtures/invalid/checkpoint-missing-read-formats.json",
-      "sha256": "6ce18ccf933b1ad2702e7e6d1053b48e8ca6ed9b67c83056e3ffe54d27f1949e"
+      "sha256": "6a98a671f5a94cda6e608e57807c2e832734005d3377c7fb6c1de2ee50bcd272"
     },
     {
       "path": "api/runtime-provider/v1/fixtures/invalid/duplicate-field.json",
-      "sha256": "88598ad4490961032dbe2ca52795513bc3a7a7e95ee7e30dc563206553d623d8"
+      "sha256": "df1cdef80555e3789285571b73e12035ef14d7d8993c3dd6784067f19eca146c"
     },
     {
       "path": "api/runtime-provider/v1/fixtures/invalid/exponent-json-input.json",
-      "sha256": "32a13e6d0ce4cf92a7c1b6065230ae3c8f42a236adfa452ec6f5788b93ef90f5"
+      "sha256": "538e07015b74cca6023d3f93697fb03c15cb9f6f00050c867faca3ea16426ef1"
     },
     {
       "path": "api/runtime-provider/v1/fixtures/invalid/float-json-input.json",
-      "sha256": "831cd10c39c77230a52695dbe339dc040dca2dc305beb48a4088fa006328fb51"
+      "sha256": "7a8049bfdcd55f37eaf52421e9f7b9ff510b41c86e77dfb81059aff127537d9d"
     },
     {
       "path": "api/runtime-provider/v1/fixtures/invalid/invalid-unicode.json",
-      "sha256": "2691dd0babdb285cccab22d6e5db801bb27bcca02f2ef33a6742aa1f5b2817d3"
+      "sha256": "463ad1dd09c4139b142d6fa8484524053fcd355df1e4c0267573722848aaec34"
     },
     {
       "path": "api/runtime-provider/v1/fixtures/invalid/missing-capability.json",
-      "sha256": "2ccda1dd801b37af039ce2a5c805f8b3a81281ab9cc2c60b7c4b9062be13699e"
+      "sha256": "439a225527f6fa6a59b125235e28b8d22f458be4c2d327091074cc871de8c71c"
     },
     {
       "path": "api/runtime-provider/v1/fixtures/invalid/unknown-top-level.json",
-      "sha256": "e695f42709df6179f27f016c3382ff27714737f651545f0a9314270ec7c60a1d"
+      "sha256": "1bd2f23a45f9e5a9a5bd61c7e906293bef3086bf3bf465eefbfa1addb0607db7"
     },
     {
       "path": "api/runtime-provider/v1/fixtures/invalid/unsafe-integer-json-input.json",
-      "sha256": "ab2947cd13a9ba2257fb06ef28edc9ce87778d5808b259e407a7cc41e3da1995"
+      "sha256": "a05808cb207ff5dfe2443ad012b9546c67378a7b7c4945a41575643fa0844c71"
     },
     {
       "path": "api/runtime-provider/v1/fixtures/target-options/schema-validation.json",
@@ -70,11 +70,11 @@
     },
     {
       "path": "api/runtime-provider/v1/fixtures/valid/checkpoint-restore.json",
-      "sha256": "fb50cca8c85545a8c2388449866e04db4f412cd64474fec134a6eeec10256706"
+      "sha256": "6dbd9c1882c038fc1141ebb61e70d6acede1f0315ecf05108379ba54a804feba"
     },
     {
       "path": "api/runtime-provider/v1/fixtures/valid/single-minimal.json",
-      "sha256": "187a3e29cde764ef90899932771c3b8314e52b8444781d01d6d083b065d1b17f"
+      "sha256": "17140c391adb272807528647daa8baf406f73a0f5f38fb3e1307f41801e11317"
     }
   ],
   "schemaVersion": 1

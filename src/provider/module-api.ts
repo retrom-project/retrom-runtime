@@ -12,10 +12,10 @@ import type {
   RuntimeMultiDiscResourceV1,
   RuntimeResourceV1,
   RuntimeWebResourceV1,
-} from "./generated/provider-module-v1.js";
+} from "./generated/provider-module-v2.js";
 import { projectProviderManifest, type ProviderManifest } from "./manifest.js";
 
-export type * from "./generated/provider-module-v1.js";
+export type * from "./generated/provider-module-v2.js";
 
 export type RuntimeCheckpointContractV1 = LaunchEnvelopeV1["runtime"]["checkpoint"];
 export type AssetIndexV1 = Readonly<Record<string, {sha256: string; sizeBytes: number}>>;
@@ -91,7 +91,7 @@ function validateRuntime(value: unknown) {
     "bundleSha256", "capabilities", "checkpoint", "moduleSha256", "moduleUrl", "providerApiVersion",
     "providerId", "providerVersion", "runtimeBaseUrl", "targetId",
   ]) || !validIdentity(runtime.providerId) || !validSemver(runtime.providerVersion) ||
-    runtime.providerApiVersion !== 1 || !validIdentity(runtime.targetId) ||
+    runtime.providerApiVersion !== 2 || !validIdentity(runtime.targetId) ||
     !validDigest(runtime.bundleSha256) || !validDigest(runtime.moduleSha256) ||
     !validCapabilities(runtime.capabilities) || !validCheckpointShape(runtime.checkpoint)) {invalidRequest();}
   return runtime as unknown as LaunchEnvelopeV1["runtime"];

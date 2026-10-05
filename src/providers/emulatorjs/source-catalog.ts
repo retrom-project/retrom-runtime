@@ -1,8 +1,10 @@
+import {emulatorJsDevelopmentCoreSources} from "./development-core-sources.ts";
 import {emulatorJsPlatformCoreForks} from "./released-platform-core-catalog.ts";
 import type {DevelopmentFork} from "../../../scripts/emulatorjs-development-forks.mjs";
 
 export const emulatorJsSourceCatalog = {
   schemaVersion: 1,
+  developmentCores: emulatorJsDevelopmentCoreSources,
   developmentForks: [] as readonly DevelopmentFork[],
   forks: [
     ...emulatorJsPlatformCoreForks,
@@ -437,39 +439,6 @@ export const emulatorJsSourceCatalog = {
   ]
 },
     {
-      "repository": "https://github.com/retrom-project/flycast-wasm",
-      "tag": "retrom-core-1.0-r2",
-      "commit": "5de493dc115894b84914ff9f658bcc35d24e267d",
-      "adapterAbi": "emulatorjs-flycast-state-v1",
-      "runtimeCore": "flycast",
-      "assets": [
-        {
-          "filename": "LICENSE",
-          "sha256": "71433d9114710e9d2f65310c43561515c051fc13500de981fd1ebe7ce499ba92",
-          "sizeBytes": 61843,
-          "url": "https://github.com/retrom-project/flycast-wasm/releases/download/retrom-core-1.0-r2/LICENSE"
-        },
-        {
-          "filename": "flycast-wasm.data",
-          "sha256": "4e2d15a35d7a28e094465ff69fe040ee428bac04f9dd955e329430ce7ebecc2f",
-          "sizeBytes": 3546423,
-          "url": "https://github.com/retrom-project/flycast-wasm/releases/download/retrom-core-1.0-r2/flycast-wasm.data"
-        },
-        {
-          "filename": "flycast.json",
-          "sha256": "215107a9bf4af4fd96f89d864b0ad927edb6e878616d851417dcf50a56bde814",
-          "sizeBytes": 92,
-          "url": "https://github.com/retrom-project/flycast-wasm/releases/download/retrom-core-1.0-r2/flycast.json"
-        },
-        {
-          "filename": "rpg-runtime-release.json",
-          "sha256": "586230f5d991b542b7c7c14477a5fb08fb532daf6da2f69739b6ad4b4a1531cb",
-          "sizeBytes": 709,
-          "url": "https://github.com/retrom-project/flycast-wasm/releases/download/retrom-core-1.0-r2/rpg-runtime-release.json"
-        }
-      ]
-    },
-    {
       "repository": "https://github.com/retrom-project/vice-libretro",
       "tag": "retrom-core-g1b4309f4d56d-r1",
       "commit": "515d625643e4b0fbc30f3ab185daab0e43331dd9",
@@ -544,7 +513,7 @@ export const emulatorJsSourceCatalog = {
       },
       commit: "e150dc0491ae747028919fb82d6598954976ede6",
       id: "4.2.3",
-      licenseRoots: ["LICENSE", "licenses/forks/flycast"],
+      licenseRoots: ["LICENSE", "licenses/forks/flycast", "licenses/forks/fbneo"],
       repository: "https://github.com/EmulatorJS/EmulatorJS",
       tag: "v4.2.3",
     },
@@ -557,7 +526,7 @@ export const emulatorJsSourceCatalog = {
       },
       commit: "5628818822054610a2f06e61a6dc802fd1a3681f",
       id: "4.3.0-pre",
-      licenseRoots: ["LICENSE"],
+      licenseRoots: ["LICENSE", "licenses/forks/azahar"],
       repository: "https://github.com/EmulatorJS/EmulatorJS",
       tag: "v4.3.0-pre",
     },

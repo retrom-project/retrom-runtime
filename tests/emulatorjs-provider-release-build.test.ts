@@ -12,6 +12,7 @@ import {emulatorJsSourceCatalog} from "../src/providers/emulatorjs/source-catalo
 import {buildEmulatorJsProviderBundle} from "../scripts/provider-release-build.mjs";
 import {developmentForkFiles} from "../scripts/emulatorjs-development-forks.mjs";
 import type {DevelopmentFork} from "../scripts/emulatorjs-development-forks.mjs";
+import type {ForkRelease} from "../scripts/emulatorjs-fork-releases.mjs";
 import {forkReleaseFiles} from "../scripts/emulatorjs-fork-releases.mjs";
 
 describe("EmulatorJS Provider release build", () => {
@@ -88,7 +89,7 @@ async function temporaryRoot() {
 
 async function fixtureForks(sourceRoot: string) {
   const forks = [];
-  for (const fork of emulatorJsSourceCatalog.forks) {
+  for (const fork of emulatorJsSourceCatalog.forks as readonly ForkRelease[]) {
     const destinations = new Map(forkReleaseFiles({forks: [fork]}).map((file) => [file.filename, file.destination]));
     const metadataAsset = fork.assets.find((asset) => asset.filename.endsWith("-release.json"))!;
     const assets = fork.assets.filter((asset) => asset !== metadataAsset).map((asset) => {

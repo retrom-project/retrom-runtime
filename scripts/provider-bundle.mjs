@@ -87,7 +87,7 @@ async function addSources(files, sources) {
 }
 
 function validateInputClosure(manifest, files) {
-  if (manifest?.schemaVersion !== 1 || manifest.clientModulePath !== "client.mjs" ||
+  if (manifest?.schemaVersion !== 2 || manifest.clientModulePath !== "client.mjs" ||
     !Array.isArray(manifest.targets) || !manifest.targets.length) {
     throw new Error("PROVIDER_MANIFEST_INVALID");
   }

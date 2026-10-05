@@ -21,7 +21,7 @@ export function launchEnvelope(): LaunchEnvelopeV1 {
       checkpoint: {maxBytes: 268435456, readFormats: ["emulatorjs-state-v1", "emulatorjs-state-v1-storage-v1"], writeFormat: "emulatorjs-state-v1-storage-v1"},
       moduleSha256: digest,
       moduleUrl: `/runtime/providers/emulatorjs/${bundleDigest}/client.mjs`,
-      providerApiVersion: 1,
+      providerApiVersion: 2,
       providerId: "emulatorjs",
       providerVersion: "0.0.0-dev",
       runtimeBaseUrl: `/runtime/providers/emulatorjs/${bundleDigest}/`,

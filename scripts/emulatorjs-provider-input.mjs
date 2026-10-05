@@ -1,7 +1,7 @@
 import {developmentForkFiles, requireDevelopmentForkMode, stageDevelopmentForks} from "./emulatorjs-development-forks.mjs";
 import {parseDevReleaseOverrides} from "./dev-release-overrides.mjs";
 import {loadProviderSources} from "./provider-sources.mjs";
-import {emulatorJsCoreInputs, readEmulatorJsCoreCandidate} from "./emulatorjs-core-candidate.mjs";
+import {emulatorJsCoreInputs, readPinnedEmulatorJsCoreCandidate} from "./emulatorjs-core-candidate.mjs";
 import {createHash, randomUUID} from "node:crypto";
 import {spawnSync} from "node:child_process";
 import {
@@ -306,7 +306,7 @@ if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1]
 async function candidateFiles(input) {
   const files = new Map();
   for (const source of input.catalog.developmentCores ?? []) {
-    const verified = await readEmulatorJsCoreCandidate(source, input.coreDirectories?.[source.id], input.candidate === true);
+    const verified = await readPinnedEmulatorJsCoreCandidate(source, input.coreDirectories?.[source.id], input.candidate === true);
     for (const [path, bytes] of verified) {files.set(path, bytes);}
   }
   return files;

@@ -1,3 +1,4 @@
+import {validArcadeDAT, validContentRequirements} from "./contract-content.js";
 import type { ProviderManifest } from "./manifest.js";
 
 const identity = /^[a-z0-9](?:[a-z0-9-]{0,62}[a-z0-9])?$/u;
@@ -14,7 +15,7 @@ const capabilityKeys = [
   "checkpoint", "discSwitch", "frameCounter", "frameMode", "inputFilter", "nativeSettings",
   "pause", "requiresThreads", "screenshot", "standardGamepad", "videoModes", "volume",
 ];
-const inputKeys = ["cardinality", "kind", "optional", "role"];
+const inputKeys = ["cardinality", "kind", "maxFileBytes", "optional", "role"];
 const checkpointKeys = ["maxBytes", "readFormats", "writeFormat"];
 const frameModes = new Set([
   "NONE", "SAME_ORIGIN_BLANK", "SAME_ORIGIN_RESOURCE", "ISOLATED_ORIGIN_RESOURCE",
@@ -29,7 +30,7 @@ const schemaPropertyName = /^[A-Za-z][A-Za-z0-9]{0,63}$/u;
 
 export function validateProviderManifest(value: unknown): ProviderManifest {
   const manifest = record(value);
-  if (!manifest || !exactKeys(manifest, manifestKeys) || manifest.schemaVersion !== 1 ||
+  if (!manifest || !exactKeys(manifest, manifestKeys) || manifest.schemaVersion !== 2 ||
     !positiveSafeInteger(manifest.providerApiVersion) || manifest.clientModulePath !== "client.mjs" ||
     !validIdentity(manifest.providerId) || !validSemver(manifest.providerVersion) ||
     !Array.isArray(manifest.targets) || manifest.targets.length === 0) {
@@ -49,7 +50,7 @@ export function canonicalJsonBytes(value: unknown): Uint8Array {
 
 function validateTarget(value: unknown): string {
   const target = record(value);
-  if (!target || !exactKeys(target, targetKeys) || !validIdentity(target.id) ||
+  if (!target || !exactKeys(target, [...targetKeys, ...["contentRequirements", "arcadeDAT"].filter(key => Object.hasOwn(target, key))].sort()) || !validIdentity(target.id) ||
     !boundedText(target.displayName, 1, 120)) {
     invalidManifest();
   }
@@ -65,6 +66,8 @@ function validateTarget(value: unknown): string {
   }
   const assetPaths = stringArray(target.assetPaths, false);
   if (!assetPaths || !isSortedUnique(assetPaths) || !assetPaths.every(validPath)) {invalidManifest();}
+  if (Object.hasOwn(target, "contentRequirements") && !validContentRequirements(target.contentRequirements, assetPaths)) {invalidManifest();}
+  if (Object.hasOwn(target, "arcadeDAT") && !validArcadeDAT(target.arcadeDAT, assetPaths)) {invalidManifest();}
   return target.id;
 }
 
@@ -165,7 +168,8 @@ function validateInputs(value: unknown): void {
     const input = record(inputValue);
     if (!input || !exactKeys(input, inputKeys) || !validIdentity(input.role) || roles.has(input.role) ||
       typeof input.kind !== "string" || !resourceKinds.has(input.kind) ||
-      input.cardinality !== "ONE" && input.cardinality !== "MANY" || typeof input.optional !== "boolean") {
+      input.cardinality !== "ONE" && input.cardinality !== "MANY" || typeof input.optional !== "boolean" ||
+      input.maxFileBytes !== null && !positiveSafeInteger(input.maxFileBytes)) {
       invalidManifest();
     }
     roles.add(input.role);

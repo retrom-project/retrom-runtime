@@ -8,18 +8,18 @@ Supported targets, Provider Module architecture and core integration guides are 
 
 Managed game acquisition and cache/bridge ownership are described in [Content I/O v1](docs/content-io.md).
 
-## Provider Module V1
+## Provider Module V2
 
 Hosts integrate the generated Provider Bundle. A Bundle exports one `client.mjs`:
 
 ```ts
 export const providerId = "retrom-runtime";
 export const providerVersion = "0.46.0"; // derived from release tag v0.46.0
-export const providerApiVersion = 1;
+export const providerApiVersion = 2;
 export async function createRuntime(
   value: unknown,
   host: RuntimeHostV1,
-): Promise<PlayerRuntimeV1>;
+): Promise<PlayerRuntimeV2>;
 ```
 
 The host validates a Launch Envelope V1, verifies the module URL and SHA-256 against the active Bundle, imports the module, checks the exported identity and calls `createRuntime`.
@@ -66,7 +66,7 @@ MIT
 ### Host keyboard and program selection
 
 Each Target owns its host shortcut policy through `hostKeyboardShortcuts`. The public
-`PlayerRuntimeV1.getInputCapabilities()` exposes the allowed `PAUSE` / `MENU` shortcuts;
+`PlayerRuntimeV2.getInputCapabilities()` exposes the allowed `PAUSE` / `MENU` shortcuts;
 hosts leave game keys untouched when this optional method is absent on an older Provider.
 A checkpoint availability with `requiredAction: "SELECT_PROGRAM"` tells the host to show
 program selection guidance. Provider-private Target options are interpreted only inside

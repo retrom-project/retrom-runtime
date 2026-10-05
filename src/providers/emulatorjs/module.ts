@@ -11,7 +11,7 @@ declare const __RETROM_PROVIDER_ASSET_INDEX__: AssetIndexV1;
 
 export const providerId = emulatorJsProviderDefinition.providerId;
 export const providerVersion = emulatorJsProviderDefinition.providerVersion;
-export const providerApiVersion = 1 as const;
+export const providerApiVersion = 2 as const;
 
 export async function createRuntime(value: unknown, host: RuntimeHostV1) {
   return createEmulatorJsPlayer(

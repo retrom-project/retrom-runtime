@@ -1,6 +1,7 @@
 import {afterEach, describe, expect, it, vi} from "vitest";
 
 import {installEmulatorJs423StateRestoreCompatibility} from "./state-restore.js";
+import {installContentAcceptance} from "./content-acceptance.js";
 import {installExternalFileCompatibility} from "./external-files.js";
 import {installEmulatorJsRetroArchConfig} from "./retroarch-config.js";
 
@@ -13,6 +14,15 @@ afterEach(() => {
 });
 
 describe("EmulatorJS 4.2.3 explicit restore", () => {
+  it("retains the core content receipt when native restore hooks share the factory", async () => {
+    const content = installContentAcceptance(window);
+    const cleanup = installEmulatorJs423StateRestoreCompatibility(window, true);
+    Reflect.set(window, "EJS_Runtime", async () => ({_retrom_content_load_result: () => 1}));
+    await Reflect.get(window, "EJS_Runtime")({});
+    try {await expect(content.wait(new AbortController().signal)).resolves.toBeUndefined();}
+    finally {cleanup(); content.cleanup();}
+  });
+
   it("does not autoload a MAME 2003 Plus state before its first emulated frame", async () => {
     vi.useFakeTimers();
     const cleanup = installEmulatorJs423StateRestoreCompatibility(window, true);

@@ -48,6 +48,8 @@ temporary network errors are retryable. Native causes are copied before cleanup,
 credentials, and bounded to eight entries of 500 characters. Hosts retain the failure and return navigation
 after teardown; they never classify errors by parsing native messages. Mount completion removes transport
 wrappers and deadlines; frame error, rejection and CSP listeners survive until exit to observe gameplay failures.
+The browser's message-only Resize Observer deferred-delivery notification does not terminate the runtime;
+it remains observable by browser diagnostics. Script exceptions, Wasm traps and unhandled rejections still fail.
 
 EasyRPG requires an explicit startup cancellation signal. Its factory/script errors and enforced eval CSP
 violations fail mounting immediately instead of leaving a pending factory promise. Browser release builds use

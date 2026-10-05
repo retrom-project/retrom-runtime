@@ -6,7 +6,7 @@ import {emulatorJsSourceCatalog} from "../src/providers/emulatorjs/source-catalo
 import {developmentForkFiles, developmentForkSource, stageDevelopmentForks} from "./emulatorjs-development-forks.mjs";
 import {loadProviderSources} from "./provider-sources.mjs";
 import {stageCoreDevelopmentInput, validCoreDevelopmentInput} from "./core-development-input.mjs";
-import {readEmulatorJsCoreCandidate} from "./emulatorjs-core-candidate.mjs";
+import {emulatorJsCandidateSource, readEmulatorJsCoreCandidate} from "./emulatorjs-core-candidate.mjs";
 
 // Explicit, already-built candidates only. This path never compiles a core or changes a catalog.
 export async function readPFBProviderCoreFiles(outputRoot, providerId, staging, assetIndex) {
@@ -27,7 +27,7 @@ export async function readPFBProviderCoreFiles(outputRoot, providerId, staging, 
       result.push(...await readRuntimeCore(core, staging, assetIndex));
       continue;
     }
-    const candidateSource = emulatorJsSourceCatalog.developmentCores.find(source => source.id === core.id);
+    const candidateSource = emulatorJsCandidateSource(emulatorJsSourceCatalog, core.id);
     if (candidateSource) {
       const files = await readEmulatorJsCoreCandidate(candidateSource, core.directory, true);
       for (const [output, contents] of files) {

@@ -81,12 +81,20 @@ export function emulatorJsCoreInputs(catalog, directories = {}, candidate = fals
   const forks = (catalog.forks ?? []).filter((fork) => {
     if (!Object.hasOwn(directories, fork.runtimeCore)) {return true;}
     if (!candidate) {throw new Error("UNPUBLISHED_CORE_INPUT");}
-    const source = {id: fork.runtimeCore, repository: fork.repository, adapterAbi: fork.adapterAbi,
-      files: forkReleaseFiles({forks: [fork]}).filter((file) => file.filename !== "rpg-runtime-release.json")
-        .map(({filename, destination, sizeBytes, sha256}) => ({filename, output: destination, sizeBytes, sha256}))};
+    const source = emulatorJsCandidateSource({forks: [fork]}, fork.runtimeCore);
     if (!validEmulatorJsCoreSource(source)) {throw invalid();}
     developmentCores.push(source);
     return false;
   });
   return {...catalog, forks, developmentCores};
+}
+
+export function emulatorJsCandidateSource(catalog, coreId) {
+  const development = catalog.developmentCores?.find(source => source.id === coreId);
+  if (development) {return development;}
+  const fork = catalog.forks?.find(fork => fork.runtimeCore === coreId);
+  if (!fork || !Object.hasOwn(sources, coreId)) {return null;}
+  return {id: coreId, repository: fork.repository, adapterAbi: fork.adapterAbi,
+    files: forkReleaseFiles({forks: [fork]}).filter(file => file.filename !== "rpg-runtime-release.json")
+      .map(({filename, destination, sizeBytes, sha256}) => ({filename, output: destination, sizeBytes, sha256}))};
 }

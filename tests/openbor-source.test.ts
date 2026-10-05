@@ -19,8 +19,8 @@ it("pins the published OpenBOR identity and requires exact asset digests", async
   expect(() => validateProviderSources(sources)).not.toThrow();
   expect(sources.developmentInputs?.some((source: {id: string}) => source.id === "openbor") ?? false).toBe(false);
   const release = sources.upstreamReleases.find((entry: {id: string}) => entry.id === "openbor");
-  expect(release).toMatchObject({tag: "retrom-core-g9d81480f8481-r1",
-    commit: "e3f86c09bf9ab6ed5b7e5c06cbd9c3d351a80ee6", adapterAbi: "openbor-host-v1"});
+  expect(release).toMatchObject({tag: "retrom-core-g9d81480f8481-r2",
+    commit: "0a3ad398ae7adb3939459bd332954f6d95e1450f", adapterAbi: "openbor-host-v1"});
   expect(asOpenBORCandidateSource(release)).toEqual(openborSource);
   release.assets[0].sha256 = "invalid";
   expect(() => validateProviderSources(sources)).toThrow("PROVIDER_SOURCES_INVALID");

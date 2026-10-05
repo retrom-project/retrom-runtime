@@ -98,10 +98,11 @@ async function fixtureForks(sourceRoot: string) {
       return {...asset, contents, sha256: createHash("sha256").update(contents).digest("hex"),
         sizeBytes: Buffer.byteLength(contents)};
     });
+    const hasContentReport = ["flycast", "fbneo", "azahar"].includes(fork.runtimeCore);
     const records = assets.map((asset) => ({filename: asset.filename, sizeBytes: asset.sizeBytes,
-      ...(fork.runtimeCore === "flycast" ? {sha256: asset.sha256} : {observedSha256: asset.sha256})}));
+      ...(hasContentReport ? {sha256: asset.sha256} : {observedSha256: asset.sha256})}));
     const metadata = JSON.stringify({...fork, schemaVersion: 1,
-      ...(fork.runtimeCore === "flycast" ? {files: records} : {assets: records})});
+      ...(hasContentReport ? {files: records} : {assets: records})});
     const all = [...assets, {...metadataAsset, contents: metadata,
       sha256: createHash("sha256").update(metadata).digest("hex"), sizeBytes: Buffer.byteLength(metadata)}];
     for (const file of forkReleaseFiles({forks: [{...fork, assets: all}]})) {

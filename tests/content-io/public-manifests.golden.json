@@ -4384,11 +4384,11 @@
           },
           "core": {
             "path": "assets/4.2.3/data/cores/fbneo-wasm.data",
-            "sha256": "4596557fc573bc7d311b249c6957768e03e5498bb83d08aaf7b41d407faf62ae"
+            "sha256": "eab740b32303a75fa9007a4d03e6566aa4ece0e84d3550b2f9490d116e106625"
           },
           "provenance": {
             "path": "assets/4.2.3/data/cores/fbneo-content-pair.json",
-            "sha256": "61b649cb699e390306ff918b0d7c1e91590485aa38367fabe024c516dfd0b8af"
+            "sha256": "4cb989cd43bdf956de1e43b81dea81b2a1f6c55ce69712e4c224141ba1b31c51"
           }
         },
         "capabilities": {

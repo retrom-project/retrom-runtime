@@ -1,12 +1,14 @@
-import {emulatorJsDevelopmentCoreSources} from "./development-core-sources.ts";
+import {emulatorJsContentCoreForks} from "./released-content-core-catalog.ts";
+import type {EmulatorJsCoreSource} from "../../../scripts/emulatorjs-core-candidate.mjs";
 import {emulatorJsPlatformCoreForks} from "./released-platform-core-catalog.ts";
 import type {DevelopmentFork} from "../../../scripts/emulatorjs-development-forks.mjs";
 
 export const emulatorJsSourceCatalog = {
   schemaVersion: 1,
-  developmentCores: emulatorJsDevelopmentCoreSources,
+  developmentCores: [] as readonly EmulatorJsCoreSource[],
   developmentForks: [] as readonly DevelopmentFork[],
   forks: [
+    ...emulatorJsContentCoreForks,
     ...emulatorJsPlatformCoreForks,
     {
       repository: "https://github.com/retrom-project/dosbox-pure",

@@ -5,6 +5,10 @@ export type EmulatorJsCoreSource = {
 export function validEmulatorJsCoreSource(value: unknown): boolean;
 export function readEmulatorJsCoreCandidate(source: EmulatorJsCoreSource, directory: string, candidate: boolean): Promise<Map<string, Buffer>>;
 export function readPinnedEmulatorJsCoreCandidate(source: EmulatorJsCoreSource, directory: string, candidate: boolean): Promise<Map<string, Buffer>>;
+export function emulatorJsCandidateSource(catalog: {
+  forks?: readonly import("./emulatorjs-fork-releases.mjs").ForkRelease[];
+  developmentCores?: readonly EmulatorJsCoreSource[];
+}, coreId: string): EmulatorJsCoreSource | null;
 export function emulatorJsCoreInputs<T extends {
   forks?: readonly import("./emulatorjs-fork-releases.mjs").ForkRelease[];
   developmentCores?: readonly EmulatorJsCoreSource[];

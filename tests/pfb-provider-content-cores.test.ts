@@ -5,13 +5,14 @@ import {tmpdir} from "node:os";
 import {join} from "node:path";
 import {expect, it} from "vitest";
 import {readPFBProviderCoreFiles, requireBaseContentPairs} from "../scripts/pfb-provider-cores.mjs";
-import {emulatorJsDevelopmentCoreSources} from "../src/providers/emulatorjs/development-core-sources.js";
+import {emulatorJsSourceCatalog} from "../src/providers/emulatorjs/source-catalog.js";
+import {emulatorJsCoreInputs} from "../scripts/emulatorjs-core-candidate.mjs";
 
 it("loads the full owned Azahar candidate and rejects a missing public base asset or changed bytes", async () => {
   const root = await mkdtemp(join(tmpdir(), "pfb-content-core-"));
   try {
     const directory = join(root, "candidate"); await mkdir(directory);
-    const source = emulatorJsDevelopmentCoreSources.find(source => source.id === "azahar")!;
+    const source = emulatorJsCoreInputs(emulatorJsSourceCatalog, {azahar: directory}, true).developmentCores.find(source => source.id === "azahar")!;
     const files = [], index: Record<string, {sha256: string; sizeBytes: number}> = {};
     for (const file of source.files) {
       const bytes = Buffer.from(`owned ${file.filename}`), sha256 = createHash("sha256").update(bytes).digest("hex");

@@ -138,7 +138,7 @@ const cores: readonly CoreSource[] = [
   {...flycast, targetId: "flycast-naomi2"},
 
   core("a5200", "4.2.3", "a5200-wasm.data", 881560, "c82476478d6b70b9da80cccc27ca06a5fd85acf7cdd5643f230cc4d6777990ef", "c402648f858a8a566b39c8d0949470eeeda5f0346b8dfc6228dad312a0af295d"),
-  core("azahar", "4.3.0-pre", "azahar-thread-wasm.data", 4033927, "97db19118be320907b78227408fdeb339fc9fdf126ec14e9dcc0ac663a60b6a4", "f15c560df7dc5038d0e8026b45f6ab05e11bb8a5cacbb801059e81e4db586a97", {inputMode: "POINTER", defaultOptions: {webgl2Enabled: "enabled"}}),
+  core("azahar", "4.3.0-pre", "azahar-thread-wasm.data", 4035286, "ae5fb48d9662c6f1b46f872eee302dc3d11c58d804bbd2d86a78dbb361a21a69", "f15c560df7dc5038d0e8026b45f6ab05e11bb8a5cacbb801059e81e4db586a97", {inputMode: "POINTER", defaultOptions: {webgl2Enabled: "enabled"}}),
   core("beetle_vb", "4.2.3", "beetle_vb-wasm.data", 858313, "3db727a78b6a6551a4024c273069eb39c8e8f33aa78ef16a073ed7460f6ce692", "71604fbf1001fc5d053b08ce5f8396a1da456f176a0b3106eff08f7cac3e5986", {startupActions: [press(2000, 0), press(4000, 3), press(15000, 3), press(25000, 3)]}),
   core("bsnes", "4.3.0-pre", "bsnes-wasm.data", 1226327, "c0384975cf12d2227ccf31a03966ebf677c63fef44fc0852ef574efa2673fec1", "91994d91c9d828d8179936ada920d64b7a28cfb274ef75d560a60b46305fe610", {artifactFlavor: "OVERRIDE", coreBundleVersion: "retrom-core-g4b344745e387-r1"}),
   core("cap32", "4.2.3", "cap32-wasm.data", 1029996, "534321cbb8f3f62fd2d2c8cc01b34ae50f6315869755218f8f6fa6581aa5083b", "2b1bc24a3fef304aca5a1e2a240b3ecde947fe4f72a3af75624953ccfc4e8faf", {artifactFlavor: "OVERRIDE", coreBundleVersion: "retrom-core-g310cc579b79b-r4", defaultOptions: {keyboardInput: "enabled"}}),
@@ -148,7 +148,7 @@ const cores: readonly CoreSource[] = [
   core("dosbox_pure", "4.3.0-pre", "dosbox_pure-thread-wasm.data", 1811506, "ad4368ae51924e23f8a36a2c8fd3dc36d04bd3c1e249e5f4fae782ee78527025", "d7343fb6a79bf35c939f34194dc33ff85d46f198de5a5efe2446cc2ce12048d5", {contentKinds: ["DOS_BUNDLE"]}),
   core("fbalpha2012_cps1", "4.2.3", "fbalpha2012_cps1-wasm.data", 1031240, "15b47667eb3c3746649c79e997b9f8c463f83bed9f61f51322cbe4db3d6e078e", "8e95c25731ad4868449f5bb6f8b238c8fa6ea2352e117817b124764354465da9"),
   core("fbalpha2012_cps2", "4.2.3", "fbalpha2012_cps2-wasm.data", 992866, "432c2dd513603b04ccbf4e81f282f012763d2435311805443e2bd0cc9021d8d1", "73ac6fc4b1a2030701471b630e658118486e99c6c7349663dadcde4abeab6e5d"),
-  core("fbneo", "4.2.3", "fbneo-wasm.data", 8684348, "4596557fc573bc7d311b249c6957768e03e5498bb83d08aaf7b41d407faf62ae", "5d3d8d417e49ef7a4268191800fccdf3efcebaff8121d358d5b9c713fff26170"),
+  core("fbneo", "4.2.3", "fbneo-wasm.data", 8697867, "eab740b32303a75fa9007a4d03e6566aa4ece0e84d3550b2f9490d116e106625", "5d3d8d417e49ef7a4268191800fccdf3efcebaff8121d358d5b9c713fff26170"),
   core("fceumm", "4.2.3", "fceumm-wasm.data", 1054015, "8c449fd5c36646fb0769423ed6ffa9efbdfc21fbfdc9bac7952b559d34d5b493", "d1a20a10b27908b6f199ed8d10f7ccf4376065b8a733492aee53b4d4a2c2f26d"),
   core("freeintv", "4.3.0-pre", "freeintv-wasm.data", 1139022, "e5f84b6a322e5b01b077e6e60895f52555af6ddc5838bfc775f946a0d44a8d6e", "9a5045b039305fbc0ed13a679cb6534980f2b2b4e1cb321ba9d109c5cc0c9062"),
   core("fuse", "4.2.3", "fuse-wasm.data", 1218229, "791fe40dfba9ac236c5c14d629d555133c5fe3c36d1dbdc2a48ced487da51373", "0f2dee6ecd4bd57fe793239ec42bd6efa4b4b8696aae4f62a2a469cad2a22f32", {defaultOptions: {keyboardInput: "enabled"}}),

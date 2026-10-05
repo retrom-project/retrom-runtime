@@ -1,4 +1,4 @@
-import type {RuntimeEventV2, RuntimeStartupKindV1, RuntimeStartupTaskV1} from "./module-api.js";
+import type {RuntimeEventV1, RuntimeStartupKindV1, RuntimeStartupTaskV1} from "./module-api.js";
 
 export type StartupTask = {
   progress(loadedBytes: number, totalBytes: number | null): void;
@@ -13,7 +13,7 @@ export class StartupTasks {
   private stopped = false;
   private readonly pending = new Map<string, RuntimeStartupTaskV1>();
   private readonly preparations = new Map<RuntimeStartupKindV1, StartupTask>();
-  constructor(private readonly emit: (event: RuntimeEventV2) => void, private readonly signal: AbortSignal) {}
+  constructor(private readonly emit: (event: RuntimeEventV1) => void, private readonly signal: AbortSignal) {}
 
   get active(): boolean {return !this.stopped && !this.signal.aborted;}
 

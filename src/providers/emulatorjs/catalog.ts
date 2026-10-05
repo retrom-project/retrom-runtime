@@ -253,7 +253,7 @@ const targets = cores.map((entry) => {
 
 export const emulatorJsProviderDefinition = defineProvider({
   adapters: storageAdapters(adapters),
-  providerApiVersion: 2,
+  providerApiVersion: 1,
   providerId: "emulatorjs",
   providerVersion,
   targets,

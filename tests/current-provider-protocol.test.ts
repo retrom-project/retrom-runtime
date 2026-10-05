@@ -19,10 +19,10 @@ describe("current Provider protocol", () => {
     const artifacts = [
       "contracts/retrom-provider/v1/launch-envelope.schema.json",
       "contracts/retrom-provider/v1/provider-manifest.schema.json",
-      "contracts/retrom-provider/v1/provider-module-v2.d.ts",
+      "contracts/retrom-provider/v1/provider-module-v1.d.ts",
       "src/provider/contract.ts",
       "src/provider/declarations.ts",
-      "src/provider/generated/provider-module-v2.ts",
+      "src/provider/generated/provider-module-v1.ts",
       "src/provider/manifest.ts",
       "src/provider/module-api.ts",
       "src/providers/emulatorjs/catalog.ts",

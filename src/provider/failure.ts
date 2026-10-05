@@ -1,4 +1,4 @@
-import type {RuntimeFailureV1} from "./generated/provider-module-v2.js";
+import type {RuntimeFailureV1} from "./generated/provider-module-v1.js";
 
 /** Adapter-owned classification and native text, copied before native resources disappear. */
 export class RuntimeFailureError extends Error {

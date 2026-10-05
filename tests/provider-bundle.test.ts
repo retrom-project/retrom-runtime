@@ -83,7 +83,7 @@ async function build(root: string, name: string, asset: string, license: string)
     clientModuleBytes: new TextEncoder().encode([
       'export const providerId = "fixture";',
       'export const providerVersion = "1.0.0";',
-      "export const providerApiVersion = 2;",
+      "export const providerApiVersion = 1;",
       "export async function createRuntime() { throw new Error('fixture'); }",
       "",
     ].join("\n")),
@@ -101,10 +101,10 @@ async function build(root: string, name: string, asset: string, license: string)
 function fixtureManifest() {
   return {
     clientModulePath: "client.mjs" as const,
-    providerApiVersion: 2 as const,
+    providerApiVersion: 1 as const,
     providerId: "fixture",
     providerVersion: "1.0.0",
-    schemaVersion: 2 as const,
+    schemaVersion: 1 as const,
     targets: [{
       assetPaths: ["assets/fixture/core.wasm"],
       capabilities: {

@@ -16,8 +16,8 @@ import {stopNativeInstance} from "./native-exit.js";
 import {startEmulatorInputDiagnostics} from "./input-diagnostics.js";
 import type {RuntimeInputDiagnosticsV1} from "../../provider/module-api.js";
 import type {
-  AssetIndexV1, LaunchEnvelopeV1, PlayerRuntimeV2, RuntimeDiscStateV1, RuntimeCheckpointAvailabilityV1,
-  RuntimeCheckpointV1, RuntimeEventV2, RuntimeHostV1, RuntimeInputFilterPolicyV1,
+  AssetIndexV1, LaunchEnvelopeV1, PlayerRuntimeV1, RuntimeDiscStateV1, RuntimeCheckpointAvailabilityV1,
+  RuntimeCheckpointV1, RuntimeEventV1, RuntimeHostV1, RuntimeInputFilterPolicyV1,
   RuntimeMultiDiscResourceV1, RuntimeStateV1, RuntimeVideoModeV1,
 } from "../../provider/module-api.js";
 import {PlayerRuntimeError} from "../../provider/errors.js";
@@ -61,14 +61,14 @@ export async function createEmulatorJsPlayer(
   envelope: LaunchEnvelopeV1,
   host: RuntimeHostV1,
   assetIndex: AssetIndexV1,
-): Promise<PlayerRuntimeV2> {
+): Promise<PlayerRuntimeV1> {
   return new EmulatorJsPlayer(envelope, host, assetIndex);
 }
 
-class EmulatorJsPlayer implements PlayerRuntimeV2 {
+class EmulatorJsPlayer implements PlayerRuntimeV1 {
   private readonly startup: StartupTasks;
   private cleanupStartupDownloads: (() => void) | null = null;
-  private readonly listeners = new Set<(event: RuntimeEventV2) => void>();
+  private readonly listeners = new Set<(event: RuntimeEventV1) => void>();
   private state: RuntimeStateV1 = "CREATED";
   private inputDiagnostics: RuntimeInputDiagnosticsV1 | null = null;
   private runtimeWindow: EjsWindow | null = null;
@@ -268,7 +268,7 @@ class EmulatorJsPlayer implements PlayerRuntimeV2 {
     return this.inputDiagnostics = startEmulatorInputDiagnostics(this.runtimeWindow, this.instance, () => this.getCanvas());
   }
 
-  subscribe(listener: (event: RuntimeEventV2) => void) {this.listeners.add(listener); return () => this.listeners.delete(listener);}
+  subscribe(listener: (event: RuntimeEventV1) => void) {this.listeners.add(listener); return () => this.listeners.delete(listener);}
 
   private installPreloaderCompatibility(runtimeWindow: EjsWindow) {
     if (this.implementation.contentAcceptance === "CORE_RESULT_V1") {this.contentAcceptance = installContentAcceptance(runtimeWindow);}
@@ -631,7 +631,7 @@ class EmulatorJsPlayer implements PlayerRuntimeV2 {
     this.exitRequestedEmitted = true; this.emit({type: "EXIT_REQUESTED"});
   }
 
-  private emit(event: RuntimeEventV2) {for (const listener of this.listeners) {listener(event);}}
+  private emit(event: RuntimeEventV1) {for (const listener of this.listeners) {listener(event);}}
 }
 
 function contractError(cause?: unknown) {return new PlayerRuntimeError("PLAYER_RUNTIME_CONTRACT_INVALID", {cause});}

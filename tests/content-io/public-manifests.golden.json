@@ -1,10 +1,10 @@
 [
   {
     "clientModulePath": "client.mjs",
-    "providerApiVersion": 2,
+    "providerApiVersion": 1,
     "providerId": "retrom-runtime",
     "providerVersion": "0.0.0-dev",
-    "schemaVersion": 2,
+    "schemaVersion": 1,
     "targets": [
       {
         "assetPaths": [
@@ -2440,10 +2440,10 @@
   },
   {
     "clientModulePath": "client.mjs",
-    "providerApiVersion": 2,
+    "providerApiVersion": 1,
     "providerId": "emulatorjs",
     "providerVersion": "0.0.0-dev",
-    "schemaVersion": 2,
+    "schemaVersion": 1,
     "targets": [
       {
         "assetPaths": [

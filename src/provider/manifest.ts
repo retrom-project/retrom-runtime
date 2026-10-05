@@ -53,7 +53,7 @@ export function projectProviderManifest(definition: ProviderDefinition) {
     providerApiVersion: definition.providerApiVersion,
     providerId: definition.providerId,
     providerVersion: definition.providerVersion,
-    schemaVersion: 2 as const,
+    schemaVersion: 1 as const,
     targets,
   };
 }

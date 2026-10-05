@@ -30,7 +30,7 @@ const schemaPropertyName = /^[A-Za-z][A-Za-z0-9]{0,63}$/u;
 
 export function validateProviderManifest(value: unknown): ProviderManifest {
   const manifest = record(value);
-  if (!manifest || !exactKeys(manifest, manifestKeys) || manifest.schemaVersion !== 2 ||
+  if (!manifest || !exactKeys(manifest, manifestKeys) || manifest.schemaVersion !== 1 ||
     !positiveSafeInteger(manifest.providerApiVersion) || manifest.clientModulePath !== "client.mjs" ||
     !validIdentity(manifest.providerId) || !validSemver(manifest.providerVersion) ||
     !Array.isArray(manifest.targets) || manifest.targets.length === 0) {

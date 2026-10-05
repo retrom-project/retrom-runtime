@@ -1,4 +1,4 @@
-# Provider Module V2
+# Provider Module V1
 
 Hosts integrate the generated Provider Bundle, not an engine registry or the legacy adapter API. A Bundle exports
 one `client.mjs` with this closed interface:
@@ -6,15 +6,15 @@ one `client.mjs` with this closed interface:
 ```ts
 export const providerId = "retrom-runtime";
 export const providerVersion = "0.16.0";
-export const providerApiVersion = 2;
+export const providerApiVersion = 1;
 export async function createRuntime(
   value: unknown,
   host: RuntimeHostV1,
-): Promise<PlayerRuntimeV2>;
+): Promise<PlayerRuntimeV1>;
 ```
 
 The host validates a Launch Envelope V1, verifies the module URL and SHA-256 against the active Bundle, imports
-the module, checks the exported identity and calls `createRuntime`. It only consumes `PlayerRuntimeV2`; it never
+the module, checks the exported identity and calls `createRuntime`. It only consumes `PlayerRuntimeV1`; it never
 chooses EasyRPG, mkxp, native Web or another implementation. The Provider validates the stable `providerId` plus
 `targetId`, current resources, private Target options, optional restore input before mounting.
 
@@ -42,7 +42,7 @@ for the existing DOS/Supermodel restore path). A stalled parallel request still 
 Cancellation aborts pending transports and clears timers. HTTP responses retain upstream fallback semantics.
 The Provider reports `PLAYER_RESOURCE_IDLE_TIMEOUT`, `PLAYER_RESOURCE_NETWORK_FAILED`,
 `PLAYER_CORE_INITIALIZATION_TIMEOUT`, `PLAYER_RUNTIME_INITIALIZATION_FAILED` or `PLAYER_RUNTIME_CSP_BLOCKED`
-through the ordinary FAILED state. Module V2 reports FATAL_ERROR with a structured failure: stable code, STARTUP/PLAYING phase,
+through the ordinary FAILED state. Module V1 reports FATAL_ERROR with a structured failure: stable code, STARTUP/PLAYING phase,
 CONTENT/NETWORK/STORAGE/SECURITY/CORE/CONFIGURATION category, retryable and diagnostics. Only known
 temporary network errors are retryable. Native causes are copied before cleanup, stripped of URLs, paths and
 credentials, and bounded to eight entries of 500 characters. Content I/O length, checksum and immutable-identity
@@ -129,7 +129,7 @@ input, screenshots, bounded `wasm4-state-v1` checkpoints and direct restore in a
 WASM memory, exported mutable globals and the bounded WASM-4 disk to the exact cart digest.
 
 ONS is a separate Provider Target rather than an RPG Maker generation. A Host launches target
-`onscripter-yuri` through Provider Module V2 and only interacts with the returned `PlayerRuntimeV2`;
+`onscripter-yuri` through Provider Module V1 and only interacts with the returned `PlayerRuntimeV1`;
 the ONS adapter config and constructor are private implementation details of the Provider.
 
 Each session must use its own frame. `exit()` pauses the core and removes library-owned DOM and globals; the host
@@ -143,7 +143,7 @@ or close the Player when it receives this event. Targets that cannot observe the
 the host ends those sessions through `exit()`.
 
 KiriKiri is also an independent Provider Target. A Host launches target `kirikiri2-kag` through
-Provider Module V2 and never imports the KiriKiri adapter config or constructor.
+Provider Module V1 and never imports the KiriKiri adapter config or constructor.
 
 The KiriKiri Target accepts games exposing the standard KAG `saveBookMark`/`loadBookMark` API. Its checkpoint
 contains the small native KAG save files written under
@@ -159,7 +159,7 @@ for the next stable KAG save point and restores the paused state after capture.
 The KiriKiri Web core does not expose its native pad-key conversion in Emscripten builds. It uses the shared
 Provider gamepad cursor (enabled by default); Ruffle uses the same implementation with PointerEvents (disabled
 by default). Adapters expose `gamepadCursor` with an actual input surface and event protocol, without private
-polling or drawing implementations. After mount, optional `PlayerRuntimeV2.getGamepadCursor()` returns a public
+polling or drawing implementations. After mount, optional `PlayerRuntimeV1.getGamepadCursor()` returns a public
 controller (`getState(): {enabled, defaultEnabled}`, `setEnabled(boolean)`), or null for unsupported adapters.
 This instance capability does not change the manifest or checkpoint contract.
 
@@ -192,9 +192,9 @@ When EmulatorJS native settings are open, the Provider hides its virtual gamepad
 
 ## Optional Input Diagnostics
 
-Provider Module V2 exposes optional `startInputDiagnostics()` with bounded `read`, `clear` and idempotent `stop`.
+Provider Module V1 exposes optional `startInputDiagnostics()` with bounded `read`, `clear` and idempotent `stop`.
 
-RPG Maker MV/MZ optionally expose `getGameEditor()` on `PlayerRuntimeV2`. It returns a host-neutral editor with `categories()`, paginated `entries(category, query, offset, limit)`, and `set(category, id, value)`. The native iframe bridge reads and writes the engine's live `$gameParty`, `$gameVariables`, `$gameSwitches`, and party actor APIs through the existing isolated MessageChannel. It supports gold, item/weapon/armor counts, variables, switches, actor attributes, skills, states, classes, and party members. Unsupported variable values are read-only. The optional `selfSwitches` interface lists maps and events independently in pages. It lists only events with a self switch used as an event-page appearance condition, and each event includes the referenced switch keys, page numbers, and page summaries. It reads the current map from `$dataMap`, loads another map's project JSON on demand only after validating its ID against `$dataMapInfos`, and writes through `$gameSelfSwitches.setValue([mapId, eventId, key], value)`. It verifies the map, event, and referenced switch key before writing, then reads the switch back. Edits affect the current game state; persistence follows the game's normal save flow.
+RPG Maker MV/MZ optionally expose `getGameEditor()` on `PlayerRuntimeV1`. It returns a host-neutral editor with `categories()`, paginated `entries(category, query, offset, limit)`, and `set(category, id, value)`. The native iframe bridge reads and writes the engine's live `$gameParty`, `$gameVariables`, `$gameSwitches`, and party actor APIs through the existing isolated MessageChannel. It supports gold, item/weapon/armor counts, variables, switches, actor attributes, skills, states, classes, and party members. Unsupported variable values are read-only. The optional `selfSwitches` interface lists maps and events independently in pages. It lists only events with a self switch used as an event-page appearance condition, and each event includes the referenced switch keys, page numbers, and page summaries. It reads the current map from `$dataMap`, loads another map's project JSON on demand only after validating its ID against `$dataMapInfos`, and writes through `$gameSelfSwitches.setValue([mapId, eventId, key], value)`. It verifies the map, event, and referenced switch key before writing, then reads the switch back. Edits affect the current game state; persistence follows the game's normal save flow.
 It observes existing input events, gamepad reads and adapter delivery boundaries only while enabled. It never polls
 extra gamepad frames, synthesizes inputs or pauses/resumes a game. The Host may refresh snapshots at up to 10 Hz.
 The history retains 64 transitions; gamepad values are quantized for diagnostics only. Unsupported observation points
@@ -281,7 +281,7 @@ counters alone do not complete these Targets' startup barriers. FBNeo's native
 error-screen branch returns a failed load. Azahar exposes a separate asynchronous
 state-load receipt; startup restore waits for success and fails on rejection,
 rather than accepting the wrapper's early callback. The adapter owns these native
-details and reports failures through Module V2.
+details and reports failures through Module V1.
 
 ### EmulatorJS download cache retirement
 

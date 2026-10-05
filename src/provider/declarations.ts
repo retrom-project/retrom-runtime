@@ -129,7 +129,7 @@ export type TargetDeclaration = {
 export type ProviderDefinition = {
   providerId: string;
   providerVersion: string;
-  providerApiVersion: 2;
+  providerApiVersion: 1;
   adapters: readonly AdapterDeclaration[];
   targets: readonly TargetDeclaration[];
 };

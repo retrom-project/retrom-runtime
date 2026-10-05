@@ -59,10 +59,10 @@ describe("retrom-runtime provider declarations", () => {
     const manifest = projectProviderManifest(retromRuntimeProviderDefinition);
     expect(manifest).toMatchObject({
       clientModulePath: "client.mjs",
-      providerApiVersion: 2,
+      providerApiVersion: 1,
       providerId: "retrom-runtime",
       providerVersion: "0.0.0-dev",
-      schemaVersion: 2,
+      schemaVersion: 1,
     });
     expect(manifest.targets.map((target) => target.id)).toEqual(targetIds);
     for (const target of manifest.targets) {

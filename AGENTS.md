@@ -4,7 +4,7 @@
 
 ## 边界
 
-- `src/` 实现 Provider declaration、Provider Module V2、运行时生命周期、Target 私有实现、checkpoint codec 与宿主无关的 Envelope 校验。
+- `src/` 实现 Provider declaration、Provider Module V1、运行时生命周期、Target 私有实现、checkpoint codec 与宿主无关的 Envelope 校验。
 - `assets/` 只保存项目自有 bridge 与小型文本资产；不得保存第三方核心源码、源码补丁或构建产物。
 - `src/providers/*/catalog.ts` 生成的 Provider declaration 是 Target、能力、checkpoint contract 与运行文件的唯一机器事实源；`provider-sources.json`（retrom-runtime）和 `src/providers/emulatorjs/source-catalog.ts`（EmulatorJS）只记录第三方上游/本地构建来源，不能声明 Target 或宿主路由。
 - 本仓库不得编译第三方核心。第三方核心的源码修改、构建脚本、质量门禁和 Release 全部由对应 fork 的

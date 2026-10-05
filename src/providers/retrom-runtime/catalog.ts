@@ -191,7 +191,7 @@ const targets = [
 
 export const retromRuntimeProviderDefinition = defineProvider({
   adapters: storageAdapters(adapters),
-  providerApiVersion: 2,
+  providerApiVersion: 1,
   providerId: "retrom-runtime",
   providerVersion,
   targets,

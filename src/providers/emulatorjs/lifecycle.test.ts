@@ -1,7 +1,7 @@
 import "../../../tests/emulatorjs-content-fixture.js";
 import {afterEach, beforeEach, describe, expect, it, vi} from "vitest";
 
-import type {RuntimeEventV2, RuntimeHostV1} from "../../provider/module-api.js";
+import type {RuntimeEventV1, RuntimeHostV1} from "../../provider/module-api.js";
 import {launchEnvelope} from "../../../tests/emulatorjs-provider-fixtures.js";
 import {createEmulatorJsPlayer} from "./provider-runtime.js";
 
@@ -69,7 +69,7 @@ describe("EmulatorJS provider lifecycle boundaries", () => {
     const envelope = launchEnvelope();
     envelope.restore = {format: "emulatorjs-state-v1", sha256: digest, sizeBytes: 3, url: "/runtime/restore"};
     const player = await createEmulatorJsPlayer(envelope, host, assetIndex);
-    const received: RuntimeEventV2[] = [];
+    const received: RuntimeEventV1[] = [];
     player.subscribe((event) => received.push(event));
     const mounting = player.mount(document.createElement("div"));
     await vi.waitFor(() => expect(runtimeWindow.document.querySelector("script[data-retrom-loader]")).not.toBeNull());
@@ -131,7 +131,7 @@ describe("EmulatorJS provider lifecycle boundaries", () => {
       reportDiagnostic: vi.fn(), signal: new AbortController().signal,
     };
     const player = await createEmulatorJsPlayer(launchEnvelope(), host, assetIndex);
-    const events: RuntimeEventV2[] = [];
+    const events: RuntimeEventV1[] = [];
     player.subscribe((event) => events.push(event));
     const mounting = player.mount(document.createElement("div"));
     await vi.waitFor(() => expect(runtimeWindow.document.querySelector("script[data-retrom-loader]")).not.toBeNull());

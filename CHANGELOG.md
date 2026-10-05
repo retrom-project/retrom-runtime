@@ -21,7 +21,7 @@
 - Content I/O Session 支持冻结的小文件整取阈值与独立网络窗口；默认 1 MiB / 512 KiB，内部缓存块保持 256 KiB。
 - 修复缓存降级与本地读取身份错误时的跨 reader 撤销，并记录缓存后端诊断。
 
-- Provider 私有的 Content I/O v1 统一游戏字节读取、完整物化、可配置 Range 窗口与 256 KiB 缓存块、持久缓存和取消。Provider Module V2、Launch Envelope V1、Target 身份和 checkpoint 格式保持原契约。
+- Provider 私有的 Content I/O v1 统一游戏字节读取、完整物化、可配置 Range 窗口与 256 KiB 缓存块、持久缓存和取消。Provider Module V1、Launch Envelope V1、Target 身份和 checkpoint 格式保持原契约。
 - NeoCD、ScummVM、独立 PPSSPP、Play!、mkxp 和 KiriKiri 使用公共 Reader；原有完整下载入口仍按原来的加载时机物化。EasyRPG、J2ME、隔离网页和 ONS 浏览器视频保留既有上游/浏览器加载边界。
 - Provider 新增 `assets/content-io/worker.mjs`；同步 Worker 目标额外声明 `sync-client.mjs`。二者均由同一构建器生成并逐字节校验。旧基座不能承载新资产或新核心 ABI，PFB 需显式安装完整候选基座。
 - PPSSPP、Play!、KiriKiri 和 mkxp 使用对应新 ABI 的固定核心 Release；未发布来源仍只能用于显式候选构建，不能作为正式 Release 输入。

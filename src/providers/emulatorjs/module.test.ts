@@ -14,7 +14,7 @@ const digest = "a".repeat(64);
 const bundleDigest = "b".repeat(64);
 afterEach(() => {vi.useRealTimers(); vi.unstubAllGlobals();});
 
-describe("EmulatorJS Provider Module V2", () => {
+describe("EmulatorJS Provider Module V1", () => {
   it("narrows disc switching to sessions with disc resources", async () => {
     const target = emulatorJsProviderDefinition.targets.find(entry => entry.id === "yabause")!;
     const assets = {[target.implementation.coreAssetPath]: {sha256: target.implementation.coreSha256, sizeBytes: target.implementation.coreSizeBytes}};
@@ -69,7 +69,7 @@ describe("EmulatorJS Provider Module V2", () => {
 
   it("exports one stable Provider identity for both embedded EmulatorJS releases", async () => {
     expect({providerApiVersion, providerId, providerVersion}).toEqual({
-      providerApiVersion: 2,
+      providerApiVersion: 1,
       providerId: "emulatorjs",
       providerVersion: "0.0.0-dev",
     });

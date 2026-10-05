@@ -1,6 +1,6 @@
 import {decodeStoredCheckpoint, nativeCheckpointFormat} from "../../provider/checkpoint-storage.js";
 import {afterEach, beforeEach, describe, expect, it, vi} from "vitest";
-import type {RuntimeEventV2, RuntimeHostV1} from "../../provider/module-api.js";
+import type {RuntimeEventV1, RuntimeHostV1} from "../../provider/module-api.js";
 import {adapterFixture, hostFixture} from "../../../tests/provider-adapter-fixture.js";
 import {gamepad, rpgMvEnvelope, targetEnvelope, wasmEnvelope} from "../../../tests/provider-fixtures.js";
 import {retromRuntimeProviderDefinition} from "./catalog.js";
@@ -12,7 +12,7 @@ vi.mock("./target-adapter.js", () => ({mountTargetAdapter: vi.fn()}));
 beforeEach(() => {vi.mocked(mountTargetAdapter).mockReset();});
 afterEach(() => {document.body.replaceChildren(); vi.useRealTimers();});
 
-describe("retrom-runtime Provider Module V2", () => {
+describe("retrom-runtime Provider Module V1", () => {
   it("fits a non-square-pixel core to its display aspect without changing its frame buffer", async () => {
     const frame = document.createElement("iframe"); document.body.append(frame);
     const realm = frame.contentWindow!;
@@ -71,7 +71,7 @@ describe("retrom-runtime Provider Module V2", () => {
 
   it("exports only the current provider entry and exact identity", async () => {
     expect(Object.keys(provider).sort()).toEqual(["createRuntime", "providerApiVersion", "providerId", "providerVersion"]);
-    expect(provider).toMatchObject({providerApiVersion: 2, providerId: "retrom-runtime", providerVersion: "0.0.0-dev"});
+    expect(provider).toMatchObject({providerApiVersion: 1, providerId: "retrom-runtime", providerVersion: "0.0.0-dev"});
     expect((await provider.createRuntime(wasmEnvelope(), hostFixture())).getState()).toBe("CREATED");
     await expect(provider.createRuntime({...wasmEnvelope(), providerId: "leaked"}, hostFixture()))
       .rejects.toThrow("PROVIDER_LAUNCH_REQUEST_INVALID");
@@ -200,7 +200,7 @@ describe("retrom-runtime Provider Module V2", () => {
       contentWindow: runtimeWindow, element: frame, origin: "https://runtime.test",
     })}), {});
     await player.setInputFilter({activeGamepadIndex: 0, suppressInput: true});
-    const received: RuntimeEventV2[] = [];
+    const received: RuntimeEventV1[] = [];
     player.subscribe((event) => received.push(event));
     await player.mount(document.createElement("div"));
     expect(runtimeWindow.navigator.getGamepads).not.toBe(nativeGetGamepads);

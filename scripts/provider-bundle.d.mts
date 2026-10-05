@@ -5,10 +5,10 @@ export type ProviderBundleInput = {
   clientModuleBytes: Uint8Array;
   licenseSources: Map<string, string>;
   manifest: {
-    schemaVersion: 2;
+    schemaVersion: 1;
     providerId: string;
     providerVersion: string;
-    providerApiVersion: 2;
+    providerApiVersion: 1;
     clientModulePath: "client.mjs";
     targets: Array<{assetPaths: string[]} & Record<string, unknown>>;
   };

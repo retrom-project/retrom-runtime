@@ -56,6 +56,18 @@ failures. Metadata queries do not extend engine readiness. READY, abort and
 channel close release the activity subscription and timer; abort also cancels
 the bootstrap handshake immediately.
 
+Range materialization, including resuming a partially cached PRELOAD, uses a
+15-second **idle** network deadline: only a nonempty response body chunk renews
+it. Header stalls, empty chunks, cancellation, and the bounded retry budget do
+not gain time from unrelated progress. A 2 MiB Range taking 32 seconds at
+64 KiB/s can complete. Materialization waiters do not impose a total read
+deadline; foreground and prefetch waiters retain their existing 15-second
+bound. The physical request also keeps its original 15-second bound while
+only foreground/prefetch consumers remain; a live materialization waiter allows
+continued network progress, and its cancellation restores that original bound.
+The last cancelled waiter still aborts physical work. ETag, byte count, final hash
+and complete-cache publication checks are unchanged.
+
 The Native Web content bridge admits at most four reads before calling Content
 I/O. Concurrent plugin or asset requests wait in a bounded FIFO, so queueing
 does not consume an individual Reader's 15-second deadline. An isolated Worker

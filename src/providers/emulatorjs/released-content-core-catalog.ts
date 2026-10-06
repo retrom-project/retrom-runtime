@@ -1,8 +1,8 @@
 export const emulatorJsContentCoreForks = [
   {
     "repository": "https://github.com/retrom-project/flycast-wasm",
-    "tag": "retrom-core-1.0-r3",
-    "commit": "6cb12fe1474e6b7c09d91f689b30a371f5985aad",
+    "tag": "retrom-core-1.0-r4",
+    "commit": "cb5fed96a5c2ee9606745fe896a4851871d8816a",
     "adapterAbi": "emulatorjs-flycast-state-v1",
     "runtimeCore": "flycast",
     "assets": [
@@ -10,31 +10,31 @@ export const emulatorJsContentCoreForks = [
         "filename": "LICENSE",
         "sha256": "71433d9114710e9d2f65310c43561515c051fc13500de981fd1ebe7ce499ba92",
         "sizeBytes": 61843,
-        "url": "https://github.com/retrom-project/flycast-wasm/releases/download/retrom-core-1.0-r3/LICENSE"
+        "url": "https://github.com/retrom-project/flycast-wasm/releases/download/retrom-core-1.0-r4/LICENSE"
       },
       {
         "filename": "flycast-rom-requirements.json",
-        "sha256": "6cf37e6599d56cd555b61807216c1d1ffcd3b430a027940df71dfaa81be892a9",
+        "sha256": "845b175b4854c3a800eeb9249dc3138c37fa7dcfae45d0fca8f912fdd10a65e1",
         "sizeBytes": 258676,
-        "url": "https://github.com/retrom-project/flycast-wasm/releases/download/retrom-core-1.0-r3/flycast-rom-requirements.json"
+        "url": "https://github.com/retrom-project/flycast-wasm/releases/download/retrom-core-1.0-r4/flycast-rom-requirements.json"
       },
       {
         "filename": "flycast-wasm.data",
-        "sha256": "4e2d15a35d7a28e094465ff69fe040ee428bac04f9dd955e329430ce7ebecc2f",
-        "sizeBytes": 3546423,
-        "url": "https://github.com/retrom-project/flycast-wasm/releases/download/retrom-core-1.0-r3/flycast-wasm.data"
+        "sha256": "2654fb698a230853ce7ab2ed9515fbffe8d5a583e93ef302bc3ec610691f9f20",
+        "sizeBytes": 3546507,
+        "url": "https://github.com/retrom-project/flycast-wasm/releases/download/retrom-core-1.0-r4/flycast-wasm.data"
       },
       {
         "filename": "flycast.json",
         "sha256": "215107a9bf4af4fd96f89d864b0ad927edb6e878616d851417dcf50a56bde814",
         "sizeBytes": 92,
-        "url": "https://github.com/retrom-project/flycast-wasm/releases/download/retrom-core-1.0-r3/flycast.json"
+        "url": "https://github.com/retrom-project/flycast-wasm/releases/download/retrom-core-1.0-r4/flycast.json"
       },
       {
         "filename": "rpg-runtime-release.json",
-        "sha256": "aa53177890147bcf4ce56cf57514df5e79913941bd249300759c53e17f9a0901",
+        "sha256": "250e136a877a06aaadeb628d324c7f2d58cb57dfa66888a516173391bab076f9",
         "sizeBytes": 883,
-        "url": "https://github.com/retrom-project/flycast-wasm/releases/download/retrom-core-1.0-r3/rpg-runtime-release.json"
+        "url": "https://github.com/retrom-project/flycast-wasm/releases/download/retrom-core-1.0-r4/rpg-runtime-release.json"
       }
     ]
   },

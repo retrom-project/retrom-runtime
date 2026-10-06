@@ -39,6 +39,8 @@ async function fetchRangeRegion(source: ContentSourceV1, state: ContentObjectSta
   const generation = state.generation;
   const dependencies = {...defaults, ...injected}, started = dependencies.now();
   const scope = requestScope(signal, Math.min(remainingMs, 15000));
+  const consumed = dependencies.consumed;
+  dependencies.consumed = bytes => {if (bytes > 0) {scope.renew();} consumed?.(bytes);};
   try {
     for (let attempt = 0; ; attempt++) {
       try {return await rangeAttempt(source, state, generation, range, scope.signal, dependencies, destination, attempt > 0);}

@@ -2,9 +2,9 @@ import {abortError, checkSignal} from "./abort.js";
 import {ContentIOError, fail, toContentIOError} from "./errors.js";
 export type Priority = "FOREGROUND" | "MATERIALIZE" | "PREFETCH";
 export type ScheduleOptions = {signal?: AbortSignal; timeoutMs?: number; priority?: Priority; whole?: boolean};
-type Waiter<Value> = {deliver: (value: Value) => void; reject: (error: ContentIOError) => void; clean: () => void};
+type Waiter<Value> = {materialize: boolean; deliver: (value: Value) => void; reject: (error: ContentIOError) => void; clean: () => void};
 type Task<Value> = {key: string; priority: Priority; whole: boolean; controller: AbortController;
-  run: (signal: AbortSignal) => Promise<Value>; waiters: Set<Waiter<Value>>; timer?: ReturnType<typeof setTimeout>};
+  run: (signal: AbortSignal) => Promise<Value>; waiters: Set<Waiter<Value>>; timer?: ReturnType<typeof setTimeout>; deadline?: number};
 /** A physical operation retains its slot until its abort cleanup has actually finished. */
 export class BlockScheduler<Value> {
   private readonly tasks = new Map<string, Task<Value>>();
@@ -36,7 +36,7 @@ export class BlockScheduler<Value> {
   consume<Result>(key: string, run: Task<Value>["run"], consume: (value: Value) => Result, options: ScheduleOptions = {}): Promise<Result> {
     checkSignal(options.signal);
     if (this.closed) {fail("ABORTED");}
-    const timeout = options.timeoutMs ?? (options.whole ? undefined : 15000);
+    const timeout = options.timeoutMs ?? (options.whole || options.priority === "MATERIALIZE" ? undefined : 15000);
     if (timeout !== undefined && (!(timeout > 0) || !Number.isFinite(timeout) || timeout > 15000)) {fail("TIMEOUT");}
     const priority = options.priority ?? "FOREGROUND";
     let task = this.tasks.get(key);
@@ -51,10 +51,10 @@ export class BlockScheduler<Value> {
       const abort = () => this.cancel(shared, waiter, abortError(options.signal!));
       const timer = timeout === undefined ? undefined : setTimeout(() =>
         this.cancel(shared, waiter, new ContentIOError("TIMEOUT")), timeout);
-      const waiter: Waiter<Value> = {deliver: (value) => {
+      const waiter: Waiter<Value> = {materialize: options.priority === "MATERIALIZE", deliver: (value) => {
         try {resolve(consume(value));} catch (error) {reject(toContentIOError(error));}
       }, reject, clean: () => {clearTimeout(timer); options.signal?.removeEventListener("abort", abort);}};
-      shared.waiters.add(waiter);
+      shared.waiters.add(waiter); this.updateDeadline(shared);
       options.signal?.addEventListener("abort", abort, {once: true});
       this.dispatch(); this.recordPeak();
     });
@@ -64,6 +64,7 @@ export class BlockScheduler<Value> {
     for (const task of this.tasks.values()) {this.cancelTask(task, reason);}
   }
   private cancelTask(task: Task<Value>, reason: ContentIOError) {
+    clearTimeout(task.timer); task.deadline = undefined;
     for (const waiter of [...task.waiters]) {this.cancel(task, waiter, reason);}
   }
   private cancel(task: Task<Value>, waiter: Waiter<Value>, error: ContentIOError) {
@@ -73,7 +74,14 @@ export class BlockScheduler<Value> {
       task.controller.abort(error);
       if (this.tasks.get(task.key) === task) {this.tasks.delete(task.key);}
       const index = this.queue.indexOf(task); if (index >= 0) {this.queue.splice(index, 1);}
-    }
+    } else {this.updateDeadline(task);}
+  }
+  private updateDeadline(task: Task<Value>): void {
+    clearTimeout(task.timer);
+    if (task.whole || task.deadline === undefined || [...task.waiters].some(waiter => waiter.materialize)) {return;}
+    const remaining = task.deadline - Date.now();
+    if (remaining <= 0) {this.cancelTask(task, new ContentIOError("TIMEOUT")); return;}
+    task.timer = setTimeout(() => this.cancelTask(task, new ContentIOError("TIMEOUT")), remaining);
   }
   private dispatch(): void {
     while (!this.closed && this.active < 4) {
@@ -88,7 +96,7 @@ export class BlockScheduler<Value> {
       this.consecutiveForeground = task.priority === "FOREGROUND" ? Math.min(8, this.consecutiveForeground + 1) : 0;
       this.queue.splice(this.queue.indexOf(task), 1);
       this.active++; this.running.add(task); if (task.whole) {this.wholeActive++;}
-      if (!task.whole) {task.timer = setTimeout(() => this.cancelTask(task, new ContentIOError("TIMEOUT")), 15000);}
+      task.deadline = Date.now() + 15000; this.updateDeadline(task);
       void this.run(task);
     }
   }

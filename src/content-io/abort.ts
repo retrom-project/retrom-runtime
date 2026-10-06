@@ -11,8 +11,13 @@ export function requestScope(signal: AbortSignal | undefined, timeoutMs: number)
   const controller = new AbortController();
   const aborted = () => controller.abort(signal ? abortError(signal) : new ContentIOError("ABORTED"));
   signal?.addEventListener("abort", aborted, {once: true});
-  const timer = setTimeout(() => controller.abort(new ContentIOError("TIMEOUT")), timeoutMs);
-  return {signal: controller.signal, dispose() {clearTimeout(timer); signal?.removeEventListener("abort", aborted);}};
+  let timer: ReturnType<typeof setTimeout>;
+  const renew = () => {
+    clearTimeout(timer);
+    if (!controller.signal.aborted) {timer = setTimeout(() => controller.abort(new ContentIOError("TIMEOUT")), timeoutMs);}
+  };
+  renew();
+  return {signal: controller.signal, renew, dispose() {clearTimeout(timer); signal?.removeEventListener("abort", aborted);}};
 }
 export async function abortable<Value>(operation: Promise<Value>, signal?: AbortSignal): Promise<Value> {
   checkSignal(signal);

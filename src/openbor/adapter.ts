@@ -25,6 +25,7 @@ export async function mountOpenBOR(config: OpenBORParameters, target: HTMLElemen
   canvas.width = 640; canvas.height = 480; canvas.tabIndex = 0;
   target.replaceChildren(canvas);
   let stopped = false, started = false, ended = false, core: OpenBOR | undefined, error: Error | undefined;
+  let nativeExitCode: number | undefined;
   let exitTask: Promise<void> | undefined;
   let input: ReturnType<typeof installInput> | undefined;
   const reportAbort = (cause: unknown) => {
@@ -35,10 +36,10 @@ export async function mountOpenBOR(config: OpenBORParameters, target: HTMLElemen
     logFailure(error);
     failure(error);
   };
-  const removeErrors = installCoreErrors(realm, reportAbort);
+  const removeErrors = installCoreErrors(realm, reportAbort, () => stopped && nativeExitCode === 0);
   const exit = () => {
     if (exitTask) {return exitTask;}
-    stopped = true; input?.dispose(); removeErrors(); signal?.removeEventListener("abort", abort);
+    stopped = true; input?.dispose(); signal?.removeEventListener("abort", abort);
     exitTask = (async () => {
       try {
         if (core) {
@@ -46,7 +47,7 @@ export async function mountOpenBOR(config: OpenBORParameters, target: HTMLElemen
           try {if (started) {await awaitTermination(() => ended);}}
           finally {await core.retromDispose();}
         }
-      } finally {canvas.remove();}
+      } finally {removeErrors(); canvas.remove();}
     })();
     return exitTask;
   };
@@ -55,7 +56,10 @@ export async function mountOpenBOR(config: OpenBORParameters, target: HTMLElemen
     core = await factory({canvas, noInitialRun: true, locateFile: (name: string) => new URL(name, base).href,
       print: (message: string) => console.debug("OpenBOR", message), printErr: (message: string) => console.warn("OpenBOR", message),
       onAbort: reportAbort,
-      onExit: () => {ended = true; if (!stopped) {error = openBORFailure(core, "OPENBOR_CORE_EXITED"); logFailure(error); failure(error);}},
+      onExit: (code: number) => {
+        ended = true; nativeExitCode = code;
+        if (!stopped) {error = openBORFailure(core, "OPENBOR_CORE_EXITED"); logFailure(error); failure(error);}
+      },
     });
     if (core.retromAbi !== "openbor-host-v1") {throw new Error("OPENBOR_CORE_ABI_MISMATCH");}
     signal?.throwIfAborted();

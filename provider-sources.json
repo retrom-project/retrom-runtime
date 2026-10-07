@@ -3136,6 +3136,41 @@
         "sha256": "7d363974cc0d8e9543d7463f56ff70181ce6e50966c7f032dddc31d6da4ec816",
         "url": "https://github.com/retrom-project/mame/releases/download/retrom-core-gf65d5ba9bc42-r2/mame-current-assets.zip"
       }
+    },
+    {
+      "id": "onsyuri",
+      "repository": "https://github.com/retrom-project/OnscripterYuri",
+      "upstreamCommit": "08f744b31cc1907b66a15f0402e62321a131ed81",
+      "adapterAbi": "ons-save",
+      "tag": "retrom-core-0.7.7beta-r6",
+      "commit": "52d84443a2e41d1b930683f9f0a459e715c5093c",
+      "metadataUrl": "https://github.com/retrom-project/OnscripterYuri/releases/download/retrom-core-0.7.7beta-r6/rpg-runtime-release.json",
+      "assets": [
+        {
+          "filename": "onsyuri.js",
+          "sizeBytes": 216695,
+          "sha256": "1a3ecc868f81d45910dda0da27c59e0c5947fadbf35399126812774c8407c033",
+          "output": "runtime/ons/onsyuri.js",
+          "maxSizeBytes": 1048576,
+          "url": "https://github.com/retrom-project/OnscripterYuri/releases/download/retrom-core-0.7.7beta-r6/onsyuri.js"
+        },
+        {
+          "filename": "onsyuri.wasm",
+          "sizeBytes": 4626227,
+          "sha256": "d9e5a04a86de40d5efa8acf7d1719a3db417dfa025f356c4bf7f0dc6cf4abf96",
+          "output": "runtime/ons/onsyuri.wasm",
+          "maxSizeBytes": 16777216,
+          "url": "https://github.com/retrom-project/OnscripterYuri/releases/download/retrom-core-0.7.7beta-r6/onsyuri.wasm"
+        },
+        {
+          "filename": "COPYING",
+          "sizeBytes": 17992,
+          "sha256": "32b1062f7da84967e7019d01ab805935caa7ab7321a7ced0e30ebe75e5df1670",
+          "output": "licenses/onsyuri/COPYING",
+          "maxSizeBytes": 65536,
+          "url": "https://github.com/retrom-project/OnscripterYuri/releases/download/retrom-core-0.7.7beta-r6/COPYING"
+        }
+      ]
     }
   ],
   "localAssets": [
@@ -3152,35 +3187,5 @@
       "output": "runtime/tyranoscript/bridge.js"
     }
   ],
-  "developmentInputs": [
-    {
-      "id": "onsyuri",
-      "repository": "https://github.com/retrom-project/OnscripterYuri",
-      "upstreamCommit": "08f744b31cc1907b66a15f0402e62321a131ed81",
-      "adapterAbi": "ons-save",
-      "assets": [
-        {
-          "filename": "onsyuri.js",
-          "output": "runtime/ons/onsyuri.js",
-          "maxSizeBytes": 1048576
-        },
-        {
-          "filename": "onsyuri.wasm",
-          "output": "runtime/ons/onsyuri.wasm",
-          "maxSizeBytes": 16777216
-        },
-        {
-          "filename": "COPYING",
-          "output": "licenses/onsyuri/COPYING",
-          "maxSizeBytes": 65536
-        }
-      ],
-      "candidateArchive": {
-        "filename": "onsyuri-core-172d894c19f0fc6d298c75d6bd7df25b25986c36e0d0a0208268200f7999fe1d.zip",
-        "sizeBytes": 1838755,
-        "sha256": "81526b8dbce1b53fbd2229ae6cb482d7c7ed77aa06d6758e930b90fdb60f72e3",
-        "sourceTreeSha256": "172d894c19f0fc6d298c75d6bd7df25b25986c36e0d0a0208268200f7999fe1d"
-      }
-    }
-  ]
+  "developmentInputs": []
 }

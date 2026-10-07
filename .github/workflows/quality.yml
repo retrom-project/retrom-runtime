@@ -20,10 +20,6 @@ jobs:
       - run: npm run lint
       - run: npm run typecheck
       - run: npm test
-      - name: Prepare hash-pinned unpublished core input
-        env:
-          RETROM_CORE_CANDIDATE_BASE_URL: ${{ vars.RETROM_CORE_CANDIDATE_BASE_URL }}
-        run: node scripts/prepare-core-candidates.mjs --base-url "$RETROM_CORE_CANDIDATE_BASE_URL" --output "$RUNNER_TEMP/runtime-core-inputs" >> "$GITHUB_ENV"
       - run: npm run release:build
         env:
           RETROM_PROVIDER_BUILD_MODE: candidate

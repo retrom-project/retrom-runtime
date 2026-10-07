@@ -82,7 +82,7 @@ describe("independent package boundary", () => {
     expect(candidate).not.toContain('join(root, "release", "stage")');
   });
 
-  it("declares fixed fork inputs and explicitly marked unreleased candidates", async () => {
+  it("declares fixed published fork inputs without unpublished transport", async () => {
     const sources = JSON.parse(await readFile(join(root, "provider-sources.json"), "utf8"));
     expect(sources).not.toHaveProperty("sourceBuilds");
     expect(sources.upstreamReleases).toEqual(expect.arrayContaining([expect.objectContaining({
@@ -102,15 +102,18 @@ describe("independent package boundary", () => {
       tag: "retrom-core-gca2600db8de4-r1",
     })]));
     const releaseIds = sources.upstreamReleases.map((release: { id: string }) => release.id).sort();
-    expect(releaseIds).toEqual(["apple2js", "butterscotch", "easyrpg", "fake08", "gbe_plus", "j2me", "jsbeeb", "kirikiri2", "mame", "mkxp", "np2kai", "nxengine", "openbor", "play", "ppsspp", "px68k", "ruffle", "samcoupeweb", "scummvm", "tic80", "tyranoscript", "wasm4", "webmsx"]);
+    expect(releaseIds).toEqual(["apple2js", "butterscotch", "easyrpg", "fake08", "gbe_plus", "j2me", "jsbeeb", "kirikiri2", "mame", "mkxp", "np2kai", "nxengine", "onsyuri", "openbor", "play", "ppsspp", "px68k", "ruffle", "samcoupeweb", "scummvm", "tic80", "tyranoscript", "wasm4", "webmsx"]);
     expect(sources.upstreamReleases).toContainEqual(expect.objectContaining({
       id: "apple2js", tag: "retrom-core-gee0aed25f73c-r1", adapterAbi: "apple2js-web-v1",
     }));
-    expect(sources.developmentInputs.map((input: {id: string}) => input.id).sort()).toEqual(["onsyuri"]);
-    expect(sources.developmentInputs).toEqual([expect.objectContaining({
+    expect(sources.developmentInputs).toEqual([]);
+    expect(sources.upstreamReleases).toContainEqual(expect.objectContaining({
       id: "onsyuri", adapterAbi: "ons-save", repository: "https://github.com/retrom-project/OnscripterYuri",
-      candidateArchive: expect.objectContaining({sha256: "81526b8dbce1b53fbd2229ae6cb482d7c7ed77aa06d6758e930b90fdb60f72e3"}),
-    })]);
+      tag: "retrom-core-0.7.7beta-r6", commit: "52d84443a2e41d1b930683f9f0a459e715c5093c",
+      assets: expect.arrayContaining([expect.objectContaining({
+        filename: "onsyuri.wasm", sha256: "d9e5a04a86de40d5efa8acf7d1719a3db417dfa025f356c4bf7f0dc6cf4abf96",
+      })]),
+    }));
     expect(await readdir(join(root, "scripts"))).not.toEqual(expect.arrayContaining([
       "build-kirikiri-core.sh", "build-ons-core.sh",
     ]));
@@ -124,7 +127,8 @@ describe("independent package boundary", () => {
     }
     const quality = await readFile(join(root, ".github/workflows/quality.yml"), "utf8");
     expect(quality).toContain("npm run release:build");
-    expect(quality).toContain('scripts/prepare-core-candidates.mjs --base-url "$RETROM_CORE_CANDIDATE_BASE_URL"');
+    expect(quality).not.toContain("RETROM_CORE_CANDIDATE_BASE_URL");
+    expect(quality).not.toContain("prepare-core-candidates.mjs");
     expect(quality).toContain('RETROM_PFB_CANDIDATE_BUILD: "1"');
     expect(quality).toContain("RETROM_PROVIDER_BUILD_MODE: candidate");
     expect(quality).toContain("GITHUB_REF_TYPE: tag");

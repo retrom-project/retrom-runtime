@@ -52,15 +52,13 @@ npm run provider:check
 npm run release:build
 ```
 
-The current ONS checkpoint implementation is unpublished. Its immutable candidate ZIP is declared in `provider-sources.json` with exact bytes, size and compiled-source digest. A clean checkout prepares an explicitly supplied archive directory, then builds the paired candidate:
-
-```bash
-mkdir -p .cache
-prepared_core_input="$(node scripts/prepare-core-candidates.mjs --archive-root "$CORE_ARCHIVE_ROOT" --output "$PWD/.cache/core-inputs")" &&
-RETROM_RUNTIME_DEV_RELEASE_OVERRIDES="${prepared_core_input#*=}" RETROM_PFB_CANDIDATE_BUILD=1 npm run release:build
-```
-
-`CORE_ARCHIVE_ROOT` contains the one declared ZIP basename; the output directory must be absent. CI uses `RETROM_CORE_CANDIDATE_BASE_URL` only to transport that same hash-pinned ZIP. Missing transport fails with `CORE_CANDIDATE_TRANSPORT_REQUIRED`; a normal build without explicit candidate mode fails with `UNPUBLISHED_CORE_INPUT`. Both release paths verify the native checkpoint-ready binding. There is no fallback to the old ONS release. Formal publication first requires an immutable ONS core release and its source pin, then a new runtime tag publishing the paired descriptor and archives. Existing tags remain unchanged.
+The ONS checkpoint implementation is pinned to the published immutable
+`retrom-core-0.7.7beta-r6` release. VecX is pinned to
+`retrom-core-g8f671cc9d737-r2`. Normal builds download and verify the declared
+release assets; no unpublished core archive transport is needed. The ONS
+checkpoint-ready JavaScript binding is checked against the actual Wasm export
+before packaging. Local PFB core candidates remain explicit development inputs
+and do not replace these release pins.
 
 For PFB upstream-sync validation, Butterscotch candidates include their metadata
 parser pair for integrity verification, but only the game runner and license

@@ -1,0 +1,670 @@
+{
+  "schemaVersion": 1,
+  "status": "INCOMPLETE",
+  "releaseAuthorizedAfterAcceptance": true,
+  "snapshot": "R15 audit of R14 paired execution plus locally built VecX fix, before installing published core pins",
+  "historicalMatrix": "runtime-product-matrix.json",
+  "counts": {
+    "CURRENT_FINGERPRINT_SEMANTICS_PENDING": 105,
+    "MATERIAL_GAP": 10,
+    "SCOPED_PASS": 5,
+    "PARTIAL": 2
+  },
+  "productRows": 122,
+  "notAReleaseApproval": true,
+  "rows": [
+    {
+      "id": "emulatorjs/81/zx81",
+      "fingerprint": "e10cce7cd037e6ee2e71a07cc255b2762b2c512c7bd858da12b735206ff04cf2",
+      "status": "CURRENT_FINGERPRINT_SEMANTICS_PENDING"
+    },
+    {
+      "id": "emulatorjs/a5200/atari5200",
+      "fingerprint": "37b09b928221fc2c1fd479ffa39a3b898536585e48da256af826e9bed920f3b4",
+      "status": "CURRENT_FINGERPRINT_SEMANTICS_PENDING"
+    },
+    {
+      "id": "emulatorjs/ardens/arduboy",
+      "fingerprint": "eb9520b3fec4c5e761e0b64cce6188465aee80c82805faf20c7e6411dc268748",
+      "status": "CURRENT_FINGERPRINT_SEMANTICS_PENDING"
+    },
+    {
+      "id": "emulatorjs/atari800/atari800",
+      "fingerprint": "cf3701d801cfc4083035ea9436698cfcf7c6d96e0c95e36515b2dcbc27b62793",
+      "status": "CURRENT_FINGERPRINT_SEMANTICS_PENDING"
+    },
+    {
+      "id": "emulatorjs/atari800-xegs/xegs",
+      "fingerprint": "5b8ef011a2521bcb4d43dcf9ff6d7d8962b2db73485f83c48f97ada078805e64",
+      "status": "CURRENT_FINGERPRINT_SEMANTICS_PENDING"
+    },
+    {
+      "id": "emulatorjs/azahar/nintendo3ds",
+      "fingerprint": "737ce4ef5eee6363e0f45a9506dcc32d87bccb26b874b364abeed168a8f5095b",
+      "status": "CURRENT_FINGERPRINT_SEMANTICS_PENDING"
+    },
+    {
+      "id": "emulatorjs/beetle-vb/virtualboy",
+      "fingerprint": "819f3c3eb444fb67a5609b930f7808de83cf87c03fe9e7be09fb0f7c0470f20c",
+      "status": "CURRENT_FINGERPRINT_SEMANTICS_PENDING"
+    },
+    {
+      "id": "emulatorjs/bsnes/snes",
+      "fingerprint": "d8f4479807a582985e36c2bc88ee68640eeac73ef41bf8a5dfb2ca559824b828",
+      "status": "CURRENT_FINGERPRINT_SEMANTICS_PENDING"
+    },
+    {
+      "id": "emulatorjs/cap32/amstradcpc",
+      "fingerprint": "1d2bc5064fa4fd65f6d3673395545ac9fea364d8d01c26996fd3e7f4dd1d2b30",
+      "status": "CURRENT_FINGERPRINT_SEMANTICS_PENDING"
+    },
+    {
+      "id": "emulatorjs/cap32/gx4000",
+      "fingerprint": "1d2bc5064fa4fd65f6d3673395545ac9fea364d8d01c26996fd3e7f4dd1d2b30",
+      "status": "CURRENT_FINGERPRINT_SEMANTICS_PENDING"
+    },
+    {
+      "id": "emulatorjs/crocods/amstradcpc",
+      "fingerprint": "a8cb419f89a6a4b01e0715aaaf1d5c9ce21609428f1f8c0ab9fbc404edb4e099",
+      "status": "CURRENT_FINGERPRINT_SEMANTICS_PENDING"
+    },
+    {
+      "id": "emulatorjs/daphne/daphne",
+      "fingerprint": "e00214d743a79155701ccdf9ee4b332fe34cfec7e64999f65c2ef2a1ecf345de",
+      "status": "MATERIAL_GAP"
+    },
+    {
+      "id": "emulatorjs/desmume/nds",
+      "fingerprint": "02568486345544db9e2321cb1104c4c24c2d7b63224bb3ed1da306a9f22d2460",
+      "status": "CURRENT_FINGERPRINT_SEMANTICS_PENDING"
+    },
+    {
+      "id": "emulatorjs/desmume2015/nds",
+      "fingerprint": "cfcded789a2fda21228185a6c86e14defb9746ca3803f9a37edb4f6b31a0457b",
+      "status": "CURRENT_FINGERPRINT_SEMANTICS_PENDING"
+    },
+    {
+      "id": "emulatorjs/dosbox-pure/dos",
+      "fingerprint": "da74423375ffccb40badebe7bcd0024ad5f5b32366779577801c9209cf22a686",
+      "status": "CURRENT_FINGERPRINT_SEMANTICS_PENDING"
+    },
+    {
+      "id": "emulatorjs/fbalpha2012-cps1/arcade",
+      "fingerprint": "d9b37bc123f89e7e27ce6cd09d29934fc54084586e8d6c1433d667b82dc917e5",
+      "status": "CURRENT_FINGERPRINT_SEMANTICS_PENDING"
+    },
+    {
+      "id": "emulatorjs/fbalpha2012-cps2/arcade",
+      "fingerprint": "90612536132bf631a6f460cd725f09fac041b47e5e3719c473185a0b9b587ade",
+      "status": "CURRENT_FINGERPRINT_SEMANTICS_PENDING"
+    },
+    {
+      "id": "emulatorjs/fbneo/arcade",
+      "fingerprint": "998dac50595fede6dafc3cbe45d5fb0c3a72e202e58072117ebeb6f42784beb8",
+      "status": "CURRENT_FINGERPRINT_SEMANTICS_PENDING"
+    },
+    {
+      "id": "emulatorjs/fceumm/fds",
+      "fingerprint": "508194817efea8cc9c8087c26bd15d8156c051a5c7fcab8ad84c6a30be420fdc",
+      "status": "CURRENT_FINGERPRINT_SEMANTICS_PENDING"
+    },
+    {
+      "id": "emulatorjs/fceumm/nes",
+      "fingerprint": "508194817efea8cc9c8087c26bd15d8156c051a5c7fcab8ad84c6a30be420fdc",
+      "status": "SCOPED_PASS",
+      "evidence": "ACC-RF-BROWSER/2cf40dcf0b024cf9",
+      "evidenceSha256": "cafe57b2954da90c710ac3977d6f655b1419cf0d7adecf36ba2c40364fd3642d",
+      "scope": "Owned MIT NES fixture actual input state, new checkpoint, different Run exact counter restore and continued input. Full unfiltered 24-case run, paired inputDigest fb31003512632f16dda07e3002d08f869c60d7bd281809d9e8561e4cf6cc9dc0."
+    },
+    {
+      "id": "emulatorjs/flycast/dreamcast",
+      "fingerprint": "2aaa60581d47e100345d439c7a65fd3a3b8b33daed4f25ce67861fff9e2e2575",
+      "status": "CURRENT_FINGERPRINT_SEMANTICS_PENDING"
+    },
+    {
+      "id": "emulatorjs/flycast-atomiswave/atomiswave",
+      "fingerprint": "d90d754b00c370db042fd82a0e4776eac8dc8f314e77417142d8bb4002f892ac",
+      "status": "MATERIAL_GAP"
+    },
+    {
+      "id": "emulatorjs/flycast-naomi/naomi",
+      "fingerprint": "2470bcb6370f3d42fecce90bcefdcd6cab516a70194e2b8d48150720d7c7733b",
+      "status": "MATERIAL_GAP"
+    },
+    {
+      "id": "emulatorjs/flycast-naomi2/naomi2",
+      "fingerprint": "30c7224ca1b6edb06ee1d7b31ef7043ff8f7c3f4796170ada65e6bfbcfa9da4a",
+      "status": "MATERIAL_GAP"
+    },
+    {
+      "id": "emulatorjs/freechaf/channelf",
+      "fingerprint": "f4e7d2bad0941f76392ef2f1fb60a28dcc5f673a3905de5de01c9f5cbf583133",
+      "status": "CURRENT_FINGERPRINT_SEMANTICS_PENDING"
+    },
+    {
+      "id": "emulatorjs/freeintv/intellivision",
+      "fingerprint": "b51844f57fd6a2dd482034e2b84d7b06ceb631f41816fea22c7d8dcc40914915",
+      "status": "CURRENT_FINGERPRINT_SEMANTICS_PENDING"
+    },
+    {
+      "id": "emulatorjs/fuse/zxspectrum",
+      "fingerprint": "a73b24de93322201b507ea859af9f73c4ddbdc947eb63a89e35cf1aad15cd90a",
+      "status": "CURRENT_FINGERPRINT_SEMANTICS_PENDING"
+    },
+    {
+      "id": "emulatorjs/gam4980/bbkrpg",
+      "fingerprint": "d65995cc6ded34667bcb31e9594db714f88ced47805b022a85f81a9107dfdd43",
+      "status": "CURRENT_FINGERPRINT_SEMANTICS_PENDING"
+    },
+    {
+      "id": "emulatorjs/gambatte/gbc",
+      "fingerprint": "8eb0b8b6c3a1cfcc481a4bfc1fd8761125e2904da4ed94ae7e2ffec1f27feb9b",
+      "status": "CURRENT_FINGERPRINT_SEMANTICS_PENDING"
+    },
+    {
+      "id": "emulatorjs/gearboy/sgb",
+      "fingerprint": "51dd986176dba7892135edcb394e574ddfb5dbe044c750f9f760c81a1f54be53",
+      "status": "CURRENT_FINGERPRINT_SEMANTICS_PENDING"
+    },
+    {
+      "id": "emulatorjs/gearcoleco/colecovision",
+      "fingerprint": "81a73bc756eaf81634015d7c39a86c03883bc74d173d880f7db725a817507561",
+      "status": "CURRENT_FINGERPRINT_SEMANTICS_PENDING"
+    },
+    {
+      "id": "emulatorjs/genesis-plus-gx/gamegear",
+      "fingerprint": "ec4700d3d73b2b0c1974198f82004b9c13c39c73970085ec6d63c5795f236558",
+      "status": "CURRENT_FINGERPRINT_SEMANTICS_PENDING"
+    },
+    {
+      "id": "emulatorjs/genesis-plus-gx/megadrive",
+      "fingerprint": "ec4700d3d73b2b0c1974198f82004b9c13c39c73970085ec6d63c5795f236558",
+      "status": "CURRENT_FINGERPRINT_SEMANTICS_PENDING"
+    },
+    {
+      "id": "emulatorjs/genesis-plus-gx/multivision",
+      "fingerprint": "ec4700d3d73b2b0c1974198f82004b9c13c39c73970085ec6d63c5795f236558",
+      "status": "CURRENT_FINGERPRINT_SEMANTICS_PENDING"
+    },
+    {
+      "id": "emulatorjs/genesis-plus-gx/sg1000",
+      "fingerprint": "ec4700d3d73b2b0c1974198f82004b9c13c39c73970085ec6d63c5795f236558",
+      "status": "CURRENT_FINGERPRINT_SEMANTICS_PENDING"
+    },
+    {
+      "id": "emulatorjs/genesis-plus-gx-cd/segacd",
+      "fingerprint": "6bbaa0f615205df31f0e900eaf98dda342bb83722e2823c704c65a9262628d78",
+      "status": "CURRENT_FINGERPRINT_SEMANTICS_PENDING"
+    },
+    {
+      "id": "emulatorjs/genesis-plus-gx-wide/megadrive",
+      "fingerprint": "6594e1e97f8cf416ebf00d06682470cadf92b82d493e3fb7a38a3feb0f664184",
+      "status": "CURRENT_FINGERPRINT_SEMANTICS_PENDING"
+    },
+    {
+      "id": "emulatorjs/handy/lynx",
+      "fingerprint": "6b07e38bd31edf26b4c7c4159b105e84726919da687ba7f1d76ca8ed7db83ac8",
+      "status": "CURRENT_FINGERPRINT_SEMANTICS_PENDING"
+    },
+    {
+      "id": "emulatorjs/hatarib/atarist",
+      "fingerprint": "40e4ce87b3c426fec136fb51826cbd3f145f0b4dd0a2ff6b7ce1e09775c28272",
+      "status": "CURRENT_FINGERPRINT_SEMANTICS_PENDING"
+    },
+    {
+      "id": "emulatorjs/lutro/lutro",
+      "fingerprint": "e81a19a8ae0943dffaa91d9cf15875dc330b4d157ea7c9eeb235b3b45492dd44",
+      "status": "CURRENT_FINGERPRINT_SEMANTICS_PENDING"
+    },
+    {
+      "id": "emulatorjs/mame2003/arcade",
+      "fingerprint": "12223b5677ce523b8bbb9d6e612a3e1d5bbfe1c65887d2062ca3466cc8912df2",
+      "status": "CURRENT_FINGERPRINT_SEMANTICS_PENDING"
+    },
+    {
+      "id": "emulatorjs/mame2003-plus/arcade",
+      "fingerprint": "16766a2be13464afa3d501656a3a034e15237888d76f69205e03b65ed8727143",
+      "status": "CURRENT_FINGERPRINT_SEMANTICS_PENDING"
+    },
+    {
+      "id": "emulatorjs/mednafen-ngp/ngpc",
+      "fingerprint": "7886281566f07b977ca5386128061fdcc5c9da0119a368580f49a8b36c7ce157",
+      "status": "CURRENT_FINGERPRINT_SEMANTICS_PENDING"
+    },
+    {
+      "id": "emulatorjs/mednafen-pce/pce",
+      "fingerprint": "cfca791115bc8b8faaac02e6cf4f809c6f6f9d67ac2357b3537d7aff0d5c6c16",
+      "status": "CURRENT_FINGERPRINT_SEMANTICS_PENDING"
+    },
+    {
+      "id": "emulatorjs/mednafen-pce/pcecd",
+      "fingerprint": "cfca791115bc8b8faaac02e6cf4f809c6f6f9d67ac2357b3537d7aff0d5c6c16",
+      "status": "CURRENT_FINGERPRINT_SEMANTICS_PENDING"
+    },
+    {
+      "id": "emulatorjs/mednafen-pce/supergrafx",
+      "fingerprint": "cfca791115bc8b8faaac02e6cf4f809c6f6f9d67ac2357b3537d7aff0d5c6c16",
+      "status": "CURRENT_FINGERPRINT_SEMANTICS_PENDING"
+    },
+    {
+      "id": "emulatorjs/mednafen-pcfx/pcfx",
+      "fingerprint": "247a8f5dddb2161a72bcc87352590e344e1ca28419b36ee53d05dd06224d14f6",
+      "status": "CURRENT_FINGERPRINT_SEMANTICS_PENDING"
+    },
+    {
+      "id": "emulatorjs/mednafen-psx-hw/psx",
+      "fingerprint": "9c11be54721806955a976257410afd86e0892f50390757ecdeaea22f37ee951c",
+      "status": "CURRENT_FINGERPRINT_SEMANTICS_PENDING"
+    },
+    {
+      "id": "emulatorjs/mednafen-wswan/wonderswan",
+      "fingerprint": "ab5ecf4989f491a55c1ce672285ed0f4116fc01c0d1af2e9db199eacb3460ef8",
+      "status": "CURRENT_FINGERPRINT_SEMANTICS_PENDING"
+    },
+    {
+      "id": "emulatorjs/melonds/nds",
+      "fingerprint": "1edc49ae04356e1ea456bea6bcd45fce66395275fdf4699e96434517590aae5e",
+      "status": "CURRENT_FINGERPRINT_SEMANTICS_PENDING"
+    },
+    {
+      "id": "emulatorjs/mgba/gba",
+      "fingerprint": "324adc6ea4fd4155e019b507fca13562b02977a8e176352b2d4013bc2f8a9349",
+      "status": "CURRENT_FINGERPRINT_SEMANTICS_PENDING"
+    },
+    {
+      "id": "emulatorjs/mgba/gbc",
+      "fingerprint": "324adc6ea4fd4155e019b507fca13562b02977a8e176352b2d4013bc2f8a9349",
+      "status": "CURRENT_FINGERPRINT_SEMANTICS_PENDING"
+    },
+    {
+      "id": "emulatorjs/mupen64plus-next/n64",
+      "fingerprint": "297a35f9614bd7f65bd3a62633321d3b8fdc764e7ef5e30f6cff3a6133c45629",
+      "status": "CURRENT_FINGERPRINT_SEMANTICS_PENDING"
+    },
+    {
+      "id": "emulatorjs/neocd/neogeocd",
+      "fingerprint": "ebd351fa3d6daabd360226667a2e995b212f418a675a577d446ac269a8fa0ac1",
+      "status": "CURRENT_FINGERPRINT_SEMANTICS_PENDING"
+    },
+    {
+      "id": "emulatorjs/nestopia/fds",
+      "fingerprint": "71fd2e44a8159f9ebca92e11e8bffb634a128c5d44bba31e24aea9f2cf066ea5",
+      "status": "CURRENT_FINGERPRINT_SEMANTICS_PENDING"
+    },
+    {
+      "id": "emulatorjs/nestopia/nes",
+      "fingerprint": "71fd2e44a8159f9ebca92e11e8bffb634a128c5d44bba31e24aea9f2cf066ea5",
+      "status": "CURRENT_FINGERPRINT_SEMANTICS_PENDING"
+    },
+    {
+      "id": "emulatorjs/o2em/odyssey2",
+      "fingerprint": "a92d88eb783951de4ca6e36fe56c4480b368fa615d202836ec7acc96fececc82",
+      "status": "CURRENT_FINGERPRINT_SEMANTICS_PENDING"
+    },
+    {
+      "id": "emulatorjs/opera/3do",
+      "fingerprint": "b8f5bf0da9ec7624c344a96cb050b6bf3b4dcb199e32647ecc9f177c0ccfb80b",
+      "status": "CURRENT_FINGERPRINT_SEMANTICS_PENDING"
+    },
+    {
+      "id": "emulatorjs/parallel-n64/n64",
+      "fingerprint": "460e86273240e6fb162178d8d9dbeb4cf7481aa5ac75acbf54066178f26f2a33",
+      "status": "CURRENT_FINGERPRINT_SEMANTICS_PENDING"
+    },
+    {
+      "id": "emulatorjs/pcsx-rearmed/psx",
+      "fingerprint": "04551f64f38961a0ed55f678a3efc193b5bf3065cad0813fca22ca7649de2d4b",
+      "status": "CURRENT_FINGERPRINT_SEMANTICS_PENDING"
+    },
+    {
+      "id": "emulatorjs/picodrive/megadrive",
+      "fingerprint": "f3d046f447c0eca4f2ba6dbf5c62bde86cbf765299ec3679d0e58c54004db0e4",
+      "status": "CURRENT_FINGERPRINT_SEMANTICS_PENDING"
+    },
+    {
+      "id": "emulatorjs/picodrive/pico",
+      "fingerprint": "f3d046f447c0eca4f2ba6dbf5c62bde86cbf765299ec3679d0e58c54004db0e4",
+      "status": "CURRENT_FINGERPRINT_SEMANTICS_PENDING"
+    },
+    {
+      "id": "emulatorjs/picodrive/sega32x",
+      "fingerprint": "f3d046f447c0eca4f2ba6dbf5c62bde86cbf765299ec3679d0e58c54004db0e4",
+      "status": "CURRENT_FINGERPRINT_SEMANTICS_PENDING"
+    },
+    {
+      "id": "emulatorjs/potator/supervision",
+      "fingerprint": "660060c1e7a96fddc41a8b21e8994c8c9d03d2d55c0483aeac02743e9c08c986",
+      "status": "CURRENT_FINGERPRINT_SEMANTICS_PENDING"
+    },
+    {
+      "id": "emulatorjs/prboom/doom",
+      "fingerprint": "802fff19f5116b9e744803694951be1bb02ea2bbd518354bcee3e9e08829ab35",
+      "status": "CURRENT_FINGERPRINT_SEMANTICS_PENDING"
+    },
+    {
+      "id": "emulatorjs/prosystem/atari7800",
+      "fingerprint": "ab4986f85fd2cca62b1e00b79f105f25e84041a6549b4d476c30a131f32fd728",
+      "status": "CURRENT_FINGERPRINT_SEMANTICS_PENDING"
+    },
+    {
+      "id": "emulatorjs/puae/amiga",
+      "fingerprint": "f7b86126aaf7b92a87ff91ebee972cb023c9a1c33ad80c6b5127f50e65be4509",
+      "status": "CURRENT_FINGERPRINT_SEMANTICS_PENDING"
+    },
+    {
+      "id": "emulatorjs/puae/amigacd32",
+      "fingerprint": "f7b86126aaf7b92a87ff91ebee972cb023c9a1c33ad80c6b5127f50e65be4509",
+      "status": "MATERIAL_GAP"
+    },
+    {
+      "id": "emulatorjs/quasi88/pc88",
+      "fingerprint": "3d8c07b888d509d79137457b135949ba72eab3ef7796684dff9952fc95ecb005",
+      "status": "CURRENT_FINGERPRINT_SEMANTICS_PENDING"
+    },
+    {
+      "id": "emulatorjs/same-cdi/cdi",
+      "fingerprint": "19139ba08cf2d96c719ecd313363302401a484e54b553c275a4a57c186ee3351",
+      "status": "CURRENT_FINGERPRINT_SEMANTICS_PENDING"
+    },
+    {
+      "id": "emulatorjs/sameduck/megaduck",
+      "fingerprint": "1f45ab8821c3f9537df94b0f76bb2d995c3558b0d5bfe98b009c8f37d357a958",
+      "status": "CURRENT_FINGERPRINT_SEMANTICS_PENDING"
+    },
+    {
+      "id": "emulatorjs/smsplus/mastersystem",
+      "fingerprint": "178c91695190485179fc166cd0080018eda0d6afcbcf57bcd6c69549977f3e59",
+      "status": "CURRENT_FINGERPRINT_SEMANTICS_PENDING"
+    },
+    {
+      "id": "emulatorjs/snes9x/satellaview",
+      "fingerprint": "b3306930080d6f450acca4fcdae566bcc0fd5606fa832394e2c1415e07c09846",
+      "status": "MATERIAL_GAP"
+    },
+    {
+      "id": "emulatorjs/snes9x/snes",
+      "fingerprint": "b3306930080d6f450acca4fcdae566bcc0fd5606fa832394e2c1415e07c09846",
+      "status": "CURRENT_FINGERPRINT_SEMANTICS_PENDING"
+    },
+    {
+      "id": "emulatorjs/stella2014/atari2600",
+      "fingerprint": "fce7cd16d1f04fe4594dbf6f835f66747be1bd76764417d5823a0e5a1d90df5c",
+      "status": "CURRENT_FINGERPRINT_SEMANTICS_PENDING"
+    },
+    {
+      "id": "emulatorjs/supermodel/model3",
+      "fingerprint": "302871f50d183c9e8bdb280b8509b169d622a4ee19cff2fda2f0076cee62fb9b",
+      "status": "MATERIAL_GAP"
+    },
+    {
+      "id": "emulatorjs/theodore/thomson",
+      "fingerprint": "98f2c27655d6740f94fca0e66d1fe0349079834801fee1288dcbe21aaf464de2",
+      "status": "CURRENT_FINGERPRINT_SEMANTICS_PENDING"
+    },
+    {
+      "id": "emulatorjs/uzem/uzebox",
+      "fingerprint": "a9e5412828a25c5e705c9710b10414035e748086e6501b1ede5373a05ac9fcd7",
+      "status": "CURRENT_FINGERPRINT_SEMANTICS_PENDING"
+    },
+    {
+      "id": "emulatorjs/vecx/vectrex",
+      "fingerprint": "f7e34877fbd00bd435c1e4c25a1f654cb180aa6557454b975d39c5a6cfeac3f7",
+      "status": "PARTIAL",
+      "evidence": "root/release-r15/vecx-vector-colour/semantic-proof.json",
+      "evidenceSha256": "6bd55b5394430b6251f9a3e5054958c5a44bd863fb596dfc11da49b851c5551b",
+      "scope": "VecX local candidate: played scene/new-browser restore/continued movement; sparse paused vector presentation remains separately unresolved. Formal release archive requires fingerprint reconciliation."
+    },
+    {
+      "id": "emulatorjs/vice-x128/c128",
+      "fingerprint": "d4635b3c4c57bed1d35fde3c2477e042ea55ab50a441b241906a1e2051af08d1",
+      "status": "CURRENT_FINGERPRINT_SEMANTICS_PENDING"
+    },
+    {
+      "id": "emulatorjs/vice-x64/c64",
+      "fingerprint": "ccd6dcfb0b332206ea1031532f099b48cf81f95ec43df8175311bff0fe181c14",
+      "status": "CURRENT_FINGERPRINT_SEMANTICS_PENDING"
+    },
+    {
+      "id": "emulatorjs/vice-x64sc/c64",
+      "fingerprint": "c5f5b3aff315f0b98022ea688634ae71d440fe0e811316adcad60e89d1ecf857",
+      "status": "CURRENT_FINGERPRINT_SEMANTICS_PENDING"
+    },
+    {
+      "id": "emulatorjs/vice-xpet/pet",
+      "fingerprint": "dc13d9bc9b235956a574c3d898b320ac7676debea4b24e6817bdd12852b5b5c9",
+      "status": "CURRENT_FINGERPRINT_SEMANTICS_PENDING"
+    },
+    {
+      "id": "emulatorjs/vice-xplus4/plus4",
+      "fingerprint": "0f7de43244de8848eb6d715c192dffe174ad42ba5333c7b7987fd774be6dccc7",
+      "status": "CURRENT_FINGERPRINT_SEMANTICS_PENDING"
+    },
+    {
+      "id": "emulatorjs/vice-xvic/vic20",
+      "fingerprint": "a9ed1193d4bb686a9e196e35b63637abab1ccfc57e9679016c5be6b7098183ef",
+      "status": "CURRENT_FINGERPRINT_SEMANTICS_PENDING"
+    },
+    {
+      "id": "emulatorjs/virtualjaguar/atarijaguar",
+      "fingerprint": "94a9ba84bc2006b68dc43de56491cd3a69de7846b25e4a7ba3455f866c6e8a7e",
+      "status": "CURRENT_FINGERPRINT_SEMANTICS_PENDING"
+    },
+    {
+      "id": "emulatorjs/yabause/saturn",
+      "fingerprint": "370041f39f83f38412e8a3d3c6ae2f0aa820db02e715bfa2617cc883d9544e67",
+      "status": "CURRENT_FINGERPRINT_SEMANTICS_PENDING"
+    },
+    {
+      "id": "retrom-runtime/apple2-apple2js/apple2",
+      "fingerprint": "74e61029d5c6637939b34ad56f18fbc4156eb332bcee862fd12db23ab930054b",
+      "status": "CURRENT_FINGERPRINT_SEMANTICS_PENDING"
+    },
+    {
+      "id": "retrom-runtime/bbc-jsbeeb/bbc",
+      "fingerprint": "707324737455496976c5995217658f8b7e5c52b3c2784119e67e43908c947cf2",
+      "status": "CURRENT_FINGERPRINT_SEMANTICS_PENDING"
+    },
+    {
+      "id": "retrom-runtime/butterscotch-gamemaker/butterscotch",
+      "fingerprint": "ea03a4f1286ce0288017ff3023e73d6e15b12d3b93429a5280a1083c0dee10da",
+      "status": "CURRENT_FINGERPRINT_SEMANTICS_PENDING"
+    },
+    {
+      "id": "retrom-runtime/fake08/pico8",
+      "fingerprint": "5b516f52e4c97fae03d71392dd317fffc0a4bd638c067de72b8da4b8a859e79d",
+      "status": "CURRENT_FINGERPRINT_SEMANTICS_PENDING"
+    },
+    {
+      "id": "retrom-runtime/flash-ruffle/flash",
+      "fingerprint": "b6ed4b49c786411140e67255fec0a451cf20703e5c69f7eda635657c852be440",
+      "status": "CURRENT_FINGERPRINT_SEMANTICS_PENDING"
+    },
+    {
+      "id": "retrom-runtime/gbe-pokemini/pokemini",
+      "fingerprint": "73e3d052a96f42cccf580a2e947ea06eb7918f1178c0ced0ddc3b470178ea1e8",
+      "status": "CURRENT_FINGERPRINT_SEMANTICS_PENDING"
+    },
+    {
+      "id": "retrom-runtime/j2me/j2me",
+      "fingerprint": "4d597d22a119b6b1804219a9df7248a404bc1e64ee48fad0eb32fd610e4077a7",
+      "status": "SCOPED_PASS",
+      "evidence": "root/ui-fidelity-r12-final/j2me-input-normal/verification.json",
+      "evidenceSha256": "bace57a8027eae5838a481630117910424068e84dd0f639f10ebe004caa96bde",
+      "scope": "Demon Tower native JD/RMS progress: red key 0 to 1, real in-game save, failed PUT/retry/ACK, cookie-only fresh Chromium in-game load, continued controller input. Does not resolve the older Counter Strike sample."
+    },
+    {
+      "id": "retrom-runtime/kirikiri2-kag/kirikiri",
+      "fingerprint": "87849a9b758fc37ffa8f04fdb0a03f97648ad10fbe223b32f93bad2b6970cb43",
+      "status": "CURRENT_FINGERPRINT_SEMANTICS_PENDING"
+    },
+    {
+      "id": "retrom-runtime/mame-apple2/apple2",
+      "fingerprint": "99364431fcbd37ebe2b2e8af91392965fac5de161304f53473234e709aa7b7ca",
+      "status": "MATERIAL_GAP"
+    },
+    {
+      "id": "retrom-runtime/mame-apple2e/apple2",
+      "fingerprint": "e5f0885a37196b82eb1cd8d5e84d6616cf9d17aad84ff9e90ba40ea9ddf8e5b3",
+      "status": "MATERIAL_GAP"
+    },
+    {
+      "id": "retrom-runtime/mame-arcade/arcade",
+      "fingerprint": "4b67086a3bcc38ab31ff4f67b46f92aa077acbbbb33bc9b18dfc166d3a268036",
+      "status": "CURRENT_FINGERPRINT_SEMANTICS_PENDING"
+    },
+    {
+      "id": "retrom-runtime/mame-atom/atom",
+      "fingerprint": "90de93e4363cbd293785cbfcb8cb81df294232799ca0c60efdc483daa9fa450d",
+      "status": "MATERIAL_GAP"
+    },
+    {
+      "id": "retrom-runtime/mame-coleco/colecovision",
+      "fingerprint": "22664df52eab02d71abbac2a5cb6ec980ca2f3d5b72e4f04927af45ffecab501",
+      "status": "CURRENT_FINGERPRINT_SEMANTICS_PENDING"
+    },
+    {
+      "id": "retrom-runtime/mame-pv1000/pv1000",
+      "fingerprint": "19be7943763c60c5eb3a2625acf9f297551a8a4f01c0ad9c1cd41f1dba8210f2",
+      "status": "CURRENT_FINGERPRINT_SEMANTICS_PENDING"
+    },
+    {
+      "id": "retrom-runtime/mame-sg1000/sg1000",
+      "fingerprint": "604775a79b2bc675ac19590f8a34f58c0b17c3d7727b0ae2354d562763c31f74",
+      "status": "CURRENT_FINGERPRINT_SEMANTICS_PENDING"
+    },
+    {
+      "id": "retrom-runtime/msx-webmsx/msx",
+      "fingerprint": "5cdaa7a0e6a608f13f5eec349f2ae989b8916d5ab1ae1d7e56c2375c0f6aba5f",
+      "status": "CURRENT_FINGERPRINT_SEMANTICS_PENDING"
+    },
+    {
+      "id": "retrom-runtime/np2kai-pc98/pc98",
+      "fingerprint": "1a24bbd58c5945fdb3422d723017e8fc73e9213491568281605c1dca129f9d83",
+      "status": "CURRENT_FINGERPRINT_SEMANTICS_PENDING"
+    },
+    {
+      "id": "retrom-runtime/nxengine/cavestory",
+      "fingerprint": "6b1dba0be6cd14f66e9ec2f4689512d9ae028e760e98e07e394f9c843b7d3262",
+      "status": "CURRENT_FINGERPRINT_SEMANTICS_PENDING"
+    },
+    {
+      "id": "retrom-runtime/onscripter-yuri/ons",
+      "fingerprint": "1b22ca71e9ee50be9572324d4f7324fa653865994efa29aa16f828d20d0fe908",
+      "status": "CURRENT_FINGERPRINT_SEMANTICS_PENDING"
+    },
+    {
+      "id": "retrom-runtime/openbor/openbor",
+      "fingerprint": "3cc5b6c6c026b5fd1922770f9d05128797f7dea2e8e027589056788bd6adb42c",
+      "status": "PARTIAL",
+      "evidence": "root/release-r15/openbor-campaign/semantic-proof.json",
+      "evidenceSha256": "0c62ba61b46627b15d5e75d8f9325bb7e1c16f4f308b7fdadc0a5689ed0ad1f7",
+      "scope": "Robo_Rumble first-level movement/combat/scrolling; no native progress file, no save/restore pass. Later gamepad continuation remains unresolved; keyboard continuation observed."
+    },
+    {
+      "id": "retrom-runtime/play-ps2/ps2",
+      "fingerprint": "0f60f7340de69837d31c766f4e3169a95859dadcce14ad9eeefc209f1312f1c8",
+      "status": "CURRENT_FINGERPRINT_SEMANTICS_PENDING"
+    },
+    {
+      "id": "retrom-runtime/ppsspp/psp",
+      "fingerprint": "dd3afe114357cf23c9b3f2541c158d12b6e3f375495e4bcab381bc8855ef2ab7",
+      "status": "CURRENT_FINGERPRINT_SEMANTICS_PENDING"
+    },
+    {
+      "id": "retrom-runtime/px68k/x68000",
+      "fingerprint": "d15653eebeaee429a8ef76df835e0cb2fbe7ac0bf42d3dcff1d6b7e2dbc1fdec",
+      "status": "CURRENT_FINGERPRINT_SEMANTICS_PENDING"
+    },
+    {
+      "id": "retrom-runtime/rpgmaker-2000/rpgmaker",
+      "fingerprint": "eb3e05baee2b7ea39ccd381b0dd33c8558442deaee1db1eaec890e4feed4b232",
+      "status": "CURRENT_FINGERPRINT_SEMANTICS_PENDING"
+    },
+    {
+      "id": "retrom-runtime/rpgmaker-2003/rpgmaker",
+      "fingerprint": "527cfc61942eaf2a845b8395e3556c55cb8c836a65ce530733f5555762d708f5",
+      "status": "CURRENT_FINGERPRINT_SEMANTICS_PENDING"
+    },
+    {
+      "id": "retrom-runtime/rpgmaker-mv/rpgmaker",
+      "fingerprint": "f3f3de64831b6ee50f652bfe445d8f81e23604859bce8291d86054c0f4239038",
+      "status": "SCOPED_PASS",
+      "evidence": "root/ui-fidelity-r11-audit/isolated-fresh-mv/report.json",
+      "evidenceSha256": "6f2bff598822c93c0db6d18b6d4ade5c76b3bf1e780385e41b9e816d9dba15c3",
+      "scope": "New save, different Run restore of concrete gameplay state, then normal input; original report defines the exact sampled scene."
+    },
+    {
+      "id": "retrom-runtime/rpgmaker-mz/rpgmaker",
+      "fingerprint": "3f31327ffc16dcca8a58714eeb3ff475a5e4c6f020651452f12921a1f5c10bc0",
+      "status": "SCOPED_PASS",
+      "evidence": "root/ui-fidelity-r11-audit/isolated-fresh-mz/report.json",
+      "evidenceSha256": "0b449bdbe2c4e71e8b1e78dad98a5d0f9bfcb860c68b35606a17c7cfafc7d0be",
+      "scope": "New save, different Run restore of concrete gameplay state, then normal input; original report defines the exact sampled scene."
+    },
+    {
+      "id": "retrom-runtime/rpgmaker-vx/rpgmaker",
+      "fingerprint": "0082ddca8961bb5fbd966bb2f4e4d60a8f6b25704903d80e0461ce2651a86005",
+      "status": "CURRENT_FINGERPRINT_SEMANTICS_PENDING"
+    },
+    {
+      "id": "retrom-runtime/rpgmaker-vx-ace/rpgmaker",
+      "fingerprint": "45796a4367db46cce48f6f8100707bf8622785e74632705ccd4040b2ad94e483",
+      "status": "CURRENT_FINGERPRINT_SEMANTICS_PENDING"
+    },
+    {
+      "id": "retrom-runtime/rpgmaker-xp/rpgmaker",
+      "fingerprint": "24ddd94fb0fa6a6851c9ce0d7d8fbe6668869bb70e1fc1aaea9e2e49de368290",
+      "status": "CURRENT_FINGERPRINT_SEMANTICS_PENDING"
+    },
+    {
+      "id": "retrom-runtime/samcoupe/samcoupe",
+      "fingerprint": "8334349fe122700f51a0e215e14921ba6e56ba1b6146def96e361c86151d370f",
+      "status": "CURRENT_FINGERPRINT_SEMANTICS_PENDING"
+    },
+    {
+      "id": "retrom-runtime/scummvm/scummvm",
+      "fingerprint": "681865506795f4ca9d30640a1cc9af44f4ae66bb3ed7932b7e6f4a6f09a9312b",
+      "status": "CURRENT_FINGERPRINT_SEMANTICS_PENDING"
+    },
+    {
+      "id": "retrom-runtime/tic80/tic80",
+      "fingerprint": "55f48caa4cc651a0c6a01164d4c2d98caf3560bd25814cbcc5d91651856fe5f1",
+      "status": "CURRENT_FINGERPRINT_SEMANTICS_PENDING"
+    },
+    {
+      "id": "retrom-runtime/tyranoscript/tyranoscript",
+      "fingerprint": "d507fe116139cfd5cdac2710023c7328ac3f9522c11d31ecc03ec1cd105a2400",
+      "status": "SCOPED_PASS",
+      "evidence": "root/ui-fidelity-r11-audit/isolated-fresh-tyrano/report.json",
+      "evidenceSha256": "991f4eb366b64da89ef76f5b101e4f2ca9718e0e72939c33ed22e56b2b929429",
+      "scope": "New save, different Run restore of concrete gameplay state, then normal input; original report defines the exact sampled scene."
+    },
+    {
+      "id": "retrom-runtime/wasm4/wasm4",
+      "fingerprint": "87e6d176f878c62c0ddee1812c4c30e7b86f11511e21a9c37c49380957172454",
+      "status": "CURRENT_FINGERPRINT_SEMANTICS_PENDING"
+    }
+  ],
+  "publishedDependencies": [
+    {
+      "repository": "retrom-project/OnscripterYuri",
+      "tag": "retrom-core-0.7.7beta-r6",
+      "commit": "52d84443a2e41d1b930683f9f0a459e715c5093c",
+      "workflowRun": 37670252602,
+      "status": "PUBLISHED_PRODUCT_RETEST_REQUIRED"
+    },
+    {
+      "repository": "retrom-project/libretro-vecx",
+      "tag": "retrom-core-g8f671cc9d737-r2",
+      "commit": "f62c58885781114445c3109dd8283ca863b932e4",
+      "workflowRun": 37670346395,
+      "status": "PUBLISHED_UNPACKED_FILES_MATCH_TESTED_CANDIDATE"
+    }
+  ],
+  "limits": [
+    "R10 any-fingerprint counts do not establish current implementation acceptance.",
+    "Only the five listed scoped proofs have been reconciled; every other row remains explicitly unclosed.",
+    "Core tags do not publish or approve a stable retrom-runtime or Retrom release.",
+    "Missing operator material is not substituted with unrelated ROMs, title screens or fabricated payloads."
+  ]
+}

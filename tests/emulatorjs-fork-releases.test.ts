@@ -1,5 +1,19 @@
 import {describe, expect, it} from "vitest";
 import {forkReleaseFiles, forkMetadataPath, verifyForkMetadata} from "../scripts/emulatorjs-fork-releases.mjs";
+import {emulatorJsProviderDefinition} from "../src/providers/emulatorjs/catalog.js";
+import {emulatorJsSourceCatalog} from "../src/providers/emulatorjs/source-catalog.js";
+
+it("keeps declared core identities equal to the pinned fork download bytes", () => {
+  const files = forkReleaseFiles(emulatorJsSourceCatalog);
+  for (const target of emulatorJsProviderDefinition.targets) {
+    const implementation = target.implementation;
+    const file = files.find((entry: {destination: string}) =>
+      `assets/${entry.destination}` === implementation.coreAssetPath);
+    if (!file) {continue;}
+    expect(implementation.coreSha256, target.id).toBe(file.sha256);
+    expect(implementation.coreSizeBytes, target.id).toBe(file.sizeBytes);
+  }
+});
 
 function fixture() {
   const repository = "https://github.com/retrom-project/vice-libretro";

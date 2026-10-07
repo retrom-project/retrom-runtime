@@ -1,6 +1,16 @@
 # Clean refactor acceptance
 
-This unpublished work is based on runtime commit `745d9ecabc7bdd0e934e1c69737399ebe6deef9b`. The retained denominator is 110 Provider Targets, 109 prior host bindings, 95 platforms and 122 platform/content rows. EmulatorJS PPSSPP remains declared without a prior product entry. No tags, production locks, ROMs or BIOS files were published or committed. The only rebuilt core is ONScripter Yuri, whose sampled checkpoint defects required a separately verified native fix.
+## R15 release audit
+
+The [release-readiness audit](release-readiness.json) supersedes the historical counts below for release decisions. Stable runtime/Retrom publication remains incomplete. Five current-fingerprint scene proofs have been reconciled (NES, MV, MZ, TyranoScript and J2ME); VecX and OpenBOR remain scoped partial observations, ten rows lack complete material, and the other rows still require current-identity semantic closure. No historical PASS is automatically promoted.
+
+The ONS and VecX fixes have been merged and their immutable core releases published. ONS r6 uses different JS/Wasm bytes from the local candidate and requires product retesting. VecX r2 has different archive bytes but identical unpacked execution files; its final fingerprint must still be reconciled after preparation. The source pins and CI now consume those published assets without unpublished ONS transport.
+
+## Historical R10 snapshot
+
+All identities and counts in the remaining sections describe the captured R10 checkpoint, including uses of “current” inside that historical record. They are not the R15 release state.
+
+This unpublished work is based on runtime commit `745d9ecabc7bdd0e934e1c69737399ebe6deef9b`. The retained denominator is 110 Provider Targets, 109 prior host bindings, 95 platforms and 122 platform/content rows. EmulatorJS PPSSPP remains declared without a prior product entry. No tags, production locks, ROMs or BIOS files were published or committed. The only rebuilt core in that snapshot is ONScripter Yuri, whose sampled checkpoint defects required a separately verified native fix.
 
 ## Installed candidate and identity
 

@@ -211,8 +211,8 @@ export const emulatorJsSourceCatalog = {
 },
 {
   "repository": "https://github.com/retrom-project/libretro-vecx",
-  "tag": "retrom-core-g8f671cc9d737-r1",
-  "commit": "cbb4cf4dadc1e799b0a760f301c3a306a6d71c3a",
+  "tag": "retrom-core-g8f671cc9d737-r2",
+  "commit": "f62c58885781114445c3109dd8283ca863b932e4",
   "adapterAbi": "emulatorjs-state-v1",
   "runtimeCore": "vecx",
   "assets": [
@@ -220,25 +220,25 @@ export const emulatorJsSourceCatalog = {
       "filename": "LICENSE.md",
       "sha256": "72d6e1a0ffb74e5e95841061200da2f5e14b66bbe043f41e634ef9bc6070132a",
       "sizeBytes": 35229,
-      "url": "https://github.com/retrom-project/libretro-vecx/releases/download/retrom-core-g8f671cc9d737-r1/LICENSE.md"
+      "url": "https://github.com/retrom-project/libretro-vecx/releases/download/retrom-core-g8f671cc9d737-r2/LICENSE.md"
     },
     {
       "filename": "rpg-runtime-release.json",
-      "sha256": "16ea415148668169b2f67f3a929cee70e26e05ca92b1d87f2a8012aeb2312ccb",
+      "sha256": "84de64676bb28b4dcc39869b75543e7d6020824718058ca55403389e307895d8",
       "sizeBytes": 792,
-      "url": "https://github.com/retrom-project/libretro-vecx/releases/download/retrom-core-g8f671cc9d737-r1/rpg-runtime-release.json"
+      "url": "https://github.com/retrom-project/libretro-vecx/releases/download/retrom-core-g8f671cc9d737-r2/rpg-runtime-release.json"
     },
     {
       "filename": "source.tar.gz",
-      "sha256": "aac1c2ecff203128bbd19cfeff55b77fa6c98611884b437073b59c2b05d90580",
-      "sizeBytes": 245151,
-      "url": "https://github.com/retrom-project/libretro-vecx/releases/download/retrom-core-g8f671cc9d737-r1/source.tar.gz"
+      "sha256": "75a19ffc40366aa3439dbd5f8696f240cbe940d2c35437c7025135f708617bf8",
+      "sizeBytes": 245429,
+      "url": "https://github.com/retrom-project/libretro-vecx/releases/download/retrom-core-g8f671cc9d737-r2/source.tar.gz"
     },
     {
       "filename": "vecx-wasm.data",
-      "sha256": "bd66a59cafb8ad3f742d85f177550966f79926030aa7bd660f4ffe3a0c02c6db",
-      "sizeBytes": 856199,
-      "url": "https://github.com/retrom-project/libretro-vecx/releases/download/retrom-core-g8f671cc9d737-r1/vecx-wasm.data"
+      "sha256": "3880ffff1aa380551eb21f4ff0b39392abf0fbe3897cba02e7ae8330ce23aa1f",
+      "sizeBytes": 856452,
+      "url": "https://github.com/retrom-project/libretro-vecx/releases/download/retrom-core-g8f671cc9d737-r2/vecx-wasm.data"
     }
   ]
 },

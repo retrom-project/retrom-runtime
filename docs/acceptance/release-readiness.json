@@ -5,8 +5,8 @@
   "snapshot": "R15: published ONS r6/VecX r2 pins, OpenBOR normal-exit fix and RGSS preconnected-controller startup fix; remaining target identities unchanged",
   "historicalMatrix": "runtime-product-matrix.json",
   "counts": {
-    "CURRENT_FINGERPRINT_SEMANTICS_PENDING": 87,
-    "SCOPED_PASS": 25,
+    "CURRENT_FINGERPRINT_SEMANTICS_PENDING": 86,
+    "SCOPED_PASS": 26,
     "MATERIAL_GAP": 10
   },
   "productRows": 122,
@@ -96,7 +96,10 @@
     {
       "id": "emulatorjs/fbalpha2012-cps1/arcade",
       "fingerprint": "d9b37bc123f89e7e27ce6cd09d29934fc54084586e8d6c1433d667b82dc917e5",
-      "status": "CURRENT_FINGERPRINT_SEMANTICS_PENDING"
+      "status": "SCOPED_PASS",
+      "evidence": "root/release-r15/cps1-1941-current/semantic-proof.json",
+      "evidenceSha256": "316a82eaacd90825f0baf141e20bb0f0dcf0308197280fc23f0eef7cd5120194",
+      "scope": "Operator1941 actual review controls after mission briefing, public played snapshot with score2300/three vitality bars, cookie-only fresh Chromium restore, seven publicly paused seconds, opposite D-pad movement and A shooting after resume. Independent CPS1 target; startup-transition snapshot excluded."
     },
     {
       "id": "emulatorjs/fbalpha2012-cps2/arcade",

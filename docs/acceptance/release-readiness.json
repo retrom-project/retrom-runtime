@@ -5,8 +5,8 @@
   "snapshot": "R15: published ONS r6/VecX r2 pins, OpenBOR normal-exit fix and RGSS preconnected-controller startup fix; remaining target identities unchanged",
   "historicalMatrix": "runtime-product-matrix.json",
   "counts": {
-    "CURRENT_FINGERPRINT_SEMANTICS_PENDING": 79,
-    "SCOPED_PASS": 33,
+    "CURRENT_FINGERPRINT_SEMANTICS_PENDING": 74,
+    "SCOPED_PASS": 38,
     "MATERIAL_GAP": 10
   },
   "productRows": 122,
@@ -194,12 +194,18 @@
     {
       "id": "emulatorjs/genesis-plus-gx/gamegear",
       "fingerprint": "ec4700d3d73b2b0c1974198f82004b9c13c39c73970085ec6d63c5795f236558",
-      "status": "CURRENT_FINGERPRINT_SEMANTICS_PENDING"
+      "status": "SCOPED_PASS",
+      "evidence": "root/release-r15/gamegear-columns-current/semantic-proof.json",
+      "evidenceSha256": "18e36162d77950b4add0dc697a0bbb468cb4736819d2ef14d5ffa434db33a4a8",
+      "scope": "Columns actual review/published direction, gem rotation and dropping; public9209-byte INSTANT checkpoint restores two settled side stacks in cookie-only fresh Chromium during seven publicly paused seconds. Continued Right/A/Down builds a third stack."
     },
     {
       "id": "emulatorjs/genesis-plus-gx/megadrive",
       "fingerprint": "ec4700d3d73b2b0c1974198f82004b9c13c39c73970085ec6d63c5795f236558",
-      "status": "CURRENT_FINGERPRINT_SEMANTICS_PENDING"
+      "status": "SCOPED_PASS",
+      "evidence": "root/release-r15/genesis-megadrive-current/semantic-proof.json",
+      "evidenceSha256": "96eda39e4a74a31c0aaf7caef46557ecdc4953f5becff0f2e3b1dccca81500b3",
+      "scope": "Actual Metal Sonic Hyperdrive review and published direction/jump, public INSTANT checkpoint of noninitial ground location, cookie-only fresh Chromium retains player/world position and three lives after seven unpaused seconds, then opposite direction and jump continue. Native timer/idle animation advance; initial menu captures excluded."
     },
     {
       "id": "emulatorjs/genesis-plus-gx/multivision",
@@ -209,7 +215,10 @@
     {
       "id": "emulatorjs/genesis-plus-gx/sg1000",
       "fingerprint": "ec4700d3d73b2b0c1974198f82004b9c13c39c73970085ec6d63c5795f236558",
-      "status": "CURRENT_FINGERPRINT_SEMANTICS_PENDING"
+      "status": "SCOPED_PASS",
+      "evidence": "root/release-r15/sg1000-congo-current/semantic-proof.json",
+      "evidenceSha256": "5941b4fb40a622684ab4b95d78e2519d1de4a26a1a91c643f381c56eb5ae0da8",
+      "scope": "Bomb Jack.sg actual review/published movement; public8600-byte INSTANT checkpoint restores score350, player position and collected-bomb layout in cookie-only fresh Chromium during seven publicly paused seconds. Resume/opposite directions continue play and score370/390. No jump-specific mapping claim."
     },
     {
       "id": "emulatorjs/genesis-plus-gx-cd/segacd",
@@ -219,7 +228,10 @@
     {
       "id": "emulatorjs/genesis-plus-gx-wide/megadrive",
       "fingerprint": "6594e1e97f8cf416ebf00d06682470cadf92b82d493e3fb7a38a3feb0f664184",
-      "status": "CURRENT_FINGERPRINT_SEMANTICS_PENDING"
+      "status": "SCOPED_PASS",
+      "evidence": "root/release-r15/genesis-wide-current/semantic-proof.json",
+      "evidenceSha256": "0fe0f0133362b0c0c61ab5ae3d66d8bafebf436b02475d418759a3b79be4b611",
+      "scope": "Actual Metal Sonic Hyperdrive review and published direction/jump, public INSTANT checkpoint of noninitial ground location, cookie-only fresh Chromium retains player/world position and three lives after seven unpaused seconds, then opposite direction and jump continue. Native timer/idle animation advance; initial menu captures excluded."
     },
     {
       "id": "emulatorjs/handy/lynx",
@@ -357,7 +369,10 @@
     {
       "id": "emulatorjs/picodrive/megadrive",
       "fingerprint": "f3d046f447c0eca4f2ba6dbf5c62bde86cbf765299ec3679d0e58c54004db0e4",
-      "status": "CURRENT_FINGERPRINT_SEMANTICS_PENDING"
+      "status": "SCOPED_PASS",
+      "evidence": "root/release-r15/picodrive-megadrive-current/semantic-proof.json",
+      "evidenceSha256": "0a591ea5ea33f1c22fbba8f43e9456430eed11a434bb28a1c765e3d05f57bffb",
+      "scope": "Metal Sonic Hyperdrive actual review/published D-pad and A gameplay; public34684-byte INSTANT checkpoint restores the standing character/level/three lives after seven unpaused seconds in cookie-only fresh Chromium. Continued opposite movement and jumping pass."
     },
     {
       "id": "emulatorjs/picodrive/pico",

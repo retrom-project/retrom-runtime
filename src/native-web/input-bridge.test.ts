@@ -4,7 +4,7 @@ import {expect, it, vi} from "vitest";
 
 it("enables native bridge observation on demand without polling or changing engine inputs", async () => {
   type Reply = {requestId: number; type: string; body: {inputDiagnostics?: {events: Array<{value: number; target: string}>}}};
-  type Handler = (event: {data: unknown; origin?: string; ports?: unknown[]; stopImmediatePropagation?: () => void}) => void;
+  type Handler = (event: {data: unknown; origin?: string; source?: unknown; ports?: unknown[]; stopImmediatePropagation?: () => void}) => void;
   const handlers = new Map<string, Handler>();
   const update = vi.fn();
   const input = {_updateGamepadState: update, gamepadMapper: {0: "ok"}};
@@ -24,7 +24,7 @@ it("enables native bridge observation on demand without polling or changing engi
   runInNewContext(readFileSync("assets/runtime/native/bridge.js", "utf8"), {window: runtime, TextEncoder, TextDecoder});
   const identity = {launchId: "fixture", nonce: "fixture", protocolVersion: 1};
   handlers.get("message")?.({data: {...identity, type: "RPG_RUNTIME_NATIVE_CONNECT",
-    parentOrigin: "https://host.example", profile: "RPGMV"}, origin: "https://host.example", ports: [port], stopImmediatePropagation: () => undefined});
+    parentOrigin: "https://host.example", profile: "RPGMV"}, origin: "https://host.example", source: runtime.parent, ports: [port], stopImmediatePropagation: () => undefined});
   let requestId = 0;
   const request = async (type: string, body: Record<string, unknown> = {}) => {
     const id = ++requestId;

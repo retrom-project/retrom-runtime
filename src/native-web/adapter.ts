@@ -1,3 +1,4 @@
+import type {RuntimeHostShortcutV1} from "../provider/module-api.js";
 import {NativeInputDiagnostics} from "./input-diagnostics.js";
 import {createNativeGameEditor} from "./editor.js";
 import {nativeReadyDeadline, type NativeReadyOptions} from "./startup-timeout.js";
@@ -80,6 +81,11 @@ export async function mountNativeRpg(
       : { available: false, blocker: "BUSY" },
     getFrameCount: () => channel.frames(),
     startInputDiagnostics: () => channel.inputDiagnostics.start(),
+    setHostShortcutPolicy: async (policy, report) => {
+      channel.reportHostShortcut = report;
+      const reply = await channel.request("SET_HOST_SHORTCUT_POLICY", {policy}, 5_000);
+      if (reply.type !== "SET_HOST_SHORTCUT_POLICY_RESULT") {throw new Error("RPG_RUNTIME_CONTROL_UNAVAILABLE");}
+    },
     setInputFilter: async (policy) => {
       const reply = await channel.request("SET_INPUT_FILTER", {policy}, 5_000);
       if (reply.type !== "SET_INPUT_FILTER_RESULT") {throw new Error("RPG_RUNTIME_CONTROL_UNAVAILABLE");}
@@ -96,6 +102,7 @@ export async function mountNativeRpg(
 }
 
 export class NativeChannel {
+  reportHostShortcut: ((shortcut: RuntimeHostShortcutV1) => void) | null = null;
   readonly inputDiagnostics = new NativeInputDiagnostics((type, body) => this.request(type, body));
   private readonly config: NativeRpgParameters;
   private readonly nonce = randomNonce();
@@ -243,6 +250,7 @@ export class NativeChannel {
   close() {
     this.inputDiagnostics.stop();
     this.closed = true;
+    this.reportHostShortcut = null;
     this.stopStatusLoop();
     if (this.pending) {
       window.clearTimeout(this.pending.timer);
@@ -262,6 +270,7 @@ export class NativeChannel {
   }
 
   private receive(value: unknown) {
+    if (this.closed) {return;}
     const reply = readReply(value, this.config.sessionId, this.nonce);
     if (!reply) {return;}
     if (reply.requestId === 0) { this.receiveEvent(reply); return; }
@@ -274,7 +283,10 @@ export class NativeChannel {
   }
 
   private receiveEvent(reply: Reply) {
-    if (reply.type === "READY") {
+    if (reply.type === "HOST_SHORTCUT" && Object.keys(reply.body).join(",") === "shortcut" &&
+      (reply.body.shortcut === "MENU" || reply.body.shortcut === "PAUSE")) {
+      this.reportHostShortcut?.(reply.body.shortcut);
+    } else if (reply.type === "READY") {
       const ready = readReady(reply.body);
       this.readyValue = ready;
       this.available = true;

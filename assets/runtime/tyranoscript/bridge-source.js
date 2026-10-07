@@ -13,6 +13,7 @@ export function installTyranoScriptBridge(global, inputFilter) {
     const MAX_DOM_SCREENSHOT_PIXELS = 4 * 1024 * 1024;
     const MAX_DOM_SCREENSHOT_TEXT = 512;
     const RESTORE_TIMEOUT_MS = 30_000;
+    inputFilter.onHostShortcut(shortcut => event("HOST_SHORTCUT", {shortcut}));
     const encoder = new TextEncoder();
     const decoder = new TextDecoder("utf-8", { fatal: true });
     const nativeClose = typeof global.close === "function" ? global.close.bind(global) : function () {};
@@ -974,6 +975,11 @@ export function installTyranoScriptBridge(global, inputFilter) {
                     if (!ownKeys(message.body, ["value"])) throw new Error("TYRANOSCRIPT_PROTOCOL_INVALID");
                     setVolume(message.body.value);
                     send(requestId, "SET_VOLUME_RESULT", {});
+                    break;
+                case "SET_HOST_SHORTCUT_POLICY":
+                    if (!ownKeys(message.body, ["policy"])) {throw new Error("PLAYER_HOST_SHORTCUT_POLICY_INVALID");}
+                    inputFilter.setHostShortcutPolicy(message.body.policy);
+                    send(requestId, "SET_HOST_SHORTCUT_POLICY_RESULT", {});
                     break;
                 case "PROBE":
                     send(requestId, "PROBE_RESULT", { checkpointAvailable: checkpointAvailable(), continuousFrames: frameCount });

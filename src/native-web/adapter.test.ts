@@ -64,3 +64,26 @@ describe("native RPG bootstrap reload", () => {
     }
   });
 });
+
+it("accepts shortcut events only from the current private channel identity and stops after close", async () => {
+  const report = vi.fn();
+  const channel = new NativeChannel({sessionId: "session", uniqueOrigin: "https://runtime.example", bridgeProfile: "RPGMV"}, () => undefined);
+  channel.reportHostShortcut = report;
+  let port: MessagePort | null = null;
+  let identity: Record<string, unknown> = {};
+  channel.connect({postMessage: (message: Record<string, unknown>, _origin: string, transfer: Transferable[]) => {
+    port = transfer[0] as MessagePort;
+    identity = {launchId: message.launchId, nonce: message.nonce, protocolVersion: message.protocolVersion};
+  }} as unknown as Window);
+  const runtimePort = port as unknown as MessagePort;
+  const event = {...identity, requestId: 0, type: "HOST_SHORTCUT", body: {shortcut: "MENU"}};
+  for (const message of [{...event, nonce: "foreign"}, {...event, launchId: "foreign"},
+    {...event, body: {shortcut: "UNKNOWN"}}, {...event, body: {shortcut: "MENU", extra: true}}]) {
+    runtimePort.postMessage(message);
+  }
+  runtimePort.postMessage(event);
+  await vi.waitFor(() => expect(report).toHaveBeenCalledExactlyOnceWith("MENU"));
+  channel.close(); runtimePort.postMessage(event);
+  await new Promise(resolve => setTimeout(resolve, 0));
+  expect(report).toHaveBeenCalledOnce(); runtimePort.close();
+});

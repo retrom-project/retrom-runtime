@@ -1,3 +1,4 @@
+import type {RuntimeHostShortcutV1} from "../provider/module-api.js";
 import type { CheckpointAvailability } from "../contract.js";
 import type { MountedRuntimeAdapter, RuntimeExitReporter } from "../internal-adapter.js";
 import type {TyranoScriptParameters} from "./parameters.js";
@@ -58,6 +59,11 @@ export async function mountTyranoScript(
       ? { available: true, blocker: null }
       : { available: false, blocker: "BUSY" },
     getFrameCount: () => channel.frames(),
+    setHostShortcutPolicy: async (policy, report) => {
+      channel.reportHostShortcut = report;
+      const reply = await channel.request("SET_HOST_SHORTCUT_POLICY", {policy}, 5_000);
+      if (reply.type !== "SET_HOST_SHORTCUT_POLICY_RESULT") {throw new Error("TYRANOSCRIPT_PROTOCOL_INVALID");}
+    },
     setInputFilter: async (policy) => {
       const reply = await channel.request("SET_INPUT_FILTER", {policy}, 5_000);
       if (reply.type !== "SET_INPUT_FILTER_RESULT") {throw new Error("TYRANOSCRIPT_PROTOCOL_INVALID");}
@@ -74,6 +80,7 @@ export async function mountTyranoScript(
 }
 
 class TyranoScriptChannel {
+  reportHostShortcut: ((shortcut: RuntimeHostShortcutV1) => void) | null = null;
   private readonly nonce = randomNonce();
   private readonly messageChannel = new MessageChannel();
   private connected = false;
@@ -181,6 +188,7 @@ class TyranoScriptChannel {
   close() {
     if (this.closed) {return;}
     this.closed = true;
+    this.reportHostShortcut = null;
     this.available = false;
     this.stopProbeLoop();
     if (this.pending) {
@@ -212,6 +220,7 @@ class TyranoScriptChannel {
   }
 
   private receive(value: unknown) {
+    if (this.closed) {return;}
     const reply = readReply(value, this.config.sessionId, this.nonce);
     if (!reply) {return;}
     if (reply.requestId === 0) {this.receiveEvent(reply); return;}
@@ -225,7 +234,10 @@ class TyranoScriptChannel {
   }
 
   private receiveEvent(reply: Reply) {
-    if (reply.type === "READY") {
+    if (reply.type === "HOST_SHORTCUT" && Object.keys(reply.body).join(",") === "shortcut" &&
+      (reply.body.shortcut === "MENU" || reply.body.shortcut === "PAUSE")) {
+      this.reportHostShortcut?.(reply.body.shortcut);
+    } else if (reply.type === "READY") {
       const ready = readReady(reply.body);
       this.readyValue = ready;
       this.available = ready.checkpointAvailable;

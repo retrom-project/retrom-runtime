@@ -77,7 +77,9 @@ MIT
 
 Each Target owns its host shortcut policy through `hostKeyboardShortcuts`. The public
 `PlayerRuntimeV1.getInputCapabilities()` exposes the allowed `PAUSE` / `MENU` shortcuts;
-hosts leave game keys untouched when this optional method is absent.
+`setHostShortcutPolicy()` selects explicit keyboard bindings and `HOST_SHORTCUT` events cross same-origin
+and isolated game windows uniformly. Null policy disables interception; see the Provider Module guide.
+The Host leaves undeclared shortcuts with the game and configures null while its overlays own input.
 A checkpoint availability with `requiredAction: "SELECT_PROGRAM"` tells the host to show
 program selection guidance. Provider-private Target options are interpreted only inside
 the Provider.

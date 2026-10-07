@@ -1,3 +1,4 @@
+import {EmulatorPlayerInput} from "./player-input.js";
 import {installContentAcceptance} from "./content-acceptance.js";
 import {createRuntimeFailure} from "../../provider/failure.js";
 import {disableEmulatorDownloadCache, retireEmulatorDownloadCaches} from "./download-cache.js";
@@ -17,7 +18,7 @@ import {startEmulatorInputDiagnostics} from "./input-diagnostics.js";
 import type {RuntimeInputDiagnosticsV1} from "../../provider/module-api.js";
 import type {
   AssetIndexV1, LaunchEnvelopeV1, PlayerRuntimeV1, RuntimeCheckpointAvailabilityV1,
-  RuntimeCheckpointV1, RuntimeEventV1, RuntimeHostV1, RuntimeInputFilterPolicyV1,
+  RuntimeCheckpointV1, RuntimeHostShortcutPolicyV1, RuntimeEventV1, RuntimeHostV1, RuntimeInputFilterPolicyV1,
   RuntimeStateV1, RuntimeVideoModeV1,
 } from "../../provider/module-api.js";
 import {PlayerRuntimeError} from "../../provider/errors.js";
@@ -34,7 +35,6 @@ import {daphneGameFile, daphneVideo, maybeInstallDaphneProject, maybePrepareDaph
 import {installArchiveWorkerCompatibility} from "./archive-worker.js";
 import {installDOSBoxPureStateCompatibility} from "./dosbox-state.js";
 import {installExternalFileCompatibility} from "./external-files.js";
-import {RuntimeGamepadFilter, installRuntimeGamepadFilter, validInputFilterPolicy} from "../../provider/gamepad-filter.js";
 import {captureEmulatorJsScreenshot} from "./screenshot.js";
 import {configureDeferredStart, createStartBarrier, emulatorCheckpointAvailability, needsVerboseRestore, startupCompletionErrorCode, type StartBarrier} from "./lifecycle.js";
 import {installEmulatorJsRetroArchConfig} from "./retroarch-config.js";
@@ -69,6 +69,7 @@ export async function createEmulatorJsPlayer(
 }
 
 class EmulatorJsPlayer implements PlayerRuntimeV1 {
+  private readonly input: EmulatorPlayerInput;
   private readonly startup: StartupTasks;
   private cleanupStartupDownloads: (() => void) | null = null;
   private readonly listeners = new Set<(event: RuntimeEventV1) => void>();
@@ -96,9 +97,7 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
   private cleanupSupermodelState: (() => void) | null = null;
   private supermodelRestore: ReturnType<typeof installSupermodelRestore> | null = null;
   private cleanupExternalFiles: (() => void) | null = null;
-  private cleanupInputFilter: (() => void) | null = null;
   private cleanupGamepadIndex: (() => void) | null = null;
-  private inputFilter: RuntimeGamepadFilter | null = null;
   private contentAcceptance: ReturnType<typeof installContentAcceptance> | null = null;
   private cleanupRetroArchConfig: () => void = () => undefined;
   private dosboxCompatibility: ReturnType<typeof installDOSBoxPureStateCompatibility> | null = null;
@@ -123,6 +122,7 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
     private readonly host: RuntimeHostV1,
     private readonly assetIndex: AssetIndexV1,
   ) {
+    this.input = new EmulatorPlayerInput(envelope, host.signal, () => this.state, event => this.emit(event));
     this.startup = new StartupTasks(event => this.emit(event), host.signal);
     const target = requireEmulatorImplementation(envelope.runtime.targetId, assetIndex);
     this.implementation = target.implementation;
@@ -234,24 +234,10 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
     closeEmulatorJsNativeSettings(this.requireInstance());
   }
 
+  async setHostShortcutPolicy(policy: RuntimeHostShortcutPolicyV1 | null) {this.input.setHostShortcutPolicy(policy);}
   async setInputFilter(policy: RuntimeInputFilterPolicyV1 | null) {
-    if (!this.envelope.runtime.capabilities.inputFilter) {throw capabilityError();}
-    if (this.state === "FAILED" || this.state === "EXITED" || !validInputFilterPolicy(policy)) {
-      throw contractError();
-    }
-    if (policy === null) {
-      this.stopInputDiagnostics();
-    this.cleanupInputFilter?.();
-      this.cleanupInputFilter = null;
-      this.inputFilter = null;
-      return;
-    }
-    if (this.inputFilter) {this.inputFilter.setPolicy(policy);}
-    else {this.inputFilter = new RuntimeGamepadFilter(policy);}
-    if (this.runtimeWindow && !this.cleanupInputFilter) {
-      try {this.cleanupInputFilter = installRuntimeGamepadFilter(this.runtimeWindow, this.inputFilter);}
-      catch (error) {throw contractError(error);}
-    }
+    this.input.setInputFilter(policy);
+    if (policy === null) {this.stopInputDiagnostics();}
   }
   startInputDiagnostics() {
     this.inputDiagnostics?.stop();
@@ -279,7 +265,6 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
     if (this.implementation.release === "4.3.0-pre" && this.implementation.runtimeCore === "dosbox_pure") {
       this.dosboxCompatibility = installDOSBoxPureStateCompatibility(runtimeWindow, () => this.discRange?.quietFor?.(1500) === true);
     }
-    if (this.inputFilter) {this.cleanupInputFilter = installRuntimeGamepadFilter(runtimeWindow, this.inputFilter);}
   }
 
   private async performMount(target: HTMLElement) {
@@ -294,6 +279,7 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
       }
       const runtimeWindow = frame.contentWindow as EjsWindow;
       this.runtimeWindow = runtimeWindow;
+      this.input.bind(runtimeWindow);
       this.checkMountActive();
       const declaration = emulatorJsProviderDefinition.targets.find(entry => entry.id === this.envelope.runtime.targetId)!;
       const content = await this.contentOwner.start(declaration, this.envelope, this.assetIndex,
@@ -544,9 +530,8 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
     this.stopInputDiagnostics();
     this.cleanupRetroArchConfig();
     this.cleanupRetroArchConfig = () => undefined;
-    this.cleanupInputFilter?.(); this.cleanupInputFilter = null;
+    this.input.stop();
     this.cleanupGamepadIndex?.(); this.cleanupGamepadIndex = null;
-    this.inputFilter = null;
     this.pspRestore?.cleanup(); this.pspRestore = null;
     this.cleanupArchiveWorker?.();
     this.cleanupArchiveWorker = null;

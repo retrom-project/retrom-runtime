@@ -68,12 +68,24 @@ describe("TyranoScript isolated Web adapter", () => {
       "GAME_RUNTIME_TYRANOSCRIPT_CONNECT") as ConnectEnvelope;
     const activeRuntimePort = runtimePort as FakePort | null;
     if (!activeRuntimePort) {throw new Error("test runtime port unavailable");}
+    const shortcuts = vi.fn();
+    await adapter.setHostShortcutPolicy!({menu: "KeyM", pause: false}, shortcuts);
+    const shortcut = eventEnvelope(connect, "HOST_SHORTCUT", {shortcut: "MENU"});
+    for (const message of [{...shortcut, nonce: "foreign"}, {...shortcut, sessionId: "foreign"},
+      {...shortcut, body: {shortcut: "UNKNOWN"}}, {...shortcut, body: {shortcut: "MENU", extra: true}}]) {
+      activeRuntimePort.postMessage(message);
+    }
+    activeRuntimePort.postMessage(shortcut);
+    await vi.waitFor(() => expect(shortcuts).toHaveBeenCalledExactlyOnceWith("MENU"));
     activeRuntimePort.postMessage(eventEnvelope(connect, "EXIT_REQUESTED", {}));
     activeRuntimePort.postMessage(eventEnvelope(connect, "EXIT_REQUESTED", {}));
     await vi.waitFor(() => expect(exits).toHaveBeenCalledTimes(1));
     expect(adapter.getCheckpointAvailability()).toEqual({available: false, blocker: "BUSY"});
 
     await adapter.exit();
+    activeRuntimePort.postMessage(shortcut);
+    await new Promise(resolve => setTimeout(resolve, 0));
+    expect(shortcuts).toHaveBeenCalledOnce();
     expect(fetchMock).not.toHaveBeenCalled();
     expect(frame.src).toBe("about:blank");
   });
@@ -136,6 +148,7 @@ function commandResult(request: RequestEnvelope) {
     SCREENSHOT: {data: Uint8Array.of(255, 216, 255, 217).buffer, mediaType: "image/jpeg"},
   };
   const types: Record<string, string> = {
+    SET_HOST_SHORTCUT_POLICY: "SET_HOST_SHORTCUT_POLICY_RESULT",
     CHECKPOINT: "CHECKPOINT_RESULT", CLEANUP: "CLEANUP_RESULT", PAUSE: "PAUSE_RESULT",
     PROBE: "PROBE_RESULT", RESTORE: "RESTORE_RESULT", RESUME: "RESUME_RESULT",
     SET_VIDEO_MODE: "SET_VIDEO_MODE_RESULT", SCREENSHOT: "SCREENSHOT_RESULT", SET_VOLUME: "SET_VOLUME_RESULT",

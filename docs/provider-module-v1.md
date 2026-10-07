@@ -290,3 +290,25 @@ Before loading EmulatorJS, its Provider retires only existing `EmulatorJS-Cache`
 
 
 Native Web resources declare an immutable index, explicit entryFile, origin and entryUrl. The Host mounts its isolated shell and connects the scoped STAT/READ bridge; script-relative URLs, dynamic imports, Workers and media use ordinary native paths served through that bridge. No derived credential is part of the envelope. HTTP and LOCAL restore descriptors are explicit alternatives; LOCAL is an in-memory review checkpoint returned by RuntimeHost.loadRestore.
+
+## Host keyboard shortcuts
+
+`getInputCapabilities().hostShortcuts` declares which `MENU` and `PAUSE` actions the Host may reserve.
+The Host calls the required `setHostShortcutPolicy({menu, pause})` method to select actual bindings:
+`menu: "Escape"` for a conventional player, `menu: "KeyM"` for an immersive player, or `null` to leave
+menu input with the game; `pause: true` reserves `Pause` and `KeyP`. A null policy disables all capture.
+Policy can be set before mount and remains inactive until the runtime is RUNNING or PAUSED. Undeclared
+shortcuts are rejected. The method is part of the current Provider Module V1 contract.
+
+Providers capture their own game window and emit `{type: "HOST_SHORTCUT", shortcut: "MENU" | "PAUSE"}`
+through `subscribe`. Hosts handle that event without inspecting frames or private engine protocols.
+MV/MZ and Tyrano carry policy and events on their existing origin/source-verified, session/nonce-bound
+MessagePort channels. Neither arbitrary window messages nor optional diagnostic snapshots are control events.
+The Host still owns keyboard navigation of its own menus and dialogs.
+
+Capture ignores editable fields (including shadow-DOM composed paths), composition,
+Ctrl/Alt/Meta combinations and already consumed events. A reserved key emits once until release or blur;
+its repeated keydown events are consumed without another Host action, so holding the shortcut does not
+leak presses to the game. Consumed presses and their releases do not reach the game. `setInputFilter` suppression and null policy
+remove listeners, and exit tears them down. Native settings panels retain their own keyboard navigation.
+Hosts disable the policy while their overlays own input and restore it after closing the overlay.

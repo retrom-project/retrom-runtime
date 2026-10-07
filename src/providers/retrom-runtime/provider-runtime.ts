@@ -1,3 +1,4 @@
+import {RuntimeHostShortcuts} from "../../provider/host-shortcuts.js";
 import {createRuntimeFailure} from "../../provider/failure.js";
 import {StartupTasks} from "../../provider/startup.js";
 import {ProviderContentOwner} from "../../provider/content-owner.js";
@@ -9,7 +10,7 @@ import type {RuntimeInputDiagnosticsV1} from "../../provider/module-api.js";
 import type {MountedRuntimeAdapter, RuntimeProgressReporter, RuntimeExitReporter} from "../../internal-adapter.js";
 import type {
   AssetIndexV1, LaunchEnvelopeV1, PlayerRuntimeV1, RuntimeCheckpointAvailabilityV1, RuntimeCheckpointV1, RuntimeCheckpointRequestV1, RuntimeFinalSnapshotV1, RuntimeNativeSaveCapabilitiesV1,
-  RuntimeEventV1, RuntimeHostV1, RuntimeInputFilterPolicyV1,
+  RuntimeEventV1, RuntimeHostShortcutPolicyV1, RuntimeHostShortcutV1, RuntimeHostV1, RuntimeInputFilterPolicyV1,
   RuntimeStateV1, RuntimeVideoModeV1,
 } from "../../provider/module-api.js";
 import {PlayerRuntimeError} from "../../provider/errors.js";
@@ -37,6 +38,8 @@ class RetromRuntimePlayer implements PlayerRuntimeV1 {
   private availabilityTimer: number | null = null;
   private lastAvailability: RuntimeCheckpointAvailabilityV1 = {available: false, reason: "NOT_READY"};
   private inputDiagnostics: RuntimeInputDiagnosticsV1 | null = null;
+  private readonly hostShortcuts: RuntimeHostShortcuts;
+  private shortcutPolicy: RuntimeHostShortcutPolicyV1 | null = null;
   private runtimeWindow: Window | null = null;
   private inputFilter: RuntimeGamepadFilter | null = null;
   private inputPolicy: RuntimeInputFilterPolicyV1 | null = null;
@@ -48,6 +51,8 @@ class RetromRuntimePlayer implements PlayerRuntimeV1 {
     private readonly host: RuntimeHostV1,
     private readonly assetIndex: AssetIndexV1,
   ) {
+    this.hostShortcuts = new RuntimeHostShortcuts(this.getInputCapabilities().hostShortcuts,
+      shortcut => this.emit({type: "HOST_SHORTCUT", shortcut}), () => this.state === "RUNNING" || this.state === "PAUSED");
     this.startup = new StartupTasks(event => this.emit(event), host.signal);
     host.signal.addEventListener("abort", this.abort, {once: true});
   }
@@ -66,6 +71,7 @@ class RetromRuntimePlayer implements PlayerRuntimeV1 {
       this.assertActive();
       const runtimeWindow = frame?.contentWindow as Window | undefined ?? window;
       this.runtimeWindow = runtimeWindow;
+      if (frameMode !== "ISOLATED_ORIGIN_RESOURCE") {this.hostShortcuts.bind(runtimeWindow);}
       const runtimeTarget = frameMode === "SAME_ORIGIN_BLANK"
         ? (this.frameSurface = installRuntimeFrameSurface(runtimeWindow, () => this.adapter?.getCanvas() ?? null,
           () => this.adapter?.canvasLayout === "CORE", () => this.adapter?.getDisplayAspectRatio?.() ?? null)).target
@@ -96,12 +102,7 @@ class RetromRuntimePlayer implements PlayerRuntimeV1 {
         this.assertActive();
       }
       this.adapter = adapter;
-      adapter.gamepadCursor?.setInputPolicy(this.inputPolicy);
-      if (frameMode === "ISOLATED_ORIGIN_RESOURCE" && this.inputPolicy !== null) {
-        if (!adapter.setInputFilter) {throw contractError();}
-        await adapter.setInputFilter(this.inputPolicy);
-        this.assertActive();
-      }
+      await this.applyMountedInputPolicy(adapter, frameMode);
       this.frameSurface?.refresh();
       this.startup.completePreparations();
       this.startup.stop();
@@ -111,6 +112,20 @@ class RetromRuntimePlayer implements PlayerRuntimeV1 {
     } catch (error) {
       if (isAbort(error)) {await this.exit();} else {await this.fail(error);}
       throw stableError(error);
+    }
+  }
+
+  private async applyMountedInputPolicy(adapter: MountedRuntimeAdapter, frameMode: string) {
+    adapter.gamepadCursor?.setInputPolicy(this.inputPolicy);
+    if (frameMode === "ISOLATED_ORIGIN_RESOURCE" && this.inputPolicy !== null) {
+      if (!adapter.setInputFilter) {throw contractError();}
+      await adapter.setInputFilter(this.inputPolicy);
+      this.assertActive();
+    }
+    if (frameMode === "ISOLATED_ORIGIN_RESOURCE" && this.shortcutPolicy !== null) {
+      if (!adapter.setHostShortcutPolicy) {throw contractError();}
+      await adapter.setHostShortcutPolicy(this.shortcutPolicy, this.reportHostShortcut);
+      this.assertActive();
     }
   }
 
@@ -246,10 +261,23 @@ class RetromRuntimePlayer implements PlayerRuntimeV1 {
   async openNativeSettings(_panel: "controls" | "display" | "core") {throw capabilityError();}
   async closeNativeSettings() {throw capabilityError();}
 
+  async setHostShortcutPolicy(policy: RuntimeHostShortcutPolicyV1 | null) {
+    this.assertActive();
+    this.hostShortcuts.setPolicy(policy);
+    this.shortcutPolicy = policy ? {...policy} : null;
+    if (this.envelope.runtime.capabilities.frameMode === "ISOLATED_ORIGIN_RESOURCE" && this.adapter) {
+      if (!this.adapter.setHostShortcutPolicy) {throw contractError();}
+      await this.adapter.setHostShortcutPolicy(this.shortcutPolicy, this.reportHostShortcut);
+      this.assertActive();
+    }
+  }
+  private readonly reportHostShortcut = (shortcut: RuntimeHostShortcutV1) => this.hostShortcuts.receive(shortcut);
+
   async setInputFilter(policy: RuntimeInputFilterPolicyV1 | null) {
     this.requireCapability("inputFilter");
     this.assertActive();
     if (!validInputFilterPolicy(policy)) {throw contractError();}
+    this.hostShortcuts.setSuppressed(policy?.suppressInput === true);
     this.inputPolicy = policy ? {...policy} : null;
     this.adapter?.gamepadCursor?.setInputPolicy(policy);
     if (this.envelope.runtime.capabilities.frameMode === "ISOLATED_ORIGIN_RESOURCE") {
@@ -334,6 +362,7 @@ class RetromRuntimePlayer implements PlayerRuntimeV1 {
   }
 
   private async performExit(failed: boolean) {
+    this.hostShortcuts.stop();
     if (this.availabilityTimer !== null) {window.clearInterval(this.availabilityTimer);}
     this.availabilityTimer = null;
     this.inputDiagnostics?.stop();

@@ -20,6 +20,7 @@ export function installRpgRuntimeNativeBridge(global, inputFilter) {
     ["def", "防御"], ["mat", "魔法攻击"], ["mdf", "魔法防御"],
     ["agi", "敏捷"], ["luk", "幸运"],
   ]);
+  inputFilter.onHostShortcut(shortcut => event("HOST_SHORTCUT", {shortcut}));
   const encoder = new TextEncoder();
   const decoder = new TextDecoder("utf-8", { fatal: true });
   let launchId = null;
@@ -835,6 +836,10 @@ export function installRpgRuntimeNativeBridge(global, inputFilter) {
 
   async function dispatch(message) {
     switch (message.type) {
+    case "SET_HOST_SHORTCUT_POLICY":
+      if (!ownKeys(message.body, ["policy"])) {throw new Error("PLAYER_HOST_SHORTCUT_POLICY_INVALID");}
+      inputFilter.setHostShortcutPolicy(message.body.policy);
+      return {type: "SET_HOST_SHORTCUT_POLICY_RESULT", body: {}};
     case "STATUS": return { type: "STATUS_RESULT", body: { ready: readyForCheckpoint(), frameCount,
       ...(inputDiagnostics ? {inputDiagnostics: inputDiagnostics.read()} : {}) } };
     case "INPUT_DIAGNOSTICS":
@@ -955,7 +960,7 @@ export function installRpgRuntimeNativeBridge(global, inputFilter) {
 
   global.addEventListener("message", function connect(eventMessage) {
     const message = eventMessage.data;
-    if (!ownKeys(message, ["launchId", "nonce", "parentOrigin", "profile", "protocolVersion", "type"]) ||
+    if (eventMessage.source !== global.parent || !ownKeys(message, ["launchId", "nonce", "parentOrigin", "profile", "protocolVersion", "type"]) ||
       message.type !== "RPG_RUNTIME_NATIVE_CONNECT" || message.protocolVersion !== PROTOCOL_VERSION ||
       typeof message.launchId !== "string" || typeof message.nonce !== "string" ||
       typeof message.parentOrigin !== "string" || eventMessage.origin !== message.parentOrigin ||

@@ -6,6 +6,7 @@ import { describe, expect, it, vi } from "vitest";
 type BridgeEvent = {
   data: unknown;
   origin: string;
+  source?: unknown;
   ports: FakePort[];
   stopImmediatePropagation: () => void;
 };
@@ -55,7 +56,7 @@ describe("native-web RPG Maker bridge", () => {
         protocolVersion: 1,
         type: "RPG_RUNTIME_NATIVE_CONNECT",
       },
-      origin: "https://host.example",
+      origin: "https://host.example", source: runtime.parent,
       ports: [port],
       stopImmediatePropagation: () => undefined,
     });
@@ -140,7 +141,7 @@ describe("native-web RPG Maker bridge", () => {
         launchId, nonce, parentOrigin: "https://host.example", profile: "RPGMV",
         protocolVersion: 1, type: "RPG_RUNTIME_NATIVE_CONNECT",
       },
-      origin: "https://host.example",
+      origin: "https://host.example", source: runtime.parent,
       ports: [port],
       stopImmediatePropagation: () => undefined,
     });
@@ -231,7 +232,7 @@ describe("native-web RPG Maker bridge", () => {
     const nonce = "test-nonce";
     listeners.get("message")?.[0]?.({
       data: { launchId, nonce, parentOrigin: "https://host.example", profile: "RPGMV", protocolVersion: 1, type: "RPG_RUNTIME_NATIVE_CONNECT" },
-      origin: "https://host.example",
+      origin: "https://host.example", source: runtime.parent,
       ports: [port],
       stopImmediatePropagation: () => undefined,
     });
@@ -353,7 +354,7 @@ describe("native-web RPG Maker bridge", () => {
     const nonce = "test-nonce";
     listeners.get("message")?.[0]?.({
       data: { launchId, nonce, parentOrigin: "https://host.example", profile: "RPGMZ", protocolVersion: 1, type: "RPG_RUNTIME_NATIVE_CONNECT" },
-      origin: "https://host.example",
+      origin: "https://host.example", source: runtime.parent,
       ports: [port],
       stopImmediatePropagation: () => undefined,
     });

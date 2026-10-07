@@ -5,8 +5,8 @@
   "snapshot": "R15: published ONS r6/VecX r2 pins, OpenBOR normal-exit fix and RGSS preconnected-controller startup fix; remaining target identities unchanged",
   "historicalMatrix": "runtime-product-matrix.json",
   "counts": {
-    "CURRENT_FINGERPRINT_SEMANTICS_PENDING": 86,
-    "SCOPED_PASS": 26,
+    "CURRENT_FINGERPRINT_SEMANTICS_PENDING": 84,
+    "SCOPED_PASS": 28,
     "MATERIAL_GAP": 10
   },
   "productRows": 122,
@@ -170,7 +170,10 @@
     {
       "id": "emulatorjs/gambatte/gbc",
       "fingerprint": "8eb0b8b6c3a1cfcc481a4bfc1fd8761125e2904da4ed94ae7e2ffec1f27feb9b",
-      "status": "CURRENT_FINGERPRINT_SEMANTICS_PENDING"
+      "status": "SCOPED_PASS",
+      "evidence": "root/release-r15/gambatte-gb-current/semantic-proof.json",
+      "evidenceSha256": "f8a30484c895384b190ce70e197d447a02d4a8ec109d389ae7fe4b3ea67149bd",
+      "scope": "Infinity preview actual review directions/confirm, published awake-room snapshot, cookie-only cold restore with room/player position stable for seven unpaused seconds, opposite movement and native menu confirmation. Cutscene snapshot excluded."
     },
     {
       "id": "emulatorjs/gearboy/sgb",
@@ -359,7 +362,10 @@
     {
       "id": "emulatorjs/prboom/doom",
       "fingerprint": "802fff19f5116b9e744803694951be1bb02ea2bbd518354bcee3e9e08829ab35",
-      "status": "CURRENT_FINGERPRINT_SEMANTICS_PENDING"
+      "status": "SCOPED_PASS",
+      "evidence": "root/release-r15/prboom-current/semantic-proof.json",
+      "evidenceSha256": "4d26ca8a13356ddc366e5cfd27f4d4d6ba8a93c0b9fa97534c22a53700e66e8a",
+      "scope": "Doom shareware actual review, explicit native New Game selection, noninitial E1M1 viewpoint/HP100/ammo48 public snapshot, cookie-only cold restore stable for seven unpaused seconds, continued movement and firing to ammo46. Earlier focus/attract-mode-ambiguous shotgun sequence excluded."
     },
     {
       "id": "emulatorjs/prosystem/atari7800",

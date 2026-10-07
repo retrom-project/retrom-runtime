@@ -21,7 +21,7 @@ export async function mountWithNativeContent(envelope: LaunchEnvelopeV1, frame: 
     if (closed || event.source !== frame.contentWindow || event.origin !== resource.origin ||
       !record(event.data) || event.data.v !== 1) {return;}
     if (event.data.type === "RETROM_WEB_CONTENT_WAITING") {
-      frame.contentWindow?.postMessage({type: "RETROM_WEB_CONTENT_START", v: 1}, resource.origin); return;
+      frame.contentWindow?.postMessage({type: "RETROM_WEB_CONTENT_START", v: 1, entryFile: resource.entryFile, contentDigest: resource.contentDigest}, resource.origin); return;
     }
     if (event.data.type === "RETROM_WEB_CONTENT_FAILED") {
       reportFailure(new Error("CONTENT_IO_STORAGE_UNAVAILABLE")); return;

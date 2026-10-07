@@ -12,10 +12,17 @@ const emulatorJsOptionsSchema = {
   additionalProperties: false,
   properties: {
     dosEntryPath: {format: "safe-path", maxLength: 240, type: ["string", "null"]},
-    initialDiscIndex: {minimum: 0, type: ["integer", "null"]},
   },
-  required: ["dosEntryPath", "initialDiscIndex"],
+  required: ["dosEntryPath"],
   type: "object",
+} as const satisfies TargetOptionsSchema;
+
+const thomsonOptionsSchema = {
+  ...emulatorJsOptionsSchema,
+  properties: {
+    ...emulatorJsOptionsSchema.properties,
+    thomsonModel: {type: "string", enum: ["Auto", "MO5", "MO6", "PC128", "TO7", "TO7/70", "TO8", "TO8D", "TO9", "TO9+"]},
+  },
 } as const satisfies TargetOptionsSchema;
 
 const capabilities = {
@@ -30,32 +37,32 @@ const capabilities = {
 const adapters = [
   defineAdapter({
     abi: "emulatorjs-state-v1", capabilities,
-    checkpoint: {readFormats: ["gam4980-state-v1", "gam4980-state-v1-storage-v1", "gam4980-state-v2"], writeFormat: "gam4980-state-v2"},
+    checkpoint: {semantics: "INSTANT", readFormats: ["gam4980-state-v2"], writeFormat: "gam4980-state-v2"},
     id: "emulatorjs-gam4980", kind: "EMULATORJS_4_2_3",
   }),
   defineAdapter({
     abi: "emulatorjs-flycast-state-v1", capabilities,
-    checkpoint: {readFormats: ["flycast-state-gzip-v1", "flycast-state-v1"], writeFormat: "flycast-state-v1"},
+    checkpoint: {semantics: "INSTANT", readFormats: ["flycast-state-v1"], writeFormat: "flycast-state-v1"},
     id: "emulatorjs-flycast", kind: "EMULATORJS_FLYCAST",
   }),
   defineAdapter({
     abi: "emulatorjs-state-v1", capabilities,
-    checkpoint: {readFormats: ["emulatorjs-state-v1"], writeFormat: "emulatorjs-state-v1"},
+    checkpoint: {semantics: "INSTANT", readFormats: ["emulatorjs-state-v1"], writeFormat: "emulatorjs-state-v1"},
     id: "emulatorjs-4.2.3", kind: "EMULATORJS_4_2_3",
   }),
   defineAdapter({
     abi: "emulatorjs-state-v1", capabilities,
-    checkpoint: {readFormats: ["emulatorjs-state-v1"], writeFormat: "emulatorjs-state-v1"},
+    checkpoint: {semantics: "INSTANT", readFormats: ["emulatorjs-state-v1"], writeFormat: "emulatorjs-state-v1"},
     id: "emulatorjs-4.3.0-pre", kind: "EMULATORJS_4_3_0_PRE",
   }),
   defineAdapter({
     abi: "emulatorjs-state-gzip-v1", capabilities,
-    checkpoint: {readFormats: ["emulatorjs-state-v1", "emulatorjs-state-gzip-v1"], writeFormat: "emulatorjs-state-v1"},
+    checkpoint: {semantics: "INSTANT", readFormats: ["emulatorjs-state-v1"], writeFormat: "emulatorjs-state-v1"},
     id: "emulatorjs-psp", kind: "EMULATORJS_PSP",
   }),
   defineAdapter({
     abi: "emulatorjs-state-v1", capabilities,
-    checkpoint: {readFormats: ["bsnes-state-v1"], writeFormat: "bsnes-state-v1"},
+    checkpoint: {semantics: "INSTANT", readFormats: ["bsnes-state-v1"], writeFormat: "bsnes-state-v1"},
     id: "emulatorjs-bsnes", kind: "EMULATORJS_4_3_0_PRE",
   }),
   defineAdapter({
@@ -73,8 +80,8 @@ const inputs = [
   {cardinality: "ONE", kind: "ROM_BLOB", optional: false, role: "game"},
   {cardinality: "ONE", kind: "BIOS_BUNDLE", optional: true, role: "bios"},
   {cardinality: "ONE", kind: "PARENT_ARCHIVE", optional: true, role: "parent"},
-  {cardinality: "ONE", kind: "MULTI_DISC", optional: true, role: "discs"},
   {cardinality: "ONE", kind: "EXTERNAL_FILE_SET", optional: true, role: "external"},
+  {cardinality: "ONE", kind: "EXTERNAL_FILE_SET", optional: true, role: "game-files"},
 ] as const satisfies readonly TargetInputDeclaration[];
 
 type RuntimeRelease = "4.2.3" | "4.3.0-pre";
@@ -104,7 +111,7 @@ type CoreSource = {
   defaultOptions: Readonly<Record<string, string>>;
   inputMode: InputMode;
   startupActions: readonly StartupAction[];
-  contentKinds: readonly ("SINGLE_FILE" | "DOS_BUNDLE" | "MULTI_DISC" | "DAPHNE_PROJECT")[];
+  contentKinds: readonly ("SINGLE_FILE" | "DOS_BUNDLE" | "DAPHNE_PROJECT")[];
 };
 
 // Replaced with an empty object by formal builds. PFB supplies only verified,
@@ -193,7 +200,7 @@ const cores: readonly CoreSource[] = [
   core("vice_xplus4", "4.2.3", "vice_xplus4-wasm.data", 1416694, "5725e2b32b7c7bf7fd49cf7fc117eae20ca96a67676a8642147b2ebf130750fb", "230a0b53aa7889dc4746bcb2c8f2b1a28b51c50c9a911d623b52d0426310c3bb", {artifactFlavor: "OVERRIDE", coreBundleVersion: "retrom-core-g1b4309f4d56d-r2", defaultOptions: {keyboardInput: "enabled", vice_joyport: "1"}}),
   core("vice_xvic", "4.2.3", "vice_xvic-wasm.data", 1400563, "8d77779568ff9ac2fe46f11ad6f37e39cc6be44dae337e0fb8cda4f29f283a49", "dc63426f1804edb9ca95a8417c68ec792c0ef52ec860ff1c0e99717415aeb8d9", {artifactFlavor: "OVERRIDE"}),
   core("virtualjaguar", "4.2.3", "virtualjaguar-wasm.data", 1199923, "16b62c38e6921fb5b410ab507ba6bc77edcaccbba532ae4711b9521a4256ba6d", "b9443f7fc635a091b9460773bb0261bd5c4a9b5cb5ed3162286553e173e6c742", {artifactFlavor: "OVERRIDE"}),
-  core("yabause", "4.2.3", "yabause-wasm.data", 991166, "ab253ac263bd98e3124e2ca45ff581e97673426ed06ecec0025333060cd8127c", "1fc177e7be4923208b92755bcfae66ac35ba6e395c3b7ea48df581806ebdf6a6", {contentKinds: ["SINGLE_FILE", "MULTI_DISC"]}),
+  core("yabause", "4.2.3", "yabause-wasm.data", 991166, "ab253ac263bd98e3124e2ca45ff581e97673426ed06ecec0025333060cd8127c", "1fc177e7be4923208b92755bcfae66ac35ba6e395c3b7ea48df581806ebdf6a6", {contentKinds: ["SINGLE_FILE"]}),
 ] as const;
 
 function hostKeyboardShortcuts(targetId: string): ("PAUSE" | "MENU")[] {
@@ -213,7 +220,6 @@ const targets = cores.map((entry) => {
     `assets/${entry.release}/data/cores/reports/${entry.id}.json`,
   ].sort(compareUtf8),
   checkpointMaxBytes: entry.id === "lutro" ? 16 * 1024 * 1024 : 256 * 1024 * 1024,
-  discSwitch: entry.id === "yabause",
   displayName: displayName(targetId),
   frameMode: "SAME_ORIGIN_BLANK",
   id: providerTargetId(targetId),
@@ -228,6 +234,7 @@ const targets = cores.map((entry) => {
     coreSha256: entry.sha256,
     coreSizeBytes: entry.sizeBytes,
     defaultOptions: entry.defaultOptions,
+    biosOptions: firmwareOptions(entry.id),
     inputMode: entry.inputMode,
     release: entry.release,
     runtimeCore: entry.id,
@@ -244,7 +251,7 @@ const targets = cores.map((entry) => {
   inputFilter: true,
   hostKeyboardShortcuts: hostKeyboardShortcuts(targetId),
   nativeSettings: !["daphne", "dosbox_pure"].includes(entry.id),
-  targetOptionsSchema: emulatorJsOptionsSchema,
+  targetOptionsSchema: targetOptionsSchema(entry.id),
   requiresThreads: entry.requiresThreads,
   videoModes: ["daphne", "dosbox_pure"].includes(entry.id) ? ["original", "pixel"] :
     ["adaptive-sharpen", "original", "pixel", "sharp-bilinear", "smooth"],
@@ -327,6 +334,12 @@ function displayName(value: string) {
     `${part[0]?.toUpperCase() ?? ""}${part.slice(1)}`).join(" ");
 }
 
+function firmwareOptions(coreId: string): Readonly<Record<string, string>> {
+  const options: Readonly<Record<string, Readonly<Record<string, string>>>> = {
+    gambatte: {gambatte_gb_bootloader: "enabled"}, mgba: {mgba_use_bios: "ON"}, flycast: {reicast_hle_bios: "disabled"},
+  };
+  return options[coreId] ?? {};
+}
 function providerTargetId(runtimeCore: string) {return runtimeCore.replaceAll("_", "-");}
 
 function compareUtf8(left: string, right: string) {
@@ -343,4 +356,8 @@ function compareUtf8(left: string, right: string) {
 
 function emulatorContentMembers(core: string): NonNullable<import("../../provider/declarations.js").TargetDeclaration["contentMembers"]> {
   return core === "daphne" ? {game: {support: eagerPolicy(contentLimits.firmwareFile)}} : {};
+}
+
+function targetOptionsSchema(coreId: string): TargetOptionsSchema {
+  return coreId === "theodore" ? thomsonOptionsSchema : emulatorJsOptionsSchema;
 }

@@ -14,7 +14,6 @@ describe("Intellivision", () => {
     const target = emulatorJsProviderDefinition.targets.find((entry) => entry.id === targetId);
     expect(target).toBeDefined();
     if (!target) {throw new Error("missing target");}
-    expect(target.discSwitch).toBe(false);
     expect(target.implementation.release).toBe("4.3.0-pre");
     const frame = document.createElement("iframe"); document.body.append(frame);
     const runtimeWindow = frame.contentWindow as Window & Record<string, unknown>;
@@ -23,7 +22,7 @@ describe("Intellivision", () => {
     const bytes = Uint8Array.of(1, 2, 3);
     const stored = gzipSync(bytes);
     if (restoring) {
-      envelope.restore = {format: "emulatorjs-state-v1-storage-v1", sha256: "a".repeat(64),
+      envelope.restore = {kind: "HTTP", format: "emulatorjs-state-v1-storage-v1", sha256: "a".repeat(64),
         sizeBytes: stored.byteLength, url: "/runtime/restore"};
     }
     const implementation = target.implementation;

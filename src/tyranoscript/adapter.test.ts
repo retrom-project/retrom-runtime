@@ -15,7 +15,9 @@ describe("TyranoScript isolated Web adapter", () => {
     const fetchMock = vi.fn(async () => new Response(null, {status: 204}));
     vi.stubGlobal("fetch", fetchMock);
     const frame = document.createElement("iframe");
+    frame.src = "https://runtime.example/host-shell.html";
     document.body.append(frame);
+    const hostShell = frame.src;
     const runtimeWindow = frame.contentWindow;
     if (!runtimeWindow) {throw new Error("test iframe unavailable");}
     const commands: string[] = [];
@@ -42,19 +44,11 @@ describe("TyranoScript isolated Web adapter", () => {
     const mounting = mountTyranoScript(config, frame, Uint8Array.of(1, 2, 3), exits);
 
     dispatchRuntimeMessage(runtimeWindow, {
-      protocolVersion: 1, type: "GAME_RUNTIME_TYRANOSCRIPT_BOOTSTRAP_REQUIRED",
-    });
-    expect(hostMessages).toContainEqual({
-      protocolVersion: 1,
-      ticket: "one-time-ticket",
-      type: "GAME_RUNTIME_TYRANOSCRIPT_BOOTSTRAP",
-    });
-    dispatchRuntimeMessage(runtimeWindow, {
       protocolVersion: 1, type: "GAME_RUNTIME_TYRANOSCRIPT_BRIDGE_READY",
     });
     const adapter = await mounting;
+    expect(frame.src).toBe(hostShell);
 
-    expect(config.bootstrapTicket).toBe("");
     expect(commands).toContain("RESTORE");
     expect(adapter.getCheckpointAvailability()).toEqual({available: true, blocker: null});
     await expect(adapter.checkpoint()).resolves.toEqual({
@@ -80,14 +74,11 @@ describe("TyranoScript isolated Web adapter", () => {
     expect(adapter.getCheckpointAvailability()).toEqual({available: false, blocker: "BUSY"});
 
     await adapter.exit();
-    expect(fetchMock).toHaveBeenCalledWith(
-      "https://runtime.example/runtime/cleanup",
-      {credentials: "include", method: "POST"},
-    );
+    expect(fetchMock).not.toHaveBeenCalled();
     expect(frame.src).toBe("about:blank");
   });
 
-  it("connects directly when an existing isolated capability redirects to the bridge", async () => {
+  it("connects when the isolated content bridge is ready", async () => {
     vi.stubGlobal("MessageChannel", FakeMessageChannel);
     vi.stubGlobal("fetch", vi.fn(async () => new Response(null, {status: 204})));
     const frame = document.createElement("iframe");
@@ -164,9 +155,6 @@ function dispatchRuntimeMessage(source: Window, data: Record<string, unknown>) {
 function runtimeConfig(): TyranoScriptParameters {
   return {
     sessionId: "01990000-0000-7000-8000-000000000001",
-    bootstrapTicket: "one-time-ticket",
-    cleanupUrl: "https://runtime.example/runtime/cleanup",
-    entryUrl: "https://runtime.example/runtime/entry",
     uniqueOrigin: "https://runtime.example",
   };
 }

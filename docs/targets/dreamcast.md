@@ -2,8 +2,7 @@
 
 The EmulatorJS Provider includes a Flycast WASM JIT Target for single-file Dreamcast CHD.
 It requires WebGL2 and installed `dc/dc_boot.bin` + `dc/dc_flash.bin`, uses standard gamepad
-controls, and supports bounded `flycast-state-gzip-v1` instant checkpoints, with lossless gzip compression
-and compatibility with existing raw `flycast-state-v1` saves. The Flycast
+controls, and supports bounded `flycast-state-v1-storage-v1` instant checkpoints with one public gzip wrapper. The Flycast
 content bridge serves bounded CHD reads from the shared Content I/O Range
 reader. Startup does not materialize the complete CHD; the core requests
 compressed hunks as it needs them.

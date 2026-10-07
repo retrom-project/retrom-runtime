@@ -182,12 +182,20 @@ export function installLutroNativeRestore(runtimeCore: string, instance: EjsInst
 const saveCapability = {capture: "IN_GAME", restore: "AUTOMATIC", captureAvailable: false,
   dataKind: "STORAGE"} as const;
 
+async function saveRevision(bytes: Uint8Array) {
+  const digest = await crypto.subtle.digest("SHA-256", Uint8Array.from(bytes).buffer);
+  return [...new Uint8Array(digest)].map(value => value.toString(16).padStart(2, "0")).join("");
+}
+
 /** Observe files written by the native core, including writes that bypass JS FS.writeFile. */
 export class LutroNativeSaveTracker {
   private availability: RuntimeCheckpointAvailabilityV1 = {available: false, reason: "NOT_READY", save: saveCapability};
   private current: Uint8Array | null = null;
   private revision: string | null = null;
   private acknowledged: string | null = null;
+  private generation = 0;
+  private acknowledgedGeneration = 0;
+  private readonly exported = new Map<string, number>();
   private firstScan = true;
   private pending: Promise<void> | null = null;
   private timer: ReturnType<typeof setInterval> | null = null;
@@ -205,6 +213,7 @@ export class LutroNativeSaveTracker {
 
   stop() {
     if (this.timer !== null) {clearInterval(this.timer); this.timer = null;}
+    this.exported.clear();
   }
 
   getAvailability() {return {...this.availability, save: saveCapability};}
@@ -220,16 +229,22 @@ export class LutroNativeSaveTracker {
 
   async capture() {
     await this.refresh();
-    if (!this.current || this.availability.available !== true) {unavailable();}
+    if (!this.current || !this.revision || this.availability.available !== true) {unavailable();}
+    this.exported.set(this.revision, this.generation);
+    if (this.exported.size > 8) {this.exported.delete(this.exported.keys().next().value!);}
     return this.current.slice();
   }
 
   async acknowledge(raw: Uint8Array) {
     await this.refresh();
-    if (!this.current || !this.revision || raw.length !== this.current.length ||
-      !raw.every((value, index) => value === this.current![index])) {unavailable();}
-    this.acknowledged = this.revision;
-    this.publish({available: false, reason: "UNCHANGED", save: saveCapability});
+    if (!raw.length || raw.length > this.maximum) {unavailable();}
+    const revision = await saveRevision(raw), generation = this.exported.get(revision);
+    if (generation === undefined) {unavailable();}
+    if (generation >= this.acknowledgedGeneration) {
+      this.acknowledged = revision;
+      this.acknowledgedGeneration = generation;
+    }
+    if (this.current && this.revision) {this.publishCurrent();}
   }
 
   private async scan() {
@@ -244,14 +259,18 @@ export class LutroNativeSaveTracker {
       this.firstScan = false;
       return;
     }
-    const digest = await crypto.subtle.digest("SHA-256", Uint8Array.from(bytes).buffer);
-    const revision = [...new Uint8Array(digest)].map(value => value.toString(16).padStart(2, "0")).join("");
+    const revision = await saveRevision(bytes);
+    if (revision !== this.revision) {this.generation++;}
     this.current = bytes; this.revision = revision;
     if (this.firstScan && this.restored) {this.acknowledged = revision;}
     this.firstScan = false;
-    this.publish(revision === this.acknowledged
+    this.publishCurrent();
+  }
+
+  private publishCurrent() {
+    this.publish(this.revision === this.acknowledged
       ? {available: false, reason: "UNCHANGED", save: saveCapability}
-      : {available: true, reason: null, revision, save: saveCapability});
+      : {available: true, reason: null, revision: this.revision!, save: saveCapability});
   }
 
   private publish(value: RuntimeCheckpointAvailabilityV1) {

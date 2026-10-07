@@ -1,10 +1,9 @@
+import {gzipSync} from "fflate";
 import "../../../tests/emulatorjs-content-fixture.js";
 import {decodeStoredCheckpoint} from "../../provider/checkpoint-storage.js";
 import {afterEach, describe, expect, it, vi} from "vitest";
 
-import type {LaunchEnvelopeV1, RuntimeHostV1} from "../../provider/module-api.js";
-import {projectProviderManifest} from "../../provider/manifest.js";
-import {emulatorJsProviderDefinition} from "./catalog.js";
+import type {RuntimeHostV1} from "../../provider/module-api.js";
 import {createEmulatorJsPlayer} from "./provider-runtime.js";
 import {launchEnvelope} from "../../../tests/emulatorjs-provider-fixtures.js";
 import {createRuntime, providerApiVersion, providerId, providerVersion} from "./module.js";
@@ -15,21 +14,6 @@ const bundleDigest = "b".repeat(64);
 afterEach(() => {vi.useRealTimers(); vi.unstubAllGlobals();});
 
 describe("EmulatorJS Provider Module V1", () => {
-  it("narrows disc switching to sessions with disc resources", async () => {
-    const target = emulatorJsProviderDefinition.targets.find(entry => entry.id === "yabause")!;
-    const assets = {[target.implementation.coreAssetPath]: {sha256: target.implementation.coreSha256, sizeBytes: target.implementation.coreSizeBytes}};
-    const multi = yabauseEnvelope();
-    const single = {...multi, resources: multi.resources.filter(resource => resource.kind !== "MULTI_DISC")};
-    const player = await createEmulatorJsPlayer(single, hostFixture(), assets);
-    expect(single.runtime.capabilities.discSwitch).toBe(true);
-    expect(player.getCapabilities().discSwitch).toBe(false);
-    expect(player.getCapabilities()).toBe(player.getCapabilities());
-    await expect(player.getDiscState()).rejects.toMatchObject({code: "PLAYER_RUNTIME_CAPABILITY_UNSUPPORTED"});
-    const multiPlayer = await createEmulatorJsPlayer(multi, hostFixture(), assets);
-    expect(multiPlayer.getCapabilities().discSwitch).toBe(true);
-    expect(multiPlayer.getCapabilities()).toBe(multiPlayer.getCapabilities());
-  });
-
   it("retains screenshot buffers before loading any core and restores the iframe on exit", async () => {
     const frame = document.createElement("iframe"); document.body.append(frame);
     const target = frame.contentWindow as Window & typeof globalThis & Record<string, unknown>;
@@ -124,11 +108,11 @@ describe("EmulatorJS Provider Module V1", () => {
     const runtimeWindow = frame.contentWindow as Window & Record<string, unknown>;
     runtimeWindow.fetch = vi.fn(async () => new Response("ok"));
     const envelope = launchEnvelope();
-    envelope.restore = {
-      format: "emulatorjs-state-v1", sha256: digest, sizeBytes: 3, url: "/runtime/session/restore",
+    envelope.restore = {kind: "HTTP",
+      format: "emulatorjs-state-v1-storage-v1", sha256: digest, sizeBytes: 3, url: "/runtime/session/restore",
     };
     const host: RuntimeHostV1 = {
-      loadRestore: vi.fn(async () => Uint8Array.of(1, 2, 3)),
+      loadRestore: vi.fn(async () => gzipSync(Uint8Array.of(1, 2, 3))),
       mountFrame: vi.fn(async () => ({contentWindow: runtimeWindow, element: frame, origin: location.origin})),
       reportDiagnostic: vi.fn(),
       signal: new AbortController().signal,
@@ -154,24 +138,6 @@ describe("EmulatorJS Provider Module V1", () => {
     expect(loadExplicitStateAndWait).toHaveBeenCalledWith(new Uint8Array([1, 2, 3]));
     expect(toggleMainLoop).toHaveBeenLastCalledWith(true);
     expect(player.getState()).toBe("RUNNING");
-  });
-
-  it("rejects unsupported operations with the stable capability error code", async () => {
-    const player = await createEmulatorJsPlayer(launchEnvelope(), {
-      loadRestore: vi.fn(async () => null),
-      mountFrame: vi.fn(async () => {throw new Error("unused");}),
-      reportDiagnostic: vi.fn(),
-      signal: new AbortController().signal,
-    }, {
-      "assets/4.2.3/data/cores/fceumm-wasm.data": {
-        sha256: "8c449fd5c36646fb0769423ed6ffa9efbdfc21fbfdc9bac7952b559d34d5b493",
-        sizeBytes: 1054015,
-      },
-    });
-
-    await expect(player.getDiscState()).rejects.toMatchObject({
-      code: "PLAYER_RUNTIME_CAPABILITY_UNSUPPORTED",
-    });
   });
 
   it("fails once and removes scoped globals when the loader fails", async () => {
@@ -420,58 +386,6 @@ describe("EmulatorJS Provider Module V1", () => {
     expect(runtimeWindow.document.documentElement.classList.contains("retrom-native-settings-open")).toBe(false);
   });
 
-  it("initializes, reads and switches a declared multi-disc runtime with readback", async () => {
-    const frame = document.createElement("iframe");
-    document.body.append(frame);
-    const runtimeWindow = frame.contentWindow as Window & Record<string, unknown>;
-    const host: RuntimeHostV1 = {
-      loadRestore: vi.fn(async () => null),
-      mountFrame: vi.fn(async () => ({contentWindow: runtimeWindow, element: frame, origin: location.origin})),
-      reportDiagnostic: vi.fn(),
-      signal: new AbortController().signal,
-    };
-    const player = await createEmulatorJsPlayer(yabauseEnvelope(), host, {
-      "assets/4.2.3/data/cores/yabause-wasm.data": {
-        sha256: "ab253ac263bd98e3124e2ca45ff581e97673426ed06ecec0025333060cd8127c",
-        sizeBytes: 991166,
-      },
-    });
-    const events: string[] = [];
-    player.subscribe((event) => events.push(event.type));
-    const mounting = player.mount(document.createElement("div"));
-    await vi.waitFor(() => expect(runtimeWindow.document.querySelector("script[data-retrom-loader]")).not.toBeNull());
-    let currentDisc = 0;
-    const calls: string[] = [];
-    const instance = {
-      gameManager: {
-        getCurrentDisk: () => currentDisc,
-        getDiskCount: () => 2,
-        setCurrentDisk: (index: number) => {calls.push(`disc:${index}`); currentDisc = index;},
-        toggleMainLoop: (running: boolean) => calls.push(`loop:${running}`),
-      },
-    };
-    runtimeWindow.EJS_emulator = instance;
-    (runtimeWindow.EJS_ready as () => void)();
-    expect(instance).toMatchObject({allSettings: {}});
-    (runtimeWindow.EJS_onGameStart as () => void)();
-    await mounting;
-    expect(calls).toEqual(["loop:false", "disc:1", "loop:true"]);
-    await expect(player.getDiscState()).resolves.toEqual({
-      count: 2, currentIndex: 1, labels: ["Disc A", "Disc B"],
-    });
-
-    calls.length = 0;
-    await expect(player.switchDisc(0)).resolves.toEqual({
-      count: 2, currentIndex: 0, labels: ["Disc A", "Disc B"],
-    });
-    expect(calls).toEqual(["loop:false", "disc:0", "loop:true"]);
-    expect(events.filter((event) => event === "DISC_CHANGED")).toHaveLength(1);
-    calls.length = 0;
-    await player.switchDisc(0);
-    expect(calls).toEqual([]);
-    await expect(player.switchDisc(2)).rejects.toMatchObject({code: "PLAYER_RUNTIME_CONTRACT_INVALID"});
-  });
-
   it("installs, updates and removes the scoped immersive input filter", async () => {
     const frame = document.createElement("iframe");
     document.body.append(frame);
@@ -523,32 +437,6 @@ describe("EmulatorJS Provider Module V1", () => {
   });
 
 });
-
-function yabauseEnvelope(): LaunchEnvelopeV1 {
-  const envelope = launchEnvelope();
-  const target = projectProviderManifest(emulatorJsProviderDefinition).targets.find((entry) => entry.id === "yabause");
-  if (!target) {throw new Error("yabause target fixture missing");}
-  return {
-    ...envelope,
-    resources: [{
-      kind: "ROM_BLOB", ordinal: 0, rangeRequired: false, role: "game",
-      sha256: digest, sizeBytes: 128, url: "/runtime/content/game/playlist.m3u",
-    }, {
-      entries: [
-        {index: 0, label: "Disc A", sha256: "c".repeat(64), sizeBytes: 128, url: "/runtime/content/discs/a.chd"},
-        {index: 1, label: "Disc B", sha256: "d".repeat(64), sizeBytes: 256, url: "/runtime/content/discs/b.chd"},
-      ],
-      initialDiscIndex: 1, kind: "MULTI_DISC", ordinal: 0, role: "discs",
-    }],
-    runtime: {
-      ...envelope.runtime,
-      capabilities: target.capabilities,
-      checkpoint: target.checkpoint,
-      targetId: "yabause",
-    },
-    targetOptions: {dosEntryPath: null, initialDiscIndex: 1},
-  };
-}
 
 function gamepad(index: number, select: boolean, start: boolean) {
   const buttons = Array.from({length: 16}, () => ({pressed: false, touched: false, value: 0}));

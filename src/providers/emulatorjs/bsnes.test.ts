@@ -16,7 +16,7 @@ describe("bsnes alternative SNES core", () => {
       artifactFlavor: "OVERRIDE", contentKinds: ["SINGLE_FILE"], startupActions: []});
     const declaration = projectProviderManifest(emulatorJsProviderDefinition).targets.find((entry) => entry.id === "bsnes");
     expect(declaration?.capabilities).toMatchObject({standardGamepad: true, checkpoint: true,
-      requiresThreads: false, discSwitch: false});
+      requiresThreads: false,});
     expect(declaration?.checkpoint).toMatchObject({maxBytes: 268435456,
       writeFormat: "bsnes-state-v1-storage-v1"});
     expect(declaration?.assetPaths).toContain("assets/4.3.0-pre/data/cores/bsnes-wasm.data");
@@ -45,7 +45,7 @@ describe("bsnes alternative SNES core", () => {
     const envelope = launchEnvelope();
     envelope.runtime.targetId = "bsnes";
     if (restore) {
-      envelope.restore = {format: "bsnes-state-v1-storage-v1", sha256: "a".repeat(64),
+      envelope.restore = {kind: "HTTP", format: "bsnes-state-v1-storage-v1", sha256: "a".repeat(64),
         sizeBytes: storedState.byteLength, url: "/runtime/restore"};
     }
     envelope.runtime.checkpoint = projectProviderManifest(emulatorJsProviderDefinition).targets.find((entry) => entry.id === "bsnes")!.checkpoint;

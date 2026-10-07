@@ -1,0 +1,81 @@
+// @vitest-environment node
+import {afterAll, beforeAll, expect, it} from "vitest";
+import {build} from "esbuild";
+import {spawn, type ChildProcessWithoutNullStreams} from "node:child_process";
+import {createInterface} from "node:readline";
+import {cp, mkdir, mkdtemp, rm, symlink, writeFile} from "node:fs/promises";
+import {join, resolve} from "node:path";
+import {tmpdir} from "node:os";
+import {once} from "node:events";
+
+let root: string;
+const children: ChildProcessWithoutNullStreams[] = [];
+beforeAll(async () => {
+  root = await mkdtemp(join(tmpdir(), "retrom-cli-test-"));
+  await mkdir(join(root, "scripts"));
+  for (const file of ["runtime-cli.mjs", "runtime-host-input.mjs", "runtime-normalize-content.mjs"]) {
+    await cp(resolve("scripts", file), join(root, "scripts", file));
+  }
+  await cp(resolve("assets/facts"), join(root, "assets/facts"), {recursive: true});
+  await writeFile(join(root, "package.json"), JSON.stringify({type: "module", version: "0.0.0-dev"}));
+  await symlink(resolve("node_modules"), join(root, "node_modules"));
+  await build({entryPoints: [resolve("src/runtime/index.ts")], outfile: join(root, "dist/runtime/index.js"),
+    bundle: true, format: "esm", platform: "node", packages: "external"});
+});
+afterAll(async () => {
+  for (const child of children) {if (child.exitCode === null) {child.kill();}}
+  await rm(root, {recursive: true, force: true});
+});
+
+function worker() {
+  const child = spawn(process.execPath, [join(root, "scripts/runtime-cli.mjs"), "--serve"], {cwd: tmpdir()});
+  children.push(child);
+  const lines = createInterface({input: child.stdout})[Symbol.asyncIterator]();
+  return {child, async read() {const line = await lines.next(); return line.done ? null : JSON.parse(line.value);}};
+}
+const files = [{logicalKey: "game.nes", name: "game.nes", sha256: "a".repeat(64), sizeBytes: 1}];
+const directory = {platformId: "nes", defaultCoreId: "fceumm", allowedCoreIds: ["fceumm"]};
+
+it("reuses a real process for configuration, prepare and identity batches and isolates request failures", async () => {
+  const {child, read} = worker();
+  child.stdin.write(JSON.stringify({id: "config", command: "configure", input: {platformId: "nes", coreIds: ["fceumm"], files}}) + "\n");
+  const configured = await read(); expect(configured.id).toBe("config");
+  const input = {directory, config: configured.result, files, fingerprints: {"emulatorjs/fceumm": "b".repeat(64)}};
+  child.stdin.write(JSON.stringify({id: 2, command: "prepare", input}) + "\n");
+  const prepared = await read(); expect(prepared.result.romHash).toBe(files[0].sha256);
+  child.stdin.write("{broken\n" + JSON.stringify({id: 3, command: "missing", input: {}}) + "\n" +
+    JSON.stringify({id: 4, command: "batch-identity", input: {items: [input, {...input, config: {}}]}}) + "\n");
+  expect((await read()).id).toBe(null);
+  expect(await read()).toEqual({id: 3, error: "RUNTIME_COMMAND_INVALID"});
+  const identities = await read(); expect(identities.id).toBe(4);
+  expect(identities.result[0].romHash).toBe(files[0].sha256); expect(identities.result[1].error).toBeTruthy();
+  child.stdin.end(JSON.stringify({id: 5, command: "hash", input: {files, mode: "FILE"}}));
+  expect(await read()).toEqual({id: 5, result: {romHash: files[0].sha256}});
+  expect(await read()).toBeNull(); expect((await once(child, "close"))[0]).toBe(0);
+}, 15000);
+
+it("bounds the stream before a newline and closes an oversized worker", async () => {
+  const {child, read} = worker();
+  child.stdin.on("error", () => {});
+  child.stdin.end(Buffer.alloc(64 * 1024 * 1024 + 1, 32));
+  expect(await read()).toEqual({id: null, error: "RUNTIME_REQUEST_TOO_LARGE"});
+  expect((await once(child, "close"))[0]).toBe(1);
+}, 15000);
+
+it("rejects unsafe request shapes without discarding the next valid request", async () => {
+  const {child, read} = worker();
+  child.stdin.end([JSON.stringify({id: -1, command: "hash", input: {files}}),
+    JSON.stringify({id: "bad", command: "hash", input: {files}, extra: true}),
+    JSON.stringify({id: "good", command: "hash", input: {files, mode: "FILE"}})].join("\n") + "\n");
+  expect(await read()).toEqual({id: null, error: "RUNTIME_REQUEST_INVALID"});
+  expect(await read()).toEqual({id: "bad", error: "RUNTIME_REQUEST_INVALID"});
+  expect(await read()).toEqual({id: "good", result: {romHash: files[0].sha256}});
+  expect((await once(child, "close"))[0]).toBe(0);
+}, 15000);
+
+it("runs source dependency discovery from the independent packaged CLI layout", async () => {
+  const {child, read} = worker();
+  child.stdin.end(JSON.stringify({id: "dependencies", command: "discover-content", input: {files, locators: {}}}) + "\n");
+  expect(await read()).toEqual({id: "dependencies", result: {files: []}});
+  expect((await once(child, "close"))[0]).toBe(0);
+});

@@ -8,8 +8,8 @@ import {deferred} from "../../tests/provider-adapter-fixture.js";
 
 const config={contentDigest:"b".repeat(64),sessionId:"launch-one",projectIndexUrl:location.origin+"/index.json"};
 const size=8*1024*1024;
-const index={schemaVersion:1,files:[{path:"Data.win",sizeBytes:size,url:"/data.win"},
-  {path:"audio/unused.ogg",sizeBytes:size,url:"/unused.ogg"}]};
+const index={schemaVersion:1,files:[{path:"Data.win",sizeBytes:size,sha256:"a".repeat(64),mediaType:"application/octet-stream",url:"/data.win"},
+  {path:"audio/unused.ogg",sizeBytes:size,sha256:"a".repeat(64),mediaType:"application/octet-stream",url:"/unused.ogg"}]};
 const owners:ReturnType<typeof contentSessionFixture>[]=[];
 const projects:Awaited<ReturnType<typeof prepareButterscotchProject>>[]=[];
 afterEach(async()=>{await Promise.allSettled(projects.splice(0).map(p=>p.release()));await Promise.all(owners.splice(0).map(o=>o.close()));vi.restoreAllMocks();vi.unstubAllGlobals();});

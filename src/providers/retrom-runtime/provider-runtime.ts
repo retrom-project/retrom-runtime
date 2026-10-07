@@ -1,6 +1,5 @@
 import {createRuntimeFailure} from "../../provider/failure.js";
 import {StartupTasks} from "../../provider/startup.js";
-import {authorizeNativePreload} from "../../native-web/preload-bootstrap.js";
 import {ProviderContentOwner} from "../../provider/content-owner.js";
 import {retromRuntimeProviderDefinition} from "./catalog.js";
 import {ContentIOError} from "../../content-io/errors.js";
@@ -10,7 +9,7 @@ import type {RuntimeInputDiagnosticsV1} from "../../provider/module-api.js";
 import type {MountedRuntimeAdapter, RuntimeProgressReporter, RuntimeExitReporter} from "../../internal-adapter.js";
 import type {
   AssetIndexV1, LaunchEnvelopeV1, PlayerRuntimeV1, RuntimeCheckpointAvailabilityV1, RuntimeCheckpointV1, RuntimeCheckpointRequestV1, RuntimeFinalSnapshotV1, RuntimeNativeSaveCapabilitiesV1,
-  RuntimeDiscStateV1, RuntimeEventV1, RuntimeHostV1, RuntimeInputFilterPolicyV1,
+  RuntimeEventV1, RuntimeHostV1, RuntimeInputFilterPolicyV1,
   RuntimeStateV1, RuntimeVideoModeV1,
 } from "../../provider/module-api.js";
 import {PlayerRuntimeError} from "../../provider/errors.js";
@@ -74,7 +73,6 @@ class RetromRuntimePlayer implements PlayerRuntimeV1 {
       this.installInputFilter(runtimeWindow, frameMode);
       const declaration = retromRuntimeProviderDefinition.targets.find((entry) => entry.id === this.envelope.runtime.targetId);
       if (!declaration) {throw contractError();}
-      if (this.host.contentLoading === "PRELOAD") {await authorizeNativePreload(this.envelope, frame?.element, this.contentOwner.signal);}
       this.assertActive();
       const contentSession = await this.contentOwner.start(declaration, this.envelope, this.assetIndex, this.host.contentLoading,
         (loadedBytes, totalBytes) => this.emit({type: "LOAD_PROGRESS", loadedBytes, totalBytes}), this.startup);
@@ -99,6 +97,11 @@ class RetromRuntimePlayer implements PlayerRuntimeV1 {
       }
       this.adapter = adapter;
       adapter.gamepadCursor?.setInputPolicy(this.inputPolicy);
+      if (frameMode === "ISOLATED_ORIGIN_RESOURCE" && this.inputPolicy !== null) {
+        if (!adapter.setInputFilter) {throw contractError();}
+        await adapter.setInputFilter(this.inputPolicy);
+        this.assertActive();
+      }
       this.frameSurface?.refresh();
       this.startup.completePreparations();
       this.startup.stop();
@@ -112,6 +115,7 @@ class RetromRuntimePlayer implements PlayerRuntimeV1 {
   }
 
   private installInputFilter(runtimeWindow: Window, frameMode: string) {
+    if (frameMode !== "SAME_ORIGIN_BLANK") {return;}
     if (frameMode === "SAME_ORIGIN_BLANK" && typeof runtimeWindow.navigator.getGamepads === "function") {
       this.inputFilter ??= new RuntimeGamepadFilter(this.inputPolicy);
     }
@@ -241,8 +245,6 @@ class RetromRuntimePlayer implements PlayerRuntimeV1 {
 
   async openNativeSettings(_panel: "controls" | "display" | "core") {throw capabilityError();}
   async closeNativeSettings() {throw capabilityError();}
-  getDiscState(): Promise<RuntimeDiscStateV1> {return Promise.reject(capabilityError());}
-  switchDisc(_index: number): Promise<RuntimeDiscStateV1> {return Promise.reject(capabilityError());}
 
   async setInputFilter(policy: RuntimeInputFilterPolicyV1 | null) {
     this.requireCapability("inputFilter");
@@ -250,6 +252,14 @@ class RetromRuntimePlayer implements PlayerRuntimeV1 {
     if (!validInputFilterPolicy(policy)) {throw contractError();}
     this.inputPolicy = policy ? {...policy} : null;
     this.adapter?.gamepadCursor?.setInputPolicy(policy);
+    if (this.envelope.runtime.capabilities.frameMode === "ISOLATED_ORIGIN_RESOURCE") {
+      if (this.adapter) {
+        if (!this.adapter.setInputFilter) {throw contractError();}
+        await this.adapter.setInputFilter(this.inputPolicy);
+        this.assertActive();
+      }
+      return;
+    }
     if (this.inputFilter) {this.inputFilter.setPolicy(policy);}
     else {this.inputFilter = new RuntimeGamepadFilter(policy);}
     if (this.runtimeWindow && !this.cleanupInputFilter) {

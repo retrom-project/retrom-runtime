@@ -26,7 +26,7 @@ export const scummvmTarget = defineTarget({
   checkpointMaxBytes: 64 * 1024 * 1024, frameMode: "SAME_ORIGIN_BLANK", requiresThreads: false,
   contentIO: {game: rangePolicy("ASYNC", limits.indexedFile, {})},
   inputs: [{role: "game", kind: "FILE_TREE", cardinality: "ONE", optional: false}],
-  targetOptionsSchema: options, implementation: {}, inputFilter: true, discSwitch: false, nativeSettings: false,
+  targetOptionsSchema: options, implementation: {}, inputFilter: true, nativeSettings: false,
   videoModes: ["original", "pixel", "smooth"],
   assetPaths: layout.files.filter((file) => !file.path.startsWith("licenses/")).map((file) => `assets/scummvm/${file.path}`),
   preloadAssetPaths: layout.files.filter(file => file.path.startsWith("data/")).map(file => `assets/scummvm/${file.path}`),

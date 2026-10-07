@@ -1,0 +1,1094 @@
+{
+  "sourceTreeSha256": "a8c47231ec7757e195f743538a8397e0097f709ef6f875e54a9912f6c8bd57cf",
+  "providers": [
+    {
+      "providerId": "emulatorjs",
+      "targets": 75,
+      "bundleSha256": "04db7ce9f44eba06f3dc1f1f560254128da842e3a1694b4dc0f127d607ddd674",
+      "moduleSha256": "06d8bb65194ac342a2e7cce6bdef4cdf5d2bf3f31592389ac8b49c7b468bb370",
+      "manifestSha256": "5a8b90b4e748a359f15ea22eba27a956d4697d054d3cb51968c049fc5bea1cf2",
+      "fileCount": 257,
+      "unpackedSizeBytes": 305108052,
+      "unchangedBinaryAssets": 70,
+      "fceummFingerprint": "391ca94150e090a6832d5cde50e73c8895e436fdc92ad8b489ced802ba977e32",
+      "nestopiaFingerprint": "1301fca2b30cc49de521fa5783dfe1efb1e295e4c03dc8523c52dcbbf2f33b40"
+    },
+    {
+      "providerId": "retrom-runtime",
+      "targets": 35,
+      "bundleSha256": "378451347ca8e8dcbff0e08cf0af684c6806a61253eddd95d8e4deb6612ff941",
+      "moduleSha256": "f30d6218bb09a13d43232c298f94a4a6f60653b727e4b77c5b457fedd3732c35",
+      "manifestSha256": "46e5149c002fa42e559697ef493a3671ebf7230402f8df3f47b192195977b843",
+      "fileCount": 538,
+      "unpackedSizeBytes": 884900933,
+      "unchangedBinaryAssets": 112
+    }
+  ],
+  "node": "24.15.0",
+  "gates": {
+    "lint": "PASS",
+    "strictTypecheck": "PASS",
+    "build": "PASS",
+    "tests": {
+      "files": 282,
+      "passed": 1505,
+      "failed": 0
+    },
+    "package": {
+      "files": 1193,
+      "upstreamInputs": 24,
+      "catalogTargets": 110,
+      "bindings": 109,
+      "platforms": 95,
+      "nativeScummvmCandidates": 1,
+      "standaloneJSONL": "PASS",
+      "externalSymlinks": 0
+    },
+    "protocolGeneration": {
+      "status": "PASS",
+      "baseCommit": "745d9ecabc7bdd0e934e1c69737399ebe6deef9b"
+    }
+  },
+  "hostTool": {
+    "sizeBytes": 9457944,
+    "sha256": "4ccd8d987e75ec03f21eb973274d3a7ea417c827882af225d6f8ed4029c00286",
+    "sourceTreeSha256": "a8c47231ec7757e195f743538a8397e0097f709ef6f875e54a9912f6c8bd57cf"
+  },
+  "fingerprintIsolation": {
+    "actualSelectedBuildRegression": "PASS",
+    "scope": "DOS-only, Lutro-only and Thomson-only actual selected-build changes remain isolated; current first cleanup changes all75 EJS plus ONS."
+  },
+  "productEvidence": {
+    "productRows": 122,
+    "productPassed": 68,
+    "actuallyAttempted": 112,
+    "preparedWithoutProductAttempt": 0,
+    "materialGaps": 10,
+    "materialAvailableWithoutProductAttempt": 0,
+    "productPassedAnyTestedFingerprint": 68,
+    "semanticRowsAtCurrentFingerprint": 25,
+    "priorPassedRowsRequiringNewFingerprintRetest": 43,
+    "bootObservedCurrentEnvironment": 78,
+    "bootAttemptedCurrentEnvironment": 79,
+    "bootTargetsCurrentEnvironment": 68
+  },
+  "subsequentCandidate": {
+    "sourceTreeSha256": "3640492a152ceaf673ad750939bb08cf1a699be8b8eff4d7fd40d604336c34c1",
+    "providers": [
+      {
+        "providerId": "emulatorjs",
+        "targets": 75,
+        "bundleSha256": "c567ee1c95bdbf31a540365393b986b453dfae4cbd6236206f6373ec056c466a",
+        "moduleSha256": "9380dfa297f67cb5f7c4d1bbd59436b03f5e48db571df6f345785626252496b3",
+        "manifestSha256": "d57d0e30ac0f5cd0b96a17c4e5ec42c107516595f66eb120db68f001a06361d4",
+        "fileCount": 257,
+        "unpackedSizeBytes": 305102235,
+        "unchangedBinaryAssets": 70,
+        "fceummFingerprint": "521727e20fd33004bb4932e87e949eeb36fe4e99b6a4ea8c11d03a07983492b2",
+        "nestopiaFingerprint": "843dacb3ef63f12a5ad1459c099fa13da38c0c796c26854bfb56147949614135"
+      },
+      {
+        "providerId": "retrom-runtime",
+        "targets": 35,
+        "bundleSha256": "b7630300dc28612cba3000d2b77b65968f3c3ea597684b2cc76467177cace0ba",
+        "moduleSha256": "95d407c319c1b99599cf6ebe8e1040fe1305ea068f7c63867ee2c519cd73bf35",
+        "manifestSha256": "46e5149c002fa42e559697ef493a3671ebf7230402f8df3f47b192195977b843",
+        "fileCount": 538,
+        "unpackedSizeBytes": 884848957,
+        "unchangedBinaryAssets": 112
+      }
+    ],
+    "label": "content-fixes-r4",
+    "hostTool": {
+      "sha256": "c1530f9e3a2ef4555b918e1db203ada8efb6c5dcddf7ab5d79f59531c53a7c16",
+      "sizeBytes": 9448734,
+      "sameSourceSnapshot": true
+    },
+    "fingerprintImpact": [
+      {
+        "providerId": "emulatorjs",
+        "compared": 75,
+        "changed": [
+          "supermodel",
+          "fbalpha2012-cps1",
+          "fbalpha2012-cps2",
+          "fbneo",
+          "mame2003",
+          "mame2003-plus"
+        ],
+        "unchanged": 69
+      },
+      {
+        "providerId": "retrom-runtime",
+        "compared": 35,
+        "changed": [
+          "rpgmaker-2000",
+          "rpgmaker-2003",
+          "tyranoscript"
+        ],
+        "unchanged": 32
+      }
+    ],
+    "gates": {
+      "lint": "PASS",
+      "strictTypecheck": "PASS",
+      "build": "PASS",
+      "fullSuite": {
+        "files": 276,
+        "passed": 1422,
+        "failed": 0
+      },
+      "additionalFocusedSuite": {
+        "files": 2,
+        "passed": 9,
+        "failed": 0
+      },
+      "authority": "PASS",
+      "protocolGeneration": "PASS",
+      "package": {
+        "files": 1173,
+        "upstreamInputs": 24,
+        "catalogTargets": 110,
+        "nativeScummvmCandidates": 1,
+        "standaloneJSONL": "PASS",
+        "externalSymlinks": 0
+      }
+    },
+    "productEvidence": {
+      "productRows": 122,
+      "productPassed": 5,
+      "actuallyAttempted": 76,
+      "preparedWithoutProductAttempt": 0,
+      "materialGaps": 27,
+      "materialAvailableWithoutProductAttempt": 19
+    }
+  },
+  "nextCandidate": {
+    "sourceTreeSha256": "381187dc5a837b50769109b3759cf1633ebe37592c82b73b79e8030c938bfae7",
+    "providers": [
+      {
+        "providerId": "emulatorjs",
+        "targets": 75,
+        "bundleSha256": "a67cdd1ba5122611cb692dff0e8d6c973809da9a0ab65da0fa19b33ac19ab0f6",
+        "moduleSha256": "b15aa38434463a2c585021717c9eb9f819489478f11548f29f200e9840e9ec00",
+        "manifestSha256": "d57d0e30ac0f5cd0b96a17c4e5ec42c107516595f66eb120db68f001a06361d4",
+        "fileCount": 257,
+        "unpackedSizeBytes": 305102499,
+        "unchangedBinaryAssets": 70,
+        "fceummFingerprint": "41c1e12fd5bc5d4b07a7fdcd1c44dd1fc00ef41e31ebf62efd5b64ff342c3ae1",
+        "nestopiaFingerprint": "1806bad441332b93d68360a837807f8313d08c4c859bd8fafc5fc5180f70f5cd"
+      },
+      {
+        "providerId": "retrom-runtime",
+        "targets": 35,
+        "bundleSha256": "0c70d853b77e38adfc2345048de2bd05c11374611765a019e444614cf887b136",
+        "moduleSha256": "a80330dcdf278c225609c91daf08906543c2ee7f41c0d35d152d9a79a00f9714",
+        "manifestSha256": "46e5149c002fa42e559697ef493a3671ebf7230402f8df3f47b192195977b843",
+        "fileCount": 538,
+        "unpackedSizeBytes": 884849445,
+        "unchangedBinaryAssets": 112
+      }
+    ],
+    "label": "content-index-r5",
+    "sourceBase": "content-fixes-r4",
+    "coreBytesUnchanged": true,
+    "hostTool": {
+      "archivePath": ".cache/acceptance-runtime/host-tool-content-index-r5/retrom-runtime-host-tool-0.59.1.tar.gz",
+      "sizeBytes": 9449422,
+      "sha256": "50917b6f906f992cf621ba9a648355cebb4a70eaa8dac7327895fe1333e6c33e"
+    },
+    "fingerprintDelta": {
+      "changed": 77,
+      "unchanged": 33,
+      "changedEmulatorJsTargets": 75,
+      "changedNativeTargets": [
+        "rpgmaker-2000",
+        "rpgmaker-2003"
+      ],
+      "reason": "DOS-specific module remained in a shared dynamic-core function; explicit production dispatch now lets normal tree shaking retain only selected DOS implementation."
+    },
+    "gates": {
+      "lint": "PASS",
+      "strictTypecheck": "PASS",
+      "build": "PASS",
+      "authority": "PASS",
+      "protocolGeneration": "PASS",
+      "diffCheck": "PASS",
+      "package": {
+        "files": 1177,
+        "upstreamInputs": 24,
+        "nativeScummvmCandidates": 1,
+        "independentJSONLTargets": 110
+      },
+      "testsInitialFull": {
+        "files": 277,
+        "passed": 1436,
+        "failed": 1,
+        "failure": "256 MiB checkpoint compression exceeded unchanged 5000 ms test deadline while build/browser activity ran concurrently"
+      },
+      "failedFileRepeat": {
+        "tests": 11,
+        "passed": 11,
+        "testDurationMs": 3270
+      },
+      "fullRepeat": {
+        "files": 277,
+        "passed": 1437,
+        "failed": 0,
+        "commands": [
+          "npm test > .cache/acceptance-runtime/content-index-r5-tests-repeat.txt 2>&1"
+        ],
+        "durationSeconds": 34.13
+      }
+    }
+  },
+  "matrix": {
+    "productRows": 122,
+    "productPassed": 51,
+    "actuallyAttempted": 105,
+    "preparedWithoutProductAttempt": 0,
+    "materialGaps": 17,
+    "materialAvailableWithoutProductAttempt": 0
+  },
+  "resourceContractCandidate": {
+    "sourceTreeSha256": "25abb694e135f4dfac5101e0c51cfdabd778e150182ff61176f25acf422bbd98",
+    "providers": [
+      {
+        "providerId": "emulatorjs",
+        "targets": 75,
+        "bundleSha256": "0e77ef633f3dd0722145ea48ee3aa5ff743fdf8d55677d8e5cce339a009d27b1",
+        "moduleSha256": "aa7a7f194e17ff3adb836c855a4a57a4178a4f9c55315bb08d20ebaf3b0146ba",
+        "manifestSha256": "d57d0e30ac0f5cd0b96a17c4e5ec42c107516595f66eb120db68f001a06361d4",
+        "fileCount": 257,
+        "unpackedSizeBytes": 305107398,
+        "unchangedBinaryAssets": 70,
+        "fceummFingerprint": "1e783d5be4e262f2d62cd5eb8201e13e0c986acd6d5eb407ef0e05edd50dcec2",
+        "nestopiaFingerprint": "c2de35100f1002cb45eb94ee3e1d03f1cc2d16704733e2a97c413565484218d7"
+      },
+      {
+        "providerId": "retrom-runtime",
+        "targets": 35,
+        "bundleSha256": "bd328f4d0bf96378d292549b98d5a2ff0500baf1dc22c46332edc76909d3e8a1",
+        "moduleSha256": "e9f4a63ffd0d1f41708bf4f6d464c340ab5bdeb64d68d167693a120a5fc0190b",
+        "manifestSha256": "46e5149c002fa42e559697ef493a3671ebf7230402f8df3f47b192195977b843",
+        "fileCount": 538,
+        "unpackedSizeBytes": 884847276,
+        "unchangedBinaryAssets": 112
+      }
+    ],
+    "label": "resource-contract-r6",
+    "sourceBase": "content-index-r5",
+    "capturedSourceSnapshot": true,
+    "subsequentDocumentationEditsDoNotRebuildCandidate": true,
+    "coreBytesUnchanged": true,
+    "hostTool": {
+      "archivePath": ".cache/acceptance-runtime/host-tool-resource-contract-r6/retrom-runtime-host-tool-0.59.1.tar.gz",
+      "sha256": "4015311bc7fe3939f13c82718fe36b45126ef7b24a997f7bbf1098d716f72385",
+      "sizeBytes": 9455285,
+      "sameSourceSnapshot": true
+    },
+    "fingerprintDelta": {
+      "changed": 78,
+      "unchanged": 32,
+      "changedEmulatorJsTargets": 75,
+      "changedNativeTargets": [
+        "butterscotch-gamemaker",
+        "kirikiri2-kag",
+        "onscripter-yuri"
+      ],
+      "evidencePath": ".cache/acceptance-runtime/resource-contract-r6-fingerprint-delta.json",
+      "evidenceSha256": "cf0918ca5d428a2fd88590c8e48d92c28a9f5da3d6228f31e1ee375486f0fbb2"
+    },
+    "gates": {
+      "lint": "PASS",
+      "strictTypecheck": "PASS",
+      "build": "PASS",
+      "fullSuite": {
+        "files": 281,
+        "passed": 1473,
+        "failed": 0,
+        "durationSeconds": 32.44,
+        "command": "npm test"
+      },
+      "authority": "PASS",
+      "protocolGeneration": "PASS",
+      "diffCheck": "PASS",
+      "package": {
+        "files": 1189,
+        "upstreamInputs": 24,
+        "catalogTargets": 110,
+        "bindings": 109,
+        "nativeScummvmCandidates": 1,
+        "externalSymlinks": 0
+      },
+      "offlineJSONL": {
+        "cwd": "/tmp",
+        "sameProcessRequests": 5,
+        "commands": [
+          "catalog",
+          "configure",
+          "prepare",
+          "discover-content",
+          "detect-scummvm"
+        ],
+        "passed": true
+      }
+    },
+    "logs": {
+      "tests": {
+        "path": ".cache/acceptance-runtime/resource-contract-r6-tests.txt",
+        "sizeBytes": 425,
+        "sha256": "ed3eccc733dc819f453b673b71d4f1629d12139b2e80bea3cf4f7435f86bfac3"
+      },
+      "lint": {
+        "path": ".cache/acceptance-runtime/resource-contract-r6-lint.txt",
+        "sizeBytes": 53,
+        "sha256": "f54c58014bfb3324bcfb6b0f5cb648915ec1847b8702ab0a8ce4be446d1b3f9d"
+      },
+      "typecheck": {
+        "path": ".cache/acceptance-runtime/resource-contract-r6-typecheck.txt",
+        "sizeBytes": 46,
+        "sha256": "3b27c30b4de616fc6d83ef2d886be70142b2a1ba1c83e441240ea5160e0e1df9"
+      },
+      "build": {
+        "path": ".cache/acceptance-runtime/resource-contract-r6-build.txt",
+        "sizeBytes": 134,
+        "sha256": "53451966858a3fc841f4c5c2dda7094c3b84326411afeffbe3cc45fac7592398"
+      },
+      "authority": {
+        "path": ".cache/acceptance-runtime/resource-contract-r6-authority.txt",
+        "sizeBytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "protocol": {
+        "path": ".cache/acceptance-runtime/resource-contract-r6-protocol.txt",
+        "sizeBytes": 5211,
+        "sha256": "05ce9846ecdd12354390aecd9053564c5d7c124dac39e4d7534f4940476fece2"
+      },
+      "package": {
+        "path": ".cache/acceptance-runtime/resource-contract-r6-package.txt",
+        "sizeBytes": 165,
+        "sha256": "ad406799b40b833670f5cde7afaea2efdbaa84421d344ca1374310ae10b5d483"
+      },
+      "provider-build": {
+        "path": ".cache/acceptance-runtime/resource-contract-r6-provider-build.txt",
+        "sizeBytes": 180,
+        "sha256": "7d761390fbc3ab00208b9786744c9db578c6ba54f5f56b612b9bbd52eee68247"
+      },
+      "verification": {
+        "path": ".cache/acceptance-runtime/resource-contract-r6-verification.txt",
+        "sizeBytes": 1007,
+        "sha256": "9bc9b10ea4819d64e76ba6db80d0b964ae1aff0ac140af6c241f93b7cf2fd0e3"
+      },
+      "host-tool": {
+        "path": ".cache/acceptance-runtime/resource-contract-r6-host-tool.txt",
+        "sizeBytes": 296,
+        "sha256": "5f5ceea22e84fd6806052bee0c8dccd7e09a9f6c16f9706220e3a7e73fd23706"
+      }
+    },
+    "productEvidence": {
+      "note": "R6 product revalidation begins only after deployment READY. Prior passing semantic evidence is retained at its tested fingerprint; unchanged native fingerprints do not imply a new browser run.",
+      "matrixRows": 122
+    }
+  },
+  "runtimeReadinessCandidate": {
+    "status": "SOURCE_AND_PACKAGE_GATES_PASS_PRODUCT_REVALIDATION_PENDING_FOR_TWO_CHANGED_TARGETS",
+    "sourceTreeSha256": "f8f383bbd34bcb31b0e49f63a0f12da9b62b0ab63bda839210ff89e9a21e3dfb",
+    "baseCommit": "745d9ecabc7bdd0e934e1c69737399ebe6deef9b",
+    "providerBase": ".cache/clean-refactor-provider-base-runtime-readiness-r7",
+    "hostToolRoot": ".cache/production-runtime-tool-runtime-readiness-r7",
+    "hostTool": {
+      "sourceTreeSha256": "f8f383bbd34bcb31b0e49f63a0f12da9b62b0ab63bda839210ff89e9a21e3dfb",
+      "archivePath": ".cache/acceptance-runtime/host-tool-runtime-readiness-r7/retrom-runtime-host-tool-0.59.1.tar.gz",
+      "sizeBytes": 9455915,
+      "sha256": "fa6010a475815d6368542ad62795028018a193ed76535691db916f1a14e374a3"
+    },
+    "providers": [
+      {
+        "providerId": "emulatorjs",
+        "targets": 75,
+        "bundleSha256": "20a4f0ab35fa71541409ad64b7d3a9e5c6012db9d33534ee8538496815c3cc51",
+        "moduleSha256": "d5a132cca7c4ba4d7804b48741198961d150b55f9e1dc960698da8741fd6090c",
+        "manifestSha256": "d57d0e30ac0f5cd0b96a17c4e5ec42c107516595f66eb120db68f001a06361d4",
+        "fileCount": 257,
+        "unpackedSizeBytes": 305107598,
+        "unchangedBinaryAssets": 70,
+        "fceummFingerprint": "1e783d5be4e262f2d62cd5eb8201e13e0c986acd6d5eb407ef0e05edd50dcec2",
+        "nestopiaFingerprint": "c2de35100f1002cb45eb94ee3e1d03f1cc2d16704733e2a97c413565484218d7"
+      },
+      {
+        "providerId": "retrom-runtime",
+        "targets": 35,
+        "bundleSha256": "253cf01549b38fac080af5d79726a38a770d6be0ba8e3d16947bdd132d819b62",
+        "moduleSha256": "8e3803243a8d51b4c85e95dc05c150f1cfcaf70ad81f671c5e7633fa90491941",
+        "manifestSha256": "46e5149c002fa42e559697ef493a3671ebf7230402f8df3f47b192195977b843",
+        "fileCount": 538,
+        "unpackedSizeBytes": 884847919,
+        "unchangedBinaryAssets": 112
+      }
+    ],
+    "changedTargets": [
+      "emulatorjs/dosbox-pure",
+      "retrom-runtime/tyranoscript"
+    ],
+    "unchangedTargetFingerprints": 108,
+    "changes": [
+      "DOS observes actual native program-selection readiness and stops observing on disposal.",
+      "Tyrano declines snapshots while a visible external project video owns an unserializable continuation.",
+      "KiriKiri startup archive uses the same project-relative coordinate as its public resource tree (host prepare only)."
+    ],
+    "fullSuite": {
+      "command": "npx vitest run --maxWorkers=4",
+      "testFiles": 282,
+      "tests": 1476,
+      "failed": 0,
+      "seconds": 65.49,
+      "defaultWorkerAttempt": {
+        "failed": 2,
+        "passed": 1474,
+        "reason": "Test deadlines exceeded while default Vitest concurrency and actual browser cores shared the machine; failures preserved.",
+        "changedAssertions": false,
+        "changedTimeouts": false
+      }
+    },
+    "offlineTool": {
+      "cwd": "/tmp",
+      "sameProcessCommands": [
+        "catalog",
+        "configure",
+        "prepare",
+        "discover-content",
+        "detect-scummvm"
+      ],
+      "nativeDetectorCandidates": 1,
+      "noSymlinks": true,
+      "kirikiriProjectEntryProjection": "PASS"
+    },
+    "logs": {
+      "runtime-readiness-r7-lint.txt": {
+        "path": ".cache/acceptance-runtime/runtime-readiness-r7-lint.txt",
+        "sha256": "f54c58014bfb3324bcfb6b0f5cb648915ec1847b8702ab0a8ce4be446d1b3f9d"
+      },
+      "runtime-readiness-r7-typecheck.txt": {
+        "path": ".cache/acceptance-runtime/runtime-readiness-r7-typecheck.txt",
+        "sha256": "3b27c30b4de616fc6d83ef2d886be70142b2a1ba1c83e441240ea5160e0e1df9"
+      },
+      "runtime-readiness-r7-tests.txt": {
+        "path": ".cache/acceptance-runtime/runtime-readiness-r7-tests.txt",
+        "sha256": "c6db7e7975b0ee9af9932063673cc9a8610b19f0dfc55bc41ccb92b3f9f8de19"
+      },
+      "runtime-readiness-r7-tests-bounded-workers.txt": {
+        "path": ".cache/acceptance-runtime/runtime-readiness-r7-tests-bounded-workers.txt",
+        "sha256": "c02d36f5bb535992b4333673e81daa08da40e960b267dcf587b1e8c148004532"
+      },
+      "runtime-readiness-r7-build.txt": {
+        "path": ".cache/acceptance-runtime/runtime-readiness-r7-build.txt",
+        "sha256": "53451966858a3fc841f4c5c2dda7094c3b84326411afeffbe3cc45fac7592398"
+      },
+      "runtime-readiness-r7-package.txt": {
+        "path": ".cache/acceptance-runtime/runtime-readiness-r7-package.txt",
+        "sha256": "64c6f9c3159e4c6e50860173184e9f7af93e7d1401bbfd85092e6ba300a671a8"
+      },
+      "runtime-readiness-r7-protocol-gate.json": {
+        "path": ".cache/acceptance-runtime/runtime-readiness-r7-protocol-gate.json",
+        "sha256": "05ce9846ecdd12354390aecd9053564c5d7c124dac39e4d7534f4940476fece2"
+      },
+      "runtime-readiness-r7-verification.json": {
+        "path": ".cache/acceptance-runtime/runtime-readiness-r7-verification.json",
+        "sha256": "ac185a89c853ae9f1f1c7673957f5acd87f2dc87e2958d5956fdc1a39a654be9"
+      },
+      "runtime-readiness-r7-fingerprint-delta.json": {
+        "path": ".cache/acceptance-runtime/runtime-readiness-r7-fingerprint-delta.json",
+        "sha256": "cd5911609218f467ca859d4df84711e5e531c8177b26f8937e6636d3e09a96a1"
+      },
+      "runtime-readiness-r7-offline.json": {
+        "path": ".cache/acceptance-runtime/runtime-readiness-r7-offline.json",
+        "sha256": "230ba3dac7a40675581d27bb5f541b76cd619b5fc090bbb90cfd83f001fba091"
+      },
+      "runtime-readiness-r7-kirikiri-packed.json": {
+        "path": ".cache/acceptance-runtime/runtime-readiness-r7-kirikiri-packed.json",
+        "sha256": "183bc7d6515155e94b800124d83a509f71256aa8eac9bb44fd88810e1b939f31"
+      },
+      "dos-availability-r7-red.txt": {
+        "path": ".cache/acceptance-runtime/dos-availability-r7-red.txt",
+        "sha256": "6c14f53fdb929064e5c43c44ab02cd649d899ac2ad7fdc1671f1a9a95b86a42f"
+      },
+      "dos-availability-r7-green.txt": {
+        "path": ".cache/acceptance-runtime/dos-availability-r7-green.txt",
+        "sha256": "eee980dd069df81fc5c592008381b2446b5b5c523150dc34e0800f967e06ce7e"
+      },
+      "kirikiri-entry-r7-red.txt": {
+        "path": ".cache/acceptance-runtime/kirikiri-entry-r7-red.txt",
+        "sha256": "aed23cc6476f1b7eb328db9614557e49d3a4ad0d7be409660fd63211ac12bd74"
+      },
+      "kirikiri-entry-r7-green.txt": {
+        "path": ".cache/acceptance-runtime/kirikiri-entry-r7-green.txt",
+        "sha256": "ce5917795b3255f2feb434011f4f3593353eed58a9d87f7d86a1e6278ca6f5f8"
+      },
+      "tyrano-media-r7-red.txt": {
+        "path": ".cache/acceptance-runtime/tyrano-media-r7-red.txt",
+        "sha256": "f42407d0b0ef869f77a30a0b39df566ea329f1f0057444caacca6e20fbdc58b1"
+      },
+      "tyrano-media-r7-green.txt": {
+        "path": ".cache/acceptance-runtime/tyrano-media-r7-green.txt",
+        "sha256": "1feadc52edb11f8a59bbc81be0b16996fe2bf5de6e4eab49c63eee6ed1310d06"
+      }
+    },
+    "subsequentDocumentationEditsDoNotRebuildCandidate": true
+  },
+  "manifestRequiredHostTool": {
+    "sourceTreeSha256": "22034302f061dfc4a680084fd0f0cfa9b8e7f7f480a3895ad87f593e4ebade37",
+    "sizeBytes": 9455889,
+    "sha256": "614c0072769abfd59bc2dc79178ab6d7a4d27a44918479776b5fa79800cb16d1",
+    "label": "manifest-required-r8",
+    "scope": "Strict mandatory checkpoint semantics in manifest/dev-input validation; fixed R7 Provider archives retained",
+    "tests": {
+      "files": 282,
+      "passed": 1479,
+      "failed": 0,
+      "durationSeconds": 51.76,
+      "workers": 4
+    },
+    "gates": {
+      "lint": "PASS",
+      "strictTypecheck": "PASS",
+      "build": "PASS",
+      "package": "PASS",
+      "protocolGeneration": "PASS",
+      "baseCommit": "745d9ecabc7bdd0e934e1c69737399ebe6deef9b"
+    },
+    "providerDelta": [
+      {
+        "providerId": "emulatorjs",
+        "targets": 75,
+        "fingerprintDelta": [],
+        "fullClientSha256": "d5a132cca7c4ba4d7804b48741198961d150b55f9e1dc960698da8741fd6090c",
+        "r7FullClientSha256": "d5a132cca7c4ba4d7804b48741198961d150b55f9e1dc960698da8741fd6090c",
+        "fullClientEqual": true,
+        "looseClientSha256": "233a214d556f0b8d9b1ff4e82287f0a18c842aa3a3d2fbb8dca9a5d15e6cd3ee",
+        "looseClientEqual": true,
+        "assetDelta": []
+      },
+      {
+        "providerId": "retrom-runtime",
+        "targets": 35,
+        "fingerprintDelta": [],
+        "fullClientSha256": "8e3803243a8d51b4c85e95dc05c150f1cfcaf70ad81f671c5e7633fa90491941",
+        "r7FullClientSha256": "8e3803243a8d51b4c85e95dc05c150f1cfcaf70ad81f671c5e7633fa90491941",
+        "fullClientEqual": true,
+        "looseClientSha256": "38697041c51b55f3ce7cc02ccd4ca74f7a25800110b2098e8fd4a8cc53056d71",
+        "looseClientEqual": true,
+        "assetDelta": []
+      }
+    ],
+    "standalone": {
+      "workerExitCode": 0,
+      "actions": [
+        {
+          "command": "catalog",
+          "error": null,
+          "pass": true
+        },
+        {
+          "command": "configure",
+          "error": null,
+          "pass": true
+        },
+        {
+          "command": "prepare",
+          "error": null,
+          "pass": true
+        },
+        {
+          "command": "discover-content",
+          "error": null,
+          "pass": true
+        },
+        {
+          "command": "detect-scummvm",
+          "error": null,
+          "pass": true
+        }
+      ],
+      "catalogTargets": 110,
+      "scummvmCandidates": 1,
+      "missingSemanticsRejected": true,
+      "symlinks": 0
+    },
+    "evidence": [
+      {
+        "artifact": ".cache/acceptance-runtime/semantics-required-r8-tests.json",
+        "sha256": "6c334a8cfeae71facf96a8e0aaeb1d41211783d46fc268540a81d237b6522181"
+      },
+      {
+        "artifact": ".cache/acceptance-runtime/semantics-required-r7-green.txt",
+        "sha256": "64de5b6164d37576d76f3429074eb76c53e45cd16ca68dcadf2d286f8596386c"
+      },
+      {
+        "artifact": ".cache/acceptance-runtime/semantics-required-r7-lint.txt",
+        "sha256": "f54c58014bfb3324bcfb6b0f5cb648915ec1847b8702ab0a8ce4be446d1b3f9d"
+      },
+      {
+        "artifact": ".cache/acceptance-runtime/semantics-required-r7-type.txt",
+        "sha256": "3b27c30b4de616fc6d83ef2d886be70142b2a1ba1c83e441240ea5160e0e1df9"
+      },
+      {
+        "artifact": ".cache/acceptance-runtime/semantics-required-r8-build.txt",
+        "sha256": "53451966858a3fc841f4c5c2dda7094c3b84326411afeffbe3cc45fac7592398"
+      },
+      {
+        "artifact": ".cache/acceptance-runtime/semantics-required-r8-package.txt",
+        "sha256": "ad406799b40b833670f5cde7afaea2efdbaa84421d344ca1374310ae10b5d483"
+      },
+      {
+        "artifact": ".cache/acceptance-runtime/semantics-required-r7-protocol.json",
+        "sha256": "05ce9846ecdd12354390aecd9053564c5d7c124dac39e4d7534f4940476fece2"
+      },
+      {
+        "artifact": ".cache/acceptance-runtime/manifest-required-r8-offline.json",
+        "sha256": "da20b4099e550aff83b9d6d908c36225e834e6e5a0c7200937f3c57d8c2d74dc"
+      },
+      {
+        "artifact": ".cache/acceptance-runtime/semantics-required-r8-compare/results.json",
+        "sha256": "11b20d3ba9498a9efa2a1e5a6e641cdc6003d0bfe887aa69e2ff643dc64c4f26"
+      },
+      {
+        "artifact": ".cache/acceptance-runtime/pfb-semantics-required-r7-red.txt",
+        "sha256": "52d56d74b0f736200aae9741651e644cf4763d34ee9c5d43bfb557f3bd9f0e71"
+      },
+      {
+        "artifact": ".cache/acceptance-runtime/manifest-semantics-required-r7-red.txt",
+        "sha256": "1bdce1ee0c1708b5e5b97daffa5a33864445d8cceb9ea35c85c366a03035dc65"
+      }
+    ]
+  },
+  "prosystemOptionalHostTool": {
+    "sourceTreeSha256": "9e9b2c22fae52fab2dbd74a81a4a5d96087d4b87ae20cd149bbbc656a2e8888e",
+    "archiveSha256": "1c266fdc119f16fde91a3b2b5667e04a48290f13c719510908f977f8bb7419bd",
+    "archiveBytes": 9455891,
+    "change": "Only host BIOS fact: ProSystem boot BIOS optional; required=false in catalog and prepare. R7 providers fixed.",
+    "gates": {
+      "fullTests": {
+        "command": "npm test -- --maxWorkers=4 --reporter=dot --reporter=json --outputFile=.cache/acceptance-runtime/prosystem-optional-r9-tests.json",
+        "testsPassed": 1480,
+        "testsFailed": 0,
+        "testFiles": 282,
+        "result": {
+          "path": ".cache/acceptance-runtime/prosystem-optional-r9-tests.json",
+          "sha256": "460f8de4eb6dbc026aed14b05bc8a1adae52a187971e96d580924e9efc390c4e"
+        }
+      },
+      "focusedRed": {
+        "path": ".cache/acceptance-runtime/prosystem-optional-r9-red.txt",
+        "sha256": "6a23cea7ebe3aa728ccb48024a3e95420dbdf228302e311dcefba64da5098d7f"
+      },
+      "focusedGreen": {
+        "path": ".cache/acceptance-runtime/prosystem-optional-r9-green.txt",
+        "sha256": "88b9aa890d33ccc7aa2204401284dc2d57a946b6fd17a90eaa663a7e71413162"
+      },
+      "lint": {
+        "path": ".cache/acceptance-runtime/prosystem-optional-r9-lint.txt",
+        "sha256": "f54c58014bfb3324bcfb6b0f5cb648915ec1847b8702ab0a8ce4be446d1b3f9d"
+      },
+      "strictTypecheck": {
+        "path": ".cache/acceptance-runtime/prosystem-optional-r9-type.txt",
+        "sha256": "3b27c30b4de616fc6d83ef2d886be70142b2a1ba1c83e441240ea5160e0e1df9"
+      },
+      "build": {
+        "path": ".cache/acceptance-runtime/prosystem-optional-r9-build.txt",
+        "sha256": "53451966858a3fc841f4c5c2dda7094c3b84326411afeffbe3cc45fac7592398"
+      },
+      "package": {
+        "path": ".cache/acceptance-runtime/prosystem-optional-r9-package.txt",
+        "sha256": "64c6f9c3159e4c6e50860173184e9f7af93e7d1401bbfd85092e6ba300a671a8"
+      },
+      "protocolOriginalBase": {
+        "path": ".cache/acceptance-runtime/prosystem-optional-r9-protocol.json",
+        "sha256": "05ce9846ecdd12354390aecd9053564c5d7c124dac39e4d7534f4940476fece2"
+      }
+    },
+    "actualClientFingerprintComparison": {
+      "path": ".cache/acceptance-runtime/prosystem-optional-r9-compare/results.json",
+      "sha256": "11b20d3ba9498a9efa2a1e5a6e641cdc6003d0bfe887aa69e2ff643dc64c4f26"
+    },
+    "offlineFiveCommands": {
+      "path": ".cache/acceptance-runtime/prosystem-optional-r9-offline.json",
+      "sha256": "287aa86904ed4a30456434fed8257cb851f9384defa409027c897ab1816a599a"
+    },
+    "deployment": "STANDARD PFB R9 READY; actual tool420646ac revision, archive1c266fdc, source9e9b2c22. Backend and root independently verified clients/110fingerprints/data unchanged; main HTTP bios required=false. backend/daily-development-r9/development-summary.json"
+  },
+  "productMatrixSummary": {
+    "productRows": 122,
+    "productPassed": 71,
+    "actuallyAttempted": 112,
+    "preparedWithoutProductAttempt": 0,
+    "materialGaps": 10,
+    "materialAvailableWithoutProductAttempt": 0,
+    "productPassedAnyTestedFingerprint": 71,
+    "semanticRowsAtCurrentFingerprint": 28,
+    "priorPassedRowsRequiringNewFingerprintRetest": 43,
+    "bootObservedCurrentEnvironment": 78,
+    "bootAttemptedCurrentEnvironment": 79,
+    "bootTargetsCurrentEnvironment": 68
+  },
+  "currentCandidate": {
+    "name": "current-wait-model-r10-final",
+    "sourceTreeSha256": "a8c47231ec7757e195f743538a8397e0097f709ef6f875e54a9912f6c8bd57cf",
+    "providers": [
+      {
+        "providerId": "emulatorjs",
+        "targets": 75,
+        "bundleSha256": "04db7ce9f44eba06f3dc1f1f560254128da842e3a1694b4dc0f127d607ddd674",
+        "moduleSha256": "06d8bb65194ac342a2e7cce6bdef4cdf5d2bf3f31592389ac8b49c7b468bb370",
+        "manifestSha256": "5a8b90b4e748a359f15ea22eba27a956d4697d054d3cb51968c049fc5bea1cf2",
+        "fileCount": 257,
+        "unpackedSizeBytes": 305108052,
+        "unchangedBinaryAssets": 70,
+        "fceummFingerprint": "391ca94150e090a6832d5cde50e73c8895e436fdc92ad8b489ced802ba977e32",
+        "nestopiaFingerprint": "1301fca2b30cc49de521fa5783dfe1efb1e295e4c03dc8523c52dcbbf2f33b40"
+      },
+      {
+        "providerId": "retrom-runtime",
+        "targets": 35,
+        "bundleSha256": "378451347ca8e8dcbff0e08cf0af684c6806a61253eddd95d8e4deb6612ff941",
+        "moduleSha256": "f30d6218bb09a13d43232c298f94a4a6f60653b727e4b77c5b457fedd3732c35",
+        "manifestSha256": "46e5149c002fa42e559697ef493a3671ebf7230402f8df3f47b192195977b843",
+        "fileCount": 538,
+        "unpackedSizeBytes": 884900933,
+        "unchangedBinaryAssets": 112
+      }
+    ],
+    "tool": {
+      "sizeBytes": 9457944,
+      "sha256": "4ccd8d987e75ec03f21eb973274d3a7ea417c827882af225d6f8ed4029c00286",
+      "sourceTreeSha256": "a8c47231ec7757e195f743538a8397e0097f709ef6f875e54a9912f6c8bd57cf"
+    },
+    "gates": {
+      "lint": "PASS",
+      "strictTypecheck": "PASS",
+      "build": "PASS",
+      "tests": {
+        "files": 282,
+        "passed": 1505,
+        "failed": 0
+      },
+      "package": {
+        "files": 1193,
+        "upstreamInputs": 24,
+        "catalogTargets": 110,
+        "bindings": 109,
+        "platforms": 95,
+        "nativeScummvmCandidates": 1,
+        "standaloneJSONL": "PASS",
+        "externalSymlinks": 0
+      },
+      "protocolGeneration": {
+        "status": "PASS",
+        "baseCommit": "745d9ecabc7bdd0e934e1c69737399ebe6deef9b"
+      }
+    },
+    "fingerprintDelta": {
+      "comparedTargets": 110,
+      "changedEmulatorJS": 75,
+      "changedNative": [
+        "onscripter-yuri"
+      ],
+      "unchangedNative": 34,
+      "lastMameHostRuleExtraDelta": 0
+    },
+    "retainedLogEvidence": [
+      {
+        "artifact": ".cache/ons-checkpoint-thomson/lint-final-green.log",
+        "sha256": "f54c58014bfb3324bcfb6b0f5cb648915ec1847b8702ab0a8ce4be446d1b3f9d"
+      },
+      {
+        "artifact": ".cache/ons-checkpoint-thomson/typecheck-final.log",
+        "sha256": "3b27c30b4de616fc6d83ef2d886be70142b2a1ba1c83e441240ea5160e0e1df9"
+      },
+      {
+        "artifact": ".cache/ons-checkpoint-thomson/build-final.log",
+        "sha256": "53451966858a3fc841f4c5c2dda7094c3b84326411afeffbe3cc45fac7592398"
+      },
+      {
+        "artifact": ".cache/ons-checkpoint-thomson/test-full-final.log",
+        "sha256": "600662f77b7dcf0f724ce9d07c05294950a4356e99e20976a6209ee590121f3d"
+      },
+      {
+        "artifact": ".cache/ons-checkpoint-thomson/package-final.log",
+        "sha256": "4a8dce51d9c87e9d103453580fe2f1fd4c9828431a5e7fb21ffd08c352b385ec"
+      },
+      {
+        "artifact": ".cache/ons-checkpoint-thomson/protocol-gate-final.json",
+        "sha256": "3ab08526c27d0374eb529da86a26066d75fd6d54ca7d5a100013831eb66c7847"
+      },
+      {
+        "artifact": ".cache/ons-checkpoint-thomson/standalone-tool-proof-final.json",
+        "sha256": "b33f16eb8975fbee8629debfe7a6eb5b8deaab556dd1030eafcc0bfdab686246"
+      }
+    ],
+    "core": {
+      "repository": "OnscripterYuri",
+      "baseCommit": "1ec932b08f5d8efb9bbd1ca6350f9ada1cfba00c",
+      "sourceTreeSha256": "8cc91bda2853ad2d716e39c2aa894f5bf625668e8cf847f9668243c99ee78a19",
+      "jsSha256": "cca7513fbf06f09afd11ecd05f55a2520dde9c700decd0fa06c037d45c7ee5ee",
+      "wasmSha256": "efa139e769f5a67abdf160955178590ae804ac82da098c6f2f38f714845be6a4",
+      "canonicalBrowserFixtures": {
+        "default": "PASS",
+        "customUtf8Textgosub": "PASS",
+        "userSlotCoexistence": "PASS",
+        "largeToShortRead": "PASS",
+        "truncatedTailReject": "PASS"
+      }
+    },
+    "note": "Complete final suite/gates apply to the captured artifact source. Earlier failed attempts remain retained and do not replace the final green suite. Subsequent docs-only edits do not mutate artifact provenance."
+  },
+  "currentProductMatrixSummary": {
+    "productRows": 122,
+    "productPassed": 73,
+    "actuallyAttempted": 112,
+    "preparedWithoutProductAttempt": 0,
+    "materialGaps": 10,
+    "materialAvailableWithoutProductAttempt": 0,
+    "productPassedAnyTestedFingerprint": 73,
+    "semanticRowsAtCurrentFingerprint": 30,
+    "priorPassedRowsRequiringNewFingerprintRetest": 43,
+    "bootObservedCurrentEnvironment": 78,
+    "bootAttemptedCurrentEnvironment": 79,
+    "bootTargetsCurrentEnvironment": 68
+  },
+  "currentProductEvidence": {
+    "ons": "runtime/interactive/ons-current-wait-cold-r10/semantic-proof.json",
+    "onsSha256": "b3a81a4d389a8e8981a30bc2e5f81528ccd365c0f9f3c08cb1c4c769e210c418",
+    "nes": "frontend/hud-handle-r10/nes-semantic-proof.json",
+    "nesSha256": "7b2324762822ba6374e49c0f7b6de65a5ab6312a0306120301e74de0506a92c4",
+    "boundedBoot": "root/matrix/ejs-r10-boot-sweep-proof.json",
+    "boundedBootSha256": "3fd3ab3e626b6e204f1da9def95dd7e5ce6db55ad57c4760cbe0dfb65d8912b1",
+    "nds": [
+      {
+        "artifact": "frontend/native/desmume-semantic-registration-delayed-hud-r10/proof.json",
+        "artifactSha256": "a0697cdd0db8ed1b526e855c736476e013a1e29b9f246e0df0d14224ec18b4a8",
+        "coreFingerprint": "deb8033048e8209dc478a5864e0f41c9cfe729dfdb59078c8aa895297119b1a6",
+        "scope": "Distinct Run visibly retained the noninitial entered イ and name scene; seven publicly paused seconds stayed pixel-identical, Resume and normal Confirm advanced to birthday registration.",
+        "executedInCurrentEnvironment": true
+      },
+      {
+        "artifact": "frontend/native/desmume2015-semantic-registration-hud-r10/proof.json",
+        "artifactSha256": "bc63aef1e33564d742224919ff6840f1c0c4716fb33c03805667d2644caeb982",
+        "coreFingerprint": "b711deaeb3506612e03d9e28ea59d781f83d74f8e1b062dae1f982c91f15017c",
+        "scope": "Distinct Run retained the birthday registration scene (rather than Request/name), seven publicly paused seconds stayed pixel-identical, Resume and normal held selection inserted digit 2 in the first year field.",
+        "executedInCurrentEnvironment": true
+      },
+      {
+        "artifact": "frontend/native/melonds-semantic-cold-registration-restore-hud-r10/proof.json",
+        "artifactSha256": "359f4dff55f5f9c0c2da773ad766db02ce2f87bfe31781aef40536b7039daa60",
+        "coreFingerprint": "ce5159f935988448f644f34f461edd984a50bd4325d4acd5979a7d2a78f6db58",
+        "scope": "Savecdf27a4c restores the birthday scene instead of fresh Request/name. Seven publicly paused seconds are pixel-identical. Resume and normal Return transition back to name registration; this game resets the name form on Return, so no claim that the name remains visible after Return. An earlier save was restored in a fresh BrowserContext with cookies-only state/origins=[] before handwriting continuation.",
+        "executedInCurrentEnvironment": true
+      }
+    ],
+    "theodore": {
+      "artifact": "root/interactive/theodore-played-cold-context-r10/semantic-proof.json",
+      "sha256": "1f7911f89523a717223efc58167b5c1e6ec6546ee8c978f1f2fc81db2e65c573",
+      "scope": "Played author world, frozen TO8D while current TO7, fresh-browser restore, paused seven seconds and ordinary continued input."
+    },
+    "gam4980": {
+      "artifact": "root/interactive/gam4980-cold-played-r10/semantic-proof.json",
+      "sha256": "8ccd2d4fc19ba3fd739d89c168ee8f3ef5099edbe6d9a8dcf5785ec4b30df7cc",
+      "scope": "Noninitial played landed grid, fresh-browser restore, publicly paused equality and continued normal falling-piece input; historical ErrnoError remains separate."
+    }
+  },
+  "initialCandidate": {
+    "sourceTreeSha256": "9c32c3c67c91af0663863dac8ea727d9341740fe91177fe53189dc56b72a6105",
+    "providers": [
+      {
+        "providerId": "emulatorjs",
+        "targets": 75,
+        "bundleSha256": "d55e39f16e55e80c43de9a3c1d251b6d965d7c428d2556ab9581029888d13d64",
+        "moduleSha256": "d41a06c166e4acb55ac78b8387edd5d9fba40bc7583a070f5d50d399b1627781",
+        "manifestSha256": "d57d0e30ac0f5cd0b96a17c4e5ec42c107516595f66eb120db68f001a06361d4",
+        "fileCount": 257,
+        "unpackedSizeBytes": 305100493,
+        "unchangedBinaryAssets": 70,
+        "fceummFingerprint": "521727e20fd33004bb4932e87e949eeb36fe4e99b6a4ea8c11d03a07983492b2",
+        "nestopiaFingerprint": "843dacb3ef63f12a5ad1459c099fa13da38c0c796c26854bfb56147949614135"
+      },
+      {
+        "providerId": "retrom-runtime",
+        "targets": 35,
+        "bundleSha256": "2075870c1d759d6ef94f9b0234766c47e7ead7dcd58f6c3107e58be8fe5b41ee",
+        "moduleSha256": "f462a35e03099599ebacdc88f092be1dc517121b2ff132239d4322bd10395576",
+        "manifestSha256": "46e5149c002fa42e559697ef493a3671ebf7230402f8df3f47b192195977b843",
+        "fileCount": 538,
+        "unpackedSizeBytes": 884845490,
+        "unchangedBinaryAssets": 112
+      }
+    ],
+    "node": "24.15.0",
+    "gates": {
+      "lint": "PASS",
+      "strictTypecheck": "PASS",
+      "build": "PASS",
+      "tests": {
+        "files": 273,
+        "passed": 1408,
+        "failed": 0
+      },
+      "authority": "PASS",
+      "protocolGeneration": "PASS",
+      "package": {
+        "files": 1164,
+        "upstreamInputs": 24,
+        "catalogTargets": 110,
+        "nativeScummvmCandidates": 1,
+        "standaloneJSONL": "PASS",
+        "externalSymlinks": 0
+      }
+    },
+    "hostTool": {
+      "sha256": "a7d7a66fd829f941b766d8bc0aec72e9f52e0149fd531d00e094bd1a70f7ffca",
+      "sameSourceSnapshot": true
+    },
+    "fingerprintIsolation": {
+      "comparedTargets": 75,
+      "changedForLutroOnly": [
+        "lutro"
+      ]
+    },
+    "productEvidence": {
+      "matrixRows": 122,
+      "attempted": 67,
+      "fullSemanticPasses": 0,
+      "materialGaps": 27,
+      "materialAvailableWithoutAttempt": 28
+    }
+  },
+  "sourceFieldsNote": "Top-level quality source/providergates identify the deployed R10 snapshot. initialCandidate and named previous candidates retain their own historical records; later docs-only changes are not part of the captured artifact digest.",
+  "formalReleaseBoundary": {
+    "status": "UNPUBLISHED_PAIRED_LOCAL_CANDIDATE_ONLY",
+    "providerVersionLabel": "0.59.1 retained from imported base, not a replacement of the official release",
+    "activeSource": "candidate",
+    "activeRelease": null,
+    "sourceTreeSha256": "a8c47231ec7757e195f743538a8397e0097f709ef6f875e54a9912f6c8bd57cf",
+    "requiresExplicitVerifiedCandidateAndHostTool": true,
+    "formalUpstreamONSStillPinned": "retrom-core-0.7.7beta-r4",
+    "futureReleaseClosure": [
+      "Publish immutable revised ONS core bytes and update the runtime core release pin.",
+      "Build/publish new runtime annotated tag with both Providers, self-contained host tool and metadata.",
+      "Update host formal release pin to the new published metadata and exact hashes."
+    ],
+    "noExistingReleaseTagOrArchiveChanged": true
+  },
+  "vecxBoundaryProof": {
+    "artifact": "runtime/interactive/vecx-current-product-r10/boundary-proof.json",
+    "artifactSha256": "5a97fa8dfc09e07c760cf336be23b81b8e3b3189ba6a9f75cdacd3126cc38135",
+    "result": "CURRENT_NULL_FUNCTION_NOT_REPRODUCED; FULL_RESTORATION_SEMANTICS_NOT_ESTABLISHED",
+    "coreFingerprint": "4406c47f85092283fa68e996f0d6303b41c32153af6fc8316cc048b349f0d992"
+  },
+  "pairedInputImplementationGates": {
+    "status": "PASS",
+    "scope": "Packaging/source orchestration changes after R10 gameplay; final immutable source is identified by the external paired descriptor, not a self-referential document hash.",
+    "tests": {
+      "files": 284,
+      "passed": 1518,
+      "failed": 0
+    },
+    "lint": "PASS",
+    "strictTypecheck": "PASS",
+    "build": "PASS",
+    "package": {
+      "files": 1193,
+      "publishedUpstreamInputs": 23,
+      "hashPinnedCoreCandidateInputs": 1,
+      "nativeScummvmCandidates": 1
+    },
+    "timezoneRegression": "OLD_IMPLEMENTATION_RED_THREE_INDEPENDENT_TZ_GREEN",
+    "producerConsumer": "STABLE_AND_RC_DESCRIPTOR_ARCHIVES_INSTALL_OFFLINE_CATALOG_PASS",
+    "executionComparedToR10": {
+      "changedTargets": 0,
+      "changedClients": 0,
+      "coreJsWasmLicenseChanged": 0
+    },
+    "logs": [
+      {
+        "artifact": ".cache/paired-inputs-final/build.log",
+        "sha256": "53451966858a3fc841f4c5c2dda7094c3b84326411afeffbe3cc45fac7592398"
+      },
+      {
+        "artifact": ".cache/paired-inputs-final/package.log",
+        "sha256": "7a5c3a433adcf0d7b97489b0afc6e06d7d603e74424d4ea92caef2ff716e8d14"
+      },
+      {
+        "artifact": ".cache/paired-inputs-final/timezone-red.log",
+        "sha256": "b1c52dd2c1de1f21514ded26e159cacef794ec92e5a0fa09053af0b6bc7a1b65"
+      },
+      {
+        "artifact": ".cache/paired-inputs-final/timezone-and-staging-green.log",
+        "sha256": "f673be0277e898eb42f64cdf93545e182478c8e571dfe0a4e594b567b51d2dd4"
+      },
+      {
+        "artifact": ".cache/paired-inputs-final/emitter-transport-final.log",
+        "sha256": "ae97111c83dfccf32bc263dffbdca6c8b2fe76f156ec46548c09cbdc2506e107"
+      },
+      {
+        "artifact": ".cache/paired-inputs-final/core-prepare-green-final.log",
+        "sha256": "f1ae7e8b6d75bdfce4029cf8a16f341dcfa6d65b68ddf9bbb81ad3b0005183d2"
+      },
+      {
+        "artifact": ".cache/paired-inputs-final/core-no-transport-red.log",
+        "sha256": "e85059eaff2afcc2a0c5d8b320c429b604e4ec304f3207b2d6bc8ae719d166ff"
+      },
+      {
+        "artifact": ".cache/paired-inputs-final/default-build-red.log",
+        "sha256": "4fac404bdf72a6a459c49cf5552aa2ac325ab87246a891a4c58112703e9bb051"
+      },
+      {
+        "artifact": ".cache/paired-inputs-final/execution-zero-delta.json",
+        "sha256": "95bbc4fa5f24b82b6c088037ea13a381d2ff954006e34d6e6bd1eab46435fa5d"
+      },
+      {
+        "artifact": ".cache/paired-inputs-final/core-canonical-zero-delta.json",
+        "sha256": "d9679bb5945c890fd34e91015699a4cee55c51b489ff70dd4e4af9a0ff52d42e"
+      },
+      {
+        "artifact": ".cache/paired-inputs-final/lint-source-final.log",
+        "sha256": "f54c58014bfb3324bcfb6b0f5cb648915ec1847b8702ab0a8ce4be446d1b3f9d"
+      },
+      {
+        "artifact": ".cache/paired-inputs-final/typecheck-source-final.log",
+        "sha256": "3b27c30b4de616fc6d83ef2d886be70142b2a1ba1c83e441240ea5160e0e1df9"
+      },
+      {
+        "artifact": ".cache/paired-inputs-final/test-source-frozen-final.log",
+        "sha256": "8e2d686b9c33684e4a334c373386bc554cd545a77ffd5c593a23028d534884c4"
+      },
+      {
+        "artifact": ".cache/paired-inputs-final/clean-core-prepare.log",
+        "sha256": "a0b10994c9f32c743c424e9a604178c581b60d1a93c5c93c81f39a72f9a6ec1b"
+      },
+      {
+        "artifact": ".cache/paired-inputs-final/core-clean-provenance.json",
+        "sha256": "a3a9c1db9c612a290b3985f6de9413a653def102e20f192ffa8dd1f760dc880c"
+      }
+    ],
+    "note": "Initial source lookup and type declaration failures are retained in ignored logs. Formal release still needs genuine core/runtime release tags; no tag or upload occurred.",
+    "cleanCoreInput": {
+      "commit": "6faf28767e1800f591f97be9e7baa3c0da53b2c9",
+      "dirty": false,
+      "sourceTreeSha256": "172d894c19f0fc6d298c75d6bd7df25b25986c36e0d0a0208268200f7999fe1d",
+      "archive": {
+        "filename": "onsyuri-core-172d894c19f0fc6d298c75d6bd7df25b25986c36e0d0a0208268200f7999fe1d.zip",
+        "sizeBytes": 1838755,
+        "sha256": "81526b8dbce1b53fbd2229ae6cb482d7c7ed77aa06d6758e930b90fdb60f72e3",
+        "sourceTreeSha256": "172d894c19f0fc6d298c75d6bd7df25b25986c36e0d0a0208268200f7999fe1d"
+      },
+      "jsWasmLicenseDelta": 0,
+      "evidence": ".cache/paired-inputs-final/core-clean-provenance.json",
+      "evidenceSha256": "a3a9c1db9c612a290b3985f6de9413a653def102e20f192ffa8dd1f760dc880c"
+    },
+    "producerConsumerEvidence": {
+      "artifact": "backend/runtime-input-chain/producer-consumer-samples.json",
+      "sha256": "371a7adbe3f99e0988ac969a67fe977d988956dc59383cd9f3c47834c611c6f7",
+      "scope": "Actual stable/RC fixture descriptor plus three archives verified, installed and offline catalog consumed; not a tag publication."
+    }
+  }
+}

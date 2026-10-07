@@ -1,15 +1,11 @@
 import {targetContentFixture} from "../../tests/target-content-fixture.js";
 // @vitest-environment jsdom
 import {afterEach, expect, it, vi} from "vitest";
-import {gzipSync} from "fflate";
 import {mountApple2} from "./adapter.js";
 
 afterEach(() => {vi.restoreAllMocks(); document.body.replaceChildren();});
 
-it.each([
-  ["apple2js-state-v1-storage-v1", false],
-  ["apple2js-state-gzip-v1-storage-v1", true],
-] as const)("writes raw state and restores %s", async (format, legacy) => {
+it("writes and restores exact native state", async () => {
   const outer = document.createElement("iframe"); document.body.append(outer);
   const frameWindow = outer.contentWindow!;
   const target = frameWindow.document.createElement("div"); frameWindow.document.body.append(target);
@@ -27,8 +23,8 @@ it.each([
   const state = "{\"ram\":[1,2,3]}";
   const mounted = mountApple2({game: {url: "https://example.test/game.dsk", sha256: "b".repeat(64), sizeBytes: 3},
     bios, runtimeBaseUrl: "https://example.test/apple2js/site/"}, target, frameWindow,
-    legacy ? gzipSync(new TextEncoder().encode(state)) : new TextEncoder().encode(state),
-    () => undefined, targetContentFixture(session as never, "apple2-apple2js"), undefined, format);
+    new TextEncoder().encode(state),
+    () => undefined, targetContentFixture(session as never, "apple2-apple2js"));
   await vi.waitFor(() => expect(target.querySelector("iframe")).not.toBeNull());
   const iframe = target.querySelector("iframe")!;
   const child = iframe.contentWindow as Window & {RetromApple2?: object};

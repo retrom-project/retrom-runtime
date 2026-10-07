@@ -8,7 +8,7 @@ import {rangePolicy} from "./content-policies.js";
 vi.mock("./metadata.js", async original => ({...await original<typeof import("./metadata.js")>(), fetchMetadataJson: vi.fn()}));
 afterEach(() => vi.resetAllMocks());
 const target = {...retromRuntimeProviderDefinition.targets.find(value => value.id === "wasm4")!,
-  contentIO: {game: rangePolicy("ASYNC", 1024 * 1024), discs: rangePolicy("ASYNC", 1024 * 1024)}};
+  contentIO: {game: rangePolicy("ASYNC", 1024 * 1024)}};
 const context = {storageOrigin: location.origin, allowedOrigins: [location.origin]};
 const signal = new AbortController().signal;
 
@@ -35,15 +35,6 @@ it.each([
   envelope.resources = [{kind: "FILE_TREE", role: "game", ordinal: 0, indexUrl: "/project/index.json", contentDigest: "b".repeat(64)}];
   vi.mocked(fetchMetadataJson).mockResolvedValue({schemaVersion: 1, files: [file]});
   await expect(preloadSources(target, envelope, {}, context, signal)).rejects.toThrow("SOURCE_INVALID");
-});
-
-it("includes discs that have not yet been selected", async () => {
-  const envelope = wasmEnvelope();
-  envelope.resources = [{kind: "MULTI_DISC", role: "discs", ordinal: 0, initialDiscIndex: 0,
-    entries: [0, 1].map(index => ({index, label: `Disc ${index + 1}`, sizeBytes: 5, sha256: String(index).repeat(64), url: `/disc/${index}`}))}];
-  const sources = await preloadSources(target, envelope, {}, context, signal);
-  expect(sources).toHaveLength(2);
-  expect(sources[1]).toMatchObject({identity: {kind: "FILE_SHA256", sha256: "1".repeat(64)}, purpose: "GAME"});
 });
 
 it("uses the firmware and parent cache identities and includes declared lazy core data", async () => {

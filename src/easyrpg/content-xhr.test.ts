@@ -73,3 +73,17 @@ it("resolves root-relative content inside the about:blank runtime frame", async 
     expect(f.read).toHaveBeenCalledWith(source, expect.any(Object), expect.any(AbortSignal));
   } finally {f.cleanup(); iframe.remove();}
 });
+
+it("serves the derived native engine index without fetching an invented host route", async () => {
+  const f = fixture(); f.cleanup();
+  const url = new URL("/api/v1/runs/run/resources/index/id/index.json", location.href).href;
+  const cleanup = installContentXHR(window, new Map([[url, {metadata: new TextEncoder().encode('{"metadata":{"version":2},"cache":{}}')}]]),
+    {open: f.read, materialize: f.materialize} as unknown as AdapterContentSession, new AbortController().signal);
+  try {
+    const xhr = new XMLHttpRequest(); xhr.open("GET", url); xhr.send();
+    await vi.waitFor(() => expect(f.send).toHaveBeenCalledOnce());
+    expect(f.read).not.toHaveBeenCalled();
+    expect(f.open).toHaveBeenLastCalledWith("GET", "blob:http://localhost/cached", true);
+    xhr.dispatchEvent(new ProgressEvent("loadend")); expect(f.revoke).toHaveBeenCalledOnce();
+  } finally {cleanup();}
+});

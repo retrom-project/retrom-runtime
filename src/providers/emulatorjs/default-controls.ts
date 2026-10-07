@@ -112,10 +112,7 @@ export function createRetromDefaultControls(core?: string): EmulatorDefaultContr
   return controllers;
 }
 
-export function thomsonMachineOption(core: string, title: string): Record<string, string> {
-  if (core !== "theodore") {return {};}
-  // Retrom content URLs do not retain the uploaded filename that Theodore's
-  // Auto option uses to identify the computer model.
-  const model = /(?:^|[^A-Z0-9])(TO7\/70|TO9\+|TO8D|PC128|MO5|MO6|TO7|TO8|TO9)(?=$|[^A-Z0-9])/iu.exec(title)?.[1];
-  return model ? {theodore_rom: model.toUpperCase()} : {};
+
+export function thomsonOptions(options: Readonly<Record<string, unknown>>): Record<string, string> {
+  return typeof options.thomsonModel === "string" ? {theodore_rom: options.thomsonModel} : {};
 }

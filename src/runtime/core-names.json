@@ -1,0 +1,410 @@
+[
+  {
+    "id": "81",
+    "displayName": "EightyOne"
+  },
+  {
+    "id": "a5200",
+    "displayName": "Atari800 5200"
+  },
+  {
+    "id": "apple2js",
+    "displayName": "Apple2JS"
+  },
+  {
+    "id": "ardens",
+    "displayName": "Ardens"
+  },
+  {
+    "id": "atari800",
+    "displayName": "Atari800"
+  },
+  {
+    "id": "atari800-xegs",
+    "displayName": "Atari800 XEGS"
+  },
+  {
+    "id": "azahar",
+    "displayName": "Azahar"
+  },
+  {
+    "id": "beetle_vb",
+    "displayName": "Beetle VB"
+  },
+  {
+    "id": "bsnes",
+    "displayName": "bsnes"
+  },
+  {
+    "id": "butterscotch",
+    "displayName": "Butterscotch"
+  },
+  {
+    "id": "cap32",
+    "displayName": "Caprice32"
+  },
+  {
+    "id": "crocods",
+    "displayName": "CrocoDS"
+  },
+  {
+    "id": "daphne",
+    "displayName": "Daphne"
+  },
+  {
+    "id": "desmume",
+    "displayName": "DeSmuME"
+  },
+  {
+    "id": "desmume2015",
+    "displayName": "DeSmuME 2015"
+  },
+  {
+    "id": "dosbox_pure",
+    "displayName": "DOSBox Pure"
+  },
+  {
+    "id": "fake08",
+    "displayName": "FAKE-08"
+  },
+  {
+    "id": "fbalpha2012_cps1",
+    "displayName": "FB Alpha 2012 CPS-1"
+  },
+  {
+    "id": "fbalpha2012_cps2",
+    "displayName": "FB Alpha 2012 CPS-2"
+  },
+  {
+    "id": "fbneo",
+    "displayName": "FinalBurn Neo"
+  },
+  {
+    "id": "fceumm",
+    "displayName": "FCEUmm"
+  },
+  {
+    "id": "flycast",
+    "displayName": "Flycast"
+  },
+  {
+    "id": "flycast-atomiswave",
+    "displayName": "Flycast Atomiswave"
+  },
+  {
+    "id": "flycast-naomi",
+    "displayName": "Flycast NAOMI"
+  },
+  {
+    "id": "flycast-naomi2",
+    "displayName": "Flycast NAOMI 2"
+  },
+  {
+    "id": "freechaf",
+    "displayName": "FreeChaF"
+  },
+  {
+    "id": "freeintv",
+    "displayName": "FreeIntv"
+  },
+  {
+    "id": "fuse",
+    "displayName": "Fuse"
+  },
+  {
+    "id": "gam4980",
+    "displayName": "GAM4980"
+  },
+  {
+    "id": "gambatte",
+    "displayName": "Gambatte"
+  },
+  {
+    "id": "gbe_plus",
+    "displayName": "GBE+ (Pokémon Mini)"
+  },
+  {
+    "id": "gearboy",
+    "displayName": "Gearboy (Super Game Boy)"
+  },
+  {
+    "id": "gearcoleco",
+    "displayName": "Gearcoleco"
+  },
+  {
+    "id": "genesis_plus_gx",
+    "displayName": "Genesis Plus GX"
+  },
+  {
+    "id": "genesis_plus_gx_wide",
+    "displayName": "Genesis Plus GX Wide"
+  },
+  {
+    "id": "handy",
+    "displayName": "Handy"
+  },
+  {
+    "id": "hatarib",
+    "displayName": "HatariB"
+  },
+  {
+    "id": "j2me",
+    "displayName": "J2ME miniJVM"
+  },
+  {
+    "id": "jsbeeb",
+    "displayName": "jsbeeb"
+  },
+  {
+    "id": "kirikiri2",
+    "displayName": "KiriKiri2"
+  },
+  {
+    "id": "lutro",
+    "displayName": "Lutro"
+  },
+  {
+    "id": "mame2003",
+    "displayName": "MAME 2003"
+  },
+  {
+    "id": "mame2003_plus",
+    "displayName": "MAME 2003 Plus"
+  },
+  {
+    "id": "mame_apple2",
+    "displayName": "MAME Apple II+"
+  },
+  {
+    "id": "mame_apple2e",
+    "displayName": "MAME Apple IIe"
+  },
+  {
+    "id": "mame_arcade",
+    "displayName": "MAME Current Arcade"
+  },
+  {
+    "id": "mame_atom",
+    "displayName": "MAME Acorn Atom"
+  },
+  {
+    "id": "mame_coleco",
+    "displayName": "MAME ColecoVision"
+  },
+  {
+    "id": "mame_pv1000",
+    "displayName": "MAME Casio PV-1000"
+  },
+  {
+    "id": "mame_sg1000",
+    "displayName": "MAME SG-1000"
+  },
+  {
+    "id": "mednafen_ngp",
+    "displayName": "Beetle NeoPop"
+  },
+  {
+    "id": "mednafen_pce",
+    "displayName": "Beetle PCE"
+  },
+  {
+    "id": "mednafen_pcfx",
+    "displayName": "Beetle PC-FX"
+  },
+  {
+    "id": "mednafen_psx_hw",
+    "displayName": "Beetle PSX HW"
+  },
+  {
+    "id": "mednafen_wswan",
+    "displayName": "Beetle WonderSwan"
+  },
+  {
+    "id": "melonds",
+    "displayName": "melonDS"
+  },
+  {
+    "id": "mgba",
+    "displayName": "mGBA"
+  },
+  {
+    "id": "mupen64plus_next",
+    "displayName": "Mupen64Plus-Next"
+  },
+  {
+    "id": "neocd",
+    "displayName": "NeoCD"
+  },
+  {
+    "id": "nestopia",
+    "displayName": "Nestopia UE"
+  },
+  {
+    "id": "np2kai",
+    "displayName": "Neko Project II Kai"
+  },
+  {
+    "id": "nxengine",
+    "displayName": "NXEngine"
+  },
+  {
+    "id": "o2em",
+    "displayName": "O2EM"
+  },
+  {
+    "id": "onscripter_yuri",
+    "displayName": "ONScripter Yuri"
+  },
+  {
+    "id": "openbor",
+    "displayName": "OpenBOR"
+  },
+  {
+    "id": "opera",
+    "displayName": "Opera"
+  },
+  {
+    "id": "parallel_n64",
+    "displayName": "ParaLLEl N64"
+  },
+  {
+    "id": "pcsx_rearmed",
+    "displayName": "PCSX-ReARMed"
+  },
+  {
+    "id": "picodrive",
+    "displayName": "PicoDrive"
+  },
+  {
+    "id": "play",
+    "displayName": "Play!"
+  },
+  {
+    "id": "potator",
+    "displayName": "Potator"
+  },
+  {
+    "id": "ppsspp",
+    "displayName": "PPSSPP"
+  },
+  {
+    "id": "prboom",
+    "displayName": "PrBoom"
+  },
+  {
+    "id": "prosystem",
+    "displayName": "ProSystem"
+  },
+  {
+    "id": "puae",
+    "displayName": "PUAE"
+  },
+  {
+    "id": "px68k",
+    "displayName": "PX68K"
+  },
+  {
+    "id": "quasi88",
+    "displayName": "QUASI88"
+  },
+  {
+    "id": "rpgmaker",
+    "displayName": "RPG Maker"
+  },
+  {
+    "id": "ruffle",
+    "displayName": "Ruffle"
+  },
+  {
+    "id": "samcoupeweb",
+    "displayName": "SamCoupeWeb"
+  },
+  {
+    "id": "same_cdi",
+    "displayName": "SAME CD-i"
+  },
+  {
+    "id": "sameduck",
+    "displayName": "SameDuck"
+  },
+  {
+    "id": "scummvm",
+    "displayName": "ScummVM"
+  },
+  {
+    "id": "smsplus",
+    "displayName": "SMS Plus GX"
+  },
+  {
+    "id": "snes9x",
+    "displayName": "Snes9x"
+  },
+  {
+    "id": "stella2014",
+    "displayName": "Stella 2014"
+  },
+  {
+    "id": "supermodel",
+    "displayName": "Supermodel"
+  },
+  {
+    "id": "theodore",
+    "displayName": "Theodore"
+  },
+  {
+    "id": "tic80",
+    "displayName": "TIC-80"
+  },
+  {
+    "id": "tyranoscript",
+    "displayName": "TyranoScript"
+  },
+  {
+    "id": "uzem",
+    "displayName": "Uzem"
+  },
+  {
+    "id": "vecx",
+    "displayName": "VecX"
+  },
+  {
+    "id": "vice_x128",
+    "displayName": "VICE x128"
+  },
+  {
+    "id": "vice_x64",
+    "displayName": "VICE C64"
+  },
+  {
+    "id": "vice_x64sc",
+    "displayName": "VICE x64sc"
+  },
+  {
+    "id": "vice_xpet",
+    "displayName": "VICE PET"
+  },
+  {
+    "id": "vice_xplus4",
+    "displayName": "VICE Plus/4"
+  },
+  {
+    "id": "vice_xvic",
+    "displayName": "VICE xvic"
+  },
+  {
+    "id": "virtualjaguar",
+    "displayName": "Virtual Jaguar"
+  },
+  {
+    "id": "wasm4",
+    "displayName": "WASM-4"
+  },
+  {
+    "id": "webmsx",
+    "displayName": "WebMSX"
+  },
+  {
+    "id": "yabause",
+    "displayName": "Yabause"
+  }
+]

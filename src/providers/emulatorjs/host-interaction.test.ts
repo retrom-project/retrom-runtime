@@ -3,7 +3,7 @@ import {launchEnvelope} from "../../../tests/emulatorjs-provider-fixtures.js";
 import {providerInputCapabilities} from "../../provider/input-capabilities.js";
 import {emulatorJsProviderDefinition} from "./catalog.js";
 import {retromRuntimeProviderDefinition} from "../retrom-runtime/catalog.js";
-import {emulatorCheckpointAvailability} from "./lifecycle.js";
+import {dosCheckpointAvailability} from "./dosbox-range.js";
 
 it.each(["atari800", "atari800-xegs", "hatarib", "theodore", "fceumm"])(
   "declares shortcut ownership for %s inside the Provider", (targetId) => {
@@ -16,7 +16,7 @@ it.each(["atari800", "atari800-xegs", "hatarib", "theodore", "fceumm"])(
 it("reports the required user action when a DOS program has not been selected", () => {
   const envelope = launchEnvelope(); envelope.runtime.targetId = "dosbox-pure";
   envelope.targetOptions.dosEntryPath = null;
-  expect(emulatorCheckpointAvailability(envelope, null, "dosbox_pure", null)).toEqual({
+  expect(dosCheckpointAvailability({gameManager: {Module: {_retrom_dos_state_ready: () => 0}}})).toEqual({
     available: false, reason: "PROGRAM_SELECTION_REQUIRED", requiredAction: "SELECT_PROGRAM",
   });
 });
@@ -26,10 +26,9 @@ it.each(["bbc-jsbeeb", "samcoupe"])("preserves computer keyboard ownership for %
 });
 
 
-it("clears the program-selection action after a launch selects a program", () => {
+it("clears the action after the native menu actually starts a program without an explicit entry", () => {
   const envelope = launchEnvelope(); envelope.runtime.targetId = "dosbox-pure";
-  envelope.targetOptions.dosEntryPath = "GAME.EXE";
-  expect(emulatorCheckpointAvailability(envelope, null, "dosbox_pure", null)).toEqual({
-    available: false, reason: "NOT_READY",
-  });
+  envelope.targetOptions.dosEntryPath = null;
+  expect(dosCheckpointAvailability({gameManager: {Module: {_retrom_dos_state_ready: () => 1}}})).toEqual({available: true, reason: null});
+  expect(dosCheckpointAvailability(null)).toEqual({available: false, reason: "NOT_READY"});
 });

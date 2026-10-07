@@ -1,0 +1,1221 @@
+[
+  {
+    "coreId": "81",
+    "providerId": "emulatorjs",
+    "targetId": "81",
+    "platformIds": [
+      "zx81"
+    ],
+    "contentKinds": [
+      "SINGLE_FILE"
+    ]
+  },
+  {
+    "coreId": "a5200",
+    "providerId": "emulatorjs",
+    "targetId": "a5200",
+    "platformIds": [
+      "atari5200"
+    ],
+    "contentKinds": [
+      "SINGLE_FILE"
+    ]
+  },
+  {
+    "coreId": "ardens",
+    "providerId": "emulatorjs",
+    "targetId": "ardens",
+    "platformIds": [
+      "arduboy"
+    ],
+    "contentKinds": [
+      "SINGLE_FILE"
+    ]
+  },
+  {
+    "coreId": "atari800",
+    "providerId": "emulatorjs",
+    "targetId": "atari800",
+    "platformIds": [
+      "atari800"
+    ],
+    "contentKinds": [
+      "SINGLE_FILE"
+    ]
+  },
+  {
+    "coreId": "atari800-xegs",
+    "providerId": "emulatorjs",
+    "targetId": "atari800-xegs",
+    "platformIds": [
+      "xegs"
+    ],
+    "contentKinds": [
+      "SINGLE_FILE"
+    ]
+  },
+  {
+    "coreId": "azahar",
+    "providerId": "emulatorjs",
+    "targetId": "azahar",
+    "platformIds": [
+      "nintendo3ds"
+    ],
+    "contentKinds": [
+      "SINGLE_FILE"
+    ]
+  },
+  {
+    "coreId": "beetle_vb",
+    "providerId": "emulatorjs",
+    "targetId": "beetle-vb",
+    "platformIds": [
+      "virtualboy"
+    ],
+    "contentKinds": [
+      "SINGLE_FILE"
+    ]
+  },
+  {
+    "coreId": "bsnes",
+    "providerId": "emulatorjs",
+    "targetId": "bsnes",
+    "platformIds": [
+      "snes"
+    ],
+    "contentKinds": [
+      "SINGLE_FILE"
+    ]
+  },
+  {
+    "coreId": "cap32",
+    "providerId": "emulatorjs",
+    "targetId": "cap32",
+    "platformIds": [
+      "amstradcpc",
+      "gx4000"
+    ],
+    "contentKinds": [
+      "SINGLE_FILE"
+    ]
+  },
+  {
+    "coreId": "crocods",
+    "providerId": "emulatorjs",
+    "targetId": "crocods",
+    "platformIds": [
+      "amstradcpc"
+    ],
+    "contentKinds": [
+      "SINGLE_FILE"
+    ]
+  },
+  {
+    "coreId": "daphne",
+    "providerId": "emulatorjs",
+    "targetId": "daphne",
+    "platformIds": [
+      "daphne"
+    ],
+    "contentKinds": [
+      "DAPHNE_PROJECT"
+    ]
+  },
+  {
+    "coreId": "desmume",
+    "providerId": "emulatorjs",
+    "targetId": "desmume",
+    "platformIds": [
+      "nds"
+    ],
+    "contentKinds": [
+      "SINGLE_FILE"
+    ]
+  },
+  {
+    "coreId": "desmume2015",
+    "providerId": "emulatorjs",
+    "targetId": "desmume2015",
+    "platformIds": [
+      "nds"
+    ],
+    "contentKinds": [
+      "SINGLE_FILE"
+    ]
+  },
+  {
+    "coreId": "dosbox_pure",
+    "providerId": "emulatorjs",
+    "targetId": "dosbox-pure",
+    "platformIds": [
+      "dos"
+    ],
+    "contentKinds": [
+      "DOS_BUNDLE"
+    ]
+  },
+  {
+    "coreId": "fbalpha2012_cps1",
+    "providerId": "emulatorjs",
+    "targetId": "fbalpha2012-cps1",
+    "platformIds": [
+      "arcade"
+    ],
+    "contentKinds": [
+      "ARCADE"
+    ]
+  },
+  {
+    "coreId": "fbalpha2012_cps2",
+    "providerId": "emulatorjs",
+    "targetId": "fbalpha2012-cps2",
+    "platformIds": [
+      "arcade"
+    ],
+    "contentKinds": [
+      "ARCADE"
+    ]
+  },
+  {
+    "coreId": "fbneo",
+    "providerId": "emulatorjs",
+    "targetId": "fbneo",
+    "platformIds": [
+      "arcade"
+    ],
+    "contentKinds": [
+      "ARCADE"
+    ]
+  },
+  {
+    "coreId": "fceumm",
+    "providerId": "emulatorjs",
+    "targetId": "fceumm",
+    "platformIds": [
+      "fds",
+      "nes"
+    ],
+    "contentKinds": [
+      "SINGLE_FILE"
+    ]
+  },
+  {
+    "coreId": "flycast",
+    "providerId": "emulatorjs",
+    "targetId": "flycast",
+    "platformIds": [
+      "dreamcast"
+    ],
+    "contentKinds": [
+      "SINGLE_FILE"
+    ]
+  },
+  {
+    "coreId": "flycast-atomiswave",
+    "providerId": "emulatorjs",
+    "targetId": "flycast-atomiswave",
+    "platformIds": [
+      "atomiswave"
+    ],
+    "contentKinds": [
+      "SINGLE_FILE"
+    ]
+  },
+  {
+    "coreId": "flycast-naomi",
+    "providerId": "emulatorjs",
+    "targetId": "flycast-naomi",
+    "platformIds": [
+      "naomi"
+    ],
+    "contentKinds": [
+      "SINGLE_FILE"
+    ]
+  },
+  {
+    "coreId": "flycast-naomi2",
+    "providerId": "emulatorjs",
+    "targetId": "flycast-naomi2",
+    "platformIds": [
+      "naomi2"
+    ],
+    "contentKinds": [
+      "SINGLE_FILE"
+    ]
+  },
+  {
+    "coreId": "freechaf",
+    "providerId": "emulatorjs",
+    "targetId": "freechaf",
+    "platformIds": [
+      "channelf"
+    ],
+    "contentKinds": [
+      "SINGLE_FILE"
+    ]
+  },
+  {
+    "coreId": "freeintv",
+    "providerId": "emulatorjs",
+    "targetId": "freeintv",
+    "platformIds": [
+      "intellivision"
+    ],
+    "contentKinds": [
+      "SINGLE_FILE"
+    ]
+  },
+  {
+    "coreId": "fuse",
+    "providerId": "emulatorjs",
+    "targetId": "fuse",
+    "platformIds": [
+      "zxspectrum"
+    ],
+    "contentKinds": [
+      "SINGLE_FILE"
+    ]
+  },
+  {
+    "coreId": "gam4980",
+    "providerId": "emulatorjs",
+    "targetId": "gam4980",
+    "platformIds": [
+      "bbkrpg"
+    ],
+    "contentKinds": [
+      "SINGLE_FILE"
+    ]
+  },
+  {
+    "coreId": "gambatte",
+    "providerId": "emulatorjs",
+    "targetId": "gambatte",
+    "platformIds": [
+      "gbc"
+    ],
+    "contentKinds": [
+      "SINGLE_FILE"
+    ]
+  },
+  {
+    "coreId": "gearboy",
+    "providerId": "emulatorjs",
+    "targetId": "gearboy",
+    "platformIds": [
+      "sgb"
+    ],
+    "contentKinds": [
+      "SINGLE_FILE"
+    ]
+  },
+  {
+    "coreId": "gearcoleco",
+    "providerId": "emulatorjs",
+    "targetId": "gearcoleco",
+    "platformIds": [
+      "colecovision"
+    ],
+    "contentKinds": [
+      "SINGLE_FILE"
+    ]
+  },
+  {
+    "coreId": "genesis_plus_gx",
+    "providerId": "emulatorjs",
+    "targetId": "genesis-plus-gx",
+    "platformIds": [
+      "gamegear",
+      "megadrive",
+      "multivision",
+      "sg1000"
+    ],
+    "contentKinds": [
+      "SINGLE_FILE"
+    ]
+  },
+  {
+    "coreId": "genesis_plus_gx",
+    "providerId": "emulatorjs",
+    "targetId": "genesis-plus-gx-cd",
+    "platformIds": [
+      "segacd"
+    ],
+    "contentKinds": [
+      "SINGLE_FILE"
+    ]
+  },
+  {
+    "coreId": "genesis_plus_gx_wide",
+    "providerId": "emulatorjs",
+    "targetId": "genesis-plus-gx-wide",
+    "platformIds": [
+      "megadrive"
+    ],
+    "contentKinds": [
+      "SINGLE_FILE"
+    ]
+  },
+  {
+    "coreId": "handy",
+    "providerId": "emulatorjs",
+    "targetId": "handy",
+    "platformIds": [
+      "lynx"
+    ],
+    "contentKinds": [
+      "SINGLE_FILE"
+    ]
+  },
+  {
+    "coreId": "hatarib",
+    "providerId": "emulatorjs",
+    "targetId": "hatarib",
+    "platformIds": [
+      "atarist"
+    ],
+    "contentKinds": [
+      "SINGLE_FILE"
+    ]
+  },
+  {
+    "coreId": "lutro",
+    "providerId": "emulatorjs",
+    "targetId": "lutro",
+    "platformIds": [
+      "lutro"
+    ],
+    "contentKinds": [
+      "SINGLE_FILE"
+    ]
+  },
+  {
+    "coreId": "mame2003",
+    "providerId": "emulatorjs",
+    "targetId": "mame2003",
+    "platformIds": [
+      "arcade"
+    ],
+    "contentKinds": [
+      "ARCADE"
+    ]
+  },
+  {
+    "coreId": "mame2003_plus",
+    "providerId": "emulatorjs",
+    "targetId": "mame2003-plus",
+    "platformIds": [
+      "arcade"
+    ],
+    "contentKinds": [
+      "ARCADE"
+    ]
+  },
+  {
+    "coreId": "mednafen_ngp",
+    "providerId": "emulatorjs",
+    "targetId": "mednafen-ngp",
+    "platformIds": [
+      "ngpc"
+    ],
+    "contentKinds": [
+      "SINGLE_FILE"
+    ]
+  },
+  {
+    "coreId": "mednafen_pce",
+    "providerId": "emulatorjs",
+    "targetId": "mednafen-pce",
+    "platformIds": [
+      "pce",
+      "pcecd",
+      "supergrafx"
+    ],
+    "contentKinds": [
+      "SINGLE_FILE"
+    ]
+  },
+  {
+    "coreId": "mednafen_pcfx",
+    "providerId": "emulatorjs",
+    "targetId": "mednafen-pcfx",
+    "platformIds": [
+      "pcfx"
+    ],
+    "contentKinds": [
+      "SINGLE_FILE"
+    ]
+  },
+  {
+    "coreId": "mednafen_psx_hw",
+    "providerId": "emulatorjs",
+    "targetId": "mednafen-psx-hw",
+    "platformIds": [
+      "psx"
+    ],
+    "contentKinds": [
+      "SINGLE_FILE"
+    ]
+  },
+  {
+    "coreId": "mednafen_wswan",
+    "providerId": "emulatorjs",
+    "targetId": "mednafen-wswan",
+    "platformIds": [
+      "wonderswan"
+    ],
+    "contentKinds": [
+      "SINGLE_FILE"
+    ]
+  },
+  {
+    "coreId": "melonds",
+    "providerId": "emulatorjs",
+    "targetId": "melonds",
+    "platformIds": [
+      "nds"
+    ],
+    "contentKinds": [
+      "SINGLE_FILE"
+    ]
+  },
+  {
+    "coreId": "mgba",
+    "providerId": "emulatorjs",
+    "targetId": "mgba",
+    "platformIds": [
+      "gba",
+      "gbc"
+    ],
+    "contentKinds": [
+      "SINGLE_FILE"
+    ]
+  },
+  {
+    "coreId": "mupen64plus_next",
+    "providerId": "emulatorjs",
+    "targetId": "mupen64plus-next",
+    "platformIds": [
+      "n64"
+    ],
+    "contentKinds": [
+      "SINGLE_FILE"
+    ]
+  },
+  {
+    "coreId": "neocd",
+    "providerId": "emulatorjs",
+    "targetId": "neocd",
+    "platformIds": [
+      "neogeocd"
+    ],
+    "contentKinds": [
+      "SINGLE_FILE"
+    ]
+  },
+  {
+    "coreId": "nestopia",
+    "providerId": "emulatorjs",
+    "targetId": "nestopia",
+    "platformIds": [
+      "fds",
+      "nes"
+    ],
+    "contentKinds": [
+      "SINGLE_FILE"
+    ]
+  },
+  {
+    "coreId": "o2em",
+    "providerId": "emulatorjs",
+    "targetId": "o2em",
+    "platformIds": [
+      "odyssey2"
+    ],
+    "contentKinds": [
+      "SINGLE_FILE"
+    ]
+  },
+  {
+    "coreId": "opera",
+    "providerId": "emulatorjs",
+    "targetId": "opera",
+    "platformIds": [
+      "3do"
+    ],
+    "contentKinds": [
+      "SINGLE_FILE"
+    ]
+  },
+  {
+    "coreId": "parallel_n64",
+    "providerId": "emulatorjs",
+    "targetId": "parallel-n64",
+    "platformIds": [
+      "n64"
+    ],
+    "contentKinds": [
+      "SINGLE_FILE"
+    ]
+  },
+  {
+    "coreId": "pcsx_rearmed",
+    "providerId": "emulatorjs",
+    "targetId": "pcsx-rearmed",
+    "platformIds": [
+      "psx"
+    ],
+    "contentKinds": [
+      "SINGLE_FILE"
+    ]
+  },
+  {
+    "coreId": "picodrive",
+    "providerId": "emulatorjs",
+    "targetId": "picodrive",
+    "platformIds": [
+      "megadrive",
+      "pico",
+      "sega32x"
+    ],
+    "contentKinds": [
+      "SINGLE_FILE"
+    ]
+  },
+  {
+    "coreId": "potator",
+    "providerId": "emulatorjs",
+    "targetId": "potator",
+    "platformIds": [
+      "supervision"
+    ],
+    "contentKinds": [
+      "SINGLE_FILE"
+    ]
+  },
+  {
+    "coreId": "prboom",
+    "providerId": "emulatorjs",
+    "targetId": "prboom",
+    "platformIds": [
+      "doom"
+    ],
+    "contentKinds": [
+      "SINGLE_FILE"
+    ]
+  },
+  {
+    "coreId": "prosystem",
+    "providerId": "emulatorjs",
+    "targetId": "prosystem",
+    "platformIds": [
+      "atari7800"
+    ],
+    "contentKinds": [
+      "SINGLE_FILE"
+    ]
+  },
+  {
+    "coreId": "puae",
+    "providerId": "emulatorjs",
+    "targetId": "puae",
+    "platformIds": [
+      "amiga",
+      "amigacd32"
+    ],
+    "contentKinds": [
+      "SINGLE_FILE"
+    ]
+  },
+  {
+    "coreId": "quasi88",
+    "providerId": "emulatorjs",
+    "targetId": "quasi88",
+    "platformIds": [
+      "pc88"
+    ],
+    "contentKinds": [
+      "SINGLE_FILE"
+    ]
+  },
+  {
+    "coreId": "same_cdi",
+    "providerId": "emulatorjs",
+    "targetId": "same-cdi",
+    "platformIds": [
+      "cdi"
+    ],
+    "contentKinds": [
+      "SINGLE_FILE"
+    ]
+  },
+  {
+    "coreId": "sameduck",
+    "providerId": "emulatorjs",
+    "targetId": "sameduck",
+    "platformIds": [
+      "megaduck"
+    ],
+    "contentKinds": [
+      "SINGLE_FILE"
+    ]
+  },
+  {
+    "coreId": "smsplus",
+    "providerId": "emulatorjs",
+    "targetId": "smsplus",
+    "platformIds": [
+      "mastersystem"
+    ],
+    "contentKinds": [
+      "SINGLE_FILE"
+    ]
+  },
+  {
+    "coreId": "snes9x",
+    "providerId": "emulatorjs",
+    "targetId": "snes9x",
+    "platformIds": [
+      "satellaview",
+      "snes"
+    ],
+    "contentKinds": [
+      "SINGLE_FILE"
+    ]
+  },
+  {
+    "coreId": "stella2014",
+    "providerId": "emulatorjs",
+    "targetId": "stella2014",
+    "platformIds": [
+      "atari2600"
+    ],
+    "contentKinds": [
+      "SINGLE_FILE"
+    ]
+  },
+  {
+    "coreId": "supermodel",
+    "providerId": "emulatorjs",
+    "targetId": "supermodel",
+    "platformIds": [
+      "model3"
+    ],
+    "contentKinds": [
+      "SINGLE_FILE"
+    ]
+  },
+  {
+    "coreId": "theodore",
+    "providerId": "emulatorjs",
+    "targetId": "theodore",
+    "platformIds": [
+      "thomson"
+    ],
+    "contentKinds": [
+      "SINGLE_FILE"
+    ]
+  },
+  {
+    "coreId": "uzem",
+    "providerId": "emulatorjs",
+    "targetId": "uzem",
+    "platformIds": [
+      "uzebox"
+    ],
+    "contentKinds": [
+      "SINGLE_FILE"
+    ]
+  },
+  {
+    "coreId": "vecx",
+    "providerId": "emulatorjs",
+    "targetId": "vecx",
+    "platformIds": [
+      "vectrex"
+    ],
+    "contentKinds": [
+      "SINGLE_FILE"
+    ]
+  },
+  {
+    "coreId": "vice_x128",
+    "providerId": "emulatorjs",
+    "targetId": "vice-x128",
+    "platformIds": [
+      "c128"
+    ],
+    "contentKinds": [
+      "SINGLE_FILE"
+    ]
+  },
+  {
+    "coreId": "vice_x64",
+    "providerId": "emulatorjs",
+    "targetId": "vice-x64",
+    "platformIds": [
+      "c64"
+    ],
+    "contentKinds": [
+      "SINGLE_FILE"
+    ]
+  },
+  {
+    "coreId": "vice_x64sc",
+    "providerId": "emulatorjs",
+    "targetId": "vice-x64sc",
+    "platformIds": [
+      "c64"
+    ],
+    "contentKinds": [
+      "SINGLE_FILE"
+    ]
+  },
+  {
+    "coreId": "vice_xpet",
+    "providerId": "emulatorjs",
+    "targetId": "vice-xpet",
+    "platformIds": [
+      "pet"
+    ],
+    "contentKinds": [
+      "SINGLE_FILE"
+    ]
+  },
+  {
+    "coreId": "vice_xplus4",
+    "providerId": "emulatorjs",
+    "targetId": "vice-xplus4",
+    "platformIds": [
+      "plus4"
+    ],
+    "contentKinds": [
+      "SINGLE_FILE"
+    ]
+  },
+  {
+    "coreId": "vice_xvic",
+    "providerId": "emulatorjs",
+    "targetId": "vice-xvic",
+    "platformIds": [
+      "vic20"
+    ],
+    "contentKinds": [
+      "SINGLE_FILE"
+    ]
+  },
+  {
+    "coreId": "virtualjaguar",
+    "providerId": "emulatorjs",
+    "targetId": "virtualjaguar",
+    "platformIds": [
+      "atarijaguar"
+    ],
+    "contentKinds": [
+      "SINGLE_FILE"
+    ]
+  },
+  {
+    "coreId": "yabause",
+    "providerId": "emulatorjs",
+    "targetId": "yabause",
+    "platformIds": [
+      "saturn"
+    ],
+    "contentKinds": [
+      "SINGLE_FILE"
+    ]
+  },
+  {
+    "coreId": "apple2js",
+    "providerId": "retrom-runtime",
+    "targetId": "apple2-apple2js",
+    "platformIds": [
+      "apple2"
+    ],
+    "contentKinds": [
+      "SINGLE_FILE"
+    ]
+  },
+  {
+    "coreId": "jsbeeb",
+    "providerId": "retrom-runtime",
+    "targetId": "bbc-jsbeeb",
+    "platformIds": [
+      "bbc"
+    ],
+    "contentKinds": [
+      "SINGLE_FILE"
+    ]
+  },
+  {
+    "coreId": "butterscotch",
+    "providerId": "retrom-runtime",
+    "targetId": "butterscotch-gamemaker",
+    "platformIds": [
+      "butterscotch"
+    ],
+    "contentKinds": [
+      "BUTTERSCOTCH_PROJECT"
+    ]
+  },
+  {
+    "coreId": "fake08",
+    "providerId": "retrom-runtime",
+    "targetId": "fake08",
+    "platformIds": [
+      "pico8"
+    ],
+    "contentKinds": [
+      "SINGLE_FILE"
+    ]
+  },
+  {
+    "coreId": "ruffle",
+    "providerId": "retrom-runtime",
+    "targetId": "flash-ruffle",
+    "platformIds": [
+      "flash"
+    ],
+    "contentKinds": [
+      "SINGLE_FILE"
+    ]
+  },
+  {
+    "coreId": "gbe_plus",
+    "providerId": "retrom-runtime",
+    "targetId": "gbe-pokemini",
+    "platformIds": [
+      "pokemini"
+    ],
+    "contentKinds": [
+      "SINGLE_FILE"
+    ]
+  },
+  {
+    "coreId": "j2me",
+    "providerId": "retrom-runtime",
+    "targetId": "j2me",
+    "platformIds": [
+      "j2me"
+    ],
+    "contentKinds": [
+      "SINGLE_FILE"
+    ]
+  },
+  {
+    "coreId": "kirikiri2",
+    "providerId": "retrom-runtime",
+    "targetId": "kirikiri2-kag",
+    "platformIds": [
+      "kirikiri"
+    ],
+    "contentKinds": [
+      "KIRIKIRI_PROJECT"
+    ]
+  },
+  {
+    "coreId": "mame_apple2",
+    "providerId": "retrom-runtime",
+    "targetId": "mame-apple2",
+    "platformIds": [
+      "apple2"
+    ],
+    "contentKinds": [
+      "SINGLE_FILE"
+    ]
+  },
+  {
+    "coreId": "mame_apple2e",
+    "providerId": "retrom-runtime",
+    "targetId": "mame-apple2e",
+    "platformIds": [
+      "apple2"
+    ],
+    "contentKinds": [
+      "SINGLE_FILE"
+    ]
+  },
+  {
+    "coreId": "mame_arcade",
+    "providerId": "retrom-runtime",
+    "targetId": "mame-arcade",
+    "platformIds": [
+      "arcade"
+    ],
+    "contentKinds": [
+      "ARCADE"
+    ]
+  },
+  {
+    "coreId": "mame_atom",
+    "providerId": "retrom-runtime",
+    "targetId": "mame-atom",
+    "platformIds": [
+      "atom"
+    ],
+    "contentKinds": [
+      "SINGLE_FILE"
+    ]
+  },
+  {
+    "coreId": "mame_coleco",
+    "providerId": "retrom-runtime",
+    "targetId": "mame-coleco",
+    "platformIds": [
+      "colecovision"
+    ],
+    "contentKinds": [
+      "SINGLE_FILE"
+    ]
+  },
+  {
+    "coreId": "mame_pv1000",
+    "providerId": "retrom-runtime",
+    "targetId": "mame-pv1000",
+    "platformIds": [
+      "pv1000"
+    ],
+    "contentKinds": [
+      "SINGLE_FILE"
+    ]
+  },
+  {
+    "coreId": "mame_sg1000",
+    "providerId": "retrom-runtime",
+    "targetId": "mame-sg1000",
+    "platformIds": [
+      "sg1000"
+    ],
+    "contentKinds": [
+      "SINGLE_FILE"
+    ]
+  },
+  {
+    "coreId": "webmsx",
+    "providerId": "retrom-runtime",
+    "targetId": "msx-webmsx",
+    "platformIds": [
+      "msx"
+    ],
+    "contentKinds": [
+      "SINGLE_FILE"
+    ]
+  },
+  {
+    "coreId": "np2kai",
+    "providerId": "retrom-runtime",
+    "targetId": "np2kai-pc98",
+    "platformIds": [
+      "pc98"
+    ],
+    "contentKinds": [
+      "SINGLE_FILE"
+    ]
+  },
+  {
+    "coreId": "nxengine",
+    "providerId": "retrom-runtime",
+    "targetId": "nxengine",
+    "platformIds": [
+      "cavestory"
+    ],
+    "contentKinds": [
+      "NXENGINE_PROJECT"
+    ]
+  },
+  {
+    "coreId": "onscripter_yuri",
+    "providerId": "retrom-runtime",
+    "targetId": "onscripter-yuri",
+    "platformIds": [
+      "ons"
+    ],
+    "contentKinds": [
+      "ONS_PROJECT"
+    ]
+  },
+  {
+    "coreId": "openbor",
+    "providerId": "retrom-runtime",
+    "targetId": "openbor",
+    "platformIds": [
+      "openbor"
+    ],
+    "contentKinds": [
+      "SINGLE_FILE"
+    ]
+  },
+  {
+    "coreId": "play",
+    "providerId": "retrom-runtime",
+    "targetId": "play-ps2",
+    "platformIds": [
+      "ps2"
+    ],
+    "contentKinds": [
+      "SINGLE_FILE"
+    ]
+  },
+  {
+    "coreId": "ppsspp",
+    "providerId": "retrom-runtime",
+    "targetId": "ppsspp",
+    "platformIds": [
+      "psp"
+    ],
+    "contentKinds": [
+      "SINGLE_FILE"
+    ]
+  },
+  {
+    "coreId": "px68k",
+    "providerId": "retrom-runtime",
+    "targetId": "px68k",
+    "platformIds": [
+      "x68000"
+    ],
+    "contentKinds": [
+      "SINGLE_FILE"
+    ]
+  },
+  {
+    "coreId": "rpgmaker",
+    "providerId": "retrom-runtime",
+    "targetId": "rpgmaker-2000",
+    "platformIds": [
+      "rpgmaker"
+    ],
+    "contentKinds": [
+      "RPG_MAKER_PROJECT"
+    ],
+    "engine": "RPG2000"
+  },
+  {
+    "coreId": "rpgmaker",
+    "providerId": "retrom-runtime",
+    "targetId": "rpgmaker-2003",
+    "platformIds": [
+      "rpgmaker"
+    ],
+    "contentKinds": [
+      "RPG_MAKER_PROJECT"
+    ],
+    "engine": "RPG2003"
+  },
+  {
+    "coreId": "rpgmaker",
+    "providerId": "retrom-runtime",
+    "targetId": "rpgmaker-mv",
+    "platformIds": [
+      "rpgmaker"
+    ],
+    "contentKinds": [
+      "RPG_MAKER_PROJECT"
+    ],
+    "engine": "RPGMV"
+  },
+  {
+    "coreId": "rpgmaker",
+    "providerId": "retrom-runtime",
+    "targetId": "rpgmaker-mz",
+    "platformIds": [
+      "rpgmaker"
+    ],
+    "contentKinds": [
+      "RPG_MAKER_PROJECT"
+    ],
+    "engine": "RPGMZ"
+  },
+  {
+    "coreId": "rpgmaker",
+    "providerId": "retrom-runtime",
+    "targetId": "rpgmaker-vx",
+    "platformIds": [
+      "rpgmaker"
+    ],
+    "contentKinds": [
+      "RPG_MAKER_PROJECT"
+    ],
+    "engine": "RPGVX"
+  },
+  {
+    "coreId": "rpgmaker",
+    "providerId": "retrom-runtime",
+    "targetId": "rpgmaker-vx-ace",
+    "platformIds": [
+      "rpgmaker"
+    ],
+    "contentKinds": [
+      "RPG_MAKER_PROJECT"
+    ],
+    "engine": "RPGVXACE"
+  },
+  {
+    "coreId": "rpgmaker",
+    "providerId": "retrom-runtime",
+    "targetId": "rpgmaker-xp",
+    "platformIds": [
+      "rpgmaker"
+    ],
+    "contentKinds": [
+      "RPG_MAKER_PROJECT"
+    ],
+    "engine": "RPGXP"
+  },
+  {
+    "coreId": "samcoupeweb",
+    "providerId": "retrom-runtime",
+    "targetId": "samcoupe",
+    "platformIds": [
+      "samcoupe"
+    ],
+    "contentKinds": [
+      "SINGLE_FILE"
+    ]
+  },
+  {
+    "coreId": "scummvm",
+    "providerId": "retrom-runtime",
+    "targetId": "scummvm",
+    "platformIds": [
+      "scummvm"
+    ],
+    "contentKinds": [
+      "SCUMMVM_PROJECT"
+    ]
+  },
+  {
+    "coreId": "tic80",
+    "providerId": "retrom-runtime",
+    "targetId": "tic80",
+    "platformIds": [
+      "tic80"
+    ],
+    "contentKinds": [
+      "SINGLE_FILE"
+    ]
+  },
+  {
+    "coreId": "tyranoscript",
+    "providerId": "retrom-runtime",
+    "targetId": "tyranoscript",
+    "platformIds": [
+      "tyranoscript"
+    ],
+    "contentKinds": [
+      "TYRANOSCRIPT_PROJECT"
+    ]
+  },
+  {
+    "coreId": "wasm4",
+    "providerId": "retrom-runtime",
+    "targetId": "wasm4",
+    "platformIds": [
+      "wasm4"
+    ],
+    "contentKinds": [
+      "SINGLE_FILE"
+    ]
+  }
+]

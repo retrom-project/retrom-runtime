@@ -7,6 +7,7 @@ import {isAbsolute, join, parse, relative} from "node:path";
 
 import {buildProviderBundle} from "./provider-bundle.mjs";
 import {buildProviderClient} from "./provider-client-build.mjs";
+import {fingerprintProvider} from "./runtime-fingerprints.mjs";
 
 import {forkMetadataPath, forkReleaseFiles, verifyForkMetadata} from "./emulatorjs-fork-releases.mjs";
 
@@ -30,6 +31,7 @@ export async function buildRetromRuntimeProviderBundle(input) {
     assetIndex[assetPath] = {sha256: sha256(contents), sizeBytes: contents.byteLength};
   }
   const licenseSources = await collectLicenses(input.stageRoot);
+  await addRuntimeFingerprints(input.definition, assetIndex, temporaryRoot, licenseSources);
     const clientPath = join(temporaryRoot, "client.mjs");
     await buildProviderClient({
       providerVersion: input.manifest.providerVersion,
@@ -79,6 +81,7 @@ export async function buildEmulatorJsProviderBundle(input) {
   for (const name of ["LICENSE", "THIRD_PARTY_NOTICES.md", "EMULATORJS_THIRD_PARTY_NOTICES.md"]) {
     licenseSources.set(`licenses/retrom-runtime/${name}`, fileURLToPath(new URL(`../${name}`, import.meta.url)));
   }
+  await addRuntimeFingerprints(input.definition, assetIndex, temporaryRoot, licenseSources);
     const clientPath = join(temporaryRoot, "client.mjs");
     await buildProviderClient({
       providerVersion: input.manifest.providerVersion,
@@ -94,6 +97,7 @@ export async function buildEmulatorJsProviderBundle(input) {
       licenseSources,
       manifest: input.manifest,
       provenance: {
+        ...(input.sourceTreeSha256 ? {runtimeSourceTreeSha256: input.sourceTreeSha256} : {}),
         adapters: input.definition.adapters.map((adapter) => ({
           abi: adapter.abi, id: adapter.id, kind: adapter.kind,
         })).sort((left, right) => compareUtf8(left.id, right.id)),
@@ -111,6 +115,13 @@ export async function buildEmulatorJsProviderBundle(input) {
   } finally {
     await rm(temporaryRoot, {force: true, recursive: true});
   }
+}
+
+async function addRuntimeFingerprints(definition, assetIndex, temporaryRoot, sources) {
+  const fingerprints = await fingerprintProvider(definition, assetIndex);
+  const path = join(temporaryRoot, "runtime-fingerprints.json");
+  await writeFile(path, JSON.stringify({schemaVersion: 1, providerId: definition.providerId, targets: fingerprints}));
+  sources.set("runtime-fingerprints.json", path);
 }
 
 /** Asyncify may suspend callMain while the shared FS obtains a Content I/O range.
@@ -147,6 +158,7 @@ function verifyEmulatorJsImplementationAssets(definition, assetIndex) {
 
 function provenance(input) {
   return {
+    ...(input.sourceTreeSha256 ? {runtimeSourceTreeSha256: input.sourceTreeSha256} : {}),
     adapters: input.definition.adapters.map((adapter) => ({
       abi: adapter.abi,
       id: adapter.id,

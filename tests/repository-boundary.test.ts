@@ -26,6 +26,7 @@ describe("independent package boundary", () => {
     expect(sources.localAssets.map((asset: { output: string }) => asset.output).sort()).toEqual([
       "runtime/butterscotch/worker.mjs",
       "runtime/native/bridge.js",
+      "runtime/tyranoscript/bridge.js",
     ]);
     expect(JSON.stringify(sources)).not.toMatch(/runtime\/(?:v\d+|[^/]+-v\d+)\//u);
   });
@@ -39,7 +40,7 @@ describe("independent package boundary", () => {
       "apple2js-web-v1", "butterscotch-checkpoint-v2", "easyrpg-save", "fake08-state-v1", "gbe-pokemini-host-v1", "j2me-rms", "jsbeeb-web-v1", "kirikiri-content-io-v1", "mkxp-content-io-v1",
       "native-save", "np2kai-host-v1", "nxengine-host-v1", "ons-save", "openbor-host-v1", "play-host-v3", "ppsspp-host-v4", "px68k-host-v1", "retrom-mame-dylink-v1", "ruffle-host-v1", "samcoupe-web-v1", "scummvm-host-v1", "tic80-pmem-v1", "tyranoscript-snapshot-v1", "wasm4-state-v1", "webmsx-host-v1",
     ]);
-    expect((await readdir(join(root, "assets/runtime"))).sort()).toEqual(["butterscotch", "native"]);
+    expect((await readdir(join(root, "assets/runtime"))).sort()).toEqual(["butterscotch", "native", "tyranoscript"]);
     for (const asset of [
       "assets/runtime/butterscotch/worker.mjs",
       "assets/runtime/native/bridge.js",
@@ -85,11 +86,6 @@ describe("independent package boundary", () => {
     const sources = JSON.parse(await readFile(join(root, "provider-sources.json"), "utf8"));
     expect(sources).not.toHaveProperty("sourceBuilds");
     expect(sources.upstreamReleases).toEqual(expect.arrayContaining([expect.objectContaining({
-      adapterAbi: "ons-save",
-      id: "onsyuri",
-      repository: "https://github.com/retrom-project/OnscripterYuri",
-      tag: "retrom-core-0.7.7beta-r4",
-    }), expect.objectContaining({
       adapterAbi: "butterscotch-checkpoint-v2",
       id: "butterscotch",
       repository: "https://github.com/retrom-project/Butterscotch",
@@ -106,11 +102,15 @@ describe("independent package boundary", () => {
       tag: "retrom-core-gca2600db8de4-r1",
     })]));
     const releaseIds = sources.upstreamReleases.map((release: { id: string }) => release.id).sort();
-    expect(releaseIds).toEqual(["apple2js", "butterscotch", "easyrpg", "fake08", "gbe_plus", "j2me", "jsbeeb", "kirikiri2", "mame", "mkxp", "np2kai", "nxengine", "onsyuri", "openbor", "play", "ppsspp", "px68k", "ruffle", "samcoupeweb", "scummvm", "tic80", "tyranoscript", "wasm4", "webmsx"]);
+    expect(releaseIds).toEqual(["apple2js", "butterscotch", "easyrpg", "fake08", "gbe_plus", "j2me", "jsbeeb", "kirikiri2", "mame", "mkxp", "np2kai", "nxengine", "openbor", "play", "ppsspp", "px68k", "ruffle", "samcoupeweb", "scummvm", "tic80", "tyranoscript", "wasm4", "webmsx"]);
     expect(sources.upstreamReleases).toContainEqual(expect.objectContaining({
       id: "apple2js", tag: "retrom-core-gee0aed25f73c-r1", adapterAbi: "apple2js-web-v1",
     }));
-    expect(sources.developmentInputs.map((input: {id: string}) => input.id).sort()).toEqual([]);
+    expect(sources.developmentInputs.map((input: {id: string}) => input.id).sort()).toEqual(["onsyuri"]);
+    expect(sources.developmentInputs).toEqual([expect.objectContaining({
+      id: "onsyuri", adapterAbi: "ons-save", repository: "https://github.com/retrom-project/OnscripterYuri",
+      candidateArchive: expect.objectContaining({sha256: "81526b8dbce1b53fbd2229ae6cb482d7c7ed77aa06d6758e930b90fdb60f72e3"}),
+    })]);
     expect(await readdir(join(root, "scripts"))).not.toEqual(expect.arrayContaining([
       "build-kirikiri-core.sh", "build-ons-core.sh",
     ]));
@@ -124,6 +124,8 @@ describe("independent package boundary", () => {
     }
     const quality = await readFile(join(root, ".github/workflows/quality.yml"), "utf8");
     expect(quality).toContain("npm run release:build");
+    expect(quality).toContain('scripts/prepare-core-candidates.mjs --base-url "$RETROM_CORE_CANDIDATE_BASE_URL"');
+    expect(quality).toContain('RETROM_PFB_CANDIDATE_BUILD: "1"');
     expect(quality).toContain("RETROM_PROVIDER_BUILD_MODE: candidate");
     expect(quality).toContain("GITHUB_REF_TYPE: tag");
     expect(quality).toContain("GITHUB_REF_NAME: v0.0.0-rc.1");
@@ -132,6 +134,7 @@ describe("independent package boundary", () => {
     expect(releaseWorkflow).toContain('git cat-file -t "$remote_tag_ref"');
     expect(releaseWorkflow).toContain('git rev-list -n 1 "$remote_tag_ref"');
     expect(releaseWorkflow).toContain("RETROM_PROVIDER_BUILD_MODE: release");
+    expect(releaseWorkflow).toContain("release/runtime-inputs.json");
     const instructions = await readFile(join(root, "AGENTS.md"), "utf8");
     expect(instructions).toContain("不得编译第三方核心");
     expect(instructions).toContain("只聚合");

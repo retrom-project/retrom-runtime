@@ -1,4 +1,3 @@
-import type {EmulatorDiscInstance} from "./discs.js";
 import type {EmulatorNativeSettingsInstance} from "./native-settings.js";
 import type {EmulatorGamepadInstance} from "./startup-gamepads.js";
 import type {EmulatorDefaultControls} from "./default-controls.js";
@@ -11,6 +10,7 @@ type EjsManager = {
     UTF8ToString?: (pointer: number) => string;
     _free?: (pointer: number) => void;
     _save_state_info?: () => number;
+    _retrom_dos_state_ready?: () => number;
     EmulatorJSGetState?: () => Uint8Array;
     cwrap?: {
       (name: string, type: "number", args: string[], options: {async: true}): (...args: (string | number)[]) => Promise<number>;
@@ -36,12 +36,14 @@ type EjsManager = {
   toggleMainLoop?: (running: boolean) => void;
 };
 
-export type EjsInstance = EmulatorDiscInstance & EmulatorNativeSettingsInstance & EmulatorGamepadInstance & {
+export type EjsInstance = EmulatorNativeSettingsInstance & EmulatorGamepadInstance & {
   fileName?: string;
   debug?: boolean;
   Module?: {callMain?: (args: string[]) => unknown};
   startGame?: () => unknown;
   downloadRom?: () => Promise<void>;
+  downloadGameParent?: () => Promise<unknown>;
+  config?: {gameUrl?: string | File; gameParentUrl?: string | File};
   checkCompression?: (data: Uint8Array, message: string | undefined,
     callback?: (name: string, data: Uint8Array) => void) => Promise<unknown>;
   canvas?: HTMLCanvasElement;
@@ -54,7 +56,7 @@ export type EjsInstance = EmulatorDiscInstance & EmulatorNativeSettingsInstance 
   changeSettingOption?: (name: string, value: string) => void;
   enableShader?: (name: string) => void;
   takeScreenshot?: (source: string, format: string, upscale: number) => Promise<{blob?: Blob; screenshot?: unknown; format: string}>;
-  downloadType?: {rom?: {dontExtractIfCore?: string[]}};
+  downloadType?: {rom?: {dontExtractIfCore?: string[]}; parent?: {dontExtractIfCore?: string[]}};
   on?: (event: string, callback: (...args: unknown[]) => void) => void;
   callEvent?: (event: string, data?: unknown) => number;
 };
@@ -70,8 +72,8 @@ export type EjsWindow = Window & {
   EJS_gameName?: string;
   EJS_gameID?: number;
   EJS_pathtodata?: string;
-  EJS_biosUrl?: string;
-  EJS_gameParentUrl?: string;
+  EJS_biosUrl?: string | File;
+  EJS_gameParentUrl?: string | File;
   EJS_startOnLoaded?: boolean;
   EJS_dontExtractRom?: boolean;
   EJS_disableBatchBootup?: boolean;

@@ -37,12 +37,20 @@ describe("checkpoint restore semantics", () => {
     expect(() => defineAdapter({...adapter, saveSemantics: undefined}))
       .toThrow("PROVIDER_NO_SAVE_INVALID");
   });
-  it("accepts explicit game saves without changing legacy instant declarations", () => {
-    const legacy = projectProviderManifest(retromRuntimeProviderDefinition);
-    expect(validateProviderManifest(legacy)).toEqual(legacy);
-    const native = structuredClone(legacy);
+  it("accepts the explicitly declared instant and native game-save semantics", () => {
+    const declared = projectProviderManifest(retromRuntimeProviderDefinition);
+    expect(validateProviderManifest(declared)).toEqual(declared);
+    const native = structuredClone(declared);
     Object.assign(native.targets[0].checkpoint ?? {}, {semantics: "GAME_SAVE"});
     expect(validateProviderManifest(native)).toEqual(native);
+  });
+
+  it("requires checkpoint semantics in the public provider manifest", () => {
+    const manifest = projectProviderManifest(retromRuntimeProviderDefinition);
+    const checkpoint = manifest.targets.find(target => target.checkpoint !== null)?.checkpoint;
+    expect(checkpoint).not.toBeNull();
+    Reflect.deleteProperty(checkpoint as object, "semantics");
+    expect(() => validateProviderManifest(manifest)).toThrow("PROVIDER_MANIFEST_INVALID");
   });
 
   it("rejects unknown, empty and non-string checkpoint semantics", () => {

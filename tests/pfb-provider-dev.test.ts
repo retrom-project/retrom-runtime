@@ -4,7 +4,7 @@ import {mkdtemp, mkdir, readFile, readdir, rm, writeFile} from "node:fs/promises
 import {createHash} from "node:crypto";
 import {tmpdir} from "node:os";
 import {join} from "node:path";
-import {afterEach, describe, expect, it} from "vitest";
+import {afterEach, describe, expect, it, vi} from "vitest";
 
 import {buildPFBProviderDev, selectedPFBProviderDevInput} from "../scripts/pfb-provider-dev.mjs";
 
@@ -15,6 +15,24 @@ afterEach(async () => {
 });
 
 describe("PFB loose provider", () => {
+  it.each([undefined, "ARBITRARY"])("requires the declared checkpoint semantics at the active-input boundary (%s)", async (semantics) => {
+    const root = await temporaryRoot(), installedRoot = join(root, "installed"), outputRoot = join(root, "dev");
+    const bundle = "a".repeat(64), installation = join(installedRoot, "retrom-runtime", bundle);
+    await mkdir(installation, {recursive: true});
+    await mkdir(outputRoot);
+    await writeFile(join(outputRoot, "dev-provider.json"), "last-valid-revision\n");
+    await writeFile(join(installation, "provider.json"), JSON.stringify({providerId: "retrom-runtime", targets: []}));
+    await writeFile(join(installation, "integrity.json"), JSON.stringify({files: []}));
+    const activePath = join(root, "active.json"), entryPoint = join(root, "entry.ts");
+    await writeFile(entryPoint, "export const providerApiVersion=1;\n");
+    await writeFile(activePath, JSON.stringify({providers: [{providerId: "retrom-runtime", bundleSha256: bundle,
+      installationPath: `retrom-runtime/${bundle}`, targets: [{id: "butterscotch", checkpoint: {
+        writeFormat: "native-v1", readFormats: ["native-v1"], maxBytes: 1024, semantics,
+      }}]}]}));
+    await expect(buildPFBProviderDev({activePath, entryPoint, installedRoot, outputRoot, localAssets: []}))
+      .rejects.toThrow("PFB_PROVIDER_BASE_INVALID");
+    expect(await readFile(join(outputRoot, "dev-provider.json"), "utf8")).toBe("last-valid-revision\n");
+  });
   it("defaults to retrom-runtime and validates an explicit persisted provider selection", async () => {
     const root = await temporaryRoot();
     expect((await selectedPFBProviderDevInput(root)).providerId).toBe("retrom-runtime");
@@ -79,7 +97,7 @@ describe("PFB loose provider", () => {
     });
     expect(second.moduleSha256).not.toBe(first.moduleSha256);
     const descriptor = JSON.parse(await readFile(join(outputRoot, "dev-provider.json"), "utf8"));
-    expect(Object.keys(descriptor).sort()).toEqual(["baseBundleSha256", "files", "providerId", "schemaVersion"]);
+    expect(Object.keys(descriptor).sort()).toEqual(["baseBundleSha256", "files", "providerId", "providerManifest", "schemaVersion", "targetFingerprints"]);
     expect(await readdir(outputRoot)).toEqual(["dev-provider.json"]);
     expect(descriptor.baseBundleSha256).toBe(bundle);
     expect(descriptor.providerId).toBe(providerId);
@@ -144,3 +162,6 @@ async function temporaryRoot() {
 function sha256(value: string) {
   return createHash("sha256").update(value).digest("hex");
 }
+
+vi.mock("../scripts/runtime-fingerprints.mjs", () => ({fingerprintProvider: async (definition: {targets: {id: string}[]}) =>
+  Object.fromEntries(definition.targets.map(target => [target.id, {fingerprint: "a".repeat(64), inputs: []}]))}));

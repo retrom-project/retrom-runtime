@@ -14,8 +14,9 @@ it.each([
   ["genesis-plus-gx", "segaGG", "game.GG"],
   ["genesis-plus-gx", "segaMS", "game.sg"],
   ["cap32", undefined, "game.cpr"],
-  ["theodore", undefined, "game.k7", "Bomb Jacques MO5"],
-] as const)("selects the explicit controller layout before %s builds its input map", async (targetId, scheme, filename, title?: string) => {
+  ["theodore", undefined, "game.k7", "Bomb Jacques MO5", "TO8D"],
+  ["theodore", undefined, "game.k7", "Display title TO7", undefined],
+] as const)("selects the explicit controller layout before %s builds its input map", async (targetId, scheme, filename, title?: string, model?: string) => {
   const target = emulatorJsProviderDefinition.targets.find((candidate) => candidate.id === targetId)!;
   const implementation = target.implementation;
   const frame = document.createElement("iframe");
@@ -26,6 +27,7 @@ it.each([
   const envelope = launchEnvelope();
   envelope.runtime.targetId = targetId;
   if (title) {envelope.session.title = title;}
+  if (model) {envelope.targetOptions.thomsonModel = model;}
   const game = envelope.resources[0];
   if (game.kind !== "ROM_BLOB") {throw new Error("ROM fixture required");}
   game.url = `/runtime/content/game/${filename}?download=1`;
@@ -43,7 +45,7 @@ it.each([
       expect(runtimeWindow.EJS_defaultOptions).toMatchObject({cap32_model: "6128+ (experimental)", cap32_gfx_colors: "24bit"});
     }
     if (targetId === "theodore") {
-      expect(runtimeWindow.EJS_defaultOptions).toMatchObject({theodore_rom: "MO5"});
+      expect((runtimeWindow.EJS_defaultOptions as Record<string, unknown>).theodore_rom).toBe(model);
     }
     expect(runtimeWindow.EJS_defaultControls).toMatchObject({
       0: {1: {value: "l", value2: targetId === "theodore" ? "BUTTON_1" : "BUTTON_4"}, 3: {value: "1", value2: "START"}},

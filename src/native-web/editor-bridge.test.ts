@@ -107,7 +107,7 @@ describe("native-web RPG Maker game editor bridge", () => {
       start: () => undefined};
     const identity = {launchId: "01980000-0000-7000-8000-000000000001", nonce: "test-nonce", protocolVersion: 1};
     listeners.get("message")?.[0]?.({
-      data: {...identity, cleanupUrl: null, parentOrigin: "https://host.example",
+      data: {...identity, parentOrigin: "https://host.example",
         profile: `RPG${edition}`, type: "RPG_RUNTIME_NATIVE_CONNECT"},
       origin: "https://host.example", ports: [port], stopImmediatePropagation: () => undefined,
     });

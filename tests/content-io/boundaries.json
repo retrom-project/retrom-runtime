@@ -792,6 +792,96 @@
       "tests": [
         "runtime:src/provider/startup-deadline.test.ts"
       ]
+    },
+    {
+      "id": "B-ISOLATED-67",
+      "repository": "runtime",
+      "path": "assets/runtime/native/bridge-source.js",
+      "symbol": "encodeScreenshot",
+      "classification": "SAVE_OR_OVERLAY",
+      "reason": "Copies the isolated engine screenshot into a bounded checkpoint or screenshot payload.",
+      "ownerStage": "S21",
+      "tests": [
+        "runtime:src/native-web/bridge-screenshot.test.ts",
+        "runtime:src/native-web/input-bridge.test.ts"
+      ]
+    },
+    {
+      "id": "B-ISOLATED-68",
+      "repository": "runtime",
+      "path": "assets/runtime/native/bridge-source.js",
+      "symbol": "editorMapData",
+      "classification": "BROWSER_NATIVE",
+      "reason": "Map metadata or screenshot backgrounds read inside the isolated native browser game realm; immutable resources are served by the scoped Content IO bridge.",
+      "ownerStage": "S21",
+      "tests": [
+        "runtime:src/native-web/bridge-screenshot.test.ts",
+        "runtime:src/native-web/input-bridge.test.ts"
+      ]
+    },
+    {
+      "id": "B-ISOLATED-69",
+      "repository": "runtime",
+      "path": "assets/runtime/tyranoscript/bridge.js",
+      "symbol": "screenshotBackground",
+      "classification": "BROWSER_NATIVE",
+      "reason": "Map metadata or screenshot backgrounds read inside the isolated native browser game realm; immutable resources are served by the scoped Content IO bridge.",
+      "ownerStage": "S21",
+      "tests": [
+        "runtime:src/native-web/bridge-screenshot.test.ts",
+        "runtime:src/native-web/input-bridge.test.ts"
+      ]
+    },
+    {
+      "id": "B-ISOLATED-70",
+      "repository": "runtime",
+      "path": "assets/runtime/tyranoscript/bridge.js",
+      "symbol": "screenshotBoundedDOM",
+      "classification": "SAVE_OR_OVERLAY",
+      "reason": "Copies the isolated engine screenshot into a bounded checkpoint or screenshot payload.",
+      "ownerStage": "S21",
+      "tests": [
+        "runtime:src/native-web/bridge-screenshot.test.ts",
+        "runtime:src/native-web/input-bridge.test.ts"
+      ]
+    },
+    {
+      "id": "B-ISOLATED-71",
+      "repository": "runtime",
+      "path": "assets/runtime/tyranoscript/bridge-source.js",
+      "symbol": "screenshotBackground",
+      "classification": "BROWSER_NATIVE",
+      "reason": "Map metadata or screenshot backgrounds read inside the isolated native browser game realm; immutable resources are served by the scoped Content IO bridge.",
+      "ownerStage": "S21",
+      "tests": [
+        "runtime:src/native-web/bridge-screenshot.test.ts",
+        "runtime:src/native-web/input-bridge.test.ts"
+      ]
+    },
+    {
+      "id": "B-ISOLATED-72",
+      "repository": "runtime",
+      "path": "assets/runtime/tyranoscript/bridge-source.js",
+      "symbol": "screenshotBoundedDOM",
+      "classification": "SAVE_OR_OVERLAY",
+      "reason": "Copies the isolated engine screenshot into a bounded checkpoint or screenshot payload.",
+      "ownerStage": "S21",
+      "tests": [
+        "runtime:src/native-web/bridge-screenshot.test.ts",
+        "runtime:src/native-web/input-bridge.test.ts"
+      ]
+    },
+    {
+      "id": "B-093",
+      "repository": "runtime",
+      "path": "src/providers/emulatorjs/parent-archive.ts",
+      "symbol": "download",
+      "classification": "CORE_BRIDGE",
+      "reason": "Mount exact named Parent archive bytes materialized by the shared Content IO session, without a private network download or decompression.",
+      "ownerStage": "S11",
+      "tests": [
+        "runtime:src/providers/emulatorjs/parent-content.test.ts"
+      ]
     }
   ]
 }

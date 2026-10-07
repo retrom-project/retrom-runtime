@@ -297,7 +297,7 @@ describe("KiriKiri2 KAG runtime", () => {
 
     const restoredVlfs = fakeVlfs();
     const nextConfig = config();
-    nextConfig.restore = {format: checkpoint.format, sha256: "a".repeat(64), sizeBytes: checkpoint.bytes.length, url: "/restore"};
+    nextConfig.restore = {kind: "HTTP", format: checkpoint.format, sha256: "a".repeat(64), sizeBytes: checkpoint.bytes.length, url: "/restore"};
     const restored = await createRuntime(nextConfig, currentWindowHost(checkpoint.bytes));
     const restoredTarget = document.createElement("div");
     const restoredMount = restored.mount(restoredTarget);
@@ -452,11 +452,11 @@ function mockDownloads(xp3Paths = ["/data.xp3"]) {
     if (url.endsWith("/index.json") && !init?.method) {
       return Response.json({ schemaVersion: 1, files: [
         ...xp3Paths.map((path) => ({
-          path: path.replace(/^\//u, ""), sizeBytes: 1234,
+          path: path.replace(/^\//u, ""), sizeBytes: 1234, sha256: "a".repeat(64), mediaType: "application/octet-stream",
           url: `/runtime/content/project/${"a".repeat(64)}${path}`,
         })),
         {
-          path: "startup.tjs", sizeBytes: 40,
+          path: "startup.tjs", sizeBytes: 40, sha256: "a".repeat(64), mediaType: "application/octet-stream",
           url: `/runtime/content/project/${"a".repeat(64)}/startup.tjs`,
         },
       ] });

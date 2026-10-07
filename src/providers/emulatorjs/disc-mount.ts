@@ -4,11 +4,11 @@ import {installFlycastCompatibility} from "./flycast.js";
 import {resource} from "./resources.js";
 import type {AdapterContentSession} from "../../provider/content-inputs.js";
 import {fileContentSource} from "../../provider/content-inputs.js";
-import {createFlycastRange, createNeoCDRange} from "./neocd-range.js";
+import {createFlycastRange, createNeoCDRange, NeoCDRange} from "./neocd-range.js";
 import {EagerContentFile} from "./eager-content-file.js";
 import {prepareEagerROM} from "./eager-resources.js";
 import type {EjsWindow} from "./emulator-instance.js";
-import {prepareDOSBundle} from "./dosbox-range.js";
+import {contentFileName} from "./content-filename.js";
 
 export function emulatorJsDisableCue(core: string, targetId: string): boolean {
   return ["cap32", "quasi88"].includes(core) || core === "flycast" &&
@@ -34,7 +34,7 @@ export async function mountSeekableContentRange(runtimeWindow: EjsWindow, disc: 
   signal: AbortSignal, fail: (error: Error) => void, session: AdapterContentSession): Promise<ReturnType<typeof createNeoCDRange>> {
   const policy = session.inputPolicy("game");
   const reader = await session.open(fileContentSource(disc, policy), policy, signal);
-  const range = createNeoCDRange(disc, reader, fail);
+  const range = new NeoCDRange(disc, reader, fail, contentFileName(disc.url));
   // The emulator may inspect both ends of a disc before its first frame.
   try {await Promise.all([range.read(0, 1), range.read(disc.sizeBytes - 1, 1)]);}
   catch (error) {await range.dispose(); throw error;}
@@ -84,7 +84,7 @@ export function hasSeekableGame(envelope: LaunchEnvelopeV1): boolean {
 }
 
 export function gameResourceURL(envelope: LaunchEnvelopeV1, core: string, seekable: boolean) {
-  // DOS receives its virtual File in configureContentDisc before the EJS loader starts.
+  // DOS receives its virtual File before the EJS loader starts.
   return core === "dosbox_pure" ? "game.zip" :
     resource(envelope, "game", seekable ? "SEEKABLE_BLOB" : "ROM_BLOB").url;
 }
@@ -98,13 +98,6 @@ export function mountRangeFS(core: string, seekable: boolean, eager: boolean, da
 export async function configureContentDisc(runtimeWindow: EjsWindow, envelope: LaunchEnvelopeV1, core: string,
   signal: AbortSignal, session: AdapterContentSession | null, fail: (error: Error) => void,
   eager = false, report: (readyBytes: number, totalBytes: number) => void = () => {}) {
-  if (core === "dosbox_pure") {
-    const game = resource(envelope, "game", "FILE_TREE");
-    const bundle = await prepareDOSBundle(game, requireContentSession(session), signal, fail);
-    const FileConstructor = (runtimeWindow as Window & typeof globalThis).File;
-    runtimeWindow.EJS_gameUrl = new FileConstructor(["RETROM_DOSBOX_RANGE_V1"], bundle.range.filename);
-    return {range: bundle.range, cleanup: null};
-  }
   if (eager) {
     const game = resource(envelope, "game", "ROM_BLOB");
     return {range: await mountEagerContentFile(runtimeWindow, game, signal, fail, requireContentSession(session), report), cleanup: null};

@@ -42,10 +42,9 @@ export async function resourceSources(resource: RuntimeResourceV1, policy: Manag
         transport: policy.mode === "RANGE" ? "RANGE_REQUIRED" : "WHOLE_ALLOWED", contentLengthPolicy: policy.contentLengthPolicy};
     });
   }
-  const files = resource.kind === "MULTI_DISC" ? resource.entries :
-    resource.kind === "BIOS_BUNDLE" || resource.kind === "EXTERNAL_FILE_SET" ? resource.files :
+  const files = resource.kind === "BIOS_BUNDLE" || resource.kind === "EXTERNAL_FILE_SET" ? resource.files :
       "sha256" in resource ? [resource] : [];
-  const purpose = resource.role === "game" || resource.role === "discs" || resource.role === "parent" ? "GAME" : "FIRMWARE";
+  const purpose = resource.role === "game" || resource.role === "parent" || resource.role === "game-files" ? "GAME" : "FIRMWARE";
   return files.map(file => {
     if (file.sizeBytes > policy.maxFileBytes) {fail("BOUNDS");}
     return fileContentSource(file, policy, purpose);

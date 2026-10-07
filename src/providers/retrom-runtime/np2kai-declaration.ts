@@ -3,7 +3,7 @@ import {contentLimits as limits} from "../../content-io/limits.js";
 import {defineAdapter, defineTarget} from "../../provider/declarations.js";
 export const np2kaiAdapter = defineAdapter({id: "np2kai-web", kind: "NP2KAI_WEB", abi: "np2kai-host-v1",
   capabilities: {checkpoint: true, pause: true, screenshot: true, standardGamepad: true, frameCounter: true, volume: false},
-  checkpoint: {writeFormat: "np2kai-state-v1", readFormats: ["np2kai-state-v1"]},
+  checkpoint: {semantics: "INSTANT", writeFormat: "np2kai-state-v1", readFormats: ["np2kai-state-v1"]},
 });
 export const np2kaiTarget = defineTarget({
   hostKeyboardShortcuts: ["PAUSE", "MENU"],
@@ -12,7 +12,7 @@ export const np2kaiTarget = defineTarget({
   contentIO: {game: eagerPolicy(limits.np2kaiDisk, {writes: "SESSION_OVERLAY"})},
   inputs: [{role: "game", kind: "ROM_BLOB", cardinality: "ONE", optional: false}],
   targetOptionsSchema: {type: "object", additionalProperties: false, properties: {}, required: []},
-  implementation: {}, inputFilter: true, discSwitch: false, nativeSettings: false,
+  implementation: {}, inputFilter: true, nativeSettings: false,
   videoModes: ["original", "pixel", "smooth"],
   assetPaths: ["font.bmp", "np2kai-register.mjs", "np2kai.mjs", "np2kai.wasm"].map(file => `assets/np2kai/${file}`),
 });

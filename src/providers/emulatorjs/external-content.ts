@@ -10,10 +10,11 @@ export async function prepareExternalContent(runtimeWindow: EjsWindow, envelope:
   optionalSession: AdapterContentSession | null, signal: AbortSignal,
   report: (ready: number, total: number) => void = () => {}): Promise<() => Promise<void>> {
   const files = [
+    ...(optionalResource(envelope, "game-files", "EXTERNAL_FILE_SET")?.files ?? []).map(file =>
+      ({file, path: file.virtualPath, role: "game-files", purpose: "GAME" as const})),
     ...(optionalResource(envelope, "external", "EXTERNAL_FILE_SET")?.files ?? []).map(file =>
-      ({file, path: file.virtualPath, role: "external", purpose: "FIRMWARE" as const})),
-    ...(optionalResource(envelope, "discs", "MULTI_DISC")?.entries ?? []).map(file =>
-      ({file, path: `/disc-${String(file.index + 1).padStart(3, "0")}.chd`, role: "discs", purpose: "GAME" as const})),
+      ({file, path: `/${file.virtualPath}`, role: "external", purpose: "FIRMWARE" as const})),
+
   ];
   if (!files.length) {return async () => {};}
   const session = requireContentSession(optionalSession), urls: Record<string, string> = {};

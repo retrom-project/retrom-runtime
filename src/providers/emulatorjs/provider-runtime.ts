@@ -16,9 +16,9 @@ import {stopNativeInstance} from "./native-exit.js";
 import {startEmulatorInputDiagnostics} from "./input-diagnostics.js";
 import type {RuntimeInputDiagnosticsV1} from "../../provider/module-api.js";
 import type {
-  AssetIndexV1, LaunchEnvelopeV1, PlayerRuntimeV1, RuntimeDiscStateV1, RuntimeCheckpointAvailabilityV1,
+  AssetIndexV1, LaunchEnvelopeV1, PlayerRuntimeV1, RuntimeCheckpointAvailabilityV1,
   RuntimeCheckpointV1, RuntimeEventV1, RuntimeHostV1, RuntimeInputFilterPolicyV1,
-  RuntimeMultiDiscResourceV1, RuntimeStateV1, RuntimeVideoModeV1,
+  RuntimeStateV1, RuntimeVideoModeV1,
 } from "../../provider/module-api.js";
 import {PlayerRuntimeError} from "../../provider/errors.js";
 import {focusRuntimeInput} from "../../provider/input-focus.js";
@@ -27,19 +27,21 @@ import {emulatorJsProviderDefinition, type EmulatorImplementation} from "./catal
 import {installAsyncRangeStartup} from "./async-range-startup.js";
 import {registerSeekableContentFS, type VirtualContentFile} from "./virtual-content-fs.js";
 import {asyncRangeCore, configureContentDisc, emulatorJsDisableCue, gameResourceURL, hasSeekableGame, mountRangeFS} from "./disc-mount.js";
+import {configureDOSContentDisc, dosCheckpointAvailability, observeDOSCheckpointAvailability} from "./dosbox-range.js";
+import {installDOSMenuInput} from "./dosbox-menu-input.js";
+import {requireContentSession} from "../../provider/content-inputs.js";
 import {daphneGameFile, daphneVideo, maybeInstallDaphneProject, maybePrepareDaphneProject, type DaphneProject} from "./daphne-project.js";
 import {installArchiveWorkerCompatibility} from "./archive-worker.js";
 import {installDOSBoxPureStateCompatibility} from "./dosbox-state.js";
 import {installExternalFileCompatibility} from "./external-files.js";
 import {RuntimeGamepadFilter, installRuntimeGamepadFilter, validInputFilterPolicy} from "../../provider/gamepad-filter.js";
-import {initializeEmulatorJsDiscs, readEmulatorJsDiscState, switchEmulatorJsDisc, switchEmulatorJsDiscPreservingPause} from "./discs.js";
 import {captureEmulatorJsScreenshot} from "./screenshot.js";
 import {configureDeferredStart, createStartBarrier, emulatorCheckpointAvailability, needsVerboseRestore, startupCompletionErrorCode, type StartBarrier} from "./lifecycle.js";
 import {installEmulatorJsRetroArchConfig} from "./retroarch-config.js";
 import {installStartupStateRestore} from "./startup-state.js";
 import {installSupermodelState} from "./supermodel-state.js";
 import {installSupermodelRestore} from "./supermodel-restore.js";
-import {createRetromDefaultControls, emulatorControlScheme, thomsonMachineOption} from "./default-controls.js";
+import {createRetromDefaultControls, emulatorControlScheme, thomsonOptions} from "./default-controls.js";
 import {initializeEmulatorJsGamepads} from "./startup-gamepads.js";
 import {closeEmulatorJsNativeSettings, openEmulatorJsNativeSettings} from "./native-settings.js";
 import {retromShaders} from "./shaders.js";
@@ -51,6 +53,7 @@ import {readPspCheckpoint} from "./psp-state.js";
 import {installPspRestoreObserver} from "./psp-restore.js";
 import {createEmulatorJsSurface} from "./surface.js";
 import {prepareParentContent} from "./parent-content.js";
+import {installParentArchiveDownload, preserveParentArchive} from "./parent-archive.js";
 import {encodeStoredCheckpoint} from "../../provider/checkpoint-storage.js";
 import {installEmulatorJsOutputViewport} from "./output-viewport.js";
 import {acknowledgeLutroStoredSave, installLutroNativeRestore, LutroNativeSaveTracker} from "./lutro-native-save.js";
@@ -124,7 +127,7 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
     const target = requireEmulatorImplementation(envelope.runtime.targetId, assetIndex);
     this.implementation = target.implementation;
     const declared = envelope.runtime.capabilities;
-    this.capabilities = {...declared, discSwitch: declared.discSwitch && optionalResource(envelope, "discs", "MULTI_DISC") !== null};
+    this.capabilities = declared;
     this.eagerDiskMount = this.implementation.runtimeCore === "puae";
   }
 
@@ -178,8 +181,9 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
   }
 
   async acknowledgeCheckpoint(checkpoint: RuntimeCheckpointV1) {
-    if (this.implementation.runtimeCore !== "lutro" || !this.lutroNativeSave) {throw capabilityError();}
-    await acknowledgeLutroStoredSave(this.lutroNativeSave, checkpoint, this.envelope.runtime.checkpoint, this.host.signal);
+    if (this.implementation.runtimeCore === "lutro" && this.lutroNativeSave) {
+      await acknowledgeLutroStoredSave(this.lutroNativeSave, checkpoint, this.envelope.runtime.checkpoint, this.host.signal);
+    } else {throw capabilityError();}
   }
 
   async screenshot() {
@@ -229,21 +233,7 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
     if (!this.envelope.runtime.capabilities.nativeSettings) {throw capabilityError();}
     closeEmulatorJsNativeSettings(this.requireInstance());
   }
-  async getDiscState(): Promise<RuntimeDiscStateV1> {
-    if (!this.getCapabilities().discSwitch) {throw capabilityError();}
-    return readEmulatorJsDiscState(this.requireInstance(), this.requireDiscResource());
-  }
-  async switchDisc(index: number): Promise<RuntimeDiscStateV1> {
-    if (!this.getCapabilities().discSwitch) {throw capabilityError();}
-    const instance = this.requireInstance();
-    const resourceValue = this.requireDiscResource();
-    let result: ReturnType<typeof switchEmulatorJsDisc>;
-    try {
-      result = switchEmulatorJsDiscPreservingPause(instance, resourceValue, index, this.state === "PAUSED");
-    } catch (error) {throw contractError(error);}
-    if (result.changed) {this.emit({type: "DISC_CHANGED", state: result.state});}
-    return result.state;
-  }
+
   async setInputFilter(policy: RuntimeInputFilterPolicyV1 | null) {
     if (!this.envelope.runtime.capabilities.inputFilter) {throw capabilityError();}
     if (this.state === "FAILED" || this.state === "EXITED" || !validInputFilterPolicy(policy)) {
@@ -323,18 +313,16 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
       if (optionalResource(this.envelope, "parent", "PARENT_ARCHIVE")) {
         this.cleanupParent = await this.startup.run("DEPENDENCIES", task => prepareParentContent(runtimeWindow, this.envelope,
           bindOptionalTargetContent(content, declaration), this.contentOwner.signal,
-          (loadedBytes, totalBytes) => {task.progress(loadedBytes, totalBytes); this.emit({type: "LOAD_PROGRESS", loadedBytes, totalBytes});}));
+          (loadedBytes, totalBytes) => {task.progress(loadedBytes, totalBytes); this.emit({type: "LOAD_PROGRESS", loadedBytes, totalBytes});}, this.implementation.release));
         this.checkMountActive();
       }
-      const disc = await configureContentDisc(runtimeWindow, this.envelope, this.implementation.runtimeCore, this.host.signal,
-        this.contentSession, error => this.fail(error.message, error), this.eagerDiskMount,
-        (loadedBytes, totalBytes) => this.emit({type: "LOAD_PROGRESS", loadedBytes, totalBytes}));
+      const disc = await this.prepareContentDisc(runtimeWindow);
       if (disc.range) {this.discRange = disc.range;}
       this.cleanupFlycast = disc.cleanup;
       this.checkMountActive();
 
       this.cleanupBIOS = await prepareEagerBIOS(runtimeWindow, this.envelope, this.contentSession, this.host.signal,
-        (loadedBytes, totalBytes) => this.emit({type: "LOAD_PROGRESS", loadedBytes, totalBytes}));
+        (loadedBytes, totalBytes) => this.emit({type: "LOAD_PROGRESS", loadedBytes, totalBytes}), this.implementation.release);
       this.checkMountActive();
       this.cleanupExternalContent = await prepareExternalContent(runtimeWindow, this.envelope, this.contentSession, this.host.signal,
         (loadedBytes, totalBytes) => this.emit({type: "LOAD_PROGRESS", loadedBytes, totalBytes}));
@@ -363,6 +351,16 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
       await this.exit();
       throw error;
     }
+  }
+
+  private prepareContentDisc(runtimeWindow: EjsWindow) {
+    const fail = (error: Error) => this.fail(error.message, error);
+    if (this.implementation.runtimeCore === "dosbox_pure") {
+      return configureDOSContentDisc(runtimeWindow, this.envelope, requireContentSession(this.contentSession), this.host.signal, fail);
+    }
+    return configureContentDisc(runtimeWindow, this.envelope, this.implementation.runtimeCore, this.host.signal,
+      this.contentSession, fail, this.eagerDiskMount,
+      (loadedBytes, totalBytes) => this.emit({type: "LOAD_PROGRESS", loadedBytes, totalBytes}));
   }
 
   private configure(runtimeWindow: EjsWindow) {
@@ -398,7 +396,8 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
     runtimeWindow.EJS_disableLocalStorage = true;
     runtimeWindow.EJS_Buttons = {exitEmulation: false};
     runtimeWindow.EJS_defaultControls = createRetromDefaultControls(this.implementation.runtimeCore);
-    runtimeWindow.EJS_defaultOptions = {...this.implementation.defaultOptions, ...thomsonMachineOption(this.implementation.runtimeCore, this.envelope.session.title),
+    runtimeWindow.EJS_defaultOptions = {...this.implementation.defaultOptions, ...(this.implementation.runtimeCore === "theodore" ? thomsonOptions(this.envelope.targetOptions) : {}),
+      ...(optionalResource(this.envelope, "bios", "BIOS_BUNDLE") ? this.implementation.biosOptions : {}),
       ...(["daphne", "dosbox_pure"].includes(this.implementation.runtimeCore) ? {shader: "disabled"} : {}),
       ...(this.implementation.runtimeCore === "cap32" && new URL(gameURL, "http://runtime.invalid").pathname.toLowerCase().endsWith(".cpr")
         ? {cap32_model: "6128+ (experimental)", cap32_gfx_colors: "24bit"} : {}),
@@ -412,6 +411,20 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
       this.instance = runtimeWindow.EJS_emulator ?? null;
       if (!this.instance) {this.fail("PLAYER_RUNTIME_UNAVAILABLE"); return;}
       const instance = this.instance;
+      try {
+        (() => {
+          if ((this.implementation.runtimeCore === "fbneo" || this.implementation.runtimeCore === "fbalpha2012_cps1" ||
+            this.implementation.runtimeCore === "fbalpha2012_cps2" || this.implementation.runtimeCore === "mame2003" ||
+            this.implementation.runtimeCore === "mame2003_plus" || this.implementation.runtimeCore === "supermodel") &&
+            optionalResource(this.envelope, "parent", "PARENT_ARCHIVE")) {
+            const previous = this.cleanupParent;
+            const release = this.implementation.release === "4.3.0-pre"
+              ? preserveParentArchive(instance, this.implementation.runtimeCore)
+              : installParentArchiveDownload(instance, this.envelope, this.contentSession, this.contentOwner.signal);
+            this.cleanupParent = async () => {release(); await previous?.();};
+          }
+        })();
+      } catch (error) {this.fail("PLAYER_PARENT_ARCHIVE_UNAVAILABLE", error); return;}
       this.startupObserver?.deadline.initialize();
       this.cleanupStartupDownloads = installStartupDownloads(instance, this.implementation.release, this.startup,
         runtimeWindow.XMLHttpRequest, this.envelope.resources);
@@ -425,15 +438,12 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
       }
       this.cleanupDaphneProject = maybeInstallDaphneProject(instance, this.daphneProject,
         error => this.fail("DAPHNE_MOUNT_FAILED", error));
-      installLutroNativeRestore(this.implementation.runtimeCore, instance, this.restorePayload,
-        checkpointMaximum, () => {this.restorePayload = null;},
-        error => this.fail("PLAYER_STATE_RESTORE_FAILED", error));
-      instance.on?.("exit", () => this.requestExit());
-      const discs = optionalResource(this.envelope, "discs", "MULTI_DISC");
-      if (discs) {
-        try {initializeEmulatorJsDiscs(instance);}
-        catch (error) {this.fail("PLAYER_DISC_RUNTIME_INVALID", error); return;}
+      if (this.implementation.runtimeCore === "lutro") {
+        installLutroNativeRestore(this.implementation.runtimeCore, instance, this.restorePayload,
+          checkpointMaximum, () => {this.restorePayload = null;},
+          error => this.fail("PLAYER_STATE_RESTORE_FAILED", error));
       }
+      instance.on?.("exit", () => this.requestExit());
       if (deferredStart) {
         try {
           this.cleanupDeferredStart = configureDeferredStart(runtimeWindow, instance, this.implementation.runtimeCore, this.implementation.coreSha256);
@@ -445,6 +455,14 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
       this.updateCheckpointAvailability(this.currentCheckpointAvailability());
     };
     runtimeWindow.EJS_onGameStart = () => {
+      if (this.implementation.runtimeCore === "dosbox_pure" && this.instance) {
+        const cleanup = this.cleanupDeferredStart;
+        const cleanupMenu = installDOSMenuInput(runtimeWindow, this.instance);
+        const cleanupAvailability = observeDOSCheckpointAvailability(runtimeWindow, this.instance, availability => {
+          if (this.state !== "FAILED" && this.state !== "EXITED") {this.updateCheckpointAvailability(availability);}
+        });
+        this.cleanupDeferredStart = () => {cleanupAvailability(); cleanupMenu(); cleanup?.();};
+      }
       if (this.implementation.runtimeCore === "lutro" && this.instance && !this.lutroNativeSave) {
         this.lutroNativeSave = new LutroNativeSaveTracker(this.instance, checkpointMaximum,
           Boolean(this.envelope.restore), value => this.updateCheckpointAvailability(value));
@@ -472,9 +490,7 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
       if (!this.instance) {throw new Error("PLAYER_RUNTIME_UNAVAILABLE");}
       await this.contentAcceptance?.wait(this.host.signal);
       this.dosboxCompatibility?.prepare(this.instance);
-      const discs = optionalResource(this.envelope, "discs", "MULTI_DISC");
-      if (discs) {await this.prepareInitialDisc(discs);}
-      else if (this.restorePayload) {
+      if (this.restorePayload) {
         await this.startup.run("RESTORE_APPLY", () => this.restore(this.restorePayload!));
         if (!this.instance.gameManager?.toggleMainLoop) {throw new Error("PLAYER_STATE_RESTORE_FAILED");}
         this.instance.gameManager.toggleMainLoop(true);
@@ -493,24 +509,6 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
     await restoreEmulatorCheckpoint(this.instance?.gameManager, this.implementation.runtimeCore, bytes,
       this.envelope.runtime.checkpoint?.maxBytes ?? 0, () => this.pspRestore!.wait(this.host.signal), this.host.signal);
     this.restorePayload = null;
-  }
-
-  private async prepareInitialDisc(resourceValue: RuntimeMultiDiscResourceV1) {
-    const instance = this.instance;
-    if (!instance) {throw new Error("PLAYER_RUNTIME_UNAVAILABLE");}
-    const manager = instance.gameManager;
-    if (!manager?.toggleMainLoop) {throw new Error("PLAYER_DISC_RUNTIME_INVALID");}
-    manager.toggleMainLoop(false);
-    switchEmulatorJsDisc(instance, resourceValue, resourceValue.initialDiscIndex);
-    if (this.restorePayload) {await this.restore(this.restorePayload);}
-    manager.toggleMainLoop(true);
-    instance.paused = false;
-  }
-
-  private requireDiscResource() {
-    const resourceValue = optionalResource(this.envelope, "discs", "MULTI_DISC");
-    if (!resourceValue) {throw contractError();}
-    return resourceValue;
   }
 
   private checkMountActive() {
@@ -619,7 +617,10 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
     this.emit({type: "STATE_CHANGED", previous, state: next});
   }
 
-  private currentCheckpointAvailability() {return emulatorCheckpointAvailability(this.envelope, this.instance, this.implementation.runtimeCore, this.lutroNativeSave);}
+  private currentCheckpointAvailability() {
+    if (this.implementation.runtimeCore === "dosbox_pure") {return dosCheckpointAvailability(this.instance);}
+    return emulatorCheckpointAvailability(this.envelope, this.instance, this.implementation.runtimeCore, this.lutroNativeSave);
+  }
 
   private updateCheckpointAvailability(availability: RuntimeCheckpointAvailabilityV1) {
     if (JSON.stringify(availability) === JSON.stringify(this.checkpointAvailability)) {return;}

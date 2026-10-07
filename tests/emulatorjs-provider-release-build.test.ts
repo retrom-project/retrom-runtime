@@ -65,6 +65,10 @@ describe("EmulatorJS Provider release build", () => {
       };
       expect(provider.providerId).toBe("emulatorjs");
       expect(provider.targets).toHaveLength(75);
+      const identity = JSON.parse(await readFile(join(result.bundleRoot, "runtime-fingerprints.json"), "utf8"));
+      expect(identity.providerId).toBe("emulatorjs");
+      expect(Object.keys(identity.targets)).toHaveLength(75);
+      expect(identity.targets.fceumm.fingerprint).toMatch(/^[a-f0-9]{64}$/u);
       const provenance = JSON.parse(await readFile(join(result.bundleRoot, "provenance.json"), "utf8"));
       expect(provenance.forks).toEqual(sourceCatalog.forks);
       expect(await readFile(join(result.bundleRoot,

@@ -21,8 +21,13 @@ import {fileURLToPath} from "node:url";
 import { parseDevReleaseOverrides } from "./dev-release-overrides.mjs";
 import { loadProviderSources, sha256 } from "./provider-sources.mjs";
 import { buildCurrentProviderBuild, pinCurrentProviderRelease } from "./provider-release.mjs";
+import {sourceTreeSha256} from "./provider-release.mjs";
+import {buildRuntimeHostTool} from "./runtime-host-tool.mjs";
+import {writeRuntimeInputs} from "./runtime-inputs.mjs";
+import {assertONSCheckpointCore} from "./ons-core-abi.mjs";
 
 const root = new URL("../", import.meta.url);
+const capturedSource = sourceTreeSha256(fileURLToPath(root));
 const requestedBuildMode = process.env.RETROM_PROVIDER_BUILD_MODE ?? "candidate";
 const candidateBuild = process.env.RETROM_PFB_CANDIDATE_BUILD === "1" || requestedBuildMode === "candidate";
 const formalBuild = requestedBuildMode === "release";
@@ -50,9 +55,6 @@ await mkdir(stage, { recursive: true });
 await cp(new URL("../dist", import.meta.url), new URL("library", stage), { recursive: true });
 for (const document of ["LICENSE", "THIRD_PARTY_NOTICES.md"]) {
   await publish(await readFile(new URL(`../${document}`, import.meta.url)), new URL(document, stage));
-}
-for (const asset of sources.localAssets) {
-  await publish(await readFile(new URL(asset.source, root)), new URL(asset.output, stage));
 }
 for (const release of sources.upstreamReleases) {
   const devRoot = devReleaseOverrides.get(release.id);
@@ -109,6 +111,9 @@ for (const release of sources.upstreamReleases) {
     await publish(contents, new URL(asset.output, stage));
   }
 }
+for (const asset of sources.localAssets) {
+  await publish(await readFile(new URL(asset.source, root)), new URL(asset.output, stage));
+}
 const developmentOutputs = [];
 for (const input of developmentInputs) {
   if (validEmulatorJsDevelopmentSource(input)) {continue;}
@@ -131,11 +136,22 @@ if ([...sources.upstreamReleases, ...developmentInputs].some((source) => source.
   await expandSamCoupeSite(fileURLToPath(stage));
 }
 if (developmentInputs.some(validEmulatorJsDevelopmentSource)) {await materializeEmulatorJsProviderInput(await currentInput());}
+assertONSCheckpointCore(await readFile(new URL("runtime/ons/onsyuri.js", stage)),
+  await readFile(new URL("runtime/ons/onsyuri.wasm", stage)));
 const records = await collectRecords(sources, stage, developmentOutputs);
+const hostTool = await buildRuntimeHostTool({repositoryRoot: fileURLToPath(root), outputRoot: fileURLToPath(output),
+  version, sourceTreeSha256: capturedSource});
+records.push({path: basename(hostTool.archivePath), filename: basename(hostTool.archivePath),
+  sizeBytes: hostTool.sizeBytes, sha256: hostTool.sha256});
 const provider = await buildCurrentProviderBuild({
   stageRoot: fileURLToPath(stage),
+  sourceTreeSha256: capturedSource,
 });
 await verifyBuiltProvider(provider);
+if (sourceTreeSha256(fileURLToPath(root)) !== capturedSource) {throw new Error("RUNTIME_SOURCE_CHANGED");}
+await writeRuntimeInputs({outputRoot: fileURLToPath(output), sourceTreeSha256: provider.metadata.sourceTreeSha256,
+  release: formalBuild ? {repository: "https://github.com/retrom-project/retrom-runtime", tag: `v${version}`, commit} : null,
+  tool: hostTool, providers: Object.values(provider.providers)});
 if (formalBuild) {
   assertFormalReleaseEnvironment(commit, version);
   const metadata = {

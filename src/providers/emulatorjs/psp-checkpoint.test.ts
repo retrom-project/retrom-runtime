@@ -14,21 +14,21 @@ beforeEach(() => {
 afterEach(() => {vi.unstubAllGlobals(); document.body.replaceChildren();});
 
 describe("PSP checkpoint product boundary", () => {
-  it.each(["emulatorjs-state-v1", "emulatorjs-state-gzip-v1", "emulatorjs-state-v1-storage-v1"])("restores %s and creates a compressed checkpoint", async (format) => {
+  it.each(["emulatorjs-state-v1-storage-v1"])("restores %s and creates a compressed checkpoint", async (format) => {
     const frame = document.createElement("iframe");
     document.body.append(frame);
     const runtimeWindow = frame.contentWindow as Window & Record<string, unknown>;
     runtimeWindow.fetch = vi.fn(async () => new Response("ok"));
     const original = new Uint8Array(64 * 1024);
     original.set([82, 65, 83, 84, 65, 84, 69, 1]); original[original.length - 1] = 19;
-    const stored = format === "emulatorjs-state-v1" ? original : gzipSync(original);
+    const stored = gzipSync(original);
     const envelope = launchEnvelope();
     const target = projectProviderManifest(emulatorJsProviderDefinition).targets.find((entry) => entry.id === "ppsspp")!;
     const implementation = emulatorJsProviderDefinition.targets.find((entry) => entry.id === "ppsspp")!.implementation;
     envelope.runtime.targetId = target.id;
     envelope.runtime.capabilities = target.capabilities;
     envelope.runtime.checkpoint = target.checkpoint;
-    envelope.restore = {format, sha256: "a".repeat(64), sizeBytes: stored.length, url: "/runtime/restore"};
+    envelope.restore = {kind: "HTTP", format, sha256: "a".repeat(64), sizeBytes: stored.length, url: "/runtime/restore"};
     const host: RuntimeHostV1 = {
       loadRestore: vi.fn(async () => stored),
       mountFrame: vi.fn(async () => ({contentWindow: runtimeWindow, element: frame, origin: location.origin})),

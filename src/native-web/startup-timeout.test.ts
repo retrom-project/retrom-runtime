@@ -7,7 +7,7 @@ afterEach(() => {for (const channel of channels) channel.close(); channels.lengt
 function fixture(initialLoading = false) {
   vi.useFakeTimers();
   const channel = new NativeChannel({sessionId: "018f0f31-26fe-7a31-9d61-4ec92f16d4c3", bridgeProfile: "RPGMZ",
-    uniqueOrigin: "https://runtime.test", bootstrapUrl: "https://runtime.test/bootstrap", bootstrapTicket: "ticket", cleanupUrl: null}, () => {});
+    uniqueOrigin: "https://runtime.test"}, () => {});
   channels.push(channel);
   let notify: (busy: boolean) => void = () => {};
   const unsubscribe = vi.fn(), controller = new AbortController();
@@ -74,7 +74,7 @@ it("preserves a read failure when the Host immediately aborts startup after FATA
   const state = fixture();
   await state.channel.close();
   const channel = new NativeChannel({sessionId: "018f0f31-26fe-7a31-9d61-4ec92f16d4c3", bridgeProfile: "RPGMZ",
-    uniqueOrigin: "https://runtime.test", bootstrapUrl: "https://runtime.test/bootstrap", bootstrapTicket: "ticket", cleanupUrl: null}, () => {});
+    uniqueOrigin: "https://runtime.test"}, () => {});
   channels.push(channel);
   const loading = new NativeContentActivity(), controller = new AbortController();
   const failure = new Error("CONTENT_IO_TIMEOUT");
@@ -103,7 +103,7 @@ it("immediately cancels the bootstrap handshake and releases its timers", async 
   const frame = document.createElement("iframe"); document.body.append(frame);
   const controller = new AbortController();
   const mounted = mountNativeRpg({sessionId: "018f0f31-26fe-7a31-9d61-4ec92f16d4c3", bridgeProfile: "RPGMZ",
-    uniqueOrigin: "https://runtime.test", bootstrapUrl: "https://runtime.test/bootstrap", bootstrapTicket: "ticket", cleanupUrl: null},
+    uniqueOrigin: "https://runtime.test"},
   frame, null, undefined, {signal: controller.signal});
   const rejected = expect(mounted).rejects.toMatchObject({name: "AbortError"});
   controller.abort();

@@ -22,8 +22,7 @@ describe("EmulatorJS Provider declarations", () => {
       defaultOptions: {neocd_region: "Japan", neocd_cdspeedhack: "On", neocd_loadskip: "On"}});
     const manifest = projectProviderManifest(emulatorJsProviderDefinition).targets.find((entry) => entry.id === "neocd")!;
     expect(manifest.checkpoint?.writeFormat).toBe("emulatorjs-state-v1-storage-v1");
-    expect(manifest.capabilities).toMatchObject({standardGamepad: true, pause: true, screenshot: true,
-      discSwitch: false, requiresThreads: false});
+    expect(manifest.capabilities).toMatchObject({standardGamepad: true, pause: true, screenshot: true, requiresThreads: false});
   });
 
   it("gives Flycast a bounded, distinct instant checkpoint contract and single-disc target", () => {
@@ -32,10 +31,9 @@ describe("EmulatorJS Provider declarations", () => {
     const declaration = emulatorJsProviderDefinition.targets.find((entry) => entry.id === "flycast")!;
     expect(declaration.inputs.find(input => input.role === "game")?.kind).toBe("SEEKABLE_BLOB");
     expect(declaration.contentIO.game).toMatchObject({mode: "RANGE", bridge: "ASYNC", result: "READER"});
-    expect(target.checkpoint).toEqual({maxBytes: 268435456,
-      readFormats: ["flycast-state-gzip-v1", "flycast-state-v1", "flycast-state-v1-storage-v1"], writeFormat: "flycast-state-v1-storage-v1"});
-    expect(target.capabilities).toMatchObject({standardGamepad: true, pause: true, screenshot: true,
-      discSwitch: false, requiresThreads: false});
+    expect(target.checkpoint).toEqual({maxBytes: 268435456, semantics: "INSTANT",
+      readFormats: ["flycast-state-v1-storage-v1"], writeFormat: "flycast-state-v1-storage-v1"});
+    expect(target.capabilities).toMatchObject({standardGamepad: true, pause: true, screenshot: true, requiresThreads: false});
   });
   it("declares separate arcade targets backed by the same Flycast bytes", () => {
     const dreamcast = emulatorJsProviderDefinition.targets.find((entry) => entry.id === "flycast")!;
@@ -53,7 +51,7 @@ describe("EmulatorJS Provider declarations", () => {
   it("limits PSP output and writes compressed states while retaining raw saves", () => {
     const manifest = projectProviderManifest(emulatorJsProviderDefinition);
     expect(manifest.targets.find((target) => target.id === "ppsspp")?.checkpoint).toMatchObject({
-      writeFormat: "emulatorjs-state-v1-storage-v1", readFormats: ["emulatorjs-state-gzip-v1", "emulatorjs-state-v1", "emulatorjs-state-v1-storage-v1"],
+      writeFormat: "emulatorjs-state-v1-storage-v1", readFormats: ["emulatorjs-state-v1-storage-v1"],
     });
     expect(emulatorJsProviderDefinition.targets.find((target) => target.id === "ppsspp")?.implementation)
       .toMatchObject({outputSizeLimit: {width: 960, height: 544}});
@@ -68,7 +66,7 @@ describe("EmulatorJS Provider declarations", () => {
   it("declares Lutro native game saves with a separate bounded format", () => {
     const target = projectProviderManifest(emulatorJsProviderDefinition).targets.find(entry => entry.id === "lutro")!;
     expect(target.checkpoint).toEqual({maxBytes: 16 * 1024 * 1024, semantics: "GAME_SAVE",
-      readFormats: ["lutro-native-v1", "lutro-native-v1-storage-v1"], writeFormat: "lutro-native-v1-storage-v1"});
+      readFormats: ["lutro-native-v1-storage-v1"], writeFormat: "lutro-native-v1-storage-v1"});
   });
   it("uses last declaration wins for exactly seventy-five current core targets", () => {
     const manifest = projectProviderManifest(emulatorJsProviderDefinition);
@@ -96,7 +94,6 @@ describe("EmulatorJS Provider declarations", () => {
         artifactFlavor: targetId === "puae" ? "THREAD_WASM" : ["vice-xvic", "virtualjaguar"].includes(targetId) ? "OVERRIDE" : "WASM",
         contentKinds: ["SINGLE_FILE"], release: "4.2.3",
       });
-      expect(target?.discSwitch, targetId).toBe(false);
       expect(target?.requiresThreads, targetId).toBe(targetId === "puae");
     }
     expect(emulatorJsProviderDefinition.targets.find((entry) => entry.id === "fuse")?.implementation.defaultOptions)
@@ -118,12 +115,11 @@ describe("EmulatorJS Provider declarations", () => {
     const ppsspp = emulatorJsProviderDefinition.targets.find((target) => target.id === "ppsspp");
     const yabause = emulatorJsProviderDefinition.targets.find((target) => target.id === "yabause");
     expect(ppsspp?.implementation.startupActions).toHaveLength(2);
-    expect(yabause?.implementation.contentKinds).toEqual(["SINGLE_FILE", "MULTI_DISC"]);
+    expect(yabause?.implementation.contentKinds).toEqual(["SINGLE_FILE"]);
     expect(yabause?.inputs.map((input) => input.kind)).toEqual([
-      "ROM_BLOB", "BIOS_BUNDLE", "PARENT_ARCHIVE", "MULTI_DISC",
-      "EXTERNAL_FILE_SET",
+      "ROM_BLOB", "BIOS_BUNDLE", "PARENT_ARCHIVE",
+      "EXTERNAL_FILE_SET", "EXTERNAL_FILE_SET",
     ]);
-    expect(yabause?.discSwitch).toBe(true);
   });
 
   it.each(["azahar", "fbneo"])("requires a native content receipt for %s", (id) => {

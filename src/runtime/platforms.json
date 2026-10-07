@@ -1,0 +1,382 @@
+[
+  {
+    "id": "3do",
+    "displayName": "3DO"
+  },
+  {
+    "id": "amiga",
+    "displayName": "Commodore Amiga"
+  },
+  {
+    "id": "amigacd32",
+    "displayName": "Amiga CD32"
+  },
+  {
+    "id": "amstradcpc",
+    "displayName": "Amstrad CPC"
+  },
+  {
+    "id": "apple2",
+    "displayName": "Apple II"
+  },
+  {
+    "id": "arcade",
+    "displayName": "Arcade"
+  },
+  {
+    "id": "arduboy",
+    "displayName": "Arduboy"
+  },
+  {
+    "id": "atari2600",
+    "displayName": "Atari 2600"
+  },
+  {
+    "id": "atari5200",
+    "displayName": "Atari 5200"
+  },
+  {
+    "id": "atari7800",
+    "displayName": "Atari 7800"
+  },
+  {
+    "id": "atari800",
+    "displayName": "Atari 8-bit"
+  },
+  {
+    "id": "atarijaguar",
+    "displayName": "Atari Jaguar"
+  },
+  {
+    "id": "atarist",
+    "displayName": "Atari ST"
+  },
+  {
+    "id": "atom",
+    "displayName": "Acorn Atom"
+  },
+  {
+    "id": "atomiswave",
+    "displayName": "Sammy Atomiswave"
+  },
+  {
+    "id": "bbc",
+    "displayName": "BBC Micro"
+  },
+  {
+    "id": "bbkrpg",
+    "displayName": "步步高 RPG"
+  },
+  {
+    "id": "butterscotch",
+    "displayName": "GameMaker"
+  },
+  {
+    "id": "c128",
+    "displayName": "Commodore 128"
+  },
+  {
+    "id": "c64",
+    "displayName": "Commodore 64"
+  },
+  {
+    "id": "cavestory",
+    "displayName": "Cave Story"
+  },
+  {
+    "id": "cdi",
+    "displayName": "Philips CD-i"
+  },
+  {
+    "id": "channelf",
+    "displayName": "Fairchild Channel F"
+  },
+  {
+    "id": "colecovision",
+    "displayName": "ColecoVision"
+  },
+  {
+    "id": "daphne",
+    "displayName": "Daphne"
+  },
+  {
+    "id": "doom",
+    "displayName": "Doom"
+  },
+  {
+    "id": "dos",
+    "displayName": "MS-DOS"
+  },
+  {
+    "id": "dreamcast",
+    "displayName": "Sega Dreamcast"
+  },
+  {
+    "id": "fds",
+    "displayName": "Famicom Disk System"
+  },
+  {
+    "id": "flash",
+    "displayName": "Flash"
+  },
+  {
+    "id": "gamegear",
+    "displayName": "Game Gear"
+  },
+  {
+    "id": "gba",
+    "displayName": "Game Boy Advance"
+  },
+  {
+    "id": "gbc",
+    "displayName": "Game Boy / Color"
+  },
+  {
+    "id": "gx4000",
+    "displayName": "GX4000"
+  },
+  {
+    "id": "intellivision",
+    "displayName": "Mattel Intellivision"
+  },
+  {
+    "id": "j2me",
+    "displayName": "Java ME"
+  },
+  {
+    "id": "kirikiri",
+    "displayName": "KiriKiri"
+  },
+  {
+    "id": "lutro",
+    "displayName": "Lutro"
+  },
+  {
+    "id": "lynx",
+    "displayName": "Atari Lynx"
+  },
+  {
+    "id": "mastersystem",
+    "displayName": "Master System"
+  },
+  {
+    "id": "megadrive",
+    "displayName": "Mega Drive / Genesis"
+  },
+  {
+    "id": "megaduck",
+    "displayName": "Mega Duck"
+  },
+  {
+    "id": "model3",
+    "displayName": "Sega Model 3"
+  },
+  {
+    "id": "msx",
+    "displayName": "MSX"
+  },
+  {
+    "id": "multivision",
+    "displayName": "Multivision"
+  },
+  {
+    "id": "n64",
+    "displayName": "Nintendo 64"
+  },
+  {
+    "id": "naomi",
+    "displayName": "Sega NAOMI"
+  },
+  {
+    "id": "naomi2",
+    "displayName": "Sega NAOMI 2"
+  },
+  {
+    "id": "nds",
+    "displayName": "Nintendo DS"
+  },
+  {
+    "id": "neogeocd",
+    "displayName": "Neo Geo CD"
+  },
+  {
+    "id": "nes",
+    "displayName": "NES / Famicom"
+  },
+  {
+    "id": "ngpc",
+    "displayName": "Neo Geo Pocket / Color"
+  },
+  {
+    "id": "nintendo3ds",
+    "displayName": "Nintendo 3DS"
+  },
+  {
+    "id": "odyssey2",
+    "displayName": "Magnavox Odyssey² / Philips Videopac"
+  },
+  {
+    "id": "ons",
+    "displayName": "ONScripter"
+  },
+  {
+    "id": "openbor",
+    "displayName": "OpenBOR"
+  },
+  {
+    "id": "pc88",
+    "displayName": "NEC PC-88"
+  },
+  {
+    "id": "pc98",
+    "displayName": "NEC PC-98"
+  },
+  {
+    "id": "pce",
+    "displayName": "PC Engine"
+  },
+  {
+    "id": "pcecd",
+    "displayName": "PC Engine CD"
+  },
+  {
+    "id": "pcfx",
+    "displayName": "PC-FX"
+  },
+  {
+    "id": "pet",
+    "displayName": "Commodore PET"
+  },
+  {
+    "id": "pico",
+    "displayName": "Sega Pico"
+  },
+  {
+    "id": "pico8",
+    "displayName": "PICO-8"
+  },
+  {
+    "id": "plus4",
+    "displayName": "Commodore Plus/4"
+  },
+  {
+    "id": "pokemini",
+    "displayName": "Nintendo Pokémon Mini"
+  },
+  {
+    "id": "ps2",
+    "displayName": "PlayStation 2"
+  },
+  {
+    "id": "psp",
+    "displayName": "PlayStation Portable"
+  },
+  {
+    "id": "psx",
+    "displayName": "PlayStation"
+  },
+  {
+    "id": "pv1000",
+    "displayName": "Casio PV-1000"
+  },
+  {
+    "id": "rpgmaker",
+    "displayName": "RPG Maker"
+  },
+  {
+    "id": "samcoupe",
+    "displayName": "SAM Coupé"
+  },
+  {
+    "id": "satellaview",
+    "displayName": "Satellaview / BS-X"
+  },
+  {
+    "id": "saturn",
+    "displayName": "Sega Saturn"
+  },
+  {
+    "id": "scummvm",
+    "displayName": "ScummVM"
+  },
+  {
+    "id": "sega32x",
+    "displayName": "Sega 32X"
+  },
+  {
+    "id": "segacd",
+    "displayName": "Sega CD / Mega-CD"
+  },
+  {
+    "id": "sg1000",
+    "displayName": "SG-1000"
+  },
+  {
+    "id": "sgb",
+    "displayName": "Super Game Boy"
+  },
+  {
+    "id": "snes",
+    "displayName": "SNES"
+  },
+  {
+    "id": "supergrafx",
+    "displayName": "SuperGrafx"
+  },
+  {
+    "id": "supervision",
+    "displayName": "Watara Supervision"
+  },
+  {
+    "id": "thomson",
+    "displayName": "Thomson"
+  },
+  {
+    "id": "tic80",
+    "displayName": "TIC-80"
+  },
+  {
+    "id": "tyranoscript",
+    "displayName": "TyranoScript"
+  },
+  {
+    "id": "uzebox",
+    "displayName": "Uzebox"
+  },
+  {
+    "id": "vectrex",
+    "displayName": "GCE Vectrex"
+  },
+  {
+    "id": "vic20",
+    "displayName": "Commodore VIC-20"
+  },
+  {
+    "id": "virtualboy",
+    "displayName": "Virtual Boy"
+  },
+  {
+    "id": "wasm4",
+    "displayName": "WASM-4"
+  },
+  {
+    "id": "wonderswan",
+    "displayName": "WonderSwan / Color"
+  },
+  {
+    "id": "x68000",
+    "displayName": "Sharp X68000"
+  },
+  {
+    "id": "xegs",
+    "displayName": "Atari XEGS"
+  },
+  {
+    "id": "zx81",
+    "displayName": "Sinclair ZX81"
+  },
+  {
+    "id": "zxspectrum",
+    "displayName": "ZX Spectrum"
+  }
+]

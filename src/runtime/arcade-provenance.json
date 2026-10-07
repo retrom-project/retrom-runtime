@@ -1,0 +1,36 @@
+[
+  {
+    "coreId": "mame2003",
+    "sha256": "dacf9d5739ddf386705bc703f7f70239ac61b8ab44c438f76f6658c7156da147",
+    "source": "https://github.com/EmulatorJS/mame2003-libretro/blob/0ee1c0e4daf9fb7d96119ebf4627ee5d9af2c312/metadata/mame2003.xml"
+  },
+  {
+    "coreId": "mame2003_plus",
+    "sha256": "e1107634c5847b825d6769e19e38cee7581f2faedd213c2457580aa6a7d7303c",
+    "source": "https://github.com/EmulatorJS/mame2003-plus-libretro/blob/09e84fe55799031e225b9da5e526d82ee85b9cd8/metadata/mame2003-plus.xml"
+  },
+  {
+    "coreId": "fbalpha2012_cps1",
+    "sha256": "54a95deb406fefbf4522498ee55a4d644724c3abc017d744538678204015b789",
+    "source": "https://github.com/EmulatorJS/fbalpha2012_cps1/tree/d6f5267a3abe8b079ed31d2ab3521911e6498372"
+  },
+  {
+    "coreId": "fbalpha2012_cps2",
+    "requiresParentArchive": true,
+    "sha256": "f59166dbd123d998ae874910275e5a0ab09b7aca83dde621f2c5a53af0407f99",
+    "source": "https://github.com/EmulatorJS/fbalpha2012_cps2/tree/3fb5b89d2ab719e45e814e1ad0b5ff721bffdff2"
+  },
+  {
+    "coreId": "mame_arcade",
+    "sha256": "db3e67df32ba9becae005050a948e75222f37940c5754c3833ed38d617efc2c4",
+    "source": "https://github.com/retrom-project/mame/releases/download/retrom-core-gf65d5ba9bc42-r2/mame-current-assets.zip#member=mame-arcade.xml",
+    "commit": "919816e409260a759a82f65b10792f6938001894"
+  },
+  {
+    "coreId": "fbneo",
+    "sha256": "1864074639d42c2b6a7ad407e2df609c8824041408e42421eb7fa58fce5993e7",
+    "source": "https://github.com/retrom-project/retrom-runtime/releases/tag/v0.59.1",
+    "providerBundleSha256": "8fbd38e61df0a20cde56256bf3bc57c104c76f1be1ae72be315c342ff955fcf9",
+    "assetPath": "assets/4.2.3/data/cores/fbneo-arcade.dat"
+  }
+]

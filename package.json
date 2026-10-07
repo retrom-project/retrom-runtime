@@ -10,7 +10,10 @@
     "README.md",
     "LICENSE",
     "THIRD_PARTY_NOTICES.md",
-    "contracts/content-io/v1"
+    "contracts/content-io/v1",
+    "scripts/runtime-cli.mjs",
+    "scripts/runtime-host-input.mjs",
+    "scripts/runtime-normalize-content.mjs"
   ],
   "exports": {
     ".": {
@@ -23,7 +26,7 @@
     "lint": "eslint src scripts tests --max-warnings=0",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "vitest run",
-    "build": "npm run clean && tsc -p tsconfig.build.json",
+    "build": "node scripts/build-isolated-bridges.mjs && npm run clean && tsc -p tsconfig.build.json",
     "dev:watch": "node scripts/dev-watch.mjs",
     "dev:provider:watch": "node scripts/pfb-provider-watch.mjs",
     "candidate:build": "node scripts/build-candidate.mjs",

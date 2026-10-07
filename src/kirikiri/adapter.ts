@@ -8,8 +8,7 @@ import type { MountedRuntimeAdapter, RuntimeExitReporter } from "../internal-ada
 import type {KirikiriParameters} from "./parameters.js";
 import {installGamepadCursor, type GamepadCursor} from "../provider/gamepad-cursor.js";
 
-type ProjectFile = { path: string; url: string; sizeBytes: number };
-type ProjectIndex = { schemaVersion: 1; files: ProjectFile[] };
+import {parseProjectIndex} from "../provider/project-index.js";
 type KirikiriVlfs = {
   contentAbi: string;
   contractSha256: string;
@@ -268,31 +267,17 @@ async function registerProject(vlfs: KirikiriVlfs, indexUrl: string, documentBas
   try {
     value = await fetchMetadataJson(new URL(indexUrl, documentBaseUrl), indexByteBudget(maximumProjectFiles, 1024), signal);
   } catch {throw new Error("KIRIKIRI_PROJECT_INDEX_UNAVAILABLE");}
-  if (!validProjectIndex(value)) {throw new Error("KIRIKIRI_PROJECT_INDEX_INVALID");}
+  const index = parseProjectIndex(value, maximumProjectFiles);
+  if (!index) {throw new Error("KIRIKIRI_PROJECT_INDEX_INVALID");}
   const base = new URL(indexUrl, documentBaseUrl);
   const xp3Paths: string[] = [];
-  for (const file of value.files) {
+  for (const file of index.files) {
     const path = `/${file.path}`;
     const reader = content.register(contentDigest, file.path, new URL(file.url, base).href, file.sizeBytes);
     vlfs.registerContent(path, {fileId: reader.id, sizeBytes: reader.sizeBytes}, reader);
     if (file.path.toLowerCase().endsWith(".xp3")) {xp3Paths.push(path);}
   }
   return { xp3Paths };
-}
-
-function validProjectIndex(value: unknown): value is ProjectIndex {
-  if (!isRecord(value) || !exactKeys(value, ["files", "schemaVersion"]) || value.schemaVersion !== 1 ||
-    !Array.isArray(value.files) || value.files.length < 1 || value.files.length > maximumProjectFiles) {return false;}
-  const seen = new Set<string>();
-  for (const file of value.files) {
-    if (!isRecord(file) || !exactKeys(file, ["path", "sizeBytes", "url"]) || !validPath(file.path) ||
-      !validProjectUrl(file.url) || typeof file.sizeBytes !== "number" ||
-      !Number.isSafeInteger(file.sizeBytes) || file.sizeBytes < 0) {return false;}
-    const identity = file.path.toLowerCase();
-    if (seen.has(identity)) {return false;}
-    seen.add(identity);
-  }
-  return true;
 }
 
 function selectStartupXp3(paths: string[], configured: string | null) {
@@ -319,23 +304,6 @@ function isBookmarkBookkeepingPath(path: string) {
   const name = path.slice(path.lastIndexOf("/") + 1);
   return /^datas[cu](?:[_~])?\.ksd$/iu.test(name);
 }
-function validPath(value: unknown): value is string {
-  return typeof value === "string" && value.length > 0 && value.length <= 1024 && value.normalize("NFC") === value &&
-    !value.startsWith("/") && !value.includes("\\") && !value.includes("//") &&
-    value.split("/").every((part) => part !== "" && part !== "." && part !== "..");
-}
-function validProjectUrl(value: unknown) {
-  if (typeof value !== "string") {return false;}
-  if (value.startsWith("/") && !value.startsWith("//") && !value.includes("\\") && !value.includes("#")) {return true;}
-  try {return ["http:", "https:"].includes(new URL(value).protocol);} catch {return false;}
-}
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null && !Array.isArray(value);
-}
-function exactKeys(value: Record<string, unknown>, expected: string[]) {
-  return Object.keys(value).sort().join("\0") === [...expected].sort().join("\0");
-}
-
 function requireBrowserFeatures(frameWindow: Window) {
   const runtimeGlobals = frameWindow as Window & typeof globalThis;
   const wasm = runtimeGlobals.WebAssembly as typeof WebAssembly & {

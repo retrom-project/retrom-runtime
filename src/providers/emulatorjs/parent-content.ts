@@ -5,24 +5,26 @@ import {checkSignal} from "../../content-io/abort.js";
 import {ContentIOError} from "../../content-io/errors.js";
 import {optionalResource} from "./resources.js";
 import type {EjsWindow} from "./emulator-instance.js";
+import {contentFileName} from "./content-filename.js";
 
-/** Keep the upstream ZIP extraction while owning immutable parent downloads and their lifetime. */
+/** Keep a verified Parent archive intact for the core's named ZIP lookup. */
 export async function prepareParentContent(runtimeWindow: EjsWindow, envelope: LaunchEnvelopeV1,
   optionalSession: AdapterContentSession | null, signal: AbortSignal,
-  report: (readyBytes: number, totalBytes: number) => void = () => {}): Promise<() => Promise<void>> {
+  report: (readyBytes: number, totalBytes: number) => void,
+  releaseVersion: "4.2.3" | "4.3.0-pre"): Promise<() => Promise<void>> {
   const parent = optionalResource(envelope, "parent", "PARENT_ARCHIVE");
   if (!parent) {return async () => {};}
   const session = requireContentSession(optionalSession), policy = session.inputPolicy("parent");
   const reader = await session.open(fileContentSource(parent, policy), policy, signal);
   let release: (() => Promise<void>) | undefined;
-  let url: string | undefined, closed = false;
+  let localParent: string | File | undefined, closed = false;
   const abort = () => {void cleanup().catch(() => {});};
   const cleanup = async () => {
     if (closed) {return;} closed = true;
     signal.removeEventListener("abort", abort);
-    if (url) {
-      if (runtimeWindow.EJS_gameParentUrl === url) {delete runtimeWindow.EJS_gameParentUrl;}
-      URL.revokeObjectURL(url);
+    if (localParent) {
+      if (runtimeWindow.EJS_gameParentUrl === localParent) {delete runtimeWindow.EJS_gameParentUrl;}
+      if (typeof localParent === "string") {URL.revokeObjectURL(localParent);}
     }
     try {await release?.();} finally {await reader.close();}
   };
@@ -33,9 +35,14 @@ export async function prepareParentContent(runtimeWindow: EjsWindow, envelope: L
     release = result.release;
     checkSignal(signal);
     if (result.blob.size !== parent.sizeBytes) {throw new ContentIOError("LENGTH_MISMATCH");}
-    // A URL also supports 4.2.3's string-only cache lookup before its File handling.
-    url = URL.createObjectURL(result.blob);
-    runtimeWindow.EJS_gameParentUrl = url;
+    if (releaseVersion === "4.3.0-pre") {
+      const FileConstructor = (runtimeWindow as Window & typeof globalThis).File;
+      localParent = new FileConstructor([result.blob], contentFileName(parent.url));
+    } else {
+      // 4.2.3 has a string-only cache lookup before its File handling.
+      localParent = URL.createObjectURL(result.blob);
+    }
+    runtimeWindow.EJS_gameParentUrl = localParent;
     signal.addEventListener("abort", abort, {once: true});
     return cleanup;
   } catch (error) {await cleanup(); throw error;}

@@ -63,7 +63,7 @@ describe("native-web RPG Maker screenshot bridge", () => {
     const launchId = "01980000-0000-7000-8000-000000000001";
     const nonce = "test-nonce";
     listeners.get("message")?.[0]?.({
-      data: {cleanupUrl: null, launchId, nonce, parentOrigin: "https://host.example", profile: "RPGMV", protocolVersion: 1, type: "RPG_RUNTIME_NATIVE_CONNECT"},
+      data: {launchId, nonce, parentOrigin: "https://host.example", profile: "RPGMV", protocolVersion: 1, type: "RPG_RUNTIME_NATIVE_CONNECT"},
       origin: "https://host.example",
       ports: [port],
       stopImmediatePropagation: () => undefined,

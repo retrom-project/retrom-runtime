@@ -315,7 +315,7 @@ function mockProject() {
     const url = input instanceof Request ? input.url : String(input);
     if (url.endsWith("index.json")) {
       return new Response(JSON.stringify({
-        files: [{ path: "data.win", sizeBytes: 4, url: "https://content.example/data.win" }],
+        files: [{ path: "data.win", sizeBytes: 4, sha256: "a".repeat(64), mediaType: "application/octet-stream", url: "https://content.example/data.win" }],
         schemaVersion: 1,
       }));
     }

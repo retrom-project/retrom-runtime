@@ -15,13 +15,13 @@ export function wasmEnvelope(): LaunchEnvelopeV1 {
       sizeBytes: 128,
       url: "/runtime/content/game/cart.wasm",
     }],
-    restore: {format: "wasm4-state-v1", sha256: digest, sizeBytes: 3, url: "/runtime/launches/id/state"},
+    restore: {kind: "HTTP", format: "wasm4-state-v1-storage-v1", sha256: digest, sizeBytes: 3, url: "/runtime/launches/id/state"},
     runtime: {
+      coreId: "fixture-core", coreFingerprint: digest, romHash: digest,
       bundleSha256: bundleDigest,
       capabilities: {
         contentLoading: "PRELOAD_ONLY",
         checkpoint: true,
-        discSwitch: false,
         frameCounter: true,
         frameMode: "SAME_ORIGIN_BLANK" as const,
         inputFilter: true,
@@ -33,7 +33,7 @@ export function wasmEnvelope(): LaunchEnvelopeV1 {
         videoModes: ["original", "pixel", "smooth"],
         volume: false,
       },
-      checkpoint: {maxBytes: 132144, readFormats: ["wasm4-state-v1", "wasm4-state-v1-storage-v1"], writeFormat: "wasm4-state-v1-storage-v1"},
+      checkpoint: {semantics: "INSTANT", maxBytes: 132144, readFormats: ["wasm4-state-v1-storage-v1"], writeFormat: "wasm4-state-v1-storage-v1"},
       moduleSha256: digest,
       moduleUrl: `/runtime/providers/retrom-runtime/${bundleDigest}/client.mjs`,
       providerApiVersion: 1 as const,
@@ -64,17 +64,18 @@ export function rpgMvEnvelope(): LaunchEnvelopeV1 {
   if (!target || !target.checkpoint) {throw new Error("RPG Maker MV target fixture missing");}
   return {
     resources: [{
-      indexUrl: `/runtime/content/web/${digest}/index.json`, bootstrapTicket: "t".repeat(48),
-      cleanupUrl: "https://runtime.test/__retrom/cleanup",
+      indexUrl: `/runtime/content/web/${digest}/index.json`,
       contentDigest: digest,
+      bridgeUrl: `/runtime/providers/retrom-runtime/${bundleDigest}/assets/native/bridge.js`,
       entryUrl: "https://runtime.test/__retrom/bootstrap",
-      kind: "NATIVE_WEB",
+      entryFile: "index.html", kind: "NATIVE_WEB",
       ordinal: 0,
       origin: "https://runtime.test",
       role: "game",
     }],
     restore: null,
     runtime: {
+      coreId: "fixture-core", coreFingerprint: digest, romHash: digest,
       bundleSha256: bundleDigest,
       capabilities: target.capabilities,
       checkpoint: target.checkpoint,
@@ -112,15 +113,17 @@ export function targetEnvelope(targetId: string): LaunchEnvelopeV1 {
     };
   } else if (["rpgmaker-mv", "rpgmaker-mz"].includes(targetId)) {
     resource = {
-      indexUrl: `/runtime/content/web/${digest}/index.json`, bootstrapTicket: "t".repeat(48), cleanupUrl: "https://runtime.test/__retrom/cleanup",
+      indexUrl: `/runtime/content/web/${digest}/index.json`,
       contentDigest: digest, entryUrl: "https://runtime.test/__retrom/bootstrap",
-      kind: "NATIVE_WEB", ordinal: 0, origin: "https://runtime.test", role: "game",
+      bridgeUrl: `/runtime/providers/retrom-runtime/${bundleDigest}/assets/native/bridge.js`,
+      entryFile: "index.html", kind: "NATIVE_WEB", ordinal: 0, origin: "https://runtime.test", role: "game",
     };
   } else if (targetId === "tyranoscript") {
     resource = {
-      indexUrl: `/runtime/content/web/${digest}/index.json`, bootstrapTicket: "t".repeat(48), cleanupUrl: "https://runtime.test/__retrom/cleanup",
+      indexUrl: `/runtime/content/web/${digest}/index.json`,
       contentDigest: digest, entryUrl: "https://runtime.test/__retrom/bootstrap",
-      kind: "ISOLATED_WEB", ordinal: 0, origin: "https://runtime.test", role: "game",
+      bridgeUrl: `/runtime/providers/retrom-runtime/${bundleDigest}/assets/tyranoscript/bridge.js`,
+      entryFile: "index.html", kind: "ISOLATED_WEB", ordinal: 0, origin: "https://runtime.test", role: "game",
     };
   } else if (["apple2-apple2js", "mame-apple2", "mame-apple2e", "mame-arcade", "mame-atom", "mame-coleco", "mame-pv1000", "mame-sg1000", "bbc-jsbeeb", "samcoupe", "gbe-pokemini", "j2me", "tic80", "fake08", "flash-ruffle", "msx-webmsx", "openbor", "px68k", "np2kai-pc98"].includes(targetId)) {
     resource = {kind: "ROM_BLOB", ordinal: 0, rangeRequired: false, role: "game",
@@ -178,6 +181,7 @@ export function targetEnvelope(targetId: string): LaunchEnvelopeV1 {
     }] : [resource],
     restore: null,
     runtime: {
+      coreId: "fixture-core", coreFingerprint: digest, romHash: digest,
       bundleSha256: bundleDigest,
       capabilities: target.capabilities,
       checkpoint: target.checkpoint,

@@ -1,3 +1,4 @@
+import {gzipSync} from "fflate";
 import {decodeStoredCheckpoint, nativeCheckpointFormat} from "../../provider/checkpoint-storage.js";
 import {afterEach, beforeEach, describe, expect, it, vi} from "vitest";
 import type {RuntimeEventV1, RuntimeHostV1} from "../../provider/module-api.js";
@@ -111,7 +112,7 @@ describe("retrom-runtime Provider Module V1", () => {
     const adapter = adapterFixture();
     vi.mocked(mountTargetAdapter).mockResolvedValue(adapter);
     const restore = Uint8Array.of(1, 2, 3);
-    const host = hostFixture({loadRestore: vi.fn(async () => restore)});
+    const host = hostFixture({loadRestore: vi.fn(async () => gzipSync(restore))});
     const player = await provider.createRuntime(wasmEnvelope(), host);
     await player.mount(document.createElement("div"));
     expect(mountTargetAdapter).toHaveBeenCalledWith(wasmEnvelope(), expect.objectContaining({id: "game"}),
@@ -128,7 +129,6 @@ describe("retrom-runtime Provider Module V1", () => {
   it("rejects unsupported operations with the stable capability error", async () => {
     const player = await provider.createRuntime(wasmEnvelope(), hostFixture());
     for (const action of [
-      () => player.getDiscState(), () => player.switchDisc(1),
       () => player.openNativeSettings("core"), () => player.closeNativeSettings(), () => player.setVolume(0.5),
     ]) {await expect(action()).rejects.toMatchObject({code: "PLAYER_RUNTIME_CAPABILITY_UNSUPPORTED"});}
     await player.exit();
@@ -196,7 +196,9 @@ describe("retrom-runtime Provider Module V1", () => {
       getFrameCount: () => 88, setVideoMode: vi.fn(async () => undefined),
     });
     vi.mocked(mountTargetAdapter).mockResolvedValue(adapter);
-    const player = createRetromRuntimePlayer(rpgMvEnvelope(), hostFixture({mountFrame: async () => ({
+    const envelope = rpgMvEnvelope();
+    envelope.runtime.capabilities = {...envelope.runtime.capabilities, frameMode: "SAME_ORIGIN_BLANK"};
+    const player = createRetromRuntimePlayer(envelope, hostFixture({mountFrame: async () => ({
       contentWindow: runtimeWindow, element: frame, origin: "https://runtime.test",
     })}), {});
     await player.setInputFilter({activeGamepadIndex: 0, suppressInput: true});
@@ -223,5 +225,27 @@ describe("retrom-runtime Provider Module V1", () => {
     expect(player.getFrameCount()).toBe(88);
     await player.exit();
     expect(runtimeWindow.navigator.getGamepads).toBe(nativeGetGamepads);
+  });
+  it("delivers isolated input policy through the adapter without reading cross-origin window properties", async () => {
+    const accessed = vi.fn();
+    const isolated = new Proxy({} as Window, {get(_target, key) {
+      accessed(key); throw new DOMException("Blocked cross-origin access", "SecurityError");
+    }});
+    const frame = document.createElement("iframe");
+    const setInputFilter = vi.fn(async () => {});
+    const adapter = Object.assign(adapterFixture({getCanvas: () => null}), {setInputFilter});
+    vi.mocked(mountTargetAdapter).mockResolvedValue(adapter);
+    const host = hostFixture({mountFrame: async () => ({contentWindow: isolated, element: frame, origin: "https://runtime.test"})});
+    const player = createRetromRuntimePlayer(rpgMvEnvelope(), host, {});
+    const first = {activeGamepadIndex: 0, suppressInput: true};
+    await player.setInputFilter(first);
+    await player.mount(document.createElement("div"));
+    expect(setInputFilter).toHaveBeenCalledWith(first);
+    const second = {activeGamepadIndex: 1, suppressInput: false};
+    await player.setInputFilter(second);
+    await player.setInputFilter(null);
+    expect(setInputFilter.mock.calls).toEqual([[first], [second], [null]]);
+    expect(accessed).not.toHaveBeenCalled();
+    await player.exit();
   });
 });

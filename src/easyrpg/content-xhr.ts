@@ -2,7 +2,7 @@ import type {ContentSourceV1, ManagedInputPolicyV1} from "../../contracts/conten
 import type {AdapterContentSession} from "../provider/content-inputs.js";
 import {ContentIOError} from "../content-io/errors.js";
 
-type IndexedContent = {source: ContentSourceV1; policy: ManagedInputPolicyV1};
+export type IndexedContent = {source: ContentSourceV1; policy: ManagedInputPolicyV1} | {metadata: Uint8Array<ArrayBuffer>};
 type Pending = {controller: AbortController; url?: string; sent: boolean; finish(): void};
 
 /** EasyRPG's async wget consumes XHR. Only authorized indexed payload URLs enter Content I/O. */
@@ -43,23 +43,28 @@ export function installContentXHR(frame: Window, files: ReadonlyMap<string, Inde
     xhr.addEventListener("loadend", request.finish);
     const active = AbortSignal.any([signal, controller.signal]);
     void (async () => {
-      const reader = await session.open(entry.source, entry.policy, active);
-      try {
-        const value = await session.materialize(reader.id, {kind: "BYTES", maxBytes: entry.policy.maxFileBytes}, active,
-          progress => {if (!active.aborted) {xhr.dispatchEvent(new realm.ProgressEvent("progress",
-            {lengthComputable: true, loaded: progress.readyBytes, total: progress.totalBytes}));}});
-        active.throwIfAborted();
-        if (value.kind !== "BYTES" || value.bytes.byteLength !== entry.source.sizeBytes) {throw new ContentIOError("LENGTH_MISMATCH");}
-        const responseType = xhr.responseType, timeout = xhr.timeout, credentials = xhr.withCredentials;
-        request.url = URL.createObjectURL(new Blob([value.bytes as Uint8Array<ArrayBuffer>]));
-        open.call(xhr, "GET", request.url, true);
-        xhr.responseType = responseType; xhr.timeout = timeout; xhr.withCredentials = credentials;
-        request.sent = true; send.call(xhr);
-      } finally {await reader.close();}
+      const bytes = "metadata" in entry ? entry.metadata : await contentBytes(entry, active, xhr);
+      active.throwIfAborted();
+      const responseType = xhr.responseType, timeout = xhr.timeout, credentials = xhr.withCredentials;
+      request.url = URL.createObjectURL(new Blob([bytes]));
+      open.call(xhr, "GET", request.url, true);
+      xhr.responseType = responseType; xhr.timeout = timeout; xhr.withCredentials = credentials;
+      request.sent = true; send.call(xhr);
     })().catch(() => {
       if (active.aborted) {return;}
       xhr.dispatchEvent(new realm.ProgressEvent("error")); xhr.dispatchEvent(new realm.ProgressEvent("loadend"));
     });
+  };
+  const contentBytes = async (entry: Extract<IndexedContent, {source: ContentSourceV1}>, active: AbortSignal,
+    xhr: XMLHttpRequest): Promise<Uint8Array<ArrayBuffer>> => {
+    const reader = await session.open(entry.source, entry.policy, active);
+    try {
+      const value = await session.materialize(reader.id, {kind: "BYTES", maxBytes: entry.policy.maxFileBytes}, active,
+        progress => {if (!active.aborted) {xhr.dispatchEvent(new realm.ProgressEvent("progress",
+          {lengthComputable: true, loaded: progress.readyBytes, total: progress.totalBytes}));}});
+      if (value.kind !== "BYTES" || value.bytes.byteLength !== entry.source.sizeBytes) {throw new ContentIOError("LENGTH_MISMATCH");}
+      return value.bytes as Uint8Array<ArrayBuffer>;
+    } finally {await reader.close();}
   };
   const wrappedAbort: typeof abort = function(this: XMLHttpRequest) {cancel(this); return abort.call(this);};
   prototype.open = wrappedOpen; prototype.send = wrappedSend; prototype.abort = wrappedAbort;

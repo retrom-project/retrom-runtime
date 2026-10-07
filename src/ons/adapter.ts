@@ -10,7 +10,7 @@ import {
   type OnsProjectFileNode,
 } from "./project-files.js";
 
-type ProjectIndex = { schemaVersion: 1; title: string; fontPath: string; files: OnsProjectFile[] };
+import {parseProjectIndex, type ProjectIndex} from "../provider/project-index.js";
 
 type OnsFileSystem = {
   isDir(mode: number): boolean;
@@ -34,6 +34,7 @@ type OnsModule = {
   _onsyuri_host_load(slot: number): number;
   _onsyuri_host_did_restore_fail(): number;
   _onsyuri_host_is_ready(): number;
+  _onsyuri_host_checkpoint_ready(): number;
   _onsyuri_host_save(slot: number): number;
   _onsyuri_host_set_paused(paused: number): void;
   _onsyuri_host_set_restore_slot(slot: number): void;
@@ -79,7 +80,7 @@ export async function mountOnsYuri(
   Object.assign(canvas.style, { gridArea: "1 / 1", maxHeight: "100%", maxWidth: "100%" });
   Object.assign(video.style, { gridArea: "1 / 1", maxHeight: "100%", maxWidth: "100%" });
   canvas.tabIndex = 0;
-  canvas.setAttribute("aria-label", index.title);
+  canvas.setAttribute("aria-label", "ONScripter game");
   video.hidden = true;
   surface.append(canvas, video);
   target.replaceChildren(surface);
@@ -123,6 +124,7 @@ export async function mountOnsYuri(
     script = await loadRuntimeScript(document, new URL("onsyuri.js", base).href);
     if (typeof host.onsyuri !== "function") {throw new Error("ONS_RUNTIME_ARTIFACT_INVALID");}
     module = await host.onsyuri(moduleOptions);
+    if (typeof module._onsyuri_host_checkpoint_ready !== "function") {throw new Error("ONS_RUNTIME_ARTIFACT_INVALID");}
     host.g_onsyuri_module = module;
     videoCleanup = installVideo(host, module, video, canvas, fileMap, projectFiles.videoSource);
     module._onsyuri_host_set_restore_slot(restore?.resumeSlot ?? -1);
@@ -146,12 +148,13 @@ export async function mountOnsYuri(
   return {
     checkpoint: async () => {
       if (exited) {throw new Error("ONS_RUNTIME_INVALID_STATE");}
+      if (activeModule._onsyuri_host_checkpoint_ready() !== 1) {throw new Error("ONS_CHECKPOINT_NOT_READY");}
       const resume = !paused;
       if (resume) {activeModule._onsyuri_host_set_paused(1);}
       try {
-        if (activeModule._onsyuri_host_save(config.checkpointSlot) !== 0) {
-          throw new Error("ONS_CHECKPOINT_CREATE_FAILED");
-        }
+        const status = activeModule._onsyuri_host_save(config.checkpointSlot);
+        if (status === -1) {throw new Error("ONS_CHECKPOINT_NOT_READY");}
+        if (status !== 0) {throw new Error("ONS_CHECKPOINT_CREATE_FAILED");}
         const entries = collectFiles(activeModule.FS, saveRoot);
         if (!entries.some((entry) => entry.path === `save${config.checkpointSlot}.dat`)) {
           throw new Error("ONS_CHECKPOINT_CREATE_FAILED");
@@ -161,7 +164,7 @@ export async function mountOnsYuri(
           format: "ons-save-bundle-v1",
         };
       } catch (error) {
-        if (error instanceof Error && error.message === "ONS_CHECKPOINT_CREATE_FAILED") {throw error;}
+        if (error instanceof Error && ["ONS_CHECKPOINT_CREATE_FAILED", "ONS_CHECKPOINT_NOT_READY"].includes(error.message)) {throw error;}
         throw new Error("ONS_CHECKPOINT_CREATE_FAILED");
       } finally {
         if (resume) {activeModule._onsyuri_host_set_paused(0);}
@@ -180,7 +183,8 @@ export async function mountOnsYuri(
       restoreGlobals(host, globals);
     },
     getCanvas: () => canvas,
-    getCheckpointAvailability: () => ({ available: true, blocker: null }),
+    getCheckpointAvailability: () => activeModule._onsyuri_host_checkpoint_ready() === 1
+      ? {available: true, blocker: null} : {available: false, blocker: "BUSY"},
     getFrameCount: () => null,
     pause: async () => {activeModule._onsyuri_host_set_paused(1); paused = true;},
     resume: async () => {activeModule._onsyuri_host_set_paused(0); paused = false;},
@@ -194,32 +198,9 @@ async function loadProjectIndex(url: string, signal?: AbortSignal): Promise<Proj
   try {
     value = await fetchMetadataJson(url, indexByteBudget(maximumProjectFiles, 1024), signal);
   } catch {throw new Error("ONS_PROJECT_INDEX_UNAVAILABLE");}
-  if (!validIndex(value)) {throw new Error("ONS_PROJECT_INDEX_INVALID");}
-  return value;
-}
-
-function validIndex(value: unknown): value is ProjectIndex {
-  if (!isRecord(value) || !exactKeys(value, ["files", "fontPath", "schemaVersion", "title"]) ||
-    value.schemaVersion !== 1 || !boundedText(value.title, 500) || !validPath(value.fontPath) ||
-    !Array.isArray(value.files) || value.files.length < 2 || value.files.length > maximumProjectFiles) {return false;}
-  const seen = new Set<string>();
-  let fontFound = false;
-  let totalBytes = 0;
-  for (const item of value.files) {
-    if (!validProjectFile(item)) {return false;}
-    const identity = item.path.toLowerCase();
-    if (seen.has(identity)) {return false;}
-    seen.add(identity);
-    totalBytes += Number(item.sizeBytes);
-    if (!Number.isSafeInteger(totalBytes)) {return false;}
-    fontFound ||= item.path === value.fontPath;
-  }
-  return fontFound;
-}
-
-function validProjectFile(value: unknown): value is OnsProjectFile {
-  return isRecord(value) && exactKeys(value, ["path", "sizeBytes", "url"]) && validPath(value.path) &&
-    validProjectUrl(value.url) && Number.isSafeInteger(value.sizeBytes) && Number(value.sizeBytes) >= 1;
+  const index = parseProjectIndex(value, maximumProjectFiles);
+  if (!index || index.files.some(file => file.sizeBytes < 1)) {throw new Error("ONS_PROJECT_INDEX_INVALID");}
+  return index;
 }
 
 function prepareFileSystem(fs: OnsFileSystem, files: OnsProjectFile[], restore: OnsCheckpointBundle | null) {
@@ -301,7 +282,7 @@ function installVideo(
 function runtimeArgs(config: OnsParameters, index: ProjectIndex) {
   return [
     "--root", gameRoot,
-    "--font", `${gameRoot}/${index.fontPath}`,
+    "--font", `${gameRoot}/${fontPath(index)}`,
     "--save-dir", saveRoot,
     `--enc:${config.scriptEncoding}`,
   ];
@@ -398,22 +379,9 @@ function scaleToFrame(frameWindow: Window, element: HTMLElement, ratio: number) 
   return { h: element.style.height, w: element.style.width };
 }
 function parentPath(value: string) {return value.slice(0, value.lastIndexOf("/")) || "/";}
-function boundedText(value: unknown, maximum: number): value is string {
-  return typeof value === "string" && value.length > 0 && value.length <= maximum;
-}
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null && !Array.isArray(value);
-}
-function exactKeys(value: Record<string, unknown>, expected: string[]) {
-  return Object.keys(value).sort().join("\0") === [...expected].sort().join("\0");
-}
-function validProjectUrl(value: unknown) {
-  if (typeof value !== "string") {return false;}
-  if (value.startsWith("/") && !value.startsWith("//") && !value.includes("\\") && !value.includes("#")) {return true;}
-  try {return ["http:", "https:"].includes(new URL(value).protocol);} catch {return false;}
-}
-function validPath(value: unknown): value is string {
-  return typeof value === "string" && value.length > 0 && value.length <= 1024 && value.normalize("NFC") === value &&
-    !value.startsWith("/") && !value.includes("\\") && !value.includes("//") &&
-    value.split("/").every((part) => part !== "" && part !== "." && part !== "..");
+
+function fontPath(index: ProjectIndex) {
+  const font = index.files.find(file => file.path.toLowerCase() === "default.ttf");
+  if (!font) {throw new Error("ONS_PROJECT_FONT_MISSING");}
+  return font.path;
 }

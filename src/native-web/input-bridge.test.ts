@@ -13,16 +13,17 @@ it("enables native bridge observation on demand without polling or changing engi
     onmessage: null, start: () => undefined, postMessage: (reply) => replies.push(reply),
   };
   const requestAnimationFrame = vi.fn();
+  const nativeGetGamepads = vi.fn(() => [{index: 0, buttons: [{pressed: true, value: 1, touched: true}], axes: [0.5]}]);
   const runtime = {
     Input: input, performance: {now: () => 100}, document: {hasFocus: () => true},
     Utils: {RPGMAKER_NAME: "MV"}, SceneManager: {updateMain: () => undefined}, DataManager: {}, StorageManager: {},
-    parent: {postMessage: () => undefined}, requestAnimationFrame,
+    parent: {postMessage: () => undefined}, requestAnimationFrame, navigator: {getGamepads: nativeGetGamepads},
     addEventListener: (name: string, handler: Handler) => handlers.set(name, handler),
     removeEventListener: (name: string) => handlers.delete(name),
   };
   runInNewContext(readFileSync("assets/runtime/native/bridge.js", "utf8"), {window: runtime, TextEncoder, TextDecoder});
   const identity = {launchId: "fixture", nonce: "fixture", protocolVersion: 1};
-  handlers.get("message")?.({data: {...identity, cleanupUrl: null, type: "RPG_RUNTIME_NATIVE_CONNECT",
+  handlers.get("message")?.({data: {...identity, type: "RPG_RUNTIME_NATIVE_CONNECT",
     parentOrigin: "https://host.example", profile: "RPGMV"}, origin: "https://host.example", ports: [port], stopImmediatePropagation: () => undefined});
   let requestId = 0;
   const request = async (type: string, body: Record<string, unknown> = {}) => {
@@ -43,4 +44,13 @@ it("enables native bridge observation on demand without polling or changing engi
   expect(input._updateGamepadState).toBe(update);
   expect(handlers.has("keydown")).toBe(false);
   expect((await request("STATUS")).body.inputDiagnostics).toBeUndefined();
+  expect((await request("SET_INPUT_FILTER", {policy: {activeGamepadIndex: 0, suppressInput: true}})).type)
+    .toBe("SET_INPUT_FILTER_RESULT");
+  expect(runtime.navigator.getGamepads()[0]?.buttons[0]?.pressed).toBe(false);
+  expect(runtime.navigator.getGamepads()[0]?.axes).toEqual([0]);
+  await request("SET_INPUT_FILTER", {policy: null});
+  expect(runtime.navigator.getGamepads()[0]?.buttons[0]?.pressed).toBe(true);
+  expect((await request("SET_INPUT_FILTER", {policy: {activeGamepadIndex: -1, suppressInput: true}})).type).toBe("ERROR");
+  await request("CLEANUP");
+  expect(runtime.navigator.getGamepads).toBe(nativeGetGamepads);
 });

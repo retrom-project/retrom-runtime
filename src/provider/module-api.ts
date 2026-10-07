@@ -9,7 +9,6 @@ import type {
   RuntimeFileSetResourceV1,
   RuntimeFileTreeResourceV1,
   RuntimeHostV1,
-  RuntimeMultiDiscResourceV1,
   RuntimeResourceV1,
   RuntimeWebResourceV1,
 } from "./generated/provider-module-v1.js";
@@ -31,7 +30,8 @@ export function validateLaunchEnvelopeBoundary(value: unknown): LaunchEnvelopeV1
   ]) || value.schemaVersion !== 1) {invalidRequest();}
   const runtime = validateRuntime(value.runtime);
   if (!validSession(value.session) || !validTargetOptionsShape(value.targetOptions) ||
-    !validResourceSetShape(value.resources) || !validRestore(value.restore, runtime.checkpoint)) {invalidRequest();}
+    !validResourceSetShape(value.resources) || !validBridgeAssets(value.resources, runtime.runtimeBaseUrl) ||
+    !validRestore(value.restore, runtime.checkpoint)) {invalidRequest();}
   return value as LaunchEnvelopeV1;
 }
 
@@ -82,16 +82,18 @@ function validEnvelopeContract(
     sameCapabilities(runtime.capabilities, target.capabilities) &&
     sameCheckpoint(runtime.checkpoint, target.checkpoint) && validSession(value.session) &&
     validTargetOptions(value.targetOptions, target.targetOptionsSchema) && validResources(value.resources, target.inputs) &&
+    validBridgeAssets(value.resources, runtime.runtimeBaseUrl, target.assetPaths) &&
     validRestore(value.restore, target.checkpoint);
 }
 
 function validateRuntime(value: unknown) {
   const runtime = isRecord(value) ? value : null;
   if (!runtime || !exactKeys(runtime, [
-    "bundleSha256", "capabilities", "checkpoint", "moduleSha256", "moduleUrl", "providerApiVersion",
-    "providerId", "providerVersion", "runtimeBaseUrl", "targetId",
+    "bundleSha256", "capabilities", "checkpoint", "coreFingerprint", "coreId", "moduleSha256", "moduleUrl", "providerApiVersion",
+    "providerId", "providerVersion", "romHash", "runtimeBaseUrl", "targetId",
   ]) || !validIdentity(runtime.providerId) || !validSemver(runtime.providerVersion) ||
     runtime.providerApiVersion !== 1 || !validIdentity(runtime.targetId) ||
+    !validCoreIdentity(runtime.coreId) || !validDigest(runtime.coreFingerprint) || !validDigest(runtime.romHash) ||
     !validDigest(runtime.bundleSha256) || !validDigest(runtime.moduleSha256) ||
     !validCapabilities(runtime.capabilities) || !validCheckpointShape(runtime.checkpoint)) {invalidRequest();}
   return runtime as unknown as LaunchEnvelopeV1["runtime"];
@@ -116,13 +118,13 @@ function validSession(value: unknown) {
 function validCapabilities(value: unknown): value is RuntimeCapabilitiesV1 {
   if (!isRecord(value) || !exactKeys(value, [
     "checkpoint", ...(Object.hasOwn(value, "contentLoading") ? ["contentLoading"] : []),
-    "discSwitch", "frameCounter", "frameMode", "inputFilter", "nativeSettings",
+    "frameCounter", "frameMode", "inputFilter", "nativeSettings",
     "pause", "requiresThreads", "screenshot", "standardGamepad", "videoModes", "volume",
   ])) {return false;}
   if (Object.hasOwn(value, "contentLoading") && value.contentLoading !== "ON_DEMAND_AND_PRELOAD" &&
     value.contentLoading !== "PRELOAD_ONLY") {return false;}
   for (const key of [
-    "checkpoint", "discSwitch", "frameCounter", "inputFilter", "nativeSettings", "pause",
+    "checkpoint", "frameCounter", "inputFilter", "nativeSettings", "pause",
     "requiresThreads", "screenshot", "standardGamepad", "volume",
   ]) {if (typeof value[key] !== "boolean") {return false;}}
   return ["NONE", "SAME_ORIGIN_BLANK", "SAME_ORIGIN_RESOURCE", "ISOLATED_ORIGIN_RESOURCE"]
@@ -134,10 +136,8 @@ function validCapabilities(value: unknown): value is RuntimeCapabilitiesV1 {
 function validCheckpointShape(value: unknown): value is RuntimeCheckpointContractV1 {
   if (value === null) {return true;}
   if (!isRecord(value)) {return false;}
-  const hasSemantics = Object.hasOwn(value, "semantics");
-  if (hasSemantics && value.semantics !== "INSTANT" && value.semantics !== "GAME_SAVE") {return false;}
-  const keys = hasSemantics ? ["maxBytes", "readFormats", "semantics", "writeFormat"]
-    : ["maxBytes", "readFormats", "writeFormat"];
+  if (value.semantics !== "INSTANT" && value.semantics !== "GAME_SAVE") {return false;}
+  const keys = ["maxBytes", "readFormats", "semantics", "writeFormat"];
   return exactKeys(value, keys) &&
     validToken(value.writeFormat) && positiveInteger(value.maxBytes) && Array.isArray(value.readFormats) &&
     sortedUnique(value.readFormats) && value.readFormats.every(validToken) && value.readFormats.includes(value.writeFormat);
@@ -145,7 +145,7 @@ function validCheckpointShape(value: unknown): value is RuntimeCheckpointContrac
 
 function sameCapabilities(actual: RuntimeCapabilitiesV1, expected: RuntimeCapabilitiesV1) {
   return actual.contentLoading === expected.contentLoading && actual.checkpoint === expected.checkpoint && actual.frameCounter === expected.frameCounter &&
-    actual.discSwitch === expected.discSwitch && actual.frameMode === expected.frameMode &&
+    actual.frameMode === expected.frameMode &&
     actual.inputFilter === expected.inputFilter && actual.nativeSettings === expected.nativeSettings &&
     actual.pause === expected.pause &&
     actual.requiresThreads === expected.requiresThreads && actual.screenshot === expected.screenshot &&
@@ -160,7 +160,7 @@ function sameCheckpoint(
 ) {
   return actual === null && expected === null || actual !== null && expected !== null &&
     actual.writeFormat === expected.writeFormat && actual.maxBytes === expected.maxBytes &&
-    (actual.semantics ?? "INSTANT") === (expected.semantics ?? "INSTANT") &&
+    actual.semantics === expected.semantics &&
     actual.readFormats.length === expected.readFormats.length &&
     actual.readFormats.every((format, index) => format === expected.readFormats[index]);
 }
@@ -202,7 +202,6 @@ function validResourceShape(resource: RuntimeResourceV1) {
   if (resource.kind === "NATIVE_WEB" || resource.kind === "ISOLATED_WEB") {return validWebResource(resource);}
   if (isBlobResource(resource)) {return validBlobResource(resource);}
   if (resource.kind === "BIOS_BUNDLE" || resource.kind === "EXTERNAL_FILE_SET") {return validFileSetResource(resource);}
-  if (resource.kind === "MULTI_DISC") {return validMultiDiscResource(resource);}
   return false;
 }
 
@@ -211,11 +210,19 @@ function validFileTreeResource(resource: RuntimeFileTreeResourceV1) {
     validDigest(resource.contentDigest) && relativeURL(resource.indexUrl);
 }
 function validWebResource(resource: RuntimeWebResourceV1) {
-  return exactKeys(resource, [
-    "bootstrapTicket", "cleanupUrl", "contentDigest", "entryUrl", "indexUrl", "kind", "ordinal", "origin", "role",
-  ]) && relativeURL(resource.indexUrl) && validDigest(resource.contentDigest) && validOrigin(resource.origin) &&
-    sameOrigin(resource.entryUrl, resource.origin) && (resource.cleanupUrl === null ||
-      sameOrigin(resource.cleanupUrl, resource.origin)) && /^[A-Za-z0-9_-]{43,128}$/u.test(resource.bootstrapTicket);
+  return exactKeys(resource, ["bridgeUrl", "contentDigest", "entryFile", "entryUrl", "indexUrl", "kind", "ordinal", "origin", "role"]) &&
+    relativeURL(resource.bridgeUrl) && !resource.bridgeUrl.includes("?") &&
+    relativeURL(resource.indexUrl) && validDigest(resource.contentDigest) && validOrigin(resource.origin) &&
+    sameOrigin(resource.entryUrl, resource.origin) && safePath(resource.entryFile, 1024);
+}
+function validBridgeAssets(resources: RuntimeResourceV1[], base: string, declared?: string[]) {
+  return resources.every(resource => resource.kind !== "NATIVE_WEB" && resource.kind !== "ISOLATED_WEB" ||
+    canonicalBridgeURL(resource.bridgeUrl) && resource.bridgeUrl.startsWith(`${base}assets/`) && resource.bridgeUrl.endsWith("/bridge.js") &&
+    (declared === undefined || declared.some(path => resource.bridgeUrl === `${base}${path}`)));
+}
+function canonicalBridgeURL(url: string) {
+  try {return new URL(url, "http://assets.invalid").pathname === url;}
+  catch {return false;}
 }
 function validBlobResource(resource: RuntimeBlobResourceV1) {
   return exactKeys(resource, ["kind", "ordinal", "rangeRequired", "role", "sha256", "sizeBytes", "url"]) &&
@@ -228,22 +235,9 @@ function validFileSetResource(resource: RuntimeFileSetResourceV1) {
     resource.files.length > 0 && resource.files.every(validFileEntry) &&
     sortedUnique(resource.files.map((entry) => entry.virtualPath));
 }
-function validMultiDiscResource(resource: RuntimeMultiDiscResourceV1) {
-  return exactKeys(resource, ["entries", "initialDiscIndex", "kind", "ordinal", "role"]) &&
-    Array.isArray(resource.entries) && resource.entries.length > 0 &&
-    resource.entries.every((entry, index) => validDiscEntry(entry, index)) &&
-    Number.isSafeInteger(resource.initialDiscIndex) && resource.initialDiscIndex >= 0 &&
-    resource.initialDiscIndex < resource.entries.length;
-}
 function validFileEntry(value: RuntimeFileEntryV1) {
   return isRecord(value) && exactKeys(value, ["logicalName", "sha256", "sizeBytes", "url", "virtualPath"]) &&
     boundedText(value.logicalName, 1, 240) && safePath(value.virtualPath) && relativeURL(value.url) &&
-    validDigest(value.sha256) && positiveInteger(value.sizeBytes);
-}
-
-function validDiscEntry(value: RuntimeMultiDiscResourceV1["entries"][number], index: number) {
-  return isRecord(value) && exactKeys(value, ["index", "label", "sha256", "sizeBytes", "url"]) &&
-    value.index === index && boundedText(value.label, 1, 240) && relativeURL(value.url) &&
     validDigest(value.sha256) && positiveInteger(value.sizeBytes);
 }
 
@@ -309,10 +303,13 @@ function validRestore(
   checkpoint: ProviderManifest["targets"][number]["checkpoint"] | RuntimeCheckpointContractV1,
 ) {
   if (value === null) {return true;}
-  return checkpoint !== null && isRecord(value) && exactKeys(value, ["format", "sha256", "sizeBytes", "url"]) &&
-    typeof value.format === "string" && checkpoint.readFormats.includes(value.format) &&
-    validDigest(value.sha256) && positiveInteger(value.sizeBytes) && value.sizeBytes <= checkpoint.maxBytes &&
-    relativeURL(value.url);
+  if (!checkpoint || !isRecord(value)) {return false;}
+  const keys = value.kind === "HTTP" ? ["format", "kind", "sha256", "sizeBytes", "url"]
+    : value.kind === "LOCAL" ? ["format", "kind", "sha256", "sizeBytes"] : null;
+  return keys !== null && exactKeys(value, keys) && typeof value.format === "string" &&
+    checkpoint.readFormats.includes(value.format) && validDigest(value.sha256) &&
+    positiveInteger(value.sizeBytes) && value.sizeBytes <= checkpoint.maxBytes &&
+    (value.kind !== "HTTP" || relativeURL(value.url));
 }
 
 
@@ -338,9 +335,9 @@ function relativeURL(value: unknown): value is string {
     !value.startsWith("//") && !value.includes("\\") && !value.includes("#") &&
     [...value].every((character) => character >= " " && character <= "~");
 }
-function safePath(value: unknown): value is string {
-  return typeof value === "string" && value.length >= 1 && value.length <= 240 && !value.startsWith("/") &&
-    !value.includes("\\") && !value.includes("?") && !value.includes("#") &&
+function safePath(value: unknown, maximum = 240): value is string {
+  return typeof value === "string" && value.length >= 1 && value.length <= maximum && !value.startsWith("/") &&
+    !value.includes("\\") && wellFormed(value) && [...value].every(character => character.charCodeAt(0) >= 32 && character.charCodeAt(0) !== 127) &&
     value.split("/").every((part) => part !== "" && part !== "." && part !== "..");
 }
 function jsonRecord(value: unknown): value is Record<string, unknown> {
@@ -394,3 +391,5 @@ function wellFormed(value: string) {
   return true;
 }
 function invalidRequest(): never {throw new Error("PROVIDER_LAUNCH_REQUEST_INVALID");}
+
+function validCoreIdentity(value: unknown) {return typeof value === "string" && /^[a-z0-9]+(?:[-_][a-z0-9]+)*$/u.test(value) && value.length <= 64;}

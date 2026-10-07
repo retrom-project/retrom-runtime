@@ -27,8 +27,7 @@ type Pending = {
   type?: string;
 };
 
-type NativeBootstrapStage = "BOOTSTRAP" | "BRIDGE";
-type NativeBootstrapAction = "SEND_TICKET" | "CONNECT" | "IGNORE";
+type NativeBootstrapAction = "CONNECT" | "IGNORE";
 
 const protocolVersion = 1;
 const maximumControlBytes = 64 * 1024;
@@ -81,6 +80,10 @@ export async function mountNativeRpg(
       : { available: false, blocker: "BUSY" },
     getFrameCount: () => channel.frames(),
     startInputDiagnostics: () => channel.inputDiagnostics.start(),
+    setInputFilter: async (policy) => {
+      const reply = await channel.request("SET_INPUT_FILTER", {policy}, 5_000);
+      if (reply.type !== "SET_INPUT_FILTER_RESULT") {throw new Error("RPG_RUNTIME_CONTROL_UNAVAILABLE");}
+    },
     pause: async () => {await channel.request("PAUSE", {}, 5_000);},
     resume: async () => {await channel.request("RESUME", {}, 5_000);},
     screenshot: () => channel.screenshot(),
@@ -122,7 +125,7 @@ export class NativeChannel {
     target.postMessage({
       type: "RPG_RUNTIME_NATIVE_CONNECT", protocolVersion,
       launchId: this.config.sessionId, nonce: this.nonce, parentOrigin: window.location.origin,
-      profile: this.config.bridgeProfile, cleanupUrl: this.config.cleanupUrl,
+      profile: this.config.bridgeProfile,
     }, this.config.uniqueOrigin, [this.port.port2]);
   }
 
@@ -299,48 +302,29 @@ async function bootstrapNativeFrame(config: NativeRpgParameters, frame: HTMLIFra
   const target = frame.contentWindow;
   if (!target) {throw new Error("PLAYER_FRAME_UNAVAILABLE");}
   const runtimeWindow: Window = target;
-  let bootstrapTicket = config.bootstrapTicket;
-  config.bootstrapTicket = "";
   await new Promise<void>((resolve, reject) => {
     const timer = window.setTimeout(() => finish(new Error("RPG_NATIVE_BOOTSTRAP_TIMEOUT")), bootstrapTimeoutMs);
-    const ticketTimer = window.setTimeout(() => {bootstrapTicket = "";}, 60_000);
-    let stage: NativeBootstrapStage = "BOOTSTRAP";
     const abort = () => finish(new DOMException("Aborted", "AbortError"));
     function finish(error?: Error) {
       window.clearTimeout(timer);
-      window.clearTimeout(ticketTimer);
-      bootstrapTicket = "";
       window.removeEventListener("message", receive, true);
       signal?.removeEventListener("abort", abort);
       if (error) {reject(error);} else {resolve();}
     }
     function receive(event: MessageEvent) {
-      if (event.source !== runtimeWindow || event.origin !== config.uniqueOrigin || !event.data || typeof event.data !== "object") {return;}
-      const action = nativeBootstrapAction(stage, event.data);
-      if (action === "SEND_TICKET") {
-        stage = "BRIDGE";
-        if (!bootstrapTicket) {finish(new Error("RPG_NATIVE_BOOTSTRAP_TIMEOUT")); return;}
-        runtimeWindow.postMessage({ type: "RPG_RUNTIME_NATIVE_BOOTSTRAP", protocolVersion, ticket: bootstrapTicket }, config.uniqueOrigin);
-        bootstrapTicket = "";
-      } else if (action === "CONNECT") {
-        channel.connect(runtimeWindow);
-        finish();
-      }
+      if (event.source !== runtimeWindow || event.origin !== config.uniqueOrigin) {return;}
+      if (nativeBootstrapAction(event.data) === "CONNECT") {channel.connect(runtimeWindow); finish();}
     }
     window.addEventListener("message", receive, true);
     signal?.addEventListener("abort", abort, {once: true});
-    frame.src = config.bootstrapUrl;
   });
 }
 
-export function nativeBootstrapAction(stage: NativeBootstrapStage, value: unknown): NativeBootstrapAction {
+export function nativeBootstrapAction(value: unknown): NativeBootstrapAction {
   if (!value || typeof value !== "object" || Array.isArray(value) ||
     Object.keys(value).sort().join(",") !== "protocolVersion,type") {return "IGNORE";}
   const message = value as { protocolVersion?: unknown; type?: unknown };
-  if (message.protocolVersion !== protocolVersion) {return "IGNORE";}
-  if (message.type === "RPG_RUNTIME_NATIVE_BRIDGE_READY") {return "CONNECT";}
-  return stage === "BOOTSTRAP" && message.type === "RPG_RUNTIME_NATIVE_BOOTSTRAP_READY"
-    ? "SEND_TICKET" : "IGNORE";
+  return message.protocolVersion === protocolVersion && message.type === "RPG_RUNTIME_NATIVE_BRIDGE_READY" ? "CONNECT" : "IGNORE";
 }
 
 function readReply(value: unknown, launchId: string, nonce: string): Reply | null {

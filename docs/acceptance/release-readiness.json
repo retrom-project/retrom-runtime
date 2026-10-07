@@ -5,8 +5,8 @@
   "snapshot": "R15: published ONS r6/VecX r2 pins, OpenBOR normal-exit fix and RGSS preconnected-controller startup fix; remaining target identities unchanged",
   "historicalMatrix": "runtime-product-matrix.json",
   "counts": {
-    "CURRENT_FINGERPRINT_SEMANTICS_PENDING": 92,
-    "SCOPED_PASS": 20,
+    "CURRENT_FINGERPRINT_SEMANTICS_PENDING": 89,
+    "SCOPED_PASS": 23,
     "MATERIAL_GAP": 10
   },
   "productRows": 122,
@@ -88,7 +88,10 @@
     {
       "id": "emulatorjs/dosbox-pure/dos",
       "fingerprint": "da74423375ffccb40badebe7bcd0024ad5f5b32366779577801c9209cf22a686",
-      "status": "CURRENT_FINGERPRINT_SEMANTICS_PENDING"
+      "status": "SCOPED_PASS",
+      "evidence": "root/release-r15/dos-current/semantic-proof.json",
+      "evidenceSha256": "8d25163c8bfe83bdb450092af0ee50435bfc7629f4f27f4d7161c74a0b434380",
+      "scope": "PREHISTORIK2 actual level1; review/public play with opposite D-pad movement and A jump, keyboard1 for native startup and standard Start difficulty confirmation. Public908596-byte save restores actual character/world/lives/energy in a cookie-only new Chromium. Seven-second position comparison is publicly paused; resumed direction/jump and seven-second continued play remain valid. Attract-mode attempts explicitly excluded."
     },
     {
       "id": "emulatorjs/fbalpha2012-cps1/arcade",
@@ -598,12 +601,18 @@
     {
       "id": "retrom-runtime/rpgmaker-2000/rpgmaker",
       "fingerprint": "eb3e05baee2b7ea39ccd381b0dd33c8558442deaee1db1eaec890e4feed4b232",
-      "status": "CURRENT_FINGERPRINT_SEMANTICS_PENDING"
+      "status": "SCOPED_PASS",
+      "evidence": "root/release-r15/easyrpg-palette-fixed/semantic-proof.json",
+      "evidenceSha256": "8b08e53c97bb7978c957cdc532260069b29d621bcfe3595e39d4c030801e0bca",
+      "scope": "Original MIT visible-map fixture; actual review/published play, standard D-pad and native menu confirm. Public INSTANT save restores map1,12,8/variable1 in cookie-only fresh Chromium; complete source/restored RGBA frames match exactly seven seconds after rendering, then Down moves to12,10. Original PNG pixels disprove apparent missing marker in tool preview."
     },
     {
       "id": "retrom-runtime/rpgmaker-2003/rpgmaker",
       "fingerprint": "527cfc61942eaf2a845b8395e3556c55cb8c836a65ce530733f5555762d708f5",
-      "status": "CURRENT_FINGERPRINT_SEMANTICS_PENDING"
+      "status": "SCOPED_PASS",
+      "evidence": "root/release-r15/easyrpg2003-palette-fixed/semantic-proof.json",
+      "evidenceSha256": "091358709e57529d3795e2b936ecc82192bd32ad94d967b1ce12f9a1857d8ebd",
+      "scope": "Original MIT visible-map fixture; actual review/published play, standard D-pad and native menu confirm. Public INSTANT save restores map1,12,8/variable1 in cookie-only fresh Chromium; complete source/restored RGBA frames match exactly seven seconds after rendering, then Down moves to12,10. Original PNG pixels disprove apparent missing marker in tool preview."
     },
     {
       "id": "retrom-runtime/rpgmaker-mv/rpgmaker",

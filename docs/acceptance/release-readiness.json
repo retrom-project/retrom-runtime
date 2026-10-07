@@ -5,9 +5,9 @@
   "snapshot": "R15: published ONS r6/VecX r2 pins plus tested OpenBOR normal-exit fix; all other target identities unchanged",
   "historicalMatrix": "runtime-product-matrix.json",
   "counts": {
-    "CURRENT_FINGERPRINT_SEMANTICS_PENDING": 104,
-    "MATERIAL_GAP": 10,
-    "SCOPED_PASS": 8
+    "CURRENT_FINGERPRINT_SEMANTICS_PENDING": 101,
+    "SCOPED_PASS": 11,
+    "MATERIAL_GAP": 10
   },
   "productRows": 122,
   "notAReleaseApproval": true,
@@ -50,7 +50,10 @@
     {
       "id": "emulatorjs/bsnes/snes",
       "fingerprint": "d8f4479807a582985e36c2bc88ee68640eeac73ef41bf8a5dfb2ca559824b828",
-      "status": "CURRENT_FINGERPRINT_SEMANTICS_PENDING"
+      "status": "SCOPED_PASS",
+      "evidence": "root/release-r15/counter-native-current/bsnes-semantic-proof.json",
+      "evidenceSha256": "1919b06d299e335e6aefa292caf331da1aa59a0399845c635f35a89eef4b0abd",
+      "scope": "Original MIT test cartridge; actual review preview and published play use standard D-pad and A, native P1 counter stored via public save, restored after 7s in fresh Chromium with only login cookies, then more standard input. P2 remains zero. This is scoped fixture coverage, not all-game compatibility."
     },
     {
       "id": "emulatorjs/cap32/amstradcpc",
@@ -293,7 +296,10 @@
     {
       "id": "emulatorjs/nestopia/nes",
       "fingerprint": "71fd2e44a8159f9ebca92e11e8bffb634a128c5d44bba31e24aea9f2cf066ea5",
-      "status": "CURRENT_FINGERPRINT_SEMANTICS_PENDING"
+      "status": "SCOPED_PASS",
+      "evidence": "root/release-r15/counter-native-current/nestopia-semantic-proof.json",
+      "evidenceSha256": "da584345b228d2e3b8016eec4566474eee495391ae61ede451784477eca54d20",
+      "scope": "Original MIT test cartridge; actual review preview and published play use standard D-pad and A, native P1 counter stored via public save, restored after 7s in fresh Chromium with only login cookies, then more standard input. P2 remains zero. This is scoped fixture coverage, not all-game compatibility."
     },
     {
       "id": "emulatorjs/o2em/odyssey2",
@@ -383,7 +389,10 @@
     {
       "id": "emulatorjs/snes9x/snes",
       "fingerprint": "b3306930080d6f450acca4fcdae566bcc0fd5606fa832394e2c1415e07c09846",
-      "status": "CURRENT_FINGERPRINT_SEMANTICS_PENDING"
+      "status": "SCOPED_PASS",
+      "evidence": "root/release-r15/counter-native-current/snes9x-semantic-proof.json",
+      "evidenceSha256": "2eceb75a44385e4fa7fd51fe6a08a9931241cd263c9040e1da6e0101ba6652c4",
+      "scope": "Original MIT test cartridge; actual review preview and published play use standard D-pad and A, native P1 counter stored via public save, restored after 7s in fresh Chromium with only login cookies, then more standard input. P2 remains zero. This is scoped fixture coverage, not all-game compatibility."
     },
     {
       "id": "emulatorjs/stella2014/atari2600",

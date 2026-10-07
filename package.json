@@ -25,6 +25,7 @@
     "clean": "node scripts/clean.mjs",
     "lint": "eslint src scripts tests --max-warnings=0",
     "typecheck": "tsc -p tsconfig.json --noEmit",
+    "pretest": "npm run build",
     "test": "vitest run",
     "build": "node scripts/build-isolated-bridges.mjs && npm run clean && tsc -p tsconfig.build.json",
     "dev:watch": "node scripts/dev-watch.mjs",

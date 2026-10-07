@@ -237,6 +237,15 @@ async function mountMkxpUnchecked(
       totalBytes: remoteContent.manifest.byteLength,
     });
     await waitForMkxpFrame(status);
+    // Nostalgist's postRun runs before the pthread necessarily installs
+    // rwebpad's connection listener. Reconcile existing pads once the core is
+    // presenting; later browser connection events remain owned by rwebpad.
+    for (const gamepad of navigator.getGamepads?.() ?? []) {
+      if (!gamepad?.connected) {continue;}
+      const event = new Event("gamepadconnected");
+      Object.defineProperty(event, "gamepad", {value: gamepad});
+      window.dispatchEvent(event);
+    }
     if (restorePayload) {
       status.requestRestore();
       await waitForMkxpRestore(status);

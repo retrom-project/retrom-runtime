@@ -2,11 +2,11 @@
   "schemaVersion": 1,
   "status": "INCOMPLETE",
   "releaseAuthorizedAfterAcceptance": true,
-  "snapshot": "R15: published ONS r6/VecX r2 pins plus tested OpenBOR normal-exit fix; all other target identities unchanged",
+  "snapshot": "R15: published ONS r6/VecX r2 pins, OpenBOR normal-exit fix and RGSS preconnected-controller startup fix; remaining target identities unchanged",
   "historicalMatrix": "runtime-product-matrix.json",
   "counts": {
-    "CURRENT_FINGERPRINT_SEMANTICS_PENDING": 96,
-    "SCOPED_PASS": 16,
+    "CURRENT_FINGERPRINT_SEMANTICS_PENDING": 93,
+    "SCOPED_PASS": 19,
     "MATERIAL_GAP": 10
   },
   "productRows": 122,
@@ -620,18 +620,27 @@
     },
     {
       "id": "retrom-runtime/rpgmaker-vx/rpgmaker",
-      "fingerprint": "0082ddca8961bb5fbd966bb2f4e4d60a8f6b25704903d80e0461ce2651a86005",
-      "status": "CURRENT_FINGERPRINT_SEMANTICS_PENDING"
+      "fingerprint": "b98c7afadfe73b19c6366ee058b07cc6e1afd8340c4dc358fc1791937edb29b1",
+      "status": "SCOPED_PASS",
+      "evidence": "root/release-r15/rgss-connected-fixed/rpgmaker-vx-semantic-proof.json",
+      "evidenceSha256": "ae75f15d1afb71ce400876c1467ee516e371e946d6273e00e9a542a93a72db1e",
+      "scope": "Original MIT RGSS fixture. Already-connected standard-controller D-pad and native-confirm button change position 10,8 to 11,8 and variable 0 to 1 in actual review and published play. Public INSTANT save restores 11,8/variable 1 after seven seconds in a cookie-only fresh Chromium, then further controller input moves to 12,8. No late connection injection in passing cases; browser Gamepad API/event fixture, not a physical USB claim."
     },
     {
       "id": "retrom-runtime/rpgmaker-vx-ace/rpgmaker",
-      "fingerprint": "45796a4367db46cce48f6f8100707bf8622785e74632705ccd4040b2ad94e483",
-      "status": "CURRENT_FINGERPRINT_SEMANTICS_PENDING"
+      "fingerprint": "1a0782df7803a3b70c522176546aa55e93058c2efca9294900f3d5674b73ccb3",
+      "status": "SCOPED_PASS",
+      "evidence": "root/release-r15/rgss-connected-fixed/rpgmaker-vx-ace-semantic-proof.json",
+      "evidenceSha256": "fa32cb60cb4d8185b63e3701e11f53d89245e3c4134896f680f9dbdbb09513b9",
+      "scope": "Original MIT RGSS fixture. Already-connected standard-controller D-pad and native-confirm button change position 10,8 to 11,8 and variable 0 to 1 in actual review and published play. Public INSTANT save restores 11,8/variable 1 after seven seconds in a cookie-only fresh Chromium, then further controller input moves to 12,8. No late connection injection in passing cases; browser Gamepad API/event fixture, not a physical USB claim."
     },
     {
       "id": "retrom-runtime/rpgmaker-xp/rpgmaker",
-      "fingerprint": "24ddd94fb0fa6a6851c9ce0d7d8fbe6668869bb70e1fc1aaea9e2e49de368290",
-      "status": "CURRENT_FINGERPRINT_SEMANTICS_PENDING"
+      "fingerprint": "47c6fa88c7e0c158c169e5a71a315995f69aba4bebc4849a7dd76648e8045983",
+      "status": "SCOPED_PASS",
+      "evidence": "root/release-r15/rgss-connected-fixed/rpgmaker-xp-semantic-proof.json",
+      "evidenceSha256": "8d9744c699ab3a053674d12170eb3a94dc3a8d608d1456f5815417bf5da2774f",
+      "scope": "Original MIT RGSS fixture. Already-connected standard-controller D-pad and native-confirm button change position 10,8 to 11,8 and variable 0 to 1 in actual review and published play. Public INSTANT save restores 11,8/variable 1 after seven seconds in a cookie-only fresh Chromium, then further controller input moves to 12,8. No late connection injection in passing cases; browser Gamepad API/event fixture, not a physical USB claim."
     },
     {
       "id": "retrom-runtime/samcoupe/samcoupe",

@@ -5,8 +5,8 @@
   "snapshot": "R15: published ONS r6/VecX r2 pins, OpenBOR normal-exit fix and RGSS preconnected-controller startup fix; remaining target identities unchanged",
   "historicalMatrix": "runtime-product-matrix.json",
   "counts": {
-    "CURRENT_FINGERPRINT_SEMANTICS_PENDING": 74,
-    "SCOPED_PASS": 38,
+    "CURRENT_FINGERPRINT_SEMANTICS_PENDING": 69,
+    "SCOPED_PASS": 43,
     "MATERIAL_GAP": 10
   },
   "productRows": 122,
@@ -236,7 +236,10 @@
     {
       "id": "emulatorjs/handy/lynx",
       "fingerprint": "6b07e38bd31edf26b4c7c4159b105e84726919da687ba7f1d76ca8ed7db83ac8",
-      "status": "CURRENT_FINGERPRINT_SEMANTICS_PENDING"
+      "status": "SCOPED_PASS",
+      "evidence": "root/release-r15/handy-basketbrawl-current/semantic-proof.json",
+      "evidenceSha256": "bba70af60fe8c30554ab3f837f6675f78bd3dfd7d6800496972ec795248976c7",
+      "scope": "Actual Basketbrawl review/published native confirmation, direction and action. Public38110-byte INSTANT save restores Level1-1 court/player and3:54 clock in cookie-only fresh Chromium, held seven publicly paused seconds. Resumed direction/action continues to3:52; no scored basket claimed."
     },
     {
       "id": "emulatorjs/hatarib/atarist",
@@ -270,12 +273,18 @@
     {
       "id": "emulatorjs/mednafen-ngp/ngpc",
       "fingerprint": "7886281566f07b977ca5386128061fdcc5c9da0119a368580f49a8b36c7ce157",
-      "status": "CURRENT_FINGERPRINT_SEMANTICS_PENDING"
+      "status": "SCOPED_PASS",
+      "evidence": "root/release-r15/ngpc-gears-current/semantic-proof.json",
+      "evidenceSha256": "6cba9ec7da0397d5744e1a28e082f05828e6875ea45d7d49bf0709a3b8f45edd",
+      "scope": "Gears of Fate actual review and published first-puzzle rotations; native menu direction and B confirmation. Public3985-byte INSTANT checkpoint restores rotated red/green positions and path after seven unpaused seconds in cookie-only fresh Chromium; standard B/A rotates the live board again. Decorative gears animate normally; no second-level completion claim."
     },
     {
       "id": "emulatorjs/mednafen-pce/pce",
       "fingerprint": "cfca791115bc8b8faaac02e6cf4f809c6f6f9d67ac2357b3537d7aff0d5c6c16",
-      "status": "CURRENT_FINGERPRINT_SEMANTICS_PENDING"
+      "status": "SCOPED_PASS",
+      "evidence": "root/release-r15/pce-bonk-current/semantic-proof.json",
+      "evidenceSha256": "c79c585a8f91be5b33726d15dc27d4901d069e690c91930a763cf601551b21bd",
+      "scope": "Actual PC Bonk review/published Start, directions and jump. Public21180-byte INSTANT save restores the scrolled scene, character and three hearts in cookie-only fresh Chromium, held seven publicly paused seconds; resumed opposite movement and jumping pass."
     },
     {
       "id": "emulatorjs/mednafen-pce/pcecd",
@@ -285,7 +294,10 @@
     {
       "id": "emulatorjs/mednafen-pce/supergrafx",
       "fingerprint": "cfca791115bc8b8faaac02e6cf4f809c6f6f9d67ac2357b3537d7aff0d5c6c16",
-      "status": "CURRENT_FINGERPRINT_SEMANTICS_PENDING"
+      "status": "SCOPED_PASS",
+      "evidence": "root/release-r15/supergrafx-aldynes-current/semantic-proof.json",
+      "evidenceSha256": "43e121a96a4356e8e4545ad35183a8e389362fe80b0c491d38f7d93aa3cb1a27",
+      "scope": "Actual Aldynes review/published Start and opposite vertical movement. Public38535-byte INSTANT save restores ship position and advancing battlefield in cookie-only fresh Chromium, held seven publicly paused seconds, then Up/Down continues. No stage completion or scored hit claim."
     },
     {
       "id": "emulatorjs/mednafen-pcfx/pcfx",
@@ -400,7 +412,10 @@
     {
       "id": "emulatorjs/prosystem/atari7800",
       "fingerprint": "ab4986f85fd2cca62b1e00b79f105f25e84041a6549b4d476c30a131f32fd728",
-      "status": "CURRENT_FINGERPRINT_SEMANTICS_PENDING"
+      "status": "SCOPED_PASS",
+      "evidence": "root/release-r15/prosystem-dungeon-current/semantic-proof-reviewed.json",
+      "evidenceSha256": "c58245d9e5b9064b1d01a99b6b58422dcf00c49a80cafeb34da0408fa2fc50ac",
+      "scope": "Author Dungeon Stalker native Start Game selected with standard direction and confirmed by B. Actual review/published movement leaves the cage. Public1586-byte INSTANT save restores upper-corridor player and five lives in cookie-only fresh Chromium, held seven publicly paused seconds, then opposite movement continues. Earlier DEMO/menu attempts excluded; actual successful review Run explicitly bound."
     },
     {
       "id": "emulatorjs/puae/amiga",

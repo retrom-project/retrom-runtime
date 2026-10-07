@@ -2,13 +2,12 @@
   "schemaVersion": 1,
   "status": "INCOMPLETE",
   "releaseAuthorizedAfterAcceptance": true,
-  "snapshot": "R15 audit of R14 paired execution plus locally built VecX fix, before installing published core pins",
+  "snapshot": "R15: published ONS r6/VecX r2 pins plus tested OpenBOR normal-exit fix; all other target identities unchanged",
   "historicalMatrix": "runtime-product-matrix.json",
   "counts": {
-    "CURRENT_FINGERPRINT_SEMANTICS_PENDING": 105,
+    "CURRENT_FINGERPRINT_SEMANTICS_PENDING": 104,
     "MATERIAL_GAP": 10,
-    "SCOPED_PASS": 5,
-    "PARTIAL": 2
+    "SCOPED_PASS": 8
   },
   "productRows": 122,
   "notAReleaseApproval": true,
@@ -408,11 +407,11 @@
     },
     {
       "id": "emulatorjs/vecx/vectrex",
-      "fingerprint": "f7e34877fbd00bd435c1e4c25a1f654cb180aa6557454b975d39c5a6cfeac3f7",
-      "status": "PARTIAL",
-      "evidence": "root/release-r15/vecx-vector-colour/semantic-proof.json",
-      "evidenceSha256": "6bd55b5394430b6251f9a3e5054958c5a44bd863fb596dfc11da49b851c5551b",
-      "scope": "VecX local candidate: played scene/new-browser restore/continued movement; sparse paused vector presentation remains separately unresolved. Formal release archive requires fingerprint reconciliation."
+      "fingerprint": "0f88a0b6f1001fa0def80440e30aca44cc1c5a01b4249356b7f244612b160895",
+      "status": "SCOPED_PASS",
+      "evidence": "root/release-r15/vecx-published/semantic-proof.json",
+      "evidenceSha256": "94305725a609d5754d064f4efe04853ac800595c98761890429c1d41473ee85a",
+      "scope": "Published VecX r2: real Berzerk review/play/input, public paused checkpoint, new-browser restore with all 7509 saved maze pixels and the player position intact, continued movement. Earlier suspected sparse rendering was disproved by decoded PNG pixels."
     },
     {
       "id": "emulatorjs/vice-x128/c128",
@@ -549,16 +548,19 @@
     },
     {
       "id": "retrom-runtime/onscripter-yuri/ons",
-      "fingerprint": "1b22ca71e9ee50be9572324d4f7324fa653865994efa29aa16f828d20d0fe908",
-      "status": "CURRENT_FINGERPRINT_SEMANTICS_PENDING"
+      "fingerprint": "04a2394fc16f81802531032876060cf3a03f2ee679f594b618079f33ec459ec4",
+      "status": "SCOPED_PASS",
+      "evidence": "root/release-r15/ons-published/semantic-proof.json",
+      "evidenceSha256": "f5af980ad523fda0f5ff4fd185e60f18f3f2cce62169ec1c78a14b3bdd9c0351",
+      "scope": "Published ONS r6: real GBK project review/play, public dialogue checkpoint, new-browser restore preserving the background and third waiting point, continued input to next line. Sample-scoped."
     },
     {
       "id": "retrom-runtime/openbor/openbor",
-      "fingerprint": "3cc5b6c6c026b5fd1922770f9d05128797f7dea2e8e027589056788bd6adb42c",
-      "status": "PARTIAL",
-      "evidence": "root/release-r15/openbor-campaign/semantic-proof.json",
-      "evidenceSha256": "0c62ba61b46627b15d5e75d8f9325bb7e1c16f4f308b7fdadc0a5689ed0ad1f7",
-      "scope": "Robo_Rumble first-level movement/combat/scrolling; no native progress file, no save/restore pass. Later gamepad continuation remains unresolved; keyboard continuation observed."
+      "fingerprint": "0bb86cdf8b01a18360dcc12e3b0b1aad547febd4ecde527101047165ff2cc061",
+      "status": "SCOPED_PASS",
+      "evidence": "root/release-r15/openbor-exit-fixed/semantic-proof.json",
+      "evidenceSha256": "49bdef873a69d253943595a1b7a287e5f7f6524e88397e1ff23e09b581c8f868",
+      "scope": "Original two-stage native game: review/play, engine-created game.sav, public gzip synchronization, new-browser native Load Game, saved level and continued movement, clean exit. GAME_SAVE, not exact-position snapshot. Original 8MAN campaign did not reach native progress and remains partial."
     },
     {
       "id": "retrom-runtime/play-ps2/ps2",

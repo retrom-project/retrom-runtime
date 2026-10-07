@@ -97,6 +97,8 @@ J2ME standard gamepads use the following phone actions. The Provider owns gamepa
 Direction and Fire actions are separate from numeric keys 2, 4, 6, 8 and 5. Physical keyboard digits 0–9, star, hash and the core's existing soft-key bindings remain available. Start+Select chords remain reserved by the Host filter; gamepad keys are released on suppression, focus loss, pause, disconnection and exit.
 
 The offline host tool's `batch-content-bios-requirements` command accepts up to 100 ordered `items` with `directory`, `config`, `files` and host-owned `locators` (an optional `coreId` selects an allowed core). Each result has `{biosRequirements: [], error: null}` or a stable error code. It reads bounded PSX disc evidence and the arcade entry ZIP's directory, then resolves the same declared BIOS rules as launch preparation. It does not read Parent archives, installed BIOS, implementation fingerprints or assemble launch resources. An error must be treated as an unknown BIOS result, never as an empty successful requirement list.
+
+`dos-entry-candidates` accepts `config`, immutable `files` and host-owned `locators`, then returns `{entries: string[]}` from the selected DOS ZIP/DOSZ archive. Entries retain their complete safe paths, include `.exe`, `.com` and `.bat` without case restrictions, and are deduplicated and sorted by UTF-8 path. The query ignores any existing `entryPath` and does not prepare a Run, so a replaced archive can offer new choices even when its previous program is absent.
 A checkpoint availability with `requiredAction: "SELECT_PROGRAM"` tells the host to show
 program selection guidance. Provider-private Target options are interpreted only inside
 the Provider.

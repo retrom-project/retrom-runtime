@@ -1,6 +1,6 @@
 import {describe, expect, it} from "vitest";
 import {arcadeDependencies} from "./arcade.js";
-import {configureRuntime} from "./configure.js";
+import {configureRuntime, dosEntryCandidates} from "./configure.js";
 import {contentHash, restorability} from "./identity.js";
 import {parseRuntimeConfiguration} from "./configuration.js";
 import {inspectRuntimeIdentity, prepareRuntime} from "./prepare.js";
@@ -205,6 +205,14 @@ describe("unified runtime facts", () => {
     for (const entryPath of [null, ""]) {
       expect(() => parseRuntimeConfiguration({content: {kind: "DOS_BUNDLE", entryFile: "game.zip", entryPath}})).toThrow();
     }
+  });
+  it("shares safe unique sorted DOS program paths with configuration without flattening directories", () => {
+    const entries = ["nested/Game.EXE", "START.BAT", "nested/Game.EXE", "command.com", "路径/运行.eXe", "readme.txt",
+      "/absolute.exe", "../escape.bat", "bad\\game.com", "folder/../game.exe", "nul\u0000.exe"];
+    expect(dosEntryCandidates(entries)).toEqual(["START.BAT", "command.com", "nested/Game.EXE", "路径/运行.eXe"]);
+    const config = configureRuntime({platformId: "dos", coreIds: ["dosbox_pure"], files: [file("game.zip")],
+      archiveMembers: {"game.zip": ["nested/START.BAT", "nested/START.BAT", "readme.txt"]}});
+    expect(config.content).toEqual({kind: "DOS_BUNDLE", entryFile: "game.zip", entryPath: "nested/START.BAT"});
   });
   it("requires the actual PSX disc region's BIOS and exposes all regions for unidentified containers", () => {
     const input = {providerId: "emulatorjs", targetId: "mednafen-psx-hw", files: [file("disc.cue")],

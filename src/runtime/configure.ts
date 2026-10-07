@@ -2,7 +2,7 @@ import {parseRuntimeConfiguration} from "./configuration.js";
 import {runtimeBindings} from "./catalog.js";
 import {contentHash} from "./identity.js";
 import type {RPGEngine, RuntimeConfiguration, RuntimeContent, RuntimeContentFile} from "./types.js";
-import {configurationFailure, logicalPath, object} from "./validation.js";
+import {configurationFailure, logicalPath, object, utf8Compare} from "./validation.js";
 import {validateConfiguredOptions} from "./prepare.js";
 import {detectLcfEngine} from "./lcf.js";
 import formats from "./content-formats.json" with {type: "json"};
@@ -57,10 +57,14 @@ function dosContent(input: ConfigureRequest): RuntimeContent {
   const file = chooseFile(input, name => /\.(?:zip|dosz)$/u.test(name));
   const entries = input.archiveMembers?.[file.logicalKey] ?? [];
   if (input.selection?.entryPath !== undefined && !logicalPath(input.selection.entryPath)) {configurationFailure("RUNTIME_DOS_ENTRY_INVALID");}
-  const possible = entries.filter(name => /\.(?:exe|com|bat)$/iu.test(name) && logicalPath(name));
+  const possible = dosEntryCandidates(entries);
   const entryPath = input.selection?.entryPath ?? (possible.length === 1 ? possible[0] : null);
   if (entryPath !== null && !possible.includes(entryPath)) {configurationFailure("RUNTIME_DOS_ENTRY_INVALID");}
   return {kind: "DOS_BUNDLE", entryFile: file.logicalKey, ...(entryPath === null ? {} : {entryPath})};
+}
+/** Preserve complete safe paths; both configuration and the offline projection use these candidates. */
+export function dosEntryCandidates(entries: readonly string[]) {
+  return [...new Set(entries.filter(name => /\.(?:exe|com|bat)$/iu.test(name) && logicalPath(name)))].sort(utf8Compare);
 }
 function singleFileContent(input: ConfigureRequest): RuntimeContent {
   const declarations = formats.cores as Readonly<Record<string, {extensions: readonly string[]}>>;

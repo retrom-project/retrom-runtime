@@ -1,5 +1,5 @@
 import {configureHostInput, prepareHostInput, parentArchive, assembleResource, detectScummvm, arcadeTables, identifyHostBIOS,
-  discoverContentDependencies, contentHostBIOSRequirements} from "./runtime-host-input.mjs";
+  discoverContentDependencies, contentHostBIOSRequirements, hostDOSEntryCandidates} from "./runtime-host-input.mjs";
 import {normalizeContent} from "./runtime-normalize-content.mjs";
 import {readFile} from "node:fs/promises";
 import {once} from "node:events";
@@ -23,6 +23,7 @@ async function execute(command, input) {
   case "detect-scummvm": output = await detectScummvm(input); break;
   case "normalize-content": output = await normalizeContent(input); break;
   case "discover-content": output = await discoverContentDependencies(input); break;
+  case "dos-entry-candidates": output = await hostDOSEntryCandidates(input); break;
   case "configure": output = configureRuntime(await configureHostInput(input)); break;
   case "prepare": output = prepareRuntime(await prepareHostInput(input)); break;
   case "parent-archive": output = await parentArchive(input); break;

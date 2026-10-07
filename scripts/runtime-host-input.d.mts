@@ -6,6 +6,7 @@ export function assembleResource(input: HostFiles): Promise<{path: string; sizeB
 export function parentArchive(input: HostFiles): Promise<{path: string; sizeBytes: number; sha256: string}>;
 export function prepareHostInput(input: PrepareRuntimeRequest & {locators: Record<string, string>}): Promise<PrepareRuntimeRequest>;
 export function contentHostBIOSRequirements(input: ContentBIOSRequest & {locators: Record<string, string>}): Promise<{biosRequirements: BIOSRequirement[]}>;
+export function hostDOSEntryCandidates(input: {config: unknown; files: RuntimeContentFile[]; locators: Record<string, string>}): Promise<{entries: string[]}>;
 export function arcadeTables(): Promise<Record<string, import("../src/runtime/arcade.js").ArcadeCatalog>>;
 export function identifyHostBIOS(input: {file: {name: string; sizeBytes: number; sha256: string; md5: string}; path?: string; requirements: BIOSRequirement[]}): Promise<BIOSRequirement[]>;
 export function detectScummvm(input: {providerRoot: string; treeRoot: string}): Promise<unknown>;

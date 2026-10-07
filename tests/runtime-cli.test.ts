@@ -116,3 +116,37 @@ it("projects content BIOS alone from real PSX and arcade evidence without requir
   expect(await read()).toEqual({id: "limit", error: "RUNTIME_REQUEST_TOO_LARGE"});
   expect((await once(child, "close"))[0]).toBe(0);
 }, 15000);
+
+it("lists current DOS program paths without validating a stale entry selection or preparing a run", async () => {
+  const {child, read} = worker();
+  const bytes = zipSync({"folder/Game.EXE": Uint8Array.of(1), "DOS.COM": Uint8Array.of(2),
+    "dir/Start.BAT": Uint8Array.of(3), "路径/运行.exe": Uint8Array.of(4), "readme.txt": Uint8Array.of(5)});
+  const path = join(root, "programs.dosz"); await writeFile(path, bytes);
+  const input = {config: {content: {kind: "DOS_BUNDLE", entryFile: "programs.dosz", entryPath: "removed/OLD.EXE"}},
+    files: [{logicalKey: "programs.dosz", name: "programs.dosz", sizeBytes: bytes.length,
+      sha256: createHash("sha256").update(bytes).digest("hex")}], locators: {"programs.dosz": path}};
+  const entries = ["DOS.COM", "dir/Start.BAT", "folder/Game.EXE", "路径/运行.exe"];
+  child.stdin.write(JSON.stringify({id: "programs", command: "dos-entry-candidates", input}) + "\n");
+  expect(await read()).toEqual({id: "programs", result: {entries}});
+  child.stdin.write(JSON.stringify({id: "stale", command: "dos-entry-candidates", input: {
+    ...input, config: {content: {...input.config.content, entryPath: "../invalid-old-entry.exe"}},
+  }}) + "\n");
+  expect(await read()).toEqual({id: "stale", result: {entries}});
+  child.stdin.write(JSON.stringify({id: "missing", command: "dos-entry-candidates", input: {...input, files: files}}) + "\n");
+  expect(await read()).toEqual({id: "missing", error: "RUNTIME_ENTRY_MISSING"});
+  child.stdin.write(JSON.stringify({id: "unavailable", command: "dos-entry-candidates", input: {
+    ...input, locators: {"programs.dosz": join(root, "absent.dosz")},
+  }}) + "\n");
+  expect(await read()).toEqual({id: "unavailable", error: "RUNTIME_CONTENT_UNAVAILABLE"});
+  const unsafe = zipSync({"../escape.exe": Uint8Array.of(1)}); await writeFile(path, unsafe);
+  child.stdin.write(JSON.stringify({id: "unsafe", command: "dos-entry-candidates", input: {...input,
+    files: [{...input.files[0], sizeBytes: unsafe.length, sha256: createHash("sha256").update(unsafe).digest("hex")}],
+  }}) + "\n");
+  expect(await read()).toEqual({id: "unsafe", error: "RUNTIME_ARCHIVE_INVALID"});
+  const empty = zipSync({"readme.txt": Uint8Array.of(1)}); await writeFile(path, empty);
+  child.stdin.end(JSON.stringify({id: "empty", command: "dos-entry-candidates", input: {...input,
+    files: [{...input.files[0], sizeBytes: empty.length, sha256: createHash("sha256").update(empty).digest("hex")}],
+  }}) + "\n");
+  expect(await read()).toEqual({id: "empty", result: {entries: []}});
+  expect((await once(child, "close"))[0]).toBe(0);
+}, 15000);

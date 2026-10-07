@@ -9,7 +9,7 @@ import {join, dirname} from "node:path";
 import {gunzipSync, crc32} from "node:zlib";
 import {unzipSync, zipSync} from "fflate";
 import {parseRuntimeConfiguration, contentHash, runtimeBindings, identifyPSXRegion, resolveSavedRuntimeRequest,
-  contentBIOSRequirements} from "../dist/runtime/index.js";
+  contentBIOSRequirements, dosEntryCandidates} from "../dist/runtime/index.js";
 
 export async function configureHostInput(input) {
   contentHash(input.files, "TREE");
@@ -96,6 +96,21 @@ export async function contentHostBIOSRequirements(input) {
       archives: {[file.logicalKey]: await zipMembers(requireLocator(input, file))}};
   }
   return contentBIOSRequirements(prepared);
+}
+
+/** List the current archive independently of an existing, possibly stale program selection. */
+export async function hostDOSEntryCandidates(input) {
+  contentHash(input.files, "TREE");
+  const content = input.config?.content;
+  const config = parseRuntimeConfiguration({content: {kind: content?.kind, entryFile: content?.entryFile}});
+  if (config.content.kind !== "DOS_BUNDLE") {throw new Error("RUNTIME_CONFIGURATION_INVALID");}
+  const file = input.files.find(file => file.logicalKey === config.content.entryFile);
+  if (!file) {throw new Error("RUNTIME_ENTRY_MISSING");}
+  try {return {entries: dosEntryCandidates((await zipMembers(requireLocator(input, file))).map(member => member.name))};}
+  catch (cause) {
+    if (cause instanceof Error && /^RUNTIME_[A-Z0-9_]+$/u.test(cause.message)) {throw cause;}
+    throw new Error("RUNTIME_CONTENT_UNAVAILABLE", {cause});
+  }
 }
 
 async function prepareFirmwareEvidence(input, config, coreId) {

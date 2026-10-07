@@ -5,8 +5,8 @@
   "snapshot": "R15: published ONS r6/VecX r2 pins plus tested OpenBOR normal-exit fix; all other target identities unchanged",
   "historicalMatrix": "runtime-product-matrix.json",
   "counts": {
-    "CURRENT_FINGERPRINT_SEMANTICS_PENDING": 101,
-    "SCOPED_PASS": 11,
+    "CURRENT_FINGERPRINT_SEMANTICS_PENDING": 96,
+    "SCOPED_PASS": 16,
     "MATERIAL_GAP": 10
   },
   "productRows": 122,
@@ -216,7 +216,10 @@
     {
       "id": "emulatorjs/lutro/lutro",
       "fingerprint": "e81a19a8ae0943dffaa91d9cf15875dc330b4d157ea7c9eeb235b3b45492dd44",
-      "status": "CURRENT_FINGERPRINT_SEMANTICS_PENDING"
+      "status": "SCOPED_PASS",
+      "evidence": "root/release-r15/lutro-native-current/lutro-semantic-proof.json",
+      "evidenceSha256": "532738351b37fe879b0fd79c4647f84221a32458d7f83e86268c106e180d8e91",
+      "scope": "Original MIT cartridge; review and published play with standard controller direction/confirm. Public GAME_SAVE gzip payload restores actual position/color in cookie-only fresh Chromium, remains after four seconds, then responds to further input. Fixture-scoped, not all-game compatibility."
     },
     {
       "id": "emulatorjs/mame2003/arcade",
@@ -480,7 +483,10 @@
     {
       "id": "retrom-runtime/fake08/pico8",
       "fingerprint": "5b516f52e4c97fae03d71392dd317fffc0a4bd638c067de72b8da4b8a859e79d",
-      "status": "CURRENT_FINGERPRINT_SEMANTICS_PENDING"
+      "status": "SCOPED_PASS",
+      "evidence": "root/release-r15/fantasy-current/fake08-semantic-proof.json",
+      "evidenceSha256": "ef5eae59c5a14bc586731964b8f1814f527448d86a4ca893fc0acffa00c3f036",
+      "scope": "Original MIT cartridge; review and published play with standard controller direction/confirm. Public INSTANT gzip payload restores actual position/color in cookie-only fresh Chromium, remains after four seconds, then responds to further input. Fixture-scoped, not all-game compatibility."
     },
     {
       "id": "retrom-runtime/flash-ruffle/flash",
@@ -635,12 +641,18 @@
     {
       "id": "retrom-runtime/scummvm/scummvm",
       "fingerprint": "681865506795f4ca9d30640a1cc9af44f4ae66bb3ed7932b7e6f4a6f09a9312b",
-      "status": "CURRENT_FINGERPRINT_SEMANTICS_PENDING"
+      "status": "SCOPED_PASS",
+      "evidence": "root/release-r15/scummvm-current/semantic-proof.json",
+      "evidenceSha256": "ebacdbfdd7b066d1ccaeba2a1fe7e58e17b10dd2c2dc2277236e5d05e89d8d2f",
+      "scope": "Beneath a Steel Sky floppy: actual review/published play, left-stick cursor and A confirmation move the character. Native save R15 LEFT synchronized in a 13101-byte gzip bundle. Cookie-only new Chromium imports it before startup; native Load restores the player at the saved left-side location after seven seconds, then standard controller moves the player right. GAME_SAVE; no automatic execution-snapshot claim."
     },
     {
       "id": "retrom-runtime/tic80/tic80",
       "fingerprint": "55f48caa4cc651a0c6a01164d4c2d98caf3560bd25814cbcc5d91651856fe5f1",
-      "status": "CURRENT_FINGERPRINT_SEMANTICS_PENDING"
+      "status": "SCOPED_PASS",
+      "evidence": "root/release-r15/fantasy-current/tic80-semantic-proof.json",
+      "evidenceSha256": "082adc43313da7f491f09cafddf32751cf636c2bda114d853fa9a06ff0c6a8f6",
+      "scope": "Original MIT cartridge; review and published play with standard controller direction/confirm. Public GAME_SAVE gzip payload restores actual position/color in cookie-only fresh Chromium, remains after four seconds, then responds to further input. Fixture-scoped, not all-game compatibility."
     },
     {
       "id": "retrom-runtime/tyranoscript/tyranoscript",
@@ -653,7 +665,10 @@
     {
       "id": "retrom-runtime/wasm4/wasm4",
       "fingerprint": "87e6d176f878c62c0ddee1812c4c30e7b86f11511e21a9c37c49380957172454",
-      "status": "CURRENT_FINGERPRINT_SEMANTICS_PENDING"
+      "status": "SCOPED_PASS",
+      "evidence": "root/release-r15/fantasy-current/wasm4-semantic-proof.json",
+      "evidenceSha256": "5aacaff253cf20c65e9c14101e255786d9c248c3da9c3056322bfc9718d8c054",
+      "scope": "Original MIT cartridge; review and published play with standard controller direction/confirm. Public INSTANT gzip payload restores actual position/color in cookie-only fresh Chromium, remains after four seconds, then responds to further input. Fixture-scoped, not all-game compatibility."
     }
   ],
   "publishedDependencies": [

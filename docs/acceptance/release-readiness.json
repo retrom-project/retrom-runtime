@@ -5,8 +5,8 @@
   "snapshot": "R15: published ONS r6/VecX r2 pins, OpenBOR normal-exit fix and RGSS preconnected-controller startup fix; remaining target identities unchanged",
   "historicalMatrix": "runtime-product-matrix.json",
   "counts": {
-    "CURRENT_FINGERPRINT_SEMANTICS_PENDING": 84,
-    "SCOPED_PASS": 28,
+    "CURRENT_FINGERPRINT_SEMANTICS_PENDING": 79,
+    "SCOPED_PASS": 33,
     "MATERIAL_GAP": 10
   },
   "productRows": 122,
@@ -25,7 +25,10 @@
     {
       "id": "emulatorjs/ardens/arduboy",
       "fingerprint": "eb9520b3fec4c5e761e0b64cce6188465aee80c82805faf20c7e6411dc268748",
-      "status": "CURRENT_FINGERPRINT_SEMANTICS_PENDING"
+      "status": "SCOPED_PASS",
+      "evidence": "root/release-r15/ardens-microcity-current/semantic-proof.json",
+      "evidenceSha256": "855768ff1cfea0c3c23c8fb652fda8ea7ed7f8a2ad19ae12585ae0ce3159a16d",
+      "scope": "Official author MicroCity1.3 actual review and published construction with standard direction/B. Public22317-byte INSTANT checkpoint restores two roads and funds9980 after seven unpaused seconds in cookie-only fresh Chromium; further direction/B builds a third road and funds9970. Calendar/cursor animation advances normally."
     },
     {
       "id": "emulatorjs/atari800/atari800",
@@ -178,7 +181,10 @@
     {
       "id": "emulatorjs/gearboy/sgb",
       "fingerprint": "51dd986176dba7892135edcb394e574ddfb5dbe044c750f9f760c81a1f54be53",
-      "status": "CURRENT_FINGERPRINT_SEMANTICS_PENDING"
+      "status": "SCOPED_PASS",
+      "evidence": "root/release-r15/gearboy-sgb-current/semantic-proof.json",
+      "evidenceSha256": "2b5e1448b62d007450414ed362c81890bc2ea23e910e8646afaf49786260de58",
+      "scope": "Tobu Tobu Girl through SGB binding: actual review direction/confirmation, published airborne character/bat scene, public 27035-byte INSTANT snapshot, cookie-only fresh Chromium restore with seven publicly paused seconds, then opposite direction/boost input. Game Boy cartridge scope; enhanced SGB features not covered."
     },
     {
       "id": "emulatorjs/gearcoleco/colecovision",
@@ -236,12 +242,18 @@
     {
       "id": "emulatorjs/mame2003/arcade",
       "fingerprint": "12223b5677ce523b8bbb9d6e612a3e1d5bbfe1c65887d2062ca3466cc8912df2",
-      "status": "CURRENT_FINGERPRINT_SEMANTICS_PENDING"
+      "status": "SCOPED_PASS",
+      "evidence": "root/release-r15/mame2003-1941-current/semantic-proof.json",
+      "evidenceSha256": "953808724ca5efbd52b05926c27dd93262b971af36f2168529078007ad97bc61",
+      "scope": "1941 actual review coin/Start, opposite direction and shooting; 9315-byte public INSTANT gameplay checkpoint restores plane/coastal battlefield in cookie-only fresh Chromium, observed with public pause for seven seconds, then opposite movement/shooting and seven more unpaused seconds. Historical Renegade issue not claimed fixed."
     },
     {
       "id": "emulatorjs/mame2003-plus/arcade",
       "fingerprint": "16766a2be13464afa3d501656a3a034e15237888d76f69205e03b65ed8727143",
-      "status": "CURRENT_FINGERPRINT_SEMANTICS_PENDING"
+      "status": "SCOPED_PASS",
+      "evidence": "root/release-r15/mame2003plus-1941-current/semantic-proof.json",
+      "evidenceSha256": "ec1b8e557b911ab5d092d1febfc3467c146eef563caac99ff168d854b2915276",
+      "scope": "1941 actual review/play and public9250-byte INSTANT snapshot. Cookie-only fresh Chromium restores two vitality bars and coastal battle during seven publicly paused seconds; opposite direction/shooting and seven additional unpaused seconds continue. Core startup notice briefly overlays the restored scene, then ordinary input clears it. Renegade failure remains separate."
     },
     {
       "id": "emulatorjs/mednafen-ngp/ngpc",
@@ -294,7 +306,10 @@
     {
       "id": "emulatorjs/mgba/gbc",
       "fingerprint": "324adc6ea4fd4155e019b507fca13562b02977a8e176352b2d4013bc2f8a9349",
-      "status": "CURRENT_FINGERPRINT_SEMANTICS_PENDING"
+      "status": "SCOPED_PASS",
+      "evidence": "root/release-r15/mgba-gbc-current/semantic-proof.json",
+      "evidenceSha256": "38b790c60af664591a8db947088c6b93dfe170d7b3761e9f8784c49385d7449e",
+      "scope": "Tobu Tobu Girl through GBC binding: actual review direction/confirmation and gameplay; final 4070-byte INSTANT snapshot restores native RESUME/DASH COUNT ON menu for seven unpaused seconds in cookie-only fresh Chromium. A resumes the saved level and opposite direction/boost continue. Initial death/fall capture excluded; enhanced GBC features not covered."
     },
     {
       "id": "emulatorjs/mupen64plus-next/n64",

@@ -8,7 +8,8 @@ import {tmpdir} from "node:os";
 import {join, dirname} from "node:path";
 import {gunzipSync, crc32} from "node:zlib";
 import {unzipSync, zipSync} from "fflate";
-import {parseRuntimeConfiguration, contentHash, runtimeBindings, identifyPSXRegion, resolveSavedRuntimeRequest} from "../dist/runtime/index.js";
+import {parseRuntimeConfiguration, contentHash, runtimeBindings, identifyPSXRegion, resolveSavedRuntimeRequest,
+  contentBIOSRequirements} from "../dist/runtime/index.js";
 
 export async function configureHostInput(input) {
   contentHash(input.files, "TREE");
@@ -67,9 +68,7 @@ export async function prepareHostInput(input) {
     prepared = {...input, cueFiles: await cueFiles(input, config.content.entryFile)};
   }
   const coreId = input.coreId ?? input.directory.defaultCoreId;
-  if (coreId === "mednafen_psx_hw" && config.content.kind === "SINGLE_FILE") {
-    prepared = {...prepared, firmwareEvidence: {psxRegion: await psxRegion(prepared, config.content.entryFile)}};
-  }
+  prepared = await prepareFirmwareEvidence(prepared, config, coreId);
   if (config.content.kind !== "ARCADE") {return prepared;}
   const tables = await arcadeTables();
   if (!tables[coreId]) {throw new Error("RUNTIME_ARCADE_CATALOG_UNAVAILABLE");}
@@ -81,6 +80,30 @@ export async function prepareHostInput(input) {
     archives[key] = await zipMembers(requireLocator(input, file));
   }
   return {...input, arcadeCatalog: tables[coreId], archives};
+}
+
+/** Read only evidence needed for BIOS rules; Parent and other launch resources remain unprepared. */
+export async function contentHostBIOSRequirements(input) {
+  contentHash(input.files, "TREE");
+  const config = parseRuntimeConfiguration(input.config), coreId = input.coreId ?? input.directory.defaultCoreId;
+  let prepared = await prepareFirmwareEvidence(input, config, coreId);
+  if (config.content.kind === "ARCADE") {
+    const tables = await arcadeTables();
+    if (!tables[coreId]) {throw new Error("RUNTIME_ARCADE_CATALOG_UNAVAILABLE");}
+    const file = input.files.find(file => file.logicalKey === config.content.entryFile);
+    if (!file) {throw new Error("RUNTIME_ENTRY_MISSING");}
+    prepared = {...prepared, arcadeCatalog: tables[coreId],
+      archives: {[file.logicalKey]: await zipMembers(requireLocator(input, file))}};
+  }
+  return contentBIOSRequirements(prepared);
+}
+
+async function prepareFirmwareEvidence(input, config, coreId) {
+  if (coreId !== "mednafen_psx_hw" || config.content.kind !== "SINGLE_FILE") {return input;}
+  if (config.content.entryFile.toLowerCase().endsWith(".cue") && !input.cueFiles) {
+    input = {...input, cueFiles: await cueFiles(input, config.content.entryFile)};
+  }
+  return {...input, firmwareEvidence: {psxRegion: await psxRegion(input, config.content.entryFile)}};
 }
 
 /** The managed store already verified whole-file SHA; inspect only the disc system area. */

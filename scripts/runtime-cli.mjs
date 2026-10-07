@@ -1,4 +1,5 @@
-import {configureHostInput, prepareHostInput, parentArchive, assembleResource, detectScummvm, arcadeTables, identifyHostBIOS, discoverContentDependencies} from "./runtime-host-input.mjs";
+import {configureHostInput, prepareHostInput, parentArchive, assembleResource, detectScummvm, arcadeTables, identifyHostBIOS,
+  discoverContentDependencies, contentHostBIOSRequirements} from "./runtime-host-input.mjs";
 import {normalizeContent} from "./runtime-normalize-content.mjs";
 import {readFile} from "node:fs/promises";
 import {once} from "node:events";
@@ -37,6 +38,18 @@ async function execute(command, input) {
     output = input.items.map(restorability); break;
   }
   case "bios-requirements": output = resolveBIOSRequirements(input); break;
+  case "batch-content-bios-requirements": {
+    if (!Array.isArray(input.items) || input.items.length > 100) {throw new Error("RUNTIME_REQUEST_TOO_LARGE");}
+    output = [];
+    for (const item of input.items) {
+      try {output.push({...await contentHostBIOSRequirements(item), error: null});}
+      catch (error) {
+        output.push({biosRequirements: [], error: error instanceof Error && /^RUNTIME_[A-Z0-9_]+$/u.test(error.message)
+          ? error.message : "RUNTIME_CONTENT_UNAVAILABLE"});
+      }
+    }
+    break;
+  }
   case "bios-identify": output = await identifyHostBIOS(input); break;
   default: throw new Error("RUNTIME_COMMAND_INVALID");
   }

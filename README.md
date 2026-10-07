@@ -80,6 +80,23 @@ Each Target owns its host shortcut policy through `hostKeyboardShortcuts`. The p
 `setHostShortcutPolicy()` selects explicit keyboard bindings and `HOST_SHORTCUT` events cross same-origin
 and isolated game windows uniformly. Null policy disables interception; see the Provider Module guide.
 The Host leaves undeclared shortcuts with the game and configures null while its overlays own input.
+
+J2ME standard gamepads use the following phone actions. The Provider owns gamepad polling in the game frame and preserves the Host's input filter; the core owns physical keyboard input.
+
+| Standard control | Phone action |
+| --- | --- |
+| D-pad / left stick | Up, down, left, right |
+| A | Fire / confirm |
+| B / Select | Right soft key |
+| X / Start | Left soft key |
+| Y | 1 |
+| L1 / R1 | 3 / 7 |
+| L2 / R2 | 9 / 0 |
+| L3 / R3 | * / # |
+
+Direction and Fire actions are separate from numeric keys 2, 4, 6, 8 and 5. Physical keyboard digits 0–9, star, hash and the core's existing soft-key bindings remain available. Start+Select chords remain reserved by the Host filter; gamepad keys are released on suppression, focus loss, pause, disconnection and exit.
+
+The offline host tool's `batch-content-bios-requirements` command accepts up to 100 ordered `items` with `directory`, `config`, `files` and host-owned `locators` (an optional `coreId` selects an allowed core). Each result has `{biosRequirements: [], error: null}` or a stable error code. It reads bounded PSX disc evidence and the arcade entry ZIP's directory, then resolves the same declared BIOS rules as launch preparation. It does not read Parent archives, installed BIOS, implementation fingerprints or assemble launch resources. An error must be treated as an unknown BIOS result, never as an empty successful requirement list.
 A checkpoint availability with `requiredAction: "SELECT_PROGRAM"` tells the host to show
 program selection guidance. Provider-private Target options are interpreted only inside
 the Provider.

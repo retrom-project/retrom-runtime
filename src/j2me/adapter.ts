@@ -2,10 +2,13 @@ import type {CheckpointAvailability, RuntimeCheckpoint, RuntimeLoadProgress} fro
 import type {MountedRuntimeAdapter, RuntimeProgressReporter, RuntimeExitReporter} from "../internal-adapter.js";
 import type {J2meParameters} from "./parameters.js";
 import {withStartupTask, type StartupTasks, type StartupTask} from "../provider/startup.js";
+import {installJ2meGamepad, type J2meGamepadAction} from "./input.js";
 
 type J2meRuntime = Omit<MountedRuntimeAdapter, "setVolume"> & {
   mount(target: HTMLElement): Promise<void>;
   setVolume(value: number): void;
+  getState(): string;
+  setInput(action: J2meGamepadAction, pressed: boolean): void;
   subscribe(listener: (event: CoreEvent) => void): () => void;
 };
 type CoreEvent = RuntimeLoadProgress & {type: string; code?: string};
@@ -49,6 +52,7 @@ export async function mountJ2me(
   }, {frameWindow, restorePayload, signal});
   let exited = false;
   let exitReported = false;
+  let input: ReturnType<typeof installJ2meGamepad> | undefined;
   const progressTasks = new Map<string, StartupTask>();
   const unsubscribe = runtime.subscribe((event) => {
     if (exited) {return;}
@@ -70,11 +74,16 @@ export async function mountJ2me(
     if (exited) {return;}
     exited = true;
     unsubscribe();
-    await runtime.exit();
+    try {input?.dispose();} finally {await runtime.exit();}
   };
   try {
-    if (typeof runtime.acknowledgeCheckpoint !== "function") {throw new Error("J2ME_CORE_ABI_MISMATCH");}
+    if (typeof runtime.acknowledgeCheckpoint !== "function" || typeof runtime.setInput !== "function" ||
+      typeof runtime.getState !== "function") {throw new Error("J2ME_CORE_ABI_MISMATCH");}
+    input = installJ2meGamepad(frameWindow, (action, pressed) => {
+      if (runtime.getState() === "RUNNING") {runtime.setInput(action, pressed);}
+    }, () => !exited && !exitReported && runtime.getState() === "RUNNING");
     await runtime.mount(target);
+    input.resume();
     for (const task of progressTasks.values()) {task.complete();}
   } catch (error) {for (const task of progressTasks.values()) {task.fail();} await exit(); throw error;}
   return {
@@ -83,19 +92,24 @@ export async function mountJ2me(
       return runtime.acknowledgeCheckpoint(checkpoint);
     },
     checkpoint: async (): Promise<RuntimeCheckpoint> => {
-      const result = await runtime.checkpoint();
-      if (result.format !== format || !result.bytes?.byteLength || result.bytes.byteLength > maximum) {
-        throw new Error("J2ME_CHECKPOINT_INVALID");
+      input?.pause();
+      try {
+        const result = await runtime.checkpoint();
+        if (result.format !== format || !result.bytes?.byteLength || result.bytes.byteLength > maximum) {
+          throw new Error("J2ME_CHECKPOINT_INVALID");
+        }
+        return {format, bytes: Uint8Array.from(result.bytes)};
+      } finally {
+        if (!exited && runtime.getState() === "RUNNING") {input?.resume();}
       }
-      return {format, bytes: Uint8Array.from(result.bytes)};
     },
     exit,
     getCanvas: () => exited ? null : runtime.getCanvas(),
     getCheckpointAvailability: (): CheckpointAvailability => exited || exitReported
       ? {available: false, blocker: "NOT_READY"} : runtime.getCheckpointAvailability(),
     getFrameCount: () => runtime.getFrameCount(),
-    pause: () => runtime.pause(),
-    resume: () => runtime.resume(),
+    pause: async () => {input?.pause(); await runtime.pause();},
+    resume: async () => {await runtime.resume(); input?.resume();},
     screenshot: () => runtime.screenshot(),
     setVolume: (value) => runtime.setVolume(value),
   };

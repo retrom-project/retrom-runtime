@@ -1,10 +1,11 @@
-import type {PrepareRuntimeRequest, RuntimeContentFile, BIOSRequirement} from "../src/runtime/index.js";
+import type {PrepareRuntimeRequest, ContentBIOSRequest, RuntimeContentFile, BIOSRequirement} from "../src/runtime/index.js";
 export type HostFiles = {files: RuntimeContentFile[]; locators: Record<string, string>; paths?: Record<string, string>; outputPath: string};
 export function discoverContentDependencies(input: Pick<HostFiles, "files" | "locators">): Promise<{files: Array<{logicalKey: string; relativeTo: string; relativePath: string}>}>;
 export function configureHostInput(input: import("../src/runtime/configure.js").ConfigureRequest & {locators: Record<string, string>; providerRoots?: Record<string, string>}): Promise<import("../src/runtime/configure.js").ConfigureRequest>;
 export function assembleResource(input: HostFiles): Promise<{path: string; sizeBytes: number; sha256: string}>;
 export function parentArchive(input: HostFiles): Promise<{path: string; sizeBytes: number; sha256: string}>;
 export function prepareHostInput(input: PrepareRuntimeRequest & {locators: Record<string, string>}): Promise<PrepareRuntimeRequest>;
+export function contentHostBIOSRequirements(input: ContentBIOSRequest & {locators: Record<string, string>}): Promise<{biosRequirements: BIOSRequirement[]}>;
 export function arcadeTables(): Promise<Record<string, import("../src/runtime/arcade.js").ArcadeCatalog>>;
 export function identifyHostBIOS(input: {file: {name: string; sizeBytes: number; sha256: string; md5: string}; path?: string; requirements: BIOSRequirement[]}): Promise<BIOSRequirement[]>;
 export function detectScummvm(input: {providerRoot: string; treeRoot: string}): Promise<unknown>;

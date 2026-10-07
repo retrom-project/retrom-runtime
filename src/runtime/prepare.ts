@@ -28,6 +28,28 @@ export type PrepareRuntimeRequest = {
   firmwareEvidence?: {psxRegion?: import("./psx.js").PSXRegion | null};
 };
 
+export type ContentBIOSRequest = Pick<PrepareRuntimeRequest,
+  "directory" | "config" | "files" | "coreId" | "archives" | "arcadeCatalog" | "firmwareEvidence">;
+
+/** BIOS eligibility uses content facts without preparing resources or requiring Parent archives. */
+export function contentBIOSRequirements(request: ContentBIOSRequest) {
+  const config = parseRuntimeConfiguration(request.config), selectedCore = selectedRuntimeCore(request);
+  contentHash(request.files, "TREE");
+  const entry = "entryFile" in config.content ? config.content.entryFile : null;
+  if (entry !== null && !request.files.some(file => file.logicalKey === entry)) {
+    configurationFailure("RUNTIME_ENTRY_MISSING");
+  }
+  const {binding} = resolveRuntimeTarget(request.directory.platformId, selectedCore, config.content);
+  let biosSets: string[] = [];
+  if (config.content.kind === "ARCADE") {
+    if (!request.arcadeCatalog || !request.archives) {configurationFailure("RUNTIME_ARCADE_CATALOG_UNAVAILABLE");}
+    biosSets = arcadeDependencies(selectedCore, config, request.files, request.archives, request.arcadeCatalog).biosSets;
+  }
+  return {biosRequirements: [...resolveBIOSRequirements({providerId: binding.providerId, targetId: binding.targetId,
+    config, files: request.files, firmwareEvidence: request.firmwareEvidence}),
+    ...(request.arcadeCatalog ? arcadeBIOSRequirements(selectedCore, request.arcadeCatalog, biosSets) : [])]};
+}
+
 /** Resolve frozen save facts before any content-specific host reads or resource assembly. */
 export function resolveSavedRuntimeRequest<T extends PrepareRuntimeRequest>(request: T): T {
   if (request.savedContext === undefined) {return request;}
@@ -194,7 +216,7 @@ export function inspectRuntimeIdentity(request: PrepareRuntimeRequest) {
   return {...identity, readFormats: declaration.checkpoint?.readFormats ?? []};
 }
 
-function selectedRuntimeCore(request: PrepareRuntimeRequest) {
+function selectedRuntimeCore(request: Pick<PrepareRuntimeRequest, "directory" | "coreId">) {
   const directory = request.directory, selectedCore = request.coreId ?? directory.defaultCoreId;
   if (!identifier(directory.platformId) || !identifier(directory.defaultCoreId) || !identifier(selectedCore) ||
     !Array.isArray(directory.allowedCoreIds) || new Set(directory.allowedCoreIds).size !== directory.allowedCoreIds.length ||

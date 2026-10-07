@@ -1,14 +1,21 @@
 // @vitest-environment jsdom
-import {describe, expect, it, vi} from "vitest";
+import {afterEach, beforeEach, describe, expect, it, vi} from "vitest";
 import {mountJ2me} from "./adapter.js";
 
 const config = {sessionId: "launch", contentDigest: "a".repeat(64), jarSizeBytes: 10,
   jarUrl: "http://localhost/content/game.jar", runtimeBaseUrl: "http://localhost/runtime/"};
+const gamepads = Object.getOwnPropertyDescriptor(navigator, "getGamepads");
+beforeEach(() => {Object.defineProperty(navigator, "getGamepads", {configurable: true, value: () => []});});
+afterEach(() => {
+  if (gamepads) {Object.defineProperty(navigator, "getGamepads", gamepads);}
+  else {Reflect.deleteProperty(navigator, "getGamepads");}
+});
 function fixture() {
   const target = document.createElement("div");
   let listener: (event: {type: string; code?: string}) => void = () => undefined;
   const unsubscribe = vi.fn();
   const core = {mount: vi.fn(), exit: vi.fn(), pause: vi.fn(), resume: vi.fn(), screenshot: vi.fn(),
+    getState: () => "RUNNING", setInput: vi.fn(),
     acknowledgeCheckpoint: vi.fn(async () => undefined),
     getCanvas: () => null, getFrameCount: () => 3, setVolume: vi.fn(),
     getCheckpointAvailability: () => ({available: true, blocker: null}),

@@ -7,6 +7,8 @@ import {cp, mkdir, mkdtemp, rm, symlink, writeFile} from "node:fs/promises";
 import {join, resolve} from "node:path";
 import {tmpdir} from "node:os";
 import {once} from "node:events";
+import {createHash} from "node:crypto";
+import {zipSync} from "fflate";
 
 let root: string;
 const children: ChildProcessWithoutNullStreams[] = [];
@@ -79,3 +81,38 @@ it("runs source dependency discovery from the independent packaged CLI layout", 
   expect(await read()).toEqual({id: "dependencies", result: {files: []}});
   expect((await once(child, "close"))[0]).toBe(0);
 });
+
+it("projects content BIOS alone from real PSX and arcade evidence without requiring Parent or implementation fingerprints", async () => {
+  const {child, read} = worker();
+  const disc = Buffer.alloc(5 * 2352); disc.write("Licensed by Sony Computer Entertainment Amer  ica", 4 * 2352 + 32);
+  const arcade = zipSync({"unrelated.bin": Uint8Array.of(1)});
+  const samples = [{name: "disc.bin", bytes: disc}, {name: "kof99h.zip", bytes: arcade}];
+  const metadata = [];
+  for (const sample of samples) {
+    const path = join(root, sample.name); await writeFile(path, sample.bytes);
+    metadata.push({logicalKey: sample.name, name: sample.name, sizeBytes: sample.bytes.length,
+      sha256: createHash("sha256").update(sample.bytes).digest("hex")});
+  }
+  const request = (platformId: string, coreId: string, name: string, sample = files[0]) => ({
+    directory: {platformId, defaultCoreId: coreId, allowedCoreIds: [coreId]},
+    config: {content: {kind: "SINGLE_FILE", entryFile: name}}, files: [{...sample, logicalKey: name, name}], locators: {},
+  });
+  const psx = {...request("psx", "mednafen_psx_hw", "disc.bin", metadata[0]), locators: {"disc.bin": join(root, "disc.bin")}};
+  const clone = {...request("arcade", "fbneo", "kof99h.zip", metadata[1]),
+    config: {content: {kind: "ARCADE", entryFile: "kof99h.zip"}, cores: {fbneo: {parentFiles: ["missing-parent.zip"]}}},
+    locators: {"kof99h.zip": join(root, "kof99h.zip")}};
+  child.stdin.write(JSON.stringify({id: "bios", command: "batch-content-bios-requirements", input: {items: [
+    request("nes", "fceumm", "game.nes"), request("nes", "fceumm", "game.fds"),
+    request("atari7800", "prosystem", "game.a78"), psx, clone, {...psx, locators: {"disc.bin": join(root, "does-not-exist")}},
+  ]}}) + "\n");
+  const result = await read(); expect(result.id).toBe("bios");
+  expect(result.result[0]).toEqual({biosRequirements: [], error: null});
+  expect(result.result[1]).toMatchObject({error: null, biosRequirements: [expect.objectContaining({logicalName: "disksys.rom", required: true})]});
+  expect(result.result[2]).toMatchObject({error: null, biosRequirements: [expect.objectContaining({required: false})]});
+  expect(result.result[3]).toMatchObject({error: null, biosRequirements: [expect.objectContaining({condition: "PSX_REGION_US", required: true})]});
+  expect(result.result[4]).toMatchObject({error: null, biosRequirements: [expect.objectContaining({logicalName: "neogeo.zip", required: true, members: expect.any(Array)})]});
+  expect(result.result[5]).toEqual({biosRequirements: [], error: "RUNTIME_CONTENT_UNAVAILABLE"});
+  child.stdin.end(JSON.stringify({id: "limit", command: "batch-content-bios-requirements", input: {items: Array.from({length: 101}, () => ({}))}}) + "\n");
+  expect(await read()).toEqual({id: "limit", error: "RUNTIME_REQUEST_TOO_LARGE"});
+  expect((await once(child, "close"))[0]).toBe(0);
+}, 15000);

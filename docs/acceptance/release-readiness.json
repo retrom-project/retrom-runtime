@@ -5,8 +5,8 @@
   "snapshot": "R15: published ONS r6/VecX r2 pins, OpenBOR normal-exit fix and RGSS preconnected-controller startup fix; remaining target identities unchanged",
   "historicalMatrix": "runtime-product-matrix.json",
   "counts": {
-    "CURRENT_FINGERPRINT_SEMANTICS_PENDING": 89,
-    "SCOPED_PASS": 23,
+    "CURRENT_FINGERPRINT_SEMANTICS_PENDING": 87,
+    "SCOPED_PASS": 25,
     "MATERIAL_GAP": 10
   },
   "productRows": 122,
@@ -106,7 +106,10 @@
     {
       "id": "emulatorjs/fbneo/arcade",
       "fingerprint": "998dac50595fede6dafc3cbe45d5fb0c3a72e202e58072117ebeb6f42784beb8",
-      "status": "CURRENT_FINGERPRINT_SEMANTICS_PENDING"
+      "status": "SCOPED_PASS",
+      "evidence": "root/release-r15/fbneo-1941-current/semantic-proof.json",
+      "evidenceSha256": "11b2e9b591daf3369c9241c68573fd387f9bde9e67e12c9ef7447125bc9eaea1",
+      "scope": "Operator 1941 actual review and published gameplay, standard coin/Start/D-pad/A, public instantaneous save, cookie-only fresh Chromium restoration with coastal scene and M-GUN59, then more movement/shooting. Seven-second invariant observation is publicly paused; not universal game compatibility."
     },
     {
       "id": "emulatorjs/fceumm/fds",
@@ -497,7 +500,10 @@
     {
       "id": "retrom-runtime/flash-ruffle/flash",
       "fingerprint": "b6ed4b49c786411140e67255fec0a451cf20703e5c69f7eda635657c852be440",
-      "status": "CURRENT_FINGERPRINT_SEMANTICS_PENDING"
+      "status": "SCOPED_PASS",
+      "evidence": "root/release-r15/ruffle-followup/semantic-proof.json",
+      "evidenceSha256": "738a628ff01471d27ea421452af7befd2c48595a7bf09704a3863be70b254dce",
+      "scope": "Operator Flash fixture: D-pad movement, A native SharedObject confirmation, public GAME_SAVE position80, fresh cookie-only browser native reload stable seven unpaused seconds, Left/A and public updated native position60. Earlier harness timeout excluded; no engine state injection."
     },
     {
       "id": "retrom-runtime/gbe-pokemini/pokemini",

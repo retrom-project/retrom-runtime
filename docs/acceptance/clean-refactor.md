@@ -2,7 +2,7 @@
 
 ## R15 release audit
 
-The [release-readiness audit](release-readiness.json) supersedes the historical counts below for release decisions. Stable runtime/Retrom publication remains incomplete. Twenty-three current-fingerprint scoped proofs have been reconciled (FCEUmm/Nestopia NES, bsnes/Snes9x SNES, MV, MZ, TyranoScript, J2ME, ONS, VecX, OpenBOR, ScummVM, WASM-4, PICO-8, TIC-80, Lutro, RPG Maker 2000/2003/XP/VX/VX Ace, mGBA/GBA and DOS); ten rows lack complete material and 89 still require current-identity semantic closure. No historical PASS is automatically promoted.
+The [release-readiness audit](release-readiness.json) supersedes the historical counts below for release decisions. Stable runtime/Retrom publication remains incomplete. Twenty-five current-fingerprint scoped proofs have been reconciled (FCEUmm/Nestopia NES, bsnes/Snes9x SNES, MV, MZ, TyranoScript, J2ME, ONS, VecX, OpenBOR, ScummVM, WASM-4, PICO-8, TIC-80, Lutro, RPG Maker 2000/2003/XP/VX/VX Ace, mGBA/GBA, DOS, FBNeo/arcade and Flash); ten rows lack complete material and 87 still require current-identity semantic closure. No historical PASS is automatically promoted.
 
 The ONS and VecX fixes have been merged and their immutable core releases published. Product retesting used the actual ONS r6 and VecX r2 bytes: normal review/play, public checkpoints, fresh browsers with only login cookies, native scene restoration and continued input. ONS retained the background and third dialogue waiting point. VecX retained all 7,509 saved maze pixels and the player position; direct PNG measurements disproved the earlier apparent missing-vector observation. The source pins and CI consume the published assets without unpublished ONS transport.
 
@@ -25,6 +25,10 @@ DOS now has actual PREHISTORIK2 level1 evidence, explicitly excluding earlier at
 
 RPG Maker 2000/2003 fixtures now use palette index zero for the blank upper tile, as required by the native renderer; the earlier opaque upper tile hid the map/player. A failing-then-passing generator regression and deterministic regeneration cover the fix. Actual review/play, public 829/863-byte saves, fresh-browser restore and continued input pass: map1, position12,8 and variable1 persist for seven seconds, then Down moves to12,10. Complete decoded source/restored RGBA frames are identical. Pixel measurements disprove the apparent blank/missing-marker tool previews; no runtime render defect was established. Raw payloads, screenshots and owned-object cleanup are retained under `root/release-r15/{dos-current,easyrpg-palette-fixed,easyrpg2003-palette-fixed}/`.
 
+
+FBNeo actual 1941 review/gameplay and fresh-process instantaneous restoration now pass at the current fingerprint. The final snapshot contains a noninitial coastal scene, score11001 and M-GUN ammunition59; restored standard direction and shooting continue, reducing ammunition to57. The seven-second invariant observation is publicly paused. Startup-warning and intermediate CONTINUE snapshots are excluded. Proof `root/release-r15/fbneo-1941-current/semantic-proof.json` has SHA `11b2e9b591daf3369c9241c68573fd387f9bde9e67e12c9ef7447125bc9eaea1`.
+
+Flash uses native GAME_SAVE semantics: unconfirmed movement does not persist; standard A triggers the game SharedObject flush. Public gzip transfers actual SOL position80, which a cookie-only fresh browser reloads and retains for seven unpaused seconds. Further Left/A persists position60 through the public API. Proof `root/release-r15/ruffle-followup/semantic-proof.json` has SHA `738a628ff01471d27ea421452af7befd2c48595a7bf09704a3863be70b254dce`. An earlier harness timed out after normal automatic synchronization already completed; its incomplete sequence is excluded, and its lost-cookie session was revoked by an exact account/time-verified database update. Both completed cases remove only their own domain records and log out normally.
 
 ## Historical R10 snapshot
 

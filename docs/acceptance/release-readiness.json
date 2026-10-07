@@ -5,8 +5,8 @@
   "snapshot": "R15: published ONS r6/VecX r2 pins, OpenBOR normal-exit fix and RGSS preconnected-controller startup fix; remaining target identities unchanged",
   "historicalMatrix": "runtime-product-matrix.json",
   "counts": {
-    "CURRENT_FINGERPRINT_SEMANTICS_PENDING": 93,
-    "SCOPED_PASS": 19,
+    "CURRENT_FINGERPRINT_SEMANTICS_PENDING": 92,
+    "SCOPED_PASS": 20,
     "MATERIAL_GAP": 10
   },
   "productRows": 122,
@@ -274,7 +274,10 @@
     {
       "id": "emulatorjs/mgba/gba",
       "fingerprint": "324adc6ea4fd4155e019b507fca13562b02977a8e176352b2d4013bc2f8a9349",
-      "status": "CURRENT_FINGERPRINT_SEMANTICS_PENDING"
+      "status": "SCOPED_PASS",
+      "evidence": "root/release-r15/mgba-sd-current/semantic-proof.json",
+      "evidenceSha256": "6846bf3b8eef9c0ccdcb4921a290e1beb501d63a8bcdcdcd3f5e496e26342577",
+      "scope": "Actual SD Gundam Force with standard-controller confirm, movement and attack through review and published play. Public INSTANT save restores score10000, HP3 and actor/enemy/world position after seven seconds in a fresh cookie-only Chromium. Continued input changes world position and score33000. Native PAUSE blink is not a pixel-equality assertion; synthetic browser Gamepad API, not physical USB."
     },
     {
       "id": "emulatorjs/mgba/gbc",
@@ -686,19 +689,23 @@
       "tag": "retrom-core-0.7.7beta-r6",
       "commit": "52d84443a2e41d1b930683f9f0a459e715c5093c",
       "workflowRun": 37670252602,
-      "status": "PUBLISHED_PRODUCT_RETEST_REQUIRED"
+      "status": "PUBLISHED_SCOPED_PRODUCT_RETEST_PASS",
+      "evidence": "root/release-r15/ons-published/semantic-proof.json",
+      "evidenceSha256": "f5af980ad523fda0f5ff4fd185e60f18f3f2cce62169ec1c78a14b3bdd9c0351"
     },
     {
       "repository": "retrom-project/libretro-vecx",
       "tag": "retrom-core-g8f671cc9d737-r2",
       "commit": "f62c58885781114445c3109dd8283ca863b932e4",
       "workflowRun": 37670346395,
-      "status": "PUBLISHED_UNPACKED_FILES_MATCH_TESTED_CANDIDATE"
+      "status": "PUBLISHED_SCOPED_PRODUCT_RETEST_PASS",
+      "evidence": "root/release-r15/vecx-published/semantic-proof.json",
+      "evidenceSha256": "94305725a609d5754d064f4efe04853ac800595c98761890429c1d41473ee85a"
     }
   ],
   "limits": [
     "R10 any-fingerprint counts do not establish current implementation acceptance.",
-    "Only the five listed scoped proofs have been reconciled; every other row remains explicitly unclosed.",
+    "Only rows marked SCOPED_PASS have reconciled current-identity scoped evidence; other rows remain explicitly unclosed.",
     "Core tags do not publish or approve a stable retrom-runtime or Retrom release.",
     "Missing operator material is not substituted with unrelated ROMs, title screens or fabricated payloads."
   ]

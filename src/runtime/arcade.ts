@@ -37,7 +37,7 @@ export function arcadeDependencies(coreId: string, config: RuntimeConfiguration,
   }
   return {parentFiles, missingParents, biosSets};
 }
-function configuredMachine(coreId: string, config: RuntimeConfiguration, name: string) {
+export function configuredMachine(coreId: string, config: RuntimeConfiguration, name: string) {
   const explicit = config.cores?.[coreId]?.options?.machine;
   return coreId === "mame_arcade" && typeof explicit === "string" ? explicit : archiveId(name);
 }

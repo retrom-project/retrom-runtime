@@ -216,7 +216,7 @@ export function inspectRuntimeIdentity(request: PrepareRuntimeRequest) {
   return {...identity, readFormats: declaration.checkpoint?.readFormats ?? []};
 }
 
-function selectedRuntimeCore(request: Pick<PrepareRuntimeRequest, "directory" | "coreId">) {
+export function selectedRuntimeCore(request: Pick<PrepareRuntimeRequest, "directory" | "coreId">) {
   const directory = request.directory, selectedCore = request.coreId ?? directory.defaultCoreId;
   if (!identifier(directory.platformId) || !identifier(directory.defaultCoreId) || !identifier(selectedCore) ||
     !Array.isArray(directory.allowedCoreIds) || new Set(directory.allowedCoreIds).size !== directory.allowedCoreIds.length ||

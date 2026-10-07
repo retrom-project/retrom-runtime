@@ -9,7 +9,7 @@ import {join, dirname} from "node:path";
 import {gunzipSync, crc32} from "node:zlib";
 import {unzipSync, zipSync} from "fflate";
 import {parseRuntimeConfiguration, contentHash, runtimeBindings, identifyPSXRegion, resolveSavedRuntimeRequest,
-  contentBIOSRequirements, dosEntryCandidates} from "../dist/runtime/index.js";
+  contentBIOSRequirements, dosEntryCandidates, arcadeParentOptions} from "../dist/runtime/index.js";
 
 export async function configureHostInput(input) {
   contentHash(input.files, "TREE");
@@ -111,6 +111,20 @@ export async function hostDOSEntryCandidates(input) {
     if (cause instanceof Error && /^RUNTIME_[A-Z0-9_]+$/u.test(cause.message)) {throw cause;}
     throw new Error("RUNTIME_CONTENT_UNAVAILABLE", {cause});
   }
+}
+
+/** Read current Parent archives and a proposed attachment using the same DAT authority. */
+export async function hostArcadeParentOptions(input) {
+  const config = parseRuntimeConfiguration(input.config), coreId = input.coreId ?? input.directory.defaultCoreId;
+  if (config.content.kind !== "ARCADE") {throw new Error("RUNTIME_CONFIGURATION_INVALID");}
+  const tables = await arcadeTables(), archives = {};
+  const keys = new Set([config.content.entryFile, ...config.cores?.[coreId]?.parentFiles ?? [],
+    ...(input.attachFile === undefined ? [] : [input.attachFile])]);
+  for (const key of keys) {
+    const file = input.files.find(item => item.logicalKey === key);
+    if (file) {archives[key] = await zipMembers(requireLocator(input, file));}
+  }
+  return arcadeParentOptions({...input, archives, arcadeCatalog: tables[coreId]});
 }
 
 async function prepareFirmwareEvidence(input, config, coreId) {

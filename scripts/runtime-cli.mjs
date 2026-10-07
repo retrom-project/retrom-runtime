@@ -1,5 +1,5 @@
 import {configureHostInput, prepareHostInput, parentArchive, assembleResource, detectScummvm, arcadeTables, identifyHostBIOS,
-  discoverContentDependencies, contentHostBIOSRequirements, hostDOSEntryCandidates} from "./runtime-host-input.mjs";
+  discoverContentDependencies, contentHostBIOSRequirements, hostDOSEntryCandidates, hostArcadeParentOptions} from "./runtime-host-input.mjs";
 import {normalizeContent} from "./runtime-normalize-content.mjs";
 import {readFile} from "node:fs/promises";
 import {once} from "node:events";
@@ -24,6 +24,7 @@ async function execute(command, input) {
   case "normalize-content": output = await normalizeContent(input); break;
   case "discover-content": output = await discoverContentDependencies(input); break;
   case "dos-entry-candidates": output = await hostDOSEntryCandidates(input); break;
+  case "arcade-parents": output = await hostArcadeParentOptions(input); break;
   case "configure": output = configureRuntime(await configureHostInput(input)); break;
   case "prepare": output = prepareRuntime(await prepareHostInput(input)); break;
   case "parent-archive": output = await parentArchive(input); break;
@@ -58,6 +59,7 @@ async function execute(command, input) {
 }
 
 function failure(error) {return error instanceof Error ? error.message : "RUNTIME_REQUEST_FAILED";}
+function parentFailureDetails(error) {return error?.message === "RUNTIME_PARENT_MISSING" ? error.details : undefined;}
 
 async function write(value) {
   const encoded = JSON.stringify(value);
@@ -100,7 +102,7 @@ async function serve() {
         throw new Error("RUNTIME_REQUEST_INVALID");
       }
       await write({id, result: await execute(request.command, request.input)});
-    } catch (error) {await write({id, error: failure(error)});}
+    } catch (error) {await write({id, error: failure(error), errorDetails: parentFailureDetails(error)});}
   }
 }
 
@@ -119,6 +121,7 @@ async function single() {
 try {
   if (process.argv[2] === "--serve") {await serve();} else {await single();}
 } catch (error) {
-  await write(process.argv[2] === "--serve" ? {id: null, error: failure(error)} : {error: failure(error)});
+  await write(process.argv[2] === "--serve" ? {id: null, error: failure(error), errorDetails: parentFailureDetails(error)}
+    : {error: failure(error), errorDetails: parentFailureDetails(error)});
   process.exitCode = 1;
 }

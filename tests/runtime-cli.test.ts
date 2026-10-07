@@ -82,6 +82,22 @@ it("runs source dependency discovery from the independent packaged CLI layout", 
   expect((await once(child, "close"))[0]).toBe(0);
 });
 
+it("projects named Parent requirements and preserves the launch error's actual missing names", async () => {
+  const {child, read} = worker();
+  const bytes = zipSync({"fixture.bin": Uint8Array.of(1)}), archive = join(root, "1941j.zip");
+  await writeFile(archive, bytes);
+  const input = {directory: {platformId: "arcade", defaultCoreId: "fbneo", allowedCoreIds: ["fbneo"]},
+    config: {content: {kind: "ARCADE", entryFile: "1941j.zip"}}, files: [{logicalKey: "1941j.zip", name: "1941j.zip",
+      sizeBytes: bytes.length, sha256: createHash("sha256").update(bytes).digest("hex")}],
+    locators: {"1941j.zip": archive}, coreId: "fbneo"};
+  child.stdin.write(JSON.stringify({id: "parents", command: "arcade-parents", input}) + "\n");
+  expect((await read()).result).toMatchObject({coreId: "fbneo", parentFiles: [], missingParents: ["1941.zip"]});
+  child.stdin.end(JSON.stringify({id: "launch", command: "prepare",
+    input: {...input, fingerprints: {"emulatorjs/fbneo": "b".repeat(64)}}}) + "\n");
+  expect(await read()).toEqual({id: "launch", error: "RUNTIME_PARENT_MISSING", errorDetails: {parents: "1941"}});
+  expect((await once(child, "close"))[0]).toBe(0);
+});
+
 it("projects content BIOS alone from real PSX and arcade evidence without requiring Parent or implementation fingerprints", async () => {
   const {child, read} = worker();
   const disc = Buffer.alloc(5 * 2352); disc.write("Licensed by Sony Computer Entertainment Amer  ica", 4 * 2352 + 32);

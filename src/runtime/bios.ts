@@ -76,10 +76,10 @@ export function arcadeBIOSRequirements(coreId: string, games: import("./arcade.j
   selected?: readonly string[]): BIOSRequirement[] {
   const binding = runtimeBindings.find(item => item.coreId === coreId && item.contentKinds.includes("ARCADE"));
   if (!binding) {return [];}
-  return Object.entries(games).filter(([name, machine]) => machine.bios && (!selected || selected.includes(name)))
+  return Object.entries(games).filter(([name, machine]) => (machine.bios || machine.device && machine.roms.some(rom => !rom.optional)) && (!selected || selected.includes(name)))
     .map(([name, machine]) => ({requirementKey: `${binding.providerId}/${binding.targetId}/${name}.zip`,
       coreId, providerId: binding.providerId, targetId: binding.targetId, logicalName: `${name}.zip`, required: true,
       condition: "ARCADE_BIOS", sizeBytes: null, md5: null, sha256: null, delivery: "EXTERNAL_FILE" as const,
-      virtualPath: `${name}.zip`, activationOptions: {}, members: machine.roms.map(rom => ({name: rom.name,
-        sizeBytes: Number(rom.size), crc32: rom.crc, sha1: "", required: !rom.optional}))}));
+      virtualPath: coreId === "mame_arcade" ? `content/roms/${name}.zip` : `${name}.zip`, activationOptions: {}, members: machine.roms.map(rom => ({name: rom.name,
+        sizeBytes: Number(rom.size), crc32: rom.crc, sha1: rom.sha1 ?? "", required: !rom.optional}))}));
 }

@@ -9078,7 +9078,7 @@
             "kind": "EXTERNAL_FILE_SET",
             "cardinality": "ONE",
             "optional": true,
-            "maxFileBytes": 65536
+            "maxFileBytes": 134217728
           }
         ],
         "targetOptionsSchema": {

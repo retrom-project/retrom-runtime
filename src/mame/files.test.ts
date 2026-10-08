@@ -11,6 +11,17 @@ const config = {machine: "apple2p" as const, game: source, runtimeBaseUrl: "/pro
 const content = {assetIndex: {}, contentSession: {inputPolicy: () => eagerPolicy(143360),
   open: async () => {throw new Error("unused");}, materialize: async () => {throw new Error("unused");}, closeFile: async () => {}}};
 function fixture() {return {FS: {mkdirTree: vi.fn(), writeFile: vi.fn(), chmod: vi.fn(), ignorePermissions: true}};}
+it("mounts declared device ZIP sets in the MAME ROM search directory and rejects collisions", async () => {
+  const core = fixture(), device = {...source, logicalName: "m68705p5.zip", virtualPath: "content/roms/m68705p5.zip", sizeBytes: 200};
+  const arcade = {arcade: true as const, machine: "renegade", game: source, parent: null, bios: null,
+    deviceBios: [device], runtimeBaseUrl: "/provider/"};
+  await mountFiles(core, arcade, content);
+  expect(core.FS.writeFile).toHaveBeenCalledWith("/content/roms/m68705p5.zip", expect.any(Uint8Array));
+  for (const bad of [{...device, virtualPath: "../escape"}, {...device, logicalName: "renegade.zip", virtualPath: "content/roms/renegade.zip"}]) {
+    await expect(mountFiles(fixture(), {...arcade, deviceBios: [bad]}, content)).rejects.toThrow("MAME_CONTENT_INVALID");
+  }
+  await expect(mountFiles(fixture(), {...arcade, deviceBios: [device, device]}, content)).rejects.toThrow("MAME_CONTENT_INVALID");
+});
 afterEach(() => vi.unstubAllGlobals());
 it("mounts the machine, Disk II card and nested controller BIOS and opens a read-only game", async () => {
   const core = fixture(); await mountFiles(core, config, content);

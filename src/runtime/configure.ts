@@ -6,7 +6,7 @@ import {configurationFailure, logicalPath, object, utf8Compare} from "./validati
 import {validateConfiguredOptions} from "./prepare.js";
 import {detectLcfEngine} from "./lcf.js";
 import formats from "./content-formats.json" with {type: "json"};
-import type {ArcadeCatalog} from "./arcade.js";
+import {playableArcadeMachine, type ArcadeCatalog} from "./arcade.js";
 
 export type ConfigureRequest = {
   platformId: string;
@@ -89,8 +89,11 @@ function arcadeAncestors(catalog: ArcadeCatalog | undefined, id: string): string
   return parents;
 }
 function arcadeEntry(input: ConfigureRequest): RuntimeContentFile {
-  if (input.selection?.entryFile) {return chooseFile(input, name => name.endsWith(".zip"));}
-  const candidates = input.files.filter(file => /\.zip$/iu.test(file.name));
+  const candidates = input.files.filter(file => /\.zip$/iu.test(file.name) && !input.coreIds.some(core => {
+    const machine = input.arcadeCatalogs?.[core]?.[archiveName(file)];
+    return machine && !playableArcadeMachine(machine);
+  }));
+  if (input.selection?.entryFile) {return chooseFile({...input, files: candidates}, name => name.endsWith(".zip"));}
   const parents = new Set(input.coreIds.flatMap(core => candidates.flatMap(file =>
     arcadeAncestors(input.arcadeCatalogs?.[core], archiveName(file)))));
   const leaves = candidates.filter(file => !parents.has(archiveName(file)));

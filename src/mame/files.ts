@@ -54,8 +54,14 @@ async function mountArcadeFiles(core: Pick<MameCore, "FS">, config: Extract<Mame
   if (!/^[a-z0-9_]{1,32}$/u.test(config.machine) || config.game.sizeBytes < 22 || config.game.sizeBytes > 128 * 1024 * 1024) {
     throw new Error("MAME_CONTENT_INVALID");
   }
-  if (config.deviceBios.length > 1 || config.deviceBios.some(file => file.logicalName !== "epr-18022.ic2" ||
-    file.virtualPath !== "content/roms/segabill/epr-18022.ic2" || file.sizeBytes !== 65536)) {
+  const firmwarePaths = new Set<string>();
+  if (config.deviceBios.length > 64 || config.deviceBios.some(file => {
+    const zip = /^[a-z0-9_]{1,32}\.zip$/u.test(file.logicalName) && file.virtualPath === `content/roms/${file.logicalName}` &&
+      file.sizeBytes >= 22 && file.sizeBytes <= 128 * 1024 * 1024;
+    const segabill = file.logicalName === "epr-18022.ic2" && file.virtualPath === "content/roms/segabill/epr-18022.ic2" && file.sizeBytes === 65536;
+    if ((!zip && !segabill) || firmwarePaths.has(file.virtualPath)) {return true;}
+    firmwarePaths.add(file.virtualPath); return false;
+  })) {
     throw new Error("MAME_CONTENT_INVALID");
   }
   const game = await materializeFileBytes(content.contentSession, config.game, content.contentSession.inputPolicy("game"),
@@ -77,14 +83,16 @@ async function mountArcadeFiles(core: Pick<MameCore, "FS">, config: Extract<Mame
   core.FS.mkdirTree("/content/roms");
   for (const [name, bytes] of archives) {core.FS.writeFile(`/content/roms/${name}`, bytes);}
   for (const file of config.deviceBios) {
+    if (archives.has(file.logicalName)) {throw new Error("MAME_CONTENT_INVALID");}
     const bytes = await materializeFileBytes(content.contentSession, file, content.contentSession.inputPolicy("external"),
       "FIRMWARE", content.signal);
-    core.FS.mkdirTree("/content/roms/segabill");
-    core.FS.writeFile(`/content/roms/segabill/${file.logicalName}`, bytes);
+    const path = `/${file.virtualPath}`;
+    core.FS.mkdirTree(path.slice(0, path.lastIndexOf("/")));
+    core.FS.writeFile(path, bytes);
   }
   core.FS.writeFile("/content/boot.cmd", new TextEncoder().encode(`${config.machine} -rompath /content/roms -skip_gameinfo -nothrottle`));
   const identity = [config.machine, config.game.sha256, parentIdentity, config.bios?.sha256 ?? "",
-    ...config.deviceBios.map(file => file.sha256)].join("\n");
+    ...config.deviceBios.map(file => `${file.virtualPath}:${file.sha256}`).sort()].join("\n");
   return bytesToHex(sha256(new TextEncoder().encode(identity)));
 }
 

@@ -8,8 +8,7 @@ import type { MountedRuntimeAdapter, RuntimeExitReporter } from "../internal-ada
 import type {KirikiriParameters} from "./parameters.js";
 import {installGamepadCursor, type GamepadCursor} from "../provider/gamepad-cursor.js";
 
-type ProjectFile = { path: string; url: string; sizeBytes: number };
-type ProjectIndex = { schemaVersion: 1; files: ProjectFile[] };
+import {parseProjectIndex} from "../provider/project-index.js";
 type KirikiriVlfs = {
   contentAbi: string;
   contractSha256: string;
@@ -36,7 +35,9 @@ type KirikiriModule = {
   printErr(message: string): void;
   pauseMainLoop(): void;
   resumeMainLoop(): void;
+  krkr2StopMainLoop(): Promise<void>;
   _krkr2_host_bookmark_is_ready(): number;
+  _krkr2_host_load_bookmark_is_ready(): number;
   _krkr2_host_load_bookmark(slot: number): number;
   _krkr2_host_load_bookmark_state(): number;
   _krkr2_host_save_bookmark(slot: number): number;
@@ -112,6 +113,21 @@ export async function mountKirikiri2(
     exitReported = true;
     reportExitRequested();
   };
+  const dispose = async () => {
+    // Script loading may fail before the core installs the main-loop bridge.
+    // Stop scheduling first, cancel reads so a suspended JSPI tick can unwind,
+    // and retain Module/VLFS until it has completely returned.
+    const stopping = module?.krkr2StopMainLoop?.();
+    try {await content.close();}
+    finally {
+      await stopping;
+      module?.PThread?.terminateAllThreads();
+      cleanup(
+        host, previousModule, previousVlfs, target, canvas, focusCanvas,
+        gamepadCleanup, runtimeTerminationCleanup, scripts,
+      );
+    }
+  };
   try {
     const base = new URL(normalizedBase(config.runtimeBaseUrl), document.baseURI);
     const assets = await content.assets(base);
@@ -161,11 +177,12 @@ export async function mountKirikiri2(
     const startupPath = selectStartupXp3(project.xp3Paths, config.startupXp3Path);
     if (startupPath) {options._startupXp3Path = startupPath;}
     host.Module = options;
+    module = options as KirikiriModule;
     scripts.push(await loadClassicScript(document, runtimeUrl));
     module = host.Module as KirikiriModule;
     await withTimeout(ready.promise, readyTimeoutMs, "KIRIKIRI_RUNTIME_TIMEOUT");
     if (restore) {
-      await waitFor(() => module?._krkr2_host_bookmark_is_ready?.() === 1, readyTimeoutMs);
+      await waitFor(() => module!._krkr2_host_load_bookmark_is_ready() === 1, readyTimeoutMs);
       await restoreBookmark(module, config.checkpointSlot);
     }
     startupKeyboardCleanup();
@@ -173,13 +190,10 @@ export async function mountKirikiri2(
     focusCanvas();
   } catch (error) {
     startupKeyboardCleanup();
-    cleanup(
-      host, previousModule, previousVlfs, target, canvas, focusCanvas,
-      gamepadCleanup, runtimeTerminationCleanup, scripts,
-    );
-    module?.PThread?.terminateAllThreads();
-    await content.close();
-    throw stableMountError(error);
+    const failure = stableMountError(error);
+    try {await dispose();}
+    catch (cleanupError) {failure.cause = new AggregateError([error, cleanupError], "KiriKiri teardown failed");}
+    throw failure;
   }
 
   const activeModule = module;
@@ -222,13 +236,7 @@ export async function mountKirikiri2(
     exit: async () => {
       if (exited) {return;}
       exited = true;
-      activeModule.pauseMainLoop();
-      activeModule.PThread?.terminateAllThreads();
-      await content.close();
-      cleanup(
-        host, previousModule, previousVlfs, target, canvas, focusCanvas,
-        gamepadCleanup, runtimeTerminationCleanup, scripts,
-      );
+      await dispose();
     },
     gamepadCursor,
     getCanvas: () => canvas,
@@ -268,31 +276,17 @@ async function registerProject(vlfs: KirikiriVlfs, indexUrl: string, documentBas
   try {
     value = await fetchMetadataJson(new URL(indexUrl, documentBaseUrl), indexByteBudget(maximumProjectFiles, 1024), signal);
   } catch {throw new Error("KIRIKIRI_PROJECT_INDEX_UNAVAILABLE");}
-  if (!validProjectIndex(value)) {throw new Error("KIRIKIRI_PROJECT_INDEX_INVALID");}
+  const index = parseProjectIndex(value, maximumProjectFiles);
+  if (!index) {throw new Error("KIRIKIRI_PROJECT_INDEX_INVALID");}
   const base = new URL(indexUrl, documentBaseUrl);
   const xp3Paths: string[] = [];
-  for (const file of value.files) {
+  for (const file of index.files) {
     const path = `/${file.path}`;
     const reader = content.register(contentDigest, file.path, new URL(file.url, base).href, file.sizeBytes);
     vlfs.registerContent(path, {fileId: reader.id, sizeBytes: reader.sizeBytes}, reader);
     if (file.path.toLowerCase().endsWith(".xp3")) {xp3Paths.push(path);}
   }
   return { xp3Paths };
-}
-
-function validProjectIndex(value: unknown): value is ProjectIndex {
-  if (!isRecord(value) || !exactKeys(value, ["files", "schemaVersion"]) || value.schemaVersion !== 1 ||
-    !Array.isArray(value.files) || value.files.length < 1 || value.files.length > maximumProjectFiles) {return false;}
-  const seen = new Set<string>();
-  for (const file of value.files) {
-    if (!isRecord(file) || !exactKeys(file, ["path", "sizeBytes", "url"]) || !validPath(file.path) ||
-      !validProjectUrl(file.url) || typeof file.sizeBytes !== "number" ||
-      !Number.isSafeInteger(file.sizeBytes) || file.sizeBytes < 0) {return false;}
-    const identity = file.path.toLowerCase();
-    if (seen.has(identity)) {return false;}
-    seen.add(identity);
-  }
-  return true;
 }
 
 function selectStartupXp3(paths: string[], configured: string | null) {
@@ -319,23 +313,6 @@ function isBookmarkBookkeepingPath(path: string) {
   const name = path.slice(path.lastIndexOf("/") + 1);
   return /^datas[cu](?:[_~])?\.ksd$/iu.test(name);
 }
-function validPath(value: unknown): value is string {
-  return typeof value === "string" && value.length > 0 && value.length <= 1024 && value.normalize("NFC") === value &&
-    !value.startsWith("/") && !value.includes("\\") && !value.includes("//") &&
-    value.split("/").every((part) => part !== "" && part !== "." && part !== "..");
-}
-function validProjectUrl(value: unknown) {
-  if (typeof value !== "string") {return false;}
-  if (value.startsWith("/") && !value.startsWith("//") && !value.includes("\\") && !value.includes("#")) {return true;}
-  try {return ["http:", "https:"].includes(new URL(value).protocol);} catch {return false;}
-}
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null && !Array.isArray(value);
-}
-function exactKeys(value: Record<string, unknown>, expected: string[]) {
-  return Object.keys(value).sort().join("\0") === [...expected].sort().join("\0");
-}
-
 function requireBrowserFeatures(frameWindow: Window) {
   const runtimeGlobals = frameWindow as Window & typeof globalThis;
   const wasm = runtimeGlobals.WebAssembly as typeof WebAssembly & {
@@ -386,7 +363,10 @@ async function loadClassicScript(document: Document, source: string) {
   script.dataset.runtime = "kirikiri2";
   const loaded = new Promise<void>((resolve, reject) => {
     script.addEventListener("load", () => resolve(), { once: true });
-    script.addEventListener("error", () => reject(new Error("KIRIKIRI_RUNTIME_ARTIFACT_UNAVAILABLE")), { once: true });
+    script.addEventListener("error", () => {
+      script.remove();
+      reject(new Error("KIRIKIRI_RUNTIME_ARTIFACT_UNAVAILABLE"));
+    }, { once: true });
   });
   document.head.append(script);
   await loaded;

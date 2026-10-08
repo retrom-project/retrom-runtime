@@ -7,9 +7,6 @@ export function emulatorCheckpointAvailability(envelope: LaunchEnvelopeV1, insta
   runtimeCore: string, lutroSave: LutroNativeSaveTracker | null): RuntimeCheckpointAvailabilityV1 {
   if (!envelope.runtime.capabilities.checkpoint) {return {available: false, reason: "UNSUPPORTED"};}
   if (runtimeCore === "lutro") {return lutroSave?.getAvailability() ?? {available: false, reason: "NOT_READY"};}
-  if (envelope.runtime.targetId === "dosbox-pure" && !envelope.targetOptions.dosEntryPath) {
-    return {available: false, reason: "PROGRAM_SELECTION_REQUIRED", requiredAction: "SELECT_PROGRAM"};
-  }
   if (!instance?.gameManager) {
     return {available: false, reason: "NOT_READY"};
   }

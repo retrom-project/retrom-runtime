@@ -1,0 +1,1571 @@
+{
+  "schemaVersion": 1,
+  "status": "INCOMPLETE",
+  "snapshot": "R15: published ONS r6/VecX r2 pins, OpenBOR exit and RGSS connected-controller fixes, Virtual Boy user-controlled startup; other target identities unchanged",
+  "historicalMatrix": "runtime-product-matrix.json",
+  "counts": {
+    "CURRENT_FINGERPRINT_SEMANTICS_PENDING": 58,
+    "SCOPED_PASS": 54,
+    "MATERIAL_GAP": 10
+  },
+  "productRows": 122,
+  "notAReleaseApproval": true,
+  "rows": [
+    {
+      "id": "emulatorjs/81/zx81",
+      "fingerprint": "e10cce7cd037e6ee2e71a07cc255b2762b2c512c7bd858da12b735206ff04cf2",
+      "status": "CURRENT_FINGERPRINT_SEMANTICS_PENDING"
+    },
+    {
+      "id": "emulatorjs/a5200/atari5200",
+      "fingerprint": "37b09b928221fc2c1fd479ffa39a3b898536585e48da256af826e9bed920f3b4",
+      "status": "CURRENT_FINGERPRINT_SEMANTICS_PENDING"
+    },
+    {
+      "id": "emulatorjs/ardens/arduboy",
+      "fingerprint": "eb9520b3fec4c5e761e0b64cce6188465aee80c82805faf20c7e6411dc268748",
+      "status": "SCOPED_PASS",
+      "evidence": "root/release-r15/ardens-microcity-current/semantic-proof.json",
+      "evidenceSha256": "855768ff1cfea0c3c23c8fb652fda8ea7ed7f8a2ad19ae12585ae0ce3159a16d",
+      "scope": "Official author MicroCity1.3 actual review and published construction with standard direction/B. Public22317-byte INSTANT checkpoint restores two roads and funds9980 after seven unpaused seconds in cookie-only fresh Chromium; further direction/B builds a third road and funds9970. Calendar/cursor animation advances normally."
+    },
+    {
+      "id": "emulatorjs/atari800/atari800",
+      "fingerprint": "cf3701d801cfc4083035ea9436698cfcf7c6d96e0c95e36515b2dcbc27b62793",
+      "status": "CURRENT_FINGERPRINT_SEMANTICS_PENDING"
+    },
+    {
+      "id": "emulatorjs/atari800-xegs/xegs",
+      "fingerprint": "5b8ef011a2521bcb4d43dcf9ff6d7d8962b2db73485f83c48f97ada078805e64",
+      "status": "CURRENT_FINGERPRINT_SEMANTICS_PENDING"
+    },
+    {
+      "id": "emulatorjs/azahar/nintendo3ds",
+      "fingerprint": "737ce4ef5eee6363e0f45a9506dcc32d87bccb26b874b364abeed168a8f5095b",
+      "status": "CURRENT_FINGERPRINT_SEMANTICS_PENDING"
+    },
+    {
+      "id": "emulatorjs/beetle-vb/virtualboy",
+      "fingerprint": "33053deef39e1db61be65db22814bc639e98593c70d68dabb6661c1d46a211e5",
+      "status": "SCOPED_PASS",
+      "evidence": "root/release-r15/virtualboy-racing-fixed/semantic-proof.json",
+      "evidenceSha256": "f9edd62c6ef60d2c2183b132a9c9086460fe54412ce9035f149cd27163c5fa78",
+      "scope": "VB Racing actual review/published standard Start/A/direction. Public46154-byte INSTANT snapshot restores noninitial native pause, time00:07:48, remaining158, speed104 and road through thirty runtime-unpaused seconds in cookie-only fresh Chromium. Manual Start/A/opposite direction resumes and steers. Timed startup inputs removed only for Virtual Boy; title/transition snapshot excluded."
+    },
+    {
+      "id": "emulatorjs/bsnes/snes",
+      "fingerprint": "d8f4479807a582985e36c2bc88ee68640eeac73ef41bf8a5dfb2ca559824b828",
+      "status": "SCOPED_PASS",
+      "evidence": "root/release-r15/counter-native-current/bsnes-semantic-proof.json",
+      "evidenceSha256": "1919b06d299e335e6aefa292caf331da1aa59a0399845c635f35a89eef4b0abd",
+      "scope": "Original MIT test cartridge; actual review preview and published play use standard D-pad and A, native P1 counter stored via public save, restored after 7s in fresh Chromium with only login cookies, then more standard input. P2 remains zero. This is scoped fixture coverage, not all-game compatibility."
+    },
+    {
+      "id": "emulatorjs/cap32/amstradcpc",
+      "fingerprint": "1d2bc5064fa4fd65f6d3673395545ac9fea364d8d01c26996fd3e7f4dd1d2b30",
+      "status": "CURRENT_FINGERPRINT_SEMANTICS_PENDING"
+    },
+    {
+      "id": "emulatorjs/cap32/gx4000",
+      "fingerprint": "1d2bc5064fa4fd65f6d3673395545ac9fea364d8d01c26996fd3e7f4dd1d2b30",
+      "status": "CURRENT_FINGERPRINT_SEMANTICS_PENDING"
+    },
+    {
+      "id": "emulatorjs/crocods/amstradcpc",
+      "fingerprint": "a8cb419f89a6a4b01e0715aaaf1d5c9ce21609428f1f8c0ab9fbc404edb4e099",
+      "status": "CURRENT_FINGERPRINT_SEMANTICS_PENDING"
+    },
+    {
+      "id": "emulatorjs/daphne/daphne",
+      "fingerprint": "e00214d743a79155701ccdf9ee4b332fe34cfec7e64999f65c2ef2a1ecf345de",
+      "status": "MATERIAL_GAP"
+    },
+    {
+      "id": "emulatorjs/desmume/nds",
+      "fingerprint": "02568486345544db9e2321cb1104c4c24c2d7b63224bb3ed1da306a9f22d2460",
+      "status": "CURRENT_FINGERPRINT_SEMANTICS_PENDING"
+    },
+    {
+      "id": "emulatorjs/desmume2015/nds",
+      "fingerprint": "cfcded789a2fda21228185a6c86e14defb9746ca3803f9a37edb4f6b31a0457b",
+      "status": "CURRENT_FINGERPRINT_SEMANTICS_PENDING"
+    },
+    {
+      "id": "emulatorjs/dosbox-pure/dos",
+      "fingerprint": "da74423375ffccb40badebe7bcd0024ad5f5b32366779577801c9209cf22a686",
+      "status": "SCOPED_PASS",
+      "evidence": "root/release-r15/dos-current/semantic-proof.json",
+      "evidenceSha256": "8d25163c8bfe83bdb450092af0ee50435bfc7629f4f27f4d7161c74a0b434380",
+      "scope": "PREHISTORIK2 actual level1; review/public play with opposite D-pad movement and A jump, keyboard1 for native startup and standard Start difficulty confirmation. Public908596-byte save restores actual character/world/lives/energy in a cookie-only new Chromium. Seven-second position comparison is publicly paused; resumed direction/jump and seven-second continued play remain valid. Attract-mode attempts explicitly excluded."
+    },
+    {
+      "id": "emulatorjs/fbalpha2012-cps1/arcade",
+      "fingerprint": "d9b37bc123f89e7e27ce6cd09d29934fc54084586e8d6c1433d667b82dc917e5",
+      "status": "SCOPED_PASS",
+      "evidence": "root/release-r15/cps1-1941-current/semantic-proof.json",
+      "evidenceSha256": "316a82eaacd90825f0baf141e20bb0f0dcf0308197280fc23f0eef7cd5120194",
+      "scope": "Operator1941 actual review controls after mission briefing, public played snapshot with score2300/three vitality bars, cookie-only fresh Chromium restore, seven publicly paused seconds, opposite D-pad movement and A shooting after resume. Independent CPS1 target; startup-transition snapshot excluded."
+    },
+    {
+      "id": "emulatorjs/fbalpha2012-cps2/arcade",
+      "fingerprint": "90612536132bf631a6f460cd725f09fac041b47e5e3719c473185a0b9b587ade",
+      "status": "CURRENT_FINGERPRINT_SEMANTICS_PENDING",
+      "latestAttempt": {
+        "evidence": "root/release-r15/cps2-19xx-current/partial-proof.json",
+        "result": "Published real battle and checkpoint verified; cold exact state/position remains unconfirmed after startup black frames. Separate review battle still required.",
+        "evidenceSha256": "874b76f97f5287db5514e5101c78eb45b04cba56032e6294a62ad12e629e2841"
+      }
+    },
+    {
+      "id": "emulatorjs/fbneo/arcade",
+      "fingerprint": "998dac50595fede6dafc3cbe45d5fb0c3a72e202e58072117ebeb6f42784beb8",
+      "status": "SCOPED_PASS",
+      "evidence": "root/release-r15/fbneo-1941-current/semantic-proof.json",
+      "evidenceSha256": "11b2e9b591daf3369c9241c68573fd387f9bde9e67e12c9ef7447125bc9eaea1",
+      "scope": "Operator 1941 actual review and published gameplay, standard coin/Start/D-pad/A, public instantaneous save, cookie-only fresh Chromium restoration with coastal scene and M-GUN59, then more movement/shooting. Seven-second invariant observation is publicly paused; not universal game compatibility."
+    },
+    {
+      "id": "emulatorjs/fceumm/fds",
+      "fingerprint": "508194817efea8cc9c8087c26bd15d8156c051a5c7fcab8ad84c6a30be420fdc",
+      "status": "CURRENT_FINGERPRINT_SEMANTICS_PENDING"
+    },
+    {
+      "id": "emulatorjs/fceumm/nes",
+      "fingerprint": "508194817efea8cc9c8087c26bd15d8156c051a5c7fcab8ad84c6a30be420fdc",
+      "status": "SCOPED_PASS",
+      "evidence": "ACC-RF-BROWSER/2cf40dcf0b024cf9",
+      "evidenceSha256": "cafe57b2954da90c710ac3977d6f655b1419cf0d7adecf36ba2c40364fd3642d",
+      "scope": "Owned MIT NES fixture actual input state, new checkpoint, different Run exact counter restore and continued input. Full unfiltered 24-case run, paired inputDigest fb31003512632f16dda07e3002d08f869c60d7bd281809d9e8561e4cf6cc9dc0."
+    },
+    {
+      "id": "emulatorjs/flycast/dreamcast",
+      "fingerprint": "2aaa60581d47e100345d439c7a65fd3a3b8b33daed4f25ce67861fff9e2e2575",
+      "status": "CURRENT_FINGERPRINT_SEMANTICS_PENDING"
+    },
+    {
+      "id": "emulatorjs/flycast-atomiswave/atomiswave",
+      "fingerprint": "d90d754b00c370db042fd82a0e4776eac8dc8f314e77417142d8bb4002f892ac",
+      "status": "MATERIAL_GAP"
+    },
+    {
+      "id": "emulatorjs/flycast-naomi/naomi",
+      "fingerprint": "2470bcb6370f3d42fecce90bcefdcd6cab516a70194e2b8d48150720d7c7733b",
+      "status": "MATERIAL_GAP"
+    },
+    {
+      "id": "emulatorjs/flycast-naomi2/naomi2",
+      "fingerprint": "30c7224ca1b6edb06ee1d7b31ef7043ff8f7c3f4796170ada65e6bfbcfa9da4a",
+      "status": "MATERIAL_GAP"
+    },
+    {
+      "id": "emulatorjs/freechaf/channelf",
+      "fingerprint": "f4e7d2bad0941f76392ef2f1fb60a28dcc5f673a3905de5de01c9f5cbf583133",
+      "status": "SCOPED_PASS",
+      "evidence": "root/release-r15/freechaf-quest-current/semantic-proof.json",
+      "evidenceSha256": "9436f17dcdf2ec555d31b72d2cf779c4299a852b9b07aafc68c33dc9140c68f0",
+      "scope": "Original-author QUEST review standard movement/A battle confirmation,1972-byte public INSTANT checkpoint, cookie-only fresh-browser map/played-position/health restore through seven publicly paused seconds, continued collision battle/A attacks and map return. Initial wrong-controller exploration and unavailable read-only diagnostic method are excluded."
+    },
+    {
+      "id": "emulatorjs/freeintv/intellivision",
+      "fingerprint": "b51844f57fd6a2dd482034e2b84d7b06ceb631f41816fea22c7d8dcc40914915",
+      "status": "SCOPED_PASS",
+      "evidence": "root/release-r15/freeintv-4tris-current/semantic-proof.json",
+      "evidenceSha256": "4df66a6d6a83f217c29d9eb43a1525080c0688b978362fa3cb52e62eb1961bc6",
+      "scope": "4-TRIS review A startup/rotation and opposite movement; published multicolor board score440. Public23963-byte INSTANT save restores stack/score/falling green piece in cookie-only fresh Chromium for seven publicly paused seconds; continued opposite movement and falling settle the piece. Native core frontend PAUSED overlay is not part of the claim."
+    },
+    {
+      "id": "emulatorjs/fuse/zxspectrum",
+      "fingerprint": "a73b24de93322201b507ea859af9f73c4ddbdc947eb63a89e35cf1aad15cd90a",
+      "status": "CURRENT_FINGERPRINT_SEMANTICS_PENDING"
+    },
+    {
+      "id": "emulatorjs/gam4980/bbkrpg",
+      "fingerprint": "d65995cc6ded34667bcb31e9594db714f88ced47805b022a85f81a9107dfdd43",
+      "status": "SCOPED_PASS",
+      "evidence": "root/release-r15/gam4980-gomoku-current/semantic-proof.json",
+      "evidenceSha256": "8367c709b6e316addee4318d459fbe40809734cba8dfe61d48d7840e93ef0053",
+      "scope": "Operator Gomoku: normal review and published direction/A confirmation, public12786-byte INSTANT save, cookie-only fresh-browser board restoration through seven unpaused seconds, then a second black move and computer response. Eros separately proves a played falling-block grid restore and continued directional/drop input."
+    },
+    {
+      "id": "emulatorjs/gambatte/gbc",
+      "fingerprint": "8eb0b8b6c3a1cfcc481a4bfc1fd8761125e2904da4ed94ae7e2ffec1f27feb9b",
+      "status": "SCOPED_PASS",
+      "evidence": "root/release-r15/gambatte-gb-current/semantic-proof.json",
+      "evidenceSha256": "f8a30484c895384b190ce70e197d447a02d4a8ec109d389ae7fe4b3ea67149bd",
+      "scope": "Infinity preview actual review directions/confirm, published awake-room snapshot, cookie-only cold restore with room/player position stable for seven unpaused seconds, opposite movement and native menu confirmation. Cutscene snapshot excluded."
+    },
+    {
+      "id": "emulatorjs/gearboy/sgb",
+      "fingerprint": "51dd986176dba7892135edcb394e574ddfb5dbe044c750f9f760c81a1f54be53",
+      "status": "SCOPED_PASS",
+      "evidence": "root/release-r15/gearboy-sgb-current/semantic-proof.json",
+      "evidenceSha256": "2b5e1448b62d007450414ed362c81890bc2ea23e910e8646afaf49786260de58",
+      "scope": "Tobu Tobu Girl through SGB binding: actual review direction/confirmation, published airborne character/bat scene, public 27035-byte INSTANT snapshot, cookie-only fresh Chromium restore with seven publicly paused seconds, then opposite direction/boost input. Game Boy cartridge scope; enhanced SGB features not covered."
+    },
+    {
+      "id": "emulatorjs/gearcoleco/colecovision",
+      "fingerprint": "81a73bc756eaf81634015d7c39a86c03883bc74d173d880f7db725a817507561",
+      "status": "SCOPED_PASS",
+      "evidence": "root/release-r15/gearcoleco-suite-current/semantic-proof.json",
+      "evidenceSha256": "f1e56ded9fc3177e7dec9dc619e43f8ffa335c23157c0495293e418cb0dbb278",
+      "scope": "Operator240p Test Suite native menu direction/A confirmation and active Grid utility. Public35449-byte INSTANT snapshot restores grid/border/dots in cookie-only fresh Chromium for seven unpaused seconds; B exits, Down/Up selects and A opens Monoscope. Diagnostic-ROM scope, not commercial gameplay; initial black-screen capture excluded."
+    },
+    {
+      "id": "emulatorjs/genesis-plus-gx/gamegear",
+      "fingerprint": "ec4700d3d73b2b0c1974198f82004b9c13c39c73970085ec6d63c5795f236558",
+      "status": "SCOPED_PASS",
+      "evidence": "root/release-r15/gamegear-columns-current/semantic-proof.json",
+      "evidenceSha256": "18e36162d77950b4add0dc697a0bbb468cb4736819d2ef14d5ffa434db33a4a8",
+      "scope": "Columns actual review/published direction, gem rotation and dropping; public9209-byte INSTANT checkpoint restores two settled side stacks in cookie-only fresh Chromium during seven publicly paused seconds. Continued Right/A/Down builds a third stack."
+    },
+    {
+      "id": "emulatorjs/genesis-plus-gx/megadrive",
+      "fingerprint": "ec4700d3d73b2b0c1974198f82004b9c13c39c73970085ec6d63c5795f236558",
+      "status": "SCOPED_PASS",
+      "evidence": "root/release-r15/genesis-megadrive-current/semantic-proof.json",
+      "evidenceSha256": "96eda39e4a74a31c0aaf7caef46557ecdc4953f5becff0f2e3b1dccca81500b3",
+      "scope": "Actual Metal Sonic Hyperdrive review and published direction/jump, public INSTANT checkpoint of noninitial ground location, cookie-only fresh Chromium retains player/world position and three lives after seven unpaused seconds, then opposite direction and jump continue. Native timer/idle animation advance; initial menu captures excluded."
+    },
+    {
+      "id": "emulatorjs/genesis-plus-gx/multivision",
+      "fingerprint": "ec4700d3d73b2b0c1974198f82004b9c13c39c73970085ec6d63c5795f236558",
+      "status": "CURRENT_FINGERPRINT_SEMANTICS_PENDING"
+    },
+    {
+      "id": "emulatorjs/genesis-plus-gx/sg1000",
+      "fingerprint": "ec4700d3d73b2b0c1974198f82004b9c13c39c73970085ec6d63c5795f236558",
+      "status": "SCOPED_PASS",
+      "evidence": "root/release-r15/sg1000-congo-current/semantic-proof.json",
+      "evidenceSha256": "5941b4fb40a622684ab4b95d78e2519d1de4a26a1a91c643f381c56eb5ae0da8",
+      "scope": "Bomb Jack.sg actual review/published movement; public8600-byte INSTANT checkpoint restores score350, player position and collected-bomb layout in cookie-only fresh Chromium during seven publicly paused seconds. Resume/opposite directions continue play and score370/390. No jump-specific mapping claim."
+    },
+    {
+      "id": "emulatorjs/genesis-plus-gx-cd/segacd",
+      "fingerprint": "6bbaa0f615205df31f0e900eaf98dda342bb83722e2823c704c65a9262628d78",
+      "status": "CURRENT_FINGERPRINT_SEMANTICS_PENDING"
+    },
+    {
+      "id": "emulatorjs/genesis-plus-gx-wide/megadrive",
+      "fingerprint": "6594e1e97f8cf416ebf00d06682470cadf92b82d493e3fb7a38a3feb0f664184",
+      "status": "SCOPED_PASS",
+      "evidence": "root/release-r15/genesis-wide-current/semantic-proof.json",
+      "evidenceSha256": "0fe0f0133362b0c0c61ab5ae3d66d8bafebf436b02475d418759a3b79be4b611",
+      "scope": "Actual Metal Sonic Hyperdrive review and published direction/jump, public INSTANT checkpoint of noninitial ground location, cookie-only fresh Chromium retains player/world position and three lives after seven unpaused seconds, then opposite direction and jump continue. Native timer/idle animation advance; initial menu captures excluded."
+    },
+    {
+      "id": "emulatorjs/handy/lynx",
+      "fingerprint": "6b07e38bd31edf26b4c7c4159b105e84726919da687ba7f1d76ca8ed7db83ac8",
+      "status": "SCOPED_PASS",
+      "evidence": "root/release-r15/handy-basketbrawl-current/semantic-proof.json",
+      "evidenceSha256": "bba70af60fe8c30554ab3f837f6675f78bd3dfd7d6800496972ec795248976c7",
+      "scope": "Actual Basketbrawl review/published native confirmation, direction and action. Public38110-byte INSTANT save restores Level1-1 court/player and3:54 clock in cookie-only fresh Chromium, held seven publicly paused seconds. Resumed direction/action continues to3:52; no scored basket claimed."
+    },
+    {
+      "id": "emulatorjs/hatarib/atarist",
+      "fingerprint": "40e4ce87b3c426fec136fb51826cbd3f145f0b4dd0a2ff6b7ce1e09775c28272",
+      "status": "CURRENT_FINGERPRINT_SEMANTICS_PENDING"
+    },
+    {
+      "id": "emulatorjs/lutro/lutro",
+      "fingerprint": "e81a19a8ae0943dffaa91d9cf15875dc330b4d157ea7c9eeb235b3b45492dd44",
+      "status": "SCOPED_PASS",
+      "evidence": "root/release-r15/lutro-native-current/lutro-semantic-proof.json",
+      "evidenceSha256": "532738351b37fe879b0fd79c4647f84221a32458d7f83e86268c106e180d8e91",
+      "scope": "Original MIT cartridge; review and published play with standard controller direction/confirm. Public GAME_SAVE gzip payload restores actual position/color in cookie-only fresh Chromium, remains after four seconds, then responds to further input. Fixture-scoped, not all-game compatibility."
+    },
+    {
+      "id": "emulatorjs/mame2003/arcade",
+      "fingerprint": "12223b5677ce523b8bbb9d6e612a3e1d5bbfe1c65887d2062ca3466cc8912df2",
+      "status": "SCOPED_PASS",
+      "evidence": "root/release-r15/mame2003-1941-current/semantic-proof.json",
+      "evidenceSha256": "953808724ca5efbd52b05926c27dd93262b971af36f2168529078007ad97bc61",
+      "scope": "1941 actual review coin/Start, opposite direction and shooting; 9315-byte public INSTANT gameplay checkpoint restores plane/coastal battlefield in cookie-only fresh Chromium, observed with public pause for seven seconds, then opposite movement/shooting and seven more unpaused seconds. Historical Renegade issue not claimed fixed."
+    },
+    {
+      "id": "emulatorjs/mame2003-plus/arcade",
+      "fingerprint": "16766a2be13464afa3d501656a3a034e15237888d76f69205e03b65ed8727143",
+      "status": "SCOPED_PASS",
+      "evidence": "root/release-r15/mame2003plus-1941-current/semantic-proof.json",
+      "evidenceSha256": "ec1b8e557b911ab5d092d1febfc3467c146eef563caac99ff168d854b2915276",
+      "scope": "1941 actual review/play and public9250-byte INSTANT snapshot. Cookie-only fresh Chromium restores two vitality bars and coastal battle during seven publicly paused seconds; opposite direction/shooting and seven additional unpaused seconds continue. Core startup notice briefly overlays the restored scene, then ordinary input clears it. Renegade failure remains separate."
+    },
+    {
+      "id": "emulatorjs/mednafen-ngp/ngpc",
+      "fingerprint": "7886281566f07b977ca5386128061fdcc5c9da0119a368580f49a8b36c7ce157",
+      "status": "SCOPED_PASS",
+      "evidence": "root/release-r15/ngpc-gears-current/semantic-proof.json",
+      "evidenceSha256": "6cba9ec7da0397d5744e1a28e082f05828e6875ea45d7d49bf0709a3b8f45edd",
+      "scope": "Gears of Fate actual review and published first-puzzle rotations; native menu direction and B confirmation. Public3985-byte INSTANT checkpoint restores rotated red/green positions and path after seven unpaused seconds in cookie-only fresh Chromium; standard B/A rotates the live board again. Decorative gears animate normally; no second-level completion claim."
+    },
+    {
+      "id": "emulatorjs/mednafen-pce/pce",
+      "fingerprint": "cfca791115bc8b8faaac02e6cf4f809c6f6f9d67ac2357b3537d7aff0d5c6c16",
+      "status": "SCOPED_PASS",
+      "evidence": "root/release-r15/pce-bonk-current/semantic-proof.json",
+      "evidenceSha256": "c79c585a8f91be5b33726d15dc27d4901d069e690c91930a763cf601551b21bd",
+      "scope": "Actual PC Bonk review/published Start, directions and jump. Public21180-byte INSTANT save restores the scrolled scene, character and three hearts in cookie-only fresh Chromium, held seven publicly paused seconds; resumed opposite movement and jumping pass."
+    },
+    {
+      "id": "emulatorjs/mednafen-pce/pcecd",
+      "fingerprint": "cfca791115bc8b8faaac02e6cf4f809c6f6f9d67ac2357b3537d7aff0d5c6c16",
+      "status": "CURRENT_FINGERPRINT_SEMANTICS_PENDING"
+    },
+    {
+      "id": "emulatorjs/mednafen-pce/supergrafx",
+      "fingerprint": "cfca791115bc8b8faaac02e6cf4f809c6f6f9d67ac2357b3537d7aff0d5c6c16",
+      "status": "SCOPED_PASS",
+      "evidence": "root/release-r15/supergrafx-aldynes-current/semantic-proof.json",
+      "evidenceSha256": "43e121a96a4356e8e4545ad35183a8e389362fe80b0c491d38f7d93aa3cb1a27",
+      "scope": "Actual Aldynes review/published Start and opposite vertical movement. Public38535-byte INSTANT save restores ship position and advancing battlefield in cookie-only fresh Chromium, held seven publicly paused seconds, then Up/Down continues. No stage completion or scored hit claim."
+    },
+    {
+      "id": "emulatorjs/mednafen-pcfx/pcfx",
+      "fingerprint": "247a8f5dddb2161a72bcc87352590e344e1ca28419b36ee53d05dd06224d14f6",
+      "status": "CURRENT_FINGERPRINT_SEMANTICS_PENDING"
+    },
+    {
+      "id": "emulatorjs/mednafen-psx-hw/psx",
+      "fingerprint": "9c11be54721806955a976257410afd86e0892f50390757ecdeaea22f37ee951c",
+      "status": "CURRENT_FINGERPRINT_SEMANTICS_PENDING"
+    },
+    {
+      "id": "emulatorjs/mednafen-wswan/wonderswan",
+      "fingerprint": "ab5ecf4989f491a55c1ce672285ed0f4116fc01c0d1af2e9db199eacb3460ef8",
+      "status": "SCOPED_PASS",
+      "evidence": "root/release-r15/wswan-wondercell-current/semantic-proof.json",
+      "evidenceSha256": "bd15ee7e8f9ca2b6b52f3d91413611aa4bf829a02edfca50521a2bccd83297c2",
+      "scope": "Author WonderCellv0.2 real review and published card movement with standard direction/A. Public4977-byte INSTANT checkpoint restores heart3 in first free cell and full randomized board after seven unpaused seconds in cookie-only fresh Chromium; continued A/Right/A moves it to second cell. The separate Swan Driving collision freeze is resolved as author ROM behavior; see stableFollowUp.materialDispositions."
+    },
+    {
+      "id": "emulatorjs/melonds/nds",
+      "fingerprint": "1edc49ae04356e1ea456bea6bcd45fce66395275fdf4699e96434517590aae5e",
+      "status": "CURRENT_FINGERPRINT_SEMANTICS_PENDING"
+    },
+    {
+      "id": "emulatorjs/mgba/gba",
+      "fingerprint": "324adc6ea4fd4155e019b507fca13562b02977a8e176352b2d4013bc2f8a9349",
+      "status": "SCOPED_PASS",
+      "evidence": "root/release-r15/mgba-sd-current/semantic-proof.json",
+      "evidenceSha256": "6846bf3b8eef9c0ccdcb4921a290e1beb501d63a8bcdcdcd3f5e496e26342577",
+      "scope": "Actual SD Gundam Force with standard-controller confirm, movement and attack through review and published play. Public INSTANT save restores score10000, HP3 and actor/enemy/world position after seven seconds in a fresh cookie-only Chromium. Continued input changes world position and score33000. Native PAUSE blink is not a pixel-equality assertion; synthetic browser Gamepad API, not physical USB."
+    },
+    {
+      "id": "emulatorjs/mgba/gbc",
+      "fingerprint": "324adc6ea4fd4155e019b507fca13562b02977a8e176352b2d4013bc2f8a9349",
+      "status": "SCOPED_PASS",
+      "evidence": "root/release-r15/mgba-gbc-current/semantic-proof.json",
+      "evidenceSha256": "38b790c60af664591a8db947088c6b93dfe170d7b3761e9f8784c49385d7449e",
+      "scope": "Tobu Tobu Girl through GBC binding: actual review direction/confirmation and gameplay; final 4070-byte INSTANT snapshot restores native RESUME/DASH COUNT ON menu for seven unpaused seconds in cookie-only fresh Chromium. A resumes the saved level and opposite direction/boost continue. Initial death/fall capture excluded; enhanced GBC features not covered."
+    },
+    {
+      "id": "emulatorjs/mupen64plus-next/n64",
+      "fingerprint": "297a35f9614bd7f65bd3a62633321d3b8fdc764e7ef5e30f6cff3a6133c45629",
+      "status": "CURRENT_FINGERPRINT_SEMANTICS_PENDING"
+    },
+    {
+      "id": "emulatorjs/neocd/neogeocd",
+      "fingerprint": "ebd351fa3d6daabd360226667a2e995b212f418a675a577d446ac269a8fa0ac1",
+      "status": "CURRENT_FINGERPRINT_SEMANTICS_PENDING"
+    },
+    {
+      "id": "emulatorjs/nestopia/fds",
+      "fingerprint": "71fd2e44a8159f9ebca92e11e8bffb634a128c5d44bba31e24aea9f2cf066ea5",
+      "status": "CURRENT_FINGERPRINT_SEMANTICS_PENDING"
+    },
+    {
+      "id": "emulatorjs/nestopia/nes",
+      "fingerprint": "71fd2e44a8159f9ebca92e11e8bffb634a128c5d44bba31e24aea9f2cf066ea5",
+      "status": "SCOPED_PASS",
+      "evidence": "root/release-r15/counter-native-current/nestopia-semantic-proof.json",
+      "evidenceSha256": "da584345b228d2e3b8016eec4566474eee495391ae61ede451784477eca54d20",
+      "scope": "Original MIT test cartridge; actual review preview and published play use standard D-pad and A, native P1 counter stored via public save, restored after 7s in fresh Chromium with only login cookies, then more standard input. P2 remains zero. This is scoped fixture coverage, not all-game compatibility."
+    },
+    {
+      "id": "emulatorjs/o2em/odyssey2",
+      "fingerprint": "a92d88eb783951de4ca6e36fe56c4480b368fa615d202836ec7acc96fececc82",
+      "status": "SCOPED_PASS",
+      "evidence": "root/release-r15/o2em-birdhunt-current/semantic-proof.json",
+      "evidenceSha256": "dfe4aaf3ed4595948f20e9a3b255d19d77551261ab0ce2bf9457488885041961",
+      "scope": "Original-author Bird Hunt actual review/published aim movement and A fire. Public311-byte INSTANT checkpoint restores noninitial aim/four bullets in cookie-only fresh Chromium for seven publicly paused seconds; native swap-gamepads is selected through GUI in each Run before continued aim/fire consumes another bullet. No automatic native-option persistence or scored hit is claimed."
+    },
+    {
+      "id": "emulatorjs/opera/3do",
+      "fingerprint": "b8f5bf0da9ec7624c344a96cb050b6bf3b4dcb199e32647ecc9f177c0ccfb80b",
+      "status": "CURRENT_FINGERPRINT_SEMANTICS_PENDING"
+    },
+    {
+      "id": "emulatorjs/parallel-n64/n64",
+      "fingerprint": "460e86273240e6fb162178d8d9dbeb4cf7481aa5ac75acbf54066178f26f2a33",
+      "status": "CURRENT_FINGERPRINT_SEMANTICS_PENDING"
+    },
+    {
+      "id": "emulatorjs/pcsx-rearmed/psx",
+      "fingerprint": "04551f64f38961a0ed55f678a3efc193b5bf3065cad0813fca22ca7649de2d4b",
+      "status": "CURRENT_FINGERPRINT_SEMANTICS_PENDING"
+    },
+    {
+      "id": "emulatorjs/picodrive/megadrive",
+      "fingerprint": "f3d046f447c0eca4f2ba6dbf5c62bde86cbf765299ec3679d0e58c54004db0e4",
+      "status": "SCOPED_PASS",
+      "evidence": "root/release-r15/picodrive-megadrive-current/semantic-proof.json",
+      "evidenceSha256": "0a591ea5ea33f1c22fbba8f43e9456430eed11a434bb28a1c765e3d05f57bffb",
+      "scope": "Metal Sonic Hyperdrive actual review/published D-pad and A gameplay; public34684-byte INSTANT checkpoint restores the standing character/level/three lives after seven unpaused seconds in cookie-only fresh Chromium. Continued opposite movement and jumping pass."
+    },
+    {
+      "id": "emulatorjs/picodrive/pico",
+      "fingerprint": "f3d046f447c0eca4f2ba6dbf5c62bde86cbf765299ec3679d0e58c54004db0e4",
+      "status": "CURRENT_FINGERPRINT_SEMANTICS_PENDING"
+    },
+    {
+      "id": "emulatorjs/picodrive/sega32x",
+      "fingerprint": "f3d046f447c0eca4f2ba6dbf5c62bde86cbf765299ec3679d0e58c54004db0e4",
+      "status": "CURRENT_FINGERPRINT_SEMANTICS_PENDING"
+    },
+    {
+      "id": "emulatorjs/potator/supervision",
+      "fingerprint": "660060c1e7a96fddc41a8b21e8994c8c9d03d2d55c0483aeac02743e9c08c986",
+      "status": "SCOPED_PASS",
+      "evidence": "root/release-r15/potator-xsnake-current/semantic-proof.json",
+      "evidenceSha256": "24c0c1f703c44d9f3756b9b2e7e91682cdefaeacd9ec0a35f7409d54f8bb3131",
+      "scope": "Original-author XSnake, real review/published standard A and direction,880-byte public INSTANT save, cookie-only fresh-browser played-board/score20/eleven-apples/right-edge-snake restore, seven publicly paused seconds, then Up/Left continue play. Initial637-byte LEVEL01 capture excluded."
+    },
+    {
+      "id": "emulatorjs/prboom/doom",
+      "fingerprint": "802fff19f5116b9e744803694951be1bb02ea2bbd518354bcee3e9e08829ab35",
+      "status": "SCOPED_PASS",
+      "evidence": "root/release-r15/prboom-current/semantic-proof.json",
+      "evidenceSha256": "4d26ca8a13356ddc366e5cfd27f4d4d6ba8a93c0b9fa97534c22a53700e66e8a",
+      "scope": "Doom shareware actual review, explicit native New Game selection, noninitial E1M1 viewpoint/HP100/ammo48 public snapshot, cookie-only cold restore stable for seven unpaused seconds, continued movement and firing to ammo46. Earlier focus/attract-mode-ambiguous shotgun sequence excluded."
+    },
+    {
+      "id": "emulatorjs/prosystem/atari7800",
+      "fingerprint": "ab4986f85fd2cca62b1e00b79f105f25e84041a6549b4d476c30a131f32fd728",
+      "status": "SCOPED_PASS",
+      "evidence": "root/release-r15/prosystem-dungeon-current/semantic-proof-reviewed.json",
+      "evidenceSha256": "c58245d9e5b9064b1d01a99b6b58422dcf00c49a80cafeb34da0408fa2fc50ac",
+      "scope": "Author Dungeon Stalker native Start Game selected with standard direction and confirmed by B. Actual review/published movement leaves the cage. Public1586-byte INSTANT save restores upper-corridor player and five lives in cookie-only fresh Chromium, held seven publicly paused seconds, then opposite movement continues. Earlier DEMO/menu attempts excluded; actual successful review Run explicitly bound."
+    },
+    {
+      "id": "emulatorjs/puae/amiga",
+      "fingerprint": "f7b86126aaf7b92a87ff91ebee972cb023c9a1c33ad80c6b5127f50e65be4509",
+      "status": "CURRENT_FINGERPRINT_SEMANTICS_PENDING"
+    },
+    {
+      "id": "emulatorjs/puae/amigacd32",
+      "fingerprint": "f7b86126aaf7b92a87ff91ebee972cb023c9a1c33ad80c6b5127f50e65be4509",
+      "status": "MATERIAL_GAP"
+    },
+    {
+      "id": "emulatorjs/quasi88/pc88",
+      "fingerprint": "3d8c07b888d509d79137457b135949ba72eab3ef7796684dff9952fc95ecb005",
+      "status": "CURRENT_FINGERPRINT_SEMANTICS_PENDING"
+    },
+    {
+      "id": "emulatorjs/same-cdi/cdi",
+      "fingerprint": "19139ba08cf2d96c719ecd313363302401a484e54b553c275a4a57c186ee3351",
+      "status": "CURRENT_FINGERPRINT_SEMANTICS_PENDING"
+    },
+    {
+      "id": "emulatorjs/sameduck/megaduck",
+      "fingerprint": "1f45ab8821c3f9537df94b0f76bb2d995c3558b0d5bfe98b009c8f37d357a958",
+      "status": "SCOPED_PASS",
+      "evidence": "root/release-r15/sameduck-maxpirate-current/semantic-proof.json",
+      "evidenceSha256": "567a968418ff163d2e85d128e00ce23d2522ce29f4ca320b7373a74a8a271540",
+      "scope": "Max Pirate real review Start/direction, published advance into a new spike/enemy room,10350-byte public checkpoint, cookie-only fresh-browser room/player/eight-health restoration through seven publicly paused seconds, continued opposite-direction movement amid normal enemy damage. Earlier unpaused restore is separate."
+    },
+    {
+      "id": "emulatorjs/smsplus/mastersystem",
+      "fingerprint": "178c91695190485179fc166cd0080018eda0d6afcbcf57bcd6c69549977f3e59",
+      "status": "CURRENT_FINGERPRINT_SEMANTICS_PENDING"
+    },
+    {
+      "id": "emulatorjs/snes9x/satellaview",
+      "fingerprint": "b3306930080d6f450acca4fcdae566bcc0fd5606fa832394e2c1415e07c09846",
+      "status": "MATERIAL_GAP"
+    },
+    {
+      "id": "emulatorjs/snes9x/snes",
+      "fingerprint": "b3306930080d6f450acca4fcdae566bcc0fd5606fa832394e2c1415e07c09846",
+      "status": "SCOPED_PASS",
+      "evidence": "root/release-r15/counter-native-current/snes9x-semantic-proof.json",
+      "evidenceSha256": "2eceb75a44385e4fa7fd51fe6a08a9931241cd263c9040e1da6e0101ba6652c4",
+      "scope": "Original MIT test cartridge; actual review preview and published play use standard D-pad and A, native P1 counter stored via public save, restored after 7s in fresh Chromium with only login cookies, then more standard input. P2 remains zero. This is scoped fixture coverage, not all-game compatibility."
+    },
+    {
+      "id": "emulatorjs/stella2014/atari2600",
+      "fingerprint": "fce7cd16d1f04fe4594dbf6f835f66747be1bd76764417d5823a0e5a1d90df5c",
+      "status": "SCOPED_PASS",
+      "evidence": "root/release-r15/stella-sheep-current/semantic-proof.json",
+      "evidenceSha256": "5cebe734e6b80523528c8c69fef8bab108330c757bc2b2ca802dbc80bf096296",
+      "scope": "Author Sheep It Up actual B confirmation and directed review/published jumps. Public323-byte INSTANT checkpoint restores airborne sheep beside the lower cloud and score000000 in cookie-only fresh Chromium; seven publicly paused seconds, then continued fall and another controller-triggered jump. Initial-ground save excluded; no scored climb or pixel equality claim."
+    },
+    {
+      "id": "emulatorjs/supermodel/model3",
+      "fingerprint": "302871f50d183c9e8bdb280b8509b169d622a4ee19cff2fda2f0076cee62fb9b",
+      "status": "MATERIAL_GAP"
+    },
+    {
+      "id": "emulatorjs/theodore/thomson",
+      "fingerprint": "98f2c27655d6740f94fca0e66d1fe0349079834801fee1288dcbe21aaf464de2",
+      "status": "CURRENT_FINGERPRINT_SEMANTICS_PENDING"
+    },
+    {
+      "id": "emulatorjs/uzem/uzebox",
+      "fingerprint": "a9e5412828a25c5e705c9710b10414035e748086e6501b1ede5373a05ac9fcd7",
+      "status": "SCOPED_PASS",
+      "evidence": "root/release-r15/uzem-arkanoid-current/semantic-proof.json",
+      "evidenceSha256": "b8f82f525e3d7184199f3b1c91473864478812fd3b9fa4a0b84eb48e2961786c",
+      "scope": "Arkanoid actual review/published D-pad paddle and A launch. Public35689-byte INSTANT save restores broken green brick, noncentral paddle, ball and pickup in cookie-only fresh Chromium; seven publicly paused seconds then paddle movement, normal missed-ball/new-life continuation, opposite movement and A break another brick. Intro snapshot excluded."
+    },
+    {
+      "id": "emulatorjs/vecx/vectrex",
+      "fingerprint": "0f88a0b6f1001fa0def80440e30aca44cc1c5a01b4249356b7f244612b160895",
+      "status": "SCOPED_PASS",
+      "evidence": "root/release-r15/vecx-published/semantic-proof.json",
+      "evidenceSha256": "94305725a609d5754d064f4efe04853ac800595c98761890429c1d41473ee85a",
+      "scope": "Published VecX r2: real Berzerk review/play/input, public paused checkpoint, new-browser restore with all 7509 saved maze pixels and the player position intact, continued movement. Earlier suspected sparse rendering was disproved by decoded PNG pixels."
+    },
+    {
+      "id": "emulatorjs/vice-x128/c128",
+      "fingerprint": "d4635b3c4c57bed1d35fde3c2477e042ea55ab50a441b241906a1e2051af08d1",
+      "status": "CURRENT_FINGERPRINT_SEMANTICS_PENDING"
+    },
+    {
+      "id": "emulatorjs/vice-x64/c64",
+      "fingerprint": "ccd6dcfb0b332206ea1031532f099b48cf81f95ec43df8175311bff0fe181c14",
+      "status": "CURRENT_FINGERPRINT_SEMANTICS_PENDING"
+    },
+    {
+      "id": "emulatorjs/vice-x64sc/c64",
+      "fingerprint": "c5f5b3aff315f0b98022ea688634ae71d440fe0e811316adcad60e89d1ecf857",
+      "status": "CURRENT_FINGERPRINT_SEMANTICS_PENDING"
+    },
+    {
+      "id": "emulatorjs/vice-xpet/pet",
+      "fingerprint": "dc13d9bc9b235956a574c3d898b320ac7676debea4b24e6817bdd12852b5b5c9",
+      "status": "CURRENT_FINGERPRINT_SEMANTICS_PENDING"
+    },
+    {
+      "id": "emulatorjs/vice-xplus4/plus4",
+      "fingerprint": "0f7de43244de8848eb6d715c192dffe174ad42ba5333c7b7987fd774be6dccc7",
+      "status": "CURRENT_FINGERPRINT_SEMANTICS_PENDING"
+    },
+    {
+      "id": "emulatorjs/vice-xvic/vic20",
+      "fingerprint": "a9ed1193d4bb686a9e196e35b63637abab1ccfc57e9679016c5be6b7098183ef",
+      "status": "CURRENT_FINGERPRINT_SEMANTICS_PENDING"
+    },
+    {
+      "id": "emulatorjs/virtualjaguar/atarijaguar",
+      "fingerprint": "94a9ba84bc2006b68dc43de56491cd3a69de7846b25e4a7ba3455f866c6e8a7e",
+      "status": "CURRENT_FINGERPRINT_SEMANTICS_PENDING"
+    },
+    {
+      "id": "emulatorjs/yabause/saturn",
+      "fingerprint": "370041f39f83f38412e8a3d3c6ae2f0aa820db02e715bfa2617cc883d9544e67",
+      "status": "CURRENT_FINGERPRINT_SEMANTICS_PENDING"
+    },
+    {
+      "id": "retrom-runtime/apple2-apple2js/apple2",
+      "fingerprint": "74e61029d5c6637939b34ad56f18fbc4156eb332bcee862fd12db23ab930054b",
+      "status": "CURRENT_FINGERPRINT_SEMANTICS_PENDING"
+    },
+    {
+      "id": "retrom-runtime/bbc-jsbeeb/bbc",
+      "fingerprint": "707324737455496976c5995217658f8b7e5c52b3c2784119e67e43908c947cf2",
+      "status": "CURRENT_FINGERPRINT_SEMANTICS_PENDING"
+    },
+    {
+      "id": "retrom-runtime/butterscotch-gamemaker/butterscotch",
+      "fingerprint": "ea03a4f1286ce0288017ff3023e73d6e15b12d3b93429a5280a1083c0dee10da",
+      "status": "CURRENT_FINGERPRINT_SEMANTICS_PENDING"
+    },
+    {
+      "id": "retrom-runtime/fake08/pico8",
+      "fingerprint": "5b516f52e4c97fae03d71392dd317fffc0a4bd638c067de72b8da4b8a859e79d",
+      "status": "SCOPED_PASS",
+      "evidence": "root/release-r15/fantasy-current/fake08-semantic-proof.json",
+      "evidenceSha256": "ef5eae59c5a14bc586731964b8f1814f527448d86a4ca893fc0acffa00c3f036",
+      "scope": "Original MIT cartridge; review and published play with standard controller direction/confirm. Public INSTANT gzip payload restores actual position/color in cookie-only fresh Chromium, remains after four seconds, then responds to further input. Fixture-scoped, not all-game compatibility."
+    },
+    {
+      "id": "retrom-runtime/flash-ruffle/flash",
+      "fingerprint": "b6ed4b49c786411140e67255fec0a451cf20703e5c69f7eda635657c852be440",
+      "status": "SCOPED_PASS",
+      "evidence": "root/release-r15/ruffle-followup/semantic-proof.json",
+      "evidenceSha256": "738a628ff01471d27ea421452af7befd2c48595a7bf09704a3863be70b254dce",
+      "scope": "Operator Flash fixture: D-pad movement, A native SharedObject confirmation, public GAME_SAVE position80, fresh cookie-only browser native reload stable seven unpaused seconds, Left/A and public updated native position60. Earlier harness timeout excluded; no engine state injection."
+    },
+    {
+      "id": "retrom-runtime/gbe-pokemini/pokemini",
+      "fingerprint": "73e3d052a96f42cccf580a2e947ea06eb7918f1178c0ced0ddc3b470178ea1e8",
+      "status": "CURRENT_FINGERPRINT_SEMANTICS_PENDING"
+    },
+    {
+      "id": "retrom-runtime/j2me/j2me",
+      "fingerprint": "4d597d22a119b6b1804219a9df7248a404bc1e64ee48fad0eb32fd610e4077a7",
+      "status": "SCOPED_PASS",
+      "evidence": "root/ui-fidelity-r12-final/j2me-input-normal/verification.json",
+      "evidenceSha256": "bace57a8027eae5838a481630117910424068e84dd0f639f10ebe004caa96bde",
+      "scope": "Demon Tower native JD/RMS progress: red key 0 to 1, real in-game save, failed PUT/retry/ACK, cookie-only fresh Chromium in-game load, continued controller input. Does not resolve the older Counter Strike sample."
+    },
+    {
+      "id": "retrom-runtime/kirikiri2-kag/kirikiri",
+      "fingerprint": "87849a9b758fc37ffa8f04fdb0a03f97648ad10fbe223b32f93bad2b6970cb43",
+      "status": "CURRENT_FINGERPRINT_SEMANTICS_PENDING"
+    },
+    {
+      "id": "retrom-runtime/mame-apple2/apple2",
+      "fingerprint": "99364431fcbd37ebe2b2e8af91392965fac5de161304f53473234e709aa7b7ca",
+      "status": "MATERIAL_GAP"
+    },
+    {
+      "id": "retrom-runtime/mame-apple2e/apple2",
+      "fingerprint": "e5f0885a37196b82eb1cd8d5e84d6616cf9d17aad84ff9e90ba40ea9ddf8e5b3",
+      "status": "MATERIAL_GAP"
+    },
+    {
+      "id": "retrom-runtime/mame-arcade/arcade",
+      "fingerprint": "4b67086a3bcc38ab31ff4f67b46f92aa077acbbbb33bc9b18dfc166d3a268036",
+      "status": "CURRENT_FINGERPRINT_SEMANTICS_PENDING"
+    },
+    {
+      "id": "retrom-runtime/mame-atom/atom",
+      "fingerprint": "90de93e4363cbd293785cbfcb8cb81df294232799ca0c60efdc483daa9fa450d",
+      "status": "MATERIAL_GAP"
+    },
+    {
+      "id": "retrom-runtime/mame-coleco/colecovision",
+      "fingerprint": "22664df52eab02d71abbac2a5cb6ec980ca2f3d5b72e4f04927af45ffecab501",
+      "status": "CURRENT_FINGERPRINT_SEMANTICS_PENDING"
+    },
+    {
+      "id": "retrom-runtime/mame-pv1000/pv1000",
+      "fingerprint": "19be7943763c60c5eb3a2625acf9f297551a8a4f01c0ad9c1cd41f1dba8210f2",
+      "status": "CURRENT_FINGERPRINT_SEMANTICS_PENDING"
+    },
+    {
+      "id": "retrom-runtime/mame-sg1000/sg1000",
+      "fingerprint": "604775a79b2bc675ac19590f8a34f58c0b17c3d7727b0ae2354d562763c31f74",
+      "status": "CURRENT_FINGERPRINT_SEMANTICS_PENDING"
+    },
+    {
+      "id": "retrom-runtime/msx-webmsx/msx",
+      "fingerprint": "5cdaa7a0e6a608f13f5eec349f2ae989b8916d5ab1ae1d7e56c2375c0f6aba5f",
+      "status": "CURRENT_FINGERPRINT_SEMANTICS_PENDING"
+    },
+    {
+      "id": "retrom-runtime/np2kai-pc98/pc98",
+      "fingerprint": "1a24bbd58c5945fdb3422d723017e8fc73e9213491568281605c1dca129f9d83",
+      "status": "CURRENT_FINGERPRINT_SEMANTICS_PENDING"
+    },
+    {
+      "id": "retrom-runtime/nxengine/cavestory",
+      "fingerprint": "6b1dba0be6cd14f66e9ec2f4689512d9ae028e760e98e07e394f9c843b7d3262",
+      "status": "CURRENT_FINGERPRINT_SEMANTICS_PENDING"
+    },
+    {
+      "id": "retrom-runtime/onscripter-yuri/ons",
+      "fingerprint": "04a2394fc16f81802531032876060cf3a03f2ee679f594b618079f33ec459ec4",
+      "status": "SCOPED_PASS",
+      "evidence": "root/release-r15/ons-published/semantic-proof.json",
+      "evidenceSha256": "f5af980ad523fda0f5ff4fd185e60f18f3f2cce62169ec1c78a14b3bdd9c0351",
+      "scope": "Published ONS r6: real GBK project review/play, public dialogue checkpoint, new-browser restore preserving the background and third waiting point, continued input to next line. Sample-scoped."
+    },
+    {
+      "id": "retrom-runtime/openbor/openbor",
+      "fingerprint": "0bb86cdf8b01a18360dcc12e3b0b1aad547febd4ecde527101047165ff2cc061",
+      "status": "SCOPED_PASS",
+      "evidence": "root/release-r15/openbor-exit-fixed/semantic-proof.json",
+      "evidenceSha256": "49bdef873a69d253943595a1b7a287e5f7f6524e88397e1ff23e09b581c8f868",
+      "scope": "Original two-stage native game: review/play, engine-created game.sav, public gzip synchronization, new-browser native Load Game, saved level and continued movement, clean exit. GAME_SAVE, not exact-position snapshot. Original 8MAN campaign did not reach native progress and remains partial."
+    },
+    {
+      "id": "retrom-runtime/play-ps2/ps2",
+      "fingerprint": "0f60f7340de69837d31c766f4e3169a95859dadcce14ad9eeefc209f1312f1c8",
+      "status": "CURRENT_FINGERPRINT_SEMANTICS_PENDING"
+    },
+    {
+      "id": "retrom-runtime/ppsspp/psp",
+      "fingerprint": "dd3afe114357cf23c9b3f2541c158d12b6e3f375495e4bcab381bc8855ef2ab7",
+      "status": "CURRENT_FINGERPRINT_SEMANTICS_PENDING"
+    },
+    {
+      "id": "retrom-runtime/px68k/x68000",
+      "fingerprint": "d15653eebeaee429a8ef76df835e0cb2fbe7ac0bf42d3dcff1d6b7e2dbc1fdec",
+      "status": "CURRENT_FINGERPRINT_SEMANTICS_PENDING"
+    },
+    {
+      "id": "retrom-runtime/rpgmaker-2000/rpgmaker",
+      "fingerprint": "eb3e05baee2b7ea39ccd381b0dd33c8558442deaee1db1eaec890e4feed4b232",
+      "status": "SCOPED_PASS",
+      "evidence": "root/release-r15/easyrpg-palette-fixed/semantic-proof.json",
+      "evidenceSha256": "8b08e53c97bb7978c957cdc532260069b29d621bcfe3595e39d4c030801e0bca",
+      "scope": "Original MIT visible-map fixture; actual review/published play, standard D-pad and native menu confirm. Public INSTANT save restores map1,12,8/variable1 in cookie-only fresh Chromium; complete source/restored RGBA frames match exactly seven seconds after rendering, then Down moves to12,10. Original PNG pixels disprove apparent missing marker in tool preview."
+    },
+    {
+      "id": "retrom-runtime/rpgmaker-2003/rpgmaker",
+      "fingerprint": "527cfc61942eaf2a845b8395e3556c55cb8c836a65ce530733f5555762d708f5",
+      "status": "SCOPED_PASS",
+      "evidence": "root/release-r15/easyrpg2003-palette-fixed/semantic-proof.json",
+      "evidenceSha256": "091358709e57529d3795e2b936ecc82192bd32ad94d967b1ce12f9a1857d8ebd",
+      "scope": "Original MIT visible-map fixture; actual review/published play, standard D-pad and native menu confirm. Public INSTANT save restores map1,12,8/variable1 in cookie-only fresh Chromium; complete source/restored RGBA frames match exactly seven seconds after rendering, then Down moves to12,10. Original PNG pixels disprove apparent missing marker in tool preview."
+    },
+    {
+      "id": "retrom-runtime/rpgmaker-mv/rpgmaker",
+      "fingerprint": "f3f3de64831b6ee50f652bfe445d8f81e23604859bce8291d86054c0f4239038",
+      "status": "SCOPED_PASS",
+      "evidence": "root/ui-fidelity-r11-audit/isolated-fresh-mv/report.json",
+      "evidenceSha256": "6f2bff598822c93c0db6d18b6d4ade5c76b3bf1e780385e41b9e816d9dba15c3",
+      "scope": "New save, different Run restore of concrete gameplay state, then normal input; original report defines the exact sampled scene."
+    },
+    {
+      "id": "retrom-runtime/rpgmaker-mz/rpgmaker",
+      "fingerprint": "3f31327ffc16dcca8a58714eeb3ff475a5e4c6f020651452f12921a1f5c10bc0",
+      "status": "SCOPED_PASS",
+      "evidence": "root/ui-fidelity-r11-audit/isolated-fresh-mz/report.json",
+      "evidenceSha256": "0b449bdbe2c4e71e8b1e78dad98a5d0f9bfcb860c68b35606a17c7cfafc7d0be",
+      "scope": "New save, different Run restore of concrete gameplay state, then normal input; original report defines the exact sampled scene."
+    },
+    {
+      "id": "retrom-runtime/rpgmaker-vx/rpgmaker",
+      "fingerprint": "b98c7afadfe73b19c6366ee058b07cc6e1afd8340c4dc358fc1791937edb29b1",
+      "status": "SCOPED_PASS",
+      "evidence": "root/release-r15/rgss-connected-fixed/rpgmaker-vx-semantic-proof.json",
+      "evidenceSha256": "ae75f15d1afb71ce400876c1467ee516e371e946d6273e00e9a542a93a72db1e",
+      "scope": "Original MIT RGSS fixture. Already-connected standard-controller D-pad and native-confirm button change position 10,8 to 11,8 and variable 0 to 1 in actual review and published play. Public INSTANT save restores 11,8/variable 1 after seven seconds in a cookie-only fresh Chromium, then further controller input moves to 12,8. No late connection injection in passing cases; browser Gamepad API/event fixture, not a physical USB claim."
+    },
+    {
+      "id": "retrom-runtime/rpgmaker-vx-ace/rpgmaker",
+      "fingerprint": "1a0782df7803a3b70c522176546aa55e93058c2efca9294900f3d5674b73ccb3",
+      "status": "SCOPED_PASS",
+      "evidence": "root/release-r15/rgss-connected-fixed/rpgmaker-vx-ace-semantic-proof.json",
+      "evidenceSha256": "fa32cb60cb4d8185b63e3701e11f53d89245e3c4134896f680f9dbdbb09513b9",
+      "scope": "Original MIT RGSS fixture. Already-connected standard-controller D-pad and native-confirm button change position 10,8 to 11,8 and variable 0 to 1 in actual review and published play. Public INSTANT save restores 11,8/variable 1 after seven seconds in a cookie-only fresh Chromium, then further controller input moves to 12,8. No late connection injection in passing cases; browser Gamepad API/event fixture, not a physical USB claim."
+    },
+    {
+      "id": "retrom-runtime/rpgmaker-xp/rpgmaker",
+      "fingerprint": "47c6fa88c7e0c158c169e5a71a315995f69aba4bebc4849a7dd76648e8045983",
+      "status": "SCOPED_PASS",
+      "evidence": "root/release-r15/rgss-connected-fixed/rpgmaker-xp-semantic-proof.json",
+      "evidenceSha256": "8d9744c699ab3a053674d12170eb3a94dc3a8d608d1456f5815417bf5da2774f",
+      "scope": "Original MIT RGSS fixture. Already-connected standard-controller D-pad and native-confirm button change position 10,8 to 11,8 and variable 0 to 1 in actual review and published play. Public INSTANT save restores 11,8/variable 1 after seven seconds in a cookie-only fresh Chromium, then further controller input moves to 12,8. No late connection injection in passing cases; browser Gamepad API/event fixture, not a physical USB claim."
+    },
+    {
+      "id": "retrom-runtime/samcoupe/samcoupe",
+      "fingerprint": "8334349fe122700f51a0e215e14921ba6e56ba1b6146def96e361c86151d370f",
+      "status": "CURRENT_FINGERPRINT_SEMANTICS_PENDING"
+    },
+    {
+      "id": "retrom-runtime/scummvm/scummvm",
+      "fingerprint": "681865506795f4ca9d30640a1cc9af44f4ae66bb3ed7932b7e6f4a6f09a9312b",
+      "status": "SCOPED_PASS",
+      "evidence": "root/release-r15/scummvm-current/semantic-proof.json",
+      "evidenceSha256": "ebacdbfdd7b066d1ccaeba2a1fe7e58e17b10dd2c2dc2277236e5d05e89d8d2f",
+      "scope": "Beneath a Steel Sky floppy: actual review/published play, left-stick cursor and A confirmation move the character. Native save R15 LEFT synchronized in a 13101-byte gzip bundle. Cookie-only new Chromium imports it before startup; native Load restores the player at the saved left-side location after seven seconds, then standard controller moves the player right. GAME_SAVE; no automatic execution-snapshot claim."
+    },
+    {
+      "id": "retrom-runtime/tic80/tic80",
+      "fingerprint": "55f48caa4cc651a0c6a01164d4c2d98caf3560bd25814cbcc5d91651856fe5f1",
+      "status": "SCOPED_PASS",
+      "evidence": "root/release-r15/fantasy-current/tic80-semantic-proof.json",
+      "evidenceSha256": "082adc43313da7f491f09cafddf32751cf636c2bda114d853fa9a06ff0c6a8f6",
+      "scope": "Original MIT cartridge; review and published play with standard controller direction/confirm. Public GAME_SAVE gzip payload restores actual position/color in cookie-only fresh Chromium, remains after four seconds, then responds to further input. Fixture-scoped, not all-game compatibility."
+    },
+    {
+      "id": "retrom-runtime/tyranoscript/tyranoscript",
+      "fingerprint": "d507fe116139cfd5cdac2710023c7328ac3f9522c11d31ecc03ec1cd105a2400",
+      "status": "SCOPED_PASS",
+      "evidence": "root/ui-fidelity-r11-audit/isolated-fresh-tyrano/report.json",
+      "evidenceSha256": "991f4eb366b64da89ef76f5b101e4f2ca9718e0e72939c33ed22e56b2b929429",
+      "scope": "New save, different Run restore of concrete gameplay state, then normal input; original report defines the exact sampled scene."
+    },
+    {
+      "id": "retrom-runtime/wasm4/wasm4",
+      "fingerprint": "87e6d176f878c62c0ddee1812c4c30e7b86f11511e21a9c37c49380957172454",
+      "status": "SCOPED_PASS",
+      "evidence": "root/release-r15/fantasy-current/wasm4-semantic-proof.json",
+      "evidenceSha256": "5aacaff253cf20c65e9c14101e255786d9c248c3da9c3056322bfc9718d8c054",
+      "scope": "Original MIT cartridge; review and published play with standard controller direction/confirm. Public INSTANT gzip payload restores actual position/color in cookie-only fresh Chromium, remains after four seconds, then responds to further input. Fixture-scoped, not all-game compatibility."
+    }
+  ],
+  "publishedDependencies": [
+    {
+      "repository": "retrom-project/OnscripterYuri",
+      "tag": "retrom-core-0.7.7beta-r6",
+      "commit": "52d84443a2e41d1b930683f9f0a459e715c5093c",
+      "workflowRun": 37670252602,
+      "status": "PUBLISHED_SCOPED_PRODUCT_RETEST_PASS",
+      "evidence": "root/release-r15/ons-published/semantic-proof.json",
+      "evidenceSha256": "f5af980ad523fda0f5ff4fd185e60f18f3f2cce62169ec1c78a14b3bdd9c0351"
+    },
+    {
+      "repository": "retrom-project/libretro-vecx",
+      "tag": "retrom-core-g8f671cc9d737-r2",
+      "commit": "f62c58885781114445c3109dd8283ca863b932e4",
+      "workflowRun": 37670346395,
+      "status": "PUBLISHED_SCOPED_PRODUCT_RETEST_PASS",
+      "evidence": "root/release-r15/vecx-published/semantic-proof.json",
+      "evidenceSha256": "94305725a609d5754d064f4efe04853ac800595c98761890429c1d41473ee85a"
+    }
+  ],
+  "limits": [
+    "R10 any-fingerprint counts do not establish current implementation acceptance.",
+    "Only rows marked SCOPED_PASS have reconciled current-identity scoped evidence; other rows remain explicitly unclosed.",
+    "Core tags do not publish or approve a stable retrom-runtime or Retrom release.",
+    "Missing operator material is not substituted with unrelated ROMs, title screens or fabricated payloads."
+  ],
+  "releaseDecision": {
+    "channel": "RC",
+    "runtimeTag": "v0.60.0-rc.1",
+    "retromTag": "v0.0.111-rc.1",
+    "authorization": "User requested RC publication without exhaustive per-ROM verification; known observations tracked as issues.",
+    "exhaustiveRomVerificationRequiredForThisRC": false,
+    "standardBuildAndQualityGatesRequired": true,
+    "stableReleaseApproved": false
+  },
+  "knownIssues": [
+    "https://github.com/retrom-project/retrom-runtime/issues/106",
+    "https://github.com/retrom-project/retrom-runtime/issues/107",
+    "https://github.com/retrom-project/retrom-runtime/issues/108",
+    "https://github.com/retrom-project/retrom-runtime/issues/109",
+    "https://github.com/retrom-project/retrom-runtime/issues/110",
+    "https://github.com/retrom-project/retrom-runtime/issues/111",
+    "https://github.com/retrom-project/retrom-runtime/issues/113",
+    "https://github.com/retrom-project/retrom-runtime/issues/114",
+    "https://github.com/retrom-project/retrom-runtime/issues/115",
+    "https://github.com/retrom-project/retrom-runtime/issues/116",
+    "https://github.com/retrom-project/retrom-runtime/issues/117",
+    "https://github.com/retrom-project/retrom-runtime/issues/118",
+    "https://github.com/retrom-project/retrom-runtime/issues/119",
+    "https://github.com/retrom-project/retrom-runtime/issues/120",
+    "https://github.com/retrom-project/retrom-runtime/issues/121",
+    "https://github.com/retrom-project/retrom-runtime/issues/122"
+  ],
+  "stableFollowUp": {
+    "status": "RECORDED_REPAIRS_VERIFIED_FINAL_PUBLICATION_GATES_PENDING",
+    "authorization": "User authorized fixing recorded issues in the current PFB and completing stable releases; latest instruction stops new core sample acceptance. Only affected regressions and required final gates remain.",
+    "published": false,
+    "targetExceptions": [
+      {
+        "id": "retrom-runtime/play-ps2/ps2",
+        "scope": "User accepts loading and entering the game; texture/rendering limitations do not block this release. Racing and public checkpoint restoration are not claimed.",
+        "result": "SCOPED_ACCEPTANCE",
+        "evidence": "root/release-r15/stable-ps2/sealed-proof.json",
+        "evidenceSha256": "9ae16b8f60cb49a754f572ea7333feb9e49f5ff6d449e02b64fafff9e24df83d"
+      }
+    ],
+    "invalidReports": [
+      {
+        "issue": 112,
+        "reason": "Original PNGs disprove the reported caption loss; full text and pixel-identical dialogue regions are preserved. No product fix.",
+        "correctionSha256": "4d9b6936282de665cc9ad34fd323e1a888ad9236ccaabe5ac3abfa5f848f719c"
+      }
+    ],
+    "materialDispositions": [
+      {
+        "issue": 110,
+        "sample": "Swan Driving",
+        "result": "EXPECTED_SAMPLE_BEHAVIOR",
+        "reason": "Exact author ROM enters an infinite collision-handler loop before VBlank acknowledgement. No runtime fix or additional checkpoint pass is claimed.",
+        "evidence": "root/stable-r16/wswan-source/source-disposition.json",
+        "evidenceSha256": "d818c483cdc7694c496cd264eb31f192aa730a1943da13bdd584e289ee779d45"
+      }
+    ],
+    "historicalMatrixPolicy": "R15 top-level historical matrix, status, counts and product rows remain unchanged. These bounded follow-ups do not promote unverified rows or claim complete core compatibility.",
+    "oldVersionComparison": {
+      "old": {
+        "tag": "v0.59.1",
+        "commit": "745d9ecabc7bdd0e934e1c69737399ebe6deef9b",
+        "verifiedArchiveSha256": "8fbd38e61df0a20cde56256bf3bc57c104c76f1be1ae72be315c342ff955fcf9"
+      },
+      "comparison": {
+        "tag": "v0.60.0-rc.1",
+        "commit": "88ec0ad5bed4a56bfbc1620ea36b9a622d865a84"
+      },
+      "assetEvidence": {
+        "path": "root/release-r15/stable-ejs/asset-differential.json",
+        "sha256": "1bad7156468c296d858162f470b0d773dd7ff3027702cc0fb8625de4c6aade30"
+      },
+      "scope": "The old and RC Parallel N64, MAME2003, MAME2003 Plus and CPS2 archives, EmulatorJS loader and emulator JS are byte-identical. Provider adapters differ and were exercised through each version's valid contract. Core byte identity alone is not a gameplay or checkpoint pass.",
+      "results": [
+        {
+          "issue": 106,
+          "classification": "PREEXISTING_CORE_DEFECT",
+          "observation": "Same Button Test ROM and options produce the same memory-out-of-bounds stack at native frame 29 in both immutable versions. This bounded startup failure predates the refactor.",
+          "evidence": {
+            "path": "root/release-r15/stable-ejs/parallel-probe-differential.json",
+            "sha256": "b2f97411f556ac7bf21ec8a75ad3e87b70bad80221c104c15b928021534e2515"
+          },
+          "gestureBoundary": "The trusted click was scheduled at two seconds, after both startup traps; this comparison does not claim a successful post-click startup."
+        },
+        {
+          "issue": 107,
+          "classification": "PREEXISTING_CORE_DEFECT",
+          "observation": "Same Renegade ROM, unchanged core archives and valid version-specific checkpoint contracts reproduce missing/corrupted restored background in both MAME cores under both versions. Four controlled fresh-browser runs have advancing native frames and no runtime errors.",
+          "evidence": {
+            "path": "root/release-r15/stable-ejs/renegade-differential.json",
+            "sha256": "f94e9b82813ba919919f7453a6148329316a7c07557badf88ad86411587d8ac5"
+          },
+          "excludedEvidence": "Early PLAYER 1 READY snapshots are not meaningful gameplay passes; the initial late-death comparison run is excluded."
+        },
+        {
+          "issue": 114,
+          "classification": "NATIVE_SERIALIZATION_OMISSION_WITH_UNCHANGED_OLD_RC_CORE_BYTES",
+          "observation": "The retained CPS2 archive is identical in the old and RC releases. A controlled RC native-state counterfactual identifies the omitted palette latch. A separately sealed old-version end-to-end palette reproduction is not claimed.",
+          "evidence": {
+            "path": "root/release-r15/stable-ejs/cps2-palette-causal-proof.json",
+            "sha256": "b873e1900aa68938924d80f57b83e02e3284bfc95ecd5bfd80c632425a6c9007"
+          }
+        }
+      ]
+    },
+    "fixedIssues": [
+      {
+        "issue": 106,
+        "url": "https://github.com/retrom-project/retrom-runtime/issues/106",
+        "status": "FIXED_AND_FORMAL_PIN_PRODUCT_RETESTED",
+        "githubStateAtDraft": "OPEN",
+        "owner": "retrom-project/parallel-n64",
+        "sourceCommit": "e22e9ab6c92a70cf076e9a3735fc184db60bb4f7",
+        "fix": "Mask VI hardware fields and validate the RDRAM framebuffer span; invalidate decoded direct-RAM aliases after cached-interpreter writes; invalidate restored code before selecting the restored instruction pointer.",
+        "regression": "Focused production-function ASan/UBSan tests cover all three defects; old implementations fail and fixed implementation passes.",
+        "formalProductCases": [
+          "emulatorjs/parallel-n64/probe",
+          "emulatorjs/parallel-n64/tennis"
+        ],
+        "evidence": {
+          "path": "root/release-r15/stable-n64/product-r18-formal/sealed-proof.json",
+          "sha256": "6fd5d93ce1415c7f41fc7979bc68d76a20c5ee6a9b9b867fac0d72e0bedc7383"
+        }
+      },
+      {
+        "issue": 107,
+        "url": "https://github.com/retrom-project/retrom-runtime/issues/107",
+        "status": "FIXED_AND_FORMAL_PIN_PRODUCT_RETESTED",
+        "githubStateAtDraft": "OPEN",
+        "owners": [
+          "retrom-project/mame2003-libretro",
+          "retrom-project/mame2003-plus-libretro"
+        ],
+        "sourceCommits": [
+          "bcc607ed056f21d018889d2ba4d6d84c759f52ae",
+          "19b33fd71d987c5b7a3e473125a639dc2e8322d5"
+        ],
+        "fix": "Register Renegade driver scroll, MCU and interrupt state for serialization, including MAME2003 bank state and restoration; retain Plus bank restoration.",
+        "regression": "Focused native driver-state red/green regression and isolated cold-restore checks precede the actual R18 public-save product retests.",
+        "formalProductCases": [
+          "emulatorjs/mame2003/renegade",
+          "emulatorjs/mame2003-plus/renegade"
+        ],
+        "causalEvidence": {
+          "path": "root/release-r15/stable-ejs/renegade-scroll-causal-proof.json",
+          "sha256": "0ee724bc784caa23d64b4a59b608652de5e301601ce9651b75104e0409ca5b2e"
+        }
+      },
+      {
+        "issue": 114,
+        "url": "https://github.com/retrom-project/retrom-runtime/issues/114",
+        "status": "FIXED_AND_FORMAL_PIN_PRODUCT_RETESTED",
+        "githubStateAtDraft": "OPEN",
+        "owner": "retrom-project/fbalpha2012_cps2",
+        "sourceCommit": "33a8d1f0afb9ac7cba3cde5d9c3b09e40fe7108f",
+        "fix": "Include the 8192-byte CpsSavePal latch in native state scanning so post-load palette rebuilding receives the saved colors.",
+        "regression": "Actual serializer/palette baseline red and fixed green regression; isolated and R18 product cold restores preserve the palette and continued input.",
+        "nativeRegressionEvidence": [
+          {
+            "path": "root/stable-r16/cps2-native-red.log",
+            "sha256": "197cbbdd8eaf28b6f4d59bd3a2e1382e60d6c29e2a4e5bbacde34a3956017f17"
+          },
+          {
+            "path": "root/stable-r16/cps2-native-green.log",
+            "sha256": "c873057f0b9a1aa82021354f75426a1872aca86b83c0e9bde3734f73c2b56774"
+          }
+        ],
+        "formalProductCases": [
+          "emulatorjs/fbalpha2012-cps2/19xx"
+        ],
+        "excludedDiagnostic": "Bare native load without serialize-size initialization was a harness error. The diagnostic palette memory counterfactual establishes causality only and is not a production fix or product pass."
+      },
+      {
+        "issue": 115,
+        "url": "https://github.com/retrom-project/retrom-runtime/issues/115",
+        "status": "FIXED_REGRESSION_AND_FORMAL_PROVIDER_BUILD_VERIFIED",
+        "githubStateAtDraft": "OPEN",
+        "owner": "retrom-project/retrom-runtime",
+        "sourceCommit": "0f03331eaec9f7ae0b98ad6c95c788785cd9afe9",
+        "fix": "Allow an empty EmulatorJS override catalog after migration to maintained core forks; retain declared asset identity, size, digest and license validation.",
+        "regression": "The all-75-target release-build test fails with the original overrides-length assumption and passes after the fix, including the mismatched-asset rejection and empty-override provenance. The complete formal Provider was subsequently built and imported for the R18 runs.",
+        "evidence": [
+          {
+            "path": "root/stable-r16/catalog-without-overrides-red.log",
+            "sha256": "37834e7ec501c332de1ea674220892d408d28fa90cbe78f519581c004dc537c4"
+          },
+          {
+            "path": "root/stable-r16/catalog-without-overrides-green.log",
+            "sha256": "486932ca65adef72f280df8adb50f6d0a1580aef8fef7eb771b5013328891370"
+          },
+          {
+            "path": "root/stable-r16/formal-ejs-base-identities.json",
+            "sha256": "51d22bcb279cf184a3637bb6006adaf6f79dbca67d50f384d6aea53585d3ce49"
+          }
+        ]
+      },
+      {
+        "issue": 111,
+        "status": "FIXED_AND_FORMAL_CORE_PRODUCT_RETESTED",
+        "owner": "retrom-project/kirikiroid2-web",
+        "sourceCommit": "08f81c28f787eb2e8a0fcada79e551563333ae43",
+        "fix": "Wait for native startup completion between JSPI ticks; use the public KAGEX loadFunction entry and observe the real requested bookmark result; retain ordinary KAG loading, balance TJS references, cancel owned observers and drain asynchronous teardown.",
+        "evidence": {
+          "path": "root/release-r15/stable-kirikiri/final-product/semantic-proof.json",
+          "sha256": "9cb4546bcfc99d1f6893561f0d499108ae4c5908c0de0c9c823d08234b26a570"
+        },
+        "formalSourceCommit": "39df3412ae827b213fd3188b6a95c67431b3c02e",
+        "formalProductEvidence": {
+          "path": "root/stable-r16/formal-kag-flash/r1-formal-core-r21-r2/semantic-proof.json",
+          "sha256": "dc3f3ab64748ea876e5ded06389cf63a8df11807693464d80e96b8927b0f1e21"
+        }
+      }
+    ],
+    "residualIssueDispositions": [
+      {
+        "issue": 110,
+        "url": "https://github.com/retrom-project/retrom-runtime/issues/110",
+        "status": "SCOPED_DISPOSITIONS_AND_REMAINING_COVERAGE_GAPS",
+        "evidence": {
+          "path": "root/stable-r16/issues/110-residual-disposition.json",
+          "sha256": "439386c22c8400972428d82dbde99bd85f5dbe751b6e81f297b7791ffc4b7314"
+        },
+        "items": [
+          {
+            "sample": "Swan Driving",
+            "result": "EXPECTED_SAMPLE_BEHAVIOR",
+            "oldVersionComparison": "The same author ROM stops at the overlapping-car scene in both official v0.59.1 and RC after trusted input unlocks rendering. The core and frontend assets are unchanged. The no-gesture harness stall is excluded.",
+            "cause": "The exact author ROM contains the infinite collision-handler loop before interrupt acknowledgement and input resume. Source reconstruction differs in only two equivalent XCHG instruction encodings and preserves the same collision loop.",
+            "romSha256": "d3c35b8e33dd0a930cb7e6de5fdded043788b026151fd58a5d41a16eefff7c1e",
+            "evidence": [
+              {
+                "path": "root/stable-r16/wswan-differential/differential-proof.json",
+                "sha256": "fca91ef4667992b46772bc4d0fa30b2a3af09b8c8e68e331d0940bea82993cbb"
+              },
+              {
+                "path": "root/stable-r16/wswan-source/source-disposition.json",
+                "sha256": "d818c483cdc7694c496cd264eb31f192aa730a1943da13bdd584e289ee779d45"
+              }
+            ],
+            "limit": "No runtime fix or additional checkpoint-semantic pass."
+          },
+          {
+            "sample": "CPS2 / 19XX",
+            "result": "FIXED_UNDER_114",
+            "formalProductCase": "emulatorjs/fbalpha2012-cps2/19xx"
+          },
+          {
+            "sample": "V-Rally 3",
+            "result": "SCOPED_MENU_AND_PUBLIC_CHECKPOINT_PASS",
+            "observation": "Normal language/create-game menus; a 57061-byte public save restores the name/country menu in a fresh cookie-only browser and new direction input continues. The original report was startup evidence, not a proven restore defect.",
+            "evidenceSha256": "eaf7db41bac07d67ae32622556a8e6b60bb5b8b81163419554ef5ae1016d339f",
+            "limit": "No race-completion claim."
+          },
+          {
+            "sample": "Tyrano external video",
+            "result": "FIXED_BEFORE_RC",
+            "sourceCommit": "638bb64",
+            "observation": "The checkpoint restriction was already fixed before RC, with a regression and five disabled-video checks. Stable dialogue checkpoint evidence is separate. No new Tyrano regression established."
+          },
+          {
+            "sample": "KiriKiri",
+            "result": "FINAL_RETEST_PENDING",
+            "issue": 111,
+            "oldVersionComparison": "Startup works under both official old and current assets; the cold bookmark failure is tracked separately."
+          },
+          {
+            "sample": "Flash",
+            "result": "FINAL_RETEST_PENDING",
+            "issue": 113,
+            "observation": "Duplicate destruction-flush fix has regression and earlier progress-save/cold-restore evidence; final retest remains pending."
+          },
+          {
+            "sample": "GBC caption-loss report",
+            "result": "INVALID_REPORT_NO_FIX",
+            "issue": 112,
+            "observation": "Reinspection of unchanged original PNGs preserves the full caption; before/cold PNG bytes and dialogue regions are identical.",
+            "limit": "This correction does not resolve the separate historical bed/cutscene observation."
+          },
+          {
+            "sample": "SAM Coupe disk sample",
+            "result": "SEMANTIC_EVIDENCE_GAP",
+            "observation": "Unchanged disk sample is not a demonstrated lost native save."
+          }
+        ],
+        "limit": "No residual observation or material gap promotes an unverified historical matrix row."
+      }
+    ],
+    "pendingFinalRetests": [
+      {
+        "issue": 111,
+        "result": "PENDING",
+        "required": "Repeat the verified candidate KiriKiri public-save/cold-restore workflow with the formally published core and final assembled Provider; preserve the saved scene and accept new input.",
+        "core": "KiriKiri"
+      },
+      {
+        "issue": 113,
+        "result": "PENDING",
+        "required": "Final Flash public-save/cold-restore/progress and clean-exit regression on the final assembled Provider.",
+        "core": "Flash"
+      }
+    ],
+    "publishedCoreDependencies": [
+      {
+        "core": "mame2003",
+        "repository": "https://github.com/retrom-project/mame2003-libretro",
+        "tag": "retrom-core-gb6c6d52d8d63-r1",
+        "commit": "bcc607ed056f21d018889d2ba4d6d84c759f52ae",
+        "releaseUrl": "https://github.com/retrom-project/mame2003-libretro/releases/tag/retrom-core-gb6c6d52d8d63-r1"
+      },
+      {
+        "core": "mame2003_plus",
+        "repository": "https://github.com/retrom-project/mame2003-plus-libretro",
+        "tag": "retrom-core-g09e84fe55799-r1",
+        "commit": "19b33fd71d987c5b7a3e473125a639dc2e8322d5",
+        "releaseUrl": "https://github.com/retrom-project/mame2003-plus-libretro/releases/tag/retrom-core-g09e84fe55799-r1"
+      },
+      {
+        "core": "fbalpha2012_cps2",
+        "repository": "https://github.com/retrom-project/fbalpha2012_cps2",
+        "tag": "retrom-core-g3fb5b89d2ab7-r1",
+        "commit": "33a8d1f0afb9ac7cba3cde5d9c3b09e40fe7108f",
+        "releaseUrl": "https://github.com/retrom-project/fbalpha2012_cps2/releases/tag/retrom-core-g3fb5b89d2ab7-r1"
+      },
+      {
+        "core": "parallel_n64",
+        "repository": "https://github.com/retrom-project/parallel-n64",
+        "tag": "retrom-core-g56f4daf8ec9b-r1",
+        "commit": "e22e9ab6c92a70cf076e9a3735fc184db60bb4f7",
+        "releaseUrl": "https://github.com/retrom-project/parallel-n64/releases/tag/retrom-core-g56f4daf8ec9b-r1"
+      },
+      {
+        "core": "mame",
+        "repository": "https://github.com/retrom-project/mame",
+        "tag": "retrom-core-gf65d5ba9bc42-r3",
+        "commit": "11288494f6e4cc2334155223ec5575cb486aa242",
+        "releaseUrl": "https://github.com/retrom-project/mame/releases/tag/retrom-core-gf65d5ba9bc42-r3"
+      }
+    ],
+    "formalCoreRetests": {
+      "round": "R18",
+      "result": "SCOPED_PASS",
+      "sourceWindow": {
+        "runtimeCommit": "c5cd4ec2209b23c016169ccc1d63cad355938fb9",
+        "retromCommit": "3a009a8ba850fe3b738d348b67b797380d405383",
+        "providerBundleSha256": "2f5bf56d1ab06ee1844d52740470eb58144c9bafcf80dc2e8ef23c30e526472a",
+        "providerModuleSha256": "6a837eeb9558d2cb14d09ad5abd187336892eb9a0566cc5ab30a4911f6a86bd5",
+        "providerModuleSizeBytes": 275178,
+        "sourceAndLifecycleFrozenDuringRuns": true
+      },
+      "inputFixture": "Standard Gamepad API simulation; no physical controller test claimed.",
+      "actualHttpCoreBytesEqualFormalReleaseAssets": true,
+      "summaryEvidence": [
+        {
+          "path": "root/release-r15/stable-ejs/product-r18-formal-summary.json",
+          "sha256": "7cec92eb7819c974ca81b0d71d36a9b45a59f46816a1983a138051fcef1b43fa"
+        },
+        {
+          "path": "root/release-r15/stable-n64/product-r18-formal/sealed-proof.json",
+          "sha256": "6fd5d93ce1415c7f41fc7979bc68d76a20c5ee6a9b9b867fac0d72e0bedc7383"
+        }
+      ],
+      "cases": [
+        {
+          "id": "emulatorjs/mame2003/renegade",
+          "result": "SCOPED_PASS",
+          "coreFingerprint": "d03349fcbaea39528dbc41f164a8620a3f6685674ee324cc8d6dfd97de224db9",
+          "formalReleaseTag": "retrom-core-gb6c6d52d8d63-r1",
+          "publicSave": {
+            "version": 1,
+            "sizeBytes": 10880,
+            "sha256": "7f12d9067b7758c8ea20f45ac354708ee22178f2c00ccd6c0d6f670aea4f0ada",
+            "newForFormalFingerprint": true
+          },
+          "observedBehavior": "Renegade active subway battle. The public-save image and fresh-browser restore retain train doors, station signs, columns, floor, player and enemies. New left input scrolls the station; right/action input continues combat. The full background remains after seven additional running seconds.",
+          "evidence": {
+            "path": "root/release-r15/stable-ejs/product-r18-formal-mame2003/sanitized-proof.json",
+            "sha256": "6b2ffaf9eee3bb1b5b1b4015dce9184bc295cc03f98a79ffa8902ef317ad514b"
+          }
+        },
+        {
+          "id": "emulatorjs/mame2003-plus/renegade",
+          "result": "SCOPED_PASS",
+          "coreFingerprint": "236a2e2e9f2abe292d48e961998fa10e821108dddce781a3c9b9a52f6357d0d3",
+          "formalReleaseTag": "retrom-core-g09e84fe55799-r1",
+          "publicSave": {
+            "version": 1,
+            "sizeBytes": 10939,
+            "sha256": "a26c49f046dab46c0069dda628efcc33c4e5f83509a7e0b9ec1f328e93a0d8ab",
+            "newForFormalFingerprint": true
+          },
+          "observedBehavior": "Renegade active subway battle. The public-save image and fresh-browser restore retain train doors, station signs, columns, floor, player and enemies. New left input scrolls the station; right/action input continues combat. The full background remains after seven additional running seconds. The saved airborne player lands with new left input, then visibly jumps again with right/action input.",
+          "evidence": {
+            "path": "root/release-r15/stable-ejs/product-r18-formal-mame2003-plus/sanitized-proof.json",
+            "sha256": "fbd52a8d83d7fbaff248fdeb3724c3293bb072bfe5cd2dafd74994d65e3df865"
+          }
+        },
+        {
+          "id": "emulatorjs/fbalpha2012-cps2/19xx",
+          "result": "SCOPED_PASS",
+          "coreFingerprint": "95960c193bb723c6553d972816c4903f641b4126302851f415ecc8a9b5f686bd",
+          "formalReleaseTag": "retrom-core-g3fb5b89d2ab7-r1",
+          "publicSave": {
+            "version": 1,
+            "sizeBytes": 22316,
+            "sha256": "0be8ff4bdcdac7fbeb2704787f9c0348cb343eef22088e4e1642712486b4980e",
+            "newForFormalFingerprint": true
+          },
+          "observedBehavior": "19XX active mission, verified in Review by moving the green player plane to both sides while attacks produce visible explosions. A new public save is captured at score 200. Fresh-browser restore preserves the ocean, green player, bomber enemies and palette immediately. After seven running seconds the ocean, enemy waves, bullets and explosion remain correctly colored. Following the normal player respawn, new left/fire and right/fire inputs move the green plane and produce missile flame and impact effects.",
+          "evidence": {
+            "path": "root/release-r15/stable-ejs/product-r18-formal-cps2/sanitized-proof.json",
+            "sha256": "d7fb18ccc91177a6741fb564f7e53f6a3d21e96dc3bd0d75ca25bc1d30daafc8"
+          }
+        },
+        {
+          "id": "emulatorjs/parallel-n64/probe",
+          "result": "SCOPED_PASS",
+          "coreFingerprint": "93cd3462ac58913f1f92c524098e289d474da2f62cf610e3a761e6932e0f9573",
+          "formalReleaseTag": "retrom-core-g56f4daf8ec9b-r1",
+          "publicSave": {
+            "version": 1,
+            "sizeBytes": 63525,
+            "sha256": "e6972dab5560c6b8b9998e2b3753614fd039c9f63a7b9c8a21927526104ba71c",
+            "newForFormalFingerprint": true
+          },
+          "observedBehavior": {
+            "review": "TextField/TextQueue responds to A/right down/up with four records.",
+            "published": "Fresh published run produces four A/right records; public checkpoint captures them.",
+            "coldRestore": "Different run in new Chromium with only login cookies restores four records and retains them for seven unpaused seconds.",
+            "continuedInput": "New D-left down/up appends two records, making six."
+          },
+          "evidence": {
+            "path": "root/release-r15/stable-n64/product-r18-formal/sealed-proof.json",
+            "sha256": "6fd5d93ce1415c7f41fc7979bc68d76a20c5ee6a9b9b867fac0d72e0bedc7383"
+          }
+        },
+        {
+          "id": "emulatorjs/parallel-n64/tennis",
+          "result": "SCOPED_PASS",
+          "coreFingerprint": "93cd3462ac58913f1f92c524098e289d474da2f62cf610e3a761e6932e0f9573",
+          "formalReleaseTag": "retrom-core-g56f4daf8ec9b-r1",
+          "publicSave": {
+            "version": 1,
+            "sizeBytes": 1050098,
+            "sha256": "a8a0c7b8b2537e49ce96ba3fce7318666ba24b37dde85700eecf3f4c2505713b",
+            "newForFormalFingerprint": true
+          },
+          "observedBehavior": {
+            "review": "Actual Mario/Luigi court; left and right analog input visibly move Mario.",
+            "published": "Fresh match; A serve/hit completes first point, 0-15. After replay naturally ends, public save captures actual next-point service court and position.",
+            "coldRestore": "Different run in new Chromium with only login cookies restores same 0-15 score, court and service position; retained for seven unpaused seconds.",
+            "continuedInput": "New analog left input visibly moves Mario from saved position to left baseline boundary.",
+            "notObserved": "Subsequent two A presses did not produce a new point in the observed screenshot, which still shows 0-15. The historical filename cold-after-new-point.png is not evidence of 0-30."
+          },
+          "evidence": {
+            "path": "root/release-r15/stable-n64/product-r18-formal/sealed-proof.json",
+            "sha256": "6fd5d93ce1415c7f41fc7979bc68d76a20c5ee6a9b9b867fac0d72e0bedc7383"
+          }
+        }
+      ]
+    },
+    "candidateCoreRetests": [
+      {
+        "id": "retrom-runtime/kirikiri2-kag",
+        "result": "SCOPED_PASS",
+        "coreCommit": "08f81c28f787eb2e8a0fcada79e551563333ae43",
+        "runtimeCommit": "c5cd4ec2209b23c016169ccc1d63cad355938fb9",
+        "coreFingerprint": "914ab3c53601d07dd77e8fabe404e9f9ffd888ce020fcf87b007230867902ff9",
+        "evidence": "root/release-r15/stable-kirikiri/final-product/semantic-proof.json",
+        "evidenceSha256": "9cb4546bcfc99d1f6893561f0d499108ae4c5908c0de0c9c823d08234b26a570",
+        "scope": "Normal import, Review Preview and standard-controller chapter input; publication, new public 271839-byte checkpoint, cookie-only fresh browser restore of the saved chapter/dialogue in 8.399 seconds, continued controller dialogue input and normal exits. No game/page/HTTP errors during Runs; route warmup reload notices precede Run creation. Owning core publication and formal-asset retest remain pending."
+      }
+    ],
+    "codeGates": {
+      "runtime": {
+        "commit": "3c168dbfd5eb5038b88987efc44f41d1ad1f5a9b",
+        "result": "PASS_AFTER_RESOURCE_ISOLATION",
+        "checks": [
+          "npm ci",
+          "lint",
+          "typecheck",
+          "test",
+          "build",
+          "package:check"
+        ],
+        "testFiles": 294,
+        "tests": 1605,
+        "evidence": "root/stable-r20/runtime-source-gates/proof.json",
+        "evidenceSha256": "d7e709f88c0a03902ba2814fae700663bc52440cb3d37bfdcbf29c8a326ed3d8",
+        "resourceIsolation": "First run recorded six wall-clock timeouts during 16-job MAME compilation on 12 CPUs. The unmodified entire suite passed after temporarily suspending only that build process tree; all original assertions/timeouts retained. Build was resumed.",
+        "scope": "Source aggregate before final MAME DAT/core pins and formal release gates; tracked source hashes unchanged during checks."
+      },
+      "retrom": {
+        "commit": "3a009a8ba850fe3b738d348b67b797380d405383",
+        "backend": {
+          "result": "PASS",
+          "realPostgresTests": 106,
+          "skipped": 0,
+          "temporaryDatabasesCreatedAndDropped": 23,
+          "evidence": "root/stable-r16/retrom-backend-final-r18/sealed-proof.json",
+          "sha256": "e7cf7c1d0cb40631dae3ad78fd87c07448fcafe4af37589d53cf37fa8965e9c1"
+        },
+        "webAndApi": {
+          "result": "PASS",
+          "testFiles": 69,
+          "tests": 281,
+          "evidence": "root/stable-r16/retrom-web-final-r19/sealed-proof.json",
+          "sha256": "76b7eb73d62792081c71f39b2e7489174f623260525cf2b93b89b09d21edeafa"
+        },
+        "scope": "Source-only gates passed; formal-runtime browser and paired-image verification remain pending.",
+        "loginFollowUp": {
+          "commit": "36c2d0a05a758ee4ba9352db7d6ad53b35b2afee",
+          "result": "PASS",
+          "testFiles": 70,
+          "tests": 286,
+          "actualBrowserScope": "Desktop, mobile, 4K 150%; real invalid-credentials HTTP response, single contextual toast, successful retry and logout.",
+          "evidence": "root/stable-r20/login-205/sealed-proof.json",
+          "evidenceSha256": "256558636f786e08b44b14384a7cb04036642e87364fd554f72a5e97d83ec9ae",
+          "formalPairedBrowser": "PENDING"
+        }
+      }
+    },
+    "kagPublication": {
+      "status": "FORMAL_CORE_ASSETS_AND_R21_PRODUCT_RETEST_VERIFIED",
+      "repository": "retrom-project/kirikiroid2-web",
+      "pullRequest": 8,
+      "candidateCommit": "08f81c28f787eb2e8a0fcada79e551563333ae43",
+      "mergeCommit": "39df3412ae827b213fd3188b6a95c67431b3c02e",
+      "gitTree": "30a2b44a8f4bca0693d12b59a1cf55f73f50e41a",
+      "tag": "retrom-core-g13dda190f837-r2",
+      "qualityRun": 37801805014,
+      "releaseRun": 37809057471,
+      "binaryComparison": {
+        "path": "root/stable-r16/kag-pr-ci/difference-conclusion.json",
+        "sha256": "760130c21f9d9a567804627178e36b24c52d2971e600d01636cc1a7b31fc29cf",
+        "scope": "Same source tree and ABI; bounded differences match build-path/date metadata and address relocation. No binary semantic equivalence or formal-asset product acceptance is claimed."
+      },
+      "formalAssetEvidence": "root/stable-r16/published-cores/kirikiri2-r2-evidence/verification.json",
+      "formalAssetEvidenceSha256": "7defdf06a040ef76b96427d028d73b02955e05b551b16c9a6bbc4983abc85cd6",
+      "runtimePinCommit": "eeb808c",
+      "formalAssetComparison": "JavaScript identical to PR CI; WASM only twelve timestamp bytes differ; ZIP member contents identical. Actual formal assets subsequently pass the R21 product chain.",
+      "formalProductEvidence": {
+        "path": "root/stable-r16/formal-kag-flash/r1-formal-core-r21-r2/semantic-proof.json",
+        "sha256": "dc3f3ab64748ea876e5ded06389cf63a8df11807693464d80e96b8927b0f1e21"
+      }
+    },
+    "sampleCampaignStop": {
+      "scope": "46 cores / 47 core-platform rows; no additional sample campaign after user stop",
+      "counts": {
+        "SCOPED_PASS": 14,
+        "PARTIAL": 3,
+        "CONFIRMED_FAILURE": 3,
+        "OBSERVATION_PENDING": 1,
+        "DEFERRED_BY_USER_SCOPE": 26
+      },
+      "passedRows": [
+        "a5200/atari5200",
+        "atari800/atari800",
+        "atari800-xegs/xegs",
+        "cap32/amstradcpc",
+        "cap32/gx4000",
+        "crocods/amstradcpc",
+        "fuse/zxspectrum",
+        "smsplus/mastersystem",
+        "gbe_plus/pokemini",
+        "mame_pv1000/pv1000",
+        "mame_sg1000/sg1000",
+        "np2kai/pc98",
+        "neocd/neogeocd",
+        "flycast/dreamcast"
+      ],
+      "partialRows": [
+        "apple2js/apple2",
+        "jsbeeb/bbc",
+        "desmume/nds"
+      ],
+      "deferredRows": [
+        "hatarib/atarist",
+        "puae/amiga",
+        "quasi88/pc88",
+        "theodore/thomson",
+        "vice_x128/c128",
+        "vice_x64/c64",
+        "vice_x64sc/c64",
+        "vice_xpet/pet",
+        "vice_xplus4/plus4",
+        "vice_xvic/vic20",
+        "virtualjaguar/atarijaguar",
+        "nxengine/cavestory",
+        "ppsspp/psp",
+        "px68k/x68000",
+        "samcoupeweb/samcoupe",
+        "webmsx/msx",
+        "azahar/nintendo3ds",
+        "desmume2015/nds",
+        "melonds/nds",
+        "mednafen_pcfx/pcfx",
+        "mednafen_psx_hw/psx",
+        "pcsx_rearmed/psx",
+        "mupen64plus_next/n64",
+        "opera/3do",
+        "same_cdi/cdi",
+        "yabause/saturn"
+      ],
+      "unattributedObservation": "81/zx81: BO visual observation unresolved; no established product defect",
+      "evidence": "root/stable-r20/summary.json",
+      "evidenceSha256": "c6ebd76605af53670a8b6ef16747017a0ad48c09a43f6a3cd5cf4754657458d4",
+      "policy": "Frozen campaign boundary only. Later issue regressions do not rewrite these results; deferred and partial rows are not passes or bugs."
+    },
+    "r21IssueRegressions": {
+      "scope": "Recorded defects only. Historical matrix and stopped campaign rows unchanged; final paired stable runtime remains pending.",
+      "runtimeCommit": "3c168dbfd5eb5038b88987efc44f41d1ad1f5a9b",
+      "kagAndFlash": {
+        "result": "SCOPED_PASS",
+        "issues": [
+          111,
+          113
+        ],
+        "evidence": {
+          "path": "root/stable-r16/formal-kag-flash/r1-formal-core-r21-r2/semantic-proof.json",
+          "sha256": "dc3f3ab64748ea876e5ded06389cf63a8df11807693464d80e96b8927b0f1e21"
+        },
+        "observed": "New public checkpoints, cookie-only fresh-browser restoration, seven unpaused seconds, subsequent native dialogue or SharedObject position changes, normal exits and scoped cleanup."
+      },
+      "butterscotch": {
+        "result": "SCOPED_PASS",
+        "issue": 116,
+        "evidence": {
+          "path": "root/stable-r20/butterscotch-product-regression/r21-candidate/sealed-proof.json",
+          "sha256": "c0ec731789feea06dbe12757e5f19c489a27dedc808921d400eb86b4a88fdabe"
+        },
+        "formalPublication": {
+          "path": "root/stable-r20/butterscotch-fix/formal-publication/verification.json",
+          "sha256": "255a551d729b6613ef781b93703942f4f099a7d1b3914b9f5824277640ba4436"
+        },
+        "formalTag": "retrom-core-ge8294c9070a4-r2",
+        "formalCommit": "24b281e86661897687c04fb88009a73c838cdda9",
+        "runtimePinCommit": "ac7df93",
+        "observed": "Actual Undertale name B, MENU and position survive new public save and cookie-only cold restore; resumed input changes scene. All five published payloads are byte-identical to tested candidate. Final paired-runtime acceptance remains separate."
+      },
+      "ndsInputAndWakeLock": {
+        "result": "SCOPED_PASS",
+        "issues": [
+          117,
+          121
+        ],
+        "index": {
+          "path": "root/stable-r20/ejs-fixes/product-harness/r21-sealed-index.json",
+          "sha256": "451d9016fde2057b93ff38f391a07694d708fbf41bc508e7753735a915887678"
+        },
+        "desmume": {
+          "path": "root/stable-r20/ejs-fixes/product-harness/desmume-r21-diagnostic/sealed-proof.json",
+          "sha256": "8a20bb83c6955f51b50747d0df801ce419195f9dc6b87375a9e0f989f2b06edc"
+        },
+        "desmume2015": {
+          "path": "root/stable-r20/ejs-fixes/product-harness/desmume2015-r21/sealed-proof.json",
+          "sha256": "49dff21579b398fed8a5eb6b01c20dbb2234dca5844c12f106c4ce02f1767393"
+        },
+        "melonds": {
+          "path": "root/stable-r20/ejs-fixes/product-harness/melonds-r21/sealed-proof.json",
+          "sha256": "b3299d00b623cdbd94f83359012961c662e225ec7e2577d2ea70ec460cfa298b"
+        },
+        "scope": "DeSmuME normal public save/cold restore and subsequent right-stick/R2 dialogue, including real denied WakeLock permission. DeSmuME2015 and melonDS input-only native handwriting regressions; no complete checkpoint/matrix promotion."
+      },
+      "contentIdentityObservation": {
+        "issue": 120,
+        "originalR20RootCause": "UNKNOWN",
+        "r21WarmResult": "NOT_REPRODUCED_IN_TWO_BOUNDED_PRODUCT_PATHS",
+        "originalOptionsEvidence": {
+          "path": "root/stable-r20/ejs-fixes/product-harness/warm-original-options-r21/sealed-proof.json",
+          "sha256": "86888a05b009bd45387e1828ac5aa7a3f3c3708358dc4e5f6f0979bd5c2131ba"
+        },
+        "confirmedSeparateFailureMode": "A missing physical block in COMPLETE optional cache was incorrectly reported as source IDENTITY_CHANGED. Fixed by classifying unreadable physical storage as CACHE_UNAVAILABLE; source ETag/If-Match/hash checks are unchanged.",
+        "cacheAudit": {
+          "path": "root/stable-r21/content-cache-audit/review.json",
+          "sha256": "733243aa084b870262eb9cf36fe18a24b1ce2a898788ad93d9cf54a6d7727dc0"
+        },
+        "repairCommit": "6d2accf9a081ae56ba24844c7342c02f40541d31",
+        "repairEvidence": {
+          "path": "root/stable-r21/content-cache-audit/implementation-proof.json",
+          "sha256": "801077aa62f40268871310081226f9f0364f2b9490ce76fd134f7f8d6aea3914"
+        },
+        "regression": {
+          "oldFailures": 10,
+          "fixedPasses": 10,
+          "affectedBrowserPasses": 28,
+          "contentIOUnitPasses": 201,
+          "publicProductCacheLossRegression": "SCOPED_PASS_R22_SEPARATE_RECORD"
+        }
+      },
+      "mameCandidate": {
+        "result": "NATIVE_PASS_PRODUCT_PENDING",
+        "issues": [
+          118,
+          119,
+          122
+        ],
+        "coreCommit": "aad50145f9a25639641e090aed0efc3d25119a8d",
+        "evidence": {
+          "path": "root/stable-r20/mame-diagnostic/native-aad50145-proof.json",
+          "sha256": "a46307dd327724689c329eba71e9c4cf6452d0b394d1d50b814bfc0437e1bca2"
+        },
+        "scope": "Exact standard candidate and device DAT; native readiness, cold CPU/timer continuation and saved Coleco state now pass. Actual paired Provider/public-save regressions and core publication still required."
+      },
+      "excludedEnvironmentAttempts": "Initial Next development route compilation caused simultaneous full reloads. Exact app-window log correlates these; affected attempts are preserved and excluded. Later stable-window proofs record no reload. No product error was hidden."
+    },
+    "r22IssueRegressions": {
+      "scope": "Existing issues only; no new sample acceptance and no promotion of the frozen R20 matrix.",
+      "cacheLoss": {
+        "issue": 120,
+        "result": "SCOPED_PASS",
+        "evidence": {
+          "path": "root/stable-r20/ejs-fixes/product-harness/r22-cache-last-block/sealed-proof.json",
+          "sha256": "3cb100abe46e4d708fb1c1ce68a68cf9dca94055584428c57e28cc9e57b1597a"
+        },
+        "observed": "After normal Review exit, remove only the last cached ROM block. Published launch automatically recovers through 64 valid 206 responses; 128 rebuilt blocks match the full ROM SHA. Native stylus input works.",
+        "limit": "The actual new EJS worker was verified; the Host snapshot was still old for this isolated worker check. Original R20 cause remains UNKNOWN."
+      },
+      "mame": {
+        "issues": [
+          118,
+          119,
+          122
+        ],
+        "result": "SCOPED_PASS",
+        "evidence": {
+          "path": "root/stable-r20/mame-product/r22-r2-seal/semantic-proof.json",
+          "sha256": "b8a7b19d9837cceada7231a10b70f0453eaa8877c0cdce1ad6ce922dfce6a1b0"
+        },
+        "observed": "Renegade explicitly reports required MCU before normal BIOS installation; afterward review/play/public save/cold restoration and continued battle input pass. Coleco saves and restores Monoscope, then native menu input renders Grid. SG1000 affected regression passes normal public save/cold restore/input. All three observe seven unpaused seconds, normal exits and owned-data cleanup.",
+        "hostSnapshot": {
+          "path": "root/stable-r22/host-refresh/verified.json",
+          "sha256": "61a4c836d751a6ca8faa185b04e27421dff3af31a26a8f913cd3332d8aa9cb9b"
+        },
+        "excludedEnvironment": {
+          "path": "root/stable-r20/mame-product/r22-renegade/excluded-environment.json",
+          "sha256": "7f24b49188b286596d9b84f4f2db4c1cb23919eaaf798ff6f4230c29e6d852b9"
+        },
+        "corePublication": {
+          "path": "root/stable-r23/mame-release/verification.json",
+          "sha256": "fc106f79a53ddf10a2fb718c6e94488a93e652ebd13d04d748ea103ff9112cc9"
+        },
+        "tag": "retrom-core-gf65d5ba9bc42-r3",
+        "commit": "11288494f6e4cc2334155223ec5575cb486aa242",
+        "runtimePinCommit": "4986844",
+        "formalArchiveEqualsCandidateFiles": 94
+      },
+      "retromSourceReuse": {
+        "path": "root/stable-r23/retrom-final-gates/reuse-verification.json",
+        "sha256": "a77c9be51f5a50cc3022faf82f9a3ece5f38ed8e643ac6c13079d28490669f1b"
+      },
+      "remaining": "Exact final-source gates, immutable runtime publication, final paired product/browser gates, Retrom images and release. External final receipts avoid a self-referential source digest."
+    }
+  }
+}

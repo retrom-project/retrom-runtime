@@ -7,12 +7,12 @@ import type {ContentSessionClient} from "../../content-io/client.js";
 afterEach(() => vi.unstubAllGlobals());
 
 it.each([
-  {indexUrl: "/runtime/content/game/digest/index.json", url: "/runtime/content/game/digest/game.zip"},
+  {indexUrl: "/api/v1/runs/run-id/resources/index/index-id", url: "/api/v1/runs/run-id/resources/resource-id/PC%E5%8E%9F%E4%BA%BA2.zip"},
   {indexUrl: "https://cdn.test/projects/catalog?signature=index", url: "./payload?signature=game"},
 ])("opens the declared DOS ZIP without depending on Host routes: $indexUrl", async ({indexUrl, url}) => {
   const digest = "a".repeat(64);
   vi.stubGlobal("fetch", vi.fn(async () => new Response(JSON.stringify({schemaVersion: 1, files: [{
-    path: "game.zip", url, sizeBytes: 1_000_000,
+    path: "game.zip", url, sizeBytes: 1_000_000, sha256: digest, mediaType: "application/zip",
   }]}))));
   const reads: number[] = [];
   const session = {open: vi.fn(async () => ({abi: "content-io-v1", sizeBytes: 1_000_000,
@@ -29,4 +29,19 @@ it.each([
   expect(reads).toEqual([0, 999_999]);
   expect(bundle.range.filename).toBe("game.zip");
   await bundle.range.dispose();
+});
+
+
+it.each([
+  {path: "game.zip", url: "/game.zip", sizeBytes: 1024, mediaType: "application/zip"},
+  {path: "game.zip", url: "/game.zip", sizeBytes: 1024, sha256: "a".repeat(64)},
+  {path: "game.zip", url: "/game.zip", sizeBytes: 1024, sha256: "invalid", mediaType: "application/zip"},
+  {path: "../game.zip", url: "/game.zip", sizeBytes: 1024, sha256: "a".repeat(64), mediaType: "application/zip"},
+  {path: "game.zip", url: "/game.zip", sizeBytes: 0, sha256: "a".repeat(64), mediaType: "application/zip"},
+])("rejects invalid public DOS metadata before opening content", async file => {
+  vi.stubGlobal("fetch", vi.fn(async () => new Response(JSON.stringify({schemaVersion: 1, files: [file]}))));
+  const session = {open: vi.fn()} as unknown as ContentSessionClient;
+  await expect(prepareDOSBundle({indexUrl: "/api/v1/runs/run-id/resources/index/index-id", contentDigest: "a".repeat(64)},
+    targetContentFixture(session, "dosbox-pure"), new AbortController().signal, () => {})).rejects.toThrow("DOSBOX_CONTENT_INDEX_INVALID");
+  expect(session.open).not.toHaveBeenCalled();
 });

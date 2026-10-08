@@ -58,8 +58,8 @@ const adapters = [
   adapter("jsbeeb-web", "JSBEEB_WEB", "jsbeeb-web-v1", "jsbeeb-snapshot-gzip-v1", capabilities(true, false, false)),
   defineAdapter({id: "apple2js-web", kind: "APPLE2JS_WEB", abi: "apple2js-web-v1",
     capabilities: capabilities(true, false, false),
-    checkpoint: {writeFormat: "apple2js-state-v1", readFormats: [
-      "apple2js-state-gzip-v1", "apple2js-state-gzip-v1-storage-v1", "apple2js-state-v1",
+    checkpoint: {semantics: "INSTANT", writeFormat: "apple2js-state-v1", readFormats: [
+      "apple2js-state-v1",
     ]}}),
   defineAdapter({id: "samcoupe-web", kind: "SAMCOUPE_WEB", abi: "samcoupe-web-v1",
     capabilities: capabilities(true, false, false),
@@ -85,7 +85,7 @@ const adapters = [
   adapter("kirikiri2-web", "KIRIKIRI2_WEB", "kirikiri-content-io-v1",
     "kirikiri-save-bundle-v1", standardCapabilities),
   defineAdapter({id: "mkxp-libretro-web", kind: "MKXP_LIBRETRO_WEB", abi: "mkxp-content-io-v1",
-    checkpoint: {writeFormat: "mkxp-state-v1", readFormats: ["mkxp-state-v1", "mkxp-state-compact-v1"]}, capabilities: rpgCapabilities}),
+    checkpoint: {semantics: "INSTANT", writeFormat: "mkxp-state-v1", readFormats: ["mkxp-state-v1"]}, capabilities: rpgCapabilities}),
   adapter("native-web", "NATIVE_WEB", "native-save", "native-save-bundle-v1", nativeCapabilities),
   adapter("ons-yuri-web", "ONS_YURI_WEB", "ons-save", "ons-save-bundle-v1", standardCapabilities),
   adapter("tyranoscript-web", "TYRANOSCRIPT_WEB", "tyranoscript-snapshot-v1",
@@ -222,7 +222,7 @@ function adapter(
   return defineAdapter({
     abi,
     capabilities: adapterCapabilities,
-    checkpoint: {readFormats: [checkpointFormat], writeFormat: checkpointFormat},
+    checkpoint: {semantics: "INSTANT", readFormats: [checkpointFormat], writeFormat: checkpointFormat},
     id,
     kind,
   });
@@ -244,7 +244,6 @@ function target(
     adapterId,
     assetPaths,
     checkpointMaxBytes,
-    discSwitch: false,
     displayName,
     frameMode,
     id,

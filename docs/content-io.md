@@ -248,7 +248,7 @@ the bridge. The index allows empty files and unique ASCII case aliases.
 
 PRELOAD authenticates the isolated bootstrap before downloading, while its
 host page waits for an explicit start signal without running game code. This
-keeps short-lived tickets from expiring during a large download. It fills and
+retains its scoped resource context through a large download. It fills and
 leases every indexed file before the game starts. ON_DEMAND
 uses the same INDEX_ENTRY identities and reads existing blocks, including after
 a different Launch. Missing storage remains an explicit PRELOAD failure. A
@@ -267,6 +267,6 @@ EmulatorJS ordinary ROM_BLOB and BIOS_BUNDLE inputs use EAGER Content I/O. The c
 
 ## Persistent original content regression
 
-EmulatorJS external firmware and every MULTI_DISC entry are materialized through Content I/O before the upstream loader receives local Blob URLs. Firmware uses FIRMWARE identity and discs use GAME identity, matching PRELOAD. Blob leases and URLs remain owned until exit, including partial preparation failure and cancellation. MAME Arcade BIOS bundles likewise use the managed bios policy before their bounded archive extraction. Parent archives continue using their existing verified identities.
+EmulatorJS external firmware and referenced tracks of a single CUE disc are materialized through Content I/O before the upstream loader receives local Blob URLs. Firmware uses FIRMWARE identity and tracks use GAME identity, matching PRELOAD. Blob leases and URLs remain owned until exit, including partial preparation failure and cancellation. MAME Arcade BIOS bundles likewise use the managed bios policy before their bounded archive extraction. Parent archives continue using their existing verified identities.
 
 The product regression runs a cold launch, closes the browser, then starts a distinct launch with the same disk profile, HTTP cache disabled and original ROM/Parent/BIOS URLs blocked. A warm pass requires a running game and zero original-content requests. EasyRPG additionally exercises default ON_DEMAND and explicit PRELOAD. The retention regression covers OPFS and Cache Storage across sessions, including valid partial blocks older than 24 hours and complete content above the former application budget; quarantined objects still respect reader and Blob use leases before cleanup.

@@ -3,6 +3,14 @@ import {lstat, readFile, readdir, writeFile, mkdir} from "node:fs/promises";
 import {dirname, isAbsolute, join} from "node:path";
 
 const sources = new Map([
+  ["mame2003", {repository: "https://github.com/retrom-project/mame2003-libretro",
+    upstreamCommit: "b6c6d52d8d630d1a172b6b771443dcbbdb45b76d", license: "LICENSE.md"}],
+  ["mame2003_plus", {repository: "https://github.com/retrom-project/mame2003-plus-libretro",
+    upstreamCommit: "09e84fe55799031e225b9da5e526d82ee85b9cd8", license: "LICENSE.md"}],
+  ["fbalpha2012_cps2", {repository: "https://github.com/retrom-project/fbalpha2012_cps2",
+    upstreamCommit: "3fb5b89d2ab719e45e814e1ad0b5ff721bffdff2", license: "LICENSE"}],
+  ["parallel_n64", {repository: "https://github.com/retrom-project/parallel-n64",
+    upstreamCommit: "56f4daf8ec9b00d51d7db88e3c34c381294dbde0", license: "COPYING"}],
   ["dosbox_pure", {repository: "https://github.com/retrom-project/dosbox-pure",
     upstreamCommit: "3a5222c97456e8df90983eb546f4d866b0feb848", license: "LICENSE.md",
     threaded: true, release: "4.3.0-pre", adapterAbi: "emulatorjs-content-io-v1"}],

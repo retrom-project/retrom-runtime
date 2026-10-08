@@ -27,6 +27,64 @@ afterEach(() => {
 });
 
 describe("ONS Yuri runtime", () => {
+  it("exposes the native stable-wait boundary and rejects capture while rendering or transitioning", async () => {
+    const module = fakeModule();
+    module._onsyuri_host_checkpoint_ready.mockReturnValue(0);
+    (window as HostWindow).onsyuri = vi.fn(async (options: Record<string, unknown>) => {
+      Object.assign(options, module);
+      const configured = options as FakeModule;
+      configured.preRun?.();
+      return configured;
+    });
+    mockIndex();
+    const runtime = await createRuntime(config(), currentWindowHost(null));
+    const mounting = runtime.mount(document.createElement("div"));
+    await loadRuntimeScript();
+    await mounting;
+    expect(runtime.getCheckpointAvailability()).toEqual({available: false, reason: "BUSY"});
+    await expect(runtime.checkpoint()).rejects.toThrow();
+    expect(module._onsyuri_host_save).not.toHaveBeenCalled();
+    module._onsyuri_host_checkpoint_ready.mockReturnValue(1);
+    expect(runtime.getCheckpointAvailability()).toEqual({available: true, reason: null});
+    await expect(runtime.checkpoint()).resolves.toMatchObject({format: "ons-save-bundle-v1-storage-v1"});
+    await runtime.exit();
+  });
+
+  it("rechecks the native boundary atomically instead of exporting an old slot after readiness changes", async () => {
+    const module = fakeModule();
+    module._onsyuri_host_save.mockReturnValue(-1);
+    (window as HostWindow).onsyuri = vi.fn(async (options: Record<string, unknown>) => {
+      Object.assign(options, module);
+      const configured = options as FakeModule;
+      configured.preRun?.();
+      return configured;
+    });
+    mockIndex();
+    const runtime = await createRuntime(config(), currentWindowHost(null));
+    const mounting = runtime.mount(document.createElement("div"));
+    await loadRuntimeScript();
+    await mounting;
+    await expect(runtime.checkpoint()).rejects.toThrow("ONS_CHECKPOINT_NOT_READY");
+    expect(module._onsyuri_host_save).toHaveBeenCalledOnce();
+    await runtime.exit();
+  });
+
+  it("requires the native checkpoint boundary ABI before starting the engine", async () => {
+    const module = fakeModule();
+    Reflect.deleteProperty(module, "_onsyuri_host_checkpoint_ready");
+    (window as HostWindow).onsyuri = vi.fn(async (options: Record<string, unknown>) => {
+      Object.assign(options, module);
+      return options as FakeModule;
+    });
+    mockIndex();
+    const runtime = await createRuntime(config(), currentWindowHost(null));
+    const mounting = runtime.mount(document.createElement("div"));
+    await loadRuntimeScript();
+    await expect(mounting).rejects.toThrow("ONS_RUNTIME_ARTIFACT_INVALID");
+    expect(module.callMain).not.toHaveBeenCalled();
+    await runtime.exit();
+  });
+
   it("reports the engine process exit and makes checkpointing unavailable", async () => {
     const module = fakeModule();
     let configured: FakeModule | undefined;
@@ -101,11 +159,9 @@ describe("ONS Yuri runtime", () => {
     ];
     const indexBody = JSON.stringify({
       schemaVersion: 1,
-      title: "fixture",
-      fontPath: "default.ttf",
       files: projectFiles.map(({ path, bytes }) => ({
         path,
-        sizeBytes: bytes.byteLength,
+        sizeBytes: bytes.byteLength, sha256: "a".repeat(64), mediaType: "application/octet-stream",
         url: `https://content.example/${path}`,
       })),
     });
@@ -295,12 +351,10 @@ describe("ONS Yuri runtime", () => {
     });
     const body = JSON.stringify({
       schemaVersion: 1,
-      title: "fixture",
-      fontPath: "default.ttf",
       files: [
-        { path: "0.txt", sizeBytes: 1, url: "https://content.example/0.txt" },
-        { path: "default.ttf", sizeBytes: 1, url: "https://content.example/default.ttf" },
-        { path: "movie/intro.mp4", sizeBytes: 50_000_000, url: "https://content.example/movie/intro.mp4" },
+        { path: "0.txt", sizeBytes: 1, sha256: "a".repeat(64), mediaType: "application/octet-stream", url: "https://content.example/0.txt" },
+        { path: "default.ttf", sizeBytes: 1, sha256: "a".repeat(64), mediaType: "application/octet-stream", url: "https://content.example/default.ttf" },
+        { path: "movie/intro.mp4", sizeBytes: 50_000_000, sha256: "a".repeat(64), mediaType: "application/octet-stream", url: "https://content.example/movie/intro.mp4" },
       ],
     });
     const fetchMock = vi.fn(async () => new Response(body, { status: 200 }));
@@ -332,11 +386,9 @@ describe("ONS Yuri runtime", () => {
     });
     const body = JSON.stringify({
       schemaVersion: 1,
-      title: "fixture",
-      fontPath: "default.ttf",
       files: [
-        { path: "0.txt", sizeBytes: 1, url: `/runtime/content/project/${"a".repeat(64)}/0.txt` },
-        { path: "default.ttf", sizeBytes: 1, url: `/runtime/content/project/${"a".repeat(64)}/default.ttf` },
+        { path: "0.txt", sizeBytes: 1, sha256: "a".repeat(64), mediaType: "application/octet-stream", url: `/runtime/content/project/${"a".repeat(64)}/0.txt` },
+        { path: "default.ttf", sizeBytes: 1, sha256: "a".repeat(64), mediaType: "application/octet-stream", url: `/runtime/content/project/${"a".repeat(64)}/default.ttf` },
       ],
     });
     vi.stubGlobal("fetch", vi.fn(async () => new Response(body, { status: 200 })));
@@ -370,12 +422,10 @@ describe("ONS Yuri runtime", () => {
   it("rejects a project index with ambiguous case-insensitive paths", async () => {
     const body = JSON.stringify({
       schemaVersion: 1,
-      title: "fixture",
-      fontPath: "default.ttf",
       files: [
-        { path: "0.txt", sizeBytes: 1, url: "https://content.example/0.txt" },
-        { path: "0.TXT", sizeBytes: 1, url: "https://content.example/0.TXT" },
-        { path: "default.ttf", sizeBytes: 1, url: "https://content.example/default.ttf" },
+        { path: "0.txt", sizeBytes: 1, sha256: "a".repeat(64), mediaType: "application/octet-stream", url: "https://content.example/0.txt" },
+        { path: "0.TXT", sizeBytes: 1, sha256: "a".repeat(64), mediaType: "application/octet-stream", url: "https://content.example/0.TXT" },
+        { path: "default.ttf", sizeBytes: 1, sha256: "a".repeat(64), mediaType: "application/octet-stream", url: "https://content.example/default.ttf" },
       ],
     });
     vi.stubGlobal("fetch", vi.fn(async () => new Response(body, { status: 200 })));
@@ -394,11 +444,9 @@ function config() {return targetEnvelope("onscripter-yuri");}
 function mockIndex() {
   const body = JSON.stringify({
     schemaVersion: 1,
-    title: "fixture",
-    fontPath: "default.ttf",
     files: [
-      { path: "0.txt", sizeBytes: 1, url: "https://content.example/0.txt" },
-      { path: "default.ttf", sizeBytes: 1, url: "https://content.example/default.ttf" },
+      { path: "0.txt", sizeBytes: 1, sha256: "a".repeat(64), mediaType: "application/octet-stream", url: "https://content.example/0.txt" },
+      { path: "default.ttf", sizeBytes: 1, sha256: "a".repeat(64), mediaType: "application/octet-stream", url: "https://content.example/default.ttf" },
     ],
   });
   vi.stubGlobal("fetch", vi.fn(async () => new Response(body, { status: 200 })));
@@ -413,6 +461,7 @@ function fakeModule(): FakeModule {
     _onsyuri_host_load: vi.fn(() => 0),
     _onsyuri_host_did_restore_fail: vi.fn(() => 0),
     _onsyuri_host_is_ready: vi.fn(() => 1),
+    _onsyuri_host_checkpoint_ready: vi.fn(() => 1),
     _onsyuri_host_save: vi.fn((slot: number) => {
       FS.writeFile(`/save/save${slot}.dat`, Uint8Array.of(1, 2, 3));
       return 0;
@@ -432,6 +481,7 @@ type FakeModule = {
   _onsyuri_host_load: ReturnType<typeof vi.fn>;
   _onsyuri_host_did_restore_fail: ReturnType<typeof vi.fn>;
   _onsyuri_host_is_ready: ReturnType<typeof vi.fn>;
+  _onsyuri_host_checkpoint_ready: ReturnType<typeof vi.fn>;
   _onsyuri_host_save: ReturnType<typeof vi.fn>;
   _onsyuri_host_set_paused: ReturnType<typeof vi.fn>;
   _onsyuri_host_set_restore_slot: ReturnType<typeof vi.fn>;

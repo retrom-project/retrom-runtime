@@ -23,7 +23,7 @@ export class NativeContentFiles {
       const folded = asciiFold(path);
       this.folded.set(folded, this.folded.has(folded) ? null : path);
     }
-    if (!this.files.has("index.html")) {throw invalid();}
+    if (!canonicalPath(resource.entryFile) || !this.files.has(resource.entryFile)) {throw invalid();}
   }
   async request(value: unknown): Promise<Record<string, unknown>> {
     if (this.closed || this.signal?.aborted) {throw new ContentIOError("ABORTED");}

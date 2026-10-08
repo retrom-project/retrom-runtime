@@ -25,6 +25,7 @@ export async function mountRuffle(config: RuffleParameters, target: HTMLElement,
   const exit = async () => {
     if (exited) {return;}
     exited = true;
+    storage.stop();
     input?.dispose();
     gamepadCursor?.dispose();
     try {api.destroy();} finally {player.remove();}
@@ -37,8 +38,8 @@ export async function mountRuffle(config: RuffleParameters, target: HTMLElement,
     target.replaceChildren(player);
     const hostStorage = Object.freeze({
       get: (name: string) => {const value = storage.get(name); return value ? new realm.Uint8Array(value) : null;},
-      put: (name: string, bytes: Uint8Array) => !exited && storage.put(name, bytes),
-      remove: (name: string) => {if (!exited) {storage.remove(name);}},
+      put: (name: string, bytes: Uint8Array) => storage.put(name, bytes),
+      remove: (name: string) => storage.remove(name),
     });
     const loading = api.load({data: new realm.Uint8Array(data), hostStorage,
       swfFileName: "game.swf", hostMovieUrl: `https://retrom.invalid/${config.contentDigest}/game.swf`,

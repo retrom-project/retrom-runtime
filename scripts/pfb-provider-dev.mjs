@@ -3,7 +3,9 @@ import {createHash, randomUUID} from "node:crypto";
 import {lstat, mkdir, mkdtemp, readFile, rename, rm, writeFile} from "node:fs/promises";
 import {dirname, isAbsolute, join, resolve} from "node:path";
 import {fileURLToPath} from "node:url";
+import {build} from "esbuild";
 
+import {fingerprintProvider} from "./runtime-fingerprints.mjs";
 import {buildProviderClient} from "./provider-client-build.mjs";
 import {readPFBProviderCoreFiles, requireBaseContentPairs} from "./pfb-provider-cores.mjs";
 import {providerMediaType} from "./provider-bundle.mjs";
@@ -75,7 +77,12 @@ export async function buildPFBProviderDev(input) {
     await buildProviderClient({providerVersion: manifest.providerVersion, assetIndex, pfbCoreInputs, entryPoint: input.entryPoint, outfile: clientPath});
     files.push(fileDescriptor("client.mjs", await readRegular(clientPath)));
     files.sort((left, right) => Buffer.from(left.path).compare(Buffer.from(right.path)));
+    const {runtimeProviders, projectProviderManifest} = await currentDeclarations();
+    const definition = runtimeProviders.find(item => item.providerId === providerId);
+    const targetIdentities = await fingerprintProvider(definition, assetIndex);
     const descriptor = {
+      targetFingerprints: Object.fromEntries(Object.entries(targetIdentities).map(([id, item]) => [id, item.fingerprint])),
+      providerManifest: {...projectProviderManifest(definition), providerVersion: manifest.providerVersion},
       schemaVersion: 1,
       providerId,
       baseBundleSha256: provider.bundleSha256,
@@ -87,6 +94,12 @@ export async function buildPFBProviderDev(input) {
   } finally {
     await rm(staging, {recursive: true, force: true});
   }
+}
+
+async function currentDeclarations() {
+  const result = await build({stdin: {contents: 'export {runtimeProviders} from "./src/runtime/catalog.ts"; export {projectProviderManifest} from "./src/provider/manifest.ts";',
+    resolveDir: runtimeRoot}, bundle: true, platform: "node", format: "esm", write: false, logLevel: "silent"});
+  return import(`data:text/javascript;base64,${Buffer.from(result.outputFiles[0].contents).toString("base64")}`);
 }
 
 async function atomicWrite(path, contents) {
@@ -159,11 +172,9 @@ function validActiveTarget(value) {
   }
   const checkpoint = value.checkpoint;
   if (checkpoint === null) {return true;}
-  const hasSemantics = checkpoint && Object.hasOwn(checkpoint, "semantics");
-  if (hasSemantics && checkpoint.semantics !== "INSTANT" && checkpoint.semantics !== "GAME_SAVE") {return false;}
-  const keys = hasSemantics ? "maxBytes\0readFormats\0semantics\0writeFormat" : "maxBytes\0readFormats\0writeFormat";
   if (!checkpoint || typeof checkpoint !== "object" || Array.isArray(checkpoint) ||
-    Object.keys(checkpoint).sort().join("\0") !== keys ||
+    Object.keys(checkpoint).sort().join("\0") !== "maxBytes\0readFormats\0semantics\0writeFormat" ||
+    checkpoint.semantics !== "INSTANT" && checkpoint.semantics !== "GAME_SAVE" ||
     !Number.isSafeInteger(checkpoint.maxBytes) || checkpoint.maxBytes < 1 ||
     typeof checkpoint.writeFormat !== "string" || !Array.isArray(checkpoint.readFormats)) {
     return false;

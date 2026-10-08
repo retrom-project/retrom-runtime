@@ -117,7 +117,31 @@ describe("Lutro native saves", () => {
     fs.writeFile("/data/saves/lutro/lutro-native/Sienna/progress", new Uint8Array([2]));
     await tracker.refresh();
     expect(tracker.getAvailability().revision).not.toBe(first.revision);
-    await expect(tracker.acknowledge(saved)).rejects.toThrow("PLAYER_STATE_UNAVAILABLE");
+    await tracker.acknowledge(saved);
+    expect(tracker.getAvailability()).toMatchObject({available: true, reason: null});
     expect(events.length).toBeGreaterThanOrEqual(4);
+  });
+
+  it("acknowledges an exported pending revision without clearing newer native writes", async () => {
+    const fs = memoryFs();
+    importLutroNativeSave(fs, "Sienna.lutro", null, 1024);
+    const path = "/data/saves/lutro/lutro-native/Sienna/progress";
+    fs.writeFile(path, new Uint8Array([1]));
+    const tracker = new LutroNativeSaveTracker({fileName: "Sienna.lutro", gameManager: {FS: fs}} as unknown as EjsInstance,
+      1024, false, () => undefined);
+    const first = await tracker.capture();
+    fs.writeFile(path, new Uint8Array([2]));
+    await tracker.refresh();
+    const current = tracker.getAvailability().revision;
+    await tracker.acknowledge(first);
+    expect(tracker.getAvailability()).toMatchObject({available: true, reason: null, revision: current});
+    const second = await tracker.capture();
+    await tracker.acknowledge(second);
+    expect(tracker.getAvailability()).toMatchObject({available: false, reason: "UNCHANGED"});
+    await tracker.acknowledge(first);
+    expect(tracker.getAvailability()).toMatchObject({available: false, reason: "UNCHANGED"});
+    fs.writeFile(path, new Uint8Array([3]));
+    const unexported = captureLutroNativeSave(fs, "Sienna.lutro", 1024);
+    await expect(tracker.acknowledge(unexported)).rejects.toThrow("PLAYER_STATE_UNAVAILABLE");
   });
 });

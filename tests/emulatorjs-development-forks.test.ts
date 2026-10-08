@@ -21,19 +21,26 @@ import {join} from "node:path";
 import {afterEach} from "vitest";
 import {developmentForkFiles, requireDevelopmentForkMode, stageDevelopmentForks,
   verifyDevelopmentForkMetadata} from "../scripts/emulatorjs-development-forks.mjs";
+const maintainedCores: Record<string, {repository: string; upstreamCommit: string; license: string}> = {
+  mame2003: {repository: "mame2003-libretro", upstreamCommit: "b6c6d52d8d630d1a172b6b771443dcbbdb45b76d", license: "LICENSE.md"},
+  mame2003_plus: {repository: "mame2003-plus-libretro", upstreamCommit: "09e84fe55799031e225b9da5e526d82ee85b9cd8", license: "LICENSE.md"},
+  fbalpha2012_cps2: {repository: "fbalpha2012_cps2", upstreamCommit: "3fb5b89d2ab719e45e814e1ad0b5ff721bffdff2", license: "LICENSE"},
+  parallel_n64: {repository: "parallel-n64", upstreamCommit: "56f4daf8ec9b00d51d7db88e3c34c381294dbde0", license: "COPYING"},
+};
 const roots: string[] = [];
 afterEach(async () => {await Promise.all(roots.splice(0).map((root) => rm(root, {recursive: true, force: true})));});
 const sha = (bytes: Uint8Array) => createHash("sha256").update(bytes).digest("hex");
 function fixtureUpstreamCommit(core: string) {
+  if (maintainedCores[core]) {return maintainedCores[core].upstreamCommit;}
   return core === "gam4980" ? "eeaa531b55e7127ab4b5e0bdc5ceba686df59c6a" : core === "uzem" ? "d991ee94547c8294abc1c4cb73d63116aa58b5bc" : core === "neocd" ? "3118c6901787e863e80e79170d02d47657b3b0ab" : core === "bsnes" ? "4b344745e3878e7c0675a60c624582935524b8f7" : core === "vecx" ? "8f671cc9d737f2890c3ce19e177e2984dcae121f" : core === "same_cdi" ? "cfb05d803f54130adf94efef88edd816d01df7a3" : core.startsWith("vice_") ? "1b4309f4d56ded7bfc5ad7ba8d5a9a44ac3388a8" : core === "cap32" ? "310cc579b79b6051b378b192224b325a73437c9b" : core === "81" ? "86decf3ee61ea5803972948e80197bee8474796b" : "be00fb904da08d66221017f6708508298f17ff07";
 }
 function fixture(core = "cap32") {
-  const license = core === "bsnes" ? "LICENSE.txt" : ["vecx", "neocd"].includes(core) ? "LICENSE.md" : (core === "cap32" || core === "same_cdi" || core.startsWith("vice_")) ? "COPYING" : "LICENSE";
+  const license = maintainedCores[core]?.license ?? (core === "bsnes" ? "LICENSE.txt" : ["vecx", "neocd"].includes(core) ? "LICENSE.md" : (core === "cap32" || core === "same_cdi" || core.startsWith("vice_")) ? "COPYING" : "LICENSE");
   const contents = new Map([...[license, `${core}-wasm.data`, "source.tar.gz"].map((name) =>
     [name, Buffer.from(`project-owned ${name} test bytes`)] as const)]);
   const files = [...contents].map(([filename, bytes]) => ({filename, sha256: sha(bytes), sizeBytes: bytes.length}));
   const metadata = {schemaVersion: 1, kind: "RETROM_CORE_CANDIDATE_V1", coreId: core,
-    repository: `https://github.com/retrom-project/${core === "gam4980" ? "gam4980" : core === "neocd" ? "neocd_libretro" : core === "bsnes" ? "bsnes-libretro" : core.startsWith("vice_") ? "vice-libretro" : core === "81" ? "81-libretro" : core === "same_cdi" ? "same_cdi" : `libretro-${core}`}`, branch: "feat/test-core",
+    repository: `https://github.com/retrom-project/${maintainedCores[core]?.repository ?? (core === "gam4980" ? "gam4980" : core === "neocd" ? "neocd_libretro" : core === "bsnes" ? "bsnes-libretro" : core.startsWith("vice_") ? "vice-libretro" : core === "81" ? "81-libretro" : core === "same_cdi" ? "same_cdi" : `libretro-${core}`)}`, branch: "feat/test-core",
     commit: "a".repeat(40), dirty: false, sourceTreeSha256: "b".repeat(64), adapterAbi: "emulatorjs-state-v1", files};
   const bytes = Buffer.from(JSON.stringify(metadata));
   contents.set("retrom-core-candidate.json", bytes);
@@ -46,7 +53,7 @@ function fixture(core = "cap32") {
 async function directory() {const root = await mkdtemp(join(tmpdir(), "cap32-candidate-")); roots.push(root); return root;}
 
 describe("EmulatorJS local core provenance", () => {
-  it.each(["uzem", "gam4980"])("stages %s and rejects source drift, tampering and production use", async (core) => {
+  it.each(["uzem", "gam4980", ...Object.keys(maintainedCores)])("stages %s and rejects source drift, tampering and production use", async (core) => {
     const {catalog, contents, fork, metadata} = fixture(core), source = await directory(), output = await directory();
     for (const [name, bytes] of contents) {await writeFile(join(source, name), bytes);}
     await stageDevelopmentForks(catalog, new Map([[core, source]]), output);

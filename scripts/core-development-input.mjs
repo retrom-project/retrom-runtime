@@ -1,14 +1,16 @@
 import {lstat, mkdir, readFile, readdir, writeFile} from "node:fs/promises";
 import {join} from "node:path";
 import {sha256} from "./provider-sources.mjs";
+import {validCandidateArchive, verifyPinnedCoreDirectory} from "./core-candidate-archive.mjs";
 export function validCoreDevelopmentInput(value) {
-  if (!exact(value, ["id", "repository", "upstreamCommit", "adapterAbi", "assets"]) ||
+  if (!exact(value, ["id", "repository", "upstreamCommit", "adapterAbi", "assets", ...(value?.candidateArchive ? ["candidateArchive"] : [])]) ||
     !/^[a-z0-9_]{1,64}$/u.test(value.id) || !/^https:\/\/github\.com\/retrom-project\/[A-Za-z0-9._-]+$/u.test(value.repository) ||
     !/^[0-9a-f]{40}$/u.test(value.upstreamCommit) || !/^[a-z0-9-]+$/u.test(value.adapterAbi) ||
     !Array.isArray(value.assets) || value.assets.length < 2 ||
-    value.assets.length > (value.id === "mame" ? 256 : 12)) {return false;}
+    value.assets.length > (value.id === "mame" ? 256 : 12) ||
+    value.candidateArchive && !validCandidateArchive(value.candidateArchive)) {return false;}
   const names = new Set(), outputs = new Set();
-  const runtimeDirectory=value.id === "kirikiri2" ? "kirikiri" : value.id;
+  const runtimeDirectory = {kirikiri2: "kirikiri", onsyuri: "ons"}[value.id] ?? value.id;
   for (const asset of value.assets) {
     if (!exact(asset, ["filename", "output", "maxSizeBytes"]) || !/^[A-Za-z0-9._-]+$/u.test(asset.filename) ||
       !new RegExp(`^(runtime/${runtimeDirectory}|licenses/${value.id})/[A-Za-z0-9._-]+$`, "u").test(asset.output) ||
@@ -42,6 +44,7 @@ export async function stageCoreDevelopmentInput(source, directory, stage) {
     const target = new URL(asset.output, stage);
     await mkdir(new URL(".", target), {recursive: true}); await writeFile(target, bytes); outputs.push(asset.output);
   }
+  await verifyPinnedCoreDirectory(source, directory, descriptor);
   return outputs;
 }
 async function boundedRead(path, maximum) {

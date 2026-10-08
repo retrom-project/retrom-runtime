@@ -66,7 +66,7 @@ export function easyRpg(envelope: LaunchEnvelopeV1, implementation: Readonly<Rec
     sessionId: envelope.session.id,
     checkpointSlot: 100,
     engineMode: implementation.engineMode,
-    projectRootUrl: rootFromIndex(game.indexUrl),
+    projectRootUrl: `${game.indexUrl}/`,
     rtpSource: rtp ? fileTreeSource(rtp) : null,
     runtimeBaseUrl: assetBase(envelope, "easyrpg"),
   };
@@ -111,10 +111,7 @@ export function nativeRpg(
   if (implementation.bridgeProfile !== "RPGMV" && implementation.bridgeProfile !== "RPGMZ") {invalidRequest();}
   return {
     sessionId: envelope.session.id,
-    bootstrapTicket: game.bootstrapTicket,
-    bootstrapUrl: game.entryUrl,
     bridgeProfile: implementation.bridgeProfile,
-    cleanupUrl: game.cleanupUrl,
     uniqueOrigin: game.origin,
   };
 }
@@ -159,9 +156,6 @@ export function tyranoScript(envelope: LaunchEnvelopeV1): TyranoScriptParameters
   const game = resource(envelope, "game", "ISOLATED_WEB");
   return {
     sessionId: envelope.session.id,
-    bootstrapTicket: game.bootstrapTicket,
-    cleanupUrl: game.cleanupUrl,
-    entryUrl: game.entryUrl,
     uniqueOrigin: game.origin,
   };
 }
@@ -233,11 +227,6 @@ function resources<Kind extends RuntimeResourceV1["kind"]>(
 }
 
 type RuntimeResourceOfKind<Kind extends RuntimeResourceV1["kind"]> = RuntimeResourceV1 & {kind: Kind};
-
-function rootFromIndex(indexUrl: string) {
-  if (!indexUrl.endsWith("/index.json")) {invalidRequest();}
-  return indexUrl.slice(0, -"index.json".length);
-}
 
 function fileTreeSource(resourceValue: RuntimeResourceOfKind<"FILE_TREE">): FileTreeSource {
   return {kind: "FILE_TREE", indexUrl: resourceValue.indexUrl};

@@ -12,10 +12,17 @@ const emulatorJsOptionsSchema = {
   additionalProperties: false,
   properties: {
     dosEntryPath: {format: "safe-path", maxLength: 240, type: ["string", "null"]},
-    initialDiscIndex: {minimum: 0, type: ["integer", "null"]},
   },
-  required: ["dosEntryPath", "initialDiscIndex"],
+  required: ["dosEntryPath"],
   type: "object",
+} as const satisfies TargetOptionsSchema;
+
+const thomsonOptionsSchema = {
+  ...emulatorJsOptionsSchema,
+  properties: {
+    ...emulatorJsOptionsSchema.properties,
+    thomsonModel: {type: "string", enum: ["Auto", "MO5", "MO6", "PC128", "TO7", "TO7/70", "TO8", "TO8D", "TO9", "TO9+"]},
+  },
 } as const satisfies TargetOptionsSchema;
 
 const capabilities = {
@@ -30,32 +37,32 @@ const capabilities = {
 const adapters = [
   defineAdapter({
     abi: "emulatorjs-state-v1", capabilities,
-    checkpoint: {readFormats: ["gam4980-state-v1", "gam4980-state-v1-storage-v1", "gam4980-state-v2"], writeFormat: "gam4980-state-v2"},
+    checkpoint: {semantics: "INSTANT", readFormats: ["gam4980-state-v2"], writeFormat: "gam4980-state-v2"},
     id: "emulatorjs-gam4980", kind: "EMULATORJS_4_2_3",
   }),
   defineAdapter({
     abi: "emulatorjs-flycast-state-v1", capabilities,
-    checkpoint: {readFormats: ["flycast-state-gzip-v1", "flycast-state-v1"], writeFormat: "flycast-state-v1"},
+    checkpoint: {semantics: "INSTANT", readFormats: ["flycast-state-v1"], writeFormat: "flycast-state-v1"},
     id: "emulatorjs-flycast", kind: "EMULATORJS_FLYCAST",
   }),
   defineAdapter({
     abi: "emulatorjs-state-v1", capabilities,
-    checkpoint: {readFormats: ["emulatorjs-state-v1"], writeFormat: "emulatorjs-state-v1"},
+    checkpoint: {semantics: "INSTANT", readFormats: ["emulatorjs-state-v1"], writeFormat: "emulatorjs-state-v1"},
     id: "emulatorjs-4.2.3", kind: "EMULATORJS_4_2_3",
   }),
   defineAdapter({
     abi: "emulatorjs-state-v1", capabilities,
-    checkpoint: {readFormats: ["emulatorjs-state-v1"], writeFormat: "emulatorjs-state-v1"},
+    checkpoint: {semantics: "INSTANT", readFormats: ["emulatorjs-state-v1"], writeFormat: "emulatorjs-state-v1"},
     id: "emulatorjs-4.3.0-pre", kind: "EMULATORJS_4_3_0_PRE",
   }),
   defineAdapter({
     abi: "emulatorjs-state-gzip-v1", capabilities,
-    checkpoint: {readFormats: ["emulatorjs-state-v1", "emulatorjs-state-gzip-v1"], writeFormat: "emulatorjs-state-v1"},
+    checkpoint: {semantics: "INSTANT", readFormats: ["emulatorjs-state-v1"], writeFormat: "emulatorjs-state-v1"},
     id: "emulatorjs-psp", kind: "EMULATORJS_PSP",
   }),
   defineAdapter({
     abi: "emulatorjs-state-v1", capabilities,
-    checkpoint: {readFormats: ["bsnes-state-v1"], writeFormat: "bsnes-state-v1"},
+    checkpoint: {semantics: "INSTANT", readFormats: ["bsnes-state-v1"], writeFormat: "bsnes-state-v1"},
     id: "emulatorjs-bsnes", kind: "EMULATORJS_4_3_0_PRE",
   }),
   defineAdapter({
@@ -73,8 +80,8 @@ const inputs = [
   {cardinality: "ONE", kind: "ROM_BLOB", optional: false, role: "game"},
   {cardinality: "ONE", kind: "BIOS_BUNDLE", optional: true, role: "bios"},
   {cardinality: "ONE", kind: "PARENT_ARCHIVE", optional: true, role: "parent"},
-  {cardinality: "ONE", kind: "MULTI_DISC", optional: true, role: "discs"},
   {cardinality: "ONE", kind: "EXTERNAL_FILE_SET", optional: true, role: "external"},
+  {cardinality: "ONE", kind: "EXTERNAL_FILE_SET", optional: true, role: "game-files"},
 ] as const satisfies readonly TargetInputDeclaration[];
 
 type RuntimeRelease = "4.2.3" | "4.3.0-pre";
@@ -104,7 +111,7 @@ type CoreSource = {
   defaultOptions: Readonly<Record<string, string>>;
   inputMode: InputMode;
   startupActions: readonly StartupAction[];
-  contentKinds: readonly ("SINGLE_FILE" | "DOS_BUNDLE" | "MULTI_DISC" | "DAPHNE_PROJECT")[];
+  contentKinds: readonly ("SINGLE_FILE" | "DOS_BUNDLE" | "DAPHNE_PROJECT")[];
 };
 
 // Replaced with an empty object by formal builds. PFB supplies only verified,
@@ -139,7 +146,7 @@ const cores: readonly CoreSource[] = [
 
   core("a5200", "4.2.3", "a5200-wasm.data", 881560, "c82476478d6b70b9da80cccc27ca06a5fd85acf7cdd5643f230cc4d6777990ef", "c402648f858a8a566b39c8d0949470eeeda5f0346b8dfc6228dad312a0af295d"),
   core("azahar", "4.3.0-pre", "azahar-thread-wasm.data", 4035286, "ae5fb48d9662c6f1b46f872eee302dc3d11c58d804bbd2d86a78dbb361a21a69", "f15c560df7dc5038d0e8026b45f6ab05e11bb8a5cacbb801059e81e4db586a97", {inputMode: "POINTER", defaultOptions: {webgl2Enabled: "enabled"}}),
-  core("beetle_vb", "4.2.3", "beetle_vb-wasm.data", 858313, "3db727a78b6a6551a4024c273069eb39c8e8f33aa78ef16a073ed7460f6ce692", "71604fbf1001fc5d053b08ce5f8396a1da456f176a0b3106eff08f7cac3e5986", {startupActions: [press(2000, 0), press(4000, 3), press(15000, 3), press(25000, 3)]}),
+  core("beetle_vb", "4.2.3", "beetle_vb-wasm.data", 858313, "3db727a78b6a6551a4024c273069eb39c8e8f33aa78ef16a073ed7460f6ce692", "71604fbf1001fc5d053b08ce5f8396a1da456f176a0b3106eff08f7cac3e5986"),
   core("bsnes", "4.3.0-pre", "bsnes-wasm.data", 1226327, "c0384975cf12d2227ccf31a03966ebf677c63fef44fc0852ef574efa2673fec1", "91994d91c9d828d8179936ada920d64b7a28cfb274ef75d560a60b46305fe610", {artifactFlavor: "OVERRIDE", coreBundleVersion: "retrom-core-g4b344745e387-r1"}),
   core("cap32", "4.2.3", "cap32-wasm.data", 1029996, "534321cbb8f3f62fd2d2c8cc01b34ae50f6315869755218f8f6fa6581aa5083b", "2b1bc24a3fef304aca5a1e2a240b3ecde947fe4f72a3af75624953ccfc4e8faf", {artifactFlavor: "OVERRIDE", coreBundleVersion: "retrom-core-g310cc579b79b-r4", defaultOptions: {keyboardInput: "enabled"}}),
   core("crocods", "4.2.3", "crocods-wasm.data", 976148, "8c70df810436f225c5a2b40f31555636d6e12eacd41968f28b7dc708a9c6db10", "51e5f77fbcd99f13c49efae470290e4d1215ad10bc992e4a3332da72568119c9", {artifactFlavor: "OVERRIDE", coreBundleVersion: "retrom-core-gbe00fb904da0-r1", defaultOptions: {keyboardInput: "enabled"}}),
@@ -147,7 +154,7 @@ const cores: readonly CoreSource[] = [
   core("desmume2015", "4.2.3", "desmume2015-wasm.data", 1043573, "6f45da7f37007c0a69b7d91490b43e8294d4d642d1cc4ac999b341416f1ce13f", "5fc49392b5b73cd59446bf2ff6e01f4a2a9a7c07761cdb724ac1712bcc69ac0f", {inputMode: "POINTER"}),
   core("dosbox_pure", "4.3.0-pre", "dosbox_pure-thread-wasm.data", 1811506, "ad4368ae51924e23f8a36a2c8fd3dc36d04bd3c1e249e5f4fae782ee78527025", "d7343fb6a79bf35c939f34194dc33ff85d46f198de5a5efe2446cc2ce12048d5", {contentKinds: ["DOS_BUNDLE"]}),
   core("fbalpha2012_cps1", "4.2.3", "fbalpha2012_cps1-wasm.data", 1031240, "15b47667eb3c3746649c79e997b9f8c463f83bed9f61f51322cbe4db3d6e078e", "8e95c25731ad4868449f5bb6f8b238c8fa6ea2352e117817b124764354465da9"),
-  core("fbalpha2012_cps2", "4.2.3", "fbalpha2012_cps2-wasm.data", 992866, "432c2dd513603b04ccbf4e81f282f012763d2435311805443e2bd0cc9021d8d1", "73ac6fc4b1a2030701471b630e658118486e99c6c7349663dadcde4abeab6e5d"),
+  core("fbalpha2012_cps2", "4.2.3", "fbalpha2012_cps2-wasm.data", 982195, "b73afff3f7265900f1d5ba7b1ece3982b1931467bcb87187b53058201cb56561", "49337524b4f659313286e136114730ce5b96342b272cd71259dd984a06fa6416", {artifactFlavor: "OVERRIDE", coreBundleVersion: "retrom-core-g3fb5b89d2ab7-r1"}),
   core("fbneo", "4.2.3", "fbneo-wasm.data", 8697867, "eab740b32303a75fa9007a4d03e6566aa4ece0e84d3550b2f9490d116e106625", "5d3d8d417e49ef7a4268191800fccdf3efcebaff8121d358d5b9c713fff26170"),
   core("fceumm", "4.2.3", "fceumm-wasm.data", 1054015, "8c449fd5c36646fb0769423ed6ffa9efbdfc21fbfdc9bac7952b559d34d5b493", "d1a20a10b27908b6f199ed8d10f7ccf4376065b8a733492aee53b4d4a2c2f26d"),
   core("freeintv", "4.3.0-pre", "freeintv-wasm.data", 1139022, "e5f84b6a322e5b01b077e6e60895f52555af6ddc5838bfc775f946a0d44a8d6e", "9a5045b039305fbc0ed13a679cb6534980f2b2b4e1cb321ba9d109c5cc0c9062"),
@@ -161,8 +168,8 @@ const cores: readonly CoreSource[] = [
   {...genesisPlusGX, targetId: "genesis_plus_gx_cd", defaultOptions: {...genesisPlusGX.defaultOptions, genesis_plus_gx_cd_precache: "disabled"}},
   core("genesis_plus_gx_wide", "4.3.0-pre", "genesis_plus_gx_wide-wasm.data", 1007775, "653b59f5b4c3147c6786313ecd60c6657b1bc0d465814919d363728afa93b2e0", "76fc52778209b88d6e7c22aa921d735c9bb8dbf53fea08e74ec08ce3c26b6d60"),
   core("handy", "4.2.3", "handy-wasm.data", 862304, "ab49f61338fcc3b79a945b02005815066c4d9aadb8de6ab59c408dc158aaeeff", "7fdd80119886994285f34905a38b7159d6c807539d0533bbd786ec442023a810"),
-  core("mame2003", "4.2.3", "mame2003-wasm.data", 4993110, "1d8283ce042f71607b9b55656cd4068f703c52faa7a3d0940855c9dd21d542df", "92a7d5f005aa6667fb712e1bedd1cd5864780e4854f6a5dd620ffb955ed87e3e", {artifactFlavor: "OVERRIDE", canvasResizePolicy: "ON_GAME_START_TO_CSS_PIXELS", coreBundleVersion: "4.2.1"}),
-  core("mame2003_plus", "4.2.3", "mame2003_plus-wasm.data", 5391355, "cb6d9c80a88b65d1579d16d02128a678f8d1cd3f51de1479e647cea27b13247b", "233ae3603dd1889ca00273373e8b83503b8ae59951453e91f3f2bfee362848ea"),
+  core("mame2003", "4.2.3", "mame2003-wasm.data", 5029085, "55101c1e658b06b07c14734165e1f1d991cb7ca82087ad36985118f5e6473993", "e0111a90ea0a03615b5017f246156bc84d522f4697ee147bafa758f07e87b001", {artifactFlavor: "OVERRIDE", canvasResizePolicy: "ON_GAME_START_TO_CSS_PIXELS", coreBundleVersion: "retrom-core-gb6c6d52d8d63-r1"}),
+  core("mame2003_plus", "4.2.3", "mame2003_plus-wasm.data", 5417111, "26e6f5bf72b7225a67ff0c0798d603cc3adf57a5c9463aeb8b8197f6673fef26", "7a54c1af75784bce49c021972018300dde6ccb26ad23e26fc5d251f1250cda2f", {artifactFlavor: "OVERRIDE", coreBundleVersion: "retrom-core-g09e84fe55799-r1"}),
   core("mednafen_ngp", "4.2.3", "mednafen_ngp-wasm.data", 871904, "cdfe377bd380e418507dccda50d8664eecb06ebe1d2e5fbf5f397be859d1c83d", "9705cd898514bb807cfad0db67473e6f1e2db98152da802dad024a3d7243f0c5"),
   core("mednafen_pce", "4.2.3", "mednafen_pce-wasm.data", 994844, "29cebda0c7a93bbcb5e67e97fe28a1886bd030715d5a25224e7d9175d1d985c3", "e53f98ae4711886d3a6baf7072804145d4dbba265b598e726a7835c7d0fafdd0"),
   core("mednafen_pcfx", "4.2.3", "mednafen_pcfx-wasm.data", 953008, "7a49a92992d463afc1f414dc5f3eff99613ae9340fbf137a10b6df0ac890f29e", "3f4cc068607aab63cb9391842bdd1403c658503a7ee0de9624840178e89c6da6"),
@@ -173,7 +180,7 @@ const cores: readonly CoreSource[] = [
   core("mupen64plus_next", "4.2.3", "mupen64plus_next-wasm.data", 1451795, "2da1cbce9fda395e3ae83ca5787353baa159142d45ef3ea90f108b92524f76cc", "1471de394753ecff65b8945f8656c3187c8c2ba1119ac432e4b2a65e20167a07"),
   core("nestopia", "4.2.3", "nestopia-wasm.data", 1219547, "051de1b67a5b582b8a1bac6b99471d4f9f883ce3b3603d00330c1a066e546375", "513140634c8fe76611e0231be5a782805ce3217be17da39941bbac64b075a229"),
   core("opera", "4.2.3", "opera-wasm.data", 854147, "3e737f4f739814c12c017a5f26cb1e43bdfe3ac6f2d3bf6e8972633df49e33d4", "7e08a187b7a7309f754fd2a2be20aa97fa4bdf22d930d0b92686d00593e209f6", {defaultOptions: {opera_nvram_storage: "per game"}}),
-  core("parallel_n64", "4.2.3", "parallel_n64-wasm.data", 1028134, "873755608d41a604f3eee11b631f1cbe7e4d8c4d10c92859c27941299c8ef6a6", "570e28f134062f8681992b5160b8c503f23e492e2a10d852cca86da3c926f07a"),
+  core("parallel_n64", "4.2.3", "parallel_n64-wasm.data", 1039770, "6cf2e3eecdf91429bbf4d2b29718d1158fe6a4251bfa11263a1e05c786ad07c8", "75bdcd74b1c3739444717c17096c9f0cf9fec50ac2cbdd85100bade701c1c43f", {artifactFlavor: "OVERRIDE", coreBundleVersion: "retrom-core-g56f4daf8ec9b-r1"}),
   core("pcsx_rearmed", "4.2.3", "pcsx_rearmed-wasm.data", 1039627, "fe5515f6c29f093f0e8c01824b213804f1f76eb9cb4c97c72fe2cc17606bfbc2", "14cafda8e2a977fe406ffe7f6b66eebe1b35981cafafefbfa7436f68e79a8520"),
   core("picodrive", "4.2.3", "picodrive-wasm.data", 1034483, "bb5d50b8b88111b583977d2f7a16d01a822b3deda9205048d99ecaad2c56d861", "043ab4ae01f3018243aaf1dce6d5eb1ce098c146154be8f8a50914a4e42edfb0"),
   core("ppsspp", "4.3.0-pre", "ppsspp-thread-wasm.data", 4548468, "b75f51aa9c66bfb20c3b056b0dc5f9246516648786d0f0e73d636f224ff9080f", "d3c58abe2b9a375044ea03ceca1cfd4bb035507e8c7eff5c52401a21c3bc130d", {outputSizeLimit: {width: 960, height: 544}, startupActions: [press(2000, 0), press(5000, 0)]}),
@@ -185,7 +192,7 @@ const cores: readonly CoreSource[] = [
   core("smsplus", "4.2.3", "smsplus-wasm.data", 855876, "0f197c5e0000f17b2d072122a72b3f8fc1693514c4014fcd9694eec78584aa08", "a09612f1d088bffe8d9c107caf196b023710ed4aaeaa24f05caee7eec8591ff0"),
   core("snes9x", "4.2.3", "snes9x-wasm.data", 1093765, "eaa0bcfce67673809886e50387a80a616b719502175db64c090d04c9d75958ee", "f2ecf64d84dc3845ccd9828daf48436667f6aa79e6a5d6c41f0965f0151f1f34"),
   core("stella2014", "4.2.3", "stella2014-wasm.data", 1051659, "6c96c6b1746f3f05ca599066abe131a36c77ca61fc20a9e2a7560540457c487d", "f5244febaf876003e9acf97e09b8785f1f51563c3f96527232652c1d9ec40e68"),
-  core("vecx", "4.2.3", "vecx-wasm.data", 856199, "bd66a59cafb8ad3f742d85f177550966f79926030aa7bd660f4ffe3a0c02c6db", "16ea415148668169b2f67f3a929cee70e26e05ca92b1d87f2a8012aeb2312ccb", {artifactFlavor: "OVERRIDE", coreBundleVersion: "retrom-core-g8f671cc9d737-r1"}),
+  core("vecx", "4.2.3", "vecx-wasm.data", 856452, "3880ffff1aa380551eb21f4ff0b39392abf0fbe3897cba02e7ae8330ce23aa1f", "84de64676bb28b4dcc39869b75543e7d6020824718058ca55403389e307895d8", {artifactFlavor: "OVERRIDE", coreBundleVersion: "retrom-core-g8f671cc9d737-r2"}),
   core("vice_x128", "4.2.3", "vice_x128-wasm.data", 1595414, "dbac85e530b006c2d17e200c445de582c7ea272bacf333e4b4f8c1e391ed8506", "e8ef53ec0bc53244319e87a8f6b75396f077a982dd4438743a52e82f0c136126", {inputMode: "POINTER"}),
   core("vice_x64", "4.2.3", "vice_x64-wasm.data", 1528680, "ccc5a868163b67e21f6f4c4cc994a6290cf44ab079eaf28e3a992defa2bd66f0", "643787490d9f261abe7a329d6d2daac8b2cdf469f037adcdac0fa8262fb37d50", {inputMode: "POINTER"}),
   core("vice_x64sc", "4.2.3", "vice_x64sc-wasm.data", 1523457, "77f58884c81b58721cbc4754ffc5574838219258e9390630c352a494a3f335ab", "4b788799ef1225e48610b99bdf746425ba6e2bda27fa105fd1238dfbb9fb47cb", {inputMode: "POINTER"}),
@@ -193,7 +200,7 @@ const cores: readonly CoreSource[] = [
   core("vice_xplus4", "4.2.3", "vice_xplus4-wasm.data", 1416694, "5725e2b32b7c7bf7fd49cf7fc117eae20ca96a67676a8642147b2ebf130750fb", "230a0b53aa7889dc4746bcb2c8f2b1a28b51c50c9a911d623b52d0426310c3bb", {artifactFlavor: "OVERRIDE", coreBundleVersion: "retrom-core-g1b4309f4d56d-r2", defaultOptions: {keyboardInput: "enabled", vice_joyport: "1"}}),
   core("vice_xvic", "4.2.3", "vice_xvic-wasm.data", 1400563, "8d77779568ff9ac2fe46f11ad6f37e39cc6be44dae337e0fb8cda4f29f283a49", "dc63426f1804edb9ca95a8417c68ec792c0ef52ec860ff1c0e99717415aeb8d9", {artifactFlavor: "OVERRIDE"}),
   core("virtualjaguar", "4.2.3", "virtualjaguar-wasm.data", 1199923, "16b62c38e6921fb5b410ab507ba6bc77edcaccbba532ae4711b9521a4256ba6d", "b9443f7fc635a091b9460773bb0261bd5c4a9b5cb5ed3162286553e173e6c742", {artifactFlavor: "OVERRIDE"}),
-  core("yabause", "4.2.3", "yabause-wasm.data", 991166, "ab253ac263bd98e3124e2ca45ff581e97673426ed06ecec0025333060cd8127c", "1fc177e7be4923208b92755bcfae66ac35ba6e395c3b7ea48df581806ebdf6a6", {contentKinds: ["SINGLE_FILE", "MULTI_DISC"]}),
+  core("yabause", "4.2.3", "yabause-wasm.data", 991166, "ab253ac263bd98e3124e2ca45ff581e97673426ed06ecec0025333060cd8127c", "1fc177e7be4923208b92755bcfae66ac35ba6e395c3b7ea48df581806ebdf6a6", {contentKinds: ["SINGLE_FILE"]}),
 ] as const;
 
 function hostKeyboardShortcuts(targetId: string): ("PAUSE" | "MENU")[] {
@@ -213,7 +220,6 @@ const targets = cores.map((entry) => {
     `assets/${entry.release}/data/cores/reports/${entry.id}.json`,
   ].sort(compareUtf8),
   checkpointMaxBytes: entry.id === "lutro" ? 16 * 1024 * 1024 : 256 * 1024 * 1024,
-  discSwitch: entry.id === "yabause",
   displayName: displayName(targetId),
   frameMode: "SAME_ORIGIN_BLANK",
   id: providerTargetId(targetId),
@@ -228,6 +234,7 @@ const targets = cores.map((entry) => {
     coreSha256: entry.sha256,
     coreSizeBytes: entry.sizeBytes,
     defaultOptions: entry.defaultOptions,
+    biosOptions: firmwareOptions(entry.id),
     inputMode: entry.inputMode,
     release: entry.release,
     runtimeCore: entry.id,
@@ -244,7 +251,7 @@ const targets = cores.map((entry) => {
   inputFilter: true,
   hostKeyboardShortcuts: hostKeyboardShortcuts(targetId),
   nativeSettings: !["daphne", "dosbox_pure"].includes(entry.id),
-  targetOptionsSchema: emulatorJsOptionsSchema,
+  targetOptionsSchema: targetOptionsSchema(entry.id),
   requiresThreads: entry.requiresThreads,
   videoModes: ["daphne", "dosbox_pure"].includes(entry.id) ? ["original", "pixel"] :
     ["adaptive-sharpen", "original", "pixel", "sharp-bilinear", "smooth"],
@@ -327,6 +334,12 @@ function displayName(value: string) {
     `${part[0]?.toUpperCase() ?? ""}${part.slice(1)}`).join(" ");
 }
 
+function firmwareOptions(coreId: string): Readonly<Record<string, string>> {
+  const options: Readonly<Record<string, Readonly<Record<string, string>>>> = {
+    gambatte: {gambatte_gb_bootloader: "enabled"}, mgba: {mgba_use_bios: "ON"}, flycast: {reicast_hle_bios: "disabled"},
+  };
+  return options[coreId] ?? {};
+}
 function providerTargetId(runtimeCore: string) {return runtimeCore.replaceAll("_", "-");}
 
 function compareUtf8(left: string, right: string) {
@@ -343,4 +356,8 @@ function compareUtf8(left: string, right: string) {
 
 function emulatorContentMembers(core: string): NonNullable<import("../../provider/declarations.js").TargetDeclaration["contentMembers"]> {
   return core === "daphne" ? {game: {support: eagerPolicy(contentLimits.firmwareFile)}} : {};
+}
+
+function targetOptionsSchema(coreId: string): TargetOptionsSchema {
+  return coreId === "theodore" ? thomsonOptionsSchema : emulatorJsOptionsSchema;
 }

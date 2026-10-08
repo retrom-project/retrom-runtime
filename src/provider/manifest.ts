@@ -14,7 +14,7 @@ export function projectProviderManifest(definition: ProviderDefinition) {
           maxBytes: target.checkpointMaxBytes,
           readFormats: sorted(adapter.checkpoint.readFormats),
           writeFormat: adapter.checkpoint.writeFormat,
-          ...(adapter.checkpoint.semantics ? {semantics: adapter.checkpoint.semantics} : {}),
+          semantics: adapter.checkpoint.semantics,
         };
     if (adapter.capabilities.checkpoint !== (checkpoint !== null)) {
       throw new Error("PROVIDER_TARGET_CHECKPOINT_INVALID");
@@ -26,7 +26,6 @@ export function projectProviderManifest(definition: ProviderDefinition) {
       capabilities: {
         ...contentLoadingCapability(target),
         checkpoint: adapter.capabilities.checkpoint,
-        discSwitch: target.discSwitch,
         frameCounter: adapter.capabilities.frameCounter,
         frameMode: target.frameMode,
         inputFilter: target.inputFilter,

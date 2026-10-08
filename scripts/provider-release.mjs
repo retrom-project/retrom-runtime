@@ -19,6 +19,7 @@ const releaseMetadataName = "provider-release.json";
 const repository = "https://github.com/retrom-project/retrom-runtime";
 
 export async function buildCurrentProviderBuild(input = {}) {
+  const capturedSource = input.sourceTreeSha256 ?? sourceTreeSha256();
   const stageRoot = input.stageRoot ?? join(root, "release", "stage");
   const outputRoot = input.outputRoot ?? join(root, "release", "providers");
   const emulatorJsSourceRoot = input.emulatorJsSourceRoot ?? process.env.RETROM_EMULATORJS_PROVIDER_INPUT_ROOT ??
@@ -43,6 +44,7 @@ export async function buildCurrentProviderBuild(input = {}) {
     manifest: retromManifest,
     outputRoot: join(outputRoot, "retrom-runtime"),
     stageRoot,
+    sourceTreeSha256: capturedSource,
   });
   const directories = JSON.parse(process.env.RETROM_RUNTIME_DEV_RELEASE_OVERRIDES ?? "{}");
   const candidate = process.env.RETROM_PFB_CANDIDATE_BUILD === "1";
@@ -58,11 +60,13 @@ export async function buildCurrentProviderBuild(input = {}) {
     sourceCatalog,
     allowDevelopmentForks: process.env.RETROM_PFB_CANDIDATE_BUILD === "1",
     sourceRoot: resolve(emulatorJsSourceRoot),
+    sourceTreeSha256: capturedSource,
   });
   const providers = [releaseMetadata(outputRoot, retromManifest, retrom),
     releaseMetadata(outputRoot, emulatorManifest, emulatorjs)]
     .sort((left, right) => Buffer.from(left.providerId).compare(Buffer.from(right.providerId)));
-  const metadata = createProviderBuildMetadata(providers, input.sourceTreeSha256 ?? sourceTreeSha256());
+  if (sourceTreeSha256() !== capturedSource) {throw new Error("RUNTIME_SOURCE_CHANGED");}
+  const metadata = createProviderBuildMetadata(providers, capturedSource);
   await writeFile(join(outputRoot, buildMetadataName), `${JSON.stringify(metadata, null, 2)}\n`);
   return {archivePath: retrom.archivePath, metadata, outputRoot, providers: {emulatorjs, retromRuntime: retrom}};
 }

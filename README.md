@@ -1,12 +1,12 @@
 # retrom-runtime
 
-Host-independent browser library and release bundle for retro game runtimes. It owns runtime lifecycle, adapters, checkpoint codecs, bridge assets and pinned core release inputs. It does not know about a host application's users, database, review flow, storage or HTTP API.
+Host-independent browser library and release bundle for retro game runtimes. It owns runtime lifecycle, adapters, checkpoint codecs, bridge assets and pinned core release inputs. It owns game-specific configuration, implementation selection, content identities and dependency declarations. Host applications own users, databases, review, storage and HTTP authorization.
 
 ## Documentation
 
 Supported targets, Provider Module architecture and core integration guides are maintained in the [docs](docs/) directory.
 
-Managed game acquisition and cache/bridge ownership are described in [Content I/O v1](docs/content-io.md).
+Game configuration, fingerprints, dependency preparation and the offline host tool are described in [Runtime module](docs/runtime-module.md). Managed game acquisition and cache/bridge ownership are described in [Content I/O v1](docs/content-io.md).
 
 ## Provider Module V1
 
@@ -26,11 +26,11 @@ The host validates a Launch Envelope V1, verifies the module URL and SHA-256 aga
 
 ## Release versions
 
-The immutable GitHub tag is the only release version source. Tag `v0.46.0` produces both `retrom-runtime-provider-0.46.0.tar.gz` and `emulatorjs-provider-0.46.0.tar.gz`; manifests, client exports and release metadata all use `0.46.0`. There is no maintained package version or per-Provider version in source. The repository is private to npm publishing; GitHub Provider archives are the release artifacts.
+The immutable GitHub tag is the only release version source. Tag `v0.46.0` produces both `retrom-runtime-provider-0.46.0.tar.gz` and `emulatorjs-provider-0.46.0.tar.gz`, plus an offline `retrom-runtime-host-tool-0.46.0.tar.gz`; manifests, client exports and release metadata all use `0.46.0`. There is no maintained package version or per-Provider version in source. The repository is private to npm publishing; GitHub archives are the release artifacts.
 
-Formal builds require a validated annotated tag at the released commit and `RETROM_PROVIDER_BUILD_MODE=release`. Untagged candidate builds use `0.0.0-dev` and do not publish formal release metadata. PFB clients receive the installed base's verified manifest version, so editing local adapters does not impersonate a new release.
+Formal builds require a validated annotated tag at the released commit and `RETROM_PROVIDER_BUILD_MODE=release`. Untagged candidate builds use `0.0.0-dev`. Every build emits `runtime-inputs.json` with the actual source-tree SHA, offline host tool and both verified Provider archive/client hashes. Candidates have `release: null`; tagged releases include the real tag and commit. PFB clients receive the installed base's verified manifest version.
 
-This replaces the older independent EmulatorJS `2.x` sequence. Existing development databases and active Provider state must be archived and reset before activating the unified sequence; hosts must retain downgrade and same-version/different-digest protection. No compatibility migration is provided for unreleased development data.
+Transport the host-tool archive and both Provider archives as three flat basenames alongside `runtime-inputs.json`. Provider records retain their `providerId/archive` paths; consumers take the validated basename for local-directory or HTTPS transport. The tracked descriptor fixes identity; a transport URL does not select hashes or source.
 
 ## Development
 
@@ -52,6 +52,14 @@ npm run provider:check
 npm run release:build
 ```
 
+The ONS checkpoint implementation is pinned to the published immutable
+`retrom-core-0.7.7beta-r6` release. VecX is pinned to
+`retrom-core-g8f671cc9d737-r2`. Normal builds download and verify the declared
+release assets; no unpublished core archive transport is needed. The ONS
+checkpoint-ready JavaScript binding is checked against the actual Wasm export
+before packaging. Local PFB core candidates remain explicit development inputs
+and do not replace these release pins.
+
 For PFB upstream-sync validation, Butterscotch candidates include their metadata
 parser pair for integrity verification, but only the game runner and license
 override the installed Provider. The metadata tools are outside its public asset
@@ -67,7 +75,28 @@ MIT
 
 Each Target owns its host shortcut policy through `hostKeyboardShortcuts`. The public
 `PlayerRuntimeV1.getInputCapabilities()` exposes the allowed `PAUSE` / `MENU` shortcuts;
-hosts leave game keys untouched when this optional method is absent on an older Provider.
+`setHostShortcutPolicy()` selects explicit keyboard bindings and `HOST_SHORTCUT` events cross same-origin
+and isolated game windows uniformly. Null policy disables interception; see the Provider Module guide.
+The Host leaves undeclared shortcuts with the game and configures null while its overlays own input.
+
+J2ME standard gamepads use the following phone actions. The Provider owns gamepad polling in the game frame and preserves the Host's input filter; the core owns physical keyboard input.
+
+| Standard control | Phone action |
+| --- | --- |
+| D-pad / left stick | Up, down, left, right |
+| A | Fire / confirm |
+| B / Select | Right soft key |
+| X / Start | Left soft key |
+| Y | 1 |
+| L1 / R1 | 3 / 7 |
+| L2 / R2 | 9 / 0 |
+| L3 / R3 | * / # |
+
+Direction and Fire actions are separate from numeric keys 2, 4, 6, 8 and 5. Physical keyboard digits 0–9, star, hash and the core's existing soft-key bindings remain available. Start+Select chords remain reserved by the Host filter; gamepad keys are released on suppression, focus loss, pause, disconnection and exit.
+
+The offline host tool's `batch-content-bios-requirements` command accepts up to 100 ordered `items` with `directory`, `config`, `files` and host-owned `locators` (an optional `coreId` selects an allowed core). Each result has `{biosRequirements: [], error: null}` or a stable error code. It reads bounded PSX disc evidence and the arcade entry ZIP's directory, then resolves the same declared BIOS rules as launch preparation. It does not read Parent archives, installed BIOS, implementation fingerprints or assemble launch resources. An error must be treated as an unknown BIOS result, never as an empty successful requirement list.
+
+`dos-entry-candidates` accepts `config`, immutable `files` and host-owned `locators`, then returns `{entries: string[]}` from the selected DOS ZIP/DOSZ archive. Entries retain their complete safe paths, include `.exe`, `.com` and `.bat` without case restrictions, and are deduplicated and sorted by UTF-8 path. The query ignores any existing `entryPath` and does not prepare a Run, so a replaced archive can offer new choices even when its previous program is absent.
 A checkpoint availability with `requiredAction: "SELECT_PROGRAM"` tells the host to show
 program selection guidance. Provider-private Target options are interpreted only inside
 the Provider.

@@ -1,3 +1,4 @@
+import type {RuntimeHostShortcutV1} from "../provider/module-api.js";
 import type { CheckpointAvailability } from "../contract.js";
 import type { MountedRuntimeAdapter, RuntimeExitReporter } from "../internal-adapter.js";
 import type {TyranoScriptParameters} from "./parameters.js";
@@ -50,7 +51,6 @@ export async function mountTyranoScript(
     exit: async () => {
       channel.stopProbeLoop();
       await channel.request("CLEANUP", {}, 5_000).catch(() => undefined);
-      await cleanup(config.cleanupUrl).catch(() => undefined);
       channel.close();
       frame.src = "about:blank";
     },
@@ -59,6 +59,15 @@ export async function mountTyranoScript(
       ? { available: true, blocker: null }
       : { available: false, blocker: "BUSY" },
     getFrameCount: () => channel.frames(),
+    setHostShortcutPolicy: async (policy, report) => {
+      channel.reportHostShortcut = report;
+      const reply = await channel.request("SET_HOST_SHORTCUT_POLICY", {policy}, 5_000);
+      if (reply.type !== "SET_HOST_SHORTCUT_POLICY_RESULT") {throw new Error("TYRANOSCRIPT_PROTOCOL_INVALID");}
+    },
+    setInputFilter: async (policy) => {
+      const reply = await channel.request("SET_INPUT_FILTER", {policy}, 5_000);
+      if (reply.type !== "SET_INPUT_FILTER_RESULT") {throw new Error("TYRANOSCRIPT_PROTOCOL_INVALID");}
+    },
     pause: async () => {await channel.request("PAUSE", {});},
     resume: async () => {await channel.request("RESUME", {});},
     screenshot: () => channel.screenshot(),
@@ -71,6 +80,7 @@ export async function mountTyranoScript(
 }
 
 class TyranoScriptChannel {
+  reportHostShortcut: ((shortcut: RuntimeHostShortcutV1) => void) | null = null;
   private readonly nonce = randomNonce();
   private readonly messageChannel = new MessageChannel();
   private connected = false;
@@ -178,6 +188,7 @@ class TyranoScriptChannel {
   close() {
     if (this.closed) {return;}
     this.closed = true;
+    this.reportHostShortcut = null;
     this.available = false;
     this.stopProbeLoop();
     if (this.pending) {
@@ -209,6 +220,7 @@ class TyranoScriptChannel {
   }
 
   private receive(value: unknown) {
+    if (this.closed) {return;}
     const reply = readReply(value, this.config.sessionId, this.nonce);
     if (!reply) {return;}
     if (reply.requestId === 0) {this.receiveEvent(reply); return;}
@@ -222,7 +234,10 @@ class TyranoScriptChannel {
   }
 
   private receiveEvent(reply: Reply) {
-    if (reply.type === "READY") {
+    if (reply.type === "HOST_SHORTCUT" && Object.keys(reply.body).join(",") === "shortcut" &&
+      (reply.body.shortcut === "MENU" || reply.body.shortcut === "PAUSE")) {
+      this.reportHostShortcut?.(reply.body.shortcut);
+    } else if (reply.type === "READY") {
       const ready = readReady(reply.body);
       this.readyValue = ready;
       this.available = ready.checkpointAvailable;
@@ -260,38 +275,20 @@ async function bootstrapFrame(
   const contentWindow = frame.contentWindow;
   if (!contentWindow) {throw new Error("PLAYER_FRAME_UNAVAILABLE");}
   const runtimeWindow: Window = contentWindow;
-  let bootstrapTicket = config.bootstrapTicket;
-  config.bootstrapTicket = "";
   await new Promise<void>((resolve, reject) => {
     const timer = window.setTimeout(() => finish(new Error("TYRANOSCRIPT_BOOTSTRAP_TIMEOUT")), bootstrapTimeoutMs);
     function finish(error?: Error) {
       window.clearTimeout(timer);
-      bootstrapTicket = "";
       window.removeEventListener("message", receive, true);
       if (error) {reject(error);} else {resolve();}
     }
     function receive(event: MessageEvent) {
       if (event.source !== runtimeWindow || event.origin !== config.uniqueOrigin ||
         !event.data || typeof event.data !== "object") {return;}
-      if (bootstrapRequired(event.data)) {
-        if (!bootstrapTicket) {finish(new Error("TYRANOSCRIPT_BOOTSTRAP_TIMEOUT")); return;}
-        runtimeWindow.postMessage({
-          protocolVersion, ticket: bootstrapTicket, type: "GAME_RUNTIME_TYRANOSCRIPT_BOOTSTRAP",
-        }, config.uniqueOrigin);
-        bootstrapTicket = "";
-      } else if (bridgeReady(event.data)) {
-        channel.connect(runtimeWindow);
-        finish();
-      }
+      if (bridgeReady(event.data)) {channel.connect(runtimeWindow); finish();}
     }
     window.addEventListener("message", receive, true);
-    frame.src = config.entryUrl;
   });
-}
-
-function bootstrapRequired(value: Record<string, unknown>) {
-  return ownKeys(value, ["protocolVersion", "type"]) && value.protocolVersion === protocolVersion &&
-    value.type === "GAME_RUNTIME_TYRANOSCRIPT_BOOTSTRAP_REQUIRED";
 }
 
 function bridgeReady(value: Record<string, unknown>) {
@@ -332,9 +329,4 @@ function randomNonce() {
 
 function stableError(error: unknown, fallback: string) {
   return error instanceof Error && /^TYRANOSCRIPT_[A-Z0-9_]+$/u.test(error.message) ? error : new Error(fallback);
-}
-
-async function cleanup(value: string | null) {
-  if (!value) {return;}
-  await fetch(value, {credentials: "include", method: "POST"});
 }

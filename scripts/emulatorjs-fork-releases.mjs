@@ -1,4 +1,8 @@
 const identities = {
+  mame2003: {repository: "https://github.com/retrom-project/mame2003-libretro", baseline: "gb6c6d52d8d63", license: "LICENSE.md", source: "source.tar.gz"},
+  mame2003_plus: {repository: "https://github.com/retrom-project/mame2003-plus-libretro", baseline: "g09e84fe55799", license: "LICENSE.md", source: "source.tar.gz"},
+  fbalpha2012_cps2: {repository: "https://github.com/retrom-project/fbalpha2012_cps2", baseline: "g3fb5b89d2ab7", license: "LICENSE", source: "source.tar.gz"},
+  parallel_n64: {repository: "https://github.com/retrom-project/parallel-n64", baseline: "g56f4daf8ec9b", license: "COPYING", source: "source.tar.gz"},
   ardens: {repository: "https://github.com/retrom-project/Ardens", baseline: "g661a7dd4febc", license: "LICENSE", source: "source.tar.gz"},
   atari800: {repository: "https://github.com/retrom-project/libretro-atari800", baseline: "g4e7fbc73765c", license: "LICENSE", source: "source.tar.gz"},
   freechaf: {repository: "https://github.com/retrom-project/FreeChaF", baseline: "g76c7a84f1f7e", license: "LICENSE", source: "source.tar.gz"},

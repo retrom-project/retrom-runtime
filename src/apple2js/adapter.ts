@@ -1,5 +1,5 @@
 import {materializeFileBytes, type AdapterContentSession} from "../provider/content-inputs.js";
-import {checkpointSize, transformCheckpoint} from "../provider/checkpoint-compression.js";
+import {checkpointSize} from "../provider/checkpoint-compression.js";
 import {startInputDiagnostics} from "../provider/input-diagnostics.js";
 import type {MountedRuntimeAdapter, RuntimeProgressReporter} from "../internal-adapter.js";
 
@@ -23,7 +23,7 @@ const maxCheckpointBytes = 32 * 1024 * 1024;
 
 export async function mountApple2(config: Apple2Parameters, target: HTMLElement, frameWindow: Window,
   restore: Uint8Array | null, progress: RuntimeProgressReporter, contentSession: AdapterContentSession,
-  signal?: AbortSignal, restoreFormat?: string | null): Promise<MountedRuntimeAdapter> {
+  signal?: AbortSignal): Promise<MountedRuntimeAdapter> {
   if (target.ownerDocument !== frameWindow.document ||
     restore && (!restore.length || restore.length > maxCheckpointBytes)) {invalid();}
   const bios = await loadBios(config.bios, contentSession, signal);
@@ -52,8 +52,7 @@ export async function mountApple2(config: Apple2Parameters, target: HTMLElement,
       characterRom: bios["apple2e-character.rom"], diskRom: bios["AppleIIe_DiskII.rom"],
       diskName: `game.${extension}`, diskBytes: new Uint8Array(game)});
     if (restore) {
-      const raw = await decodeApple2State(restore, restoreFormat, signal);
-      session.restore(new TextDecoder("utf-8", {fatal: true}).decode(raw));
+      session.restore(new TextDecoder("utf-8", {fatal: true}).decode(restore));
     }
     signal?.throwIfAborted();
     iframe.contentDocument?.addEventListener("pointerdown", focus, true);
@@ -110,12 +109,4 @@ async function loadBios(files: BiosFile[], contentSession: AdapterContentSession
     bios[file.logicalName] = await materializeFileBytes(contentSession, file, contentSession.inputPolicy("external"), "FIRMWARE", signal);
   }
   return bios;
-}
-
-async function decodeApple2State(bytes: Uint8Array, format: string | null | undefined, signal?: AbortSignal) {
-  if (format === "apple2js-state-v1" || format === "apple2js-state-v1-storage-v1") {return bytes;}
-  if (format === "apple2js-state-gzip-v1" || format === "apple2js-state-gzip-v1-storage-v1") {
-    return transformCheckpoint(bytes, true, 64 * 1024 * 1024, signal);
-  }
-  invalid();
 }

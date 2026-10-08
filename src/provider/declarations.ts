@@ -9,7 +9,6 @@ export type ResourceKind =
   | "ISOLATED_WEB"
   | "BIOS_BUNDLE"
   | "PARENT_ARCHIVE"
-  | "MULTI_DISC"
   | "EXTERNAL_FILE_SET"
   | "WASM4_CART";
 
@@ -84,7 +83,7 @@ export type AdapterDeclaration = {
   checkpoint: {
     writeFormat: string;
     readFormats: readonly string[];
-    semantics?: "INSTANT" | "GAME_SAVE";
+    semantics: "INSTANT" | "GAME_SAVE";
   } | null;
   capabilities: ProviderCapabilities;
 };
@@ -110,7 +109,6 @@ export type TargetDeclaration = {
   targetOptionsSchema: TargetOptionsSchema;
   requiresThreads: boolean;
   frameMode: FrameMode;
-  discSwitch: boolean;
   nativeSettings: boolean;
   inputFilter: boolean;
   /** Runtime-owned input policy, consumed through getInputCapabilities(). */
@@ -139,6 +137,9 @@ export function defineAdapter<const Definition extends AdapterDeclaration>(defin
   const noSave = definition.saveSemantics === "NO_SAVE";
   if (noSave === hasCheckpoint || definition.capabilities.checkpoint !== hasCheckpoint) {
     throw new Error("PROVIDER_NO_SAVE_INVALID");
+  }
+  if (definition.checkpoint && !["INSTANT", "GAME_SAVE"].includes(definition.checkpoint.semantics)) {
+    throw new Error("PROVIDER_CHECKPOINT_SEMANTICS_INVALID");
   }
   return definition;
 }

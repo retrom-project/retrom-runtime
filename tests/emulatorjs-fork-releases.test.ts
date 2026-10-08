@@ -1,5 +1,19 @@
 import {describe, expect, it} from "vitest";
 import {forkReleaseFiles, forkMetadataPath, verifyForkMetadata} from "../scripts/emulatorjs-fork-releases.mjs";
+import {emulatorJsProviderDefinition} from "../src/providers/emulatorjs/catalog.js";
+import {emulatorJsSourceCatalog} from "../src/providers/emulatorjs/source-catalog.js";
+
+it("keeps declared core identities equal to the pinned fork download bytes", () => {
+  const files = forkReleaseFiles(emulatorJsSourceCatalog);
+  for (const target of emulatorJsProviderDefinition.targets) {
+    const implementation = target.implementation;
+    const file = files.find((entry: {destination: string}) =>
+      `assets/${entry.destination}` === implementation.coreAssetPath);
+    if (!file) {continue;}
+    expect(implementation.coreSha256, target.id).toBe(file.sha256);
+    expect(implementation.coreSizeBytes, target.id).toBe(file.sizeBytes);
+  }
+});
 
 function fixture() {
   const repository = "https://github.com/retrom-project/vice-libretro";
@@ -46,6 +60,10 @@ describe("EmulatorJS fork Release inputs", () => {
 });
 
 const promotedCores = [
+  ["mame2003", "mame2003-libretro", "gb6c6d52d8d63", "LICENSE.md"],
+  ["mame2003_plus", "mame2003-plus-libretro", "g09e84fe55799", "LICENSE.md"],
+  ["fbalpha2012_cps2", "fbalpha2012_cps2", "g3fb5b89d2ab7", "LICENSE"],
+  ["parallel_n64", "parallel-n64", "g56f4daf8ec9b", "COPYING"],
   ["uzem", "libretro-uzem", "gd991ee94547c", "LICENSE"],
   ["bsnes", "bsnes-libretro", "g4b344745e387", "LICENSE.txt"],
   ["neocd", "neocd_libretro", "g3118c6901787", "LICENSE.md"],

@@ -12,17 +12,17 @@ const targetKeys = [
   "assetPaths", "capabilities", "checkpoint", "displayName", "id", "inputs", "targetOptionsSchema",
 ];
 const capabilityKeys = [
-  "checkpoint", "discSwitch", "frameCounter", "frameMode", "inputFilter", "nativeSettings",
+  "checkpoint", "frameCounter", "frameMode", "inputFilter", "nativeSettings",
   "pause", "requiresThreads", "screenshot", "standardGamepad", "videoModes", "volume",
 ];
 const inputKeys = ["cardinality", "kind", "maxFileBytes", "optional", "role"];
-const checkpointKeys = ["maxBytes", "readFormats", "writeFormat"];
+const checkpointKeys = ["maxBytes", "readFormats", "semantics", "writeFormat"];
 const frameModes = new Set([
   "NONE", "SAME_ORIGIN_BLANK", "SAME_ORIGIN_RESOURCE", "ISOLATED_ORIGIN_RESOURCE",
 ]);
 const resourceKinds = new Set([
   "ROM_BLOB", "FILE_TREE", "SEEKABLE_BLOB", "NATIVE_WEB", "ISOLATED_WEB",
-  "BIOS_BUNDLE", "PARENT_ARCHIVE", "MULTI_DISC", "EXTERNAL_FILE_SET",
+  "BIOS_BUNDLE", "PARENT_ARCHIVE", "EXTERNAL_FILE_SET",
   "WASM4_CART",
 ]);
 const videoModes = new Set(["original", "pixel", "smooth", "sharp-bilinear", "adaptive-sharpen"]);
@@ -149,7 +149,7 @@ function validateCapabilities(value: unknown): void {
   if (!exactKeys(capabilities, keys) || Object.hasOwn(capabilities, "contentLoading") &&
     capabilities.contentLoading !== "ON_DEMAND_AND_PRELOAD" && capabilities.contentLoading !== "PRELOAD_ONLY") {invalidManifest();}
   for (const key of [
-    "checkpoint", "discSwitch", "frameCounter", "inputFilter", "nativeSettings", "pause",
+    "checkpoint", "frameCounter", "inputFilter", "nativeSettings", "pause",
     "requiresThreads", "screenshot", "standardGamepad", "volume",
   ]) {
     if (typeof capabilities[key] !== "boolean") {invalidManifest();}
@@ -178,14 +178,11 @@ function validateInputs(value: unknown): void {
 
 function validateCheckpoint(value: unknown): void {
   const checkpoint = record(value);
-  const keys = checkpoint && Object.hasOwn(checkpoint, "semantics")
-    ? [...checkpointKeys, "semantics"].sort() : checkpointKeys;
-  if (!checkpoint || !exactKeys(checkpoint, keys) || !validToken(checkpoint.writeFormat) ||
+  if (!checkpoint || !exactKeys(checkpoint, checkpointKeys) || !validToken(checkpoint.writeFormat) ||
     !positiveSafeInteger(checkpoint.maxBytes)) {
     invalidManifest();
   }
-  if (Object.hasOwn(checkpoint, "semantics") &&
-    checkpoint.semantics !== "INSTANT" && checkpoint.semantics !== "GAME_SAVE") {invalidManifest();}
+  if (checkpoint.semantics !== "INSTANT" && checkpoint.semantics !== "GAME_SAVE") {invalidManifest();}
   const readFormats = stringArray(checkpoint.readFormats, false);
   if (!readFormats || !isSortedUnique(readFormats) || !readFormats.every(validToken) ||
     !readFormats.includes(checkpoint.writeFormat)) {

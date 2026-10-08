@@ -80,7 +80,7 @@ async function mount(restore: Uint8Array | null, state: Uint8Array, format = "em
   const envelope = launchEnvelope();
   Object.assign(envelope.resources[0], {kind: "SEEKABLE_BLOB", rangeRequired: true});
   Object.assign(envelope.runtime, {targetId: "neocd", capabilities: manifest.capabilities, checkpoint: manifest.checkpoint});
-  if (restore) {envelope.restore = {format, sha256: "a".repeat(64), sizeBytes: restore.length, url: "/restore"};}
+  if (restore) {envelope.restore = {kind: "HTTP", format, sha256: "a".repeat(64), sizeBytes: restore.length, url: "/restore"};}
   const frame = document.createElement("iframe"); document.body.append(frame);
   const runtimeWindow = frame.contentWindow as Window & Record<string, unknown>;
   runtimeWindow.fetch = vi.fn(async () => new Response("{}"));

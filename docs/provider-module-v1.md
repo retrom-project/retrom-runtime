@@ -18,7 +18,7 @@ the module, checks the exported identity and calls `createRuntime`. It only cons
 chooses EasyRPG, mkxp, native Web or another implementation. The Provider validates the stable `providerId` plus
 `targetId`, current resources, private Target options, optional restore input before mounting.
 
-`src/providers/retrom-runtime/catalog.ts` is the single Target declaration for the 14 targets in this Provider.
+`src/providers/retrom-runtime/catalog.ts` is the single Target declaration for the 35 targets in this Provider; EmulatorJS declares another 75 Targets.
 The generated declaration provides current capabilities, checkpoint `writeFormat/readFormats/maxBytes/semantics`, resource
 kinds, runtime files and a constrained closed `targetOptionsSchema`. The Provider Module uses that schema to
 exact-validate options before mounting; it has no
@@ -28,8 +28,7 @@ it cannot declare a Target or host binding. Product play and review previews use
 There are no production proof gates, fixture variables, validation probes, or expected-position Target options.
 Strict input, visual and restored-position assertions belong to development acceptance through real game fixtures.
 
-The package root exports the same Provider entry and public ABI types. There is no separate runtime constructor,
-generic adapter config, config conversion layer or inner controller. The Provider creates minimal, typed parameters
+The package root exports the same Provider entry and public ABI types. The runtime configuration module constructs typed game rules and resource plans before Provider creation; the browser still exposes one createRuntime entry. The Provider creates minimal, typed parameters
 for the selected core directly. One controller owns state, progress, serialized operations, cancellation and cleanup;
 the Host separately owns the page, frame and authorization session. The public state is CREATED, MOUNTING, RUNNING,
 PAUSED, CHECKPOINTING, EXITING, EXITED or FAILED. Exit preempts pending controls and checkpoints; cancellation is
@@ -254,12 +253,12 @@ valid for dual-mode Targets; fixed/hidden modes must not overwrite device prefer
 
 ### Original content cache ownership
 
-EasyRPG now publishes `contentLoading: ON_DEMAND_AND_PRELOAD`: default game/RTP reads remain lazy and use immutable index identities; explicit PRELOAD commits the complete indexed content before launch. EmulatorJS external BIOS and multi-disc media, and MAME Arcade BIOS bundles, all use the same persistent Content I/O store as ROMs and Parent ROMs. The application does not automatically evict valid original content by age or size. Quota denial follows the existing default-mode fallback and explicit-PRELOAD failure contract.
+EasyRPG now publishes `contentLoading: ON_DEMAND_AND_PRELOAD`: default game/RTP reads remain lazy and use immutable index identities; explicit PRELOAD commits the complete indexed content before launch. EmulatorJS external BIOS and single-disc CUE track files, and MAME Arcade BIOS bundles, all use the same persistent Content I/O store as ROMs and Parent ROMs. The application does not automatically evict valid original content by age or size. Quota denial follows the existing default-mode fallback and explicit-PRELOAD failure contract.
 
 
 ### Session disc availability
 
-Envelope capabilities remain the exact Target declaration. The runtime instance's `getCapabilities()` describes the current session: `discSwitch` is false when no `MULTI_DISC` resource is present, even for a Target supporting multi-disc games. Other capability fields remain equal to the declaration. No instance may grant undeclared capabilities. Single-disc saves omit a disc index; malformed multi-disc inputs still fail validation.
+Envelope capabilities remain the exact Target declaration. Multi-disc resources and controls are absent. A single CUE disc retains its referenced BIN/audio tracks through the managed `game-files` resource. Restoration checks the frozen core fingerprint and complete Game active content hash before mounting.
 
 ### Content requirements and native acceptance
 
@@ -288,3 +287,28 @@ details and reports failures through Module V1.
 Content I/O is the sole persistent owner of original game, BIOS and Parent content. The pinned 4.2.3 loader uses `EJS_disableDatabases=true`; the pinned 4.3.0-pre loader uses `EJS_cacheConfig.enabled=false`. The obsolete `EJS_CacheLimit` is not configured. These are explicit interfaces of two current releases, not fallback behavior.
 
 Before loading EmulatorJS, its Provider retires only existing `EmulatorJS-Cache`, `EmulatorJS-roms`, `EmulatorJS-bios` and `EmulatorJS-core` download databases. It never deletes native saves, `EmulatorJS-states`, or Content I/O databases. A blocked or unavailable deletion is bounded and reported diagnostically; disabled download caching still prevents old cache contents from being read or duplicated. The Host does not access EmulatorJS storage internals.
+
+
+Native Web resources declare an immutable index, explicit entryFile, origin and entryUrl. The Host mounts its isolated shell and connects the scoped STAT/READ bridge; script-relative URLs, dynamic imports, Workers and media use ordinary native paths served through that bridge. No derived credential is part of the envelope. HTTP and LOCAL restore descriptors are explicit alternatives; LOCAL is an in-memory review checkpoint returned by RuntimeHost.loadRestore.
+
+## Host keyboard shortcuts
+
+`getInputCapabilities().hostShortcuts` declares which `MENU` and `PAUSE` actions the Host may reserve.
+The Host calls the required `setHostShortcutPolicy({menu, pause})` method to select actual bindings:
+`menu: "Escape"` for a conventional player, `menu: "KeyM"` for an immersive player, or `null` to leave
+menu input with the game; `pause: true` reserves `Pause` and `KeyP`. A null policy disables all capture.
+Policy can be set before mount and remains inactive until the runtime is RUNNING or PAUSED. Undeclared
+shortcuts are rejected. The method is part of the current Provider Module V1 contract.
+
+Providers capture their own game window and emit `{type: "HOST_SHORTCUT", shortcut: "MENU" | "PAUSE"}`
+through `subscribe`. Hosts handle that event without inspecting frames or private engine protocols.
+MV/MZ and Tyrano carry policy and events on their existing origin/source-verified, session/nonce-bound
+MessagePort channels. Neither arbitrary window messages nor optional diagnostic snapshots are control events.
+The Host still owns keyboard navigation of its own menus and dialogs.
+
+Capture ignores editable fields (including shadow-DOM composed paths), composition,
+Ctrl/Alt/Meta combinations and already consumed events. A reserved key emits once until release or blur;
+its repeated keydown events are consumed without another Host action, so holding the shortcut does not
+leak presses to the game. Consumed presses and their releases do not reach the game. `setInputFilter` suppression and null policy
+remove listeners, and exit tears them down. Native settings panels retain their own keyboard navigation.
+Hosts disable the policy while their overlays own input and restore it after closing the overlay.

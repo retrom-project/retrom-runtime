@@ -11,6 +11,17 @@ const config = {machine: "apple2p" as const, game: source, runtimeBaseUrl: "/pro
 const content = {assetIndex: {}, contentSession: {inputPolicy: () => eagerPolicy(143360),
   open: async () => {throw new Error("unused");}, materialize: async () => {throw new Error("unused");}, closeFile: async () => {}}};
 function fixture() {return {FS: {mkdirTree: vi.fn(), writeFile: vi.fn(), chmod: vi.fn(), ignorePermissions: true}};}
+it.each([["renegade", "m68705p5"], ["vf2", "segabill"]])("mounts %s device ZIPs in the ROM search directory and rejects collisions", async (machine, firmware) => {
+  const core = fixture(), device = {...source, logicalName: `${firmware}.zip`, virtualPath: `content/roms/${firmware}.zip`, sizeBytes: 200};
+  const arcade = {arcade: true as const, machine, game: source, parent: null, bios: null,
+    deviceBios: [device], runtimeBaseUrl: "/provider/"};
+  await mountFiles(core, arcade, content);
+  expect(core.FS.writeFile).toHaveBeenCalledWith(`/content/roms/${firmware}.zip`, expect.any(Uint8Array));
+  for (const bad of [{...device, virtualPath: "../escape"}, {...device, logicalName: `${machine}.zip`, virtualPath: `content/roms/${machine}.zip`}]) {
+    await expect(mountFiles(fixture(), {...arcade, deviceBios: [bad]}, content)).rejects.toThrow("MAME_CONTENT_INVALID");
+  }
+  await expect(mountFiles(fixture(), {...arcade, deviceBios: [device, device]}, content)).rejects.toThrow("MAME_CONTENT_INVALID");
+});
 afterEach(() => vi.unstubAllGlobals());
 it("mounts the machine, Disk II card and nested controller BIOS and opens a read-only game", async () => {
   const core = fixture(); await mountFiles(core, config, content);
@@ -102,12 +113,4 @@ it("rejects archive names that could escape the MAME ROM directory", async () =>
   await expect(mountFiles(core, {arcade: true, machine: "mspacman", game: {...source, sizeBytes: 40},
     parent: {...source, url: "/parent"}, bios: null, deviceBios: [], runtimeBaseUrl: "/provider/"}, content)).rejects.toThrow("MAME_CONTENT_INVALID");
   expect(core.FS.writeFile).not.toHaveBeenCalled();
-});
-it("mounts the separately installed Sega Model 2 billboard ROM at its MAME search path", async () => {
-  const core = fixture(), deviceBios = [{...source, logicalName: "epr-18022.ic2",
-    virtualPath: "content/roms/segabill/epr-18022.ic2", sizeBytes: 65536}];
-  await mountFiles(core, {arcade: true, machine: "vf2", game: {...source, sizeBytes: 40},
-    parent: null, bios: null, deviceBios, runtimeBaseUrl: "/provider/"}, content);
-  expect(core.FS.mkdirTree).toHaveBeenCalledWith("/content/roms/segabill");
-  expect(core.FS.writeFile).toHaveBeenCalledWith("/content/roms/segabill/epr-18022.ic2", expect.any(Uint8Array));
 });

@@ -19,7 +19,7 @@ it("copies PAK and restored files into the core realm before native startup", as
   }, readdir: (path: string) => [...writes.keys()].filter(name => name.startsWith(path + "/")).map(name => name.slice(path.length + 1)),
   readFile: (path: string) => writes.get(path)!, stat: (path: string) => ({size: writes.get(path)!.length, mode: 1}),
   isFile: (mode: number) => mode === 1};
-  let onExit = () => undefined, stopRequested = false;
+  let onExit = (_code: number) => undefined, stopRequested = false;
   const core = {FS: fs, retromAbi: "openbor-host-v1", retromFrames: 2, retromKeys: [],
     retromStopped: false, retromStop: () => {stopRequested = true;}, retromDispose: vi.fn().mockResolvedValue(undefined), retromSetPaused: vi.fn().mockResolvedValue(undefined),
     callMain: vi.fn(() => {expect([...writes.keys()]).toEqual(["/Paks/game.pak", "/Saves/game.sav"]);})};
@@ -38,7 +38,21 @@ it("copies PAK and restored files into the core realm before native startup", as
   const exiting = runtime.exit();
   expect(runtime.exit()).toBe(exiting); expect(stopRequested).toBe(true);
   expect(core.retromDispose).not.toHaveBeenCalled();
-  onExit(); await exiting;
+  onExit(0);
+  const expectedExit = Object.assign(new Event("unhandledrejection", {cancelable: true}), {
+    reason: {name: "ExitStatus", status: 0, message: "Program terminated with exit(0)"},
+  });
+  realm.dispatchEvent(expectedExit);
+  expect(expectedExit.defaultPrevented).toBe(true);
+  const unexpectedExit = Object.assign(new Event("unhandledrejection", {cancelable: true}), {
+    reason: {name: "ExitStatus", status: 1},
+  });
+  realm.dispatchEvent(unexpectedExit);
+  expect(unexpectedExit.defaultPrevented).toBe(false);
+  await exiting;
   expect(runtime.getCheckpointAvailability()).toMatchObject({available: false, blocker: "NOT_READY"});
   expect(mocks.dispose).toHaveBeenCalledOnce(); expect(core.retromDispose).toHaveBeenCalledOnce(); expect(target.children).toHaveLength(0);
+  const lateEvent = Object.assign(new Event("unhandledrejection", {cancelable: true}), {reason: expectedExit.reason});
+  realm.dispatchEvent(lateEvent);
+  expect(lateEvent.defaultPrevented).toBe(false);
 });

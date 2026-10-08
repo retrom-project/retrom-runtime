@@ -3,7 +3,7 @@ import {createHash} from "node:crypto";
 import {mkdtemp, mkdir, readFile, rm, writeFile} from "node:fs/promises";
 import {tmpdir} from "node:os";
 import {join} from "node:path";
-import {afterEach, expect, it} from "vitest";
+import {afterEach, expect, it, vi} from "vitest";
 import {readPFBProviderCoreFiles} from "../scripts/pfb-provider-cores.mjs";
 import {buildPFBProviderDev} from "../scripts/pfb-provider-dev.mjs";
 import {emulatorJsProviderDefinition} from "../src/providers/emulatorjs/catalog.js";
@@ -71,6 +71,15 @@ it("validates Butterscotch metadata tools without publishing them as runtime ass
     .rejects.toThrow("PFB_PROVIDER_CORE_INPUT_INVALID");
 });
 
+it("stages ONS in its declared assets/ons namespace and verifies the mandatory license", async () => {
+  const {root, directory, index} = await kirikiriFixture("onsyuri");
+  const files = await readPFBProviderCoreFiles(root, "retrom-runtime", join(root, "staging"), index);
+  expect(files.map(file => file.path).sort()).toEqual(Object.keys(index).sort());
+  expect(files.find(file => file.path === "assets/ons/onsyuri.wasm")?.contents.toString()).toBe("owned onsyuri.wasm fixture");
+  await writeFile(join(directory, "COPYING"), "tampered");
+  await expect(readPFBProviderCoreFiles(root, "retrom-runtime", join(root, "tampered"), index)).rejects.toThrow("CORE_CANDIDATE_INVALID");
+});
+
 it("accepts the declared EasyRPG release pair and still validates every byte", async () => {
   const {root, directory, index} = await kirikiriFixture("easyrpg");
   const files = await readPFBProviderCoreFiles(root, "retrom-runtime", join(root, "staging"), index);
@@ -85,10 +94,13 @@ async function kirikiriFixture(coreId = "kirikiri2") {
   roots.push(root);
   const directory = join(root, "candidate");
   await mkdir(directory);
-  const sources = await loadProviderSources(new URL("../", import.meta.url)) as {upstreamReleases: {
+  type Source = {
     id: string; repository: string; adapterAbi: string; assets: {filename: string; output: string}[];
-  }[]};
-  const source = sources.upstreamReleases.find(source => source.id === coreId);
+  };
+  const sources = await loadProviderSources(new URL("../", import.meta.url)) as {
+    upstreamReleases: Source[]; developmentInputs: Source[];
+  };
+  const source = [...sources.upstreamReleases, ...sources.developmentInputs].find(source => source.id === coreId);
   if (!source) {throw new Error("KIRIKIRI_SOURCE_MISSING");}
   const files = [];
   const index: Record<string, {sha256: string; sizeBytes: number}> = {};
@@ -183,3 +195,6 @@ async function fixture(core: "cap32" | "gam4980" | "dosbox_pure" = "cap32") {
   await writeFile(join(root, "core-inputs.json"), JSON.stringify({schemaVersion: 1, cores: [{id: core, directory}]}));
   return {root, directory, descriptor, corePath, index: {[corePath]: {sha256: "c".repeat(64), sizeBytes: 10}}};
 }
+
+vi.mock("../scripts/runtime-fingerprints.mjs", () => ({fingerprintProvider: async (definition: {targets: {id: string}[]}) =>
+  Object.fromEntries(definition.targets.map(target => [target.id, {fingerprint: "a".repeat(64), inputs: []}]))}));

@@ -23,7 +23,7 @@ describe("retrom-runtime Provider release build", () => {
       .toBe('{"𐀀":2,"":1}');
   });
 
-  it("builds all thirty-two targets from one staged release without downloading cores", async () => {
+  it("builds all thirty-five targets and their immutable fingerprints without downloading cores", async () => {
     const root = await temporaryRoot();
     const stageRoot = join(root, "stage");
     const manifest = projectProviderManifest(retromRuntimeProviderDefinition);
@@ -57,6 +57,12 @@ describe("retrom-runtime Provider release build", () => {
       targets: Array<Record<string, unknown>>;
     };
     expect(provider.targets).toHaveLength(35);
+    const identity = JSON.parse(await readFile(join(first.bundleRoot, "runtime-fingerprints.json"), "utf8"));
+    expect(identity.providerId).toBe("retrom-runtime");
+    expect(Object.keys(identity.targets).sort()).toEqual(provider.targets.map(target => target.id).sort());
+    expect(identity.targets.wasm4.fingerprint).toMatch(/^[a-f0-9]{64}$/u);
+    const integrity = JSON.parse(await readFile(join(first.bundleRoot, "integrity.json"), "utf8"));
+    expect(integrity.files.some((file: {path: string}) => file.path === "runtime-fingerprints.json")).toBe(true);
     expect(provider.targets.some((target) => target.id === "wasm4")).toBe(true);
     expect(provider.targets.every((target) => !("adapterId" in target))).toBe(true);
     expect(await readFile(join(first.bundleRoot, "client.mjs"), "utf8")).toContain("retrom-runtime");

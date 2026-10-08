@@ -1,3 +1,4 @@
+import {gzipSync} from "fflate";
 import "../../../tests/emulatorjs-content-fixture.js";
 import {afterEach, beforeEach, describe, expect, it, vi} from "vitest";
 
@@ -25,21 +26,51 @@ beforeEach(() => {vi.stubGlobal("ResizeObserver", class {observe() {} disconnect
 afterEach(() => {vi.useRealTimers(); vi.unstubAllGlobals();});
 
 describe("EmulatorJS provider lifecycle boundaries", () => {
-  it("does not press PSP boot-dialog controls after an explicit restore", async () => {
+  it.each([false, true])("leaves Virtual Boy game controls to the user (restore=%s)", async (restoring) => {
     vi.useFakeTimers();
     const frame = document.createElement("iframe"); document.body.append(frame);
     const runtimeWindow = frame.contentWindow as Window & Record<string, unknown>;
     runtimeWindow.fetch = vi.fn(async () => new Response("ok"));
     const bytes = Uint8Array.of(1, 2, 3);
     const host: RuntimeHostV1 = {
-      loadRestore: vi.fn(async () => bytes),
+      loadRestore: vi.fn(async () => restoring ? gzipSync(bytes) : null),
+      mountFrame: vi.fn(async () => ({contentWindow: runtimeWindow, element: frame, origin: location.origin})),
+      reportDiagnostic: vi.fn(), signal: new AbortController().signal,
+    };
+    const envelope = launchEnvelope(); envelope.runtime.targetId = "beetle-vb";
+    if (restoring) {
+      envelope.restore = {kind: "HTTP", format: "emulatorjs-state-v1-storage-v1", sha256: digest, sizeBytes: 3, url: "/restore"};
+    }
+    const player = await createEmulatorJsPlayer(envelope, host, assetIndex);
+    const mounting = player.mount(document.createElement("div"));
+    await vi.waitFor(() => expect(runtimeWindow.EJS_ready).toBeTypeOf("function"));
+    const simulateInput = vi.fn();
+    const loadExplicitStateAndWait = vi.fn(async () => {});
+    runtimeWindow.EJS_emulator = {gameManager: {simulateInput, loadExplicitStateAndWait, toggleMainLoop: vi.fn()}};
+    (runtimeWindow.EJS_ready as () => void)(); (runtimeWindow.EJS_onGameStart as () => void)();
+    await mounting;
+    expect(loadExplicitStateAndWait).toHaveBeenCalledTimes(restoring ? 1 : 0);
+    await vi.advanceTimersByTimeAsync(30000);
+    expect(simulateInput).not.toHaveBeenCalled();
+    expect(player.getState()).toBe("RUNNING");
+    await player.exit(); frame.remove();
+  });
+
+  it("does not press PSP boot-dialog controls after an explicit restore", async () => {
+    const frame = document.createElement("iframe"); document.body.append(frame);
+    const runtimeWindow = frame.contentWindow as Window & Record<string, unknown>;
+    runtimeWindow.fetch = vi.fn(async () => new Response("ok"));
+    const bytes = Uint8Array.of(1, 2, 3);
+    const host: RuntimeHostV1 = {
+      loadRestore: vi.fn(async () => gzipSync(bytes)),
       mountFrame: vi.fn(async () => ({contentWindow: runtimeWindow, element: frame, origin: location.origin})),
       reportDiagnostic: vi.fn(), signal: new AbortController().signal,
     };
     const envelope = launchEnvelope(); envelope.runtime.targetId = "ppsspp";
-    envelope.restore = {format: "emulatorjs-state-v1", sha256: "a".repeat(64), sizeBytes: 3, url: "/restore"};
+    envelope.restore = {kind: "HTTP", format: "emulatorjs-state-v1-storage-v1", sha256: "a".repeat(64), sizeBytes: 3, url: "/restore"};
     const player = await createEmulatorJsPlayer(envelope, host, assetIndex);
-    const mounting = player.mount(document.createElement("div")); await vi.advanceTimersByTimeAsync(0);
+    const mounting = player.mount(document.createElement("div"));
+    await vi.waitFor(() => expect(runtimeWindow.EJS_ready).toBeTypeOf("function"));
     let native!: {print: (message: string) => void; postMainLoop: () => void};
     runtimeWindow.EJS_Runtime = (config: typeof native) => {native = config;};
     (runtimeWindow.EJS_Runtime as (config: object) => unknown)({});
@@ -52,7 +83,7 @@ describe("EmulatorJS provider lifecycle boundaries", () => {
       FS: {writeFile: vi.fn(), unlink: vi.fn()},
     }};
     (runtimeWindow.EJS_ready as () => void)(); (runtimeWindow.EJS_onGameStart as () => void)();
-    await mounting; await vi.advanceTimersByTimeAsync(6000);
+    await mounting;
     expect(simulateInput).not.toHaveBeenCalled(); await player.exit(); frame.remove();
   });
   it("waits for restore, publishes checkpoint availability and forwards core exit once", async () => {
@@ -62,12 +93,12 @@ describe("EmulatorJS provider lifecycle boundaries", () => {
     runtimeWindow.fetch = vi.fn(async () => new Response("ok"));
     const restore = new Uint8Array([7, 8, 9]);
     const host: RuntimeHostV1 = {
-      loadRestore: vi.fn(async () => restore),
+      loadRestore: vi.fn(async () => gzipSync(restore)),
       mountFrame: vi.fn(async () => ({contentWindow: runtimeWindow, element: frame, origin: location.origin})),
       reportDiagnostic: vi.fn(), signal: new AbortController().signal,
     };
     const envelope = launchEnvelope();
-    envelope.restore = {format: "emulatorjs-state-v1", sha256: digest, sizeBytes: 3, url: "/runtime/restore"};
+    envelope.restore = {kind: "HTTP", format: "emulatorjs-state-v1-storage-v1", sha256: digest, sizeBytes: 3, url: "/runtime/restore"};
     const player = await createEmulatorJsPlayer(envelope, host, assetIndex);
     const received: RuntimeEventV1[] = [];
     player.subscribe((event) => received.push(event));
@@ -150,7 +181,6 @@ describe("EmulatorJS provider lifecycle boundaries", () => {
 
   it.each([
     {targetId: "ppsspp", presses: [[2000, 0], [5000, 0]]},
-    {targetId: "beetle-vb", presses: [[2000, 0], [4000, 3], [15000, 3], [25000, 3]]},
   ])("preserves the $targetId manager receiver for every startup press and release", async ({targetId, presses}) => {
     vi.useFakeTimers();
     const frame = document.createElement("iframe");

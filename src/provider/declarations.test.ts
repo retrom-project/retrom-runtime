@@ -85,9 +85,9 @@ describe("retrom-runtime provider declarations", () => {
     const manifest = projectProviderManifest(retromRuntimeProviderDefinition);
     const wasm4 = manifest.targets.find((target) => target.id === "wasm4");
     expect(wasm4).toMatchObject({
-      checkpoint: {
+      checkpoint: {semantics: "INSTANT",
         maxBytes: 132144,
-        readFormats: ["wasm4-state-v1", "wasm4-state-v1-storage-v1"],
+        readFormats: ["wasm4-state-v1-storage-v1"],
         writeFormat: "wasm4-state-v1-storage-v1",
       },
       inputs: [{ cardinality: "ONE", kind: "WASM4_CART", optional: false, role: "game" }],

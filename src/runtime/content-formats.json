@@ -1,0 +1,1148 @@
+{
+  "provenance": {
+    "repository": "https://github.com/libretro/libretro-core-info",
+    "commit": "5a74858ab2f7a50cebb5a6330895bc38899531c0",
+    "scope": "ROM entry selection from unpacked files; ordinary archive sidecars remain in full content identity"
+  },
+  "cores": {
+    "81": {
+      "extensions": [
+        "p",
+        "t81",
+        "tzx"
+      ],
+      "source": "81_libretro.info",
+      "sourceSha256": "06036186b108b32901290288cde80b817a22f5a0cd0454da0ce520ad7ab647ec"
+    },
+    "a5200": {
+      "extensions": [
+        "a52",
+        "bin"
+      ],
+      "source": "a5200_libretro.info",
+      "sourceSha256": "e707b742d0c12e87483986742e316ea530b2592ce74aaa74f5617267a9abafab"
+    },
+    "apple2js": {
+      "extensions": [
+        "dsk",
+        "do",
+        "po",
+        "2mg",
+        "nib",
+        "woz"
+      ],
+      "source": "runtime-owned adapter input formats"
+    },
+    "ardens": {
+      "extensions": [
+        "arduboy",
+        "hex"
+      ],
+      "source": "ardens_libretro.info",
+      "sourceSha256": "58dac1d776f5539d88c5bbeef94df80de377d3e7a261aacb4f3c258592559a0e"
+    },
+    "atari800": {
+      "extensions": [
+        "a52",
+        "atr",
+        "atx",
+        "bin",
+        "car",
+        "cas",
+        "com",
+        "dcm",
+        "m3u",
+        "rom",
+        "xex",
+        "xfd"
+      ],
+      "source": "atari800_libretro.info",
+      "sourceSha256": "4b56fa399760a8c48e6ac8b08ecc2ae2f7163bbfb34f3f08351bc7e092602e5e"
+    },
+    "atari800-xegs": {
+      "extensions": [
+        "a52",
+        "atr",
+        "atx",
+        "bin",
+        "car",
+        "cas",
+        "com",
+        "dcm",
+        "m3u",
+        "rom",
+        "xex",
+        "xfd"
+      ],
+      "source": "atari800_libretro.info",
+      "sourceSha256": "4b56fa399760a8c48e6ac8b08ecc2ae2f7163bbfb34f3f08351bc7e092602e5e"
+    },
+    "azahar": {
+      "extensions": [
+        "3ds",
+        "3dsx",
+        "app",
+        "axf",
+        "cci",
+        "cxi",
+        "elf",
+        "z3dsx",
+        "zcci",
+        "zcxi"
+      ],
+      "source": "azahar_libretro.info",
+      "sourceSha256": "c5bff8202e7ed32bce79ef0ab34dbeabde0637a298ef19a9e9c0ff5ea363aac3"
+    },
+    "beetle_vb": {
+      "extensions": [
+        "bin",
+        "vb",
+        "vboy"
+      ],
+      "source": "mednafen_vb_libretro.info",
+      "sourceSha256": "425e0ef983f72b7e938af8cc170d2ddc1cb6b0a19a98aa4fce49bb2957567236"
+    },
+    "bsnes": {
+      "extensions": [
+        "bs",
+        "fig",
+        "gb",
+        "gbc",
+        "sfc",
+        "smc",
+        "swc"
+      ],
+      "source": "bsnes_libretro.info",
+      "sourceSha256": "fc6f9bb67e99848bfcad99e5e4bb028a9ce998d3bbd0195fded36edef5ed1506"
+    },
+    "cap32": {
+      "extensions": [
+        "cdt",
+        "cpr",
+        "dsk",
+        "m3u",
+        "sna",
+        "tap",
+        "voc"
+      ],
+      "source": "cap32_libretro.info",
+      "sourceSha256": "7ef5d3ad67d195a5dc87ed62d9edf6732169cbde6da045583cc81a1264aad6fb"
+    },
+    "crocods": {
+      "extensions": [
+        "dsk",
+        "kcr",
+        "sna"
+      ],
+      "source": "crocods_libretro.info",
+      "sourceSha256": "4bf12dc021fcb628de8d14542a9e5b0ee8aa69828a99adda85346fe54c879cf8"
+    },
+    "desmume": {
+      "extensions": [
+        "bin",
+        "ids",
+        "nds"
+      ],
+      "source": "desmume_libretro.info",
+      "sourceSha256": "82730a4bcd36df5631f1791f50a66f056075ef47b501c19258f703b73966101b"
+    },
+    "desmume2015": {
+      "extensions": [
+        "bin",
+        "ids",
+        "nds"
+      ],
+      "source": "desmume2015_libretro.info",
+      "sourceSha256": "d47e012b0ded47a50cd8c06ca4ade9ead7e9d6ded7b0aaed22b9ad3e7e65112d"
+    },
+    "fake08": {
+      "extensions": [
+        "p8",
+        "png"
+      ],
+      "source": "fake08_libretro.info",
+      "sourceSha256": "2c44dee60fa090a08f4198d001f3fb09c73f59caed60ab40d949a4576e7a5a9d"
+    },
+    "fceumm": {
+      "extensions": [
+        "fds",
+        "nes",
+        "unf",
+        "unif"
+      ],
+      "source": "fceumm_libretro.info",
+      "sourceSha256": "eda6fbfdc1fda5ea80c2caed205345b0cbbfa9427acf3626e0cffd6ee5a96721"
+    },
+    "flycast": {
+      "extensions": [
+        "bin",
+        "cdi",
+        "chd",
+        "cue",
+        "dat",
+        "elf",
+        "gdi",
+        "lst",
+        "m3u"
+      ],
+      "source": "flycast_libretro.info",
+      "sourceSha256": "d32663d9bd4dfcbe8bf84cdf806ac1d7437512c2b5d75287b9a918ebed968898"
+    },
+    "flycast-atomiswave": {
+      "extensions": [
+        "bin",
+        "cdi",
+        "chd",
+        "cue",
+        "dat",
+        "elf",
+        "gdi",
+        "lst",
+        "m3u"
+      ],
+      "source": "flycast_libretro.info",
+      "sourceSha256": "d32663d9bd4dfcbe8bf84cdf806ac1d7437512c2b5d75287b9a918ebed968898"
+    },
+    "flycast-naomi": {
+      "extensions": [
+        "bin",
+        "cdi",
+        "chd",
+        "cue",
+        "dat",
+        "elf",
+        "gdi",
+        "lst",
+        "m3u"
+      ],
+      "source": "flycast_libretro.info",
+      "sourceSha256": "d32663d9bd4dfcbe8bf84cdf806ac1d7437512c2b5d75287b9a918ebed968898"
+    },
+    "flycast-naomi2": {
+      "extensions": [
+        "bin",
+        "cdi",
+        "chd",
+        "cue",
+        "dat",
+        "elf",
+        "gdi",
+        "lst",
+        "m3u"
+      ],
+      "source": "flycast_libretro.info",
+      "sourceSha256": "d32663d9bd4dfcbe8bf84cdf806ac1d7437512c2b5d75287b9a918ebed968898"
+    },
+    "freechaf": {
+      "extensions": [
+        "bin",
+        "chf"
+      ],
+      "source": "freechaf_libretro.info",
+      "sourceSha256": "d66cf527d20808993234f05b59c410c37ed349f310360ffc5c9dcc0973840e9b"
+    },
+    "freeintv": {
+      "extensions": [
+        "bin",
+        "int",
+        "rom"
+      ],
+      "source": "freeintv_libretro.info",
+      "sourceSha256": "8a688f4c8aa5048d9086451dd8d33873cef34b4458d5766593d911ffa60eda52"
+    },
+    "fuse": {
+      "extensions": [
+        "dck",
+        "dsk",
+        "ipf",
+        "rzx",
+        "scl",
+        "sna",
+        "szx",
+        "tap",
+        "trd",
+        "tzx",
+        "z80"
+      ],
+      "source": "fuse_libretro.info",
+      "sourceSha256": "a87806db8485cbb186f3704d33b04fab7bd4a56da6af538a33af315072f59519"
+    },
+    "gam4980": {
+      "extensions": [
+        "gam"
+      ],
+      "source": "gam4980_libretro.info",
+      "sourceSha256": "95ab902d6697526e904847ff4de1e9736c824ef643575843788f008e281c14a2"
+    },
+    "gambatte": {
+      "extensions": [
+        "dmg",
+        "gb",
+        "gbc"
+      ],
+      "source": "gambatte_libretro.info",
+      "sourceSha256": "084975942c06a658972890c12a8251fe8d0f6c7ffd2b268850458628bbbe68f4"
+    },
+    "gbe_plus": {
+      "extensions": [
+        "min"
+      ],
+      "source": "runtime-owned adapter input formats"
+    },
+    "gearboy": {
+      "extensions": [
+        "cgb",
+        "dmg",
+        "gb",
+        "gbc",
+        "sgb"
+      ],
+      "source": "gearboy_libretro.info",
+      "sourceSha256": "de8704813970be46d973aa67141d21ee4c318f7dcf9030ec72f9ca0d014e8724"
+    },
+    "gearcoleco": {
+      "extensions": [
+        "bin",
+        "col",
+        "cv",
+        "ddp",
+        "dsk",
+        "m3u",
+        "rom"
+      ],
+      "source": "gearcoleco_libretro.info",
+      "sourceSha256": "ebc7293724350790b31ef0245c4e0fe790c5876438a7eb830076e6a16dc80ecf"
+    },
+    "genesis_plus_gx": {
+      "extensions": [
+        "68k",
+        "bin",
+        "bms",
+        "chd",
+        "cue",
+        "gen",
+        "gg",
+        "iso",
+        "m3u",
+        "md",
+        "mdx",
+        "sg",
+        "sgd",
+        "smd",
+        "sms"
+      ],
+      "source": "genesis_plus_gx_libretro.info",
+      "sourceSha256": "9793bff8d9e298a7ee0c94c0511dab242200ca60fbe87e3720eb9231a3e0166a"
+    },
+    "genesis_plus_gx_wide": {
+      "extensions": [
+        "68k",
+        "bin",
+        "bms",
+        "chd",
+        "cue",
+        "gen",
+        "gg",
+        "iso",
+        "m3u",
+        "md",
+        "mdx",
+        "sg",
+        "sgd",
+        "smd",
+        "sms"
+      ],
+      "source": "genesis_plus_gx_wide_libretro.info",
+      "sourceSha256": "8aa2205e8a3ea2cf2ed04d5ae83eed52c4e9ca6b8d2722afa2bb853a9939357c"
+    },
+    "handy": {
+      "extensions": [
+        "lnx",
+        "lyx",
+        "o"
+      ],
+      "source": "handy_libretro.info",
+      "sourceSha256": "a059661e377deb24ede5a77c725fbbdd4829666d0996f30bb9c2c9a10ee0461d"
+    },
+    "hatarib": {
+      "extensions": [
+        "acsi",
+        "ahd",
+        "ctr",
+        "dim",
+        "gem",
+        "gz",
+        "ide",
+        "ipf",
+        "m3u",
+        "m3u8",
+        "msa",
+        "scsi",
+        "shd",
+        "st",
+        "stx",
+        "vhd",
+        "zst"
+      ],
+      "source": "hatarib_libretro.info",
+      "sourceSha256": "dd5d9314f2b5517939eb54db982905c23db02ab8289c696d182706a52a3b5657"
+    },
+    "j2me": {
+      "extensions": [
+        "jar"
+      ],
+      "source": "runtime-owned adapter input formats"
+    },
+    "jsbeeb": {
+      "extensions": [
+        "ssd",
+        "dsd",
+        "adl",
+        "adf",
+        "img"
+      ],
+      "source": "runtime-owned adapter input formats"
+    },
+    "lutro": {
+      "extensions": [
+        "love",
+        "lua",
+        "lutro"
+      ],
+      "source": "lutro_libretro.info",
+      "sourceSha256": "aadccb98a1c1ce636a0293be4a9381ca4dfb591d471d07d1f2f8026456213aef"
+    },
+    "mame_apple2": {
+      "extensions": [
+        "dsk",
+        "do",
+        "po",
+        "2mg",
+        "nib",
+        "woz"
+      ],
+      "source": "runtime-owned adapter input formats"
+    },
+    "mame_apple2e": {
+      "extensions": [
+        "dsk",
+        "do",
+        "po",
+        "2mg",
+        "nib",
+        "woz"
+      ],
+      "source": "runtime-owned adapter input formats"
+    },
+    "mame_atom": {
+      "extensions": [
+        "atm",
+        "tap",
+        "dsk"
+      ],
+      "source": "runtime-owned adapter input formats"
+    },
+    "mame_coleco": {
+      "extensions": [
+        "col",
+        "rom",
+        "bin"
+      ],
+      "source": "runtime-owned adapter input formats"
+    },
+    "mame_pv1000": {
+      "extensions": [
+        "bin",
+        "rom"
+      ],
+      "source": "runtime-owned adapter input formats"
+    },
+    "mame_sg1000": {
+      "extensions": [
+        "sg",
+        "bin",
+        "rom"
+      ],
+      "source": "runtime-owned adapter input formats"
+    },
+    "mednafen_ngp": {
+      "extensions": [
+        "ngc",
+        "ngp",
+        "ngpc",
+        "npc"
+      ],
+      "source": "mednafen_ngp_libretro.info",
+      "sourceSha256": "1e7485277cffaf01ae4c4c5406a7dfc6f85f4d2a6949273feae5634781ec396b"
+    },
+    "mednafen_pce": {
+      "extensions": [
+        "ccd",
+        "chd",
+        "cue",
+        "m3u",
+        "pce",
+        "sgx",
+        "toc"
+      ],
+      "source": "mednafen_pce_libretro.info",
+      "sourceSha256": "ec52873e28177fb250108ec69ae889a7a258dc352c9d946c051345cc69fbe1db"
+    },
+    "mednafen_pcfx": {
+      "extensions": [
+        "ccd",
+        "chd",
+        "cue",
+        "toc"
+      ],
+      "source": "mednafen_pcfx_libretro.info",
+      "sourceSha256": "d352e83266f1d965e1b0fcb190dc3300158f419985b8d77374a2994d00f38f19"
+    },
+    "mednafen_psx_hw": {
+      "extensions": [
+        "bin",
+        "ccd",
+        "chd",
+        "cue",
+        "exe",
+        "m3u",
+        "pbp",
+        "toc"
+      ],
+      "source": "mednafen_psx_hw_libretro.info",
+      "sourceSha256": "0790f04425488765bf3c199755036501f0ef09bc4af6b00cd516c209b4358940"
+    },
+    "mednafen_wswan": {
+      "extensions": [
+        "pc2",
+        "pcv2",
+        "ws",
+        "wsc"
+      ],
+      "source": "mednafen_wswan_libretro.info",
+      "sourceSha256": "07f595bdc27cf7ee145091ae226b2dc37eeefa499ef9720b64d5384e54ac5ac1"
+    },
+    "melonds": {
+      "extensions": [
+        "dsi",
+        "ids",
+        "nds"
+      ],
+      "source": "melonds_libretro.info",
+      "sourceSha256": "6185bf7a56cd87a3c976b17c91b29a3a38e8956f85cc30c00fe431b7ac68333e"
+    },
+    "mgba": {
+      "extensions": [
+        "gb",
+        "gba",
+        "gbc"
+      ],
+      "source": "mgba_libretro.info",
+      "sourceSha256": "64444beb8268d3a57d53a45564c55049f39ff621315401fef86e82f3849042d6"
+    },
+    "mupen64plus_next": {
+      "extensions": [
+        "bin",
+        "n64",
+        "ndd",
+        "u1",
+        "v64",
+        "z64"
+      ],
+      "source": "mupen64plus_next_libretro.info",
+      "sourceSha256": "8d1fcd13a17310e233be4ff247bf1032f8f786fe685e24cef5ed4ea474ccdfb6"
+    },
+    "neocd": {
+      "extensions": [
+        "chd",
+        "cue"
+      ],
+      "source": "neocd_libretro.info",
+      "sourceSha256": "6ea290bc3814131091c08eec089386492264fc3aaa3f678b7b130874cac0cc37"
+    },
+    "nestopia": {
+      "extensions": [
+        "fds",
+        "nes",
+        "nsf",
+        "unf",
+        "unif"
+      ],
+      "source": "nestopia_libretro.info",
+      "sourceSha256": "bce8d791385b01639ef282d370e218f814519c964d6f4c747bd9d2e6e0b1e35b"
+    },
+    "np2kai": {
+      "extensions": [
+        "2hd",
+        "88d",
+        "98d",
+        "cmd",
+        "d88",
+        "d98",
+        "dup",
+        "fdd",
+        "fdi",
+        "hdd",
+        "hdi",
+        "hdm",
+        "hdn",
+        "nhd",
+        "tfd",
+        "thd",
+        "xdf"
+      ],
+      "source": "np2kai_libretro.info",
+      "sourceSha256": "b68e1c4aa673840f6bb8f6c29838430d2c5af15b7fb7315deb5a36a5945b490e"
+    },
+    "o2em": {
+      "extensions": [
+        "bin"
+      ],
+      "source": "o2em_libretro.info",
+      "sourceSha256": "d8cbfb38f736448d16817a4b2f17d61843e43c1b8bf64fae228a9d9e95e48378"
+    },
+    "openbor": {
+      "extensions": [
+        "pak"
+      ],
+      "source": "runtime-owned adapter input formats"
+    },
+    "opera": {
+      "extensions": [
+        "bin",
+        "chd",
+        "cue",
+        "iso"
+      ],
+      "source": "opera_libretro.info",
+      "sourceSha256": "3edce84cd4bd8afba0727a07a70fef7ccc44e7db7e1e0f00897ed6805087d94f"
+    },
+    "parallel_n64": {
+      "extensions": [
+        "bin",
+        "n64",
+        "ndd",
+        "u1",
+        "v64",
+        "z64"
+      ],
+      "source": "parallel_n64_libretro.info",
+      "sourceSha256": "f32a557f5e4aa3327e182dc6ffcceebd35ea07f60b04874d29a96c638dbdddad"
+    },
+    "pcsx_rearmed": {
+      "extensions": [
+        "bin",
+        "cbn",
+        "ccd",
+        "chd",
+        "cue",
+        "exe",
+        "img",
+        "iso",
+        "m3u",
+        "mdf",
+        "pbp",
+        "toc"
+      ],
+      "source": "pcsx_rearmed_libretro.info",
+      "sourceSha256": "83e98e7b7068b99330db52741a369f217ebadcdbd1eb182a5a435c76ab6ae704"
+    },
+    "picodrive": {
+      "extensions": [
+        "32x",
+        "68k",
+        "bin",
+        "chd",
+        "cue",
+        "gen",
+        "gg",
+        "iso",
+        "m3u",
+        "md",
+        "pco",
+        "sc",
+        "sg",
+        "sgd",
+        "smd",
+        "sms"
+      ],
+      "source": "picodrive_libretro.info",
+      "sourceSha256": "35cef57b4b61d95a86e1ceee3a7c325d9d16bbdc136b4b3a556e808864de06c5"
+    },
+    "play": {
+      "extensions": [
+        "chd",
+        "cso",
+        "cue",
+        "elf",
+        "iso",
+        "isz"
+      ],
+      "source": "play_libretro.info",
+      "sourceSha256": "caa9f1a687d055a820426cb987ecb02e88ac31eac9970069822bd943ada53b20"
+    },
+    "potator": {
+      "extensions": [
+        "bin",
+        "sv"
+      ],
+      "source": "potator_libretro.info",
+      "sourceSha256": "1e7155841e4dcdb7feef31018432d2e259cbfd2b349add6d4731165cee8ede1a"
+    },
+    "ppsspp": {
+      "extensions": [
+        "chd",
+        "cso",
+        "elf",
+        "iso",
+        "pbp",
+        "prx"
+      ],
+      "source": "ppsspp_libretro.info",
+      "sourceSha256": "2e9becab17d0db4222e9655bb9b065167e5bcf599ca16256be72beb8f38e646d"
+    },
+    "prboom": {
+      "extensions": [
+        "iwad",
+        "pk3",
+        "pwad",
+        "wad"
+      ],
+      "source": "prboom_libretro.info",
+      "sourceSha256": "10ffe6fb3aa641c90a6d2ab4d7d88d436087762e08d5ad29e04edd35aaec11d4"
+    },
+    "prosystem": {
+      "extensions": [
+        "a78",
+        "bin",
+        "cdf"
+      ],
+      "source": "prosystem_libretro.info",
+      "sourceSha256": "22e9bc148612082f41147b4de167bb7ade705ec5f4642b8b70c0eb9ad1971681"
+    },
+    "puae": {
+      "extensions": [
+        "/",
+        "adf",
+        "adz",
+        "ccd",
+        "chd",
+        "cue",
+        "dms",
+        "fdi",
+        "hdf",
+        "hdz",
+        "info",
+        "ipf",
+        "iso",
+        "lha",
+        "m3u",
+        "mds",
+        "nrg",
+        "rp9",
+        "slave",
+        "uae"
+      ],
+      "source": "puae_libretro.info",
+      "sourceSha256": "fc400817a4e304fe2721b9c7fbe3b4a0dfe7d9429366938abe48946aa56b43a3"
+    },
+    "px68k": {
+      "extensions": [
+        "2hd",
+        "88d",
+        "cmd",
+        "d88",
+        "dim",
+        "dup",
+        "hdf",
+        "hdm",
+        "img",
+        "m3u",
+        "xdf"
+      ],
+      "source": "px68k_libretro.info",
+      "sourceSha256": "9b4aae3ac3721bdcc11394a9a855a3fee1a7de787cee935aa568057c2684c915"
+    },
+    "quasi88": {
+      "extensions": [
+        "d88",
+        "m3u",
+        "u88"
+      ],
+      "source": "quasi88_libretro.info",
+      "sourceSha256": "ec33106f058bcdc95ac93226c9b11d164d4e1cadf0c731e73eabd2380c50104a"
+    },
+    "ruffle": {
+      "extensions": [
+        "swf"
+      ],
+      "source": "runtime-owned adapter input formats"
+    },
+    "samcoupeweb": {
+      "extensions": [
+        "mgt",
+        "dsk",
+        "sad"
+      ],
+      "source": "runtime-owned adapter input formats"
+    },
+    "same_cdi": {
+      "extensions": [
+        "chd",
+        "cue",
+        "iso"
+      ],
+      "source": "same_cdi_libretro.info",
+      "sourceSha256": "ee928ed46d44e2415eb2cc61f83fa9376d6230377e7583d08100b233e5a9b060"
+    },
+    "sameduck": {
+      "extensions": [
+        "bin",
+        "duck"
+      ],
+      "source": "sameduck_libretro.info",
+      "sourceSha256": "1b0844ec4fbbcc595ada875c7f1e80de467d8e0b2713119f6e41ec8bd5b4fd29"
+    },
+    "smsplus": {
+      "extensions": [
+        "bin",
+        "col",
+        "gg",
+        "rom",
+        "sg",
+        "sms"
+      ],
+      "source": "smsplus_libretro.info",
+      "sourceSha256": "041fd38a307095402dafa6a3654a3eae22088976f326f14d8fdb3402d937a519"
+    },
+    "snes9x": {
+      "extensions": [
+        "bs",
+        "fig",
+        "sfc",
+        "smc",
+        "st",
+        "swc"
+      ],
+      "source": "snes9x_libretro.info",
+      "sourceSha256": "fa62b78d58bc4c30f4e0a4a581f0cb3252447b7f198b55bd6ebe2e4b9bde5cc2"
+    },
+    "stella2014": {
+      "extensions": [
+        "a26",
+        "bin"
+      ],
+      "source": "stella2014_libretro.info",
+      "sourceSha256": "d3e08071f6c19ec9ae72d83fe377b35d5da824c4a5f7819a8ee31e1379bdc17d"
+    },
+    "supermodel": {
+      "extensions": [
+        "chd"
+      ],
+      "source": "supermodel_libretro.info",
+      "sourceSha256": "3207bac59d3111caf5eb93045072785c18744619848277f721badb114afef454"
+    },
+    "theodore": {
+      "extensions": [
+        "fd",
+        "k7",
+        "m5",
+        "m7",
+        "rom",
+        "sap"
+      ],
+      "source": "theodore_libretro.info",
+      "sourceSha256": "1e335df620e8e9eeca8365fc8a892b9a73571c9a1fb348e71ea5b73fe7152188"
+    },
+    "tic80": {
+      "extensions": [
+        "tic"
+      ],
+      "source": "tic80_libretro.info",
+      "sourceSha256": "f8a1cf3a7e35e834abbc8b51cefcaa9e0753289300363665ea56d3768e2cfdf8"
+    },
+    "uzem": {
+      "extensions": [
+        "uze"
+      ],
+      "source": "uzem_libretro.info",
+      "sourceSha256": "ad1e429e11e0084b5844493f72fbb0164c570b333c9707ccb91faef415a998cc"
+    },
+    "vecx": {
+      "extensions": [
+        "bin",
+        "vec"
+      ],
+      "source": "vecx_libretro.info",
+      "sourceSha256": "9eec259b2b84256aca32cdcd37b084732b17d2fce829dac01bab9a84ea01b4e3"
+    },
+    "vice_x128": {
+      "extensions": [
+        "/",
+        "bin",
+        "cmd",
+        "crt",
+        "d2m",
+        "d4m",
+        "d64",
+        "d6z",
+        "d71",
+        "d7z",
+        "d80",
+        "d81",
+        "d82",
+        "d8z",
+        "g41",
+        "g4z",
+        "g64",
+        "g6z",
+        "gz",
+        "m3u",
+        "nbz",
+        "nib",
+        "p00",
+        "prg",
+        "t64",
+        "tap",
+        "vfl",
+        "vsf",
+        "x64",
+        "x6z"
+      ],
+      "source": "vice_x128_libretro.info",
+      "sourceSha256": "4437aa06d31462f58fcc9d4702e3b1760d3e01501a292a665ea932d567c80f06"
+    },
+    "vice_x64": {
+      "extensions": [
+        "/",
+        "bin",
+        "cmd",
+        "crt",
+        "d2m",
+        "d4m",
+        "d64",
+        "d6z",
+        "d71",
+        "d7z",
+        "d80",
+        "d81",
+        "d82",
+        "d8z",
+        "g41",
+        "g4z",
+        "g64",
+        "g6z",
+        "gz",
+        "m3u",
+        "nbz",
+        "nib",
+        "p00",
+        "prg",
+        "t64",
+        "tap",
+        "vfl",
+        "vsf",
+        "x64",
+        "x6z"
+      ],
+      "source": "vice_x64_libretro.info",
+      "sourceSha256": "5b3f59e050c260e53d29e4a13a3983e9b77e77b7b3b4512dded8e313d756b168"
+    },
+    "vice_x64sc": {
+      "extensions": [
+        "/",
+        "bin",
+        "cmd",
+        "crt",
+        "d2m",
+        "d4m",
+        "d64",
+        "d6z",
+        "d71",
+        "d7z",
+        "d80",
+        "d81",
+        "d82",
+        "d8z",
+        "g41",
+        "g4z",
+        "g64",
+        "g6z",
+        "gz",
+        "m3u",
+        "nbz",
+        "nib",
+        "p00",
+        "prg",
+        "t64",
+        "tap",
+        "vfl",
+        "vsf",
+        "x64",
+        "x6z"
+      ],
+      "source": "vice_x64sc_libretro.info",
+      "sourceSha256": "944370dcfe24e575a3ecf2d21b9324284b885e32311bce9d1c28492e036cf4fb"
+    },
+    "vice_xpet": {
+      "extensions": [
+        "/",
+        "bin",
+        "cmd",
+        "crt",
+        "d2m",
+        "d4m",
+        "d64",
+        "d6z",
+        "d71",
+        "d7z",
+        "d80",
+        "d81",
+        "d82",
+        "d8z",
+        "g41",
+        "g4z",
+        "g64",
+        "g6z",
+        "gz",
+        "m3u",
+        "nbz",
+        "nib",
+        "p00",
+        "prg",
+        "t64",
+        "tap",
+        "vfl",
+        "vsf",
+        "x64",
+        "x6z"
+      ],
+      "source": "vice_xpet_libretro.info",
+      "sourceSha256": "38da60f07b51374dc997101f0423d050d58a9a130ee61708febac0c9debf4e0f"
+    },
+    "vice_xplus4": {
+      "extensions": [
+        "/",
+        "bin",
+        "cmd",
+        "crt",
+        "d2m",
+        "d4m",
+        "d64",
+        "d6z",
+        "d71",
+        "d7z",
+        "d80",
+        "d81",
+        "d82",
+        "d8z",
+        "g41",
+        "g4z",
+        "g64",
+        "g6z",
+        "gz",
+        "m3u",
+        "nbz",
+        "nib",
+        "p00",
+        "prg",
+        "t64",
+        "tap",
+        "vfl",
+        "vsf",
+        "x64",
+        "x6z"
+      ],
+      "source": "vice_xplus4_libretro.info",
+      "sourceSha256": "759a836bcdd2ae1bcb33404c4dbe9eeab6feceb48d1b3337f0a307ecdce4b597"
+    },
+    "vice_xvic": {
+      "extensions": [
+        "/",
+        "20",
+        "40",
+        "60",
+        "a0",
+        "b0",
+        "bin",
+        "cmd",
+        "crt",
+        "d2m",
+        "d4m",
+        "d64",
+        "d6z",
+        "d71",
+        "d7z",
+        "d80",
+        "d81",
+        "d82",
+        "d8z",
+        "g41",
+        "g4z",
+        "g64",
+        "g6z",
+        "gz",
+        "m3u",
+        "nbz",
+        "nib",
+        "p00",
+        "prg",
+        "rom",
+        "t64",
+        "tap",
+        "vfl",
+        "vsf",
+        "x64",
+        "x6z"
+      ],
+      "source": "vice_xvic_libretro.info",
+      "sourceSha256": "98e64ee0e0400726cbc0e35bbea7df4107ee51fd4602de58c1c7b0d6a3a5fce4"
+    },
+    "virtualjaguar": {
+      "extensions": [
+        "abs",
+        "bin",
+        "cdi",
+        "chd",
+        "cof",
+        "cue",
+        "j64",
+        "jag",
+        "prg",
+        "rom"
+      ],
+      "source": "virtualjaguar_libretro.info",
+      "sourceSha256": "c6338c31a4d72706a110e89a94686254a08718479735ad5df156059a1144500a"
+    },
+    "wasm4": {
+      "extensions": [
+        "wasm"
+      ],
+      "source": "wasm4_libretro.info",
+      "sourceSha256": "e6e069d1259c2362da7b1e8b52a7dcd0532f420e34f193fa8257a45a6ebfd5fb"
+    },
+    "webmsx": {
+      "extensions": [
+        "rom",
+        "mx1",
+        "mx2",
+        "dsk",
+        "cas"
+      ],
+      "source": "runtime-owned adapter input formats"
+    },
+    "yabause": {
+      "extensions": [
+        "bin",
+        "ccd",
+        "chd",
+        "cue",
+        "iso",
+        "m3u",
+        "mds"
+      ],
+      "source": "yabause_libretro.info",
+      "sourceSha256": "a65a050c3cedefd6a06d790e3a9b4341ed21a9bb122e7b49516dbd5f4c014e81"
+    }
+  }
+}

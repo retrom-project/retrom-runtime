@@ -63,7 +63,7 @@ for (const path of [join(root, "src"), join(root, "assets"),join(root,"contracts
     watch(directory, {persistent: true}, () => void rebuild());
   }
 }
-for (const file of ["package.json", "provider-sources.json", "tsconfig.json","scripts/pfb-provider-dev.mjs","scripts/provider-client-build.mjs"]) {
+for (const file of ["package.json", "provider-sources.json", "tsconfig.json","scripts/pfb-provider-dev.mjs","scripts/provider-client-build.mjs","scripts/runtime-fingerprints.mjs"]) {
   watch(join(root, file), {persistent: true}, () => void rebuild());
 }
 process.stdout.write("pfb provider dev watcher ready\n");

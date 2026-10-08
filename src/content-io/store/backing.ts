@@ -98,9 +98,10 @@ export class PersistentBacking {
   private async corrupt(current: GenerationRecord, receipt: BlockReceipt): Promise<null> {
     this.onCorrupt();
     if (current.state === "COMPLETE") {
-      // Published physical generations are immutable, including in other Sessions.
+      // Retire unreadable immutable cache bytes without revoking the source identity.
+      // Optional storage loss must permit a fresh, validated network read.
       await this.resources.metadata.update(this.key, this.generation, current.revision, (record) => {record.state = "QUARANTINED";});
-      fail("IDENTITY_CHANGED");
+      fail("CACHE_UNAVAILABLE");
     }
     await this.resources.metadata.update(this.key, this.generation, current.revision, (record) => {
       record.state = "PARTIAL"; record.completionAssurance = null; record.localSha256 = null;

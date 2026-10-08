@@ -4,7 +4,7 @@ import type {
   RuntimeCheckpoint,
   RuntimeLoadProgress,
 } from "./contract.js";
-import type {RuntimeVideoModeV1, RuntimeInputDiagnosticsV1, RuntimeGameEditorV1} from "./provider/module-api.js";
+import type {RuntimeHostShortcutPolicyV1, RuntimeHostShortcutV1, RuntimeVideoModeV1, RuntimeInputDiagnosticsV1, RuntimeGameEditorV1, RuntimeInputFilterPolicyV1} from "./provider/module-api.js";
 
 import type {GamepadCursor} from "./provider/gamepad-cursor.js";
 
@@ -21,6 +21,9 @@ export type MountedRuntimeAdapter = {
   getCheckpointAvailability(): CheckpointAvailability;
   getFrameCount(): number | null;
   startInputDiagnostics?(): RuntimeInputDiagnosticsV1;
+  /** Isolated adapters deliver policy to their own realm through the control channel. */
+  setInputFilter?(policy: RuntimeInputFilterPolicyV1 | null): Promise<void>;
+  setHostShortcutPolicy?(policy: RuntimeHostShortcutPolicyV1 | null, report: (shortcut: RuntimeHostShortcutV1) => void): Promise<void>;
   gameEditor?: RuntimeGameEditorV1;
   pause(): Promise<void>;
   resume(): Promise<void>;

@@ -8,6 +8,7 @@ export type RetromRuntimeProviderBuildInput = {
   manifest: ProviderManifest;
   outputRoot: string;
   stageRoot: string;
+  sourceTreeSha256?: string;
 };
 
 export function buildRetromRuntimeProviderBundle(

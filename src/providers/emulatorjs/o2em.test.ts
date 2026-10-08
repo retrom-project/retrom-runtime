@@ -15,12 +15,12 @@ describe("O2EM cartridge runtime", () => {
 
   it("declares the single-file core, firmware input and instant checkpoint", () => {
     const target = emulatorJsProviderDefinition.targets.find((entry) => entry.id === "o2em");
-    expect(target).toMatchObject({discSwitch: false, requiresThreads: false,
+    expect(target).toMatchObject({ requiresThreads: false,
       implementation: {runtimeCore: "o2em", contentKinds: ["SINGLE_FILE"],
         defaultOptions: {keyboardInput: "enabled", o2em_bios: "o2rom.bin"}}});
     expect(target?.inputs).toContainEqual({cardinality: "ONE", kind: "BIOS_BUNDLE", optional: true, role: "bios"});
     expect(emulatorJsProviderDefinition.adapters.find((adapter) => adapter.id === target?.adapterId))
-      .toMatchObject({checkpoint: {writeFormat: "emulatorjs-state-v1-storage-v1"}});
+      .toMatchObject({checkpoint: {semantics: "INSTANT", writeFormat: "emulatorjs-state-v1-storage-v1"}});
   });
 
   it("maps both players' direction and action to distinct standard pad inputs", () => {

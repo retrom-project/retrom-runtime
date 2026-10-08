@@ -158,7 +158,7 @@ function mountMachineAdapter(kind: string, envelope: LaunchEnvelopeV1, target: H
       requireContentSession(context.contentSession), context.signal);
   case "APPLE2JS_WEB":
     return mountApple2(parameters.apple2js(envelope), target, frameWindow, restorePayload, reportProgress,
-      requireContentSession(context.contentSession), context.signal, envelope.restore?.format ?? null);
+      requireContentSession(context.contentSession), context.signal);
   case "SAMCOUPE_WEB":
     return mountSamCoupe(parameters.samcoupe(envelope), target, frameWindow, restorePayload, reportProgress,
       requireContentSession(context.contentSession), reportFailure, context.signal);

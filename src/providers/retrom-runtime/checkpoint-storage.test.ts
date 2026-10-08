@@ -18,7 +18,7 @@ describe("shared checkpoint storage boundary", () => {
       expect(saved.bytes.byteLength).toBeLessThan(bytes.byteLength / 10);
       expect(saved.format).toBe("np2kai-state-v1-storage-v1");
       const next = targetEnvelope("np2kai-pc98");
-      next.restore = {format: saved.format, sizeBytes: saved.bytes.length, sha256: "a".repeat(64), url: "/save"};
+      next.restore = {kind: "HTTP", format: saved.format, sizeBytes: saved.bytes.length, sha256: "a".repeat(64), url: "/save"};
       const restored = createRetromRuntimePlayer(next, hostFixture({loadRestore: async () => saved.bytes}), {});
       try {
         await restored.mount(document.createElement("div"));
@@ -28,7 +28,7 @@ describe("shared checkpoint storage boundary", () => {
   });
 });
 
-it.each(["openbor-game-save-v1", "openbor-game-save-v1-storage-v1"])("decodes %s and acknowledges only native OpenBOR bytes", async format => {
+it.each(["openbor-game-save-v1-storage-v1"])("decodes %s and acknowledges only native OpenBOR bytes", async format => {
   const {encodeSave, decodeSave, saveFormat} = await import("../../openbor/save.js");
   const {gzipSync, gunzipSync} = await import("fflate");
   const identity = "a".repeat(64), files = [["game.sav", new Uint8Array(2048).fill(7)]] as const;
@@ -41,9 +41,9 @@ it.each(["openbor-game-save-v1", "openbor-game-save-v1-storage-v1"])("decodes %s
     }),
   });
   vi.mocked(mountTargetAdapter).mockResolvedValue(adapter);
-  const stored = format === saveFormat ? bytes : gzipSync(bytes);
+  const stored = gzipSync(bytes);
   const envelope = targetEnvelope("openbor");
-  envelope.restore = {format, sizeBytes: stored.length, sha256: identity, url: "/save"};
+  envelope.restore = {kind: "HTTP", format, sizeBytes: stored.length, sha256: identity, url: "/save"};
   const player = createRetromRuntimePlayer(envelope, hostFixture({loadRestore: async () => stored}), {});
   try {
     await player.mount(document.createElement("div"));

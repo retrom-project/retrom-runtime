@@ -4,7 +4,7 @@ import {checkpointFormat, checkpointLimit} from "../../mame/state.js";
 import arcadeFamilies from "../../mame/arcade-families.json" with {type: "json"};
 export const mameAdapter = defineAdapter({id: "mame-dylink", kind: "MAME_DYLINK", abi: "retrom-mame-dylink-v1",
   capabilities: {checkpoint: true, pause: true, screenshot: true, standardGamepad: true, frameCounter: true, volume: true},
-  checkpoint: {writeFormat: checkpointFormat, readFormats: [checkpointFormat]},
+  checkpoint: {semantics: "INSTANT", writeFormat: checkpointFormat, readFormats: [checkpointFormat]},
 });
 export const mameAppleTarget = defineTarget({
   hostKeyboardShortcuts: ["PAUSE", "MENU"],
@@ -14,7 +14,7 @@ export const mameAppleTarget = defineTarget({
   inputs: [{role: "game", kind: "ROM_BLOB", cardinality: "ONE", optional: false},
     {role: "external", kind: "EXTERNAL_FILE_SET", cardinality: "ONE", optional: false}],
   targetOptionsSchema: {type: "object", additionalProperties: false, properties: {}, required: []},
-  implementation: {}, inputFilter: true, discSwitch: false, nativeSettings: false,
+  implementation: {}, inputFilter: true, nativeSettings: false,
   videoModes: ["original", "pixel", "smooth"],
   assetPaths: ["mame-build.json", "mame-common.mjs", "mame-common.wasm",
     "mame-apple.wasm"].map(file => `assets/mame/${file}`),
@@ -43,7 +43,7 @@ export const mamePV1000Target = defineTarget({...mameAppleTarget, id: "mame-pv10
 });
 export const mameArcadeTarget = defineTarget({...mameAppleTarget, id: "mame-arcade", displayName: "MAME Current Arcade",
   contentIO: {game: eagerPolicy(128 * 1024 * 1024),
-    external: eagerPolicy(65536),
+    external: eagerPolicy(128 * 1024 * 1024),
     parent: eagerPolicy(128 * 1024 * 1024),
     bios: eagerPolicy(128 * 1024 * 1024)},
   inputs: [{role: "game", kind: "ROM_BLOB", cardinality: "ONE", optional: false},

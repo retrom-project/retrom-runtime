@@ -5,6 +5,7 @@ import { decodeKirikiriCheckpoint, encodeKirikiriCheckpoint } from "./checkpoint
 import {targetEnvelope} from "../../tests/provider-fixtures.js";
 import {currentWindowHost} from "../../tests/provider-adapter-fixture.js";
 import { createRuntime } from "../index.js";
+import {KirikiriContent} from "./content.js";
 
 vi.mock("./content.js", async importOriginal => {
   const actual = await importOriginal<typeof import("./content.js")>();
@@ -22,7 +23,9 @@ type FakeModule = {
   postRun: Array<() => void>;
   pauseMainLoop: ReturnType<typeof vi.fn>;
   resumeMainLoop: ReturnType<typeof vi.fn>;
+  krkr2StopMainLoop: ReturnType<typeof vi.fn>;
   _krkr2_host_bookmark_is_ready: ReturnType<typeof vi.fn>;
+  _krkr2_host_load_bookmark_is_ready: ReturnType<typeof vi.fn>;
   _krkr2_host_load_bookmark: ReturnType<typeof vi.fn>;
   _krkr2_host_load_bookmark_state: ReturnType<typeof vi.fn>;
   _krkr2_host_save_bookmark: ReturnType<typeof vi.fn>;
@@ -43,6 +46,51 @@ afterEach(() => {
 });
 
 describe("KiriKiri2 KAG runtime", () => {
+  it.each(["exit", "mount-abort"] as const)("drains a suspended tick before releasing globals on %s", async (mode) => {
+    enableRuntimeFeatures();
+    const vlfs = fakeVlfs();
+    mockDownloads();
+    const close = vi.spyOn(KirikiriContent.prototype, "close");
+    let finishTick!: () => void;
+    const tick = new Promise<void>(resolve => {finishTick = resolve;});
+    const runtime = await createRuntime(config(), currentWindowHost(null));
+    const mounting = runtime.mount(document.createElement("div"));
+    const mounted = mounting.catch(error => error as Error);
+    await loadVlfs(vlfs);
+    const module = await loadCore(vlfs, {abort: mode === "mount-abort", stopping: tick});
+    let stopping: Promise<unknown>;
+    if (mode === "exit") {await mounting; stopping = runtime.exit();}
+    else {stopping = mounted;}
+    let stopped = false;
+    void stopping.then(() => {stopped = true;});
+    try {
+      await vi.waitFor(() => expect(module.krkr2StopMainLoop).toHaveBeenCalledOnce());
+      await vi.waitFor(() => expect(close).toHaveBeenCalledOnce());
+      expect(close).toHaveBeenCalledAfter(module.krkr2StopMainLoop);
+      expect(stopped).toBe(false);
+      expect((window as HostWindow).Module).toBe(module);
+      expect((window as HostWindow).VLFS).toBe(vlfs);
+    } finally {finishTick(); await stopping;}
+    expect((window as HostWindow).Module).toBeUndefined();
+    expect((window as HostWindow).VLFS).toBeUndefined();
+    if (mode === "mount-abort") {expect(await mounted).toMatchObject({message: "KIRIKIRI_RUNTIME_ABORTED"});}
+  });
+
+  it("cleans up a core script failure before the main loop is initialized", async () => {
+    enableRuntimeFeatures();
+    mockDownloads();
+    const runtime = await createRuntime(config(), currentWindowHost(null));
+    const mounting = runtime.mount(document.createElement("div"));
+    const outcome = mounting.catch(error => error as Error);
+    await loadVlfs(fakeVlfs());
+    await vi.waitFor(() => expect(runtimeScripts()).toHaveLength(2));
+    runtimeScripts()[1]!.dispatchEvent(new Event("error"));
+    expect(await outcome).toMatchObject({message: "KIRIKIRI_RUNTIME_ARTIFACT_UNAVAILABLE"});
+    expect(runtimeScripts()).toHaveLength(0);
+    expect((window as HostWindow).Module).toBeUndefined();
+    expect((window as HostWindow).VLFS).toBeUndefined();
+  });
+
   it("loads the verified Wasm Blob through the SDK loader without a network fallback", async () => {
     enableRuntimeFeatures();
     const vlfs = fakeVlfs();
@@ -297,12 +345,12 @@ describe("KiriKiri2 KAG runtime", () => {
 
     const restoredVlfs = fakeVlfs();
     const nextConfig = config();
-    nextConfig.restore = {format: checkpoint.format, sha256: "a".repeat(64), sizeBytes: checkpoint.bytes.length, url: "/restore"};
+    nextConfig.restore = {kind: "HTTP", format: checkpoint.format, sha256: "a".repeat(64), sizeBytes: checkpoint.bytes.length, url: "/restore"};
     const restored = await createRuntime(nextConfig, currentWindowHost(checkpoint.bytes));
     const restoredTarget = document.createElement("div");
     const restoredMount = restored.mount(restoredTarget);
     await loadVlfs(restoredVlfs);
-    const restoredModule = await loadCore(restoredVlfs, { restoreState: 1 });
+    const restoredModule = await loadCore(restoredVlfs, { bookmarkReady: 0, restoreState: 1 });
     let mountCompleted = false;
     void restoredMount.then(() => {
       mountCompleted = true;
@@ -311,6 +359,7 @@ describe("KiriKiri2 KAG runtime", () => {
       expect(restoredModule._krkr2_host_load_bookmark).toHaveBeenCalledWith(1999),
     );
     expect(mountCompleted).toBe(false);
+    expect(restoredModule._krkr2_host_load_bookmark_is_ready).toHaveBeenCalled();
     restoredModule._krkr2_host_bookmark_is_ready.mockReturnValue(0);
     restoredModule._krkr2_host_load_bookmark_state.mockReturnValue(2);
     await new Promise((resolve) => setTimeout(resolve, 100));
@@ -452,11 +501,11 @@ function mockDownloads(xp3Paths = ["/data.xp3"]) {
     if (url.endsWith("/index.json") && !init?.method) {
       return Response.json({ schemaVersion: 1, files: [
         ...xp3Paths.map((path) => ({
-          path: path.replace(/^\//u, ""), sizeBytes: 1234,
+          path: path.replace(/^\//u, ""), sizeBytes: 1234, sha256: "a".repeat(64), mediaType: "application/octet-stream",
           url: `/runtime/content/project/${"a".repeat(64)}${path}`,
         })),
         {
-          path: "startup.tjs", sizeBytes: 40,
+          path: "startup.tjs", sizeBytes: 40, sha256: "a".repeat(64), mediaType: "application/octet-stream",
           url: `/runtime/content/project/${"a".repeat(64)}/startup.tjs`,
         },
       ] });
@@ -487,14 +536,16 @@ async function loadVlfs(vlfs: FakeVlfs) {
 
 async function loadCore(
   vlfs: FakeVlfs,
-  options: { bookmarkReady?: number; restoreResult?: number; restoreState?: number } = {},
+  options: { bookmarkReady?: number; restoreResult?: number; restoreState?: number; abort?: boolean; stopping?: Promise<void> } = {},
 ) {
   await vi.waitFor(() => expect(runtimeScripts()).toHaveLength(2));
   const configured = (window as HostWindow).Module ?? {};
   const module = Object.assign(configured, {
     pauseMainLoop: vi.fn(),
     resumeMainLoop: vi.fn(),
+    krkr2StopMainLoop: vi.fn(() => options.stopping ?? Promise.resolve()),
     _krkr2_host_bookmark_is_ready: vi.fn(() => options.bookmarkReady ?? 1),
+    _krkr2_host_load_bookmark_is_ready: vi.fn(() => 1),
     _krkr2_host_load_bookmark: vi.fn(() => options.restoreResult ?? 0),
     _krkr2_host_load_bookmark_state: vi.fn(() => options.restoreState ?? 2),
     _krkr2_host_save_bookmark: vi.fn((slot: number) => {
@@ -505,7 +556,8 @@ async function loadCore(
   }) as FakeModule;
   (window as HostWindow).Module = module;
   runtimeScripts()[1]!.dispatchEvent(new Event("load"));
-  module.postRun[0]?.();
+  if (options.abort) {(module.onAbort as () => void)();}
+  else {module.postRun[0]?.();}
   return module;
 }
 

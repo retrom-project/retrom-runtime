@@ -5,8 +5,7 @@ import {fetchMetadataJson, indexByteBudget} from "../provider/metadata.js";
 import {ContentIOError} from "../content-io/errors.js";
 import {LazyContentReader} from "../provider/lazy-reader.js";
 import {serveContentReads} from "./content-bridge.js";
-type ProjectFile = {path: string; sizeBytes: number; url: string};
-type ProjectIndex = {files: ProjectFile[]; schemaVersion: 1};
+import {parseProjectIndex} from "../provider/project-index.js";
 type ProjectConfig = Pick<ButterscotchParameters, "contentDigest" | "sessionId" | "projectIndexUrl">;
 const maximumProjectFiles = 10_000;
 export async function prepareButterscotchProject(config: ProjectConfig, frameWindow: Window,
@@ -14,8 +13,8 @@ export async function prepareButterscotchProject(config: ProjectConfig, frameWin
   if (!content) {throw new ContentIOError("ABI_MISMATCH");}
   reportProgress({phase:"PROJECT_INDEX",loadedBytes:0,totalBytes:null});
   const base = new URL(config.projectIndexUrl,frameWindow.document.baseURI), budget = indexByteBudget(maximumProjectFiles,1024);
-  const value = await fetchMetadataJson(base,budget,content.signal);
-  if (!validProjectIndex(value)) {throw new Error("BUTTERSCOTCH_PROJECT_INDEX_INVALID");}
+  const value = parseProjectIndex(await fetchMetadataJson(base,budget,content.signal), maximumProjectFiles);
+  if (!value || value.files.filter(file => file.path.toLowerCase() === "data.win").length !== 1 || value.files.some(file => file.sizeBytes < 1)) {throw new Error("BUTTERSCOTCH_PROJECT_INDEX_INVALID");}
   reportProgress({phase:"PROJECT_INDEX",loadedBytes:1,totalBytes:1});
   const policy=content.contentSession.inputPolicy("game");
   const readers=value.files.map(file=>new LazyContentReader(content.contentSession,{
@@ -57,40 +56,4 @@ export async function prepareButterscotchProject(config: ProjectConfig, frameWin
       });
     },release,
   };
-}
-
-function validProjectIndex(value: unknown): value is ProjectIndex {
-  if (!isRecord(value) || !exactKeys(value, ["files", "schemaVersion"]) || value.schemaVersion !== 1 ||
-    !Array.isArray(value.files) || value.files.length < 1 || value.files.length > maximumProjectFiles) {return false;}
-  const identities = new Set<string>();
-  let totalBytes = 0;
-  let dataWinCount = 0;
-  for (const file of value.files) {
-    if (!isRecord(file) || !exactKeys(file, ["path", "sizeBytes", "url"]) || !validPath(file.path) ||
-      !validProjectUrl(file.url) || !Number.isSafeInteger(file.sizeBytes) || Number(file.sizeBytes) < 1) {return false;}
-    const identity = file.path.toLowerCase();
-    if (identities.has(identity)) {return false;}
-    identities.add(identity);
-    totalBytes += Number(file.sizeBytes);
-    if (!Number.isSafeInteger(totalBytes)) {return false;}
-    if (identity === "data.win") {dataWinCount += 1;}
-  }
-  return dataWinCount === 1;
-}
-
-function validPath(value: unknown): value is string {
-  return typeof value === "string" && value.length > 0 && value.length <= 1024 && value.normalize("NFC") === value &&
-    !value.startsWith("/") && !value.includes("\\") && !value.includes("//") &&
-    value.split("/").every((part) => part !== "" && part !== "." && part !== "..");
-}
-function validProjectUrl(value: unknown) {
-  if (typeof value !== "string") {return false;}
-  if (value.startsWith("/") && !value.startsWith("//") && !value.includes("\\") && !value.includes("#")) {return true;}
-  try {return ["http:", "https:"].includes(new URL(value).protocol);} catch {return false;}
-}
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null && !Array.isArray(value);
-}
-function exactKeys(value: Record<string, unknown>, expected: string[]) {
-  return Object.keys(value).sort().join("\0") === [...expected].sort().join("\0");
 }

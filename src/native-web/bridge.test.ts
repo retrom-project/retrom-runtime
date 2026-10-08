@@ -6,6 +6,7 @@ import { describe, expect, it, vi } from "vitest";
 type BridgeEvent = {
   data: unknown;
   origin: string;
+  source?: unknown;
   ports: FakePort[];
   stopImmediatePropagation: () => void;
 };
@@ -48,7 +49,6 @@ describe("native-web RPG Maker bridge", () => {
 
     listeners.get("message")?.[0]?.({
       data: {
-        cleanupUrl: null,
         launchId: "01980000-0000-7000-8000-000000000001",
         nonce: "test-nonce",
         parentOrigin: "https://host.example",
@@ -56,7 +56,7 @@ describe("native-web RPG Maker bridge", () => {
         protocolVersion: 1,
         type: "RPG_RUNTIME_NATIVE_CONNECT",
       },
-      origin: "https://host.example",
+      origin: "https://host.example", source: runtime.parent,
       ports: [port],
       stopImmediatePropagation: () => undefined,
     });
@@ -117,8 +117,7 @@ describe("native-web RPG Maker bridge", () => {
       get(this: object) {return alignments.get(this) ?? "start";},
       set: nativeTextAlignSetter,
     });
-    let resolveCleanup!: (response: Response) => void;
-    const fetcher = vi.fn(() => new Promise<Response>((resolvePromise) => {resolveCleanup = resolvePromise;}));
+    const fetcher = vi.fn();
     const runtime = {
       CanvasRenderingContext2D: FakeCanvasRenderingContext2D,
       addEventListener: (name: string, callback: (event: BridgeEvent) => void) => {
@@ -139,11 +138,10 @@ describe("native-web RPG Maker bridge", () => {
     const nonce = "test-nonce";
     listeners.get("message")?.[0]?.({
       data: {
-        cleanupUrl: "https://runtime.example/__retrom/cleanup",
         launchId, nonce, parentOrigin: "https://host.example", profile: "RPGMV",
         protocolVersion: 1, type: "RPG_RUNTIME_NATIVE_CONNECT",
       },
-      origin: "https://host.example",
+      origin: "https://host.example", source: runtime.parent,
       ports: [port],
       stopImmediatePropagation: () => undefined,
     });
@@ -158,14 +156,10 @@ describe("native-web RPG Maker bridge", () => {
     port.onmessage?.({data: {
       body: {}, launchId, nonce, protocolVersion: 1, requestId: 1, type: "CLEANUP",
     }});
-    await vi.waitFor(() => expect(fetcher).toHaveBeenCalledWith(
-      "https://runtime.example/__retrom/cleanup",
-      {method: "POST", credentials: "same-origin", keepalive: true},
-    ));
+    expect(fetcher).not.toHaveBeenCalled();
     await vi.waitFor(() => expect(replies).toContainEqual(expect.objectContaining({
       requestId: 1, type: "CLEANUP_RESULT",
     })));
-    resolveCleanup(new Response(null, {status: 204}));
   });
 
   it("waits for the engine database before restoring an MV save", async () => {
@@ -237,8 +231,8 @@ describe("native-web RPG Maker bridge", () => {
     const launchId = "01980000-0000-7000-8000-000000000001";
     const nonce = "test-nonce";
     listeners.get("message")?.[0]?.({
-      data: { cleanupUrl: null, launchId, nonce, parentOrigin: "https://host.example", profile: "RPGMV", protocolVersion: 1, type: "RPG_RUNTIME_NATIVE_CONNECT" },
-      origin: "https://host.example",
+      data: { launchId, nonce, parentOrigin: "https://host.example", profile: "RPGMV", protocolVersion: 1, type: "RPG_RUNTIME_NATIVE_CONNECT" },
+      origin: "https://host.example", source: runtime.parent,
       ports: [port],
       stopImmediatePropagation: () => undefined,
     });
@@ -359,8 +353,8 @@ describe("native-web RPG Maker bridge", () => {
     const launchId = "01980000-0000-7000-8000-000000000001";
     const nonce = "test-nonce";
     listeners.get("message")?.[0]?.({
-      data: { cleanupUrl: null, launchId, nonce, parentOrigin: "https://host.example", profile: "RPGMZ", protocolVersion: 1, type: "RPG_RUNTIME_NATIVE_CONNECT" },
-      origin: "https://host.example",
+      data: { launchId, nonce, parentOrigin: "https://host.example", profile: "RPGMZ", protocolVersion: 1, type: "RPG_RUNTIME_NATIVE_CONNECT" },
+      origin: "https://host.example", source: runtime.parent,
       ports: [port],
       stopImmediatePropagation: () => undefined,
     });

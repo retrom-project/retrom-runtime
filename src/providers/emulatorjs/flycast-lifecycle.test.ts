@@ -1,5 +1,5 @@
 import {decodeStoredCheckpoint} from "../../provider/checkpoint-storage.js";
-import {gzipSync, gunzipSync} from "fflate";
+import {gunzipSync} from "fflate";
 import {afterEach, describe, expect, it, vi} from "vitest";
 import {projectProviderManifest} from "../../provider/manifest.js";
 import {emulatorJsProviderDefinition} from "./catalog.js";
@@ -35,25 +35,19 @@ describe("Flycast player lifecycle", () => {
     expect(restored.toggle).toHaveBeenLastCalledWith(true);
     await restored.player.exit();
   });
-  it.each(["flycast-state-v1", "flycast-state-gzip-v1"])("continues to load existing %s Flycast saves", async format => {
-    const raw = new Uint8Array([82, 65, 83, 84, 65, 84, 69, 1, 5]);
-    const restored = await mount(format.endsWith("gzip-v1") ? gzipSync(raw) : raw, raw, format);
-    expect(restored.load).toHaveBeenCalledWith(raw);
-    await restored.player.exit();
-  });
   it("rejects an empty core checkpoint", async () => {
     const fixture = await mount(null, new Uint8Array());
     await expect(fixture.player.checkpoint()).rejects.toThrow();
     await fixture.player.exit();
   });
 });
-async function mount(restore: Uint8Array | null, state: Uint8Array, format = "flycast-state-v1") {
+async function mount(restore: Uint8Array | null, state: Uint8Array, format = "flycast-state-v1-storage-v1") {
   const target = emulatorJsProviderDefinition.targets.find((entry) => entry.id === "flycast")!;
   const manifest = projectProviderManifest(emulatorJsProviderDefinition).targets.find((entry) => entry.id === "flycast")!;
   const envelope = launchEnvelope();
   Object.assign(envelope.resources[0], {kind: "SEEKABLE_BLOB", rangeRequired: true});
   Object.assign(envelope.runtime, {targetId: "flycast", capabilities: manifest.capabilities, checkpoint: manifest.checkpoint});
-  if (restore) {envelope.restore = {format, sha256: "a".repeat(64), sizeBytes: restore.length, url: "/restore"};}
+  if (restore) {envelope.restore = {kind: "HTTP", format, sha256: "a".repeat(64), sizeBytes: restore.length, url: "/restore"};}
   const frame = document.createElement("iframe"); document.body.append(frame);
   const runtimeWindow = frame.contentWindow as Window & Record<string, unknown>;
   runtimeWindow.fetch = vi.fn(async () => new Response("{}"));

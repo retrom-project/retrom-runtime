@@ -20,16 +20,10 @@ export async function mountMame(config: MameParameters, target: HTMLElement, win
       content.signal?.throwIfAborted();
       const command = new TextEncoder().encode("/content/boot.cmd\0");
       const loaded = withMemory(core, command.length, pointer => {core.HEAPU8.set(command, pointer); return core._retrom_mame_start(pointer);});
-      if (loaded !== 1 || core._retrom_mame_step() !== 1) {throw new Error("MAME_BOOT_FAILED");}
+      if (loaded !== 1) {throw new Error("MAME_BOOT_FAILED");}
     });
     if (restorePayload) {
       await withStartupTask(content.startup, "RESTORE_APPLY", async () => {
-        if (config.machine === "sg1000") {
-          // A state loaded on the first boot step leaves Bank Panic's video frozen.
-          for (let frame = 0; frame < 60; frame++) {
-            if (core._retrom_mame_step() !== 1) {throw new Error("MAME_BOOT_FAILED");}
-          }
-        }
         const native = await decodeState(identity, build, restorePayload);
         const restored = withMemory(core, native.length, pointer => {core.HEAPU8.set(native, pointer); return core._retrom_mame_restore(pointer, native.length);});
         if (restored !== 1) {throw new Error("MAME_CHECKPOINT_RESTORE_FAILED");}

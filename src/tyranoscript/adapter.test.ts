@@ -15,7 +15,9 @@ describe("TyranoScript isolated Web adapter", () => {
     const fetchMock = vi.fn(async () => new Response(null, {status: 204}));
     vi.stubGlobal("fetch", fetchMock);
     const frame = document.createElement("iframe");
+    frame.src = "https://runtime.example/host-shell.html";
     document.body.append(frame);
+    const hostShell = frame.src;
     const runtimeWindow = frame.contentWindow;
     if (!runtimeWindow) {throw new Error("test iframe unavailable");}
     const commands: string[] = [];
@@ -42,19 +44,11 @@ describe("TyranoScript isolated Web adapter", () => {
     const mounting = mountTyranoScript(config, frame, Uint8Array.of(1, 2, 3), exits);
 
     dispatchRuntimeMessage(runtimeWindow, {
-      protocolVersion: 1, type: "GAME_RUNTIME_TYRANOSCRIPT_BOOTSTRAP_REQUIRED",
-    });
-    expect(hostMessages).toContainEqual({
-      protocolVersion: 1,
-      ticket: "one-time-ticket",
-      type: "GAME_RUNTIME_TYRANOSCRIPT_BOOTSTRAP",
-    });
-    dispatchRuntimeMessage(runtimeWindow, {
       protocolVersion: 1, type: "GAME_RUNTIME_TYRANOSCRIPT_BRIDGE_READY",
     });
     const adapter = await mounting;
+    expect(frame.src).toBe(hostShell);
 
-    expect(config.bootstrapTicket).toBe("");
     expect(commands).toContain("RESTORE");
     expect(adapter.getCheckpointAvailability()).toEqual({available: true, blocker: null});
     await expect(adapter.checkpoint()).resolves.toEqual({
@@ -74,20 +68,29 @@ describe("TyranoScript isolated Web adapter", () => {
       "GAME_RUNTIME_TYRANOSCRIPT_CONNECT") as ConnectEnvelope;
     const activeRuntimePort = runtimePort as FakePort | null;
     if (!activeRuntimePort) {throw new Error("test runtime port unavailable");}
+    const shortcuts = vi.fn();
+    await adapter.setHostShortcutPolicy!({menu: "KeyM", pause: false}, shortcuts);
+    const shortcut = eventEnvelope(connect, "HOST_SHORTCUT", {shortcut: "MENU"});
+    for (const message of [{...shortcut, nonce: "foreign"}, {...shortcut, sessionId: "foreign"},
+      {...shortcut, body: {shortcut: "UNKNOWN"}}, {...shortcut, body: {shortcut: "MENU", extra: true}}]) {
+      activeRuntimePort.postMessage(message);
+    }
+    activeRuntimePort.postMessage(shortcut);
+    await vi.waitFor(() => expect(shortcuts).toHaveBeenCalledExactlyOnceWith("MENU"));
     activeRuntimePort.postMessage(eventEnvelope(connect, "EXIT_REQUESTED", {}));
     activeRuntimePort.postMessage(eventEnvelope(connect, "EXIT_REQUESTED", {}));
     await vi.waitFor(() => expect(exits).toHaveBeenCalledTimes(1));
     expect(adapter.getCheckpointAvailability()).toEqual({available: false, blocker: "BUSY"});
 
     await adapter.exit();
-    expect(fetchMock).toHaveBeenCalledWith(
-      "https://runtime.example/runtime/cleanup",
-      {credentials: "include", method: "POST"},
-    );
+    activeRuntimePort.postMessage(shortcut);
+    await new Promise(resolve => setTimeout(resolve, 0));
+    expect(shortcuts).toHaveBeenCalledOnce();
+    expect(fetchMock).not.toHaveBeenCalled();
     expect(frame.src).toBe("about:blank");
   });
 
-  it("connects directly when an existing isolated capability redirects to the bridge", async () => {
+  it("connects when the isolated content bridge is ready", async () => {
     vi.stubGlobal("MessageChannel", FakeMessageChannel);
     vi.stubGlobal("fetch", vi.fn(async () => new Response(null, {status: 204})));
     const frame = document.createElement("iframe");
@@ -145,6 +148,7 @@ function commandResult(request: RequestEnvelope) {
     SCREENSHOT: {data: Uint8Array.of(255, 216, 255, 217).buffer, mediaType: "image/jpeg"},
   };
   const types: Record<string, string> = {
+    SET_HOST_SHORTCUT_POLICY: "SET_HOST_SHORTCUT_POLICY_RESULT",
     CHECKPOINT: "CHECKPOINT_RESULT", CLEANUP: "CLEANUP_RESULT", PAUSE: "PAUSE_RESULT",
     PROBE: "PROBE_RESULT", RESTORE: "RESTORE_RESULT", RESUME: "RESUME_RESULT",
     SET_VIDEO_MODE: "SET_VIDEO_MODE_RESULT", SCREENSHOT: "SCREENSHOT_RESULT", SET_VOLUME: "SET_VOLUME_RESULT",
@@ -164,9 +168,6 @@ function dispatchRuntimeMessage(source: Window, data: Record<string, unknown>) {
 function runtimeConfig(): TyranoScriptParameters {
   return {
     sessionId: "01990000-0000-7000-8000-000000000001",
-    bootstrapTicket: "one-time-ticket",
-    cleanupUrl: "https://runtime.example/runtime/cleanup",
-    entryUrl: "https://runtime.example/runtime/entry",
     uniqueOrigin: "https://runtime.example",
   };
 }

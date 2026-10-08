@@ -16,7 +16,7 @@ describe("Daphne Content I/O project", () => {
       {path: "interstellar.zip", url: "/runtime/content/project/digest/interstellar.zip", sizeBytes: 4},
       {path: "interstellar.txt", url: "/runtime/content/project/digest/interstellar.txt", sizeBytes: 4},
       {path: "interstellar.m2v", url: "/runtime/content/project/digest/interstellar.m2v", sizeBytes: 390_000_000},
-    ];
+    ].map(file => ({...file, sha256: "a".repeat(64), mediaType: "application/octet-stream"}));
     vi.stubGlobal("fetch", vi.fn(async () => new Response(JSON.stringify({schemaVersion: 1, files}))));
     const opened: Array<{path: string; transport: string}> = [];
     const session = {
@@ -30,7 +30,7 @@ describe("Daphne Content I/O project", () => {
     } as unknown as ContentSessionClient;
     const content = targetContentFixture(session, "daphne"), declaredPolicy = content.inputPolicy.bind(content);
     vi.spyOn(content, "inputPolicy").mockImplementation((role, member) => ({...declaredPolicy(role, member), contentLengthPolicy: "REQUIRED_EXACT"}));
-    const project = await prepareDaphneProject({indexUrl: "/runtime/content/project/digest/index.json", contentDigest: "a".repeat(64)},
+    const project = await prepareDaphneProject({indexUrl: "/api/v1/runs/run-id/resources/index/index-id", contentDigest: "a".repeat(64)},
       content, new AbortController().signal, () => {});
     for (const [source, policy] of vi.mocked(session.open).mock.calls) {
       expect(source.contentLengthPolicy).toBe("REQUIRED_EXACT");

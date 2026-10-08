@@ -6,6 +6,7 @@ import { describe, expect, it, vi } from "vitest";
 type BridgeEvent = {
   data: unknown;
   origin: string;
+  source?: unknown;
   ports: FakePort[];
   stopImmediatePropagation: () => void;
 };
@@ -107,9 +108,9 @@ describe("native-web RPG Maker game editor bridge", () => {
       start: () => undefined};
     const identity = {launchId: "01980000-0000-7000-8000-000000000001", nonce: "test-nonce", protocolVersion: 1};
     listeners.get("message")?.[0]?.({
-      data: {...identity, cleanupUrl: null, parentOrigin: "https://host.example",
+      data: {...identity, parentOrigin: "https://host.example",
         profile: `RPG${edition}`, type: "RPG_RUNTIME_NATIVE_CONNECT"},
-      origin: "https://host.example", ports: [port], stopImmediatePropagation: () => undefined,
+      origin: "https://host.example", source: runtime.parent, ports: [port], stopImmediatePropagation: () => undefined,
     });
     async function request(requestId: number, type: string, body: Record<string, unknown>) {
       port.onmessage?.({data: {...identity, requestId, type, body}});

@@ -6,6 +6,9 @@ export type EmulatorControlBinding = {
 export type EmulatorDefaultControls = Record<number, Record<number, EmulatorControlBinding>>;
 
 export function emulatorControlScheme(core: string, release: "4.2.3" | "4.3.0-pre", gameUrl = "") {
+  // The NDS layout removes the native stylus triggers and both analog sticks.
+  // The generic libretro layout retains these controls and exposes their bindings.
+  if (["desmume", "desmume2015", "melonds"].includes(core)) {return "generic";}
   if (core === "neocd") {return "arcade";}
   if (core === "uzem" || core === "gam4980") {return "snes";}
   if (!["genesis_plus_gx", "genesis_plus_gx_wide", "picodrive"].includes(core)) {return undefined;}
@@ -112,10 +115,13 @@ export function createRetromDefaultControls(core?: string): EmulatorDefaultContr
   return controllers;
 }
 
-export function thomsonMachineOption(core: string, title: string): Record<string, string> {
-  if (core !== "theodore") {return {};}
-  // Retrom content URLs do not retain the uploaded filename that Theodore's
-  // Auto option uses to identify the computer model.
-  const model = /(?:^|[^A-Z0-9])(TO7\/70|TO9\+|TO8D|PC128|MO5|MO6|TO7|TO8|TO9)(?=$|[^A-Z0-9])/iu.exec(title)?.[1];
-  return model ? {theodore_rom: model.toUpperCase()} : {};
+
+export function thomsonOptions(options: Readonly<Record<string, unknown>>): Record<string, string> {
+  return typeof options.thomsonModel === "string" ? {theodore_rom: options.thomsonModel} : {};
+}
+
+export function emulatorPointerOptions(core: string): Record<string, string> {
+  // DeSmuME accepts mouse and emulated analog input together. melonDS exposes
+  // mutually exclusive touch modes, so retain its public mode selection.
+  return ["desmume", "desmume2015"].includes(core) ? {desmume_pointer_device_r: "emulated"} : {};
 }

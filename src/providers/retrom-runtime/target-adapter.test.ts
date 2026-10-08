@@ -57,7 +57,7 @@ describe("Provider to core-private parameters", () => {
       await mountTargetAdapter(request, target, options);
       expect(mountEasyRpg).toHaveBeenCalledWith({
         sessionId: request.session.id, engineMode, checkpointSlot: 100,
-        projectRootUrl: `/runtime/content/project/${"a".repeat(64)}/`, rtpSource: null,
+        projectRootUrl: `/runtime/content/project/${"a".repeat(64)}/index.json/`, rtpSource: null,
         runtimeBaseUrl: request.runtime.runtimeBaseUrl + "assets/easyrpg/",
       }, target, window, null, {signal: options.signal, reportExitRequested: options.reportExitRequested, tasks: options.startup});
       expect(JSON.stringify(request)).not.toMatch(/adapter|engineMode|generation|validationPurpose/u);
@@ -91,8 +91,7 @@ describe("Provider to core-private parameters", () => {
       const options = {...context(), signal: new AbortController().signal};
       await mountTargetAdapter(request, document.createElement("div"), options);
       expect(mountNativeRpg).toHaveBeenCalledWith({
-        sessionId: request.session.id, bridgeProfile, bootstrapTicket: "t".repeat(48),
-        bootstrapUrl: "https://runtime.test/__retrom/bootstrap", cleanupUrl: "https://runtime.test/__retrom/cleanup",
+        sessionId: request.session.id, bridgeProfile,
         uniqueOrigin: "https://runtime.test",
       }, options.frame, null, options.reportExitRequested, {loading: expect.any(NativeContentActivity), signal: options.signal});
     },
@@ -125,13 +124,12 @@ describe("Provider to core-private parameters", () => {
     });
   });
 
-  it("preserves isolated Web tickets without a duplicate project identity", async () => {
+  it("passes isolated Web identity while preserving the host's prepared shell", async () => {
     const request = targetEnvelope("tyranoscript");
     const options = context();
     await mountTargetAdapter(request, document.createElement("div"), options);
     expect(mountTyranoScript).toHaveBeenCalledWith({
-      sessionId: request.session.id, bootstrapTicket: "t".repeat(48), uniqueOrigin: "https://runtime.test",
-      cleanupUrl: "https://runtime.test/__retrom/cleanup", entryUrl: "https://runtime.test/__retrom/bootstrap",
+      sessionId: request.session.id, uniqueOrigin: "https://runtime.test",
     }, options.frame, null, options.reportExitRequested);
   });
 

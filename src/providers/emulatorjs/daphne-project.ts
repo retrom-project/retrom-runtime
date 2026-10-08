@@ -9,7 +9,7 @@ import type {AdapterContentOptions} from "../../provider/content-inputs.js";
 import type {TargetDeclaration} from "../../provider/declarations.js";
 import type {LaunchEnvelopeV1} from "../../provider/module-api.js";
 
-type ProjectFile = {path: string; url: string; sizeBytes: number};
+import {parseProjectIndex, type ProjectIndexFile as ProjectFile} from "../../provider/project-index.js";
 type ProjectResource = {indexUrl: string; contentDigest: string};
 export type DaphneProject = {romName: string; files: ReadonlyMap<string, Uint8Array>;
   assets: ReadonlyMap<string, Uint8Array>; video: NeoCDRange};
@@ -51,11 +51,9 @@ export async function prepareDaphneAssets(runtimeBaseUrl: string, signal: AbortS
 }
 
 function projectFiles(value: unknown, romDigest: string): ProjectFile[] {
-  if (!/^[a-f0-9]{64}$/u.test(romDigest) || !value || typeof value !== "object" ||
-    (value as {schemaVersion?: unknown}).schemaVersion !== 1 ||
-    !Array.isArray((value as {files?: unknown}).files)) {throw new Error("DAPHNE_PROJECT_INVALID");}
-  const entries = (value as {files: unknown[]}).files;
-  if (entries.length < 3 || entries.length > 16) {throw new Error("DAPHNE_PROJECT_INVALID");}
+  const index = parseProjectIndex(value, 16);
+  if (!/^[a-f0-9]{64}$/u.test(romDigest) || !index || index.files.length < 3) {throw new Error("DAPHNE_PROJECT_INVALID");}
+  const entries = index.files;
   const seen = new Set<string>();
   let total = 0;
   const files = entries.map(entry => {
@@ -89,7 +87,7 @@ export async function prepareDaphneProject(resource: ProjectResource, session: A
   let ready = 0;
   const source = (file: ProjectFile, policy: ReturnType<AdapterContentSession["inputPolicy"]>) => {
     const url = new URL(file.url, indexUrl);
-    if (url.origin !== indexUrl.origin || !url.pathname.startsWith(indexUrl.pathname.slice(0, -"index.json".length))) {
+    if (url.origin !== indexUrl.origin || url.username || url.password || url.hash) {
       throw new Error("DAPHNE_PROJECT_INVALID");
     }
     return {identity: {kind: "INDEX_ENTRY" as const, projectDigest: resource.contentDigest, logicalPath: file.path},

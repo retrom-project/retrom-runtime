@@ -11,14 +11,15 @@ export function launchEnvelope(): LaunchEnvelopeV1 {
     }],
     restore: null,
     runtime: {
+      coreId: "fixture-core", coreFingerprint: digest, romHash: digest,
       bundleSha256: bundleDigest,
       capabilities: {
-        contentLoading: "PRELOAD_ONLY", checkpoint: true, discSwitch: false, frameCounter: true, frameMode: "SAME_ORIGIN_BLANK",
+        contentLoading: "PRELOAD_ONLY", checkpoint: true, frameCounter: true, frameMode: "SAME_ORIGIN_BLANK",
         inputFilter: true, nativeSettings: true, pause: true, requiresThreads: false,
         screenshot: true, standardGamepad: true,
         videoModes: ["adaptive-sharpen", "original", "pixel", "sharp-bilinear", "smooth"], volume: true,
       },
-      checkpoint: {maxBytes: 268435456, readFormats: ["emulatorjs-state-v1", "emulatorjs-state-v1-storage-v1"], writeFormat: "emulatorjs-state-v1-storage-v1"},
+      checkpoint: {semantics: "INSTANT", maxBytes: 268435456, readFormats: ["emulatorjs-state-v1-storage-v1"], writeFormat: "emulatorjs-state-v1-storage-v1"},
       moduleSha256: digest,
       moduleUrl: `/runtime/providers/emulatorjs/${bundleDigest}/client.mjs`,
       providerApiVersion: 1,
@@ -33,6 +34,6 @@ export function launchEnvelope(): LaunchEnvelopeV1 {
       id: "018f0f31-26fe-7a31-9d61-4ec92f16d4c3", mode: "SINGLE", platformName: "NES",
       purpose: "PRODUCT", returnTo: "/games/fixture", title: "Fixture", warnings: [],
     },
-    targetOptions: {dosEntryPath: null, initialDiscIndex: null},
+    targetOptions: {dosEntryPath: null},
   };
 }

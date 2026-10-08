@@ -1,10 +1,38 @@
 import {describe, expect, it} from "vitest";
 import {RuffleStorage, ruffleSaveFormat, maximumRuffleSaveBytes} from "./storage.js";
+import {runInNewContext} from "node:vm";
 
 const identity = "a".repeat(64);
 const name = "retrom.invalid/game.swf/progress";
 
 describe("Ruffle native saves", () => {
+  it("freezes changes on stop while accepting validated identical destructor flushes", async () => {
+    const store = new RuffleStorage(identity);
+    const bytes = new Uint8Array([1, 2, 3]);
+    store.put(name, bytes);
+    store.put("empty", new Uint8Array());
+    const captured = await store.checkpoint();
+    store.put(name, new Uint8Array([4]));
+    const revision = store.availability();
+    const latest = await store.checkpoint();
+    store.stop();
+    store.stop();
+    expect(store.put(name, runInNewContext("new Uint8Array([4])") as Uint8Array)).toBe(true);
+    expect(store.put(name, new Uint8Array([4]))).toBe(true);
+    expect(store.put(name, bytes)).toBe(false);
+    expect(store.put("new", new Uint8Array([4]))).toBe(false);
+    expect(store.put("../escape", new Uint8Array([4]))).toBe(false);
+    expect(store.put(name, new Uint8Array(maximumRuffleSaveBytes))).toBe(false);
+    expect(store.put("empty", new DataView(new ArrayBuffer(0)) as unknown as Uint8Array)).toBe(false);
+    store.remove(name);
+    expect(store.get(name)).toEqual(new Uint8Array([4]));
+    expect(store.availability()).toEqual(revision);
+    expect(await store.checkpoint()).toEqual(latest);
+    // A pending upload may acknowledge its own earlier bytes, never newer data.
+    await store.acknowledge(captured);
+    expect(store.availability().available).toBe(true);
+    expect(await store.checkpoint()).toEqual(latest);
+  });
   it("preserves root-path SharedObject keys emitted by Flash", () => {
     const store = new RuffleStorage(identity);
     expect(store.put("retrom.invalid//progress", new Uint8Array([1]))).toBe(true);

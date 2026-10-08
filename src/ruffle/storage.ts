@@ -11,6 +11,7 @@ export class RuffleStorage {
   private baseline: string;
   private current: string;
   private revision = 0;
+  private stopped = false;
 
   constructor(private identity: string, restore?: Uint8Array | null) {
     if (!/^[a-f0-9]{64}$/u.test(identity)) {throw invalid();}
@@ -25,9 +26,11 @@ export class RuffleStorage {
   }
 
   put(name: string, bytes: Uint8Array): boolean {
-    if (!validName(name) || !ArrayBuffer.isView(bytes) || bytes.byteLength > maximumDataBytes) {return false;}
+    if (!validName(name) || !ArrayBuffer.isView(bytes) || Object.prototype.toString.call(bytes) !== "[object Uint8Array]" ||
+      bytes.byteLength > maximumDataBytes) {return false;}
     const encoded = toBase64(bytes);
     if (this.files.get(name) === encoded) {return true;}
+    if (this.stopped) {return false;}
     const candidate = new Map(this.files);
     candidate.set(name, encoded);
     if (!validFiles([...candidate])) {return false;}
@@ -36,7 +39,11 @@ export class RuffleStorage {
     return true;
   }
 
-  remove(name: string) {if (this.files.delete(name)) {this.changed();}}
+  remove(name: string) {if (!this.stopped && this.files.delete(name)) {this.changed();}}
+
+  // Ruffle flushes again during destruction. A retained identical write is
+  // already satisfied; no mutation may follow the Host's final capture.
+  stop() {this.stopped = true;}
 
   availability(): CheckpointAvailability {
     const save = {capture: "IN_GAME", restore: "IN_GAME", captureAvailable: false, dataKind: "STORAGE"} as const;

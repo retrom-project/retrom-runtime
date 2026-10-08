@@ -49,3 +49,19 @@ it("[X-09] UNIT/kirikiri file registration is metadata only; independent handles
   expect(() => b.tryReadInto(3, new Uint8Array())).toThrow("ABORTED");
   await expect(b.readInto(0, cached)).rejects.toThrow("ABORTED");
 });
+it("cancels an outstanding content read during teardown so its suspended caller can unwind", async () => {
+  const f = fixture();
+  let requestSignal: AbortSignal | null = null;
+  f.fetcher.mockImplementation(async (_url, options) => new Promise<Response>((_resolve, reject) => {
+    requestSignal = options?.signal ?? null;
+    requestSignal?.addEventListener("abort", () => reject(new DOMException("Aborted", "AbortError")), {once: true});
+  }));
+  const reader = f.content.register("a".repeat(64), "data.xp3", "http://localhost/game/data.xp3", 3);
+  const reading = reader.readInto(0, new Uint8Array(3));
+  const failure = reading.catch(error => error as Error);
+  await vi.waitFor(() => expect(f.fetcher).toHaveBeenCalledOnce());
+  await f.content.close();
+  expect(await failure).toMatchObject({message: "CONTENT_IO_ABORTED"});
+  expect(requestSignal!.aborted).toBe(true);
+  expect(f.owner.files.size).toBe(0);
+});

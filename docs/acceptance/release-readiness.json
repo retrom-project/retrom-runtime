@@ -2,11 +2,11 @@
   "schemaVersion": 1,
   "status": "INCOMPLETE",
   "releaseAuthorizedAfterAcceptance": true,
-  "snapshot": "R15: published ONS r6/VecX r2 pins, OpenBOR normal-exit fix and RGSS preconnected-controller startup fix; remaining target identities unchanged",
+  "snapshot": "R15: published ONS r6/VecX r2 pins, OpenBOR exit and RGSS connected-controller fixes, Virtual Boy user-controlled startup; other target identities unchanged",
   "historicalMatrix": "runtime-product-matrix.json",
   "counts": {
-    "CURRENT_FINGERPRINT_SEMANTICS_PENDING": 64,
-    "SCOPED_PASS": 48,
+    "CURRENT_FINGERPRINT_SEMANTICS_PENDING": 63,
+    "SCOPED_PASS": 49,
     "MATERIAL_GAP": 10
   },
   "productRows": 122,
@@ -47,8 +47,11 @@
     },
     {
       "id": "emulatorjs/beetle-vb/virtualboy",
-      "fingerprint": "819f3c3eb444fb67a5609b930f7808de83cf87c03fe9e7be09fb0f7c0470f20c",
-      "status": "CURRENT_FINGERPRINT_SEMANTICS_PENDING"
+      "fingerprint": "33053deef39e1db61be65db22814bc639e98593c70d68dabb6661c1d46a211e5",
+      "status": "SCOPED_PASS",
+      "evidence": "root/release-r15/virtualboy-racing-fixed/semantic-proof.json",
+      "evidenceSha256": "f9edd62c6ef60d2c2183b132a9c9086460fe54412ce9035f149cd27163c5fa78",
+      "scope": "VB Racing actual review/published standard Start/A/direction. Public46154-byte INSTANT snapshot restores noninitial native pause, time00:07:48, remaining158, speed104 and road through thirty runtime-unpaused seconds in cookie-only fresh Chromium. Manual Start/A/opposite direction resumes and steers. Timed startup inputs removed only for Virtual Boy; title/transition snapshot excluded."
     },
     {
       "id": "emulatorjs/bsnes/snes",

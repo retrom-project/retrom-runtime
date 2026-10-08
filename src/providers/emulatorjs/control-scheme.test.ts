@@ -11,6 +11,9 @@ it.each([
   ["picodrive", "segaCD", "game.32x"],
   ["genesis-plus-gx-wide", "segaMD", "game.smd"],
   ["fceumm", undefined, "game.nes"],
+  ["desmume", "generic", "game.nds"],
+  ["desmume2015", "generic", "game.nds"],
+  ["melonds", "generic", "game.nds"],
   ["genesis-plus-gx", "segaGG", "game.GG"],
   ["genesis-plus-gx", "segaMS", "game.sg"],
   ["cap32", undefined, "game.cpr"],
@@ -54,6 +57,16 @@ it.each([
       expect(runtimeWindow.EJS_defaultControls).toMatchObject({0: {
         1: {value2: "BUTTON_1"}, 8: {value2: "BUTTON_4"},
       }});
+    }
+    if (["desmume", "desmume2015", "melonds"].includes(targetId)) {
+      const controls = (runtimeWindow.EJS_defaultControls as Record<number, Record<number, {value: string; value2?: string}>>)[0];
+      expect(controls).toMatchObject({13: {value2: "RIGHT_BOTTOM_SHOULDER"}, 15: {value2: "RIGHT_STICK"},
+        20: {value2: "RIGHT_STICK_X:+1"}, 21: {value2: "RIGHT_STICK_X:-1"},
+        22: {value2: "RIGHT_STICK_Y:+1"}, 23: {value2: "RIGHT_STICK_Y:-1"}});
+      const buttons = Object.values(controls).flatMap(control => control.value2 ? [control.value2] : []);
+      expect(new Set(buttons).size).toBe(buttons.length);
+      expect(controls[8].value).toBe("k");
+      if (targetId !== "melonds") {expect(runtimeWindow.EJS_defaultOptions).toMatchObject({desmume_pointer_device_r: "emulated"});}
     }
     const instance = {
       gameManager: {getState: () => Uint8Array.of(1)},

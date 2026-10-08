@@ -41,7 +41,7 @@ import {installEmulatorJsRetroArchConfig} from "./retroarch-config.js";
 import {installStartupStateRestore} from "./startup-state.js";
 import {installSupermodelState} from "./supermodel-state.js";
 import {installSupermodelRestore} from "./supermodel-restore.js";
-import {createRetromDefaultControls, emulatorControlScheme, thomsonOptions} from "./default-controls.js";
+import {createRetromDefaultControls, emulatorControlScheme, emulatorPointerOptions, thomsonOptions} from "./default-controls.js";
 import {initializeEmulatorJsGamepads} from "./startup-gamepads.js";
 import {closeEmulatorJsNativeSettings, openEmulatorJsNativeSettings} from "./native-settings.js";
 import {retromShaders} from "./shaders.js";
@@ -382,7 +382,8 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
     runtimeWindow.EJS_disableLocalStorage = true;
     runtimeWindow.EJS_Buttons = {exitEmulation: false};
     runtimeWindow.EJS_defaultControls = createRetromDefaultControls(this.implementation.runtimeCore);
-    runtimeWindow.EJS_defaultOptions = {...this.implementation.defaultOptions, ...(this.implementation.runtimeCore === "theodore" ? thomsonOptions(this.envelope.targetOptions) : {}),
+    runtimeWindow.EJS_defaultOptions = {...this.implementation.defaultOptions,
+      ...emulatorPointerOptions(this.implementation.runtimeCore), ...(this.implementation.runtimeCore === "theodore" ? thomsonOptions(this.envelope.targetOptions) : {}),
       ...(optionalResource(this.envelope, "bios", "BIOS_BUNDLE") ? this.implementation.biosOptions : {}),
       ...(["daphne", "dosbox_pure"].includes(this.implementation.runtimeCore) ? {shader: "disabled"} : {}),
       ...(this.implementation.runtimeCore === "cap32" && new URL(gameURL, "http://runtime.invalid").pathname.toLowerCase().endsWith(".cpr")

@@ -5,8 +5,8 @@
   "snapshot": "R15: published ONS r6/VecX r2 pins, OpenBOR exit and RGSS connected-controller fixes, Virtual Boy user-controlled startup; other target identities unchanged",
   "historicalMatrix": "runtime-product-matrix.json",
   "counts": {
-    "CURRENT_FINGERPRINT_SEMANTICS_PENDING": 63,
-    "SCOPED_PASS": 49,
+    "CURRENT_FINGERPRINT_SEMANTICS_PENDING": 59,
+    "SCOPED_PASS": 53,
     "MATERIAL_GAP": 10
   },
   "productRows": 122,
@@ -169,7 +169,10 @@
     {
       "id": "emulatorjs/freeintv/intellivision",
       "fingerprint": "b51844f57fd6a2dd482034e2b84d7b06ceb631f41816fea22c7d8dcc40914915",
-      "status": "CURRENT_FINGERPRINT_SEMANTICS_PENDING"
+      "status": "SCOPED_PASS",
+      "evidence": "root/release-r15/freeintv-4tris-current/semantic-proof.json",
+      "evidenceSha256": "4df66a6d6a83f217c29d9eb43a1525080c0688b978362fa3cb52e62eb1961bc6",
+      "scope": "4-TRIS review A startup/rotation and opposite movement; published multicolor board score440. Public23963-byte INSTANT save restores stack/score/falling green piece in cookie-only fresh Chromium for seven publicly paused seconds; continued opposite movement and falling settle the piece. Native core frontend PAUSED overlay is not part of the claim."
     },
     {
       "id": "emulatorjs/fuse/zxspectrum",
@@ -378,7 +381,10 @@
     {
       "id": "emulatorjs/o2em/odyssey2",
       "fingerprint": "a92d88eb783951de4ca6e36fe56c4480b368fa615d202836ec7acc96fececc82",
-      "status": "CURRENT_FINGERPRINT_SEMANTICS_PENDING"
+      "status": "SCOPED_PASS",
+      "evidence": "root/release-r15/o2em-birdhunt-current/semantic-proof.json",
+      "evidenceSha256": "dfe4aaf3ed4595948f20e9a3b255d19d77551261ab0ce2bf9457488885041961",
+      "scope": "Original-author Bird Hunt actual review/published aim movement and A fire. Public311-byte INSTANT checkpoint restores noninitial aim/four bullets in cookie-only fresh Chromium for seven publicly paused seconds; native swap-gamepads is selected through GUI in each Run before continued aim/fire consumes another bullet. No automatic native-option persistence or scored hit is claimed."
     },
     {
       "id": "emulatorjs/opera/3do",
@@ -486,7 +492,10 @@
     {
       "id": "emulatorjs/stella2014/atari2600",
       "fingerprint": "fce7cd16d1f04fe4594dbf6f835f66747be1bd76764417d5823a0e5a1d90df5c",
-      "status": "CURRENT_FINGERPRINT_SEMANTICS_PENDING"
+      "status": "SCOPED_PASS",
+      "evidence": "root/release-r15/stella-sheep-current/semantic-proof.json",
+      "evidenceSha256": "5cebe734e6b80523528c8c69fef8bab108330c757bc2b2ca802dbc80bf096296",
+      "scope": "Author Sheep It Up actual B confirmation and directed review/published jumps. Public323-byte INSTANT checkpoint restores airborne sheep beside the lower cloud and score000000 in cookie-only fresh Chromium; seven publicly paused seconds, then continued fall and another controller-triggered jump. Initial-ground save excluded; no scored climb or pixel equality claim."
     },
     {
       "id": "emulatorjs/supermodel/model3",
@@ -501,7 +510,10 @@
     {
       "id": "emulatorjs/uzem/uzebox",
       "fingerprint": "a9e5412828a25c5e705c9710b10414035e748086e6501b1ede5373a05ac9fcd7",
-      "status": "CURRENT_FINGERPRINT_SEMANTICS_PENDING"
+      "status": "SCOPED_PASS",
+      "evidence": "root/release-r15/uzem-arkanoid-current/semantic-proof.json",
+      "evidenceSha256": "b8f82f525e3d7184199f3b1c91473864478812fd3b9fa4a0b84eb48e2961786c",
+      "scope": "Arkanoid actual review/published D-pad paddle and A launch. Public35689-byte INSTANT save restores broken green brick, noncentral paddle, ball and pickup in cookie-only fresh Chromium; seven publicly paused seconds then paddle movement, normal missed-ball/new-life continuation, opposite movement and A break another brick. Intro snapshot excluded."
     },
     {
       "id": "emulatorjs/vecx/vectrex",

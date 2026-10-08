@@ -60,6 +60,10 @@ describe("EmulatorJS fork Release inputs", () => {
 });
 
 const promotedCores = [
+  ["mame2003", "mame2003-libretro", "gb6c6d52d8d63", "LICENSE.md"],
+  ["mame2003_plus", "mame2003-plus-libretro", "g09e84fe55799", "LICENSE.md"],
+  ["fbalpha2012_cps2", "fbalpha2012_cps2", "g3fb5b89d2ab7", "LICENSE"],
+  ["parallel_n64", "parallel-n64", "g56f4daf8ec9b", "COPYING"],
   ["uzem", "libretro-uzem", "gd991ee94547c", "LICENSE"],
   ["bsnes", "bsnes-libretro", "g4b344745e387", "LICENSE.txt"],
   ["neocd", "neocd_libretro", "g3118c6901787", "LICENSE.md"],

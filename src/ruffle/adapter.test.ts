@@ -22,6 +22,28 @@ function fixture() {
   return {target, element, api, loader: vi.fn(async () => element)};
 }
 describe("Ruffle adapter", () => {
+  it("accepts duplicate destructor flushes without accepting new data after exit", async () => {
+    const f = fixture();
+    const runtime = await mountRuffle(config, f.target, window, null, () => undefined, undefined, f.loader);
+    const storage = hostStorage(f);
+    const bytes = new Uint8Array([1, 2, 3]);
+    expect(storage.put("progress", bytes)).toBe(true);
+    const checkpoint = await runtime.checkpoint();
+    await runtime.acknowledgeCheckpoint?.(checkpoint);
+    const writes: boolean[] = [];
+    f.api.destroy.mockImplementation(() => {
+      writes.push(storage.put("progress", bytes.slice()), storage.put("progress", bytes.slice()));
+      writes.push(storage.put("progress", new Uint8Array([4])), storage.put("new", bytes));
+      storage.remove("progress");
+    });
+    await runtime.exit();
+    expect(writes).toEqual([true, true, false, false]);
+    expect(storage.get("progress")).toEqual(bytes);
+    expect(storage.get("new")).toBeNull();
+    expect(runtime.getCheckpointAvailability()).toMatchObject({available: false, blocker: "NOT_READY"});
+    await expect(runtime.checkpoint()).rejects.toThrow("RUFFLE_RUNTIME_STOPPED");
+  });
+
   it("normalizes a core-realm screenshot to the Host Blob contract", async () => {
     const f = fixture();
     const image = new ForeignBlob([new Uint8Array([1, 2, 3])], {type: "image/png"});
@@ -63,10 +85,24 @@ describe("Ruffle adapter", () => {
     f.api.load.mockImplementation(() => new Promise<void>((resolve) => {complete = resolve; abort.abort();}));
     await expect(mountRuffle(config, f.target, window, null, () => undefined, abort.signal, f.loader)).rejects.toThrow();
     expect(f.target.children).toHaveLength(0);
+    const storage = hostStorage(f);
+    expect(storage.put("late", new Uint8Array([1]))).toBe(false);
+    const lateWrites: boolean[] = [];
+    f.api.destroy.mockImplementation(() => {lateWrites.push(storage.put("late", new Uint8Array([2])));});
     complete(); await Promise.resolve(); await Promise.resolve();
     expect(f.api.destroy).toHaveBeenCalled();
+    expect(lateWrites).toEqual([false]);
+    expect(storage.get("late")).toBeNull();
   });
 });
+
+function hostStorage(f: ReturnType<typeof fixture>) {
+  return (f.api.load.mock.calls[0] as unknown as [{hostStorage: {
+    get(name: string): Uint8Array | null;
+    put(name: string, bytes: Uint8Array): boolean;
+    remove(name: string): void;
+  }}])[0].hostStorage;
+}
 
 const mountRuffle: typeof mount = (...args) => {
   args[7] ??= managedAdapterFixture("flash-ruffle", args[0]); return mount(...args);

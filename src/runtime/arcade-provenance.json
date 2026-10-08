@@ -22,9 +22,10 @@
   },
   {
     "coreId": "mame_arcade",
-    "sha256": "db3e67df32ba9becae005050a948e75222f37940c5754c3833ed38d617efc2c4",
-    "source": "https://github.com/retrom-project/mame/releases/download/retrom-core-gf65d5ba9bc42-r2/mame-current-assets.zip#member=mame-arcade.xml",
-    "commit": "919816e409260a759a82f65b10792f6938001894"
+    "sha256": "450599810917ce07863a085104bfd7ff01b243fa593c6bfe60fe2cc0348a127c",
+    "source": "https://github.com/retrom-project/mame/tree/aad50145f9a25639641e090aed0efc3d25119a8d",
+    "commit": "aad50145f9a25639641e090aed0efc3d25119a8d",
+    "assetPath": "mame-arcade.xml"
   },
   {
     "coreId": "fbneo",

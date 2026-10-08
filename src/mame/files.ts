@@ -58,8 +58,7 @@ async function mountArcadeFiles(core: Pick<MameCore, "FS">, config: Extract<Mame
   if (config.deviceBios.length > 64 || config.deviceBios.some(file => {
     const zip = /^[a-z0-9_]{1,32}\.zip$/u.test(file.logicalName) && file.virtualPath === `content/roms/${file.logicalName}` &&
       file.sizeBytes >= 22 && file.sizeBytes <= 128 * 1024 * 1024;
-    const segabill = file.logicalName === "epr-18022.ic2" && file.virtualPath === "content/roms/segabill/epr-18022.ic2" && file.sizeBytes === 65536;
-    if ((!zip && !segabill) || firmwarePaths.has(file.virtualPath)) {return true;}
+    if (!zip || firmwarePaths.has(file.virtualPath)) {return true;}
     firmwarePaths.add(file.virtualPath); return false;
   })) {
     throw new Error("MAME_CONTENT_INVALID");

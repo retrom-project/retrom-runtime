@@ -30,6 +30,14 @@ it("accepts device ROMs already present in the game archive", () => {
     {name: rom.name, sizeBytes: 115, crc32: rom.crc},
   ]}, catalog).biosSets).toEqual([]);
 });
+it("preserves optional device ROM semantics from the DAT", () => {
+  const optional = {...rom, name: "optional.bin", optional: true};
+  const onlyOptional = {...catalog, mcu: {...catalog.mcu, roms: [optional]}};
+  expect(arcadeDependencies("mame_arcade", config, [file], {[file.logicalKey]: []}, onlyOptional).biosSets).toEqual([]);
+  expect(arcadeBIOSRequirements("mame_arcade", onlyOptional)).toEqual([]);
+  const mixed = {...catalog, mcu: {...catalog.mcu, roms: [rom, optional]}};
+  expect(arcadeBIOSRequirements("mame_arcade", mixed)[0].members?.map(member => member.required)).toEqual([true, false]);
+});
 it("rejects missing device definitions, cycles, and selecting firmware as a game", () => {
   for (const bad of [{...catalog, cpu: undefined}, {...catalog, cpu: {...catalog.cpu, devices: ["mcu"]}}]) {
     expect(() => arcadeDependencies("mame_arcade", config, [file], {[file.logicalKey]: []}, bad as ArcadeCatalog))

@@ -530,18 +530,6 @@
     "virtualPath": "/content/apple2e/342-0135-b.64"
   },
   {
-    "coreId": "mame_arcade",
-    "logicalName": "epr-18022.ic2",
-    "mode": "OPTIONAL",
-    "condition": "",
-    "sizeBytes": 65536,
-    "md5": "b9574b29185fa9e16977d041dd21dabd",
-    "sha256": "111427213e2635b18753cbfb7cc4a0bffdd7c71cedec5cacadb11eec0211afda",
-    "activationOptions": {},
-    "delivery": "EXTERNAL_FILE",
-    "virtualPath": "/content/roms/segabill/epr-18022.ic2"
-  },
-  {
     "coreId": "mame_atom",
     "logicalName": "abasic.ic20",
     "mode": "REQUIRED",

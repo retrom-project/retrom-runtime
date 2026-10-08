@@ -142,5 +142,6 @@ export class ContentMetadata {
   }
 }
 export function requireGeneration(value: GenerationRecord | undefined): GenerationRecord {
-  if (!value || value.state === "QUARANTINED") {fail("IDENTITY_CHANGED");} return value;
+  // This record describes optional physical storage, not the HTTP source identity.
+  if (!value || value.state === "QUARANTINED") {fail("CACHE_UNAVAILABLE");} return value;
 }

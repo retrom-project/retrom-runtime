@@ -5,8 +5,8 @@
   "snapshot": "R15: published ONS r6/VecX r2 pins, OpenBOR normal-exit fix and RGSS preconnected-controller startup fix; remaining target identities unchanged",
   "historicalMatrix": "runtime-product-matrix.json",
   "counts": {
-    "CURRENT_FINGERPRINT_SEMANTICS_PENDING": 69,
-    "SCOPED_PASS": 43,
+    "CURRENT_FINGERPRINT_SEMANTICS_PENDING": 64,
+    "SCOPED_PASS": 48,
     "MATERIAL_GAP": 10
   },
   "productRows": 122,
@@ -107,7 +107,12 @@
     {
       "id": "emulatorjs/fbalpha2012-cps2/arcade",
       "fingerprint": "90612536132bf631a6f460cd725f09fac041b47e5e3719c473185a0b9b587ade",
-      "status": "CURRENT_FINGERPRINT_SEMANTICS_PENDING"
+      "status": "CURRENT_FINGERPRINT_SEMANTICS_PENDING",
+      "latestAttempt": {
+        "evidence": "root/release-r15/cps2-19xx-current/partial-proof.json",
+        "result": "Published real battle and checkpoint verified; cold exact state/position remains unconfirmed after startup black frames. Separate review battle still required.",
+        "evidenceSha256": "874b76f97f5287db5514e5101c78eb45b04cba56032e6294a62ad12e629e2841"
+      }
     },
     {
       "id": "emulatorjs/fbneo/arcade",
@@ -153,7 +158,10 @@
     {
       "id": "emulatorjs/freechaf/channelf",
       "fingerprint": "f4e7d2bad0941f76392ef2f1fb60a28dcc5f673a3905de5de01c9f5cbf583133",
-      "status": "CURRENT_FINGERPRINT_SEMANTICS_PENDING"
+      "status": "SCOPED_PASS",
+      "evidence": "root/release-r15/freechaf-quest-current/semantic-proof.json",
+      "evidenceSha256": "9436f17dcdf2ec555d31b72d2cf779c4299a852b9b07aafc68c33dc9140c68f0",
+      "scope": "Original-author QUEST review standard movement/A battle confirmation,1972-byte public INSTANT checkpoint, cookie-only fresh-browser map/played-position/health restore through seven publicly paused seconds, continued collision battle/A attacks and map return. Initial wrong-controller exploration and unavailable read-only diagnostic method are excluded."
     },
     {
       "id": "emulatorjs/freeintv/intellivision",
@@ -168,7 +176,10 @@
     {
       "id": "emulatorjs/gam4980/bbkrpg",
       "fingerprint": "d65995cc6ded34667bcb31e9594db714f88ced47805b022a85f81a9107dfdd43",
-      "status": "CURRENT_FINGERPRINT_SEMANTICS_PENDING"
+      "status": "SCOPED_PASS",
+      "evidence": "root/release-r15/gam4980-gomoku-current/semantic-proof.json",
+      "evidenceSha256": "8367c709b6e316addee4318d459fbe40809734cba8dfe61d48d7840e93ef0053",
+      "scope": "Operator Gomoku: normal review and published direction/A confirmation, public12786-byte INSTANT save, cookie-only fresh-browser board restoration through seven unpaused seconds, then a second black move and computer response. Eros separately proves a played falling-block grid restore and continued directional/drop input."
     },
     {
       "id": "emulatorjs/gambatte/gbc",
@@ -312,7 +323,10 @@
     {
       "id": "emulatorjs/mednafen-wswan/wonderswan",
       "fingerprint": "ab5ecf4989f491a55c1ce672285ed0f4116fc01c0d1af2e9db199eacb3460ef8",
-      "status": "CURRENT_FINGERPRINT_SEMANTICS_PENDING"
+      "status": "SCOPED_PASS",
+      "evidence": "root/release-r15/wswan-wondercell-current/semantic-proof.json",
+      "evidenceSha256": "bd15ee7e8f9ca2b6b52f3d91413611aa4bf829a02edfca50521a2bccd83297c2",
+      "scope": "Author WonderCellv0.2 real review and published card movement with standard direction/A. Public4977-byte INSTANT checkpoint restores heart3 in first free cell and full randomized board after seven unpaused seconds in cookie-only fresh Chromium; continued A/Right/A moves it to second cell. Earlier Swan Driving static material remains separately unconfirmed."
     },
     {
       "id": "emulatorjs/melonds/nds",
@@ -399,7 +413,10 @@
     {
       "id": "emulatorjs/potator/supervision",
       "fingerprint": "660060c1e7a96fddc41a8b21e8994c8c9d03d2d55c0483aeac02743e9c08c986",
-      "status": "CURRENT_FINGERPRINT_SEMANTICS_PENDING"
+      "status": "SCOPED_PASS",
+      "evidence": "root/release-r15/potator-xsnake-current/semantic-proof.json",
+      "evidenceSha256": "24c0c1f703c44d9f3756b9b2e7e91682cdefaeacd9ec0a35f7409d54f8bb3131",
+      "scope": "Original-author XSnake, real review/published standard A and direction,880-byte public INSTANT save, cookie-only fresh-browser played-board/score20/eleven-apples/right-edge-snake restore, seven publicly paused seconds, then Up/Left continue play. Initial637-byte LEVEL01 capture excluded."
     },
     {
       "id": "emulatorjs/prboom/doom",
@@ -440,7 +457,10 @@
     {
       "id": "emulatorjs/sameduck/megaduck",
       "fingerprint": "1f45ab8821c3f9537df94b0f76bb2d995c3558b0d5bfe98b009c8f37d357a958",
-      "status": "CURRENT_FINGERPRINT_SEMANTICS_PENDING"
+      "status": "SCOPED_PASS",
+      "evidence": "root/release-r15/sameduck-maxpirate-current/semantic-proof.json",
+      "evidenceSha256": "567a968418ff163d2e85d128e00ce23d2522ce29f4ca320b7373a74a8a271540",
+      "scope": "Max Pirate real review Start/direction, published advance into a new spike/enemy room,10350-byte public checkpoint, cookie-only fresh-browser room/player/eight-health restoration through seven publicly paused seconds, continued opposite-direction movement amid normal enemy damage. Earlier unpaused restore is separate."
     },
     {
       "id": "emulatorjs/smsplus/mastersystem",

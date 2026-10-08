@@ -1,3 +1,4 @@
+import {ownEmulatorJsWakeLocks} from "./wake-lock.js";
 import {EmulatorPlayerInput} from "./player-input.js";
 import {installContentAcceptance} from "./content-acceptance.js";
 import {createRuntimeFailure} from "../../provider/failure.js";
@@ -71,6 +72,7 @@ export async function createEmulatorJsPlayer(
 class EmulatorJsPlayer implements PlayerRuntimeV1 {
   private readonly input: EmulatorPlayerInput;
   private readonly startup: StartupTasks;
+  private cleanupWakeLocks: (() => Promise<void>) | null = null;
   private cleanupStartupDownloads: (() => void) | null = null;
   private readonly listeners = new Set<(event: RuntimeEventV1) => void>();
   private state: RuntimeStateV1 = "CREATED";
@@ -279,6 +281,8 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
       }
       const runtimeWindow = frame.contentWindow as EjsWindow;
       this.runtimeWindow = runtimeWindow;
+      this.cleanupWakeLocks = ownEmulatorJsWakeLocks(runtimeWindow, () => this.host.reportDiagnostic({
+        code: "OPTIONAL_WAKE_LOCK_UNAVAILABLE", message: "Screen wake lock is unavailable; game execution continues."}));
       this.input.bind(runtimeWindow);
       this.checkMountActive();
       const declaration = emulatorJsProviderDefinition.targets.find(entry => entry.id === this.envelope.runtime.targetId)!;
@@ -509,6 +513,7 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
     this.host.signal.removeEventListener("abort", this.hostAbort);
     const nativeExitAlreadyRequested = this.exitRequestedEmitted; this.exitRequestedEmitted = true;
     await stopNativeInstance(this.runtimeWindow, this.instance, this.implementation.runtimeCore, nativeExitAlreadyRequested, this.discRange);
+    await this.cleanupWakeLocks?.(); this.cleanupWakeLocks = null;
     await this.closeContent();
     if (this.runtimeWindow) {
       for (const timer of this.startupTimers) {this.runtimeWindow.clearTimeout(timer);}

@@ -433,5 +433,137 @@ export const emulatorJsPlatformCoreForks = [
         "url": "https://github.com/retrom-project/daphne/releases/download/retrom-core-g6f1695dd1f37-r1/source.tar.gz"
       }
     ]
+  },
+  {
+    "repository": "https://github.com/retrom-project/mame2003-libretro",
+    "tag": "retrom-core-gb6c6d52d8d63-r1",
+    "commit": "bcc607ed056f21d018889d2ba4d6d84c759f52ae",
+    "adapterAbi": "emulatorjs-state-v1",
+    "runtimeCore": "mame2003",
+    "assets": [
+      {
+        "filename": "LICENSE.md",
+        "sha256": "ba6c4d2d81531ba22fe9d2cf6ce6b4787b7c7e5fc4bcdfe4aa4c2012508f9549",
+        "sizeBytes": 7937,
+        "url": "https://github.com/retrom-project/mame2003-libretro/releases/download/retrom-core-gb6c6d52d8d63-r1/LICENSE.md"
+      },
+      {
+        "filename": "mame2003-wasm.data",
+        "sha256": "55101c1e658b06b07c14734165e1f1d991cb7ca82087ad36985118f5e6473993",
+        "sizeBytes": 5029085,
+        "url": "https://github.com/retrom-project/mame2003-libretro/releases/download/retrom-core-gb6c6d52d8d63-r1/mame2003-wasm.data"
+      },
+      {
+        "filename": "rpg-runtime-release.json",
+        "sha256": "e0111a90ea0a03615b5017f246156bc84d522f4697ee147bafa758f07e87b001",
+        "sizeBytes": 802,
+        "url": "https://github.com/retrom-project/mame2003-libretro/releases/download/retrom-core-gb6c6d52d8d63-r1/rpg-runtime-release.json"
+      },
+      {
+        "filename": "source.tar.gz",
+        "sha256": "50cbf1d69915be8a3cebed533b73cfd22a5dece49a6185ff4de8b0a53dd2615d",
+        "sizeBytes": 14237215,
+        "url": "https://github.com/retrom-project/mame2003-libretro/releases/download/retrom-core-gb6c6d52d8d63-r1/source.tar.gz"
+      }
+    ]
+  },
+  {
+    "repository": "https://github.com/retrom-project/mame2003-plus-libretro",
+    "tag": "retrom-core-g09e84fe55799-r1",
+    "commit": "19b33fd71d987c5b7a3e473125a639dc2e8322d5",
+    "adapterAbi": "emulatorjs-state-v1",
+    "runtimeCore": "mame2003_plus",
+    "assets": [
+      {
+        "filename": "LICENSE.md",
+        "sha256": "b3a631505e25262c3e0ed794195344d226c38c747e96e744b5c69e8d548a812f",
+        "sizeBytes": 7913,
+        "url": "https://github.com/retrom-project/mame2003-plus-libretro/releases/download/retrom-core-g09e84fe55799-r1/LICENSE.md"
+      },
+      {
+        "filename": "mame2003_plus-wasm.data",
+        "sha256": "26e6f5bf72b7225a67ff0c0798d603cc3adf57a5c9463aeb8b8197f6673fef26",
+        "sizeBytes": 5417111,
+        "url": "https://github.com/retrom-project/mame2003-plus-libretro/releases/download/retrom-core-g09e84fe55799-r1/mame2003_plus-wasm.data"
+      },
+      {
+        "filename": "rpg-runtime-release.json",
+        "sha256": "7a54c1af75784bce49c021972018300dde6ccb26ad23e26fc5d251f1250cda2f",
+        "sizeBytes": 812,
+        "url": "https://github.com/retrom-project/mame2003-plus-libretro/releases/download/retrom-core-g09e84fe55799-r1/rpg-runtime-release.json"
+      },
+      {
+        "filename": "source.tar.gz",
+        "sha256": "cb3e374e2a0e97e4143f077759bbb25030c70a115eaf04a146178ac271583b6e",
+        "sizeBytes": 29475393,
+        "url": "https://github.com/retrom-project/mame2003-plus-libretro/releases/download/retrom-core-g09e84fe55799-r1/source.tar.gz"
+      }
+    ]
+  },
+  {
+    "repository": "https://github.com/retrom-project/fbalpha2012_cps2",
+    "tag": "retrom-core-g3fb5b89d2ab7-r1",
+    "commit": "33a8d1f0afb9ac7cba3cde5d9c3b09e40fe7108f",
+    "adapterAbi": "emulatorjs-state-v1",
+    "runtimeCore": "fbalpha2012_cps2",
+    "assets": [
+      {
+        "filename": "LICENSE",
+        "sha256": "d964fc5260c2ed8b3114b4cb451b48bbb2b6df3141e3b8122d2d222fea585eb0",
+        "sizeBytes": 4152,
+        "url": "https://github.com/retrom-project/fbalpha2012_cps2/releases/download/retrom-core-g3fb5b89d2ab7-r1/LICENSE"
+      },
+      {
+        "filename": "fbalpha2012_cps2-wasm.data",
+        "sha256": "b73afff3f7265900f1d5ba7b1ece3982b1931467bcb87187b53058201cb56561",
+        "sizeBytes": 982195,
+        "url": "https://github.com/retrom-project/fbalpha2012_cps2/releases/download/retrom-core-g3fb5b89d2ab7-r1/fbalpha2012_cps2-wasm.data"
+      },
+      {
+        "filename": "rpg-runtime-release.json",
+        "sha256": "49337524b4f659313286e136114730ce5b96342b272cd71259dd984a06fa6416",
+        "sizeBytes": 803,
+        "url": "https://github.com/retrom-project/fbalpha2012_cps2/releases/download/retrom-core-g3fb5b89d2ab7-r1/rpg-runtime-release.json"
+      },
+      {
+        "filename": "source.tar.gz",
+        "sha256": "20f08be61be895f235312adc107812f53da12ff6b9832bec70f4021a7084299c",
+        "sizeBytes": 750150,
+        "url": "https://github.com/retrom-project/fbalpha2012_cps2/releases/download/retrom-core-g3fb5b89d2ab7-r1/source.tar.gz"
+      }
+    ]
+  },
+  {
+    "repository": "https://github.com/retrom-project/parallel-n64",
+    "tag": "retrom-core-g56f4daf8ec9b-r1",
+    "commit": "e22e9ab6c92a70cf076e9a3735fc184db60bb4f7",
+    "adapterAbi": "emulatorjs-state-v1",
+    "runtimeCore": "parallel_n64",
+    "assets": [
+      {
+        "filename": "COPYING",
+        "sha256": "d3e6751646e0d830d9492a061089bdc1d7fad427f3a2e42dc3a0af2b350d405b",
+        "sizeBytes": 17979,
+        "url": "https://github.com/retrom-project/parallel-n64/releases/download/retrom-core-g56f4daf8ec9b-r1/COPYING"
+      },
+      {
+        "filename": "parallel_n64-wasm.data",
+        "sha256": "6cf2e3eecdf91429bbf4d2b29718d1158fe6a4251bfa11263a1e05c786ad07c8",
+        "sizeBytes": 1039770,
+        "url": "https://github.com/retrom-project/parallel-n64/releases/download/retrom-core-g56f4daf8ec9b-r1/parallel_n64-wasm.data"
+      },
+      {
+        "filename": "rpg-runtime-release.json",
+        "sha256": "75bdcd74b1c3739444717c17096c9f0cf9fec50ac2cbdd85100bade701c1c43f",
+        "sizeBytes": 798,
+        "url": "https://github.com/retrom-project/parallel-n64/releases/download/retrom-core-g56f4daf8ec9b-r1/rpg-runtime-release.json"
+      },
+      {
+        "filename": "source.tar.gz",
+        "sha256": "b6d055fb7391738b8e301165a30d3e28d7d9b4e363978586db7554d12984c16c",
+        "sizeBytes": 5066880,
+        "url": "https://github.com/retrom-project/parallel-n64/releases/download/retrom-core-g56f4daf8ec9b-r1/source.tar.gz"
+      }
+    ]
   }
 ] as const;

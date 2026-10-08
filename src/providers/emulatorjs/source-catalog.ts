@@ -495,16 +495,7 @@ export const emulatorJsSourceCatalog = {
       ]
     }
   ],
-  overrides: [
-    {
-      destination: "4.2.3/data/cores/mame2003-wasm.data",
-      runtimeCore: "mame2003",
-      sha256: "1d8283ce042f71607b9b55656cd4068f703c52faa7a3d0940855c9dd21d542df",
-      sizeBytes: 4993110,
-      sourceRelease: "4.2.1",
-      url: "https://cdn.emulatorjs.org/4.2.1/data/cores/mame2003-wasm.data",
-    },
-  ],
+  overrides: [],
   releases: [
     {
       archive: {

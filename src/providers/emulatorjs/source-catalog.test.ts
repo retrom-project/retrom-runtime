@@ -45,10 +45,6 @@ describe("EmulatorJS Provider source catalog", () => {
       target.implementation.runtimeCore === "genesis_plus_gx");
     expect([...emulatorJsSourceCatalog.overrides, ...emulatorJsSourceCatalog.forks, ...emulatorJsSourceCatalog.developmentForks, ...emulatorJsSourceCatalog.developmentCores.map(core => ({runtimeCore: core.id}))].map((override) => override.runtimeCore).sort())
       .toEqual([...new Set(overrides.map((target) => target.implementation.runtimeCore))].sort());
-    for (const override of emulatorJsSourceCatalog.overrides) {
-      expect(override.sha256).toMatch(/^[0-9a-f]{64}$/u);
-      expect(override.url).toMatch(/^https:\/\//u);
-      expect(override.destination).toMatch(/^4\.2\.3\/data\/cores\//u);
-    }
+    expect(emulatorJsSourceCatalog.overrides).toEqual([]);
   });
 });

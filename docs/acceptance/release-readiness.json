@@ -1,12 +1,11 @@
 {
   "schemaVersion": 1,
   "status": "INCOMPLETE",
-  "releaseAuthorizedAfterAcceptance": true,
   "snapshot": "R15: published ONS r6/VecX r2 pins, OpenBOR exit and RGSS connected-controller fixes, Virtual Boy user-controlled startup; other target identities unchanged",
   "historicalMatrix": "runtime-product-matrix.json",
   "counts": {
-    "CURRENT_FINGERPRINT_SEMANTICS_PENDING": 59,
-    "SCOPED_PASS": 53,
+    "CURRENT_FINGERPRINT_SEMANTICS_PENDING": 58,
+    "SCOPED_PASS": 54,
     "MATERIAL_GAP": 10
   },
   "productRows": 122,
@@ -206,7 +205,10 @@
     {
       "id": "emulatorjs/gearcoleco/colecovision",
       "fingerprint": "81a73bc756eaf81634015d7c39a86c03883bc74d173d880f7db725a817507561",
-      "status": "CURRENT_FINGERPRINT_SEMANTICS_PENDING"
+      "status": "SCOPED_PASS",
+      "evidence": "root/release-r15/gearcoleco-suite-current/semantic-proof.json",
+      "evidenceSha256": "f1e56ded9fc3177e7dec9dc619e43f8ffa335c23157c0495293e418cb0dbb278",
+      "scope": "Operator240p Test Suite native menu direction/A confirmation and active Grid utility. Public35449-byte INSTANT snapshot restores grid/border/dots in cookie-only fresh Chromium for seven unpaused seconds; B exits, Down/Up selects and A opens Monoscope. Diagnostic-ROM scope, not commercial gameplay; initial black-screen capture excluded."
     },
     {
       "id": "emulatorjs/genesis-plus-gx/gamegear",
@@ -812,5 +814,21 @@
     "Only rows marked SCOPED_PASS have reconciled current-identity scoped evidence; other rows remain explicitly unclosed.",
     "Core tags do not publish or approve a stable retrom-runtime or Retrom release.",
     "Missing operator material is not substituted with unrelated ROMs, title screens or fabricated payloads."
+  ],
+  "releaseDecision": {
+    "channel": "RC",
+    "runtimeTag": "v0.60.0-rc.1",
+    "retromTag": "v0.0.111-rc.1",
+    "authorization": "User requested RC publication without exhaustive per-ROM verification; known observations tracked as issues.",
+    "exhaustiveRomVerificationRequiredForThisRC": false,
+    "standardBuildAndQualityGatesRequired": true,
+    "stableReleaseApproved": false
+  },
+  "knownIssues": [
+    "https://github.com/retrom-project/retrom-runtime/issues/106",
+    "https://github.com/retrom-project/retrom-runtime/issues/107",
+    "https://github.com/retrom-project/retrom-runtime/issues/108",
+    "https://github.com/retrom-project/retrom-runtime/issues/109",
+    "https://github.com/retrom-project/retrom-runtime/issues/110"
   ]
 }

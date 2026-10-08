@@ -334,7 +334,7 @@
       "status": "SCOPED_PASS",
       "evidence": "root/release-r15/wswan-wondercell-current/semantic-proof.json",
       "evidenceSha256": "bd15ee7e8f9ca2b6b52f3d91413611aa4bf829a02edfca50521a2bccd83297c2",
-      "scope": "Author WonderCellv0.2 real review and published card movement with standard direction/A. Public4977-byte INSTANT checkpoint restores heart3 in first free cell and full randomized board after seven unpaused seconds in cookie-only fresh Chromium; continued A/Right/A moves it to second cell. Earlier Swan Driving static material remains separately unconfirmed."
+      "scope": "Author WonderCellv0.2 real review and published card movement with standard direction/A. Public4977-byte INSTANT checkpoint restores heart3 in first free cell and full randomized board after seven unpaused seconds in cookie-only fresh Chromium; continued A/Right/A moves it to second cell. The separate Swan Driving collision freeze is resolved as author ROM behavior; see stableFollowUp.materialDispositions."
     },
     {
       "id": "emulatorjs/melonds/nds",
@@ -831,8 +831,8 @@
     "https://github.com/retrom-project/retrom-runtime/issues/109",
     "https://github.com/retrom-project/retrom-runtime/issues/110",
     "https://github.com/retrom-project/retrom-runtime/issues/111",
-    "https://github.com/retrom-project/retrom-runtime/issues/112",
-    "https://github.com/retrom-project/retrom-runtime/issues/113"
+    "https://github.com/retrom-project/retrom-runtime/issues/113",
+    "https://github.com/retrom-project/retrom-runtime/issues/114"
   ],
   "stableFollowUp": {
     "status": "IN_PROGRESS",
@@ -845,6 +845,23 @@
         "result": "SCOPED_ACCEPTANCE",
         "evidence": "root/release-r15/stable-ps2/sealed-proof.json",
         "evidenceSha256": "9ae16b8f60cb49a754f572ea7333feb9e49f5ff6d449e02b64fafff9e24df83d"
+      }
+    ],
+    "invalidReports": [
+      {
+        "issue": 112,
+        "reason": "Original PNGs disprove the reported caption loss; full text and pixel-identical dialogue regions are preserved. No product fix.",
+        "correctionSha256": "4d9b6936282de665cc9ad34fd323e1a888ad9236ccaabe5ac3abfa5f848f719c"
+      }
+    ],
+    "materialDispositions": [
+      {
+        "issue": 110,
+        "sample": "Swan Driving",
+        "result": "EXPECTED_SAMPLE_BEHAVIOR",
+        "reason": "Exact author ROM enters an infinite collision-handler loop before VBlank acknowledgement. No runtime fix or additional checkpoint pass is claimed.",
+        "evidence": "root/stable-r16/wswan-source/source-disposition.json",
+        "evidenceSha256": "d818c483cdc7694c496cd264eb31f192aa730a1943da13bdd584e289ee779d45"
       }
     ]
   }

@@ -829,6 +829,23 @@
     "https://github.com/retrom-project/retrom-runtime/issues/107",
     "https://github.com/retrom-project/retrom-runtime/issues/108",
     "https://github.com/retrom-project/retrom-runtime/issues/109",
-    "https://github.com/retrom-project/retrom-runtime/issues/110"
-  ]
+    "https://github.com/retrom-project/retrom-runtime/issues/110",
+    "https://github.com/retrom-project/retrom-runtime/issues/111",
+    "https://github.com/retrom-project/retrom-runtime/issues/112",
+    "https://github.com/retrom-project/retrom-runtime/issues/113"
+  ],
+  "stableFollowUp": {
+    "status": "IN_PROGRESS",
+    "authorization": "User requested testing, issue tracking, complete fixes in the same PFB, and stable publication after validation.",
+    "published": false,
+    "targetExceptions": [
+      {
+        "id": "retrom-runtime/play-ps2/ps2",
+        "scope": "User accepts loading and entering the game; texture/rendering limitations do not block this release. Racing and public checkpoint restoration are not claimed.",
+        "result": "SCOPED_ACCEPTANCE",
+        "evidence": "root/release-r15/stable-ps2/sealed-proof.json",
+        "evidenceSha256": "9ae16b8f60cb49a754f572ea7333feb9e49f5ff6d449e02b64fafff9e24df83d"
+      }
+    ]
+  }
 }

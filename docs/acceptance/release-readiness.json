@@ -843,7 +843,7 @@
     "https://github.com/retrom-project/retrom-runtime/issues/122"
   ],
   "stableFollowUp": {
-    "status": "ISSUE_REPAIR_AND_STABLE_PUBLICATION_IN_PROGRESS",
+    "status": "RECORDED_REPAIRS_VERIFIED_FINAL_PUBLICATION_GATES_PENDING",
     "authorization": "User authorized fixing recorded issues in the current PFB and completing stable releases; latest instruction stops new core sample acceptance. Only affected regressions and required final gates remain.",
     "published": false,
     "targetExceptions": [
@@ -1144,6 +1144,13 @@
         "tag": "retrom-core-g56f4daf8ec9b-r1",
         "commit": "e22e9ab6c92a70cf076e9a3735fc184db60bb4f7",
         "releaseUrl": "https://github.com/retrom-project/parallel-n64/releases/tag/retrom-core-g56f4daf8ec9b-r1"
+      },
+      {
+        "core": "mame",
+        "repository": "https://github.com/retrom-project/mame",
+        "tag": "retrom-core-gf65d5ba9bc42-r3",
+        "commit": "11288494f6e4cc2334155223ec5575cb486aa242",
+        "releaseUrl": "https://github.com/retrom-project/mame/releases/tag/retrom-core-gf65d5ba9bc42-r3"
       }
     ],
     "formalCoreRetests": {
@@ -1494,7 +1501,7 @@
           "fixedPasses": 10,
           "affectedBrowserPasses": 28,
           "contentIOUnitPasses": 201,
-          "publicProductCacheLossRegression": "PENDING_R22"
+          "publicProductCacheLossRegression": "SCOPED_PASS_R22_SEPARATE_RECORD"
         }
       },
       "mameCandidate": {
@@ -1512,6 +1519,53 @@
         "scope": "Exact standard candidate and device DAT; native readiness, cold CPU/timer continuation and saved Coleco state now pass. Actual paired Provider/public-save regressions and core publication still required."
       },
       "excludedEnvironmentAttempts": "Initial Next development route compilation caused simultaneous full reloads. Exact app-window log correlates these; affected attempts are preserved and excluded. Later stable-window proofs record no reload. No product error was hidden."
+    },
+    "r22IssueRegressions": {
+      "scope": "Existing issues only; no new sample acceptance and no promotion of the frozen R20 matrix.",
+      "cacheLoss": {
+        "issue": 120,
+        "result": "SCOPED_PASS",
+        "evidence": {
+          "path": "root/stable-r20/ejs-fixes/product-harness/r22-cache-last-block/sealed-proof.json",
+          "sha256": "3cb100abe46e4d708fb1c1ce68a68cf9dca94055584428c57e28cc9e57b1597a"
+        },
+        "observed": "After normal Review exit, remove only the last cached ROM block. Published launch automatically recovers through 64 valid 206 responses; 128 rebuilt blocks match the full ROM SHA. Native stylus input works.",
+        "limit": "The actual new EJS worker was verified; the Host snapshot was still old for this isolated worker check. Original R20 cause remains UNKNOWN."
+      },
+      "mame": {
+        "issues": [
+          118,
+          119,
+          122
+        ],
+        "result": "SCOPED_PASS",
+        "evidence": {
+          "path": "root/stable-r20/mame-product/r22-r2-seal/semantic-proof.json",
+          "sha256": "b8a7b19d9837cceada7231a10b70f0453eaa8877c0cdce1ad6ce922dfce6a1b0"
+        },
+        "observed": "Renegade explicitly reports required MCU before normal BIOS installation; afterward review/play/public save/cold restoration and continued battle input pass. Coleco saves and restores Monoscope, then native menu input renders Grid. SG1000 affected regression passes normal public save/cold restore/input. All three observe seven unpaused seconds, normal exits and owned-data cleanup.",
+        "hostSnapshot": {
+          "path": "root/stable-r22/host-refresh/verified.json",
+          "sha256": "61a4c836d751a6ca8faa185b04e27421dff3af31a26a8f913cd3332d8aa9cb9b"
+        },
+        "excludedEnvironment": {
+          "path": "root/stable-r20/mame-product/r22-renegade/excluded-environment.json",
+          "sha256": "7f24b49188b286596d9b84f4f2db4c1cb23919eaaf798ff6f4230c29e6d852b9"
+        },
+        "corePublication": {
+          "path": "root/stable-r23/mame-release/verification.json",
+          "sha256": "fc106f79a53ddf10a2fb718c6e94488a93e652ebd13d04d748ea103ff9112cc9"
+        },
+        "tag": "retrom-core-gf65d5ba9bc42-r3",
+        "commit": "11288494f6e4cc2334155223ec5575cb486aa242",
+        "runtimePinCommit": "4986844",
+        "formalArchiveEqualsCandidateFiles": 94
+      },
+      "retromSourceReuse": {
+        "path": "root/stable-r23/retrom-final-gates/reuse-verification.json",
+        "sha256": "a77c9be51f5a50cc3022faf82f9a3ece5f38ed8e643ac6c13079d28490669f1b"
+      },
+      "remaining": "Exact final-source gates, immutable runtime publication, final paired product/browser gates, Retrom images and release. External final receipts avoid a self-referential source digest."
     }
   }
 }

@@ -57,7 +57,7 @@ describe("EmulatorJS Provider release build", () => {
       const result = await buildEmulatorJsProviderBundle({
         allowDevelopmentForks: true, definition,
         entryPoint: join(process.cwd(), "src/providers/emulatorjs/module.ts"), manifest,
-        outputRoot: join(root, "output"), sourceCatalog, sourceRoot,
+        outputRoot: join(root, "output"), sourceCatalog: {...sourceCatalog, overrides: []}, sourceRoot,
       });
 
       const provider = JSON.parse(await readFile(join(result.bundleRoot, "provider.json"), "utf8")) as {
@@ -71,6 +71,7 @@ describe("EmulatorJS Provider release build", () => {
       expect(identity.targets.fceumm.fingerprint).toMatch(/^[a-f0-9]{64}$/u);
       const provenance = JSON.parse(await readFile(join(result.bundleRoot, "provenance.json"), "utf8"));
       expect(provenance.forks).toEqual(sourceCatalog.forks);
+      expect(provenance.overrides).toEqual([]);
       expect(await readFile(join(result.bundleRoot,
         "licenses/emulatorjs/4.2.3/licenses/forks/vice_xvic/COPYING"), "utf8"))
         .toBe("vice_xvic fixture license\n");

@@ -257,7 +257,7 @@ function validateSourceCatalog(value) {
   forkReleaseFiles(value);
   if (!value || value.schemaVersion !== 1 || !Array.isArray(value.releases) || value.releases.length !== 2 ||
     value.releases.map((release) => release.id).join("\0") !== `4.2.3${"\0"}4.3.0-pre` ||
-    !Array.isArray(value.overrides) || value.overrides.length !== 1) {unsafe();}
+    !Array.isArray(value.overrides)) {unsafe();}
   for (const release of value.releases) {
     if (!/^[0-9a-f]{40}$/u.test(release.commit) || !/^v[0-9]+\.[0-9]+\.[0-9]+(?:-pre)?$/u.test(release.tag) ||
       !release.repository.startsWith("https://") || !/^[0-9a-f]{64}$/u.test(release.archive?.sha256) ||

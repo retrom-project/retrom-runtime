@@ -35,7 +35,9 @@ type KirikiriModule = {
   printErr(message: string): void;
   pauseMainLoop(): void;
   resumeMainLoop(): void;
+  krkr2StopMainLoop(): Promise<void>;
   _krkr2_host_bookmark_is_ready(): number;
+  _krkr2_host_load_bookmark_is_ready(): number;
   _krkr2_host_load_bookmark(slot: number): number;
   _krkr2_host_load_bookmark_state(): number;
   _krkr2_host_save_bookmark(slot: number): number;
@@ -111,6 +113,21 @@ export async function mountKirikiri2(
     exitReported = true;
     reportExitRequested();
   };
+  const dispose = async () => {
+    // Script loading may fail before the core installs the main-loop bridge.
+    // Stop scheduling first, cancel reads so a suspended JSPI tick can unwind,
+    // and retain Module/VLFS until it has completely returned.
+    const stopping = module?.krkr2StopMainLoop?.();
+    try {await content.close();}
+    finally {
+      await stopping;
+      module?.PThread?.terminateAllThreads();
+      cleanup(
+        host, previousModule, previousVlfs, target, canvas, focusCanvas,
+        gamepadCleanup, runtimeTerminationCleanup, scripts,
+      );
+    }
+  };
   try {
     const base = new URL(normalizedBase(config.runtimeBaseUrl), document.baseURI);
     const assets = await content.assets(base);
@@ -160,11 +177,12 @@ export async function mountKirikiri2(
     const startupPath = selectStartupXp3(project.xp3Paths, config.startupXp3Path);
     if (startupPath) {options._startupXp3Path = startupPath;}
     host.Module = options;
+    module = options as KirikiriModule;
     scripts.push(await loadClassicScript(document, runtimeUrl));
     module = host.Module as KirikiriModule;
     await withTimeout(ready.promise, readyTimeoutMs, "KIRIKIRI_RUNTIME_TIMEOUT");
     if (restore) {
-      await waitFor(() => module?._krkr2_host_bookmark_is_ready?.() === 1, readyTimeoutMs);
+      await waitFor(() => module!._krkr2_host_load_bookmark_is_ready() === 1, readyTimeoutMs);
       await restoreBookmark(module, config.checkpointSlot);
     }
     startupKeyboardCleanup();
@@ -172,13 +190,10 @@ export async function mountKirikiri2(
     focusCanvas();
   } catch (error) {
     startupKeyboardCleanup();
-    cleanup(
-      host, previousModule, previousVlfs, target, canvas, focusCanvas,
-      gamepadCleanup, runtimeTerminationCleanup, scripts,
-    );
-    module?.PThread?.terminateAllThreads();
-    await content.close();
-    throw stableMountError(error);
+    const failure = stableMountError(error);
+    try {await dispose();}
+    catch (cleanupError) {failure.cause = new AggregateError([error, cleanupError], "KiriKiri teardown failed");}
+    throw failure;
   }
 
   const activeModule = module;
@@ -221,13 +236,7 @@ export async function mountKirikiri2(
     exit: async () => {
       if (exited) {return;}
       exited = true;
-      activeModule.pauseMainLoop();
-      activeModule.PThread?.terminateAllThreads();
-      await content.close();
-      cleanup(
-        host, previousModule, previousVlfs, target, canvas, focusCanvas,
-        gamepadCleanup, runtimeTerminationCleanup, scripts,
-      );
+      await dispose();
     },
     gamepadCursor,
     getCanvas: () => canvas,
@@ -354,7 +363,10 @@ async function loadClassicScript(document: Document, source: string) {
   script.dataset.runtime = "kirikiri2";
   const loaded = new Promise<void>((resolve, reject) => {
     script.addEventListener("load", () => resolve(), { once: true });
-    script.addEventListener("error", () => reject(new Error("KIRIKIRI_RUNTIME_ARTIFACT_UNAVAILABLE")), { once: true });
+    script.addEventListener("error", () => {
+      script.remove();
+      reject(new Error("KIRIKIRI_RUNTIME_ARTIFACT_UNAVAILABLE"));
+    }, { once: true });
   });
   document.head.append(script);
   await loaded;

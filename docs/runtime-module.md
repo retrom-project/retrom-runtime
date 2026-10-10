@@ -48,3 +48,24 @@ The same executable accepts `--serve` for an internal host process pool. Each ne
 Provider release builders and the PFB watcher call `fingerprintProvider` from `scripts/runtime-fingerprints.mjs` with the source and development esbuild dependency. The offline host tool reads the integrity-covered result from its selected Provider. Hosts cache startup facts and bound repeated preparation work; they do not launch one Node process per save.
 
 Unit and build gates validate this contract and all retained adapters. Product acceptance remains a separate per-binding exercise: real review and play, frame/input evidence, declared checkpoint semantics, a different run's restore and post-restore input. Isolation URL loading and loss-of-context draft persistence need actual browser and host fault evidence. A component test, missing-material annotation or declaration count is never a product pass.
+
+### Arcade review CRC warnings
+
+`prepareRuntime` and `contentBIOSRequirements` compute `crcWarnings` from the
+current game, explicitly bound Parent and BIOS archives. Named members with the
+required size remain usable when their CRC differs from the core catalog. Each
+warning identifies ROM, Parent or BIOS, the archive/member, and expected/actual
+CRC32. Hosts show these warnings before manual approval and exclude affected
+games from quick approval. A test launch is optional. Missing members, wrong
+sizes and unsupported media remain structural errors. No warning is persisted
+in a game record or database column. Ordinary Parent archives supply game ROMs;
+firmware is resolved separately from declared BIOS/device ancestry.
+
+Flycast cartridge ZIPs use the selected Provider's SHA-bound compiled requirements
+catalog. Their contents remain opaque during import and are read by the native
+ZIP reader. Dreamcast CDI retains its extension and native entry without an
+automatically generated CUE. CDI selects Flycast's HLE bootstrap because the WASM
+real-BIOS MIL-CD boot path traps after loading the disc; CHD and arcade keep their
+existing BIOS options. CDI metadata and track FILE handles use bounded
+reads with separate seek cursors. Core load receipts reject failed native loads;
+a successful receipt alone does not establish gameplay compatibility.

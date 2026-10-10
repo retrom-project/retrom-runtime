@@ -10,9 +10,14 @@ import {prepareEagerROM} from "./eager-resources.js";
 import type {EjsWindow} from "./emulator-instance.js";
 import {contentFileName} from "./content-filename.js";
 
-export function emulatorJsDisableCue(core: string, targetId: string): boolean {
-  return ["cap32", "quasi88"].includes(core) || core === "flycast" &&
-    isFlycastArcadeTarget(targetId);
+export function emulatorJsDisableCue(core: string): boolean {
+  return ["cap32", "quasi88", "flycast"].includes(core);
+}
+
+/** The WASM core's real BIOS MIL-CD boot path traps; CDI boots via its HLE loader. */
+export function flycastDiscBootOptions(core: string, url: string): Record<string, string> {
+  return core === "flycast" && new URL(url, "https://retrom.invalid").pathname.toLowerCase().endsWith(".cdi")
+    ? {reicast_hle_bios: "enabled"} : {};
 }
 
 export function isFlycastArcadeTarget(targetId: string) {
@@ -68,7 +73,13 @@ export async function mountFlycastRange(runtimeWindow: EjsWindow,
 }
 
 export function flycastContentName(url: string, sha256: string, targetId: string): string {
-  if (targetId === "flycast") {return `${sha256}.chd`;}
+  if (targetId === "flycast") {
+    const extension = contentFileName(url).split(".").at(-1)?.toLowerCase();
+    if (!extension || !["bin", "cdi", "chd", "cue", "dat", "elf", "gdi", "lst", "m3u"].includes(extension)) {
+      throw new Error("FLYCAST_CONTENT_NAME_INVALID");
+    }
+    return `${sha256}.${extension}`;
+  }
   if (!isFlycastArcadeTarget(targetId) ||
     /(?:^|\/)\.{1,2}(?:\/|$)/u.test(url)) {throw new Error("FLYCAST_CONTENT_NAME_INVALID");}
   const pathname = new URL(url, "https://retrom.invalid").pathname;

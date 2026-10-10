@@ -32,3 +32,16 @@ it("rejects missing ABI and cancels polling on exit", async () => {
   const canceled = expect(promise).rejects.toThrow("PLAYER_SESSION_ENDED"); bridge.cleanup(); await canceled;
   expect(vi.getTimerCount()).toBe(0);
 });
+
+it("reports a native failure after startup and stops watching on exit", async () => {
+  vi.useFakeTimers(); let receipt = 1;
+  const bridge = installContentAcceptance(window), failure = vi.fn();
+  Reflect.set(window, "EJS_Runtime", async () => ({_retrom_content_load_result: () => receipt}));
+  await Reflect.get(window, "EJS_Runtime")({});
+  await bridge.wait(new AbortController().signal);
+  bridge.monitor(new AbortController().signal, failure);
+  await vi.advanceTimersByTimeAsync(250); expect(failure).not.toHaveBeenCalled();
+  receipt = -1; await vi.advanceTimersByTimeAsync(250);
+  expect(failure).toHaveBeenCalledWith(expect.objectContaining({code: "PLAYER_CONTENT_REJECTED"}));
+  bridge.cleanup(); expect(vi.getTimerCount()).toBe(0);
+});

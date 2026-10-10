@@ -1,5 +1,5 @@
 import {parseRuntimeConfiguration} from "./configuration.js";
-import {runtimeBindings} from "./catalog.js";
+import {runtimeBindings, resolveRuntimeTarget} from "./catalog.js";
 import {contentHash} from "./identity.js";
 import type {RPGEngine, RuntimeConfiguration, RuntimeContent, RuntimeContentFile} from "./types.js";
 import {configurationFailure, logicalPath, object, utf8Compare} from "./validation.js";
@@ -73,6 +73,8 @@ function singleFileContent(input: ConfigureRequest): RuntimeContent {
     if (!declaration) {configurationFailure("RUNTIME_DECLARATION_INVALID");}
     return declaration.extensions;
   }));
+  if (input.coreIds.some(coreId => resolveRuntimeTarget(input.platformId, coreId,
+    {kind: "SINGLE_FILE", entryFile: "content"}).target.contentRequirements?.kind === "FLYCAST_CARTRIDGE")) {extensions.add("zip");}
   const cue = extensions.has("cue") && input.files.some(file => /\.cue$/iu.test(file.name));
   return {kind: "SINGLE_FILE", entryFile: chooseFile(input, name => cue ? name.endsWith(".cue")
     : extensions.has(name.slice(name.lastIndexOf(".") + 1))).logicalKey};

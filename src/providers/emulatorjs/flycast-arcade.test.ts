@@ -21,12 +21,9 @@ describe("Flycast seekable content", () => {
     expect(() => flycastContentName("/content/game/pstone2.zip", "a".repeat(64), "unknown")).toThrow();
   });
   it("keeps Flycast cartridge ZIPs instead of making a synthetic CD cue", () => {
-    for (const target of ["flycast-naomi", "flycast-naomi2", "flycast-atomiswave"]) {
-      expect(emulatorJsDisableCue("flycast", target)).toBe(true);
-    }
-    expect(emulatorJsDisableCue("flycast", "flycast")).toBe(false);
-    expect(emulatorJsDisableCue("cap32", "cap32")).toBe(true);
-    expect(emulatorJsDisableCue("quasi88", "quasi88")).toBe(true);
+    expect(emulatorJsDisableCue("flycast")).toBe(true);
+    expect(emulatorJsDisableCue("cap32")).toBe(true);
+    expect(emulatorJsDisableCue("quasi88")).toBe(true);
   });
   it.each([
     {target: "flycast", url: "/content/game.chd", filename: `${"a".repeat(64)}.chd`},

@@ -7,6 +7,8 @@ import {thomsonModelOptions} from "./thomson.js";
 import {parseRuntimeConfiguration, validateConfigurationFiles} from "./configuration.js";
 import {arcadeDependencies, type ArcadeCatalog, type ArchiveMember} from "./arcade.js";
 import {arcadeBIOSRequirements, resolveBIOSRequirements} from "./bios.js";
+import {validateFlycastCartridge, type FlycastMachine} from "./flycast-cartridge.js";
+import {arcadeCRCWarnings, type CRCWarning} from "./arcade-crc.js";
 import {contentHash, restorability} from "./identity.js";
 import {canonicalJsonBytes} from "../provider/contract.js";
 import type {RuntimeContentFile, RuntimeDirectory, RuntimeIdentity, ResourcePlan, RuntimeConfiguration, SaveContext} from "./types.js";
@@ -23,13 +25,14 @@ export type PrepareRuntimeRequest = {
   fingerprints: Readonly<Record<string, string>>;
   archives?: Readonly<Record<string, readonly ArchiveMember[]>>;
   arcadeCatalog?: ArcadeCatalog;
+  flycastCatalog?: readonly FlycastMachine[];
   cueFiles?: string[];
   dosEntries?: readonly string[];
   firmwareEvidence?: {psxRegion?: import("./psx.js").PSXRegion | null};
 };
 
 export type ContentBIOSRequest = Pick<PrepareRuntimeRequest,
-  "directory" | "config" | "files" | "coreId" | "archives" | "arcadeCatalog" | "firmwareEvidence">;
+  "directory" | "config" | "files" | "coreId" | "archives" | "arcadeCatalog" | "firmwareEvidence" | "flycastCatalog">;
 
 /** BIOS eligibility uses content facts without preparing resources or requiring Parent archives. */
 export function contentBIOSRequirements(request: ContentBIOSRequest) {
@@ -39,15 +42,20 @@ export function contentBIOSRequirements(request: ContentBIOSRequest) {
   if (entry !== null && !request.files.some(file => file.logicalKey === entry)) {
     configurationFailure("RUNTIME_ENTRY_MISSING");
   }
-  const {binding} = resolveRuntimeTarget(request.directory.platformId, selectedCore, config.content);
+  const {binding, target} = resolveRuntimeTarget(request.directory.platformId, selectedCore, config.content);
   let biosSets: string[] = [];
   if (config.content.kind === "ARCADE") {
     if (!request.arcadeCatalog || !request.archives) {configurationFailure("RUNTIME_ARCADE_CATALOG_UNAVAILABLE");}
     biosSets = arcadeDependencies(selectedCore, config, request.files, request.archives, request.arcadeCatalog).biosSets;
   }
+  const crcWarnings = target.contentRequirements?.kind === "FLYCAST_CARTRIDGE" && entry
+    ? validateFlycastCartridge(target.contentRequirements.platform, request.files.find(file => file.logicalKey === entry)!,
+      request.flycastCatalog, request.archives?.[entry])
+    : request.arcadeCatalog && request.archives ? arcadeCRCWarnings(selectedCore, config, request.files, request.archives, request.arcadeCatalog) : [];
   return {biosRequirements: [...resolveBIOSRequirements({providerId: binding.providerId, targetId: binding.targetId,
     config, files: request.files, firmwareEvidence: request.firmwareEvidence}),
-    ...(request.arcadeCatalog ? arcadeBIOSRequirements(selectedCore, request.arcadeCatalog, biosSets) : [])]};
+    ...(request.arcadeCatalog ? arcadeBIOSRequirements(selectedCore, request.arcadeCatalog, biosSets) : [])],
+    crcWarnings};
 }
 
 /** Resolve frozen save facts before any content-specific host reads or resource assembly. */
@@ -118,15 +126,23 @@ function prepareIdentity(request: PrepareRuntimeRequest) {
 export function prepareRuntime(request: PrepareRuntimeRequest) {
   request = resolveSavedRuntimeRequest(request);
   const {config, selectedCore, binding, target, targetOptions, declaration, identity} = prepareIdentity(request);
+  let crcWarnings: CRCWarning[] = [];
+  if (target.contentRequirements?.kind === "FLYCAST_CARTRIDGE") {
+    const entry = "entryFile" in config.content ? config.content.entryFile : "";
+    crcWarnings = validateFlycastCartridge(target.contentRequirements.platform, request.files.find(file => file.logicalKey === entry)!,
+      request.flycastCatalog, request.archives?.[entry]);
+  }
   if (config.content.kind === "DOS_BUNDLE" && config.content.entryPath !== undefined &&
     !request.dosEntries?.includes(config.content.entryPath)) {configurationFailure("RUNTIME_DOS_ENTRY_INVALID");}
   let dependencies = {parentFiles: [] as string[], missingParents: [] as string[], biosSets: [] as string[]};
   if (config.content.kind === "ARCADE") {
     if (!request.arcadeCatalog || !request.archives) {configurationFailure("RUNTIME_ARCADE_CATALOG_UNAVAILABLE");}
     dependencies = arcadeDependencies(selectedCore, config, request.files, request.archives, request.arcadeCatalog);
+    crcWarnings = arcadeCRCWarnings(selectedCore, config, request.files, request.archives, request.arcadeCatalog);
     if (dependencies.missingParents.length) {configurationFailure("RUNTIME_PARENT_MISSING", {parents: dependencies.missingParents.join(",")});}
   }
   return {...identity, config, targetOptions, dependencies,
+    crcWarnings,
     biosRequirements: [...resolveBIOSRequirements({providerId: binding.providerId, targetId: binding.targetId, config,
       files: request.files, firmwareEvidence: request.firmwareEvidence}),
       ...(request.arcadeCatalog ? arcadeBIOSRequirements(selectedCore, request.arcadeCatalog, dependencies.biosSets) : [])], checkpoint: declaration.checkpoint, capabilities: declaration.capabilities,

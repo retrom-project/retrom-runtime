@@ -2144,11 +2144,11 @@
           "platform": "atomiswave",
           "catalog": {
             "path": "assets/4.2.3/data/cores/flycast-rom-requirements.json",
-            "sha256": "845b175b4854c3a800eeb9249dc3138c37fa7dcfae45d0fca8f912fdd10a65e1"
+            "sha256": "ad46976c01472c9aa710e0d0f15d0a39bff2ac1b7fc49d7bbb4092773bfa77fd"
           },
           "core": {
             "path": "assets/4.2.3/data/cores/flycast-wasm.data",
-            "sha256": "2654fb698a230853ce7ab2ed9515fbffe8d5a583e93ef302bc3ec610691f9f20"
+            "sha256": "c8ed647ff6d63bff45314ee5acea0b2f91fa6ef4049f62e19c4065aff95c2a6d"
           }
         },
         "capabilities": {
@@ -2267,11 +2267,11 @@
           "platform": "naomi",
           "catalog": {
             "path": "assets/4.2.3/data/cores/flycast-rom-requirements.json",
-            "sha256": "845b175b4854c3a800eeb9249dc3138c37fa7dcfae45d0fca8f912fdd10a65e1"
+            "sha256": "ad46976c01472c9aa710e0d0f15d0a39bff2ac1b7fc49d7bbb4092773bfa77fd"
           },
           "core": {
             "path": "assets/4.2.3/data/cores/flycast-wasm.data",
-            "sha256": "2654fb698a230853ce7ab2ed9515fbffe8d5a583e93ef302bc3ec610691f9f20"
+            "sha256": "c8ed647ff6d63bff45314ee5acea0b2f91fa6ef4049f62e19c4065aff95c2a6d"
           }
         },
         "capabilities": {
@@ -2390,11 +2390,11 @@
           "platform": "naomi2",
           "catalog": {
             "path": "assets/4.2.3/data/cores/flycast-rom-requirements.json",
-            "sha256": "845b175b4854c3a800eeb9249dc3138c37fa7dcfae45d0fca8f912fdd10a65e1"
+            "sha256": "ad46976c01472c9aa710e0d0f15d0a39bff2ac1b7fc49d7bbb4092773bfa77fd"
           },
           "core": {
             "path": "assets/4.2.3/data/cores/flycast-wasm.data",
-            "sha256": "2654fb698a230853ce7ab2ed9515fbffe8d5a583e93ef302bc3ec610691f9f20"
+            "sha256": "c8ed647ff6d63bff45314ee5acea0b2f91fa6ef4049f62e19c4065aff95c2a6d"
           }
         },
         "capabilities": {

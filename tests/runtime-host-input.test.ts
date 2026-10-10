@@ -5,7 +5,7 @@ import {mkdtemp, readFile, writeFile, rm, access} from "node:fs/promises";
 import {join} from "node:path";
 import {tmpdir} from "node:os";
 import {unzipSync, zipSync} from "fflate";
-import {assembleResource, parentArchive, prepareHostInput, configureHostInput, discoverContentDependencies} from "../scripts/runtime-host-input.mjs";
+import {assembleResource, parentArchive, prepareHostInput, configureHostInput, discoverContentDependencies, identifyHostBIOS, flycastTable, contentHostBIOSRequirements} from "../scripts/runtime-host-input.mjs";
 import type {RuntimeContentFile} from "../src/runtime/types.js";
 const roots: string[] = [];
 afterEach(async () => {await Promise.all(roots.splice(0).map(path => rm(path, {recursive: true, force: true})));});
@@ -103,4 +103,47 @@ it("checks an explicit DOS executable against actual archive members but leaves 
     fingerprints: {}, config: {content: {kind: "DOS_BUNDLE", entryFile: "game.zip", entryPath: "START.BAT"}}};
   expect((await prepareHostInput(request)).dosEntries).toEqual(["START.BAT", "GAME.EXE"]);
   expect((await prepareHostInput({...request, config: {content: {kind: "DOS_BUNDLE", entryFile: "game.zip"}}})).dosEntries).toBeUndefined();
+});
+
+it("identifies a named firmware ZIP with modified CRC without accepting missing members or wrong sizes", async () => {
+  const input = await tree({"bios.zip": zipSync({"bios.bin": Uint8Array.of(1, 2)})});
+  const requirement = {requirementKey: "emulatorjs/fbneo/bios.zip", coreId: "fbneo", providerId: "emulatorjs", targetId: "fbneo",
+    logicalName: "bios.zip", required: true, condition: "ARCADE_BIOS", sizeBytes: null, md5: null, sha256: null,
+    delivery: "EXTERNAL_FILE" as const, virtualPath: "bios.zip", activationOptions: {},
+    members: [{name: "bios.bin", sizeBytes: 2, crc32: "ffffffff", sha1: "", required: true}]};
+  const file = {...input.files[0], md5: "a".repeat(32)};
+  expect(await identifyHostBIOS({file, path: input.locators[file.name], requirements: [requirement]})).toEqual([requirement]);
+  expect(await identifyHostBIOS({file: {...file, name: "random.zip"}, path: input.locators[file.name], requirements: [requirement]})).toEqual([]);
+  expect(await identifyHostBIOS({file, path: input.locators[file.name], requirements: [{...requirement,
+    members: [{...requirement.members[0], sizeBytes: 3}]}]})).toEqual([]);
+});
+
+it("reads the compiled Flycast catalog envelope and binds its declared core SHA to the selected Provider", async () => {
+  const bytes = Uint8Array.of(1, 2, 3), machine = {name: "game", parent: null, platform: "naomi2", mediaType: "CARTRIDGE",
+    disc: null, files: [{name: "game.ic1", sizeBytes: 4, crc32: "12345678", optional: false}]};
+  const envelope = {schemaVersion: 1, kind: "FLYCAST_ROM_REQUIREMENTS", core: {filename: "0.bin", sha256: sha(bytes)}, machines: [machine]};
+  const catalog = Buffer.from(JSON.stringify(envelope));
+  const input = await tree({"core": bytes, "catalog": catalog});
+  const requirement = {core: {path: "0.bin", sha256: sha(bytes)}, catalog: {path: "1.bin", sha256: sha(catalog)}};
+  expect(await flycastTable(input.root, requirement)).toEqual([machine]);
+  const wrongCore = Buffer.from(JSON.stringify({...envelope, core: {...envelope.core, sha256: "f".repeat(64)}}));
+  await writeFile(join(input.root, "1.bin"), wrongCore);
+  await expect(flycastTable(input.root, {...requirement, catalog: {...requirement.catalog, sha256: sha(wrongCore)}}))
+    .rejects.toThrow("RUNTIME_FLYCAST_CATALOG_INVALID");
+});
+
+it("projects modified installed BIOS CRCs for review without rejecting a game", async () => {
+  const input = await tree({"mslug3h.zip": zipSync({})});
+  const request = {...input,
+    directory: {platformId: "arcade", defaultCoreId: "fbneo", allowedCoreIds: ["fbneo"]},
+    config: {content: {kind: "ARCADE" as const, entryFile: "mslug3h.zip"}}};
+  const projected = await contentHostBIOSRequirements(request);
+  const bios = projected.biosRequirements.find(requirement => requirement.logicalName === "neogeo.zip")!;
+  expect(bios.members?.length).toBeGreaterThan(0);
+  const bytes = zipSync(Object.fromEntries(bios.members!.map(member => [member.name, new Uint8Array(member.sizeBytes)])));
+  const path = join(input.root, "installed-bios.zip"); await writeFile(path, bytes);
+  const withBIOS = await contentHostBIOSRequirements({...request, biosFiles: [{filename: "neogeo.zip", path,
+    requirementKey: bios.requirementKey}]});
+  expect(withBIOS.biosRequirements).toEqual(projected.biosRequirements);
+  expect(withBIOS.crcWarnings).toEqual(expect.arrayContaining([expect.objectContaining({role: "BIOS", file: "neogeo.zip"})]));
 });

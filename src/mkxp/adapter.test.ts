@@ -18,6 +18,20 @@ afterEach(() => {
 });
 
 describe("mkxp runtime mount", () => {
+  it.each([1, 2, 3])("binds bottom to RGSS Confirm and right to Cancel for RGSS %s", async (rgssVersion) => {
+    const harness = createHarness();
+    const config = {...mkxpConfig(), rgssVersion: rgssVersion as 1 | 2 | 3};
+    const mounted = await mountMkxp(config, harness.target, null, harness.dependencies);
+    // RGSS C=RetroPad A; RGSS B=RetroPad B. Explicit bindings override rwebpad.
+    expect(harness.prepareOptions?.retroarchConfig).toMatchObject({
+      input_player1_a_btn: "0", input_player1_b_btn: "1",
+      input_player1_x_btn: "2", input_player1_y_btn: "3",
+      input_player1_a: "x",
+    });
+    await mounted.exit();
+    harness.frame.remove();
+  });
+
   it("does not read or unlink a state when the native operation is rejected", async () => {
     const harness = createHarness();
     const mounted = await mountMkxp(mkxpConfig(), harness.target, null, harness.dependencies);

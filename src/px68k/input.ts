@@ -1,7 +1,8 @@
 // Browser standard gamepad -> libretro joypad; keyboard input stays independent.
 export function padMask(pad: Gamepad | null) {
   if (!pad || !pad.connected || pad.mapping !== "standard") {return 0;}
-  const mapping = [8, 0, 9, 1, 10, 11, 12, 13, 2, 3, 14, 15, 4, 5, 6, 7];
+  // With the native default VbtnSwap=0, B is TRIG1 and A is TRIG2.
+  const mapping = [0, 8, 9, 1, 10, 11, 12, 13, 2, 3, 14, 15, 4, 5, 6, 7];
   let mask = 0;
   for (let i = 0; i < mapping.length; i++) {if (pad.buttons[i]?.pressed) {mask |= 1 << mapping[i];}}
   if ((pad.axes[0] ?? 0) < -.4) {mask |= 1 << 6;}

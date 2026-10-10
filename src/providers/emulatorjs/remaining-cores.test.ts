@@ -42,7 +42,7 @@ describe("remaining EmulatorJS cores", () => {
       expect(runtimeWindow.EJS_defaultControls).toMatchObject({0: {
         4: {value2: "DPAD_UP"}, 5: {value2: "DPAD_DOWN"},
         6: {value2: "DPAD_LEFT"}, 7: {value2: "DPAD_RIGHT"},
-        0: {value2: "BUTTON_2"}, 8: {value2: "BUTTON_1"},
+        0: {value2: ["uzem", "cap32", "crocods", "same_cdi"].includes(coreId) ? "BUTTON_2" : "BUTTON_1"}, 8: {value2: ["uzem", "cap32", "crocods", "same_cdi"].includes(coreId) ? "BUTTON_1" : "BUTTON_2"},
       }});
       // A physical gamepad input must never trigger two native controls.
       // Keyboard bindings remain independent inputs to those controls.

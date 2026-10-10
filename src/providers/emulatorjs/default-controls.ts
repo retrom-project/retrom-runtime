@@ -50,8 +50,8 @@ const playerTwoKeyboard: Readonly<Record<number, string>> = {
   9: "numpad 5",
 };
 
-// These are the pinned EmulatorJS 4.2.3/4.3 defaults. Keyboard overrides must
-// retain them byte-for-byte so connecting a gamepad behaves as before.
+// Letter-oriented platforms (including Nintendo) use A/B/X/Y. Libretro's
+// numeric slots describe RetroPad positions, which are not every core's letters.
 const playerOneGamepad: Readonly<Record<number, string>> = {
   0: "BUTTON_2",
   1: "BUTTON_4",
@@ -79,22 +79,50 @@ const playerOneGamepad: Readonly<Record<number, string>> = {
   23: "RIGHT_STICK_Y:-1",
 };
 
-// DOSBox Pure's generic keyboard preset maps libretro B to Ctrl (primary action).
-// Daphne, Flycast, NeoCD and PUAE also use libretro B as their primary native action.
-// Keep that action on the bottom standard gamepad button.
+// Position-oriented cores use B/A/Y/X for bottom/right/left/top respectively.
 const nativeFaceGamepad: Readonly<Record<number, string>> = {...playerOneGamepad, 0: "BUTTON_1", 8: "BUTTON_2", 1: "BUTTON_3", 9: "BUTTON_4"};
+
+const positionalCores = new Set([
+  "daphne", "dosbox_pure", "flycast", "neocd", "o2em", "puae",
+  "fbneo", "fbalpha2012_cps1", "fbalpha2012_cps2", "mame2003", "mame2003_plus",
+  "supermodel", "pcsx_rearmed", "mednafen_psx_hw", "ppsspp",
+  "atari800", "a5200", "freechaf", "hatarib",
+  "vice_x128", "vice_x64", "vice_x64sc", "vice_xpet", "vice_xplus4", "vice_xvic",
+]);
+
+const primaryButtonCores = new Set(["mednafen_ngp", "smsplus", "prosystem", "stella2014", "81", "theodore"]);
+const primaryButtonGamepad = {...playerOneGamepad, 0: "BUTTON_1", 8: "BUTTON_2"};
+
+// N64 layouts retain native 0/1 for A/B and remove 8/9. C buttons remain on
+// the right stick, so unused face buttons must not duplicate those inputs.
+const n64Gamepad = {...playerOneGamepad, 0: "BUTTON_1", 1: "BUTTON_2", 8: "BUTTON_3", 9: "BUTTON_4"};
+
+// Sega: A/B/X/Y on like-named standard buttons, C on R1 and Z on L1.
+// Saturn's X/Y native slots differ from Mega Drive's; SMS/GG are two-button.
+const megaDriveGamepad = {...playerOneGamepad, 1: "BUTTON_1", 0: "BUTTON_2", 10: "BUTTON_3", 9: "BUTTON_4", 8: "RIGHT_TOP_SHOULDER", 11: "LEFT_TOP_SHOULDER"};
+const saturnGamepad = {...megaDriveGamepad, 9: "BUTTON_3", 10: "BUTTON_4"};
+const threeDOGamepad = {...playerOneGamepad, 1: "BUTTON_1", 0: "BUTTON_2", 8: "BUTTON_3", 9: "BUTTON_4"};
+
+function isSegaEightBit(gameUrl: string) {
+  const extension = new URL(gameUrl, "http://runtime.invalid").pathname.toLowerCase().split(".").pop();
+  return extension === "sms" || extension === "sg" || extension === "gg";
+}
 
 // PC-88 confirmation is Return (native Start). Swap the two bindings so
 // each physical button still sends exactly one native control.
 const pc88Gamepad: Readonly<Record<number, string>> = {...playerOneGamepad, 3: "BUTTON_1", 8: "START"};
 
-// Theodore's native A button types Space for games that require it at their
-// title screen. Keep the bottom face button mapped to joystick fire.
-const thomsonGamepad: Readonly<Record<number, string>> = {...playerOneGamepad, 1: "BUTTON_1", 8: "BUTTON_4"};
+function gamepadControls(core: string, gameUrl: string): Readonly<Record<number, string>> {
+  return positionalCores.has(core) ? nativeFaceGamepad
+    : primaryButtonCores.has(core) ? primaryButtonGamepad
+    : core === "mupen64plus_next" || core === "parallel_n64" ? n64Gamepad
+    : ["genesis_plus_gx", "genesis_plus_gx_wide", "picodrive"].includes(core) ? (isSegaEightBit(gameUrl) ? primaryButtonGamepad : megaDriveGamepad)
+    : core === "yabause" ? saturnGamepad : core === "opera" ? threeDOGamepad
+    : core === "quasi88" ? pc88Gamepad : playerOneGamepad;
+}
 
-export function createRetromDefaultControls(core?: string): EmulatorDefaultControls {
-  const gamepad = ["daphne", "dosbox_pure", "flycast", "neocd", "o2em", "puae"].includes(core ?? "") ? nativeFaceGamepad
-    : core === "quasi88" ? pc88Gamepad : core === "theodore" ? thomsonGamepad : playerOneGamepad;
+export function createRetromDefaultControls(core = "", gameUrl = ""): EmulatorDefaultControls {
+  const gamepad = gamepadControls(core, gameUrl);
   const controllers: EmulatorDefaultControls = {};
   for (let player = 0; player < 4; player += 1) {
     const keyboard: Readonly<Record<number, string>> = player === 0

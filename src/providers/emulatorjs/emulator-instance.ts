@@ -1,6 +1,7 @@
 import type {EmulatorNativeSettingsInstance} from "./native-settings.js";
 import type {EmulatorGamepadInstance} from "./startup-gamepads.js";
 import type {EmulatorDefaultControls} from "./default-controls.js";
+import type {EmulatorVirtualControl} from "./virtual-controls.js";
 import type {retromShaders} from "./shaders.js";
 
 type EjsManager = {
@@ -89,6 +90,7 @@ export type EjsWindow = Window & {
   EJS_cacheConfig?: {enabled: boolean};
   EJS_Buttons?: Record<string, boolean>;
   EJS_defaultControls?: EmulatorDefaultControls;
+  EJS_VirtualGamepadSettings?: EmulatorVirtualControl[];
   EJS_defaultOptions?: Record<string, string>;
   EJS_shaders?: typeof retromShaders;
   EJS_paths?: Record<string, string>;
@@ -106,6 +108,7 @@ export const configuredGlobals = [
   "EJS_disableBatchBootup", "EJS_disableCue", "EJS_language", "EJS_disableAutoLang", "EJS_DEBUG_XX",
   "EJS_EXPERIMENTAL_NETPLAY", "EJS_threads", "EJS_fullscreenOnLoaded", "EJS_disableDatabases",
   "EJS_disableLocalStorage", "EJS_cacheConfig", "EJS_Buttons", "EJS_defaultControls",
+  "EJS_VirtualGamepadSettings",
   "EJS_defaultOptions", "EJS_shaders", "EJS_paths",
   "EJS_externalFiles", "EJS_ready", "EJS_onGameStart",
 ] as const;

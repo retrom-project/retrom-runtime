@@ -5,9 +5,11 @@ export function configureHostInput(input: import("../src/runtime/configure.js").
 export function assembleResource(input: HostFiles): Promise<{path: string; sizeBytes: number; sha256: string}>;
 export function parentArchive(input: HostFiles): Promise<{path: string; sizeBytes: number; sha256: string}>;
 export function prepareHostInput(input: PrepareRuntimeRequest & {locators: Record<string, string>}): Promise<PrepareRuntimeRequest>;
-export function contentHostBIOSRequirements(input: ContentBIOSRequest & {locators: Record<string, string>}): Promise<{biosRequirements: BIOSRequirement[]}>;
+export function contentHostBIOSRequirements(input: ContentBIOSRequest & {locators: Record<string, string>; providerRoots?: Record<string, string>; biosFiles?: Array<{requirementKey: string; filename: string; path: string}>}): Promise<{biosRequirements: BIOSRequirement[]; crcWarnings: import("../src/runtime/arcade-crc.js").CRCWarning[]}>;
 export function hostDOSEntryCandidates(input: {config: unknown; files: RuntimeContentFile[]; locators: Record<string, string>}): Promise<{entries: string[]}>;
 export function hostArcadeParentOptions(input: import("../src/runtime/arcade-parent.js").ArcadeParentRequest & {locators: Record<string, string>}): Promise<ReturnType<typeof import("../src/runtime/arcade-parent.js").arcadeParentOptions>>;
 export function arcadeTables(): Promise<Record<string, import("../src/runtime/arcade.js").ArcadeCatalog>>;
 export function identifyHostBIOS(input: {file: {name: string; sizeBytes: number; sha256: string; md5: string}; path?: string; requirements: BIOSRequirement[]}): Promise<BIOSRequirement[]>;
 export function detectScummvm(input: {providerRoot: string; treeRoot: string}): Promise<unknown>;
+
+export function flycastTable(root: string, requirement: {core: {path: string; sha256: string}; catalog: {path: string; sha256: string}}): Promise<import("../src/runtime/flycast-cartridge.js").FlycastMachine[]>;

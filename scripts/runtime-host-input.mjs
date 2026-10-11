@@ -9,7 +9,8 @@ import {join, dirname} from "node:path";
 import {gunzipSync, crc32} from "node:zlib";
 import {unzipSync, zipSync} from "fflate";
 import {parseRuntimeConfiguration, contentHash, runtimeBindings, identifyPSXRegion, resolveSavedRuntimeRequest,
-  contentBIOSRequirements, dosEntryCandidates, arcadeParentOptions} from "../dist/runtime/index.js";
+  contentBIOSRequirements, dosEntryCandidates, arcadeParentOptions, resolveRuntimeTarget} from "../dist/runtime/index.js";
+import {decodeZIPName} from "../dist/content-io/zip-name.js";
 
 export async function configureHostInput(input) {
   contentHash(input.files, "TREE");
@@ -69,6 +70,13 @@ export async function prepareHostInput(input) {
   }
   const coreId = input.coreId ?? input.directory.defaultCoreId;
   prepared = await prepareFirmwareEvidence(prepared, config, coreId);
+  const {target, binding} = resolveRuntimeTarget(input.directory.platformId, coreId, config.content);
+  if (target.contentRequirements?.kind === "FLYCAST_CARTRIDGE") {
+    const file = input.files.find(item => item.logicalKey === config.content.entryFile);
+    if (!file) {throw new Error("RUNTIME_ENTRY_MISSING");}
+    return {...prepared, flycastCatalog: await flycastTable(input.providerRoots?.[binding.providerId], target.contentRequirements),
+      archives: {[file.logicalKey]: await zipMembers(requireLocator(input, file))}};
+  }
   if (config.content.kind !== "ARCADE") {return prepared;}
   const tables = await arcadeTables();
   if (!tables[coreId]) {throw new Error("RUNTIME_ARCADE_CATALOG_UNAVAILABLE");}
@@ -82,6 +90,39 @@ export async function prepareHostInput(input) {
   return {...input, arcadeCatalog: tables[coreId], archives};
 }
 
+const flycastTables = new Map();
+export async function flycastTable(root, requirement) {
+  if (typeof root !== "string" || !root.startsWith("/")) {throw new Error("RUNTIME_FLYCAST_CATALOG_UNAVAILABLE");}
+  const key = `${root}:${requirement.core.sha256}:${requirement.catalog.sha256}`;
+  if (!flycastTables.has(key)) {
+    const readAsset = async (reference, maximum) => {
+      const handle = await open(join(root, reference.path), constants.O_RDONLY | constants.O_NOFOLLOW);
+      try {
+        const info = await handle.stat();
+        if (!info.isFile() || info.size < 1 || info.size > maximum) {throw new Error("RUNTIME_FLYCAST_CATALOG_INVALID");}
+        const bytes = await handle.readFile();
+        if (sha256(bytes) !== reference.sha256) {throw new Error("RUNTIME_FLYCAST_CATALOG_INVALID");}
+        return bytes;
+      } finally {await handle.close();}
+    };
+    // The selected Provider's ROM facts must belong to the exact core used for this Target.
+    await readAsset(requirement.core, 32 * 1024 * 1024);
+    const document = JSON.parse((await readAsset(requirement.catalog, 4 * 1024 * 1024)).toString("utf8"));
+    if (document.schemaVersion !== 1 || document.kind !== "FLYCAST_ROM_REQUIREMENTS" ||
+      document.core?.sha256 !== requirement.core.sha256 || document.core?.filename !== requirement.core.path.split("/").at(-1)) {
+      throw new Error("RUNTIME_FLYCAST_CATALOG_INVALID");
+    }
+    const catalog = document.machines;
+    if (!Array.isArray(catalog) || catalog.length > 10000 || catalog.some(machine =>
+      typeof machine.name !== "string" || typeof machine.platform !== "string" || typeof machine.mediaType !== "string" ||
+      !Array.isArray(machine.files) || machine.files.some(file => typeof file.name !== "string" ||
+        !Number.isSafeInteger(file.sizeBytes) || file.sizeBytes < 0 || typeof file.optional !== "boolean" ||
+        file.crc32 !== null && !/^[0-9a-f]{8}$/iu.test(file.crc32)))) {throw new Error("RUNTIME_FLYCAST_CATALOG_INVALID");}
+    flycastTables.set(key, catalog);
+  }
+  return flycastTables.get(key);
+}
+
 /** Read only evidence needed for BIOS rules; Parent and other launch resources remain unprepared. */
 export async function contentHostBIOSRequirements(input) {
   contentHash(input.files, "TREE");
@@ -92,10 +133,35 @@ export async function contentHostBIOSRequirements(input) {
     if (!tables[coreId]) {throw new Error("RUNTIME_ARCADE_CATALOG_UNAVAILABLE");}
     const file = input.files.find(file => file.logicalKey === config.content.entryFile);
     if (!file) {throw new Error("RUNTIME_ENTRY_MISSING");}
-    prepared = {...prepared, arcadeCatalog: tables[coreId],
+    const archives = {[file.logicalKey]: await zipMembers(requireLocator(input, file))};
+    for (const key of config.cores?.[coreId]?.parentFiles ?? []) {
+      const parent = input.files.find(file => file.logicalKey === key);
+      if (parent) {archives[key] = await zipMembers(requireLocator(input, parent));}
+    }
+    prepared = {...prepared, arcadeCatalog: tables[coreId], archives};
+  }
+  const {target, binding} = resolveRuntimeTarget(input.directory.platformId, coreId, config.content);
+  if (target.contentRequirements?.kind === "FLYCAST_CARTRIDGE") {
+    const file = input.files.find(file => file.logicalKey === config.content.entryFile);
+    if (!file) {throw new Error("RUNTIME_ENTRY_MISSING");}
+    prepared = {...prepared, flycastCatalog: await flycastTable(input.providerRoots?.[binding.providerId], target.contentRequirements),
       archives: {[file.logicalKey]: await zipMembers(requireLocator(input, file))}};
   }
-  return contentBIOSRequirements(prepared);
+  const result = contentBIOSRequirements(prepared);
+  for (const requirement of result.biosRequirements) {
+    const file = input.biosFiles?.find(file => file.requirementKey === requirement.requirementKey);
+    if (!file || !requirement.members?.length) {continue;}
+    const members = await zipMembers(file.path);
+    for (const expected of requirement.members) {
+      const member = members.find(member => member.sizeBytes === expected.sizeBytes && member.crc32 === expected.crc32) ??
+        members.find(member => member.name === expected.name && member.sizeBytes === expected.sizeBytes);
+      if (member && member.crc32 !== expected.crc32) {
+        result.crcWarnings.push({role: "BIOS", file: file.filename, member: member.name,
+          expectedCRC32: expected.crc32.toLowerCase(), actualCRC32: member.crc32.toLowerCase()});
+      }
+    }
+  }
+  return result;
 }
 
 /** List the current archive independently of an existing, possibly stale program selection. */
@@ -290,7 +356,11 @@ async function zipMembers(path) {
     for (let i = 0; i < count; i++) {
       if (at + 46 > size || directory.readUInt32LE(at) !== 0x02014b50 || directory.readUInt16LE(at + 8) & 1) {throw new Error("RUNTIME_ARCHIVE_INVALID");}
       const length = directory.readUInt16LE(at + 28), extra = directory.readUInt16LE(at + 30), comment = directory.readUInt16LE(at + 32);
-      const name = directory.subarray(at + 46, at + 46 + length).toString("utf8");
+      if (at + 46 + length + extra + comment > size) {throw new Error("RUNTIME_ARCHIVE_INVALID");}
+      let name;
+      try {name = decodeZIPName(directory.subarray(at + 46, at + 46 + length), directory.readUInt16LE(at + 8),
+        directory.subarray(at + 46 + length, at + 46 + length + extra));}
+      catch {throw new Error("RUNTIME_ARCHIVE_INVALID");}
       if (!safePath(name.replace(/\/$/u, "")) || names.has(name)) {throw new Error("RUNTIME_ARCHIVE_INVALID");}
       names.add(name);
       if (!name.endsWith("/")) {result.push({name, sizeBytes: directory.readUInt32LE(at + 24), crc32: directory.readUInt32LE(at + 16).toString(16).padStart(8, "0")});}
@@ -363,5 +433,6 @@ export async function identifyHostBIOS(input) {
   if (!input.path || !input.file.name?.toLowerCase().endsWith(".zip")) {return direct;}
   const members = await zipMembers(input.path);
   return input.requirements.filter(requirement => requirement.members?.length && requirement.members.every(expected =>
-    !expected.required || members.some(member => member.sizeBytes === expected.sizeBytes && member.crc32 === expected.crc32)));
+    !expected.required || members.some(member => member.sizeBytes === expected.sizeBytes && (member.crc32 === expected.crc32 ||
+      input.file.name.toLowerCase() === requirement.logicalName.toLowerCase() && member.name === expected.name))));
 }

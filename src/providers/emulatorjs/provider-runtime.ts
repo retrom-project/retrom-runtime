@@ -28,7 +28,7 @@ import {providerInputCapabilities} from "../../provider/input-capabilities.js";
 import {emulatorJsProviderDefinition, type EmulatorImplementation} from "./catalog.js";
 import {installAsyncRangeStartup} from "./async-range-startup.js";
 import {registerSeekableContentFS, type VirtualContentFile} from "./virtual-content-fs.js";
-import {asyncRangeCore, configureContentDisc, emulatorJsDisableCue, gameResourceURL, hasSeekableGame, mountRangeFS} from "./disc-mount.js";
+import {asyncRangeCore, configureContentDisc, emulatorJsDisableCue, flycastDiscBootOptions, gameResourceURL, hasSeekableGame, mountRangeFS} from "./disc-mount.js";
 import {configureDOSContentDisc, dosCheckpointAvailability, observeDOSCheckpointAvailability} from "./dosbox-range.js";
 import {installDOSMenuInput} from "./dosbox-menu-input.js";
 import {requireContentSession} from "../../provider/content-inputs.js";
@@ -43,6 +43,7 @@ import {installStartupStateRestore} from "./startup-state.js";
 import {installSupermodelState} from "./supermodel-state.js";
 import {installSupermodelRestore} from "./supermodel-restore.js";
 import {createRetromDefaultControls, emulatorControlScheme, emulatorPointerOptions, thomsonOptions} from "./default-controls.js";
+import {emulatorVirtualControls} from "./virtual-controls.js";
 import {initializeEmulatorJsGamepads} from "./startup-gamepads.js";
 import {closeEmulatorJsNativeSettings, openEmulatorJsNativeSettings} from "./native-settings.js";
 import {retromShaders} from "./shaders.js";
@@ -373,7 +374,7 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
     runtimeWindow.EJS_startOnLoaded = !deferredStart;
     runtimeWindow.EJS_dontExtractRom = deferredStart || this.implementation.runtimeCore === "flycast" || seekable || this.eagerDiskMount || !!this.daphneProject;
     runtimeWindow.EJS_disableBatchBootup = deferredDOSStart;
-    runtimeWindow.EJS_disableCue = emulatorJsDisableCue(this.implementation.runtimeCore, this.envelope.runtime.targetId) ? true : undefined;
+    runtimeWindow.EJS_disableCue = emulatorJsDisableCue(this.implementation.runtimeCore) ? true : undefined;
     runtimeWindow.EJS_language = "zh-CN";
     runtimeWindow.EJS_disableAutoLang = false;
     // RetroArch emits native load receipts only in verbose mode. The PSP and
@@ -385,10 +386,12 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
     disableEmulatorDownloadCache(runtimeWindow, this.implementation.release);
     runtimeWindow.EJS_disableLocalStorage = true;
     runtimeWindow.EJS_Buttons = {exitEmulation: false};
-    runtimeWindow.EJS_defaultControls = createRetromDefaultControls(this.implementation.runtimeCore);
+    runtimeWindow.EJS_defaultControls = createRetromDefaultControls(this.implementation.runtimeCore, gameURL);
+    runtimeWindow.EJS_VirtualGamepadSettings = emulatorVirtualControls(this.implementation.runtimeCore);
     runtimeWindow.EJS_defaultOptions = {...this.implementation.defaultOptions,
       ...emulatorPointerOptions(this.implementation.runtimeCore), ...(this.implementation.runtimeCore === "theodore" ? thomsonOptions(this.envelope.targetOptions) : {}),
       ...(optionalResource(this.envelope, "bios", "BIOS_BUNDLE") ? this.implementation.biosOptions : {}),
+      ...flycastDiscBootOptions(this.implementation.runtimeCore, gameURL),
       ...(["daphne", "dosbox_pure"].includes(this.implementation.runtimeCore) ? {shader: "disabled"} : {}),
       ...(this.implementation.runtimeCore === "cap32" && new URL(gameURL, "http://runtime.invalid").pathname.toLowerCase().endsWith(".cpr")
         ? {cap32_model: "6128+ (experimental)", cap32_gfx_colors: "24bit"} : {}),
@@ -480,6 +483,7 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
     try {
       if (!this.instance) {throw new Error("PLAYER_RUNTIME_UNAVAILABLE");}
       await this.contentAcceptance?.wait(this.host.signal);
+      this.contentAcceptance?.monitor(this.host.signal, error => this.fail(error.message, error));
       this.dosboxCompatibility?.prepare(this.instance);
       if (this.restorePayload) {
         await this.startup.run("RESTORE_APPLY", () => this.restore(this.restorePayload!));
@@ -510,6 +514,7 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
     const preserveFailure = this.state === "FAILED";
     if (this.state === "MOUNTING") {this.startBarrier?.reject(contractError());}
     this.clearStartBarrier();
+    this.stopContentAcceptance();
     this.host.signal.removeEventListener("abort", this.hostAbort);
     const nativeExitAlreadyRequested = this.exitRequestedEmitted; this.exitRequestedEmitted = true;
     await stopNativeInstance(this.runtimeWindow, this.instance, this.implementation.runtimeCore, nativeExitAlreadyRequested, this.discRange);
@@ -569,8 +574,12 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
     this.inputDiagnostics = null;
   }
 
-  private cleanupSurface() {
+  private stopContentAcceptance() {
     this.contentAcceptance?.cleanup(); this.contentAcceptance = null;
+  }
+
+  private cleanupSurface() {
+    this.stopContentAcceptance();
     this.cleanupDaphneProject?.(); this.cleanupDaphneProject = null;
     this.lutroNativeSave?.stop(); this.lutroNativeSave = null;
     this.cleanupSeekableFS?.(); this.cleanupSeekableFS = null;

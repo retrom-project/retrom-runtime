@@ -10,7 +10,7 @@ import {configurationFailure} from "./validation.js";
 
 export const runtimeProviders: readonly ProviderDefinition[] = [emulatorJsProviderDefinition, retromRuntimeProviderDefinition];
 export type RuntimeBinding = {coreId: string; providerId: string; targetId: string; platformIds: string[];
-  contentKinds: string[]; engine?: string};
+  contentKinds: string[]; engine?: string; archiveExtensions?: string[]};
 export const runtimeBindings: readonly RuntimeBinding[] = bindings;
 export const runtimePlatforms: readonly {id: string; displayName: string}[] = platforms;
 
@@ -18,7 +18,10 @@ export function runtimeCatalog(providerVersion?: string) {
   const cores = coreNames.map(core => ({...core, platformIds: [...new Set(runtimeBindings.filter(binding => binding.coreId === core.id)
     .flatMap(binding => binding.platformIds))].sort()}));
   return {providers: runtimeProviders.map(provider => projectProviderManifest(providerVersion ? {...provider, providerVersion} : provider)),
-    bindings: runtimeBindings, platforms: runtimePlatforms, cores};
+    bindings: runtimeBindings.map(binding => ({...binding,
+      ...(runtimeProviders.find(provider => provider.providerId === binding.providerId)?.targets
+        .find(target => target.id === binding.targetId)?.contentRequirements?.kind === "FLYCAST_CARTRIDGE"
+        ? {archiveExtensions: ["zip"]} : {})})), platforms: runtimePlatforms, cores};
 }
 
 export function resolveRuntimeTarget(platformId: string, coreId: string, content: RuntimeContent):

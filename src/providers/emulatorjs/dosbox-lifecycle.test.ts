@@ -1,4 +1,5 @@
 import {expect, it, vi} from "vitest";
+import {zipSync} from "fflate";
 
 import {launchEnvelope} from "../../../tests/emulatorjs-provider-fixtures.js";
 import {ProviderContentOwner} from "../../provider/content-owner.js";
@@ -17,15 +18,18 @@ it("starts DOS before requiring the game manager created by that startup", async
   envelope.runtime.capabilities.requiresThreads = true;
   envelope.session.purpose = "REVIEW_PREVIEW";
   const digest = "a".repeat(64);
+  const archive = zipSync({"GAME.EXE": Uint8Array.of(1), "MENU.BAT": Uint8Array.of(2)});
   envelope.resources = [{kind: "FILE_TREE", role: "game", ordinal: 0,
     contentDigest: digest, indexUrl: `/runtime/content/game/${digest}/index.json`}];
-  const contentSession = {open: vi.fn(async () => ({abi: "content-io-v1", sizeBytes: 1024,
-    tryReadInto: (_offset: number, bytes: Uint8Array) => bytes.byteLength,
+  const contentSession = {open: vi.fn(async () => ({abi: "content-io-v1", sizeBytes: archive.length,
+    tryReadInto: (offset: number, bytes: Uint8Array) => {
+      bytes.set(archive.subarray(offset, offset + bytes.length)); return bytes.byteLength;
+    },
     readInto: vi.fn(), close: vi.fn(async () => {}),
   })), close: vi.fn(async () => {}), fail: vi.fn()} as unknown as ContentSessionClient;
   const startContent = vi.spyOn(ProviderContentOwner.prototype, "start").mockResolvedValue(contentSession);
   vi.stubGlobal("fetch", vi.fn(async () => new Response(JSON.stringify({schemaVersion: 1, files: [{
-    path: "game.zip", url: `/runtime/content/game/${digest}/game.zip`, sizeBytes: 1024, sha256: digest, mediaType: "application/zip",
+    path: "game.zip", url: `/runtime/content/game/${digest}/game.zip`, sizeBytes: archive.length, sha256: digest, mediaType: "application/zip",
   }]}))));
   const implementation = emulatorJsProviderDefinition.targets.find(target => target.id === "dosbox-pure")!.implementation;
   const player = await createEmulatorJsPlayer(envelope, {

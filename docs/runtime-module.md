@@ -6,6 +6,8 @@ The runtime module is the source of game interpretation for both review and play
 
 `configureRuntime` constructs these rules from immutable logical path/size/SHA facts and bounded evidence. RPG Maker uses its real JS marker, Game.ini Scripts field or LCF system identifier. DOS selects an actual executable member when one is explicit or uniquely detected. A package with several programs omits `entryPath` and starts the core's program menu; an explicit `entryPath` must be nonempty and identify a real archive member. Empty strings and null are invalid configuration states. ONS, KiriKiri and Cave Story choose their ordinary script/archive/executable entries. ScummVM runs the pinned native detector and returns explicit candidates; a blocked or ambiguous candidate requires an operator choice rather than a host engine guess. Every stored core option is validated against its actual Target schema before returning a configuration.
 
+ZIP member names use explicit UTF-8 or a CRC-verified Info-ZIP Unicode Path field first. Unmarked names are decoded as strict UTF-8, then GB18030 for legacy Chinese archives, with CP437 as the remaining byte fallback. DOS candidates, configuration and preparation share this decoding and retain the readable canonical member path. DOSBox cannot address Unicode names directly, so its bounded archive view assigns non-ASCII path segments deterministic, collision-checked ASCII 8.3 aliases and maps an explicit program choice to the same native path. Existing ASCII segments remain unchanged. Only the virtual central directory and optional `AUTOBOOT.DBP` are appended; original compressed payloads, CAS bytes and game content identity remain unchanged. The default program menu uses the same native aliases.
+
 `prepareRuntime` selects the declared implementation using directory platform, selected core and game content. It freezes coreId, providerId, targetId, coreFingerprint and romHash, then returns selected options, checkpoint semantics, BIOS requirements, actual arcade dependencies and generic resource plans. The host projects these plans into authorized resource URLs. `paths` maps logical file keys to virtual paths; `encoding: "ZIP"` requests an ordinary deterministic STORE archive. MKXP receives the complete project ZIP, DOS receives its ZIP as `game.zip`, file-tree cores receive paths relative to the project root, and a single CUE receives its verified referenced track files. Multiple Parent archives are merged into one validated archive, with conflicting same-path bytes rejected. The runtime mounts the named ZIP intact for arcade driver lookup; the core loader must not expand it into loose ROM members.
 
 ROM identity is calculated from the entire Game active file set, including Parent files needed by any configured core. A single non-project ROM uses its raw SHA-256. Projects, including singleton trees, and multi-file content use the canonical sorted logical path, byte size and SHA-256 tree encoding. Media rows remain outside this set. Selecting another core does not change the Game content identity.
@@ -48,3 +50,24 @@ The same executable accepts `--serve` for an internal host process pool. Each ne
 Provider release builders and the PFB watcher call `fingerprintProvider` from `scripts/runtime-fingerprints.mjs` with the source and development esbuild dependency. The offline host tool reads the integrity-covered result from its selected Provider. Hosts cache startup facts and bound repeated preparation work; they do not launch one Node process per save.
 
 Unit and build gates validate this contract and all retained adapters. Product acceptance remains a separate per-binding exercise: real review and play, frame/input evidence, declared checkpoint semantics, a different run's restore and post-restore input. Isolation URL loading and loss-of-context draft persistence need actual browser and host fault evidence. A component test, missing-material annotation or declaration count is never a product pass.
+
+### Arcade review CRC warnings
+
+`prepareRuntime` and `contentBIOSRequirements` compute `crcWarnings` from the
+current game, explicitly bound Parent and BIOS archives. Named members with the
+required size remain usable when their CRC differs from the core catalog. Each
+warning identifies ROM, Parent or BIOS, the archive/member, and expected/actual
+CRC32. Hosts show these warnings before manual approval and exclude affected
+games from quick approval. A test launch is optional. Missing members, wrong
+sizes and unsupported media remain structural errors. No warning is persisted
+in a game record or database column. Ordinary Parent archives supply game ROMs;
+firmware is resolved separately from declared BIOS/device ancestry.
+
+Flycast cartridge ZIPs use the selected Provider's SHA-bound compiled requirements
+catalog. Their contents remain opaque during import and are read by the native
+ZIP reader. Dreamcast CDI retains its extension and native entry without an
+automatically generated CUE. CDI selects Flycast's HLE bootstrap because the WASM
+real-BIOS MIL-CD boot path traps after loading the disc; CHD and arcade keep their
+existing BIOS options. CDI metadata and track FILE handles use bounded
+reads with separate seek cursors. Core load receipts reject failed native loads;
+a successful receipt alone does not establish gameplay compatibility.

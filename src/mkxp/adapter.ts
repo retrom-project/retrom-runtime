@@ -188,6 +188,12 @@ async function mountMkxpUnchecked(
       input_pause_toggle: "f6",
       // RGSS Input::C maps to RetroPad A; make its browser binding explicit.
       input_player1_a: "x",
+      // RGSS C (confirm) / B (cancel) override rwebpad's positional defaults.
+      // Gamepad bindings are independent of the keyboard binding above.
+      input_player1_a_btn: "0",
+      input_player1_b_btn: "1",
+      input_player1_x_btn: "2",
+      input_player1_y_btn: "3",
       // The host persists the exact raw core payload and validates an exact
       // RASTATE1 runtime envelope. RetroArch otherwise defaults to rzip for
       // savestates, which changes the file format and defers file visibility.

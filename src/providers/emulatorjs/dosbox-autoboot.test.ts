@@ -3,6 +3,7 @@ import {unzipSync, zipSync} from "fflate";
 import type {ContentSessionClient} from "../../content-io/client.js";
 import {targetContentFixture} from "../../../tests/target-content-fixture.js";
 import {prepareDOSBundle} from "./dosbox-range.js";
+import {gbkProgramName, legacyZip} from "../../../tests/zip-encoding-fixture.js";
 
 afterEach(() => vi.unstubAllGlobals());
 
@@ -34,9 +35,37 @@ it("projects an explicit nested program into the native AUTOBOOT.DBP without cha
   } finally {await range.dispose();}
 });
 
-it("leaves an omitted entry as the real core menu and reads no archive metadata", async () => {
+it("mounts a GBK Chinese directory using a readable selection and a native ASCII boot path", async () => {
+  const bytes = legacyZip([{name: gbkProgramName, data: Uint8Array.of(1, 2, 3)}]);
+  const {range} = await mount(bytes, "金庸群侠传/PLAY.BAT");
+  try {
+    const projected = await range.read(0, range.sizeBytes), files = unzipSync(projected);
+    const program = Object.keys(files).find(path => path.endsWith("/PLAY.BAT"))!;
+    expect(program).toMatch(/^[A-Z0-9]{8}\/PLAY\.BAT$/u);
+    expect(new TextDecoder().decode(files["AUTOBOOT.DBP"])).toBe("C:\\" + program.replaceAll("/", "\\") + "\r\n");
+    expect(Array.from(files[program])).toEqual([1, 2, 3]);
+    expect(Array.from(projected.subarray(0, bytes.length))).toEqual(Array.from(bytes));
+  } finally {await range.dispose();}
+});
+
+it("normalizes legacy names for the core menu without choosing a program", async () => {
+  const bytes = legacyZip([{name: gbkProgramName, data: Uint8Array.of(1)}]);
+  const {range} = await mount(bytes, null);
+  try {
+    const files = unzipSync(await range.read(0, range.sizeBytes));
+    expect(Object.keys(files)).toEqual([expect.stringMatching(/^[A-Z0-9]{8}\/PLAY\.BAT$/u)]);
+    expect(files["AUTOBOOT.DBP"]).toBeUndefined();
+  } finally {await range.dispose();}
+});
+
+it("leaves an omitted ASCII entry as the real core menu with bounded metadata inspection", async () => {
   const bytes = zipSync({"a.exe": Uint8Array.of(1), "b.exe": Uint8Array.of(2)}), {range, reads} = await mount(bytes, null);
-  try {expect(range.sizeBytes).toBe(bytes.length); expect(reads).toEqual([[0, 1], [bytes.length - 1, 1]]);}
+  try {
+    expect(range.sizeBytes).toBe(bytes.length);
+    expect(Array.from(await range.read(0, bytes.length))).toEqual(Array.from(bytes));
+    expect(reads.every(([, length]) => length <= 262144)).toBe(true);
+    expect(unzipSync(await range.read(0, bytes.length))["AUTOBOOT.DBP"]).toBeUndefined();
+  }
   finally {await range.dispose();}
 });
 

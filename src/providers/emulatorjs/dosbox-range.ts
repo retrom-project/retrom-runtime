@@ -62,7 +62,8 @@ export async function prepareDOSBundle(resource: DOSIndexResource, session: Adap
   const disc = {sha256: resource.contentDigest, sizeBytes: file.sizeBytes};
   let range = new NeoCDRange(disc, reader, fail, "game.zip");
   try {
-    if (entryPath !== null) {range = new DOSAutobootRange(disc, reader, fail, await dosAutobootSuffix(range, entryPath));}
+    const suffix = await dosAutobootSuffix(range, entryPath);
+    if (suffix !== null) {range = new DOSAutobootRange(disc, reader, fail, suffix);}
     await Promise.all([range.read(0, 1), range.read(range.sizeBytes - 1, 1)]);
   }
   catch (error) {await range.dispose(); throw error;}

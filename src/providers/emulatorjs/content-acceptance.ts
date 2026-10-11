@@ -13,6 +13,7 @@ export function installContentAcceptance(realm: Window) {
   const diagnostics: string[] = [];
   const pending = new Set<(error: Error) => void>();
   let module: NativeModule | undefined, active = true;
+  let monitorTimer: number | undefined;
   const record = (values: unknown[]) => {
     if (!active) {return;}
     diagnostics.push(values.filter(value => typeof value === "string").join(" ").slice(-500));
@@ -30,8 +31,7 @@ export function installContentAcceptance(realm: Window) {
   Object.defineProperty(target, "EJS_Runtime", {configurable: true, enumerable: true,
     get: () => current, set: (factory: Factory | undefined) => {current = wrap(factory);},
   });
-  return {
-    wait(signal: AbortSignal): Promise<void> {
+  const wait = (signal: AbortSignal): Promise<void> => {
       return new Promise((resolve, reject) => {
         let timer: number | undefined, settled = false;
         const finish = (error?: Error) => {
@@ -58,9 +58,20 @@ export function installContentAcceptance(realm: Window) {
         };
         pending.add(finish); signal.addEventListener("abort", abort, {once: true}); poll();
       });
+    };
+  return {
+    wait,
+    monitor(signal: AbortSignal, onFailure: (error: Error) => void) {
+      const poll = () => {
+        if (!active || signal.aborted) {return;}
+        void wait(signal).then(() => {
+          if (active && !signal.aborted) {monitorTimer = target.setTimeout(poll, 250);}
+        }, error => {if (active && !signal.aborted) {onFailure(error);}});
+      };
+      poll();
     },
     cleanup() {
-      active = false;
+      active = false; target.clearTimeout(monitorTimer);
       for (const finish of pending) {finish(new Error("PLAYER_SESSION_ENDED"));}
       module = undefined; diagnostics.length = 0;
       if (previous) {Object.defineProperty(target, "EJS_Runtime", previous);}

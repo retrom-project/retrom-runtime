@@ -19,6 +19,8 @@ describe("Flycast player lifecycle", () => {
       3: {value: "1", value2: "START"},
     }});
     expect(first.runtimeWindow.EJS_dontExtractRom).toBe(true);
+    expect(first.runtimeWindow.EJS_disableCue).toBe(true);
+    expect(first.runtimeWindow.EJS_defaultOptions).toMatchObject({reicast_hle_bios: "enabled"});
     const saved = await first.player.checkpoint();
     expect(saved.format).toBe("flycast-state-v1-storage-v1");
     expect(gunzipSync(saved.bytes)).toEqual(snapshot);
@@ -45,7 +47,7 @@ async function mount(restore: Uint8Array | null, state: Uint8Array, format = "fl
   const target = emulatorJsProviderDefinition.targets.find((entry) => entry.id === "flycast")!;
   const manifest = projectProviderManifest(emulatorJsProviderDefinition).targets.find((entry) => entry.id === "flycast")!;
   const envelope = launchEnvelope();
-  Object.assign(envelope.resources[0], {kind: "SEEKABLE_BLOB", rangeRequired: true});
+  Object.assign(envelope.resources[0], {kind: "SEEKABLE_BLOB", rangeRequired: true, url: "/runtime/content/game/game.cdi"});
   Object.assign(envelope.runtime, {targetId: "flycast", capabilities: manifest.capabilities, checkpoint: manifest.checkpoint});
   if (restore) {envelope.restore = {kind: "HTTP", format, sha256: "a".repeat(64), sizeBytes: restore.length, url: "/restore"};}
   const frame = document.createElement("iframe"); document.body.append(frame);
@@ -60,7 +62,9 @@ async function mount(restore: Uint8Array | null, state: Uint8Array, format = "fl
   const load = vi.fn(async () => {}), toggle = vi.fn();
   const mounting = player.mount(document.createElement("div"));
   await vi.waitFor(() => expect(runtimeWindow.document.querySelector("script[data-retrom-loader]")).not.toBeNull());
-  runtimeWindow.EJS_emulator = {fileName: "game.chd", Module: {callMain: vi.fn()}, startGame: vi.fn(),
+  runtimeWindow.EJS_Runtime = async () => ({_retrom_content_load_result: () => 1});
+  await (runtimeWindow.EJS_Runtime as (config: object) => Promise<unknown>)({});
+  runtimeWindow.EJS_emulator = {fileName: "game.cdi", Module: {callMain: vi.fn()}, startGame: vi.fn(),
     gameManager: {getState: () => state, loadExplicitStateAndWait: load, toggleMainLoop: toggle}};
   (runtimeWindow.EJS_ready as () => void)();
   (runtimeWindow.EJS_onGameStart as () => void)();

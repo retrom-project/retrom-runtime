@@ -44,6 +44,14 @@ it.each([
     const settled = mounting.catch(() => undefined);
     await vi.waitFor(() => expect(runtimeWindow.document.querySelector("script[data-retrom-loader]")).not.toBeNull());
     expect(runtimeWindow.EJS_controlScheme).toBe(scheme);
+    if (["desmume", "desmume2015", "melonds"].includes(targetId)) {
+      expect(runtimeWindow.EJS_VirtualGamepadSettings).toEqual(expect.arrayContaining([
+        expect.objectContaining({text: "A", input_value: 8}),
+        expect.objectContaining({text: "B", input_value: 0}),
+        expect.objectContaining({text: "X", input_value: 9}),
+        expect.objectContaining({text: "Y", input_value: 1}),
+      ]));
+    }
     if (filename === "game.cpr") {
       expect(runtimeWindow.EJS_defaultOptions).toMatchObject({cap32_model: "6128+ (experimental)", cap32_gfx_colors: "24bit"});
     }
@@ -51,11 +59,11 @@ it.each([
       expect((runtimeWindow.EJS_defaultOptions as Record<string, unknown>).theodore_rom).toBe(model);
     }
     expect(runtimeWindow.EJS_defaultControls).toMatchObject({
-      0: {1: {value: "l", value2: targetId === "theodore" ? "BUTTON_1" : "BUTTON_4"}, 3: {value: "1", value2: "START"}},
+      0: {1: {value: "l", value2: ["genesis-plus-gx", "picodrive", "genesis-plus-gx-wide"].includes(targetId) && !["game.GG", "game.sg"].includes(filename) ? "BUTTON_1" : "BUTTON_4"}, 3: {value: "1", value2: "START"}},
     });
     if (targetId === "theodore") {
       expect(runtimeWindow.EJS_defaultControls).toMatchObject({0: {
-        1: {value2: "BUTTON_1"}, 8: {value2: "BUTTON_4"},
+        0: {value2: "BUTTON_1"}, 8: {value2: "BUTTON_2"}, 1: {value2: "BUTTON_4"},
       }});
     }
     if (["desmume", "desmume2015", "melonds"].includes(targetId)) {
@@ -84,6 +92,7 @@ it.each([
   } finally {
     await player.exit();
     expect(runtimeWindow.EJS_controlScheme).toBeUndefined();
+    expect(runtimeWindow.EJS_VirtualGamepadSettings).toBeUndefined();
     frame.remove();
   }
 });

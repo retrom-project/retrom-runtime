@@ -4,16 +4,16 @@ import {mountPx68k as mount} from "./adapter.js";
 import {decodeCheckpoint, encodeCheckpoint} from "./state.js";
 import {px68kFixture} from "../../tests/px68k-adapter-fixture.js";
 afterEach(() => {vi.restoreAllMocks(); vi.unstubAllGlobals(); document.body.replaceChildren();});
-it("sends standard Button 1 as joypad B without injecting Escape, and keeps keyboard input independent", async () => {
+it("sends standard bottom/right as TRIG1/TRIG2 without injecting Escape, and keeps keyboard input independent", async () => {
   const f = px68kFixture();
   const buttons = Array.from({length: 16}, () => ({pressed: false, touched: false, value: 0}));
   const pad = {connected: true, mapping: "standard", buttons, axes: []};
   vi.stubGlobal("navigator", {getGamepads: () => [pad]});
   const player = await mountPx68k(f.config, f.target, window, null, vi.fn(), vi.fn(), undefined, f.loader);
-  buttons[1]!.pressed = true; f.frame(100);
+  buttons[0]!.pressed = true; f.frame(100);
   expect(f.core._retrom_step).toHaveBeenLastCalledWith(1, 0);
   expect(f.core._retrom_key).not.toHaveBeenCalledWith(27, 1);
-  buttons[1]!.pressed = false; buttons[0]!.pressed = true; f.frame(120);
+  buttons[0]!.pressed = false; buttons[1]!.pressed = true; f.frame(120);
   expect(f.core._retrom_step).toHaveBeenLastCalledWith(1 << 8, 0);
   expect(f.core._retrom_key).not.toHaveBeenCalledWith(13, 1);
   for (const [code, key, native] of [["Escape", "Escape", 27], ["Enter", "Enter", 13], ["ArrowLeft", "ArrowLeft", 276], ["KeyZ", "z", 122]] as const) {

@@ -4,13 +4,14 @@ import provenance from "./arcade-provenance.json" with {type: "json"};
 import {arcadeAncestry} from "./arcade-ancestry.js";
 export type ArchiveMember = {name: string; sizeBytes: number; crc32: string};
 export type ArcadeMachine = {parent: string | null; bios: boolean; device?: boolean; runnable?: boolean; devices?: string[];
+  description?: string; year?: string; manufacturer?: string;
   roms: Array<{name: string; size: string; crc: string; sha1?: string; merge?: string; bios?: string; optional?: boolean}>};
 export type ArcadeCatalog = Readonly<Record<string, ArcadeMachine>>;
 export function playableArcadeMachine(machine: ArcadeMachine | undefined): machine is ArcadeMachine {
   return !!machine && !machine.bios && !machine.device && machine.runnable !== false;
 }
 
-/** Match DAT facts against actual members, so merged sets do not require redundant parent archives. */
+/** Match game Parent payloads against actual members; DAT firmware is delivered independently. */
 export function arcadeDependencies(coreId: string, config: RuntimeConfiguration, files: readonly RuntimeContentFile[],
   archives: Readonly<Record<string, readonly ArchiveMember[]>>, catalog: ArcadeCatalog) {
   if (config.content.kind !== "ARCADE") {return {parentFiles: [], missingParents: [], biosSets: []};}
@@ -37,15 +38,14 @@ export function arcadeDependencies(coreId: string, config: RuntimeConfiguration,
       else {parentFiles.push(file.logicalKey); availableMembers.push(...archives[file.logicalKey]);}
     }
   }
-  const missingBIOS = biosSets.filter(id => catalog[id].roms.some(rom => !rom.optional && !hasRom(availableMembers, rom)));
-  biosSets.splice(0, biosSets.length, ...missingBIOS);
-  biosSets.push(...devices.filter(({machine}) => machine.roms.some(rom => !rom.optional && !hasRom(availableMembers, rom)))
+  // An embedded firmware member must not suppress the DAT's independent BIOS
+  // requirement, even when its name, size and CRC match the selected core.
+  biosSets.push(...devices.filter(({machine}) => machine.roms.some(rom => !rom.optional))
     .map(({id}) => id).filter(id => !biosSets.includes(id)));
   return {parentFiles, missingParents, biosSets};
 }
 export function configuredMachine(coreId: string, config: RuntimeConfiguration, name: string) {
-  const explicit = config.cores?.[coreId]?.options?.machine;
-  return coreId === "mame_arcade" && typeof explicit === "string" ? explicit : archiveId(name);
+  return config.cores?.[coreId]?.romSet ?? archiveId(name);
 }
 function needsParent(coreId: string, direct: boolean, inherited: ArcadeMachine["roms"], members: ArchiveMember[]) {
   // The pinned CPS2 loader opens its named parent archive before looking at clone members.

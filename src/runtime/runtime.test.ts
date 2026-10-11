@@ -87,12 +87,12 @@ describe("unified runtime facts", () => {
     const original = prepareRuntime(request);
     expect(original.targetOptions.machine).toBe("pacman");
     const renamed = {...request, files: [file("renamed.zip")], archives: {"renamed.zip": []},
-      config: {content: {kind: "ARCADE", entryFile: "renamed.zip"}, cores: {mame_arcade: {options: {machine: "pacman"}}}}};
+      config: {content: {kind: "ARCADE", entryFile: "renamed.zip"}, cores: {mame_arcade: {romSet: "pacman"}}}};
     expect(prepareRuntime(renamed).targetOptions.machine).toBe("pacman");
     const savedContext = {coreId: original.coreId, providerId: original.providerId, targetId: original.targetId,
       coreFingerprint: original.coreFingerprint, romHash: original.romHash, checkpointFormat: original.checkpoint!.writeFormat,
-      content: original.config.content, runtimeOptions: original.targetOptions};
-    const restored = prepareRuntime({...renamed, config: {...renamed.config, cores: {mame_arcade: {options: {machine: "other"}}}},
+      content: original.config.content, runtimeOptions: original.targetOptions, romSet: original.romSet};
+    const restored = prepareRuntime({...renamed, config: {...renamed.config, cores: {mame_arcade: {romSet: "other"}}},
       savedContext});
     expect(restored.targetOptions.machine).toBe("pacman");
     expect(restored.config.content).toEqual({kind: "ARCADE", entryFile: "renamed.zip"});

@@ -2476,9 +2476,9 @@
       "repository": "https://github.com/retrom-project/mame",
       "upstreamCommit": "f65d5ba9bc42febea7cd76d4559827d0e1271581",
       "adapterAbi": "retrom-mame-dylink-v1",
-      "tag": "retrom-core-gf65d5ba9bc42-r3",
-      "commit": "11288494f6e4cc2334155223ec5575cb486aa242",
-      "metadataUrl": "https://github.com/retrom-project/mame/releases/download/retrom-core-gf65d5ba9bc42-r3/rpg-runtime-release.json",
+      "tag": "retrom-core-gf65d5ba9bc42-r4",
+      "commit": "ac55bf875f13ffb7686dde6e17608a52cd09b26e",
+      "metadataUrl": "https://github.com/retrom-project/mame/releases/download/retrom-core-gf65d5ba9bc42-r4/rpg-runtime-release.json",
       "assets": [
         {
           "filename": "LICENSES.txt",
@@ -2491,660 +2491,681 @@
           "filename": "mame-acorn.wasm",
           "output": "runtime/mame/mame-acorn.wasm",
           "maxSizeBytes": 134217728,
-          "sizeBytes": 855833,
-          "sha256": "b3d713a56ea84315a9de6b5e16c1beabded26e52f873c87cc5d9342acdae2ca8"
+          "sizeBytes": 809646,
+          "sha256": "57cfe9f210fceae99fdc6dc5cdec6c23131830a7971ec2960def908457ffbc07"
         },
         {
           "filename": "mame-apple.wasm",
           "output": "runtime/mame/mame-apple.wasm",
           "maxSizeBytes": 134217728,
-          "sizeBytes": 2140106,
-          "sha256": "c1792de8d8bacf12a3fa681c8b596bae2911ab357d45cdaecd030c04d603e437"
+          "sizeBytes": 2048159,
+          "sha256": "4a0a9ee8ed7e9f58fc58d54e07c5340434c78e07cca3a0646a2cd370544c4366"
         },
         {
           "filename": "mame-arcade.xml",
           "output": "runtime/mame/mame-arcade.xml",
           "maxSizeBytes": 67108864,
-          "sizeBytes": 34479812,
-          "sha256": "450599810917ce07863a085104bfd7ff01b243fa593c6bfe60fe2cc0348a127c"
+          "sizeBytes": 35705378,
+          "sha256": "10ef1994746d38f5507a75348a8d4185dff263afd20c6c74682bebcdc48f9282"
+        },
+        {
+          "filename": "mame-arcade_acorn.wasm",
+          "output": "runtime/mame/mame-arcade_acorn.wasm",
+          "maxSizeBytes": 134217728,
+          "sizeBytes": 122463,
+          "sha256": "eabfcc31911852a06e452d7cee8cf1e499fda2a0c798a955f118bf24bbdcb19b"
         },
         {
           "filename": "mame-arcade_alliedleisure.wasm",
           "output": "runtime/mame/mame-arcade_alliedleisure.wasm",
           "maxSizeBytes": 134217728,
           "sizeBytes": 148147,
-          "sha256": "7ab32c0a3df5f6af677d13bb8db345da618ad4dff78654cb87763b7016454d2c"
+          "sha256": "77d3d07a0b623a1aa1df8533b752099c4daa82aa569359e22f51f0dfc5bea018"
         },
         {
           "filename": "mame-arcade_alpha.wasm",
           "output": "runtime/mame/mame-arcade_alpha.wasm",
           "maxSizeBytes": 134217728,
           "sizeBytes": 610591,
-          "sha256": "a1ebb94888d261165519d1deb29aaf6798a654cd24aafdfa40c4905fc3ba41be"
+          "sha256": "8a7b3a4a17846ef2dbff83a780089c039f36166554ef35ca0e8954fd9266592e"
         },
         {
           "filename": "mame-arcade_arcadia.wasm",
           "output": "runtime/mame/mame-arcade_arcadia.wasm",
           "maxSizeBytes": 134217728,
           "sizeBytes": 83493,
-          "sha256": "485f37492fc9b336501374d052a6c0cb5ab1145d5b03ee8eac83d424313f384d"
+          "sha256": "8e0cc4cf47ad7dc2111250da631aa4b0b18de3664b3bd9876e00b2ad8a86bb39"
         },
         {
           "filename": "mame-arcade_atari.wasm",
           "output": "runtime/mame/mame-arcade_atari.wasm",
           "maxSizeBytes": 134217728,
           "sizeBytes": 4018033,
-          "sha256": "bd2be0359f8f96f650fb76ef4bd89a316018e4a201217b9b118dab1c10c6dce8"
+          "sha256": "98fca86e9213e0a4c7c6aa37fc5b7b1efab2d7f0e554740dc20e794844c5ef4c"
         },
         {
           "filename": "mame-arcade_atlus.wasm",
           "output": "runtime/mame/mame-arcade_atlus.wasm",
           "maxSizeBytes": 134217728,
-          "sizeBytes": 340309,
-          "sha256": "32a038d255d081885bec87b892953d79063f7697a113c683d22e3e68b263996a"
+          "sizeBytes": 340308,
+          "sha256": "74b347db9d627ea7a3404508b1d914b686a6ddb15dda9865396da2982280c681"
         },
         {
           "filename": "mame-arcade_bally.wasm",
           "output": "runtime/mame/mame-arcade_bally.wasm",
           "maxSizeBytes": 134217728,
           "sizeBytes": 939475,
-          "sha256": "631fb86d9f68fdc48744e2bb7cdaa80564dfe716cc1f4ed13df180fb7ed35e74"
+          "sha256": "c23ea1be1e2369d4a662369e64166eb4e334db2b1d492138bd3a0ab58005a3ee"
+        },
+        {
+          "filename": "mame-arcade_bmc.wasm",
+          "output": "runtime/mame/mame-arcade_bmc.wasm",
+          "maxSizeBytes": 134217728,
+          "sizeBytes": 50089,
+          "sha256": "603391ef08489382432f25a4c8a3d795bcb426d2454065bbbf99fda8658829e5"
         },
         {
           "filename": "mame-arcade_capcom.wasm",
           "output": "runtime/mame/mame-arcade_capcom.wasm",
           "maxSizeBytes": 134217728,
           "sizeBytes": 2721071,
-          "sha256": "1423ad1457aeea81c691f7ecb87f928be5a2994075271743a8fdf75c19b51a19"
+          "sha256": "2276b1b5bdb354f5a717630d855c83e89fdc9ebe19fb3650d6c88668a882a127"
         },
         {
           "filename": "mame-arcade_cinematronics.wasm",
           "output": "runtime/mame/mame-arcade_cinematronics.wasm",
           "maxSizeBytes": 134217728,
           "sizeBytes": 2575486,
-          "sha256": "e731519b09484d9acda0f1d796e40baf7b2e96ca558427058da0261246bf51eb"
+          "sha256": "d20e43ad03798ebd7ca7ee264588b615c273262c7610600c666ee2fac9e3614d"
         },
         {
           "filename": "mame-arcade_comad.wasm",
           "output": "runtime/mame/mame-arcade_comad.wasm",
           "maxSizeBytes": 134217728,
           "sizeBytes": 74481,
-          "sha256": "52b730c2fc706983a799788830461073aa054b5c26134baa8cf732bda767262e"
+          "sha256": "62b254aa014dfde70abc3ea8f12c41b92eb2cb356b61c7e58fccfe5ef7142e4b"
         },
         {
           "filename": "mame-arcade_dataeast.wasm",
           "output": "runtime/mame/mame-arcade_dataeast.wasm",
           "maxSizeBytes": 134217728,
           "sizeBytes": 3045820,
-          "sha256": "01dc2be0de8898e6020b316ba66bd255dc0830dc0f57884ce6154f832d8ea8d5"
+          "sha256": "d96796a5d58da1738ac60150c1211c0aa94fdb07af0a05d41d01c8f547be1225"
         },
         {
           "filename": "mame-arcade_ddr.wasm",
           "output": "runtime/mame/mame-arcade_ddr.wasm",
           "maxSizeBytes": 134217728,
           "sizeBytes": 44915,
-          "sha256": "38d822ed95926ee4d05bf997e064c6ac79ce7dda5584a16e6c828beafb6327b4"
+          "sha256": "18365a4f732f8375424bb7771dec09b950d58b9fd12225130c400d5fa9250834"
         },
         {
           "filename": "mame-arcade_dec.wasm",
           "output": "runtime/mame/mame-arcade_dec.wasm",
           "maxSizeBytes": 134217728,
           "sizeBytes": 211717,
-          "sha256": "0ab1c98a94f0c5d06cd2b291355a80d2e397b61d062123c9a56878e4097eebd7"
+          "sha256": "4fac3fa563dd1ea0a5af84c747cc4c9068ae6088ad46b67fd898d16210d869f6"
+        },
+        {
+          "filename": "mame-arcade_dgrm.wasm",
+          "output": "runtime/mame/mame-arcade_dgrm.wasm",
+          "maxSizeBytes": 134217728,
+          "sizeBytes": 39318,
+          "sha256": "d8236b868570a2c8ded9e258f86deded72de3848ceef4faca9381c19174cf4fa"
         },
         {
           "filename": "mame-arcade_dooyong.wasm",
           "output": "runtime/mame/mame-arcade_dooyong.wasm",
           "maxSizeBytes": 134217728,
           "sizeBytes": 187990,
-          "sha256": "75395305ff72c98a3d75694cdba899d04ff38d20cd9bbbc56ea6dab4c004f0cb"
+          "sha256": "425ad0246023d9dda4de99f51d82e1dd61687b0acdce4fa9bbadd2e452568b1f"
         },
         {
           "filename": "mame-arcade_dynax.wasm",
           "output": "runtime/mame/mame-arcade_dynax.wasm",
           "maxSizeBytes": 134217728,
           "sizeBytes": 1194223,
-          "sha256": "5a1abbe64b93ec6493503516b28e9e63e6d5b2496f124e7ca2c90a01ec192fb8"
+          "sha256": "af7673c8b1a1aebcbc5081006914c8490c220e384b8513a3e7a7bf5db66ad5a2"
         },
         {
           "filename": "mame-arcade_edevices.wasm",
           "output": "runtime/mame/mame-arcade_edevices.wasm",
           "maxSizeBytes": 134217728,
-          "sizeBytes": 184984,
-          "sha256": "588a09193c7a90e48c66d060bbf7d500c700a1a6e6184fe192f721f35d2c30b6"
+          "sizeBytes": 184983,
+          "sha256": "84401750471b58ff9b2920f2d742cadcc5bd0510f48262adf34190ff5fa8d218"
         },
         {
           "filename": "mame-arcade_eolith.wasm",
           "output": "runtime/mame/mame-arcade_eolith.wasm",
           "maxSizeBytes": 134217728,
-          "sizeBytes": 92646,
-          "sha256": "bd4b11a6380ebe2464a959f8c5bf4b59cde752bdcdc5d2df2c70a47a66a19048"
+          "sizeBytes": 202486,
+          "sha256": "bb46eb3f4e2f8a2a6ba4f7afba4ed25a4e8414f101f911215c7b9ca9afc1156b"
         },
         {
           "filename": "mame-arcade_excellent.wasm",
           "output": "runtime/mame/mame-arcade_excellent.wasm",
           "maxSizeBytes": 134217728,
           "sizeBytes": 85644,
-          "sha256": "0cbc1a3d642d855ff5d6a43fae2ec17d23ac3893ff791c1dcc1971a378c29c38"
+          "sha256": "0123fc8de9af2af38effdcb1cf51040ad73be6055181a1024d787cfbf4a3ebd1"
         },
         {
           "filename": "mame-arcade_exidy.wasm",
           "output": "runtime/mame/mame-arcade_exidy.wasm",
           "maxSizeBytes": 134217728,
           "sizeBytes": 846691,
-          "sha256": "5baa8723cd3eed958cd0c8d66a3e7612e00d5eb6952d2d5900f8ba5f8749067b"
+          "sha256": "dd5514fc05444b8aa3562ceedd2beb91eea1cf44c283061d8627555566c1fe62"
         },
         {
           "filename": "mame-arcade_f32.wasm",
           "output": "runtime/mame/mame-arcade_f32.wasm",
           "maxSizeBytes": 134217728,
           "sizeBytes": 65712,
-          "sha256": "cbab0367c06baf7f2089bb53f6490bb534b07fdfb002ca157843e0c3fb28e6fd"
+          "sha256": "cf3f5f9059e6be049a75cbb6ce15f717c6b0d622f4441c143b78968a81ada077"
         },
         {
           "filename": "mame-arcade_fuuki.wasm",
           "output": "runtime/mame/mame-arcade_fuuki.wasm",
           "maxSizeBytes": 134217728,
           "sizeBytes": 113811,
-          "sha256": "c9d5124c3598effcaa5b69ab6dc02a85c0f6d924c9f6c44441ea5019fc389d30"
+          "sha256": "50c70d1241c2a852eb9e7dbf5b46a3db3ffd071136f10656fff0c202b9bc8755"
         },
         {
           "filename": "mame-arcade_gaelco.wasm",
           "output": "runtime/mame/mame-arcade_gaelco.wasm",
           "maxSizeBytes": 134217728,
-          "sizeBytes": 563598,
-          "sha256": "4fac1f2c4d8b8cbaab99c2295c86ede092ac2dc4185c88fed0fc80375f048b63"
+          "sizeBytes": 690776,
+          "sha256": "d1f71b1580c75b1aa0d1fbc1b6bf4de7028d945bc1da21a0ddd2081ceaab2ee7"
         },
         {
           "filename": "mame-arcade_galaxian.wasm",
           "output": "runtime/mame/mame-arcade_galaxian.wasm",
           "maxSizeBytes": 134217728,
           "sizeBytes": 1387264,
-          "sha256": "1861a83cdcb19635468eadbed195fc3b2cd3682f1b171e53a51a0f045216eae1"
+          "sha256": "1b2f9a0e1e6b132eed1fb87d202754322c4de2a1f4bee31fb7cdcdc0c68c83e0"
         },
         {
           "filename": "mame-arcade_gametron.wasm",
           "output": "runtime/mame/mame-arcade_gametron.wasm",
           "maxSizeBytes": 134217728,
           "sizeBytes": 50658,
-          "sha256": "e7b053106ed6eb16dfa6274d4eb5a0b6218c635a07f5c509e0548e3fca73c684"
+          "sha256": "a50af23035f63a5e9ef20ea5be83b94af39272e51ef95f5ebede56c7eb2961c3"
         },
         {
           "filename": "mame-arcade_gottlieb.wasm",
           "output": "runtime/mame/mame-arcade_gottlieb.wasm",
           "maxSizeBytes": 134217728,
-          "sizeBytes": 276909,
-          "sha256": "5f6a8465a58797cbe644bf9a30419127b10a10cbcad8f916e5b6e5e7cdc94717"
+          "sizeBytes": 276906,
+          "sha256": "1df80a0350197c660a57aa9416574244e12e9d5308c64bc567a600fdac64ef79"
         },
         {
           "filename": "mame-arcade_ice.wasm",
           "output": "runtime/mame/mame-arcade_ice.wasm",
           "maxSizeBytes": 134217728,
-          "sizeBytes": 64957,
-          "sha256": "97b3b0e5f9abca02baa97eacb579e2e09f351e4f6198a8576eb3483d844c9126"
+          "sizeBytes": 87658,
+          "sha256": "c39eb76d8e4694b2e4b2a87c3e6e37ea2ddfe2e9f69c110200bc0478e1bd812b"
         },
         {
           "filename": "mame-arcade_igs.wasm",
           "output": "runtime/mame/mame-arcade_igs.wasm",
           "maxSizeBytes": 134217728,
-          "sizeBytes": 768837,
-          "sha256": "1fe60925bf0d8744b7875dbd5dcb48be2627a0612e3e33aa7ca95404608fdc48"
+          "sizeBytes": 1000673,
+          "sha256": "5d5dd9972d8c3045f73e014fdac8286df9f4015907dfbf30e5ac60fa9c423ae7"
         },
         {
           "filename": "mame-arcade_irem.wasm",
           "output": "runtime/mame/mame-arcade_irem.wasm",
           "maxSizeBytes": 134217728,
           "sizeBytes": 1195710,
-          "sha256": "89443712ed76c5427e4e37570575265bd8071501981e28818e95831863822927"
+          "sha256": "92775d3d4f35fdae6bdb6966ea34d45acea88bed24e3d1420fec548ea6685785"
         },
         {
           "filename": "mame-arcade_itech.wasm",
           "output": "runtime/mame/mame-arcade_itech.wasm",
           "maxSizeBytes": 134217728,
-          "sizeBytes": 546126,
-          "sha256": "ce87b346e80062af9d0a92bb49a823dbd3702035f203bda2bfeace020a82996a"
+          "sizeBytes": 546115,
+          "sha256": "4ada707395ecaaafc25bf9e5fc4d618e26ee57bc7bf8f3690924d7bb674afa96"
         },
         {
           "filename": "mame-arcade_jaleco.wasm",
           "output": "runtime/mame/mame-arcade_jaleco.wasm",
           "maxSizeBytes": 134217728,
-          "sizeBytes": 1366876,
-          "sha256": "ab18e3fa1bad6bad82b5e1a123cacd142ec0a49c463bafd7c6ce20c0954c37bf"
+          "sizeBytes": 1372348,
+          "sha256": "46217a47330ad55cd35dd1fc4f5712a0b3aa5ab433d02da6dcfff03bb6f4e2d8"
         },
         {
           "filename": "mame-arcade_kaneko.wasm",
           "output": "runtime/mame/mame-arcade_kaneko.wasm",
           "maxSizeBytes": 134217728,
           "sizeBytes": 902137,
-          "sha256": "a98895257247551ad180b45e9b5c2e5a6cb7eab10037c5b3b1937d66667f9108"
+          "sha256": "786ee379b24074a248b7078a45ae5e65b77d7cfce18e058c8a9d3dd143fc17c3"
         },
         {
           "filename": "mame-arcade_konami.wasm",
           "output": "runtime/mame/mame-arcade_konami.wasm",
           "maxSizeBytes": 134217728,
-          "sizeBytes": 3325625,
-          "sha256": "14e871eef084dd15dbbb543aaa427ea003ce62d0b8257e97fbfbcd314b39a44d"
+          "sizeBytes": 4771610,
+          "sha256": "8180b19b20171056726c8e510b665c34c424f0c0ec68ee428559c97fa0df6d6b"
         },
         {
           "filename": "mame-arcade_meadows.wasm",
           "output": "runtime/mame/mame-arcade_meadows.wasm",
           "maxSizeBytes": 134217728,
           "sizeBytes": 74016,
-          "sha256": "5702c38a639e23758a1ea060e5d71dee9f47d0fb45975ef83aeeef0ce283f28e"
+          "sha256": "faef955eb04ac962942674bac0ee75e8a9cb13fed841dfb23bf1031fdaaed39f"
         },
         {
           "filename": "mame-arcade_metro.wasm",
           "output": "runtime/mame/mame-arcade_metro.wasm",
           "maxSizeBytes": 134217728,
           "sizeBytes": 451131,
-          "sha256": "f97e4cce33db3340744ecf2a272d06602adb03d013c9a861df399033a233ce41"
+          "sha256": "7fcb80fb80bf5a8b52ad5a345f6be38b45214426a221041984ea72551459614a"
         },
         {
           "filename": "mame-arcade_midcoin.wasm",
           "output": "runtime/mame/mame-arcade_midcoin.wasm",
           "maxSizeBytes": 134217728,
           "sizeBytes": 41347,
-          "sha256": "5e203aa8b2aa8fbc1d03c8e800456fb38d4bbbb3f27dffb3094a877f1fdd397f"
+          "sha256": "3a1c804e9b50eb22ea7f5924bd70dcdb1176b7c12f089028898dd17ee2b9de76"
         },
         {
           "filename": "mame-arcade_midw8080.wasm",
           "output": "runtime/mame/mame-arcade_midw8080.wasm",
           "maxSizeBytes": 134217728,
           "sizeBytes": 1118632,
-          "sha256": "ef85c0fa5f180833dda415813f7bd81a2d6d8f96a46e5ab05713d6919a936aea"
+          "sha256": "7c29e1191dcbe4ce1200148a69479983f72bb3a766170414c505d3ce3217390e"
         },
         {
           "filename": "mame-arcade_misc.wasm",
           "output": "runtime/mame/mame-arcade_misc.wasm",
           "maxSizeBytes": 134217728,
-          "sizeBytes": 1768021,
-          "sha256": "e162eb277ac55ed9dcaa6dda7a2864f6a3cc5559dc95bcd61ef1b152f41a2778"
+          "sizeBytes": 2071310,
+          "sha256": "a59c1421b76f32f5ca81b938bbeb57a90c5e07c5b4951bf6bddd5e96e860dac4"
         },
         {
           "filename": "mame-arcade_model2.wasm",
           "output": "runtime/mame/mame-arcade_model2.wasm",
           "maxSizeBytes": 134217728,
-          "sizeBytes": 1496053,
-          "sha256": "258a15d6620fc675a0517c1ae19f32dff9dcc2afd360056d926b11a377a360cf"
+          "sizeBytes": 889262,
+          "sha256": "5ac26a5ef9cd087d80d4a27e008c78c543a61899ae87db98be8f7b5745f2477e"
         },
         {
           "filename": "mame-arcade_modelracing.wasm",
           "output": "runtime/mame/mame-arcade_modelracing.wasm",
           "maxSizeBytes": 134217728,
           "sizeBytes": 190247,
-          "sha256": "1da2ccd4e67be2ab6536f6f514df8f00beaf3813f352e7df6130ad30a8d92a80"
+          "sha256": "9b329039e1fb2952873ca2b2b9b9ee5eb4994a020620e6b853d9ec67ef64538d"
         },
         {
           "filename": "mame-arcade_namco.wasm",
           "output": "runtime/mame/mame-arcade_namco.wasm",
           "maxSizeBytes": 134217728,
-          "sizeBytes": 4465793,
-          "sha256": "d8975bd5ab83f8afd0095e4f8b0d65fc4cb82b6555245168a62ab33b11f96573"
+          "sizeBytes": 4469224,
+          "sha256": "5166ac8ea4e91d49ccf4f5fa34f6fb8b925861d3905d7b74ec51607fcde74858"
         },
         {
           "filename": "mame-arcade_nasco.wasm",
           "output": "runtime/mame/mame-arcade_nasco.wasm",
           "maxSizeBytes": 134217728,
           "sizeBytes": 61441,
-          "sha256": "7d59eac6b4b86bdc6cda21184944d9df89f5d41d0bf1b33916508266480eda92"
+          "sha256": "358ead1ee8712742a97d7a5f445f859c4de87e6aa0997e5af1b5987e61afaba2"
         },
         {
           "filename": "mame-arcade_nichibutsu.wasm",
           "output": "runtime/mame/mame-arcade_nichibutsu.wasm",
           "maxSizeBytes": 134217728,
-          "sizeBytes": 1235588,
-          "sha256": "bf5b358762d6c94781fa0c013840173bc36c84798314f7dcb81e8ed1ced56f97"
+          "sizeBytes": 1228642,
+          "sha256": "7541b4b5294de710c30e3a5d27b6a182762b0d8f660c4e63ad678a93bef520f8"
         },
         {
           "filename": "mame-arcade_nintendo.wasm",
           "output": "runtime/mame/mame-arcade_nintendo.wasm",
           "maxSizeBytes": 134217728,
-          "sizeBytes": 1512794,
-          "sha256": "39d92418971ce1c6ab44fe61917d9d4d82109a645b304f3575118b6c06866243"
+          "sizeBytes": 1867791,
+          "sha256": "c8cfa57c91eb538794f007163437173ecb7c401043aa726aab58afb97a572357"
         },
         {
           "filename": "mame-arcade_nix.wasm",
           "output": "runtime/mame/mame-arcade_nix.wasm",
           "maxSizeBytes": 134217728,
-          "sizeBytes": 89074,
-          "sha256": "6038bea753a40fa3909d33f9ce44a055081aab859e2685006984568d194438e8"
+          "sizeBytes": 89057,
+          "sha256": "b88b099c8cd2caaa5a4db2ea22daa95011a23bcaae9123db3b61af39c51eab70"
         },
         {
           "filename": "mame-arcade_nmk.wasm",
           "output": "runtime/mame/mame-arcade_nmk.wasm",
           "maxSizeBytes": 134217728,
           "sizeBytes": 584155,
-          "sha256": "aea257a87c43589d67f8c6139fdff5d28f33aaac54f2e714196789a8e3618d1b"
+          "sha256": "4852a8e593a78d7279369b6c04ba8b2867d0807f3051cd68ec6335d52fb5d166"
         },
         {
           "filename": "mame-arcade_novag.wasm",
           "output": "runtime/mame/mame-arcade_novag.wasm",
           "maxSizeBytes": 134217728,
           "sizeBytes": 71549,
-          "sha256": "01595244ef78aafcd4aba23091d27412e6206c002135c46bc8722e21ad52630f"
+          "sha256": "4f7f817260a80dbda19b27cd1f36ce2425dcf8e92f05ff99d0de63d6dc479931"
         },
         {
           "filename": "mame-arcade_olympia.wasm",
           "output": "runtime/mame/mame-arcade_olympia.wasm",
           "maxSizeBytes": 134217728,
           "sizeBytes": 60373,
-          "sha256": "59aec9c3eccb7878cb4ee03328e47dd6ac22fae5fc526c27fb1e599c93d47e4c"
+          "sha256": "ae9d4cf7e9f04db861904247828dc19c6211092b0f486392a82f14f16f068636"
         },
         {
           "filename": "mame-arcade_omori.wasm",
           "output": "runtime/mame/mame-arcade_omori.wasm",
           "maxSizeBytes": 134217728,
           "sizeBytes": 68067,
-          "sha256": "ff0e1130452f83df92b9b99b74894fa51a80507e7b1df1c3e46c5bf7bcef4fe0"
+          "sha256": "79909c6c34c4d5b9734f66608b4baee109a8e0fc342bf297b9a09f87e100291f"
         },
         {
           "filename": "mame-arcade_orca.wasm",
           "output": "runtime/mame/mame-arcade_orca.wasm",
           "maxSizeBytes": 134217728,
-          "sizeBytes": 265161,
-          "sha256": "70700b93a3f5802c562398d19720814340ca466ca6286ff5d96cff4551b32ac9"
+          "sizeBytes": 265159,
+          "sha256": "215a5454f221fffed57224223d5c2d8ff463af5f7c9148b2f39589e2e69fb20b"
         },
         {
           "filename": "mame-arcade_pacific.wasm",
           "output": "runtime/mame/mame-arcade_pacific.wasm",
           "maxSizeBytes": 134217728,
           "sizeBytes": 89227,
-          "sha256": "5ec4ce4a7f41e4501a0b8d53bd47a7997203e81a8609ad3dc036c3a28a5cbf39"
+          "sha256": "5fc4b38b6c53d85bfce1eda02d8a408174a2530342192c99abd5ea97c365e21b"
         },
         {
           "filename": "mame-arcade_phoenix.wasm",
           "output": "runtime/mame/mame-arcade_phoenix.wasm",
           "maxSizeBytes": 134217728,
-          "sizeBytes": 245516,
-          "sha256": "ee784aed2db6db09a4de516fe373365f480616b454f89b8316dc29da0c71372c"
+          "sizeBytes": 245510,
+          "sha256": "bbd499bfda0da48fcabb7d22a6441312eb9d57b8f8c695261692bef3db9a2f8d"
         },
         {
           "filename": "mame-arcade_playmark.wasm",
           "output": "runtime/mame/mame-arcade_playmark.wasm",
           "maxSizeBytes": 134217728,
-          "sizeBytes": 216341,
-          "sha256": "5189e3103c624b25eab2dc9a59008c55877a5e44a2163b34e70bb0f671ec9ba1"
+          "sizeBytes": 216339,
+          "sha256": "31de09b0f8023bf2f8c08a81cf13aea192cef2ffb31e2a308990e58755391c49"
         },
         {
           "filename": "mame-arcade_promat.wasm",
           "output": "runtime/mame/mame-arcade_promat.wasm",
           "maxSizeBytes": 134217728,
           "sizeBytes": 53009,
-          "sha256": "207205f438ce1ffe53620337610a1444b3cc3eb717c7d1d0ae2f762580262ace"
+          "sha256": "c98e280fe1f621085dbd4f903bb053703abf910259070e5b45975d54bef61eb1"
         },
         {
           "filename": "mame-arcade_psikyo.wasm",
           "output": "runtime/mame/mame-arcade_psikyo.wasm",
           "maxSizeBytes": 134217728,
-          "sizeBytes": 254669,
-          "sha256": "c4f51a891ad2e2ecf27fbcdf9b95400d7c7f8c0132a899a27b58b7656b4adcb6"
+          "sizeBytes": 254668,
+          "sha256": "40f66913f0b192cf35d18e31a17f8f5e38d51b55c244eeebe1c90097cecbb1fc"
         },
         {
           "filename": "mame-arcade_ramtek.wasm",
           "output": "runtime/mame/mame-arcade_ramtek.wasm",
           "maxSizeBytes": 134217728,
           "sizeBytes": 202996,
-          "sha256": "1708a8acc98c6d508f87fa5137295e6e282adce1ed01ff2fd54b20a4565f5658"
+          "sha256": "86e907db877ca39bb61ba68aa77591cb0ae370467d843e44e6b190d25337bbc7"
         },
         {
           "filename": "mame-arcade_rare.wasm",
           "output": "runtime/mame/mame-arcade_rare.wasm",
           "maxSizeBytes": 134217728,
           "sizeBytes": 160808,
-          "sha256": "0a789a981501cd247888176cd33f3fa47ec9d085a4b008a0fddf100f3805bb55"
+          "sha256": "a913c12d34fb0a0037c0c17cdd6a2cfc850eecfaf50c6a67d405bff98fb7220b"
         },
         {
           "filename": "mame-arcade_sanritsu.wasm",
           "output": "runtime/mame/mame-arcade_sanritsu.wasm",
           "maxSizeBytes": 134217728,
-          "sizeBytes": 236422,
-          "sha256": "0e133a67541ea904b7e06cb1d6752fa4c1f4ebf6503b892c05cdfeb46be5d017"
+          "sizeBytes": 236418,
+          "sha256": "97e89dac987a994b4011f92a77ffc79fcbb1768f3ce7b4b7c17a75d2e83cc39c"
         },
         {
           "filename": "mame-arcade_sega.wasm",
           "output": "runtime/mame/mame-arcade_sega.wasm",
           "maxSizeBytes": 134217728,
-          "sizeBytes": 6594805,
-          "sha256": "920dbfe3bdf0103695a1370cf5acbd53d9605646ae36ef9cc2e86ebb76f3c8b3"
+          "sizeBytes": 6675096,
+          "sha256": "882b74cdaf9fbcdaaa3b9dc1fadf144741620481ba5ffc228908b8bfaea4bcd2"
         },
         {
           "filename": "mame-arcade_seibu.wasm",
           "output": "runtime/mame/mame-arcade_seibu.wasm",
           "maxSizeBytes": 134217728,
           "sizeBytes": 990026,
-          "sha256": "08d3ef89ba0a7f7cc423a46aa900a6c650eceeb22f4388142c8eb5929df8eb5f"
+          "sha256": "9153210693672b43af033178437be92ee05d760d9ba7c243a5a9bfdbcd3f2f5c"
         },
         {
           "filename": "mame-arcade_seta.wasm",
           "output": "runtime/mame/mame-arcade_seta.wasm",
           "maxSizeBytes": 134217728,
-          "sizeBytes": 1201213,
-          "sha256": "3a9447eca205f16037e6e58ff6920d0b8c9ff81507da1576dd981821060456a0"
+          "sizeBytes": 1266310,
+          "sha256": "838867e45385a104d731129339bc374a34e1ba338969f8585a13186ca6006cdc"
         },
         {
           "filename": "mame-arcade_sigma.wasm",
           "output": "runtime/mame/mame-arcade_sigma.wasm",
           "maxSizeBytes": 134217728,
           "sizeBytes": 120712,
-          "sha256": "a60a7d6b472ccc6ecf543bf320a5f56e34014d064ca2e47ef695cfe0a0302466"
+          "sha256": "06f3694e2558ebd1c9cc620c710cb548cfd794cb76c514b5f846b1b6df5f7a68"
         },
         {
           "filename": "mame-arcade_skeleton.wasm",
           "output": "runtime/mame/mame-arcade_skeleton.wasm",
           "maxSizeBytes": 134217728,
           "sizeBytes": 78123,
-          "sha256": "50e303f8022c55f4d560262374d5c67347a08fad0b473fa9ba8d47dd201ab555"
+          "sha256": "e4b9c9cf94f5c7a0989e01c0fc1f4bc66c409bb64b8554c80b7b931d2ce441b6"
         },
         {
           "filename": "mame-arcade_snk.wasm",
           "output": "runtime/mame/mame-arcade_snk.wasm",
           "maxSizeBytes": 134217728,
           "sizeBytes": 2898911,
-          "sha256": "c4ad2775fc696f72052b2fef677e2152dc81c4ff7572c62e19be73c3185b45a9"
+          "sha256": "92e0c29b2357da4c4f823b727e042001583c7c9bc7ad196bc6031632ef01ba4f"
         },
         {
           "filename": "mame-arcade_sony.wasm",
           "output": "runtime/mame/mame-arcade_sony.wasm",
           "maxSizeBytes": 134217728,
-          "sizeBytes": 535467,
-          "sha256": "9941ddb39fdfb99a8ac633da46eb42df633d6cbeb2a86eb734b02b5a7cc5f26b"
+          "sizeBytes": 661776,
+          "sha256": "ad8e3512e0fd63615f03d978815e00293ab1980c71bda23190cdad007c963189"
         },
         {
           "filename": "mame-arcade_stern.wasm",
           "output": "runtime/mame/mame-arcade_stern.wasm",
           "maxSizeBytes": 134217728,
-          "sizeBytes": 234592,
-          "sha256": "89303089e1349a40f1cf73d4b2de8b4db6283e5f6636ea370f92585138cf3d30"
+          "sizeBytes": 234591,
+          "sha256": "5c84fe2e53bd7ee3d7d1bdd1bb6e69196c852aaa3421d3a60cea0f609c5dfd0c"
         },
         {
           "filename": "mame-arcade_suna.wasm",
           "output": "runtime/mame/mame-arcade_suna.wasm",
           "maxSizeBytes": 134217728,
-          "sizeBytes": 235995,
-          "sha256": "54f11fa02fc30db8f14e2025720e284afcf498174c0a873c760323574c6653bf"
+          "sizeBytes": 235994,
+          "sha256": "3e858bb23ee23f97d04188be4d0c0403cf7cf3e9a6a7b3fec1d3f1e1063d0e11"
         },
         {
           "filename": "mame-arcade_sunelectronics.wasm",
           "output": "runtime/mame/mame-arcade_sunelectronics.wasm",
           "maxSizeBytes": 134217728,
           "sizeBytes": 277503,
-          "sha256": "0651395f514c6a2b683334d2efc07ffd0c35a522afff1c358e655601b9b743f8"
+          "sha256": "9e8274ad5e58a2ec624c51696cdfd9ad0c6011e6ec046a2d2a9bb049af5ab20f"
         },
         {
           "filename": "mame-arcade_taito.wasm",
           "output": "runtime/mame/mame-arcade_taito.wasm",
           "maxSizeBytes": 134217728,
-          "sizeBytes": 4352687,
-          "sha256": "4bb97dedc331a34a39d2eacd95a4b56295f6afd8d3c123507046641b72ee4425"
+          "sizeBytes": 4638693,
+          "sha256": "ba26ac67c67913b845114fe8ff8a2c4e582eee3885906c5e1d291120a0c9fecf"
         },
         {
           "filename": "mame-arcade_tatsumi.wasm",
           "output": "runtime/mame/mame-arcade_tatsumi.wasm",
           "maxSizeBytes": 134217728,
-          "sizeBytes": 121268,
-          "sha256": "cbdaf65f06e6f049e4500972698ae55ff8d33e3b29e89b1e1ef0d890b8aea110"
+          "sizeBytes": 178221,
+          "sha256": "0a4e4eac62b4345510ede01f00609fb9af0854f885488ed5f06d5e34d5498bf0"
         },
         {
           "filename": "mame-arcade_tch.wasm",
           "output": "runtime/mame/mame-arcade_tch.wasm",
           "maxSizeBytes": 134217728,
-          "sizeBytes": 84452,
-          "sha256": "fbc8e93af25e71f3ef688392230215927e512c099fa3a010522aa99202ce4df1"
+          "sizeBytes": 130302,
+          "sha256": "3bda26a5a084f011a16eed96f14e1db1f7e31f148f636ca81cd778e0617f7098"
         },
         {
           "filename": "mame-arcade_tecfri.wasm",
           "output": "runtime/mame/mame-arcade_tecfri.wasm",
           "maxSizeBytes": 134217728,
           "sizeBytes": 164761,
-          "sha256": "f3ad4239030c1ac44f5939889db39a6d4c48d29a31ef18450996711b47b190c8"
+          "sha256": "270d004155ea3f933557f2d12a58062cb4ead916f8db320fd6b9e5cfa68751a3"
         },
         {
           "filename": "mame-arcade_technos.wasm",
           "output": "runtime/mame/mame-arcade_technos.wasm",
           "maxSizeBytes": 134217728,
           "sizeBytes": 626513,
-          "sha256": "352e24810d2c9a91569ff83390af286784c668c89fab0d5532a53e561ee93383"
+          "sha256": "6ad76014ae2a9644697427a853c5ebe5bc404209d7f8fe1651c444114d7e9960"
         },
         {
           "filename": "mame-arcade_tecmo.wasm",
           "output": "runtime/mame/mame-arcade_tecmo.wasm",
           "maxSizeBytes": 134217728,
           "sizeBytes": 531152,
-          "sha256": "7b332ff57bd9f296c952b2a60bca804f081e79b85bdc539e6f9ef73166da229f"
+          "sha256": "3ea8ce5f5671e3667faf5c13ea92bc2b97ed3f8b1ad00eb2254ef3192d194c15"
         },
         {
           "filename": "mame-arcade_toaplan.wasm",
           "output": "runtime/mame/mame-arcade_toaplan.wasm",
           "maxSizeBytes": 134217728,
           "sizeBytes": 884144,
-          "sha256": "f43694b4b7224e37cdd8cead5f13e3908309f12d9816f7c7cdae002a4873ffd3"
+          "sha256": "826cc69e3eb5fe84a09e6afb063dcde90cee502707f7c72687b6abc720f4b45a"
         },
         {
           "filename": "mame-arcade_unico.wasm",
           "output": "runtime/mame/mame-arcade_unico.wasm",
           "maxSizeBytes": 134217728,
           "sizeBytes": 134264,
-          "sha256": "53c9fdc1c04265cd5b00787012c864e4f855c8dfde94fea93d059ae547757dd3"
+          "sha256": "26eb1ca9a7381a7aac359a461e59616cbe1fcfdcd7eb9f859a0b97874c488b03"
         },
         {
           "filename": "mame-arcade_universal.wasm",
           "output": "runtime/mame/mame-arcade_universal.wasm",
           "maxSizeBytes": 134217728,
-          "sizeBytes": 434170,
-          "sha256": "8e8c2b9169d8b6765cca0e0c05e33263d90c2373a669995ebaf7476c42c14213"
+          "sizeBytes": 434165,
+          "sha256": "ee9c56b80e05cdd24af5afc613b80c617f5ce82d6015727d439d668639afc86b"
         },
         {
           "filename": "mame-arcade_upl.wasm",
           "output": "runtime/mame/mame-arcade_upl.wasm",
           "maxSizeBytes": 134217728,
-          "sizeBytes": 195540,
-          "sha256": "e8d19bb858eb6075c12403430417e79954a5d833a947fb9e753ff33d7d7580ba"
+          "sizeBytes": 195528,
+          "sha256": "c29a45b48fa93eab8c0ea3679b84473ce5ee8a3136252b6eed0761c05ac52c25"
         },
         {
           "filename": "mame-arcade_valadon.wasm",
           "output": "runtime/mame/mame-arcade_valadon.wasm",
           "maxSizeBytes": 134217728,
           "sizeBytes": 135494,
-          "sha256": "c7f60877d9e2a240b92cee51030a83c2463003474cbdbfd864e59cfe7662569e"
+          "sha256": "3fb8e00ac4ba9857f76e55648e36d27a1264e052d191c482050b59c32fe8dd00"
         },
         {
           "filename": "mame-arcade_videogames.wasm",
           "output": "runtime/mame/mame-arcade_videogames.wasm",
           "maxSizeBytes": 134217728,
           "sizeBytes": 295677,
-          "sha256": "2db50f2a5b772432cb6eb39ae6e0ea90bfa6d19934865d158d6aa8bd46ee094b"
+          "sha256": "9b697df4bd573ec44be11226755548d6bd8fef8107f89227b28af1eb19b92ffd"
         },
         {
           "filename": "mame-arcade_vsystem.wasm",
           "output": "runtime/mame/mame-arcade_vsystem.wasm",
           "maxSizeBytes": 134217728,
           "sizeBytes": 748091,
-          "sha256": "e06abd5c80f90dbac0bc4d17360683d6005cb97241f4530daed0aee1f60acb6f"
+          "sha256": "19e46108c36e404f1956f8608230f5adea805f1abbf60178e18334099e8318f2"
         },
         {
           "filename": "mame-arcade_williams.wasm",
           "output": "runtime/mame/mame-arcade_williams.wasm",
           "maxSizeBytes": 134217728,
-          "sizeBytes": 2458737,
-          "sha256": "7b07f51dee6d6eaf7d1f1343a11ce6e5126aae88ccbca834e52e9899ddeedd7d"
+          "sizeBytes": 2014346,
+          "sha256": "b8bbc9d999e2f513dedb89427d3e4683e37004980d886d7fe9f9d5621bcbe6f9"
         },
         {
           "filename": "mame-arcade_yachiyo.wasm",
           "output": "runtime/mame/mame-arcade_yachiyo.wasm",
           "maxSizeBytes": 134217728,
           "sizeBytes": 38276,
-          "sha256": "66695f143d2eecbe3e9681a5b6fbc8045f15b20487d8946b5501e6049b2e3958"
+          "sha256": "323a4290d6d89988296c590525cc7b2b5806d68b5a608e2768aea12a3a18409f"
         },
         {
           "filename": "mame-arcade_yunsung.wasm",
           "output": "runtime/mame/mame-arcade_yunsung.wasm",
           "maxSizeBytes": 134217728,
-          "sizeBytes": 150519,
-          "sha256": "f82e40c0016fb7b5bb84f29d19f8b8501624f785ace4c4d0a6f3e99d92b17111"
+          "sizeBytes": 150518,
+          "sha256": "b5abb48b4b83a48d7d6f542b992d92dfef5fd4612dd4ccd8c87ddae7a84b450b"
         },
         {
           "filename": "mame-arcade_zaccaria.wasm",
           "output": "runtime/mame/mame-arcade_zaccaria.wasm",
           "maxSizeBytes": 134217728,
           "sizeBytes": 253662,
-          "sha256": "84704b2748d7e82f4045f4b66eeb5c7cf6750c08c010e942bfa6f51b736970ba"
+          "sha256": "27a86fc087779e5e512b25f61e7e9ff3f9e9a56416b31add0caa6a583060e538"
         },
         {
           "filename": "mame-build.json",
           "output": "runtime/mame/mame-build.json",
           "maxSizeBytes": 2097152,
-          "sizeBytes": 225972,
-          "sha256": "d6749f955300ca1db6c6f2db792b3f744e5f2e6752731369f1a76058381d9bae"
+          "sizeBytes": 236132,
+          "sha256": "aa72e3a68cf1ab342429b249c99074fc8413cc5d69c143c5337084e38c7a0d3b"
         },
         {
           "filename": "mame-coleco.wasm",
           "output": "runtime/mame/mame-coleco.wasm",
           "maxSizeBytes": 134217728,
           "sizeBytes": 130828,
-          "sha256": "14fe377e3f64216a45bda30e1bb84207cb4003b83f7777d0bcd657d8187faf39"
+          "sha256": "bcdea014bb7d9add3fed793e5da18a05575e3d8d1aa45f80c1dda6eff0a7a2e4"
         },
         {
           "filename": "mame-common.mjs",
           "output": "runtime/mame/mame-common.mjs",
-          "maxSizeBytes": 2097152,
-          "sizeBytes": 2045176,
-          "sha256": "0cb5308f1f7484c7aa887bffda55e13e2824c7116d9aea56427cfd7eee59a666"
+          "maxSizeBytes": 4194304,
+          "sizeBytes": 2140161,
+          "sha256": "7f50ee494e2f4dc328e3615114f553370e34c8b5c010c914bda148ee492efc85"
         },
         {
           "filename": "mame-common.wasm",
           "output": "runtime/mame/mame-common.wasm",
           "maxSizeBytes": 268435456,
-          "sizeBytes": 131529484,
-          "sha256": "911567b2dd39eebab1e6d5139b3c6324f6ad4b2a32a006457a3e9c10d4036567"
+          "sizeBytes": 132628017,
+          "sha256": "c9e714af9217720296a7fbdace28b71051cf15bdde20bcd095074b869429b20f"
         },
         {
           "filename": "mame-pacman.wasm",
           "output": "runtime/mame/mame-pacman.wasm",
           "maxSizeBytes": 134217728,
           "sizeBytes": 454510,
-          "sha256": "d7e06b86b3e7b85ce03257268af32049e7b6128c1eba44d8335cc73365ea16b9"
+          "sha256": "4e2a0efebc68c43accec83df480307b86b1fecca1f9f1b1dd333608e3fc68b95"
         },
         {
           "filename": "mame-sg1000.wasm",
           "output": "runtime/mame/mame-sg1000.wasm",
           "maxSizeBytes": 134217728,
-          "sizeBytes": 717214,
-          "sha256": "0da129ec655ff0237846f24affaa149f5004803a22f5eb1579deee5e108f9e6e"
+          "sizeBytes": 717212,
+          "sha256": "f3b9cc11efa66262ee4e19ad3e0f5470dd66e8cdcf109f6fb33df48e819844d1"
         },
         {
           "filename": "mame-vintage.wasm",
           "output": "runtime/mame/mame-vintage.wasm",
           "maxSizeBytes": 134217728,
           "sizeBytes": 43035,
-          "sha256": "f0c1c4f72e9ff8351ba9ff6be685329bf4d8c589475943e5fb27e0f00b13da04"
+          "sha256": "98580dfe7a2061b578cf90cac89d1543dcfbe90c9ddd3dce79a249c7457d4c9e"
         }
       ],
       "archive": {
         "filename": "mame-current-assets.zip",
         "format": "zip",
-        "sizeBytes": 33349625,
-        "sha256": "100d760a3d10d2de84ea5a802161aac8aa297ba414a019deda3ccc7771d77b5d",
-        "url": "https://github.com/retrom-project/mame/releases/download/retrom-core-gf65d5ba9bc42-r3/mame-current-assets.zip"
+        "sha256": "edd576272836fd03ac96e7f3794420aac4e4516590b80283f7c69b8e2e9b51d3",
+        "sizeBytes": 34319069,
+        "url": "https://github.com/retrom-project/mame/releases/download/retrom-core-gf65d5ba9bc42-r4/mame-current-assets.zip"
       }
     },
     {

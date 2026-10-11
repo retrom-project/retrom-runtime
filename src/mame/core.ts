@@ -35,7 +35,7 @@ export async function loadCore(config: MameParameters, content: AdapterContentOp
   const sizes = files.map(name => content.assetIndex[`assets/mame/${name}`]?.sizeBytes ?? 0);
   const total = sizes.reduce((a, b) => a + b, 0), ready = sizes.map(() => 0);
   const loaded = await Promise.all(files.map((name, i) => loadCoreAsset(content, new URL(name, base).href,
-    `assets/mame/${name}`, name.endsWith(".wasm") ? 256 * 1024 * 1024 : 2 * 1024 * 1024, content.signal,
+    `assets/mame/${name}`, name.endsWith(".wasm") ? 256 * 1024 * 1024 : 4 * 1024 * 1024, content.signal,
     progress => {ready[i] = progress.readyBytes; content.reportProgress?.({phase: "RUNTIME_ASSET", loadedBytes: ready.reduce((a, b) => a + b, 0), totalBytes: total});})));
   return withStartupTask(content.startup, "CORE_INITIALIZATION", async () => {
     const build = manifest.build;

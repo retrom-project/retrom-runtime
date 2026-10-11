@@ -2,6 +2,7 @@ import {eagerPolicy} from "../../provider/content-policies.js";
 import {defineAdapter, defineTarget} from "../../provider/declarations.js";
 import {checkpointFormat, checkpointLimit} from "../../mame/state.js";
 import arcadeFamilies from "../../mame/arcade-families.json" with {type: "json"};
+import arcadeProvenance from "../../runtime/arcade-provenance.json" with {type: "json"};
 export const mameAdapter = defineAdapter({id: "mame-dylink", kind: "MAME_DYLINK", abi: "retrom-mame-dylink-v1",
   capabilities: {checkpoint: true, pause: true, screenshot: true, standardGamepad: true, frameCounter: true, volume: true},
   checkpoint: {semantics: "INSTANT", writeFormat: checkpointFormat, readFormats: [checkpointFormat]},
@@ -42,6 +43,7 @@ export const mamePV1000Target = defineTarget({...mameAppleTarget, id: "mame-pv10
   assetPaths: mameAppleTarget.assetPaths.map(path => path.replace("mame-apple.wasm", "mame-vintage.wasm")),
 });
 export const mameArcadeTarget = defineTarget({...mameAppleTarget, id: "mame-arcade", displayName: "MAME Current Arcade",
+  romSetSelection: {datSHA256: arcadeProvenance.find(source => source.coreId === "mame_arcade")!.sha256, driver: "MACHINE_OPTION"},
   contentIO: {game: eagerPolicy(128 * 1024 * 1024),
     external: eagerPolicy(128 * 1024 * 1024),
     parent: eagerPolicy(128 * 1024 * 1024),

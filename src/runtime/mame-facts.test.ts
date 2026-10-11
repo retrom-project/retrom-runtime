@@ -1,12 +1,21 @@
 import {readFileSync} from "node:fs";
 import {gunzipSync} from "node:zlib";
 import {expect, it} from "vitest";
-import type {ArcadeCatalog, ArchiveMember} from "./arcade.js";
+import {playableArcadeMachine, type ArcadeCatalog, type ArchiveMember} from "./arcade.js";
 import {contentBIOSRequirements, prepareRuntime} from "./prepare.js";
 
 const tables: Record<string, ArcadeCatalog> = JSON.parse(gunzipSync(
   readFileSync("assets/facts/arcade-catalog.json.gz")).toString());
 const catalog = tables.mame_arcade;
+const currentDriverCoverage = ["crysking", "denseib", "ffight3b", "bballoon", "dendego", "dendego2", "hyperbbc",
+  "kingdrbb", "renju", "tarzanc", "topbladv", "twrshaft", "gradius4", "megaphx", "slrassltj", "starsldr",
+  "shikigam", "mk4", "coolridr", "finalapr", "gticlub", "midnrun", "ppcar", "speedrcr", "speedup",
+  "wheelfir", "windheat", "bmcbowl", "evosocc", "fiveside", "nbapbp", "pokechmp", "skimaxx", "ttchamp"];
+
+it.each(currentDriverCoverage)("includes the compiled Current arcade driver %s in the MAME DAT", machine => {
+  expect(playableArcadeMachine(catalog[machine])).toBe(true);
+  expect(catalog[machine].roms.length).toBeGreaterThan(0);
+});
 function request(machine: string, extra: ArchiveMember[] = []) {
   const file = {logicalKey: "game", name: `${machine}.zip`, sizeBytes: 100, sha256: "a".repeat(64)};
   return {directory: {platformId: "arcade", defaultCoreId: "mame_arcade", allowedCoreIds: ["mame_arcade"]},
@@ -25,10 +34,13 @@ it("prepares Renegade with the exact device firmware omitted from its game ROM l
   expect(contentBIOSRequirements(input).biosRequirements).toEqual(prepared.biosRequirements);
 });
 
-it("does not require another firmware archive when the game already contains the device ROM", () => {
+it("still requires the DAT device firmware archive when the game already contains its ROM", () => {
   const input = request("renegade", [{name: "bootstrap.bin", sizeBytes: 115, crc32: "f70a8620"}]);
-  expect(prepareRuntime(input).biosRequirements).toEqual([]);
-  expect(contentBIOSRequirements(input).biosRequirements).toEqual([]);
+  const prepared = prepareRuntime(input);
+  expect(prepared.biosRequirements).toEqual([expect.objectContaining({
+    logicalName: "m68705p5.zip", required: true, virtualPath: "content/roms/m68705p5.zip",
+  })]);
+  expect(contentBIOSRequirements(input).biosRequirements).toEqual(prepared.biosRequirements);
 });
 
 it("declares the referenced billboard firmware once using its actual DAT requirement", () => {

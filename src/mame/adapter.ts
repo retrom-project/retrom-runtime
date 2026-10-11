@@ -67,8 +67,12 @@ export async function mountMame(config: MameParameters, target: HTMLElement, win
     return {
       exit, getCanvas: () => stopped ? null : canvas, getFrameCount: () => frames,
       getDisplayAspectRatio: () => core._retrom_mame_aspect_ratio(),
-      getCheckpointAvailability: () => stopped ? {available: false, blocker: "NOT_READY"} :
-        core._retrom_mame_save_size() > 0 ? {available: true, blocker: null} : {available: false, blocker: "UNSUPPORTED"},
+      getCheckpointAvailability: () => {
+        if (stopped) {return {available: false, blocker: "NOT_READY"};}
+        const size = core._retrom_mame_save_size();
+        return size > 0 && size <= checkpointLimit - 108 ?
+          {available: true, blocker: null} : {available: false, blocker: "UNSUPPORTED"};
+      },
       checkpoint: async () => {
         active(); const size = core._retrom_mame_save_size();
         if (size < 1 || size > checkpointLimit - 108) {throw new Error("MAME_CHECKPOINT_UNAVAILABLE");}

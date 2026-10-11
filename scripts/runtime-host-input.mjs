@@ -1,16 +1,16 @@
 import {createHash} from "node:crypto";
 import {createReadStream, constants} from "node:fs";
-import {open, readFile, writeFile, lstat, mkdtemp, copyFile, chmod, rm, readdir, mkdir} from "node:fs/promises";
+import {open, readFile, lstat, mkdtemp, copyFile, chmod, rm, readdir, mkdir} from "node:fs/promises";
 import {fileURLToPath} from "node:url";
 import {execFile} from "node:child_process";
 import {promisify} from "node:util";
 import {tmpdir} from "node:os";
 import {join, dirname} from "node:path";
 import {gunzipSync, crc32} from "node:zlib";
-import {unzipSync, zipSync} from "fflate";
 import {parseRuntimeConfiguration, contentHash, runtimeBindings, identifyPSXRegion, resolveSavedRuntimeRequest,
   contentBIOSRequirements, dosEntryCandidates, arcadeParentOptions, resolveRuntimeTarget} from "../dist/runtime/index.js";
-import {decodeZIPName} from "../dist/content-io/zip-name.js";
+import {zipMembers, requireLocator, safePath, sha256} from "./runtime-archive-input.mjs";
+export {parentArchive} from "./runtime-archive-input.mjs";
 
 export async function configureHostInput(input) {
   contentHash(input.files, "TREE");
@@ -94,7 +94,10 @@ const flycastTables = new Map();
 export async function flycastTable(root, requirement) {
   if (typeof root !== "string" || !root.startsWith("/")) {throw new Error("RUNTIME_FLYCAST_CATALOG_UNAVAILABLE");}
   const key = `${root}:${requirement.core.sha256}:${requirement.catalog.sha256}`;
-  if (!flycastTables.has(key)) {
+  if (!flycastTables.has(key)) {flycastTables.set(key, loadFlycastTable(root, requirement));}
+  return flycastTables.get(key);
+}
+async function loadFlycastTable(root, requirement) {
     const readAsset = async (reference, maximum) => {
       const handle = await open(join(root, reference.path), constants.O_RDONLY | constants.O_NOFOLLOW);
       try {
@@ -118,9 +121,7 @@ export async function flycastTable(root, requirement) {
       !Array.isArray(machine.files) || machine.files.some(file => typeof file.name !== "string" ||
         !Number.isSafeInteger(file.sizeBytes) || file.sizeBytes < 0 || typeof file.optional !== "boolean" ||
         file.crc32 !== null && !/^[0-9a-f]{8}$/iu.test(file.crc32)))) {throw new Error("RUNTIME_FLYCAST_CATALOG_INVALID");}
-    flycastTables.set(key, catalog);
-  }
-  return flycastTables.get(key);
+    return catalog;
 }
 
 /** Read only evidence needed for BIOS rules; Parent and other launch resources remain unprepared. */
@@ -263,7 +264,7 @@ async function cueReferences(input, file) {
 }
 
 /** Stream an ordinary, deterministic STORE ZIP without retaining the project bytes in memory. */
-export async function assembleResource(input) {
+export async function assembleResource(input, signal) {
   if (!Array.isArray(input.files) || !input.files.length || input.files.length >= 65535 ||
     typeof input.outputPath !== "string" || !input.outputPath.startsWith("/")) {throw new Error("RUNTIME_RESOURCE_INVALID");}
   const rows = input.files.map(file => ({file, name: input.paths?.[file.logicalKey] ?? file.logicalKey}));
@@ -271,12 +272,14 @@ export async function assembleResource(input) {
   rows.sort((a, b) => Buffer.from(a.name).compare(Buffer.from(b.name)));
   const output = await open(input.outputPath, "wx", 0o600), resultHash = createHash("sha256"), central = []; let offset = 0;
   const emit = async bytes => {
+    signal?.throwIfAborted();
     let at = 0;
     while (at < bytes.length) {const {bytesWritten} = await output.write(bytes, at, bytes.length - at); if (!bytesWritten) {throw new Error("RUNTIME_RESOURCE_WRITE_FAILED");} at += bytesWritten;}
     resultHash.update(bytes); offset += bytes.length; if (offset >= 0xffffffff) {throw new Error("RUNTIME_RESOURCE_TOO_LARGE");}
   };
   try {
     for (const {file, name} of rows) {
+      signal?.throwIfAborted();
       const path = requireLocator(input, file), info = await lstat(path);
       if (!info.isFile() || info.isSymbolicLink()) {throw new Error("RUNTIME_CONTENT_CHANGED");}
       const source = await open(path, "r");
@@ -315,72 +318,7 @@ function zipCentral(name, start, size, crc) {
   return Buffer.concat([header, name]);
 }
 
-export async function parentArchive(input) {
-  if (!Array.isArray(input.files) || input.files.length < 1 || input.files.length > 32 ||
-    typeof input.outputPath !== "string" || !input.outputPath.startsWith("/")) {throw new Error("RUNTIME_PARENT_INVALID");}
-  const members = Object.create(null), hashes = new Map(); let expanded = 0;
-  for (const file of input.files) {
-    const path = requireLocator(input, file), info = await lstat(path);
-    if (!info.isFile() || info.isSymbolicLink() || info.size !== file.sizeBytes || info.size > 512 * 1024 * 1024) {throw new Error("RUNTIME_PARENT_INVALID");}
-    const index = await zipMembers(path);
-    expanded += index.reduce((sum, item) => sum + item.sizeBytes, 0);
-    if (expanded > 512 * 1024 * 1024) {throw new Error("RUNTIME_PARENT_TOO_LARGE");}
-    const bytes = await readFile(path);
-    if (sha256(bytes) !== file.sha256) {throw new Error("RUNTIME_CONTENT_CHANGED");}
-    const files = unzipSync(bytes);
-    for (const [name, content] of Object.entries(files)) {
-      if (!safePath(name) || name.endsWith("/")) {throw new Error("RUNTIME_PARENT_INVALID");}
-      const hash = sha256(content), existing = hashes.get(name);
-      if (existing && existing !== hash) {throw new Error("RUNTIME_PARENT_MEMBER_CONFLICT");}
-      hashes.set(name, hash); members[name] = [content, {level: 0, mtime: new Date("1980-01-01T00:00:00Z")}];
-    }
-  }
-  const bytes = zipSync(Object.fromEntries(Object.keys(members).sort().map(key => [key, members[key]])));
-  await writeFile(input.outputPath, bytes, {flag: "wx", mode: 0o600});
-  return {path: input.outputPath, sizeBytes: bytes.byteLength, sha256: sha256(bytes)};
-}
-
-async function zipMembers(path) {
-  const handle = await open(path, "r");
-  try {
-    const info = await handle.stat();
-    const length = Math.min(info.size, 65557), tail = Buffer.alloc(length);
-    await handle.read(tail, 0, length, info.size - length);
-    let end = -1;
-    for (let i = tail.length - 22; i >= 0; i--) {if (tail.readUInt32LE(i) === 0x06054b50) {end = i; break;}}
-    if (end < 0 || tail.readUInt16LE(end + 4) !== 0 || tail.readUInt16LE(end + 6) !== 0) {throw new Error("RUNTIME_ARCHIVE_INVALID");}
-    const count = tail.readUInt16LE(end + 10), size = tail.readUInt32LE(end + 12), offset = tail.readUInt32LE(end + 16);
-    if (count === 65535 || size > 64 * 1024 * 1024 || offset + size > info.size) {throw new Error("RUNTIME_ARCHIVE_LIMIT");}
-    const directory = Buffer.alloc(size); await handle.read(directory, 0, size, offset);
-    const result = [], names = new Set(); let at = 0;
-    for (let i = 0; i < count; i++) {
-      if (at + 46 > size || directory.readUInt32LE(at) !== 0x02014b50 || directory.readUInt16LE(at + 8) & 1) {throw new Error("RUNTIME_ARCHIVE_INVALID");}
-      const length = directory.readUInt16LE(at + 28), extra = directory.readUInt16LE(at + 30), comment = directory.readUInt16LE(at + 32);
-      if (at + 46 + length + extra + comment > size) {throw new Error("RUNTIME_ARCHIVE_INVALID");}
-      let name;
-      try {name = decodeZIPName(directory.subarray(at + 46, at + 46 + length), directory.readUInt16LE(at + 8),
-        directory.subarray(at + 46 + length, at + 46 + length + extra));}
-      catch {throw new Error("RUNTIME_ARCHIVE_INVALID");}
-      if (!safePath(name.replace(/\/$/u, "")) || names.has(name)) {throw new Error("RUNTIME_ARCHIVE_INVALID");}
-      names.add(name);
-      if (!name.endsWith("/")) {result.push({name, sizeBytes: directory.readUInt32LE(at + 24), crc32: directory.readUInt32LE(at + 16).toString(16).padStart(8, "0")});}
-      at += 46 + length + extra + comment;
-    }
-    if (at !== size) {throw new Error("RUNTIME_ARCHIVE_INVALID");}
-    return result;
-  } finally {await handle.close();}
-}
-function requireLocator(input, file) {
-  const path = input.locators?.[file.logicalKey];
-  if (typeof path !== "string" || !path.startsWith("/")) {throw new Error("RUNTIME_CONTENT_LOCATOR_REQUIRED");}
-  return path;
-}
-function safePath(path) {return typeof path === "string" && path.length > 0 && path.length <= 4096 && !path.startsWith("/") &&
-  !path.includes("\\") && [...path].every(character => character.charCodeAt(0) >= 32 && character.charCodeAt(0) !== 127) &&
-  path.split("/").every(part => part && part !== "." && part !== "..");}
-function sha256(bytes) {return createHash("sha256").update(bytes).digest("hex");}
-
-export async function detectScummvm(input) {
+export async function detectScummvm(input, signal) {
   if (typeof input.providerRoot !== "string" || !input.providerRoot.startsWith("/") ||
     typeof input.treeRoot !== "string" || !input.treeRoot.startsWith("/")) {throw new Error("RUNTIME_DETECTION_INPUT_INVALID");}
   const providerRoot = input.providerRoot;
@@ -407,7 +345,7 @@ export async function detectScummvm(input) {
     await copyFile(join(providerRoot, source), tool); await chmod(tool, 0o700);
     const {stdout} = await promisify(execFile)(tool, ["--config=/dev/null", "--retrom-detect", "--recursive",
       `--path=${input.treeRoot}`, `--savepath=${temporary}`], {cwd: temporary, timeout: 45000, maxBuffer: 16 * 1024 * 1024,
-      env: {LANG: "C.UTF-8", HOME: temporary, XDG_CONFIG_HOME: temporary}});
+      signal, env: {LANG: "C.UTF-8", HOME: temporary, XDG_CONFIG_HOME: temporary}});
     const output = JSON.parse(stdout);
     if (output.schemaVersion !== 1 || output.upstreamCommit !== manifest.upstreamCommit || output.error !== null ||
       !Array.isArray(output.candidates) || output.candidates.length > 4096) {throw new Error("RUNTIME_DETECTION_RESULT_INVALID");}
@@ -425,7 +363,8 @@ export async function detectScummvm(input) {
 
 let tables;
 export async function arcadeTables() {
-  return tables ??= JSON.parse(gunzipSync(await readFile(fileURLToPath(new URL("../assets/facts/arcade-catalog.json.gz", import.meta.url)))));
+  return tables ??= readFile(fileURLToPath(new URL("../assets/facts/arcade-catalog.json.gz", import.meta.url)))
+    .then(bytes => JSON.parse(gunzipSync(bytes)));
 }
 export async function identifyHostBIOS(input) {
   const {identifyBIOSFile} = await import("../dist/runtime/index.js");

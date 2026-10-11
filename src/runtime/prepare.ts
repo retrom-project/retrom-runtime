@@ -5,7 +5,7 @@ import type {ResourceKind, TargetDeclaration} from "../provider/declarations.js"
 import {resolveRuntimeTarget} from "./catalog.js";
 import {thomsonModelOptions} from "./thomson.js";
 import {parseRuntimeConfiguration, validateConfigurationFiles} from "./configuration.js";
-import {arcadeDependencies, type ArcadeCatalog, type ArchiveMember} from "./arcade.js";
+import {arcadeDependencies, configuredMachine, type ArcadeCatalog, type ArchiveMember} from "./arcade.js";
 import {arcadeBIOSRequirements, resolveBIOSRequirements} from "./bios.js";
 import {validateFlycastCartridge, type FlycastMachine} from "./flycast-cartridge.js";
 import {arcadeCRCWarnings, type CRCWarning} from "./arcade-crc.js";
@@ -86,7 +86,7 @@ export function resolveSavedRuntimeRequest<T extends PrepareRuntimeRequest>(requ
     content = {...content, entryFile: request.files[0].logicalKey};
   }
   const config: RuntimeConfiguration = {content, cores: {[saved.coreId]: {
-    ...current.cores?.[saved.coreId], options,
+    ...current.cores?.[saved.coreId], options, romSet: saved.romSet,
   }}};
   const normalized = {...request, config, coreId: saved.coreId, savedContext: undefined};
   const actualOptions = prepareTargetOptions(config, target, saved.coreId, request.files);
@@ -99,9 +99,10 @@ export function resolveSavedRuntimeRequest<T extends PrepareRuntimeRequest>(requ
 function savedContext(value: unknown): SaveContext {
   const saved = value;
   if (!object(saved) || !exact(saved, ["coreId", "providerId", "targetId", "coreFingerprint", "romHash",
-    "checkpointFormat", "content", "runtimeOptions"]) || !identifier(saved.coreId) || !identifier(saved.providerId) ||
+    "checkpointFormat", "content", "runtimeOptions"], ["romSet"]) || !identifier(saved.coreId) || !identifier(saved.providerId) ||
     !identifier(saved.targetId) || !digest(saved.coreFingerprint) || !digest(saved.romHash) ||
-    typeof saved.checkpointFormat !== "string" || !object(saved.runtimeOptions)) {configurationFailure("RUNTIME_SAVED_CONTEXT_INVALID");}
+    typeof saved.checkpointFormat !== "string" || !object(saved.runtimeOptions) ||
+    saved.romSet !== undefined && (typeof saved.romSet !== "string" || !/^[a-z0-9_]{1,128}$/u.test(saved.romSet))) {configurationFailure("RUNTIME_SAVED_CONTEXT_INVALID");}
   return saved as SaveContext;
 }
 
@@ -141,7 +142,10 @@ export function prepareRuntime(request: PrepareRuntimeRequest) {
     crcWarnings = arcadeCRCWarnings(selectedCore, config, request.files, request.archives, request.arcadeCatalog);
     if (dependencies.missingParents.length) {configurationFailure("RUNTIME_PARENT_MISSING", {parents: dependencies.missingParents.join(",")});}
   }
+  const entryKey = "entryFile" in config.content ? config.content.entryFile : null;
+  const entry = request.files.find(file => file.logicalKey === entryKey);
   return {...identity, config, targetOptions, dependencies,
+    ...(target.romSetSelection && entry ? {romSet: configuredMachine(selectedCore, config, entry.name)} : {}),
     crcWarnings,
     biosRequirements: [...resolveBIOSRequirements({providerId: binding.providerId, targetId: binding.targetId, config,
       files: request.files, firmwareEvidence: request.firmwareEvidence}),
@@ -163,11 +167,11 @@ function prepareTargetOptions(config: RuntimeConfiguration, target: TargetDeclar
     options.startupXp3Path = config.content.kind === "KIRIKIRI_PROJECT" && config.content.entryFile.toLowerCase().endsWith(".xp3")
       ? projectPaths([config.content.entryFile], config.content.entryFile)[config.content.entryFile] : null;
   }
-  if (target.id === "mame-arcade" && options.machine === undefined) {
+  if (target.romSetSelection?.driver === "MACHINE_OPTION") {
     const key = "entryFile" in config.content ? config.content.entryFile : "";
     const name = files.find(file => file.logicalKey === key)?.name;
     if (!name) {configurationFailure("RUNTIME_ENTRY_MISSING");}
-    options.machine = name.split("/").at(-1)!.replace(/\.[^.]+$/u, "");
+    options.machine = configuredMachine(coreId, config, name);
   }
   try {return validateTargetOptionsAgainstSchema(options, target.targetOptionsSchema);}
   catch {configurationFailure("RUNTIME_OPTIONS_INVALID", {coreId});}
@@ -179,6 +183,7 @@ function contentResources(config: RuntimeConfiguration, target: TargetDeclaratio
   if (!game) {configurationFailure("RUNTIME_DECLARATION_INVALID");}
   const parent = config.cores?.[coreId]?.parentFiles ?? [];
   const resources: ResourcePlan[] = [gameResource(game.kind, config, files)];
+  arcadeResourcePath(resources[0], config, target, coreId, files);
   if (game.kind === "NATIVE_WEB" || game.kind === "ISOLATED_WEB") {
     const bridges = target.assetPaths.filter(path => path.endsWith("/bridge.js"));
     if (bridges.length !== 1) {configurationFailure("RUNTIME_DECLARATION_INVALID");}
@@ -198,6 +203,14 @@ function contentResources(config: RuntimeConfiguration, target: TargetDeclaratio
     resources.push({role: "parent", kind: "PARENT_ARCHIVE", ordinal: 0, files: parent});
   }
   return resources;
+}
+
+function arcadeResourcePath(resource: ResourcePlan, config: RuntimeConfiguration, target: TargetDeclaration,
+  coreId: string, files: readonly RuntimeContentFile[]) {
+  if (config.content.kind !== "ARCADE" || target.romSetSelection?.driver !== "CONTENT_BASENAME") {return;}
+  const key = config.content.entryFile, name = files.find(file => file.logicalKey === key)?.name;
+  if (!name) {configurationFailure("RUNTIME_ENTRY_MISSING");}
+  resource.paths = {[key]: `${configuredMachine(coreId, config, name)}.zip`};
 }
 
 function gameResource(kind: ResourceKind, config: RuntimeConfiguration, files: readonly RuntimeContentFile[]): ResourcePlan {

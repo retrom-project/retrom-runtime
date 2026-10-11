@@ -9,7 +9,7 @@ export type RuntimeContent =
   | {kind: "SCUMMVM_PROJECT"}
   | {kind: "ONS_PROJECT" | "KIRIKIRI_PROJECT" | "BUTTERSCOTCH_PROJECT" | "TYRANOSCRIPT_PROJECT" |
       "NXENGINE_PROJECT" | "DAPHNE_PROJECT"; entryFile: string};
-export type CoreConfiguration = {parentFiles?: string[]; options?: TargetOptionsV1};
+export type CoreConfiguration = {parentFiles?: string[]; options?: TargetOptionsV1; romSet?: string};
 export type RuntimeConfiguration = {content: RuntimeContent; cores?: Record<string, CoreConfiguration>};
 
 /** Files have immutable content identities. Database IDs and host storage paths remain outside configuration. */
@@ -22,6 +22,7 @@ export type SaveContext = RuntimeIdentity & {
   checkpointFormat: string;
   runtimeOptions: TargetOptionsV1;
   content: RuntimeContent;
+  romSet?: string;
 };
 export type ResourcePlan = {
   role: string; kind: ResourceKind; ordinal: number; files: string[];

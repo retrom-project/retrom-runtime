@@ -15,13 +15,16 @@ const request = {directory: {platformId: "arcade", defaultCoreId: "fbneo", allow
 
 it("allows named, correctly sized game/Parent/BIOS members with mismatched CRC and returns review warnings", () => {
   expect(arcadeDependencies("fbneo", request.config, files, request.archives, catalog))
-    .toEqual({parentFiles: ["parent.zip"], missingParents: [], biosSets: []});
+    .toEqual({parentFiles: ["parent.zip"], missingParents: [], biosSets: ["firmware"]});
   const projected = contentBIOSRequirements(request);
   expect(projected.crcWarnings).toEqual(expect.arrayContaining([
     {role: "PARENT", file: "parent.zip", member: rom.name, expectedCRC32: rom.crc, actualCRC32: "ffffffff"},
     {role: "BIOS", file: "child.zip", member: firmware.name, expectedCRC32: firmware.crc, actualCRC32: "ffffffff"},
   ]));
   expect(prepareRuntime(request).crcWarnings).toEqual(projected.crcWarnings);
+  expect(prepareRuntime(request).biosRequirements).toEqual([expect.objectContaining({
+    requirementKey: "emulatorjs/fbneo/firmware.zip", required: true,
+  })]);
 });
 it("does not turn a truly missing or wrong-sized game ROM into a CRC warning", () => {
   const archives = {...request.archives, "parent.zip": [{...member(rom), sizeBytes: 5}]};

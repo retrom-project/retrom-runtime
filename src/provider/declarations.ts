@@ -103,6 +103,8 @@ export type TargetArcadeDAT = Readonly<{format: "ARCADE_XML"; asset: TargetAsset
 export type TargetDeclaration = {
   contentRequirements?: TargetContentRequirements;
   arcadeDAT?: TargetArcadeDAT;
+  /** Offline configuration capability; the DAT digest is tied to this built Target. */
+  romSetSelection?: Readonly<{datSHA256: string; driver: "CONTENT_BASENAME" | "MACHINE_OPTION"}>;
   id: string;
   displayName: string;
   adapterId: string;

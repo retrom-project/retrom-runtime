@@ -10,14 +10,14 @@ it("pins the published MAME Current release and validates every family asset", a
   const mame = sources.upstreamReleases.find((source: {id: string}) => source.id === "mame");
   expect(mame).toMatchObject({
     repository: "https://github.com/retrom-project/mame",
-    tag: "retrom-core-gf65d5ba9bc42-r3",
-    commit: "11288494f6e4cc2334155223ec5575cb486aa242",
+    tag: "retrom-core-gf65d5ba9bc42-r4",
+    commit: "ac55bf875f13ffb7686dde6e17608a52cd09b26e",
     adapterAbi: "retrom-mame-dylink-v1",
   });
   expect(mame.metadataUrl).toBe(`${mame.repository}/releases/download/${mame.tag}/rpg-runtime-release.json`);
-  expect(mame.archive).toMatchObject({filename: "mame-current-assets.zip", format: "zip", sizeBytes: 33349625,
-    sha256: "100d760a3d10d2de84ea5a802161aac8aa297ba414a019deda3ccc7771d77b5d"});
-  expect(mame.assets).toHaveLength(94);
+  expect(mame.archive).toMatchObject({filename: "mame-current-assets.zip", format: "zip", sizeBytes: 34319069,
+    sha256: "edd576272836fd03ac96e7f3794420aac4e4516590b80283f7c69b8e2e9b51d3"});
+  expect(mame.assets).toHaveLength(97);
   for (const asset of mame.assets) {
     expect(asset.sizeBytes).toBeGreaterThan(0);
     expect(asset.sizeBytes).toBeLessThanOrEqual(asset.maxSizeBytes);

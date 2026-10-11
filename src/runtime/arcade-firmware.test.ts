@@ -54,3 +54,13 @@ it("preserves merged game payload handling and the pinned CPS2 physical Parent r
   expect(arcadeDependencies("fbalpha2012_cps2", cps2, [files[0]], complete, catalog))
     .toMatchObject({missingParents: ["parent"]});
 });
+
+it.each(["fbneo", "mame_arcade"])("always delivers DAT BIOS for %s even from a complete merged game or Parent", coreId => {
+  const input = {...config, cores: {[coreId]: {parentFiles: ["parent.zip"]}}};
+  for (const biosFile of ["child.zip", "parent.zip"]) {
+    const complete = {"child.zip": [member(payload)], "parent.zip": [member(payload)]};
+    complete[biosFile as keyof typeof complete].push(member(firmware));
+    expect(arcadeDependencies(coreId, input, files, complete, catalog))
+      .toEqual({parentFiles: [], missingParents: [], biosSets: ["firmware"]});
+  }
+});

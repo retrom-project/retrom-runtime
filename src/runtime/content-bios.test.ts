@@ -35,3 +35,24 @@ it("uses the default allowed core and rejects unavailable selections without req
   expect(() => contentBIOSRequirements({...request, coreId: "nestopia"})).toThrow("RUNTIME_CORE_UNAVAILABLE");
   expect(() => contentBIOSRequirements({...request, files: [file("different.fds")]})).toThrow("RUNTIME_ENTRY_MISSING");
 });
+
+it.each(["fbneo", "mame_arcade"])("prepares independent DAT BIOS and keeps embedded CRC warnings for %s", coreId => {
+  const rom = {name: "bios.bin", size: "2", crc: "87654321"};
+  const request = {directory: {platformId: "arcade", defaultCoreId: coreId, allowedCoreIds: [coreId]},
+    config: {content: {kind: "ARCADE", entryFile: "game.zip"}}, files: [file("game.zip")],
+    arcadeCatalog: {game: {parent: "firmware", bios: false, roms: [rom]},
+      firmware: {parent: null, bios: true, roms: [rom]}},
+    fingerprints: {[coreId === "fbneo" ? "emulatorjs/fbneo" : "retrom-runtime/mame-arcade"]: "b".repeat(64)},
+  };
+  for (const crc32 of [rom.crc, "ffffffff"]) {
+    const input = {...request, archives: {"game.zip": [{name: rom.name, sizeBytes: 2, crc32}]}};
+    const projected = contentBIOSRequirements(input), prepared = prepareRuntime(input);
+    expect(projected.biosRequirements).toEqual([expect.objectContaining({
+      coreId, logicalName: "firmware.zip", required: true, delivery: "EXTERNAL_FILE",
+    })]);
+    expect(prepared.biosRequirements).toEqual(projected.biosRequirements);
+    expect(prepared.resources).toEqual([expect.objectContaining({role: "game", entryFile: "game.zip"})]);
+    expect(prepared.crcWarnings).toEqual(projected.crcWarnings);
+    expect(projected.crcWarnings).toHaveLength(crc32 === rom.crc ? 0 : 1);
+  }
+});

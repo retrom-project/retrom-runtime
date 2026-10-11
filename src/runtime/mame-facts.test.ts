@@ -25,10 +25,13 @@ it("prepares Renegade with the exact device firmware omitted from its game ROM l
   expect(contentBIOSRequirements(input).biosRequirements).toEqual(prepared.biosRequirements);
 });
 
-it("does not require another firmware archive when the game already contains the device ROM", () => {
+it("still requires the DAT device firmware archive when the game already contains its ROM", () => {
   const input = request("renegade", [{name: "bootstrap.bin", sizeBytes: 115, crc32: "f70a8620"}]);
-  expect(prepareRuntime(input).biosRequirements).toEqual([]);
-  expect(contentBIOSRequirements(input).biosRequirements).toEqual([]);
+  const prepared = prepareRuntime(input);
+  expect(prepared.biosRequirements).toEqual([expect.objectContaining({
+    logicalName: "m68705p5.zip", required: true, virtualPath: "content/roms/m68705p5.zip",
+  })]);
+  expect(contentBIOSRequirements(input).biosRequirements).toEqual(prepared.biosRequirements);
 });
 
 it("declares the referenced billboard firmware once using its actual DAT requirement", () => {

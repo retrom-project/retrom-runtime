@@ -25,10 +25,10 @@ it("declares only required ROM-bearing devices and retains authoritative member 
       members: [{name: rom.name, sizeBytes: 115, crc32: rom.crc, sha1: rom.sha1, required: true}]}),
   ]);
 });
-it("accepts device ROMs already present in the game archive", () => {
+it("still delivers required device firmware when its ROM is already present in the game archive", () => {
   expect(arcadeDependencies("mame_arcade", config, [file], {[file.logicalKey]: [
     {name: rom.name, sizeBytes: 115, crc32: rom.crc},
-  ]}, catalog).biosSets).toEqual([]);
+  ]}, catalog).biosSets).toEqual(["mcu"]);
 });
 it("preserves optional device ROM semantics from the DAT", () => {
   const optional = {...rom, name: "optional.bin", optional: true};

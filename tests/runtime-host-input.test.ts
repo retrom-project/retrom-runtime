@@ -5,7 +5,8 @@ import {mkdtemp, readFile, writeFile, rm, access} from "node:fs/promises";
 import {join} from "node:path";
 import {tmpdir} from "node:os";
 import {unzipSync, zipSync} from "fflate";
-import {assembleResource, parentArchive, prepareHostInput, configureHostInput, discoverContentDependencies, identifyHostBIOS, flycastTable, contentHostBIOSRequirements} from "../scripts/runtime-host-input.mjs";
+import {assembleResource, parentArchive, prepareHostInput, configureHostInput, discoverContentDependencies, identifyHostBIOS, flycastTable, contentHostBIOSRequirements, hostDOSEntryCandidates} from "../scripts/runtime-host-input.mjs";
+import {gbkProgramName, legacyZip} from "./zip-encoding-fixture.js";
 import type {RuntimeContentFile} from "../src/runtime/types.js";
 const roots: string[] = [];
 afterEach(async () => {await Promise.all(roots.splice(0).map(path => rm(path, {recursive: true, force: true})));});
@@ -103,6 +104,17 @@ it("checks an explicit DOS executable against actual archive members but leaves 
     fingerprints: {}, config: {content: {kind: "DOS_BUNDLE", entryFile: "game.zip", entryPath: "START.BAT"}}};
   expect((await prepareHostInput(request)).dosEntries).toEqual(["START.BAT", "GAME.EXE"]);
   expect((await prepareHostInput({...request, config: {content: {kind: "DOS_BUNDLE", entryFile: "game.zip"}}})).dosEntries).toBeUndefined();
+});
+
+it("uses the same lossless GBK DOS name for import evidence, candidates and saved program validation", async () => {
+  const input = await tree({"game.zip": legacyZip([{name: gbkProgramName, data: Uint8Array.of(1)}])});
+  const config = {content: {kind: "DOS_BUNDLE", entryFile: "game.zip", entryPath: "金庸群侠传/PLAY.BAT"}};
+  expect((await configureHostInput({...input, platformId: "dos", coreIds: ["dosbox_pure"]})).archiveMembers?.["game.zip"])
+    .toEqual([config.content.entryPath]);
+  expect(await hostDOSEntryCandidates({...input, config})).toEqual({entries: [config.content.entryPath]});
+  const request = {...input, directory: {platformId: "dos", defaultCoreId: "dosbox_pure", allowedCoreIds: ["dosbox_pure"]},
+    fingerprints: {}, config};
+  expect((await prepareHostInput(request)).dosEntries).toEqual([config.content.entryPath]);
 });
 
 it("identifies a named firmware ZIP with modified CRC without accepting missing members or wrong sizes", async () => {

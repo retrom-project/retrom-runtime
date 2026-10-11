@@ -10,6 +10,7 @@ import {gunzipSync, crc32} from "node:zlib";
 import {unzipSync, zipSync} from "fflate";
 import {parseRuntimeConfiguration, contentHash, runtimeBindings, identifyPSXRegion, resolveSavedRuntimeRequest,
   contentBIOSRequirements, dosEntryCandidates, arcadeParentOptions, resolveRuntimeTarget} from "../dist/runtime/index.js";
+import {decodeZIPName} from "../dist/content-io/zip-name.js";
 
 export async function configureHostInput(input) {
   contentHash(input.files, "TREE");
@@ -355,7 +356,11 @@ async function zipMembers(path) {
     for (let i = 0; i < count; i++) {
       if (at + 46 > size || directory.readUInt32LE(at) !== 0x02014b50 || directory.readUInt16LE(at + 8) & 1) {throw new Error("RUNTIME_ARCHIVE_INVALID");}
       const length = directory.readUInt16LE(at + 28), extra = directory.readUInt16LE(at + 30), comment = directory.readUInt16LE(at + 32);
-      const name = directory.subarray(at + 46, at + 46 + length).toString("utf8");
+      if (at + 46 + length + extra + comment > size) {throw new Error("RUNTIME_ARCHIVE_INVALID");}
+      let name;
+      try {name = decodeZIPName(directory.subarray(at + 46, at + 46 + length), directory.readUInt16LE(at + 8),
+        directory.subarray(at + 46 + length, at + 46 + length + extra));}
+      catch {throw new Error("RUNTIME_ARCHIVE_INVALID");}
       if (!safePath(name.replace(/\/$/u, "")) || names.has(name)) {throw new Error("RUNTIME_ARCHIVE_INVALID");}
       names.add(name);
       if (!name.endsWith("/")) {result.push({name, sizeBytes: directory.readUInt32LE(at + 24), crc32: directory.readUInt32LE(at + 16).toString(16).padStart(8, "0")});}

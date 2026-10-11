@@ -9,6 +9,7 @@ import {tmpdir} from "node:os";
 import {once} from "node:events";
 import {createHash} from "node:crypto";
 import {zipSync} from "fflate";
+import {gbkProgramName, legacyZip} from "./zip-encoding-fixture.js";
 
 let root: string;
 const children: ChildProcessWithoutNullStreams[] = [];
@@ -21,7 +22,7 @@ beforeAll(async () => {
   await cp(resolve("assets/facts"), join(root, "assets/facts"), {recursive: true});
   await writeFile(join(root, "package.json"), JSON.stringify({type: "module", version: "0.0.0-dev"}));
   await symlink(resolve("node_modules"), join(root, "node_modules"));
-  await build({entryPoints: [resolve("src/runtime/index.ts")], outfile: join(root, "dist/runtime/index.js"),
+  await build({entryPoints: [resolve("src/runtime/index.ts"), resolve("src/content-io/zip-name.ts")], outdir: join(root, "dist"), outbase: resolve("src"),
     bundle: true, format: "esm", platform: "node", packages: "external"});
 });
 afterAll(async () => {
@@ -55,6 +56,18 @@ it("reuses a real process for configuration, prepare and identity batches and is
   expect(await read()).toEqual({id: 5, result: {romHash: files[0].sha256}});
   expect(await read()).toBeNull(); expect((await once(child, "close"))[0]).toBe(0);
 }, 15000);
+
+it("keeps legacy Chinese program paths readable in the independent packaged CLI", async () => {
+  const {child, read} = worker();
+  const bytes = legacyZip([{name: gbkProgramName, data: Uint8Array.of(1)}]);
+  const path = join(root, "chinese.zip"); await writeFile(path, bytes);
+  const input = {config: {content: {kind: "DOS_BUNDLE", entryFile: "chinese.zip"}},
+    files: [{logicalKey: "chinese.zip", name: "chinese.zip", sizeBytes: bytes.length,
+      sha256: createHash("sha256").update(bytes).digest("hex")}], locators: {"chinese.zip": path}};
+  child.stdin.end(JSON.stringify({id: "chinese", command: "dos-entry-candidates", input}) + "\n");
+  expect(await read()).toEqual({id: "chinese", result: {entries: ["金庸群侠传/PLAY.BAT"]}});
+  expect((await once(child, "close"))[0]).toBe(0);
+});
 
 it("bounds the stream before a newline and closes an oversized worker", async () => {
   const {child, read} = worker();

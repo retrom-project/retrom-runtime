@@ -4,11 +4,13 @@ import {ContentIOError} from "../../content-io/errors.js";
 import {canonicalPath} from "../../content-io/source.js";
 import {contentLimits} from "../../content-io/limits.js";
 import {NeoCDRange, neoCDRangeBlockSize} from "./neocd-range.js";
+import {decodeZIPName} from "../../content-io/zip-name.js";
+import {dosArchiveNames} from "./dosbox-archive-names.js";
 
 const maximumDirectoryBytes = 16 * 1024 * 1024;
 type Directory = {count: number; offset: number; size: number};
 
-/** Append native boot metadata; all original ZIP payloads and their offsets remain untouched. */
+/** Append a native directory/boot view; original compressed payloads and offsets remain untouched. */
 export class DOSAutobootRange extends NeoCDRange {
   override readonly sizeBytes: number;
   private closed = false;
@@ -35,17 +37,25 @@ export class DOSAutobootRange extends NeoCDRange {
   override dispose() {this.closed = true; return super.dispose();}
 }
 
-export async function dosAutobootSuffix(range: NeoCDRange, entryPath: string): Promise<Uint8Array> {
-  if (!canonicalPath(entryPath) || entryPath.length > 256 || /[:\r\n"]/u.test(entryPath)) {throw new Error("DOSBOX_ENTRY_INVALID");}
+export async function dosAutobootSuffix(range: NeoCDRange, entryPath: string | null): Promise<Uint8Array | null> {
+  if (entryPath !== null && (!canonicalPath(entryPath) || entryPath.length > 256 || /[:\r\n"]/u.test(entryPath))) {throw new Error("DOSBOX_ENTRY_INVALID");}
   const end = await readDirectoryInfo(range);
   const directory = await readBounded(range, end.offset, end.size);
-  const records = directoryRecords(directory, end.count);
-  const boot = zipSync({"AUTOBOOT.DBP": [new TextEncoder().encode("C:\\" + entryPath.replaceAll("/", "\\") + "\r\n"),
-    {level: 0, mtime: new Date("1980-01-01T00:00:00Z")}]});
+  const entries = directoryRecords(directory, end.count);
+  const paths = dosArchiveNames(entries.map(entry => entry.name));
+  const changed = entries.some(entry => paths.get(entry.name) !== entry.name);
+  if (entryPath === null && !changed) {return null;}
+  const nativePath = entryPath === null ? null : paths.get(entryPath);
+  if (entryPath !== null && !nativePath) {throw new Error("DOSBOX_ENTRY_INVALID");}
+  const records = entries.filter(entry => entryPath === null || entry.name.toUpperCase() !== "AUTOBOOT.DBP")
+    .map(entry => renameRecord(entry.record, paths.get(entry.name)!));
+  const boot = zipSync(nativePath ? {"AUTOBOOT.DBP": [new TextEncoder().encode("C:\\" + nativePath.replaceAll("/", "\\") + "\r\n"),
+    {level: 0, mtime: new Date("1980-01-01T00:00:00Z")}]}
+    : {});
   const bootView = view(boot), bootEnd = boot.length - 22;
   const bootDirectoryOffset = bootView.getUint32(bootEnd + 16, true);
   const bootRecord = boot.slice(bootDirectoryOffset, bootEnd);
-  view(bootRecord).setUint32(42, range.sizeBytes, true);
+  if (bootRecord.length) {view(bootRecord).setUint32(42, range.sizeBytes, true);}
   const directorySize = records.reduce((sum, record) => sum + record.length, bootRecord.length);
   const output = new Uint8Array(bootDirectoryOffset + directorySize + 22);
   output.set(boot.subarray(0, bootDirectoryOffset));
@@ -53,7 +63,9 @@ export async function dosAutobootSuffix(range: NeoCDRange, entryPath: string): P
   for (const record of [...records, bootRecord]) {output.set(record, at); at += record.length;}
   output.set(boot.subarray(bootEnd), at);
   const footer = view(output);
-  footer.setUint16(at + 8, records.length + 1, true); footer.setUint16(at + 10, records.length + 1, true);
+  const count = records.length + (nativePath ? 1 : 0);
+  if (count >= 65535) {throw invalid();}
+  footer.setUint16(at + 8, count, true); footer.setUint16(at + 10, count, true);
   footer.setUint32(at + 12, directorySize, true);
   footer.setUint32(at + 16, range.sizeBytes + bootDirectoryOffset, true);
   if (range.sizeBytes + output.length > contentLimits.signedDisc) {throw invalid();}
@@ -81,8 +93,9 @@ async function readBounded(range: NeoCDRange, position: number, length: number) 
   return output;
 }
 
-function directoryRecords(bytes: Uint8Array, count: number): Uint8Array[] {
+function directoryRecords(bytes: Uint8Array, count: number): Array<{name: string; record: Uint8Array}> {
   const data = view(bytes), records = [];
+  const names = new Set<string>();
   let at = 0;
   for (let index = 0; index < count; index++) {
     if (at + 46 > bytes.length || data.getUint32(at, true) !== 0x02014b50) {throw invalid();}
@@ -90,12 +103,24 @@ function directoryRecords(bytes: Uint8Array, count: number): Uint8Array[] {
     const length = 46 + nameLength + data.getUint16(at + 30, true) + data.getUint16(at + 32, true);
     if (at + length > bytes.length || data.getUint16(at + 34, true) || data.getUint16(at + 8, true) & 1 ||
       [20, 24, 42].some(field => data.getUint32(at + field, true) === 0xffffffff)) {throw invalid();}
-    const name = new TextDecoder().decode(bytes.subarray(at + 46, at + 46 + nameLength));
-    if (name.toUpperCase() !== "AUTOBOOT.DBP") {records.push(bytes.subarray(at, at + length));}
+    let name: string;
+    try {name = decodeZIPName(bytes.subarray(at + 46, at + 46 + nameLength), data.getUint16(at + 8, true),
+      bytes.subarray(at + 46 + nameLength, at + 46 + nameLength + data.getUint16(at + 30, true)));}
+    catch {throw invalid();}
+    if (!canonicalPath(name.replace(/\/$/u, "")) || names.has(name)) {throw invalid();}
+    names.add(name); records.push({name, record: bytes.subarray(at, at + length)});
     at += length;
   }
   if (at !== bytes.length || records.length >= 65534) {throw invalid();}
   return records;
+}
+function renameRecord(record: Uint8Array, name: string) {
+  const header = view(record), encoded = new TextEncoder().encode(name), oldLength = header.getUint16(28, true);
+  const output = new Uint8Array(record.length - oldLength + encoded.length);
+  output.set(record.subarray(0, 46)); output.set(encoded, 46);
+  output.set(record.subarray(46 + oldLength), 46 + encoded.length);
+  view(output).setUint16(28, encoded.length, true); view(output).setUint16(8, header.getUint16(8, true) | 0x800, true);
+  return output;
 }
 function view(bytes: Uint8Array) {return new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);}
 function invalid() {return new Error("DOSBOX_ARCHIVE_INVALID");}

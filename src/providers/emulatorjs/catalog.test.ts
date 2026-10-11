@@ -135,3 +135,14 @@ describe("EmulatorJS Provider declarations", () => {
   });
 
 });
+it("omits absent optional DAT declarations from canonical Provider build input", () => {
+  const targets = emulatorJsProviderDefinition.targets;
+  for (const target of targets) {
+    expect(Object.values(target)).not.toContain(undefined);
+    if (["fbneo", "mame2003", "mame2003-plus"].includes(target.id)) {
+      expect(target).toHaveProperty("romSetSelection");
+    } else {
+      expect(target).not.toHaveProperty("romSetSelection");
+    }
+  }
+});

@@ -14,6 +14,13 @@ ROM identity is calculated from the entire Game active file set, including Paren
 
 BIOS requirements have stable explicit keys, known size and digest facts, delivery paths and activation options. Requirements share a file only where declarations explicitly share the same key. A scan matches known digests or an unambiguous declared name/path when no digest is known; hosts skip ambiguous missing requirements. Arcade DAT facts inspect actual ZIP members, accept merged game content and identify missing Parent sets even if the game rules omit them. Required BIOS and ROM-bearing device firmware are always delivered independently according to the selected core's DAT, even when matching firmware members are embedded in the game or Parent archive. The compressed fact table retains each pinned source digest in `src/runtime/arcade-provenance.json`; it contains metadata, never ROM or firmware bytes.
 
+When adding native MAME drivers, run `scripts/mame-facts.py` against the clean
+PFB core candidate. It verifies the generated DAT and build metadata, updates
+only the MAME catalog/provenance, and derives the Arcade asset family list from
+that same candidate so launch assets and Host facts cover the same machines.
+The generated MAME JavaScript loader remains digest-verified and bounded to
+4 MiB in candidate packaging and browser loading.
+
 For Beetle PSX HW, playable preparation reads only the disc system area (at most 11,760 bytes) from the managed locator. Its sector-four license selects the declared Japanese, US or European firmware requirement; the region never becomes stored game JSON. Unknown compressed-disc evidence leaves all declared regional files optional for the core to select from the available installation, so it does not invent a Japanese default. The stable firmware names, sizes and MD5s follow the [core's official firmware declaration](https://docs.libretro.com/library/beetle_psx_hw/).
 
 EasyRPG converts the authorized public file-tree index into the pinned engine's private index and scoped XHR aliases. The canonical host index URL remains unchanged; every game payload still goes through shared Content IO. Tyrano's isolated bridge redirects desktop file-storage calls to the engine's own browser-storage functions before initialization. This preserves its missing-value and serialization rules without editing the managed project or adding an engine branch to the host.

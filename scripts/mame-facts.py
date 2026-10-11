@@ -4,6 +4,7 @@ import gzip
 import hashlib
 import json
 from pathlib import Path
+import re
 import sys
 import xml.etree.ElementTree as ET
 
@@ -42,18 +43,36 @@ def parse_mame(data):
     return dict(sorted(games.items()))
 
 
+def verified_file(candidate, descriptor, filename):
+    declared = next(f for f in descriptor["files"] if f["filename"] == filename)
+    data = (candidate / filename).read_bytes()
+    sha = hashlib.sha256(data).hexdigest()
+    if len(data) != declared["sizeBytes"] or sha != declared["sha256"]:
+        raise ValueError(f"MAME {filename} identity mismatch")
+    return data
+
+
 def generate(candidate, repository):
     descriptor = json.loads((candidate / "retrom-core-candidate.json").read_text())
     if descriptor["coreId"] != "mame" or descriptor["dirty"]:
         raise ValueError("Clean MAME candidate required")
-    declared = next(f for f in descriptor["files"] if f["filename"] == "mame-arcade.xml")
-    data = (candidate / "mame-arcade.xml").read_bytes()
+    data = verified_file(candidate, descriptor, "mame-arcade.xml")
+    catalog = parse_mame(data)
+    metadata = json.loads(verified_file(candidate, descriptor, "mame-build.json"))
+    if metadata["adapterAbi"] != descriptor["adapterAbi"]:
+        raise ValueError("MAME adapter ABI mismatch")
+    families = sorted(name for name, family in metadata["families"].items() if family["arcade"])
+    if not families or any(not re.fullmatch(r"[a-z0-9_]+", name) or
+                           metadata["families"][name]["module"] != f"mame-{name}.wasm" or
+                           # MAME's built-in empty driver is excluded by its listxml command.
+                           any(machine not in catalog for machine in
+                               set(metadata["families"][name]["machines"]) - {"___empty"})
+                           for name in families):
+        raise ValueError("MAME arcade family/catalog mismatch")
     sha = hashlib.sha256(data).hexdigest()
-    if len(data) != declared["sizeBytes"] or sha != declared["sha256"]:
-        raise ValueError("MAME DAT identity mismatch")
     facts = repository / "assets/facts/arcade-catalog.json.gz"
     tables = json.loads(gzip.decompress(facts.read_bytes()))
-    tables["mame_arcade"] = parse_mame(data)
+    tables["mame_arcade"] = catalog
     facts.write_bytes(gzip.compress(json.dumps(tables, separators=(",", ":"), ensure_ascii=False).encode(), mtime=0))
     provenance = repository / "src/runtime/arcade-provenance.json"
     sources = json.loads(provenance.read_text())
@@ -61,6 +80,7 @@ def generate(candidate, repository):
     record.update(sha256=sha, commit=descriptor["commit"],
                   source=descriptor["repository"] + "/tree/" + descriptor["commit"], assetPath="mame-arcade.xml")
     provenance.write_text(json.dumps(sources, indent=2) + "\n")
+    (repository / "src/mame/arcade-families.json").write_text(json.dumps(families, indent=2) + "\n")
     print(json.dumps({"machines": len(tables["mame_arcade"]), "sha256": sha, "commit": descriptor["commit"]}))
 
 

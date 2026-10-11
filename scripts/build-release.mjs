@@ -4,6 +4,7 @@ import {currentInput, materializeEmulatorJsProviderInput} from "./emulatorjs-pro
 import {asOpenBORCandidateSource, stageOpenBORCandidate} from "./openbor-candidate.mjs";
 import {stagePinnedCoreIfNeeded} from "./pinned-core-release.mjs";
 import {stageCoreDevelopmentInput} from "./core-development-input.mjs";
+import {stageMameCandidate} from "./mame-candidate.mjs";
 import {expandJsbeebSite} from "./jsbeeb-site.mjs";
 import {expandApple2Site} from "./apple2js-site.mjs";
 import {expandSamCoupeSite} from "./samcoupe-site.mjs";
@@ -44,6 +45,7 @@ const devReleaseOverrides = parseDevReleaseOverrides(
     ...[...emulatorJsSourceCatalog.forks ?? [], ...emulatorJsSourceCatalog.developmentForks ?? []].map((fork) => ({id: fork.runtimeCore}))],
   formalBuild,
 );
+const candidateReleaseOutputs = new Map();
 const commit = releaseCommit();
 const version = buildVersion();
 if (formalBuild) {assertFormalReleaseEnvironment(commit, version);}
@@ -58,6 +60,11 @@ for (const document of ["LICENSE", "THIRD_PARTY_NOTICES.md"]) {
 }
 for (const release of sources.upstreamReleases) {
   const devRoot = devReleaseOverrides.get(release.id);
+  if (release.id === "mame" && devRoot) {
+    if (process.env.RETROM_PFB_CANDIDATE_BUILD !== "1") {throw new Error("UNPUBLISHED_CORE_INPUT");}
+    candidateReleaseOutputs.set(release.id, await stageMameCandidate(release, devRoot, stage));
+    continue;
+  }
   if (release.id === "openbor" && devRoot) {
     assertScummvmCandidateMode([release], process.env.RETROM_PFB_CANDIDATE_BUILD === "1", formalBuild);
     await stageOpenBORCandidate(asOpenBORCandidateSource(release), devRoot, stage);
@@ -138,7 +145,7 @@ if ([...sources.upstreamReleases, ...developmentInputs].some((source) => source.
 if (developmentInputs.some(validEmulatorJsDevelopmentSource)) {await materializeEmulatorJsProviderInput(await currentInput());}
 assertONSCheckpointCore(await readFile(new URL("runtime/ons/onsyuri.js", stage)),
   await readFile(new URL("runtime/ons/onsyuri.wasm", stage)));
-const records = await collectRecords(sources, stage, developmentOutputs);
+const records = await collectRecords(sources, stage, developmentOutputs, candidateReleaseOutputs);
 const hostTool = await buildRuntimeHostTool({repositoryRoot: fileURLToPath(root), outputRoot: fileURLToPath(output),
   version, sourceTreeSha256: capturedSource});
 records.push({path: basename(hostTool.archivePath), filename: basename(hostTool.archivePath),
@@ -221,10 +228,10 @@ async function publish(contents, target) {
   await writeFile(target, contents);
 }
 
-async function collectRecords(value, directory, developmentOutputs) {
+async function collectRecords(value, directory, developmentOutputs, candidateReleaseOutputs) {
   const paths = ["LICENSE", "THIRD_PARTY_NOTICES.md", "library/index.js", "library/index.d.ts",
     ...value.localAssets.map((asset) => asset.output), ...developmentOutputs,
-    ...value.upstreamReleases.flatMap((release) => release.assets.map((asset) => asset.output))].sort();
+    ...value.upstreamReleases.flatMap((release) => candidateReleaseOutputs.get(release.id) ?? release.assets.map((asset) => asset.output))].sort();
   return Promise.all(paths.map(async (path) => {
     const contents = await readFile(new URL(path, directory));
     return { path, filename: basename(path), sizeBytes: contents.length, sha256: sha256(contents) };

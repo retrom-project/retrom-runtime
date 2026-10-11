@@ -1,12 +1,21 @@
 import {readFileSync} from "node:fs";
 import {gunzipSync} from "node:zlib";
 import {expect, it} from "vitest";
-import type {ArcadeCatalog, ArchiveMember} from "./arcade.js";
+import {playableArcadeMachine, type ArcadeCatalog, type ArchiveMember} from "./arcade.js";
 import {contentBIOSRequirements, prepareRuntime} from "./prepare.js";
 
 const tables: Record<string, ArcadeCatalog> = JSON.parse(gunzipSync(
   readFileSync("assets/facts/arcade-catalog.json.gz")).toString());
 const catalog = tables.mame_arcade;
+const currentDriverCoverage = ["crysking", "denseib", "ffight3b", "bballoon", "dendego", "dendego2", "hyperbbc",
+  "kingdrbb", "renju", "tarzanc", "topbladv", "twrshaft", "gradius4", "megaphx", "slrassltj", "starsldr",
+  "shikigam", "mk4", "coolridr", "finalapr", "gticlub", "midnrun", "ppcar", "speedrcr", "speedup",
+  "wheelfir", "windheat", "bmcbowl", "evosocc", "fiveside", "nbapbp", "pokechmp", "skimaxx", "ttchamp"];
+
+it.each(currentDriverCoverage)("includes the compiled Current arcade driver %s in the MAME DAT", machine => {
+  expect(playableArcadeMachine(catalog[machine])).toBe(true);
+  expect(catalog[machine].roms.length).toBeGreaterThan(0);
+});
 function request(machine: string, extra: ArchiveMember[] = []) {
   const file = {logicalKey: "game", name: `${machine}.zip`, sizeBytes: 100, sha256: "a".repeat(64)};
   return {directory: {platformId: "arcade", defaultCoreId: "mame_arcade", allowedCoreIds: ["mame_arcade"]},

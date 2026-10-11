@@ -22,9 +22,9 @@
   },
   {
     "coreId": "mame_arcade",
-    "sha256": "450599810917ce07863a085104bfd7ff01b243fa593c6bfe60fe2cc0348a127c",
-    "source": "https://github.com/retrom-project/mame/releases/download/retrom-core-gf65d5ba9bc42-r3/mame-current-assets.zip",
-    "commit": "11288494f6e4cc2334155223ec5575cb486aa242",
+    "sha256": "10ef1994746d38f5507a75348a8d4185dff263afd20c6c74682bebcdc48f9282",
+    "source": "https://github.com/retrom-project/mame/tree/ac55bf875f13ffb7686dde6e17608a52cd09b26e",
+    "commit": "ac55bf875f13ffb7686dde6e17608a52cd09b26e",
     "assetPath": "mame-arcade.xml"
   },
   {

@@ -1,5 +1,9 @@
 import importlib.util
+import gzip
+import hashlib
+import json
 from pathlib import Path
+import tempfile
 import unittest
 
 spec = importlib.util.spec_from_file_location("mame_facts", Path(__file__).with_name("mame-facts.py"))
@@ -30,6 +34,45 @@ class MameFactsTest(unittest.TestCase):
                      b'<mame><machine name="g"/><machine name="g"/></mame>']:
             with self.assertRaises(ValueError):
                 facts.parse_mame(data)
+
+    def test_candidate_updates_catalog_and_arcade_asset_families_together(self):
+        with tempfile.TemporaryDirectory() as directory:
+            candidate, repository = Path(directory) / "candidate", Path(directory) / "runtime"
+            candidate.mkdir()
+            (repository / "assets/facts").mkdir(parents=True)
+            (repository / "src/runtime").mkdir(parents=True)
+            (repository / "src/mame").mkdir(parents=True)
+            (repository / "assets/facts/arcade-catalog.json.gz").write_bytes(gzip.compress(
+                json.dumps({"fbneo": {"preserved": True}, "mame_arcade": {"old": {}}}).encode()))
+            (repository / "src/runtime/arcade-provenance.json").write_text(json.dumps([
+                {"coreId": "fbneo", "sha256": "unchanged"}, {"coreId": "mame_arcade"}]))
+            families_path = repository / "src/mame/arcade-families.json"
+            families_path.write_text('["old"]')
+            payloads = {"mame-arcade.xml": b'<mame><machine name="new"/></mame>',
+                        "mame-build.json": json.dumps({"adapterAbi": "retrom-mame-dylink-v1", "families": {
+                            "arcade_new": {"arcade": True, "module": "mame-arcade_new.wasm", "machines": ["___empty", "new"]},
+                            "apple": {"arcade": False, "module": "mame-apple.wasm", "machines": ["apple2p"]},
+                        }}).encode()}
+            descriptor = {"coreId": "mame", "dirty": False, "commit": "a" * 40,
+                          "repository": "https://github.com/retrom-project/mame", "adapterAbi": "retrom-mame-dylink-v1",
+                          "files": [{"filename": name, "sizeBytes": len(data), "sha256": hashlib.sha256(data).hexdigest()}
+                                    for name, data in payloads.items()]}
+            for name, data in payloads.items():
+                (candidate / name).write_bytes(data)
+            (candidate / "retrom-core-candidate.json").write_text(json.dumps(descriptor))
+            facts.generate(candidate, repository)
+            self.assertEqual(["arcade_new"], json.loads(families_path.read_text()))
+            tables = json.loads(gzip.decompress((repository / "assets/facts/arcade-catalog.json.gz").read_bytes()))
+            self.assertEqual({"preserved": True}, tables["fbneo"])
+            self.assertEqual(["new"], list(tables["mame_arcade"]))
+            provenance = json.loads((repository / "src/runtime/arcade-provenance.json").read_text())
+            self.assertEqual("unchanged", provenance[0]["sha256"])
+            self.assertEqual("a" * 40, provenance[1]["commit"])
+            (candidate / "mame-build.json").write_bytes(b"unverified bytes")
+            before = (repository / "assets/facts/arcade-catalog.json.gz").read_bytes()
+            with self.assertRaisesRegex(ValueError, "identity mismatch"):
+                facts.generate(candidate, repository)
+            self.assertEqual(before, (repository / "assets/facts/arcade-catalog.json.gz").read_bytes())
 
 
 if __name__ == '__main__':

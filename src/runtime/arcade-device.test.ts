@@ -43,6 +43,6 @@ it("rejects missing device definitions, cycles, and selecting firmware as a game
     expect(() => arcadeDependencies("mame_arcade", config, [file], {[file.logicalKey]: []}, bad as ArcadeCatalog))
       .toThrow("RUNTIME_ARCADE_CATALOG_INVALID");
   }
-  expect(() => arcadeDependencies("mame_arcade", {...config, cores: {mame_arcade: {options: {machine: "mcu"}}}},
+  expect(() => arcadeDependencies("mame_arcade", {...config, cores: {mame_arcade: {romSet: "mcu"}}},
     [file], {[file.logicalKey]: []}, catalog)).toThrow("RUNTIME_ARCADE_MACHINE_UNKNOWN");
 });

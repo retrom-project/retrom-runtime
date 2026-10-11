@@ -16,7 +16,7 @@ const children: ChildProcessWithoutNullStreams[] = [];
 beforeAll(async () => {
   root = await mkdtemp(join(tmpdir(), "retrom-cli-test-"));
   await mkdir(join(root, "scripts"));
-  for (const file of ["runtime-cli.mjs", "runtime-host-input.mjs", "runtime-normalize-content.mjs"]) {
+  for (const file of ["runtime-cli.mjs", "runtime-host-input.mjs", "runtime-normalize-content.mjs", "runtime-jsonl.mjs", "runtime-archive-input.mjs", "runtime-archive-task.mjs", "runtime-archive-worker.mjs"]) {
     await cp(resolve("scripts", file), join(root, "scripts", file));
   }
   await cp(resolve("assets/facts"), join(root, "assets/facts"), {recursive: true});
@@ -55,6 +55,17 @@ it("reuses a real process for configuration, prepare and identity batches and is
   child.stdin.end(JSON.stringify({id: 5, command: "hash", input: {files, mode: "FILE"}}));
   expect(await read()).toEqual({id: 5, result: {romHash: files[0].sha256}});
   expect(await read()).toBeNull(); expect((await once(child, "close"))[0]).toBe(0);
+}, 15000);
+
+it("serves an independent request while the shared DAT is loading", async () => {
+  const {child, read} = worker();
+  child.stdin.end([
+    {id: "catalog", command: "catalog", input: {}},
+    {id: "hash", command: "hash", input: {files, mode: "FILE"}},
+  ].map(value => JSON.stringify(value)).join("\n") + "\n");
+  expect(await read()).toEqual({id: "hash", result: {romHash: files[0].sha256}});
+  expect((await read()).id).toBe("catalog");
+  expect((await once(child, "close"))[0]).toBe(0);
 }, 15000);
 
 it("keeps legacy Chinese program paths readable in the independent packaged CLI", async () => {

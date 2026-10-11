@@ -9,7 +9,7 @@ import {contentHash} from "../dist/runtime/index.js";
 
 const maximumHeader = 16 * 1024 * 1024, maximumTree = 16 * 1024 * 1024 * 1024;
 /** Normalize retained project containers into ordinary immutable game files, never executable processes. */
-export async function normalizeContent(input) {
+export async function normalizeContent(input, signal) {
   contentHash(input.files, "TREE");
   if (input.platformId !== "tyranoscript" || input.files.some(file => /(?:^|\/)index\.html$/iu.test(file.logicalKey))) {return {files: input.files};}
   const asar = input.files.filter(file => /(?:^|\/)app\.asar$/iu.test(file.logicalKey));
@@ -29,6 +29,7 @@ export async function normalizeContent(input) {
   await mkdir(input.outputRoot, {recursive: false, mode: 0o700});
   try {
     for (const row of rows) {
+      signal?.throwIfAborted();
       total += row.sizeBytes;
       if (total > maximumTree) {throw new Error("RUNTIME_PROJECT_TOO_LARGE");}
       const path = join(input.outputRoot, row.logicalKey); await mkdir(dirname(path), {recursive: true});
@@ -42,7 +43,7 @@ export async function normalizeContent(input) {
       if (row.compressedBytes === 0) {destination.end(); await new Promise((complete, reject) => {destination.on("finish", complete); destination.on("error", reject);});}
       else {
         const reader = createReadStream(row.sourceKey ? input.locators[row.sourceKey] : source, {start: row.offset, end: row.offset + row.compressedBytes - 1});
-        if (row.deflate) {await pipeline(reader, createInflateRaw(), verify, destination);} else {await pipeline(reader, verify, destination);}
+        if (row.deflate) {await pipeline(reader, createInflateRaw(), verify, destination, {signal});} else {await pipeline(reader, verify, destination, {signal});}
       }
       const digest = hash.digest("hex");
       if (length !== row.sizeBytes || row.crc32 !== undefined && checksum !== row.crc32 || row.expectedSHA256 && row.expectedSHA256 !== digest) {throw new Error("RUNTIME_CONTENT_CHANGED");}

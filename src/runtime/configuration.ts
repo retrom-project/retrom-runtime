@@ -12,7 +12,8 @@ export function parseRuntimeConfiguration(value: unknown): RuntimeConfiguration 
   if (value.cores !== undefined) {
     if (!object(value.cores) || Object.keys(value.cores).length > 128) {configurationFailure();}
     for (const [coreId, core] of Object.entries(value.cores)) {
-      if (!identifier(coreId) || !object(core) || !exact(core, [], ["parentFiles", "options"])) {configurationFailure();}
+      if (!identifier(coreId) || !object(core) || !exact(core, [], ["parentFiles", "options", "romSet"])) {configurationFailure();}
+      validateROMSet(core.romSet, content);
       if (core.options !== undefined && !object(core.options)) {configurationFailure();}
       if (core.parentFiles !== undefined && (content.kind !== "ARCADE" || !Array.isArray(core.parentFiles) ||
         core.parentFiles.length > 32 || !core.parentFiles.every(path => logicalPath(path)) ||
@@ -21,6 +22,11 @@ export function parseRuntimeConfiguration(value: unknown): RuntimeConfiguration 
   }
   // The returned object cannot be mutated by the caller after an async launch starts.
   return structuredClone(value) as RuntimeConfiguration;
+}
+
+function validateROMSet(value: unknown, content: RuntimeContent) {
+  if (value !== undefined && (content.kind !== "ARCADE" || typeof value !== "string" ||
+    !/^[a-z0-9_]{1,128}$/u.test(value))) {configurationFailure("RUNTIME_ROM_SET_INVALID");}
 }
 
 function parseContent(value: unknown): RuntimeContent {

@@ -121,7 +121,7 @@ npm run package:check
 
 - Game 的 JSON 只保存游戏特定 content 规则、各核心 options 与 Parent logical path；不保存 BIOS 安装 ID、来源批次、凭据、Provider 部署 URL 或 Bundle 摘要。
 - ROM hash 是整份 Game active 游戏文件集合的唯一内容身份。单个非项目 ROM 使用原始 SHA；项目（即使只有一个文件）及多文件集合使用排序后的 logical path/size/SHA 树 hash。媒体文件不属于此集合。
-- `scripts/runtime-cli.mjs` 随 npm package 布局离线交付；宿主启动读取 catalog，运行准备调用 prepare，保存列表使用 batch-identity/batch-restorable，不逐条启动 Node，不为列表装配 BIOS 或 Parent。宿主可用 `--serve` 复用有界串行 JSONL 子进程；不新增网络运行服务、持久队列或授权状态。
+- `scripts/runtime-cli.mjs` 随 npm package 布局离线交付；宿主启动读取 catalog，运行准备调用 prepare，保存列表使用 batch-identity/batch-restorable，不逐条启动 Node，不为列表装配 BIOS 或 Parent。宿主用 `--serve` 共用一个常驻 JSONL 子进程，以唯一请求 ID 关联并发响应；执行、队列、输入与输出均有界，单请求可取消，DAT 首次加载及缓存共享。CPU 密集型归档操作使用不加载 DAT 的有界 worker_threads；不新增网络运行服务、持久队列或授权状态。
 - PFB 的 host 工具必须完整生成后原子发布不可变快照；不能把活跃宿主指向会被 clean 删除的 dist。Provider watcher 使用当前源码声明及实际 Target 执行闭包计算指纹；无关 adapter 修改不得改变其他 Target 指纹。
 - 运行资源只由宿主现有登录态授权。运行 ID 与 RPC nonce 是资源标识/消息关联值，不是授权凭据。隔离页面通过受限内容桥获取原始文件，不签发 ticket/token/capability 或额外 cookie。
 - 全部 110 个 Provider Target 保留；既有宿主产品绑定为 109 个，EmulatorJS PPSSPP 没有原产品入口。运行组件测试与真实产品验收必须分别记录，不能用声明数量或空白画面代替产品证据。

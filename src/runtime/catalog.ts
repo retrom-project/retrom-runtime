@@ -10,7 +10,7 @@ import {configurationFailure} from "./validation.js";
 
 export const runtimeProviders: readonly ProviderDefinition[] = [emulatorJsProviderDefinition, retromRuntimeProviderDefinition];
 export type RuntimeBinding = {coreId: string; providerId: string; targetId: string; platformIds: string[];
-  contentKinds: string[]; engine?: string; archiveExtensions?: string[]};
+  contentKinds: string[]; engine?: string; archiveExtensions?: string[]; romSetSelection?: {datSHA256: string}};
 export const runtimeBindings: readonly RuntimeBinding[] = bindings;
 export const runtimePlatforms: readonly {id: string; displayName: string}[] = platforms;
 
@@ -19,6 +19,9 @@ export function runtimeCatalog(providerVersion?: string) {
     .flatMap(binding => binding.platformIds))].sort()}));
   return {providers: runtimeProviders.map(provider => projectProviderManifest(providerVersion ? {...provider, providerVersion} : provider)),
     bindings: runtimeBindings.map(binding => ({...binding,
+      ...(() => {const selection = runtimeProviders.find(provider => provider.providerId === binding.providerId)?.targets
+        .find(target => target.id === binding.targetId)?.romSetSelection;
+      return selection ? {romSetSelection: {datSHA256: selection.datSHA256}} : {};})(),
       ...(runtimeProviders.find(provider => provider.providerId === binding.providerId)?.targets
         .find(target => target.id === binding.targetId)?.contentRequirements?.kind === "FLYCAST_CARTRIDGE"
         ? {archiveExtensions: ["zip"]} : {})})), platforms: runtimePlatforms, cores};

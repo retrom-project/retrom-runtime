@@ -12,6 +12,13 @@ spec.loader.exec_module(facts)
 
 
 class MameFactsTest(unittest.TestCase):
+    def test_search_labels_survive_candidate_regeneration(self):
+        result = facts.parse_mame(b'<mame><machine name="game"><description> Test  Game (World v2) </description>'
+                                 b'<year>1990</year><manufacturer>Studio</manufacturer></machine></mame>')
+        self.assertEqual(result['game']['description'], 'Test Game (World v2)')
+        self.assertEqual(result['game']['year'], '1990')
+        self.assertEqual(result['game']['manufacturer'], 'Studio')
+
     def test_device_refs_and_rom_identity(self):
         result = facts.parse_mame(b'<mame><machine name="game"><device_ref name="mcu"/></machine>'
                                  b'<machine name="mcu" isdevice="yes" runnable="no">'

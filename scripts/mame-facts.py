@@ -7,6 +7,7 @@ from pathlib import Path
 import re
 import sys
 import xml.etree.ElementTree as ET
+from dat_labels import labels
 
 
 def parse_mame(data):
@@ -32,7 +33,7 @@ def parse_mame(data):
             if rom.get("optional") == "yes":
                 entry["optional"] = True
             roms.append(entry)
-        games[name] = {"parent": machine.get("romof") or machine.get("cloneof"),
+        games[name] = {**labels(machine), "parent": machine.get("romof") or machine.get("cloneof"),
                        "bios": machine.get("isbios") == "yes", "device": machine.get("isdevice") == "yes",
                        "runnable": machine.get("runnable") != "no",
                        "devices": sorted({r.attrib["name"] for r in machine.findall("device_ref")}), "roms": roms}

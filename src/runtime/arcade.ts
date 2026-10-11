@@ -4,6 +4,7 @@ import provenance from "./arcade-provenance.json" with {type: "json"};
 import {arcadeAncestry} from "./arcade-ancestry.js";
 export type ArchiveMember = {name: string; sizeBytes: number; crc32: string};
 export type ArcadeMachine = {parent: string | null; bios: boolean; device?: boolean; runnable?: boolean; devices?: string[];
+  description?: string; year?: string; manufacturer?: string;
   roms: Array<{name: string; size: string; crc: string; sha1?: string; merge?: string; bios?: string; optional?: boolean}>};
 export type ArcadeCatalog = Readonly<Record<string, ArcadeMachine>>;
 export function playableArcadeMachine(machine: ArcadeMachine | undefined): machine is ArcadeMachine {
@@ -44,8 +45,7 @@ export function arcadeDependencies(coreId: string, config: RuntimeConfiguration,
   return {parentFiles, missingParents, biosSets};
 }
 export function configuredMachine(coreId: string, config: RuntimeConfiguration, name: string) {
-  const explicit = config.cores?.[coreId]?.options?.machine;
-  return coreId === "mame_arcade" && typeof explicit === "string" ? explicit : archiveId(name);
+  return config.cores?.[coreId]?.romSet ?? archiveId(name);
 }
 function needsParent(coreId: string, direct: boolean, inherited: ArcadeMachine["roms"], members: ArchiveMember[]) {
   // The pinned CPS2 loader opens its named parent archive before looking at clone members.

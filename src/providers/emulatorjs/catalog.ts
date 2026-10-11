@@ -1,4 +1,4 @@
-import {emulatorContentRequirements, emulatorArcadeDAT, emulatorRequirementAssets} from "./content-requirements.js";
+import {emulatorContentRequirements, emulatorArcadeDAT, emulatorRequirementAssets, emulatorROMSetSelection} from "./content-requirements.js";
 import {eagerPolicy} from "../../provider/content-policies.js";
 import {contentLimits} from "../../content-io/limits.js";
 import {providerVersion} from "../../provider/version.js";
@@ -247,6 +247,7 @@ const targets = cores.map((entry) => {
   contentIO: emulatorContentPolicies(targetId),
   ...(emulatorContentRequirements(targetId) ? {contentRequirements: emulatorContentRequirements(targetId)} : {}),
   ...(emulatorArcadeDAT(targetId) ? {arcadeDAT: emulatorArcadeDAT(targetId)} : {}),
+  romSetSelection: emulatorROMSetSelection(targetId),
   contentMembers: emulatorContentMembers(entry.id),
   inputFilter: true,
   hostKeyboardShortcuts: hostKeyboardShortcuts(targetId),

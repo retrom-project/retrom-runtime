@@ -137,7 +137,9 @@ it("reads the compiled Flycast catalog envelope and binds its declared core SHA 
   const catalog = Buffer.from(JSON.stringify(envelope));
   const input = await tree({"core": bytes, "catalog": catalog});
   const requirement = {core: {path: "0.bin", sha256: sha(bytes)}, catalog: {path: "1.bin", sha256: sha(catalog)}};
-  expect(await flycastTable(input.root, requirement)).toEqual([machine]);
+  const tables = await Promise.all(Array.from({length: 8}, () => flycastTable(input.root, requirement)));
+  expect(tables[0]).toEqual([machine]);
+  for (const table of tables) {expect(table).toBe(tables[0]);}
   const wrongCore = Buffer.from(JSON.stringify({...envelope, core: {...envelope.core, sha256: "f".repeat(64)}}));
   await writeFile(join(input.root, "1.bin"), wrongCore);
   await expect(flycastTable(input.root, {...requirement, catalog: {...requirement.catalog, sha256: sha(wrongCore)}}))

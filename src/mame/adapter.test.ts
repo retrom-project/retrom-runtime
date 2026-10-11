@@ -14,9 +14,10 @@ vi.mock("./audio.js", () => ({MameAudio: class {resume = async () => {}; pause =
 const content = {assetIndex: {}, contentSession: {inputPolicy: () => eagerPolicy(32768),
   open: async () => {throw Error("unused");}, materialize: async () => {throw Error("unused");}, closeFile: async () => {}}};
 beforeEach(() => {
-  state.core = {HEAPU8: new Uint8Array(1024), _malloc: () => 16, _free: vi.fn(),
+  state.core = {HEAPU8: new Uint8Array(1024), _malloc: vi.fn(() => 16), _free: vi.fn(),
     _retrom_mame_start: vi.fn(() => 1), _retrom_mame_step: vi.fn(() => 1), _retrom_mame_stop: vi.fn(),
-    _retrom_mame_restore: vi.fn(() => 1), _retrom_mame_aspect_ratio: () => 4 / 3,
+    _retrom_mame_restore: vi.fn(() => 1), _retrom_mame_save_size: vi.fn(() => 8), _retrom_mame_save: vi.fn(() => 1),
+    _retrom_mame_aspect_ratio: () => 4 / 3,
     _retrom_mame_fps: () => 60, _retrom_mame_sample_rate: () => 48000} as unknown as MameCore;
   vi.spyOn(window, "requestAnimationFrame").mockReturnValue(1);
   vi.spyOn(window, "cancelAnimationFrame").mockImplementation(() => {});
@@ -36,4 +37,23 @@ it("rejects failed native startup before restoration and cleans up", async () =>
     new Uint8Array([1]), content)).rejects.toThrow("MAME_BOOT_FAILED");
   expect(state.core._retrom_mame_restore).not.toHaveBeenCalled();
   expect(state.core._retrom_mame_stop).toHaveBeenCalledOnce();
+});
+it.each([0, 917])("disables unusable checkpoints of %i native bytes before capture", async size => {
+  vi.mocked(state.core._retrom_mame_save_size).mockReturnValue(size);
+  const adapter = await mountMame({machine: "coleco", game, bios: [], runtimeBaseUrl: "/"}, document.body, window, null, content);
+  expect(adapter.getCheckpointAvailability?.()).toEqual({available: false, blocker: "UNSUPPORTED"});
+  vi.mocked(state.core._malloc).mockClear();
+  await expect(adapter.checkpoint?.()).rejects.toThrow("MAME_CHECKPOINT_UNAVAILABLE");
+  expect(state.core._malloc).not.toHaveBeenCalled();
+  expect(state.core._retrom_mame_save).not.toHaveBeenCalled();
+  await adapter.exit();
+});
+it("allows native checkpoints at the exact declared payload boundary", async () => {
+  vi.mocked(state.core._retrom_mame_save_size).mockReturnValue(916);
+  const adapter = await mountMame({machine: "coleco", game, bios: [], runtimeBaseUrl: "/"}, document.body, window, null, content);
+  expect(adapter.getCheckpointAvailability?.()).toEqual({available: true, blocker: null});
+  await expect(adapter.checkpoint?.()).resolves.toEqual({bytes: new Uint8Array([1]), format: "format"});
+  expect(state.core._retrom_mame_save).toHaveBeenCalledWith(16, 916);
+  await adapter.exit();
+  expect(adapter.getCheckpointAvailability?.()).toEqual({available: false, blocker: "NOT_READY"});
 });

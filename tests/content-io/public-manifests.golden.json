@@ -1801,11 +1801,11 @@
           },
           "core": {
             "path": "assets/4.2.3/data/cores/fbneo-wasm.data",
-            "sha256": "4f0ea82f529eefbbbd4d97f347dcbd55655ba9dd7ccc9d20e4c4806e0885fafa"
+            "sha256": "6cf6dcde0dd230415706d49e9b20ffcf3f58666cbd118e66c00d497ab5f5bfb8"
           },
           "provenance": {
             "path": "assets/4.2.3/data/cores/fbneo-content-pair.json",
-            "sha256": "e6380f45de1e854c8c889ebd00efa4d3520994365392f269ae10441d953faa28"
+            "sha256": "6ec331af711fa37baa78edf9143da0f6bdebb4bc954744383f68bf6d49adb448"
           }
         },
         "capabilities": {

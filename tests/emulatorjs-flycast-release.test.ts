@@ -31,7 +31,7 @@ it("binds Flycast release bytes and metadata separately and confines candidate o
 });
 
 it.each([
-  {core: "fbneo", repo: "FBNeo", baseline: "gd5f072e147cf", release: "4.2.3", binary: "fbneo-wasm.data", resources: ["fbneo-arcade.dat", "fbneo-content-pair.json"]},
+  {core: "fbneo", repo: "FBNeo", baseline: "g6e7b7ea6c61a", release: "4.2.3", binary: "fbneo-wasm.data", resources: ["fbneo-arcade.dat", "fbneo-content-pair.json"]},
   {core: "azahar", repo: "azahar", baseline: "g62cfcfb5e488", release: "4.3.0-pre", binary: "azahar-thread-wasm.data", resources: []},
 ])("verifies the complete $core release and rejects missing paired assets", ({core, repo, baseline, release, binary, resources}) => {
   const repository = `https://github.com/retrom-project/${repo}`, tag = `retrom-core-${baseline}-r1`;

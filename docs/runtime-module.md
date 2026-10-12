@@ -1,6 +1,6 @@
 # Runtime configuration and preparation
 
-The runtime module is the source of game interpretation for both review and play. It declares 110 Provider Targets (75 EmulatorJS and 35 independent runtime Targets), 109 existing product bindings and 95 named platforms. EmulatorJS PPSSPP remains declared without a prior host product binding; the independent PPSSPP Target supplies that product core. These counts describe retained declarations, not completed product acceptance.
+The runtime module is the source of game interpretation for both review and play. It declares 111 Provider Targets (76 EmulatorJS and 35 independent runtime Targets), 110 existing product bindings and 95 named platforms. EmulatorJS PPSSPP remains declared without a prior host product binding; the independent PPSSPP Target supplies that product core. These counts describe retained declarations, not completed product acceptance.
 
 `RuntimeConfiguration` contains `content` and optional `cores`. Content identifies a single file, arcade archive, DOS bundle and optional internal executable, or a project. RPG Maker projects select the actual one of seven engine implementations. Per-core rules contain declared Target options, arcade Parent logical paths and an optional `romSet` short name from that core’s paired DAT. `cores[coreId].romSet` stays inside the existing game JSON and cannot be borrowed by another core. BIOS file IDs, installation state, import batches, deployment revisions and authorization credentials never enter this JSON.
 

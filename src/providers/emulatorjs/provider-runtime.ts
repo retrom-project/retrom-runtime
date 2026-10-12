@@ -1,3 +1,4 @@
+import {registerCoreFamily} from "./core-family.js";
 import {ownEmulatorJsWakeLocks} from "./wake-lock.js";
 import {EmulatorPlayerInput} from "./player-input.js";
 import {installEmulatorJsNativeObservation} from "./content-acceptance.js";
@@ -55,7 +56,7 @@ import {readPspCheckpoint} from "./psp-state.js";
 import {installPspRestoreObserver} from "./psp-restore.js";
 import {createEmulatorJsSurface} from "./surface.js";
 import {prepareParentContent} from "./parent-content.js";
-import {installParentArchiveDownload, preserveParentArchive} from "./parent-archive.js";
+import {maybeInstallParentArchive} from "./parent-archive.js";
 import {encodeStoredCheckpoint} from "../../provider/checkpoint-storage.js";
 import {installEmulatorJsOutputViewport} from "./output-viewport.js";
 import {acknowledgeLutroStoredSave, installLutroNativeRestore, LutroNativeSaveTracker} from "./lutro-native-save.js";
@@ -74,6 +75,7 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
   private readonly input: EmulatorPlayerInput;
   private readonly startup: StartupTasks;
   private cleanupWakeLocks: (() => Promise<void>) | null = null;
+  private cleanupCoreFamily: (() => void) | null = null;
   private cleanupStartupDownloads: (() => void) | null = null;
   private readonly listeners = new Set<(event: RuntimeEventV1) => void>();
   private state: RuntimeStateV1 = "CREATED";
@@ -196,6 +198,7 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
 
   exit() {
     this.startup.stop(this.state === "FAILED");
+    this.cleanupCoreFamily?.();
     this.cleanupStartupDownloads?.();
     this.exitPromise ??= Promise.resolve().then(() => this.performExit());
     return this.exitPromise;
@@ -406,18 +409,15 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
       if (!this.instance) {this.fail("PLAYER_RUNTIME_UNAVAILABLE"); return;}
       const instance = this.instance;
       try {
-        (() => {
-          if ((this.implementation.runtimeCore === "fbneo" || this.implementation.runtimeCore === "fbalpha2012_cps1" ||
-            this.implementation.runtimeCore === "fbalpha2012_cps2" || this.implementation.runtimeCore === "mame2003" ||
-            this.implementation.runtimeCore === "mame2003_plus" || this.implementation.runtimeCore === "supermodel") &&
-            optionalResource(this.envelope, "parent", "PARENT_ARCHIVE")) {
-            const previous = this.cleanupParent;
-            const release = this.implementation.release === "4.3.0-pre"
-              ? preserveParentArchive(instance, this.implementation.runtimeCore)
-              : installParentArchiveDownload(instance, this.envelope, this.contentSession, this.contentOwner.signal);
-            this.cleanupParent = async () => {release(); await previous?.();};
-          }
-        })();
+        if (this.implementation.runtimeCore === "fbalpha") {
+          this.cleanupCoreFamily = registerCoreFamily(instance, "fbalpha", "arcade");
+        }
+        const release = maybeInstallParentArchive(instance, this.implementation.runtimeCore, this.implementation.release,
+          this.envelope, this.contentSession, this.contentOwner.signal);
+        if (release) {
+          const previous = this.cleanupParent;
+          this.cleanupParent = async () => {release(); await previous?.();};
+        }
       } catch (error) {this.fail("PLAYER_PARENT_ARCHIVE_UNAVAILABLE", error); return;}
       this.startupObserver?.deadline.initialize();
       this.cleanupStartupDownloads = installStartupDownloads(instance, this.implementation.release, this.startup,

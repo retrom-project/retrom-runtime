@@ -16,7 +16,7 @@ import type {ForkRelease} from "../scripts/emulatorjs-fork-releases.mjs";
 import {forkReleaseFiles} from "../scripts/emulatorjs-fork-releases.mjs";
 
 describe("EmulatorJS Provider release build", () => {
-  it("builds all 75 targets from one verified materialized input without downloads", {timeout: 30_000}, async () => {
+  it("builds all 76 targets from one verified materialized input without downloads", {timeout: 30_000}, async () => {
     const root = await temporaryRoot();
     try {
       const sourceRoot = join(root, "source");
@@ -64,10 +64,10 @@ describe("EmulatorJS Provider release build", () => {
         providerId: string; targets: unknown[];
       };
       expect(provider.providerId).toBe("emulatorjs");
-      expect(provider.targets).toHaveLength(75);
+      expect(provider.targets).toHaveLength(76);
       const identity = JSON.parse(await readFile(join(result.bundleRoot, "runtime-fingerprints.json"), "utf8"));
       expect(identity.providerId).toBe("emulatorjs");
-      expect(Object.keys(identity.targets)).toHaveLength(75);
+      expect(Object.keys(identity.targets)).toHaveLength(76);
       expect(identity.targets.fceumm.fingerprint).toMatch(/^[a-f0-9]{64}$/u);
       const provenance = JSON.parse(await readFile(join(result.bundleRoot, "provenance.json"), "utf8"));
       expect(provenance.forks).toEqual(sourceCatalog.forks);
@@ -115,7 +115,14 @@ async function fixtureForks(sourceRoot: string) {
     }
     forks.push({...fork, assets: all.map(({contents: _contents, ...asset}) => asset)});
   }
-  return {...emulatorJsSourceCatalog, forks, developmentForks: await fixtureDevelopmentForks(sourceRoot)};
+  const developmentCores = await Promise.all(emulatorJsSourceCatalog.developmentCores.map(async source => ({
+    ...source, files: await Promise.all(source.files.map(async file => {
+      const contents = `fixture:assets/${file.output}\n`;
+      await write(join(sourceRoot, file.output), contents);
+      return {...file, sizeBytes: Buffer.byteLength(contents), sha256: createHash("sha256").update(contents).digest("hex")};
+    })),
+  })));
+  return {...emulatorJsSourceCatalog, forks, developmentCores, developmentForks: await fixtureDevelopmentForks(sourceRoot)};
 }
 
 async function fixtureDevelopmentForks(root: string) {

@@ -1,3 +1,4 @@
+import type {FlycastMachine} from "./flycast-arcade.js";
 import {arcadeAncestry} from "./arcade-ancestry.js";
 import {configuredMachine, playableArcadeMachine, type ArcadeCatalog, type ArcadeMachine} from "./arcade.js";
 import {resolveRuntimeTarget} from "./catalog.js";
@@ -55,14 +56,18 @@ export function arcadeROMSetOptions(request: ROMSetRequest) {
 }
 
 /** Prune obsolete Parent references, while preserving selections and shared files belonging to other cores. */
-export function reconcileArcadeConfiguration(request: Request & {previousConfig?: unknown; arcadeCatalogs: Readonly<Record<string, ArcadeCatalog>>}) {
+export function reconcileArcadeConfiguration(request: Request & {previousConfig?: unknown; arcadeCatalogs: Readonly<Record<string, ArcadeCatalog>>; flycastCatalogs?: Readonly<Record<string, readonly FlycastMachine[]>>}) {
   const config = parseRuntimeConfiguration(request.config);
   validateConfigurationFiles(config, request.files);
-  if (config.content.kind !== "ARCADE") {return {config, removedParentFiles: []};}
+  if (!("entryFile" in config.content)) {return {config, removedParentFiles: []};}
   const entryFile = config.content.entryFile;
   const file = request.files.find(file => file.logicalKey === entryFile)!;
   for (const [coreId, core] of Object.entries(config.cores ?? {})) {
     const {target} = resolveRuntimeTarget(request.directory.platformId, coreId, config.content);
+    if (target.contentRequirements?.kind === "FLYCAST_CARTRIDGE") {
+      pruneFlycastParents(core, file, request.files, request.flycastCatalogs?.[coreId]);
+      continue;
+    }
     const catalog = request.arcadeCatalogs[coreId];
     if (core.romSet !== undefined && (!target.romSetSelection ||
       !playableArcadeMachine(catalog?.[core.romSet]))) {configurationFailure("RUNTIME_ROM_SET_INVALID", {coreId});}
@@ -80,4 +85,14 @@ export function reconcileArcadeConfiguration(request: Request & {previousConfig?
   const previous = request.previousConfig === undefined ? config : parseRuntimeConfiguration(request.previousConfig);
   const previousParents = new Set(Object.values(previous.cores ?? {}).flatMap(core => core.parentFiles ?? []));
   return {config, removedParentFiles: [...previousParents].filter(key => !retained.has(key))};
+}
+
+function pruneFlycastParents(core: {parentFiles?: string[]}, file: RuntimeContentFile,
+  files: readonly RuntimeContentFile[], catalog: readonly FlycastMachine[] | undefined) {
+  const name = file.name.split("/").at(-1)!.replace(/\.zip$/iu, "").toLowerCase();
+  const parent = catalog?.find(machine => machine.name === name)?.parent;
+  if (core.parentFiles) {core.parentFiles = core.parentFiles.filter(key => {
+    const candidate = files.find(file => file.logicalKey === key);
+    return candidate && /\.zip$/iu.test(candidate.name) && candidate.name.split("/").at(-1)!.slice(0, -4).toLowerCase() === parent;
+  });}
 }

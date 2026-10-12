@@ -9,6 +9,8 @@ import {EagerContentFile} from "./eager-content-file.js";
 import {prepareEagerROM} from "./eager-resources.js";
 import type {EjsWindow} from "./emulator-instance.js";
 import {contentFileName} from "./content-filename.js";
+import {FlycastFiles} from "./flycast-files.js";
+import {optionalResource} from "./resources.js";
 
 export function emulatorJsDisableCue(core: string): boolean {
   return ["cap32", "quasi88", "flycast"].includes(core);
@@ -62,14 +64,26 @@ export async function mountEagerContentFile(runtimeWindow: EjsWindow, disc: {url
 
 export async function mountFlycastRange(runtimeWindow: EjsWindow,
   disc: {url: string; sha256: string; sizeBytes: number}, targetId: string,
-  signal: AbortSignal, fail: (error: Error) => void, session: AdapterContentSession) {
+  signal: AbortSignal, fail: (error: Error) => void, session: AdapterContentSession,
+  files: ReadonlyArray<{virtualPath: string; url: string; sha256: string; sizeBytes: number}> = []) {
   const policy = session.inputPolicy("game");
   const reader = await session.open(fileContentSource(disc, policy), policy, signal);
   const range = createFlycastRange(disc, flycastContentName(disc.url, disc.sha256, targetId), reader, fail);
-  runtimeWindow.RETROM_FLYCAST_RANGE = range;
-  const FileConstructor = (runtimeWindow as Window & typeof globalThis).File;
-  runtimeWindow.EJS_gameUrl = new FileConstructor(["RETROM_FLYCAST_RANGE_V1"], range.filename);
-  return range;
+  const opened = [range];
+  try {
+    const dependencies = [];
+    for (const file of files) {
+      const policy = session.inputPolicy("game-files");
+      const reader = await session.open(fileContentSource(file, policy), policy, signal);
+      const mounted = createFlycastRange(file, file.virtualPath, reader, fail);
+      opened.push(mounted); dependencies.push({path: `/${file.virtualPath}`, range: mounted});
+    }
+    const bridge = new FlycastFiles(range, dependencies, fail);
+    runtimeWindow.RETROM_FLYCAST_RANGE = bridge;
+    const FileConstructor = (runtimeWindow as Window & typeof globalThis).File;
+    runtimeWindow.EJS_gameUrl = new FileConstructor(["RETROM_FLYCAST_RANGE_V1"], range.filename);
+    return bridge.contentFile;
+  } catch (error) {await Promise.all(opened.map(file => file.dispose())); throw error;}
 }
 
 export function flycastContentName(url: string, sha256: string, targetId: string): string {
@@ -87,7 +101,7 @@ export function flycastContentName(url: string, sha256: string, targetId: string
   if (name.length > 255 || !/^[a-z0-9][a-z0-9._-]*\.zip$/iu.test(name) || name.includes("..")) {
     throw new Error("FLYCAST_CONTENT_NAME_INVALID");
   }
-  return name;
+  return name.toLowerCase();
 }
 
 export function hasSeekableGame(envelope: LaunchEnvelopeV1): boolean {
@@ -126,6 +140,6 @@ export async function configureContentDisc(runtimeWindow: EjsWindow, envelope: L
   const cleanup = installFlycastCompatibility(runtimeWindow);
   try {
     return {range: await mountFlycastRange(runtimeWindow, game, envelope.runtime.targetId,
-      signal, fail, requireContentSession(session)), cleanup};
+      signal, fail, requireContentSession(session), optionalResource(envelope, "game-files", "EXTERNAL_FILE_SET")?.files), cleanup};
   } catch (error) {cleanup(); throw error;}
 }

@@ -7,7 +7,7 @@ import {thomsonModelOptions} from "./thomson.js";
 import {parseRuntimeConfiguration, validateConfigurationFiles} from "./configuration.js";
 import {arcadeDependencies, configuredMachine, type ArcadeCatalog, type ArchiveMember} from "./arcade.js";
 import {arcadeBIOSRequirements, resolveBIOSRequirements} from "./bios.js";
-import {validateFlycastCartridge, type FlycastMachine} from "./flycast-cartridge.js";
+import {flycastDependencies, requireFlycastDependencies, type FlycastMachine} from "./flycast-arcade.js";
 import {arcadeCRCWarnings, type CRCWarning} from "./arcade-crc.js";
 import {contentHash, restorability} from "./identity.js";
 import {canonicalJsonBytes} from "../provider/contract.js";
@@ -49,8 +49,8 @@ export function contentBIOSRequirements(request: ContentBIOSRequest) {
     biosSets = arcadeDependencies(selectedCore, config, request.files, request.archives, request.arcadeCatalog).biosSets;
   }
   const crcWarnings = target.contentRequirements?.kind === "FLYCAST_CARTRIDGE" && entry
-    ? validateFlycastCartridge(target.contentRequirements.platform, request.files.find(file => file.logicalKey === entry)!,
-      request.flycastCatalog, request.archives?.[entry])
+    ? (() => {const dependencies = flycastDependencies(target.contentRequirements.platform, selectedCore, config,
+      request.files, request.flycastCatalog, request.archives); requireFlycastDependencies(dependencies); return dependencies.crcWarnings;})()
     : request.arcadeCatalog && request.archives ? arcadeCRCWarnings(selectedCore, config, request.files, request.archives, request.arcadeCatalog) : [];
   return {biosRequirements: [...resolveBIOSRequirements({providerId: binding.providerId, targetId: binding.targetId,
     config, files: request.files, firmwareEvidence: request.firmwareEvidence}),
@@ -128,11 +128,9 @@ export function prepareRuntime(request: PrepareRuntimeRequest) {
   request = resolveSavedRuntimeRequest(request);
   const {config, selectedCore, binding, target, targetOptions, declaration, identity} = prepareIdentity(request);
   let crcWarnings: CRCWarning[] = [];
-  if (target.contentRequirements?.kind === "FLYCAST_CARTRIDGE") {
-    const entry = "entryFile" in config.content ? config.content.entryFile : "";
-    crcWarnings = validateFlycastCartridge(target.contentRequirements.platform, request.files.find(file => file.logicalKey === entry)!,
-      request.flycastCatalog, request.archives?.[entry]);
-  }
+  const flycast = target.contentRequirements?.kind === "FLYCAST_CARTRIDGE"
+    ? flycastDependencies(target.contentRequirements.platform, selectedCore, config, request.files, request.flycastCatalog, request.archives) : null;
+  if (flycast) {requireFlycastDependencies(flycast); crcWarnings = flycast.crcWarnings;}
   if (config.content.kind === "DOS_BUNDLE" && config.content.entryPath !== undefined &&
     !request.dosEntries?.includes(config.content.entryPath)) {configurationFailure("RUNTIME_DOS_ENTRY_INVALID");}
   let dependencies = {parentFiles: [] as string[], missingParents: [] as string[], biosSets: [] as string[]};
@@ -142,6 +140,7 @@ export function prepareRuntime(request: PrepareRuntimeRequest) {
     crcWarnings = arcadeCRCWarnings(selectedCore, config, request.files, request.archives, request.arcadeCatalog);
     if (dependencies.missingParents.length) {configurationFailure("RUNTIME_PARENT_MISSING", {parents: dependencies.missingParents.join(",")});}
   }
+  if (flycast) {dependencies = {parentFiles: flycast.parentFiles, missingParents: flycast.missingParents, biosSets: []};}
   const entryKey = "entryFile" in config.content ? config.content.entryFile : null;
   const entry = request.files.find(file => file.logicalKey === entryKey);
   return {...identity, config, targetOptions, dependencies,
@@ -150,7 +149,7 @@ export function prepareRuntime(request: PrepareRuntimeRequest) {
     biosRequirements: [...resolveBIOSRequirements({providerId: binding.providerId, targetId: binding.targetId, config,
       files: request.files, firmwareEvidence: request.firmwareEvidence}),
       ...(request.arcadeCatalog ? arcadeBIOSRequirements(selectedCore, request.arcadeCatalog, dependencies.biosSets) : [])], checkpoint: declaration.checkpoint, capabilities: declaration.capabilities,
-    resources: contentResources(config, target, selectedCore, request.files, request.cueFiles)};
+    resources: contentResources(config, target, selectedCore, request.files, request.cueFiles, flycast)};
 }
 
 function prepareTargetOptions(config: RuntimeConfiguration, target: TargetDeclaration, coreId: string,
@@ -178,7 +177,7 @@ function prepareTargetOptions(config: RuntimeConfiguration, target: TargetDeclar
 }
 
 function contentResources(config: RuntimeConfiguration, target: TargetDeclaration, coreId: string,
-  files: readonly RuntimeContentFile[], cueFiles?: readonly string[]): ResourcePlan[] {
+  files: readonly RuntimeContentFile[], cueFiles?: readonly string[], flycast?: ReturnType<typeof flycastDependencies> | null): ResourcePlan[] {
   const game = target.inputs.find(input => input.role === "game");
   if (!game) {configurationFailure("RUNTIME_DECLARATION_INVALID");}
   const parent = config.cores?.[coreId]?.parentFiles ?? [];
@@ -189,13 +188,10 @@ function contentResources(config: RuntimeConfiguration, target: TargetDeclaratio
     if (bridges.length !== 1) {configurationFailure("RUNTIME_DECLARATION_INVALID");}
     resources[0].bridgeAssetPath = bridges[0];
   }
-  const entryFile = "entryFile" in config.content ? config.content.entryFile : null;
-  if (config.content.kind === "SINGLE_FILE" && files.some(file => file.logicalKey === entryFile && file.name.toLowerCase().endsWith(".cue"))) {
-    if (!target.inputs.some(input => input.role === "game-files")) {configurationFailure("RUNTIME_CONTENT_UNSUPPORTED");}
-    const others = cueFiles ? [...cueFiles] : files.filter(file => file.logicalKey !== entryFile).map(file => file.logicalKey);
-    if (others.some(key => !files.some(file => file.logicalKey === key) || key === entryFile)) {configurationFailure("RUNTIME_CUE_INVALID");}
-    if (others.length) {resources.push({role: "game-files", kind: "EXTERNAL_FILE_SET", ordinal: 0, files: others,
-      paths: projectPaths(others, entryFile!)});}
+  resources.push(...cueResourcePlans(config, target, files, cueFiles));
+  if (flycast) {
+    resources.push(...flycastResourcePlans(flycast, files));
+    return resources;
   }
   if (parent.length > 0) {
     const input = target.inputs.find(item => item.role === "parent");
@@ -203,6 +199,25 @@ function contentResources(config: RuntimeConfiguration, target: TargetDeclaratio
     resources.push({role: "parent", kind: "PARENT_ARCHIVE", ordinal: 0, files: parent});
   }
   return resources;
+}
+
+function cueResourcePlans(config: RuntimeConfiguration, target: TargetDeclaration,
+  files: readonly RuntimeContentFile[], cueFiles?: readonly string[]): ResourcePlan[] {
+  if (config.content.kind !== "SINGLE_FILE") {return [];}
+  const entryFile = config.content.entryFile;
+  if (!files.some(file => file.logicalKey === entryFile && file.name.toLowerCase().endsWith(".cue"))) {return [];}
+  if (!target.inputs.some(input => input.role === "game-files")) {configurationFailure("RUNTIME_CONTENT_UNSUPPORTED");}
+  const others = cueFiles ? [...cueFiles] : files.filter(file => file.logicalKey !== entryFile).map(file => file.logicalKey);
+  if (others.some(key => !files.some(file => file.logicalKey === key) || key === entryFile)) {configurationFailure("RUNTIME_CUE_INVALID");}
+  return others.length ? [{role: "game-files", kind: "EXTERNAL_FILE_SET", ordinal: 0, files: others,
+    paths: projectPaths(others, entryFile)}] : [];
+}
+
+function flycastResourcePlans(flycast: ReturnType<typeof flycastDependencies>, files: readonly RuntimeContentFile[]): ResourcePlan[] {
+  const keys = [...flycast.parentFiles, ...flycast.mediaFiles];
+  return keys.length ? [{role: "game-files", kind: "EXTERNAL_FILE_SET", ordinal: 0, files: keys,
+    paths: {...Object.fromEntries(flycast.parentFiles.map(key => [key, files.find(file => file.logicalKey === key)!.name.split("/").at(-1)!.toLowerCase()])),
+      ...flycast.mediaPaths}}] : [];
 }
 
 function arcadeResourcePath(resource: ResourcePlan, config: RuntimeConfiguration, target: TargetDeclaration,

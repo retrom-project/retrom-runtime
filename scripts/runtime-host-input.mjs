@@ -8,7 +8,7 @@ import {tmpdir} from "node:os";
 import {join, dirname} from "node:path";
 import {gunzipSync, crc32} from "node:zlib";
 import {parseRuntimeConfiguration, contentHash, runtimeBindings, identifyPSXRegion, resolveSavedRuntimeRequest,
-  contentBIOSRequirements, dosEntryCandidates, arcadeParentOptions, resolveRuntimeTarget} from "../dist/runtime/index.js";
+  contentBIOSRequirements, dosEntryCandidates, arcadeParentOptions, resolveRuntimeTarget, flycastMachine, flycastContentReferences, flycastMedia} from "../dist/runtime/index.js";
 import {zipMembers, requireLocator, safePath, sha256} from "./runtime-archive-input.mjs";
 export {parentArchive} from "./runtime-archive-input.mjs";
 
@@ -31,7 +31,8 @@ export async function configureHostInput(input) {
   }
   const selection = input.platformId === "scummvm" && !input.selection?.scummvm
     ? {...input.selection, scummvm: await configureScummvm(input)} : input.selection;
-  return {...input, evidence, archiveMembers, selection, ...(input.platformId === "arcade" ? {arcadeCatalogs: await arcadeTables()} : {})};
+  return {...input, evidence, archiveMembers, selection, ...(input.platformId === "arcade" ? {arcadeCatalogs: await arcadeTables()} : {}),
+    ...await flycastConfigureEvidence(input)};
 }
 
 async function configureScummvm(input) {
@@ -74,8 +75,10 @@ export async function prepareHostInput(input) {
   if (target.contentRequirements?.kind === "FLYCAST_CARTRIDGE") {
     const file = input.files.find(item => item.logicalKey === config.content.entryFile);
     if (!file) {throw new Error("RUNTIME_ENTRY_MISSING");}
-    return {...prepared, flycastCatalog: await flycastTable(input.providerRoots?.[binding.providerId], target.contentRequirements),
-      archives: {[file.logicalKey]: await zipMembers(requireLocator(input, file))}};
+    const facts = await flycastArchiveEvidence(input, config, coreId, binding, target);
+    const machine = flycastMachine(target.contentRequirements.platform, file, facts.flycastCatalog);
+    for (const key of flycastMedia(machine, file, input.files).mediaFiles) {await validateCHD(input, key);}
+    return {...prepared, ...facts};
   }
   if (config.content.kind !== "ARCADE") {return prepared;}
   const tables = await arcadeTables();
@@ -88,6 +91,43 @@ export async function prepareHostInput(input) {
     archives[key] = await zipMembers(requireLocator(input, file));
   }
   return {...input, arcadeCatalog: tables[coreId], archives};
+}
+
+/** All host operations use the same paired table and original archive evidence. */
+async function flycastArchiveEvidence(input, config, coreId, binding, target) {
+  const archives = {}, keys = new Set([config.content.entryFile, ...config.cores?.[coreId]?.parentFiles ?? [],
+    ...(input.attachFile?.toLowerCase().endsWith(".zip") ? [input.attachFile] : [])]);
+  for (const key of keys) {
+    const file = input.files.find(file => file.logicalKey === key);
+    if (file) {archives[key] = await zipMembers(requireLocator(input, file));}
+  }
+  return {archives, flycastCatalog: await flycastTable(input.providerRoots?.[binding.providerId], target.contentRequirements)};
+}
+export async function flycastConfigureEvidence(input) {
+  const flycastCatalogs = {};
+  for (const coreId of input.coreIds ?? []) {
+    if (!runtimeBindings.some(binding => binding.coreId === coreId && binding.platformIds.includes(input.platformId) &&
+      binding.contentKinds.includes("SINGLE_FILE"))) {continue;}
+    const {target, binding} = resolveRuntimeTarget(input.platformId, coreId, {kind: "SINGLE_FILE", entryFile: "content"});
+    if (target.contentRequirements?.kind === "FLYCAST_CARTRIDGE") {
+      flycastCatalogs[coreId] = await flycastTable(input.providerRoots?.[binding.providerId], target.contentRequirements);
+    }
+  }
+  return Object.keys(flycastCatalogs).length ? {flycastCatalogs} : {};
+}
+async function validateCHD(input, key) {
+  const file = input.files.find(file => file.logicalKey === key);
+  if (!file) {throw new Error("RUNTIME_FLYCAST_DISC_MISSING");}
+  const handle = await open(requireLocator(input, file), constants.O_RDONLY | constants.O_NOFOLLOW);
+  try {
+    const info = await handle.stat(), bytes = Buffer.alloc(124);
+    if (!info.isFile() || info.size !== file.sizeBytes) {throw new Error("RUNTIME_CONTENT_CHANGED");}
+    const {bytesRead} = await handle.read(bytes, 0, bytes.length, 0);
+    const version = bytesRead >= 16 ? bytes.readUInt32BE(12) : 0;
+    const minimum = ({3: 120, 4: 108, 5: 124})[version];
+    if (!minimum || bytesRead < minimum || bytes.subarray(0, 8).toString("ascii") !== "MComprHD" ||
+      bytes.readUInt32BE(8) !== minimum) {throw new Error("RUNTIME_FLYCAST_DISC_INVALID");}
+  } finally {await handle.close();}
 }
 
 const flycastTables = new Map();
@@ -118,6 +158,8 @@ async function loadFlycastTable(root, requirement) {
     const catalog = document.machines;
     if (!Array.isArray(catalog) || catalog.length > 10000 || catalog.some(machine =>
       typeof machine.name !== "string" || typeof machine.platform !== "string" || typeof machine.mediaType !== "string" ||
+      machine.parent !== null && (typeof machine.parent !== "string" || !/^[a-z0-9][a-z0-9._-]*$/u.test(machine.parent) || machine.parent.includes("..")) ||
+      machine.disc !== null && (typeof machine.disc !== "string" || !/^[a-z0-9][a-z0-9._-]*$/u.test(machine.disc) || machine.disc.includes("..")) ||
       !Array.isArray(machine.files) || machine.files.some(file => typeof file.name !== "string" ||
         !Number.isSafeInteger(file.sizeBytes) || file.sizeBytes < 0 || typeof file.optional !== "boolean" ||
         file.crc32 !== null && !/^[0-9a-f]{8}$/iu.test(file.crc32)))) {throw new Error("RUNTIME_FLYCAST_CATALOG_INVALID");}
@@ -145,8 +187,10 @@ export async function contentHostBIOSRequirements(input) {
   if (target.contentRequirements?.kind === "FLYCAST_CARTRIDGE") {
     const file = input.files.find(file => file.logicalKey === config.content.entryFile);
     if (!file) {throw new Error("RUNTIME_ENTRY_MISSING");}
-    prepared = {...prepared, flycastCatalog: await flycastTable(input.providerRoots?.[binding.providerId], target.contentRequirements),
-      archives: {[file.logicalKey]: await zipMembers(requireLocator(input, file))}};
+    const facts = await flycastArchiveEvidence(input, config, coreId, binding, target);
+    const machine = flycastMachine(target.contentRequirements.platform, file, facts.flycastCatalog);
+    for (const key of flycastMedia(machine, file, input.files).mediaFiles) {await validateCHD(input, key);}
+    prepared = {...prepared, ...facts};
   }
   const result = contentBIOSRequirements(prepared);
   for (const requirement of result.biosRequirements) {
@@ -183,6 +227,11 @@ export async function hostDOSEntryCandidates(input) {
 /** Read current Parent archives and a proposed attachment using the same DAT authority. */
 export async function hostArcadeParentOptions(input) {
   const config = parseRuntimeConfiguration(input.config), coreId = input.coreId ?? input.directory.defaultCoreId;
+  const {target, binding} = resolveRuntimeTarget(input.directory.platformId, coreId, config.content);
+  if (target.contentRequirements?.kind === "FLYCAST_CARTRIDGE") {
+    if (input.attachFile?.toLowerCase().endsWith(".chd")) {await validateCHD(input, input.attachFile);}
+    return arcadeParentOptions({...input, ...await flycastArchiveEvidence(input, config, coreId, binding, target)});
+  }
   if (config.content.kind !== "ARCADE") {throw new Error("RUNTIME_CONFIGURATION_INVALID");}
   const tables = await arcadeTables(), archives = {};
   const keys = new Set([config.content.entryFile, ...config.cores?.[coreId]?.parentFiles ?? [],
@@ -235,6 +284,21 @@ export async function discoverContentDependencies(input) {
   const found = [];
   for (const file of input.files.filter(file => file.logicalKey.toLowerCase().endsWith(".cue"))) {
     found.push(...await cueReferences(input, file));
+  }
+  const directory = input.directory;
+  if (directory && runtimeBindings.some(binding => binding.coreId === directory.defaultCoreId &&
+    binding.platformIds.includes(directory.platformId) && binding.contentKinds.includes("SINGLE_FILE"))) {
+    const {target, binding} = resolveRuntimeTarget(directory.platformId, directory.defaultCoreId, {kind: "SINGLE_FILE", entryFile: "content"});
+    if (target.contentRequirements?.kind === "FLYCAST_CARTRIDGE") {
+      const catalog = await flycastTable(input.providerRoots?.[binding.providerId], target.contentRequirements);
+      for (const file of input.files.filter(file => /\.zip$/iu.test(file.name))) {
+        const name = file.name.split("/").at(-1).slice(0, -4).toLowerCase();
+        const machine = catalog.find(machine => machine.name === name && machine.platform === directory.platformId);
+        if (machine && ["CARTRIDGE", "GDROM"].includes(machine.mediaType)) {
+          found.push(...flycastContentReferences(machine, file, await zipMembers(requireLocator(input, file)), catalog));
+        }
+      }
+    }
   }
   return {files: found.filter((file, index) => found.findIndex(other => other.logicalKey === file.logicalKey) === index)};
 }

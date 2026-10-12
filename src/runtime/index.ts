@@ -10,3 +10,5 @@ export * from "./arcade.js";
 export * from "./arcade-crc.js";
 export * from "./rom-set.js";
 export {identifyPSXRegion} from "./psx.js";
+
+export * from "./flycast-arcade.js";

@@ -23,18 +23,17 @@ export function contentHash(files: readonly RuntimeContentFile[], mode: "FILE" |
   return hashBytes(canonicalJsonBytes(entries));
 }
 
-export type Restorability = {restorable: true; reason: null} | {restorable: false;
-  reason: "GAME_UNAVAILABLE" | "SAVE_UNAVAILABLE" | "CORE_UNAVAILABLE" | "CORE_CHANGED" | "CONTENT_CHANGED" | "FORMAT_UNREADABLE"};
+export type Restorability = {restorable: true; reason: null; warning: "CORE_CHANGED" | null} | {restorable: false; warning: null;
+  reason: "GAME_UNAVAILABLE" | "SAVE_UNAVAILABLE" | "CORE_UNAVAILABLE" | "CONTENT_CHANGED" | "FORMAT_UNREADABLE"};
 export function restorability(input: {gameAvailable: boolean; saveAvailable: boolean; current: RuntimeIdentity | null;
   context: SaveContext; readFormats: readonly string[]}): Restorability {
-  if (!input.gameAvailable) {return {restorable: false, reason: "GAME_UNAVAILABLE"};}
-  if (!input.saveAvailable) {return {restorable: false, reason: "SAVE_UNAVAILABLE"};}
+  if (!input.gameAvailable) {return {restorable: false, reason: "GAME_UNAVAILABLE", warning: null};}
+  if (!input.saveAvailable) {return {restorable: false, reason: "SAVE_UNAVAILABLE", warning: null};}
   const current = input.current, saved = input.context;
   if (!current || current.coreId !== saved.coreId || current.providerId !== saved.providerId || current.targetId !== saved.targetId) {
-    return {restorable: false, reason: "CORE_UNAVAILABLE"};
+    return {restorable: false, reason: "CORE_UNAVAILABLE", warning: null};
   }
-  if (current.coreFingerprint !== saved.coreFingerprint) {return {restorable: false, reason: "CORE_CHANGED"};}
-  if (current.romHash !== saved.romHash) {return {restorable: false, reason: "CONTENT_CHANGED"};}
-  if (!input.readFormats.includes(saved.checkpointFormat)) {return {restorable: false, reason: "FORMAT_UNREADABLE"};}
-  return {restorable: true, reason: null};
+  if (current.romHash !== saved.romHash) {return {restorable: false, reason: "CONTENT_CHANGED", warning: null};}
+  if (!input.readFormats.includes(saved.checkpointFormat)) {return {restorable: false, reason: "FORMAT_UNREADABLE", warning: null};}
+  return {restorable: true, reason: null, warning: current.coreFingerprint !== saved.coreFingerprint ? "CORE_CHANGED" : null};
 }

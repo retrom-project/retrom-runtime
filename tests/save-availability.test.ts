@@ -28,7 +28,7 @@ it("keeps saves available after frontend assets and runtime presentation declara
   expect(restorability({gameAvailable: true, saveAvailable: true, current,
     context: {...current, coreFingerprint: before.yabause.fingerprint, checkpointFormat: format,
       content: {kind: "SINGLE_FILE", entryFile: "game.chd"}, runtimeOptions: {dosEntryPath: null}},
-    readFormats: [format]})).toEqual({restorable: true, reason: null});
+    readFormats: [format]})).toEqual({restorable: true, reason: null, warning: null});
 });
 
 it("excludes the native host bridge while keeping the packaged core protected", async () => {

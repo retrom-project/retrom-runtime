@@ -54,7 +54,7 @@ async function execute(command, input, signal = new AbortController().signal) {
     for (const item of input.items) {
       try {output.push({...await contentHostBIOSRequirements(item), error: null});}
       catch (error) {
-        output.push({biosRequirements: [], crcWarnings: [], error: error instanceof Error && /^RUNTIME_[A-Z0-9_]+$/u.test(error.message)
+        output.push({biosRequirements: [], crcWarnings: [], missingRomMembers: [], error: error instanceof Error && /^RUNTIME_[A-Z0-9_]+$/u.test(error.message)
           ? error.message : "RUNTIME_CONTENT_UNAVAILABLE"});
       }
     }

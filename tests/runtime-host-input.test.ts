@@ -160,4 +160,11 @@ it("projects modified installed BIOS CRCs for review without rejecting a game", 
     requirementKey: bios.requirementKey}]});
   expect(withBIOS.biosRequirements).toEqual(projected.biosRequirements);
   expect(withBIOS.crcWarnings).toEqual(expect.arrayContaining([expect.objectContaining({role: "BIOS", file: "neogeo.zip"})]));
+  expect(withBIOS.missingRomMembers.filter(item => item.role === "BIOS")).toEqual([]);
+  const required = bios.members!.find(member => member.required)!;
+  const incomplete = zipSync(Object.fromEntries(bios.members!.filter(member => member.name !== required.name)
+    .map(member => [member.name, new Uint8Array(member.sizeBytes)])));
+  await writeFile(path, incomplete);
+  const missing = await contentHostBIOSRequirements({...request, biosFiles: [{filename: "neogeo.zip", path, requirementKey: bios.requirementKey}]});
+  expect(missing.missingRomMembers).toContainEqual(expect.objectContaining({role: "BIOS", coreId: "fbneo", member: required.name, reason: "MISSING"}));
 });

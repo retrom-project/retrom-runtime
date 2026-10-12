@@ -32,4 +32,11 @@ describe("persistent runtime failure", () => {
     expect(failure.diagnostics.length).toBeLessThanOrEqual(8);
     expect(failure.diagnostics.every(item => item.message.length <= 500)).toBe(true);
   });
+  it("retains native evidence for generic adapter exceptions but excludes banners from public failure reasons", () => {
+    const failure = createRuntimeFailure("PLAYER_RUNTIME_START_FAILED", new Error("PLAYER_RUNTIME_START_FAILED"), "STARTUP", [
+      "Built for EmulatorJS", "Download a copy from https://example.test", "[WARN] continuing startup", "[ERROR] required program.bin is missing",
+    ]);
+    expect(failure.diagnostics.filter(item => item.source === "CORE")).toEqual([{source: "CORE", message: "[ERROR] required program.bin is missing"}]);
+    expect(failure.diagnostics.some(item => item.source === "RUNTIME" && item.message.startsWith("at "))).toBe(true);
+  });
 });

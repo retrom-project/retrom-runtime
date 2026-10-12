@@ -8,6 +8,7 @@ export * from "./configure.js";
 export * from "./arcade-parent.js";
 export * from "./arcade.js";
 export * from "./arcade-crc.js";
+export * from "./arcade-completeness.js";
 export * from "./rom-set.js";
 export {identifyPSXRegion} from "./psx.js";
 

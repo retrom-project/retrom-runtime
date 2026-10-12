@@ -2,6 +2,7 @@ import {afterEach, describe, expect, it, vi} from "vitest";
 
 import {installEmulatorJs423StateRestoreCompatibility} from "./state-restore.js";
 import {installContentAcceptance} from "./content-acceptance.js";
+import {installEmulatorJsNativeDiagnostics} from "./native-diagnostics.js";
 import {installExternalFileCompatibility} from "./external-files.js";
 import {installEmulatorJsRetroArchConfig} from "./retroarch-config.js";
 
@@ -15,12 +16,13 @@ afterEach(() => {
 
 describe("EmulatorJS 4.2.3 explicit restore", () => {
   it("retains the core content receipt when native restore hooks share the factory", async () => {
-    const content = installContentAcceptance(window);
+    const diagnostics = installEmulatorJsNativeDiagnostics(window);
+    const content = installContentAcceptance(window, diagnostics);
     const cleanup = installEmulatorJs423StateRestoreCompatibility(window, true);
     Reflect.set(window, "EJS_Runtime", async () => ({_retrom_content_load_result: () => 1}));
     await Reflect.get(window, "EJS_Runtime")({});
     try {await expect(content.wait(new AbortController().signal)).resolves.toBeUndefined();}
-    finally {cleanup(); content.cleanup();}
+    finally {cleanup(); content.cleanup(); diagnostics.cleanup();}
   });
 
   it("does not autoload a MAME 2003 Plus state before its first emulated frame", async () => {
@@ -58,7 +60,7 @@ describe("EmulatorJS 4.2.3 explicit restore", () => {
   });
 
   it("preserves configuration hooks installed before the deferred GameManager appears", () => {
-    const cleanupConfig = installEmulatorJsRetroArchConfig(window, "fuse", true);
+    const cleanupConfig = installEmulatorJsRetroArchConfig(window, "fuse");
     const cleanupExternal = installExternalFileCompatibility(window);
     const cleanupState = installEmulatorJs423StateRestoreCompatibility(window);
     const callMain = vi.fn<(args: string[]) => void>();

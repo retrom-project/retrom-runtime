@@ -6,10 +6,10 @@ import hashlib
 import json
 from pathlib import Path
 import xml.etree.ElementTree as ET
-from dat_labels import labels
+from dat_labels import labels, rom_facts
 
 
-def enrich(repository, inputs):
+def enrich(repository, inputs, refresh=False):
     sources = {item['coreId']: item for item in json.loads((repository / 'src/runtime/arcade-provenance.json').read_text())}
     path = repository / 'assets/facts/arcade-catalog.json.gz'
     catalogs = json.loads(gzip.decompress(path.read_bytes()))
@@ -20,8 +20,13 @@ def enrich(repository, inputs):
         root = ET.fromstring(data)
         records = root.findall('machine') or root.findall('game')
         indexed = {record.attrib['name']: record for record in records}
-        if len(indexed) != len(records) or set(indexed) != set(catalogs[core_id]):
+        if len(indexed) != len(records) or not refresh and set(indexed) != set(catalogs[core_id]):
             raise ValueError(f'DAT/facts entries differ: {core_id}')
+        if refresh:
+            catalogs[core_id] = {name: {'parent': record.get('romof') or record.get('cloneof'),
+                                      'bios': record.get('isbios') == 'yes',
+                                      'devices': sorted({r.attrib['name'] for r in record.findall('device_ref')}),
+                                      'roms': rom_facts(record)} for name, record in indexed.items()}
         for name, facts in catalogs[core_id].items():
             record = indexed[name]
             facts.update(labels(record))
@@ -34,5 +39,6 @@ def enrich(repository, inputs):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--dat', action='append', required=True, metavar='CORE=PATH')
+    parser.add_argument('--refresh', action='store_true', help='Regenerate ROM facts from the digest-verified paired DAT.')
     args = parser.parse_args()
-    enrich(Path(__file__).resolve().parents[1], [value.split('=', 1) for value in args.dat])
+    enrich(Path(__file__).resolve().parents[1], [value.split('=', 1) for value in args.dat], args.refresh)

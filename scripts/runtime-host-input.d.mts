@@ -5,7 +5,7 @@ export function configureHostInput(input: import("../src/runtime/configure.js").
 export function assembleResource(input: HostFiles): Promise<{path: string; sizeBytes: number; sha256: string}>;
 export function parentArchive(input: HostFiles): Promise<{path: string; sizeBytes: number; sha256: string}>;
 export function prepareHostInput(input: PrepareRuntimeRequest & {locators: Record<string, string>}): Promise<PrepareRuntimeRequest>;
-export function contentHostBIOSRequirements(input: ContentBIOSRequest & {locators: Record<string, string>; providerRoots?: Record<string, string>; biosFiles?: Array<{requirementKey: string; filename: string; path: string}>}): Promise<{biosRequirements: BIOSRequirement[]; crcWarnings: import("../src/runtime/arcade-crc.js").CRCWarning[]}>;
+export function contentHostBIOSRequirements(input: ContentBIOSRequest & {locators: Record<string, string>; providerRoots?: Record<string, string>; biosFiles?: Array<{requirementKey: string; filename: string; path: string}>}): Promise<ReturnType<typeof import("../src/runtime/prepare.js").contentBIOSRequirements>>;
 export function hostDOSEntryCandidates(input: {config: unknown; files: RuntimeContentFile[]; locators: Record<string, string>}): Promise<{entries: string[]}>;
 export function hostArcadeParentOptions(input: import("../src/runtime/arcade-parent.js").ArcadeParentRequest & {locators: Record<string, string>}): Promise<ReturnType<typeof import("../src/runtime/arcade-parent.js").arcadeParentOptions>>;
 export function arcadeTables(): Promise<Record<string, import("../src/runtime/arcade.js").ArcadeCatalog>>;

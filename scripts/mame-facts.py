@@ -7,7 +7,7 @@ from pathlib import Path
 import re
 import sys
 import xml.etree.ElementTree as ET
-from dat_labels import labels
+from dat_labels import labels, rom_facts
 
 
 def parse_mame(data):
@@ -19,20 +19,7 @@ def parse_mame(data):
         name = machine.attrib["name"]
         if name in games:
             raise ValueError(f"Duplicate MAME record: {name}")
-        bios = machine.findall("biosset")
-        default = next((b.get("name") for b in bios if b.get("default") == "yes"),
-                       bios[0].get("name") if bios else None)
-        roms = []
-        for rom in machine.findall("rom"):
-            if not rom.get("crc") or rom.get("bios") not in (None, default):
-                continue
-            entry = {key: rom.attrib[key] for key in ("name", "size", "crc")}
-            for key in ("sha1", "merge", "bios"):
-                if rom.get(key):
-                    entry[key] = rom.get(key)
-            if rom.get("optional") == "yes":
-                entry["optional"] = True
-            roms.append(entry)
+        roms = rom_facts(machine)
         games[name] = {**labels(machine), "parent": machine.get("romof") or machine.get("cloneof"),
                        "bios": machine.get("isbios") == "yes", "device": machine.get("isdevice") == "yes",
                        "runnable": machine.get("runnable") != "no",

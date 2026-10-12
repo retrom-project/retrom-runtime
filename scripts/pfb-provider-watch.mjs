@@ -3,7 +3,7 @@ import {dirname, join, resolve} from "node:path";
 import {fileURLToPath} from "node:url";
 import {watch} from "node:fs";
 
-import {buildPFBProviderDev, selectedPFBProviderDevInput} from "./pfb-provider-dev.mjs";
+import {buildPFBProvidersDev, selectedPFBProviderDevInput} from "./pfb-provider-dev.mjs";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const required = ["PFB_PROVIDER_ACTIVE_PATH", "PFB_PROVIDER_INSTALLED_ROOT", "PFB_PROVIDER_DEV_ROOT"];
@@ -19,9 +19,9 @@ const input = {
   activePath: resolve(process.env.PFB_PROVIDER_ACTIVE_PATH),
   installedRoot: resolve(process.env.PFB_PROVIDER_INSTALLED_ROOT),
   outputRoot: resolve(process.env.PFB_PROVIDER_DEV_ROOT),
-  localAssets: (selected.providerId === "retrom-runtime" ? sources.localAssets : []).map((asset) => ({
+  assetsByProvider: {"retrom-runtime": sources.localAssets.map((asset) => ({
     source: join(root, asset.source), output: asset.output,
-  })),
+  })), emulatorjs: []},
 };
 let building = false;
 let queued = false;
@@ -31,9 +31,11 @@ async function rebuild() {
   if (building) { queued = true; return; }
   building = true;
   try {
-    const result = await buildPFBProviderDev(input);
+    const results = await buildPFBProvidersDev(input);
     lastError = undefined;
-    process.stdout.write(`pfb provider dev module ${result.moduleSha256}\n`);
+    for (const [providerId, result] of Object.entries(results)) {
+      process.stdout.write(`pfb provider dev module ${providerId} ${result.moduleSha256}\n`);
+    }
   } catch (error) {
     lastError = error;
     process.stderr.write(`${error?.stack ?? error}\n`);

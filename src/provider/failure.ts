@@ -1,4 +1,5 @@
 import type {RuntimeFailureV1} from "./generated/provider-module-v1.js";
+import {usefulCoreDiagnostic} from "./core-diagnostics.js";
 
 /** Adapter-owned classification and native text, copied before native resources disappear. */
 export class RuntimeFailureError extends Error {
@@ -12,10 +13,11 @@ const storage = new Set(["CONTENT_IO_CACHE_UNAVAILABLE", "CONTENT_IO_WORKSPACE_U
 const content = new Set(["PLAYER_CONTENT_REJECTED", "CONTENT_IO_CHECKSUM_MISMATCH", "CONTENT_IO_IDENTITY_CHANGED",
   "CONTENT_IO_LENGTH_MISMATCH"]);
 
-export function createRuntimeFailure(code: string, error: unknown, phase: RuntimeFailureV1["phase"]): RuntimeFailureV1 {
+export function createRuntimeFailure(code: string, error: unknown, phase: RuntimeFailureV1["phase"], native: readonly string[] = []): RuntimeFailureV1 {
   const category = classifyFailure(code, error);
   const diagnostics: {source: "CORE" | "RUNTIME"; message: string}[] = [];
   const append = (source: "CORE" | "RUNTIME", message: string) => {
+    if (source === "CORE" && !usefulCoreDiagnostic(message)) {return;}
     const sanitized = sanitizeDiagnostic(message);
     if (sanitized && diagnostics.length < 8 && !diagnostics.some(item => item.message === sanitized)) {
       diagnostics.push({source, message: sanitized});
@@ -24,6 +26,7 @@ export function createRuntimeFailure(code: string, error: unknown, phase: Runtim
   if (error instanceof RuntimeFailureError) {
     for (const message of error.diagnostics.slice(-8)) {append("CORE", message);}
   }
+  for (const message of native.slice(-8)) {append("CORE", message);}
   let cause = error;
   const visited = new Set<unknown>();
   for (let depth = 0; cause != null && depth < 4 && !visited.has(cause); depth++) {

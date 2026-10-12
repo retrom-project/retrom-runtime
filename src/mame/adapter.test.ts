@@ -2,9 +2,12 @@ import {beforeEach, expect, it, vi} from "vitest";
 import type {MameCore} from "./core.js";
 import {mountMame} from "./adapter.js";
 import {eagerPolicy} from "../provider/content-policies.js";
+import {CoreDiagnostics} from "../provider/core-diagnostics.js";
+import {RuntimeFailureError} from "../provider/failure.js";
+const diagnostics = new CoreDiagnostics();
 const state = vi.hoisted(() => ({core: null as unknown as MameCore}));
 vi.mock("./core.js", async original => ({...await original<typeof import("./core.js")>(),
-  loadCore: async () => ({core: state.core, build: "build"})}));
+  loadCore: async () => ({core: state.core, build: "build", diagnostics})}));
 vi.mock("./files.js", () => ({mountFiles: async () => "identity"}));
 vi.mock("./state.js", () => ({checkpointFormat: "format", checkpointLimit: 1024,
   decodeState: async () => new Uint8Array([1, 2]), encodeState: async () => new Uint8Array([1])}));
@@ -14,6 +17,7 @@ vi.mock("./audio.js", () => ({MameAudio: class {resume = async () => {}; pause =
 const content = {assetIndex: {}, contentSession: {inputPolicy: () => eagerPolicy(32768),
   open: async () => {throw Error("unused");}, materialize: async () => {throw Error("unused");}, closeFile: async () => {}}};
 beforeEach(() => {
+  diagnostics.clear();
   state.core = {HEAPU8: new Uint8Array(1024), _malloc: vi.fn(() => 16), _free: vi.fn(),
     _retrom_mame_start: vi.fn(() => 1), _retrom_mame_step: vi.fn(() => 1), _retrom_mame_stop: vi.fn(),
     _retrom_mame_restore: vi.fn(() => 1), _retrom_mame_save_size: vi.fn(() => 8), _retrom_mame_save: vi.fn(() => 1),
@@ -32,9 +36,13 @@ it.each(["sg1000", "coleco", "pv1000"] as const)("restores %s immediately after 
   expect(state.core._retrom_mame_stop).toHaveBeenCalledOnce();
 });
 it("rejects failed native startup before restoration and cleans up", async () => {
+  diagnostics.record("program.bin NOT FOUND\nFatal error: Required files are missing.");
   vi.mocked(state.core._retrom_mame_start).mockReturnValue(0);
-  await expect(mountMame({machine: "coleco", game, bios: [], runtimeBaseUrl: "/"}, document.body, window,
-    new Uint8Array([1]), content)).rejects.toThrow("MAME_BOOT_FAILED");
+  const failure = await mountMame({machine: "coleco", game, bios: [], runtimeBaseUrl: "/"}, document.body, window,
+    new Uint8Array([1]), content).catch(error => error);
+  expect(failure).toBeInstanceOf(RuntimeFailureError);
+  expect(failure).toMatchObject({code: "MAME_BOOT_FAILED", category: "CONTENT", diagnostics: ["program.bin NOT FOUND", "Fatal error: Required files are missing."]});
+  expect(diagnostics.messages()).toEqual([]);
   expect(state.core._retrom_mame_restore).not.toHaveBeenCalled();
   expect(state.core._retrom_mame_stop).toHaveBeenCalledOnce();
 });

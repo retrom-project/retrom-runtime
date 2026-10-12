@@ -146,12 +146,12 @@ it("projects content BIOS alone from real PSX and arcade evidence without requir
     request("atari7800", "prosystem", "game.a78"), psx, clone, {...psx, locators: {"disc.bin": join(root, "does-not-exist")}},
   ]}}) + "\n");
   const result = await read(); expect(result.id).toBe("bios");
-  expect(result.result[0]).toEqual({biosRequirements: [], crcWarnings: [], error: null});
+  expect(result.result[0]).toEqual({biosRequirements: [], crcWarnings: [], missingRomMembers: [], error: null});
   expect(result.result[1]).toMatchObject({error: null, biosRequirements: [expect.objectContaining({logicalName: "disksys.rom", required: true})]});
   expect(result.result[2]).toMatchObject({error: null, biosRequirements: [expect.objectContaining({required: false})]});
   expect(result.result[3]).toMatchObject({error: null, biosRequirements: [expect.objectContaining({condition: "PSX_REGION_US", required: true})]});
   expect(result.result[4]).toMatchObject({error: null, biosRequirements: [expect.objectContaining({logicalName: "neogeo.zip", required: true, members: expect.any(Array)})]});
-  expect(result.result[5]).toEqual({biosRequirements: [], crcWarnings: [], error: "RUNTIME_CONTENT_UNAVAILABLE"});
+  expect(result.result[5]).toEqual({biosRequirements: [], crcWarnings: [], missingRomMembers: [], error: "RUNTIME_CONTENT_UNAVAILABLE"});
   child.stdin.end(JSON.stringify({id: "limit", command: "batch-content-bios-requirements", input: {items: Array.from({length: 101}, () => ({}))}}) + "\n");
   expect(await read()).toEqual({id: "limit", error: "RUNTIME_REQUEST_TOO_LARGE"});
   expect((await once(child, "close"))[0]).toBe(0);

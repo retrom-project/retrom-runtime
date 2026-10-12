@@ -23,7 +23,7 @@ function fixture(config: string | null = originalConfig) {
 describe("SAME CD-i directional input configuration", () => {
   it("creates native defaults in a fresh browser without existing MAME configuration", () => {
     const {Manager, readFile, writeFile} = fixture(null);
-    const cleanup = installEmulatorJsRetroArchConfig(window, "same_cdi", false);
+    const cleanup = installEmulatorJsRetroArchConfig(window, "same_cdi");
     Reflect.set(window, "EJS_GameManager", Manager);
     try {
       const manager = new Manager(); manager.getRetroArchCfg();
@@ -36,14 +36,14 @@ describe("SAME CD-i directional input configuration", () => {
     } finally {cleanup(); Reflect.deleteProperty(window, "EJS_GameManager");}
   });
 
-  it.each([false, true])("configures both directions without changing native mappings (restoring=%s)", (restoring) => {
+  it.each([{args: []}, {args: ["-v"]}])("configures both directions without changing native mappings (args=$args)", ({args}) => {
     const {Manager, readFile, writeFile, callMain} = fixture();
-    const cleanup = installEmulatorJsRetroArchConfig(window, "same_cdi", restoring);
+    const cleanup = installEmulatorJsRetroArchConfig(window, "same_cdi");
     Reflect.set(window, "EJS_GameManager", Manager);
     try {
       const manager = new Manager(); manager.getRetroArchCfg(); manager.getRetroArchCfg();
       expect(readFile).not.toHaveBeenCalled(); // Saves and core defaults are not mounted yet.
-      const result = manager.Module.callMain([]);
+      const result = manager.Module.callMain(args);
       const xml = new DOMParser().parseFromString(result, "text/xml");
       expect(readFile).toHaveBeenCalledWith(path, {encoding: "utf8"});
       expect(writeFile).toHaveBeenCalledTimes(1);
@@ -66,7 +66,7 @@ describe("SAME CD-i directional input configuration", () => {
   it.each(["broken XML", originalConfig.replace('type="P1_MOUSE_Y"', 'type="P2_MOUSE_Y"')])(
     "rejects a missing native input port rather than starting with ineffective defaults", (config) => {
       const {Manager, callMain} = fixture(config);
-      const cleanup = installEmulatorJsRetroArchConfig(window, "same_cdi", false);
+      const cleanup = installEmulatorJsRetroArchConfig(window, "same_cdi");
       Reflect.set(window, "EJS_GameManager", Manager);
       try {
         const manager = new Manager(); manager.getRetroArchCfg();
@@ -78,7 +78,7 @@ describe("SAME CD-i directional input configuration", () => {
   it("leaves other cores' configuration and startup unchanged", () => {
     const {Manager, readFile, writeFile} = fixture();
     Reflect.set(window, "EJS_GameManager", Manager);
-    const cleanup = installEmulatorJsRetroArchConfig(window, "vice_xplus4", true);
+    const cleanup = installEmulatorJsRetroArchConfig(window, "vice_xplus4");
     try {
       const manager = new Manager(); manager.getRetroArchCfg(); manager.Module.callMain([]);
       expect(readFile).not.toHaveBeenCalled(); expect(writeFile).not.toHaveBeenCalled();

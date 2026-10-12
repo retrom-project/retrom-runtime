@@ -5,15 +5,14 @@ type Manager = SameCdiConfigurationIO & {getRetroArchCfg?: () => string; Module?
 type Constructor = {prototype?: Manager};
 type ConfigWindow = Window & {EJS_GameManager?: Constructor};
 
-export function installEmulatorJsRetroArchConfig(playerWindow: Window, core: string, restoring: boolean) {
+export function installEmulatorJsRetroArchConfig(playerWindow: Window, core: string) {
   const settings = [
     ...(core === "quasi88" ? ['system_directory = "/retroarch/userdata/system"'] : []),
     ...(core === "fuse" ? ['input_libretro_device_p1 = "513"', 'input_libretro_device_p2 = "0"'] : []),
     ...(core === "81" ? ['input_libretro_device_p1 = "257"', 'input_libretro_device_p2 = "259"'] : []),
     ...(core === "daphne" ? ["history_list_enable = false"] : []),
-    ...(restoring ? ["log_verbosity = true"] : []),
+    "log_verbosity = true",
   ];
-  if (!settings.length && core !== "same_cdi") {return () => undefined;}
   const target = playerWindow as ConfigWindow;
   const descriptor = Object.getOwnPropertyDescriptor(target, "EJS_GameManager");
   if (descriptor && !descriptor.configurable) {throw new Error("PLAYER_RUNTIME_CONFIG_UNAVAILABLE");}
@@ -32,7 +31,7 @@ export function installEmulatorJsRetroArchConfig(playerWindow: Window, core: str
       // command-line overrides; retroarch.cfg alone cannot preserve these ports.
       const devices = core === "81" ? ["--device", "1:257", "--device", "2:259"] : [];
       // Logging is initialized before retroarch.cfg in some 4.2.3 cores.
-      const logging = restoring && !args.includes("-v") ? ["-v"] : [];
+      const logging = !args.includes("-v") ? ["-v"] : [];
       return callMain.call(this, [...devices, ...logging, ...args]);
     };
   };
@@ -47,7 +46,7 @@ export function installEmulatorJsRetroArchConfig(playerWindow: Window, core: str
     const getConfig = prototype.getRetroArchCfg;
     patched.set(prototype, original);
     prototype.getRetroArchCfg = function () {
-      if (restoring || core === "81" || core === "same_cdi") {configureNativeEntry(this);}
+      configureNativeEntry(this);
       return `${getConfig.call(this)}\n${settings.join("\n")}\n`;
     };
   };

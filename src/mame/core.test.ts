@@ -37,6 +37,16 @@ test("registers the verified family after matching the native build and releases
   expect(core.loadDynamicLibrary).toHaveBeenCalledWith("blob:verified", {global: true, nodelete: true, loadAsync: true});
   expect(core._retrom_mame_attach).toHaveBeenCalledOnce(); expect(URL.revokeObjectURL).toHaveBeenCalledTimes(2);
 });
+test("captures missing members from both native output streams without treating a read-only retry as a failure", async () => {
+  const core = fixture();
+  const loaded = await loadCore(config, content, async () => ({default: async (io: {print(message: string): void; printErr(message: string): void}) => {
+    io.print("program.bin NOT FOUND");
+    io.printErr("Fatal error: Required files are missing");
+    io.printErr(":sl6:diskiing:0:525: error opening image file /content/game.dsk with flags=00000003 (generic:2 Permission denied)");
+    return core;
+  }}));
+  expect(loaded.diagnostics.messages()).toEqual(["program.bin NOT FOUND", "Fatal error: Required files are missing"]);
+});
 test("rejects metadata outside the verified asset index before executing any JS", async () => {
   state.assetHash = "c".repeat(64); const loader = vi.fn();
   await expect(loadCore(config, content, loader)).rejects.toThrow("MAME_CORE_ABI_MISMATCH");

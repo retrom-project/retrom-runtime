@@ -40,8 +40,8 @@ export const emulatorJsContentCoreForks = [
   },
   {
     "repository": "https://github.com/retrom-project/FBNeo",
-    "tag": "retrom-core-gd5f072e147cf-r2",
-    "commit": "f0f6f846537d7e72310834f5933df515df79e300",
+    "tag": "retrom-core-g6e7b7ea6c61a-r1",
+    "commit": "35ce6528f243ec537e5dc3a187d45c7ad073c768",
     "adapterAbi": "emulatorjs-content-result-v1",
     "runtimeCore": "fbneo",
     "assets": [
@@ -49,37 +49,37 @@ export const emulatorJsContentCoreForks = [
         "filename": "LICENSE",
         "sha256": "85fef85fe2c4b8c14ef25ba7e2f251580dcfa01f8be09cd9781b378cf2cd5af7",
         "sizeBytes": 46417,
-        "url": "https://github.com/retrom-project/FBNeo/releases/download/retrom-core-gd5f072e147cf-r2/LICENSE"
+        "url": "https://github.com/retrom-project/FBNeo/releases/download/retrom-core-g6e7b7ea6c61a-r1/LICENSE"
       },
       {
         "filename": "fbneo-arcade.dat",
-        "sha256": "1864074639d42c2b6a7ad407e2df609c8824041408e42421eb7fa58fce5993e7",
-        "sizeBytes": 11297869,
-        "url": "https://github.com/retrom-project/FBNeo/releases/download/retrom-core-gd5f072e147cf-r2/fbneo-arcade.dat"
+        "sha256": "b7192ff1aa025b8281979d96e12c8cf82e4df43a3afb81af6b668a4a7bbb90f9",
+        "sizeBytes": 11605505,
+        "url": "https://github.com/retrom-project/FBNeo/releases/download/retrom-core-g6e7b7ea6c61a-r1/fbneo-arcade.dat"
       },
       {
         "filename": "fbneo-content-pair.json",
-        "sha256": "4cb989cd43bdf956de1e43b81dea81b2a1f6c55ce69712e4c224141ba1b31c51",
+        "sha256": "6ec331af711fa37baa78edf9143da0f6bdebb4bc954744383f68bf6d49adb448",
         "sizeBytes": 732,
-        "url": "https://github.com/retrom-project/FBNeo/releases/download/retrom-core-gd5f072e147cf-r2/fbneo-content-pair.json"
+        "url": "https://github.com/retrom-project/FBNeo/releases/download/retrom-core-g6e7b7ea6c61a-r1/fbneo-content-pair.json"
       },
       {
         "filename": "fbneo-wasm.data",
-        "sha256": "eab740b32303a75fa9007a4d03e6566aa4ece0e84d3550b2f9490d116e106625",
-        "sizeBytes": 8697867,
-        "url": "https://github.com/retrom-project/FBNeo/releases/download/retrom-core-gd5f072e147cf-r2/fbneo-wasm.data"
+        "sha256": "6cf6dcde0dd230415706d49e9b20ffcf3f58666cbd118e66c00d497ab5f5bfb8",
+        "sizeBytes": 9222008,
+        "url": "https://github.com/retrom-project/FBNeo/releases/download/retrom-core-g6e7b7ea6c61a-r1/fbneo-wasm.data"
       },
       {
         "filename": "fbneo.json",
-        "sha256": "5d3d8d417e49ef7a4268191800fccdf3efcebaff8121d358d5b9c713fff26170",
+        "sha256": "4b32e8a25dcde94c01254ddf78dd4e226acbce436f9810e53de8a99ce67cdcfe",
         "sizeBytes": 117,
-        "url": "https://github.com/retrom-project/FBNeo/releases/download/retrom-core-gd5f072e147cf-r2/fbneo.json"
+        "url": "https://github.com/retrom-project/FBNeo/releases/download/retrom-core-g6e7b7ea6c61a-r1/fbneo.json"
       },
       {
         "filename": "rpg-runtime-release.json",
-        "sha256": "08eef2543fa1d3b8f60aae7a3d207602290f2c1d67d688b3b1feec44be7505c6",
+        "sha256": "e573fdb7ff08526894422297ec8b6a03fea67ada3e7c5da5197f72e456340350",
         "sizeBytes": 1038,
-        "url": "https://github.com/retrom-project/FBNeo/releases/download/retrom-core-gd5f072e147cf-r2/rpg-runtime-release.json"
+        "url": "https://github.com/retrom-project/FBNeo/releases/download/retrom-core-g6e7b7ea6c61a-r1/rpg-runtime-release.json"
       }
     ]
   },

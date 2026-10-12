@@ -15,7 +15,7 @@ export function parseRuntimeConfiguration(value: unknown): RuntimeConfiguration 
       if (!identifier(coreId) || !object(core) || !exact(core, [], ["parentFiles", "options", "romSet"])) {configurationFailure();}
       validateROMSet(core.romSet, content);
       if (core.options !== undefined && !object(core.options)) {configurationFailure();}
-      if (core.parentFiles !== undefined && (content.kind !== "ARCADE" || !Array.isArray(core.parentFiles) ||
+      if (core.parentFiles !== undefined && (!["ARCADE", "SINGLE_FILE"].includes(content.kind) || !Array.isArray(core.parentFiles) ||
         core.parentFiles.length > 32 || !core.parentFiles.every(path => logicalPath(path)) ||
         new Set(core.parentFiles).size !== core.parentFiles.length)) {configurationFailure();}
     }

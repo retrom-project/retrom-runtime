@@ -10,7 +10,7 @@ export async function prepareExternalContent(runtimeWindow: EjsWindow, envelope:
   optionalSession: AdapterContentSession | null, signal: AbortSignal,
   report: (ready: number, total: number) => void = () => {}): Promise<() => Promise<void>> {
   const files = [
-    ...(optionalResource(envelope, "game-files", "EXTERNAL_FILE_SET")?.files ?? []).map(file =>
+    ...(runtimeWindow.RETROM_FLYCAST_RANGE ? [] : optionalResource(envelope, "game-files", "EXTERNAL_FILE_SET")?.files ?? []).map(file =>
       ({file, path: file.virtualPath, role: "game-files", purpose: "GAME" as const})),
     ...(optionalResource(envelope, "external", "EXTERNAL_FILE_SET")?.files ?? []).map(file =>
       ({file, path: `/${file.virtualPath}`, role: "external", purpose: "FIRMWARE" as const})),

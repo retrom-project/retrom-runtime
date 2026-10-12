@@ -1,5 +1,5 @@
 import {configureHostInput, prepareHostInput, assembleResource, detectScummvm, arcadeTables, identifyHostBIOS,
-  discoverContentDependencies, contentHostBIOSRequirements, hostDOSEntryCandidates, hostArcadeParentOptions} from "./runtime-host-input.mjs";
+  flycastConfigureEvidence, discoverContentDependencies, contentHostBIOSRequirements, hostDOSEntryCandidates, hostArcadeParentOptions} from "./runtime-host-input.mjs";
 import {normalizeContent} from "./runtime-normalize-content.mjs";
 import {readFile} from "node:fs/promises";
 import {once} from "node:events";
@@ -31,7 +31,8 @@ async function execute(command, input, signal = new AbortController().signal) {
   case "dos-entry-candidates": output = await hostDOSEntryCandidates(input); break;
   case "arcade-parents": output = await hostArcadeParentOptions(input); break;
   case "rom-sets": output = arcadeROMSetOptions({...input, arcadeCatalog: (await arcadeTables())[input.coreId]}); break;
-  case "reconcile-config": output = reconcileArcadeConfiguration({...input, arcadeCatalogs: await arcadeTables()}); break;
+  case "reconcile-config": output = reconcileArcadeConfiguration({...input, arcadeCatalogs: await arcadeTables(),
+    ...await flycastConfigureEvidence({platformId: input.directory.platformId, coreIds: Object.keys(input.config?.cores ?? {}), providerRoots: input.providerRoots})}); break;
   case "configure": output = configureRuntime(await configureHostInput(input)); break;
   case "prepare": output = prepareRuntime(await prepareHostInput(input)); break;
   case "parent-archive": output = await archiveTask(input, signal); break;

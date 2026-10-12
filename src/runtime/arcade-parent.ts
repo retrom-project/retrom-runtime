@@ -1,3 +1,4 @@
+import {flycastAttachment, flycastDependencies} from "./flycast-arcade.js";
 import {arcadeDependencies, configuredMachine} from "./arcade.js";
 import {parseRuntimeConfiguration} from "./configuration.js";
 import {contentHash} from "./identity.js";
@@ -13,7 +14,15 @@ export function arcadeParentOptions(request: ArcadeParentRequest) {
   let config = parseRuntimeConfiguration(request.config);
   const coreId = selectedRuntimeCore(request);
   contentHash(request.files, "TREE");
-  resolveRuntimeTarget(request.directory.platformId, coreId, config.content);
+  const {target} = resolveRuntimeTarget(request.directory.platformId, coreId, config.content);
+  if (target.contentRequirements?.kind === "FLYCAST_CARTRIDGE") {
+    const platform = target.contentRequirements.platform;
+    if (request.attachFile !== undefined) {config = parseRuntimeConfiguration(flycastAttachment(platform, coreId, config,
+      request.files, request.flycastCatalog, request.attachFile));}
+    const dependencies = flycastDependencies(platform, coreId, config, request.files, request.flycastCatalog, request.archives);
+    return {coreId, parentFiles: dependencies.parentFiles, missingParents: dependencies.missingParents.map(name => `${name}.zip`),
+      mediaFiles: dependencies.mediaFiles, missingMedia: dependencies.missingMedia, config};
+  }
   if (config.content.kind !== "ARCADE") {configurationFailure();}
   if (!request.arcadeCatalog || !request.archives) {configurationFailure("RUNTIME_ARCADE_CATALOG_UNAVAILABLE");}
   if (request.attachFile !== undefined) {
@@ -27,7 +36,7 @@ export function arcadeParentOptions(request: ArcadeParentRequest) {
   }
   const dependencies = arcadeDependencies(coreId, config, request.files, request.archives, request.arcadeCatalog);
   return {coreId, parentFiles: dependencies.parentFiles,
-    missingParents: dependencies.missingParents.map(parent => `${parent}.zip`), config};
+    missingParents: dependencies.missingParents.map(parent => `${parent}.zip`), mediaFiles: [], missingMedia: [], config};
 }
 
 function parentReferenceID(request: ArcadeParentRequest, config: RuntimeConfiguration, coreId: string) {

@@ -33,6 +33,22 @@ it("rejects missing ABI and cancels polling on exit", async () => {
   expect(vi.getTimerCount()).toBe(0);
 });
 
+it("keeps a native content error when ordinary frontend option notices follow it", async () => {
+  const bridge = installContentAcceptance(window);
+  Reflect.set(window, "EJS_Runtime", async (config: {printErr(message: string): void}) => {
+    config.printErr("[libretro ERROR] Cannot read the disc sector");
+    for (let index = 0; index < 10; index++) {
+      config.printErr(`invalid core option frontend-${index}. This is not an error.`);
+      config.printErr("[INFO] Setting real canvas size: 1280 x 800");
+    }
+    return {_retrom_content_load_result: () => -1};
+  });
+  await Reflect.get(window, "EJS_Runtime")({});
+  const error = await bridge.wait(new AbortController().signal).catch(error => error);
+  bridge.cleanup();
+  expect(error).toMatchObject({diagnostics: ["[libretro ERROR] Cannot read the disc sector"]});
+});
+
 it("reports a native failure after startup and stops watching on exit", async () => {
   vi.useFakeTimers(); let receipt = 1;
   const bridge = installContentAcceptance(window), failure = vi.fn();

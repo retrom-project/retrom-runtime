@@ -6,6 +6,7 @@ import {configurationFailure, logicalPath, object, utf8Compare} from "./validati
 import {validateConfiguredOptions} from "./prepare.js";
 import {detectLcfEngine} from "./lcf.js";
 import formats from "./content-formats.json" with {type: "json"};
+import type {FlycastMachine} from "./flycast-arcade.js";
 import {playableArcadeMachine, type ArcadeCatalog} from "./arcade.js";
 
 export type ConfigureRequest = {
@@ -17,6 +18,7 @@ export type ConfigureRequest = {
   /** Archive members are inspected by the runtime; the outer archive remains the Game file. */
   archiveMembers?: Record<string, string[]>;
   arcadeCatalogs?: Readonly<Record<string, ArcadeCatalog>>;
+  flycastCatalogs?: Readonly<Record<string, readonly FlycastMachine[]>>;
   selection?: {entryFile?: string; entryPath?: string; scummvm?: Record<string, string | null>};
 };
 
@@ -30,6 +32,7 @@ export function configureRuntime(input: ConfigureRequest): RuntimeConfiguration 
   validateEvidence(input);
   const content = constructContent(input);
   const cores = input.platformId === "arcade" && content.kind === "ARCADE" ? arcadeParents(input, content.entryFile)
+    : input.flycastCatalogs && "entryFile" in content ? flycastParents(input, content.entryFile)
     : input.platformId === "scummvm" ? {scummvm: {options: scummvmOptions(input)}}
     : input.platformId === "ons" ? {onscripter_yuri: {options: {scriptEncoding: "utf8"}}} : undefined;
   const config = parseRuntimeConfiguration({content, ...(cores ? {cores} : {})});
@@ -74,11 +77,27 @@ function singleFileContent(input: ConfigureRequest): RuntimeContent {
     return declaration.extensions;
   }));
   if (input.coreIds.some(coreId => resolveRuntimeTarget(input.platformId, coreId,
-    {kind: "SINGLE_FILE", entryFile: "content"}).target.contentRequirements?.kind === "FLYCAST_CARTRIDGE")) {extensions.add("zip");}
+    {kind: "SINGLE_FILE", entryFile: "content"}).target.contentRequirements?.kind === "FLYCAST_CARTRIDGE")) {
+    const parents = new Set(input.files.flatMap(file => Object.values(input.flycastCatalogs ?? {})
+      .flatMap(catalog => catalog.filter(machine => machine.name === archiveName(file) && machine.parent).map(machine => machine.parent!))));
+    return {kind: "SINGLE_FILE", entryFile: chooseFile(input, name => name.endsWith(".zip") &&
+      !parents.has(name.split("/").at(-1)!.slice(0, -4))).logicalKey};
+  }
   const cue = extensions.has("cue") && input.files.some(file => /\.cue$/iu.test(file.name));
   return {kind: "SINGLE_FILE", entryFile: chooseFile(input, name => cue ? name.endsWith(".cue")
     : extensions.has(name.slice(name.lastIndexOf(".") + 1))).logicalKey};
 }
+function flycastParents(input: ConfigureRequest, entryFile: string) {
+  const entry = input.files.find(file => file.logicalKey === entryFile)!;
+  return Object.fromEntries(input.coreIds.flatMap(coreId => {
+    const catalog = input.flycastCatalogs?.[coreId];
+    if (!catalog) {return [];}
+    const parent = catalog.find(machine => machine.name === archiveName(entry))?.parent;
+    const files = input.files.filter(file => parent && archiveName(file) === parent && /\.zip$/iu.test(file.name));
+    return files.length ? [[coreId, {parentFiles: files.map(file => file.logicalKey)}]] : [];
+  }));
+}
+
 function archiveName(file: RuntimeContentFile) {return file.name.split("/").at(-1)!.replace(/\.zip$/iu, "").toLowerCase();}
 function arcadeAncestors(catalog: ArcadeCatalog | undefined, id: string): string[] {
   const parents: string[] = [], seen = new Set([id]);

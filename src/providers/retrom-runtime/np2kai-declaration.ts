@@ -14,5 +14,6 @@ export const np2kaiTarget = defineTarget({
   targetOptionsSchema: {type: "object", additionalProperties: false, properties: {}, required: []},
   implementation: {}, inputFilter: true, nativeSettings: false,
   videoModes: ["original", "pixel", "smooth"],
+  coreAssetPaths: ["assets/np2kai/np2kai.mjs", "assets/np2kai/np2kai.wasm"],
   assetPaths: ["font.bmp", "np2kai-register.mjs", "np2kai.mjs", "np2kai.wasm"].map(file => `assets/np2kai/${file}`),
 });

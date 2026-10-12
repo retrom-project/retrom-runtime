@@ -98,6 +98,7 @@ const targets = [
     ...target("apple2-apple2js", "Apple IIe (Apple2JS)", "apple2js-web", noOptionsSchema, false,
       "SAME_ORIGIN_BLANK", "ROM_BLOB", 32 * 1024 * 1024,
       apple2SiteAssets.map((path) => `assets/apple2js/site/${path}`)),
+    coreAssetPaths: apple2SiteAssets.filter(path => path.endsWith(".js")).map(path => `assets/apple2js/site/${path}`),
     inputs: [
       {cardinality: "ONE", kind: "ROM_BLOB", optional: false, role: "game"},
       {cardinality: "ONE", kind: "EXTERNAL_FILE_SET", optional: false, role: "external"},
@@ -108,6 +109,7 @@ const targets = [
     ...target("bbc-jsbeeb", "BBC Micro (jsbeeb)", "jsbeeb-web", noOptionsSchema, false,
       "SAME_ORIGIN_BLANK", "ROM_BLOB", 32 * 1024 * 1024,
       jsbeebSiteAssets.map((path) => `assets/jsbeeb/site/${path}`)),
+    coreAssetPaths: jsbeebSiteAssets.filter(path => path.endsWith(".js")).map(path => `assets/jsbeeb/site/${path}`),
     inputs: [
       {cardinality: "ONE", kind: "ROM_BLOB", optional: false, role: "game"},
       {cardinality: "ONE", kind: "EXTERNAL_FILE_SET", optional: false, role: "external"},
@@ -115,12 +117,12 @@ const targets = [
     contentIO: {game: runtimeGamePolicy("bbc-jsbeeb"), external: eagerPolicy(1024 * 1024)},
     hostKeyboardShortcuts: ["MENU"],
   }),
-  target(
+  defineTarget({...target(
     "butterscotch-gamemaker", "GameMaker (Butterscotch)", "butterscotch-web", noOptionsSchema,
     true, "SAME_ORIGIN_BLANK", "FILE_TREE", 16 * 1024 * 1024,
     ["assets/butterscotch/butterscotch.mjs", "assets/butterscotch/butterscotch.wasm",
       "assets/butterscotch/worker.mjs"],
-  ),
+  ), coreAssetPaths: ["assets/butterscotch/butterscotch.mjs", "assets/butterscotch/butterscotch.wasm"]}),
   target("fake08", "PICO-8 (FAKE-08)", "fake08-web", noOptionsSchema, false, "SAME_ORIGIN_BLANK", "ROM_BLOB",
     4194380, ["assets/fake08/fake08-retrom.mjs", "assets/fake08/fake08-retrom.wasm"]),
   target("flash-ruffle", "Flash (Ruffle)", "ruffle-web", noOptionsSchema, false, "SAME_ORIGIN_BLANK", "ROM_BLOB",
@@ -178,11 +180,11 @@ const targets = [
   scummvmTarget,
   target("tic80", "TIC-80", "tic80-web", noOptionsSchema, false, "SAME_ORIGIN_BLANK", "ROM_BLOB",
     1100, ["assets/tic80/tic80-retrom.mjs", "assets/tic80/tic80-retrom.wasm"]),
-  target(
+  defineTarget({...target(
     "tyranoscript", "TyranoScript", "tyranoscript-web", noOptionsSchema, false,
     "ISOLATED_ORIGIN_RESOURCE", "ISOLATED_WEB", 32 * 1024 * 1024,
     ["assets/tyranoscript/bridge.js"],
-  ),
+  ), coreAssetPaths: []}),
   target(
     "wasm4", "WASM-4", "wasm4-web", noOptionsSchema, false, "SAME_ORIGIN_BLANK", "WASM4_CART",
     132144, ["assets/wasm4/wasm4-retrom.mjs"],
@@ -243,6 +245,7 @@ function target(
   return defineTarget({
     adapterId,
     assetPaths,
+    coreAssetPaths: assetPaths,
     checkpointMaxBytes,
     displayName,
     frameMode,
@@ -296,8 +299,8 @@ function easyRpgTarget(
 }
 
 function nativeRpgTarget(id: string, displayName: string, bridgeProfile: "RPGMV" | "RPGMZ") {
-  return target(
+  return defineTarget({...target(
     id, displayName, "native-web", noOptionsSchema, false, "ISOLATED_ORIGIN_RESOURCE",
     "NATIVE_WEB", 64 * 1024 * 1024, ["assets/native/bridge.js"], {bridgeProfile},
-  );
+  ), coreAssetPaths: []});
 }

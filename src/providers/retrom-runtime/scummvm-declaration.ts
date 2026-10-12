@@ -28,6 +28,7 @@ export const scummvmTarget = defineTarget({
   inputs: [{role: "game", kind: "FILE_TREE", cardinality: "ONE", optional: false}],
   targetOptionsSchema: options, implementation: {}, inputFilter: true, nativeSettings: false,
   videoModes: ["original", "pixel", "smooth"],
+  coreAssetPaths: layout.files.filter(file => /\.(?:js|mjs|wasm|so)$/u.test(file.path)).map(file => `assets/scummvm/${file.path}`),
   assetPaths: layout.files.filter((file) => !file.path.startsWith("licenses/")).map((file) => `assets/scummvm/${file.path}`),
   preloadAssetPaths: layout.files.filter(file => file.path.startsWith("data/")).map(file => `assets/scummvm/${file.path}`),
 });

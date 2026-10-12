@@ -17,13 +17,12 @@ export const mameAppleTarget = defineTarget({
   targetOptionsSchema: {type: "object", additionalProperties: false, properties: {}, required: []},
   implementation: {}, inputFilter: true, nativeSettings: false,
   videoModes: ["original", "pixel", "smooth"],
-  assetPaths: ["mame-build.json", "mame-common.mjs", "mame-common.wasm",
-    "mame-apple.wasm"].map(file => `assets/mame/${file}`),
+  ...mameAssets(["apple"]),
 });
 
 export const mameAtomTarget = defineTarget({...mameAppleTarget, id: "mame-atom", displayName: "Acorn Atom (MAME)",
   contentIO: {game: eagerPolicy(65557), external: eagerPolicy(8192)},
-  assetPaths: mameAppleTarget.assetPaths.map(path => path.replace("mame-apple.wasm", "mame-acorn.wasm")),
+  ...mameAssets(["acorn"]),
 });
 export const mameApple2eTarget = defineTarget({...mameAppleTarget, id: "mame-apple2e", displayName: "Apple IIe (MAME)",
   contentIO: {game: eagerPolicy(143360), external: eagerPolicy(8192)},
@@ -31,16 +30,16 @@ export const mameApple2eTarget = defineTarget({...mameAppleTarget, id: "mame-app
 export const mameSG1000Target = defineTarget({...mameAppleTarget, id: "mame-sg1000", displayName: "SG-1000 (MAME)",
   contentIO: {game: eagerPolicy(2 * 1024 * 1024)},
   inputs: [{role: "game", kind: "ROM_BLOB", cardinality: "ONE", optional: false}],
-  assetPaths: mameAppleTarget.assetPaths.map(path => path.replace("mame-apple.wasm", "mame-sg1000.wasm")),
+  ...mameAssets(["sg1000"]),
 });
 export const mameColecoTarget = defineTarget({...mameAppleTarget, id: "mame-coleco", displayName: "ColecoVision (MAME)",
   contentIO: {game: eagerPolicy(2 * 1024 * 1024), external: eagerPolicy(8192)},
-  assetPaths: mameAppleTarget.assetPaths.map(path => path.replace("mame-apple.wasm", "mame-coleco.wasm")),
+  ...mameAssets(["coleco"]),
 });
 export const mamePV1000Target = defineTarget({...mameAppleTarget, id: "mame-pv1000", displayName: "Casio PV-1000 (MAME)",
   contentIO: {game: eagerPolicy(32768)},
   inputs: [{role: "game", kind: "ROM_BLOB", cardinality: "ONE", optional: false}],
-  assetPaths: mameAppleTarget.assetPaths.map(path => path.replace("mame-apple.wasm", "mame-vintage.wasm")),
+  ...mameAssets(["vintage"]),
 });
 export const mameArcadeTarget = defineTarget({...mameAppleTarget, id: "mame-arcade", displayName: "MAME Current Arcade",
   romSetSelection: {datSHA256: arcadeProvenance.find(source => source.coreId === "mame_arcade")!.sha256, driver: "MACHINE_OPTION"},
@@ -54,6 +53,11 @@ export const mameArcadeTarget = defineTarget({...mameAppleTarget, id: "mame-arca
     {role: "external", kind: "EXTERNAL_FILE_SET", cardinality: "ONE", optional: true}],
   targetOptionsSchema: {type: "object", additionalProperties: false,
     properties: {machine: {type: "string", minLength: 1, maxLength: 32}}, required: ["machine"]},
-  assetPaths: ["mame-build.json", "mame-common.mjs", "mame-common.wasm",
-    ...arcadeFamilies.map(family => `mame-${family}.wasm`)].map(file => `assets/mame/${file}`),
+  ...mameAssets(arcadeFamilies),
 });
+
+function mameAssets(families: readonly string[]) {
+  const coreAssetPaths = ["mame-common.mjs", "mame-common.wasm", ...families.map(family => `mame-${family}.wasm`)]
+    .map(file => `assets/mame/${file}`);
+  return {coreAssetPaths, assetPaths: ["assets/mame/mame-build.json", ...coreAssetPaths]};
+}

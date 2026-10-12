@@ -56,7 +56,7 @@
 
 - 所有新存档不设大小阈值，必须在 Provider 公共存档边界统一执行一次 gzip 压缩；恢复时由同一公共层有界解压后再交给核心。覆盖即时快照、原生存档导出、退出最终快照和成功持久化后的确认。
 - 核心 adapter 只输出、接收自身未压缩的状态或语义封包；移除 adapter 内已有的传输压缩写入，不得叠加核心 gzip 与公共 gzip。PX68K 等多文件语义容器保留 ZIP，但新写入使用 STORE（level 0），由公共 gzip 压缩。核心原生状态序列化中的字段编码（例如 WebMSX 的数组编码）、游戏固有存档编码和游戏资源解包不属于整包传输压缩；不得破坏核心原生读取契约。
-- 公共存储格式通过各 Target 的 `writeFormat`/`readFormats` 显式声明。每个 Target 只读写当前公共单层 gzip 格式；不保留历史编码或按魔数猜测格式。存档恢复同时要求冻结的 core/provider/target、实际实现指纹与完整 active 游戏文件内容 hash 一致。
+- 公共存储格式通过各 Target 的 `writeFormat`/`readFormats` 显式声明。每个 Target 只读写当前公共单层 gzip 格式；不保留历史编码或按魔数猜测格式。存档恢复同时要求冻结的 core/provider/target、核心文件指纹与完整 active 游戏文件内容 hash 一致。
 - 压缩和解压都须校验非空与 Target 大小上限；解压流逐块限制实际输出量，不能只信任 gzip 尾部的长度。损坏、截断、解压超限或取消必须失败，不得回退为新游戏或把压缩字节传入核心。
 - 回归必须覆盖小存档、完整字节往返、当前格式读取、单层压缩、损坏/超限、取消，以及原生存档确认和退出最终快照。宿主保存、哈希和传输压缩后的字节，不复制核心专用编解码。
 
@@ -87,6 +87,7 @@ npm run package:check
 - 发布版本只来自 GitHub 的不可移动 `vX.Y.Z`（或 RC）tag；两个 Provider 的 manifest、客户端导出和归档名统一使用去掉 `v` 的版本。不得在 package.json、provider-sources.json 或 catalog 中维护独立发布版本；未打 tag 的构建使用 `0.0.0-dev`，PFB 客户端沿用已校验基座版本。
 - `v*` tag 由 `.github/workflows/release.yml` 构建 GitHub Release；tag 不移动、不覆盖。`vX.Y.Z-rc.N` 可从功能分支发布 GitHub prerelease，稳定 tag 必须已进入 `master`；两者都执行相同代码和聚合门禁。
 - `providerId + targetId` 是长期稳定的 Target 身份。Provider Bundle 是单次部署与 Launch 的不可变产物，不能成为 Game、Review 或 Save 的兼容身份。Provider Module、Launch Envelope 与 checkpoint 行为直接修改现有契约，不因不兼容而升级协议代际，也不保留兼容读取、旧调用识别或旧数据迁移。提交前必须运行协议代际门禁。
+- `coreFingerprint` 只绑定 Provider/Target 与显式核心文件内容摘要；Bundle/Module 摘要继续校验部署产物，不能作为存档兼容条件。修改 checkpoint 编码或恢复语义造成不兼容时必须更新该 Target 的格式声明，不能依赖 adapter 源码 hash 自动失效。无格式变化的 runtime 升级必须保持存档可恢复。
 - checkpoint 格式由当前实现声明，`readFormats` 仅包含当前 `writeFormat`。宿主只向前激活更高 Provider 版本；旧存档格式不可读时禁用恢复，不保留旧 Bundle 或设计运行时回滚。
 
 ## 与 Retrom 的本地联调
@@ -122,6 +123,6 @@ npm run package:check
 - Game 的 JSON 只保存游戏特定 content 规则、各核心 options 与 Parent logical path；不保存 BIOS 安装 ID、来源批次、凭据、Provider 部署 URL 或 Bundle 摘要。
 - ROM hash 是整份 Game active 游戏文件集合的唯一内容身份。单个非项目 ROM 使用原始 SHA；项目（即使只有一个文件）及多文件集合使用排序后的 logical path/size/SHA 树 hash。媒体文件不属于此集合。
 - `scripts/runtime-cli.mjs` 随 npm package 布局离线交付；宿主启动读取 catalog，运行准备调用 prepare，保存列表使用 batch-identity/batch-restorable，不逐条启动 Node，不为列表装配 BIOS 或 Parent。宿主用 `--serve` 共用一个常驻 JSONL 子进程，以唯一请求 ID 关联并发响应；执行、队列、输入与输出均有界，单请求可取消，DAT 首次加载及缓存共享。CPU 密集型归档操作使用不加载 DAT 的有界 worker_threads；不新增网络运行服务、持久队列或授权状态。
-- PFB 的 host 工具必须完整生成后原子发布不可变快照；不能把活跃宿主指向会被 clean 删除的 dist。Provider watcher 使用当前源码声明及实际 Target 执行闭包计算指纹；无关 adapter 修改不得改变其他 Target 指纹。
+- PFB 的 host 工具必须完整生成后原子发布不可变快照；不能把活跃宿主指向会被 clean 删除的 dist。Provider watcher 与正式构建按当前 Target 的 `coreAssetPaths` 计算核心文件指纹；runtime/adapter、公共加载/输入/UI、发行版本及部署路径不进入存档身份。核心文件变化只影响声明该文件的 Target。游戏自带引擎由完整 ROM hash 覆盖，显式声明空核心文件集。
 - 运行资源只由宿主现有登录态授权。运行 ID 与 RPC nonce 是资源标识/消息关联值，不是授权凭据。隔离页面通过受限内容桥获取原始文件，不签发 ticket/token/capability 或额外 cookie。
 - 全部 110 个 Provider Target 保留；既有宿主产品绑定为 109 个，EmulatorJS PPSSPP 没有原产品入口。运行组件测试与真实产品验收必须分别记录，不能用声明数量或空白画面代替产品证据。

@@ -1797,15 +1797,15 @@
           "format": "ARCADE_XML",
           "asset": {
             "path": "assets/4.2.3/data/cores/fbneo-arcade.dat",
-            "sha256": "1864074639d42c2b6a7ad407e2df609c8824041408e42421eb7fa58fce5993e7"
+            "sha256": "b7192ff1aa025b8281979d96e12c8cf82e4df43a3afb81af6b668a4a7bbb90f9"
           },
           "core": {
             "path": "assets/4.2.3/data/cores/fbneo-wasm.data",
-            "sha256": "eab740b32303a75fa9007a4d03e6566aa4ece0e84d3550b2f9490d116e106625"
+            "sha256": "4f0ea82f529eefbbbd4d97f347dcbd55655ba9dd7ccc9d20e4c4806e0885fafa"
           },
           "provenance": {
             "path": "assets/4.2.3/data/cores/fbneo-content-pair.json",
-            "sha256": "4cb989cd43bdf956de1e43b81dea81b2a1f6c55ce69712e4c224141ba1b31c51"
+            "sha256": "e6380f45de1e854c8c889ebd00efa4d3520994365392f269ae10441d953faa28"
           }
         },
         "capabilities": {

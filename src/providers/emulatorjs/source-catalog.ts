@@ -5,10 +5,48 @@ import type {DevelopmentFork} from "../../../scripts/emulatorjs-development-fork
 
 export const emulatorJsSourceCatalog = {
   schemaVersion: 1,
-  developmentCores: [] as readonly EmulatorJsCoreSource[],
+  developmentCores: [
+  {
+    "id": "fbneo",
+    "repository": "https://github.com/retrom-project/FBNeo",
+    "adapterAbi": "emulatorjs-content-result-v1",
+    "files": [
+      {
+        "filename": "LICENSE",
+        "sha256": "85fef85fe2c4b8c14ef25ba7e2f251580dcfa01f8be09cd9781b378cf2cd5af7",
+        "sizeBytes": 46417,
+        "output": "4.2.3/licenses/forks/fbneo/LICENSE"
+      },
+      {
+        "filename": "fbneo-arcade.dat",
+        "sha256": "b7192ff1aa025b8281979d96e12c8cf82e4df43a3afb81af6b668a4a7bbb90f9",
+        "sizeBytes": 11605505,
+        "output": "4.2.3/data/cores/fbneo-arcade.dat"
+      },
+      {
+        "filename": "fbneo-content-pair.json",
+        "sha256": "e6380f45de1e854c8c889ebd00efa4d3520994365392f269ae10441d953faa28",
+        "sizeBytes": 732,
+        "output": "4.2.3/data/cores/fbneo-content-pair.json"
+      },
+      {
+        "filename": "fbneo-wasm.data",
+        "sha256": "4f0ea82f529eefbbbd4d97f347dcbd55655ba9dd7ccc9d20e4c4806e0885fafa",
+        "sizeBytes": 9197009,
+        "output": "4.2.3/data/cores/fbneo-wasm.data"
+      },
+      {
+        "filename": "fbneo.json",
+        "sha256": "4b32e8a25dcde94c01254ddf78dd4e226acbce436f9810e53de8a99ce67cdcfe",
+        "sizeBytes": 117,
+        "output": "4.2.3/data/cores/reports/fbneo.json"
+      }
+    ]
+  }
+] as readonly EmulatorJsCoreSource[],
   developmentForks: [] as readonly DevelopmentFork[],
   forks: [
-    ...emulatorJsContentCoreForks,
+    ...emulatorJsContentCoreForks.filter((fork) => fork.runtimeCore !== "fbneo"),
     ...emulatorJsPlatformCoreForks,
     {
       repository: "https://github.com/retrom-project/dosbox-pure",

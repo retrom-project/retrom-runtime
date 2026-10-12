@@ -3,7 +3,7 @@ import provenance from "../../runtime/arcade-provenance.json" with {type: "json"
 
 const flycastCatalog = {"path": "assets/4.2.3/data/cores/flycast-rom-requirements.json", "sha256": "ad46976c01472c9aa710e0d0f15d0a39bff2ac1b7fc49d7bbb4092773bfa77fd"};
 const flycastCore = {"path": "assets/4.2.3/data/cores/flycast-wasm.data", "sha256": "c8ed647ff6d63bff45314ee5acea0b2f91fa6ef4049f62e19c4065aff95c2a6d"};
-const fbneo: TargetArcadeDAT = {"format": "ARCADE_XML", "asset": {"path": "assets/4.2.3/data/cores/fbneo-arcade.dat", "sha256": "1864074639d42c2b6a7ad407e2df609c8824041408e42421eb7fa58fce5993e7"}, "core": {"path": "assets/4.2.3/data/cores/fbneo-wasm.data", "sha256": "eab740b32303a75fa9007a4d03e6566aa4ece0e84d3550b2f9490d116e106625"}, "provenance": {"path": "assets/4.2.3/data/cores/fbneo-content-pair.json", "sha256": "4cb989cd43bdf956de1e43b81dea81b2a1f6c55ce69712e4c224141ba1b31c51"}};
+const fbneo: TargetArcadeDAT = {"format": "ARCADE_XML", "asset": {"path": "assets/4.2.3/data/cores/fbneo-arcade.dat", "sha256": "b7192ff1aa025b8281979d96e12c8cf82e4df43a3afb81af6b668a4a7bbb90f9"}, "core": {"path": "assets/4.2.3/data/cores/fbneo-wasm.data", "sha256": "4f0ea82f529eefbbbd4d97f347dcbd55655ba9dd7ccc9d20e4c4806e0885fafa"}, "provenance": {"path": "assets/4.2.3/data/cores/fbneo-content-pair.json", "sha256": "e6380f45de1e854c8c889ebd00efa4d3520994365392f269ae10441d953faa28"}};
 
 export function emulatorContentRequirements(target: string): TargetContentRequirements | undefined {
  if (target === "azahar") {return {kind: "DECRYPTED_NCSD_NCCH"};}

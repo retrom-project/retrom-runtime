@@ -210,6 +210,7 @@ function hostKeyboardShortcuts(targetId: string): ("PAUSE" | "MENU")[] {
 const targets = cores.map((entry) => {
   const targetId = entry.targetId ?? entry.id;
   return defineTarget({
+  coreAssetPaths: [entry.asset],
   adapterId: entry.id === "gam4980" ? "emulatorjs-gam4980" : entry.id === "bsnes" ? "emulatorjs-bsnes" : entry.id === "flycast" ? "emulatorjs-flycast" : entry.id === "ppsspp" ? "emulatorjs-psp" : entry.id === "lutro" ? "emulatorjs-lutro" : entry.id === "daphne" ? "emulatorjs-daphne" : `emulatorjs-${entry.release}`,
   assetPaths: [
     ...commonAssets(entry.release),

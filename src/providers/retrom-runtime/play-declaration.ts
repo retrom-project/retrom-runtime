@@ -16,6 +16,7 @@ export const playTarget = defineTarget({
   targetOptionsSchema: {type: "object", additionalProperties: false, properties: {}, required: []},
   implementation: {}, inputFilter: true, nativeSettings: false,
   videoModes: ["original", "pixel", "smooth"],
+  coreAssetPaths: ["assets/play/Play.js", "assets/play/Play.wasm", "assets/play/checkpoint.mjs"],
   assetPaths: ["Play.js", "Play.wasm", "checkpoint.mjs", "input.mjs", "play-retrom.mjs", "disc-device.mjs"]
     .map(file => `assets/play/${file}`),
 });

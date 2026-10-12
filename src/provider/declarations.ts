@@ -121,6 +121,8 @@ export type TargetDeclaration = {
   contentMembers?: Readonly<Record<string, Readonly<Record<string, ManagedInputPolicyV1>>>>;
   checkpointMaxBytes: number | null;
   assetPaths: readonly string[];
+  /** Packaged core bytes used for save identity. Empty when the engine belongs to game content. */
+  coreAssetPaths: readonly string[];
   /** Assets read lazily during gameplay, prepared with game content when requested by the Host. */
   preloadAssetPaths?: readonly string[];
   implementation: Readonly<Record<string, unknown>>;
@@ -147,6 +149,11 @@ export function defineAdapter<const Definition extends AdapterDeclaration>(defin
 }
 
 export function defineTarget<const Definition extends TargetDeclaration>(definition: Definition): Definition {
+  if (!Array.isArray(definition.coreAssetPaths) ||
+    new Set(definition.coreAssetPaths).size !== definition.coreAssetPaths.length ||
+    definition.coreAssetPaths.some(path => !definition.assetPaths.includes(path))) {
+    throw new Error("PROVIDER_CORE_ASSETS_INVALID");
+  }
   const contentIO = validateContentPolicies(definition.inputs.map((input) => input.role), definition.contentIO, Object.keys(contentBoundaries));
   const contentMembers = Object.fromEntries(Object.entries(definition.contentMembers ?? {}).map(([role, members]) => {
     if (!(role in contentIO) || !("bridge" in contentIO[role])) {throw new Error("PROVIDER_CONTENT_POLICY_INVALID");}

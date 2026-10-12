@@ -90,6 +90,7 @@ async function frontendReports(directory) {
 }
 await frontendReports("frontend");
 const currentFingerprints = new Map();
+const currentProviders = new Map();
 if (args["provider-base"]) {
   const base = resolve(args["provider-base"]), active = JSON.parse(await readFile(join(base, "active.json"), "utf8"));
   matrix.currentCandidate = active.providers.map(({providerId, bundleSha256, moduleSha256}) =>
@@ -97,6 +98,7 @@ if (args["provider-base"]) {
   matrix.currentProviderSourceTreeSha256 = active.sourceTreeSha256;
   if (!matrix.currentHostToolSourceTreeSha256) {matrix.currentSourceTreeSha256 = active.sourceTreeSha256;}
   for (const provider of active.providers) {
+    currentProviders.set(provider.providerId, provider);
     const identities = JSON.parse(await readFile(join(base, "installed", provider.installationPath, "runtime-fingerprints.json"), "utf8"));
     for (const [targetId, identity] of Object.entries(identities.targets)) {currentFingerprints.set(`${provider.providerId}/${targetId}`, identity.fingerprint);}
   }
@@ -105,7 +107,10 @@ for (const row of matrix.rows) {
   const latest = row.attempts?.toSorted((a, b) => String(a.at).localeCompare(String(b.at))).at(-1);
   if (latest) {row.checks = latest.checks; row.currentEvidenceFingerprint = latest.coreFingerprint;}
   const current = currentFingerprints.get(`${row.providerId}/${row.targetId}`);
-  const proof = row.semanticEvidence?.find(item => item.result === "PASS" && item.coreFingerprint === current);
+  const provider = currentProviders.get(row.providerId);
+  // Save compatibility does not prove that the current runtime passed product acceptance.
+  const proof = provider && row.semanticEvidence?.find(item => item.result === "PASS" && item.coreFingerprint === current &&
+    item.providerBundleSha256 === provider.bundleSha256 && item.providerModuleSha256 === provider.moduleSha256);
   if (proof) {row.productStatus = "PASS"; row.checks = proof.checks; row.currentEvidenceFingerprint = current;}
   else if (row.productStatus === "PASS") {row.productStatus = "PRODUCT_ATTEMPTED";}
 }

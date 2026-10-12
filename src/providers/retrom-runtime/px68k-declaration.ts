@@ -7,6 +7,7 @@ export const px68kAdapter = defineAdapter({id: "px68k-web", kind: "PX68K_WEB", a
 export const px68kTarget = defineTarget({
   hostKeyboardShortcuts: ["PAUSE", "MENU"],
   id: "px68k", displayName: "Sharp X68000 (PX68K)", adapterId: "px68k-web",
+  coreAssetPaths: ["assets/px68k/px68k-retrom.mjs", "assets/px68k/px68k-retrom.wasm"],
   assetPaths: ["assets/px68k/px68k-retrom.mjs", "assets/px68k/px68k-retrom.wasm"],
   checkpointMaxBytes: 96 * 1024 * 1024, frameMode: "SAME_ORIGIN_BLANK", inputFilter: true,
   contentIO: {game: eagerPolicy(limits.firmwareFile, {writes: "SESSION_OVERLAY"}), external: eagerPolicy(limits.firmwareFile)},

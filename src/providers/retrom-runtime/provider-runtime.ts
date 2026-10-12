@@ -1,5 +1,5 @@
 import {RuntimeHostShortcuts} from "../../provider/host-shortcuts.js";
-import {createRuntimeFailure} from "../../provider/failure.js";
+import {createRuntimeFailure, RuntimeFailureError} from "../../provider/failure.js";
 import {StartupTasks} from "../../provider/startup.js";
 import {ProviderContentOwner} from "../../provider/content-owner.js";
 import {retromRuntimeProviderDefinition} from "./catalog.js";
@@ -393,6 +393,7 @@ class RetromRuntimePlayer implements PlayerRuntimeV1 {
     this.transition("FAILED");
     this.contentOwner.force(error instanceof ContentIOError ? error : new ContentIOError("INTERNAL", {cause: error}));
     this.emit({type: "FATAL_ERROR", failure});
+    this.host.reportDiagnostic({code: failure.code, message: JSON.stringify(failure)});
     try {await this.exit();} catch (cleanupError) {this.reportCleanupFailure(cleanupError);}
   }
 
@@ -496,6 +497,7 @@ function validProgress(value: {loadedBytes: number; totalBytes: number | null}) 
 function isAbort(error: unknown) {return error instanceof DOMException && error.name === "AbortError";}
 function stableError(error: unknown) {
   if (isAbort(error)) {return error as DOMException;}
+  if (error instanceof RuntimeFailureError && /^[A-Z][A-Z0-9_]{1,127}$/u.test(error.code)) {return error;}
   if (error instanceof Error && /^(?:CONTENT_IO|RUNTIME|CHECKPOINT|PLAYER|PROVIDER|RPG|ONS|KIRIKIRI|BUTTERSCOTCH|TYRANOSCRIPT|WASM4|J2ME|SCUMMVM|FANTASY|WEBMSX|PX68K|NP2KAI|OPENBOR|NXENGINE)_[A-Z0-9_]+$/u.test(error.message)) {
     return error;
   }

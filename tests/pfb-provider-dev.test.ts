@@ -6,7 +6,7 @@ import {tmpdir} from "node:os";
 import {join} from "node:path";
 import {afterEach, describe, expect, it, vi} from "vitest";
 
-import {buildPFBProviderDev, selectedPFBProviderDevInput} from "../scripts/pfb-provider-dev.mjs";
+import {buildPFBProviderDev, buildPFBProvidersDev, selectedPFBProviderDevInput} from "../scripts/pfb-provider-dev.mjs";
 
 const temporaryRoots: string[] = [];
 
@@ -15,6 +15,33 @@ afterEach(async () => {
 });
 
 describe("PFB loose provider", () => {
+  it("builds both installed adapters and removes a duplicate descriptor when the selected Provider changes", async () => {
+    const root = await temporaryRoot(), installedRoot = join(root, "installed"), outputRoot = join(root, "dev");
+    const bundle = "a".repeat(64), activePath = join(root, "active.json"), entryPoint = join(root, "entry.ts");
+    const ids = ["retrom-runtime", "emulatorjs"];
+    for (const providerId of ids) {
+      const installation = join(installedRoot, providerId, bundle);
+      await mkdir(installation, {recursive: true});
+      await writeFile(join(installation, "provider.json"), JSON.stringify({providerId, providerVersion: "0.62.0",
+        targets: [{id: "butterscotch", assetPaths: []}]}));
+      await writeFile(join(installation, "integrity.json"), JSON.stringify({files: []}));
+    }
+    await writeFile(activePath, JSON.stringify({providers: ids.map(providerId => ({providerId,
+      bundleSha256: bundle, installationPath: `${providerId}/${bundle}`, targets: [{id: "butterscotch", checkpoint: null}]}))}));
+    await writeFile(entryPoint, "export const providerApiVersion=1;\n");
+    const input = {activePath, entryPoint, installedRoot, outputRoot, assetsByProvider: {}};
+    const first = await buildPFBProvidersDev({...input, providerId: "retrom-runtime"});
+    expect(Object.keys(first).sort()).toEqual([...ids].sort());
+    const additional = join(outputRoot, "providers", "emulatorjs", "dev-provider.json");
+    expect(JSON.parse(await readFile(additional, "utf8")).providerId).toBe("emulatorjs");
+    await buildPFBProvidersDev({...input, providerId: "emulatorjs"});
+    expect(JSON.parse(await readFile(join(outputRoot, "dev-provider.json"), "utf8")).providerId).toBe("emulatorjs");
+    expect(JSON.parse(await readFile(join(outputRoot, "providers", "retrom-runtime", "dev-provider.json"), "utf8")).providerId)
+      .toBe("retrom-runtime");
+    await expect(readFile(additional)).rejects.toMatchObject({code: "ENOENT"});
+    await writeFile(join(outputRoot, "core-inputs.json"), JSON.stringify({schemaVersion: 1, cores: []}));
+    await expect(buildPFBProvidersDev({...input, providerId: "emulatorjs"})).rejects.toThrow("PFB_PROVIDER_CORE_INPUT_INVALID");
+  });
   it.each([undefined, "ARBITRARY"])("requires the declared checkpoint semantics at the active-input boundary (%s)", async (semantics) => {
     const root = await temporaryRoot(), installedRoot = join(root, "installed"), outputRoot = join(root, "dev");
     const bundle = "a".repeat(64), installation = join(installedRoot, "retrom-runtime", bundle);

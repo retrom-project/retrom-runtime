@@ -1,6 +1,6 @@
 import {ownEmulatorJsWakeLocks} from "./wake-lock.js";
 import {EmulatorPlayerInput} from "./player-input.js";
-import {installContentAcceptance} from "./content-acceptance.js";
+import {installEmulatorJsNativeObservation} from "./content-acceptance.js";
 import {createRuntimeFailure} from "../../provider/failure.js";
 import {disableEmulatorDownloadCache, retireEmulatorDownloadCaches} from "./download-cache.js";
 import {prepareExternalContent} from "./external-content.js";
@@ -101,7 +101,7 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
   private supermodelRestore: ReturnType<typeof installSupermodelRestore> | null = null;
   private cleanupExternalFiles: (() => void) | null = null;
   private cleanupGamepadIndex: (() => void) | null = null;
-  private contentAcceptance: ReturnType<typeof installContentAcceptance> | null = null;
+  private nativeObservation: ReturnType<typeof installEmulatorJsNativeObservation> | null = null;
   private cleanupRetroArchConfig: () => void = () => undefined;
   private dosboxCompatibility: ReturnType<typeof installDOSBoxPureStateCompatibility> | null = null;
   private cleanupDeferredStart: (() => void) | null = null;
@@ -250,9 +250,9 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
   subscribe(listener: (event: RuntimeEventV1) => void) {this.listeners.add(listener); return () => this.listeners.delete(listener);}
 
   private installPreloaderCompatibility(runtimeWindow: EjsWindow) {
-    if (this.implementation.contentAcceptance === "CORE_RESULT_V1") {this.contentAcceptance = installContentAcceptance(runtimeWindow);}
+    this.nativeObservation = installEmulatorJsNativeObservation(runtimeWindow, this.implementation.contentAcceptance === "CORE_RESULT_V1");
     this.cleanupRetroArchConfig = installEmulatorJsRetroArchConfig(runtimeWindow,
-      this.implementation.runtimeCore, Boolean(this.restorePayload));
+      this.implementation.runtimeCore);
     this.cleanupArchiveWorker = installArchiveWorkerCompatibility(runtimeWindow, this.implementation.release,
       runtimeBase(this.envelope, this.implementation.release), this.implementation.runtimeCore);
     if (this.implementation.release === "4.2.3" && Object.keys(runtimeWindow.EJS_externalFiles ?? {}).length) {
@@ -482,8 +482,8 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
     this.startObserved = true;
     try {
       if (!this.instance) {throw new Error("PLAYER_RUNTIME_UNAVAILABLE");}
-      await this.contentAcceptance?.wait(this.host.signal);
-      this.contentAcceptance?.monitor(this.host.signal, error => this.fail(error.message, error));
+      await this.nativeObservation?.wait(this.host.signal);
+      this.nativeObservation?.monitor(this.host.signal, error => this.fail(error.message, error));
       this.dosboxCompatibility?.prepare(this.instance);
       if (this.restorePayload) {
         await this.startup.run("RESTORE_APPLY", () => this.restore(this.restorePayload!));
@@ -514,7 +514,7 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
     const preserveFailure = this.state === "FAILED";
     if (this.state === "MOUNTING") {this.startBarrier?.reject(contractError());}
     this.clearStartBarrier();
-    this.stopContentAcceptance();
+    this.stopNativeObservation();
     this.host.signal.removeEventListener("abort", this.hostAbort);
     const nativeExitAlreadyRequested = this.exitRequestedEmitted; this.exitRequestedEmitted = true;
     await stopNativeInstance(this.runtimeWindow, this.instance, this.implementation.runtimeCore, nativeExitAlreadyRequested, this.discRange);
@@ -574,12 +574,12 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
     this.inputDiagnostics = null;
   }
 
-  private stopContentAcceptance() {
-    this.contentAcceptance?.cleanup(); this.contentAcceptance = null;
+  private stopNativeObservation() {
+    this.nativeObservation?.cleanup(); this.nativeObservation = null;
   }
 
   private cleanupSurface() {
-    this.stopContentAcceptance();
+    this.stopNativeObservation();
     this.cleanupDaphneProject?.(); this.cleanupDaphneProject = null;
     this.lutroNativeSave?.stop(); this.lutroNativeSave = null;
     this.cleanupSeekableFS?.(); this.cleanupSeekableFS = null;
@@ -595,12 +595,12 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
 
   private fail(code: string, error?: unknown) {
     if (this.state === "FAILED" || this.state === "EXITED") {return;}
-    const failure = createRuntimeFailure(code, error, this.state === "RUNNING" || this.state === "PAUSED" ? "PLAYING" : "STARTUP");
+    const failure = createRuntimeFailure(code, error, this.state === "RUNNING" || this.state === "PAUSED" ? "PLAYING" : "STARTUP", this.nativeObservation?.messages());
     this.transition("FAILED");
     this.lutroNativeSave?.stop();
     this.contentOwner.force(error instanceof ContentIOError ? error : new ContentIOError("INTERNAL"));
     this.updateCheckpointAvailability({available: false, reason: "FAILED"});
-    this.host.reportDiagnostic({code, message: error instanceof Error ? error.message : code});
+    this.host.reportDiagnostic({code, message: JSON.stringify(failure)});
     this.emit({type: "FATAL_ERROR", failure});
     this.startBarrier?.reject(new PlayerRuntimeError(code, {cause: error}));
   }

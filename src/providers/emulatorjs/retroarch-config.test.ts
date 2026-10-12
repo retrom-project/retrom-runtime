@@ -5,20 +5,20 @@ describe("EmulatorJS RetroArch configuration", () => {
   it("assigns EightyOne's second port to its keyboard so it cannot release player one's joypad keys", () => {
     const callMain = vi.fn();
     class Manager {Module = {callMain}; getRetroArchCfg() {return "";}}
-    const cleanup = installEmulatorJsRetroArchConfig(window, "81", false);
+    const cleanup = installEmulatorJsRetroArchConfig(window, "81");
     Reflect.set(window, "EJS_GameManager", Manager);
     try {
       expect(new Manager().getRetroArchCfg()).toContain('input_libretro_device_p1 = "257"');
       expect(new Manager().getRetroArchCfg()).toContain('input_libretro_device_p2 = "259"');
       const manager = new Manager(); manager.getRetroArchCfg();
       manager.Module.callMain(["/game.p"]);
-      expect(callMain).toHaveBeenCalledWith(["--device", "1:257", "--device", "2:259", "/game.p"]);
+      expect(callMain).toHaveBeenCalledWith(["--device", "1:257", "--device", "2:259", "-v", "/game.p"]);
     } finally {cleanup(); Reflect.deleteProperty(window, "EJS_GameManager");}
   });
   it("combines EightyOne device overrides with restore observation and cleans up", () => {
     const callMain = vi.fn();
     class Manager {Module = {callMain}; getRetroArchCfg() {return "";}}
-    const cleanup = installEmulatorJsRetroArchConfig(window, "81", true);
+    const cleanup = installEmulatorJsRetroArchConfig(window, "81");
     Reflect.set(window, "EJS_GameManager", Manager);
     const manager = new Manager(); manager.getRetroArchCfg(); manager.getRetroArchCfg();
     manager.Module.callMain(["-v", "/game.p"]);
@@ -27,9 +27,9 @@ describe("EmulatorJS RetroArch configuration", () => {
     Reflect.deleteProperty(window, "EJS_GameManager");
   });
   it("selects the Fuse Kempston port before construction and restores the prototype", () => {
-    class Manager {getRetroArchCfg() {return "video_vsync = true\n";}}
+    class Manager {Module = {callMain: vi.fn()}; getRetroArchCfg() {return "video_vsync = true\n";}}
     const original = Manager.prototype.getRetroArchCfg;
-    const cleanup = installEmulatorJsRetroArchConfig(window, "fuse", false);
+    const cleanup = installEmulatorJsRetroArchConfig(window, "fuse");
     Reflect.set(window, "EJS_GameManager", Manager);
     expect(new Manager().getRetroArchCfg()).toContain('input_libretro_device_p1 = "513"');
     expect(new Manager().getRetroArchCfg()).toContain('input_libretro_device_p2 = "0"');
@@ -42,7 +42,7 @@ describe("EmulatorJS RetroArch configuration", () => {
   it("enables native restore observation without changing other core devices", () => {
     const callMain = vi.fn();
     class Manager {Module = {callMain}; getRetroArchCfg() {return "";}}
-    const cleanup = installEmulatorJsRetroArchConfig(window, "vice_x64sc", true);
+    const cleanup = installEmulatorJsRetroArchConfig(window, "vice_x64sc");
     Reflect.set(window, "EJS_GameManager", Manager);
     const manager = new Manager();
     expect(manager.getRetroArchCfg()).toBe("\nlog_verbosity = true\n");
@@ -56,9 +56,9 @@ describe("EmulatorJS RetroArch configuration", () => {
   });
 
   it("points QUASI88 at the installed external firmware before native startup", () => {
-    class Manager {getRetroArchCfg() {return "video_vsync = true\n";}}
+    class Manager {Module = {callMain: vi.fn()}; getRetroArchCfg() {return "video_vsync = true\n";}}
     const original = Manager.prototype.getRetroArchCfg;
-    const cleanup = installEmulatorJsRetroArchConfig(window, "quasi88", false);
+    const cleanup = installEmulatorJsRetroArchConfig(window, "quasi88");
     Reflect.set(window, "EJS_GameManager", Manager);
     try {
       expect(new Manager().getRetroArchCfg()).toContain('system_directory = "/retroarch/userdata/system"');
@@ -68,9 +68,9 @@ describe("EmulatorJS RetroArch configuration", () => {
   });
 
   it("avoids a Daphne history entry without a native core path", () => {
-    class Manager {getRetroArchCfg() {return "video_vsync = true\n";}}
+    class Manager {Module = {callMain: vi.fn()}; getRetroArchCfg() {return "video_vsync = true\n";}}
     const original = Manager.prototype.getRetroArchCfg;
-    const cleanup = installEmulatorJsRetroArchConfig(window, "daphne", false);
+    const cleanup = installEmulatorJsRetroArchConfig(window, "daphne");
     Reflect.set(window, "EJS_GameManager", Manager);
     try {
       expect(new Manager().getRetroArchCfg()).toContain("history_list_enable = false");
@@ -78,9 +78,19 @@ describe("EmulatorJS RetroArch configuration", () => {
     expect(Manager.prototype.getRetroArchCfg).toBe(original);
   });
 
-  it("leaves ordinary launches untouched", () => {
-    const cleanup = installEmulatorJsRetroArchConfig(window, "fceumm", false);
-    expect(Reflect.has(window, "EJS_GameManager")).toBe(false);
+  it("collects native errors on ordinary launches without turning on EmulatorJS debug or adding duplicate flags", () => {
+    const callMain = vi.fn();
+    class Manager {Module = {callMain}; getRetroArchCfg() {return "";}}
+    const cleanup = installEmulatorJsRetroArchConfig(window, "fceumm");
+    Reflect.set(window, "EJS_GameManager", Manager);
+    const manager = new Manager();
+    expect(manager.getRetroArchCfg()).toContain("log_verbosity = true");
+    manager.Module.callMain(["/game.nes"]);
+    expect(callMain).toHaveBeenLastCalledWith(["-v", "/game.nes"]);
+    manager.getRetroArchCfg(); manager.Module.callMain(["-v", "/game.nes"]);
+    expect(callMain).toHaveBeenLastCalledWith(["-v", "/game.nes"]);
     cleanup();
+    expect(manager.Module.callMain).toBe(callMain);
+    expect(Reflect.has(window, "EJS_GameManager")).toBe(false);
   });
 });

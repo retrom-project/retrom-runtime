@@ -2,6 +2,7 @@ import {withStartupTask} from "../provider/startup.js";
 import {loadCoreAsset} from "../provider/core-assets.js";
 import type {AdapterContentOptions} from "../provider/content-inputs.js";
 import {profiles, type MameMachine} from "./profiles.js";
+import {CoreDiagnostics} from "../provider/core-diagnostics.js";
 export type FileSource = {url: string; sha256: string; sizeBytes: number};
 export type MameParameters = {machine: MameMachine; arcade?: false; game: FileSource; bios: (FileSource & {logicalName: string})[]; runtimeBaseUrl: string} |
   {machine: string; arcade: true; game: FileSource; parent: FileSource | null; bios: FileSource | null;
@@ -37,6 +38,8 @@ export async function loadCore(config: MameParameters, content: AdapterContentOp
   const loaded = await Promise.all(files.map((name, i) => loadCoreAsset(content, new URL(name, base).href,
     `assets/mame/${name}`, name.endsWith(".wasm") ? 256 * 1024 * 1024 : 4 * 1024 * 1024, content.signal,
     progress => {ready[i] = progress.readyBytes; content.reportProgress?.({phase: "RUNTIME_ASSET", loadedBytes: ready.reduce((a, b) => a + b, 0), totalBytes: total});})));
+  const diagnostics = new CoreDiagnostics();
+  const record = (message: string) => {if (!readOnlyImageRetry(message)) {diagnostics.record(message);}};
   return withStartupTask(content.startup, "CORE_INITIALIZATION", async () => {
     const build = manifest.build;
     const moduleURL = URL.createObjectURL(new Blob([Uint8Array.from(loaded[0])], {type: "text/javascript"}));
@@ -46,7 +49,7 @@ export async function loadCore(config: MameParameters, content: AdapterContentOp
       if (!module || typeof module !== "object" || !("default" in module) || typeof module.default !== "function") {invalid();}
       content.signal?.throwIfAborted();
       const value: unknown = await module.default({wasmBinary: loaded[1], locateFile: (name: string) => new URL(name, base).href,
-        print: () => undefined, printErr: nativeLog});
+        print: record, printErr: (message: string) => {record(message); nativeLog(message);}});
       if (!validCore(value)) {invalid();} core = value;
       if (core.UTF8ToString(core._retrom_mame_build_id()) !== build) {invalid();}
       const familyURL = URL.createObjectURL(new Blob([Uint8Array.from(loaded[2])], {type: "application/wasm"}));
@@ -54,7 +57,7 @@ export async function loadCore(config: MameParameters, content: AdapterContentOp
       finally {URL.revokeObjectURL(familyURL);}
       content.signal?.throwIfAborted();
       if (core._retrom_mame_attach() !== 0) {invalid();}
-      return {core, build};
+      return {core, build, diagnostics};
     } catch (error) {core?._retrom_mame_stop(); throw error;}
     finally {URL.revokeObjectURL(moduleURL);}
   });
@@ -105,7 +108,10 @@ export function nativeLog(message: string) {
   // libretro sends ordinary progress and device registration to stderr too.
   // diimage.cpp tries READ|WRITE before READ for writable devices. This exact
   // denial is expected for our chmod(0444) disk; failure of READ is still fatal.
-  const readOnlyRetry = /^:sl6:diskiing:0:525: error opening image file \/content\/game\.dsk with flags=00000003 \(generic:2 Permission denied\)\s*$/u.test(message);
-  if (!readOnlyRetry && (/\berror\b|\bwarning\b/iu.test(message) || message.includes("NOT FOUND"))) {console.warn("MAME:", message);}
+  if (!readOnlyImageRetry(message) && (/\berror\b|\bwarning\b/iu.test(message) || message.includes("NOT FOUND"))) {console.warn("MAME:", message);}
   else {console.debug("MAME:", message);}
+}
+
+function readOnlyImageRetry(message: string) {
+  return /^:sl6:diskiing:0:525: error opening image file \/content\/game\.dsk with flags=00000003 \(generic:2 Permission denied\)\s*$/u.test(message);
 }

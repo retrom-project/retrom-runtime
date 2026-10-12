@@ -6,12 +6,25 @@ import {adapterFixture, deferred, hostFixture} from "../../../tests/provider-ada
 import {wasmEnvelope} from "../../../tests/provider-fixtures.js";
 import {createRuntime} from "./module.js";
 import {mountTargetAdapter} from "./target-adapter.js";
+import {RuntimeFailureError} from "../../provider/failure.js";
 
 vi.mock("./target-adapter.js", () => ({mountTargetAdapter: vi.fn()}));
 beforeEach(() => {vi.mocked(mountTargetAdapter).mockReset();});
 afterEach(() => {document.body.replaceChildren(); vi.useRealTimers();});
 
 describe("Provider-owned lifecycle", () => {
+  it("preserves adapter-owned failure codes and native evidence after teardown", async () => {
+    const failure = new RuntimeFailureError("MAME_BOOT_FAILED", "CONTENT", ["program.bin NOT FOUND"]);
+    vi.mocked(mountTargetAdapter).mockRejectedValue(failure);
+    const host = hostFixture(), player = await createRuntime(wasmEnvelope(), host);
+    const events: RuntimeEventV1[] = []; player.subscribe(event => events.push(event));
+    await expect(player.mount(document.createElement("div"))).rejects.toThrow("MAME_BOOT_FAILED");
+    expect(events.filter(event => event.type === "FATAL_ERROR")).toEqual([expect.objectContaining({failure: expect.objectContaining({
+      code: "MAME_BOOT_FAILED", category: "CONTENT", diagnostics: expect.arrayContaining([{source: "CORE", message: "program.bin NOT FOUND"}]),
+    })})]);
+    expect(host.reportDiagnostic).toHaveBeenCalledWith(expect.objectContaining({code: "MAME_BOOT_FAILED"}));
+    await player.exit();
+  });
   it.each(["success", "failure", "exit"] as const)("restores input focus only after a successful active resume: %s", async (outcome) => {
     const resume = deferred<void>();
     const canvas = document.createElement("canvas");

@@ -8,9 +8,10 @@ import {checkpointFormat, checkpointLimit, decodeState, encodeState} from "./sta
 import {MameAudio} from "./audio.js";
 import {createVideo, captureVideo} from "./video.js";
 import {profiles} from "./profiles.js";
+import {RuntimeFailureError} from "../provider/failure.js";
 export async function mountMame(config: MameParameters, target: HTMLElement, win: Window,
   restorePayload: Uint8Array | null, content: AdapterContentOptions, loader?: ModuleLoader): Promise<MountedRuntimeAdapter> {
-  const {core, build} = await loadCore(config, content, loader);
+  const {core, build, diagnostics} = await loadCore(config, content, loader);
   let identity: string;
   try {
     identity = await withStartupTask(content.startup, "CONTENT_MOUNT", () => mountFiles(core, config, content));
@@ -20,7 +21,7 @@ export async function mountMame(config: MameParameters, target: HTMLElement, win
       content.signal?.throwIfAborted();
       const command = new TextEncoder().encode("/content/boot.cmd\0");
       const loaded = withMemory(core, command.length, pointer => {core.HEAPU8.set(command, pointer); return core._retrom_mame_start(pointer);});
-      if (loaded !== 1) {throw new Error("MAME_BOOT_FAILED");}
+      if (loaded !== 1) {throw new RuntimeFailureError("MAME_BOOT_FAILED", "CONTENT", diagnostics.messages());}
     });
     if (restorePayload) {
       await withStartupTask(content.startup, "RESTORE_APPLY", async () => {
@@ -31,7 +32,7 @@ export async function mountMame(config: MameParameters, target: HTMLElement, win
     }
     content.signal?.throwIfAborted();
     return startLoop();
-  } catch (error) {core._retrom_mame_stop(); throw error;}
+  } catch (error) {core._retrom_mame_stop(); diagnostics.clear(); throw error;}
 
   function startLoop(): MountedRuntimeAdapter {
     const rate = core._retrom_mame_sample_rate(), fps = core._retrom_mame_fps(), aspect = core._retrom_mame_aspect_ratio();
@@ -46,7 +47,7 @@ export async function mountMame(config: MameParameters, target: HTMLElement, win
       if (stopped) {return;}
       stopped = true; win.cancelAnimationFrame(request); keyboard.stop();
       content.signal?.removeEventListener("abort", abort); win.removeEventListener("pointerdown", unlock); win.removeEventListener("keydown", unlock);
-      core._retrom_mame_stop(); canvas.remove(); await audio.stop();
+      core._retrom_mame_stop(); diagnostics.clear(); canvas.remove(); await audio.stop();
     };
     const abort = () => {void exit();};
     const tick = (time: number) => {
@@ -55,7 +56,7 @@ export async function mountMame(config: MameParameters, target: HTMLElement, win
       try {
         while (accumulator >= 1000 / fps) {
           keyboard.input.poll(win.document.hidden ? [] : Array.from(win.navigator.getGamepads?.() ?? []));
-          if (core._retrom_mame_step() !== 1) {throw new Error("MAME_EXECUTION_STOPPED");}
+          if (core._retrom_mame_step() !== 1) {throw new RuntimeFailureError("MAME_EXECUTION_STOPPED", "CORE", diagnostics.messages());}
           frames++; audio.push(core); accumulator -= 1000 / fps;
         }
         draw(); request = win.requestAnimationFrame(tick);

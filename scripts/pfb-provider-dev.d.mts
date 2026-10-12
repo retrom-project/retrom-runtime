@@ -12,6 +12,10 @@ export function buildPFBProviderDev(input: PFBProviderDevInput): Promise<{
   moduleSha256: string;
 }>;
 
+export function buildPFBProvidersDev(input: Omit<PFBProviderDevInput, "localAssets"> & {
+  assetsByProvider: Partial<Record<"retrom-runtime" | "emulatorjs", PFBProviderDevInput["localAssets"]>>;
+}): Promise<Record<string, {baseBundleSha256: string; moduleSha256: string}>>;
+
 type PFBProviderSelection = Required<Pick<PFBProviderDevInput, "providerId" | "entryPoint">>;
 
 export const defaultPFBProviderDevInput: PFBProviderSelection;

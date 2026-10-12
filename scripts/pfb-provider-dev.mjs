@@ -206,3 +206,24 @@ export async function selectedPFBProviderDevInput(outputRoot) {
   }
   return {providerId, entryPoint: join(runtimeRoot, "src/providers", providerId, "module.ts")};
 }
+
+// The selected Provider owns explicit core inputs. Other installed Providers use
+// their verified base cores and get only their development adapter/assets.
+export async function buildPFBProvidersDev(input) {
+  const active = await readJSON(input.activePath);
+  const results = {};
+  const selectedId = input.providerId ?? "retrom-runtime";
+  for (const providerId of [selectedId, ...["retrom-runtime", "emulatorjs"].filter(id => id !== selectedId)]) {
+    const selected = providerId === selectedId;
+    if (!selected && !active.providers.some(provider => provider.providerId === providerId)) {continue;}
+    results[providerId] = await buildPFBProviderDev({...input, providerId,
+      entryPoint: selected ? input.entryPoint : join(runtimeRoot, "src/providers", providerId, "module.ts"),
+      outputRoot: selected ? input.outputRoot : join(input.outputRoot, "providers", providerId),
+      localAssets: input.assetsByProvider[providerId] ?? [],
+    });
+  }
+  // An earlier explicit selection may have left this Provider's extra descriptor.
+  // Only remove the generated file, preserving all core inputs and other state.
+  await rm(join(input.outputRoot, "providers", selectedId, "dev-provider.json"), {force: true});
+  return results;
+}

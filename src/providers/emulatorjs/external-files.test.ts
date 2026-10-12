@@ -8,7 +8,7 @@ afterEach(() => {Reflect.deleteProperty(window, "EJS_GameManager");});
 
 describe("EmulatorJS external files", () => {
   it("preserves restore configuration when BIOS and state hooks share the deferred constructor", () => {
-    const cleanupConfig = installEmulatorJsRetroArchConfig(window, "flycast", true);
+    const cleanupConfig = installEmulatorJsRetroArchConfig(window, "flycast");
     const cleanupFiles = installExternalFileCompatibility(window);
     const cleanupState = installEmulatorJs423StateRestoreCompatibility(window);
     const writeFile = vi.fn();

@@ -5,40 +5,10 @@ import type {DevelopmentFork} from "../../../scripts/emulatorjs-development-fork
 
 export const emulatorJsSourceCatalog = {
   schemaVersion: 1,
-  developmentCores: [{
-  "id": "flycast",
-  "repository": "https://github.com/retrom-project/flycast-wasm",
-  "adapterAbi": "emulatorjs-flycast-state-v1",
-  "files": [
-    {
-      "filename": "LICENSE",
-      "sha256": "71433d9114710e9d2f65310c43561515c051fc13500de981fd1ebe7ce499ba92",
-      "sizeBytes": 61843,
-      "output": "4.2.3/licenses/forks/flycast/LICENSE"
-    },
-    {
-      "filename": "flycast-rom-requirements.json",
-      "sha256": "4c72c87d92fd2d4f0473669be08c9cc01446d506d30f27303204261e2276aa87",
-      "sizeBytes": 258676,
-      "output": "4.2.3/data/cores/flycast-rom-requirements.json"
-    },
-    {
-      "filename": "flycast-wasm.data",
-      "sha256": "44f7e789285fe2d1408357e3d49b64c47d2d2519bfee4b6225ddb7a0a2591894",
-      "sizeBytes": 3550635,
-      "output": "4.2.3/data/cores/flycast-wasm.data"
-    },
-    {
-      "filename": "flycast.json",
-      "sha256": "215107a9bf4af4fd96f89d864b0ad927edb6e878616d851417dcf50a56bde814",
-      "sizeBytes": 92,
-      "output": "4.2.3/data/cores/reports/flycast.json"
-    }
-  ]
-}] as readonly EmulatorJsCoreSource[],
+  developmentCores: [] as readonly EmulatorJsCoreSource[],
   developmentForks: [] as readonly DevelopmentFork[],
   forks: [
-    ...emulatorJsContentCoreForks.filter(fork => fork.runtimeCore !== "flycast"),
+    ...emulatorJsContentCoreForks,
     ...emulatorJsPlatformCoreForks,
     {
       repository: "https://github.com/retrom-project/dosbox-pure",

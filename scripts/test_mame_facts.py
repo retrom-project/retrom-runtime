@@ -12,6 +12,14 @@ spec.loader.exec_module(facts)
 
 
 class MameFactsTest(unittest.TestCase):
+    def test_nodump_is_not_required_but_baddump_with_crc_is(self):
+        result = facts.parse_mame(b'<mame><machine name="game">'
+                                 b'<rom name="unknown" size="1" status="nodump"/>'
+                                 b'<rom name="explicit" size="1" crc="00000001" status="nodump"/>'
+                                 b'<rom name="known" size="548" crc="bdef9a1f" status="baddump"/>'
+                                 b'</machine></mame>')
+        self.assertEqual(result['game']['roms'], [{'name': 'known', 'size': '548', 'crc': 'bdef9a1f'}])
+
     def test_search_labels_survive_candidate_regeneration(self):
         result = facts.parse_mame(b'<mame><machine name="game"><description> Test  Game (World v2) </description>'
                                  b'<year>1990</year><manufacturer>Studio</manufacturer></machine></mame>')

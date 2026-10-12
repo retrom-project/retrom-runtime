@@ -9,6 +9,7 @@ import {arcadeDependencies, configuredMachine, type ArcadeCatalog, type ArchiveM
 import {arcadeBIOSRequirements, resolveBIOSRequirements} from "./bios.js";
 import {flycastDependencies, requireFlycastDependencies, type FlycastMachine} from "./flycast-arcade.js";
 import {arcadeCRCWarnings, type CRCWarning} from "./arcade-crc.js";
+import {arcadeMissingROMMembers, type MissingROMMember} from "./arcade-completeness.js";
 import {contentHash, restorability} from "./identity.js";
 import {canonicalJsonBytes} from "../provider/contract.js";
 import type {RuntimeContentFile, RuntimeDirectory, RuntimeIdentity, ResourcePlan, RuntimeConfiguration, SaveContext} from "./types.js";
@@ -34,7 +35,7 @@ export type PrepareRuntimeRequest = {
 export type ContentBIOSRequest = Pick<PrepareRuntimeRequest,
   "directory" | "config" | "files" | "coreId" | "archives" | "arcadeCatalog" | "firmwareEvidence" | "flycastCatalog">;
 
-/** BIOS eligibility uses content facts without preparing resources or requiring Parent archives. */
+/** Review eligibility inspects required content without changing launch preparation. */
 export function contentBIOSRequirements(request: ContentBIOSRequest) {
   const config = parseRuntimeConfiguration(request.config), selectedCore = selectedRuntimeCore(request);
   contentHash(request.files, "TREE");
@@ -44,9 +45,13 @@ export function contentBIOSRequirements(request: ContentBIOSRequest) {
   }
   const {binding, target} = resolveRuntimeTarget(request.directory.platformId, selectedCore, config.content);
   let biosSets: string[] = [];
+  let missingRomMembers: MissingROMMember[] = [];
   if (config.content.kind === "ARCADE") {
     if (!request.arcadeCatalog || !request.archives) {configurationFailure("RUNTIME_ARCADE_CATALOG_UNAVAILABLE");}
-    biosSets = arcadeDependencies(selectedCore, config, request.files, request.archives, request.arcadeCatalog).biosSets;
+    const dependencies = arcadeDependencies(selectedCore, config, request.files, request.archives, request.arcadeCatalog);
+    biosSets = dependencies.biosSets;
+    missingRomMembers = arcadeMissingROMMembers(selectedCore, config, request.files, request.archives, request.arcadeCatalog);
+    if (dependencies.missingParents.length && !missingRomMembers.length) {configurationFailure("RUNTIME_PARENT_MISSING");}
   }
   const crcWarnings = target.contentRequirements?.kind === "FLYCAST_CARTRIDGE" && entry
     ? (() => {const dependencies = flycastDependencies(target.contentRequirements.platform, selectedCore, config,
@@ -55,7 +60,7 @@ export function contentBIOSRequirements(request: ContentBIOSRequest) {
   return {biosRequirements: [...resolveBIOSRequirements({providerId: binding.providerId, targetId: binding.targetId,
     config, files: request.files, firmwareEvidence: request.firmwareEvidence}),
     ...(request.arcadeCatalog ? arcadeBIOSRequirements(selectedCore, request.arcadeCatalog, biosSets) : [])],
-    crcWarnings};
+    crcWarnings, missingRomMembers};
 }
 
 /** Resolve frozen save facts before any content-specific host reads or resource assembly. */

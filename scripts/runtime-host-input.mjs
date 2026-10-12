@@ -8,7 +8,7 @@ import {tmpdir} from "node:os";
 import {join, dirname} from "node:path";
 import {gunzipSync, crc32} from "node:zlib";
 import {parseRuntimeConfiguration, contentHash, runtimeBindings, identifyPSXRegion, resolveSavedRuntimeRequest,
-  contentBIOSRequirements, dosEntryCandidates, arcadeParentOptions, resolveRuntimeTarget, flycastMachine, flycastContentReferences, flycastMedia} from "../dist/runtime/index.js";
+  contentBIOSRequirements, missingROMMember, dosEntryCandidates, arcadeParentOptions, resolveRuntimeTarget, flycastMachine, flycastContentReferences, flycastMedia} from "../dist/runtime/index.js";
 import {zipMembers, requireLocator, safePath, sha256} from "./runtime-archive-input.mjs";
 export {parentArchive} from "./runtime-archive-input.mjs";
 
@@ -198,6 +198,9 @@ export async function contentHostBIOSRequirements(input) {
     if (!file || !requirement.members?.length) {continue;}
     const members = await zipMembers(file.path);
     for (const expected of requirement.members) {
+      const missing = expected.required && missingROMMember(requirement.coreId, requirement.logicalName.replace(/\.zip$/iu, ""),
+        "BIOS", {name: expected.name, size: String(expected.sizeBytes), crc: expected.crc32}, members);
+      if (missing) {result.missingRomMembers.push(missing);}
       const member = members.find(member => member.sizeBytes === expected.sizeBytes && member.crc32 === expected.crc32) ??
         members.find(member => member.name === expected.name && member.sizeBytes === expected.sizeBytes);
       if (member && member.crc32 !== expected.crc32) {

@@ -16,7 +16,10 @@ export function installContentAcceptance(realm: Window) {
   let monitorTimer: number | undefined;
   const record = (values: unknown[]) => {
     if (!active) {return;}
-    diagnostics.push(values.filter(value => typeof value === "string").join(" ").slice(-500));
+    const message = values.filter(value => typeof value === "string").join(" ").slice(-500);
+    if (!message || /^invalid core option .*This is not an error\./u.test(message) ||
+      /^\[(?:INFO|libretro INFO)\]/u.test(message)) {return;}
+    diagnostics.push(message);
     if (diagnostics.length > 8) {diagnostics.shift();}
   };
   const wrap = (factory: Factory | undefined): Factory | undefined => factory && async function (this: unknown, config) {

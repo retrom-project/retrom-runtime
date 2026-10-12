@@ -16,6 +16,10 @@ it("rejects unsupported single-file Dreamcast formats before presenting a placeh
   expect(() => flycastContentName("/content/disc.iso", "a".repeat(64), "flycast")).toThrow("FLYCAST_CONTENT_NAME_INVALID");
 });
 
+it("normalizes an arcade filename's case without changing the original archive", () => {
+  expect(flycastContentName("/content/WLDRIDER.ZIP", "a".repeat(64), "flycast-naomi2")).toBe("wldrider.zip");
+});
+
 it.each(["cue", "iso", "chd"])("keeps the actual single-disc %s entry and original bounded reads", async extension => {
   const bytes = new TextEncoder().encode('FILE "track.iso" BINARY\n');
   const reader = {abi: "content-io-v1", sizeBytes: bytes.length, close: vi.fn(async () => {}),

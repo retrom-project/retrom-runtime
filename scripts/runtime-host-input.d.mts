@@ -1,6 +1,6 @@
 import type {PrepareRuntimeRequest, ContentBIOSRequest, RuntimeContentFile, BIOSRequirement} from "../src/runtime/index.js";
 export type HostFiles = {files: RuntimeContentFile[]; locators: Record<string, string>; paths?: Record<string, string>; outputPath: string};
-export function discoverContentDependencies(input: Pick<HostFiles, "files" | "locators">): Promise<{files: Array<{logicalKey: string; relativeTo: string; relativePath: string}>}>;
+export function discoverContentDependencies(input: Pick<HostFiles, "files" | "locators"> & {directory?: import("../src/runtime/types.js").RuntimeDirectory; providerRoots?: Record<string,string>}): Promise<{files: Array<{logicalKey: string; relativeTo: string; relativePath: string; optional?: boolean}>}>;
 export function configureHostInput(input: import("../src/runtime/configure.js").ConfigureRequest & {locators: Record<string, string>; providerRoots?: Record<string, string>}): Promise<import("../src/runtime/configure.js").ConfigureRequest>;
 export function assembleResource(input: HostFiles): Promise<{path: string; sizeBytes: number; sha256: string}>;
 export function parentArchive(input: HostFiles): Promise<{path: string; sizeBytes: number; sha256: string}>;
@@ -12,4 +12,6 @@ export function arcadeTables(): Promise<Record<string, import("../src/runtime/ar
 export function identifyHostBIOS(input: {file: {name: string; sizeBytes: number; sha256: string; md5: string}; path?: string; requirements: BIOSRequirement[]}): Promise<BIOSRequirement[]>;
 export function detectScummvm(input: {providerRoot: string; treeRoot: string}): Promise<unknown>;
 
-export function flycastTable(root: string, requirement: {core: {path: string; sha256: string}; catalog: {path: string; sha256: string}}): Promise<import("../src/runtime/flycast-cartridge.js").FlycastMachine[]>;
+export function flycastTable(root: string, requirement: {core: {path: string; sha256: string}; catalog: {path: string; sha256: string}}): Promise<import("../src/runtime/flycast-arcade.js").FlycastMachine[]>;
+
+export function flycastConfigureEvidence(input: {platformId: string; coreIds: string[]; providerRoots?: Record<string,string>}): Promise<{flycastCatalogs?: Readonly<Record<string, readonly import("../src/runtime/flycast-arcade.js").FlycastMachine[]>>}>;

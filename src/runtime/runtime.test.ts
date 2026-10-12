@@ -29,7 +29,7 @@ describe("unified runtime facts", () => {
     expect(restored.config.content).toEqual({kind: "SINGLE_FILE", entryFile: "renamed.sap"});
     expect(restored.romHash).toBe(sha);
     expect(() => prepareRuntime({...request, files: [file("renamed.sap", "c".repeat(64))]})).toThrow("CONTENT_CHANGED");
-    expect(() => prepareRuntime({...request, fingerprints: {"emulatorjs/theodore": "c".repeat(64)}})).toThrow("CORE_CHANGED");
+    expect(prepareRuntime({...request, fingerprints: {"emulatorjs/theodore": "c".repeat(64)}}).coreFingerprint).toBe("c".repeat(64));
     expect(() => prepareRuntime({...request, savedContext: {...request.savedContext,
       runtimeOptions: {dosEntryPath: null, thomsonModel: "BOGUS"}}})).toThrow("RUNTIME_SAVED_CONTEXT_INVALID");
     expect(prepareRuntime({...request, savedContext: undefined}).targetOptions.thomsonModel).toBe("TO8");
@@ -245,8 +245,12 @@ describe("unified runtime facts", () => {
     const current = {coreId: "fceumm", providerId: "emulatorjs", targetId: "fceumm", coreFingerprint: fingerprint, romHash: sha};
     const context = {...current, checkpointFormat: "state-storage-v1", runtimeOptions: {}, content: {kind: "SINGLE_FILE" as const, entryFile: "game.nes"}};
     const input = {gameAvailable: true, saveAvailable: true, current, context, readFormats: [context.checkpointFormat]};
-    expect(restorability(input)).toEqual({restorable: true, reason: null});
-    expect(restorability({...input, current: {...current, coreFingerprint: sha}}).reason).toBe("CORE_CHANGED");
+    expect(restorability(input)).toEqual({restorable: true, reason: null, warning: null});
+    expect(restorability({...input, current: {...current, coreFingerprint: sha}})).toEqual({restorable: true, reason: null, warning: "CORE_CHANGED"});
+    expect(restorability({...input, current: {...current, coreFingerprint: sha, romHash: fingerprint}}))
+      .toEqual({restorable: false, reason: "CONTENT_CHANGED", warning: null});
+    expect(restorability({...input, current: {...current, coreFingerprint: sha}, readFormats: []}))
+      .toEqual({restorable: false, reason: "FORMAT_UNREADABLE", warning: null});
     expect(restorability({...input, current: {...current, romHash: fingerprint}}).reason).toBe("CONTENT_CHANGED");
     expect(restorability({...input, current: null}).reason).toBe("CORE_UNAVAILABLE");
   });

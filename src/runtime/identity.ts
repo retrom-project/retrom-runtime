@@ -23,19 +23,6 @@ export function contentHash(files: readonly RuntimeContentFile[], mode: "FILE" |
   return hashBytes(canonicalJsonBytes(entries));
 }
 
-export type ImplementationInput = {kind: "ASSET" | "ADAPTER" | "CHECKPOINT" | "LIFECYCLE"; path: string; sha256: string};
-
-/** Release names, archive hashes, UI strings and build timestamps do not enter this identity. */
-export function implementationFingerprint(targetId: string, implementation: Readonly<Record<string, unknown>>,
-  inputs: readonly ImplementationInput[]): string {
-  if (!targetId || inputs.length === 0 || inputs.some(input => !logicalPath(input.path) || !digest(input.sha256))) {
-    configurationFailure("RUNTIME_IMPLEMENTATION_INVALID");
-  }
-  const sorted = [...inputs].sort((a, b) => utf8Compare(a.kind, b.kind) || utf8Compare(a.path, b.path));
-  if (new Set(sorted.map(input => `${input.kind}:${input.path}`)).size !== sorted.length) {configurationFailure("RUNTIME_IMPLEMENTATION_INVALID");}
-  return hashBytes(canonicalJsonBytes({targetId, implementation, inputs: sorted.map(({kind, path, sha256}) => [kind, path, sha256])}));
-}
-
 export type Restorability = {restorable: true; reason: null} | {restorable: false;
   reason: "GAME_UNAVAILABLE" | "SAVE_UNAVAILABLE" | "CORE_UNAVAILABLE" | "CORE_CHANGED" | "CONTENT_CHANGED" | "FORMAT_UNREADABLE"};
 export function restorability(input: {gameAvailable: boolean; saveAvailable: boolean; current: RuntimeIdentity | null;

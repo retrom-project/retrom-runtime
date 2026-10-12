@@ -16,6 +16,7 @@ export const pspTarget = defineTarget({
   targetOptionsSchema: {type: "object", additionalProperties: false, properties: {}, required: []},
   implementation: {}, inputFilter: true, nativeSettings: false,
   videoModes: ["original", "pixel", "smooth"],
+  coreAssetPaths: ["assets/ppsspp/ppsspp.js", "assets/ppsspp/ppsspp.wasm", "assets/ppsspp/ppsspp.data"],
   assetPaths: ["ppsspp.js", "ppsspp.wasm", "ppsspp.data", "ppsspp.worker.mjs", "ppsspp-host.mjs"]
     .map(file => `assets/ppsspp/${file}`),
 });

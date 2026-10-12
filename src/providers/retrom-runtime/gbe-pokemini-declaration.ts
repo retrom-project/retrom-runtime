@@ -15,5 +15,6 @@ export const gbeTarget = defineTarget({
   targetOptionsSchema: {type: "object", additionalProperties: false, properties: {}, required: []},
   implementation: {}, inputFilter: true, nativeSettings: false,
   videoModes: ["original", "pixel", "smooth"],
+  coreAssetPaths: ["assets/gbe_plus/gbe-pokemini.mjs", "assets/gbe_plus/gbe-pokemini.wasm"],
   assetPaths: ["gbe-pokemini.mjs", "gbe-pokemini.wasm", "gbe-pokemini-register.mjs"].map(file => `assets/gbe_plus/${file}`),
 });

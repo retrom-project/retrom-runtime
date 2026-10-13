@@ -20,6 +20,7 @@ export function createOnsProjectFileMap(files: OnsProjectFile[], frameWindow: Wi
   };
   return {
     fileMap: map,
+    hasPendingReads: () => pending.size > 0,
     videoSource: content.contentSession.preloaded ? (node: OnsProjectFileNode) => track((async () => {
       checkSignal(scope.signal);
       const policy = {...content.contentSession.inputPolicy("game"), result: "BLOB" as const};

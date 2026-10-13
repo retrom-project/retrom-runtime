@@ -1,11 +1,13 @@
-/** The stable-wait checkpoint is a required native interface, not an optional fallback. */
+/** Checkpoint readiness and stopping pending Asyncify work are required native interfaces. */
 export function assertONSCheckpointCore(javascript, wasm) {
   const glue = Buffer.from(javascript).toString("utf8");
-  const binding = /Module\[["']_onsyuri_host_checkpoint_ready["']\]\s*=\s*wasmExports\[["']([^"']+)["']\]/u.exec(glue);
-  if (!binding) {invalid();}
   let exports;
   try {exports = globalThis.WebAssembly.Module.exports(new globalThis.WebAssembly.Module(wasm));}
   catch {invalid();}
-  if (!exports.some(value => value.name === binding[1] && value.kind === "function")) {invalid();}
+  for (const [name, code] of [["checkpoint_ready", "ONS_CHECKPOINT_NATIVE_ABI_REQUIRED"],
+    ["stop", "ONS_STOP_NATIVE_ABI_REQUIRED"]]) {
+    const binding = new RegExp(`Module\\[["']_onsyuri_host_${name}["']\\]\\s*=\\s*wasmExports\\[["']([^"']+)["']\\]`, "u").exec(glue);
+    if (!binding || !exports.some(value => value.name === binding[1] && value.kind === "function")) {invalid(code);}
+  }
 }
-function invalid() {throw new Error("ONS_CHECKPOINT_NATIVE_ABI_REQUIRED");}
+function invalid(code = "ONS_CHECKPOINT_NATIVE_ABI_REQUIRED") {throw new Error(code);}

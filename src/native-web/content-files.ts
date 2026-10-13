@@ -9,10 +9,12 @@ type File = {source: ContentSourceV1; mediaType: string; reader?: Promise<Conten
 export class NativeContentFiles {
   private readonly files = new Map<string, File>();
   private readonly folded = new Map<string, string | null>();
+  private nativeAudio = false;
   private closed = false;
   constructor(private readonly session: ContentSessionAccess, private readonly policy: ManagedInputPolicyV1,
     private readonly signal?: AbortSignal) {}
   async load(resource: RuntimeWebResourceV1): Promise<void> {
+    this.nativeAudio = resource.kind === "NATIVE_WEB";
     const base = new URL(resource.indexUrl, location.href);
     const value = await fetchMetadataJson(base, indexByteBudget(100_000, 4096), this.signal);
     if (!record(value) || value.schemaVersion !== 1 || !Array.isArray(value.files) || value.files.length > 100_000) {throw invalid();}
@@ -28,8 +30,7 @@ export class NativeContentFiles {
   async request(value: unknown): Promise<Record<string, unknown>> {
     if (this.closed || this.signal?.aborted) {throw new ContentIOError("ABORTED");}
     if (!record(value) || typeof value.path !== "string" || !canonicalPath(value.path)) {throw invalid();}
-    const path = value.path.normalize("NFC");
-    const name = this.files.has(path) ? path : this.folded.get(asciiFold(path));
+    const name = this.resolve(value.path.normalize("NFC"));
     const file = name ? this.files.get(name) : undefined;
     if (!file) {return {status: 404};}
     if (value.type === "STAT") {return {status: 200, path: name, sizeBytes: file.source.sizeBytes, mediaType: file.mediaType};}
@@ -46,6 +47,20 @@ export class NativeContentFiles {
     await Promise.allSettled([...this.files.values()].map(async file => (await file.reader)?.close()));
     this.files.clear(); this.folded.clear();
   }
+  private find(path: string) {return this.files.has(path) ? path : this.folded.get(asciiFold(path));}
+  private resolve(path: string) {
+    const name = this.find(path);
+    if (name !== undefined || !this.nativeAudio) {return name;}
+    const alternative = alternateAudioPath(path);
+    return alternative ? this.find(alternative) : undefined;
+  }
+}
+function alternateAudioPath(path: string) {
+  const match = /(?:^|\/)audio\/(?:bgm|bgs|me|se)\/[^/]+\.(ogg|m4a|rpgmvo|rpgmvm)$/iu.exec(path);
+  if (!match) {return null;}
+  const formats: Record<string, string> = {ogg: "m4a", m4a: "ogg", rpgmvo: "rpgmvm", rpgmvm: "rpgmvo"};
+  const extension = match[1]!.toLowerCase();
+  return path.slice(0, -extension.length) + formats[extension];
 }
 function asciiFold(value: string) {return value.replace(/[A-Z]/gu, character => character.toLowerCase());}
 function invalid() {return new ContentIOError("SOURCE_INVALID");}

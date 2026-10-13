@@ -33,8 +33,9 @@ export async function productIdentities(environment) {
     assert.equal(development.schemaVersion, 1);
     for (const [path, field] of [["client.mjs", "moduleSha256"], ["assets/content-io/worker.mjs", "workerSha256"]]) {
       const files = development.files.filter(file => file.path === path); assert.equal(files.length, 1);
-      const file = files[0], bytes = Buffer.from(file.contentBase64, "base64");
-      assert.equal(bytes.length, file.sizeBytes); assert.equal(sha(bytes), file.sha256);
+      const file = files[0]; assert.match(file.sha256, /^[0-9a-f]{64}$/u);
+      const stored = await artifactDigest(join(root, "dev/files", file.sha256));
+      assert.equal(stored.sizeBytes, file.sizeBytes); assert.equal(stored.sha256, file.sha256);
       provider[field] = file.sha256;
     }
   }

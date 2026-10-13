@@ -123,17 +123,19 @@ describe("PFB loose provider", () => {
       outputRoot,
     });
     expect(second.moduleSha256).not.toBe(first.moduleSha256);
+    expect(await readFile(join(outputRoot, "files", first.moduleSha256), "utf8")).toContain("providerApiVersion");
     const descriptor = JSON.parse(await readFile(join(outputRoot, "dev-provider.json"), "utf8"));
     expect(Object.keys(descriptor).sort()).toEqual(["baseBundleSha256", "files", "providerId", "providerManifest", "schemaVersion", "targetFingerprints"]);
-    expect(await readdir(outputRoot)).toEqual(["dev-provider.json"]);
+    expect(await readdir(outputRoot)).toEqual(["dev-provider.json", "files"]);
     expect(descriptor.baseBundleSha256).toBe(bundle);
     expect(descriptor.providerId).toBe(providerId);
     expect(descriptor.files.map((file: {path: string}) => file.path)).toEqual([
       "assets/butterscotch/worker.mjs", "client.mjs",
     ]);
-    expect(Buffer.from(descriptor.files[0].contentBase64, "base64").toString("utf8"))
+    expect(await readFile(join(outputRoot, "files", descriptor.files[0].sha256), "utf8"))
       .toBe("export const changed=2;\n");
-    const client = Buffer.from(descriptor.files[1].contentBase64, "base64").toString("utf8");
+    expect(descriptor.files.every((file: object) => !Object.hasOwn(file, "contentBase64"))).toBe(true);
+    const client = await readFile(join(outputRoot, "files", descriptor.files[1].sha256), "utf8");
     expect(client).toContain("providerApiVersion");
     const module = await import(`data:text/javascript;base64,${Buffer.from(client).toString("base64")}`);
     expect(module.providerApiVersion).toBe(1);
@@ -159,7 +161,7 @@ describe("PFB loose provider", () => {
       outputRoot,
     })).rejects.toThrow();
     expect(await readFile(join(outputRoot, "dev-provider.json"), "utf8")).toBe(published);
-    expect(await readdir(outputRoot)).toEqual(["dev-provider.json"]);
+    expect(await readdir(outputRoot)).toEqual(["dev-provider.json", "files"]);
 
     await writeFile(activePath, JSON.stringify({
       schemaVersion: 1,

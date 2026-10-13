@@ -86,9 +86,14 @@ export async function buildPFBProviderDev(input) {
       schemaVersion: 1,
       providerId,
       baseBundleSha256: provider.bundleSha256,
-      files,
+      files: files.map(({contents, ...metadata}) => { void contents; return metadata; }),
     };
     await mkdir(input.outputRoot, {recursive: true});
+    const filesRoot = join(input.outputRoot, "files");
+    await mkdir(filesRoot, {recursive: true});
+    // Publish every immutable object before switching the descriptor. Existing
+    // readers keep their previous digests even across rebuilds or failures.
+    for (const file of files) {await atomicWrite(join(filesRoot, file.sha256), file.contents);}
     await atomicWrite(join(input.outputRoot, "dev-provider.json"), canonicalBytes(descriptor));
     return {baseBundleSha256: provider.bundleSha256, moduleSha256: files.find((file) => file.path === "client.mjs").sha256};
   } finally {
@@ -138,7 +143,7 @@ function fileDescriptor(path, contents) {
     sizeBytes: contents.byteLength,
     sha256: sha256(contents),
     mediaType: providerMediaType(path),
-    contentBase64: contents.toString("base64"),
+    contents,
   };
 }
 

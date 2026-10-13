@@ -24,7 +24,7 @@ function fixture(size: number) {
   const content = {contentSession: owner.session, assetIndex: Object.fromEntries(Object.entries(files)
     .map(([name, bytes]) => [`assets/mame/${name}`, {sizeBytes: bytes.length, sha256: sha(bytes)}]))};
   const config = {arcade: true as const, machine: "game", runtimeBaseUrl: base,
-    game: {url: base + "game.zip", sha256: "b".repeat(64), sizeBytes: 22}, parent: null, bios: null, deviceBios: []};
+    game: {url: base + "game.zip", sha256: "b".repeat(64), sizeBytes: 22}, parents: [], deviceBios: []};
   // Stop at the module boundary: this test exercises actual Content IO verification,
   // while product verification executes the real compiled native module.
   const loader = vi.fn(async () => {throw Error("TEST_MODULE_BOUNDARY_REACHED");});

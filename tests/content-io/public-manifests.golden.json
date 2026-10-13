@@ -78,7 +78,7 @@
           },
           {
             "cardinality": "ONE",
-            "kind": "PARENT_ARCHIVE",
+            "kind": "EXTERNAL_FILE_SET",
             "optional": true,
             "role": "parent",
             "maxFileBytes": 2147483647
@@ -188,7 +188,7 @@
           },
           {
             "cardinality": "ONE",
-            "kind": "PARENT_ARCHIVE",
+            "kind": "EXTERNAL_FILE_SET",
             "optional": true,
             "role": "parent",
             "maxFileBytes": 2147483647
@@ -298,7 +298,7 @@
           },
           {
             "cardinality": "ONE",
-            "kind": "PARENT_ARCHIVE",
+            "kind": "EXTERNAL_FILE_SET",
             "optional": true,
             "role": "parent",
             "maxFileBytes": 2147483647
@@ -408,7 +408,7 @@
           },
           {
             "cardinality": "ONE",
-            "kind": "PARENT_ARCHIVE",
+            "kind": "EXTERNAL_FILE_SET",
             "optional": true,
             "role": "parent",
             "maxFileBytes": 2147483647
@@ -518,7 +518,7 @@
           },
           {
             "cardinality": "ONE",
-            "kind": "PARENT_ARCHIVE",
+            "kind": "EXTERNAL_FILE_SET",
             "optional": true,
             "role": "parent",
             "maxFileBytes": 2147483647
@@ -634,7 +634,7 @@
           },
           {
             "cardinality": "ONE",
-            "kind": "PARENT_ARCHIVE",
+            "kind": "EXTERNAL_FILE_SET",
             "optional": true,
             "role": "parent",
             "maxFileBytes": 2147483647
@@ -744,7 +744,7 @@
           },
           {
             "cardinality": "ONE",
-            "kind": "PARENT_ARCHIVE",
+            "kind": "EXTERNAL_FILE_SET",
             "optional": true,
             "role": "parent",
             "maxFileBytes": 2147483647
@@ -857,7 +857,7 @@
           },
           {
             "cardinality": "ONE",
-            "kind": "PARENT_ARCHIVE",
+            "kind": "EXTERNAL_FILE_SET",
             "optional": true,
             "role": "parent",
             "maxFileBytes": 2147483647
@@ -967,7 +967,7 @@
           },
           {
             "cardinality": "ONE",
-            "kind": "PARENT_ARCHIVE",
+            "kind": "EXTERNAL_FILE_SET",
             "optional": true,
             "role": "parent",
             "maxFileBytes": 2147483647
@@ -1077,7 +1077,7 @@
           },
           {
             "cardinality": "ONE",
-            "kind": "PARENT_ARCHIVE",
+            "kind": "EXTERNAL_FILE_SET",
             "optional": true,
             "role": "parent",
             "maxFileBytes": 2147483647
@@ -1178,7 +1178,7 @@
           },
           {
             "cardinality": "ONE",
-            "kind": "PARENT_ARCHIVE",
+            "kind": "EXTERNAL_FILE_SET",
             "optional": true,
             "role": "parent",
             "maxFileBytes": 2147483647
@@ -1288,7 +1288,7 @@
           },
           {
             "cardinality": "ONE",
-            "kind": "PARENT_ARCHIVE",
+            "kind": "EXTERNAL_FILE_SET",
             "optional": true,
             "role": "parent",
             "maxFileBytes": 2147483647
@@ -1398,7 +1398,7 @@
           },
           {
             "cardinality": "ONE",
-            "kind": "PARENT_ARCHIVE",
+            "kind": "EXTERNAL_FILE_SET",
             "optional": true,
             "role": "parent",
             "maxFileBytes": 2147483647
@@ -1508,7 +1508,7 @@
           },
           {
             "cardinality": "ONE",
-            "kind": "PARENT_ARCHIVE",
+            "kind": "EXTERNAL_FILE_SET",
             "optional": true,
             "role": "parent",
             "maxFileBytes": 2147483647
@@ -1635,7 +1635,7 @@
           },
           {
             "cardinality": "ONE",
-            "kind": "PARENT_ARCHIVE",
+            "kind": "EXTERNAL_FILE_SET",
             "optional": true,
             "role": "parent",
             "maxFileBytes": 2147483647
@@ -1745,7 +1745,7 @@
           },
           {
             "cardinality": "ONE",
-            "kind": "PARENT_ARCHIVE",
+            "kind": "EXTERNAL_FILE_SET",
             "optional": true,
             "role": "parent",
             "maxFileBytes": 2147483647
@@ -1855,7 +1855,7 @@
           },
           {
             "cardinality": "ONE",
-            "kind": "PARENT_ARCHIVE",
+            "kind": "EXTERNAL_FILE_SET",
             "optional": true,
             "role": "parent",
             "maxFileBytes": 2147483647
@@ -1982,7 +1982,7 @@
           },
           {
             "cardinality": "ONE",
-            "kind": "PARENT_ARCHIVE",
+            "kind": "EXTERNAL_FILE_SET",
             "optional": true,
             "role": "parent",
             "maxFileBytes": 2147483647
@@ -2092,7 +2092,7 @@
           },
           {
             "cardinality": "ONE",
-            "kind": "PARENT_ARCHIVE",
+            "kind": "EXTERNAL_FILE_SET",
             "optional": true,
             "role": "parent",
             "maxFileBytes": 2147483647
@@ -2202,7 +2202,7 @@
           },
           {
             "cardinality": "ONE",
-            "kind": "PARENT_ARCHIVE",
+            "kind": "EXTERNAL_FILE_SET",
             "optional": true,
             "role": "parent",
             "maxFileBytes": 2147483647
@@ -2325,7 +2325,7 @@
           },
           {
             "cardinality": "ONE",
-            "kind": "PARENT_ARCHIVE",
+            "kind": "EXTERNAL_FILE_SET",
             "optional": true,
             "role": "parent",
             "maxFileBytes": 2147483647
@@ -2448,7 +2448,7 @@
           },
           {
             "cardinality": "ONE",
-            "kind": "PARENT_ARCHIVE",
+            "kind": "EXTERNAL_FILE_SET",
             "optional": true,
             "role": "parent",
             "maxFileBytes": 2147483647
@@ -2571,7 +2571,7 @@
           },
           {
             "cardinality": "ONE",
-            "kind": "PARENT_ARCHIVE",
+            "kind": "EXTERNAL_FILE_SET",
             "optional": true,
             "role": "parent",
             "maxFileBytes": 2147483647
@@ -2681,7 +2681,7 @@
           },
           {
             "cardinality": "ONE",
-            "kind": "PARENT_ARCHIVE",
+            "kind": "EXTERNAL_FILE_SET",
             "optional": true,
             "role": "parent",
             "maxFileBytes": 2147483647
@@ -2794,7 +2794,7 @@
           },
           {
             "cardinality": "ONE",
-            "kind": "PARENT_ARCHIVE",
+            "kind": "EXTERNAL_FILE_SET",
             "optional": true,
             "role": "parent",
             "maxFileBytes": 2147483647
@@ -2904,7 +2904,7 @@
           },
           {
             "cardinality": "ONE",
-            "kind": "PARENT_ARCHIVE",
+            "kind": "EXTERNAL_FILE_SET",
             "optional": true,
             "role": "parent",
             "maxFileBytes": 2147483647
@@ -3014,7 +3014,7 @@
           },
           {
             "cardinality": "ONE",
-            "kind": "PARENT_ARCHIVE",
+            "kind": "EXTERNAL_FILE_SET",
             "optional": true,
             "role": "parent",
             "maxFileBytes": 2147483647
@@ -3124,7 +3124,7 @@
           },
           {
             "cardinality": "ONE",
-            "kind": "PARENT_ARCHIVE",
+            "kind": "EXTERNAL_FILE_SET",
             "optional": true,
             "role": "parent",
             "maxFileBytes": 2147483647
@@ -3234,7 +3234,7 @@
           },
           {
             "cardinality": "ONE",
-            "kind": "PARENT_ARCHIVE",
+            "kind": "EXTERNAL_FILE_SET",
             "optional": true,
             "role": "parent",
             "maxFileBytes": 2147483647
@@ -3344,7 +3344,7 @@
           },
           {
             "cardinality": "ONE",
-            "kind": "PARENT_ARCHIVE",
+            "kind": "EXTERNAL_FILE_SET",
             "optional": true,
             "role": "parent",
             "maxFileBytes": 2147483647
@@ -3454,7 +3454,7 @@
           },
           {
             "cardinality": "ONE",
-            "kind": "PARENT_ARCHIVE",
+            "kind": "EXTERNAL_FILE_SET",
             "optional": true,
             "role": "parent",
             "maxFileBytes": 2147483647
@@ -3564,7 +3564,7 @@
           },
           {
             "cardinality": "ONE",
-            "kind": "PARENT_ARCHIVE",
+            "kind": "EXTERNAL_FILE_SET",
             "optional": true,
             "role": "parent",
             "maxFileBytes": 2147483647
@@ -3677,7 +3677,7 @@
           },
           {
             "cardinality": "ONE",
-            "kind": "PARENT_ARCHIVE",
+            "kind": "EXTERNAL_FILE_SET",
             "optional": true,
             "role": "parent",
             "maxFileBytes": 2147483647
@@ -3787,7 +3787,7 @@
           },
           {
             "cardinality": "ONE",
-            "kind": "PARENT_ARCHIVE",
+            "kind": "EXTERNAL_FILE_SET",
             "optional": true,
             "role": "parent",
             "maxFileBytes": 2147483647
@@ -3897,7 +3897,7 @@
           },
           {
             "cardinality": "ONE",
-            "kind": "PARENT_ARCHIVE",
+            "kind": "EXTERNAL_FILE_SET",
             "optional": true,
             "role": "parent",
             "maxFileBytes": 2147483647
@@ -4007,7 +4007,7 @@
           },
           {
             "cardinality": "ONE",
-            "kind": "PARENT_ARCHIVE",
+            "kind": "EXTERNAL_FILE_SET",
             "optional": true,
             "role": "parent",
             "maxFileBytes": 2147483647
@@ -4117,7 +4117,7 @@
           },
           {
             "cardinality": "ONE",
-            "kind": "PARENT_ARCHIVE",
+            "kind": "EXTERNAL_FILE_SET",
             "optional": true,
             "role": "parent",
             "maxFileBytes": 2147483647
@@ -4227,7 +4227,7 @@
           },
           {
             "cardinality": "ONE",
-            "kind": "PARENT_ARCHIVE",
+            "kind": "EXTERNAL_FILE_SET",
             "optional": true,
             "role": "parent",
             "maxFileBytes": 2147483647
@@ -4337,7 +4337,7 @@
           },
           {
             "cardinality": "ONE",
-            "kind": "PARENT_ARCHIVE",
+            "kind": "EXTERNAL_FILE_SET",
             "optional": true,
             "role": "parent",
             "maxFileBytes": 2147483647
@@ -4447,7 +4447,7 @@
           },
           {
             "cardinality": "ONE",
-            "kind": "PARENT_ARCHIVE",
+            "kind": "EXTERNAL_FILE_SET",
             "optional": true,
             "role": "parent",
             "maxFileBytes": 2147483647
@@ -4557,7 +4557,7 @@
           },
           {
             "cardinality": "ONE",
-            "kind": "PARENT_ARCHIVE",
+            "kind": "EXTERNAL_FILE_SET",
             "optional": true,
             "role": "parent",
             "maxFileBytes": 2147483647
@@ -4667,7 +4667,7 @@
           },
           {
             "cardinality": "ONE",
-            "kind": "PARENT_ARCHIVE",
+            "kind": "EXTERNAL_FILE_SET",
             "optional": true,
             "role": "parent",
             "maxFileBytes": 2147483647
@@ -4777,7 +4777,7 @@
           },
           {
             "cardinality": "ONE",
-            "kind": "PARENT_ARCHIVE",
+            "kind": "EXTERNAL_FILE_SET",
             "optional": true,
             "role": "parent",
             "maxFileBytes": 2147483647
@@ -4887,7 +4887,7 @@
           },
           {
             "cardinality": "ONE",
-            "kind": "PARENT_ARCHIVE",
+            "kind": "EXTERNAL_FILE_SET",
             "optional": true,
             "role": "parent",
             "maxFileBytes": 2147483647
@@ -4997,7 +4997,7 @@
           },
           {
             "cardinality": "ONE",
-            "kind": "PARENT_ARCHIVE",
+            "kind": "EXTERNAL_FILE_SET",
             "optional": true,
             "role": "parent",
             "maxFileBytes": 2147483647
@@ -5107,7 +5107,7 @@
           },
           {
             "cardinality": "ONE",
-            "kind": "PARENT_ARCHIVE",
+            "kind": "EXTERNAL_FILE_SET",
             "optional": true,
             "role": "parent",
             "maxFileBytes": 2147483647
@@ -5217,7 +5217,7 @@
           },
           {
             "cardinality": "ONE",
-            "kind": "PARENT_ARCHIVE",
+            "kind": "EXTERNAL_FILE_SET",
             "optional": true,
             "role": "parent",
             "maxFileBytes": 2147483647
@@ -5327,7 +5327,7 @@
           },
           {
             "cardinality": "ONE",
-            "kind": "PARENT_ARCHIVE",
+            "kind": "EXTERNAL_FILE_SET",
             "optional": true,
             "role": "parent",
             "maxFileBytes": 2147483647
@@ -5437,7 +5437,7 @@
           },
           {
             "cardinality": "ONE",
-            "kind": "PARENT_ARCHIVE",
+            "kind": "EXTERNAL_FILE_SET",
             "optional": true,
             "role": "parent",
             "maxFileBytes": 2147483647
@@ -5547,7 +5547,7 @@
           },
           {
             "cardinality": "ONE",
-            "kind": "PARENT_ARCHIVE",
+            "kind": "EXTERNAL_FILE_SET",
             "optional": true,
             "role": "parent",
             "maxFileBytes": 2147483647
@@ -5657,7 +5657,7 @@
           },
           {
             "cardinality": "ONE",
-            "kind": "PARENT_ARCHIVE",
+            "kind": "EXTERNAL_FILE_SET",
             "optional": true,
             "role": "parent",
             "maxFileBytes": 2147483647
@@ -5767,7 +5767,7 @@
           },
           {
             "cardinality": "ONE",
-            "kind": "PARENT_ARCHIVE",
+            "kind": "EXTERNAL_FILE_SET",
             "optional": true,
             "role": "parent",
             "maxFileBytes": 2147483647
@@ -5877,7 +5877,7 @@
           },
           {
             "cardinality": "ONE",
-            "kind": "PARENT_ARCHIVE",
+            "kind": "EXTERNAL_FILE_SET",
             "optional": true,
             "role": "parent",
             "maxFileBytes": 2147483647
@@ -5987,7 +5987,7 @@
           },
           {
             "cardinality": "ONE",
-            "kind": "PARENT_ARCHIVE",
+            "kind": "EXTERNAL_FILE_SET",
             "optional": true,
             "role": "parent",
             "maxFileBytes": 2147483647
@@ -6102,7 +6102,7 @@
           },
           {
             "cardinality": "ONE",
-            "kind": "PARENT_ARCHIVE",
+            "kind": "EXTERNAL_FILE_SET",
             "optional": true,
             "role": "parent",
             "maxFileBytes": 2147483647
@@ -6212,7 +6212,7 @@
           },
           {
             "cardinality": "ONE",
-            "kind": "PARENT_ARCHIVE",
+            "kind": "EXTERNAL_FILE_SET",
             "optional": true,
             "role": "parent",
             "maxFileBytes": 2147483647
@@ -6322,7 +6322,7 @@
           },
           {
             "cardinality": "ONE",
-            "kind": "PARENT_ARCHIVE",
+            "kind": "EXTERNAL_FILE_SET",
             "optional": true,
             "role": "parent",
             "maxFileBytes": 2147483647
@@ -6432,7 +6432,7 @@
           },
           {
             "cardinality": "ONE",
-            "kind": "PARENT_ARCHIVE",
+            "kind": "EXTERNAL_FILE_SET",
             "optional": true,
             "role": "parent",
             "maxFileBytes": 2147483647
@@ -6542,7 +6542,7 @@
           },
           {
             "cardinality": "ONE",
-            "kind": "PARENT_ARCHIVE",
+            "kind": "EXTERNAL_FILE_SET",
             "optional": true,
             "role": "parent",
             "maxFileBytes": 2147483647
@@ -6652,7 +6652,7 @@
           },
           {
             "cardinality": "ONE",
-            "kind": "PARENT_ARCHIVE",
+            "kind": "EXTERNAL_FILE_SET",
             "optional": true,
             "role": "parent",
             "maxFileBytes": 2147483647
@@ -6762,7 +6762,7 @@
           },
           {
             "cardinality": "ONE",
-            "kind": "PARENT_ARCHIVE",
+            "kind": "EXTERNAL_FILE_SET",
             "optional": true,
             "role": "parent",
             "maxFileBytes": 2147483647
@@ -6872,7 +6872,7 @@
           },
           {
             "cardinality": "ONE",
-            "kind": "PARENT_ARCHIVE",
+            "kind": "EXTERNAL_FILE_SET",
             "optional": true,
             "role": "parent",
             "maxFileBytes": 2147483647
@@ -6982,7 +6982,7 @@
           },
           {
             "cardinality": "ONE",
-            "kind": "PARENT_ARCHIVE",
+            "kind": "EXTERNAL_FILE_SET",
             "optional": true,
             "role": "parent",
             "maxFileBytes": 2147483647
@@ -7092,7 +7092,7 @@
           },
           {
             "cardinality": "ONE",
-            "kind": "PARENT_ARCHIVE",
+            "kind": "EXTERNAL_FILE_SET",
             "optional": true,
             "role": "parent",
             "maxFileBytes": 2147483647
@@ -7205,7 +7205,7 @@
           },
           {
             "cardinality": "ONE",
-            "kind": "PARENT_ARCHIVE",
+            "kind": "EXTERNAL_FILE_SET",
             "optional": true,
             "role": "parent",
             "maxFileBytes": 2147483647
@@ -7315,7 +7315,7 @@
           },
           {
             "cardinality": "ONE",
-            "kind": "PARENT_ARCHIVE",
+            "kind": "EXTERNAL_FILE_SET",
             "optional": true,
             "role": "parent",
             "maxFileBytes": 2147483647
@@ -7440,7 +7440,7 @@
           },
           {
             "cardinality": "ONE",
-            "kind": "PARENT_ARCHIVE",
+            "kind": "EXTERNAL_FILE_SET",
             "optional": true,
             "role": "parent",
             "maxFileBytes": 2147483647
@@ -7550,7 +7550,7 @@
           },
           {
             "cardinality": "ONE",
-            "kind": "PARENT_ARCHIVE",
+            "kind": "EXTERNAL_FILE_SET",
             "optional": true,
             "role": "parent",
             "maxFileBytes": 2147483647
@@ -7660,7 +7660,7 @@
           },
           {
             "cardinality": "ONE",
-            "kind": "PARENT_ARCHIVE",
+            "kind": "EXTERNAL_FILE_SET",
             "optional": true,
             "role": "parent",
             "maxFileBytes": 2147483647
@@ -7770,7 +7770,7 @@
           },
           {
             "cardinality": "ONE",
-            "kind": "PARENT_ARCHIVE",
+            "kind": "EXTERNAL_FILE_SET",
             "optional": true,
             "role": "parent",
             "maxFileBytes": 2147483647
@@ -7880,7 +7880,7 @@
           },
           {
             "cardinality": "ONE",
-            "kind": "PARENT_ARCHIVE",
+            "kind": "EXTERNAL_FILE_SET",
             "optional": true,
             "role": "parent",
             "maxFileBytes": 2147483647
@@ -7990,7 +7990,7 @@
           },
           {
             "cardinality": "ONE",
-            "kind": "PARENT_ARCHIVE",
+            "kind": "EXTERNAL_FILE_SET",
             "optional": true,
             "role": "parent",
             "maxFileBytes": 2147483647
@@ -8100,7 +8100,7 @@
           },
           {
             "cardinality": "ONE",
-            "kind": "PARENT_ARCHIVE",
+            "kind": "EXTERNAL_FILE_SET",
             "optional": true,
             "role": "parent",
             "maxFileBytes": 2147483647
@@ -8210,7 +8210,7 @@
           },
           {
             "cardinality": "ONE",
-            "kind": "PARENT_ARCHIVE",
+            "kind": "EXTERNAL_FILE_SET",
             "optional": true,
             "role": "parent",
             "maxFileBytes": 2147483647
@@ -8320,7 +8320,7 @@
           },
           {
             "cardinality": "ONE",
-            "kind": "PARENT_ARCHIVE",
+            "kind": "EXTERNAL_FILE_SET",
             "optional": true,
             "role": "parent",
             "maxFileBytes": 2147483647
@@ -8430,7 +8430,7 @@
           },
           {
             "cardinality": "ONE",
-            "kind": "PARENT_ARCHIVE",
+            "kind": "EXTERNAL_FILE_SET",
             "optional": true,
             "role": "parent",
             "maxFileBytes": 2147483647
@@ -9191,14 +9191,7 @@
           },
           {
             "role": "parent",
-            "kind": "PARENT_ARCHIVE",
-            "cardinality": "ONE",
-            "optional": true,
-            "maxFileBytes": 134217728
-          },
-          {
-            "role": "bios",
-            "kind": "BIOS_BUNDLE",
+            "kind": "EXTERNAL_FILE_SET",
             "cardinality": "ONE",
             "optional": true,
             "maxFileBytes": 134217728

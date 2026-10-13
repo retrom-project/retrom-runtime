@@ -5,7 +5,7 @@ import {mkdtemp, readFile, writeFile, rm, access} from "node:fs/promises";
 import {join} from "node:path";
 import {tmpdir} from "node:os";
 import {unzipSync, zipSync} from "fflate";
-import {assembleResource, parentArchive, prepareHostInput, configureHostInput, discoverContentDependencies, identifyHostBIOS, flycastTable, contentHostBIOSRequirements, hostDOSEntryCandidates} from "../scripts/runtime-host-input.mjs";
+import {assembleResource, prepareHostInput, configureHostInput, discoverContentDependencies, identifyHostBIOS, flycastTable, contentHostBIOSRequirements, hostDOSEntryCandidates} from "../scripts/runtime-host-input.mjs";
 import {gbkProgramName, legacyZip} from "./zip-encoding-fixture.js";
 import type {RuntimeContentFile} from "../src/runtime/types.js";
 const roots: string[] = [];
@@ -30,14 +30,6 @@ it("streams a deterministic ordinary ZIP with virtual project paths and exact so
   const failed = join(input.root, "failed.zip"); input.files[0].sha256 = "0".repeat(64);
   await expect(assembleResource({...input, paths, outputPath: failed})).rejects.toThrow("RUNTIME_CONTENT_CHANGED");
   await expect(access(failed)).rejects.toThrow();
-});
-it("merges all parent archives once and refuses conflicting same-path members", async () => {
-  const input = await tree({"base.zip": zipSync({"base.bin": Uint8Array.of(1)}), "grand.zip": zipSync({"grand.bin": Uint8Array.of(2)})});
-  const result = await parentArchive({...input, outputPath: join(input.root, "parents.zip")});
-  expect(Object.keys(unzipSync(await readFile(result.path)))).toEqual(["base.bin", "grand.bin"]);
-  const conflict = zipSync({"base.bin": Uint8Array.of(9)}); await writeFile(input.locators["grand.zip"], conflict);
-  input.files[1] = {...input.files[1], sizeBytes: conflict.length, sha256: sha(conflict)};
-  await expect(parentArchive({...input, outputPath: join(input.root, "conflict.zip")})).rejects.toThrow("RUNTIME_PARENT_MEMBER_CONFLICT");
 });
 it("keeps a single CUE disc's actual tracks and rejects a missing referenced track", async () => {
   const input = await tree({"game/disc.cue": Buffer.from('FILE "track.bin" BINARY\n TRACK 01 MODE1/2352\n'), "game/track.bin": Uint8Array.of(3)});

@@ -79,7 +79,7 @@ const adapters = [
 const inputs = [
   {cardinality: "ONE", kind: "ROM_BLOB", optional: false, role: "game"},
   {cardinality: "ONE", kind: "BIOS_BUNDLE", optional: true, role: "bios"},
-  {cardinality: "ONE", kind: "PARENT_ARCHIVE", optional: true, role: "parent"},
+  {cardinality: "ONE", kind: "EXTERNAL_FILE_SET", optional: true, role: "parent"},
   {cardinality: "ONE", kind: "EXTERNAL_FILE_SET", optional: true, role: "external"},
   {cardinality: "ONE", kind: "EXTERNAL_FILE_SET", optional: true, role: "game-files"},
 ] as const satisfies readonly TargetInputDeclaration[];

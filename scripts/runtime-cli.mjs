@@ -4,7 +4,6 @@ import {normalizeContent} from "./runtime-normalize-content.mjs";
 import {readFile} from "node:fs/promises";
 import {once} from "node:events";
 import {serveJSONL} from "./runtime-jsonl.mjs";
-import {archiveTask} from "./runtime-archive-task.mjs";
 import {runtimeCatalog, prepareRuntime, contentHash, restorability,
   inspectRuntimeIdentity, configureRuntime, arcadeBIOSRequirements, biosCatalog, resolveBIOSRequirements,
   arcadeROMSetOptions, reconcileArcadeConfiguration} from "../dist/runtime/index.js";
@@ -35,7 +34,6 @@ async function execute(command, input, signal = new AbortController().signal) {
     ...await flycastConfigureEvidence({platformId: input.directory.platformId, coreIds: Object.keys(input.config?.cores ?? {}), providerRoots: input.providerRoots})}); break;
   case "configure": output = configureRuntime(await configureHostInput(input)); break;
   case "prepare": output = prepareRuntime(await prepareHostInput(input)); break;
-  case "parent-archive": output = await archiveTask(input, signal); break;
   case "assemble-resource": output = await assembleResource(input, signal); break;
   case "hash": output = {romHash: contentHash(input.files, input.mode)}; break;
   case "restorable": output = restorability(input); break;

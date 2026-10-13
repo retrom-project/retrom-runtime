@@ -22,7 +22,7 @@ const frameModes = new Set([
 ]);
 const resourceKinds = new Set([
   "ROM_BLOB", "FILE_TREE", "SEEKABLE_BLOB", "NATIVE_WEB", "ISOLATED_WEB",
-  "BIOS_BUNDLE", "PARENT_ARCHIVE", "EXTERNAL_FILE_SET",
+  "BIOS_BUNDLE", "EXTERNAL_FILE_SET",
   "WASM4_CART",
 ]);
 const videoModes = new Set(["original", "pixel", "smooth", "sharp-bilinear", "adaptive-sharpen"]);

@@ -16,7 +16,7 @@ const children: ChildProcessWithoutNullStreams[] = [];
 beforeAll(async () => {
   root = await mkdtemp(join(tmpdir(), "retrom-cli-test-"));
   await mkdir(join(root, "scripts"));
-  for (const file of ["runtime-cli.mjs", "runtime-host-input.mjs", "runtime-normalize-content.mjs", "runtime-jsonl.mjs", "runtime-archive-input.mjs", "runtime-archive-task.mjs", "runtime-archive-worker.mjs"]) {
+  for (const file of ["runtime-cli.mjs", "runtime-host-input.mjs", "runtime-normalize-content.mjs", "runtime-jsonl.mjs", "runtime-archive-input.mjs"]) {
     await cp(resolve("scripts", file), join(root, "scripts", file));
   }
   await cp(resolve("assets/facts"), join(root, "assets/facts"), {recursive: true});

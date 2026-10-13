@@ -49,7 +49,7 @@ function resourceKinds(resources: readonly RuntimeResourceV1[]) {
   for (const resource of resources) {
     if (resource.kind === "BIOS_BUNDLE" || resource.kind === "EXTERNAL_FILE_SET") {
       for (const file of resource.files) {kinds.set(file.url, resource.kind === "BIOS_BUNDLE" ? "BIOS" : "DEPENDENCIES");}
-    } else if ("url" in resource) {kinds.set(resource.url, resource.kind === "PARENT_ARCHIVE" ? "DEPENDENCIES" : "GAME_CONTENT");}
+    } else if ("url" in resource) {kinds.set(resource.url, "GAME_CONTENT");}
   }
   return kinds;
 }

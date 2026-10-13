@@ -16,6 +16,15 @@ import type {ForkRelease} from "../scripts/emulatorjs-fork-releases.mjs";
 import {forkReleaseFiles} from "../scripts/emulatorjs-fork-releases.mjs";
 
 describe("EmulatorJS Provider release build", () => {
+  it("ships FBAlpha from an immutable core release without development inputs", () => {
+    expect(emulatorJsSourceCatalog.developmentCores).toEqual([]);
+    const fork = emulatorJsSourceCatalog.forks.find(entry => entry.runtimeCore === "fbalpha");
+    expect(fork).toMatchObject({repository: "https://github.com/retrom-project/fbalpha",
+      tag: "retrom-core-gb25b724ba204-r1", adapterAbi: "emulatorjs-content-result-v1"});
+    expect(forkReleaseFiles({forks: [fork!]}).map(file => file.filename)).toEqual(expect.arrayContaining([
+      "fbalpha-wasm.data", "fbalpha-arcade.dat", "fbalpha-content-pair.json", "rpg-runtime-release.json",
+    ]));
+  });
   it("builds all 76 targets from one verified materialized input without downloads", {timeout: 30_000}, async () => {
     const root = await temporaryRoot();
     try {
@@ -103,7 +112,7 @@ async function fixtureForks(sourceRoot: string) {
       return {...asset, contents, sha256: createHash("sha256").update(contents).digest("hex"),
         sizeBytes: Buffer.byteLength(contents)};
     });
-    const hasContentReport = ["flycast", "fbneo", "azahar"].includes(fork.runtimeCore);
+    const hasContentReport = ["flycast", "fbneo", "fbalpha", "azahar"].includes(fork.runtimeCore);
     const records = assets.map((asset) => ({filename: asset.filename, sizeBytes: asset.sizeBytes,
       ...(hasContentReport ? {sha256: asset.sha256} : {observedSha256: asset.sha256})}));
     const metadata = JSON.stringify({...fork, schemaVersion: 1,

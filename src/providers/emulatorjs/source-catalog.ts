@@ -5,43 +5,7 @@ import type {DevelopmentFork} from "../../../scripts/emulatorjs-development-fork
 
 export const emulatorJsSourceCatalog = {
   schemaVersion: 1,
-  developmentCores: [{
-    "id": "fbalpha",
-    "repository": "https://github.com/retrom-project/fbalpha",
-    "adapterAbi": "emulatorjs-content-result-v1",
-    "files": [
-        {
-            "filename": "LICENSE",
-            "sha256": "839b32d3246978a05fe9b135b579e665cba32616a1c3f2eb5a0254dcbb8a518c",
-            "sizeBytes": 41543,
-            "output": "4.2.3/licenses/forks/fbalpha/LICENSE"
-        },
-        {
-            "filename": "fbalpha-arcade.dat",
-            "sha256": "4c257078e2f2ab66c75602905d68b7fe7e93e114858813a479e2fd08dd5f18a1",
-            "sizeBytes": 6739689,
-            "output": "4.2.3/data/cores/fbalpha-arcade.dat"
-        },
-        {
-            "filename": "fbalpha-content-pair.json",
-            "sha256": "9276511f3299f5df9d31a4ddbe897987361b156b6fbc7919398e94c99f2a0317",
-            "sizeBytes": 736,
-            "output": "4.2.3/data/cores/fbalpha-content-pair.json"
-        },
-        {
-            "filename": "fbalpha-wasm.data",
-            "sha256": "18ea6e0b352f757323602b856514a4955d99766c4c0a72df7eb2e457120373a4",
-            "sizeBytes": 4458494,
-            "output": "4.2.3/data/cores/fbalpha-wasm.data"
-        },
-        {
-            "filename": "fbalpha.json",
-            "sha256": "498ac8f941f1a46643e160fec07949e94a010c7335a1cf186f459bcfbdf71a86",
-            "sizeBytes": 119,
-            "output": "4.2.3/data/cores/reports/fbalpha.json"
-        }
-    ]
-}] as readonly EmulatorJsCoreSource[],
+  developmentCores: [] as readonly EmulatorJsCoreSource[],
   developmentForks: [] as readonly DevelopmentFork[],
   forks: [
     ...emulatorJsContentCoreForks,

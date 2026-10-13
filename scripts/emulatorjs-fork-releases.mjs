@@ -42,6 +42,8 @@ const identities = {
     adapterAbi: "emulatorjs-flycast-state-v1", resources: ["flycast-rom-requirements.json"], report: "flycast.json"},
   fbneo: {repository: "https://github.com/retrom-project/FBNeo", baseline: "g6e7b7ea6c61a", license: "LICENSE",
     adapterAbi: "emulatorjs-content-result-v1", resources: ["fbneo-arcade.dat", "fbneo-content-pair.json"], report: "fbneo.json"},
+  fbalpha: {repository: "https://github.com/retrom-project/fbalpha", baseline: "gb25b724ba204", license: "LICENSE",
+    adapterAbi: "emulatorjs-content-result-v1", resources: ["fbalpha-arcade.dat", "fbalpha-content-pair.json"], report: "fbalpha.json"},
   azahar: {repository: "https://github.com/retrom-project/azahar", baseline: "g62cfcfb5e488", license: "LICENSE",
     adapterAbi: "emulatorjs-content-result-v1", coreAsset: "azahar-thread-wasm.data", release: "4.3.0-pre", report: "azahar.json"},
 };

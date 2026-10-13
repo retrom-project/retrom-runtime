@@ -51,7 +51,12 @@ export class WindowLoader {
     if (window.start !== 0 || window.length !== object.source.sizeBytes || object.source.identity.kind !== "FILE_SHA256") {return;}
     if (present === window.blockCount && backing && this.store.persistent(object) === backing && await completedBacking(backing, signal)) {return;}
     const hash = createContentHasher();
-    try {hash.update(bytes); if (hash.digest() !== object.source.identity.sha256) {fail("CHECKSUM_MISMATCH");}}
+    try {
+      hash.update(bytes);
+      if (hash.digest() !== object.source.identity.sha256) {
+        this.cache.deletePrefix(`${object.key}:`); await this.store.quarantine(object); fail("CHECKSUM_MISMATCH");
+      }
+    }
     finally {hash.destroy();}
   }
 }

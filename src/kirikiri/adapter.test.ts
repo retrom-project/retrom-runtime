@@ -95,6 +95,7 @@ describe("KiriKiri2 KAG runtime", () => {
     enableRuntimeFeatures();
     const vlfs = fakeVlfs();
     mockDownloads();
+    const network = fetch;
     const runtime = await createRuntime(config(), currentWindowHost(null));
     const mounting = runtime.mount(document.createElement("div"));
     await loadVlfs(vlfs);
@@ -103,7 +104,7 @@ describe("KiriKiri2 KAG runtime", () => {
     try {
       expect(module.locateFile("index.wasm")).toBe("blob:kirikiri-verified-wasm");
       expect(module.wasmBinary).toBeUndefined();
-      expect(fetch).toHaveBeenCalledTimes(1);
+      expect(network).toHaveBeenCalledTimes(1);
     } finally {await runtime.exit();}
   });
   const runtimeTerminationCases: ReadonlyArray<readonly [string, "error" | "unhandledrejection"]> = [

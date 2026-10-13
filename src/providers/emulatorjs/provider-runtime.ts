@@ -1,3 +1,4 @@
+import {EmulatorCoreAssets} from "./core-loading.js";
 import {registerCoreFamily} from "./core-family.js";
 import {ownEmulatorJsWakeLocks} from "./wake-lock.js";
 import {EmulatorPlayerInput} from "./player-input.js";
@@ -29,7 +30,7 @@ import {providerInputCapabilities} from "../../provider/input-capabilities.js";
 import {emulatorJsProviderDefinition, type EmulatorImplementation} from "./catalog.js";
 import {installAsyncRangeStartup} from "./async-range-startup.js";
 import {registerSeekableContentFS, type VirtualContentFile} from "./virtual-content-fs.js";
-import {asyncRangeCore, configureContentDisc, emulatorJsDisableCue, flycastDiscBootOptions, gameResourceURL, hasSeekableGame, mountRangeFS} from "./disc-mount.js";
+import {asyncRangeCore, configureContentDisc, emulatorJsDisableCue, gameResourceURL, hasSeekableGame, mountRangeFS} from "./disc-mount.js";
 import {configureDOSContentDisc, dosCheckpointAvailability, observeDOSCheckpointAvailability} from "./dosbox-range.js";
 import {installDOSMenuInput} from "./dosbox-menu-input.js";
 import {requireContentSession} from "../../provider/content-inputs.js";
@@ -43,13 +44,12 @@ import {installEmulatorJsRetroArchConfig} from "./retroarch-config.js";
 import {installStartupStateRestore} from "./startup-state.js";
 import {installSupermodelState} from "./supermodel-state.js";
 import {installSupermodelRestore} from "./supermodel-restore.js";
-import {createRetromDefaultControls, emulatorControlScheme, emulatorPointerOptions, thomsonOptions} from "./default-controls.js";
-import {emulatorVirtualControls} from "./virtual-controls.js";
+import {emulatorControlScheme} from "./default-controls.js";
+import {configurePlayerOptions} from "./player-options.js";
 import {initializeEmulatorJsGamepads} from "./startup-gamepads.js";
 import {closeEmulatorJsNativeSettings, openEmulatorJsNativeSettings} from "./native-settings.js";
-import {retromShaders} from "./shaders.js";
 import {createEmulatorJsVideoModeController} from "./video-mode.js";
-import {fileName, optionalResource, runtimeBase} from "./resources.js";
+import {optionalResource, runtimeBase} from "./resources.js";
 import {readEmulatorJsCheckpoint} from "./bytes.js";
 import {restoreEmulatorCheckpoint} from "./restore-checkpoint.js";
 import {readPspCheckpoint} from "./psp-state.js";
@@ -118,6 +118,7 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
   private readonly capabilities: LaunchEnvelopeV1["runtime"]["capabilities"];
   private readonly eagerDiskMount: boolean;
   private cleanupBIOS?: () => void;
+  private coreAssets: EmulatorCoreAssets | null = null;
   private readonly contentOwner = new ProviderContentOwner(error => this.fail(error.message, error), diagnostic => this.host.reportDiagnostic({code: "CONTENT_IO_METRICS", message: JSON.stringify(diagnostic)}));
   private contentSession: ReturnType<typeof bindOptionalTargetContent> = null;
   private readonly hostAbort = () => {this.contentOwner.force(); void this.exit();};
@@ -302,6 +303,10 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
       this.cleanupFrameStyle = createEmulatorJsSurface(runtimeWindow);
       this.startBarrier = createStartBarrier();
       this.configure(runtimeWindow);
+      this.coreAssets = new EmulatorCoreAssets(runtimeWindow, {contentSession: requireContentSession(this.contentSession), assetIndex: this.assetIndex},
+        this.envelope.runtime.runtimeBaseUrl, this.contentOwner.signal);
+      await this.coreAssets.prepare(this.implementation.coreAssetPath, this.implementation.release);
+      this.checkMountActive();
       await retireEmulatorDownloadCaches(runtimeWindow.indexedDB, code => this.host.reportDiagnostic({code, message: "Obsolete EmulatorJS download cache could not be fully removed; persistent download caching remains disabled."}));
       this.checkMountActive();
       if (optionalResource(this.envelope, "parent", "PARENT_ARCHIVE")) {
@@ -389,19 +394,7 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
     disableEmulatorDownloadCache(runtimeWindow, this.implementation.release);
     runtimeWindow.EJS_disableLocalStorage = true;
     runtimeWindow.EJS_Buttons = {exitEmulation: false};
-    runtimeWindow.EJS_defaultControls = createRetromDefaultControls(this.implementation.runtimeCore, gameURL);
-    runtimeWindow.EJS_VirtualGamepadSettings = emulatorVirtualControls(this.implementation.runtimeCore);
-    runtimeWindow.EJS_defaultOptions = {...this.implementation.defaultOptions,
-      ...emulatorPointerOptions(this.implementation.runtimeCore), ...(this.implementation.runtimeCore === "theodore" ? thomsonOptions(this.envelope.targetOptions) : {}),
-      ...(optionalResource(this.envelope, "bios", "BIOS_BUNDLE") ? this.implementation.biosOptions : {}),
-      ...flycastDiscBootOptions(this.implementation.runtimeCore, gameURL),
-      ...(["daphne", "dosbox_pure"].includes(this.implementation.runtimeCore) ? {shader: "disabled"} : {}),
-      ...(this.implementation.runtimeCore === "cap32" && new URL(gameURL, "http://runtime.invalid").pathname.toLowerCase().endsWith(".cpr")
-        ? {cap32_model: "6128+ (experimental)", cap32_gfx_colors: "24bit"} : {}),
-    };
-    runtimeWindow.EJS_shaders = retromShaders;
-    runtimeWindow.EJS_paths = {[fileName(this.implementation.coreAssetPath)]:
-      `${this.envelope.runtime.runtimeBaseUrl}${this.implementation.coreAssetPath}`};
+    configurePlayerOptions(runtimeWindow, this.implementation, this.envelope, gameURL);
 
     const checkpointMaximum = this.envelope.runtime.checkpoint?.maxBytes ?? 0;
     runtimeWindow.EJS_ready = () => {
@@ -516,9 +509,7 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
     this.clearStartBarrier();
     this.stopNativeObservation();
     this.host.signal.removeEventListener("abort", this.hostAbort);
-    const nativeExitAlreadyRequested = this.exitRequestedEmitted; this.exitRequestedEmitted = true;
-    await stopNativeInstance(this.runtimeWindow, this.instance, this.implementation.runtimeCore, nativeExitAlreadyRequested, this.discRange);
-    await this.cleanupWakeLocks?.(); this.cleanupWakeLocks = null;
+    await this.stopNative();
     await this.closeContent();
     if (this.runtimeWindow) {
       for (const timer of this.startupTimers) {this.runtimeWindow.clearTimeout(timer);}
@@ -546,6 +537,7 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
     this.pspRestore?.cleanup(); this.pspRestore = null;
     this.cleanupArchiveWorker?.();
     this.cleanupArchiveWorker = null;
+    this.coreAssets?.close(); this.coreAssets = null;
     if (this.runtimeWindow) {
       for (const name of configuredGlobals) {Reflect.deleteProperty(this.runtimeWindow, name);}
     }
@@ -553,6 +545,12 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
     this.runtimeWindow = null;
     if (!preserveFailure) {this.transition("EXITED");}
     this.listeners.clear();
+  }
+
+  private async stopNative() {
+    const requested = this.exitRequestedEmitted; this.exitRequestedEmitted = true;
+    await stopNativeInstance(this.runtimeWindow, this.instance, this.implementation.runtimeCore, requested, this.discRange);
+    await this.cleanupWakeLocks?.(); this.cleanupWakeLocks = null;
   }
 
   private async closeContent() {

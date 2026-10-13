@@ -101,7 +101,8 @@ function validateRuntime(value: unknown) {
 
 function validBundleURLs(runtime: LaunchEnvelopeV1["runtime"]) {
   const base = `/runtime/providers/${runtime.providerId}/${runtime.bundleSha256}/`;
-  return runtime.runtimeBaseUrl === base && runtime.moduleUrl === `${base}client.mjs`;
+  return [base, `${base}dev/${runtime.moduleSha256}/`].includes(runtime.runtimeBaseUrl) &&
+    runtime.moduleUrl === `${runtime.runtimeBaseUrl}client.mjs`;
 }
 
 function validSession(value: unknown) {

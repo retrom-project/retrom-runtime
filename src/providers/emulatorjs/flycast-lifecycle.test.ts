@@ -77,3 +77,6 @@ vi.mock("../../content-io/bootstrap.js", () => ({bootstrapContentSession: vi.fn(
     tryReadInto: vi.fn(() => null), readInto: vi.fn(async (_offset: number, bytes: Uint8Array) => bytes.byteLength), close: vi.fn(async () => {})})),
   close: vi.fn(async () => {}), fail: vi.fn(),
 }))}));
+
+// These lifecycle cases stop at the native boundary; core byte integrity is exercised separately.
+vi.mock("../../provider/core-assets.js", () => ({loadCoreAsset: vi.fn(async () => new Uint8Array([1]))}));

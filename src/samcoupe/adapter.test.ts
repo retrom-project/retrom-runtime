@@ -1,6 +1,8 @@
 import {targetContentFixture} from "../../tests/target-content-fixture.js";
 // @vitest-environment jsdom
 import {afterEach, expect, it, vi} from "vitest";
+import {installCoreAssetFetch} from "../provider/core-asset-fetch.js";
+vi.mock("../provider/core-asset-fetch.js", () => ({installCoreAssetFetch: vi.fn(() => vi.fn())}));
 import {mountSamCoupe} from "./adapter.js";
 import {decodeSamDisk, encodeSamDisk, saveFormat} from "./state.js";
 
@@ -53,8 +55,10 @@ it("loads the supplied ROM and restored disk, then checkpoints flushed disk writ
     bios: [{url: "http://localhost/samcoupe.rom", sha256: "b".repeat(64), sizeBytes: 32768,
       logicalName: "samcoupe.rom", virtualPath: "Resource/samcoupe.rom"}],
     runtimeBaseUrl: "/assets/samcoupeweb/",
-  }, target, frameWindow, encodeSamDisk(gameSha256, restored), () => undefined, targetContentFixture(session as never, "samcoupe"),
+  }, target, frameWindow, encodeSamDisk(gameSha256, restored), () => undefined, {contentSession: targetContentFixture(session as never, "samcoupe"), assetIndex: {}},
     () => undefined);
+  expect(installCoreAssetFetch).toHaveBeenCalledWith(target.querySelector("iframe")?.contentWindow,
+    expect.objectContaining({contentSession: expect.any(Object)}), expect.any(String), undefined);
   expect(files.get("/Resource/samcoupe.rom")?.byteLength).toBe(32768);
   expect(files.get("/media/game.mgt")).toEqual(restored);
   expect(target.querySelector("iframe")?.contentDocument?.querySelector("canvas")?.id).toBe("canvas");

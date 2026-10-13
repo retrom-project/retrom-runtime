@@ -1,3 +1,5 @@
+import {installCoreAssetFetch} from "../../provider/core-asset-fetch.js";
+import {bindTargetContent} from "../../provider/target-content.js";
 import {RuntimeHostShortcuts} from "../../provider/host-shortcuts.js";
 import {createRuntimeFailure, RuntimeFailureError} from "../../provider/failure.js";
 import {StartupTasks} from "../../provider/startup.js";
@@ -45,6 +47,7 @@ class RetromRuntimePlayer implements PlayerRuntimeV1 {
   private inputPolicy: RuntimeInputFilterPolicyV1 | null = null;
   private cleanupInputFilter: (() => void) | null = null;
   private frameSurface: RuntimeFrameSurface | null = null;
+  private cleanupCoreFetch: (() => void) | null = null;
 
   constructor(
     private readonly envelope: LaunchEnvelopeV1,
@@ -83,6 +86,10 @@ class RetromRuntimePlayer implements PlayerRuntimeV1 {
       const contentSession = await this.contentOwner.start(declaration, this.envelope, this.assetIndex, this.host.contentLoading,
         (loadedBytes, totalBytes) => this.emit({type: "LOAD_PROGRESS", loadedBytes, totalBytes}), this.startup);
       this.assertActive();
+      if (contentSession && frameMode !== "ISOLATED_ORIGIN_RESOURCE") {
+        this.cleanupCoreFetch = installCoreAssetFetch(runtimeWindow, {assetIndex: this.assetIndex,
+          contentSession: bindTargetContent(contentSession, declaration, this.startup)}, this.envelope.runtime.runtimeBaseUrl, this.contentOwner.signal);
+      }
       const adapter = await this.startup.run("GAME_START", () => mountTargetAdapter(this.envelope, runtimeTarget, {
         startup: this.startup,
         assetIndex: this.assetIndex, contentSession,
@@ -380,6 +387,7 @@ class RetromRuntimePlayer implements PlayerRuntimeV1 {
       this.frameSurface = null;
       this.runtimeWindow = null;
       await this.finalSnapshotPromise;
+      this.cleanupCoreFetch?.(); this.cleanupCoreFetch = null;
       await this.contentOwner.close();
       if (!failed) {this.transition("EXITED");}
       this.listeners.clear();

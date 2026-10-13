@@ -882,6 +882,18 @@
       "tests": [
         "runtime:src/providers/emulatorjs/parent-content.test.ts"
       ]
+    },
+    {
+      "repository": "runtime",
+      "path": "src/provider/core-asset-fetch.ts",
+      "symbol": "cached",
+      "classification": "COMMON_CONTENT_IO",
+      "reason": "Only exact declared Provider asset GETs use digest-verified Content I/O; other methods, ranges and unrelated URLs retain the original fetch transport.",
+      "tests": [
+        "src/provider/core-asset-fetch.test.ts",
+        "src/provider/core-asset-urls.test.ts"
+      ],
+      "ownerStage": "S10"
     }
   ]
 }

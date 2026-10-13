@@ -1,3 +1,4 @@
+import {importVerifiedFrameModule} from "../provider/verified-module.js";
 import type {AdapterContentSession} from "../provider/content-inputs.js";
 import type {AssetIndexV1} from "../provider/module-api.js";
 import {fetchFile, type FileSource} from "./files.js";
@@ -13,14 +14,19 @@ export type CoreLoader = (config: GBEParameters, win: Window, canvas: HTMLCanvas
 export const loadCore: CoreLoader = async (config, win, canvas, signal, session) => {
   const base = new URL("assets/gbe_plus/", new URL(config.runtimeBaseUrl, win.document.baseURI));
   const files = new Map<string, Uint8Array>();
-  for (const name of ["gbe-pokemini.mjs", "gbe-pokemini.wasm", "gbe-pokemini-register.mjs"]) {
+  for (const name of ["gbe-pokemini.mjs", "gbe-pokemini.wasm"]) {
     const asset = config.assetIndex[`assets/gbe_plus/${name}`];
     if (!asset) {throw new Error("GBE_ASSET_MISSING");}
     files.set(name, await fetchFile({url: new URL(name, base).href, ...asset}, () => undefined, signal, session, "CORE_ASSET"));
   }
-  const factory = await loadFactory(win, new URL("gbe-pokemini-register.mjs", base).href, signal);
+  const module = await importVerifiedFrameModule(win, files.get("gbe-pokemini.mjs")!, signal);
+  if (!module || typeof module !== "object" || !("default" in module) || typeof module.default !== "function") {
+    throw new Error("PROVIDER_CORE_ABI_MISMATCH");
+  }
+  const factory = module.default;
   signal?.throwIfAborted();
   const value: unknown = await factory({canvas, wasmBinary: files.get("gbe-pokemini.wasm"),
+    locateFile: (path: string) => new URL(path, base).href,
     print: () => undefined, printErr: () => undefined});
   if (!validCore(value)) {throw new Error("GBE_ABI_MISMATCH");}
   return value;
@@ -31,21 +37,4 @@ function validCore(value: unknown): value is GBECore {
   return !!core.FS && [core.FS.writeFile, core.FS.readFile, core.FS.unlink, core._retrom_init, core._retrom_is_ready,
     core._retrom_frame_count, core._retrom_key, core._retrom_pause, core._retrom_save, core._retrom_restore,
     core._retrom_stop, core._retrom_volume].every(method => typeof method === "function");
-}
-function loadFactory(win: Window, url: string, signal?: AbortSignal): Promise<(options: unknown) => Promise<unknown>> {
-  signal?.throwIfAborted();
-  return new Promise((resolve, reject) => {
-    const script = win.document.createElement("script"); script.type = "module"; script.src = url;
-    const cleanup = () => {win.clearTimeout(timer); signal?.removeEventListener("abort", abort); script.remove();};
-    const fail = () => {cleanup(); reject(new Error("GBE_MODULE_LOAD_FAILED"));};
-    const abort = () => {cleanup(); reject(new Error("GBE_RUNTIME_EXITED"));};
-    const timer = win.setTimeout(fail, 30000);
-    script.addEventListener("error", fail, {once: true});
-    script.addEventListener("load", () => {
-      const value = (win as unknown as Record<string, unknown>).__RETROM_GBE_POKEMINI_FACTORY_V1__;
-      if (typeof value !== "function") {fail(); return;}
-      cleanup(); resolve(value as (options: unknown) => Promise<unknown>);
-    }, {once: true});
-    signal?.addEventListener("abort", abort, {once: true}); win.document.head.append(script);
-  });
 }

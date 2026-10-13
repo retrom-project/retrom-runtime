@@ -1,3 +1,5 @@
+import {installCoreAssetFetch} from "../provider/core-asset-fetch.js";
+import type {AdapterContentOptions} from "../provider/content-inputs.js";
 import {sha256} from "@noble/hashes/sha2.js";
 
 import {materializeFileBytes, type AdapterContentSession} from "../provider/content-inputs.js";
@@ -20,9 +22,9 @@ type SamWindow = Window & {Module?: SamModule; Uint8Array: Uint8ArrayConstructor
 const save = {capture: "IN_GAME", restore: "AUTOMATIC", captureAvailable: false, dataKind: "PROGRESS"} as const;
 
 export async function mountSamCoupe(config: SamCoupeParameters, target: HTMLElement, frameWindow: Window,
-  restore: Uint8Array | null, progress: RuntimeProgressReporter, contentSession: AdapterContentSession,
+  restore: Uint8Array | null, progress: RuntimeProgressReporter, content: AdapterContentOptions,
   failure: (error: Error) => void, signal?: AbortSignal): Promise<MountedRuntimeAdapter> {
-  const {bios, game, restoredDisk, extension} = await loadMedia(config, target, frameWindow, restore, progress, contentSession, signal);
+  const {bios, game, restoredDisk, extension} = await loadMedia(config, target, frameWindow, restore, progress, content.contentSession, signal);
   const diskPath = `/media/game.${extension}`;
   const writableDisk = extension !== "sbt";
   let checkpointBaseline = new Uint8Array(restoredDisk ?? game);
@@ -30,6 +32,7 @@ export async function mountSamCoupe(config: SamCoupeParameters, target: HTMLElem
   let observedRevision: string | null = null;
   const {iframe, realm, canvas} = createFrame(target, frameWindow);
   const base = new URL(config.runtimeBaseUrl, frameWindow.document.baseURI);
+  const restoreFetch = installCoreAssetFetch(realm, content, new URL("../../", base).href, signal);
   const ByteArray = realm.Uint8Array;
   let stopped = false, startedAt = 0, engineError: Error | null = null;
   let input: ReturnType<typeof installSamGamepad> | null = null;
@@ -45,6 +48,7 @@ export async function mountSamCoupe(config: SamCoupeParameters, target: HTMLElem
     stopped = true;
     signal?.removeEventListener("abort", abort);
     input?.dispose();
+    restoreFetch();
     iframe.remove();
   };
   signal?.addEventListener("abort", abort, {once: true});

@@ -1,3 +1,4 @@
+import {importVerifiedModule} from "../provider/verified-module.js";
 import type {AdapterContentSession} from "../provider/content-inputs.js";
 import type {FantasyCore} from "./state.js";
 import {verifiedFetch} from "./fetch.js";
@@ -34,7 +35,7 @@ export async function loadCore(config: FantasyParameters, progress: RuntimeProgr
     assetReady[index] = ready;
     progress({phase: "RUNTIME_ASSET", loadedBytes: assetReady[0] + assetReady[1], totalBytes: assetTotal});
   };
-  const [cart, wasm] = await Promise.all([
+  const [cart, wasm, script] = await Promise.all([
     verifiedFetch(config.cartUrl, config.cartSizeBytes, config.contentDigest, signal, session, "GAME",
       value => progress({phase: "PROJECT_CONTENT", loadedBytes: value.readyBytes, totalBytes: config.cartSizeBytes})),
     verifiedFetch(new URL(wasmPath, base).href, wasmInfo.sizeBytes, wasmInfo.sha256, signal, session, "CORE_ASSET",
@@ -42,12 +43,13 @@ export async function loadCore(config: FantasyParameters, progress: RuntimeProgr
     verifiedFetch(moduleURL, jsInfo.sizeBytes, jsInfo.sha256, signal, session, "CORE_ASSET",
       value => reportAsset(1, value.readyBytes)),
   ]);
-  const module = await loader(moduleURL);
+  const module = await importVerifiedModule(script, loader, signal);
   if (!module || typeof module !== "object" || !("default" in module) || typeof module.default !== "function") {
     throw new Error("FANTASY_CORE_ABI_MISMATCH");
   }
   signal?.throwIfAborted();
-  const core: unknown = await module.default({wasmBinary: wasm, print: () => undefined, printErr: () => undefined});
+  const core: unknown = await module.default({wasmBinary: wasm,
+    locateFile: (path: string) => new URL(path, moduleURL).href, print: () => undefined, printErr: () => undefined});
   if (!validCore(core)) {throw new Error("FANTASY_CORE_ABI_MISMATCH");}
   return {core, cart};
 }

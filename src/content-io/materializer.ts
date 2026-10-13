@@ -74,6 +74,7 @@ export class ContentMaterializer {
     } catch (error) {
       await sinkOperation(()=>sink.abort(signal.aborted ? "CANCELLED" : this.canRestart(object,error) ? "RESTART" : "FAILED"),new AbortController().signal).catch(() => {});
       if (error instanceof ContentIOError && error.scope === "OBJECT") {object.state.revoked = true; this.pool.cache.deletePrefix(`${object.key}:`);}
+      if (error instanceof ContentIOError && error.code === "CONTENT_IO_CHECKSUM_MISMATCH") {await this.store.quarantine(object);}
       throw error;
     } finally {hash?.destroy();}
   }

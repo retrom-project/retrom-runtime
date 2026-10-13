@@ -1,7 +1,15 @@
+import {CoreAssetURLs} from "../provider/core-asset-urls.js";
+const mountButterscotch = (...args: Parameters<typeof mount>) => {
+  args[6] ??= {contentSession: targetContentFixture({} as never, "butterscotch-gamemaker"), assetIndex: {}};
+  return mount(...args);
+};
+const assets = vi.hoisted(() => ({url: vi.fn(async (path: string) => `blob:${path}`), close: vi.fn()}));
+vi.mock("../provider/core-asset-urls.js", () => ({CoreAssetURLs: vi.fn(function () {return assets;})}));
 import {prepareButterscotchProject} from "./project-store.js";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { mountButterscotch } from "./adapter.js";
+import {targetContentFixture} from "../../tests/target-content-fixture.js";
+import { mountButterscotch as mount } from "./adapter.js";
 import type {ButterscotchParameters} from "./parameters.js";
 import {deferred} from "../../tests/provider-adapter-fixture.js";
 
@@ -172,6 +180,10 @@ describe("Butterscotch Web adapter", () => {
     const resumeIndex = workers[0].messages.findIndex(message => message.command === "RESUME");
     const restoredIndex = workers[0].messages.findIndex(message => message.command === "RESTORE");
     expect(workers[0].messages.slice(restoredIndex + 1, resumeIndex)).toContainEqual({type: "GAMEPAD", gamepads: [null, snapshot]});
+    expect(CoreAssetURLs).toHaveBeenCalled();
+    expect(workers[0]?.messages).toContainEqual(expect.objectContaining({type: "START",
+      moduleUrl: new URL("/runtime/retrom-runtime/v0.8.0/butterscotch.mjs", location.href).href,
+      wasmUrl: "blob:assets/butterscotch/butterscotch.wasm"}));
     expect(workers[0]?.url.pathname).toBe("/runtime/retrom-runtime/v0.8.0/worker.mjs");
     expect(workers[0]?.messages).toContainEqual(expect.objectContaining({ keyCode: 38, pressed: true, type: "KEY" }));
     expect(workers[0]?.messages).toContainEqual(expect.objectContaining({ type: "GAMEPAD" }));
@@ -183,6 +195,7 @@ describe("Butterscotch Web adapter", () => {
     await adapter.exit();
     expect(workers[0]?.messages).toContainEqual({type: "GAMEPAD", gamepads: []});
     expect(workers[0]?.terminated).toBe(true);
+    expect(assets.close).toHaveBeenCalled();
     expect(target.childElementCount).toBe(0);
   });
 

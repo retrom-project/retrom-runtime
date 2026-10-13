@@ -88,6 +88,23 @@ export class ContentStoreManager {
     const binding = this.bindings.get(object.key);
     if (binding && !this.degraded) {await this.write(binding, index, bytes, signal, "STAGED_FULL");}
   }
+  /** Failed verification must not leave staged bytes attached to the next Session. */
+  async quarantine(object: BlockObject): Promise<void> {
+    object.state.revoked = true;
+    const active = this.bindings.get(object.key);
+    const bindings = [...(active ? [active] : []), ...(this.retired.get(object.key) ?? [])];
+    for (const {backing} of bindings) {
+      await this.optional(signal => backing.resources.locks.data(object.key, signal, async () => {
+        const current = await backing.resources.metadata.generation(object.key, backing.generation);
+        // A previously completed generation is already verified and remains immutable.
+        if (!current || current.state === "QUARANTINED" || current.state === "COMPLETE") {return;}
+        await backing.resources.metadata.update(object.key, backing.generation, current.revision, record => {
+          record.state = "QUARANTINED";
+        });
+      }), undefined, backing.resources.data.backend).catch(() => {});
+    }
+    this.release(object.key);
+  }
   release(key: string): void {this.bindings.get(key)?.release();this.bindings.delete(key);this.preparing.delete(key);
     for(const old of this.retired.get(key)??[]){old.release();}this.retired.delete(key);
   }

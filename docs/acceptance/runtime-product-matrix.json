@@ -1,11 +1,11 @@
 {
   "schemaVersion": 1,
-  "declarationCount": 110,
-  "bindingCount": 109,
+  "declarationCount": 111,
+  "bindingCount": 110,
   "platformCount": 95,
-  "productRowCount": 122,
+  "productRowCount": 123,
   "materialInventoryOnly": false,
-  "productPassed": 73,
+  "productPassed": 74,
   "rows": [
     {
       "id": "emulatorjs/81/zx81",
@@ -2321,6 +2321,72 @@
       },
       "currentFingerprint": "bc5e95381e888fc4472eabaffc49c895293728875d866babfb114e1cae651e7f",
       "semanticStatusAtCurrentFingerprint": "NOT_ESTABLISHED"
+    },
+    {
+      "id": "emulatorjs/fbalpha/arcade",
+      "providerId": "emulatorjs",
+      "targetId": "fbalpha",
+      "coreId": "fbalpha",
+      "platformId": "arcade",
+      "contentKind": "ARCADE",
+      "engine": null,
+      "checkpointSemantics": "INSTANT",
+      "materialStatus": "OPERATOR_MATERIAL_CANDIDATE",
+      "materialCandidates": [],
+      "notes": [
+        "21 authorized Pegasus FBAlpha 0.2.97.44 ZIPs, original bytes and independent BIOS. All 21 review previews and published short gameplay/input checks passed. CRC warnings require manual approval.",
+        "Checkpoint, new-run/fresh-browser recovery and continued input verified on representative captcomm; not universal game or full-game completion coverage.",
+        "Standard Gamepad API exercised in Chromium. Persistent whole-file OPFS cache, offline input, cancellation and quota-failure feedback verified.",
+        "Independent core CI and PFB assets are byte-identical. Final archive loading rechecked on all 21; gameplay used identical unpacked JS/Wasm before compressor pinning.",
+        "This supplemental candidate is independent of the historical R10 snapshot in top-level current* fields; no other row is promoted."
+      ],
+      "productStatus": "PASS",
+      "checks": {
+        "configuration": "PASS",
+        "prepare": "PASS",
+        "review": "PASS",
+        "launch": "PASS",
+        "frame": "PASS",
+        "direction": "PASS",
+        "confirm": "PASS",
+        "screenshot": "PASS",
+        "checkpoint": "PASS",
+        "differentRunRestore": "PASS",
+        "restoredInput": "PASS",
+        "cleanup": "PASS"
+      },
+      "evidence": [
+        "retrom-fbalpha-029744-20261013/report.json"
+      ],
+      "attempts": [
+        {
+          "artifact": "retrom-fbalpha-029744-20261013/report.json",
+          "artifactSha256": "6314ecb1b2ab2020712c194f75e6d50a8594fdf694334bc3c3e540fc76d73f89",
+          "at": "2026-10-12T17:45:21.622Z",
+          "result": "SEMANTIC_PASS_SCOPED_21_GAMES",
+          "coreFingerprint": "839d0dd54d37ef9bded6781dfd5e9a8ec915768fcf9a6eb42ec279d82aa79a02",
+          "providerBundleSha256": "9c4935e08e26528c9e03da010d44cbf3b23d1e8637296e45807a74f6c46e9d45",
+          "providerModuleSha256": "0dc6f8ed90b64fd0636932de5565c614a80c20a9e2a20ccfe8d91b028b15a242",
+          "coreSourceCommit": "8ab6a13b68ef201a15b8009a26f57026c76c9e60",
+          "coreArchiveSha256": "18ea6e0b352f757323602b856514a4955d99766c4c0a72df7eb2e457120373a4",
+          "runtimeSourceTreeSha256": "974251a11ee39d188890a328b3e2787d175782ac888af593523a32ff836785ea",
+          "checks": {
+            "configuration": "PASS",
+            "prepare": "PASS",
+            "review": "PASS",
+            "launch": "PASS",
+            "frame": "PASS",
+            "direction": "PASS",
+            "confirm": "PASS",
+            "screenshot": "PASS",
+            "checkpoint": "PASS",
+            "differentRunRestore": "PASS",
+            "restoredInput": "PASS",
+            "cleanup": "PASS"
+          },
+          "observation": "21 real games entered gameplay and responded to coin/start/direction/action. Representative Mack battle checkpoint restored in different Run and fresh Chromium; seven-second paused observation followed by resumed movement/attack. Warm run made zero ROM requests with ordinary HTTP cache disabled. Temporary regression game and obsolete saves removed; 21 games and latest save retained for operator experience."
+        }
+      ]
     },
     {
       "id": "emulatorjs/fbneo/arcade",
@@ -17308,18 +17374,19 @@
     }
   ],
   "summary": {
-    "productRows": 122,
-    "productPassed": 73,
-    "actuallyAttempted": 112,
+    "productRows": 123,
+    "productPassed": 74,
+    "actuallyAttempted": 113,
     "preparedWithoutProductAttempt": 0,
     "materialGaps": 10,
     "materialAvailableWithoutProductAttempt": 0,
-    "productPassedAnyTestedFingerprint": 73,
+    "productPassedAnyTestedFingerprint": 74,
     "semanticRowsAtCurrentFingerprint": 30,
     "priorPassedRowsRequiringNewFingerprintRetest": 43,
     "bootObservedCurrentEnvironment": 78,
     "bootAttemptedCurrentEnvironment": 79,
-    "bootTargetsCurrentEnvironment": 68
+    "bootTargetsCurrentEnvironment": 68,
+    "supplementalPassedRowsOutsideCurrentSnapshot": 1
   },
   "currentCandidate": [
     {
@@ -17363,7 +17430,7 @@
     "fingerprintUnchangedAgainstR7": 34,
     "note": "Normal source Go/Next development and standard provider watcher; formal native module differs from loose module. Current source fields identify the captured deployed artifact source, not later acceptance-document edits."
   },
-  "sourceFieldsNote": "All current source fields name captured R10 artifact source a8c47231; subsequent acceptance-document changes do not mutate that immutable snapshot. Historical semantic proofs retain their own tested fingerprints; productPassed counts any tested fingerprint and semanticRowsAtCurrentFingerprint is separate.",
+  "sourceFieldsNote": "All current source fields name captured R10 artifact source a8c47231; subsequent acceptance-document changes do not mutate that immutable snapshot. Historical semantic proofs retain their own tested fingerprints; productPassed counts any tested fingerprint and semanticRowsAtCurrentFingerprint is separate. The FBAlpha 0.2.97.44 supplemental row records its own 2026-10-13 PFB candidate identity; R10 current-fingerprint and boot counters are historical and unchanged.",
   "currentBootSweep": {
     "artifact": "root/matrix/ejs-r10-boot-sweep-proof.json",
     "artifactSha256": "3fd3ab3e626b6e204f1da9def95dd7e5ce6db55ad57c4760cbe0dfb65d8912b1",
@@ -17445,5 +17512,23 @@
       "Update host formal release pin to the new published metadata and exact hashes."
     ],
     "noExistingReleaseTagOrArchiveChanged": true
-  }
+  },
+  "supplementalCandidates": [
+    {
+      "id": "fbalpha-029744",
+      "artifact": "retrom-fbalpha-029744-20261013/report.json",
+      "artifactSha256": "6314ecb1b2ab2020712c194f75e6d50a8594fdf694334bc3c3e540fc76d73f89",
+      "rowIds": [
+        "emulatorjs/fbalpha/arcade"
+      ],
+      "sourceTreeSha256": "974251a11ee39d188890a328b3e2787d175782ac888af593523a32ff836785ea",
+      "status": "UNPUBLISHED_PAIRED_LOCAL_CANDIDATE_ONLY",
+      "coreSourceCommit": "8ab6a13b68ef201a15b8009a26f57026c76c9e60",
+      "formalReleaseRequired": [
+        "Publish verified FBAlpha core assets on an immutable tag.",
+        "Replace development core inputs with exact released URLs and hashes, then release runtime.",
+        "Update Retrom to the paired runtime release and reverify."
+      ]
+    }
+  ]
 }

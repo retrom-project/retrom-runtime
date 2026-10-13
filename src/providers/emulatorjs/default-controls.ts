@@ -9,7 +9,7 @@ export function emulatorControlScheme(core: string, release: "4.2.3" | "4.3.0-pr
   // The NDS layout removes the native stylus triggers and both analog sticks.
   // The generic libretro layout retains these controls and exposes their bindings.
   if (["desmume", "desmume2015", "melonds"].includes(core)) {return "generic";}
-  if (core === "neocd") {return "arcade";}
+  if (["neocd", "fbalpha"].includes(core)) {return "arcade";}
   if (core === "uzem" || core === "gam4980") {return "snes";}
   if (!["genesis_plus_gx", "genesis_plus_gx_wide", "picodrive"].includes(core)) {return undefined;}
   const extension = new URL(gameUrl, "http://runtime.invalid").pathname.toLowerCase().split(".").pop();
@@ -84,7 +84,7 @@ const nativeFaceGamepad: Readonly<Record<number, string>> = {...playerOneGamepad
 
 const positionalCores = new Set([
   "daphne", "dosbox_pure", "flycast", "neocd", "o2em", "puae",
-  "fbneo", "fbalpha2012_cps1", "fbalpha2012_cps2", "mame2003", "mame2003_plus",
+  "fbalpha", "fbneo", "fbalpha2012_cps1", "fbalpha2012_cps2", "mame2003", "mame2003_plus",
   "supermodel", "pcsx_rearmed", "mednafen_psx_hw", "ppsspp",
   "atari800", "a5200", "freechaf", "hatarib",
   "vice_x128", "vice_x64", "vice_x64sc", "vice_xpet", "vice_xplus4", "vice_xvic",

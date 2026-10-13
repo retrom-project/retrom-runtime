@@ -177,6 +177,17 @@
     ]
   },
   {
+    "coreId": "fbalpha",
+    "providerId": "emulatorjs",
+    "targetId": "fbalpha",
+    "platformIds": [
+      "arcade"
+    ],
+    "contentKinds": [
+      "ARCADE"
+    ]
+  },
+  {
     "coreId": "fbneo",
     "providerId": "emulatorjs",
     "targetId": "fbneo",

@@ -11,13 +11,13 @@ const catalog: ArcadeCatalog = {
   firmware: {parent: null, bios: true, roms: [bios]},
   other: {parent: null, bios: false, roms: [{...code, name: "other.bin", crc: "11111111"}]},
 };
-const cores = ["fbneo", "mame2003", "mame2003_plus", "mame_arcade"];
+const cores = ["fbalpha", "fbneo", "mame2003", "mame2003_plus", "mame_arcade"];
 function request(coreId: string, members: ArchiveMember[]) {
   return {directory: {platformId: "arcade", defaultCoreId: coreId, allowedCoreIds: cores},
     config: {content: {kind: "ARCADE" as const, entryFile: "original.zip"}, cores: {[coreId]: {romSet: "game", parentFiles: ["parent.zip"]}}},
     files: ["original.zip", "parent.zip"].map(name => ({name, logicalKey: name, sizeBytes: 100, sha256: "a".repeat(64)})),
     archives: {"original.zip": members, "parent.zip": [{name: shared.name, sizeBytes: 8, crc32: shared.crc}]}, arcadeCatalog: catalog,
-    fingerprints: {"emulatorjs/fbneo": "b".repeat(64), "emulatorjs/mame2003": "b".repeat(64),
+    fingerprints: {"emulatorjs/fbalpha": "b".repeat(64), "emulatorjs/fbneo": "b".repeat(64), "emulatorjs/mame2003": "b".repeat(64),
       "emulatorjs/mame2003-plus": "b".repeat(64), "retrom-runtime/mame-arcade": "b".repeat(64)}};
 }
 it.each(cores)("reports missing game members for %s while retaining existing startup behavior", core => {

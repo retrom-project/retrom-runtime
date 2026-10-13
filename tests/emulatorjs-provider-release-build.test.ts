@@ -16,7 +16,16 @@ import type {ForkRelease} from "../scripts/emulatorjs-fork-releases.mjs";
 import {forkReleaseFiles} from "../scripts/emulatorjs-fork-releases.mjs";
 
 describe("EmulatorJS Provider release build", () => {
-  it("builds all 75 targets from one verified materialized input without downloads", {timeout: 30_000}, async () => {
+  it("ships FBAlpha from an immutable core release without development inputs", () => {
+    expect(emulatorJsSourceCatalog.developmentCores).toEqual([]);
+    const fork = emulatorJsSourceCatalog.forks.find(entry => entry.runtimeCore === "fbalpha");
+    expect(fork).toMatchObject({repository: "https://github.com/retrom-project/fbalpha",
+      tag: "retrom-core-gb25b724ba204-r1", adapterAbi: "emulatorjs-content-result-v1"});
+    expect(forkReleaseFiles({forks: [fork!]}).map(file => file.filename)).toEqual(expect.arrayContaining([
+      "fbalpha-wasm.data", "fbalpha-arcade.dat", "fbalpha-content-pair.json", "rpg-runtime-release.json",
+    ]));
+  });
+  it("builds all 76 targets from one verified materialized input without downloads", {timeout: 30_000}, async () => {
     const root = await temporaryRoot();
     try {
       const sourceRoot = join(root, "source");
@@ -64,10 +73,10 @@ describe("EmulatorJS Provider release build", () => {
         providerId: string; targets: unknown[];
       };
       expect(provider.providerId).toBe("emulatorjs");
-      expect(provider.targets).toHaveLength(75);
+      expect(provider.targets).toHaveLength(76);
       const identity = JSON.parse(await readFile(join(result.bundleRoot, "runtime-fingerprints.json"), "utf8"));
       expect(identity.providerId).toBe("emulatorjs");
-      expect(Object.keys(identity.targets)).toHaveLength(75);
+      expect(Object.keys(identity.targets)).toHaveLength(76);
       expect(identity.targets.fceumm.fingerprint).toMatch(/^[a-f0-9]{64}$/u);
       const provenance = JSON.parse(await readFile(join(result.bundleRoot, "provenance.json"), "utf8"));
       expect(provenance.forks).toEqual(sourceCatalog.forks);
@@ -103,7 +112,7 @@ async function fixtureForks(sourceRoot: string) {
       return {...asset, contents, sha256: createHash("sha256").update(contents).digest("hex"),
         sizeBytes: Buffer.byteLength(contents)};
     });
-    const hasContentReport = ["flycast", "fbneo", "azahar"].includes(fork.runtimeCore);
+    const hasContentReport = ["flycast", "fbneo", "fbalpha", "azahar"].includes(fork.runtimeCore);
     const records = assets.map((asset) => ({filename: asset.filename, sizeBytes: asset.sizeBytes,
       ...(hasContentReport ? {sha256: asset.sha256} : {observedSha256: asset.sha256})}));
     const metadata = JSON.stringify({...fork, schemaVersion: 1,
@@ -115,7 +124,14 @@ async function fixtureForks(sourceRoot: string) {
     }
     forks.push({...fork, assets: all.map(({contents: _contents, ...asset}) => asset)});
   }
-  return {...emulatorJsSourceCatalog, forks, developmentForks: await fixtureDevelopmentForks(sourceRoot)};
+  const developmentCores = await Promise.all(emulatorJsSourceCatalog.developmentCores.map(async source => ({
+    ...source, files: await Promise.all(source.files.map(async file => {
+      const contents = `fixture:assets/${file.output}\n`;
+      await write(join(sourceRoot, file.output), contents);
+      return {...file, sizeBytes: Buffer.byteLength(contents), sha256: createHash("sha256").update(contents).digest("hex")};
+    })),
+  })));
+  return {...emulatorJsSourceCatalog, forks, developmentCores, developmentForks: await fixtureDevelopmentForks(sourceRoot)};
 }
 
 async function fixtureDevelopmentForks(root: string) {

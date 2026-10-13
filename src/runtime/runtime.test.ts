@@ -12,9 +12,9 @@ const file = (logicalKey: string, digest = sha): RuntimeContentFile => ({logical
 const directory = {platformId: "nes", defaultCoreId: "fceumm", allowedCoreIds: ["fceumm", "nestopia"]};
 const fingerprints = {"emulatorjs/fceumm": fingerprint, "emulatorjs/nestopia": fingerprint};
 describe("unified runtime facts", () => {
-  it("retains 110 declared Targets and the 109 previously connected product bindings", () => {
-    expect(runtimeCatalog().providers.map(provider => provider.targets.length)).toEqual([75, 35]);
-    expect(runtimeBindings).toHaveLength(109);
+  it("retains 111 declared Targets and 110 product bindings", () => {
+    expect(runtimeCatalog().providers.map(provider => provider.targets.length)).toEqual([76, 35]);
+    expect(runtimeBindings).toHaveLength(110);
     expect(runtimeBindings.some(binding => binding.providerId === "emulatorjs" && binding.targetId === "ppsspp")).toBe(false);
   });
   it("prepares restored Thomson options from frozen context and remaps a renamed single ROM", () => {

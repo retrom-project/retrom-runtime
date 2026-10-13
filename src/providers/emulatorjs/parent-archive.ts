@@ -6,6 +6,14 @@ import type {EjsInstance} from "./emulator-instance.js";
 import {optionalResource} from "./resources.js";
 import {contentFileName} from "./content-filename.js";
 
+/** Keep parent archives intact for cores that resolve their own ZIP members. */
+export function maybeInstallParentArchive(instance: EjsInstance, core: string, release: string,
+  envelope: LaunchEnvelopeV1, session: AdapterContentSession | null, signal: AbortSignal): (() => void) | null {
+  if (!["fbalpha", "fbneo", "fbalpha2012_cps1", "fbalpha2012_cps2", "mame2003", "mame2003_plus", "supermodel"].includes(core) ||
+    !optionalResource(envelope, "parent", "PARENT_ARCHIVE")) {return null;}
+  return release === "4.3.0-pre" ? preserveParentArchive(instance, core) : installParentArchiveDownload(instance, envelope, session, signal);
+}
+
 /** The pinned 4.3 File dispatch consults this policy before it decompresses content. */
 export function preserveParentArchive(instance: EjsInstance, core: string): () => void {
   const parent = instance.downloadType?.parent;

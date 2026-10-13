@@ -76,6 +76,10 @@
     "displayName": "FB Alpha 2012 CPS-2"
   },
   {
+    "id": "fbalpha",
+    "displayName": "FBAlpha 0.2.97.44"
+  },
+  {
     "id": "fbneo",
     "displayName": "FinalBurn Neo"
   },

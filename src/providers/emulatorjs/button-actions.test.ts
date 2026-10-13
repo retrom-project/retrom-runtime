@@ -11,7 +11,7 @@ function delivered(core: string, physical: string, pressed: boolean, gameUrl = "
 
 describe("standard gamepad native actions", () => {
   it.each([
-    "fbneo", "fbalpha2012_cps1", "fbalpha2012_cps2", "mame2003", "mame2003_plus",
+    "fbalpha", "fbneo", "fbalpha2012_cps1", "fbalpha2012_cps2", "mame2003", "mame2003_plus",
     "supermodel", "pcsx_rearmed", "mednafen_psx_hw", "ppsspp", "atari800", "a5200",
     "freechaf", "hatarib",
     "vice_x128", "vice_x64", "vice_x64sc", "vice_xpet", "vice_xplus4", "vice_xvic",

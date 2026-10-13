@@ -62,7 +62,7 @@ it("requires explicit declared core assets and verified bytes", async () => {
 
 it("declares core bytes for every packaged engine and excludes runtime-owned bridges", () => {
   const targets = runtimeProviders.flatMap(provider => provider.targets);
-  expect(targets).toHaveLength(110);
+  expect(targets).toHaveLength(111);
   expect(targets.filter(target => target.coreAssetPaths.length === 0).map(target => target.id).sort())
     .toEqual(["rpgmaker-mv", "rpgmaker-mz", "tyranoscript"]);
   for (const target of targets) {

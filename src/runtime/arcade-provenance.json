@@ -33,5 +33,12 @@
     "source": "https://github.com/retrom-project/retrom-runtime/releases/tag/v0.62.0",
     "providerBundleSha256": "215b5f7f7bb4cd4b929bfd66dcbf0cb04b01650e19367eef296e27fccda6ab23",
     "assetPath": "assets/4.2.3/data/cores/fbneo-arcade.dat"
+  },
+  {
+    "coreId": "fbalpha",
+    "sha256": "4c257078e2f2ab66c75602905d68b7fe7e93e114858813a479e2fd08dd5f18a1",
+    "source": "https://github.com/retrom-project/fbalpha/releases/tag/retrom-core-gb25b724ba204-r1",
+    "commit": "4d2e442bda68f9c3574ce0052de352240c99dbd5",
+    "assetPath": "assets/4.2.3/data/cores/fbalpha-arcade.dat"
   }
 ]

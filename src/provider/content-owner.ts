@@ -58,7 +58,7 @@ export class ProviderContentOwner {
 }
 function resourceURLs(resource: RuntimeResourceV1): string[] {
   switch (resource.kind) {
-    case "ROM_BLOB": case "SEEKABLE_BLOB": case "PARENT_ARCHIVE": case "WASM4_CART": return [resource.url];
+    case "ROM_BLOB": case "SEEKABLE_BLOB": case "WASM4_CART": return [resource.url];
     case "FILE_TREE": case "NATIVE_WEB": case "ISOLATED_WEB": return [resource.indexUrl];
     case "BIOS_BUNDLE": case "EXTERNAL_FILE_SET": return resource.files.map((file) => file.url);
     default: return [];

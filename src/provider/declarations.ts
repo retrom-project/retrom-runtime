@@ -8,7 +8,6 @@ export type ResourceKind =
   | "NATIVE_WEB"
   | "ISOLATED_WEB"
   | "BIOS_BUNDLE"
-  | "PARENT_ARCHIVE"
   | "EXTERNAL_FILE_SET"
   | "WASM4_CART";
 

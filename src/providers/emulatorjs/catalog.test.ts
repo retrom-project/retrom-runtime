@@ -117,7 +117,7 @@ describe("EmulatorJS Provider declarations", () => {
     expect(ppsspp?.implementation.startupActions).toHaveLength(2);
     expect(yabause?.implementation.contentKinds).toEqual(["SINGLE_FILE"]);
     expect(yabause?.inputs.map((input) => input.kind)).toEqual([
-      "ROM_BLOB", "BIOS_BUNDLE", "PARENT_ARCHIVE",
+      "ROM_BLOB", "BIOS_BUNDLE", "EXTERNAL_FILE_SET",
       "EXTERNAL_FILE_SET", "EXTERNAL_FILE_SET",
     ]);
   });

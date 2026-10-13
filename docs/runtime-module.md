@@ -52,7 +52,7 @@ Commands read one bounded JSON request on stdin and write one JSON result to std
 - `reconcile-config`: validates per-core DAT choices and prunes Parent references that the selected entry no longer needs. It returns removed logical keys only after comparing all cores’ references with the previous configuration; the host uses its existing transactional retirement and delayed reference-safe cleanup. This is configuration validation, not launch preparation or mandatory CRC acceptance.
 - `detect-scummvm`: verified providerRoot and a bounded treeRoot; returns candidates and optional automaticSelection.
 - `assemble-resource`: files, locators, optional virtual paths and a fresh outputPath; streams a deterministic STORE ZIP, verifies every file SHA and removes incomplete output on failure.
-- `parent-archive`: immutable archive files and locators; merges bounded verified members into one archive.
+- Parent dependencies use `EXTERNAL_FILE_SET`: each original archive has its own size, SHA and canonical virtual filename. Adapters mount these bytes directly; the host never merges or repackages Parent ZIPs.
 - `batch-identity` / `batch-restorable`: process up to 10,000 items in one invocation; list identity does not assemble BIOS, Parent or playable resources.
 - `bios-requirements` / `bios-identify`: resolve declarations or identify exact immutable bytes and archive members.
 

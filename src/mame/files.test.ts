@@ -11,9 +11,19 @@ const config = {machine: "apple2p" as const, game: source, runtimeBaseUrl: "/pro
 const content = {assetIndex: {}, contentSession: {inputPolicy: () => eagerPolicy(143360),
   open: async () => {throw new Error("unused");}, materialize: async () => {throw new Error("unused");}, closeFile: async () => {}}};
 function fixture() {return {FS: {mkdirTree: vi.fn(), writeFile: vi.fn(), chmod: vi.fn(), ignorePermissions: true}};}
+it("mounts original parent ZIPs independently even when ROM member names conflict", async () => {
+  const base = zipSync({"shared.bin": Uint8Array.of(1, 2, 3)}), grand = zipSync({"shared.bin": Uint8Array.of(3, 2, 1)});
+  vi.mocked(materializeFileBytes).mockResolvedValueOnce(new Uint8Array(40)).mockResolvedValueOnce(base).mockResolvedValueOnce(grand);
+  const core = fixture(), parent = (name: string, bytes: Uint8Array) => ({...source, url: `/${name}`,
+    logicalName: `stored/${name}`, virtualPath: name, sizeBytes: bytes.length});
+  await mountFiles(core, {arcade: true, machine: "clone", game: {...source, sizeBytes: 40},
+    parents: [parent("base.zip", base), parent("grand.zip", grand)], deviceBios: [], runtimeBaseUrl: "/provider/"}, content);
+  expect(core.FS.writeFile).toHaveBeenCalledWith("/content/roms/base.zip", base);
+  expect(core.FS.writeFile).toHaveBeenCalledWith("/content/roms/grand.zip", grand);
+});
 it.each([["renegade", "m68705p5"], ["vf2", "segabill"]])("mounts %s device ZIPs in the ROM search directory and rejects collisions", async (machine, firmware) => {
   const core = fixture(), device = {...source, logicalName: `${firmware}.zip`, virtualPath: `content/roms/${firmware}.zip`, sizeBytes: 200};
-  const arcade = {arcade: true as const, machine, game: source, parent: null, bios: null,
+  const arcade = {arcade: true as const, machine, game: source, parents: [],
     deviceBios: [device], runtimeBaseUrl: "/provider/"};
   await mountFiles(core, arcade, content);
   expect(core.FS.writeFile).toHaveBeenCalledWith(`/content/roms/${firmware}.zip`, expect.any(Uint8Array));
@@ -22,7 +32,8 @@ it.each([["renegade", "m68705p5"], ["vf2", "segabill"]])("mounts %s device ZIPs 
   }
   await expect(mountFiles(fixture(), {...arcade, deviceBios: [device, device]}, content)).rejects.toThrow("MAME_CONTENT_INVALID");
 });
-afterEach(() => vi.unstubAllGlobals());
+afterEach(() => {vi.unstubAllGlobals(); vi.mocked(materializeFileBytes).mockReset();
+  vi.mocked(materializeFileBytes).mockImplementation(async (_session, file) => new Uint8Array(file.sizeBytes));});
 it("mounts the machine, Disk II card and nested controller BIOS and opens a read-only game", async () => {
   const core = fixture(); await mountFiles(core, config, content);
   expect(core.FS.writeFile).toHaveBeenCalledWith("/content/d2fdc/341-0028-a.rom", expect.any(Uint8Array));
@@ -91,15 +102,16 @@ it("rejects malformed cartridge ZIPs and oversized expanded media", async () => 
   }
 });
 it("mounts a MAME arcade machine with the selected game, parent and BIOS archives", async () => {
-  const parent = zipSync({"puckman.zip": new Uint8Array(40)}), bios = zipSync({"namco51.zip": new Uint8Array(20)});
+  const parent = zipSync({"rom.bin": new Uint8Array(40)}), bios = zipSync({"bios.bin": new Uint8Array(20)});
   vi.mocked(materializeFileBytes).mockResolvedValueOnce(new Uint8Array(40)).mockResolvedValueOnce(parent).mockResolvedValueOnce(bios);
   const fetch = vi.fn(() => {throw new Error("BIOS bypassed Content I/O");});
   vi.stubGlobal("fetch", fetch);
   const core = fixture(), arcade = {arcade: true as const, machine: "mspacman", game: {...source, sizeBytes: 40},
-    parent: {...source, url: "/parent"}, bios: {...source, url: "/bios"}, deviceBios: [], runtimeBaseUrl: "/provider/"};
+    parents: [{...source, url: "/parent", logicalName: "puckman.zip", virtualPath: "puckman.zip"}],
+    deviceBios: [{...source, url: "/bios", logicalName: "namco51.zip", virtualPath: "content/roms/namco51.zip"}], runtimeBaseUrl: "/provider/"};
   await mountFiles(core, arcade, content);
   expect(fetch).not.toHaveBeenCalled();
-  expect(materializeFileBytes).toHaveBeenCalledWith(content.contentSession, arcade.bios, expect.any(Object), "FIRMWARE", undefined, expect.any(Function));
+  expect(materializeFileBytes).toHaveBeenCalledWith(content.contentSession, arcade.deviceBios[0], expect.any(Object), "FIRMWARE", undefined);
   expect(core.FS.writeFile).toHaveBeenCalledWith("/content/roms/mspacman.zip", expect.any(Uint8Array));
   expect(core.FS.writeFile).toHaveBeenCalledWith("/content/roms/puckman.zip", expect.any(Uint8Array));
   expect(core.FS.writeFile).toHaveBeenCalledWith("/content/roms/namco51.zip", expect.any(Uint8Array));
@@ -111,6 +123,6 @@ it("rejects archive names that could escape the MAME ROM directory", async () =>
   vi.mocked(materializeFileBytes).mockResolvedValueOnce(new Uint8Array(40)).mockResolvedValueOnce(parent);
   const core = fixture();
   await expect(mountFiles(core, {arcade: true, machine: "mspacman", game: {...source, sizeBytes: 40},
-    parent: {...source, url: "/parent"}, bios: null, deviceBios: [], runtimeBaseUrl: "/provider/"}, content)).rejects.toThrow("MAME_CONTENT_INVALID");
+    parents: [{...source, url: "/parent", logicalName: "escape.zip", virtualPath: "../escape.zip"}], deviceBios: [], runtimeBaseUrl: "/provider/"}, content)).rejects.toThrow("MAME_CONTENT_INVALID");
   expect(core.FS.writeFile).not.toHaveBeenCalled();
 });

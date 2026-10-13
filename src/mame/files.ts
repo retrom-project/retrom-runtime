@@ -66,19 +66,19 @@ async function mountArcadeFiles(core: Pick<MameCore, "FS">, config: Extract<Mame
   const game = await materializeFileBytes(content.contentSession, config.game, content.contentSession.inputPolicy("game"),
     "GAME", content.signal);
   const archives = new Map<string, Uint8Array>([[`${config.machine}.zip`, game]]);
-  let parentIdentity = "";
-  if (config.parent) {
-    const parent = await materializeFileBytes(content.contentSession, config.parent, content.contentSession.inputPolicy("parent"),
+  const parentEntries: Record<string, Uint8Array> = {};
+  if (config.parents.length > 32) {throw new Error("MAME_CONTENT_INVALID");}
+  for (const file of config.parents) {
+    const name = file.virtualPath;
+    if (!/^[a-z0-9_]{1,32}\.zip$/u.test(name) || archives.has(name) ||
+      file.sizeBytes < 1 || file.sizeBytes > 128 * 1024 * 1024) {throw new Error("MAME_CONTENT_INVALID");}
+    const bytes = await materializeFileBytes(content.contentSession, file, content.contentSession.inputPolicy("parent"),
       "GAME", content.signal, progress => content.reportProgress?.({phase: "PROJECT_CONTENT",
         loadedBytes: progress.readyBytes, totalBytes: progress.totalBytes}));
-    parentIdentity = parentStateIdentity(addArcadeArchives(archives, parent));
+    parentEntries[name] = bytes;
+    archives.set(name, bytes);
   }
-  if (config.bios) {
-    const bios = await materializeFileBytes(content.contentSession, config.bios, content.contentSession.inputPolicy("bios"),
-      "FIRMWARE", content.signal, progress => content.reportProgress?.({phase: "PROJECT_CONTENT",
-        loadedBytes: progress.readyBytes, totalBytes: progress.totalBytes}));
-    addArcadeArchives(archives, bios);
-  }
+  const parentIdentity = config.parents.length ? parentStateIdentity(parentEntries) : "";
   core.FS.mkdirTree("/content/roms");
   for (const [name, bytes] of archives) {core.FS.writeFile(`/content/roms/${name}`, bytes);}
   for (const file of config.deviceBios) {
@@ -90,23 +90,7 @@ async function mountArcadeFiles(core: Pick<MameCore, "FS">, config: Extract<Mame
     core.FS.writeFile(path, bytes);
   }
   core.FS.writeFile("/content/boot.cmd", new TextEncoder().encode(`${config.machine} -rompath /content/roms -skip_gameinfo -nothrottle`));
-  const identity = [config.machine, config.game.sha256, parentIdentity, config.bios?.sha256 ?? "",
+  const identity = [config.machine, config.game.sha256, parentIdentity, "",
     ...config.deviceBios.map(file => `${file.virtualPath}:${file.sha256}`).sort()].join("\n");
   return bytesToHex(sha256(new TextEncoder().encode(identity)));
-}
-
-function addArcadeArchives(archives: Map<string, Uint8Array>, bytes: Uint8Array) {
-  let entries: Record<string, Uint8Array>, expanded = 0, count = 0;
-  try {entries = unzipSync(bytes, {filter: entry => {
-    expanded += entry.originalSize; count++;
-    if (expanded > 128 * 1024 * 1024 || count > 64) {throw new Error("MAME_CONTENT_INVALID");}
-    return true;
-  }});} catch {throw new Error("MAME_CONTENT_INVALID");}
-  for (const [name, contents] of Object.entries(entries)) {
-    if (!/^[a-z0-9_]{1,32}\.zip$/u.test(name) || archives.has(name) || contents.length > 128 * 1024 * 1024) {
-      throw new Error("MAME_CONTENT_INVALID");
-    }
-    archives.set(name, contents);
-  }
-  return entries;
 }

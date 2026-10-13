@@ -10,7 +10,6 @@ import {gunzipSync, crc32} from "node:zlib";
 import {parseRuntimeConfiguration, contentHash, runtimeBindings, identifyPSXRegion, resolveSavedRuntimeRequest,
   contentBIOSRequirements, missingROMMember, dosEntryCandidates, arcadeParentOptions, resolveRuntimeTarget, flycastMachine, flycastContentReferences, flycastMedia} from "../dist/runtime/index.js";
 import {zipMembers, requireLocator, safePath, sha256} from "./runtime-archive-input.mjs";
-export {parentArchive} from "./runtime-archive-input.mjs";
 
 export async function configureHostInput(input) {
   contentHash(input.files, "TREE");

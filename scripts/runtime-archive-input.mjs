@@ -1,32 +1,6 @@
 import {createHash} from "node:crypto";
-import {open, readFile, writeFile, lstat} from "node:fs/promises";
-import {unzipSync, zipSync} from "fflate";
+import {open} from "node:fs/promises";
 import {decodeZIPName} from "../dist/content-io/zip-name.js";
-
-export async function parentArchive(input) {
-  if (!Array.isArray(input.files) || input.files.length < 1 || input.files.length > 32 ||
-    typeof input.outputPath !== "string" || !input.outputPath.startsWith("/")) {throw new Error("RUNTIME_PARENT_INVALID");}
-  const members = Object.create(null), hashes = new Map(); let expanded = 0;
-  for (const file of input.files) {
-    const path = requireLocator(input, file), info = await lstat(path);
-    if (!info.isFile() || info.isSymbolicLink() || info.size !== file.sizeBytes || info.size > 512 * 1024 * 1024) {throw new Error("RUNTIME_PARENT_INVALID");}
-    const index = await zipMembers(path);
-    expanded += index.reduce((sum, item) => sum + item.sizeBytes, 0);
-    if (expanded > 512 * 1024 * 1024) {throw new Error("RUNTIME_PARENT_TOO_LARGE");}
-    const bytes = await readFile(path);
-    if (sha256(bytes) !== file.sha256) {throw new Error("RUNTIME_CONTENT_CHANGED");}
-    const files = unzipSync(bytes);
-    for (const [name, content] of Object.entries(files)) {
-      if (!safePath(name) || name.endsWith("/")) {throw new Error("RUNTIME_PARENT_INVALID");}
-      const hash = sha256(content), existing = hashes.get(name);
-      if (existing && existing !== hash) {throw new Error("RUNTIME_PARENT_MEMBER_CONFLICT");}
-      hashes.set(name, hash); members[name] = [content, {level: 0, mtime: new Date("1980-01-01T00:00:00Z")}];
-    }
-  }
-  const bytes = zipSync(Object.fromEntries(Object.keys(members).sort().map(key => [key, members[key]])));
-  await writeFile(input.outputPath, bytes, {flag: "wx", mode: 0o600});
-  return {path: input.outputPath, sizeBytes: bytes.byteLength, sha256: sha256(bytes)};
-}
 
 export async function zipMembers(path) {
   const handle = await open(path, "r");

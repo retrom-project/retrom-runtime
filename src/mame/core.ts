@@ -5,7 +5,7 @@ import {profiles, type MameMachine} from "./profiles.js";
 import {CoreDiagnostics} from "../provider/core-diagnostics.js";
 export type FileSource = {url: string; sha256: string; sizeBytes: number};
 export type MameParameters = {machine: MameMachine; arcade?: false; game: FileSource; bios: (FileSource & {logicalName: string})[]; runtimeBaseUrl: string} |
-  {machine: string; arcade: true; game: FileSource; parent: FileSource | null; bios: FileSource | null;
+  {machine: string; arcade: true; game: FileSource; parents: (FileSource & {logicalName: string; virtualPath: string})[];
     deviceBios: (FileSource & {logicalName: string; virtualPath: string})[]; runtimeBaseUrl: string};
 export type MameCore = {
   HEAPU8: Uint8Array; HEAP16: Int16Array;

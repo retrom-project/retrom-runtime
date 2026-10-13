@@ -302,10 +302,8 @@ function mameArcade(envelope: LaunchEnvelopeV1): Extract<import("../../mame/core
   const machine = envelope.targetOptions.machine;
   if (typeof machine !== "string" || !/^[a-z0-9_]{1,32}$/u.test(machine)) {invalidRequest();}
   const game = resource(envelope, "game", "ROM_BLOB");
-  const parent = optionalResource(envelope, "parent", "PARENT_ARCHIVE");
-  const bios = optionalResource(envelope, "bios", "BIOS_BUNDLE");
+  const parents = optionalResource(envelope, "parent", "EXTERNAL_FILE_SET");
   const external = optionalResource(envelope, "external", "EXTERNAL_FILE_SET");
-  if (bios && (bios.files.length !== 1 || bios.files[0].logicalName !== "bundle.zip")) {invalidRequest();}
-  return {machine, arcade: true, game, parent, bios: bios?.files[0] ?? null,
+  return {machine, arcade: true, game, parents: parents?.files ?? [],
     deviceBios: external?.files ?? [], runtimeBaseUrl: envelope.runtime.runtimeBaseUrl};
 }

@@ -1,3 +1,4 @@
+import {registerCoreFamily} from "./core-family.js";
 import {ownEmulatorJsWakeLocks} from "./wake-lock.js";
 import {EmulatorPlayerInput} from "./player-input.js";
 import {installEmulatorJsNativeObservation} from "./content-acceptance.js";
@@ -53,6 +54,7 @@ import {restoreEmulatorCheckpoint} from "./restore-checkpoint.js";
 import {readPspCheckpoint} from "./psp-state.js";
 import {installPspRestoreObserver} from "./psp-restore.js";
 import {createEmulatorJsSurface} from "./surface.js";
+
 import {encodeStoredCheckpoint} from "../../provider/checkpoint-storage.js";
 import {installEmulatorJsOutputViewport} from "./output-viewport.js";
 import {acknowledgeLutroStoredSave, installLutroNativeRestore, LutroNativeSaveTracker} from "./lutro-native-save.js";
@@ -71,6 +73,7 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
   private readonly input: EmulatorPlayerInput;
   private readonly startup: StartupTasks;
   private cleanupWakeLocks: (() => Promise<void>) | null = null;
+  private cleanupCoreFamily: (() => void) | null = null;
   private cleanupStartupDownloads: (() => void) | null = null;
   private readonly listeners = new Set<(event: RuntimeEventV1) => void>();
   private state: RuntimeStateV1 = "CREATED";
@@ -191,6 +194,7 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
 
   exit() {
     this.startup.stop(this.state === "FAILED");
+    this.cleanupCoreFamily?.();
     this.cleanupStartupDownloads?.();
     this.exitPromise ??= Promise.resolve().then(() => this.performExit());
     return this.exitPromise;
@@ -392,6 +396,12 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
       this.instance = runtimeWindow.EJS_emulator ?? null;
       if (!this.instance) {this.fail("PLAYER_RUNTIME_UNAVAILABLE"); return;}
       const instance = this.instance;
+      try {
+        if (this.implementation.runtimeCore === "fbalpha") {
+          this.cleanupCoreFamily = registerCoreFamily(instance, "fbalpha", "arcade");
+        }
+      } catch (error) {this.fail("PLAYER_RUNTIME_UNAVAILABLE", error); return;}
+
       this.startupObserver?.deadline.initialize();
       this.cleanupStartupDownloads = installStartupDownloads(instance, this.implementation.release, this.startup,
         runtimeWindow.XMLHttpRequest, this.envelope.resources);

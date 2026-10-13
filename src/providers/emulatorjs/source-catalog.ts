@@ -506,7 +506,7 @@ export const emulatorJsSourceCatalog = {
       },
       commit: "e150dc0491ae747028919fb82d6598954976ede6",
       id: "4.2.3",
-      licenseRoots: ["LICENSE", "licenses/forks/flycast", "licenses/forks/fbneo"],
+      licenseRoots: ["LICENSE", "licenses/forks/flycast", "licenses/forks/fbneo", "licenses/forks/fbalpha"],
       repository: "https://github.com/EmulatorJS/EmulatorJS",
       tag: "v4.2.3",
     },

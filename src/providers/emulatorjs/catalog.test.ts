@@ -68,13 +68,13 @@ describe("EmulatorJS Provider declarations", () => {
     expect(target.checkpoint).toEqual({maxBytes: 16 * 1024 * 1024, semantics: "GAME_SAVE",
       readFormats: ["lutro-native-v1-storage-v1"], writeFormat: "lutro-native-v1-storage-v1"});
   });
-  it("uses last declaration wins for exactly seventy-five current core targets", () => {
+  it("uses last declaration wins for exactly seventy-six current core targets", () => {
     const manifest = projectProviderManifest(emulatorJsProviderDefinition);
     expect(validateProviderManifest(manifest)).toBe(manifest);
     expect(manifest.providerId).toBe("emulatorjs");
     expect(manifest.providerVersion).toBe("0.0.0-dev");
-    expect(manifest.targets).toHaveLength(75);
-    expect(new Set(manifest.targets.map((target) => target.id)).size).toBe(75);
+    expect(manifest.targets).toHaveLength(76);
+    expect(new Set(manifest.targets.map((target) => target.id)).size).toBe(76);
     for (const targetId of ["dosbox-pure", "genesis-plus-gx-wide", "azahar", "freeintv"]) {
       const target = emulatorJsProviderDefinition.targets.find((entry) => entry.id === targetId);
       expect(target?.implementation.release).toBe("4.3.0-pre");
@@ -122,7 +122,7 @@ describe("EmulatorJS Provider declarations", () => {
     ]);
   });
 
-  it.each(["azahar", "fbneo"])("requires a native content receipt for %s", (id) => {
+  it.each(["azahar", "fbneo", "fbalpha"])("requires a native content receipt for %s", (id) => {
     const target = emulatorJsProviderDefinition.targets.find(target => target.id === id);
     expect(target?.implementation.contentAcceptance).toBe("CORE_RESULT_V1");
   });
@@ -139,7 +139,7 @@ it("omits absent optional DAT declarations from canonical Provider build input",
   const targets = emulatorJsProviderDefinition.targets;
   for (const target of targets) {
     expect(Object.values(target)).not.toContain(undefined);
-    if (["fbneo", "mame2003", "mame2003-plus"].includes(target.id)) {
+    if (["fbalpha", "fbneo", "mame2003", "mame2003-plus"].includes(target.id)) {
       expect(target).toHaveProperty("romSetSelection");
     } else {
       expect(target).not.toHaveProperty("romSetSelection");

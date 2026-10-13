@@ -18,7 +18,7 @@ the module, checks the exported identity and calls `createRuntime`. It only cons
 chooses EasyRPG, mkxp, native Web or another implementation. The Provider validates the stable `providerId` plus
 `targetId`, current resources, private Target options, optional restore input before mounting.
 
-`src/providers/retrom-runtime/catalog.ts` is the single Target declaration for the 35 targets in this Provider; EmulatorJS declares another 75 Targets.
+`src/providers/retrom-runtime/catalog.ts` is the single Target declaration for the 35 targets in this Provider; EmulatorJS declares another 76 Targets.
 The generated declaration provides current capabilities, checkpoint `writeFormat/readFormats/maxBytes/semantics`, resource
 kinds, runtime files and a constrained closed `targetOptionsSchema`. The Provider Module uses that schema to
 exact-validate options before mounting; it has no

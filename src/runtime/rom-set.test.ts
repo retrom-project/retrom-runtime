@@ -4,7 +4,7 @@ import {runtimeCatalog} from "./catalog.js";
 import {arcadeParentOptions} from "./arcade-parent.js";
 import {arcadeROMSetOptions, reconcileArcadeConfiguration} from "./rom-set.js";
 
-const cores = ["fbneo", "mame2003", "mame2003_plus", "mame_arcade"];
+const cores = ["fbalpha", "fbneo", "mame2003", "mame2003_plus", "mame_arcade"];
 const file = {logicalKey: "original.zip", name: "original.zip", sha256: "a".repeat(64), sizeBytes: 1};
 const catalog = {
   chosen: {parent: null, bios: false, roms: []},

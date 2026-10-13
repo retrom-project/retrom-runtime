@@ -43,6 +43,7 @@ export type EjsInstance = EmulatorNativeSettingsInstance & EmulatorGamepadInstan
   Module?: {callMain?: (args: string[]) => unknown};
   startGame?: () => unknown;
   downloadRom?: () => Promise<void>;
+  getCores?: () => Record<string, string[]>;
   downloadGameParent?: () => Promise<unknown>;
   config?: {gameUrl?: string | File; gameParentUrl?: string | File};
   checkCompression?: (data: Uint8Array, message: string | undefined,

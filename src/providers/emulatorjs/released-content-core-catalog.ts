@@ -115,5 +115,50 @@ export const emulatorJsContentCoreForks = [
         "url": "https://github.com/retrom-project/azahar/releases/download/retrom-core-g62cfcfb5e488-r2/rpg-runtime-release.json"
       }
     ]
-  }
+  },
+{
+  "repository": "https://github.com/retrom-project/fbalpha",
+  "tag": "retrom-core-gb25b724ba204-r1",
+  "commit": "4d2e442bda68f9c3574ce0052de352240c99dbd5",
+  "adapterAbi": "emulatorjs-content-result-v1",
+  "runtimeCore": "fbalpha",
+  "assets": [
+    {
+      "filename": "LICENSE",
+      "sha256": "839b32d3246978a05fe9b135b579e665cba32616a1c3f2eb5a0254dcbb8a518c",
+      "sizeBytes": 41543,
+      "url": "https://github.com/retrom-project/fbalpha/releases/download/retrom-core-gb25b724ba204-r1/LICENSE"
+    },
+    {
+      "filename": "fbalpha-arcade.dat",
+      "sha256": "4c257078e2f2ab66c75602905d68b7fe7e93e114858813a479e2fd08dd5f18a1",
+      "sizeBytes": 6739689,
+      "url": "https://github.com/retrom-project/fbalpha/releases/download/retrom-core-gb25b724ba204-r1/fbalpha-arcade.dat"
+    },
+    {
+      "filename": "fbalpha-content-pair.json",
+      "sha256": "9276511f3299f5df9d31a4ddbe897987361b156b6fbc7919398e94c99f2a0317",
+      "sizeBytes": 736,
+      "url": "https://github.com/retrom-project/fbalpha/releases/download/retrom-core-gb25b724ba204-r1/fbalpha-content-pair.json"
+    },
+    {
+      "filename": "fbalpha-wasm.data",
+      "sha256": "18ea6e0b352f757323602b856514a4955d99766c4c0a72df7eb2e457120373a4",
+      "sizeBytes": 4458494,
+      "url": "https://github.com/retrom-project/fbalpha/releases/download/retrom-core-gb25b724ba204-r1/fbalpha-wasm.data"
+    },
+    {
+      "filename": "fbalpha.json",
+      "sha256": "498ac8f941f1a46643e160fec07949e94a010c7335a1cf186f459bcfbdf71a86",
+      "sizeBytes": 119,
+      "url": "https://github.com/retrom-project/fbalpha/releases/download/retrom-core-gb25b724ba204-r1/fbalpha.json"
+    },
+    {
+      "filename": "rpg-runtime-release.json",
+      "sha256": "61f80961eab7139935e5a439576f29e8560fd4b0a4068f607da97e03d490172f",
+      "sizeBytes": 1047,
+      "url": "https://github.com/retrom-project/fbalpha/releases/download/retrom-core-gb25b724ba204-r1/rpg-runtime-release.json"
+    }
+  ]
+},
 ];

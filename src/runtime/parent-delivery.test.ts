@@ -8,7 +8,7 @@ const catalog = {
   base: {parent: "grand", bios: false, roms: [rom("base.bin"), {...rom("grand.bin"), crc: "87654321", merge: "grand.bin"}]},
   grand: {parent: null, bios: false, roms: [{...rom("grand.bin"), crc: "87654321"}]},
 };
-it.each(["fbneo", "mame2003", "mame2003_plus", "fbalpha2012_cps1", "fbalpha2012_cps2", "mame_arcade"])(
+it.each(["fbneo", "fbalpha", "mame2003", "mame2003_plus", "fbalpha2012_cps1", "fbalpha2012_cps2", "mame_arcade"])(
   "%s delivers each selected parent as an original named file", coreId => {
     const provider = coreId === "mame_arcade" ? "retrom-runtime/mame-arcade" : `emulatorjs/${coreId.replaceAll("_", "-")}`;
     const request = {directory: {platformId: "arcade", defaultCoreId: coreId, allowedCoreIds: [coreId]},

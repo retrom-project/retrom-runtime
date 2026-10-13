@@ -1635,7 +1635,7 @@
           },
           {
             "cardinality": "ONE",
-            "kind": "PARENT_ARCHIVE",
+            "kind": "EXTERNAL_FILE_SET",
             "optional": true,
             "role": "parent",
             "maxFileBytes": 2147483647

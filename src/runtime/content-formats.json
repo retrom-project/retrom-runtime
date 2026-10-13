@@ -837,10 +837,15 @@
     },
     "supermodel": {
       "extensions": [
-        "chd"
+        "zip"
       ],
       "source": "supermodel_libretro.info",
-      "sourceSha256": "3207bac59d3111caf5eb93045072785c18744619848277f721badb114afef454"
+      "sourceSha256": "4bc1d9a12f2d8a24b3199201cf45d77a2c424b77f6316223240132761567a926",
+      "provenance": {
+        "repository": "https://github.com/retrom-project/Libretro-Supermodel",
+        "commit": "e2c63b74c35e6a1faf820fe5f977720e48ae3fdc",
+        "tag": "retrom-core-g84bc106b45b2-r1"
+      }
     },
     "theodore": {
       "extensions": [

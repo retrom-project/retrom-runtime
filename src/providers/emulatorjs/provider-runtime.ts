@@ -16,7 +16,7 @@ import {observeEmulatorJsStartup} from "./startup-observer.js";
 import {bindOptionalTargetContent} from "../../provider/target-content.js";
 import {ProviderContentOwner} from "../../provider/content-owner.js";
 import {ContentIOError} from "../../content-io/errors.js";
-import {stopNativeInstance} from "./native-exit.js";
+import {installNativeExit, stopNativeInstance} from "./native-exit.js";
 import {startEmulatorInputDiagnostics} from "./input-diagnostics.js";
 import type {RuntimeInputDiagnosticsV1} from "../../provider/module-api.js";
 import type {
@@ -430,6 +430,7 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
           checkpointMaximum, () => {this.restorePayload = null;},
           error => this.fail("PLAYER_STATE_RESTORE_FAILED", error));
       }
+      installNativeExit(instance);
       instance.on?.("exit", () => this.requestExit());
       if (deferredStart) {
         try {
@@ -549,7 +550,7 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
 
   private async stopNative() {
     const requested = this.exitRequestedEmitted; this.exitRequestedEmitted = true;
-    await stopNativeInstance(this.runtimeWindow, this.instance, this.implementation.runtimeCore, requested, this.discRange);
+    await stopNativeInstance(this.runtimeWindow, this.instance, requested, this.discRange);
     await this.cleanupWakeLocks?.(); this.cleanupWakeLocks = null;
   }
 

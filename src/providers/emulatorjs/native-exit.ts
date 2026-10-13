@@ -1,21 +1,34 @@
 import type {EjsInstance} from "./emulator-instance.js";
 
-export function requestNativeExit(instance: EjsInstance, core: string) {
-  const functions = ["ppsspp", "neocd", "flycast"].includes(core) ? instance.gameManager?.functions : undefined;
-  const restart = functions?.restart;
-  try {
-    // Upstream resets to flush directory saves. Instant-state PSP and Range-backed disc cores must not reboot on exit.
-    if (functions && restart) {functions.restart = () => undefined;}
-    instance.callEvent?.("exit");
-  } catch { /* Continue bounded host cleanup after a native exit error. */ }
-  finally {if (functions && restart) {functions.restart = restart;}}
+/** Own all exit sources, including upstream's beforeunload handler. */
+export function installNativeExit(instance: EjsInstance) {
+  const dispatch = instance.callEvent;
+  if (!dispatch) {return;}
+  let exited = false;
+  instance.callEvent = function (...args) {
+    if (args[0] !== "exit") {return dispatch.apply(this, args);}
+    if (exited) {return 0;}
+    exited = true;
+    const functions = this.gameManager?.functions, restart = functions?.restart;
+    try {
+      // Keep upstream save flushing and teardown, but never reboot a closing
+      // session. Content IO may already be aborted by page navigation.
+      if (functions && restart) {functions.restart = () => undefined;}
+      return dispatch.apply(this, args);
+    } finally {if (functions && restart) {functions.restart = restart;}}
+  };
+}
+
+export function requestNativeExit(instance: EjsInstance) {
+  try {instance.callEvent?.("exit");}
+  catch { /* Continue bounded host cleanup after a native exit error. */ }
 }
 
 /** Keep content readable until native teardown has consumed its existing grace period. */
 export async function stopNativeInstance(runtimeWindow: Window | null, instance: EjsInstance | null,
-  core: string, alreadyRequested: boolean, range: {idle(): Promise<void>} | null) {
+  alreadyRequested: boolean, range: {idle(): Promise<void>} | null) {
   if (!runtimeWindow || !instance?.callEvent) {return;}
-  if (!alreadyRequested) {requestNativeExit(instance, core);}
+  if (!alreadyRequested) {requestNativeExit(instance);}
   let timer: number | undefined;
   try {
     await Promise.race([range?.idle() ?? Promise.resolve(), new Promise<void>(resolve => {timer = runtimeWindow.setTimeout(resolve, 1_100);})]);

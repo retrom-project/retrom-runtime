@@ -141,7 +141,7 @@ export function prepareRuntime(request: PrepareRuntimeRequest) {
     biosRequirements: [...resolveBIOSRequirements({providerId: binding.providerId, targetId: binding.targetId, config,
       files: request.files, firmwareEvidence: request.firmwareEvidence}),
       ...(request.arcadeCatalog ? arcadeBIOSRequirements(selectedCore, request.arcadeCatalog, dependencies.biosSets) : [])], checkpoint: declaration.checkpoint, capabilities: declaration.capabilities,
-    resources: contentResources(config, target, selectedCore, request.files, request.cueFiles, flycast, dependencies.parentFiles)};
+    resources: contentResources(config, target, selectedCore, request.files, request.cueFiles, flycast)};
 }
 
 function prepareContent(request: PrepareRuntimeRequest, config: RuntimeConfiguration, selectedCore: string, target: TargetDeclaration) {
@@ -151,7 +151,7 @@ function prepareContent(request: PrepareRuntimeRequest, config: RuntimeConfigura
   if (flycast) {requireFlycastDependencies(flycast); crcWarnings = flycast.crcWarnings;}
   if (config.content.kind === "DOS_BUNDLE" && config.content.entryPath !== undefined &&
     !request.dosEntries?.includes(config.content.entryPath)) {configurationFailure("RUNTIME_DOS_ENTRY_INVALID");}
-  let dependencies = {parentFiles: config.cores?.[selectedCore]?.parentFiles ?? [], missingParents: [] as string[], biosSets: [] as string[]};
+  let dependencies = {parentFiles: [] as string[], missingParents: [] as string[], biosSets: [] as string[]};
   if (config.content.kind === "ARCADE") {
     if (!request.arcadeCatalog || !request.archives) {configurationFailure("RUNTIME_ARCADE_CATALOG_UNAVAILABLE");}
     dependencies = arcadeDependencies(selectedCore, config, request.files, request.archives, request.arcadeCatalog);
@@ -187,9 +187,10 @@ function prepareTargetOptions(config: RuntimeConfiguration, target: TargetDeclar
 }
 
 function contentResources(config: RuntimeConfiguration, target: TargetDeclaration, coreId: string,
-  files: readonly RuntimeContentFile[], cueFiles?: readonly string[], flycast?: ReturnType<typeof flycastDependencies> | null, parent: string[] = []): ResourcePlan[] {
+  files: readonly RuntimeContentFile[], cueFiles?: readonly string[], flycast?: ReturnType<typeof flycastDependencies> | null): ResourcePlan[] {
   const game = target.inputs.find(input => input.role === "game");
   if (!game) {configurationFailure("RUNTIME_DECLARATION_INVALID");}
+  const parent = config.cores?.[coreId]?.parentFiles ?? [];
   const resources: ResourcePlan[] = [gameResource(game.kind, config, files)];
   arcadeResourcePath(resources[0], config, target, coreId, files);
   if (game.kind === "NATIVE_WEB" || game.kind === "ISOLATED_WEB") {

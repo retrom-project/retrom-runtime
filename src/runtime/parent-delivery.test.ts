@@ -23,10 +23,16 @@ it.each(["fbneo", "fbalpha", "mame2003", "mame2003_plus", "fbalpha2012_cps1", "f
       kind: "EXTERNAL_FILE_SET", role: "parent", ordinal: 0, files: ["stored/BASE.ZIP", "stored/grand.zip"],
       paths: {"stored/BASE.ZIP": "base.zip", "stored/grand.zip": "grand.zip"},
     });
-    const single = prepareRuntime({...request, arcadeCatalog: {...catalog, base: {...catalog.base, parent: null}}});
+    const single = prepareRuntime({...request, config: {...request.config, cores: {[coreId]: {
+      romSet: "clone", parentFiles: ["stored/BASE.ZIP"]}}}, arcadeCatalog: {...catalog, base: {...catalog.base, parent: null}}});
     expect(single.resources.find(resource => resource.role === "parent")).toMatchObject({kind: "EXTERNAL_FILE_SET",
       files: ["stored/BASE.ZIP"], paths: {"stored/BASE.ZIP": "base.zip"}});
-    expect(result.romHash).toBe(single.romHash);
+    const selfContained = prepareRuntime({...request, archives: {...request.archives,
+      "stored/alias.zip": [...request.archives["stored/BASE.ZIP"], ...request.archives["stored/grand.zip"]]}});
+    expect(selfContained.resources.find(resource => resource.role === "parent")).toEqual(
+      result.resources.find(resource => resource.role === "parent"));
+    expect(result.romHash).toBe(selfContained.romHash);
+    expect(single.romHash).toBe(result.romHash);
   });
 it("preserves explicit per-core Parents for targets without a DAT selection capability", () => {
   const files = [file("game.zip"), file("base.zip"), file("unused.zip")];

@@ -109,9 +109,9 @@ describe("independent package boundary", () => {
     expect(sources.developmentInputs).toEqual([]);
     expect(sources.upstreamReleases).toContainEqual(expect.objectContaining({
       id: "onsyuri", adapterAbi: "ons-save", repository: "https://github.com/retrom-project/OnscripterYuri",
-      tag: "retrom-core-0.7.7beta-r6", commit: "52d84443a2e41d1b930683f9f0a459e715c5093c",
+      tag: "retrom-core-0.7.7beta-r7", commit: "8684330a24e5d29201d07997871529ec867512cd",
       assets: expect.arrayContaining([expect.objectContaining({
-        filename: "onsyuri.wasm", sha256: "d9e5a04a86de40d5efa8acf7d1719a3db417dfa025f356c4bf7f0dc6cf4abf96",
+        filename: "onsyuri.wasm", sha256: "5f9ebb05607f01691e0b4e62b3d875cdd542e42ab5c8d7c17a94a8d0fa7c0d03",
       })]),
     }));
     expect(await readdir(join(root, "scripts"))).not.toEqual(expect.arrayContaining([

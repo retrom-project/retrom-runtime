@@ -1,6 +1,7 @@
 import {PlayerRuntimeError} from "../../provider/errors.js";
 import {retainEmulatorJsDisplayedFrame} from "./displayed-frame.js";
 import {circularDpadStyle, installCircularDpadFeedback} from "./circular-dpad.js";
+import {installEmulatorJsTouchLabels} from "./touch-labels.js";
 const frameStyleText = `
 html,body,#retrom-emulator,.ejs_parent,.ejs_game,.ejs_canvas_parent{width:100%!important;height:100%!important;margin:0!important;overflow:hidden;background:#05060a}
 .ejs_canvas_parent{display:grid!important;grid-template-columns:minmax(0,1fr)!important;grid-template-rows:minmax(0,1fr)!important;place-items:center!important}
@@ -9,6 +10,10 @@ canvas{display:block;max-width:none!important;max-height:none!important;margin:a
 .ejs_virtualGamepad_open{display:none!important}
 html.retrom-native-panel-open .ejs_virtualGamepad_parent{display:none!important}
 .ejs_virtualGamepad_left,.ejs_virtualGamepad_right{bottom:20px!important}
+/* Upstream line-height equals the border-box height; center within the content box instead. */
+.ejs_virtualGamepad_button{display:flex;align-items:center;justify-content:center}
+/* Keep input on the original button; trim font leading without changing its hit area. */
+.ejs_virtualGamepad_button>.retrom-touch-label{flex:none;line-height:1;white-space:nowrap;text-box:trim-both cap alphabetic;pointer-events:none}
 html.retrom-native-menu-locked:not(.retrom-native-settings-open) .ejs_menu_bar{visibility:hidden!important;opacity:0!important;pointer-events:none!important}
 html.retrom-native-menu-locked.retrom-native-settings-open .ejs_menu_bar{border:0!important;background:transparent!important;box-shadow:none!important;pointer-events:none!important}
 html.retrom-native-menu-locked.retrom-native-settings-open .ejs_menu_bar>*{visibility:hidden!important;pointer-events:none!important}
@@ -25,7 +30,9 @@ export function installEmulatorJsFrameStyle(frameDocument: Document) {
   style.dataset.retromPlayerFrame = "true";
   style.textContent = frameStyleText;
   frameDocument.head.append(style);
+  const removeLabels = installEmulatorJsTouchLabels(frameDocument);
   return () => {
+    removeLabels();
     style.remove();
     frameDocument.documentElement.classList.remove("retrom-native-menu-locked", "retrom-native-settings-open", "retrom-native-panel-open");
   };

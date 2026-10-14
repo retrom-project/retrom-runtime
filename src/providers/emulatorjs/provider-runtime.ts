@@ -44,6 +44,7 @@ import {installSupermodelState} from "./supermodel-state.js";
 import {installSupermodelRestore} from "./supermodel-restore.js";
 import {createRetromDefaultControls, emulatorControlScheme, emulatorPointerOptions, thomsonOptions} from "./default-controls.js";
 import {emulatorVirtualControls} from "./virtual-controls.js";
+import {installDigitalJoysticks} from "./digital-joystick.js";
 import {initializeEmulatorJsGamepads} from "./startup-gamepads.js";
 import {closeEmulatorJsNativeSettings, openEmulatorJsNativeSettings} from "./native-settings.js";
 import {retromShaders} from "./shaders.js";
@@ -99,6 +100,7 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
   private cleanupSupermodelState: (() => void) | null = null;
   private supermodelRestore: ReturnType<typeof installSupermodelRestore> | null = null;
   private cleanupGamepadIndex: (() => void) | null = null;
+  private digitalJoysticks: ReturnType<typeof installDigitalJoysticks> | null = null;
   private nativeObservation: ReturnType<typeof installEmulatorJsNativeObservation> | null = null;
   private cleanupRetroArchConfig: () => void = () => undefined;
   private dosboxCompatibility: ReturnType<typeof installDOSBoxPureStateCompatibility> | null = null;
@@ -146,6 +148,7 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
     const toggle = instance.gameManager?.toggleMainLoop;
     if (!toggle) {throw contractError();}
     if (this.discRange) {await this.discRange.idle();}
+    this.digitalJoysticks?.release();
     toggle.call(instance.gameManager, false);
     instance.paused = true;
     this.transition("PAUSED");
@@ -296,6 +299,7 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
       this.cleanupFrameStyle = createEmulatorJsSurface(runtimeWindow);
       this.startBarrier = createStartBarrier();
       this.configure(runtimeWindow);
+      this.digitalJoysticks = installDigitalJoysticks(runtimeWindow);
       await retireEmulatorDownloadCaches(runtimeWindow.indexedDB, code => this.host.reportDiagnostic({code, message: "Obsolete EmulatorJS download cache could not be fully removed; persistent download caching remains disabled."}));
       this.checkMountActive();
       const disc = await this.prepareContentDisc(runtimeWindow);
@@ -500,6 +504,7 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
     this.stopNativeObservation();
     this.host.signal.removeEventListener("abort", this.hostAbort);
     const nativeExitAlreadyRequested = this.exitRequestedEmitted; this.exitRequestedEmitted = true;
+    this.digitalJoysticks?.dispose(); this.digitalJoysticks = null;
     await stopNativeInstance(this.runtimeWindow, this.instance, this.implementation.runtimeCore, nativeExitAlreadyRequested, this.discRange);
     await this.cleanupWakeLocks?.(); this.cleanupWakeLocks = null;
     await this.closeContent();

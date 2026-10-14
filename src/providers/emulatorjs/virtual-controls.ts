@@ -1,5 +1,5 @@
 export type EmulatorVirtualControl = {
-  type: "button" | "dpad";
+  type: "button" | "dpad" | "zone";
   id: string;
   location: "left" | "right" | "center";
   text?: string;

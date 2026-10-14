@@ -78,7 +78,10 @@ it.each([
     }
     const instance = {
       gameManager: {getState: () => Uint8Array.of(1)},
-      gamepad: {gamepads: [{id: "Already connected pad", index: 0}]},
+      gamepad: {gamepads: [{id: "Already connected pad", index: 0}], getGamepads: () => [{
+        id: "Already connected pad", index: 0, connected: true, mapping: "standard", timestamp: 1,
+        axes: [0.9, 0, 0, 0], buttons: Array.from({length: 17}, () => ({pressed: false, touched: false, value: 0})),
+      } as unknown as Gamepad]},
       gamepadSelection: ["", "", "", ""],
       updateGamepadLabels: vi.fn(),
     };
@@ -86,6 +89,9 @@ it.each([
     (runtimeWindow.EJS_ready as () => void)();
     expect(instance.gamepadSelection).toEqual(["Already connected pad_0", "", "", ""]);
     expect(instance.updateGamepadLabels).toHaveBeenCalledOnce();
+    if (targetId === "fceumm") {
+      expect(instance.gamepad.getGamepads()[0].buttons[15].pressed).toBe(true);
+    }
     (runtimeWindow.EJS_onGameStart as () => void)();
     await settled;
     expect(player.getState()).toBe("RUNNING");

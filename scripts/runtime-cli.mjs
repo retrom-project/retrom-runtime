@@ -6,7 +6,7 @@ import {once} from "node:events";
 import {serveJSONL} from "./runtime-jsonl.mjs";
 import {runtimeCatalog, prepareRuntime, contentHash, restorability,
   inspectRuntimeIdentity, configureRuntime, arcadeBIOSRequirements, biosCatalog, resolveBIOSRequirements,
-  arcadeROMSetOptions, reconcileArcadeConfiguration} from "../dist/runtime/index.js";
+  arcadeROMSetOptions, reconcileArcadeConfiguration, rpgEntryCandidates} from "../dist/runtime/index.js";
 
 const maximumMessage = 64 * 1024 * 1024;
 const {AbortController} = globalThis;
@@ -28,6 +28,7 @@ async function execute(command, input, signal = new AbortController().signal) {
   case "normalize-content": output = await normalizeContent(input, signal); break;
   case "discover-content": output = await discoverContentDependencies(input); break;
   case "dos-entry-candidates": output = await hostDOSEntryCandidates(input); break;
+  case "rpg-entry-candidates": output = rpgEntryCandidates(input); break;
   case "arcade-parents": output = await hostArcadeParentOptions(input); break;
   case "rom-sets": output = arcadeROMSetOptions({...input, arcadeCatalog: (await arcadeTables())[input.coreId]}); break;
   case "reconcile-config": output = reconcileArcadeConfiguration({...input, arcadeCatalogs: await arcadeTables(),

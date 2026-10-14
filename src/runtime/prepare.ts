@@ -39,6 +39,7 @@ export type ContentBIOSRequest = Pick<PrepareRuntimeRequest,
 export function contentBIOSRequirements(request: ContentBIOSRequest) {
   const config = parseRuntimeConfiguration(request.config), selectedCore = selectedRuntimeCore(request);
   contentHash(request.files, "TREE");
+  if (config.content.kind === "RPG_MAKER_PROJECT") {validateConfigurationFiles(config, request.files);}
   const entry = "entryFile" in config.content ? config.content.entryFile : null;
   if (entry !== null && !request.files.some(file => file.logicalKey === entry)) {
     configurationFailure("RUNTIME_ENTRY_MISSING");

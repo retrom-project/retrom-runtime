@@ -39,6 +39,24 @@ function worker() {
 const files = [{logicalKey: "game.nes", name: "game.nes", sha256: "a".repeat(64), sizeBytes: 1}];
 const directory = {platformId: "nes", defaultCoreId: "fceumm", allowedCoreIds: ["fceumm"]};
 
+it("projects RPG entries through the CLI without accepting an obsolete entry or another engine's HTML", async () => {
+  const {child, read} = worker();
+  const project = ["www/index.html", "www/js/rpg_core.js", "mz/index.html", "mz/js/rmmz_core.js", "docs/index.html", "data/System.json"]
+    .map(logicalKey => ({...files[0], logicalKey, name: logicalKey}));
+  const input = {config: {content: {kind: "RPG_MAKER_PROJECT", engine: "RPGMV", entryFile: "data/System.json"}}, files: project};
+  child.stdin.end([
+    {id: "mv", command: "rpg-entry-candidates", input},
+    {id: "mz", command: "rpg-entry-candidates", input: {...input, engine: "RPGMZ"}},
+    {id: "unknown", command: "rpg-entry-candidates", input: {...input, engine: "UNKNOWN"}},
+  ].map(value => JSON.stringify(value)).join("\n") + "\n");
+  const output = [await read(), await read(), await read()];
+  expect(output).toEqual(expect.arrayContaining([
+    {id: "mv", result: {entries: ["www/index.html"]}}, {id: "mz", result: {entries: ["mz/index.html"]}},
+    {id: "unknown", error: "RUNTIME_CONFIGURATION_INVALID"},
+  ]));
+  expect((await once(child, "close"))[0]).toBe(0);
+});
+
 it("reuses a real process for configuration, prepare and identity batches and isolates request failures", async () => {
   const {child, read} = worker();
   child.stdin.write(JSON.stringify({id: "config", command: "configure", input: {platformId: "nes", coreIds: ["fceumm"], files}}) + "\n");

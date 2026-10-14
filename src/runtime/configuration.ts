@@ -1,5 +1,6 @@
 import type {RuntimeConfiguration, RuntimeContent, RuntimeContentFile} from "./types.js";
 import {configurationFailure, exact, identifier, logicalPath, object} from "./validation.js";
+import {rpgEntryFiles} from "./rpg-entry-files.js";
 
 const entryKinds = ["SINGLE_FILE", "ARCADE", "ONS_PROJECT", "KIRIKIRI_PROJECT", "BUTTERSCOTCH_PROJECT",
   "TYRANOSCRIPT_PROJECT", "NXENGINE_PROJECT", "DAPHNE_PROJECT"];
@@ -46,6 +47,9 @@ export function validateConfigurationFiles(config: RuntimeConfiguration, files: 
   const paths = new Set(files.map(file => file.logicalKey));
   if ("entryFile" in config.content && !paths.has(config.content.entryFile)) {
     configurationFailure("RUNTIME_ENTRY_MISSING", {logicalKey: config.content.entryFile});
+  }
+  if (config.content.kind === "RPG_MAKER_PROJECT" && !rpgEntryFiles(config.content.engine, files).includes(config.content.entryFile)) {
+    configurationFailure("RUNTIME_RPG_ENTRY_INVALID", {logicalKey: config.content.entryFile});
   }
   for (const core of Object.values(config.cores ?? {})) {
     for (const path of core.parentFiles ?? []) {

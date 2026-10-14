@@ -5,6 +5,7 @@ export * from "./identity.js";
 export * from "./prepare.js";
 export * from "./bios.js";
 export * from "./configure.js";
+export {rpgEntryCandidates} from "./rpg-entry.js";
 export * from "./arcade-parent.js";
 export * from "./arcade.js";
 export * from "./arcade-crc.js";

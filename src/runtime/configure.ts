@@ -159,11 +159,20 @@ function rpgContent(input: ConfigureRequest): RuntimeContent {
       engines.set(file, detectLcfEngine(Uint8Array.from(atob(bytes), character => character.charCodeAt(0))));
     }
   }
-  if (engines.size !== 1) {configurationFailure("RUNTIME_RPG_ENGINE_AMBIGUOUS");}
-  const [file, engine] = [...engines][0];
-  const entry = engine === "RPGMV" || engine === "RPGMZ"
-    ? chooseFile(input, name => /(?:^|\/)index\.html$/u.test(name)) : file;
-  return {kind: "RPG_MAKER_PROJECT", entryFile: entry.logicalKey, engine};
+  const projects = [...engines].flatMap(([file, engine]) => {
+    const path = file.logicalKey.replace(/js\/(?:rpg_core|rmmz_core)\.js$/iu, "index.html");
+    return input.files.filter(entry => entry.logicalKey.toLowerCase() === path.toLowerCase())
+      .map(entry => ({kind: "RPG_MAKER_PROJECT" as const, entryFile: entry.logicalKey, engine}));
+  });
+  if (input.selection?.entryFile) {
+    const selected = projects.filter(project => project.entryFile === input.selection!.entryFile);
+    if (!selected.length) {configurationFailure("RUNTIME_RPG_ENTRY_INVALID");}
+    if (selected.length !== 1) {configurationFailure("RUNTIME_RPG_ENGINE_AMBIGUOUS");}
+    return selected[0];
+  }
+  if (!projects.length) {configurationFailure("RUNTIME_RPG_ENGINE_AMBIGUOUS");}
+  if (projects.length !== 1) {configurationFailure("RUNTIME_ENTRY_REQUIRED");}
+  return projects[0];
 }
 function scummvmOptions(input: ConfigureRequest) {
   const options = input.selection?.scummvm;

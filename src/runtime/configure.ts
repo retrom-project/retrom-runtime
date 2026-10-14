@@ -171,8 +171,10 @@ function rpgContent(input: ConfigureRequest): RuntimeContent {
     return selected[0];
   }
   if (!projects.length) {configurationFailure("RUNTIME_RPG_ENGINE_AMBIGUOUS");}
-  if (projects.length !== 1) {configurationFailure("RUNTIME_ENTRY_REQUIRED");}
-  return projects[0];
+  const defaults = projects.filter(project => projects.length === 1 ||
+    project.entryFile.toLowerCase() === "index.html" && projects.every(candidate => candidate.engine === project.engine));
+  if (defaults.length !== 1) {configurationFailure("RUNTIME_ENTRY_REQUIRED");}
+  return defaults[0];
 }
 function scummvmOptions(input: ConfigureRequest) {
   const options = input.selection?.scummvm;

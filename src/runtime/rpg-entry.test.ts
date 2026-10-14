@@ -33,7 +33,19 @@ it("ignores unrelated index pages and identifies the entry beside the engine", (
     .toEqual(config("RPGMV", "www/index.html").content);
 });
 
-it("resolves multiple projects only through an explicit valid entry", () => {
+it.each(["rpg_core.js", "rmmz_core.js"])("defaults same-engine %s projects to the root index while retaining explicit choices", script => {
+  const input = {platformId: "rpgmaker", coreIds: ["rpgmaker"],
+    files: ["index.html", `js/${script}`, "www/index.html", `www/js/${script}`, "docs/index.html"].map(file)};
+  expect(configureRuntime(input).content).toMatchObject({entryFile: "index.html"});
+  expect(configureRuntime({...input, selection: {entryFile: "www/index.html"}}).content)
+    .toMatchObject({entryFile: "www/index.html"});
+  expect(() => configureRuntime({...input, files: input.files.map(item => file(`nested/${item.logicalKey}`))}))
+    .toThrow("RUNTIME_ENTRY_REQUIRED");
+  expect(() => configureRuntime({...input, files: [...input.files, file("INDEX.HTML")]}))
+    .toThrow("RUNTIME_ENTRY_REQUIRED");
+});
+
+it("resolves mixed-engine projects only through an explicit valid entry", () => {
   const input = {platformId: "rpgmaker", coreIds: ["rpgmaker"],
     files: ["index.html", "js/rmmz_core.js", "www/index.html", "www/js/rpg_core.js", "docs/index.html"].map(file)};
   expect(() => configureRuntime(input)).toThrow("RUNTIME_ENTRY_REQUIRED");

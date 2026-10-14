@@ -1,5 +1,8 @@
+import {installGamepadDirections} from "./gamepad-directions.js";
+
 export type EmulatorGamepadInstance = {
   gamepad?: {
+    getGamepads?: () => readonly (Gamepad | null)[];
     gamepads: readonly {id: string; index: number}[];
     listeners?: Record<string, ((event: {gamepadIndex: number; [key: string]: unknown}) => void) | undefined>;
   };
@@ -8,12 +11,13 @@ export type EmulatorGamepadInstance = {
   updateGamepadLabels?: () => void;
 };
 
-export function initializeEmulatorJsGamepads(instance: EmulatorGamepadInstance): () => void {
+export function initializeEmulatorJsGamepads(instance: EmulatorGamepadInstance, core = ""): () => void {
+  const cleanupDirections = installGamepadDirections(instance.gamepad, core);
   const selection = instance.gamepadSelection;
-  if (!selection || !instance.gamepad) {return () => undefined;}
+  if (!selection || !instance.gamepad) {return cleanupDirections;}
   const gamepad = instance.gamepad;
   const listeners = gamepad.listeners;
-  const restore: (() => void)[] = [];
+  const restore: (() => void)[] = [cleanupDirections];
   let playerOneClaimed = false;
   // EmulatorJS stores connected pads densely but treats the browser's Gamepad.index
   // as an array position in these callbacks. A sole pad at index 1 otherwise

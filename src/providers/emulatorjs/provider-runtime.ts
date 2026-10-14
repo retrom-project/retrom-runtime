@@ -402,7 +402,7 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
       this.startupObserver?.deadline.initialize();
       this.cleanupStartupDownloads = installStartupDownloads(instance, this.implementation.release, this.startup,
         runtimeWindow.XMLHttpRequest, this.envelope.resources);
-      this.cleanupGamepadIndex = initializeEmulatorJsGamepads(instance);
+      this.cleanupGamepadIndex = initializeEmulatorJsGamepads(instance, this.implementation.runtimeCore);
       if (asyncRangeCore(this.implementation.runtimeCore) && this.discRange) {installAsyncRangeStartup(instance, this.discRange);}
       if (mountRangeFS(this.implementation.runtimeCore, seekable, this.eagerDiskMount, !!this.daphneProject) && this.discRange) {
         try {this.cleanupSeekableFS = registerSeekableContentFS(instance, this.discRange,

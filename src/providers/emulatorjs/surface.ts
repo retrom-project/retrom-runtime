@@ -13,7 +13,7 @@ html.retrom-native-panel-open .ejs_virtualGamepad_parent{display:none!important}
 /* Upstream line-height equals the border-box height; center within the content box instead. */
 .ejs_virtualGamepad_button{display:flex;align-items:center;justify-content:center}
 /* Keep input on the original button; trim font leading without changing its hit area. */
-.ejs_virtualGamepad_button>.retrom-touch-label{flex:none;line-height:1;white-space:nowrap;text-box:trim-both cap alphabetic;pointer-events:none}
+.ejs_virtualGamepad_button>.retrom-touch-label{flex:none;line-height:1;white-space:nowrap;text-box:trim-both cap alphabetic;transform:translateY(var(--retrom-touch-label-shift,0px));pointer-events:none}
 html.retrom-native-menu-locked:not(.retrom-native-settings-open) .ejs_menu_bar{visibility:hidden!important;opacity:0!important;pointer-events:none!important}
 html.retrom-native-menu-locked.retrom-native-settings-open .ejs_menu_bar{border:0!important;background:transparent!important;box-shadow:none!important;pointer-events:none!important}
 html.retrom-native-menu-locked.retrom-native-settings-open .ejs_menu_bar>*{visibility:hidden!important;pointer-events:none!important}

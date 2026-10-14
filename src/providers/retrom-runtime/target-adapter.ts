@@ -161,7 +161,7 @@ function mountMachineAdapter(kind: string, envelope: LaunchEnvelopeV1, target: H
       requireContentSession(context.contentSession), context.signal);
   case "SAMCOUPE_WEB":
     return mountSamCoupe(parameters.samcoupe(envelope), target, frameWindow, restorePayload, reportProgress,
-      requireContentSession(context.contentSession), reportFailure, context.signal);
+      contentOptions(context), reportFailure, context.signal);
   default: throw new Error("PROVIDER_LAUNCH_REQUEST_INVALID");
   }
 }

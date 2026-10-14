@@ -22,7 +22,8 @@ export class ProviderContentOwner {
       const policy = target.contentIO[resource.role];
       return policy && "bridge" in policy;
     });
-    if (!managed) {return null;}
+    const coreAssets = target.coreAssetPaths.length > 0 && target.frameMode !== "ISOLATED_ORIGIN_RESOURCE";
+    if (!managed && !coreAssets) {return null;}
     if (this.stopped) {throw new DOMException("Aborted", "AbortError");}
     const runtimeBaseURL = new URL(envelope.runtime.runtimeBaseUrl, location.href).href;
     const origins = new Set([location.origin, new URL(runtimeBaseURL).origin]);

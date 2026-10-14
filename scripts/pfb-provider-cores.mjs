@@ -90,10 +90,11 @@ async function readRuntimeCore(core, staging, baseFiles) {
     assets: declared.assets.map(({filename, output, maxSizeBytes}) => ({filename, output, maxSizeBytes}))};
   if (!validCoreDevelopmentInput(source)) {invalid();}
   const publicPath = output => output.replace(/^runtime\//u, "assets/");
-  // Metadata parsers are build tools, excluded from the published Provider's
-  // runtime closure. Still validate their bytes as part of the full candidate.
-  const publicAssets = source.assets.filter(asset => source.id !== "butterscotch" ||
-    !["runtime/butterscotch/butterscotch-meta.mjs", "runtime/butterscotch/butterscotch-meta.wasm"].includes(asset.output));
+  // Offline facts and metadata parsers are not browser assets. Still validate
+  // every byte of these tools/DATs as part of the complete candidate below.
+  const offlineAssets = new Set(["runtime/butterscotch/butterscotch-meta.mjs",
+    "runtime/butterscotch/butterscotch-meta.wasm", "runtime/mame/mame-arcade.xml"]);
+  const publicAssets = source.assets.filter(asset => !offlineAssets.has(asset.output));
   if (publicAssets.some(asset => !Object.hasOwn(baseFiles, publicPath(asset.output)))) {invalid();}
   const destination = join(staging, core.id);
   // Validate the complete candidate, including the license, with the same

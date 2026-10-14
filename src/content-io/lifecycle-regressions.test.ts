@@ -13,7 +13,7 @@ it("[PK-01] CONTRACT/declaration owns a frozen policy copy",()=>{
  expect(Object.isFrozen(result.contentIO)).toBe(true);expect(Object.isFrozen(result.contentIO.game)).toBe(true);
 });
 it("[X-11] UNIT/native teardown cannot wait forever on a pending read",async()=>{
- vi.useFakeTimers();try{const callEvent=vi.fn();const stopped=stopNativeInstance(window,{callEvent},"neocd",false,{idle:()=>new Promise(()=>{})});
+ vi.useFakeTimers();try{const callEvent=vi.fn();const stopped=stopNativeInstance(window,{callEvent},false,{idle:()=>new Promise(()=>{})});
  await vi.advanceTimersByTimeAsync(2200);await stopped;expect(callEvent).toHaveBeenCalledWith("exit");}finally{vi.useRealTimers();}
 });
 it("[PK-01] CONTRACT/managed targets declare the executable Content I/O closure",()=>{

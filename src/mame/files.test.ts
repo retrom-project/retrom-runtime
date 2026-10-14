@@ -41,13 +41,13 @@ it("mounts the machine, Disk II card and nested controller BIOS and opens a read
   expect(core.FS.chmod).toHaveBeenCalledWith("/content/game.dsk", 0o444); expect(core.FS.ignorePermissions).toBe(false);
 });
 it("mounts a PV-1000 cartridge without requiring firmware and rejects invalid capacities", async () => {
-  for (const sizeBytes of [8192, 16384, 32768]) {
+  for (const sizeBytes of [8192, 8193, 15955, 16384, 32768]) {
     const core = fixture();
     await mountFiles(core, {...config, machine: "pv1000", bios: [], game: {...source, sizeBytes}}, content);
     expect(core.FS.writeFile).toHaveBeenCalledWith("/content/game.rom", expect.any(Uint8Array));
     expect(core.FS.writeFile).toHaveBeenCalledWith("/content/boot.cmd", new TextEncoder().encode("pv1000 -cart /content/game.rom -rompath /content -skip_gameinfo -nothrottle"));
   }
-  await expect(mountFiles(fixture(), {...config, machine: "pv1000", bios: [], game: {...source, sizeBytes: 8193}}, content)).rejects.toThrow("MAME_CONTENT_INVALID");
+  await expect(mountFiles(fixture(), {...config, machine: "pv1000", bios: [], game: {...source, sizeBytes: 32769}}, content)).rejects.toThrow("MAME_CONTENT_INVALID");
 });
 it("rejects missing, duplicated and unexpected firmware before mounting anything", async () => {
   for (const bios of [config.bios.slice(0, -1), [...config.bios, config.bios[0]], [...config.bios.slice(0, -1), {...config.bios[0], logicalName: "../escape"}]]) {

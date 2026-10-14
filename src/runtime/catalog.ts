@@ -1,6 +1,7 @@
 import bindings from "./bindings.json" with {type: "json"};
 import platforms from "./platforms.json" with {type: "json"};
 import coreNames from "./core-names.json" with {type: "json"};
+import contentFormats from "./content-formats.json" with {type: "json"};
 import {emulatorJsProviderDefinition} from "../providers/emulatorjs/catalog.js";
 import {retromRuntimeProviderDefinition} from "../providers/retrom-runtime/catalog.js";
 import {projectProviderManifest} from "../provider/manifest.js";
@@ -20,6 +21,7 @@ export function runtimeCatalog(providerVersion?: string) {
     .flatMap(binding => binding.platformIds))].sort()}));
   return {providers: runtimeProviders.map(provider => projectProviderManifest(providerVersion ? {...provider, providerVersion} : provider)),
     bindings: runtimeBindings.map(binding => ({...binding,
+      ...nativeArchives(binding),
       ...(binding.contentKinds.includes("ARCADE") ? {dependencyFiles: {extensions: ["zip"]}} : {}),
       ...(() => {const selection = runtimeProviders.find(provider => provider.providerId === binding.providerId)?.targets
         .find(target => target.id === binding.targetId)?.romSetSelection;
@@ -27,6 +29,14 @@ export function runtimeCatalog(providerVersion?: string) {
       ...(runtimeProviders.find(provider => provider.providerId === binding.providerId)?.targets
         .find(target => target.id === binding.targetId)?.contentRequirements?.kind === "FLYCAST_CARTRIDGE"
         ? {archiveExtensions: ["zip"], dependencyFiles: {extensions: ["zip", "chd"]}} : {})})), platforms: runtimePlatforms, cores};
+}
+
+/** A declared archive entry is input to the core, not an upload container to unpack. */
+function nativeArchives(binding: RuntimeBinding): {archiveExtensions?: string[]} {
+  if (!binding.contentKinds.includes("SINGLE_FILE")) {return {};}
+  const formats = contentFormats.cores as Readonly<Record<string, {extensions: readonly string[]}>>;
+  const extensions = formats[binding.coreId]?.extensions.filter(extension => ["zip", "7z"].includes(extension)) ?? [];
+  return extensions.length ? {archiveExtensions: extensions} : {};
 }
 
 export function resolveRuntimeTarget(platformId: string, coreId: string, content: RuntimeContent):

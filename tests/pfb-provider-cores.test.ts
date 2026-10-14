@@ -50,11 +50,21 @@ it("publishes KiriKiri bytes, binary MIME types and the matching client asset in
   expect(wasm.mediaType).toBe("application/wasm");
   expect(payload.files.find((file: {path: string}) => file.path === "assets/kirikiri/assets.zip").mediaType).toBe("application/zip");
   const client = payload.files.find((file: {path: string}) => file.path === "client.mjs");
-  const {assets} = await import(`data:text/javascript;base64,${client.contentBase64}`);
+  const {assets} = await import(`data:text/javascript;base64,${(await readFile(join(root, "files", client.sha256))).toString("base64")}`);
   expect(assets[wasm.path]).toEqual({sha256: digest("owned index.wasm fixture"), sizeBytes: Buffer.byteLength("owned index.wasm fixture")});
   await writeFile(join(directory, "index.wasm"), "incomplete build");
   await expect(buildPFBProviderDev(input)).rejects.toThrow("CORE_CANDIDATE_INVALID");
   expect(await readFile(join(root, "dev-provider.json"), "utf8")).toBe(published);
+});
+
+it("validates the complete MAME candidate without publishing its offline DAT", async () => {
+  const {root, directory, index} = await kirikiriFixture("mame");
+  delete index["assets/mame/mame-arcade.xml"];
+  const files = await readPFBProviderCoreFiles(root, "retrom-runtime", join(root, "staging"), index);
+  expect(files.map(file => file.path).sort()).toEqual(Object.keys(index).sort());
+  await writeFile(join(directory, "mame-arcade.xml"), "tampered DAT");
+  await expect(readPFBProviderCoreFiles(root, "retrom-runtime", join(root, "tampered"), index))
+    .rejects.toThrow("CORE_CANDIDATE_INVALID");
 });
 
 it("validates Butterscotch metadata tools without publishing them as runtime assets", async () => {
@@ -134,7 +144,7 @@ it.each(["cap32", "gam4980", "dosbox_pure"] as const)("binds %s candidate bytes 
   await buildPFBProviderDev({activePath, entryPoint, installedRoot, providerId: "emulatorjs", localAssets: [], outputRoot: root});
   const payload = JSON.parse(await readFile(join(root, "dev-provider.json"), "utf8"));
   const client = payload.files.find((file: {path: string}) => file.path === "client.mjs");
-  const {definition} = await import(`data:text/javascript;base64,${client.contentBase64}`);
+  const {definition} = await import(`data:text/javascript;base64,${(await readFile(join(root, "files", client.sha256))).toString("base64")}`);
   expect(definition.targets).toHaveLength(emulatorJsProviderDefinition.targets.length);
   for (const original of emulatorJsProviderDefinition.targets) {
     const selected = definition.targets.find((target: {id: string}) => target.id === original.id);

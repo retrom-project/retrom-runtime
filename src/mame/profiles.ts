@@ -30,8 +30,8 @@ export const profiles: Record<MameMachine, Profile> = {
 export function validGameSize(machine: MameMachine, size: number): boolean {
   if (!Number.isSafeInteger(size)) {return false;}
   if (machine === "apple2p" || machine === "apple2e") {return size === 143360;}
-  if (machine === "pv1000") {return [8192, 16384, 32768].includes(size);}
-  if (machine === "sg1000" || machine === "coleco") {return size > 22 && size <= 2 * 1024 * 1024;}
+  if (machine === "pv1000") {return size > 0 && size <= 32768;}
+  if (machine === "sg1000" || machine === "coleco") {return size > 0 && size <= 2 * 1024 * 1024;}
   return size > 22 && size <= 65557;
 }
 
@@ -39,7 +39,7 @@ export function validateGame(machine: MameMachine, bytes: Uint8Array) {
   if (!validGameSize(machine, bytes.length)) {throw new Error("MAME_CONTENT_INVALID");}
   if (machine === "sg1000" || machine === "coleco") {
     const limit = machine === "sg1000" ? 65536 : 32768;
-    if (bytes.length < 8192 || bytes.length > limit || bytes.length % 8192 !== 0) {throw new Error("MAME_CONTENT_INVALID");}
+    if (bytes.length > limit) {throw new Error("MAME_CONTENT_INVALID");}
   }
   if (machine !== "atom") {return;}
   const header = new DataView(bytes.buffer, bytes.byteOffset, 22);

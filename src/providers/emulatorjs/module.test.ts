@@ -200,7 +200,7 @@ describe("EmulatorJS Provider Module V1", () => {
     expect((runtimeWindow.EJS_gameUrl as File).name).toBe("game.nes");
     expect(runtimeWindow.EJS_pathtodata).toBe(`/runtime/providers/emulatorjs/${bundleDigest}/assets/4.2.3/data/`);
     expect(runtimeWindow.EJS_paths).toEqual({
-      "fceumm-wasm.data": `/runtime/providers/emulatorjs/${bundleDigest}/assets/4.2.3/data/cores/fceumm-wasm.data`,
+      "fceumm-wasm.data": expect.stringMatching(/^blob:/u),
     });
     expect(runtimeWindow.EJS_defaultOptions).toMatchObject({webgl2Enabled: "enabled"});
     const defaultControls = runtimeWindow.EJS_defaultControls as Record<

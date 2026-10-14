@@ -1,3 +1,4 @@
+import {CoreAssetURLs} from "../provider/core-asset-urls.js";
 import type {AdapterContentOptions} from "../provider/content-inputs.js";
 import type { MountedRuntimeAdapter, RuntimeExitReporter, RuntimeProgressReporter } from "../internal-adapter.js";
 import type { CheckpointAvailability } from "../contract.js";
@@ -44,6 +45,7 @@ export async function mountButterscotch(
   if (target.ownerDocument !== frameWindow.document || !browserSupported(frameWindow)) {
     throw new Error("BUTTERSCOTCH_RUNTIME_UNAVAILABLE");
   }
+  let assets: CoreAssetURLs | undefined;
   let project: Awaited<ReturnType<typeof prepareButterscotchProject>> | undefined;
   const surface = frameWindow.document.createElement("div");
   const canvas = frameWindow.document.createElement("canvas");
@@ -153,6 +155,12 @@ export async function mountButterscotch(
 
   try {
     project = await prepareButterscotchProject(config, frameWindow, reportProgress, content);
+    if (!content) {throw new Error("CONTENT_IO_ABI_MISMATCH");}
+    assets = new CoreAssetURLs(content, new URL("../../", runtimeBase).href, content.signal);
+    // Emscripten's pthread module resolves its own relative Worker URL from import.meta.url.
+    // Keep the small immutable module on HTTP; only the large Wasm needs a Content I/O handle.
+    const moduleUrl = new URL("butterscotch.mjs", runtimeBase).href;
+    const wasmUrl = await assets.url("assets/butterscotch/butterscotch.wasm");
     const offscreen = canvas.transferControlToOffscreen();
     worker.postMessage({
       canvas: offscreen,
@@ -161,11 +169,11 @@ export async function mountButterscotch(
       gamePath: project.gamePath,
       files: project.files,
       persistentSaves: project.persistentSaves,
-      moduleUrl: new URL("butterscotch.mjs", runtimeBase).href,
+      moduleUrl,
       restore: restorePayload !== null,
       savePath: project.savePath,
       type: "START",
-      wasmUrl: new URL("butterscotch.wasm", runtimeBase).href,
+      wasmUrl,
     }, [offscreen]);
     await withTimeout(ready.promise, commandTimeoutMs, "BUTTERSCOTCH_RUNTIME_TIMEOUT");
     if (restorePayload) {
@@ -196,6 +204,7 @@ export async function mountButterscotch(
     worker.removeEventListener("error", onError);
     const released = project?.release();
     worker.terminate();
+    assets?.close();
     void audio?.close();
     for (const waiter of pending.values()) {waiter.reject(new DOMException("Aborted", "AbortError") as unknown as Error);}
     pending.clear();

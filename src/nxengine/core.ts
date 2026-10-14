@@ -1,3 +1,4 @@
+import {importVerifiedModule} from "../provider/verified-module.js";
 import type {AdapterContentSession} from "../provider/content-inputs.js";
 import {materializeFileBytes} from "../provider/content-inputs.js";
 import {eagerPolicy} from "../provider/content-policies.js";
@@ -29,12 +30,12 @@ export async function loadCore(config: NXEngineParameters, progress: RuntimeProg
   if (!session) {throw new ContentIOError("ABI_MISMATCH");}
   const bytes = await Promise.all(assets.map(asset => materializeFileBytes(session, asset, eagerPolicy(32 * 1024 * 1024), "CORE_ASSET", signal)));
   const files = await loadProject(config.projectIndexUrl, progress, signal, session, config.contentDigest);
-  const module = await loader(assets[0].url);
+  const module = await importVerifiedModule(bytes[0], loader, signal);
   if (!module || typeof module !== "object" || !("default" in module) || typeof module.default !== "function") {
     throw new Error("NXENGINE_CORE_ABI_MISMATCH");
   }
   signal?.throwIfAborted();
-  const value: unknown = await module.default({wasmBinary: bytes[1]});
+  const value: unknown = await module.default({wasmBinary: bytes[1], locateFile: (path: string) => new URL(path, base).href});
   if (!validCore(value)) {throw new Error("NXENGINE_CORE_ABI_MISMATCH");}
   const core = value;
   try {

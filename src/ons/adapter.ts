@@ -4,6 +4,7 @@ import { decodeOnsCheckpoint, encodeOnsCheckpoint, type OnsCheckpointBundle } fr
 import type { MountedRuntimeAdapter, RuntimeExitReporter, RuntimeProgressReporter } from "../internal-adapter.js";
 import type {OnsParameters} from "./parameters.js";
 import { installOnsAnalogGamepad } from "./gamepad-input.js";
+import {waitForOnsEngine} from "./startup.js";
 import {
   createOnsProjectFileMap,
   type OnsProjectFile,
@@ -38,6 +39,7 @@ type OnsModule = {
   _onsyuri_host_save(slot: number): number;
   _onsyuri_host_set_paused(paused: number): void;
   _onsyuri_host_set_restore_slot(slot: number): void;
+  _onsyuri_host_stop(): void;
 };
 
 type OnsFactory = (options: Partial<OnsModule>) => Promise<OnsModule>;
@@ -50,7 +52,6 @@ const gameRoot = "/game";
 const saveRoot = "/save";
 const maximumCheckpointBytes = 64 * 1024 * 1024;
 const maximumProjectFiles = 100_000;
-const readyTimeoutMs = 30_000;
 
 export async function mountOnsYuri(
   config: OnsParameters,
@@ -91,18 +92,20 @@ export async function mountOnsYuri(
   const gamepadCleanup = installOnsAnalogGamepad(frameWindow, canvas);
 
   const globals = captureGlobals(host);
-  const projectFiles = createOnsProjectFileMap(index.files, frameWindow, reportProgress, content && {...content, projectDigest: config.contentDigest});
+  const ready = deferred<void>();
+  void ready.promise.catch(() => undefined);
+  const projectFiles = createOnsProjectFileMap(index.files, frameWindow, reportProgress, content && {...content,
+    projectDigest: config.contentDigest, onFailure: error => {ready.reject(error); content.onFailure?.(error);}});
   const fileMap = projectFiles.fileMap;
   let module: OnsModule | null = null;
   let paused = false;
   let exited = false;
   let videoCleanup: () => void = () => undefined;
-  const ready = deferred<void>();
   const base = new URL(normalizedBase(config.runtimeBaseUrl), document.baseURI).href;
   const moduleOptions: Partial<OnsModule> = {
     canvas,
     locateFile: (path) => new URL(path, base).href,
-    onExit: () => reportExitRequested(),
+    onExit: () => {if (!exited) {reportExitRequested();}},
     onAbort: () => ready.reject(new Error("ONS_RUNTIME_ABORTED")),
     preRun: () => {
       const current = host.g_onsyuri_module as OnsModule | undefined;
@@ -124,24 +127,36 @@ export async function mountOnsYuri(
     script = await loadRuntimeScript(document, new URL("onsyuri.js", base).href);
     if (typeof host.onsyuri !== "function") {throw new Error("ONS_RUNTIME_ARTIFACT_INVALID");}
     module = await host.onsyuri(moduleOptions);
-    if (typeof module._onsyuri_host_checkpoint_ready !== "function") {throw new Error("ONS_RUNTIME_ARTIFACT_INVALID");}
+    if (typeof module._onsyuri_host_checkpoint_ready !== "function" || typeof module._onsyuri_host_stop !== "function") {
+      throw new Error("ONS_RUNTIME_ARTIFACT_INVALID");
+    }
     host.g_onsyuri_module = module;
     videoCleanup = installVideo(host, module, video, canvas, fileMap, projectFiles.videoSource);
     module._onsyuri_host_set_restore_slot(restore?.resumeSlot ?? -1);
     const started = module.callMain(runtimeArgs(config, index));
-    if (started instanceof Promise) {void started.catch(() => ready.reject(new Error("ONS_RUNTIME_START_FAILED")));}
-    await withTimeout(waitForEngine(ready.promise, module), readyTimeoutMs, "ONS_RUNTIME_TIMEOUT");
+    void Promise.resolve(started).catch(error => {if (!exited) {ready.reject(error);}});
+    const startingModule = module;
+    await waitForOnsEngine(ready.promise, () => startingModule._onsyuri_host_is_ready() === 1,
+      projectFiles.hasPendingReads, content?.signal);
+    if (module._onsyuri_host_did_restore_fail() === 1) {throw new Error("ONS_CHECKPOINT_RESTORE_FAILED");}
     focusCanvas();
   } catch (error) {
-    module?._onsyuri_host_set_paused(1);
-    videoCleanup();
-    gamepadCleanup();
-    script?.remove();
-    canvas.removeEventListener("pointerdown", focusCanvas, true);
-    target.replaceChildren();
-    restoreGlobals(host, globals);
-    await projectFiles.close();
+    await cleanup().catch(() => undefined);
     throw error;
+  }
+
+  async function cleanup() {
+    exited = true;
+    try {if (module && typeof module._onsyuri_host_stop === "function") {stopEngine(module);}}
+    finally {
+      videoCleanup();
+      await projectFiles.close();
+      gamepadCleanup();
+      script?.remove();
+      canvas.removeEventListener("pointerdown", focusCanvas, true);
+      target.replaceChildren();
+      restoreGlobals(host, globals);
+    }
   }
 
   const activeModule = module;
@@ -172,15 +187,7 @@ export async function mountOnsYuri(
     },
     exit: async () => {
       if (exited) {return;}
-      exited = true;
-      activeModule._onsyuri_host_set_paused(1);
-      videoCleanup();
-      await projectFiles.close();
-      gamepadCleanup();
-      script?.remove();
-      canvas.removeEventListener("pointerdown", focusCanvas, true);
-      target.replaceChildren();
-      restoreGlobals(host, globals);
+      await cleanup();
     },
     getCanvas: () => canvas,
     getCheckpointAvailability: () => activeModule._onsyuri_host_checkpoint_ready() === 1
@@ -320,13 +327,11 @@ function retainDisplayedWebGLFrame(canvas: HTMLCanvasElement) {
   });
 }
 
-async function waitForEngine(signal: Promise<void>, module: OnsModule) {
-  await signal;
-  while (module._onsyuri_host_is_ready() !== 1) {
-    await new Promise((resolve) => setTimeout(resolve, 10));
-  }
-  if (module._onsyuri_host_did_restore_fail() === 1) {
-    throw new Error("ONS_CHECKPOINT_RESTORE_FAILED");
+function stopEngine(module: OnsModule) {
+  try {module._onsyuri_host_stop();}
+  catch (error) {
+    // Emscripten's forced clean exit unwinds the JS boundary with ExitStatus.
+    if (!error || typeof error !== "object" || Reflect.get(error, "name") !== "ExitStatus" || Reflect.get(error, "status") !== 0) {throw error;}
   }
 }
 
@@ -358,14 +363,6 @@ function deferred<T>() {
   let reject!: (reason?: unknown) => void;
   const promise = new Promise<T>((accept, decline) => {resolve = accept; reject = decline;});
   return { promise, reject, resolve };
-}
-
-function withTimeout<T>(promise: Promise<T>, timeoutMs: number, code: string) {
-  return new Promise<T>((resolve, reject) => {
-    const timer = window.setTimeout(() => reject(new Error(code)), timeoutMs);
-    promise.then((value) => {window.clearTimeout(timer); resolve(value);},
-      (error) => {window.clearTimeout(timer); reject(error);});
-  });
 }
 
 function normalizedBase(value: string) {return value.endsWith("/") ? value : `${value}/`;}

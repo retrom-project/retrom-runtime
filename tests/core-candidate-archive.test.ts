@@ -64,7 +64,11 @@ it("fails explicitly when no transport is provided", async () => {
 });
 it("requires the JS checkpoint binding to resolve to a real native WASM function", () => {
   const wasm = new Uint8Array([0,97,115,109,1,0,0,0,1,4,1,96,0,0,3,2,1,0,7,5,1,1,102,0,0,10,4,1,2,0,11]);
-  expect(() => assertONSCheckpointCore(Buffer.from('Module["_onsyuri_host_checkpoint_ready"]=wasmExports["f"]'), wasm)).not.toThrow();
+  const ready = 'Module["_onsyuri_host_checkpoint_ready"]=wasmExports["f"]';
+  expect(() => assertONSCheckpointCore(Buffer.from(ready + ';Module["_onsyuri_host_stop"]=wasmExports["f"]'), wasm)).not.toThrow();
+  expect(() => assertONSCheckpointCore(Buffer.from(ready), wasm)).toThrow("ONS_STOP_NATIVE_ABI_REQUIRED");
+  expect(() => assertONSCheckpointCore(Buffer.from(ready + ';Module["_onsyuri_host_stop"]=wasmExports["missing"]'), wasm))
+    .toThrow("ONS_STOP_NATIVE_ABI_REQUIRED");
   expect(() => assertONSCheckpointCore(Buffer.from("Module={}"), wasm)).toThrow("ONS_CHECKPOINT_NATIVE_ABI_REQUIRED");
   expect(() => assertONSCheckpointCore(Buffer.from('Module["_onsyuri_host_checkpoint_ready"]=wasmExports["missing"]'), wasm))
     .toThrow("ONS_CHECKPOINT_NATIVE_ABI_REQUIRED");

@@ -98,3 +98,6 @@ it("starts DOS before requiring the game manager created by that startup", async
     vi.unstubAllGlobals();
   }
 });
+
+// These lifecycle cases stop at the native boundary; core byte integrity is exercised separately.
+vi.mock("../../provider/core-assets.js", () => ({loadCoreAsset: vi.fn(async () => new Uint8Array([1]))}));

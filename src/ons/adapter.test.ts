@@ -27,6 +27,52 @@ afterEach(() => {
 });
 
 describe("ONS Yuri runtime", () => {
+  it.each(["startup", "exit"])("cleans globals when native stop throws during %s", async phase => {
+    const module = fakeModule();
+    module._onsyuri_host_stop.mockImplementation(() => {throw new Error("ONS_STOP_FAILED");});
+    if (phase === "startup") {module.callMain.mockImplementation(() => {throw new Error("ONS_RUNTIME_START_FAILED");});}
+    (window as HostWindow).onsyuri = vi.fn(async options => {
+      Object.assign(options, module);
+      const configured = options as FakeModule;
+      configured.preRun?.();
+      return configured;
+    });
+    mockIndex();
+    const target = document.createElement("div");
+    const runtime = await createRuntime(config(), currentWindowHost(null));
+    const mounting = runtime.mount(target);
+    // Observe rejection immediately so the synthetic failure cannot leak an unhandled promise.
+    const mounted = phase === "startup" ? expect(mounting).rejects.toThrow("ONS_RUNTIME_START_FAILED") : mounting;
+    await loadRuntimeScript(); await mounted;
+    if (phase === "exit") {await runtime.exit().catch(() => undefined);}
+    expect(Reflect.get(window, "g_onsyuri_module")).toBeUndefined();
+    expect((window as HostWindow).fetch_file).toBeUndefined();
+    expect(target.childElementCount).toBe(0);
+    expect(document.head.querySelector("script[data-runtime=ons-yuri]")).toBeNull();
+  });
+
+  it("terminates the native async runtime before restoring globals on exit", async () => {
+    const module = fakeModule();
+    let globalsPresentOnStop = false;
+    module._onsyuri_host_stop.mockImplementation(() => {
+      globalsPresentOnStop = !!Reflect.get(window, "g_onsyuri_module") && typeof (window as HostWindow).fetch_file === "function";
+    });
+    (window as HostWindow).onsyuri = vi.fn(async options => {
+      Object.assign(options, module);
+      const configured = options as FakeModule;
+      configured.preRun?.();
+      return configured;
+    });
+    mockIndex();
+    const runtime = await createRuntime(config(), currentWindowHost(null));
+    const mounting = runtime.mount(document.createElement("div"));
+    await loadRuntimeScript(); await mounting;
+    await runtime.exit(); await runtime.exit();
+    expect(module._onsyuri_host_stop).toHaveBeenCalledOnce();
+    expect(globalsPresentOnStop).toBe(true);
+    expect(Reflect.get(window, "g_onsyuri_module")).toBeUndefined();
+  });
+
   it("exposes the native stable-wait boundary and rejects capture while rendering or transitioning", async () => {
     const module = fakeModule();
     module._onsyuri_host_checkpoint_ready.mockReturnValue(0);
@@ -468,6 +514,7 @@ function fakeModule(): FakeModule {
     }),
     _onsyuri_host_set_paused: vi.fn(),
     _onsyuri_host_set_restore_slot: vi.fn(),
+    _onsyuri_host_stop: vi.fn(),
   };
   return module;
 }
@@ -485,6 +532,7 @@ type FakeModule = {
   _onsyuri_host_save: ReturnType<typeof vi.fn>;
   _onsyuri_host_set_paused: ReturnType<typeof vi.fn>;
   _onsyuri_host_set_restore_slot: ReturnType<typeof vi.fn>;
+  _onsyuri_host_stop: ReturnType<typeof vi.fn>;
   [key: string]: unknown;
 };
 

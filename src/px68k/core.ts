@@ -1,3 +1,4 @@
+import {importVerifiedModule} from "../provider/verified-module.js";
 import type {AdapterContentSession} from "../provider/content-inputs.js";
 import {fetchFile, type FileSource} from "./files.js";
 import type {AssetIndexV1} from "../provider/module-api.js";
@@ -36,12 +37,13 @@ export async function loadCore(config: Px68kParameters, progress: RuntimeProgres
   const bytes = await Promise.all(sources.map((source, index) => fetchFile(source, (size) => {
     loaded[index] = size; progress({phase: "PROJECT_CONTENT", loadedBytes: loaded.reduce((a, b) => a + b, 0), totalBytes: total});
   }, signal, session, index === 0 ? "GAME" : index < 3 ? "FIRMWARE" : "CORE_ASSET")));
-  const module = await loader(assets[0].url);
+  const module = await importVerifiedModule(bytes[3], loader, signal);
   if (!module || typeof module !== "object" || !("default" in module) || typeof module.default !== "function") {
     throw new Error("PX68K_CORE_ABI_MISMATCH");
   }
   signal?.throwIfAborted();
-  const value: unknown = await module.default({wasmBinary: bytes[4], print: () => undefined, printErr: () => undefined});
+  const value: unknown = await module.default({wasmBinary: bytes[4],
+    locateFile: (path: string) => new URL(path, assets[0].url).href, print: () => undefined, printErr: () => undefined});
   if (!validCore(value)) {throw new Error("PX68K_CORE_ABI_MISMATCH");}
   const core = value, disk = `disk0.${extension}`;
   core.FS.mkdirTree("/game/keropi");

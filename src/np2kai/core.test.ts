@@ -9,12 +9,13 @@ it("resolves provider asset paths against the frame document before loading the 
   const bytes = new Uint8Array([1]), sha256 = Array.from(new Uint8Array(await crypto.subtle.digest("SHA-256", bytes)), v => v.toString(16).padStart(2, "0")).join("");
   const assetIndex = Object.fromEntries(["np2kai.mjs", "np2kai.wasm", "np2kai-register.mjs", "font.bmp"].map(name => [`assets/np2kai/${name}`, {sha256, sizeBytes: 1}]));
   const fetcher = vi.fn(async () => new Response(bytes)); vi.stubGlobal("fetch", fetcher);
+  vi.stubGlobal("URL", class extends URL {static createObjectURL() {return "blob:verified-module";} static revokeObjectURL() {}});
   vi.spyOn(win.document.head, "append").mockImplementation((...nodes) => {
     const script = nodes[0] as HTMLScriptElement;
-    expect(script.src).toBe(new URL("/provider/assets/np2kai/np2kai-register.mjs", location.href).href);
+    expect(script.src).toMatch(/^blob:/u);
     queueMicrotask(() => script.dispatchEvent(new Event("error")));
   });
   await expect(loadCore({runtimeBaseUrl: "/provider/assets/np2kai/", assetIndex}, win, win.document.createElement("canvas"), undefined, managedAdapterFixture("np2kai-pc98", {}).contentSession))
-    .rejects.toThrow("NP2KAI_MODULE_LOAD_FAILED");
-  expect(fetcher).toHaveBeenCalledTimes(4);
+    .rejects.toThrow("PROVIDER_CORE_MODULE_LOAD_FAILED");
+  expect(fetcher).toHaveBeenCalledTimes(3);
 });

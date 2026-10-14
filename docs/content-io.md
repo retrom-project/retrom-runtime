@@ -265,6 +265,16 @@ Other inputs are prepared only when their own policies are managed.
 
 EmulatorJS ordinary ROM_BLOB and BIOS_BUNDLE inputs use EAGER Content I/O. The core receives a local File retaining its filename/extension or a local BIOS Blob URL after full SHA-256 and length verification. Immutable byte keys exclude Core, Target and Provider revision; authorized envelopes still freeze execution and content grants separately. Range-backed disk, DOS, Daphne and Flycast inputs retain their bounded policies. Failed or aborted reads never hand partial bytes to a core or commit complete cache state. Reader and Blob cleanup runs on exit; committed cache survives across sessions. Public contentLoading capabilities are projected from these current declarations and require a newly built Provider candidate.
 
+## Packaged core assets
+
+Both Providers obtain declared core archives and Wasm through the same SHA-256/size-verified Content I/O cache. The cache identity excludes deployment URLs and runtime revisions, so the same core bytes are reusable across games, launches and browser restarts. An upstream-owned game loader still opens a Content Session when its Target has packaged core assets. Isolated game web assets retain their existing content bridge.
+
+EmulatorJS 4.2.3 receives its verified `.data` archive through a session-owned Blob URL. Its pinned 4.3.0-pre loader requires the original archive URL to select decompression; a frame-scoped fetch wrapper serves that exact declared asset through Content I/O. The same wrapper covers lazy native Wasm fetches, including nested runtime frames. Range requests and undeclared URLs pass through unchanged. Native Worker loaders receive verified Wasm Blob URLs explicitly. Module scripts that resolve their own relative Workers retain their original module location and use the Host's immutable small-asset HTTP cache.
+
+Self-contained module factories execute the already verified JavaScript bytes through a Blob import, in the canvas realm when required. Emscripten factories receive an explicit `locateFile` based on the original runtime base. Per-instance URLs are coalesced while loading and revoked after native shutdown, failure or cancellation. Persistent verified bytes survive that cleanup; EmulatorJS's separate download cache remains disabled.
+
+A whole-file SHA mismatch fails the current request before execution. Its unfinished persistent generations are quarantined under the storage lock, using existing metadata, so a subsequent explicit launch can download and verify clean bytes. Previously verified COMPLETE generations remain immutable. This does not introduce automatic retries for integrity failures or change checkpoint identities.
+
 ## Persistent original content regression
 
 EmulatorJS external firmware and referenced tracks of a single CUE disc are materialized through Content I/O before the upstream loader receives local Blob URLs. Firmware uses FIRMWARE identity and tracks use GAME identity, matching PRELOAD. Blob leases and URLs remain owned until exit, including partial preparation failure and cancellation. MAME Arcade BIOS bundles likewise use the managed bios policy before their bounded archive extraction. Parent archives continue using their existing verified identities.

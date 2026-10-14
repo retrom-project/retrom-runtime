@@ -15,9 +15,10 @@ it("resolves host-relative asset and project URLs before loading the native modu
   const fetch = vi.fn(async (url: string) => url.endsWith("index.json")
     ? Response.json({schemaVersion: 1, files}) : new Response(bytes));
   vi.stubGlobal("fetch", fetch); vi.stubGlobal("caches", undefined);
+  vi.stubGlobal("URL", class extends URL {static createObjectURL() {return "blob:verified-module";} static revokeObjectURL() {}});
   const loader = vi.fn(async () => {throw Error("TEST_MODULE_BOUNDARY");});
   await expect(loadCore(config, () => undefined, undefined, loader, managedAdapterFixture("nxengine", config).contentSession)).rejects.toThrow("TEST_MODULE_BOUNDARY");
-  expect(loader).toHaveBeenCalledWith(new URL(`${config.runtimeBaseUrl}nxengine-retrom.mjs`, window.location.href).href);
+  expect(loader).toHaveBeenCalledWith(expect.stringMatching(/^blob:/u));
   expect(fetch.mock.calls.map(([url]) => url)).toContain(new URL("/runtime/projects/digest/data/npc.tbl", window.location.href).href);
 });
 it("rejects corrupt restore data before allocating or fetching a core", async () => {

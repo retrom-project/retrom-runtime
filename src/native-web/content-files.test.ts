@@ -10,7 +10,7 @@ const entries = [
   {path: "data/empty.json", sizeBytes: 0, url: "/bytes/empty", mediaType: "application/json; charset=utf-8"},
 ];
 afterEach(() => vi.unstubAllGlobals());
-async function fixture(files: unknown[] = entries) {
+async function fixture(files: unknown[] = entries, kind: "NATIVE_WEB" | "ISOLATED_WEB" = "NATIVE_WEB") {
   vi.stubGlobal("fetch", vi.fn(async () => new Response(JSON.stringify({schemaVersion: 1, files}))));
   const close = vi.fn(async () => {});
   const readInto = vi.fn(async (_offset: number, into: Uint8Array) => {into.fill(7); return into.length;});
@@ -20,7 +20,7 @@ async function fixture(files: unknown[] = entries) {
   const content = new NativeContentFiles(session, rangePolicy("ASYNC", 1024));
   const resource = rpgMvEnvelope().resources[0];
   if (resource.kind !== "NATIVE_WEB") {throw new Error("fixture");}
-  await content.load(resource);
+  await content.load({...resource, kind});
   return {content, session, close, readInto};
 }
 it("maps exact, NFC and unique ASCII aliases to the same immutable file and closes readers", async () => {
@@ -53,5 +53,37 @@ it("reports empty files and refuses ambiguous ASCII aliases", async () => {
   const {content} = await fixture([...entries, {...entries[1], path: "AUDIO/雪.ogg"}]);
   expect(await content.request({type: "STAT", path: "audio/雪.ogg"})).toEqual({status: 404});
   expect(await content.request({type: "STAT", path: "data/empty.json"})).toMatchObject({status: 200, sizeBytes: 0});
+  await content.close();
+});
+it.each([
+  ["audio/bgm/雪.m4a", "audio/bgm/雪.ogg"],
+  ["audio/se/cursor.rpgmvm", "audio/se/cursor.rpgmvo"],
+  ["www/audio/me/theme.ogg", "www/audio/me/theme.m4a"],
+])("serves the packaged RPG Maker audio for an absent codec variant: %s", async (requested, packaged) => {
+  const {content, session} = await fixture([entries[0], {...entries[1], path: packaged}]);
+  expect(await content.request({type: "STAT", path: requested})).toMatchObject({status: 200, path: packaged});
+  expect((await content.request({type: "READ", path: requested, offset: 0, length: 3})).bytes)
+    .toEqual(new Uint8Array([7, 7, 7]));
+  expect(session.open.mock.calls[0]?.[0]).toMatchObject({identity: {logicalPath: packaged}});
+  await content.close();
+});
+it("prefers an existing codec and keeps audio aliases within native RPG Maker content", async () => {
+  const alternatives = [entries[0], {...entries[1], path: "audio/bgm/theme.ogg"},
+    {...entries[1], path: "audio/bgm/theme.m4a"}];
+  const {content} = await fixture(alternatives);
+  expect(await content.request({type: "STAT", path: "audio/bgm/theme.m4a"}))
+    .toMatchObject({status: 200, path: "audio/bgm/theme.m4a"});
+  await content.close();
+  const isolated = await fixture(alternatives.slice(0, 2), "ISOLATED_WEB");
+  expect(await isolated.content.request({type: "STAT", path: "audio/bgm/theme.m4a"})).toEqual({status: 404});
+  await isolated.content.close();
+  const outside = await fixture([entries[0], {...entries[1], path: "assets/theme.ogg"}]);
+  expect(await outside.content.request({type: "STAT", path: "assets/theme.m4a"})).toEqual({status: 404});
+  await outside.content.close();
+});
+it("does not resolve ambiguous codec names through another audio variant", async () => {
+  const {content} = await fixture([entries[0], {...entries[1], path: "audio/se/theme.m4a"},
+    {...entries[1], path: "audio/se/THEME.M4A"}, {...entries[1], path: "audio/se/theme.ogg"}]);
+  expect(await content.request({type: "STAT", path: "audio/se/Theme.m4a"})).toEqual({status: 404});
   await content.close();
 });

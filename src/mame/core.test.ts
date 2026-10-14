@@ -81,7 +81,7 @@ test.each([['atom', 'acorn'], ['pv1000', 'vintage']] as const)("loads only the s
 test("selects the verified Arcade side module by DAT machine", async () => {
   vi.mocked(loadCoreAsset).mockClear();
   const arcade = {arcade: true as const, machine: "mspacman", runtimeBaseUrl: config.runtimeBaseUrl,
-    game: config.game, parent: null, bios: null, deviceBios: []};
+    game: config.game, parents: [], deviceBios: []};
   await loadCore(arcade, content, async () => ({default: async () => fixture()}));
   expect(vi.mocked(loadCoreAsset).mock.calls.map(call => call[2])).toEqual([
     "assets/mame/mame-build.json", "assets/mame/mame-common.mjs", "assets/mame/mame-common.wasm", "assets/mame/mame-pacman.wasm",
@@ -90,7 +90,7 @@ test("selects the verified Arcade side module by DAT machine", async () => {
 test("selects a 2003-family machine from its Current Arcade module", async () => {
   vi.mocked(loadCoreAsset).mockClear();
   await loadCore({arcade: true, machine: "1942", runtimeBaseUrl: config.runtimeBaseUrl,
-    game: config.game, parent: null, bios: null, deviceBios: []}, content, async () => ({default: async () => fixture()}));
+    game: config.game, parents: [], deviceBios: []}, content, async () => ({default: async () => fixture()}));
   expect(vi.mocked(loadCoreAsset).mock.calls.map(call => call[2])).toEqual([
     "assets/mame/mame-build.json", "assets/mame/mame-common.mjs", "assets/mame/mame-common.wasm", "assets/mame/mame-arcade_capcom.wasm",
   ]);

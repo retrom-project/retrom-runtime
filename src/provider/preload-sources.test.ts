@@ -40,7 +40,7 @@ it.each([
 it("uses the firmware and parent cache identities and includes declared lazy core data", async () => {
   const envelope = wasmEnvelope();
   envelope.resources = [
-    {kind: "PARENT_ARCHIVE", role: "parent", ordinal: 0, sha256: "c".repeat(64), sizeBytes: 3, url: "/parent", rangeRequired: true},
+    {kind: "EXTERNAL_FILE_SET", role: "parent", ordinal: 0, files: [{logicalName: "parent.zip", virtualPath: "parent.zip", sha256: "c".repeat(64), sizeBytes: 3, url: "/parent"}]},
     {kind: "BIOS_BUNDLE", role: "bios", ordinal: 1,
       files: [{logicalName: "bios.bin", virtualPath: "bios.bin", sha256: "d".repeat(64), sizeBytes: 4, url: "/bios"}]},
   ];

@@ -6,7 +6,7 @@ export const maximumMessage = 64 * 1024 * 1024;
 const validId = id => typeof id === "string" ? /^[!-~]{1,128}$/u.test(id) : Number.isSafeInteger(id) && id >= 0;
 const failure = error => error instanceof Error ? error.message : "RUNTIME_REQUEST_FAILED";
 const deadline = command => command === "detect-scummvm" ? 60000 :
-  ["parent-archive", "assemble-resource", "normalize-content"].includes(command) ? 120000 : 30000;
+  ["assemble-resource", "normalize-content"].includes(command) ? 120000 : 30000;
 
 async function* messages(input) {
   let length = 0, chunks = [];

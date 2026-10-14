@@ -15,9 +15,7 @@
     "scripts/runtime-host-input.mjs",
     "scripts/runtime-normalize-content.mjs",
     "scripts/runtime-jsonl.mjs",
-    "scripts/runtime-archive-input.mjs",
-    "scripts/runtime-archive-task.mjs",
-    "scripts/runtime-archive-worker.mjs"
+    "scripts/runtime-archive-input.mjs"
   ],
   "exports": {
     ".": {

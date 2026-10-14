@@ -874,13 +874,13 @@
     {
       "id": "B-093",
       "repository": "runtime",
-      "path": "src/providers/emulatorjs/parent-archive.ts",
-      "symbol": "download",
+      "path": "src/providers/emulatorjs/external-content.ts",
+      "symbol": "prepareExternalContent",
       "classification": "CORE_BRIDGE",
-      "reason": "Mount exact named Parent archive bytes materialized by the shared Content IO session, without a private network download or decompression.",
+      "reason": "Mount exact named Parent and external file bytes materialized by the shared Content IO session, without a private network download or decompression.",
       "ownerStage": "S11",
       "tests": [
-        "runtime:src/providers/emulatorjs/parent-content.test.ts"
+        "runtime:src/providers/emulatorjs/external-content.test.ts"
       ]
     },
     {

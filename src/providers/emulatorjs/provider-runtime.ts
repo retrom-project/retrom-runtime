@@ -37,7 +37,6 @@ import {requireContentSession} from "../../provider/content-inputs.js";
 import {daphneGameFile, daphneVideo, maybeInstallDaphneProject, maybePrepareDaphneProject, type DaphneProject} from "./daphne-project.js";
 import {installArchiveWorkerCompatibility} from "./archive-worker.js";
 import {installDOSBoxPureStateCompatibility} from "./dosbox-state.js";
-import {installExternalFileCompatibility} from "./external-files.js";
 import {captureEmulatorJsScreenshot} from "./screenshot.js";
 import {configureDeferredStart, createStartBarrier, emulatorCheckpointAvailability, needsVerboseRestore, startupCompletionErrorCode, type StartBarrier} from "./lifecycle.js";
 import {installEmulatorJsRetroArchConfig} from "./retroarch-config.js";
@@ -46,17 +45,17 @@ import {installSupermodelState} from "./supermodel-state.js";
 import {installSupermodelRestore} from "./supermodel-restore.js";
 import {emulatorControlScheme} from "./default-controls.js";
 import {configurePlayerOptions} from "./player-options.js";
+import {installDigitalJoysticks} from "./digital-joystick.js";
 import {initializeEmulatorJsGamepads} from "./startup-gamepads.js";
 import {closeEmulatorJsNativeSettings, openEmulatorJsNativeSettings} from "./native-settings.js";
 import {createEmulatorJsVideoModeController} from "./video-mode.js";
-import {optionalResource, runtimeBase} from "./resources.js";
+import {runtimeBase} from "./resources.js";
 import {readEmulatorJsCheckpoint} from "./bytes.js";
 import {restoreEmulatorCheckpoint} from "./restore-checkpoint.js";
 import {readPspCheckpoint} from "./psp-state.js";
 import {installPspRestoreObserver} from "./psp-restore.js";
 import {createEmulatorJsSurface} from "./surface.js";
-import {prepareParentContent} from "./parent-content.js";
-import {maybeInstallParentArchive} from "./parent-archive.js";
+
 import {encodeStoredCheckpoint} from "../../provider/checkpoint-storage.js";
 import {installEmulatorJsOutputViewport} from "./output-viewport.js";
 import {acknowledgeLutroStoredSave, installLutroNativeRestore, LutroNativeSaveTracker} from "./lutro-native-save.js";
@@ -93,7 +92,6 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
   private cleanupDaphneProject: (() => void) | null = null;
   private cleanupFlycast: (() => void) | null = null;
   private cleanupExternalContent: (() => Promise<void>) | null = null;
-  private cleanupParent: (() => Promise<void>) | null = null;
   private cleanupSeekableFS: (() => void) | null = null;
   private cleanupFrameStyle: (() => void) | null = null;
   private outputViewport: ReturnType<typeof installEmulatorJsOutputViewport> | null = null;
@@ -101,8 +99,8 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
   private cleanupStateRestore: (() => void) | null = null;
   private cleanupSupermodelState: (() => void) | null = null;
   private supermodelRestore: ReturnType<typeof installSupermodelRestore> | null = null;
-  private cleanupExternalFiles: (() => void) | null = null;
   private cleanupGamepadIndex: (() => void) | null = null;
+  private digitalJoysticks: ReturnType<typeof installDigitalJoysticks> | null = null;
   private nativeObservation: ReturnType<typeof installEmulatorJsNativeObservation> | null = null;
   private cleanupRetroArchConfig: () => void = () => undefined;
   private dosboxCompatibility: ReturnType<typeof installDOSBoxPureStateCompatibility> | null = null;
@@ -151,6 +149,7 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
     const toggle = instance.gameManager?.toggleMainLoop;
     if (!toggle) {throw contractError();}
     if (this.discRange) {await this.discRange.idle();}
+    this.digitalJoysticks?.release();
     toggle.call(instance.gameManager, false);
     instance.paused = true;
     this.transition("PAUSED");
@@ -259,9 +258,7 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
       this.implementation.runtimeCore);
     this.cleanupArchiveWorker = installArchiveWorkerCompatibility(runtimeWindow, this.implementation.release,
       runtimeBase(this.envelope, this.implementation.release), this.implementation.runtimeCore);
-    if (this.implementation.release === "4.2.3" && Object.keys(runtimeWindow.EJS_externalFiles ?? {}).length) {
-      this.cleanupExternalFiles = installExternalFileCompatibility(runtimeWindow);
-    }
+
     if (this.restorePayload) {
       this.cleanupStateRestore = installStartupStateRestore(runtimeWindow, this.implementation.runtimeCore, this.implementation.release);
     }
@@ -307,14 +304,9 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
         this.envelope.runtime.runtimeBaseUrl, this.contentOwner.signal);
       await this.coreAssets.prepare(this.implementation.coreAssetPath, this.implementation.release);
       this.checkMountActive();
+      this.digitalJoysticks = installDigitalJoysticks(runtimeWindow);
       await retireEmulatorDownloadCaches(runtimeWindow.indexedDB, code => this.host.reportDiagnostic({code, message: "Obsolete EmulatorJS download cache could not be fully removed; persistent download caching remains disabled."}));
       this.checkMountActive();
-      if (optionalResource(this.envelope, "parent", "PARENT_ARCHIVE")) {
-        this.cleanupParent = await this.startup.run("DEPENDENCIES", task => prepareParentContent(runtimeWindow, this.envelope,
-          bindOptionalTargetContent(content, declaration), this.contentOwner.signal,
-          (loadedBytes, totalBytes) => {task.progress(loadedBytes, totalBytes); this.emit({type: "LOAD_PROGRESS", loadedBytes, totalBytes});}, this.implementation.release));
-        this.checkMountActive();
-      }
       const disc = await this.prepareContentDisc(runtimeWindow);
       if (disc.range) {this.discRange = disc.range;}
       this.cleanupFlycast = disc.cleanup;
@@ -323,10 +315,10 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
       this.cleanupBIOS = await prepareEagerBIOS(runtimeWindow, this.envelope, this.contentSession, this.host.signal,
         (loadedBytes, totalBytes) => this.emit({type: "LOAD_PROGRESS", loadedBytes, totalBytes}), this.implementation.release);
       this.checkMountActive();
+      this.installPreloaderCompatibility(runtimeWindow);
       this.cleanupExternalContent = await prepareExternalContent(runtimeWindow, this.envelope, this.contentSession, this.host.signal,
         (loadedBytes, totalBytes) => this.emit({type: "LOAD_PROGRESS", loadedBytes, totalBytes}));
       this.checkMountActive();
-      this.installPreloaderCompatibility(runtimeWindow);
       this.startupObserver = observeEmulatorJsStartup(runtimeWindow, this.host.signal,
         this.implementation.runtimeCore, this.restorePayload !== null, error => this.fail(error.code, error));
       const loader = runtimeWindow.document.createElement("script");
@@ -405,13 +397,8 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
         if (this.implementation.runtimeCore === "fbalpha") {
           this.cleanupCoreFamily = registerCoreFamily(instance, "fbalpha", "arcade");
         }
-        const release = maybeInstallParentArchive(instance, this.implementation.runtimeCore, this.implementation.release,
-          this.envelope, this.contentSession, this.contentOwner.signal);
-        if (release) {
-          const previous = this.cleanupParent;
-          this.cleanupParent = async () => {release(); await previous?.();};
-        }
-      } catch (error) {this.fail("PLAYER_PARENT_ARCHIVE_UNAVAILABLE", error); return;}
+      } catch (error) {this.fail("PLAYER_RUNTIME_UNAVAILABLE", error); return;}
+
       this.startupObserver?.deadline.initialize();
       this.cleanupStartupDownloads = installStartupDownloads(instance, this.implementation.release, this.startup,
         runtimeWindow.XMLHttpRequest, this.envelope.resources);
@@ -510,6 +497,7 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
     this.clearStartBarrier();
     this.stopNativeObservation();
     this.host.signal.removeEventListener("abort", this.hostAbort);
+    this.digitalJoysticks?.dispose(); this.digitalJoysticks = null;
     await this.stopNative();
     await this.closeContent();
     if (this.runtimeWindow) {
@@ -528,8 +516,6 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
     this.cleanupDeferredStart = null;
     this.dosboxCompatibility?.cleanup();
     this.dosboxCompatibility = null;
-    this.cleanupExternalFiles?.();
-    this.cleanupExternalFiles = null;
     this.stopInputDiagnostics();
     this.cleanupRetroArchConfig();
     this.cleanupRetroArchConfig = () => undefined;
@@ -556,7 +542,6 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
 
   private async closeContent() {
     await this.cleanupExternalContent?.(); this.cleanupExternalContent = null;
-    await this.cleanupParent?.(); this.cleanupParent = null;
     await this.contentOwner.close(); this.contentSession = null;
     await this.discRange?.dispose(); this.discRange = null;
     this.daphneProject = null;

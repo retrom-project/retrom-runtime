@@ -132,6 +132,19 @@ function prepareIdentity(request: PrepareRuntimeRequest) {
 export function prepareRuntime(request: PrepareRuntimeRequest) {
   request = resolveSavedRuntimeRequest(request);
   const {config, selectedCore, binding, target, targetOptions, declaration, identity} = prepareIdentity(request);
+  const {crcWarnings, flycast, dependencies} = prepareContent(request, config, selectedCore, target);
+  const entryKey = "entryFile" in config.content ? config.content.entryFile : null;
+  const entry = request.files.find(file => file.logicalKey === entryKey);
+  return {...identity, config, targetOptions, dependencies,
+    ...(target.romSetSelection && entry ? {romSet: configuredMachine(selectedCore, config, entry.name)} : {}),
+    crcWarnings,
+    biosRequirements: [...resolveBIOSRequirements({providerId: binding.providerId, targetId: binding.targetId, config,
+      files: request.files, firmwareEvidence: request.firmwareEvidence}),
+      ...(request.arcadeCatalog ? arcadeBIOSRequirements(selectedCore, request.arcadeCatalog, dependencies.biosSets) : [])], checkpoint: declaration.checkpoint, capabilities: declaration.capabilities,
+    resources: contentResources(config, target, selectedCore, request.files, request.cueFiles, flycast)};
+}
+
+function prepareContent(request: PrepareRuntimeRequest, config: RuntimeConfiguration, selectedCore: string, target: TargetDeclaration) {
   let crcWarnings: CRCWarning[] = [];
   const flycast = target.contentRequirements?.kind === "FLYCAST_CARTRIDGE"
     ? flycastDependencies(target.contentRequirements.platform, selectedCore, config, request.files, request.flycastCatalog, request.archives) : null;
@@ -146,15 +159,7 @@ export function prepareRuntime(request: PrepareRuntimeRequest) {
     if (dependencies.missingParents.length) {configurationFailure("RUNTIME_PARENT_MISSING", {parents: dependencies.missingParents.join(",")});}
   }
   if (flycast) {dependencies = {parentFiles: flycast.parentFiles, missingParents: flycast.missingParents, biosSets: []};}
-  const entryKey = "entryFile" in config.content ? config.content.entryFile : null;
-  const entry = request.files.find(file => file.logicalKey === entryKey);
-  return {...identity, config, targetOptions, dependencies,
-    ...(target.romSetSelection && entry ? {romSet: configuredMachine(selectedCore, config, entry.name)} : {}),
-    crcWarnings,
-    biosRequirements: [...resolveBIOSRequirements({providerId: binding.providerId, targetId: binding.targetId, config,
-      files: request.files, firmwareEvidence: request.firmwareEvidence}),
-      ...(request.arcadeCatalog ? arcadeBIOSRequirements(selectedCore, request.arcadeCatalog, dependencies.biosSets) : [])], checkpoint: declaration.checkpoint, capabilities: declaration.capabilities,
-    resources: contentResources(config, target, selectedCore, request.files, request.cueFiles, flycast)};
+  return {crcWarnings, flycast, dependencies};
 }
 
 function prepareTargetOptions(config: RuntimeConfiguration, target: TargetDeclaration, coreId: string,
@@ -200,8 +205,9 @@ function contentResources(config: RuntimeConfiguration, target: TargetDeclaratio
   }
   if (parent.length > 0) {
     const input = target.inputs.find(item => item.role === "parent");
-    if (!input || input.kind !== "PARENT_ARCHIVE") {configurationFailure("RUNTIME_PARENT_INVALID");}
-    resources.push({role: "parent", kind: "PARENT_ARCHIVE", ordinal: 0, files: parent});
+    if (!input || input.kind !== "EXTERNAL_FILE_SET") {configurationFailure("RUNTIME_PARENT_INVALID");}
+    resources.push({role: "parent", kind: "EXTERNAL_FILE_SET", ordinal: 0, files: parent,
+      paths: Object.fromEntries(parent.map(key => [key, files.find(file => file.logicalKey === key)!.name.split("/").at(-1)!.toLowerCase()]))});
   }
   return resources;
 }

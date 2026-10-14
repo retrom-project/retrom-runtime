@@ -229,7 +229,7 @@ function validBlobResource(resource: RuntimeBlobResourceV1) {
   return exactKeys(resource, ["kind", "ordinal", "rangeRequired", "role", "sha256", "sizeBytes", "url"]) &&
     validDigest(resource.sha256) && positiveInteger(resource.sizeBytes) && relativeURL(resource.url) &&
     (resource.kind !== "WASM4_CART" || resource.sizeBytes <= contentLimits.wasm4Cart) &&
-    resource.rangeRequired === (resource.kind === "SEEKABLE_BLOB" || resource.kind === "PARENT_ARCHIVE");
+    resource.rangeRequired === (resource.kind === "SEEKABLE_BLOB");
 }
 function validFileSetResource(resource: RuntimeFileSetResourceV1) {
   return exactKeys(resource, ["files", "kind", "ordinal", "role"]) && Array.isArray(resource.files) &&
@@ -316,7 +316,7 @@ function validRestore(
 
 function isBlobResource(resource: RuntimeResourceV1): resource is RuntimeBlobResourceV1 {
   return resource.kind === "ROM_BLOB" || resource.kind === "SEEKABLE_BLOB" ||
-    resource.kind === "PARENT_ARCHIVE" || resource.kind === "WASM4_CART";
+    resource.kind === "WASM4_CART";
 }
 
 function validDigest(value: unknown): value is string {return typeof value === "string" && /^[0-9a-f]{64}$/u.test(value);}

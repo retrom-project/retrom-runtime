@@ -7,6 +7,23 @@ Nintendo letters, Sony positions and Sega A/B/C are different conventions.
 Every physical button has one native destination. Keyboard bindings stay
 independent. The host does not remap core inputs.
 
+NES (Nestopia/FCEUmm) and digital Arcade (FBNeo, FBAlpha 0.2.97.44,
+FBA2012 CPS1/CPS2, MAME2003/Plus) also accept the standard controller's left
+stick as D-pad directions. The shared EmulatorJS polling adapter merges the
+stick with the physical D-pad before dispatching button transitions. Either
+source can hold a direction without the other source's release cancelling it.
+When the sources disagree on an axis, the physical D-pad has priority; the
+other axis can still form a diagonal. Stick activation is 0.5 and release is
+0.35, preventing center drift and threshold jitter. Consumed left axes are
+zeroed so they cannot also trigger a second native input. Right-stick and
+face-button bindings stay unchanged. Disconnection supplies one neutral sample
+before removal so EmulatorJS releases held controls.
+
+This conversion is scoped to those digital layouts. Analog console controls
+(including N64, Dreamcast and PlayStation) retain their existing axes. The
+independent MAME current Arcade adapter already accepts both the left stick
+and D-pad, with D-pad priority per axis.
+
 | Core group | Bottom / right / left / top native slots | Policy |
 | --- | --- | --- |
 | FBNeo, FBA CPS1/CPS2, MAME2003/Plus, Supermodel; EJS PSX/PSP | 0 / 8 / 1 / 9 | Native positions; fixes both reversed face pairs |

@@ -304,6 +304,8 @@ function mameArcade(envelope: LaunchEnvelopeV1): Extract<import("../../mame/core
   const game = resource(envelope, "game", "ROM_BLOB");
   const parents = optionalResource(envelope, "parent", "EXTERNAL_FILE_SET");
   const external = optionalResource(envelope, "external", "EXTERNAL_FILE_SET");
+  const media = optionalResource(envelope, "media", "EXTERNAL_FILE_SET");
   return {machine, arcade: true, game, parents: parents?.files ?? [],
+    media: media?.files ?? [],
     deviceBios: external?.files ?? [], runtimeBaseUrl: envelope.runtime.runtimeBaseUrl};
 }

@@ -23,3 +23,13 @@ def rom_facts(record):
             entry['optional'] = True
         roms.append(entry)
     return roms
+
+
+def disk_facts(record):
+    """Keep disk requirements even when no dump is available; absence must not imply ROM-only."""
+    return [{**{'name': disk.attrib['name'], 'sha1': disk.get('sha1'),
+                'region': disk.get('region', ''), 'index': disk.get('index', '0'),
+                'writable': disk.get('writable') == 'yes'},
+             **{key: disk.attrib[key] for key in ('merge', 'status') if disk.get(key)},
+             **({'optional': True} if disk.get('optional') == 'yes' else {})}
+            for disk in record.findall('disk')]

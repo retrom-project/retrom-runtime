@@ -109,17 +109,18 @@ it("uses the same lossless GBK DOS name for import evidence, candidates and save
   expect((await prepareHostInput(request)).dosEntries).toEqual([config.content.entryPath]);
 });
 
-it("identifies a named firmware ZIP with modified CRC without accepting missing members or wrong sizes", async () => {
+it("retains named firmware ZIP candidates while scoring incorrect or missing members as unmatched", async () => {
   const input = await tree({"bios.zip": zipSync({"bios.bin": Uint8Array.of(1, 2)})});
   const requirement = {requirementKey: "emulatorjs/fbneo/bios.zip", coreId: "fbneo", providerId: "emulatorjs", targetId: "fbneo",
     logicalName: "bios.zip", required: true, condition: "ARCADE_BIOS", sizeBytes: null, md5: null, sha256: null,
     delivery: "EXTERNAL_FILE" as const, virtualPath: "bios.zip", activationOptions: {},
     members: [{name: "bios.bin", sizeBytes: 2, crc32: "ffffffff", sha1: "", required: true}]};
   const file = {...input.files[0], md5: "a".repeat(32)};
-  expect(await identifyHostBIOS({file, path: input.locators[file.name], requirements: [requirement]})).toEqual([requirement]);
+  expect(await identifyHostBIOS({file, path: input.locators[file.name], requirements: [requirement]}))
+    .toMatchObject([{...requirement, candidate: {matchedMembers: 0, totalMembers: 1}}]);
   expect(await identifyHostBIOS({file: {...file, name: "random.zip"}, path: input.locators[file.name], requirements: [requirement]})).toEqual([]);
   expect(await identifyHostBIOS({file, path: input.locators[file.name], requirements: [{...requirement,
-    members: [{...requirement.members[0], sizeBytes: 3}]}]})).toEqual([]);
+    members: [{...requirement.members[0], sizeBytes: 3}]}]})).toMatchObject([{candidate: {matchedMembers: 0}}]);
 });
 
 it("reads the compiled Flycast catalog envelope and binds its declared core SHA to the selected Provider", async () => {
@@ -138,7 +139,7 @@ it("reads the compiled Flycast catalog envelope and binds its declared core SHA 
     .rejects.toThrow("RUNTIME_FLYCAST_CATALOG_INVALID");
 });
 
-it("projects modified installed BIOS CRCs for review without rejecting a game", async () => {
+it("reports modified installed BIOS members as missing usable firmware as well as CRC warnings", async () => {
   const input = await tree({"mslug3h.zip": zipSync({})});
   const request = {...input,
     directory: {platformId: "arcade", defaultCoreId: "fbneo", allowedCoreIds: ["fbneo"]},
@@ -152,7 +153,7 @@ it("projects modified installed BIOS CRCs for review without rejecting a game", 
     requirementKey: bios.requirementKey}]});
   expect(withBIOS.biosRequirements).toEqual(projected.biosRequirements);
   expect(withBIOS.crcWarnings).toEqual(expect.arrayContaining([expect.objectContaining({role: "BIOS", file: "neogeo.zip"})]));
-  expect(withBIOS.missingRomMembers.filter(item => item.role === "BIOS")).toEqual([]);
+  expect(withBIOS.missingRomMembers.filter(item => item.role === "BIOS")).toHaveLength(bios.members!.filter(member => member.required).length);
   const required = bios.members!.find(member => member.required)!;
   const incomplete = zipSync(Object.fromEntries(bios.members!.filter(member => member.name !== required.name)
     .map(member => [member.name, new Uint8Array(member.sizeBytes)])));

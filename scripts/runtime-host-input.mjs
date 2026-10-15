@@ -10,6 +10,7 @@ import {gunzipSync, crc32} from "node:zlib";
 import {parseRuntimeConfiguration, contentHash, runtimeBindings, identifyPSXRegion, resolveSavedRuntimeRequest,
   contentBIOSRequirements, missingROMMember, dosEntryCandidates, arcadeParentOptions, resolveRuntimeTarget, flycastMachine, flycastContentReferences, flycastMedia} from "../dist/runtime/index.js";
 import {zipMembers, requireLocator, safePath, sha256} from "./runtime-archive-input.mjs";
+import {discoverMameMedia, mameMediaEvidence} from "./runtime-host-media.mjs";
 
 export async function configureHostInput(input) {
   contentHash(input.files, "TREE");
@@ -89,7 +90,7 @@ export async function prepareHostInput(input) {
     if (!file) {throw new Error("RUNTIME_ENTRY_MISSING");}
     archives[key] = await zipMembers(requireLocator(input, file));
   }
-  return {...input, arcadeCatalog: tables[coreId], archives};
+  return {...input, arcadeCatalog: tables[coreId], archives, ...await mameMediaEvidence(input, coreId)};
 }
 
 /** All host operations use the same paired table and original archive evidence. */
@@ -180,7 +181,7 @@ export async function contentHostBIOSRequirements(input) {
       const parent = input.files.find(file => file.logicalKey === key);
       if (parent) {archives[key] = await zipMembers(requireLocator(input, parent));}
     }
-    prepared = {...prepared, arcadeCatalog: tables[coreId], archives};
+    prepared = {...prepared, arcadeCatalog: tables[coreId], archives, ...await mameMediaEvidence(input, coreId)};
   }
   const {target, binding} = resolveRuntimeTarget(input.directory.platformId, coreId, config.content);
   if (target.contentRequirements?.kind === "FLYCAST_CARTRIDGE") {
@@ -195,10 +196,11 @@ export async function contentHostBIOSRequirements(input) {
   for (const requirement of result.biosRequirements) {
     const file = input.biosFiles?.find(file => file.requirementKey === requirement.requirementKey);
     if (!file || !requirement.members?.length) {continue;}
-    const members = await zipMembers(file.path);
+    const members = await biosMembers(file.path);
     for (const expected of requirement.members) {
       const missing = expected.required && missingROMMember(requirement.coreId, requirement.logicalName.replace(/\.zip$/iu, ""),
-        "BIOS", {name: expected.name, size: String(expected.sizeBytes), crc: expected.crc32}, members);
+        "BIOS", {name: expected.name, size: String(expected.sizeBytes), crc: expected.crc32},
+        matchesBIOSMember(members, expected) ? members : []);
       if (missing) {result.missingRomMembers.push(missing);}
       const member = members.find(member => member.sizeBytes === expected.sizeBytes && member.crc32 === expected.crc32) ??
         members.find(member => member.name === expected.name && member.sizeBytes === expected.sizeBytes);
@@ -237,12 +239,12 @@ export async function hostArcadeParentOptions(input) {
   if (config.content.kind !== "ARCADE") {throw new Error("RUNTIME_CONFIGURATION_INVALID");}
   const tables = await arcadeTables(), archives = {};
   const keys = new Set([config.content.entryFile, ...config.cores?.[coreId]?.parentFiles ?? [],
-    ...(input.attachFile === undefined ? [] : [input.attachFile])]);
+    ...(input.attachFile?.toLowerCase().endsWith(".zip") ? [input.attachFile] : [])]);
   for (const key of keys) {
     const file = input.files.find(item => item.logicalKey === key);
     if (file) {archives[key] = await zipMembers(requireLocator(input, file));}
   }
-  return arcadeParentOptions({...input, archives, arcadeCatalog: tables[coreId]});
+  return arcadeParentOptions({...input, archives, arcadeCatalog: tables[coreId], ...await mameMediaEvidence(input, coreId)});
 }
 
 async function prepareFirmwareEvidence(input, config, coreId) {
@@ -288,6 +290,10 @@ export async function discoverContentDependencies(input) {
     found.push(...await cueReferences(input, file));
   }
   const directory = input.directory;
+  if (directory?.platformId === "arcade" && directory.defaultCoreId === "mame_arcade") {
+    const result = discoverMameMedia(input, (await arcadeTables()).mame_arcade);
+    return {...result, files: [...found, ...result.files]};
+  }
   if (directory && runtimeBindings.some(binding => binding.coreId === directory.defaultCoreId &&
     binding.platformIds.includes(directory.platformId) && binding.contentKinds.includes("SINGLE_FILE"))) {
     const {target, binding} = resolveRuntimeTarget(directory.platformId, directory.defaultCoreId, {kind: "SINGLE_FILE", entryFile: "content"});
@@ -436,8 +442,60 @@ export async function identifyHostBIOS(input) {
   const {identifyBIOSFile} = await import("../dist/runtime/index.js");
   const direct = identifyBIOSFile(input.file, input.requirements);
   if (!input.path || !input.file.name?.toLowerCase().endsWith(".zip")) {return direct;}
-  const members = await zipMembers(input.path);
-  return input.requirements.filter(requirement => requirement.members?.length && requirement.members.every(expected =>
-    !expected.required || members.some(member => member.sizeBytes === expected.sizeBytes && (member.crc32 === expected.crc32 ||
-      input.file.name.toLowerCase() === requirement.logicalName.toLowerCase() && member.name === expected.name))));
+  const members = await biosMembers(input.path);
+  const memberIdentity = sha256(Buffer.from(JSON.stringify(members.map(member => [member.name, member.sizeBytes, member.sha256])
+    .sort((left, right) => left[0] < right[0] ? -1 : left[0] > right[0] ? 1 : 0))));
+  return input.requirements.flatMap(requirement => {
+    if (!requirement.members?.length) {return direct.includes(requirement) ? [requirement] : [];}
+    const matched = requirement.members.filter(expected => matchesBIOSMember(members, expected));
+    const named = input.file.name.toLowerCase() === requirement.logicalName.toLowerCase();
+    if (!named && !requirement.members.every(expected => !expected.required || matched.includes(expected))) {return [];}
+    return [{...requirement, candidate: {memberIdentity, matchedMembers: matched.length, totalMembers: members.length}}];
+  });
+}
+
+function matchesBIOSMember(members, expected) {
+  return members.some(member => member.sizeBytes === expected.sizeBytes && (expected.sha1
+    ? member.sha1 === expected.sha1.toLowerCase() : member.crc32 === expected.crc32.toLowerCase()));
+}
+
+const biosEvidence = new Map();
+async function biosMembers(path) {
+  const key = await biosArchiveDigest(path);
+  if (!biosEvidence.has(key)) {
+    if (biosEvidence.size >= 128) {biosEvidence.delete(biosEvidence.keys().next().value);}
+    const pending = zipMembers(path, {digests: true}).catch(error => {biosEvidence.delete(key); throw error;});
+    biosEvidence.set(key, pending);
+  }
+  return biosEvidence.get(key);
+}
+
+async function biosArchiveDigest(path) {
+  const handle = await open(path, constants.O_RDONLY | constants.O_NOFOLLOW | constants.O_NONBLOCK);
+  try {
+    const info = await handle.stat();
+    if (!info.isFile() || info.size > 512 * 1024 * 1024) {throw new Error("RUNTIME_CONTENT_UNAVAILABLE");}
+    const hash = createHash("sha256"), buffer = Buffer.alloc(65536);
+    for (let position = 0; position < info.size;) {
+      const {bytesRead} = await handle.read(buffer, 0, Math.min(buffer.length, info.size - position), position);
+      if (!bytesRead) {throw new Error("RUNTIME_CONTENT_CHANGED");}
+      hash.update(buffer.subarray(0, bytesRead)); position += bytesRead;
+    }
+    return hash.digest("hex");
+  } finally {await handle.close();}
+}
+
+export async function verifyHostBIOS(input) {
+  const {requirement, path} = input;
+  if (!requirement.members?.length) {return null;}
+  try {
+    const members = await biosMembers(path);
+    const matched = requirement.members.filter(expected => matchesBIOSMember(members, expected));
+    const missingMembers = requirement.members.filter(expected => expected.required && !matched.includes(expected)).map(expected => expected.name);
+    return {status: missingMembers.length ? "incomplete" : "valid", matchedMembers: matched.length,
+      expectedMembers: requirement.members.length, missingMembers};
+  } catch {
+    return {status: "invalid", matchedMembers: 0, expectedMembers: requirement.members.length,
+      missingMembers: requirement.members.filter(expected => expected.required).map(expected => expected.name)};
+  }
 }

@@ -51,6 +51,15 @@ function cartridgeBytes(machine: string, bytes: Uint8Array): Uint8Array {
 }
 
 async function mountArcadeFiles(core: Pick<MameCore, "FS">, config: Extract<MameParameters, {arcade: true}>, content: AdapterContentOptions) {
+  const prepared = await prepareArcadeFiles(config, content);
+  for (const file of prepared.files) {
+    core.FS.mkdirTree(file.path.slice(0, file.path.lastIndexOf("/")));
+    core.FS.writeFile(file.path, file.bytes);
+  }
+  return prepared.identity;
+}
+
+export async function prepareArcadeFiles(config: Extract<MameParameters, {arcade: true}>, content: AdapterContentOptions) {
   if (!/^[a-z0-9_]{1,32}$/u.test(config.machine) || config.game.sizeBytes < 22 || config.game.sizeBytes > 128 * 1024 * 1024) {
     throw new Error("MAME_CONTENT_INVALID");
   }
@@ -79,18 +88,18 @@ async function mountArcadeFiles(core: Pick<MameCore, "FS">, config: Extract<Mame
     archives.set(name, bytes);
   }
   const parentIdentity = config.parents.length ? parentStateIdentity(parentEntries) : "";
-  core.FS.mkdirTree("/content/roms");
-  for (const [name, bytes] of archives) {core.FS.writeFile(`/content/roms/${name}`, bytes);}
+  const files = [...archives].map(([name, bytes]) => ({path: `/content/roms/${name}`, bytes}));
   for (const file of config.deviceBios) {
     if (archives.has(file.logicalName)) {throw new Error("MAME_CONTENT_INVALID");}
     const bytes = await materializeFileBytes(content.contentSession, file, content.contentSession.inputPolicy("external"),
       "FIRMWARE", content.signal);
     const path = `/${file.virtualPath}`;
-    core.FS.mkdirTree(path.slice(0, path.lastIndexOf("/")));
-    core.FS.writeFile(path, bytes);
+    files.push({path, bytes});
   }
-  core.FS.writeFile("/content/boot.cmd", new TextEncoder().encode(`${config.machine} -rompath /content/roms -skip_gameinfo -nothrottle`));
-  const identity = [config.machine, config.game.sha256, parentIdentity, "",
+  const writable = config.media?.length ? " -diff_directory /content/session/diff -nvram_directory /content/session/nvram" : "";
+  files.push({path: "/content/boot.cmd", bytes: new TextEncoder().encode(`${config.machine} -rompath /content/roms -skip_gameinfo -nothrottle${writable}`)});
+  const mediaIdentity = (config.media ?? []).map(file => `${file.virtualPath}:${file.sha256}`).sort().join("\n");
+  const identity = [config.machine, config.game.sha256, parentIdentity, mediaIdentity,
     ...config.deviceBios.map(file => `${file.virtualPath}:${file.sha256}`).sort()].join("\n");
-  return bytesToHex(sha256(new TextEncoder().encode(identity)));
+  return {files, identity: bytesToHex(sha256(new TextEncoder().encode(identity)))};
 }

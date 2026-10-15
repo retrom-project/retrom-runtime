@@ -9061,6 +9061,7 @@
       },
       {
         "assetPaths": [
+          "assets/content-io/sync-client.mjs",
           "assets/content-io/worker.mjs",
           "assets/mame/mame-arcade_acorn.wasm",
           "assets/mame/mame-arcade_alliedleisure.wasm",
@@ -9154,14 +9155,14 @@
           "assets/mame/mame-pacman.wasm"
         ],
         "capabilities": {
-          "contentLoading": "PRELOAD_ONLY",
+          "contentLoading": "ON_DEMAND_AND_PRELOAD",
           "checkpoint": true,
           "frameCounter": true,
           "frameMode": "SAME_ORIGIN_BLANK",
           "inputFilter": true,
           "nativeSettings": false,
           "pause": true,
-          "requiresThreads": false,
+          "requiresThreads": true,
           "screenshot": true,
           "standardGamepad": true,
           "videoModes": [
@@ -9195,6 +9196,13 @@
             "cardinality": "ONE",
             "optional": true,
             "maxFileBytes": 134217728
+          },
+          {
+            "role": "media",
+            "kind": "EXTERNAL_FILE_SET",
+            "cardinality": "ONE",
+            "optional": true,
+            "maxFileBytes": 9007199254740991
           },
           {
             "role": "external",

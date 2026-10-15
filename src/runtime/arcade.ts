@@ -5,7 +5,10 @@ import {arcadeAncestry} from "./arcade-ancestry.js";
 export type ArchiveMember = {name: string; sizeBytes: number; crc32: string};
 export type ArcadeMachine = {parent: string | null; bios: boolean; device?: boolean; runnable?: boolean; devices?: string[];
   description?: string; year?: string; manufacturer?: string;
+  disks?: ArcadeDisk[];
   roms: Array<{name: string; size: string; crc: string; sha1?: string; merge?: string; bios?: string; optional?: boolean}>};
+export type ArcadeDisk = {name: string; sha1: string | null; region: string; index: string;
+  writable: boolean; merge?: string; optional?: boolean; status?: string};
 export type ArcadeCatalog = Readonly<Record<string, ArcadeMachine>>;
 export function playableArcadeMachine(machine: ArcadeMachine | undefined): machine is ArcadeMachine {
   return !!machine && !machine.bios && !machine.device && machine.runnable !== false;

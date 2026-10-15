@@ -6,6 +6,7 @@ import {CoreDiagnostics} from "../provider/core-diagnostics.js";
 export type FileSource = {url: string; sha256: string; sizeBytes: number};
 export type MameParameters = {machine: MameMachine; arcade?: false; game: FileSource; bios: (FileSource & {logicalName: string})[]; runtimeBaseUrl: string} |
   {machine: string; arcade: true; game: FileSource; parents: (FileSource & {logicalName: string; virtualPath: string})[];
+    media?: (FileSource & {logicalName: string; virtualPath: string})[];
     deviceBios: (FileSource & {logicalName: string; virtualPath: string})[]; runtimeBaseUrl: string};
 export type MameCore = {
   HEAPU8: Uint8Array; HEAP16: Int16Array;
@@ -27,6 +28,10 @@ export type MameCore = {
 export type ModuleLoader = (url: string) => Promise<unknown>;
 export async function loadCore(config: MameParameters, content: AdapterContentOptions,
   loader: ModuleLoader = url => import(/* webpackIgnore: true */ /* @vite-ignore */ url)) {
+  const {manifest, loaded, base} = await prepareMameCore(config, content);
+  return instantiateMameCore(manifest, loaded, base, content, loader);
+}
+export async function prepareMameCore(config: MameParameters, content: AdapterContentOptions) {
   const arcade = config.arcade === true;
   const metadata = await loadCoreAsset(content, new URL("mame-build.json", new URL("assets/mame/", new URL(config.runtimeBaseUrl, globalThis.location?.href))).href,
     "assets/mame/mame-build.json", 2 * 1024 * 1024, content.signal);
@@ -38,6 +43,10 @@ export async function loadCore(config: MameParameters, content: AdapterContentOp
   const loaded = await Promise.all(files.map((name, i) => loadCoreAsset(content, new URL(name, base).href,
     `assets/mame/${name}`, name.endsWith(".wasm") ? 256 * 1024 * 1024 : 4 * 1024 * 1024, content.signal,
     progress => {ready[i] = progress.readyBytes; content.reportProgress?.({phase: "RUNTIME_ASSET", loadedBytes: ready.reduce((a, b) => a + b, 0), totalBytes: total});})));
+  return {manifest, loaded, base};
+}
+async function instantiateMameCore(manifest: {build: string; module: string}, loaded: Uint8Array[], base: URL,
+  content: AdapterContentOptions, loader: ModuleLoader) {
   const diagnostics = new CoreDiagnostics();
   const record = (message: string) => {if (!readOnlyImageRetry(message)) {diagnostics.record(message);}};
   return withStartupTask(content.startup, "CORE_INITIALIZATION", async () => {

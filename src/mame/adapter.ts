@@ -9,8 +9,10 @@ import {MameAudio} from "./audio.js";
 import {createVideo, captureVideo} from "./video.js";
 import {profiles} from "./profiles.js";
 import {RuntimeFailureError} from "../provider/failure.js";
+import {mountMameWorker} from "./worker-adapter.js";
 export async function mountMame(config: MameParameters, target: HTMLElement, win: Window,
   restorePayload: Uint8Array | null, content: AdapterContentOptions, loader?: ModuleLoader): Promise<MountedRuntimeAdapter> {
+  if (config.arcade && config.media?.length) {return mountMameWorker(config, target, win, restorePayload, content);}
   const {core, build, diagnostics} = await loadCore(config, content, loader);
   let identity: string;
   try {

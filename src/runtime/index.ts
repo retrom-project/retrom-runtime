@@ -1,4 +1,5 @@
 export * from "./types.js";
+export * from "./arcade-media.js";
 export * from "./catalog.js";
 export * from "./configuration.js";
 export * from "./identity.js";

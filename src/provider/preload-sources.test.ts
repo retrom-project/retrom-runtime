@@ -4,6 +4,9 @@ import {retromRuntimeProviderDefinition} from "../providers/retrom-runtime/catal
 import {preloadSources} from "./preload-sources.js";
 import {fetchMetadataJson} from "./metadata.js";
 import {rangePolicy} from "./content-policies.js";
+import {fileContentSource} from "./content-inputs.js";
+import {contentObjectKey} from "../content-io/source.js";
+import {mameArcadeTarget} from "../providers/retrom-runtime/mame-declaration.js";
 
 vi.mock("./metadata.js", async original => ({...await original<typeof import("./metadata.js")>(), fetchMetadataJson: vi.fn()}));
 afterEach(() => vi.resetAllMocks());
@@ -11,6 +14,20 @@ const target = {...retromRuntimeProviderDefinition.targets.find(value => value.i
   contentIO: {game: rangePolicy("ASYNC", 1024 * 1024)}};
 const context = {storageOrigin: location.origin, allowedOrigins: [location.origin]};
 const signal = new AbortController().signal;
+
+it("preloads arcade media into the same persistent object used by the game reader", async () => {
+  const declaration = mameArcadeTarget;
+  const policy = declaration.contentIO.media;
+  if (!("bridge" in policy)) {throw new Error("Expected managed media");}
+  const file = {logicalName: "disk.chd", virtualPath: "sample/disk.chd", sha256: "f".repeat(64),
+    sizeBytes: 25_630_931, url: "/media/disk.chd"};
+  const envelope = wasmEnvelope();
+  envelope.resources = [{kind: "EXTERNAL_FILE_SET", role: "media", ordinal: 0, files: [file]}];
+  const [preloaded] = await preloadSources(declaration, envelope, {}, context, signal);
+  const readerSource = fileContentSource(file, policy);
+  expect(preloaded.purpose).toBe("GAME");
+  expect(contentObjectKey(preloaded, context.storageOrigin)).toBe(contentObjectKey(readerSource, context.storageOrigin));
+});
 
 it("prepares every indexed member using the same project identity as the lazy reader", async () => {
   const envelope = wasmEnvelope();

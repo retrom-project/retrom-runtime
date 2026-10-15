@@ -22,9 +22,9 @@
   },
   {
     "coreId": "mame_arcade",
-    "sha256": "6c3ea0cf7353ce280aba460ac15a6b5dd6d2355603cc4cc84e7926c358efb755",
-    "source": "https://github.com/retrom-project/mame/tree/f8774f600d03979a936f59bbbfb2d3be08961964",
-    "commit": "f8774f600d03979a936f59bbbfb2d3be08961964",
+    "sha256": "0da3eec9b9f761c7c2019ac53c3223af5e4bedaf9923a066be5eb87a099158ef",
+    "source": "https://github.com/retrom-project/mame/tree/1d46caba340f54bb7241e93a6d74033385a7cd83",
+    "commit": "1d46caba340f54bb7241e93a6d74033385a7cd83",
     "assetPath": "mame-arcade.xml"
   },
   {

@@ -6,6 +6,7 @@ import {fetchMetadataJson} from "./metadata.js";
 import {rangePolicy} from "./content-policies.js";
 import {fileContentSource} from "./content-inputs.js";
 import {contentObjectKey} from "../content-io/source.js";
+import {mameArcadeTarget} from "../providers/retrom-runtime/mame-declaration.js";
 
 vi.mock("./metadata.js", async original => ({...await original<typeof import("./metadata.js")>(), fetchMetadataJson: vi.fn()}));
 afterEach(() => vi.resetAllMocks());
@@ -15,7 +16,7 @@ const context = {storageOrigin: location.origin, allowedOrigins: [location.origi
 const signal = new AbortController().signal;
 
 it("preloads arcade media into the same persistent object used by the game reader", async () => {
-  const declaration = retromRuntimeProviderDefinition.targets.find(value => value.id === "mame-arcade")!;
+  const declaration = mameArcadeTarget;
   const policy = declaration.contentIO.media;
   if (!("bridge" in policy)) {throw new Error("Expected managed media");}
   const file = {logicalName: "disk.chd", virtualPath: "sample/disk.chd", sha256: "f".repeat(64),

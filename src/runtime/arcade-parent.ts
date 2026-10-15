@@ -1,5 +1,6 @@
 import {flycastAttachment, flycastDependencies} from "./flycast-arcade.js";
 import {arcadeDependencies, configuredMachine} from "./arcade.js";
+import {arcadeMedia} from "./arcade-media.js";
 import {parseRuntimeConfiguration} from "./configuration.js";
 import {contentHash} from "./identity.js";
 import {selectedRuntimeCore, type ContentBIOSRequest} from "./prepare.js";
@@ -25,7 +26,10 @@ export function arcadeParentOptions(request: ArcadeParentRequest) {
   }
   if (config.content.kind !== "ARCADE") {configurationFailure();}
   if (!request.arcadeCatalog || !request.archives) {configurationFailure("RUNTIME_ARCADE_CATALOG_UNAVAILABLE");}
-  if (request.attachFile !== undefined) {
+  const media = arcadeMedia(coreId, config, request.files, request.arcadeCatalog, request.chdHeaders);
+  const attachMedia = request.attachFile !== undefined && /\.chd$/iu.test(request.attachFile);
+  if (attachMedia && !media.mediaFiles.includes(request.attachFile!)) {configurationFailure("RUNTIME_ARCADE_DISK_INVALID");}
+  if (request.attachFile !== undefined && !attachMedia) {
     const parentID = parentReferenceID(request, config, coreId);
     const core = config.cores?.[coreId] ?? {};
     const parentFiles = [...(core.parentFiles ?? []).filter(key => {
@@ -36,7 +40,8 @@ export function arcadeParentOptions(request: ArcadeParentRequest) {
   }
   const dependencies = arcadeDependencies(coreId, config, request.files, request.archives, request.arcadeCatalog);
   return {coreId, parentFiles: dependencies.parentFiles,
-    missingParents: dependencies.missingParents.map(parent => `${parent}.zip`), mediaFiles: [], missingMedia: [], config};
+    missingParents: dependencies.missingParents.map(parent => `${parent}.zip`),
+    mediaFiles: media.mediaFiles, missingMedia: media.missingMedia, config};
 }
 
 function parentReferenceID(request: ArcadeParentRequest, config: RuntimeConfiguration, coreId: string) {

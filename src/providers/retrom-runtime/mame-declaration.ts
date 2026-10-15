@@ -1,4 +1,5 @@
-import {eagerPolicy} from "../../provider/content-policies.js";
+import {eagerPolicy, rangePolicy} from "../../provider/content-policies.js";
+import {contentLimits} from "../../content-io/limits.js";
 import {defineAdapter, defineTarget} from "../../provider/declarations.js";
 import {checkpointFormat, checkpointLimit} from "../../mame/state.js";
 import arcadeFamilies from "../../mame/arcade-families.json" with {type: "json"};
@@ -42,12 +43,14 @@ export const mamePV1000Target = defineTarget({...mameAppleTarget, id: "mame-pv10
   ...mameAssets(["vintage"]),
 });
 export const mameArcadeTarget = defineTarget({...mameAppleTarget, id: "mame-arcade", displayName: "MAME Current Arcade",
+  requiresThreads: true,
   romSetSelection: {datSHA256: arcadeProvenance.find(source => source.coreId === "mame_arcade")!.sha256, driver: "MACHINE_OPTION"},
   contentIO: {game: eagerPolicy(128 * 1024 * 1024),
     external: eagerPolicy(128 * 1024 * 1024),
-    parent: eagerPolicy(128 * 1024 * 1024)},
+    parent: eagerPolicy(128 * 1024 * 1024), media: rangePolicy("SYNC_WORKER", contentLimits.indexedFile)},
   inputs: [{role: "game", kind: "ROM_BLOB", cardinality: "ONE", optional: false},
     {role: "parent", kind: "EXTERNAL_FILE_SET", cardinality: "ONE", optional: true},
+    {role: "media", kind: "EXTERNAL_FILE_SET", cardinality: "ONE", optional: true},
     {role: "external", kind: "EXTERNAL_FILE_SET", cardinality: "ONE", optional: true}],
   targetOptionsSchema: {type: "object", additionalProperties: false,
     properties: {machine: {type: "string", minLength: 1, maxLength: 32}}, required: ["machine"]},

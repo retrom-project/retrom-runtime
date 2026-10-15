@@ -6,7 +6,7 @@ import hashlib
 import json
 from pathlib import Path
 import xml.etree.ElementTree as ET
-from dat_labels import labels, rom_facts
+from dat_labels import labels, rom_facts, disk_facts
 
 
 def enrich(repository, inputs, refresh=False):
@@ -32,6 +32,7 @@ def enrich(repository, inputs, refresh=False):
             facts.update(labels(record))
             facts['device'] = record.get('isdevice') == 'yes'
             facts['runnable'] = record.get('runnable') != 'no'
+            facts['disks'] = disk_facts(record)
         print(json.dumps({'coreId': core_id, 'entries': len(indexed), 'sha256': sources[core_id]['sha256']}))
     path.write_bytes(gzip.compress(json.dumps(catalogs, separators=(',', ':'), ensure_ascii=False).encode(), mtime=0))
 

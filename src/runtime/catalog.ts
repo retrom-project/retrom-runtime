@@ -22,7 +22,7 @@ export function runtimeCatalog(providerVersion?: string) {
   return {providers: runtimeProviders.map(provider => projectProviderManifest(providerVersion ? {...provider, providerVersion} : provider)),
     bindings: runtimeBindings.map(binding => ({...binding,
       ...nativeArchives(binding),
-      ...(binding.contentKinds.includes("ARCADE") ? {dependencyFiles: {extensions: ["zip"]}} : {}),
+      ...(binding.contentKinds.includes("ARCADE") ? {dependencyFiles: {extensions: binding.coreId === "mame_arcade" ? ["zip", "chd"] : ["zip"]}} : {}),
       ...(() => {const selection = runtimeProviders.find(provider => provider.providerId === binding.providerId)?.targets
         .find(target => target.id === binding.targetId)?.romSetSelection;
       return selection ? {romSetSelection: {datSHA256: selection.datSHA256}} : {};})(),

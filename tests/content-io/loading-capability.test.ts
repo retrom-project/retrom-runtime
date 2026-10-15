@@ -18,7 +18,7 @@ it.each([
   ["mame-pv1000", "PRELOAD_ONLY"],
   ["mame-coleco", "PRELOAD_ONLY"],
   ["mame-sg1000", "PRELOAD_ONLY"],
-  ["mame-arcade", "PRELOAD_ONLY"],
+  ["mame-arcade", "ON_DEMAND_AND_PRELOAD"],
   ["rpgmaker-2000", "ON_DEMAND_AND_PRELOAD"],
   ["rpgmaker-2003", "ON_DEMAND_AND_PRELOAD"],
   ["j2me", undefined],

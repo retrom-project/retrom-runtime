@@ -7,6 +7,7 @@ import {resolveRuntimeTarget} from "./catalog.js";
 import {thomsonModelOptions} from "./thomson.js";
 import {parseRuntimeConfiguration, validateConfigurationFiles} from "./configuration.js";
 import {arcadeDependencies, configuredMachine, type ArcadeCatalog, type ArchiveMember} from "./arcade.js";
+import {arcadeMedia, requireArcadeMedia, type CHDHeaders} from "./arcade-media.js";
 import {arcadeBIOSRequirements, resolveBIOSRequirements} from "./bios.js";
 import {flycastDependencies, requireFlycastDependencies, type FlycastMachine} from "./flycast-arcade.js";
 import {arcadeCRCWarnings, type CRCWarning} from "./arcade-crc.js";
@@ -27,6 +28,7 @@ export type PrepareRuntimeRequest = {
   fingerprints: Readonly<Record<string, string>>;
   archives?: Readonly<Record<string, readonly ArchiveMember[]>>;
   arcadeCatalog?: ArcadeCatalog;
+  chdHeaders?: CHDHeaders;
   flycastCatalog?: readonly FlycastMachine[];
   cueFiles?: string[];
   dosEntries?: readonly string[];
@@ -34,7 +36,7 @@ export type PrepareRuntimeRequest = {
 };
 
 export type ContentBIOSRequest = Pick<PrepareRuntimeRequest,
-  "directory" | "config" | "files" | "coreId" | "archives" | "arcadeCatalog" | "firmwareEvidence" | "flycastCatalog">;
+  "directory" | "config" | "files" | "coreId" | "archives" | "arcadeCatalog" | "chdHeaders" | "firmwareEvidence" | "flycastCatalog">;
 
 /** Review eligibility inspects required content without changing launch preparation. */
 export function contentBIOSRequirements(request: ContentBIOSRequest) {
@@ -51,6 +53,7 @@ export function contentBIOSRequirements(request: ContentBIOSRequest) {
   if (config.content.kind === "ARCADE") {
     if (!request.arcadeCatalog || !request.archives) {configurationFailure("RUNTIME_ARCADE_CATALOG_UNAVAILABLE");}
     const dependencies = arcadeDependencies(selectedCore, config, request.files, request.archives, request.arcadeCatalog);
+    requireArcadeMedia(arcadeMedia(selectedCore, config, request.files, request.arcadeCatalog, request.chdHeaders));
     biosSets = dependencies.biosSets;
     missingRomMembers = arcadeMissingROMMembers(selectedCore, config, request.files, request.archives, request.arcadeCatalog);
     if (dependencies.missingParents.length && !missingRomMembers.length) {configurationFailure("RUNTIME_PARENT_MISSING");}
@@ -134,7 +137,7 @@ function prepareIdentity(request: PrepareRuntimeRequest) {
 export function prepareRuntime(request: PrepareRuntimeRequest) {
   request = resolveSavedRuntimeRequest(request);
   const {config, selectedCore, binding, target, targetOptions, declaration, identity} = prepareIdentity(request);
-  const {crcWarnings, flycast, dependencies} = prepareContent(request, config, selectedCore, target);
+  const {crcWarnings, flycast, dependencies, media} = prepareContent(request, config, selectedCore, target);
   const entryKey = "entryFile" in config.content ? config.content.entryFile : null;
   const entry = request.files.find(file => file.logicalKey === entryKey);
   return {...identity, config, targetOptions, dependencies,
@@ -143,7 +146,9 @@ export function prepareRuntime(request: PrepareRuntimeRequest) {
     biosRequirements: [...resolveBIOSRequirements({providerId: binding.providerId, targetId: binding.targetId, config,
       files: request.files, firmwareEvidence: request.firmwareEvidence}),
       ...(request.arcadeCatalog ? arcadeBIOSRequirements(selectedCore, request.arcadeCatalog, dependencies.biosSets) : [])], checkpoint: declaration.checkpoint, capabilities: declaration.capabilities,
-    resources: contentResources(config, target, selectedCore, request.files, request.cueFiles, flycast)};
+    resources: [...contentResources(config, target, selectedCore, request.files, request.cueFiles, flycast),
+      ...(media?.mediaFiles.length ? [{role: "media", kind: "EXTERNAL_FILE_SET" as const, ordinal: 0,
+        files: media.mediaFiles, paths: media.mediaPaths}] : [])]};
 }
 
 function prepareContent(request: PrepareRuntimeRequest, config: RuntimeConfiguration, selectedCore: string, target: TargetDeclaration) {
@@ -154,14 +159,17 @@ function prepareContent(request: PrepareRuntimeRequest, config: RuntimeConfigura
   if (config.content.kind === "DOS_BUNDLE" && config.content.entryPath !== undefined &&
     !request.dosEntries?.includes(config.content.entryPath)) {configurationFailure("RUNTIME_DOS_ENTRY_INVALID");}
   let dependencies = {parentFiles: [] as string[], missingParents: [] as string[], biosSets: [] as string[]};
+  let media: ReturnType<typeof arcadeMedia> | undefined;
   if (config.content.kind === "ARCADE") {
     if (!request.arcadeCatalog || !request.archives) {configurationFailure("RUNTIME_ARCADE_CATALOG_UNAVAILABLE");}
     dependencies = arcadeDependencies(selectedCore, config, request.files, request.archives, request.arcadeCatalog);
+    media = arcadeMedia(selectedCore, config, request.files, request.arcadeCatalog, request.chdHeaders);
+    requireArcadeMedia(media);
     crcWarnings = arcadeCRCWarnings(selectedCore, config, request.files, request.archives, request.arcadeCatalog);
     if (dependencies.missingParents.length) {configurationFailure("RUNTIME_PARENT_MISSING", {parents: dependencies.missingParents.join(",")});}
   }
   if (flycast) {dependencies = {parentFiles: flycast.parentFiles, missingParents: flycast.missingParents, biosSets: []};}
-  return {crcWarnings, flycast, dependencies};
+  return {crcWarnings, flycast, dependencies, media};
 }
 
 function prepareTargetOptions(config: RuntimeConfiguration, target: TargetDeclaration, coreId: string,

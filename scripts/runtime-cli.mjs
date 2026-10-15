@@ -1,4 +1,4 @@
-import {configureHostInput, prepareHostInput, assembleResource, detectScummvm, arcadeTables, identifyHostBIOS,
+import {configureHostInput, prepareHostInput, assembleResource, detectScummvm, arcadeTables, identifyHostBIOS, verifyHostBIOS,
   flycastConfigureEvidence, discoverContentDependencies, contentHostBIOSRequirements, hostDOSEntryCandidates, hostArcadeParentOptions} from "./runtime-host-input.mjs";
 import {normalizeContent} from "./runtime-normalize-content.mjs";
 import {readFile} from "node:fs/promises";
@@ -60,6 +60,7 @@ async function execute(command, input, signal = new AbortController().signal) {
     break;
   }
   case "bios-identify": output = await identifyHostBIOS(input); break;
+  case "bios-verify": output = await verifyHostBIOS(input); break;
   default: throw new Error("RUNTIME_COMMAND_INVALID");
   }
   signal.throwIfAborted();

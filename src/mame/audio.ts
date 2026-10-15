@@ -25,10 +25,16 @@ export class MameAudio {
     if (!Number.isInteger(offset) || offset < 1 || offset + count > core.HEAP16.length) {
       throw new Error("MAME_AUDIO_INVALID");
     }
+    this.pushSamples(core.HEAP16.subarray(offset, offset + count));
+  }
+  pushSamples(samples: Int16Array) {
+    const context = this.context, count = samples.length;
+    if (!context || context.state !== "running" || !count || !this.gain) {return;}
+    if (count > 8192 || count % 2 !== 0) {throw new Error("MAME_AUDIO_INVALID");}
     const buffer = context.createBuffer(2, count / 2, this.rate);
     for (let channel = 0; channel < 2; channel++) {
       const data = buffer.getChannelData(channel);
-      for (let i = 0; i < data.length; i++) {data[i] = core.HEAP16[offset + i * 2 + channel] / 32768;}
+      for (let i = 0; i < data.length; i++) {data[i] = samples[i * 2 + channel] / 32768;}
     }
     const source = context.createBufferSource();
     source.buffer = buffer; source.connect(this.gain);

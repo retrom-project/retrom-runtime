@@ -246,6 +246,11 @@ these bytes into native resource responses, including media ranges, while the
 cache remains on the application origin. No arbitrary URL or cache API crosses
 the bridge. The index allows empty files and unique ASCII case aliases.
 
+MV additionally prepares a bounded set of scenario text for synchronous desktop
+plugin reads before starting the isolated game. These bytes use the same managed
+readers and persistent identities; writable plugin saves stay separate. See
+[RPG Maker MV desktop plugins](targets/rpgmaker-mv.md) for limits and checkpoint semantics.
+
 PRELOAD authenticates the isolated bootstrap before downloading, while its
 host page waits for an explicit start signal without running game code. This
 retains its scoped resource context through a large download. It fills and

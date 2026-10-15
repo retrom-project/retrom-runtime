@@ -15,6 +15,7 @@ it("enables native bridge observation on demand without polling or changing engi
   const requestAnimationFrame = vi.fn();
   const nativeGetGamepads = vi.fn(() => [{index: 0, buttons: [{pressed: true, value: 1, touched: true}], axes: [0.5]}]);
   const runtime = {
+      location: {href: "https://runtime.example/game/www/index.html"},
     Input: input, performance: {now: () => 100}, document: {hasFocus: () => true},
     Utils: {RPGMAKER_NAME: "MV"}, SceneManager: {updateMain: () => undefined}, DataManager: {}, StorageManager: {},
     parent: {postMessage: () => undefined}, requestAnimationFrame, navigator: {getGamepads: nativeGetGamepads},
@@ -23,7 +24,7 @@ it("enables native bridge observation on demand without polling or changing engi
   };
   runInNewContext(readFileSync("assets/runtime/native/bridge.js", "utf8"), {window: runtime, TextEncoder, TextDecoder});
   const identity = {launchId: "fixture", nonce: "fixture", protocolVersion: 1};
-  handlers.get("message")?.({data: {...identity, type: "RPG_RUNTIME_NATIVE_CONNECT",
+  handlers.get("message")?.({data: {...identity, type: "RPG_RUNTIME_NATIVE_CONNECT", pluginFiles: [],
     parentOrigin: "https://host.example", profile: "RPGMV"}, origin: "https://host.example", source: runtime.parent, ports: [port], stopImmediatePropagation: () => undefined});
   let requestId = 0;
   const request = async (type: string, body: Record<string, unknown> = {}) => {

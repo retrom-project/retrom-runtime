@@ -1,3 +1,5 @@
+import {createRpgPluginFiles, isPluginSavePath} from "../../../src/native-web/plugin-files.ts";
+
 export function installRpgRuntimeNativeBridge(global, inputFilter) {
   "use strict";
 
@@ -34,6 +36,9 @@ export function installRpgRuntimeNativeBridge(global, inputFilter) {
   let engineReadySent = false;
   let sceneManagerHooked = false;
   let exitRequested = false;
+  let bootCompleted = false;
+  let closed = false;
+  let pluginFiles = null;
   let inputDiagnostics = null;
   const editorMapCache = new Map();
 
@@ -152,32 +157,48 @@ export function installRpgRuntimeNativeBridge(global, inputFilter) {
       mediaType: "application/octet-stream",
       data: bytes.slice().buffer,
     }));
+    if (profile === "RPGMV" && pluginFiles) {
+      for (const file of pluginFiles.snapshot()) entries.push({
+        store: "FILESYSTEM", key: file.path, mediaType: "application/octet-stream", data: file.data,
+      });
+    }
     return { bundle: { engine: engine(), resumeSlot: slot, entries } };
   }
 
   function validateRestoreBundle(bundle) {
     if (!bundle || bundle.engine !== engine() || !Number.isSafeInteger(bundle.resumeSlot) ||
-      bundle.resumeSlot < 1 || !Array.isArray(bundle.entries) || bundle.entries.length < 1 || bundle.entries.length > 2) {
+      bundle.resumeSlot < 1 || !Array.isArray(bundle.entries) || bundle.entries.length < 1 || bundle.entries.length > 130) {
       throw new Error("RPG_CHECKPOINT_RESTORE_INVALID");
     }
     const allowed = new Set(storageNames(bundle.resumeSlot));
     const expectedStore = profile === "RPGMZ" ? "LOCALFORAGE" : "LOCAL_STORAGE";
     const entries = new Map();
+    const files = [];
+    const fileKeys = new Set();
+    let totalBytes = 0;
     for (const entry of bundle.entries) {
-      if (!ownKeys(entry, ["data", "key", "mediaType", "store"]) || entry.store !== expectedStore ||
-        typeof entry.key !== "string" || !allowed.has(entry.key) || entries.has(entry.key) ||
-        !(entry.data instanceof ArrayBuffer) || !entry.data.byteLength || entry.data.byteLength > MAX_ENTRY_BYTES) {
+      if (!ownKeys(entry, ["data", "key", "mediaType", "store"]) ||
+        typeof entry.key !== "string" || entry.mediaType !== "application/octet-stream" ||
+        !(entry.data instanceof ArrayBuffer) || entry.data.byteLength > MAX_ENTRY_BYTES) {
         throw new Error("RPG_CHECKPOINT_RESTORE_INVALID");
       }
-      entries.set(entry.key, new Uint8Array(entry.data));
+      totalBytes += entry.data.byteLength;
+      if (totalBytes > MAX_ENTRY_BYTES) throw new Error("RPG_CHECKPOINT_RESTORE_INVALID");
+      if (profile === "RPGMV" && entry.store === "FILESYSTEM" && isPluginSavePath(entry.key) && !fileKeys.has(entry.key)) {
+        fileKeys.add(entry.key);
+        files.push({path: entry.key, data: entry.data});
+      } else if (entry.store === expectedStore && allowed.has(entry.key) && !entries.has(entry.key) && entry.data.byteLength) {
+        entries.set(entry.key, new Uint8Array(entry.data));
+      } else throw new Error("RPG_CHECKPOINT_RESTORE_INVALID");
     }
     if (!entries.has(storageNames(bundle.resumeSlot)[1])) throw new Error("RPG_CHECKPOINT_RESTORE_INVALID");
-    return { slot: bundle.resumeSlot, entries };
+    return { slot: bundle.resumeSlot, entries, files };
   }
 
   async function restoreNativeSave(bundle) {
     const validated = validateRestoreBundle(bundle);
     await waitForDatabase();
+    await waitForMVBoot();
     await waitForMZRestoreRuntime();
     const storage = global.StorageManager;
     const restorers = [];
@@ -206,12 +227,17 @@ export function installRpgRuntimeNativeBridge(global, inputFilter) {
     }
     if (!supported) throw new Error("RPG_CHECKPOINT_STORAGE_UNSUPPORTED");
     if (profile === "RPGMV") global.DataManager._globalInfo = null;
+    const previousFiles = pluginFiles && pluginFiles.snapshot();
     try {
+      if (pluginFiles) pluginFiles.restore(validated.files);
       const loaded = await global.DataManager.loadGame(validated.slot);
       if (loaded === false) throw new Error("RPG_CHECKPOINT_RESTORE_FAILED");
       if (global.SceneManager && global.Scene_Map) global.SceneManager.goto(global.Scene_Map);
       runGameSystemHook("onAfterLoad");
       await waitForMap();
+    } catch (error) {
+      if (pluginFiles && previousFiles) pluginFiles.restore(previousFiles);
+      throw error;
     } finally {
       restorers.reverse().forEach((restore) => restore());
     }
@@ -228,6 +254,20 @@ export function installRpgRuntimeNativeBridge(global, inputFilter) {
       function poll() {
         if (manager.isDatabaseLoaded()) { resolve(); return; }
         if (performance.now() >= deadline) { reject(new Error("RPG_CHECKPOINT_DATABASE_TIMEOUT")); return; }
+        global.requestAnimationFrame(poll);
+      }
+      poll();
+    });
+  }
+
+  function waitForMVBoot() {
+    if (profile !== "RPGMV") return Promise.resolve();
+    const deadline = performance.now() + 30000;
+    return new Promise((resolve, reject) => {
+      function poll() {
+        if (closed) { reject(new Error("RPG_NATIVE_CHANNEL_CLOSED")); return; }
+        if (bootCompleted) { resolve(); return; }
+        if (performance.now() >= deadline) { reject(new Error("RPG_CHECKPOINT_RESTORE_TIMEOUT")); return; }
         global.requestAnimationFrame(poll);
       }
       poll();
@@ -872,6 +912,8 @@ export function installRpgRuntimeNativeBridge(global, inputFilter) {
     case "EDITOR_SELF_SWITCH_EVENTS": return {type: "EDITOR_SELF_SWITCH_EVENTS_RESULT", body: await editorEventPage(message.body)};
     case "EDITOR_SELF_SWITCH_SET": return {type: "EDITOR_SELF_SWITCH_SET_RESULT", body: await editorSetSelfSwitch(message.body)};
     case "CLEANUP":
+      closed = true;
+      if (pluginFiles) pluginFiles.close();
       inputFilter.stop();
       if (inputDiagnostics) inputDiagnostics.stop();
       inputDiagnostics = null;
@@ -956,11 +998,63 @@ export function installRpgRuntimeNativeBridge(global, inputFilter) {
     });
   }
 
+  function installDesktopCompatibility(bootPrototype) {
+    const isReady = bootPrototype.isReady;
+    if (typeof isReady === "function") bootPrototype.isReady = function runtimeBootReady() {
+      return Boolean(pluginFiles) && isReady.apply(this, arguments);
+    };
+    global.require = function requirePluginModule(name) {
+      if (name !== "fs") throw new Error("RPG_PLUGIN_MODULE_UNSUPPORTED");
+      if (!pluginFiles) throw new Error("RPG_PLUGIN_FILES_NOT_READY");
+      return pluginFiles.fs;
+    };
+    global.StorageManager.localFileDirectoryPath = () => pluginFiles.saveDirectory;
+    const manager = global.DataManager;
+    if (typeof manager.makeSavefileInfo === "function") {
+      const makeInfo = manager.makeSavefileInfo;
+      manager.makeSavefileInfo = function runtimeSavefileInfo() {
+        const info = makeInfo.apply(this, arguments);
+        return {...info, runtimeGameTitle: global.$dataSystem.gameTitle};
+      };
+    }
+    if (typeof manager.isThisGameFile === "function") {
+      const isThisGameFile = manager.isThisGameFile;
+      manager.isThisGameFile = function runtimeIsThisGameFile(id) {
+        const info = this.loadGlobalInfo()[id];
+        if (!info || !Object.hasOwn(info, "runtimeGameTitle")) return isThisGameFile.apply(this, arguments);
+        if (info.runtimeGameTitle !== global.$dataSystem.gameTitle) return false;
+        const loadInfo = this.loadGlobalInfo;
+        // Keep plugin display text and all original engine/plugin identity checks.
+        this.loadGlobalInfo = function runtimeIdentityInfo() {
+          const result = loadInfo.apply(this, arguments).slice();
+          result[id] = {...result[id], title: info.runtimeGameTitle};
+          return result;
+        };
+        try { return isThisGameFile.apply(this, arguments); }
+        finally { this.loadGlobalInfo = loadInfo; }
+      };
+    }
+  }
+
   installCanvasTextAlignCompatibility();
+  // Install after plugins have wrapped Boot.start, before the game's window.onload runs it.
+  global.addEventListener("load", function prepareEngine(event) {
+    if (event.target !== global.document) return;
+    const prototype = global.Scene_Boot && global.Scene_Boot.prototype;
+    if (!prototype || typeof prototype.start !== "function") return;
+    if (global.Utils && global.Utils.RPGMAKER_NAME === "MV") installDesktopCompatibility(prototype);
+    const start = prototype.start;
+    prototype.start = function runtimeBootStart() {
+      const result = start.apply(this, arguments);
+      bootCompleted = true;
+      return result;
+    };
+  }, true);
+  global.addEventListener("pagehide", () => { closed = true; }, {once: true});
 
   global.addEventListener("message", function connect(eventMessage) {
     const message = eventMessage.data;
-    if (eventMessage.source !== global.parent || !ownKeys(message, ["launchId", "nonce", "parentOrigin", "profile", "protocolVersion", "type"]) ||
+    if (eventMessage.source !== global.parent || !ownKeys(message, ["launchId", "nonce", "parentOrigin", "pluginFiles", "profile", "protocolVersion", "type"]) ||
       message.type !== "RPG_RUNTIME_NATIVE_CONNECT" || message.protocolVersion !== PROTOCOL_VERSION ||
       typeof message.launchId !== "string" || typeof message.nonce !== "string" ||
       typeof message.parentOrigin !== "string" || eventMessage.origin !== message.parentOrigin ||
@@ -976,6 +1070,10 @@ export function installRpgRuntimeNativeBridge(global, inputFilter) {
     port = eventMessage.ports[0];
     port.onmessage = (portEvent) => { void receive(portEvent.data); };
     port.start();
+    if (profile === "RPGMV") {
+      try { pluginFiles = createRpgPluginFiles(global.location.href, message.pluginFiles); }
+      catch (error) { event("ERROR", {code: error.message}); return; }
+    }
     pollForEngine();
   }, true);
 

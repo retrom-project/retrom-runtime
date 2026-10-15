@@ -1,3 +1,4 @@
+import {isPluginSavePath, type RpgPluginFile} from "./plugin-files.js";
 import type {RuntimeHostShortcutV1} from "../provider/module-api.js";
 import {NativeInputDiagnostics} from "./input-diagnostics.js";
 import {createNativeGameEditor} from "./editor.js";
@@ -43,8 +44,9 @@ export async function mountNativeRpg(
   restorePayload: Uint8Array | null,
   reportExitRequested: RuntimeExitReporter = () => undefined,
   readyOptions: NativeReadyOptions = {},
+  pluginFiles: RpgPluginFile[] = [],
 ) {
-  const channel = new NativeChannel(config, reportExitRequested);
+  const channel = new NativeChannel(config, reportExitRequested, pluginFiles);
   frame.setAttribute("sandbox", "allow-scripts allow-same-origin allow-pointer-lock");
   frame.referrerPolicy = "no-referrer";
   let expectedEngine: "RPGMV" | "RPGMZ";
@@ -120,7 +122,7 @@ export class NativeChannel {
   private statusActive = false;
   private exiting = false;
 
-  constructor(config: NativeRpgParameters, private readonly reportExitRequested: RuntimeExitReporter) {
+  constructor(config: NativeRpgParameters, private readonly reportExitRequested: RuntimeExitReporter, private readonly pluginFiles: RpgPluginFile[] = []) {
     this.config = config;
     this.port.port1.onmessage = (event) => this.receive(event.data);
     this.port.port1.start();
@@ -132,8 +134,8 @@ export class NativeChannel {
     target.postMessage({
       type: "RPG_RUNTIME_NATIVE_CONNECT", protocolVersion,
       launchId: this.config.sessionId, nonce: this.nonce, parentOrigin: window.location.origin,
-      profile: this.config.bridgeProfile,
-    }, this.config.uniqueOrigin, [this.port.port2]);
+      profile: this.config.bridgeProfile, pluginFiles: this.pluginFiles,
+    }, this.config.uniqueOrigin, [this.port.port2, ...this.pluginFiles.map(file => file.data)]);
   }
 
   ready(options: NativeReadyOptions = {}) {
@@ -358,15 +360,18 @@ function readBundle(value: unknown, engine: string): RpgCheckpointBundle {
   if (!value || typeof value !== "object" || Array.isArray(value)) {throw new Error("RPG_CHECKPOINT_CREATE_FAILED");}
   const bundle = value as { engine?: unknown; resumeSlot?: unknown; entries?: unknown };
   if (bundle.engine !== engine || !Number.isSafeInteger(bundle.resumeSlot) || Number(bundle.resumeSlot) < 1 ||
-    !Array.isArray(bundle.entries) || !bundle.entries.length || bundle.entries.length > 2) {throw new Error("RPG_CHECKPOINT_CREATE_FAILED");}
+    !Array.isArray(bundle.entries) || !bundle.entries.length || bundle.entries.length > 130) {throw new Error("RPG_CHECKPOINT_CREATE_FAILED");}
+  const expectedStore = engine === "RPGMV" ? "LOCAL_STORAGE" : "LOCALFORAGE";
+  const allowed = engine === "RPGMV" ? ["0", String(bundle.resumeSlot)] : ["global", `file${bundle.resumeSlot}`];
   const entries = bundle.entries.map((raw) => {
     if (!raw || typeof raw !== "object" || Array.isArray(raw)) {throw new Error("RPG_CHECKPOINT_CREATE_FAILED");}
     const entry = raw as { store?: unknown; key?: unknown; mediaType?: unknown; data?: unknown };
-    if ((entry.store !== "LOCAL_STORAGE" && entry.store !== "LOCALFORAGE") || typeof entry.key !== "string" ||
-      typeof entry.mediaType !== "string" || !(entry.data instanceof ArrayBuffer) || !entry.data.byteLength ||
+    const pluginFile = engine === "RPGMV" && entry.store === "FILESYSTEM" &&
+      typeof entry.key === "string" && isPluginSavePath(entry.key);
+    if (typeof entry.key !== "string" || (!pluginFile && (entry.store !== expectedStore || !allowed.includes(entry.key))) ||
+      entry.mediaType !== "application/octet-stream" || !(entry.data instanceof ArrayBuffer) || (!pluginFile && !entry.data.byteLength) ||
       entry.data.byteLength > maximumCheckpointBytes) {throw new Error("RPG_CHECKPOINT_CREATE_FAILED");}
-    const store: RpgCheckpointStore = entry.store;
-    if (store !== "LOCAL_STORAGE" && store !== "LOCALFORAGE") {throw new Error("RPG_CHECKPOINT_CREATE_FAILED");}
+    const store: RpgCheckpointStore = pluginFile ? "FILESYSTEM" : expectedStore;
     return { store, key: entry.key, mediaType: "application/octet-stream" as const, data: new Uint8Array(entry.data) };
   });
   return { engine: engine as "RPGMV" | "RPGMZ", resumeSlot: Number(bundle.resumeSlot), entries };

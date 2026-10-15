@@ -53,3 +53,13 @@ it("resolves mixed-engine projects only through an explicit valid entry", () => 
     .toEqual(config("RPGMV", "www/index.html").content);
   expect(() => configureRuntime({...input, selection: {entryFile: "docs/index.html"}})).toThrow("RUNTIME_RPG_ENTRY_INVALID");
 });
+it.each(["RPGMV", "RPGMZ"] as const)("scopes %s plugin resources to the selected project without exposing desktop binaries", engine => {
+  const files = ["Game/www/index.html", `Game/www/js/${engine === 'RPGMV' ? 'rpg_core' : 'rmmz_core'}.js`,
+    "Game/scenario/En/001.sl", "Game/scenario/CG.txt", "Game/scenario/movie.ogg", "Game/Game.exe",
+    "Other/scenario/En/001.sl", "Game/readme.txt"].map(file);
+  const request = {directory: {platformId: "rpgmaker", defaultCoreId: "rpgmaker", allowedCoreIds: ["rpgmaker"]},
+    files, config: config(engine, "Game/www/index.html"),
+    fingerprints: {[`retrom-runtime/rpgmaker-${engine === 'RPGMV' ? 'mv' : 'mz'}`]: "b".repeat(64)}};
+  const game = prepareRuntime(request).resources.find(resource => resource.role === "game")!;
+  expect(game.files).toEqual(engine === "RPGMV" ? files.slice(0, 4).map(file => file.logicalKey) : files.slice(0, 2).map(file => file.logicalKey));
+});

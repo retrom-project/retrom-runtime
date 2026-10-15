@@ -24,7 +24,7 @@ vi.mock("../../tyranoscript/adapter.js", () => ({mountTyranoScript: vi.fn()}));
 vi.mock("../../wasm4/adapter.js", () => ({mountWasm4: vi.fn()}));
 vi.mock("../../fantasy-console/adapter.js", () => ({mountFantasyConsole: vi.fn()}));
 vi.mock("../../native-web/content-bridge.js", () => ({
-  mountWithNativeContent: vi.fn((_envelope: unknown, _frame: unknown, _session: unknown, mount: (loading: NativeContentActivity) => Promise<unknown>) => mount(new NativeContentActivity())),
+  mountWithNativeContent: vi.fn((_envelope: unknown, _frame: unknown, _session: unknown, mount: (loading: NativeContentActivity, files: []) => Promise<unknown>) => mount(new NativeContentActivity(), [])),
 }));
 beforeEach(() => {vi.clearAllMocks();});
 
@@ -93,7 +93,7 @@ describe("Provider to core-private parameters", () => {
       expect(mountNativeRpg).toHaveBeenCalledWith({
         sessionId: request.session.id, bridgeProfile,
         uniqueOrigin: "https://runtime.test",
-      }, options.frame, null, options.reportExitRequested, {loading: expect.any(NativeContentActivity), signal: options.signal});
+      }, options.frame, null, options.reportExitRequested, {loading: expect.any(NativeContentActivity), signal: options.signal}, []);
     },
   );
 

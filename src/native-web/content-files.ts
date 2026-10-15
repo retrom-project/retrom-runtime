@@ -1,3 +1,4 @@
+import {rpgPluginScenarioPath} from "../runtime/rpg-plugin-paths.js";
 import type {ContentReaderV1, ContentSourceV1, ManagedInputPolicyV1} from "../../contracts/content-io/v1/content-io.js";
 import {ContentIOError} from "../content-io/errors.js";
 import {canonicalPath, integer, record} from "../content-io/source.js";
@@ -10,11 +11,13 @@ export class NativeContentFiles {
   private readonly files = new Map<string, File>();
   private readonly folded = new Map<string, string | null>();
   private nativeAudio = false;
+  private entryFile = "";
   private closed = false;
   constructor(private readonly session: ContentSessionAccess, private readonly policy: ManagedInputPolicyV1,
     private readonly signal?: AbortSignal) {}
   async load(resource: RuntimeWebResourceV1): Promise<void> {
     this.nativeAudio = resource.kind === "NATIVE_WEB";
+    this.entryFile = resource.entryFile;
     const base = new URL(resource.indexUrl, location.href);
     const value = await fetchMetadataJson(base, indexByteBudget(100_000, 4096), this.signal);
     if (!record(value) || value.schemaVersion !== 1 || !Array.isArray(value.files) || value.files.length > 100_000) {throw invalid();}
@@ -41,6 +44,22 @@ export class NativeContentFiles {
     const bytes = new Uint8Array(value.length);
     await reader.readInto(value.offset, bytes, this.signal);
     return {status: 200, bytes};
+  }
+  /** Desktop plugins synchronously read a small scenario script set; media remains demand-paged. */
+  async prepareRpgPluginFiles(): Promise<Array<{path: string; data: ArrayBuffer}>> {
+    const selected = [...this.files].filter(([path]) => rpgPluginScenarioPath(this.entryFile, path) !== null);
+    const total = selected.reduce((size, [, file]) => size + file.source.sizeBytes, 0);
+    if (selected.length > 4096 || total > 16 * 1024 * 1024) {throw new Error("RPG_PLUGIN_FILES_TOO_LARGE");}
+    const result: Array<{path: string; data: ArrayBuffer}> = [];
+    for (const [path, file] of selected) {
+      const bytes = new Uint8Array(file.source.sizeBytes);
+      for (let offset = 0; offset < bytes.length; offset += 262144) {
+        const reply = await this.request({type: "READ", path, offset, length: Math.min(262144, bytes.length - offset)});
+        bytes.set(reply.bytes as Uint8Array, offset);
+      }
+      result.push({path: rpgPluginScenarioPath(this.entryFile, path)!, data: bytes.buffer});
+    }
+    return result;
   }
   async close(): Promise<void> {
     this.closed = true;

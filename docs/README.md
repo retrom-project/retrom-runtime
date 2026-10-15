@@ -4,6 +4,7 @@ This directory contains detailed documentation for individual runtime targets.
 
 ## Target Guides
 
+- [RPG Maker MV desktop plugins](targets/rpgmaker-mv.md)
 - [Uzebox / Uzem](targets/uzebox.md)
 - [Pokémon Mini / GBE+](targets/gbe-pokemini.md)
 - [PC-98 / NP2kai](targets/np2kai-pc98.md)

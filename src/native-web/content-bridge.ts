@@ -1,3 +1,4 @@
+import type {RpgPluginFile} from "./plugin-files.js";
 import type {MountedRuntimeAdapter} from "../internal-adapter.js";
 import type {AdapterContentSession} from "../provider/content-inputs.js";
 import type {LaunchEnvelopeV1} from "../provider/module-api.js";
@@ -8,7 +9,7 @@ import {NativeReadQueue} from "./read-queue.js";
 
 /** The frame receives only reads from the current immutable game, never the cache or its transport credentials. */
 export async function mountWithNativeContent(envelope: LaunchEnvelopeV1, frame: HTMLIFrameElement,
-  session: AdapterContentSession, mount: (loading: NativeContentActivity) => Promise<MountedRuntimeAdapter>, signal?: AbortSignal,
+  session: AdapterContentSession, mount: (loading: NativeContentActivity, pluginFiles: RpgPluginFile[]) => Promise<MountedRuntimeAdapter>, signal?: AbortSignal,
   reportFailure: (error: Error) => void = () => {}) {
   const resource = envelope.resources.find(item => item.role === "game" && (item.kind === "NATIVE_WEB" || item.kind === "ISOLATED_WEB"));
   if (!resource || !("origin" in resource)) {throw new Error("PROVIDER_LAUNCH_REQUEST_INVALID");}
@@ -61,9 +62,11 @@ export async function mountWithNativeContent(envelope: LaunchEnvelopeV1, frame: 
   try {
     await files.load(resource);
     if (signal?.aborted) {throw new DOMException("Aborted", "AbortError");}
+    const pluginFiles = envelope.runtime.targetId === "rpgmaker-mv" ? await files.prepareRpgPluginFiles() : [];
+    if (signal?.aborted) {throw new DOMException("Aborted", "AbortError");}
     window.addEventListener("message", receive);
     signal?.addEventListener("abort", abort, {once: true});
-    const adapter = await mount(loading);
+    const adapter = await mount(loading, pluginFiles);
     return {...adapter, exit: async () => {try {await adapter.exit();} finally {await close();}}};
   } catch (error) {await close(); throw error;}
 }

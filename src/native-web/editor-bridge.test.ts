@@ -72,6 +72,7 @@ describe("native-web RPG Maker game editor bridge", () => {
       json: async () => otherMap}));
     const item = {id: 2, name: "Potion"};
     const runtime = {
+      location: {href: "https://runtime.example/game/www/index.html"},
       DataManager: {}, StorageManager: {}, Utils: {RPGMAKER_NAME: edition}, SceneManager: sceneManager,
       $dataItems: [null, {id: 1, name: ""}, item], $dataWeapons: [null], $dataArmors: [null],
       $dataSkills: [null, {id: 1, name: ""}, {id: 2, name: "Fire"}],
@@ -103,13 +104,13 @@ describe("native-web RPG Maker game editor bridge", () => {
       },
       parent: {postMessage: () => undefined}, requestAnimationFrame: () => 1,
     };
-    runInNewContext(source, {TextDecoder, TextEncoder, window: runtime});
+    runInNewContext(source, {URL, TextDecoder, TextEncoder, window: runtime});
     const port: FakePort = {onmessage: null, postMessage: (message) => replies.push(message as typeof replies[number]),
       start: () => undefined};
     const identity = {launchId: "01980000-0000-7000-8000-000000000001", nonce: "test-nonce", protocolVersion: 1};
     listeners.get("message")?.[0]?.({
       data: {...identity, parentOrigin: "https://host.example",
-        profile: `RPG${edition}`, type: "RPG_RUNTIME_NATIVE_CONNECT"},
+        profile: `RPG${edition}`, type: "RPG_RUNTIME_NATIVE_CONNECT", pluginFiles: []},
       origin: "https://host.example", source: runtime.parent, ports: [port], stopImmediatePropagation: () => undefined,
     });
     async function request(requestId: number, type: string, body: Record<string, unknown>) {

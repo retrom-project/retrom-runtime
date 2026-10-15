@@ -29,6 +29,7 @@ describe("native-web RPG Maker bridge", () => {
     const setImageRendering = vi.fn();
     const sceneManager = { _scene: null, exit: nativeExit, updateMain: () => undefined };
     const runtime = {
+      location: {href: "https://runtime.example/game/www/index.html"},
       DataManager: {},
       document: {querySelectorAll: () => [{style: {setProperty: setImageRendering}}]},
       SceneManager: sceneManager,
@@ -40,7 +41,7 @@ describe("native-web RPG Maker bridge", () => {
       parent: { postMessage: () => undefined },
       requestAnimationFrame: () => 1,
     };
-    runInNewContext(source, { TextDecoder, TextEncoder, window: runtime });
+    runInNewContext(source, { URL, TextDecoder, TextEncoder, window: runtime });
     const port: FakePort = {
       onmessage: null,
       postMessage: (message) => replies.push(message),
@@ -54,7 +55,7 @@ describe("native-web RPG Maker bridge", () => {
         parentOrigin: "https://host.example",
         profile: "RPGMV",
         protocolVersion: 1,
-        type: "RPG_RUNTIME_NATIVE_CONNECT",
+        type: "RPG_RUNTIME_NATIVE_CONNECT", pluginFiles: [],
       },
       origin: "https://host.example", source: runtime.parent,
       ports: [port],
@@ -119,12 +120,13 @@ describe("native-web RPG Maker bridge", () => {
     });
     const fetcher = vi.fn();
     const runtime = {
+      location: {href: "https://runtime.example/game/www/index.html"},
       CanvasRenderingContext2D: FakeCanvasRenderingContext2D,
       addEventListener: (name: string, callback: (event: BridgeEvent) => void) => {
         listeners.set(name, [...(listeners.get(name) ?? []), callback]);
       },
       fetch: fetcher,
-      location: {href: "https://runtime.example/game/index.html", origin: "https://runtime.example"},
+
       parent: {postMessage: () => undefined},
       requestAnimationFrame: () => 1,
     };
@@ -139,7 +141,7 @@ describe("native-web RPG Maker bridge", () => {
     listeners.get("message")?.[0]?.({
       data: {
         launchId, nonce, parentOrigin: "https://host.example", profile: "RPGMV",
-        protocolVersion: 1, type: "RPG_RUNTIME_NATIVE_CONNECT",
+        protocolVersion: 1, type: "RPG_RUNTIME_NATIVE_CONNECT", pluginFiles: [],
       },
       origin: "https://host.example", source: runtime.parent,
       ports: [port],
@@ -162,7 +164,7 @@ describe("native-web RPG Maker bridge", () => {
     })));
   });
 
-  it("waits for the engine database before restoring an MV save", async () => {
+  it("waits for both the database and the complete MV plugin boot hook before restoring", async () => {
     const source = readFileSync(
       resolve(process.cwd(), "assets/runtime/native/bridge.js"),
       "utf8",
@@ -172,6 +174,8 @@ describe("native-web RPG Maker bridge", () => {
     const animationFrames: Array<() => void> = [];
     let databaseLoaded = false;
     let loadedSave = "";
+    let particlesReady = false;
+    class SceneBoot { start() { particlesReady = true; } }
     const afterLoad = vi.fn();
     class SceneMap {}
     const storage = {
@@ -193,17 +197,21 @@ describe("native-web RPG Maker bridge", () => {
       },
       loadGame(slot: number) {
         if (!this.loadGlobalInfo()[slot]) {return false;}
+        if (!particlesReady) {throw new Error("PARTICLES_NOT_INITIALIZED");}
         loadedSave = storage.load(slot);
         return true;
       },
     };
     const runtime = {
+      location: {href: "https://runtime.example/game/www/index.html"},
       $gameMap: { isEventRunning: () => false, mapId: () => 1 },
       $gameMessage: { isBusy: () => false },
+      document: {},
       $gamePlayer: { x: 11, y: 8 },
       $gameSystem: { onAfterLoad: afterLoad },
       $gameVariables: { value: () => 1 },
       DataManager: dataManager,
+      Scene_Boot: SceneBoot,
       Scene_Map: SceneMap,
       SceneManager: sceneManager,
       StorageManager: storage,
@@ -214,7 +222,7 @@ describe("native-web RPG Maker bridge", () => {
       parent: { postMessage: () => undefined },
       requestAnimationFrame: (callback: () => void) => {animationFrames.push(callback); return animationFrames.length;},
     };
-    const context = createContext({performance, TextDecoder, TextEncoder, window: runtime});
+    const context = createContext({URL, performance, TextDecoder, TextEncoder, window: runtime});
     runInContext(source, context);
     const saveData = runInContext(
       "Uint8Array.from([115,97,118,101,100,45,97,116,45,98]).buffer",
@@ -231,12 +239,13 @@ describe("native-web RPG Maker bridge", () => {
     const launchId = "01980000-0000-7000-8000-000000000001";
     const nonce = "test-nonce";
     listeners.get("message")?.[0]?.({
-      data: { launchId, nonce, parentOrigin: "https://host.example", profile: "RPGMV", protocolVersion: 1, type: "RPG_RUNTIME_NATIVE_CONNECT" },
+      data: { launchId, nonce, parentOrigin: "https://host.example", profile: "RPGMV", protocolVersion: 1, type: "RPG_RUNTIME_NATIVE_CONNECT", pluginFiles: [] },
       origin: "https://host.example", source: runtime.parent,
       ports: [port],
       stopImmediatePropagation: () => undefined,
     });
 
+    listeners.get("load")?.forEach(listener => listener({target: runtime.document} as unknown as BridgeEvent));
     port.onmessage?.({data: {
       body: {bundle: {
         engine: "RPGMV",
@@ -257,6 +266,11 @@ describe("native-web RPG Maker bridge", () => {
     expect(replies.some((reply) => (reply as {type?: string}).type === "RESTORE_RESULT")).toBe(false);
 
     databaseLoaded = true;
+    animationFrames.shift()?.();
+    await new Promise(resolve => setTimeout(resolve, 0));
+    expect(loadedSave).toBe("");
+    expect(replies).toEqual([]);
+    new SceneBoot().start();
     animationFrames.shift()?.();
     await vi.waitFor(() => expect(replies).toContainEqual({
       body: {},
@@ -324,6 +338,7 @@ describe("native-web RPG Maker bridge", () => {
       },
     };
     const runtime = {
+      location: {href: "https://runtime.example/game/www/index.html"},
       $gameMap: { isEventRunning: () => false, mapId: () => 3 },
       $gameMessage: { isBusy: () => false },
       $gamePlayer: { x: 9, y: 13 },
@@ -353,7 +368,7 @@ describe("native-web RPG Maker bridge", () => {
     const launchId = "01980000-0000-7000-8000-000000000001";
     const nonce = "test-nonce";
     listeners.get("message")?.[0]?.({
-      data: { launchId, nonce, parentOrigin: "https://host.example", profile: "RPGMZ", protocolVersion: 1, type: "RPG_RUNTIME_NATIVE_CONNECT" },
+      data: { launchId, nonce, parentOrigin: "https://host.example", profile: "RPGMZ", protocolVersion: 1, type: "RPG_RUNTIME_NATIVE_CONNECT", pluginFiles: [] },
       origin: "https://host.example", source: runtime.parent,
       ports: [port],
       stopImmediatePropagation: () => undefined,

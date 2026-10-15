@@ -1,3 +1,4 @@
+import {rpgPluginScenarioPath} from "./rpg-plugin-paths.js";
 import {projectProviderManifest} from "../provider/manifest.js";
 import {validateTargetOptionsAgainstSchema} from "../provider/module-api.js";
 import type {TargetOptionsV1} from "../provider/module-api.js";
@@ -248,7 +249,9 @@ function gameResource(kind: ResourceKind, config: RuntimeConfiguration, files: r
   const packed = kind === "SEEKABLE_BLOB" && content.kind === "RPG_MAKER_PROJECT";
   if (["FILE_TREE", "NATIVE_WEB", "ISOLATED_WEB"].includes(kind) || packed) {
     const root = entry?.slice(0, entry.lastIndexOf("/") + 1) ?? "";
-    plan.files = files.filter(file => file.logicalKey.startsWith(root)).map(file => file.logicalKey);
+    const mv = content.kind === "RPG_MAKER_PROJECT" && content.engine === "RPGMV";
+    plan.files = files.filter(file => file.logicalKey.startsWith(root) ||
+      mv && rpgPluginScenarioPath(entry ?? "", file.logicalKey) !== null).map(file => file.logicalKey);
     if (kind === "FILE_TREE" || packed) {
       plan.paths = projectPaths(plan.files, entry ?? "");
       if (entry) {plan.entryFile = plan.paths[entry];}

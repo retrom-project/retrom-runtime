@@ -87,3 +87,25 @@ it("does not resolve ambiguous codec names through another audio variant", async
   expect(await content.request({type: "STAT", path: "audio/se/Theme.m4a"})).toEqual({status: 404});
   await content.close();
 });
+
+it("prepares only bounded scenario text through Content I/O for synchronous desktop plugins", async () => {
+  const {content, session, readInto} = await fixture([...entries,
+    {...entries[1], path: "scenario/En/opening.sl", sizeBytes: 8},
+    {...entries[1], path: "scenario/CG.txt", sizeBytes: 8},
+    {...entries[1], path: "scenario/movie.ogg", sizeBytes: 8},
+    {...entries[1], path: "private.txt", sizeBytes: 8},
+  ]);
+  const files = await content.prepareRpgPluginFiles();
+  expect(files.map(file => file.path)).toEqual(["scenario/En/opening.sl", "scenario/CG.txt"]);
+  expect(files[0].data).toEqual(new Uint8Array(8).fill(7).buffer);
+  expect(session.open).toHaveBeenCalledTimes(2);
+  expect(readInto).toHaveBeenCalledTimes(2);
+  await content.close();
+});
+it("rejects an oversized desktop scenario set before opening any content", async () => {
+  const {content, session} = await fixture([...entries, ...Array.from({length: 4097}, (_, n) => ({
+    ...entries[1], path: `scenario/${n}.sl`, sizeBytes: 8,
+  }))]);
+  await expect(content.prepareRpgPluginFiles()).rejects.toThrow("RPG_PLUGIN_FILES_TOO_LARGE");
+  expect(session.open).not.toHaveBeenCalled(); await content.close();
+});

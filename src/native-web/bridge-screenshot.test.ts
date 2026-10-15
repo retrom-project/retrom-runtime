@@ -39,6 +39,7 @@ describe("native-web RPG Maker screenshot bridge", () => {
     }));
     const animationFrames: FrameRequestCallback[] = [];
     const runtime = {
+      location: {href: "https://runtime.example/game/www/index.html"},
       Bitmap: {snap},
       SceneManager: {_scene: {marker: "visible-scene"}, updateMain: () => undefined},
       document: {
@@ -55,7 +56,7 @@ describe("native-web RPG Maker screenshot bridge", () => {
         return animationFrames.length;
       },
     };
-    runInNewContext(source, {Blob, TextDecoder, TextEncoder, window: runtime});
+    runInNewContext(source, {URL, Blob, TextDecoder, TextEncoder, window: runtime});
     const port: FakePort = {
       onmessage: null,
       postMessage: (message) => replies.push(message),
@@ -64,7 +65,7 @@ describe("native-web RPG Maker screenshot bridge", () => {
     const launchId = "01980000-0000-7000-8000-000000000001";
     const nonce = "test-nonce";
     listeners.get("message")?.[0]?.({
-      data: {launchId, nonce, parentOrigin: "https://host.example", profile: "RPGMV", protocolVersion: 1, type: "RPG_RUNTIME_NATIVE_CONNECT"},
+      data: {launchId, nonce, parentOrigin: "https://host.example", profile: "RPGMV", protocolVersion: 1, type: "RPG_RUNTIME_NATIVE_CONNECT", pluginFiles: []},
       origin: "https://host.example", source: runtime.parent,
       ports: [port],
       stopImmediatePropagation: () => undefined,

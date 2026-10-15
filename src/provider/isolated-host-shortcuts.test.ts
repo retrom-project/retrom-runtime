@@ -11,14 +11,14 @@ function bridge(name: "native" | "tyranoscript") {
   const kag = {on() {}, once() {}, off() {}, trigger() {}, chara: {}, event: {}, layer: {},
     ftag: {array_tag: [{name:"s"}],current_order_index:0}, key_mouse:{util:{canShowMenu:()=>true}},
     menu:{}, stat:{current_scenario:"first.ks",f:{}}};
-  const global = {parent, document, TYRANO:{kag}, Utils:{RPGMAKER_NAME:"MV"}, SceneManager:{updateMain() {}},
+  const global = {parent, document, location: {href:"https://runtime.example/game/www/index.html"}, TYRANO:{kag}, Utils:{RPGMAKER_NAME:"MV"}, SceneManager:{updateMain() {}},
     DataManager:{},StorageManager:{}, navigator:{getGamepads:()=>[]}, performance:{now:()=>100},
     requestAnimationFrame:()=>1, cancelAnimationFrame() {}, setInterval:()=>1, clearInterval() {},
     addEventListener(name: string, handler: Handler) {const set=handlers.get(name)??new Set<Handler>();set.add(handler);handlers.set(name,set);},
     removeEventListener(name: string, handler: Handler) {handlers.get(name)?.delete(handler);}};
-  runInNewContext(readFileSync(`assets/runtime/${name}/bridge.js`,"utf8"), {window:global,TextEncoder,TextDecoder});
+  runInNewContext(readFileSync(`assets/runtime/${name}/bridge.js`,"utf8"), {window:global,TextEncoder,TextDecoder,URL});
   const identity = {protocolVersion:1,nonce:"abcdefghijklmnop",[name==="native"?"launchId":"sessionId"]:"session"};
-  const configuration = {...identity,parentOrigin:"https://host.example",type:name==="native"?"RPG_RUNTIME_NATIVE_CONNECT":"GAME_RUNTIME_TYRANOSCRIPT_CONNECT",...(name==="native"?{profile:"RPGMV"}:{})};
+  const configuration = {...identity,parentOrigin:"https://host.example",type:name==="native"?"RPG_RUNTIME_NATIVE_CONNECT":"GAME_RUNTIME_TYRANOSCRIPT_CONNECT",...(name==="native"?{profile:"RPGMV",pluginFiles:[]}:{})};
   const connect=(source: unknown,origin="https://host.example")=>{
     for(const handler of [...handlers.get("message")??[]]) {handler({source,origin,ports:[port],data:configuration,stopImmediatePropagation() {}});}
   };

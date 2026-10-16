@@ -257,23 +257,40 @@
 
   // assets/runtime/tyranoscript/browser-storage.js
   function installTyranoBrowserStorage(global) {
-    let releases = [], installed = /* @__PURE__ */ new WeakSet();
+    let releases = [], installed = /* @__PURE__ */ new WeakSet(), legacyStorage = {
+      getStorage(key) {
+        if (!global.localStorage) throw new Error("TYRANOSCRIPT_BROWSER_STORAGE_UNAVAILABLE");
+        let stored = global.localStorage.getItem(key), value = stored === null ? null : unescape(stored);
+        return value === "null" ? null : value;
+      },
+      setStorage(key, value) {
+        if (!global.localStorage) throw new Error("TYRANOSCRIPT_BROWSER_STORAGE_UNAVAILABLE");
+        global.localStorage.setItem(key, escape(JSON.stringify(value)));
+      }
+    };
     function install(library) {
       if (!(!library || typeof library != "object" && typeof library != "function" || installed.has(library))) {
         installed.add(library);
-        for (let [desktop, browser] of [["getStorageFile", "getStorageWeb"], ["setStorageFile", "setStorageWeb"]]) {
+        for (let [desktop, browser] of [
+          ["getStorageFile", "getStorageWeb"],
+          ["setStorageFile", "setStorageWeb"],
+          ["getStorage", "getStorageWeb"],
+          ["setStorage", "setStorageWeb"]
+        ]) {
           let descriptor = Object.getOwnPropertyDescriptor(library, desktop);
           if (descriptor && !descriptor.configurable) continue;
-          let original = library[desktop], redirect = function() {
-            if (typeof library[browser] != "function") throw new Error("TYRANOSCRIPT_BROWSER_STORAGE_UNAVAILABLE");
-            return library[browser].apply(library, arguments);
-          }, get = () => redirect;
+          let original = library[desktop], legacy = legacyStorage[desktop], adapt = (implementation) => function() {
+            if (typeof library[browser] == "function")
+              return legacy && typeof implementation == "function" ? implementation.apply(this, arguments) : library[browser].apply(library, arguments);
+            if (legacy) return legacy.apply(library, arguments);
+            throw new Error("TYRANOSCRIPT_BROWSER_STORAGE_UNAVAILABLE");
+          }, redirect = adapt(original), get = () => redirect;
           Object.defineProperty(library, desktop, {
             configurable: !0,
             enumerable: !0,
             get,
             set: (value) => {
-              original = value;
+              original = value, redirect = adapt(value);
             }
           }), releases.push(() => {
             Object.getOwnPropertyDescriptor(library, desktop)?.get === get && Object.defineProperty(library, desktop, {
@@ -476,9 +493,12 @@
       let eventName = eventIdentity(name).event, matching = legacyListeners.filter((listener) => listener.event === eventName);
       legacyListeners = legacyListeners.filter((listener) => listener.event !== eventName || !listener.once), matching.forEach((listener) => listener.callback(eventObject));
     }
+    function stableEngineState(kag) {
+      return !!(!exited && engineInitialized(kag) && kag.stat && typeof kag.stat.current_scenario == "string" && kag.stat.current_scenario && !kag.stat.is_wait && !kag.stat.is_adding_text && stableCheckpointTag(kag) && !externalVideoActive());
+    }
     function checkpointAvailable() {
       let kag = engine();
-      if (exited || !engineInitialized(kag) || !kag.stat || typeof kag.stat.current_scenario != "string" || !kag.stat.current_scenario || kag.stat.is_wait || kag.stat.is_adding_text || !stableCheckpointTag(kag) || externalVideoActive()) return !1;
+      if (!stableEngineState(kag)) return !1;
       let controls = kag.key_mouse, menuOwner = controls && controls.util && typeof controls.util.canShowMenu == "function" ? controls.util : controls, canShowMenu = menuOwner && menuOwner.canShowMenu;
       if (typeof canShowMenu != "function") return !0;
       try {
@@ -698,7 +718,7 @@
           }
         }
         function waitForStableEngine() {
-          completed || (checkpointAvailable() ? startRestore() : pollTimer = global.setTimeout(waitForStableEngine, 16));
+          completed || (stableEngineState(kag) ? startRestore() : pollTimer = global.setTimeout(waitForStableEngine, 16));
         }
         waitForStableEngine();
       }) : Promise.reject(new Error("TYRANOSCRIPT_RUNTIME_NOT_READY"));

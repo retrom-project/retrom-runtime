@@ -311,11 +311,15 @@ export function installTyranoScriptBridge(global, inputFilter) {
         matching.forEach((listener) => listener.callback(eventObject));
     }
 
+    function stableEngineState(kag) {
+        return Boolean(!exited && engineInitialized(kag) && kag.stat && typeof kag.stat.current_scenario === "string" &&
+            kag.stat.current_scenario && !kag.stat.is_wait && !kag.stat.is_adding_text &&
+            stableCheckpointTag(kag) && !externalVideoActive());
+    }
+
     function checkpointAvailable() {
         const kag = engine();
-        if (exited || !engineInitialized(kag) || !kag.stat || typeof kag.stat.current_scenario !== "string" ||
-            !kag.stat.current_scenario || kag.stat.is_wait || kag.stat.is_adding_text ||
-            !stableCheckpointTag(kag) || externalVideoActive()) return false;
+        if (!stableEngineState(kag)) return false;
         const controls = kag.key_mouse;
         const menuOwner = controls && controls.util && typeof controls.util.canShowMenu === "function"
             ? controls.util : controls;
@@ -663,7 +667,8 @@ export function installTyranoScriptBridge(global, inputFilter) {
             }
             function waitForStableEngine() {
                 if (completed) return;
-                if (checkpointAvailable()) startRestore();
+                // A title screen can disable native saving while still allowing a saved game to load.
+                if (stableEngineState(kag)) startRestore();
                 else pollTimer = global.setTimeout(waitForStableEngine, 16);
             }
             waitForStableEngine();

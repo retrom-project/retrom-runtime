@@ -37,6 +37,7 @@ export function installRpgRuntimeNativeBridge(global, inputFilter) {
   let sceneManagerHooked = false;
   let exitRequested = false;
   let bootCompleted = false;
+  let titleStarted = false;
   let closed = false;
   let pluginFiles = null;
   let inputDiagnostics = null;
@@ -197,9 +198,55 @@ export function installRpgRuntimeNativeBridge(global, inputFilter) {
 
   async function restoreNativeSave(bundle) {
     const validated = validateRestoreBundle(bundle);
-    await waitForDatabase();
-    await waitForMVBoot();
-    await waitForMZRestoreRuntime();
+    const deadline = performance.now() + 30000;
+    const releaseInput = suppressRestoreInput();
+    try {
+      if (!global.DataManager || typeof global.DataManager.isDatabaseLoaded !== "function") {
+        throw new Error("RPG_CHECKPOINT_DATABASE_UNAVAILABLE");
+      }
+      await waitForRestore(() => global.DataManager.isDatabaseLoaded(), deadline, "RPG_CHECKPOINT_DATABASE_TIMEOUT");
+      await waitForRestore(() => bootCompleted, deadline);
+      await prepareRestoreTitle(deadline);
+      return await loadNativeSave(validated, deadline);
+    } finally {
+      releaseInput();
+    }
+  }
+
+  function suppressRestoreInput() {
+    const restorers = [];
+    for (const input of [global.Input, global.TouchInput]) {
+      if (!input || typeof input.clear !== "function") continue;
+      input.clear();
+      replaceMethod(input, "update", () => function restoreInputUpdate() { this.clear(); }, restorers);
+      restorers.push(() => input.clear());
+    }
+    return () => restorers.reverse().forEach(restore => restore());
+  }
+
+  async function prepareRestoreTitle(deadline) {
+    const manager = global.SceneManager;
+    const title = global.Scene_Title;
+    if (typeof title !== "function") throw new Error("RPG_CHECKPOINT_RESTORE_UNSUPPORTED");
+    // Boot plugins may enter an opening map. Let the actual title lifecycle finish
+    // their transient state before loading game objects, including custom title hooks.
+    // Finish fades too: restored game globals may change a transition plugin's mode.
+    if (!titleStarted && !(manager._scene instanceof title) && !(manager._nextScene instanceof title)) {
+      manager.goto(title);
+    }
+    await waitForRestore(() => titleStarted && !manager.isSceneChanging() &&
+      isCurrentSceneStarted() && !manager.isCurrentSceneBusy(), deadline);
+  }
+
+  function isCurrentSceneStarted() {
+    const manager = global.SceneManager;
+    // MV owns this state on SceneManager; MZ moved it onto Scene_Base.
+    if (typeof manager.isCurrentSceneStarted === "function") return manager.isCurrentSceneStarted();
+    const scene = manager._scene;
+    return !!scene && typeof scene.isStarted === "function" && scene.isStarted();
+  }
+
+  async function loadNativeSave(validated, deadline) {
     const storage = global.StorageManager;
     const restorers = [];
     let supported = false;
@@ -232,9 +279,11 @@ export function installRpgRuntimeNativeBridge(global, inputFilter) {
       if (pluginFiles) pluginFiles.restore(validated.files);
       const loaded = await global.DataManager.loadGame(validated.slot);
       if (loaded === false) throw new Error("RPG_CHECKPOINT_RESTORE_FAILED");
+      if (closed) throw new Error("RPG_NATIVE_CHANNEL_CLOSED");
+      if (performance.now() >= deadline) throw new Error("RPG_CHECKPOINT_RESTORE_TIMEOUT");
       if (global.SceneManager && global.Scene_Map) global.SceneManager.goto(global.Scene_Map);
       runGameSystemHook("onAfterLoad");
-      await waitForMap();
+      await waitForMap(deadline);
     } catch (error) {
       if (pluginFiles && previousFiles) pluginFiles.restore(previousFiles);
       throw error;
@@ -244,69 +293,24 @@ export function installRpgRuntimeNativeBridge(global, inputFilter) {
     return {};
   }
 
-  function waitForDatabase() {
-    const manager = global.DataManager;
-    if (!manager || typeof manager.isDatabaseLoaded !== "function") {
-      return Promise.reject(new Error("RPG_CHECKPOINT_DATABASE_UNAVAILABLE"));
-    }
-    const deadline = performance.now() + 30000;
+  function waitForRestore(ready, deadline, timeoutCode = "RPG_CHECKPOINT_RESTORE_TIMEOUT") {
     return new Promise((resolve, reject) => {
       function poll() {
-        if (manager.isDatabaseLoaded()) { resolve(); return; }
-        if (performance.now() >= deadline) { reject(new Error("RPG_CHECKPOINT_DATABASE_TIMEOUT")); return; }
-        global.requestAnimationFrame(poll);
-      }
-      poll();
-    });
-  }
-
-  function waitForMVBoot() {
-    if (profile !== "RPGMV") return Promise.resolve();
-    const deadline = performance.now() + 30000;
-    return new Promise((resolve, reject) => {
-      function poll() {
-        if (closed) { reject(new Error("RPG_NATIVE_CHANNEL_CLOSED")); return; }
-        if (bootCompleted) { resolve(); return; }
-        if (performance.now() >= deadline) { reject(new Error("RPG_CHECKPOINT_RESTORE_TIMEOUT")); return; }
-        global.requestAnimationFrame(poll);
-      }
-      poll();
-    });
-  }
-
-  function waitForMZRestoreRuntime() {
-    if (profile !== "RPGMZ") return Promise.resolve();
-    const deadline = performance.now() + 30000;
-    return new Promise((resolve, reject) => {
-      function poll() {
-        const manager = global.SceneManager;
-        const colors = global.ColorManager;
-        const graphics = global.Graphics;
-        const windowskin = colors && colors._windowskin;
-        if (manager && manager._scene && graphics && graphics.width > 0 && graphics.height > 0 &&
-          windowskin && typeof windowskin.getPixel === "function") {
-          resolve();
-          return;
+        try {
+          if (closed) throw new Error("RPG_NATIVE_CHANNEL_CLOSED");
+          if (performance.now() >= deadline) throw new Error(timeoutCode);
+          if (ready()) { resolve(); return; }
+          global.requestAnimationFrame(poll);
+        } catch (error) {
+          reject(error);
         }
-        if (performance.now() >= deadline) { reject(new Error("RPG_CHECKPOINT_RESTORE_TIMEOUT")); return; }
-        global.requestAnimationFrame(poll);
       }
       poll();
     });
   }
 
-  function waitForMap() {
-    const deadline = performance.now() + 30000;
-    return new Promise((resolve, reject) => {
-      function poll() {
-        const scene = global.SceneManager && global.SceneManager._scene;
-        const sceneStarted = scene && (typeof scene.isStarted !== "function" || scene.isStarted());
-        if (sceneStarted && readyForCheckpoint()) { resolve(); return; }
-        if (performance.now() >= deadline) { reject(new Error("RPG_CHECKPOINT_RESTORE_TIMEOUT")); return; }
-        global.requestAnimationFrame(poll);
-      }
-      poll();
-    });
+  function waitForMap(deadline) {
+    return waitForRestore(() => isCurrentSceneStarted() && readyForCheckpoint(), deadline);
   }
 
   async function screenshot() {
@@ -1049,6 +1053,15 @@ export function installRpgRuntimeNativeBridge(global, inputFilter) {
       bootCompleted = true;
       return result;
     };
+    const title = global.Scene_Title && global.Scene_Title.prototype;
+    if (title && typeof title.start === "function") {
+      const startTitle = title.start;
+      title.start = function runtimeTitleStart() {
+        const result = startTitle.apply(this, arguments);
+        titleStarted = true;
+        return result;
+      };
+    }
   }, true);
   global.addEventListener("pagehide", () => { closed = true; }, {once: true});
 

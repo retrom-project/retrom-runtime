@@ -389,7 +389,7 @@
       ["luk", "\u5E78\u8FD0"]
     ]);
     inputFilter.onHostShortcut((shortcut) => event("HOST_SHORTCUT", { shortcut }));
-    let encoder2 = new TextEncoder(), decoder2 = new TextDecoder("utf-8", { fatal: !0 }), launchId = null, nonce = null, parentOrigin = null, port = null, profile = null, lastRequestId = 0, requestPending = !1, frameCount = 0, engineReadySent = !1, sceneManagerHooked = !1, exitRequested = !1, bootCompleted = !1, closed = !1, pluginFiles = null, inputDiagnostics = null, editorMapCache = /* @__PURE__ */ new Map();
+    let encoder2 = new TextEncoder(), decoder2 = new TextDecoder("utf-8", { fatal: !0 }), launchId = null, nonce = null, parentOrigin = null, port = null, profile = null, lastRequestId = 0, requestPending = !1, frameCount = 0, engineReadySent = !1, sceneManagerHooked = !1, exitRequested = !1, bootCompleted = !1, titleStarted = !1, closed = !1, pluginFiles = null, inputDiagnostics = null, editorMapCache = /* @__PURE__ */ new Map();
     function ownKeys(value, expected) {
       if (!value || typeof value != "object" || Array.isArray(value)) return !1;
       let keys = Object.keys(value).sort();
@@ -496,8 +496,35 @@
       return { slot: bundle.resumeSlot, entries, files };
     }
     async function restoreNativeSave(bundle) {
-      let validated = validateRestoreBundle(bundle);
-      await waitForDatabase(), await waitForMVBoot(), await waitForMZRestoreRuntime();
+      let validated = validateRestoreBundle(bundle), deadline = performance.now() + 3e4, releaseInput = suppressRestoreInput();
+      try {
+        if (!global.DataManager || typeof global.DataManager.isDatabaseLoaded != "function")
+          throw new Error("RPG_CHECKPOINT_DATABASE_UNAVAILABLE");
+        return await waitForRestore(() => global.DataManager.isDatabaseLoaded(), deadline, "RPG_CHECKPOINT_DATABASE_TIMEOUT"), await waitForRestore(() => bootCompleted, deadline), await prepareRestoreTitle(deadline), await loadNativeSave(validated, deadline);
+      } finally {
+        releaseInput();
+      }
+    }
+    function suppressRestoreInput() {
+      let restorers = [];
+      for (let input of [global.Input, global.TouchInput])
+        !input || typeof input.clear != "function" || (input.clear(), replaceMethod(input, "update", () => function() {
+          this.clear();
+        }, restorers), restorers.push(() => input.clear()));
+      return () => restorers.reverse().forEach((restore) => restore());
+    }
+    async function prepareRestoreTitle(deadline) {
+      let manager = global.SceneManager, title = global.Scene_Title;
+      if (typeof title != "function") throw new Error("RPG_CHECKPOINT_RESTORE_UNSUPPORTED");
+      !titleStarted && !(manager._scene instanceof title) && !(manager._nextScene instanceof title) && manager.goto(title), await waitForRestore(() => titleStarted && !manager.isSceneChanging() && isCurrentSceneStarted() && !manager.isCurrentSceneBusy(), deadline);
+    }
+    function isCurrentSceneStarted() {
+      let manager = global.SceneManager;
+      if (typeof manager.isCurrentSceneStarted == "function") return manager.isCurrentSceneStarted();
+      let scene = manager._scene;
+      return !!scene && typeof scene.isStarted == "function" && scene.isStarted();
+    }
+    async function loadNativeSave(validated, deadline) {
       let storage = global.StorageManager, restorers = [], supported = !1;
       if (profile === "RPGMV" ? (supported = replaceMethod(storage, "load", (original) => function(savefileId) {
         let value = validated.entries.get(String(savefileId));
@@ -518,7 +545,9 @@
       let previousFiles = pluginFiles && pluginFiles.snapshot();
       try {
         if (pluginFiles && pluginFiles.restore(validated.files), await global.DataManager.loadGame(validated.slot) === !1) throw new Error("RPG_CHECKPOINT_RESTORE_FAILED");
-        global.SceneManager && global.Scene_Map && global.SceneManager.goto(global.Scene_Map), runGameSystemHook("onAfterLoad"), await waitForMap();
+        if (closed) throw new Error("RPG_NATIVE_CHANNEL_CLOSED");
+        if (performance.now() >= deadline) throw new Error("RPG_CHECKPOINT_RESTORE_TIMEOUT");
+        global.SceneManager && global.Scene_Map && global.SceneManager.goto(global.Scene_Map), runGameSystemHook("onAfterLoad"), await waitForMap(deadline);
       } catch (error) {
         throw pluginFiles && previousFiles && pluginFiles.restore(previousFiles), error;
       } finally {
@@ -526,84 +555,26 @@
       }
       return {};
     }
-    function waitForDatabase() {
-      let manager = global.DataManager;
-      if (!manager || typeof manager.isDatabaseLoaded != "function")
-        return Promise.reject(new Error("RPG_CHECKPOINT_DATABASE_UNAVAILABLE"));
-      let deadline = performance.now() + 3e4;
+    function waitForRestore(ready, deadline, timeoutCode = "RPG_CHECKPOINT_RESTORE_TIMEOUT") {
       return new Promise((resolve, reject) => {
         function poll() {
-          if (manager.isDatabaseLoaded()) {
-            resolve();
-            return;
+          try {
+            if (closed) throw new Error("RPG_NATIVE_CHANNEL_CLOSED");
+            if (performance.now() >= deadline) throw new Error(timeoutCode);
+            if (ready()) {
+              resolve();
+              return;
+            }
+            global.requestAnimationFrame(poll);
+          } catch (error) {
+            reject(error);
           }
-          if (performance.now() >= deadline) {
-            reject(new Error("RPG_CHECKPOINT_DATABASE_TIMEOUT"));
-            return;
-          }
-          global.requestAnimationFrame(poll);
         }
         poll();
       });
     }
-    function waitForMVBoot() {
-      if (profile !== "RPGMV") return Promise.resolve();
-      let deadline = performance.now() + 3e4;
-      return new Promise((resolve, reject) => {
-        function poll() {
-          if (closed) {
-            reject(new Error("RPG_NATIVE_CHANNEL_CLOSED"));
-            return;
-          }
-          if (bootCompleted) {
-            resolve();
-            return;
-          }
-          if (performance.now() >= deadline) {
-            reject(new Error("RPG_CHECKPOINT_RESTORE_TIMEOUT"));
-            return;
-          }
-          global.requestAnimationFrame(poll);
-        }
-        poll();
-      });
-    }
-    function waitForMZRestoreRuntime() {
-      if (profile !== "RPGMZ") return Promise.resolve();
-      let deadline = performance.now() + 3e4;
-      return new Promise((resolve, reject) => {
-        function poll() {
-          let manager = global.SceneManager, colors = global.ColorManager, graphics = global.Graphics, windowskin = colors && colors._windowskin;
-          if (manager && manager._scene && graphics && graphics.width > 0 && graphics.height > 0 && windowskin && typeof windowskin.getPixel == "function") {
-            resolve();
-            return;
-          }
-          if (performance.now() >= deadline) {
-            reject(new Error("RPG_CHECKPOINT_RESTORE_TIMEOUT"));
-            return;
-          }
-          global.requestAnimationFrame(poll);
-        }
-        poll();
-      });
-    }
-    function waitForMap() {
-      let deadline = performance.now() + 3e4;
-      return new Promise((resolve, reject) => {
-        function poll() {
-          let scene = global.SceneManager && global.SceneManager._scene;
-          if (scene && (typeof scene.isStarted != "function" || scene.isStarted()) && readyForCheckpoint()) {
-            resolve();
-            return;
-          }
-          if (performance.now() >= deadline) {
-            reject(new Error("RPG_CHECKPOINT_RESTORE_TIMEOUT"));
-            return;
-          }
-          global.requestAnimationFrame(poll);
-        }
-        poll();
-      });
+    function waitForMap(deadline) {
+      return waitForRestore(() => isCurrentSceneStarted() && readyForCheckpoint(), deadline);
     }
     async function screenshot() {
       for (let attempt = 0; attempt < 60; attempt += 1) {
@@ -1220,6 +1191,14 @@
         let result = start.apply(this, arguments);
         return bootCompleted = !0, result;
       };
+      let title = global.Scene_Title && global.Scene_Title.prototype;
+      if (title && typeof title.start == "function") {
+        let startTitle = title.start;
+        title.start = function() {
+          let result = startTitle.apply(this, arguments);
+          return titleStarted = !0, result;
+        };
+      }
     }, !0), global.addEventListener("pagehide", () => {
       closed = !0;
     }, { once: !0 }), global.addEventListener("message", function(eventMessage) {

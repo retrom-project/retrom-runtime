@@ -23,9 +23,11 @@ function fixture() {
     var $gameMessage = {isBusy: () => false};
     var $gameSystem = {onBeforeSave() {}, onAfterLoad() {}};
     var shared, position = 7;
-    var Scene_Map = class {};
+    var Scene_Map = class {isStarted() {return true;}};
+    var Scene_Title = class {start() {} isStarted() {return true;}};
     var Scene_Boot = class {start() {DataManager.createGameObjects();}};
-    var SceneManager = {_scene: null, updateMain() {}, goto() {this._scene = new Scene_Map();}};
+    var SceneManager = {_scene: null, updateMain() {}, isSceneChanging: () => false, isCurrentSceneBusy: () => false,
+      goto(Type = Scene_Map) {this._scene = new Type(); if(this._scene instanceof Scene_Title) this._scene.start();}};
     var DataManager = {_globalId: 'RPGMV', _globalInfo: null, isDatabaseLoaded: () => true, maxSavefiles: () => 20,
       createGameObjects() {
         const fs = require('fs'), path = StorageManager.localFileDirectoryPath() + 'common.rpgsave';

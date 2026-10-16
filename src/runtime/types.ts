@@ -7,7 +7,7 @@ export type RuntimeContent =
   | {kind: "DOS_BUNDLE"; entryFile: string; entryPath?: string}
   | {kind: "RPG_MAKER_PROJECT"; entryFile: string; engine: RPGEngine}
   | {kind: "SCUMMVM_PROJECT"}
-  | {kind: "ONS_PROJECT" | "KIRIKIRI_PROJECT" | "BUTTERSCOTCH_PROJECT" | "TYRANOSCRIPT_PROJECT" |
+  | {kind: "SHIINA_PROJECT" | "ONS_PROJECT" | "KIRIKIRI_PROJECT" | "BUTTERSCOTCH_PROJECT" | "TYRANOSCRIPT_PROJECT" |
       "NXENGINE_PROJECT" | "DAPHNE_PROJECT"; entryFile: string};
 export type CoreConfiguration = {parentFiles?: string[]; options?: TargetOptionsV1; romSet?: string};
 export type RuntimeConfiguration = {content: RuntimeContent; cores?: Record<string, CoreConfiguration>};

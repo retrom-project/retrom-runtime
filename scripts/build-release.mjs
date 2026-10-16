@@ -7,6 +7,7 @@ import {stageCoreDevelopmentInput} from "./core-development-input.mjs";
 import {stageMameCandidate} from "./mame-candidate.mjs";
 import {expandJsbeebSite} from "./jsbeeb-site.mjs";
 import {expandApple2Site} from "./apple2js-site.mjs";
+import {expandShiinaSite} from "./openshiina-site.mjs";
 import {expandSamCoupeSite} from "./samcoupe-site.mjs";
 import {stageWebMSXRelease} from "./webmsx-release.mjs";
 import {asWebMSXCandidateSource, stageWebMSXCandidate} from "./webmsx-candidate.mjs";
@@ -138,6 +139,9 @@ if ([...sources.upstreamReleases, ...developmentInputs].some((source) => source.
 }
 if ([...sources.upstreamReleases, ...developmentInputs].some((source) => source.id === "apple2js")) {
   await expandApple2Site(fileURLToPath(stage));
+}
+if ([...sources.upstreamReleases, ...developmentInputs].some(source => source.id === "openshiina")) {
+  await expandShiinaSite(fileURLToPath(stage));
 }
 if ([...sources.upstreamReleases, ...developmentInputs].some((source) => source.id === "samcoupeweb")) {
   await expandSamCoupeSite(fileURLToPath(stage));

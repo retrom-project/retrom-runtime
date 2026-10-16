@@ -3218,5 +3218,34 @@
       "output": "runtime/tyranoscript/bridge.js"
     }
   ],
-  "developmentInputs": []
+  "developmentInputs": [
+    {
+      "id": "openshiina",
+      "repository": "https://github.com/retrom-project/OpenShiina",
+      "upstreamCommit": "f10ccd90a3312ffdd46c09443611b533b54f08c5",
+      "adapterAbi": "openshiina-web-v1",
+      "assets": [
+        {
+          "filename": "openshiina-web.tar.gz",
+          "output": "runtime/openshiina/openshiina-web.tar.gz",
+          "maxSizeBytes": 67108864
+        },
+        {
+          "filename": "LICENSE",
+          "output": "licenses/openshiina/LICENSE",
+          "maxSizeBytes": 1048576
+        },
+        {
+          "filename": "THIRD-PARTY-NOTICES.md",
+          "output": "licenses/openshiina/THIRD-PARTY-NOTICES.md",
+          "maxSizeBytes": 1048576
+        },
+        {
+          "filename": "source.tar.gz",
+          "output": "licenses/openshiina/source.tar.gz",
+          "maxSizeBytes": 67108864
+        }
+      ]
+    }
+  ]
 }

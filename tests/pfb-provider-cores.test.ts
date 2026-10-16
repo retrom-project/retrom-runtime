@@ -4,7 +4,7 @@ import {mkdtemp, mkdir, readFile, rm, writeFile} from "node:fs/promises";
 import {tmpdir} from "node:os";
 import {join} from "node:path";
 import {afterEach, expect, it, vi} from "vitest";
-import {readPFBProviderCoreFiles} from "../scripts/pfb-provider-cores.mjs";
+import {readPFBProviderCoreFiles, readPFBProviderCoreCandidateFiles} from "../scripts/pfb-provider-cores.mjs";
 import {buildPFBProviderDev} from "../scripts/pfb-provider-dev.mjs";
 import {emulatorJsProviderDefinition} from "../src/providers/emulatorjs/catalog.js";
 import {loadProviderSources} from "../scripts/provider-sources.mjs";
@@ -28,6 +28,16 @@ it("loads a declared KiriKiri candidate and rejects incomplete or tampered overr
   await writeFile(join(directory, "retrom-core-candidate.json"), JSON.stringify(descriptor));
   await writeFile(join(directory, "LICENSE"), "tampered license");
   await expect(readPFBProviderCoreFiles(root, "retrom-runtime", join(root, "tampered"), index)).rejects.toThrow("CORE_CANDIDATE_INVALID");
+});
+
+it("stages verified candidate files for a complete new base while loose overrides require existing assets", async () => {
+  const {root, directory, descriptor} = await kirikiriFixture();
+  await expect(readPFBProviderCoreFiles(root, "retrom-runtime", join(root, "loose"), {}))
+    .rejects.toThrow("PFB_PROVIDER_CORE_INPUT_INVALID");
+  const files = await readPFBProviderCoreCandidateFiles(root, join(root, "base"));
+  expect(files.some(file => file.path === "assets/kirikiri/index.wasm")).toBe(true);
+  await writeFile(join(directory, "retrom-core-candidate.json"), JSON.stringify({...descriptor, adapterAbi: "wrong"}));
+  await expect(readPFBProviderCoreCandidateFiles(root, join(root, "bad"))).rejects.toThrow("CORE_CANDIDATE_INVALID");
 });
 
 it("publishes KiriKiri bytes, binary MIME types and the matching client asset index atomically", async () => {

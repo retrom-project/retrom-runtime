@@ -28,7 +28,7 @@ const directories = {
   pc88: "emulatorjs/pc88",
   pc98: "retrom-runtime/pc98", x68000: "retrom-runtime/px68k", pico8: "retrom-runtime/fake08",
   flash: "retrom-runtime/ruffle", pokemini: "retrom-runtime/pokemini", j2me: "retrom-runtime/J2ME",
-  kirikiri: "retrom-runtime/krkr", butterscotch: "retrom-runtime/gamemaker", ons: "retrom-runtime/ons",
+  shiina: "retrom-runtime/shiina", kirikiri: "retrom-runtime/krkr", butterscotch: "retrom-runtime/gamemaker", ons: "retrom-runtime/ons",
   openbor: "retrom-runtime/openbor", cavestory: "retrom-runtime/nxengine/CaveStory", scummvm: "retrom-runtime/scummvm",
   tic80: "retrom-runtime/tic80", tyranoscript: "retrom-runtime/typranoscript", wasm4: "retrom-runtime/wasm4",
   megadrive: "gamelist-import/megadrive", ps2: "retrom-runtime/PS2 - Ridge Racer V",
@@ -60,7 +60,8 @@ for (const binding of catalog.bindings) {
 const bound = new Set(catalog.bindings.map(binding => `${binding.providerId}/${binding.targetId}`));
 const unboundTargets = catalog.providers.flatMap(provider => provider.targets.filter(target => !bound.has(`${provider.providerId}/${target.id}`))
   .map(target => ({providerId: provider.providerId, targetId: target.id, productEntry: false, componentStatus: "DECLARATION_AND_ADAPTER_TESTED", productStatus: "NO_EXISTING_PRODUCT_BINDING"})));
-const matrix = {schemaVersion: 1, declarationCount: 110, bindingCount: 109, platformCount: 95, productRowCount: rows.length,
+const matrix = {schemaVersion: 1, declarationCount: catalog.providers.reduce((sum, provider) => sum + provider.targets.length, 0),
+  bindingCount: catalog.bindings.length, platformCount: catalog.platforms.length, productRowCount: rows.length,
   roots, materialInventoryOnly: true, productPassed: 0, rows, unboundTargets};
 const output = resolve(args.output); await mkdir(dirname(output), {recursive: true});
 if (args["inventory-output"]) {await writeFile(resolve(args["inventory-output"]), `${JSON.stringify(matrix, null, 2)}\n`);}

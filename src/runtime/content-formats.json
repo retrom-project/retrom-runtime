@@ -607,6 +607,12 @@
       ],
       "source": "runtime-owned adapter input formats"
     },
+    "openshiina": {
+      "extensions": [
+        "ini"
+      ],
+      "source": "runtime-owned ShiinaRio project entry"
+    },
     "opera": {
       "extensions": [
         "bin",

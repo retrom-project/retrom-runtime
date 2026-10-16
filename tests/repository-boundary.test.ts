@@ -21,7 +21,7 @@ describe("independent package boundary", () => {
     expect(retromRuntimeProviderDefinition.providerId).toBe("retrom-runtime");
     expect(retromRuntimeProviderDefinition.targets.map((target) => target.id)).toEqual([
       "apple2-apple2js", "bbc-jsbeeb", "butterscotch-gamemaker", "fake08", "flash-ruffle", "gbe-pokemini", "j2me", "kirikiri2-kag", "mame-apple2", "mame-apple2e", "mame-arcade", "mame-atom", "mame-coleco", "mame-pv1000", "mame-sg1000", "msx-webmsx", "np2kai-pc98", "nxengine", "onscripter-yuri", "openbor", "play-ps2", "ppsspp", "px68k", "rpgmaker-2000", "rpgmaker-2003",
-      "rpgmaker-mv", "rpgmaker-mz", "rpgmaker-vx", "rpgmaker-vx-ace", "rpgmaker-xp", "samcoupe", "scummvm", "tic80", "tyranoscript", "wasm4",
+      "rpgmaker-mv", "rpgmaker-mz", "rpgmaker-vx", "rpgmaker-vx-ace", "rpgmaker-xp", "samcoupe", "scummvm", "shiina-rio", "tic80", "tyranoscript", "wasm4",
     ]);
     expect(sources.localAssets.map((asset: { output: string }) => asset.output).sort()).toEqual([
       "runtime/butterscotch/worker.mjs",
@@ -33,12 +33,12 @@ describe("independent package boundary", () => {
 
   it("contains one clean Provider-private adapter role without migration-era aliases", async () => {
     expect(retromRuntimeProviderDefinition.adapters.map((adapter) => adapter.id).sort()).toEqual([
-      "apple2js-web", "butterscotch-web", "easyrpg-web", "fake08-web", "gbe-pokemini-web", "j2me-minijvm-web", "jsbeeb-web", "kirikiri2-web", "mame-dylink", "mkxp-libretro-web", "native-web", "np2kai-web", "nxengine-web", "ons-yuri-web", "openbor-web",
+      "apple2js-web", "butterscotch-web", "easyrpg-web", "fake08-web", "gbe-pokemini-web", "j2me-minijvm-web", "jsbeeb-web", "kirikiri2-web", "mame-dylink", "mkxp-libretro-web", "native-web", "np2kai-web", "nxengine-web", "ons-yuri-web", "openbor-web", "openshiina-web",
       "play-web", "ppsspp-web", "px68k-web", "ruffle-web", "samcoupe-web", "scummvm-web", "tic80-web", "tyranoscript-web", "wasm4-web", "webmsx-web",
     ]);
     expect(retromRuntimeProviderDefinition.adapters.map((adapter) => adapter.abi).sort()).toEqual([
       "apple2js-web-v1", "butterscotch-checkpoint-v2", "easyrpg-save", "fake08-state-v1", "gbe-pokemini-host-v1", "j2me-rms", "jsbeeb-web-v1", "kirikiri-content-io-v1", "mkxp-content-io-v1",
-      "native-save", "np2kai-host-v1", "nxengine-host-v1", "ons-save", "openbor-host-v1", "play-host-v3", "ppsspp-host-v4", "px68k-host-v1", "retrom-mame-dylink-v1", "ruffle-host-v1", "samcoupe-web-v1", "scummvm-host-v1", "tic80-pmem-v1", "tyranoscript-snapshot-v1", "wasm4-state-v1", "webmsx-host-v1",
+      "native-save", "np2kai-host-v1", "nxengine-host-v1", "ons-save", "openbor-host-v1", "openshiina-web-v1", "play-host-v3", "ppsspp-host-v4", "px68k-host-v1", "retrom-mame-dylink-v1", "ruffle-host-v1", "samcoupe-web-v1", "scummvm-host-v1", "tic80-pmem-v1", "tyranoscript-snapshot-v1", "wasm4-state-v1", "webmsx-host-v1",
     ]);
     expect((await readdir(join(root, "assets/runtime"))).sort()).toEqual(["butterscotch", "native", "tyranoscript"]);
     for (const asset of [
@@ -106,7 +106,12 @@ describe("independent package boundary", () => {
     expect(sources.upstreamReleases).toContainEqual(expect.objectContaining({
       id: "apple2js", tag: "retrom-core-gee0aed25f73c-r1", adapterAbi: "apple2js-web-v1",
     }));
-    expect(sources.developmentInputs).toEqual([]);
+    expect(sources.developmentInputs).toEqual([expect.objectContaining({
+      id: "openshiina", repository: "https://github.com/retrom-project/OpenShiina",
+      upstreamCommit: "f10ccd90a3312ffdd46c09443611b533b54f08c5", adapterAbi: "openshiina-web-v1",
+      assets: expect.arrayContaining([expect.objectContaining({filename: "openshiina-web.tar.gz"}),
+        expect.objectContaining({filename: "source.tar.gz"})]),
+    })]);
     expect(sources.upstreamReleases).toContainEqual(expect.objectContaining({
       id: "onsyuri", adapterAbi: "ons-save", repository: "https://github.com/retrom-project/OnscripterYuri",
       tag: "retrom-core-0.7.7beta-r7", commit: "8684330a24e5d29201d07997871529ec867512cd",

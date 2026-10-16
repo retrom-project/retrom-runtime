@@ -11,6 +11,7 @@ import {np2kaiAdapter, np2kaiTarget} from "./np2kai-declaration.js";
 import {px68kAdapter, px68kTarget} from "./px68k-declaration.js";
 import {scummvmAdapter, scummvmTarget} from "./scummvm-declaration.js";
 import {playAdapter, playTarget} from "./play-declaration.js";
+import {shiinaAdapter, shiinaTarget} from "./openshiina-declaration.js";
 import {
   defineAdapter,
   defineProvider,
@@ -45,6 +46,7 @@ const isolatedCapabilities = capabilities(true, true, true);
 const wasm4Capabilities = capabilities(true, true, false);
 
 const adapters = [
+  shiinaAdapter,
   mameAdapter,
   defineAdapter({id: "nxengine-web", kind: "NXENGINE_WEB", abi: "nxengine-host-v1",
     capabilities: capabilities(true, true, true),
@@ -177,7 +179,7 @@ const targets = [
     contentIO: {game: runtimeGamePolicy("samcoupe"), external: eagerPolicy(32768)},
     hostKeyboardShortcuts: ["MENU"],
   }),
-  scummvmTarget,
+  scummvmTarget, shiinaTarget,
   target("tic80", "TIC-80", "tic80-web", noOptionsSchema, false, "SAME_ORIGIN_BLANK", "ROM_BLOB",
     1100, ["assets/tic80/tic80-retrom.mjs", "assets/tic80/tic80-retrom.wasm"]),
   defineTarget({...target(

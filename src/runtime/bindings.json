@@ -548,6 +548,17 @@
     ]
   },
   {
+    "coreId": "openshiina",
+    "providerId": "retrom-runtime",
+    "targetId": "shiina-rio",
+    "platformIds": [
+      "shiina"
+    ],
+    "contentKinds": [
+      "SHIINA_PROJECT"
+    ]
+  },
+  {
     "coreId": "opera",
     "providerId": "emulatorjs",
     "targetId": "opera",

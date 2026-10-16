@@ -11,7 +11,7 @@ import {buildContentAssets} from "./content-io/build-assets.mjs";
 import {sourceTreeSha256} from "./provider-release.mjs";
 import {execFileSync} from "node:child_process";
 import {fingerprintProvider} from "./runtime-fingerprints.mjs";
-import {readPFBProviderCoreFiles} from "./pfb-provider-cores.mjs";
+import {readPFBProviderCoreCandidateFiles} from "./pfb-provider-cores.mjs";
 import {buildRuntimeHostTool} from "./runtime-host-tool.mjs";
 import {writeRuntimeInputs} from "./runtime-inputs.mjs";
 import {assertONSCheckpointCore} from "./ons-core-abi.mjs";
@@ -48,8 +48,7 @@ for (const definition of runtimeProviders) {
   const assets = new Map();
   const declared = new Set(manifest.targets.flatMap(target => target.assetPaths));
   for (const path of declared) {
-    if (!index[path]) {throw new Error(`RUNTIME_BASE_ASSET_MISSING:${path}`);}
-    assets.set(path, join(installation, path));
+    if (index[path]) {assets.set(path, join(installation, path));}
   }
   for (const asset of generated.files) {
     if (declared.has(asset.path)) {assets.set(asset.path, join(generatedRoot, asset.path.split("/").at(-1)));}
@@ -64,7 +63,7 @@ for (const definition of runtimeProviders) {
   const coreLicenses = new Map();
   if (coreInputRoot && definition.providerId === "retrom-runtime") {
     const selection = JSON.parse(await readFile(join(coreInputRoot, "core-inputs.json"), "utf8"));
-    const coreFiles = await readPFBProviderCoreFiles(coreInputRoot, definition.providerId, join(outputRoot, "core-staging"), index);
+    const coreFiles = await readPFBProviderCoreCandidateFiles(coreInputRoot, join(outputRoot, "core-staging"));
     for (const file of coreFiles) {
       const source = join(outputRoot, "core-overrides", file.path);
       await mkdir(dirname(source), {recursive: true}); await writeFile(source, file.contents);
@@ -80,6 +79,9 @@ for (const definition of runtimeProviders) {
       coreInputs.push({id: core.id, commit: descriptor.commit, branch: descriptor.branch,
         sourceTreeSha256: descriptor.sourceTreeSha256, descriptorSha256: await fileHash(descriptorPath), files: descriptor.files});
     }
+  }
+  for (const path of declared) {
+    if (!assets.has(path)) {throw new Error(`RUNTIME_BASE_ASSET_MISSING:${path}`);}
   }
   if (definition.providerId === "retrom-runtime") {
     assertONSCheckpointCore(await readFile(assets.get("assets/ons/onsyuri.js")),

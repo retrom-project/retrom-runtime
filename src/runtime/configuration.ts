@@ -2,7 +2,7 @@ import type {RuntimeConfiguration, RuntimeContent, RuntimeContentFile} from "./t
 import {configurationFailure, exact, identifier, logicalPath, object} from "./validation.js";
 import {rpgEntryFiles} from "./rpg-entry-files.js";
 
-const entryKinds = ["SINGLE_FILE", "ARCADE", "ONS_PROJECT", "KIRIKIRI_PROJECT", "BUTTERSCOTCH_PROJECT",
+const entryKinds = ["SINGLE_FILE", "ARCADE", "SHIINA_PROJECT", "ONS_PROJECT", "KIRIKIRI_PROJECT", "BUTTERSCOTCH_PROJECT",
   "TYRANOSCRIPT_PROJECT", "NXENGINE_PROJECT", "DAPHNE_PROJECT"];
 const engines = ["RPG2000", "RPG2003", "RPGXP", "RPGVX", "RPGVXACE", "RPGMV", "RPGMZ"];
 

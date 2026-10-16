@@ -7,6 +7,7 @@ import {developmentForkFiles, developmentForkSource, stageDevelopmentForks} from
 import {loadProviderSources} from "./provider-sources.mjs";
 import {stageCoreDevelopmentInput, validCoreDevelopmentInput} from "./core-development-input.mjs";
 import {emulatorJsCandidateSource, readEmulatorJsCoreCandidate} from "./emulatorjs-core-candidate.mjs";
+import {expandShiinaSite, shiinaSitePaths} from "./openshiina-site.mjs";
 
 // Explicit, already-built candidates only. This path never compiles a core or changes a catalog.
 export async function readPFBProviderCoreFiles(outputRoot, providerId, staging, assetIndex) {
@@ -24,7 +25,9 @@ export async function readPFBProviderCoreFiles(outputRoot, providerId, staging, 
   for (const core of selection.cores) {
     if (!exact(core, ["id", "directory"]) || typeof core.directory !== "string" || !isAbsolute(core.directory)) {invalid();}
     if (providerId === "retrom-runtime") {
-      result.push(...await readRuntimeCore(core, staging, assetIndex));
+      const files = await readRuntimeCore(core, staging, assetIndex);
+      if (files.some(file => !Object.hasOwn(assetIndex, file.path))) {invalid();}
+      result.push(...files);
       continue;
     }
     const candidateSource = emulatorJsCandidateSource(emulatorJsSourceCatalog, core.id);
@@ -65,6 +68,21 @@ export async function readPFBProviderCoreFiles(outputRoot, providerId, staging, 
   return result;
 }
 
+// Complete base assembly may introduce assets from a source already declared by this runtime.
+// Loose overrides continue to require every output to exist in their verified base index.
+export async function readPFBProviderCoreCandidateFiles(outputRoot, staging) {
+  const selection = JSON.parse((await regular(join(outputRoot, "core-inputs.json"))).toString("utf8"));
+  if (!exact(selection, ["schemaVersion", "cores"]) || selection.schemaVersion !== 1 || !Array.isArray(selection.cores) ||
+    !selection.cores.length || new Set(selection.cores.map(core => core?.id)).size !== selection.cores.length) {invalid();}
+  const files = [];
+  for (const core of selection.cores) {
+    if (!exact(core, ["id", "directory"]) || typeof core.directory !== "string" || !isAbsolute(core.directory)) {invalid();}
+    files.push(...await readRuntimeCore(core, staging));
+  }
+  if (new Set(files.map(file => file.path)).size !== files.length) {invalid();}
+  return files;
+}
+
 // A loose core override cannot change the content rules recorded by the base
 // manifest. Paired ROM/DAT/catalog updates require a complete provider candidate.
 export function requireBaseContentPairs(targets, files) {
@@ -94,14 +112,17 @@ async function readRuntimeCore(core, staging, baseFiles) {
   // every byte of these tools/DATs as part of the complete candidate below.
   const offlineAssets = new Set(["runtime/butterscotch/butterscotch-meta.mjs",
     "runtime/butterscotch/butterscotch-meta.wasm", "runtime/mame/mame-arcade.xml"]);
-  const publicAssets = source.assets.filter(asset => !offlineAssets.has(asset.output));
-  if (publicAssets.some(asset => !Object.hasOwn(baseFiles, publicPath(asset.output)))) {invalid();}
+  const publicAssets = source.assets.filter(asset => !offlineAssets.has(asset.output) &&
+    !(source.id === "openshiina" && asset.filename === "openshiina-web.tar.gz"));
+  const expected = [...publicAssets.map(asset => asset.output), ...(source.id === "openshiina" ? shiinaSitePaths : [])];
+  if (baseFiles && expected.some(output => !Object.hasOwn(baseFiles, publicPath(output)))) {invalid();}
   const destination = join(staging, core.id);
   // Validate the complete candidate, including the license, with the same
   // closed file set, ABI, sizes and hashes used by candidate aggregation.
   await stageCoreDevelopmentInput(source, core.directory, pathToFileURL(`${destination}/`));
-  return Promise.all(publicAssets.map(async asset => ({
-    path: publicPath(asset.output), contents: await readFile(join(destination, asset.output)),
+  const expanded = source.id === "openshiina" ? await expandShiinaSite(destination) : [];
+  return Promise.all([...publicAssets.map(asset => asset.output), ...expanded].map(async output => ({
+    path: publicPath(output), contents: await readFile(join(destination, output)),
   })));
 }
 

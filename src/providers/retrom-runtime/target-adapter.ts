@@ -16,6 +16,7 @@ import {mountScummvm} from "../../scummvm/adapter.js";
 import {mountRuffle} from "../../ruffle/adapter.js";
 import {mountPSP} from "../../psp/adapter.js";
 import {mountPlay} from "../../play/adapter.js";
+import {mountShiina} from "../../openshiina/adapter.js";
 
 import {mountFantasyConsole} from "../../fantasy-console/adapter.js";
 import {mountJ2me} from "../../j2me/adapter.js";
@@ -65,53 +66,41 @@ function mountAdapter(envelope: LaunchEnvelopeV1, target: HTMLElement, input: Ta
   } : null};
   const {frameWindow, restorePayload, reportProgress, reportExitRequested} = context;
   const reportFailure = failureReporter(context);
-  switch (adapter.kind) {
-  case "NXENGINE_WEB":
-    return mountNXEngine(parameters.nxengine(envelope, context.assetIndex), target, frameWindow, restorePayload, reportProgress, reportFailure, context.signal, undefined, contentOptions(context));
-  case "OPENBOR_WEB":
-    return mountOpenBOR(parameters.openbor(envelope), target, frameWindow, restorePayload, reportProgress, reportFailure, context.signal, contentOptions(context));
-  case "RUFFLE_WEB":
-    return mountRuffle(parameters.ruffle(envelope), target, frameWindow, restorePayload, reportProgress, context.signal, undefined, contentOptions(context));
-  case "EASYRPG_WEB":
-    return mountWithEasyRpgContent(envelope, frameWindow, requireContentSession(contentSession), requireStartupSignal(context),
+  const mounts: Record<string, () => Promise<MountedRuntimeAdapter>> = {
+    SHIINA_WEB: () => mountShiina(parameters.shiina(envelope), target, frameWindow, restorePayload, reportProgress, reportFailure,
+      reportExitRequested, contentOptions(context)),
+    NXENGINE_WEB: () => mountNXEngine(parameters.nxengine(envelope, context.assetIndex), target, frameWindow, restorePayload, reportProgress, reportFailure, context.signal, undefined, contentOptions(context)),
+    OPENBOR_WEB: () => mountOpenBOR(parameters.openbor(envelope), target, frameWindow, restorePayload, reportProgress, reportFailure, context.signal, contentOptions(context)),
+    RUFFLE_WEB: () => mountRuffle(parameters.ruffle(envelope), target, frameWindow, restorePayload, reportProgress, context.signal, undefined, contentOptions(context)),
+    EASYRPG_WEB: () => mountWithEasyRpgContent(envelope, frameWindow, requireContentSession(contentSession), requireStartupSignal(context),
       () => mountEasyRpg(parameters.easyRpg(envelope, declaration.implementation), target,
-        frameWindow, restorePayload, {signal: requireStartupSignal(context), reportExitRequested, tasks: context.startup}));
-  case "MKXP_LIBRETRO_WEB":
-    return mountMkxp(parameters.mkxp(envelope, declaration.implementation, context.assetIndex), target,
+        frameWindow, restorePayload, {signal: requireStartupSignal(context), reportExitRequested, tasks: context.startup})),
+    MKXP_LIBRETRO_WEB: () => mountMkxp(parameters.mkxp(envelope, declaration.implementation, context.assetIndex), target,
       restorePayload, undefined, context.onDiagnostic, reportProgress, reportExitRequested,
-      {...contentOptions(context), signal: context.signal, onFailure: reportFailure});
-  case "NATIVE_WEB":
-    return mountWithNativeContent(envelope, requireFrame(context), requireContentSession(contentSession),
+      {...contentOptions(context), signal: context.signal, onFailure: reportFailure}),
+    NATIVE_WEB: () => mountWithNativeContent(envelope, requireFrame(context), requireContentSession(contentSession),
       (loading, pluginFiles) => mountNativeRpg(parameters.nativeRpg(envelope, declaration.implementation), requireFrame(context),
-        restorePayload, reportExitRequested, {loading, signal: context.signal}, pluginFiles), context.signal, reportFailure);
-  case "ONS_YURI_WEB":
-    return mountOnsYuri(parameters.ons(envelope), target, frameWindow, restorePayload, reportProgress, reportExitRequested,
-      {...contentOptions(context), signal: context.signal, onFailure: reportFailure});
-  case "KIRIKIRI2_WEB":
-    return mountKirikiri2(parameters.kirikiri(envelope), target, frameWindow, restorePayload, reportExitRequested,
-      contentOptions(context));
-  case "BUTTERSCOTCH_WEB":
-    return mountButterscotch(parameters.butterscotch(envelope), target, frameWindow, restorePayload,
-      reportProgress, reportExitRequested, {...contentOptions(context), signal: context.signal});
-  case "TYRANOSCRIPT_WEB":
-    return mountWithNativeContent(envelope, requireFrame(context), requireContentSession(contentSession),
+        restorePayload, reportExitRequested, {loading, signal: context.signal}, pluginFiles), context.signal, reportFailure),
+    ONS_YURI_WEB: () => mountOnsYuri(parameters.ons(envelope), target, frameWindow, restorePayload, reportProgress, reportExitRequested,
+      {...contentOptions(context), signal: context.signal, onFailure: reportFailure}),
+    KIRIKIRI2_WEB: () => mountKirikiri2(parameters.kirikiri(envelope), target, frameWindow, restorePayload, reportExitRequested,
+      contentOptions(context)),
+    BUTTERSCOTCH_WEB: () => mountButterscotch(parameters.butterscotch(envelope), target, frameWindow, restorePayload,
+      reportProgress, reportExitRequested, {...contentOptions(context), signal: context.signal}),
+    TYRANOSCRIPT_WEB: () => mountWithNativeContent(envelope, requireFrame(context), requireContentSession(contentSession),
       () => mountTyranoScript(parameters.tyranoScript(envelope), requireFrame(context), restorePayload, reportExitRequested),
-      context.signal, reportFailure);
-  case "J2ME_MINIJVM_WEB":
-    return mountJ2me(parameters.j2me(envelope), target, frameWindow, restorePayload, reportProgress,
-      reportExitRequested, reportFailure, context.signal, undefined, input.startup);
-  case "SCUMMVM_WEB":
-    return mountScummvm(parameters.scummvm(envelope), target, frameWindow, restorePayload, reportProgress,
-      reportExitRequested, reportFailure, context.signal, undefined, contentOptions(context));
-
-  case "TIC80_WEB":
-  case "FAKE08_WEB":
-    return mountFantasyConsole(parameters.fantasy(envelope, context.assetIndex), target, frameWindow,
-      restorePayload, reportProgress, reportFailure, context.signal, undefined, contentOptions(context));
-  case "WASM4_WEB":
-    return mountWasm4(parameters.wasm4(envelope), target, frameWindow, restorePayload, reportProgress, undefined, {...contentOptions(context), signal: context.signal});
-  default: return mountMachineAdapter(adapter.kind, envelope, target, context);
-  }
+      context.signal, reportFailure),
+    J2ME_MINIJVM_WEB: () => mountJ2me(parameters.j2me(envelope), target, frameWindow, restorePayload, reportProgress,
+      reportExitRequested, reportFailure, context.signal, undefined, input.startup),
+    SCUMMVM_WEB: () => mountScummvm(parameters.scummvm(envelope), target, frameWindow, restorePayload, reportProgress,
+      reportExitRequested, reportFailure, context.signal, undefined, contentOptions(context)),
+    TIC80_WEB: () => mountFantasyConsole(parameters.fantasy(envelope, context.assetIndex), target, frameWindow,
+      restorePayload, reportProgress, reportFailure, context.signal, undefined, contentOptions(context)),
+    WASM4_WEB: () => mountWasm4(parameters.wasm4(envelope), target, frameWindow, restorePayload, reportProgress, undefined, {...contentOptions(context), signal: context.signal}),
+  };
+  mounts.FAKE08_WEB = mounts.TIC80_WEB;
+  const mount = mounts[adapter.kind];
+  return mount ? mount() : mountMachineAdapter(adapter.kind, envelope, target, context);
 }
 
 function failureReporter(context: Pick<TargetMountContext, "reportFailure">) {

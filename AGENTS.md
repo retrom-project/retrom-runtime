@@ -1,6 +1,6 @@
 # retrom-runtime Agent 实施规范
 
-本仓库维护可被任意 Web 项目引用的浏览器游戏运行时，目前声明 111 个 Target，覆盖 EmulatorJS 与独立原生 Web/Wasm 核心，不包含宿主应用的上传、审核、权限、数据库、HTTP 路由或产品验收逻辑。
+本仓库维护可被任意 Web 项目引用的浏览器游戏运行时，目前声明 112 个 Target，覆盖 EmulatorJS 与独立原生 Web/Wasm 核心，不包含宿主应用的上传、审核、权限、数据库、HTTP 路由或产品验收逻辑。
 
 ## 边界
 
@@ -125,4 +125,4 @@ npm run package:check
 - `scripts/runtime-cli.mjs` 随 npm package 布局离线交付；宿主启动读取 catalog，运行准备调用 prepare，保存列表使用 batch-identity/batch-restorable，不逐条启动 Node，不为列表装配 BIOS 或 Parent。宿主用 `--serve` 共用一个常驻 JSONL 子进程，以唯一请求 ID 关联并发响应；执行、队列、输入与输出均有界，单请求可取消，DAT 首次加载及缓存共享。CPU 密集型归档操作使用不加载 DAT 的有界 worker_threads；不新增网络运行服务、持久队列或授权状态。
 - PFB 的 host 工具必须完整生成后原子发布不可变快照；不能把活跃宿主指向会被 clean 删除的 dist。Provider watcher 与正式构建按当前 Target 的 `coreAssetPaths` 计算核心文件指纹；runtime/adapter、公共加载/输入/UI、发行版本及部署路径不进入存档身份。核心文件变化只影响声明该文件的 Target。游戏自带引擎由完整 ROM hash 覆盖，显式声明空核心文件集。
 - 运行资源只由宿主现有登录态授权。运行 ID 与 RPC nonce 是资源标识/消息关联值，不是授权凭据。隔离页面通过受限内容桥获取原始文件，不签发 ticket/token/capability 或额外 cookie。
-- 全部 111 个 Provider Target 保留；既有宿主产品绑定为 110 个，EmulatorJS PPSSPP 没有原产品入口。运行组件测试与真实产品验收必须分别记录，不能用声明数量或空白画面代替产品证据。
+- 全部 112 个 Provider Target 保留；宿主产品绑定为 111 个，EmulatorJS PPSSPP 没有原产品入口。运行组件测试与真实产品验收必须分别记录，不能用声明数量或空白画面代替产品证据。

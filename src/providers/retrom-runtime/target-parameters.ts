@@ -116,6 +116,11 @@ export function nativeRpg(
   };
 }
 
+export function shiina(envelope: LaunchEnvelopeV1) {
+  const game = resource(envelope, "game", "FILE_TREE");
+  return {contentDigest: game.contentDigest, projectIndexUrl: game.indexUrl, runtimeBaseUrl: assetBase(envelope, "openshiina/web")};
+}
+
 export function ons(envelope: LaunchEnvelopeV1): OnsParameters {
   const game = resource(envelope, "game", "FILE_TREE");
   const encoding = envelope.targetOptions.scriptEncoding;

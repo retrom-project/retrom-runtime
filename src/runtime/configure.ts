@@ -45,6 +45,7 @@ function constructContent(input: ConfigureRequest): RuntimeContent {
   switch (input.platformId) {
   case "rpgmaker": return rpgContent(input);
   case "scummvm": return {kind: "SCUMMVM_PROJECT"};
+  case "shiina": return {kind: "SHIINA_PROJECT", entryFile: choose(name => /(?:^|\/)rio\.ini$/u.test(name)).logicalKey};
   case "dos": return dosContent(input);
   case "arcade": return {kind: "ARCADE", entryFile: arcadeEntry(input).logicalKey};
   case "ons": return {kind: "ONS_PROJECT", entryFile: choosePreferred(input, [/(?:^|\/)nscript\.dat$/u, /(?:^|\/)nscr_sec\.dat$/u, /(?:^|\/)0\.txt$/u, /(?:^|\/)00\.txt$/u]).logicalKey};

@@ -10718,6 +10718,95 @@
       },
       {
         "assetPaths": [
+          "assets/content-io/sync-client.mjs",
+          "assets/content-io/worker.mjs",
+          "assets/openshiina/web/FONT-OFL.txt",
+          "assets/openshiina/web/Formats.Json",
+          "assets/openshiina/web/_framework/Iced.wasm",
+          "assets/openshiina/web/_framework/NAudio.Core.wasm",
+          "assets/openshiina/web/_framework/NLayer.wasm",
+          "assets/openshiina/web/_framework/NVorbis.wasm",
+          "assets/openshiina/web/_framework/OpenShiina.Browser.wasm",
+          "assets/openshiina/web/_framework/OpenShiina.Core.wasm",
+          "assets/openshiina/web/_framework/SkiaSharp.wasm",
+          "assets/openshiina/web/_framework/System.Collections.Concurrent.wasm",
+          "assets/openshiina/web/_framework/System.Collections.wasm",
+          "assets/openshiina/web/_framework/System.IO.Compression.wasm",
+          "assets/openshiina/web/_framework/System.IO.MemoryMappedFiles.wasm",
+          "assets/openshiina/web/_framework/System.IO.Pipelines.wasm",
+          "assets/openshiina/web/_framework/System.Linq.Expressions.wasm",
+          "assets/openshiina/web/_framework/System.Linq.wasm",
+          "assets/openshiina/web/_framework/System.Memory.wasm",
+          "assets/openshiina/web/_framework/System.Private.CoreLib.wasm",
+          "assets/openshiina/web/_framework/System.Runtime.InteropServices.JavaScript.wasm",
+          "assets/openshiina/web/_framework/System.Runtime.Numerics.wasm",
+          "assets/openshiina/web/_framework/System.Runtime.wasm",
+          "assets/openshiina/web/_framework/System.Security.Cryptography.wasm",
+          "assets/openshiina/web/_framework/System.Text.Encoding.CodePages.wasm",
+          "assets/openshiina/web/_framework/System.Text.Encodings.Web.wasm",
+          "assets/openshiina/web/_framework/System.Text.Json.wasm",
+          "assets/openshiina/web/_framework/System.Text.RegularExpressions.wasm",
+          "assets/openshiina/web/_framework/System.Threading.Tasks.Parallel.wasm",
+          "assets/openshiina/web/_framework/dotnet.js",
+          "assets/openshiina/web/_framework/dotnet.native.js",
+          "assets/openshiina/web/_framework/dotnet.native.wasm",
+          "assets/openshiina/web/_framework/dotnet.runtime.js",
+          "assets/openshiina/web/_framework/icudt_CJK.dat",
+          "assets/openshiina/web/_framework/icudt_EFIGS.dat",
+          "assets/openshiina/web/_framework/icudt_no_CJK.dat",
+          "assets/openshiina/web/browser.mjs",
+          "assets/openshiina/web/clock.mjs",
+          "assets/openshiina/web/font.ttf",
+          "assets/openshiina/web/input-queue.mjs",
+          "assets/openshiina/web/player.mjs",
+          "assets/openshiina/web/worker.mjs"
+        ],
+        "capabilities": {
+          "contentLoading": "ON_DEMAND_AND_PRELOAD",
+          "checkpoint": true,
+          "frameCounter": true,
+          "frameMode": "SAME_ORIGIN_BLANK",
+          "inputFilter": true,
+          "nativeSettings": false,
+          "pause": true,
+          "requiresThreads": true,
+          "screenshot": true,
+          "standardGamepad": true,
+          "videoModes": [
+            "original",
+            "pixel",
+            "smooth"
+          ],
+          "volume": true
+        },
+        "checkpoint": {
+          "maxBytes": 67108864,
+          "readFormats": [
+            "shiina-game-save-v1-storage-v1"
+          ],
+          "writeFormat": "shiina-game-save-v1-storage-v1",
+          "semantics": "GAME_SAVE"
+        },
+        "displayName": "ShiinaRio (OpenShiina)",
+        "id": "shiina-rio",
+        "inputs": [
+          {
+            "role": "game",
+            "kind": "FILE_TREE",
+            "cardinality": "ONE",
+            "optional": false,
+            "maxFileBytes": 9007199254740991
+          }
+        ],
+        "targetOptionsSchema": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {},
+          "required": []
+        }
+      },
+      {
+        "assetPaths": [
           "assets/content-io/worker.mjs",
           "assets/tic80/tic80-retrom.mjs",
           "assets/tic80/tic80-retrom.wasm"

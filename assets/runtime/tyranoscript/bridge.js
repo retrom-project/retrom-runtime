@@ -502,7 +502,8 @@
       let controls = kag.key_mouse, menuOwner = controls && controls.util && typeof controls.util.canShowMenu == "function" ? controls.util : controls, canShowMenu = menuOwner && menuOwner.canShowMenu;
       if (typeof canShowMenu != "function") return !0;
       try {
-        return !!canShowMenu.call(menuOwner);
+        let stopped = kag.stat.is_strong_stop === !0 && kag.ftag.array_tag[kag.ftag.current_order_index].name === "s";
+        return !!(canShowMenu.call(menuOwner) || stopped);
       } catch {
         return !1;
       }

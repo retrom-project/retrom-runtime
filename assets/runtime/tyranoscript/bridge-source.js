@@ -326,7 +326,11 @@ export function installTyranoScriptBridge(global, inputFilter) {
         const canShowMenu = menuOwner && menuOwner.canShowMenu;
         if (typeof canShowMenu !== "function") return true;
         try {
-            return Boolean(canShowMenu.call(menuOwner));
+            // A strong [s] stop can display choices in layer_free. Native menus
+            // reject that layer, but snapSave includes it and loadGameData rebinds it.
+            const stopped = kag.stat.is_strong_stop === true &&
+                kag.ftag.array_tag[kag.ftag.current_order_index].name === "s";
+            return Boolean(canShowMenu.call(menuOwner) || stopped);
         } catch {
             return false;
         }

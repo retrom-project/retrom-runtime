@@ -32,7 +32,7 @@ export async function mountTyranoScript(
   reportExitRequested: RuntimeExitReporter = () => undefined,
 ): Promise<MountedRuntimeAdapter> {
   const channel = new TyranoScriptChannel(config, reportExitRequested);
-  frame.setAttribute("sandbox", "allow-scripts allow-same-origin allow-pointer-lock");
+  frame.setAttribute("sandbox", "allow-scripts allow-same-origin allow-pointer-lock allow-modals");
   frame.referrerPolicy = "no-referrer";
   try {
     await bootstrapFrame(config, frame, channel);
@@ -75,14 +75,17 @@ export async function mountTyranoScript(
       const reply = await channel.request("SET_VIDEO_MODE", {mode});
       if (reply.type !== "SET_VIDEO_MODE_RESULT") {throw new Error("TYRANOSCRIPT_PROTOCOL_INVALID");}
     },
-    setVolume: (value) => {void channel.request("SET_VOLUME", {value});},
+    setVolume: async (value) => {await channel.request("SET_VOLUME", {value});},
   };
 }
 
 class TyranoScriptChannel {
   reportHostShortcut: ((shortcut: RuntimeHostShortcutV1) => void) | null = null;
-  private readonly nonce = randomNonce();
-  private readonly messageChannel = new MessageChannel();
+  disposeBootstrap: () => void = () => undefined;
+  private nonce = randomNonce();
+  private messageChannel: MessageChannel;
+  private readonly controls = new Map<string, Record<string, unknown>>();
+  private replayControls = false;
   private connected = false;
   private closed = false;
   private lastRequestId = 0;
@@ -99,12 +102,34 @@ class TyranoScriptChannel {
     private readonly config: TyranoScriptParameters,
     private readonly reportExitRequested: RuntimeExitReporter,
   ) {
-    this.messageChannel.port1.onmessage = (event) => this.receive(event.data);
-    this.messageChannel.port1.start();
+    this.messageChannel = this.openChannel();
+  }
+
+  private openChannel() {
+    const channel = new MessageChannel();
+    channel.port1.onmessage = (event) => this.receive(event.data);
+    channel.port1.start();
+    return channel;
   }
 
   connect(target: Window) {
-    if (this.connected || this.closed) {throw new Error("TYRANOSCRIPT_PROTOCOL_INVALID");}
+    if (this.closed) {throw new Error("TYRANOSCRIPT_CHANNEL_CLOSED");}
+    if (this.connected) {
+      // A native return-to-title reload creates a new bridge in the same frame.
+      this.messageChannel.port1.close();
+      this.nonce = randomNonce();
+      this.messageChannel = this.openChannel();
+      this.readyValue = null;
+      this.available = false;
+      this.frameCount = 0;
+      this.replayControls = true;
+      if (this.pending) {
+        const pending = this.pending;
+        this.pending = null;
+        window.clearTimeout(pending.timer);
+        pending.reject(new Error("TYRANOSCRIPT_RUNTIME_RELOADED"));
+      }
+    }
     this.connected = true;
     target.postMessage({
       nonce: this.nonce,
@@ -132,7 +157,16 @@ class TyranoScriptChannel {
 
   request(type: string, body: Record<string, unknown>, timeoutMs = commandTimeoutMs) {
     if (!this.connected || this.closed) {return Promise.reject(new Error("TYRANOSCRIPT_CHANNEL_CLOSED"));}
-    const operation = this.requestTail.then(() => this.sendRequest(type, body, timeoutMs));
+    const nonce = this.nonce;
+    const operation = this.requestTail.then(async () => {
+      if (nonce !== this.nonce) {throw new Error("TYRANOSCRIPT_RUNTIME_RELOADED");}
+      const reply = await this.sendRequest(type, body, timeoutMs);
+      if (["SET_HOST_SHORTCUT_POLICY", "SET_INPUT_FILTER", "SET_VIDEO_MODE", "SET_VOLUME", "PAUSE", "RESUME"].includes(type)) {
+        if (type === "PAUSE" || type === "RESUME") {this.controls.delete(type === "PAUSE" ? "RESUME" : "PAUSE");}
+        this.controls.set(type, body);
+      }
+      return reply;
+    });
     this.requestTail = operation.then(() => undefined, () => undefined);
     return operation;
   }
@@ -188,6 +222,8 @@ class TyranoScriptChannel {
   close() {
     if (this.closed) {return;}
     this.closed = true;
+    this.disposeBootstrap();
+    this.controls.clear();
     this.reportHostShortcut = null;
     this.available = false;
     this.stopProbeLoop();
@@ -241,6 +277,12 @@ class TyranoScriptChannel {
       const ready = readReady(reply.body);
       this.readyValue = ready;
       this.available = ready.checkpointAvailable;
+      if (this.replayControls) {
+        this.replayControls = false;
+        for (const [type, body] of this.controls) {
+          void this.request(type, body).catch(() => {this.available = false;});
+        }
+      }
       if (this.readyWaiter) {
         const waiter = this.readyWaiter;
         this.readyWaiter = null;
@@ -277,10 +319,13 @@ async function bootstrapFrame(
   const runtimeWindow: Window = contentWindow;
   await new Promise<void>((resolve, reject) => {
     const timer = window.setTimeout(() => finish(new Error("TYRANOSCRIPT_BOOTSTRAP_TIMEOUT")), bootstrapTimeoutMs);
-    function finish(error?: Error) {
+    channel.disposeBootstrap = () => {
       window.clearTimeout(timer);
       window.removeEventListener("message", receive, true);
-      if (error) {reject(error);} else {resolve();}
+    };
+    function finish(error?: Error) {
+      window.clearTimeout(timer);
+      if (error) {channel.disposeBootstrap(); reject(error);} else {resolve();}
     }
     function receive(event: MessageEvent) {
       if (event.source !== runtimeWindow || event.origin !== config.uniqueOrigin ||

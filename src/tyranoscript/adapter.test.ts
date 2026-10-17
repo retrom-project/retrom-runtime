@@ -82,7 +82,11 @@ describe("TyranoScript isolated Web adapter", () => {
     await vi.waitFor(() => expect(exits).toHaveBeenCalledTimes(1));
     expect(adapter.getCheckpointAvailability()).toEqual({available: false, blocker: "BUSY"});
 
-    await adapter.exit();
+    try {
+      expect(frame.getAttribute("sandbox")?.split(/\s+/u)).toContain("allow-modals");
+    } finally {
+      await adapter.exit();
+    }
     activeRuntimePort.postMessage(shortcut);
     await new Promise(resolve => setTimeout(resolve, 0));
     expect(shortcuts).toHaveBeenCalledOnce();
@@ -118,6 +122,74 @@ describe("TyranoScript isolated Web adapter", () => {
     const adapter = await mounting;
     await adapter.exit();
   });
+
+  it("reconnects after a game reload, reapplies controls and keeps new checkpoints usable", async () => {
+    vi.stubGlobal("MessageChannel", FakeMessageChannel);
+    const frame = document.createElement("iframe");
+    document.body.append(frame);
+    const runtimeWindow = frame.contentWindow!;
+    const connections: {identity: ConnectEnvelope; port: FakePort; requests: RequestEnvelope[]}[] = [];
+    let holdCheckpoint = false;
+    vi.spyOn(runtimeWindow, "postMessage").mockImplementation(((message: unknown, _origin?: string, transfer?: Transferable[]) => {
+      const identity = message as ConnectEnvelope;
+      const port = transfer?.[0] as unknown as FakePort;
+      const connection = {identity, port, requests: [] as RequestEnvelope[]};
+      connections.push(connection);
+      port.onmessage = event => {
+        const request = event.data as RequestEnvelope;
+        connection.requests.push(request);
+        if (request.type === "CHECKPOINT" && holdCheckpoint) return;
+        port.postMessage(commandResult(request));
+      };
+      queueMicrotask(() => port.postMessage(eventEnvelope(identity, "READY", {
+        checkpointAvailable: true, engine: "TYRANOSCRIPT",
+      })));
+    }) as typeof runtimeWindow.postMessage);
+    const ready = () => dispatchRuntimeMessage(runtimeWindow, {
+      protocolVersion: 1, type: "GAME_RUNTIME_TYRANOSCRIPT_BRIDGE_READY",
+    });
+    const mounting = mountTyranoScript(runtimeConfig(), frame, Uint8Array.of(1));
+    ready();
+    const adapter = await mounting;
+    try {
+      await adapter.setHostShortcutPolicy!({menu: "KeyM", pause: false}, vi.fn());
+      await adapter.setInputFilter!(null);
+      await adapter.setVideoMode!("pixel");
+      await adapter.setVolume!(0.25);
+      await adapter.pause();
+      window.dispatchEvent(new MessageEvent("message", {source: runtimeWindow, origin: "https://foreign.example",
+        data: {protocolVersion: 1, type: "GAME_RUNTIME_TYRANOSCRIPT_BRIDGE_READY"}}));
+      dispatchRuntimeMessage(window, {protocolVersion: 1, type: "GAME_RUNTIME_TYRANOSCRIPT_BRIDGE_READY"});
+      expect(connections).toHaveLength(1);
+      ready();
+      await vi.waitFor(() => expect(connections).toHaveLength(2));
+      expect(connections[0].port.peer?.closed).toBe(true);
+      expect(connections[1].identity.nonce).not.toBe(connections[0].identity.nonce);
+      await vi.waitFor(() => expect(connections[1].requests).toEqual(expect.arrayContaining([
+        expect.objectContaining({type: "SET_HOST_SHORTCUT_POLICY", body: {policy: {menu: "KeyM", pause: false}}}),
+        expect.objectContaining({type: "SET_INPUT_FILTER", body: {policy: null}}),
+        expect.objectContaining({type: "SET_VIDEO_MODE", body: {mode: "pixel"}}),
+        expect.objectContaining({type: "SET_VOLUME", body: {value: 0.25}}),
+        expect.objectContaining({type: "PAUSE"}),
+      ])));
+      expect(connections[1].requests.some(request => request.type === "RESTORE")).toBe(false);
+      await adapter.resume();
+      holdCheckpoint = true;
+      const interrupted = expect(adapter.checkpoint()).rejects.toThrow("TYRANOSCRIPT_RUNTIME_RELOADED");
+      await vi.waitFor(() => expect(connections[1].requests.some(request => request.type === "CHECKPOINT")).toBe(true));
+      const queued = expect(adapter.screenshot()).rejects.toThrow("TYRANOSCRIPT_RUNTIME_RELOADED");
+      ready();
+      await Promise.all([interrupted, queued]);
+      holdCheckpoint = false;
+      await expect(adapter.checkpoint()).resolves.toMatchObject({format: "tyranoscript-snapshot-v1"});
+      expect(connections).toHaveLength(3);
+      expect(connections[2].requests.some(request => request.type === "RESTORE" || request.type === "PAUSE")).toBe(false);
+    } finally {
+      await adapter.exit();
+    }
+    ready();
+    expect(connections).toHaveLength(3);
+  });
 });
 
 type ConnectEnvelope = {
@@ -148,6 +220,7 @@ function commandResult(request: RequestEnvelope) {
     SCREENSHOT: {data: Uint8Array.of(255, 216, 255, 217).buffer, mediaType: "image/jpeg"},
   };
   const types: Record<string, string> = {
+    SET_INPUT_FILTER: "SET_INPUT_FILTER_RESULT",
     SET_HOST_SHORTCUT_POLICY: "SET_HOST_SHORTCUT_POLICY_RESULT",
     CHECKPOINT: "CHECKPOINT_RESULT", CLEANUP: "CLEANUP_RESULT", PAUSE: "PAUSE_RESULT",
     PROBE: "PROBE_RESULT", RESTORE: "RESTORE_RESULT", RESUME: "RESUME_RESULT",

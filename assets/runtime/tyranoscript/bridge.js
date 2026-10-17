@@ -686,15 +686,15 @@
     }
     function restore(data) {
       if (exited) return Promise.reject(new Error("TYRANOSCRIPT_CHECKPOINT_RESTORE_FAILED"));
-      let checkpoint2 = decodeCheckpoint(data), snapshot = checkpoint2.snapshot, kag = engine();
+      let checkpoint2 = decodeCheckpoint(data), snapshot = checkpoint2.snapshot, targetScenario = snapshot.stat.current_scenario, targetOrderIndex = snapshot.current_order_index + 1, kag = engine();
       return kag ? new Promise((resolve, reject) => {
-        let completed = !1, makeStarted = !1, pollTimer = 0, legacyRestore = kag === legacyKag || typeof kag.once != "function" || typeof kag.on != "function", timer = global.setTimeout(() => finish(new Error("TYRANOSCRIPT_CHECKPOINT_RESTORE_TIMEOUT")), RESTORE_TIMEOUT_MS);
+        let completed = !1, makeStarted = !1, pollTimer = 0, legacyRestore = kag === legacyKag || typeof kag.once != "function" || typeof kag.on != "function", deferPageClear = legacyRestore && snapshot.stat.flag_ref_page === !0, timer = global.setTimeout(() => finish(new Error("TYRANOSCRIPT_CHECKPOINT_RESTORE_TIMEOUT")), RESTORE_TIMEOUT_MS);
         function finish(error) {
-          completed || (completed = !0, global.clearTimeout(timer), pollTimer && global.clearTimeout(pollTimer), typeof kag.off == "function" && kag.off(".retrom-runtime-restore"), error ? reject(error) : resolve());
+          completed || (completed = !0, global.clearTimeout(timer), pollTimer && global.clearTimeout(pollTimer), typeof kag.off == "function" && kag.off(".retrom-runtime-restore"), error ? reject(error) : (deferPageClear && (kag.stat.flag_ref_page = !0), resolve()));
         }
         function pollTarget() {
           if (!completed) {
-            if ((legacyRestore || makeStarted) && kag.stat.current_scenario === snapshot.stat.current_scenario && kag.ftag && kag.ftag.current_order_index === snapshot.current_order_index + 1) {
+            if ((legacyRestore || makeStarted) && kag.stat.current_scenario === targetScenario && kag.ftag && kag.ftag.current_order_index === targetOrderIndex) {
               finish();
               return;
             }
@@ -712,7 +712,7 @@
                 throw new Error("TYRANOSCRIPT_CHECKPOINT_RESTORE_FAILED");
               kag.variable.sf = cloneJSON(checkpoint2.systemVariables);
             }
-            kag.menu.loadGameData(snapshot, { auto_next: "no", bgm_over: "false" }), pollTarget();
+            deferPageClear && (snapshot.stat.flag_ref_page = !1), kag.menu.loadGameData(snapshot, { auto_next: "no", bgm_over: "false" }), pollTarget();
           } catch {
             finish(new Error("TYRANOSCRIPT_CHECKPOINT_RESTORE_FAILED"));
           }

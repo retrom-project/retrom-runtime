@@ -32,8 +32,55 @@ function fixture() {
   // Complete cached bytes are intentionally trusted even if client storage changes later.
   vi.spyOn(store, "local").mockResolvedValue(Uint8Array.of(9, 2, 3));
   const materializer = new ContentMaterializer(pool, store);
-  return {object, generation, materializer, store, pool};
+  return {object, generation, materializer, store, pool, backing};
 }
+
+it("delivers a completed OPFS Blob by file reference without rereading its blocks", async () => {
+  const {object, generation, materializer, store, pool, backing} = fixture();
+  const file = new File([Uint8Array.of(1, 2, 3)], "verified.data"), release = vi.fn();
+  const openFile = vi.fn(async () => file);
+  Object.assign(backing.resources.data, {file: openFile});
+  vi.spyOn(store, "lease").mockResolvedValue(release);
+  try {
+    const result = await materializer.prepare(object, {kind: "BLOB", maxBytes: 3});
+    if (result.kind !== "BLOB") {throw new Error("wrong kind");}
+    expect(result.blob).toBe(file); expect(result.receipt.localSha256).toBe(generation.localSha256);
+    expect(store.local).not.toHaveBeenCalled(); expect(openFile).toHaveBeenCalledOnce();
+    await result.release(); await result.release(); expect(release).toHaveBeenCalledOnce();
+    expect(materializer.stats.materializedBytesByKind.BLOB).toBe(3);
+  } finally {materializer.close(); store.close(); pool.close();}
+});
+
+it.each(["missing", "wrong-size"])("keeps the verified-byte fallback when the completed Blob file is %s", async failure => {
+  const {object, materializer, store, pool, backing} = fixture();
+  const release = vi.fn(), openFile = vi.fn(async () => {
+    if (failure === "missing") {throw new DOMException("Missing file", "NotFoundError");}
+    return new File([new Uint8Array(4)], "wrong.data");
+  });
+  Object.assign(backing.resources.data, {file: openFile});
+  vi.spyOn(store, "lease").mockResolvedValue(release);
+  vi.mocked(store.local).mockResolvedValue(Uint8Array.of(1, 2, 3));
+  vi.spyOn(backing, "read").mockResolvedValue(Uint8Array.of(1, 2, 3));
+  try {
+    const result = await materializer.prepare(object, {kind: "BLOB", maxBytes: 3});
+    if (result.kind !== "BLOB") {throw new Error("wrong kind");}
+    expect([...new Uint8Array(await result.blob.arrayBuffer())]).toEqual([1, 2, 3]); expect(store.local).toHaveBeenCalledOnce();
+    await result.release(); expect(release.mock.calls.length).toBe(openFile.mock.calls.length);
+  } finally {materializer.close(); store.close(); pool.close();}
+});
+
+it("releases the Blob lease when cancellation interrupts file-reference delivery", async () => {
+  const {object, materializer, store, pool, backing} = fixture(), controller = new AbortController();
+  const release = vi.fn(); let finish!: (file: File) => void;
+  const openFile = vi.fn(() => new Promise<File>(resolve => {finish = resolve;}));
+  Object.assign(backing.resources.data, {file: openFile}); vi.spyOn(store, "lease").mockResolvedValue(release);
+  try {
+    const result = expect(materializer.prepare(object, {kind: "BLOB", maxBytes: 3}, controller.signal)).rejects.toThrow("ABORTED");
+    await vi.waitFor(() => expect(openFile).toHaveBeenCalledOnce()); controller.abort(); await result;
+    finish(new File([new Uint8Array(3)], "late.data"));
+    expect(release).toHaveBeenCalledOnce(); expect(store.local).not.toHaveBeenCalled();
+  } finally {materializer.close(); store.close(); pool.close();}
+});
 
 it.each(["BYTES", "BLOB", "SINK"] as const)("[ST-10] UNIT/cached-%s reuses a completed receipt without scanning its content hash again", async kind => {
   const {object, materializer, store, pool, generation} = fixture();

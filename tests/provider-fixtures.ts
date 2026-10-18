@@ -204,6 +204,7 @@ export function targetEnvelope(targetId: string): LaunchEnvelopeV1 {
 }
 
 function fixtureTargetOptions(targetId: string): LaunchEnvelopeV1["targetOptions"] {
+  if (targetId === "siglus") {return {language: "chs"};}
   if (targetId === "onscripter-yuri") {return {scriptEncoding: "utf8"};}
   if (targetId === "kirikiri2-kag") {return {startupXp3Path: null};}
   if (targetId === "scummvm") {

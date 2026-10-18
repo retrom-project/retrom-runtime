@@ -410,5 +410,9 @@
   {
     "id": "yabause",
     "displayName": "Yabause"
+  },
+  {
+    "id": "siglus",
+    "displayName": "SiglusEngine (siglus_rs)"
   }
 ]

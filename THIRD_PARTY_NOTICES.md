@@ -121,3 +121,12 @@ pinned Emscripten 3.1.74 license. The MIT adapter does not relicense the engine.
 No Apple firmware or game content is distributed. The candidate descriptor records
 the exact source tree, ABI and generated asset hashes; stable release inputs must
 replace the development input with an immutable fork release.
+
+## Siglus development candidate
+
+Siglus source is derived from xmoezzz/siglus_rs at
+5f358ef1360b0439e92aed2b749e8f25d8721954 (MPL-2.0). Its separate core
+candidate contains Noto Sans SC (SIL OFL-1.1), the modified wgpu-hal
+(MIT OR Apache-2.0), and CPAL (Apache-2.0) notices under `licenses/siglus/`.
+No game data, recovered keys, patch DLLs or upstream proprietary font may be
+packaged in the Provider. The candidate is not a published core release.

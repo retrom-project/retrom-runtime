@@ -3218,5 +3218,54 @@
       "output": "runtime/tyranoscript/bridge.js"
     }
   ],
-  "developmentInputs": []
+  "developmentInputs": [
+    {
+      "id": "siglus",
+      "repository": "https://github.com/retrom-project/siglus_rs",
+      "upstreamCommit": "5f358ef1360b0439e92aed2b749e8f25d8721954",
+      "adapterAbi": "siglus-host-v1",
+      "assets": [
+        {
+          "filename": "siglus.mjs",
+          "output": "runtime/siglus/siglus.mjs",
+          "maxSizeBytes": 8388608
+        },
+        {
+          "filename": "siglus_bg.wasm",
+          "output": "runtime/siglus/siglus_bg.wasm",
+          "maxSizeBytes": 134217728
+        },
+        {
+          "filename": "LICENSE-MPL-2.0",
+          "output": "licenses/siglus/LICENSE-MPL-2.0",
+          "maxSizeBytes": 1048576
+        },
+        {
+          "filename": "FONT-OFL.txt",
+          "output": "licenses/siglus/FONT-OFL.txt",
+          "maxSizeBytes": 1048576
+        },
+        {
+          "filename": "THIRD-PARTY-NOTICES.md",
+          "output": "licenses/siglus/THIRD-PARTY-NOTICES.md",
+          "maxSizeBytes": 1048576
+        },
+        {
+          "filename": "WGPU-LICENSE-MIT",
+          "output": "licenses/siglus/WGPU-LICENSE-MIT",
+          "maxSizeBytes": 1048576
+        },
+        {
+          "filename": "WGPU-LICENSE-APACHE",
+          "output": "licenses/siglus/WGPU-LICENSE-APACHE",
+          "maxSizeBytes": 1048576
+        },
+        {
+          "filename": "CPAL-LICENSE",
+          "output": "licenses/siglus/CPAL-LICENSE",
+          "maxSizeBytes": 1048576
+        }
+      ]
+    }
+  ]
 }

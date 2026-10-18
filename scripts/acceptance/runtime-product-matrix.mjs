@@ -30,7 +30,7 @@ const directories = {
   flash: "retrom-runtime/ruffle", pokemini: "retrom-runtime/pokemini", j2me: "retrom-runtime/J2ME",
   kirikiri: "retrom-runtime/krkr", butterscotch: "retrom-runtime/gamemaker", ons: "retrom-runtime/ons",
   openbor: "retrom-runtime/openbor", cavestory: "retrom-runtime/nxengine/CaveStory", scummvm: "retrom-runtime/scummvm",
-  tic80: "retrom-runtime/tic80", tyranoscript: "retrom-runtime/typranoscript", wasm4: "retrom-runtime/wasm4",
+  siglus: "retrom-runtime/siglus", tic80: "retrom-runtime/tic80", tyranoscript: "retrom-runtime/typranoscript", wasm4: "retrom-runtime/wasm4",
   megadrive: "gamelist-import/megadrive", ps2: "retrom-runtime/PS2 - Ridge Racer V",
 };
 const coreDirectories = {crocods: "emulatorjs/crocods", vice_x64sc: "emulatorjs/vice_x64sc",
@@ -38,7 +38,7 @@ const coreDirectories = {crocods: "emulatorjs/crocods", vice_x64sc: "emulatorjs/
   mame2003: "emulatorjs/neogeo", mame2003_plus: "emulatorjs/neogeo", mame_arcade: "emulatorjs/mame"};
 const fixtureDirectories = {nes: "nes-smoke", gba: "gba-smoke", snes: "snes-smoke", dos: "dos-cache", lutro: "lutro-smoke",
   wasm4: "wasm4-controls", pico8: "fantasy-controls", tic80: "fantasy-controls"};
-const archiveOrROM = /\.(?:zip|7z|chd|iso|cue|bin|rom|nes|sfc|smc|gba|gbc?|fds|nds|3ds|cci|cso|dsk|ssd|tap|tzx|adf|dim|xdf|gam|mx[12]|tic|p8|swf|wasm|jar|pak|wad|pce|md|gen|sms|gg|sg|a26|a52|a78|j64|jag|lnx|vec|uze|sv|cpr|scl|z81|p|exe|d64|d71|d81|t64|prg|crt|d88|hdi|fdi|lutro)$/iu;
+const archiveOrROM = /\.(?:zip|7z|chd|iso|cue|bin|rom|nes|sfc|smc|gba|gbc?|fds|nds|3ds|cci|cso|dsk|ssd|tap|tzx|adf|dim|xdf|gam|mx[12]|tic|p8|swf|wasm|jar|pak|pck|wad|pce|md|gen|sms|gg|sg|a26|a52|a78|j64|jag|lnx|vec|uze|sv|cpr|scl|z81|p|exe|d64|d71|d81|t64|prg|crt|d88|hdi|fdi|lutro)$/iu;
 const catalog = runtimeCatalog(), rows = [];
 for (const binding of catalog.bindings) {
   const target = catalog.providers.find(item => item.providerId === binding.providerId).targets.find(item => item.id === binding.targetId);
@@ -60,7 +60,7 @@ for (const binding of catalog.bindings) {
 const bound = new Set(catalog.bindings.map(binding => `${binding.providerId}/${binding.targetId}`));
 const unboundTargets = catalog.providers.flatMap(provider => provider.targets.filter(target => !bound.has(`${provider.providerId}/${target.id}`))
   .map(target => ({providerId: provider.providerId, targetId: target.id, productEntry: false, componentStatus: "DECLARATION_AND_ADAPTER_TESTED", productStatus: "NO_EXISTING_PRODUCT_BINDING"})));
-const matrix = {schemaVersion: 1, declarationCount: 110, bindingCount: 109, platformCount: 95, productRowCount: rows.length,
+const matrix = {schemaVersion: 1, declarationCount: catalog.providers.reduce((total, provider) => total + provider.targets.length, 0), bindingCount: catalog.bindings.length, platformCount: catalog.platforms.length, productRowCount: rows.length,
   roots, materialInventoryOnly: true, productPassed: 0, rows, unboundTargets};
 const output = resolve(args.output); await mkdir(dirname(output), {recursive: true});
 if (args["inventory-output"]) {await writeFile(resolve(args["inventory-output"]), `${JSON.stringify(matrix, null, 2)}\n`);}

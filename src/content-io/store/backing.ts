@@ -10,7 +10,9 @@ import type {PersistentResources} from "./selector.js";
 import type {Backing, BlockReceipt, GenerationRecord} from "./types.js";
 export const localDigest = (bytes: Uint8Array) => bytesToHex(sha256(bytes));
 export class PersistentBacking {
-  constructor(readonly resources: PersistentResources, readonly backing: Backing, readonly object: BlockObject, private readonly onCorrupt: () => void = () => {}) {}
+  constructor(readonly resources: PersistentResources, readonly backing: Backing, readonly object: BlockObject,
+    private readonly onCorrupt: () => void = () => {}, private readonly timeout: number | (() => number) = 500) {}
+  get operationTimeoutMs() {return typeof this.timeout === "number" ? this.timeout : this.timeout();}
   get key() {return this.object.key;}
   get generation() {return this.backing.generation.generation;}
   async pin(etag: string): Promise<void> {

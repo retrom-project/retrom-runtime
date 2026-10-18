@@ -8,6 +8,7 @@ import {projectProviderManifest} from "../../src/provider/manifest.js";
 it.each([
   ["rpgmaker-mv", "ON_DEMAND_AND_PRELOAD"],
   ["rpgmaker-mz", "ON_DEMAND_AND_PRELOAD"],
+  ["siglus", "ON_DEMAND_AND_PRELOAD"],
   ["tyranoscript", "ON_DEMAND_AND_PRELOAD"],
   ["onscripter-yuri", "ON_DEMAND_AND_PRELOAD"],
   ["fake08", "PRELOAD_ONLY"],

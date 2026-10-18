@@ -298,6 +298,13 @@ export function mame(envelope: LaunchEnvelopeV1): import("../../mame/core.js").M
   return {machine, game, bios, runtimeBaseUrl: envelope.runtime.runtimeBaseUrl};
 }
 
+export function siglus(envelope: LaunchEnvelopeV1): import("../../siglus/adapter.js").SiglusParameters {
+  const game = resource(envelope, "game", "FILE_TREE"), language = envelope.targetOptions.language;
+  if (language !== "original" && language !== "chs") {invalidRequest();}
+  return {projectIndexURL: game.indexUrl, contentDigest: game.contentDigest,
+    runtimeBaseURL: assetBase(envelope, "siglus"), language};
+}
+
 function mameArcade(envelope: LaunchEnvelopeV1): Extract<import("../../mame/core.js").MameParameters, {arcade: true}> {
   const machine = envelope.targetOptions.machine;
   if (typeof machine !== "string" || !/^[a-z0-9_]{1,32}$/u.test(machine)) {invalidRequest();}

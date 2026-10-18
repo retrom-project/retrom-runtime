@@ -28,6 +28,7 @@ import {mountNativeRpg} from "../../native-web/adapter.js";
 import {mountOnsYuri} from "../../ons/adapter.js";
 import {mountTyranoScript} from "../../tyranoscript/adapter.js";
 import {mountWasm4} from "../../wasm4/adapter.js";
+import {mountSiglus} from "../../siglus/adapter.js";
 import type {MountedRuntimeAdapter, RuntimeExitReporter, RuntimeProgressReporter} from "../../internal-adapter.js";
 import type {AssetIndexV1, LaunchEnvelopeV1} from "../../provider/module-api.js";
 import {retromRuntimeProviderDefinition} from "./catalog.js";
@@ -58,14 +59,12 @@ export function mountTargetAdapter(
 
 function mountAdapter(envelope: LaunchEnvelopeV1, target: HTMLElement, input: TargetMountContext): Promise<MountedRuntimeAdapter> {
   const {declaration, adapter} = resolveAdapter(envelope.runtime.targetId);
-  const contentSession = input.contentSession ? bindTargetContent(input.contentSession, declaration, input.startup) : null;
-  const context = {...input, contentSession, content: contentSession ? {
-    contentSession, assetIndex: input.assetIndex, signal: input.signal, startup: input.startup,
-    reportProgress: input.reportProgress, onFailure: failureReporter(input), runtimeBaseURL: envelope.runtime.runtimeBaseUrl,
-  } : null};
-  const {frameWindow, restorePayload, reportProgress, reportExitRequested} = context;
+  const context = bindMountContext(envelope, declaration, input);
+  const {frameWindow, restorePayload, reportProgress, reportExitRequested, contentSession} = context;
   const reportFailure = failureReporter(context);
   switch (adapter.kind) {
+  case "SIGLUS_WEB":
+    return mountSiglus(parameters.siglus(envelope), target, frameWindow, restorePayload, contentOptions(context), reportExitRequested);
   case "NXENGINE_WEB":
     return mountNXEngine(parameters.nxengine(envelope, context.assetIndex), target, frameWindow, restorePayload, reportProgress, reportFailure, context.signal, undefined, contentOptions(context));
   case "OPENBOR_WEB":
@@ -173,6 +172,14 @@ type BoundMountContext = Omit<TargetMountContext, "contentSession"> & {
   }) | null;
 };
 type BoundSession = import("../../provider/content-inputs.js").AdapterContentSession & Pick<ContentSessionClient, "createSyncChannel">;
+function bindMountContext(envelope: LaunchEnvelopeV1, declaration: import("../../provider/declarations.js").TargetDeclaration, input: TargetMountContext) {
+  const contentSession = input.contentSession ? bindTargetContent(input.contentSession, declaration, input.startup) : null;
+  return {...input, contentSession, content: contentSession ? {
+    contentSession, assetIndex: input.assetIndex, signal: input.signal, startup: input.startup,
+    reportProgress: input.reportProgress, onFailure: failureReporter(input), runtimeBaseURL: envelope.runtime.runtimeBaseUrl,
+  } : null};
+}
+
 function contentOptions(context: BoundMountContext) {
   if (!context.content) {throw new Error("CONTENT_IO_ABI_MISMATCH");}
   return context.content;

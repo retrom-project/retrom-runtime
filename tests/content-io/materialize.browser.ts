@@ -6,7 +6,14 @@ import {startFixtureServer} from "./fixture-server.mjs";
 const bundle = async (name: string) => (await build({entryPoints: [fileURLToPath(new URL(`../../src/content-io/${name}.ts`, import.meta.url))],
   bundle: true, format: "esm", platform: "browser", write: false, target: "es2022"})).outputFiles[0].text;
 test("[ST-10] BROWSER/whole-to-range [ST-11] BROWSER/whole [X-22] BROWSER/long-prepare [X-26] BROWSER/stream-commit @S07", async ({page}) => {
-  const server = await startFixtureServer({contentModule: await bundle("client"), modules: {"worker.mjs": await bundle("worker")}});
+  const worker = await bundle("worker");
+  const slowFile = `const getFile = FileSystemFileHandle.prototype.getFile;
+    FileSystemFileHandle.prototype.getFile = async function () {
+      await new Promise(resolve => setTimeout(resolve, 650)); return getFile.call(this);
+    };`;
+  const server = await startFixtureServer({contentModule: await bundle("client"), modules: {
+    "worker.mjs": worker, "slow-worker.mjs": slowFile + worker,
+  }});
   const identity = server.register({id: "game", fixtureId: "multi-tail", behavior: "NORMAL", seed: 17,
     delayBeforeHeadersMs: null, chunkDelayMs: null, disconnectAfterBytes: null, barrier: null});
   try {
@@ -28,6 +35,18 @@ test("[ST-10] BROWSER/whole-to-range [ST-11] BROWSER/whole [X-22] BROWSER/long-p
           hashes.push(value.receipt.localSha256); backends.push(session.stats.backend);
         } finally {await session.close();}
       }
+      const blobDiagnostics: ContentDiagnostic[] = [];
+      const blobSession = await createContentSession(new Worker("/__test__/slow-worker.mjs", {type: "module"}), context,
+        {onDiagnostic: value => blobDiagnostics.push(value)});
+      let blobHash = "", blobTag = "";
+      try {
+        const reader = await blobSession.open(source, {...policy, result: "BLOB"});
+        const value = await blobSession.materialize(reader.id, {kind: "BLOB", maxBytes: source.sizeBytes});
+        if (value.kind !== "BLOB") {throw new Error("wrong kind");}
+        blobTag = Object.prototype.toString.call(value.blob);
+        blobHash = Array.from(new Uint8Array(await crypto.subtle.digest("SHA-256", await value.blob.arrayBuffer())), n => n.toString(16).padStart(2, "0")).join("");
+        await reader.close(); await value.release();
+      } finally {await blobSession.close();}
       const session = await createContentSession(new Worker("/__test__/worker.mjs", {type: "module"}), context, {fetchPolicy: {smallFileThresholdBytes: 0, networkWindowBytes: 262144}});
       try {
         const reader = await session.open({...source, transport: "RANGE_REQUIRED"}, {...policy, mode: "RANGE", bridge: "ASYNC", result: "READER"});
@@ -39,11 +58,16 @@ test("[ST-10] BROWSER/whole-to-range [ST-11] BROWSER/whole [X-22] BROWSER/long-p
           write: async (offset, chunk) => {if (offset !== written) {throw new Error("offset");} await new Promise((resolve) => setTimeout(resolve, 1400)); written += chunk.length;},
           commit: async () => {if (reported.includes(source.sizeBytes)) {throw new Error("premature 100%");} commits++;},
           abort: async () => {aborted++;}})}, undefined, (progress) => reported.push(progress.readyBytes));
-        return {hashes, backends, written, commits, aborted, reported, duration: performance.now() - started, range: Array.from(range)};
+        return {hashes, backends, written, commits, aborted, reported, duration: performance.now() - started, range: Array.from(range),
+          blobHash, blobTag, blobDiagnostics};
       } finally {await session.close();}
     }, {identity});
     expect(result.hashes).toEqual([identity.identity.kind === "FILE_SHA256" ? identity.identity.sha256 : "", identity.identity.kind === "FILE_SHA256" ? identity.identity.sha256 : ""]);
     expect(result.backends).toEqual(["OPFS", "OPFS"]); expect(result.written).toBe(identity.sizeBytes); expect(result.commits).toBe(1); expect(result.aborted).toBe(0);
+    expect(result.blobTag).toBe("[object File]"); expect(result.blobHash).toBe(result.hashes[0]);
+    expect(result.blobDiagnostics.at(-1)).toMatchObject({operation: "CLOSE", codeNumber: 0, counts: {
+      persistentHitBytes: 0, networkBytes: 0, materializedBytesByBlob: identity.sizeBytes, leases: 0,
+    }});
     expect(result.duration).toBeGreaterThan(5000); expect(result.reported.filter((value) => value === identity.sizeBytes)).toHaveLength(1);
     expect(server.requests("game").map((request) => request.range)).toEqual([null]);
   } finally {await server.close();}

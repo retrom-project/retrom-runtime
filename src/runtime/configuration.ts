@@ -3,7 +3,7 @@ import {configurationFailure, exact, identifier, logicalPath, object} from "./va
 import {rpgEntryFiles} from "./rpg-entry-files.js";
 
 const entryKinds = ["SINGLE_FILE", "ARCADE", "ONS_PROJECT", "KIRIKIRI_PROJECT", "BUTTERSCOTCH_PROJECT",
-  "TYRANOSCRIPT_PROJECT", "NXENGINE_PROJECT", "DAPHNE_PROJECT"];
+  "TYRANOSCRIPT_PROJECT", "NXENGINE_PROJECT", "DAPHNE_PROJECT", "SIGLUS_PROJECT"];
 const engines = ["RPG2000", "RPG2003", "RPGXP", "RPGVX", "RPGVXACE", "RPGMV", "RPGMZ"];
 
 /** Accept only game-specific rules; declarations and installed BIOS are resolved at launch. */

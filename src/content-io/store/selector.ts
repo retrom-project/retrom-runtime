@@ -15,14 +15,16 @@ export class StoreSelector {
   private fallback: Promise<PersistentResources | null> | undefined;
   private readonly stores: DataStore[] = [];
   private readonly readers = new Map<Backend, Promise<PersistentResources | undefined>>();
-  constructor(private readonly origin: string, private readonly ready: (backend: string) => void = () => {}) {
+  constructor(private readonly origin: string, private readonly ready: (backend: string) => void = () => {},
+    private readonly timeout: number | (() => number) = 500) {
     this.probing = this.probe();
     void this.probing.then((resources) => {if (resources && !this.stopped) {this.ready(resources.data.backend);}});
   }
+  private get operationTimeoutMs() {return typeof this.timeout === "number" ? this.timeout : this.timeout();}
   select(): Promise<PersistentResources | null> {
     if (!this.selected) {
       this.selected = (async () => {
-        const scope = requestScope(this.controller.signal, 500);
+        const scope = requestScope(this.controller.signal, this.operationTimeoutMs);
         try {return await abortable(this.probing, scope.signal);}
         catch {this.stopped = true; this.controller.abort(); return null;}
         finally {scope.dispose();}
@@ -68,7 +70,7 @@ export class StoreSelector {
   }
   close(): void {this.stopped = true; this.controller.abort(); this.resources?.metadata.close();}
   private async bounded<Value>(action: () => Promise<Value>, late?: (value: Value) => void): Promise<Value> {
-    const scope = requestScope(this.controller.signal, 2000), pending = action();
+    const scope = requestScope(this.controller.signal, Math.max(2000, this.operationTimeoutMs)), pending = action();
     void pending.then((value) => {if (scope.signal.aborted) {late?.(value);}}, () => {});
     try {return await abortable(pending, scope.signal);} finally {scope.dispose();}
   }

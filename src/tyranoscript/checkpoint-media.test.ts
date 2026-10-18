@@ -76,3 +76,26 @@ it.each([
   expect((await request("PROBE")).body.checkpointAvailable).toBe(false);
   expect(await request("CHECKPOINT")).toMatchObject({type: "ERROR", body: {code: "TYRANOSCRIPT_CHECKPOINT_UNAVAILABLE"}});
 });
+
+it("dates a legacy plugin snapshot when its native save UI normally supplies the timestamp", async () => {
+  const snapshot = {title: "choice", img_data: "", current_order_index: 7,
+    stat: {current_scenario: "first.ks", f: {counter: 7}}, layer: {layer_free: "<button>Continue</button>"}};
+  const result = await bridge({legacy: true, snapshot})("CHECKPOINT");
+  expect(result.type).toBe("CHECKPOINT_RESULT");
+  const decoded = JSON.parse(new TextDecoder().decode(result.body.data));
+  expect(decoded.snapshot.save_date).toMatch(/^\d{4}-\d{2}-\d{2}T/);
+  expect(decoded.snapshot).toEqual({...snapshot, save_date: decoded.snapshot.save_date});
+  expect(snapshot).not.toHaveProperty("save_date");
+});
+
+it.each([
+  {save_date: 42},
+  {stat: {current_scenario: "", f: {}}},
+  {current_order_index: "7"},
+  {title: null},
+])("keeps malformed legacy snapshots invalid when filling the capture date: %j", patch => {
+  const snapshot = {title: "choice", img_data: "", current_order_index: 7,
+    stat: {current_scenario: "first.ks", f: {counter: 7}}, layer: {}, ...patch};
+  return expect(bridge({legacy: true, snapshot})("CHECKPOINT")).resolves
+    .toMatchObject({type: "ERROR", body: {code: "TYRANOSCRIPT_CHECKPOINT_INVALID"}});
+});

@@ -36,6 +36,7 @@ export function installTyranoScriptBridge(global, inputFilter) {
     let legacyMediaPrototype = null;
     let nativeLegacyMediaPlay = null;
     let legacyMediaPlay = null;
+    let legacyMediaRequests = new WeakMap();
     let nativeLegacyAudioConstructor = null;
     let legacyAudioConstructor = null;
     let legacyPlayBgmTag = null;
@@ -47,6 +48,7 @@ export function installTyranoScriptBridge(global, inputFilter) {
     const detachedAutoplayMedia = new WeakSet();
     const mutedAutoplayMedia = new Set();
     const pendingAnimations = new WeakMap();
+    const completedAnimations = new WeakSet();
 
     const LEGACY_GAMEPAD_BUTTON_COUNT = 17;
     const legacyButtonKeys = new Map([
@@ -110,6 +112,8 @@ export function installTyranoScriptBridge(global, inputFilter) {
         nativeLegacyMediaPlay = prototype.play;
         legacyMediaPlay = function playWithLegacyAutoplayFallback() {
             const media = this;
+            const request = {};
+            legacyMediaRequests.set(media, request);
             if (legacyAutoplayBlocked() && !isVideo(media)) {
                 return Promise.resolve().then(() => {
                     if (typeof media.dispatchEvent === "function") {
@@ -120,9 +124,10 @@ export function installTyranoScriptBridge(global, inputFilter) {
             const result = nativeLegacyMediaPlay.apply(media, arguments);
             if (!result || typeof result.catch !== "function") return result;
             return result.catch((error) => {
-                // Legacy games discard play promises when pausing/replacing BGM
-                // during restore. A paused media element confirms cancellation.
-                if (error && error.name === "AbortError" && media.paused) return;
+                // A replacement play may already have resumed the same element
+                // when the previous request reports its cancellation.
+                if (error && error.name === "AbortError" &&
+                    (media.paused || legacyMediaRequests.get(media) !== request)) return;
                 if (!error || error.name !== "NotAllowedError" || typeof media.dispatchEvent !== "function") {
                     throw error;
                 }
@@ -281,6 +286,7 @@ export function installTyranoScriptBridge(global, inputFilter) {
         legacyMediaPrototype = null;
         nativeLegacyMediaPlay = null;
         legacyMediaPlay = null;
+        legacyMediaRequests = new WeakMap();
     }
 
     function addLegacyListener(name, callback, once) {
@@ -472,31 +478,41 @@ export function installTyranoScriptBridge(global, inputFilter) {
     }
 
     function finishStalledAnimations() {
-        if (!global.document || typeof global.document.querySelectorAll !== "function" ||
+        if (paused || !global.document || typeof global.document.querySelectorAll !== "function" ||
             typeof global.Event !== "function") return;
         const now = global.performance && typeof global.performance.now === "function" ?
             global.performance.now() : Date.now();
         Array.from(global.document.querySelectorAll(".animated")).forEach((element) => {
-            if (!element || typeof element.getAnimations !== "function" ||
+            if (!element || !element.isConnected || typeof element.getAnimations !== "function" ||
                 typeof element.dispatchEvent !== "function") return;
             const animations = element.getAnimations();
-            const stalled = animations.find((animation) => animation && animation.playState === "running" &&
-                animation.startTime === null && animation.currentTime === 0);
+            const stalled = animations.find((animation) => {
+                if (!animation || completedAnimations.has(animation)) return false;
+                if (animation.playState === "running" && animation.startTime === null && animation.currentTime === 0) return true;
+                const timing = animation.effect && typeof animation.effect.getComputedTiming === "function" ?
+                    animation.effect.getComputedTiming() : null;
+                // Some embedded legacy transitions finish without delivering the
+                // zero-duration animation's end event to the game's callback.
+                return animation.playState === "finished" && !animation.pending && timing &&
+                    timing.duration === 0 && timing.activeDuration === 0 && timing.progress === 1 &&
+                    Number.isFinite(timing.endTime);
+            });
             if (!stalled) {
                 pendingAnimations.delete(element);
                 return;
             }
             const firstObserved = pendingAnimations.get(element);
-            if (firstObserved === undefined) {
-                pendingAnimations.set(element, now);
+            if (!firstObserved || firstObserved.animation !== stalled) {
+                pendingAnimations.set(element, {animation: stalled, at: now});
                 return;
             }
             const timing = stalled.effect && typeof stalled.effect.getComputedTiming === "function" ?
                 stalled.effect.getComputedTiming() : null;
             const duration = timing && typeof timing.duration === "number" && Number.isFinite(timing.duration) ?
                 Math.max(0, timing.duration) : 0;
-            if (now - firstObserved < Math.max(250, duration + 250)) return;
+            if (now - firstObserved.at < Math.max(250, duration + 250)) return;
             pendingAnimations.delete(element);
+            completedAnimations.add(stalled);
             element.dispatchEvent(new global.Event("animationend", { bubbles: true }));
         });
     }
@@ -599,6 +615,12 @@ export function installTyranoScriptBridge(global, inputFilter) {
                 else {
                     try {
                         const snapshot = cloneJSON(kag.menu.snap);
+                        // Legacy save plugins can add this display metadata only
+                        // when their own save UI commits, after snapSave returns.
+                        if (kag === legacyKag && snapshot && typeof snapshot === "object" && !Array.isArray(snapshot) &&
+                            !("three" in snapshot) && !("save_date" in snapshot)) {
+                            snapshot.save_date = new Date().toISOString();
+                        }
                         const systemVariables = cloneJSON(kag.variable && kag.variable.sf || {});
                         runtimeDebug("checkpoint", "cloned");
                         const encoded = encodeCheckpoint(snapshot, systemVariables);

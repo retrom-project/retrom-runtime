@@ -335,7 +335,7 @@
     let releaseBrowserStorage = installTyranoBrowserStorage(global), PROTOCOL_VERSION = 1, CHECKPOINT_FORMAT = "tyranoscript-snapshot-v1", MAX_CHECKPOINT_BYTES = 32 * 1024 * 1024, MAX_SCREENSHOT_BYTES = 2 * 1024 * 1024, MAX_DOM_SCREENSHOT_DIMENSION = 2048, MAX_DOM_SCREENSHOT_ELEMENTS = 512, MAX_DOM_SCREENSHOT_PIXELS = 4 * 1024 * 1024, MAX_DOM_SCREENSHOT_TEXT = 512, RESTORE_TIMEOUT_MS = 3e4;
     inputFilter.onHostShortcut((shortcut) => event("HOST_SHORTCUT", { shortcut }));
     let encoder = new TextEncoder(), decoder = new TextDecoder("utf-8", { fatal: !0 }), nativeClose = typeof global.close == "function" ? global.close.bind(global) : function() {
-    }, sessionId = null, nonce = null, parentOrigin = null, port = null, exited = !1, paused = !1, readySent = !1, frameCount = 0, animationFrameId = 0, bridgePollIntervalId = 0, pausedHowls = [], pausedMedia = [], legacyKag = null, legacyListeners = [], legacyButtons = [], legacyInputArmed = !1, legacyMediaPrototype = null, nativeLegacyMediaPlay = null, legacyMediaPlay = null, nativeLegacyAudioConstructor = null, legacyAudioConstructor = null, legacyPlayBgmTag = null, nativeLegacyPlayBgmStart = null, legacyPlayBgmStart = null, autoplayUnmuteInstalled = !1, autoplayAttempts = /* @__PURE__ */ new WeakSet(), autoplayMedia = /* @__PURE__ */ new Set(), detachedAutoplayMedia = /* @__PURE__ */ new WeakSet(), mutedAutoplayMedia = /* @__PURE__ */ new Set(), pendingAnimations = /* @__PURE__ */ new WeakMap(), LEGACY_GAMEPAD_BUTTON_COUNT = 17, legacyButtonKeys = /* @__PURE__ */ new Map([
+    }, sessionId = null, nonce = null, parentOrigin = null, port = null, exited = !1, paused = !1, readySent = !1, frameCount = 0, animationFrameId = 0, bridgePollIntervalId = 0, pausedHowls = [], pausedMedia = [], legacyKag = null, legacyListeners = [], legacyButtons = [], legacyInputArmed = !1, legacyMediaPrototype = null, nativeLegacyMediaPlay = null, legacyMediaPlay = null, legacyMediaRequests = /* @__PURE__ */ new WeakMap(), nativeLegacyAudioConstructor = null, legacyAudioConstructor = null, legacyPlayBgmTag = null, nativeLegacyPlayBgmStart = null, legacyPlayBgmStart = null, autoplayUnmuteInstalled = !1, autoplayAttempts = /* @__PURE__ */ new WeakSet(), autoplayMedia = /* @__PURE__ */ new Set(), detachedAutoplayMedia = /* @__PURE__ */ new WeakSet(), mutedAutoplayMedia = /* @__PURE__ */ new Set(), pendingAnimations = /* @__PURE__ */ new WeakMap(), completedAnimations = /* @__PURE__ */ new WeakSet(), LEGACY_GAMEPAD_BUTTON_COUNT = 17, legacyButtonKeys = /* @__PURE__ */ new Map([
       [0, ["Enter", 13]],
       [1, ["Escape", 27]],
       [2, [" ", 32]],
@@ -373,14 +373,14 @@
       if (legacyKag !== kag || !kag.tmp || typeof kag.tmp != "object" || (kag.tmp.ready_audio = !0, installLegacyAudioTagFallback(kag), installLegacyAudioConstructorFallback(), legacyMediaPlay || typeof global.HTMLMediaElement != "function")) return;
       let prototype = global.HTMLMediaElement.prototype;
       !prototype || typeof prototype.play != "function" || (legacyMediaPrototype = prototype, nativeLegacyMediaPlay = prototype.play, legacyMediaPlay = function() {
-        let media = this;
-        if (legacyAutoplayBlocked() && !isVideo(media))
+        let media = this, request = {};
+        if (legacyMediaRequests.set(media, request), legacyAutoplayBlocked() && !isVideo(media))
           return Promise.resolve().then(() => {
             typeof media.dispatchEvent == "function" && media.dispatchEvent(new global.Event("play"));
           });
         let result = nativeLegacyMediaPlay.apply(media, arguments);
         return !result || typeof result.catch != "function" ? result : result.catch((error) => {
-          if (!(error && error.name === "AbortError" && media.paused)) {
+          if (!(error && error.name === "AbortError" && (media.paused || legacyMediaRequests.get(media) !== request))) {
             if (!error || error.name !== "NotAllowedError" || typeof media.dispatchEvent != "function")
               throw error;
             if (isVideo(media) && !media.muted) {
@@ -473,7 +473,7 @@
     function restoreLegacyMediaFallback() {
       global.document && typeof global.document.removeEventListener == "function" && ["pointerdown", "touchstart", "keydown"].forEach((name) => {
         global.document.removeEventListener(name, unmuteAutoplayMedia, !0);
-      }), autoplayUnmuteInstalled = !1, unmuteAutoplayMedia(), legacyPlayBgmTag && legacyPlayBgmTag.start === legacyPlayBgmStart && nativeLegacyPlayBgmStart && (legacyPlayBgmTag.start = nativeLegacyPlayBgmStart), legacyAudioConstructor && global.Audio === legacyAudioConstructor && nativeLegacyAudioConstructor && (global.Audio = nativeLegacyAudioConstructor), legacyMediaPrototype && legacyMediaPrototype.play === legacyMediaPlay && nativeLegacyMediaPlay && (legacyMediaPrototype.play = nativeLegacyMediaPlay), nativeLegacyAudioConstructor = null, legacyAudioConstructor = null, legacyPlayBgmTag = null, nativeLegacyPlayBgmStart = null, legacyPlayBgmStart = null, legacyMediaPrototype = null, nativeLegacyMediaPlay = null, legacyMediaPlay = null;
+      }), autoplayUnmuteInstalled = !1, unmuteAutoplayMedia(), legacyPlayBgmTag && legacyPlayBgmTag.start === legacyPlayBgmStart && nativeLegacyPlayBgmStart && (legacyPlayBgmTag.start = nativeLegacyPlayBgmStart), legacyAudioConstructor && global.Audio === legacyAudioConstructor && nativeLegacyAudioConstructor && (global.Audio = nativeLegacyAudioConstructor), legacyMediaPrototype && legacyMediaPrototype.play === legacyMediaPlay && nativeLegacyMediaPlay && (legacyMediaPrototype.play = nativeLegacyMediaPlay), nativeLegacyAudioConstructor = null, legacyAudioConstructor = null, legacyPlayBgmTag = null, nativeLegacyPlayBgmStart = null, legacyPlayBgmStart = null, legacyMediaPrototype = null, nativeLegacyMediaPlay = null, legacyMediaPlay = null, legacyMediaRequests = /* @__PURE__ */ new WeakMap();
     }
     function addLegacyListener(name, callback, once) {
       typeof name != "string" || !name || typeof callback != "function" || name.split(/\s+/).filter(Boolean).forEach((value) => {
@@ -591,22 +591,27 @@
       kag && (pollLegacyGamepad(kag), startAutoplayVideos()), !readySent && kag && (readySent = !0, event("READY", { checkpointAvailable: checkpointAvailable(), engine: "TYRANOSCRIPT" }));
     }
     function finishStalledAnimations() {
-      if (!global.document || typeof global.document.querySelectorAll != "function" || typeof global.Event != "function") return;
+      if (paused || !global.document || typeof global.document.querySelectorAll != "function" || typeof global.Event != "function") return;
       let now = global.performance && typeof global.performance.now == "function" ? global.performance.now() : Date.now();
       Array.from(global.document.querySelectorAll(".animated")).forEach((element) => {
-        if (!element || typeof element.getAnimations != "function" || typeof element.dispatchEvent != "function") return;
-        let stalled = element.getAnimations().find((animation) => animation && animation.playState === "running" && animation.startTime === null && animation.currentTime === 0);
+        if (!element || !element.isConnected || typeof element.getAnimations != "function" || typeof element.dispatchEvent != "function") return;
+        let stalled = element.getAnimations().find((animation) => {
+          if (!animation || completedAnimations.has(animation)) return !1;
+          if (animation.playState === "running" && animation.startTime === null && animation.currentTime === 0) return !0;
+          let timing2 = animation.effect && typeof animation.effect.getComputedTiming == "function" ? animation.effect.getComputedTiming() : null;
+          return animation.playState === "finished" && !animation.pending && timing2 && timing2.duration === 0 && timing2.activeDuration === 0 && timing2.progress === 1 && Number.isFinite(timing2.endTime);
+        });
         if (!stalled) {
           pendingAnimations.delete(element);
           return;
         }
         let firstObserved = pendingAnimations.get(element);
-        if (firstObserved === void 0) {
-          pendingAnimations.set(element, now);
+        if (!firstObserved || firstObserved.animation !== stalled) {
+          pendingAnimations.set(element, { animation: stalled, at: now });
           return;
         }
         let timing = stalled.effect && typeof stalled.effect.getComputedTiming == "function" ? stalled.effect.getComputedTiming() : null, duration = timing && typeof timing.duration == "number" && Number.isFinite(timing.duration) ? Math.max(0, timing.duration) : 0;
-        now - firstObserved < Math.max(250, duration + 250) || (pendingAnimations.delete(element), element.dispatchEvent(new global.Event("animationend", { bubbles: !0 })));
+        now - firstObserved.at < Math.max(250, duration + 250) || (pendingAnimations.delete(element), completedAnimations.add(stalled), element.dispatchEvent(new global.Event("animationend", { bubbles: !0 })));
       });
     }
     function stopBridgePoll() {
@@ -670,7 +675,9 @@
             if (completed = !0, runtimeDebug("checkpoint", "finish"), restoreWeakStop && (typeof kag.weaklyStop == "function" && kag.weaklyStop(), paused = !0), runtimeDebug("checkpoint", "paused"), error) reject(error);
             else
               try {
-                let snapshot = cloneJSON(kag.menu.snap), systemVariables = cloneJSON(kag.variable && kag.variable.sf || {});
+                let snapshot = cloneJSON(kag.menu.snap);
+                kag === legacyKag && snapshot && typeof snapshot == "object" && !Array.isArray(snapshot) && !("three" in snapshot) && !("save_date" in snapshot) && (snapshot.save_date = (/* @__PURE__ */ new Date()).toISOString());
+                let systemVariables = cloneJSON(kag.variable && kag.variable.sf || {});
                 runtimeDebug("checkpoint", "cloned");
                 let encoded = encodeCheckpoint(snapshot, systemVariables);
                 runtimeDebug("checkpoint", `encoded:${encoded.byteLength}`), resolve(encoded);

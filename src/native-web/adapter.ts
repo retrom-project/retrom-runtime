@@ -47,7 +47,7 @@ export async function mountNativeRpg(
   pluginFiles: RpgPluginFile[] = [],
 ) {
   const channel = new NativeChannel(config, reportExitRequested, pluginFiles);
-  frame.setAttribute("sandbox", "allow-scripts allow-same-origin allow-pointer-lock");
+  frame.setAttribute("sandbox", "allow-scripts allow-same-origin allow-pointer-lock allow-modals");
   frame.referrerPolicy = "no-referrer";
   let expectedEngine: "RPGMV" | "RPGMZ";
   try {

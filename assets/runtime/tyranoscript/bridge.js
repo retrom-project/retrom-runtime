@@ -257,23 +257,40 @@
 
   // assets/runtime/tyranoscript/browser-storage.js
   function installTyranoBrowserStorage(global) {
-    let releases = [], installed = /* @__PURE__ */ new WeakSet();
+    let releases = [], installed = /* @__PURE__ */ new WeakSet(), legacyStorage = {
+      getStorage(key) {
+        if (!global.localStorage) throw new Error("TYRANOSCRIPT_BROWSER_STORAGE_UNAVAILABLE");
+        let stored = global.localStorage.getItem(key), value = stored === null ? null : unescape(stored);
+        return value === "null" ? null : value;
+      },
+      setStorage(key, value) {
+        if (!global.localStorage) throw new Error("TYRANOSCRIPT_BROWSER_STORAGE_UNAVAILABLE");
+        global.localStorage.setItem(key, escape(JSON.stringify(value)));
+      }
+    };
     function install(library) {
       if (!(!library || typeof library != "object" && typeof library != "function" || installed.has(library))) {
         installed.add(library);
-        for (let [desktop, browser] of [["getStorageFile", "getStorageWeb"], ["setStorageFile", "setStorageWeb"]]) {
+        for (let [desktop, browser] of [
+          ["getStorageFile", "getStorageWeb"],
+          ["setStorageFile", "setStorageWeb"],
+          ["getStorage", "getStorageWeb"],
+          ["setStorage", "setStorageWeb"]
+        ]) {
           let descriptor = Object.getOwnPropertyDescriptor(library, desktop);
           if (descriptor && !descriptor.configurable) continue;
-          let original = library[desktop], redirect = function() {
-            if (typeof library[browser] != "function") throw new Error("TYRANOSCRIPT_BROWSER_STORAGE_UNAVAILABLE");
-            return library[browser].apply(library, arguments);
-          }, get = () => redirect;
+          let original = library[desktop], legacy = legacyStorage[desktop], adapt = (implementation) => function() {
+            if (typeof library[browser] == "function")
+              return legacy && typeof implementation == "function" ? implementation.apply(this, arguments) : library[browser].apply(library, arguments);
+            if (legacy) return legacy.apply(library, arguments);
+            throw new Error("TYRANOSCRIPT_BROWSER_STORAGE_UNAVAILABLE");
+          }, redirect = adapt(original), get = () => redirect;
           Object.defineProperty(library, desktop, {
             configurable: !0,
             enumerable: !0,
             get,
             set: (value) => {
-              original = value;
+              original = value, redirect = adapt(value);
             }
           }), releases.push(() => {
             Object.getOwnPropertyDescriptor(library, desktop)?.get === get && Object.defineProperty(library, desktop, {
@@ -476,13 +493,17 @@
       let eventName = eventIdentity(name).event, matching = legacyListeners.filter((listener) => listener.event === eventName);
       legacyListeners = legacyListeners.filter((listener) => listener.event !== eventName || !listener.once), matching.forEach((listener) => listener.callback(eventObject));
     }
+    function stableEngineState(kag) {
+      return !!(!exited && engineInitialized(kag) && kag.stat && typeof kag.stat.current_scenario == "string" && kag.stat.current_scenario && !kag.stat.is_wait && !kag.stat.is_adding_text && stableCheckpointTag(kag) && !externalVideoActive());
+    }
     function checkpointAvailable() {
       let kag = engine();
-      if (exited || !engineInitialized(kag) || !kag.stat || typeof kag.stat.current_scenario != "string" || !kag.stat.current_scenario || kag.stat.is_wait || kag.stat.is_adding_text || !stableCheckpointTag(kag) || externalVideoActive()) return !1;
+      if (!stableEngineState(kag)) return !1;
       let controls = kag.key_mouse, menuOwner = controls && controls.util && typeof controls.util.canShowMenu == "function" ? controls.util : controls, canShowMenu = menuOwner && menuOwner.canShowMenu;
       if (typeof canShowMenu != "function") return !0;
       try {
-        return !!canShowMenu.call(menuOwner);
+        let stopped = kag.stat.is_strong_stop === !0 && kag.ftag.array_tag[kag.ftag.current_order_index].name === "s";
+        return !!(canShowMenu.call(menuOwner) || stopped);
       } catch {
         return !1;
       }
@@ -666,15 +687,15 @@
     }
     function restore(data) {
       if (exited) return Promise.reject(new Error("TYRANOSCRIPT_CHECKPOINT_RESTORE_FAILED"));
-      let checkpoint2 = decodeCheckpoint(data), snapshot = checkpoint2.snapshot, kag = engine();
+      let checkpoint2 = decodeCheckpoint(data), snapshot = checkpoint2.snapshot, targetScenario = snapshot.stat.current_scenario, targetOrderIndex = snapshot.current_order_index + 1, kag = engine();
       return kag ? new Promise((resolve, reject) => {
-        let completed = !1, makeStarted = !1, pollTimer = 0, legacyRestore = kag === legacyKag || typeof kag.once != "function" || typeof kag.on != "function", timer = global.setTimeout(() => finish(new Error("TYRANOSCRIPT_CHECKPOINT_RESTORE_TIMEOUT")), RESTORE_TIMEOUT_MS);
+        let completed = !1, makeStarted = !1, pollTimer = 0, legacyRestore = kag === legacyKag || typeof kag.once != "function" || typeof kag.on != "function", deferPageClear = legacyRestore && snapshot.stat.flag_ref_page === !0, timer = global.setTimeout(() => finish(new Error("TYRANOSCRIPT_CHECKPOINT_RESTORE_TIMEOUT")), RESTORE_TIMEOUT_MS);
         function finish(error) {
-          completed || (completed = !0, global.clearTimeout(timer), pollTimer && global.clearTimeout(pollTimer), typeof kag.off == "function" && kag.off(".retrom-runtime-restore"), error ? reject(error) : resolve());
+          completed || (completed = !0, global.clearTimeout(timer), pollTimer && global.clearTimeout(pollTimer), typeof kag.off == "function" && kag.off(".retrom-runtime-restore"), error ? reject(error) : (deferPageClear && (kag.stat.flag_ref_page = !0), resolve()));
         }
         function pollTarget() {
           if (!completed) {
-            if ((legacyRestore || makeStarted) && kag.stat.current_scenario === snapshot.stat.current_scenario && kag.ftag && kag.ftag.current_order_index === snapshot.current_order_index + 1) {
+            if ((legacyRestore || makeStarted) && kag.stat.current_scenario === targetScenario && kag.ftag && kag.ftag.current_order_index === targetOrderIndex) {
               finish();
               return;
             }
@@ -692,13 +713,13 @@
                 throw new Error("TYRANOSCRIPT_CHECKPOINT_RESTORE_FAILED");
               kag.variable.sf = cloneJSON(checkpoint2.systemVariables);
             }
-            kag.menu.loadGameData(snapshot, { auto_next: "no", bgm_over: "false" }), pollTarget();
+            deferPageClear && (snapshot.stat.flag_ref_page = !1), kag.menu.loadGameData(snapshot, { auto_next: "no", bgm_over: "false" }), pollTarget();
           } catch {
             finish(new Error("TYRANOSCRIPT_CHECKPOINT_RESTORE_FAILED"));
           }
         }
         function waitForStableEngine() {
-          completed || (checkpointAvailable() ? startRestore() : pollTimer = global.setTimeout(waitForStableEngine, 16));
+          completed || (stableEngineState(kag) ? startRestore() : pollTimer = global.setTimeout(waitForStableEngine, 16));
         }
         waitForStableEngine();
       }) : Promise.reject(new Error("TYRANOSCRIPT_RUNTIME_NOT_READY"));

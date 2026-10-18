@@ -122,11 +122,17 @@ No Apple firmware or game content is distributed. The candidate descriptor recor
 the exact source tree, ABI and generated asset hashes; stable release inputs must
 replace the development input with an immutable fork release.
 
-## Siglus development candidate
+## Siglus browser core
 
 Siglus source is derived from xmoezzz/siglus_rs at
-5f358ef1360b0439e92aed2b749e8f25d8721954 (MPL-2.0). Its separate core
-candidate contains Noto Sans SC (SIL OFL-1.1), the modified wgpu-hal
-(MIT OR Apache-2.0), and CPAL (Apache-2.0) notices under `licenses/siglus/`.
-No game data, recovered keys, patch DLLs or upstream proprietary font may be
-packaged in the Provider. The candidate is not a published core release.
+5f358ef1360b0439e92aed2b749e8f25d8721954. Engine modifications retain MPL-2.0;
+FFmpeg-derived WMV/WMA portions retain LGPL-2.1-or-later and the Theora port
+retains Xiph's BSD notices. Noto Sans SC uses OFL-1.1, embedded Epaint fonts
+retain their OFL/UFL/MIT terms, patched wgpu-hal uses MIT OR Apache-2.0 and
+patched CPAL uses Apache-2.0. `licenses/siglus/THIRD-PARTY-NOTICES.md` contains
+the locked normal/build dependency inventory and full license texts.
+Exact corresponding source, locked dependency sources, licensed font and
+rebuild/relink instructions accompany the fixed core release:
+<https://github.com/retrom-project/siglus_rs/releases/tag/retrom-core-g5f358ef1360b-r2>.
+No game data, recovered keys, patch DLLs or upstream proprietary default font
+is included in the Provider.

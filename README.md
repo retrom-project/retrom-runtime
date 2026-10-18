@@ -105,7 +105,7 @@ A checkpoint availability with `requiredAction: "SELECT_PROGRAM"` tells the host
 program selection guidance. Provider-private Target options are interpreted only inside
 the Provider.
 
-## Siglus browser candidate
+## Siglus browser runtime
 
 The `siglus` platform/core/Target accepts an original directory containing
 `Scene.pck` and `Gameexe.dat` (or `Gameexe.ini`). The `language` option is
@@ -131,5 +131,7 @@ game's menu. Settings alone do not qualify as progress. The adapter uses a fresh
 per-instance overlay; the public Host owns user isolation, persistence and one gzip
 layer. An acknowledgement applies only to the exported revision after persistence.
 
-The core is declared as an unpublished development input. Production release mode
-rejects it; a verified fork Release and fixed source pin are required before release.
+The core comes from the immutable `retrom-core-g5f358ef1360b-r2` release of
+`retrom-project/siglus_rs`. The source declaration pins the commit and every asset's
+size and SHA-256. Complete dependency notices accompany the Provider; the core
+Release also provides the exact corresponding source and rebuild/relink inputs.

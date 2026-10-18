@@ -84,7 +84,7 @@ describe("independent package boundary", () => {
     expect(candidate).not.toContain('join(root, "release", "stage")');
   });
 
-  it("keeps published inputs fixed and confines the unpublished Siglus core to explicit local candidates", async () => {
+  it("keeps published core inputs fixed and rejects unpublished production overrides", async () => {
     const sources = JSON.parse(await readFile(join(root, "provider-sources.json"), "utf8"));
     expect(sources).not.toHaveProperty("sourceBuilds");
     expect(sources.upstreamReleases).toEqual(expect.arrayContaining([expect.objectContaining({
@@ -104,15 +104,22 @@ describe("independent package boundary", () => {
       tag: "retrom-core-gca2600db8de4-r1",
     })]));
     const releaseIds = sources.upstreamReleases.map((release: { id: string }) => release.id).sort();
-    expect(releaseIds).toEqual(["apple2js", "butterscotch", "easyrpg", "fake08", "gbe_plus", "j2me", "jsbeeb", "kirikiri2", "mame", "mkxp", "np2kai", "nxengine", "onsyuri", "openbor", "play", "ppsspp", "px68k", "ruffle", "samcoupeweb", "scummvm", "tic80", "tyranoscript", "wasm4", "webmsx"]);
+    expect(releaseIds).toEqual(["apple2js", "butterscotch", "easyrpg", "fake08", "gbe_plus", "j2me", "jsbeeb", "kirikiri2", "mame", "mkxp", "np2kai", "nxengine", "onsyuri", "openbor", "play", "ppsspp", "px68k", "ruffle", "samcoupeweb", "scummvm", "siglus", "tic80", "tyranoscript", "wasm4", "webmsx"]);
     expect(sources.upstreamReleases).toContainEqual(expect.objectContaining({
       id: "apple2js", tag: "retrom-core-gee0aed25f73c-r1", adapterAbi: "apple2js-web-v1",
     }));
-    expect(sources.developmentInputs).toHaveLength(1);
-    expect(sources.developmentInputs[0].id).toBe("siglus");
-    expect(validCoreDevelopmentInput(sources.developmentInputs[0])).toBe(true);
-    expect(() => assertScummvmCandidateMode(sources.developmentInputs, false, false)).toThrow("UNPUBLISHED_CORE_INPUT");
-    expect(() => assertScummvmCandidateMode(sources.developmentInputs, true, true)).toThrow("UNPUBLISHED_CORE_INPUT");
+    expect(sources.developmentInputs ?? []).toEqual([]);
+    const siglus = sources.upstreamReleases.find((release: {id: string}) => release.id === "siglus");
+    expect(siglus).toEqual(expect.objectContaining({
+      repository: "https://github.com/retrom-project/siglus_rs", tag: "retrom-core-g5f358ef1360b-r2",
+      commit: "467ffb4017b138aec93135fb2e4ba2e61efb4fd2", adapterAbi: "siglus-host-v1",
+    }));
+    const candidate = {id: siglus.id, repository: siglus.repository, upstreamCommit: siglus.upstreamCommit,
+      adapterAbi: siglus.adapterAbi, assets: siglus.assets.map(
+        ({filename, output, maxSizeBytes}: {filename: string; output: string; maxSizeBytes: number}) => ({filename, output, maxSizeBytes}))};
+    expect(validCoreDevelopmentInput(candidate)).toBe(true);
+    expect(() => assertScummvmCandidateMode([candidate], false, false)).toThrow("UNPUBLISHED_CORE_INPUT");
+    expect(() => assertScummvmCandidateMode([candidate], true, true)).toThrow("UNPUBLISHED_CORE_INPUT");
     expect(sources.upstreamReleases).toContainEqual(expect.objectContaining({
       id: "onsyuri", adapterAbi: "ons-save", repository: "https://github.com/retrom-project/OnscripterYuri",
       tag: "retrom-core-0.7.7beta-r7", commit: "8684330a24e5d29201d07997871529ec867512cd",

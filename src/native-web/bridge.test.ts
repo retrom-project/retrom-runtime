@@ -177,14 +177,20 @@ describe("native-web RPG Maker bridge", () => {
     let particlesReady = false;
     class SceneBoot { start() { particlesReady = true; } }
     const afterLoad = vi.fn();
-    class SceneMap {}
+    class SceneMap { isStarted() {return true;} }
+    class SceneTitle extends SceneMap { start() {} }
     const storage = {
       exists: (slot: number) => slot < 0,
       load: (slot: number) => String(slot).slice(0, 0),
     };
     const sceneManager = {
       _scene: null as SceneMap | null,
-      goto: () => {sceneManager._scene = new SceneMap();},
+      goto: (Type: typeof SceneMap) => {
+        sceneManager._scene = new Type();
+        if (sceneManager._scene instanceof SceneTitle) {sceneManager._scene.start();}
+      },
+      isSceneChanging: () => false,
+      isCurrentSceneBusy: () => false,
       updateMain: () => undefined,
     };
     const dataManager = {
@@ -212,6 +218,7 @@ describe("native-web RPG Maker bridge", () => {
       $gameVariables: { value: () => 1 },
       DataManager: dataManager,
       Scene_Boot: SceneBoot,
+      Scene_Title: SceneTitle,
       Scene_Map: SceneMap,
       SceneManager: sceneManager,
       StorageManager: storage,
@@ -296,6 +303,8 @@ describe("native-web RPG Maker bridge", () => {
     let mapSceneStarted = true;
     const beforeSave = vi.fn();
     const afterLoad = vi.fn();
+    class SceneBoot { start() {} }
+    class SceneTitle { start() {} isStarted() {return true;} }
     class SceneMap {
       isStarted() {return mapSceneStarted;}
     }
@@ -309,8 +318,13 @@ describe("native-web RPG Maker bridge", () => {
       saveObject: async () => undefined,
     };
     const sceneManager = {
-      _scene: new SceneMap(),
-      goto: () => {sceneManager._scene = new SceneMap();},
+      _scene: new SceneMap() as SceneMap | SceneTitle,
+      goto: (Type: typeof SceneMap | typeof SceneTitle) => {
+        sceneManager._scene = new Type();
+        if (sceneManager._scene instanceof SceneTitle) {sceneManager._scene.start();}
+      },
+      isSceneChanging: () => false,
+      isCurrentSceneBusy: () => false,
       updateMain: () => undefined,
     };
     const dataManager = {
@@ -338,6 +352,7 @@ describe("native-web RPG Maker bridge", () => {
       },
     };
     const runtime = {
+      document: {},
       location: {href: "https://runtime.example/game/www/index.html"},
       $gameMap: { isEventRunning: () => false, mapId: () => 3 },
       $gameMessage: { isBusy: () => false },
@@ -348,6 +363,8 @@ describe("native-web RPG Maker bridge", () => {
       ColorManager: {_windowskin: null as {getPixel: () => string} | null},
       Graphics: {width: 0, height: 0},
       JsonEx: jsonEx,
+      Scene_Boot: SceneBoot,
+      Scene_Title: SceneTitle,
       Scene_Map: SceneMap,
       SceneManager: sceneManager,
       StorageManager: storage,
@@ -374,6 +391,7 @@ describe("native-web RPG Maker bridge", () => {
       stopImmediatePropagation: () => undefined,
     });
 
+    listeners.get("load")?.forEach(listener => listener({target: runtime.document} as unknown as BridgeEvent));
     port.onmessage?.({data: { body: {}, launchId, nonce, protocolVersion: 1, requestId: 1, type: "SAVE" }});
     await vi.waitFor(() => expect(replies.some((reply) => (reply as {type?: string}).type === "SAVE_RESULT")).toBe(true));
     const saveReply = replies.find((reply) => (reply as {type?: string}).type === "SAVE_RESULT") as {
@@ -412,6 +430,8 @@ describe("native-web RPG Maker bridge", () => {
     expect(restoredMarker).toBe("");
     runtime.Graphics.width = 816;
     runtime.Graphics.height = 624;
+    // Real MZ Boot.isReady waits for its system images and graphics before start.
+    new SceneBoot().start();
     animationFrames.shift()?.();
     await vi.waitFor(() => expect(restoredMarker).toBe("save-point-b"));
     expect(replies).not.toContainEqual(expect.objectContaining({type: "RESTORE_RESULT"}));

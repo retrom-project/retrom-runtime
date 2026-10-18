@@ -3208,31 +3208,31 @@
       "repository": "https://github.com/retrom-project/siglus_rs",
       "upstreamCommit": "5f358ef1360b0439e92aed2b749e8f25d8721954",
       "adapterAbi": "siglus-host-v1",
-      "tag": "retrom-core-g5f358ef1360b-r2",
-      "commit": "467ffb4017b138aec93135fb2e4ba2e61efb4fd2",
-      "metadataUrl": "https://github.com/retrom-project/siglus_rs/releases/download/retrom-core-g5f358ef1360b-r2/rpg-runtime-release.json",
+      "tag": "retrom-core-g5f358ef1360b-r3",
+      "commit": "e312024961156a848106d02d3a21477c20f22a5b",
+      "metadataUrl": "https://github.com/retrom-project/siglus_rs/releases/download/retrom-core-g5f358ef1360b-r3/rpg-runtime-release.json",
       "assets": [
         {
           "filename": "siglus.mjs",
           "output": "runtime/siglus/siglus.mjs",
           "maxSizeBytes": 8388608,
-          "url": "https://github.com/retrom-project/siglus_rs/releases/download/retrom-core-g5f358ef1360b-r2/siglus.mjs",
+          "url": "https://github.com/retrom-project/siglus_rs/releases/download/retrom-core-g5f358ef1360b-r3/siglus.mjs",
           "sizeBytes": 90679,
-          "sha256": "19cd14570522c289b8c0cea7d275949c9f6d4d9eece667ecab463fd8f6b7505e"
+          "sha256": "a35b1e05eb76c2a9c20afd16cf8736ee58e478f79a06582247cc044777acebe7"
         },
         {
           "filename": "siglus_bg.wasm",
           "output": "runtime/siglus/siglus_bg.wasm",
           "maxSizeBytes": 134217728,
-          "url": "https://github.com/retrom-project/siglus_rs/releases/download/retrom-core-g5f358ef1360b-r2/siglus_bg.wasm",
-          "sizeBytes": 28708717,
-          "sha256": "2c54b55c049734814b301ce3ac43c89ce02446437de836a88fc32da97f532b6a"
+          "url": "https://github.com/retrom-project/siglus_rs/releases/download/retrom-core-g5f358ef1360b-r3/siglus_bg.wasm",
+          "sizeBytes": 28690680,
+          "sha256": "be1347b81713f4d9f7bbef88ef26bc4b6dcfe39d493b1149454762dd25665ff2"
         },
         {
           "filename": "LICENSE-MPL-2.0",
           "output": "licenses/siglus/LICENSE-MPL-2.0",
           "maxSizeBytes": 1048576,
-          "url": "https://github.com/retrom-project/siglus_rs/releases/download/retrom-core-g5f358ef1360b-r2/LICENSE-MPL-2.0",
+          "url": "https://github.com/retrom-project/siglus_rs/releases/download/retrom-core-g5f358ef1360b-r3/LICENSE-MPL-2.0",
           "sizeBytes": 16726,
           "sha256": "fab3dd6bdab226f1c08630b1dd917e11fcb4ec5e1e020e2c16f83a0a13863e85"
         },
@@ -3240,7 +3240,7 @@
           "filename": "FONT-OFL.txt",
           "output": "licenses/siglus/FONT-OFL.txt",
           "maxSizeBytes": 1048576,
-          "url": "https://github.com/retrom-project/siglus_rs/releases/download/retrom-core-g5f358ef1360b-r2/FONT-OFL.txt",
+          "url": "https://github.com/retrom-project/siglus_rs/releases/download/retrom-core-g5f358ef1360b-r3/FONT-OFL.txt",
           "sizeBytes": 4388,
           "sha256": "1c05c68c34f9708415aada51f17e1b0092d2cea709bf4a94cd38114f9e73d7d9"
         },
@@ -3248,7 +3248,7 @@
           "filename": "THIRD-PARTY-NOTICES.md",
           "output": "licenses/siglus/THIRD-PARTY-NOTICES.md",
           "maxSizeBytes": 1048576,
-          "url": "https://github.com/retrom-project/siglus_rs/releases/download/retrom-core-g5f358ef1360b-r2/THIRD-PARTY-NOTICES.md",
+          "url": "https://github.com/retrom-project/siglus_rs/releases/download/retrom-core-g5f358ef1360b-r3/THIRD-PARTY-NOTICES.md",
           "sizeBytes": 668482,
           "sha256": "4b3af78ecbfe4f8f16ba6094400b926e5f7977e961c7a7946c6ba170a5780316"
         },
@@ -3256,7 +3256,7 @@
           "filename": "WGPU-LICENSE-MIT",
           "output": "licenses/siglus/WGPU-LICENSE-MIT",
           "maxSizeBytes": 1048576,
-          "url": "https://github.com/retrom-project/siglus_rs/releases/download/retrom-core-g5f358ef1360b-r2/WGPU-LICENSE-MIT",
+          "url": "https://github.com/retrom-project/siglus_rs/releases/download/retrom-core-g5f358ef1360b-r3/WGPU-LICENSE-MIT",
           "sizeBytes": 1078,
           "sha256": "c7fea58d1cfe49634cd92e54fc10a9d871f4b275321a4cd8c09e449122caaeb4"
         },
@@ -3264,7 +3264,7 @@
           "filename": "WGPU-LICENSE-APACHE",
           "output": "licenses/siglus/WGPU-LICENSE-APACHE",
           "maxSizeBytes": 1048576,
-          "url": "https://github.com/retrom-project/siglus_rs/releases/download/retrom-core-g5f358ef1360b-r2/WGPU-LICENSE-APACHE",
+          "url": "https://github.com/retrom-project/siglus_rs/releases/download/retrom-core-g5f358ef1360b-r3/WGPU-LICENSE-APACHE",
           "sizeBytes": 10173,
           "sha256": "a6cba85bc92e0cff7a450b1d873c0eaa2e9fc96bf472df0247a26bec77bf3ff9"
         },
@@ -3272,7 +3272,7 @@
           "filename": "CPAL-LICENSE",
           "output": "licenses/siglus/CPAL-LICENSE",
           "maxSizeBytes": 1048576,
-          "url": "https://github.com/retrom-project/siglus_rs/releases/download/retrom-core-g5f358ef1360b-r2/CPAL-LICENSE",
+          "url": "https://github.com/retrom-project/siglus_rs/releases/download/retrom-core-g5f358ef1360b-r3/CPAL-LICENSE",
           "sizeBytes": 11357,
           "sha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4"
         }

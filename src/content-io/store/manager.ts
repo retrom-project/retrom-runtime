@@ -30,6 +30,14 @@ export class ContentStoreManager {
   private rangeRequests = 0;
   private wholeRequests = 0;
   private retries = 0;
+  private materializations = 0;
+  private readonly baseTimeoutMs: number;
+  get operationTimeoutMs() {return this.materializations ? Math.max(5000, this.baseTimeoutMs) : this.baseTimeoutMs;}
+  /** Slow disk preparation must not discard completed files; ordinary reads retain fast fallback. */
+  materializing(): () => void {
+    this.materializations++; let released = false;
+    return () => {if (!released) {released = true; this.materializations--;}};
+  }
   readonly httpTelemetry: Pick<HttpDependencies, "consumed" | "dispatched"> = {
     consumed: (bytes) => this.countNetwork(bytes),
     dispatched: (kind, retry) => {
@@ -38,8 +46,10 @@ export class ContentStoreManager {
     },
   };
   constructor(origin: string, private readonly credits: BufferCredits, backendReady: (backend: string) => void = () => {},
-    private readonly diagnostic: (error: ContentIOError, operation: CacheOperation) => void = () => {}) {
-    this.selector = new StoreSelector(origin, backendReady);
+    private readonly diagnostic: (error: ContentIOError, operation: CacheOperation) => void = () => {},
+    requirement: "OPTIONAL" | "REQUIRED" = "OPTIONAL") {
+    this.baseTimeoutMs = requirement === "REQUIRED" ? 5000 : 500;
+    this.selector = new StoreSelector(origin, backendReady, () => this.operationTimeoutMs);
   }
   get stats() {return {leases: this.useLeases.size, peakLeases: this.peakLeases, optionalWrites: this.writes.size, degraded: this.degraded, networkBytes: this.networkBytes, cacheBytes: this.cacheBytes, rangeRequests: this.rangeRequests, wholeRequests: this.wholeRequests, headRequests: 0, retries: this.retries, cacheDegrades: this.failedBackends.size, corruptBlocks: this.corruptBlocks};}
   async prepare(object: BlockObject, signal?: AbortSignal): Promise<void> {
@@ -134,7 +144,7 @@ export class ContentStoreManager {
       release = await this.lease(resources, object.key, signal); checkSignal(signal);
       const backing = await resources.locks.data(object.key, signal, () => resources.metadata.attach(object.key, object.source, resources.data.backend,this.switched));
       checkSignal(signal);if(epoch!==this.epoch){throw new ContentIOError("CACHE_UNAVAILABLE");}
-      const binding = {backing: new PersistentBacking(resources, backing, object, () => {this.corruptBlocks++;}), release};
+      const binding = {backing: new PersistentBacking(resources, backing, object, () => {this.corruptBlocks++;}, () => this.operationTimeoutMs), release};
       if (object.state.pinnedEtag !== null) {await binding.backing.pin(object.state.pinnedEtag);}
       await this.history(object, binding, signal);
       checkSignal(signal);
@@ -153,7 +163,7 @@ export class ContentStoreManager {
       if (!resources) {continue;}
       // The active binding already holds the object-wide use lease. Alternate
       // generations remain read-only; switching backends never changes current.
-      old.push({backing: new PersistentBacking(resources, {object: binding.backing.backing.object, generation}, object, () => {this.corruptBlocks++;}), release: () => {}});
+      old.push({backing: new PersistentBacking(resources, {object: binding.backing.backing.object, generation}, object, () => {this.corruptBlocks++;}, () => this.operationTimeoutMs), release: () => {}});
     }
     this.retired.set(object.key, old);
   }
@@ -183,7 +193,7 @@ export class ContentStoreManager {
   }
   private async optional<Value>(operation: (signal: AbortSignal) => Promise<Value>, signal?: AbortSignal,backend?:string, operationName: CacheOperation = "CACHE_PROBE"): Promise<Value | undefined> {
     const combined = combineSignals([this.controller.signal, ...(signal ? [signal] : [])]);
-    const scope = requestScope(combined.signal, 500);
+    const scope = requestScope(combined.signal, this.operationTimeoutMs);
     try {return await abortable(operation(scope.signal), scope.signal);}
     catch (error) {
       checkSignal(combined.signal);

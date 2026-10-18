@@ -22,7 +22,7 @@ export function validMameRelease(release) {
 }
 
 export function usesPinnedCoreAssets(id) {
-  return ["np2kai", "px68k", "tyranoscript", "openbor", "gbe_plus", "nxengine", "ppsspp", "mame"].includes(id);
+  return ["np2kai", "px68k", "tyranoscript", "openbor", "gbe_plus", "nxengine", "ppsspp", "mame", "siglus"].includes(id);
 }
 export async function stagePinnedCoreIfNeeded(release, metadata, download, stage) {
   if (!usesPinnedCoreAssets(release.id)) {return false;}

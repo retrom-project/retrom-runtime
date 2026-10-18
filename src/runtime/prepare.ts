@@ -5,6 +5,7 @@ import type {TargetOptionsV1} from "../provider/module-api.js";
 import type {ResourceKind, TargetDeclaration} from "../provider/declarations.js";
 import {resolveRuntimeTarget} from "./catalog.js";
 import {thomsonModelOptions} from "./thomson.js";
+import {validateSiglusOptions} from "./siglus.js";
 import {parseRuntimeConfiguration, validateConfigurationFiles} from "./configuration.js";
 import {arcadeDependencies, configuredMachine, type ArcadeCatalog, type ArchiveMember} from "./arcade.js";
 import {arcadeMedia, requireArcadeMedia, type CHDHeaders} from "./arcade-media.js";
@@ -186,6 +187,7 @@ function prepareTargetOptions(config: RuntimeConfiguration, target: TargetDeclar
     options.startupXp3Path = config.content.kind === "KIRIKIRI_PROJECT" && config.content.entryFile.toLowerCase().endsWith(".xp3")
       ? projectPaths([config.content.entryFile], config.content.entryFile)[config.content.entryFile] : null;
   }
+  validateSiglusOptions(config, target, options, files);
   if (target.romSetSelection?.driver === "MACHINE_OPTION") {
     const key = "entryFile" in config.content ? config.content.entryFile : "";
     const name = files.find(file => file.logicalKey === key)?.name;

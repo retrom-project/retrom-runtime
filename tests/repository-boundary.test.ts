@@ -1,3 +1,5 @@
+import {validCoreDevelopmentInput} from "../scripts/core-development-input.mjs";
+import {assertScummvmCandidateMode} from "../scripts/scummvm-release.mjs";
 import { readFile, readdir } from "node:fs/promises";
 import { extname, join } from "node:path";
 import { describe, expect, it } from "vitest";
@@ -21,7 +23,7 @@ describe("independent package boundary", () => {
     expect(retromRuntimeProviderDefinition.providerId).toBe("retrom-runtime");
     expect(retromRuntimeProviderDefinition.targets.map((target) => target.id)).toEqual([
       "apple2-apple2js", "bbc-jsbeeb", "butterscotch-gamemaker", "fake08", "flash-ruffle", "gbe-pokemini", "j2me", "kirikiri2-kag", "mame-apple2", "mame-apple2e", "mame-arcade", "mame-atom", "mame-coleco", "mame-pv1000", "mame-sg1000", "msx-webmsx", "np2kai-pc98", "nxengine", "onscripter-yuri", "openbor", "play-ps2", "ppsspp", "px68k", "rpgmaker-2000", "rpgmaker-2003",
-      "rpgmaker-mv", "rpgmaker-mz", "rpgmaker-vx", "rpgmaker-vx-ace", "rpgmaker-xp", "samcoupe", "scummvm", "tic80", "tyranoscript", "wasm4",
+      "rpgmaker-mv", "rpgmaker-mz", "rpgmaker-vx", "rpgmaker-vx-ace", "rpgmaker-xp", "samcoupe", "scummvm", "siglus", "tic80", "tyranoscript", "wasm4",
     ]);
     expect(sources.localAssets.map((asset: { output: string }) => asset.output).sort()).toEqual([
       "runtime/butterscotch/worker.mjs",
@@ -34,11 +36,11 @@ describe("independent package boundary", () => {
   it("contains one clean Provider-private adapter role without migration-era aliases", async () => {
     expect(retromRuntimeProviderDefinition.adapters.map((adapter) => adapter.id).sort()).toEqual([
       "apple2js-web", "butterscotch-web", "easyrpg-web", "fake08-web", "gbe-pokemini-web", "j2me-minijvm-web", "jsbeeb-web", "kirikiri2-web", "mame-dylink", "mkxp-libretro-web", "native-web", "np2kai-web", "nxengine-web", "ons-yuri-web", "openbor-web",
-      "play-web", "ppsspp-web", "px68k-web", "ruffle-web", "samcoupe-web", "scummvm-web", "tic80-web", "tyranoscript-web", "wasm4-web", "webmsx-web",
+      "play-web", "ppsspp-web", "px68k-web", "ruffle-web", "samcoupe-web", "scummvm-web", "siglus-web", "tic80-web", "tyranoscript-web", "wasm4-web", "webmsx-web",
     ]);
     expect(retromRuntimeProviderDefinition.adapters.map((adapter) => adapter.abi).sort()).toEqual([
       "apple2js-web-v1", "butterscotch-checkpoint-v2", "easyrpg-save", "fake08-state-v1", "gbe-pokemini-host-v1", "j2me-rms", "jsbeeb-web-v1", "kirikiri-content-io-v1", "mkxp-content-io-v1",
-      "native-save", "np2kai-host-v1", "nxengine-host-v1", "ons-save", "openbor-host-v1", "play-host-v3", "ppsspp-host-v4", "px68k-host-v1", "retrom-mame-dylink-v1", "ruffle-host-v1", "samcoupe-web-v1", "scummvm-host-v1", "tic80-pmem-v1", "tyranoscript-snapshot-v1", "wasm4-state-v1", "webmsx-host-v1",
+      "native-save", "np2kai-host-v1", "nxengine-host-v1", "ons-save", "openbor-host-v1", "play-host-v3", "ppsspp-host-v4", "px68k-host-v1", "retrom-mame-dylink-v1", "ruffle-host-v1", "samcoupe-web-v1", "scummvm-host-v1", "siglus-host-v1", "tic80-pmem-v1", "tyranoscript-snapshot-v1", "wasm4-state-v1", "webmsx-host-v1",
     ]);
     expect((await readdir(join(root, "assets/runtime"))).sort()).toEqual(["butterscotch", "native", "tyranoscript"]);
     for (const asset of [
@@ -82,7 +84,7 @@ describe("independent package boundary", () => {
     expect(candidate).not.toContain('join(root, "release", "stage")');
   });
 
-  it("declares fixed published fork inputs without unpublished transport", async () => {
+  it("keeps published core inputs fixed and rejects unpublished production overrides", async () => {
     const sources = JSON.parse(await readFile(join(root, "provider-sources.json"), "utf8"));
     expect(sources).not.toHaveProperty("sourceBuilds");
     expect(sources.upstreamReleases).toEqual(expect.arrayContaining([expect.objectContaining({
@@ -102,11 +104,22 @@ describe("independent package boundary", () => {
       tag: "retrom-core-gca2600db8de4-r1",
     })]));
     const releaseIds = sources.upstreamReleases.map((release: { id: string }) => release.id).sort();
-    expect(releaseIds).toEqual(["apple2js", "butterscotch", "easyrpg", "fake08", "gbe_plus", "j2me", "jsbeeb", "kirikiri2", "mame", "mkxp", "np2kai", "nxengine", "onsyuri", "openbor", "play", "ppsspp", "px68k", "ruffle", "samcoupeweb", "scummvm", "tic80", "tyranoscript", "wasm4", "webmsx"]);
+    expect(releaseIds).toEqual(["apple2js", "butterscotch", "easyrpg", "fake08", "gbe_plus", "j2me", "jsbeeb", "kirikiri2", "mame", "mkxp", "np2kai", "nxengine", "onsyuri", "openbor", "play", "ppsspp", "px68k", "ruffle", "samcoupeweb", "scummvm", "siglus", "tic80", "tyranoscript", "wasm4", "webmsx"]);
     expect(sources.upstreamReleases).toContainEqual(expect.objectContaining({
       id: "apple2js", tag: "retrom-core-gee0aed25f73c-r1", adapterAbi: "apple2js-web-v1",
     }));
-    expect(sources.developmentInputs).toEqual([]);
+    expect(sources.developmentInputs ?? []).toEqual([]);
+    const siglus = sources.upstreamReleases.find((release: {id: string}) => release.id === "siglus");
+    expect(siglus).toEqual(expect.objectContaining({
+      repository: "https://github.com/retrom-project/siglus_rs", tag: "retrom-core-g5f358ef1360b-r2",
+      commit: "467ffb4017b138aec93135fb2e4ba2e61efb4fd2", adapterAbi: "siglus-host-v1",
+    }));
+    const candidate = {id: siglus.id, repository: siglus.repository, upstreamCommit: siglus.upstreamCommit,
+      adapterAbi: siglus.adapterAbi, assets: siglus.assets.map(
+        ({filename, output, maxSizeBytes}: {filename: string; output: string; maxSizeBytes: number}) => ({filename, output, maxSizeBytes}))};
+    expect(validCoreDevelopmentInput(candidate)).toBe(true);
+    expect(() => assertScummvmCandidateMode([candidate], false, false)).toThrow("UNPUBLISHED_CORE_INPUT");
+    expect(() => assertScummvmCandidateMode([candidate], true, true)).toThrow("UNPUBLISHED_CORE_INPUT");
     expect(sources.upstreamReleases).toContainEqual(expect.objectContaining({
       id: "onsyuri", adapterAbi: "ons-save", repository: "https://github.com/retrom-project/OnscripterYuri",
       tag: "retrom-core-0.7.7beta-r7", commit: "8684330a24e5d29201d07997871529ec867512cd",

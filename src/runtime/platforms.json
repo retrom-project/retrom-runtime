@@ -378,5 +378,9 @@
   {
     "id": "zxspectrum",
     "displayName": "ZX Spectrum"
+  },
+  {
+    "id": "siglus",
+    "displayName": "SiglusEngine"
   }
 ]

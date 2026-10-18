@@ -23,7 +23,8 @@ export class ContentPreloader {
         local: (object, index, signal) => this.store.local(object, index, signal ?? this.controller.signal),
         load: (object, window, signal, origins) => windows.load(object, window, signal, origins),
       });
-    this.store = new ContentStoreManager(context.storageOrigin, this.pool.credits);
+    // Required persistence waits for bounded disk work; optional demand caching keeps its fast fallback.
+    this.store = new ContentStoreManager(context.storageOrigin, this.pool.credits, undefined, undefined, "REQUIRED");
     const windows = new WindowLoader(this.store, this.pool.cache, (object, index) => this.pool.key(object, index));
     this.materializer = new ContentMaterializer(this.pool, this.store);
   }

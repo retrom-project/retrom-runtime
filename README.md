@@ -104,3 +104,34 @@ EmulatorJS launches collect bounded native output with RetroArch logging enabled
 A checkpoint availability with `requiredAction: "SELECT_PROGRAM"` tells the host to show
 program selection guidance. Provider-private Target options are interpreted only inside
 the Provider.
+
+## Siglus browser runtime
+
+The `siglus` platform/core/Target accepts an original directory containing
+`Scene.pck` and `Gameexe.dat` (or `Gameexe.ini`). The `language` option is
+explicit: configuration selects `chs` when both `scene.chs` and `gameexe.chs`
+exist at the selected root, otherwise `original`. CHS overlays those resource
+pairs and matching `.g01` images without modifying source files. Patch DLLs
+are never executed. Games requiring other patch behavior need separate validation.
+
+The Target supports `ON_DEMAND_AND_PRELOAD`, using the same public Content I/O
+Range readers and persistent cache as RPGMaker. Mounting the directory registers
+only paths and sizes. Native file reads request bounded ranges as needed; explicit
+full preload fills the same cache before startup. The core's synchronous file API
+waits through WebAssembly JSPI (`Suspending` and `promising`), which the browser
+must support. The bridge implements no separate downloader or resource cache.
+Individual compressed files are still read whole by native decoders; embedded movie
+PCM has a 64 MiB cap. Movie video frames are decoded incrementally.
+Standard controls use the shared pointer cursor (directions
+and left stick move, A confirms through the left mouse button, B uses right mouse).
+
+Checkpoint semantics are `GAME_SAVE`: save using the game's native menu, synchronize
+the complete save archive, import before a new instance starts, and load using the
+game's menu. Settings alone do not qualify as progress. The adapter uses a fresh
+per-instance overlay; the public Host owns user isolation, persistence and one gzip
+layer. An acknowledgement applies only to the exported revision after persistence.
+
+The core comes from the immutable `retrom-core-g5f358ef1360b-r2` release of
+`retrom-project/siglus_rs`. The source declaration pins the commit and every asset's
+size and SHA-256. Complete dependency notices accompany the Provider; the core
+Release also provides the exact corresponding source and rebuild/relink inputs.

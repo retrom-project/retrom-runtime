@@ -32,6 +32,7 @@ export class ContentMaterializer {
     this.pool.check(object); checkSignal(signal);
     if (!integer(request.maxBytes) || object.source.sizeBytes > request.maxBytes) {fail("BOUNDS");}
     const combined = combineSignals([this.controller.signal, ...(signal ? [signal] : [])]);
+    const releaseStorageBudget = this.store.materializing();
     let release: (() => void) | undefined;
     try {
       release = await this.gate.acquire(combined.signal);
@@ -49,10 +50,11 @@ export class ContentMaterializer {
         await restart(); checkSignal(combined.signal); this.wholeRestartCount++; progress.restart();
         return await this.run(object, request, combined.signal, progress, "WHOLE");
       }
-    } finally {release?.(); combined.dispose();}
+    } finally {release?.(); releaseStorageBudget(); combined.dispose();}
   }
   private async run(object: BlockObject, request: MaterializeRequestV1, signal: AbortSignal, progress: ContentProgress, recovery?: "BLOCKS" | "WHOLE"): Promise<MaterializeResultV1> {
-    const {backing, completed, nativeBytesHash} = await this.validation(object, request, signal, recovery);
+    const verified = await this.validation(object, request, signal, recovery);
+    const {completed, nativeBytesHash} = verified;
     const size = object.source.sizeBytes, sink = await this.sink(object,request,signal,!!recovery);
     const hash = completed || nativeBytesHash ? null : createContentHasher();
     let written = 0;
@@ -62,13 +64,13 @@ export class ContentMaterializer {
       written += chunk.length; progress.position(written);
     };
     try {
-      if (completed && backing) {await this.blocks(object,signal,consume,backing);}
-      else if (recovery === "BLOCKS") {await this.blocks(object,signal,consume);}
-      else {await this.acquire(object, signal, consume, recovery === "WHOLE");}
+      const referenced = completed !== null && sink instanceof PersistentBlobSink && await sink.adopt(completed);
+      if (referenced) {written = size;}
+      else {await this.readPrepared(object, signal, consume, verified, recovery);}
       this.pool.check(object); checkSignal(signal);
       if (written !== size) {fail("LENGTH_MISMATCH");}
       const receipt = completed ?? await this.firstReceipt(object, sink, hash, nativeBytesHash, signal);
-      try {await (request.kind === "SINK" ? sinkOperation(()=>sink.commit(receipt),signal,20000) : sink.commit(receipt));} catch (cause) {checkSignal(signal);if(request.kind!=="SINK"){throw cause;}throw new ContentIOError("WORKSPACE_UNAVAILABLE", {cause});}
+      try {if (!referenced) {await (request.kind === "SINK" ? sinkOperation(()=>sink.commit(receipt),signal,20000) : sink.commit(receipt));}} catch (cause) {checkSignal(signal);if(request.kind!=="SINK"){throw cause;}throw new ContentIOError("WORKSPACE_UNAVAILABLE", {cause});}
       checkSignal(signal); const result = this.result(request, sink, receipt);
       this.materializedBytes += size; this.materializedBytesByKind[result.kind] += size; progress.complete(); return result;
     } catch (error) {
@@ -83,6 +85,12 @@ export class ContentMaterializer {
     const completed = backing ? await completedBacking(backing, signal) : null;
     const nativeBytesHash = !completed && request.kind === "BYTES" && object.source.sizeBytes > 10 * 1024 * 1024;
     return {backing, completed, nativeBytesHash};
+  }
+  private async readPrepared(object: BlockObject, signal: AbortSignal, consume: (chunk: Uint8Array<ArrayBuffer>) => Promise<void>,
+    verified: {backing: PersistentBacking | null | undefined; completed: MaterializationReceiptV1 | null}, recovery?: "BLOCKS" | "WHOLE") {
+    if (verified.completed && verified.backing) {await this.blocks(object, signal, consume, verified.backing);}
+    else if (recovery === "BLOCKS") {await this.blocks(object, signal, consume);}
+    else {await this.acquire(object, signal, consume, recovery === "WHOLE");}
   }
   private async firstReceipt(object: BlockObject, sink: MaterializeSinkV1, hash: ReturnType<typeof createContentHasher> | null,
     nativeBytesHash: boolean, signal: AbortSignal): Promise<MaterializationReceiptV1> {

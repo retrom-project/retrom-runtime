@@ -5,6 +5,7 @@ import type {RPGEngine, RuntimeConfiguration, RuntimeContent, RuntimeContentFile
 import {configurationFailure, logicalPath, object, utf8Compare} from "./validation.js";
 import {validateConfiguredOptions} from "./prepare.js";
 import {detectLcfEngine} from "./lcf.js";
+import {siglusLanguage} from "./siglus.js";
 import formats from "./content-formats.json" with {type: "json"};
 import type {FlycastMachine} from "./flycast-arcade.js";
 import {playableArcadeMachine, type ArcadeCatalog} from "./arcade.js";
@@ -34,7 +35,8 @@ export function configureRuntime(input: ConfigureRequest): RuntimeConfiguration 
   const cores = input.platformId === "arcade" && content.kind === "ARCADE" ? arcadeParents(input, content.entryFile)
     : input.flycastCatalogs && "entryFile" in content ? flycastParents(input, content.entryFile)
     : input.platformId === "scummvm" ? {scummvm: {options: scummvmOptions(input)}}
-    : input.platformId === "ons" ? {onscripter_yuri: {options: {scriptEncoding: "utf8"}}} : undefined;
+    : input.platformId === "ons" ? {onscripter_yuri: {options: {scriptEncoding: "utf8"}}}
+    : input.platformId === "siglus" && "entryFile" in content ? {siglus: {options: {language: siglusLanguage(input.files, content.entryFile)}}} : undefined;
   const config = parseRuntimeConfiguration({content, ...(cores ? {cores} : {})});
   validateConfiguredOptions(input.platformId, config, input.files);
   return config;
@@ -51,11 +53,13 @@ function constructContent(input: ConfigureRequest): RuntimeContent {
   case "kirikiri": return {kind: "KIRIKIRI_PROJECT", entryFile: choosePreferred(input, [/(?:^|\/)startup\.tjs$/u, /(?:^|\/)data\.xp3$/u, /\.xp3$/u]).logicalKey};
   case "butterscotch": return {kind: "BUTTERSCOTCH_PROJECT", entryFile: choosePreferred(input, [/(?:^|\/)data\.win$/u, /(?:^|\/)runner\.js$/u, /(?:^|\/)game\.js$/u, /(?:^|\/)data\.js$/u, /(?:^|\/)index\.html$/u]).logicalKey};
   case "tyranoscript": return {kind: "TYRANOSCRIPT_PROJECT", entryFile: choose(name => /(?:^|\/)index\.html$/u.test(name)).logicalKey};
+  case "siglus": return {kind: "SIGLUS_PROJECT", entryFile: choose(name => /(?:^|\/)scene\.pck$/u.test(name)).logicalKey};
   case "cavestory": return {kind: "NXENGINE_PROJECT", entryFile: choose(name => /(?:^|\/)doukutsu\.exe$/u.test(name)).logicalKey};
   case "daphne": return {kind: "DAPHNE_PROJECT", entryFile: choose(name => /\.(?:txt|framefile)$/u.test(name)).logicalKey};
   default: return singleFileContent(input);
   }
 }
+
 function dosContent(input: ConfigureRequest): RuntimeContent {
   const file = chooseFile(input, name => /\.(?:zip|dosz)$/u.test(name));
   const entries = input.archiveMembers?.[file.logicalKey] ?? [];

@@ -27,17 +27,7 @@ export class PersistentBlobSink implements ResultSink {
   async commit(receipt:MaterializationReceiptV1) {
     this.check();if(this.written!==receipt.sizeBytes){fail("LENGTH_MISMATCH");}
     if(!this.memory){
-      const scope=requestScope(this.signal,500);
-      try {
-        const current=await abortable(this.backing.resources.metadata.generation(this.backing.key,this.backing.generation),scope.signal);
-        if(current?.state!=="COMPLETE"||current.localSha256!==receipt.localSha256){throw new Error("backing incomplete");}
-        this.releaseLease=await this.store.lease(this.backing.resources,this.backing.key,scope.signal);
-        const file=await abortable(this.backing.resources.data.file!(this.backing.key,this.backing.generation),scope.signal);
-        if(file.size!==receipt.sizeBytes){throw new Error("backing size");}this.check();this.value=file;return;
-      } catch(error) {
-        this.releaseLease?.();this.releaseLease=undefined;checkSignal(this.signal);
-        if(error instanceof ContentIOError&&error.scope==="OBJECT"){throw error;}
-      } finally {scope.dispose();}
+      if(await this.reference(receipt)){return;}
       await this.replay();
     }
     await this.memory!.commit(receipt);this.value=this.memory!.result();
@@ -45,7 +35,25 @@ export class PersistentBlobSink implements ResultSink {
   async abort(reason:"CANCELLED"|"FAILED"|"RESTART") {this.stopped=true;this.releaseLease?.();this.releaseLease=undefined;await this.memory?.abort(reason);this.value=undefined;}
   result():Blob {this.check();if(!this.value){fail("RESOURCE_UNAVAILABLE");}const value=this.value;this.value=undefined;return value;}
   async release(){this.releaseLease?.();this.releaseLease=undefined;}
+  async adopt(receipt:MaterializationReceiptV1):Promise<boolean> {
+    this.check();if(this.written||this.memory){fail("BOUNDS");}
+    if(!await this.reference(receipt)){return false;}
+    this.written=receipt.sizeBytes;return true;
+  }
   private check(){checkSignal(this.signal);if(this.stopped){fail("ABORTED");}}
+  private async reference(receipt:MaterializationReceiptV1):Promise<boolean> {
+    const scope=requestScope(this.signal,this.backing.operationTimeoutMs);
+    try {
+      const current=await abortable(this.backing.resources.metadata.generation(this.backing.key,this.backing.generation),scope.signal);
+      if(current?.state!=="COMPLETE"||current.localSha256!==receipt.localSha256||current.committedBytes!==receipt.sizeBytes){throw new Error("backing incomplete");}
+      this.releaseLease=await this.store.lease(this.backing.resources,this.backing.key,scope.signal);
+      const file=await abortable(this.backing.resources.data.file!(this.backing.key,this.backing.generation),scope.signal);
+      if(file.size!==receipt.sizeBytes){throw new Error("backing size");}this.check();this.value=file;return true;
+    } catch(error) {
+      this.releaseLease?.();this.releaseLease=undefined;checkSignal(this.signal);
+      if(error instanceof ContentIOError&&error.scope==="OBJECT"){throw error;}return false;
+    } finally {scope.dispose();}
+  }
   private async replay() {
     const memory=new BlobSink(this.object.source.sizeBytes);
     try {
@@ -53,7 +61,7 @@ export class PersistentBlobSink implements ResultSink {
         this.check();const release=await this.credits.reserve(2*BLOCK_BYTES,"SCRATCH",this.signal);
         let scope: ReturnType<typeof requestScope> | undefined;
         try {
-          scope=requestScope(this.signal,500);
+          scope=requestScope(this.signal,this.backing.operationTimeoutMs);
           const bytes=await abortable(this.backing.read(offset/BLOCK_BYTES,scope.signal,true),scope.signal);
           if(!bytes){throw new BlobReplayRequired();}await memory.write(offset,bytes);
         } finally {release();scope?.dispose();}

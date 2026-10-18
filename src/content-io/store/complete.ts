@@ -30,7 +30,7 @@ export async function completeBacking(backing: PersistentBacking, receipt: Mater
       const release = await credits.reserve(2 * BLOCK_BYTES, "SCRATCH", signal);
       let scope: ReturnType<typeof requestScope> | undefined;
       try {
-        scope = requestScope(signal, 500);
+        scope = requestScope(signal, backing.operationTimeoutMs);
         const bytes = await abortable(backing.read(position / BLOCK_BYTES, scope.signal, true), scope.signal);
         if (!bytes) {return false;} hash.update(bytes);
       } finally {release(); scope?.dispose();}

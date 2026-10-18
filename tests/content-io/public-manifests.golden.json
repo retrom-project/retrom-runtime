@@ -10719,6 +10719,66 @@
       {
         "assetPaths": [
           "assets/content-io/worker.mjs",
+          "assets/siglus/siglus.mjs",
+          "assets/siglus/siglus_bg.wasm"
+        ],
+        "capabilities": {
+          "contentLoading": "ON_DEMAND_AND_PRELOAD",
+          "checkpoint": true,
+          "frameCounter": true,
+          "frameMode": "SAME_ORIGIN_BLANK",
+          "inputFilter": true,
+          "nativeSettings": false,
+          "pause": true,
+          "requiresThreads": false,
+          "screenshot": true,
+          "standardGamepad": true,
+          "videoModes": [
+            "original",
+            "pixel",
+            "smooth"
+          ],
+          "volume": true
+        },
+        "checkpoint": {
+          "maxBytes": 134217728,
+          "readFormats": [
+            "siglus-save-files-v1-storage-v1"
+          ],
+          "writeFormat": "siglus-save-files-v1-storage-v1",
+          "semantics": "GAME_SAVE"
+        },
+        "displayName": "SiglusEngine",
+        "id": "siglus",
+        "inputs": [
+          {
+            "cardinality": "ONE",
+            "kind": "FILE_TREE",
+            "optional": false,
+            "role": "game",
+            "maxFileBytes": 9007199254740991
+          }
+        ],
+        "targetOptionsSchema": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "language"
+          ],
+          "properties": {
+            "language": {
+              "type": "string",
+              "enum": [
+                "chs",
+                "original"
+              ]
+            }
+          }
+        }
+      },
+      {
+        "assetPaths": [
+          "assets/content-io/worker.mjs",
           "assets/tic80/tic80-retrom.mjs",
           "assets/tic80/tic80-retrom.wasm"
         ],

@@ -42,7 +42,10 @@ describe("native RPG bootstrap reload", () => {
     const shell = frame.src, controller = new AbortController();
     const mounting = mountNativeRpg({sessionId: "run", bridgeProfile: "RPGMV", uniqueOrigin: "http://runtime.example"},
       frame, null, () => undefined, {signal: controller.signal});
-    try {expect(frame.src).toBe(shell);}
+    try {
+      expect(frame.src).toBe(shell);
+      expect(frame.getAttribute("sandbox")?.split(/\s+/u)).toContain("allow-modals");
+    }
     finally {controller.abort(); await expect(mounting).rejects.toMatchObject({name: "AbortError"}); frame.remove();}
   });
   it("connects when the isolated game bridge is ready", () => {

@@ -311,18 +311,26 @@ export function installTyranoScriptBridge(global, inputFilter) {
         matching.forEach((listener) => listener.callback(eventObject));
     }
 
+    function stableEngineState(kag) {
+        return Boolean(!exited && engineInitialized(kag) && kag.stat && typeof kag.stat.current_scenario === "string" &&
+            kag.stat.current_scenario && !kag.stat.is_wait && !kag.stat.is_adding_text &&
+            stableCheckpointTag(kag) && !externalVideoActive());
+    }
+
     function checkpointAvailable() {
         const kag = engine();
-        if (exited || !engineInitialized(kag) || !kag.stat || typeof kag.stat.current_scenario !== "string" ||
-            !kag.stat.current_scenario || kag.stat.is_wait || kag.stat.is_adding_text ||
-            !stableCheckpointTag(kag) || externalVideoActive()) return false;
+        if (!stableEngineState(kag)) return false;
         const controls = kag.key_mouse;
         const menuOwner = controls && controls.util && typeof controls.util.canShowMenu === "function"
             ? controls.util : controls;
         const canShowMenu = menuOwner && menuOwner.canShowMenu;
         if (typeof canShowMenu !== "function") return true;
         try {
-            return Boolean(canShowMenu.call(menuOwner));
+            // A strong [s] stop can display choices in layer_free. Native menus
+            // reject that layer, but snapSave includes it and loadGameData rebinds it.
+            const stopped = kag.stat.is_strong_stop === true &&
+                kag.ftag.array_tag[kag.ftag.current_order_index].name === "s";
+            return Boolean(canShowMenu.call(menuOwner) || stopped);
         } catch {
             return false;
         }
@@ -613,6 +621,9 @@ export function installTyranoScriptBridge(global, inputFilter) {
         if (exited) return Promise.reject(new Error("TYRANOSCRIPT_CHECKPOINT_RESTORE_FAILED"));
         const checkpoint = decodeCheckpoint(data);
         const snapshot = checkpoint.snapshot;
+        // Native loading can alias and mutate snapshot.stat while running make.ks.
+        const targetScenario = snapshot.stat.current_scenario;
+        const targetOrderIndex = snapshot.current_order_index + 1;
         const kag = engine();
         if (!kag) return Promise.reject(new Error("TYRANOSCRIPT_RUNTIME_NOT_READY"));
         return new Promise((resolve, reject) => {
@@ -620,6 +631,7 @@ export function installTyranoScriptBridge(global, inputFilter) {
             let makeStarted = false;
             let pollTimer = 0;
             const legacyRestore = kag === legacyKag || typeof kag.once !== "function" || typeof kag.on !== "function";
+            const deferPageClear = legacyRestore && snapshot.stat.flag_ref_page === true;
             const timer = global.setTimeout(() => finish(new Error("TYRANOSCRIPT_CHECKPOINT_RESTORE_TIMEOUT")), RESTORE_TIMEOUT_MS);
             function finish(error) {
                 if (completed) return;
@@ -628,12 +640,15 @@ export function installTyranoScriptBridge(global, inputFilter) {
                 if (pollTimer) global.clearTimeout(pollTimer);
                 if (typeof kag.off === "function") kag.off(".retrom-runtime-restore");
                 if (error) reject(error);
-                else resolve();
+                else {
+                    if (deferPageClear) kag.stat.flag_ref_page = true;
+                    resolve();
+                }
             }
             function pollTarget() {
                 if (completed) return;
-                if ((legacyRestore || makeStarted) && kag.stat.current_scenario === snapshot.stat.current_scenario &&
-                    kag.ftag && kag.ftag.current_order_index === snapshot.current_order_index + 1) {
+                if ((legacyRestore || makeStarted) && kag.stat.current_scenario === targetScenario &&
+                    kag.ftag && kag.ftag.current_order_index === targetOrderIndex) {
                     finish();
                     return;
                 }
@@ -655,6 +670,9 @@ export function installTyranoScriptBridge(global, inputFilter) {
                         }
                         kag.variable.sf = cloneJSON(checkpoint.systemVariables);
                     }
+                    // Legacy make.ks helpers would consume the pending page clear before input.
+                    // Keep the saved dialogue until loading finishes, then re-arm the next page.
+                    if (deferPageClear) snapshot.stat.flag_ref_page = false;
                     kag.menu.loadGameData(snapshot, { auto_next: "no", bgm_over: "false" });
                     pollTarget();
                 } catch {
@@ -663,7 +681,8 @@ export function installTyranoScriptBridge(global, inputFilter) {
             }
             function waitForStableEngine() {
                 if (completed) return;
-                if (checkpointAvailable()) startRestore();
+                // A title screen can disable native saving while still allowing a saved game to load.
+                if (stableEngineState(kag)) startRestore();
                 else pollTimer = global.setTimeout(waitForStableEngine, 16);
             }
             waitForStableEngine();

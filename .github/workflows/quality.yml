@@ -20,6 +20,7 @@ jobs:
       - run: npm run lint
       - run: npm run typecheck
       - run: npm test
+      - run: npm run docs:platforms:check
       - run: npm run release:build
         env:
           RETROM_PROVIDER_BUILD_MODE: candidate

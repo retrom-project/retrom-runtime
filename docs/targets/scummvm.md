@@ -1,14 +1,12 @@
 # ScummVM Projects
 
 The `scummvm` Target uses the fork's `scummvm-host-v1` Emscripten backend, pinned to
-ScummVM `v2026.3.0` (`fed42f2068dcafc6aafa1c28c77e4c88def74b66`). The declared layout contains
-105 stable parent-engine plugins. A fresh instance fetches the shared module and only its selected
-engine plugin. Support data and game files use 256 KiB range blocks, a 16 MiB memory cache and
-persistent Cache Storage; a later instance reuses verified immutable blocks. Game identification
+ScummVM `v2026.3.0` (`fed42f2068dcafc6aafa1c28c77e4c88def74b66`). The declared [core layout](../../src/scummvm/core-layout.json) lists the available parent-engine plugins. A fresh instance fetches the shared module and only its selected
+engine plugin. Support data and game files use shared [Content I/O](../content-io.md) bounded Range reads and persistent caching; a later instance reuses verified immutable blocks. Shared fetch policy determines HTTP windows, and full preload is an explicit alternative to ordinary on-demand loading. Game identification
 and candidate selection happen in the consuming Host using the fork's matching native detector.
 The adapter receives the selected engine/game, relative root and unchanged upstream launch hints.
 
-Native checkpoint format `scummvm-save-bundle-v1` has a 64 MiB bound and preserves the complete
+Public checkpoint format `scummvm-save-bundle-v1-storage-v1` has a 64 MiB bound and preserves the complete
 native save directory. It binds files to the game content and deterministic launch configuration.
 `CAPTURE` asks the game to create a new native save only when its current state permits saving;
 `EXPORT` merely collects completed writes. A known exact slot enables automatic startup recovery

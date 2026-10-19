@@ -9,7 +9,7 @@ arrows, letters, Enter, Escape and F1–F12 go directly to the emulated keyboard
 Arrow keys and Z/X also operate joypad one (directions and A/B), allowing keyboard
 play in games that only read a joystick. Click the game canvas to focus keyboard
 input. Video, stereo audio, pause, volume,
-screenshots and `px68k-state-v1` instant checkpoints share the Provider lifecycle.
+screenshots and public `px68k-state-v1-storage-v1` instant checkpoints share the Provider lifecycle.
 Checkpoints contain machine state and writable disk contents; a new launch
 restores only an explicitly supplied checkpoint belonging to the same game.
 

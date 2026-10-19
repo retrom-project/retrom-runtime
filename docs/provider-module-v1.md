@@ -18,7 +18,7 @@ the module, checks the exported identity and calls `createRuntime`. It only cons
 chooses EasyRPG, mkxp, native Web or another implementation. The Provider validates the stable `providerId` plus
 `targetId`, current resources, private Target options, optional restore input before mounting.
 
-`src/providers/retrom-runtime/catalog.ts` is the single Target declaration for the 35 targets in this Provider; EmulatorJS declares another 76 Targets.
+[`src/providers/retrom-runtime/catalog.ts`](../src/providers/retrom-runtime/catalog.ts) and the [EmulatorJS catalog](../src/providers/emulatorjs/catalog.ts) own their Provider's Target declarations. The generated [support catalog](supported-platforms-and-cores.md) lists their current Targets and product bindings.
 The generated declaration provides current capabilities, checkpoint `writeFormat/readFormats/maxBytes/semantics`, resource
 kinds, runtime files and a constrained closed `targetOptionsSchema`. The Provider Module uses that schema to
 exact-validate options before mounting; it has no
@@ -50,6 +50,8 @@ after teardown; they never classify errors by parsing native messages. Mount com
 wrappers and deadlines; frame error, rejection and CSP listeners survive until exit to observe gameplay failures.
 The browser's message-only Resize Observer deferred-delivery notification does not terminate the runtime;
 it remains observable by browser diagnostics. Script exceptions, Wasm traps and unhandled rejections still fail.
+
+EmulatorJS launches collect bounded native output with RetroArch logging enabled independently of the EmulatorJS debug console. The same diagnostic buffer is used by MAME Current and preserves required-member and fatal messages through subsequent progress output. Copyright banners, ordinary notices and recoverable fallbacks are excluded. Fatal events retain sanitized core reasons and runtime traces after teardown; host presentation should show the failure category and `CORE` evidence, keeping `RUNTIME` traces in diagnostics. Collection does not change DAT acceptance, core bytes, game files, or checkpoint identity.
 
 EasyRPG requires an explicit startup cancellation signal. Its factory/script errors and enforced eval CSP
 violations fail mounting immediately instead of leaving a pending factory promise. Browser release builds use

@@ -13,6 +13,6 @@ LB to Shake, and Select to Power. Keyboard arrows and Z/X/D/C/Space remain usabl
 Pause, exit and blur release held keys. Native instantaneous CPU/MMU/APU/LCD
 snapshots are bound to the ROM SHA-256 and checked for integrity, then compressed
 once by the shared Provider storage boundary as `gbe-pokemini-state-v1-storage-v1`
-(maximum 1 MiB). ROM and BIOS bytes use verified persistent Cache Storage across
+(maximum 1 MiB). ROM and BIOS bytes use verified persistent Content I/O caching across
 instances. The target supports screenshots, volume and frame counting; infrared
 multiplayer and native configuration UI are outside this target.

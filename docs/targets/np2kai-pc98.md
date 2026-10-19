@@ -6,15 +6,15 @@ blank frame. The maintained NP2kai fork is pinned to upstream commit
 Published assets are pinned by commit, exact size and SHA-256; local PFB overrides remain explicit.
 
 The adapter materializes disks up to 512 MiB with verified size/SHA-256 and reports download
-progress. OPFS retains immutable disk bytes across launches. Each instance writes its own
-memory copy. `np2kai-state-v1` contains the native execution state and changed 64 KiB disk
+progress. Shared Content I/O retains verified immutable disk bytes across launches. Each instance writes its own
+memory copy. The public `np2kai-state-v1-storage-v1` checkpoint contains the native execution state and changed 64 KiB disk
 blocks, bound to the original disk digest, with a 384 MiB total limit. Fresh launches ignore
 previous disk writes unless a checkpoint is explicitly supplied.
 
 Standard gamepads map directions to cursor keys, A to Space (confirm), B to Escape (cancel),
 X to Z, Y to X and Start to Enter. Keyboard input remains available. Pause, screenshot,
 frame count and instant restore are supported; volume adjustment, disk switching
-and external BIOS configuration are outside this trial. A freely distributable Shinonome
+and external BIOS configuration are outside this Target. A freely distributable Shinonome
 font is included in the core build; game bytes are supplied by the host.
 Core admission requires standard-gamepad directional movement and confirmation.
 Gamepad cancellation is optional; existing working cancellation remains supported.

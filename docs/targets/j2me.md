@@ -4,7 +4,7 @@ The `j2me` Target accepts one original JAR as `ROM_BLOB` and runs the public j2m
 thread-enabled same-origin frame. The Provider uses HOST storage: only the explicit restore payload is
 imported before the MIDlet starts. A `GAME_SAVE` checkpoint contains the bounded RMS tree, not VM stacks,
 heap or execution position. Save in the game first, upload through the Host, then use the game menu to load
-in a new Launch. Other Targets default to `INSTANT`; their direct restore requirements are unchanged.
+in a new Launch. Other Targets declare their own save semantics in the [support catalog](../supported-platforms-and-cores.md).
 
 The core verifies JAR size and SHA-256, reuses verified bytes from persistent content-addressed storage,
 reports loading progress and resolves known compatibility profiles. Core failures and game exits enter the
@@ -16,6 +16,23 @@ GAME_SAVE runtimes expose a stable availability `revision` for changed native re
 advance the baseline. Empty/unchanged content remains unavailable; failed uploads remain retryable, and
 changes during an upload retain a new revision. The Host owns automatic upload policy; the J2ME core owns
 RMS content comparison, stable-write detection and restore baselines. INSTANT targets retain manual capture.
+
+## Controls
+
+J2ME standard gamepads use the following phone actions. The Provider owns gamepad polling in the game frame and preserves the Host's input filter; the core owns physical keyboard input.
+
+| Standard control | Phone action |
+| --- | --- |
+| D-pad / left stick | Up, down, left, right |
+| A | Fire / confirm |
+| B / Select | Right soft key |
+| X / Start | Left soft key |
+| Y | 1 |
+| L1 / R1 | 3 / 7 |
+| L2 / R2 | 9 / 0 |
+| L3 / R3 | * / # |
+
+Direction and Fire actions are separate from numeric keys 2, 4, 6, 8 and 5. Physical keyboard digits 0–9, star, hash and the core's existing soft-key bindings remain available. Start+Select chords remain reserved by the Host filter; gamepad keys are released on suppression, focus loss, pause, disconnection and exit.
 
 ## Native Capture and Final Exit
 

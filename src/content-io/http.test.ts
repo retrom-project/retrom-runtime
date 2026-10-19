@@ -57,8 +57,9 @@ it("[IO-13] UNIT/transport [X-03] UNIT/transport rejects short and long bodies a
   await expect(read(response({}, 206, new Uint8Array([17, 18])))).rejects.toThrow("CONTENT_IO_LENGTH_MISMATCH");
   const cancel = vi.fn();
   const body = new ReadableStream<Uint8Array>({start(controller) {controller.enqueue(new Uint8Array([17]));}, cancel});
-  await expect(fetchRangeBlock(source(), state(), 0, undefined, 10, {fetch: async () => response({}, 206, body)})).rejects.toThrow("CONTENT_IO_TIMEOUT");
-  expect(cancel).toHaveBeenCalledOnce(); expect(body.locked).toBe(false);
+  const result = response({}, 206, body);
+  await expect(fetchRangeBlock(source(), state(), 0, undefined, 10, {fetch: async () => result})).rejects.toThrow("CONTENT_IO_TIMEOUT");
+  expect(cancel).toHaveBeenCalledOnce(); expect(result.body!.locked).toBe(false);
 });
 it.each([null, `W/${etag}`, '"changed"'])("[IO-14] UNIT/transport rejects ETag %s", async (value) => {
   await expect(read(response({ETag: value}))).rejects.toThrow("CONTENT_IO_IDENTITY_CHANGED");

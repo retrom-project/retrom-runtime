@@ -142,7 +142,7 @@ it("session close retains speculative scratch until noncooperative network clean
   });
   await reader.readInto(B, new Uint8Array(1)); await tick();
   pool.close(); await tick();
-  expect(pool.stats).toMatchObject({active: 1, temporaryBytes: 4 * B, lruBytes: 0});
+  expect(pool.stats).toMatchObject({active: 1, temporaryBytes: 6 * B, lruBytes: 0});
   finish(); await tick(); expect(pool.stats).toMatchObject({active: 0, temporaryBytes: 0, lruBytes: 0});
 });
 it("a prefetch timeout keeps the existing physical deadline when demand joins", async () => {

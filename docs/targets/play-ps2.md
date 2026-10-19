@@ -5,9 +5,8 @@ fork-owned `play-host-v1` module. The core runs in a same-origin blank frame wit
 WebAssembly threads and cross-origin isolation. No BIOS upload is required. Multi-disc,
 ELF boot, native settings, volume controls are not declared.
 
-Disc access uses 256 KiB persistent cache blocks keyed by content identity, plus an 8 MiB
-memory LRU. Missing or unavailable persistent storage falls back to bounded Range requests.
-`play-state-v1` binds a native execution snapshot and both memory cards to the disc SHA-256;
+Disc access uses the shared [Content I/O](../content-io.md) Range reader and bounded persistent cache. HTTP windows follow the shared fetch policy rather than a fixed one-request-per-native-read rule. Ordinary on-demand mode can fall back to bounded network reads when storage is unavailable; explicitly requested full preload requires confirmed persistent content.
+The public `play-state-v1-storage-v1` checkpoint binds a native execution snapshot and both memory cards to the disc SHA-256;
 its 256 MiB limit covers the entire payload. Standard gamepads support two ports; pause,
 blur and exit release controls. Save/load must acknowledge native completion before resuming.
 

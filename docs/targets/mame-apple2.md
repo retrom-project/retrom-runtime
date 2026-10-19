@@ -1,56 +1,32 @@
 # MAME driver-family targets
 
-`retrom-runtime/mame-apple2` uses `retrom-mame-dylink-v1`: a common JS/WASM runtime
-plus one selected family side module. All bytes go through verified Content I/O assets
-and its persistent cache. Each Launch creates fresh WASM memory and registers one
-family; only immutable bytes are reused. Assets from different native builds
-cannot be combined. Adding another family can change the common module's imports
-and require a new build and download. The source catalog pins the published fork
-release `retrom-core-gf65d5ba9bc42-r2`; support remains bounded to each declared
-machine, media shape and input profile below. A released asset does not establish
-compatibility with other MAME machines or software.
+The native `retrom-runtime` Provider uses `retrom-mame-dylink-v1`: a common JS/Wasm runtime plus the selected machine-family side module. Each instance has fresh machine memory; only verified immutable assets are reused. All modules must come from the same pinned native build.
 
-The first target selects `apple2p`, Disk II in slot 6 and an Apple joystick. It
-accepts one read-only 143360-byte DOS-order `.dsk`/`.do`. Required external firmware:
-`341-0011.d0`, `341-0012.d8`, `341-0013.e0`, `341-0014.e8`, `341-0015.f0`,
-`341-0020-00.f8`, `341-0036.chr`, `341-0027-a.p5` (card), `341-0028-a.rom` (controller).
-Firmware and game acquisition uses the host's explicit resource identities.
-Other Apple models, formats and writable media are not product targets.
+## Computer and console machines
 
-`mame-atom` selects Acorn Atom and the Acorn family, with its default RAM expansion
-and disabled disk expansion. It accepts a single ATM quickload file: a 22-byte
-header, nonempty matching payload, and a load range within the 16-bit address space.
-It requires `abasic.ic20` (8192 bytes) and `afloat.ic21` (4096 bytes). Machine code
-runs at its declared execution address; BASIC may need a physical `RUN` command.
-UEF cassette and disk media are outside this target.
+| Target | Native machine | Current input boundary |
+| --- | --- | --- |
+| `mame-apple2` | Apple II+ (`apple2p`) | One read-only 143,360-byte DOS-order DSK/DO disk |
+| `mame-apple2e` | Apple IIe (`apple2e`) | One read-only 143,360-byte DOS-order DSK/DO disk |
+| `mame-atom` | Acorn Atom (`atom`) | One ATM quickload file with a 22-byte header and matching nonempty payload within the 16-bit address space |
+| `mame-pv1000` | Casio PV-1000 (`pv1000`) | One cartridge, at most 32 KiB |
+| `mame-sg1000` | SG-1000 (`sg1000`) | One cartridge, at most 64 KiB in current native validation |
+| `mame-coleco` | ColecoVision (`coleco`) | One cartridge, at most 32 KiB in current native validation |
 
-`mame-pv1000` selects Casio PV-1000 and the vintage family. It accepts one
-8/16/32 KiB cartridge, without external firmware. Its D-pad/left stick map to
-native digital directions; A/B map to native buttons 1/2.
+These named machines do not imply support for other MAME computers, disk variants, expansions or multi-drive workflows. Atom selects its default RAM expansion with disk expansion disabled; BASIC software may still require an ordinary keyboard `RUN` command. The format-discovery catalog is broader than these adapter limits.
 
-Atom directions map to semicolon, period, Z and X. A maps Space, B/Start Return
-and Select Escape. This profile supports games using those keys, including GUNTUS.
-Physical keyboard controls remain available for other software.
+Firmware requirements and virtual paths come from runtime preparation and the selected [machine profile](../../src/mame/profiles.ts). Apple II+ and IIe have different system ROM sets, with their declared Disk II firmware. Atom requires its BASIC and floating-point ROMs; ColecoVision requires its declared 8 KiB BIOS. The PV-1000 and SG-1000 profiles have no external firmware resource.
 
-The D-pad and left stick control native joystick axes; A/B map to joystick buttons
-1/2. X maps Space, Y maps Enter, Select maps Escape and Start maps the `1` key.
-Each button emits exactly one target input. Physical keyboard state is independent;
-pause, blur, visibility changes and exit release inputs. Mapping sufficiency depends
-on the game: Donkey Kong's one-player selection uses Start and its jump uses A.
+These six machine Targets materialize game and required firmware before startup and do not declare Wasm threads. Standard gamepads and independent keyboard input use the selected machine's input profile; some software needs additional keys. Native display aspect ratio is preserved when fitting the frame and capturing screenshots.
 
-The native framebuffer uses non-square pixels. MAME's display aspect ratio feeds
-the shared frame surface, which preserves that ratio while resizing the window.
-Screenshots resample to square pixels at the same display ratio; the Apple II+
-560 by 192 buffer therefore produces a 560 by 420 screenshot at 4:3.
+## Arcade and CHD media
 
-Instant saves use `mame-state-v1`: native state with machine and content identity, native-build
-identity, length and SHA-256. The limit is 64 MiB. The public Provider layer writes
-`mame-state-v1-storage-v1` with one gzip layer. Corrupt, mismatched or oversized state
-fails restore instead of restarting the game. Native-build changes invalidate these
-saves; the tightly coupled MAME C++ state ABI is not promised across versions.
+`mame_arcade` binds to the separate `mame-arcade` Target. It uses an explicit selected `machine`, requires Wasm threads and cross-origin isolation, and accepts paired DAT-driven ZIP/Parent/firmware resources plus declared CHD media. It is not restricted to the small media shapes in the table above. See [Arcade sets and MAME Current](arcade.md) for dependency discovery, bounded media reads and writable-media snapshot handling.
 
-The host must deliver Brotli companions for the large common module. Content I/O
-verifies decoded bytes against the Provider asset index. Encoded game/firmware
-responses and all encoded Range responses remain rejected. Cache eviction or
-unavailable storage can require a later download. Reduced transfer size does not
-remove the browser's decompression, compilation and linear-memory costs.
+## Checkpoints and assets
+
+All these MAME Targets declare `INSTANT` saves with public format `mame-state-v1-storage-v1` and a 64 MiB bound. The native container binds machine/content identity, native-build identity, length and SHA-256. The Provider adds one gzip layer. A native-build mismatch can reject restoration even when a public format name is unchanged; no cross-version MAME C++ state ABI is promised.
+
+Core modules use shared [Content I/O](../content-io.md), including verified decoded core assets when HTTP compression is used. Game, firmware and Range resources retain their own content-encoding restrictions. Cache reuse does not remove native decompression, Wasm compilation or machine-memory costs.
+
+The current immutable core release, metadata and complete side-module set are pinned in [provider-sources.json](../../provider-sources.json). Sources for these boundaries are the [Target declarations](../../src/providers/retrom-runtime/mame-declaration.ts), [machine/media validation](../../src/mame/profiles.ts), [state codec](../../src/mame/state.ts) and [arcade Worker state](../../src/mame/worker-state.ts).

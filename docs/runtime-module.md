@@ -1,6 +1,6 @@
 # Runtime configuration and preparation
 
-The runtime module is the source of game interpretation for both review and play. It declares 111 Provider Targets (76 EmulatorJS and 35 independent runtime Targets), 110 existing product bindings and 95 named platforms. EmulatorJS PPSSPP remains declared without a prior host product binding; the independent PPSSPP Target supplies that product core. These counts describe retained declarations, not completed product acceptance.
+The runtime module is the source of game interpretation for both review and play. The generated [support catalog](supported-platforms-and-cores.md) lists the current platforms, product cores, Provider Targets and bindings. Catalog membership and product acceptance evidence are recorded separately.
 
 `RuntimeConfiguration` contains `content` and optional `cores`. Content identifies a single file, arcade archive, DOS bundle and optional internal executable, or a project. RPG Maker projects select the actual one of seven engine implementations. Per-core rules contain declared Target options, arcade Parent logical paths and an optional `romSet` short name from that core’s paired DAT. `cores[coreId].romSet` stays inside the existing game JSON and cannot be borrowed by another core. BIOS file IDs, installation state, import batches, deployment revisions and authorization credentials never enter this JSON.
 
@@ -13,6 +13,8 @@ ZIP member names use explicit UTF-8 or a CRC-verified Info-ZIP Unicode Path fiel
 ROM identity is calculated from the entire Game active file set, including Parent files needed by any configured core. A single non-project ROM uses its raw SHA-256. Projects, including singleton trees, and multi-file content use the canonical sorted logical path, byte size and SHA-256 tree encoding. Media rows remain outside this set. Selecting another core does not change the Game content identity.
 
 BIOS requirements have stable explicit keys, known size and digest facts, delivery paths and activation options. Requirements share a file only where declarations explicitly share the same key. A scan matches known digests or an unambiguous declared name/path when no digest is known; hosts skip ambiguous missing requirements. Arcade DAT facts inspect actual ZIP members, accept merged game content and identify missing Parent sets even if the game rules omit them. Required BIOS and ROM-bearing device firmware are always delivered independently according to the selected core's DAT, even when matching firmware members are embedded in the game or Parent archive. The compressed fact table retains each pinned source digest in `src/runtime/arcade-provenance.json`; it contains metadata, never ROM or firmware bytes.
+
+`python3 scripts/arcade-facts.py --refresh --dat CORE=PATH` regenerates required ROM facts and searchable labels from the exact DAT digest pinned in `src/runtime/arcade-provenance.json`. MAME and other XML DAT generators share optional/default BIOS/NO_DUMP semantics; refresh never imports DAT into a database. FBNeo's paired required-only DAT excludes BRF_OPT at export.
 
 When adding native MAME drivers, run `scripts/mame-facts.py` against the clean
 PFB core candidate. It verifies the generated DAT and build metadata, updates
@@ -55,6 +57,10 @@ Commands read one bounded JSON request on stdin and write one JSON result to std
 - Parent dependencies use `EXTERNAL_FILE_SET`: each original archive has its own size, SHA and canonical virtual filename. Adapters mount these bytes directly; the host never merges or repackages Parent ZIPs.
 - `batch-identity` / `batch-restorable`: process up to 10,000 items in one invocation; list identity does not assemble BIOS, Parent or playable resources.
 - `bios-requirements` / `bios-identify`: resolve declarations or identify exact immutable bytes and archive members.
+- `batch-content-bios-requirements`: inspect up to 100 ordered items with `directory`, `config`, `files`, host-owned `locators`, optional installed `biosFiles`, and an optional allowed `coreId` (directory default otherwise). Each result has `{biosRequirements, missingRomMembers, crcWarnings, error}`; arrays are always present and errors are stable codes.
+- `dos-entry-candidates`: accepts `config`, immutable `files` and host-owned `locators`, then returns `{entries: string[]}` from the selected DOS ZIP/DOSZ archive. Entries retain their complete safe paths, include `.exe`, `.com` and `.bat` without case restrictions, and are deduplicated and sorted by UTF-8 path. The query ignores any existing `entryPath` and does not prepare a Run, so a replaced archive can offer new choices even when its previous program is absent.
+
+A checkpoint availability with `requiredAction: "SELECT_PROGRAM"` tells the host to show program selection guidance. Provider-private Target options are interpreted only inside the Provider.
 
 The same executable accepts `--serve` for one shared persistent host process. Each newline-delimited request is exactly `{id, command, input}`; id is a nonnegative safe integer or 1–128 printable ASCII characters without spaces, and input is an object. Each reply is `{id, result}` or `{id, error}` and may arrive out of request order. The Go host serializes stdin writes and dispatches stdout replies by unique ID, admitting at most 32 concurrent calls including queue time in deadlines. The CLI runs at most four tasks and accepts at most 32 running/queued requests, with 64 MiB individual message and aggregate queued input/output bounds. Its single stdout writer respects backpressure. `{cancel: id}` cancels only that request; late replies are ignored by the host. Domain errors preserve other requests. Oversized input or a broken transport ends the process, fails pending calls, and a subsequent call starts a fresh process without replay. EOF waits for final queued work. DAT first loads use shared Promises and retain one parsed catalog per process. Parent delivery performs no archive assembly in the CLI. The process owns no sessions, durable queues, authorization or network endpoint.
 
@@ -65,6 +71,10 @@ Provider release builders and the PFB watcher call `fingerprintProvider` from `s
 Unit and build gates validate this contract and all retained adapters. Product acceptance remains a separate per-binding exercise: real review and play, frame/input evidence, declared checkpoint semantics, a different run's restore and post-restore input. Product evidence must match the current Provider Bundle and Module digests as well as the core fingerprint; save compatibility alone cannot carry an old runtime's PASS into a new build. Isolation URL loading and loss-of-context draft persistence need actual browser and host fault evidence. A component test, missing-material annotation or declaration count is never a product pass.
 
 ### Arcade review CRC warnings
+
+The batch review query reads entry/selected Parent ZIP directories and installed firmware evidence against the paired DAT. Required game/Parent/BIOS gaps or wrong sizes prevent publication; named, correctly sized CRC differences remain warnings for manual approval and optional trial play. `optional` and NO_DUMP entries are excluded; BAD_DUMP with a known CRC remains required. Firmware ownership is separate, unused ancestor ROMs are not required, and each core uses only its own saved `romSet`.
+
+These completeness facts are audit-only: `prepareRuntime` retains its existing launch checks. Review never assembles resources, rewrites original archives, or requires a browser trial. Failed inspection is unknown, never an empty successful result.
 
 `prepareRuntime` and `contentBIOSRequirements` compute `crcWarnings` from the
 current game, explicitly bound Parent and BIOS archives. Named members with the

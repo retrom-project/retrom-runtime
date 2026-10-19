@@ -1,37 +1,22 @@
-# Target Documentation
+# Documentation
 
-This directory contains detailed documentation for individual runtime targets.
+Start with the [project overview](../README.md) for the library's role and integration outline.
+
+The complete [supported platforms and cores](supported-platforms-and-cores.md) catalog lists every registered platform, core, Provider Target and save type. It is generated from the current runtime catalog; product acceptance evidence remains separate.
 
 ## Target Guides
 
-- [RPG Maker MV desktop plugins](targets/rpgmaker-mv.md)
-- [Uzebox / Uzem](targets/uzebox.md)
-- [Pokémon Mini / GBE+](targets/gbe-pokemini.md)
-- [PC-98 / NP2kai](targets/np2kai-pc98.md)
-- [Play! PS2](targets/play-ps2.md)
-- [EmulatorJS Single-File Cores](targets/emulatorjs-single-file.md)
-- [EmulatorJS bsnes](targets/emulatorjs-bsnes.md)
-- [EmulatorJS PSP](targets/emulatorjs-psp.md)
-- [Flash / Ruffle](targets/flash-ruffle.md)
-- [ScummVM](targets/scummvm.md)
-- [Java ME](targets/j2me.md)
-- [TIC-80 and FAKE-08](targets/tic80-fake08.md)
-- [Dreamcast / Flycast](targets/dreamcast.md)
-- [OpenBOR](targets/openbor.md)
-- [PX68K (Sharp X68000)](targets/px68k.md)
-- [MSX / WebMSX](targets/msx-webmsx.md)
-- [Intellivision](targets/intellivision.md)
-- [PC-88 / QUASI88](targets/pc88-quasi88.md)
-- [NeoCD](targets/neocd.md)
-- [Cave Story / NXEngine](targets/nxengine.md)
-- [PSP / PPSSPP](targets/ppsspp.md)
-
-- [Daphne](targets/daphne.md)
-- [MAME driver-family targets](targets/mame-apple2.md)
+The [Target guide index](targets/README.md) groups every native runtime and the EmulatorJS integrations by their content and execution model. Start there for game formats, firmware, browser requirements, controls and save behavior. The generated catalog above remains the complete platform/core/Target inventory.
 
 ## Architecture
 
+- [Runtime configuration and offline host tool](runtime-module.md)
 - [Provider Module V1](provider-module-v1.md)
 - [Content I/O v1](content-io.md)
+- [Standard gamepad and touch input](input-mapping.md)
+
+## Development
+
+- [Development and releases](development.md)
 - [Adding and Integrating a Core](adding-a-core.md)
 - [Maintaining Upstream Forks](maintaining-forks.md)

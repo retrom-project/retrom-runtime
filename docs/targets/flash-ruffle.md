@@ -6,7 +6,7 @@ AIR packages are not supported by this Target. Script access, URL opening and mo
 are disabled. Compatibility with a particular Flash API/game must be verified separately.
 
 The fork ABI is `ruffle-host-v1`. Instance-owned SharedObject storage replaces localStorage;
-the stable movie URL uses the content digest, not a Launch ID. `ruffle-sharedobjects-v1` is a
+the stable movie URL uses the content digest, not a Launch ID. `ruffle-sharedobjects-v1-storage-v1` is the public single-gzip format for a
 native `GAME_SAVE` envelope, not an instant execution snapshot: the game must actually write
 SharedObjects before a changed payload can be exported. It allows 128 keys, 4 MiB native data
 and an 8 MiB encoded envelope. Saves are installed before load and never implicitly restored.
@@ -29,4 +29,4 @@ The provider pins the maintained fork release `retrom-core-ge46d1642fb67-r2` in 
 Runtime scripts consume its published assets and never compile the core. Local core changes require
 an explicit fork build in the same PFB followed by `candidate:build`; overrides retain the closed
 candidate inventory checks and are rejected by formal builds. Product acceptance belongs to the
-Host's `ACC-FLASH-001`.
+consuming host's actual import/play/save/restore checks.

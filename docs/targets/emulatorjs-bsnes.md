@@ -1,6 +1,6 @@
 # EmulatorJS bsnes
 
-The optional bsnes SNES target uses the pinned EmulatorJS 4.3.0-pre frontend and
+The bsnes SNES Target uses the pinned EmulatorJS 4.3.0-pre frontend and
 `retrom-project/bsnes-libretro` release `retrom-core-g4b344745e387-r1`.
 Its Asyncify fiber and native callback bridge support asynchronous instant snapshots.
 The distinct `bsnes-state-v1-storage-v1` format prevents exchanging incompatible

@@ -1,137 +1,73 @@
 # retrom-runtime
 
-Host-independent browser library and release bundle for retro game runtimes. It owns runtime lifecycle, adapters, checkpoint codecs, bridge assets and pinned core release inputs. It owns game-specific configuration, implementation selection, content identities and dependency declarations. Host applications own users, databases, review, storage and HTTP authorization.
+A shared runtime for emulators and game engines in the browser.
+
+retrom-runtime is an open-source TypeScript project for developers building web applications that play retro games. It brings EmulatorJS and independent Web/Wasm engines behind one player interface, so an application can support multiple systems through the same integration.
+
+Your application provides the interface, game library, authorization and persistent storage. retrom-runtime handles game configuration, engine selection, content loading and the player lifecycle.
+
+[Supported platforms and cores](docs/supported-platforms-and-cores.md) · [Documentation](docs/README.md) · [Releases](https://github.com/retrom-project/retrom-runtime/releases)
+
+## What it provides
+
+- **A shared player interface** for starting and stopping games, input, pause, screenshots and audio, with explicit capabilities for each runtime.
+- **A platform and core catalog** that connects supported systems and game formats to their runtime implementations.
+- **Save and restore contracts** for both instant checkpoints and game-native saves, including content identity and format validation.
+- **Managed content loading** with bounded reads, loading progress and persistent browser caching.
+- **An offline host tool** for game configuration, dependency discovery and launch preparation.
+- **Versioned release bundles** with pinned core assets, integrity metadata and matching host tools.
+
+The [support catalog](docs/supported-platforms-and-cores.md) lists every platform, core, Target and save type. Individual [Target guides](docs/README.md#target-guides) describe supported content, controls and browser requirements.
+
+## How it fits into an application
+
+| Component | Role |
+| --- | --- |
+| Browser Provider | Runs the selected engine and exposes the shared player interface. |
+| Offline host tool | Interprets game files and prepares configuration, dependencies and launch resources. |
+| Host application | Supplies the UI, authorized content access and durable save storage. |
+
+The browser and host tool consume the same runtime declarations. Engine-specific rules stay in the runtime, while the application integrates the public interfaces.
+
+## Getting started
+
+1. Choose a version from [GitHub Releases](https://github.com/retrom-project/retrom-runtime/releases). Use the Provider bundles and offline host tool from that same release; `runtime-inputs.json` describes the matching artifacts and their checksums.
+2. Follow the [runtime configuration guide](docs/runtime-module.md) to inspect the catalog and prepare a game's launch configuration and resources.
+3. Follow the [Provider integration guide](docs/provider-module-v1.md) to create a browser runtime, mount it, handle player events and connect save storage.
+
+The offline host tool requires Node.js 24. Browser features and firmware requirements depend on the selected Target. Release artifacts are distributed through GitHub; this repository is not published to npm.
 
 ## Documentation
 
-Supported targets, Provider Module architecture and core integration guides are maintained in the [docs](docs/) directory.
+| Guide | Contents |
+| --- | --- |
+| [Supported platforms and cores](docs/supported-platforms-and-cores.md) | Complete catalog, core mappings and save types |
+| [Runtime configuration](docs/runtime-module.md) | Content interpretation, dependencies, identities and the offline host tool |
+| [Provider integration](docs/provider-module-v1.md) | Browser API, lifecycle, capabilities and host interfaces |
+| [Content I/O](docs/content-io.md) | Resource loading, caching and content bridges |
+| [Development and releases](docs/development.md) | Local setup, checks and release artifacts |
 
-Game configuration, fingerprints, dependency preparation and the offline host tool are described in [Runtime module](docs/runtime-module.md). Managed game acquisition and cache/bridge ownership are described in [Content I/O v1](docs/content-io.md).
-
-## Provider Module V1
-
-Hosts integrate the generated Provider Bundle. A Bundle exports one `client.mjs`:
-
-```ts
-export const providerId = "retrom-runtime";
-export const providerVersion = "0.46.0"; // derived from release tag v0.46.0
-export const providerApiVersion = 1;
-export async function createRuntime(
-  value: unknown,
-  host: RuntimeHostV1,
-): Promise<PlayerRuntimeV1>;
-```
-
-The host validates a Launch Envelope V1, verifies the module URL and SHA-256 against the active Bundle, imports the module, checks the exported identity and calls `createRuntime`.
-
-## Release versions
-
-The immutable GitHub tag is the only release version source. Tag `v0.46.0` produces both `retrom-runtime-provider-0.46.0.tar.gz` and `emulatorjs-provider-0.46.0.tar.gz`, plus an offline `retrom-runtime-host-tool-0.46.0.tar.gz`; manifests, client exports and release metadata all use `0.46.0`. There is no maintained package version or per-Provider version in source. The repository is private to npm publishing; GitHub archives are the release artifacts.
-
-Formal builds require a validated annotated tag at the released commit and `RETROM_PROVIDER_BUILD_MODE=release`. Untagged candidate builds use `0.0.0-dev`. Every build emits `runtime-inputs.json` with the actual source-tree SHA, offline host tool and both verified Provider archive/client hashes. Candidates have `release: null`; tagged releases include the real tag and commit. PFB clients receive the installed base's verified manifest version.
-
-Transport the host-tool archive and both Provider archives as three flat basenames alongside `runtime-inputs.json`. Provider records retain their `providerId/archive` paths; consumers take the validated basename for local-directory or HTTPS transport. The tracked descriptor fixes identity; a transport URL does not select hashes or source.
+See the [documentation index](docs/README.md) for Target-specific guides and core maintenance.
 
 ## Development
+
+Use Node.js 24 and the npm version recorded in [package.json](package.json).
 
 ```bash
 npm ci
 npm run lint
 npm run typecheck
 npm test
-npm run build
 npm run package:check
+npm run docs:platforms:check
 ```
 
-Before publishing a release tag, also run:
+`npm test` builds the runtime before running tests. See [Development and releases](docs/development.md) for Provider packaging and release checks.
 
-```bash
-npm run provider:input:check
-npm run provider:build
-npm run provider:check
-npm run release:build
-```
+## Contributing
 
-The ONS checkpoint implementation is pinned to the published immutable
-`retrom-core-0.7.7beta-r6` release. VecX is pinned to
-`retrom-core-g8f671cc9d737-r2`. Normal builds download and verify the declared
-release assets; no unpublished core archive transport is needed. The ONS
-checkpoint-ready JavaScript binding is checked against the actual Wasm export
-before packaging. Local PFB core candidates remain explicit development inputs
-and do not replace these release pins.
-
-For PFB upstream-sync validation, Butterscotch candidates include their metadata
-parser pair for integrity verification, but only the game runner and license
-override the installed Provider. The metadata tools are outside its public asset
-closure. EasyRPG candidates use the existing two-file JS/Wasm release contract;
-the installed Provider retains its separately collected license notices. These
-local inputs do not change release pins or Target declarations.
+Bug reports, integration feedback and pull requests are welcome through [Issues](https://github.com/retrom-project/retrom-runtime/issues) and [Pull requests](https://github.com/retrom-project/retrom-runtime/pulls). For a new runtime integration, start with [Adding a core](docs/adding-a-core.md) and [Maintaining upstream forks](docs/maintaining-forks.md).
 
 ## License
 
-MIT
-
-### Host keyboard and program selection
-
-Each Target owns its host shortcut policy through `hostKeyboardShortcuts`. The public
-`PlayerRuntimeV1.getInputCapabilities()` exposes the allowed `PAUSE` / `MENU` shortcuts;
-`setHostShortcutPolicy()` selects explicit keyboard bindings and `HOST_SHORTCUT` events cross same-origin
-and isolated game windows uniformly. Null policy disables interception; see the Provider Module guide.
-The Host leaves undeclared shortcuts with the game and configures null while its overlays own input.
-
-J2ME standard gamepads use the following phone actions. The Provider owns gamepad polling in the game frame and preserves the Host's input filter; the core owns physical keyboard input.
-
-| Standard control | Phone action |
-| --- | --- |
-| D-pad / left stick | Up, down, left, right |
-| A | Fire / confirm |
-| B / Select | Right soft key |
-| X / Start | Left soft key |
-| Y | 1 |
-| L1 / R1 | 3 / 7 |
-| L2 / R2 | 9 / 0 |
-| L3 / R3 | * / # |
-
-Direction and Fire actions are separate from numeric keys 2, 4, 6, 8 and 5. Physical keyboard digits 0–9, star, hash and the core's existing soft-key bindings remain available. Start+Select chords remain reserved by the Host filter; gamepad keys are released on suppression, focus loss, pause, disconnection and exit.
-
-The offline host tool's `batch-content-bios-requirements` command accepts up to 100 ordered items with `directory`, `config`, `files`, host-owned `locators`, optional installed `biosFiles`, and an optional allowed `coreId` (directory default otherwise). Each result has `{biosRequirements, missingRomMembers, crcWarnings, error}`; arrays are always present and errors are stable codes. Review reads entry/selected Parent ZIP directories and installed firmware evidence against the paired DAT. Required game/Parent/BIOS gaps or wrong sizes prevent publication; named, correctly sized CRC differences remain warnings for manual approval and optional trial play. `optional` and NO_DUMP entries are excluded; BAD_DUMP with a known CRC remains required. Firmware ownership is separate, unused ancestor ROMs are not required, and each core uses only its own saved `romSet`. These completeness facts are audit-only: `prepareRuntime` retains its existing launch checks. Review never assembles resources, rewrites original archives, or requires a browser trial. Failed inspection is unknown, never an empty successful result.
-
-`python3 scripts/arcade-facts.py --refresh --dat CORE=PATH` regenerates required ROM facts and searchable labels from the exact DAT digest pinned in `arcade-provenance.json`. MAME and other XML DAT generators share optional/default BIOS/NO_DUMP semantics; refresh never imports DAT into a database. FBNeo's paired required-only DAT excludes BRF_OPT at export.
-
-EmulatorJS launches collect bounded native output with RetroArch logging enabled independently of the EmulatorJS debug console. The same diagnostic buffer is used by MAME Current and preserves required-member and fatal messages through subsequent progress output. Copyright banners, ordinary notices and recoverable fallbacks are excluded. Fatal events retain sanitized core reasons and runtime traces after teardown; host presentation should show the failure category and `CORE` evidence, keeping `RUNTIME` traces in diagnostics. Collection does not change DAT acceptance, core bytes, game files, or checkpoint identity.
-
-`dos-entry-candidates` accepts `config`, immutable `files` and host-owned `locators`, then returns `{entries: string[]}` from the selected DOS ZIP/DOSZ archive. Entries retain their complete safe paths, include `.exe`, `.com` and `.bat` without case restrictions, and are deduplicated and sorted by UTF-8 path. The query ignores any existing `entryPath` and does not prepare a Run, so a replaced archive can offer new choices even when its previous program is absent.
-A checkpoint availability with `requiredAction: "SELECT_PROGRAM"` tells the host to show
-program selection guidance. Provider-private Target options are interpreted only inside
-the Provider.
-
-## Siglus browser runtime
-
-The `siglus` platform/core/Target accepts an original directory containing
-`Scene.pck` and `Gameexe.dat` (or `Gameexe.ini`). The `language` option is
-explicit: configuration selects `chs` when both `scene.chs` and `gameexe.chs`
-exist at the selected root, otherwise `original`. CHS overlays those resource
-pairs and matching `.g01` images without modifying source files. Patch DLLs
-are never executed. Games requiring other patch behavior need separate validation.
-
-The Target supports `ON_DEMAND_AND_PRELOAD`, using the same public Content I/O
-Range readers and persistent cache as RPGMaker. Mounting the directory registers
-only paths and sizes. Native file reads request bounded ranges as needed; explicit
-full preload fills the same cache before startup. The core's synchronous file API
-waits through WebAssembly JSPI (`Suspending` and `promising`), which the browser
-must support. The bridge implements no separate downloader or resource cache.
-Individual compressed files are still read whole by native decoders; embedded movie
-PCM has a 64 MiB cap. Movie video frames are decoded incrementally.
-Standard controls use the shared pointer cursor (directions
-and left stick move, A confirms through the left mouse button, B uses right mouse).
-
-Checkpoint semantics are `GAME_SAVE`: save using the game's native menu, synchronize
-the complete save archive, import before a new instance starts, and load using the
-game's menu. Settings alone do not qualify as progress. The adapter uses a fresh
-per-instance overlay; the public Host owns user isolation, persistence and one gzip
-layer. An acknowledgement applies only to the exported revision after persistence.
-
-The core comes from the immutable `retrom-core-g5f358ef1360b-r2` release of
-`retrom-project/siglus_rs`. The source declaration pins the commit and every asset's
-size and SHA-256. Complete dependency notices accompany the Provider; the core
-Release also provides the exact corresponding source and rebuild/relink inputs.
+retrom-runtime is licensed under the [MIT License](LICENSE). Third-party runtimes retain their own licenses; see [Third-party notices](THIRD_PARTY_NOTICES.md) and the notices shipped with each release.

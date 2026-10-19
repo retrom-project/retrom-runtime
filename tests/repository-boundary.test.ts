@@ -111,8 +111,8 @@ describe("independent package boundary", () => {
     expect(sources.developmentInputs ?? []).toEqual([]);
     const siglus = sources.upstreamReleases.find((release: {id: string}) => release.id === "siglus");
     expect(siglus).toEqual(expect.objectContaining({
-      repository: "https://github.com/retrom-project/siglus_rs", tag: "retrom-core-g5f358ef1360b-r3",
-      commit: "e312024961156a848106d02d3a21477c20f22a5b", adapterAbi: "siglus-host-v1",
+      repository: "https://github.com/retrom-project/siglus_rs", tag: "retrom-core-g5f358ef1360b-r4",
+      commit: "b2aafb6fed6ffb461151a2fe759b72e2c03678b1", adapterAbi: "siglus-host-v1",
     }));
     const candidate = {id: siglus.id, repository: siglus.repository, upstreamCommit: siglus.upstreamCommit,
       adapterAbi: siglus.adapterAbi, assets: siglus.assets.map(

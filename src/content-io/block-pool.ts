@@ -4,7 +4,7 @@ import {checkSignal} from "./abort.js";
 import {BufferCredits} from "./credits.js";
 import {ContentIOError, fail, toContentIOError} from "./errors.js";
 import {blockRange, fetchRangeBlock, type ContentObjectState} from "./http.js";
-import {fetchWindow, nextFetchWindow, MAX_FETCH_BYTES, windowScratchBytes, type FetchPolicy, type FetchWindow} from "./fetch-policy.js";
+import {fetchWindow, nextFetchWindow, windowScratchBytes, type FetchPolicy, type FetchWindow} from "./fetch-policy.js";
 import {BLOCK_BYTES} from "./source.js";
 import {ByteLRU} from "./lru.js";
 import {BlockScheduler} from "./scheduler.js";
@@ -70,7 +70,11 @@ export class BlockPool {
     if (!window || !this.scheduler.canPrefetch) {return;}
     const taskKey = this.taskKey(object, window.firstBlock, window);
     if (this.scheduler.has(taskKey) || this.cached(object, window)) {return;}
-    const release = this.credits.tryReserveScratch(windowScratchBytes(window.length), windowScratchBytes(MAX_FETCH_BYTES) + BLOCK_BYTES);
+    // Leave this Session's largest demand window (network window or whole small
+    // file, with its native tee) and one output block admissible.
+    const {networkWindowBytes, smallFileThresholdBytes} = this.windows.policy;
+    const demand = windowScratchBytes(Math.max(networkWindowBytes, smallFileThresholdBytes));
+    const release = this.credits.tryReserveScratch(windowScratchBytes(window.length), demand + BLOCK_BYTES);
     if (!release) {return;}
     const generation = object.state.generation;
     try {

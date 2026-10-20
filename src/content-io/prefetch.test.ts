@@ -114,6 +114,19 @@ it("prefetch is skipped under buffer pressure, leaving demand able to read", asy
   await reader.readInto(B, new Uint8Array(1)); await tick(); expect(load).toHaveBeenCalledTimes(1);
   release(); await reader.readInto(B + 1, new Uint8Array(1)); await tick(); expect(load).toHaveBeenCalledTimes(2);
 });
+it.each([[4, 2], [6, 1]])("a %i-block window still prefetches with %i output blocks in flight", async (blocks, outputs) => {
+  const {reader, pool, load} = setup(undefined, 20 * B + 17, blocks * B);
+  const releases = await Promise.all(Array.from({length: outputs}, () => pool.credits.reserve(B, "OUTPUT")));
+  await reader.readInto((blocks - 1) * B, new Uint8Array(1)); await tick();
+  expect(load.mock.calls.map(([, w]) => [w.start, w.length])).toEqual([[0, blocks * B], [blocks * B, blocks * B]]);
+  for (const release of releases) {release();}
+});
+it("windows whose tee scratch cannot coexist with a demand window skip prefetch and still read", async () => {
+  const {reader, load} = setup(undefined, 20 * B + 17, 8 * B);
+  await reader.readInto(7 * B, new Uint8Array(1)); await tick(); expect(load).toHaveBeenCalledTimes(1);
+  const bytes = new Uint8Array(1); await reader.readInto(8 * B, bytes);
+  expect(bytes[0]).toBe(9); expect(load).toHaveBeenCalledTimes(2);
+});
 it("first read [300,900) KiB loads two demand windows and only the adjacent [1024,1536) KiB prefetch", async () => {
   const {reader, load} = setup();
   const offset = 300 * 1024, end = 900 * 1024, bytes = new Uint8Array(end - offset);

@@ -5,6 +5,7 @@ import {basename, join, resolve} from "node:path";
 import {execFile} from "node:child_process";
 import {promisify} from "node:util";
 import {verifyProviderBundle} from "./provider-bundle.mjs";
+import {verifyProviderChunks} from "./provider-chunks.mjs";
 import {versionFromTag} from "./release-version.mjs";
 
 const repository = "https://github.com/retrom-project/retrom-runtime";
@@ -23,9 +24,13 @@ export async function writeRuntimeInputs({outputRoot, sourceTreeSha256, release 
   const hostTool = JSON.parse(stdout);
   if (hostTool.schemaVersion !== 1 || hostTool.sourceTreeSha256 !== sourceTreeSha256) {invalid();}
   const records = [];
+  const transport = [tool];
   for (const input of providers) {
     await verifyProviderBundle(input.bundleRoot);
-    await verifyArchive(input.archivePath, input.bundleSizeBytes, input.bundleSha256);
+    const manifestPath = input.chunks.manifestPath;
+    await verifyArchive(manifestPath, input.chunks.manifestSizeBytes, input.chunks.manifestSha256);
+    const verified = await verifyProviderChunks({bundleRoot: input.bundleRoot, manifestPath, chunkRoot: input.chunkRoot});
+    if (verified.bundleSha256 !== input.bundleSha256) {invalid();}
     const manifest = JSON.parse(await readFile(join(input.bundleRoot, "provider.json"), "utf8"));
     const integrity = JSON.parse(await readFile(join(input.bundleRoot, "integrity.json"), "utf8"));
     const provenance = JSON.parse(await readFile(join(input.bundleRoot, "provenance.json"), "utf8"));
@@ -34,18 +39,20 @@ export async function writeRuntimeInputs({outputRoot, sourceTreeSha256, release 
     if (!client || !digest.test(client.sha256) || manifest.clientModulePath !== "client.mjs") {invalid();}
     const id = manifest.providerId, version = manifest.providerVersion;
     if (!["emulatorjs", "retrom-runtime"].includes(id) || records.some(record => record.providerId === id) ||
-      basename(input.archivePath) !== `${id}-provider-${version}.tar.gz` || hostTool.version !== version) {invalid();}
+      basename(manifestPath) !== `${id}-chunks-${version}.json` || hostTool.version !== version) {invalid();}
     if (release && `v${version}` !== release.tag) {invalid();}
-    records.push({archive: `${id}/${basename(input.archivePath)}`, bundleDirectory: `${id}/${id}-${version}`,
-      bundleSha256: input.bundleSha256, bundleSizeBytes: input.bundleSizeBytes, fileCount: input.fileCount,
-      manifestSha256: input.manifestSha256, moduleSha256: client.sha256, providerId: id,
+    records.push({bundleSha256: input.bundleSha256,
+      chunkManifest: {asset: basename(manifestPath), sha256: input.chunks.manifestSha256, sizeBytes: input.chunks.manifestSizeBytes},
+      fileCount: input.fileCount, manifestSha256: input.manifestSha256, moduleSha256: client.sha256, providerId: id,
       providerVersion: version, unpackedSizeBytes: input.unpackedSizeBytes});
+    // Chunks and their manifest are published flat next to runtime-inputs.json as release assets.
+    const chunkManifest = JSON.parse(await readFile(manifestPath, "utf8"));
+    transport.push({archivePath: manifestPath, sizeBytes: input.chunks.manifestSizeBytes, sha256: input.chunks.manifestSha256},
+      ...chunkManifest.chunks.map(chunk => ({archivePath: join(input.chunkRoot, chunk.archive),
+        sizeBytes: chunk.archiveSizeBytes, sha256: chunk.archiveSha256})));
   }
   records.sort((left, right) => left.providerId.localeCompare(right.providerId));
-  for (const archive of [tool, ...providers.map(input => ({archivePath: input.archivePath,
-    sizeBytes: input.bundleSizeBytes, sha256: input.bundleSha256}))]) {
-    await publishTransportArchive(outputRoot, archive);
-  }
+  for (const archive of transport) {await publishTransportArchive(outputRoot, archive);}
   const descriptor = {schemaVersion: 1, repository, sourceTreeSha256, release, tool: toolRecord, providers: records};
   await writeFile(join(outputRoot, "runtime-inputs.json"), `${JSON.stringify(descriptor, null, 2)}\n`);
   return descriptor;

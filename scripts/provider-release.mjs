@@ -3,11 +3,12 @@ import {createHash} from "node:crypto";
 import {spawnSync} from "node:child_process";
 import {lstatSync, readFileSync, readlinkSync} from "node:fs";
 import {readFile, rm, writeFile} from "node:fs/promises";
-import {dirname, join, relative, resolve} from "node:path";
+import {basename, dirname, join, relative, resolve} from "node:path";
 import {fileURLToPath, pathToFileURL} from "node:url";
 
 import {emulatorJsCoreInputs, readPinnedEmulatorJsCoreCandidate} from "./emulatorjs-core-candidate.mjs";
 import {verifyProviderBundle} from "./provider-bundle.mjs";
+import {chunkProviderBundle, verifyProviderChunks} from "./provider-chunks.mjs";
 import {
   buildEmulatorJsProviderBundle,
   buildRetromRuntimeProviderBundle,
@@ -62,13 +63,19 @@ export async function buildCurrentProviderBuild(input = {}) {
     sourceRoot: resolve(emulatorJsSourceRoot),
     sourceTreeSha256: capturedSource,
   });
+  for (const result of [retrom, emulatorjs]) {
+    const provider = JSON.parse(await readFile(join(result.bundleRoot, "provider.json"), "utf8"));
+    result.chunkRoot = join(outputRoot, provider.providerId, "chunks");
+    result.chunks = await chunkProviderBundle({bundleRoot: result.bundleRoot, providerId: provider.providerId,
+      providerVersion: provider.providerVersion, outputRoot: result.chunkRoot});
+  }
   const providers = [releaseMetadata(outputRoot, retromManifest, retrom),
     releaseMetadata(outputRoot, emulatorManifest, emulatorjs)]
     .sort((left, right) => Buffer.from(left.providerId).compare(Buffer.from(right.providerId)));
   if (sourceTreeSha256() !== capturedSource) {throw new Error("RUNTIME_SOURCE_CHANGED");}
   const metadata = createProviderBuildMetadata(providers, capturedSource);
   await writeFile(join(outputRoot, buildMetadataName), `${JSON.stringify(metadata, null, 2)}\n`);
-  return {archivePath: retrom.archivePath, metadata, outputRoot, providers: {emulatorjs, retromRuntime: retrom}};
+  return {metadata, outputRoot, providers: {emulatorjs, retromRuntime: retrom}};
 }
 
 export async function checkCurrentProviderBuild(input = {}) {
@@ -85,19 +92,23 @@ export async function checkCurrentProviderBuild(input = {}) {
   for (const provider of metadata.providers) {
     validateMetadata(provider);
     const bundleRoot = confined(outputRoot, provider.bundleDirectory);
-    const archivePath = confined(outputRoot, provider.archive);
+    const chunkRoot = confined(outputRoot, provider.chunkDirectory);
+    const manifestPath = join(chunkRoot, provider.chunkManifest.asset);
     await verifyProviderBundle(bundleRoot);
-    const archive = await readFile(archivePath);
-    if (archive.byteLength !== provider.bundleSizeBytes || sha256(archive) !== provider.bundleSha256) {invalid();}
+    const manifestFile = await readFile(manifestPath);
+    if (manifestFile.byteLength !== provider.chunkManifest.sizeBytes || sha256(manifestFile) !== provider.chunkManifest.sha256) {
+      invalid();
+    }
+    const chunks = await verifyProviderChunks({bundleRoot, manifestPath, chunkRoot});
+    if (chunks.bundleSha256 !== provider.bundleSha256) {invalid();}
     const manifest = JSON.parse(await readFile(join(bundleRoot, "provider.json"), "utf8"));
     validateProviderManifest(manifest);
     const manifestBytes = await readFile(join(bundleRoot, "provider.json"));
     if (manifest.providerId !== provider.providerId || manifest.providerVersion !== provider.providerVersion ||
       sha256(manifestBytes) !== provider.manifestSha256) {invalid();}
-    results.push({archivePath, bundleRoot, metadata: provider});
+    results.push({bundleRoot, chunkRoot, metadata: provider});
   }
-  return {archivePath: results.find((result) => result.metadata.providerId === "retrom-runtime")?.archivePath,
-    metadata, outputRoot, providers: results};
+  return {metadata, outputRoot, providers: results};
 }
 
 export function createProviderBuildMetadata(providers, sourceTreeSha256) {
@@ -132,10 +143,11 @@ function validRelease(value) {
 
 function releaseMetadata(outputRoot, manifest, result) {
   return {
-    archive: relative(outputRoot, result.archivePath).replaceAll("\\", "/"),
     bundleDirectory: relative(outputRoot, result.bundleRoot).replaceAll("\\", "/"),
     bundleSha256: result.bundleSha256,
-    bundleSizeBytes: result.bundleSizeBytes,
+    chunkDirectory: relative(outputRoot, result.chunkRoot).replaceAll("\\", "/"),
+    chunkManifest: {asset: basename(result.chunks.manifestPath), sha256: result.chunks.manifestSha256,
+      sizeBytes: result.chunks.manifestSizeBytes},
     fileCount: result.fileCount,
     manifestSha256: result.manifestSha256,
     providerId: manifest.providerId,
@@ -146,13 +158,15 @@ function releaseMetadata(outputRoot, manifest, result) {
 
 function validateMetadata(value) {
   if (!exactKeys(value, [
-    "archive", "bundleDirectory", "bundleSha256", "bundleSizeBytes", "fileCount", "manifestSha256",
+    "bundleDirectory", "bundleSha256", "chunkDirectory", "chunkManifest", "fileCount", "manifestSha256",
     "providerId", "providerVersion", "unpackedSizeBytes",
   ]) || !["emulatorjs", "retrom-runtime"].includes(value.providerId) ||
-    !safeRelative(value.archive) || !safeRelative(value.bundleDirectory) ||
+    !safeRelative(value.bundleDirectory) || !safeRelative(value.chunkDirectory) ||
+    !exactKeys(value.chunkManifest, ["asset", "sha256", "sizeBytes"]) ||
+    value.chunkManifest.asset !== `${value.providerId}-chunks-${value.providerVersion}.json` ||
+    !/^[0-9a-f]{64}$/u.test(value.chunkManifest.sha256) || !positiveInteger(value.chunkManifest.sizeBytes) ||
     !/^[0-9a-f]{64}$/u.test(value.bundleSha256) || !/^[0-9a-f]{64}$/u.test(value.manifestSha256) ||
-    !positiveInteger(value.bundleSizeBytes) || !positiveInteger(value.fileCount) ||
-    !positiveInteger(value.unpackedSizeBytes)) {invalid();}
+    !positiveInteger(value.fileCount) || !positiveInteger(value.unpackedSizeBytes)) {invalid();}
 }
 
 function confined(outputRoot, path) {
@@ -225,6 +239,6 @@ if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1]
   for (const provider of command === "build"
     ? Object.values(result.providers)
     : result.providers) {
-    process.stdout.write(`${command}: ${relative(root, provider.archivePath)}\n`);
+    process.stdout.write(`${command}: ${relative(root, provider.chunkRoot)}\n`);
   }
 }

@@ -97,7 +97,7 @@ for (const definition of runtimeProviders) {
   licenses.set("runtime-fingerprints.json", identityPath);
   for (const [path, source] of coreLicenses) {licenses.set(path, source);}
   const result = await buildProviderBundle({bundleRoot: join(outputRoot, "bundles", definition.providerId),
-    archiveRoot: join(outputRoot, "archives"), manifest, assetSources: assets, licenseSources: licenses,
+    manifest, assetSources: assets, licenseSources: licenses,
     clientModuleBytes: await readFile(client), provenance: {schemaVersion: 1, sourceBundleSha256: original.bundleSha256,
       source: "verified-provider-assets", runtimeCommit: execFileSync("git", ["rev-parse", "HEAD"], {cwd: root, encoding: "utf8"}).trim(),
       runtimeSourceTreeSha256: capturedSource, coreInputs}});
@@ -109,7 +109,7 @@ for (const definition of runtimeProviders) {
     bundleSha256: result.bundleSha256, manifestSha256: result.manifestSha256, fileCount: result.fileCount, unpackedSizeBytes: result.unpackedSizeBytes};
   installationProofs.push({path: join(outputRoot, "installed", installationPath, ".installation.json"), value: installationProof});
   providers.push({providerId: definition.providerId, providerVersion: manifest.providerVersion, providerApiVersion: 1,
-    installationPath, bundleSha256: result.bundleSha256, bundleSizeBytes: result.bundleSizeBytes,
+    installationPath, bundleSha256: result.bundleSha256,
     clientModulePath: "client.mjs", moduleSha256: await fileHash(client), manifestSha256: result.manifestSha256,
     fileCount: result.fileCount, unpackedSizeBytes: result.unpackedSizeBytes,
     targets: manifest.targets.map(target => ({id: target.id, checkpoint: target.checkpoint}))});

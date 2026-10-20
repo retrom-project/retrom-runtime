@@ -40,7 +40,6 @@ export async function buildRetromRuntimeProviderBundle(input) {
       outfile: clientPath,
     });
     return await buildProviderBundle({
-      archiveRoot: input.outputRoot,
       assetSources,
       bundleRoot: join(input.outputRoot, `${input.manifest.providerId}-${input.manifest.providerVersion}`),
       clientModuleBytes: await readFile(clientPath),
@@ -90,7 +89,6 @@ export async function buildEmulatorJsProviderBundle(input) {
       outfile: clientPath,
     });
     return await buildProviderBundle({
-      archiveRoot: input.outputRoot,
       assetSources,
       bundleRoot: join(input.outputRoot, `${input.manifest.providerId}-${input.manifest.providerVersion}`),
       clientModuleBytes: await readFile(clientPath),

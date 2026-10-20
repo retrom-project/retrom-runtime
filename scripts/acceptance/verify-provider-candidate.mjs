@@ -28,8 +28,8 @@ for (const provider of active.providers) {
       provider.fileCount !== expectedProof.fileCount || provider.unpackedSizeBytes !== bytes ||
       await hash(join(root, "provider.json")) !== provider.manifestSha256 ||
       await hash(join(root, "client.mjs")) !== provider.moduleSha256) {throw new Error("CANDIDATE_PROOF_INVALID");}
-  const archive = join(candidate, "archives", `${provider.providerId}-provider-${provider.providerVersion}.tar.gz`);
-  if (await hash(archive) !== provider.bundleSha256 || (await lstat(archive)).size !== provider.bundleSizeBytes) {throw new Error("CANDIDATE_ARCHIVE_INVALID");}
+  // A bundle is identified by its integrity.json, independently of transport packaging.
+  if (await hash(join(root, "integrity.json")) !== provider.bundleSha256) {throw new Error("CANDIDATE_BUNDLE_INVALID");}
   const base = original.providers.find(item => item.providerId === provider.providerId);
   const before = JSON.parse(await readFile(join(source, "installed", base.installationPath, "integrity.json")));
   const binaryAssets = integrity.files.filter(file => file.path.startsWith("assets/") && /\.(?:wasm|data|xp3)$/u.test(file.path));

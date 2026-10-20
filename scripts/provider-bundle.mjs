@@ -1,5 +1,5 @@
 import {createHash} from "node:crypto";
-import {constants as zlibConstants, gzipSync} from "node:zlib";
+import {constants as zlibConstants, gunzipSync, gzipSync} from "node:zlib";
 import {lstat, mkdir, readFile, readdir, writeFile} from "node:fs/promises";
 import {dirname, isAbsolute, join, parse, relative} from "node:path";
 
@@ -8,7 +8,6 @@ const fileKeys = ["mediaType", "path", "sha256", "sizeBytes"];
 
 export async function buildProviderBundle(input) {
   await createEmptyDirectory(input.bundleRoot);
-  await mkdir(input.archiveRoot, {recursive: true});
   const files = new Map([
     ["client.mjs", Buffer.from(input.clientModuleBytes)],
     ["provider.json", jsonBytes(input.manifest)],
@@ -27,18 +26,14 @@ export async function buildProviderBundle(input) {
       mediaType: providerMediaType(path),
     })),
   };
-  await publish(input.bundleRoot, "integrity.json", jsonBytes(integrity));
+  const integrityBytes = jsonBytes(integrity);
+  await publish(input.bundleRoot, "integrity.json", integrityBytes);
   await verifyProviderBundle(input.bundleRoot);
-  const archiveName = `${input.manifest.providerId}-provider-${input.manifest.providerVersion}.tar.gz`;
-  const archivePath = join(input.archiveRoot, archiveName);
-  await assertAbsent(archivePath);
-  const archive = deterministicGzip(await createTar(input.bundleRoot));
-  await writeFile(archivePath, archive);
+  // integrity.json closes over every path, size, hash and media type, so its
+  // digest identifies the bundle independently of any transport packaging.
   return {
-    archivePath,
     bundleRoot: input.bundleRoot,
-    bundleSha256: sha256(archive),
-    bundleSizeBytes: archive.byteLength,
+    bundleSha256: sha256(integrityBytes),
     fileCount: files.size + 1,
     manifestSha256: sha256(files.get("provider.json")),
     unpackedSizeBytes: [...files.values()].reduce((total, bytes) => total + bytes.byteLength, 0) +
@@ -141,10 +136,56 @@ async function publish(root, path, contents) {
   await writeFile(destination, contents, {flag: "wx"});
 }
 
-async function createTar(root) {
-  const files = await collectFiles(root);
+/** Identity of an installed or built bundle: the digest of its verified integrity.json. */
+export async function providerBundleSha256(bundleRoot) {
+  await verifyProviderBundle(bundleRoot);
+  return sha256(await readFile(join(bundleRoot, "integrity.json")));
+}
+
+/** Deterministic ustar + gzip for regular files given as sorted [path, bytes] entries. */
+export function deterministicTarGz(entries) {
+  const paths = entries.map(([path]) => path);
+  if (!paths.length || !sorted(paths) || paths.some((path) => !safeRelative(path))) {unsafe();}
+  return deterministicGzip(tarBytes(entries));
+}
+
+/** Reads only the exact format written by deterministicTarGz; anything else is rejected. */
+export function readDeterministicTarGz(bytes) {
+  let tar;
+  try {tar = gunzipSync(bytes);} catch {unsafe();}
+  const entries = [];
+  let offset = 0;
+  for (;;) {
+    if (offset + 512 > tar.byteLength) {unsafe();}
+    const header = tar.subarray(offset, offset + 512);
+    if (header.every((value) => value === 0)) {
+      if (offset + 1024 !== tar.byteLength || !tar.subarray(offset).every((value) => value === 0)) {unsafe();}
+      break;
+    }
+    const name = readText(header, 0, 100), prefix = readText(header, 345, 155);
+    const path = prefix ? `${prefix}/${name}` : name;
+    const size = Number.parseInt(readText(header, 124, 12), 8);
+    // The header must be byte-identical to the one the writer emits for this path and size.
+    if (!safeRelative(path) || !Number.isSafeInteger(size) || size < 0 ||
+      Buffer.compare(tarHeader(path, size), header) !== 0) {unsafe();}
+    const start = offset + 512, end = start + size;
+    if (end > tar.byteLength) {unsafe();}
+    entries.push([path, Buffer.from(tar.subarray(start, end))]);
+    offset = end + (512 - size % 512) % 512;
+  }
+  if (!sorted(entries.map(([path]) => path))) {unsafe();}
+  return entries;
+}
+
+function readText(header, offset, length) {
+  const field = header.subarray(offset, offset + length);
+  const end = field.indexOf(0);
+  return field.subarray(0, end === -1 ? length : end).toString("utf8").trim();
+}
+
+function tarBytes(entries) {
   const chunks = [];
-  for (const [path, contents] of sortedEntries(files)) {
+  for (const [path, contents] of entries) {
     chunks.push(tarHeader(path, contents.byteLength), contents);
     const padding = (512 - contents.byteLength % 512) % 512;
     if (padding) {chunks.push(Buffer.alloc(padding));}
@@ -230,6 +271,5 @@ function sortedEntries(map) {return [...map.entries()].sort(([left], [right]) =>
 function sorted(values) {return values.every((value, index) => index === 0 || Buffer.compare(Buffer.from(values[index - 1]), Buffer.from(value)) < 0);}
 function safeRelative(value) {return typeof value === "string" && value.length > 0 && !value.startsWith("/") && !value.includes("\\") && !value.includes("?") && !value.includes("#") && !value.includes("\0") && value.split("/").every((part) => part && part !== "." && part !== "..");}
 function exactKeys(value, expected) {return value && typeof value === "object" && !Array.isArray(value) && JSON.stringify(Object.keys(value).sort()) === JSON.stringify(expected);}
-async function assertAbsent(path) {try {await lstat(path); unsafe();} catch (error) {if (error?.code !== "ENOENT") {throw error;}}}
 function unsafe() {throw new Error("PROVIDER_BUNDLE_UNSAFE");}
 function invalidIntegrity() {throw new Error("PROVIDER_INTEGRITY_INVALID");}

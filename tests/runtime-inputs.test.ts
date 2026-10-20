@@ -6,6 +6,7 @@ import {createHash} from "node:crypto";
 import {execFileSync} from "node:child_process";
 import {afterEach, expect, it} from "vitest";
 import {buildProviderBundle} from "../scripts/provider-bundle.mjs";
+import {chunkProviderBundle} from "../scripts/provider-chunks.mjs";
 import {writeRuntimeInputs} from "../scripts/runtime-inputs.mjs";
 import {buildVersion} from "../scripts/release-version.mjs";
 import {buildRuntimeHostTool} from "../scripts/runtime-host-tool.mjs";
@@ -21,29 +22,37 @@ async function fixture(version = "1.2.3") {
   const providers = [];
   for (const id of ["emulatorjs", "retrom-runtime"]) {
     const license = join(root, `${id}-LICENSE`); await writeFile(license, "MIT");
-    providers.push(await buildProviderBundle({archiveRoot: join(root, "archives"), bundleRoot: join(root, id),
+    const bundle = await buildProviderBundle({bundleRoot: join(root, id),
       clientModuleBytes: Buffer.from(`export const providerId=${JSON.stringify(id)};`),
       assetSources: new Map(), licenseSources: new Map([["licenses/LICENSE", license]]), provenance: {schemaVersion: 1, runtimeSourceTreeSha256: "a".repeat(64)},
       manifest: {schemaVersion: 1, providerId: id, providerVersion: version, providerApiVersion: 1,
-        clientModulePath: "client.mjs", targets: [{assetPaths: []}]}}));
+        clientModulePath: "client.mjs", targets: [{assetPaths: []}]}});
+    const chunkRoot = join(root, `${id}-chunks`);
+    providers.push({...bundle, chunkRoot, chunks: await chunkProviderBundle({bundleRoot: bundle.bundleRoot,
+      providerId: id, providerVersion: version, outputRoot: chunkRoot})});
   }
   const outputRoot = join(root, "out"); await mkdir(outputRoot);
   return {outputRoot, sourceTreeSha256: "a".repeat(64), providers,
     tool: {archivePath: toolPath, sizeBytes: bytes.length, sha256: createHash("sha256").update(bytes).digest("hex")}};
 }
-it("emits one local paired identity from actual archives and verified client bytes", async () => {
+it("emits one local paired identity from actual chunks and verified client bytes", async () => {
   const input = await fixture(), result = await writeRuntimeInputs(input);
   expect(result.release).toBeNull();
-  expect(result.providers.map(record => record.archive)).toEqual([
-    "emulatorjs/emulatorjs-provider-1.2.3.tar.gz", "retrom-runtime/retrom-runtime-provider-1.2.3.tar.gz"]);
-  expect(result.providers.every(record => record.moduleSha256.length === 64)).toBe(true);
+  expect(result.providers.map(record => record.chunkManifest.asset)).toEqual([
+    "emulatorjs-chunks-1.2.3.json", "retrom-runtime-chunks-1.2.3.json"]);
+  expect(result.providers.every(record => record.moduleSha256.length === 64 && !("archive" in record))).toBe(true);
   expect(await readFile(join(input.outputRoot, result.tool.archive))).toEqual(await readFile(input.tool.archivePath));
   for (const provider of input.providers) {
-    expect(await readFile(join(input.outputRoot, provider.archivePath.split("/").at(-1)!))).toEqual(await readFile(provider.archivePath));
+    const manifest = JSON.parse(await readFile(provider.chunks.manifestPath, "utf8")) as {chunks: Array<{archive: string}>};
+    expect(await readFile(join(input.outputRoot, provider.chunks.manifestPath.split("/").at(-1)!)))
+      .toEqual(await readFile(provider.chunks.manifestPath));
+    for (const chunk of manifest.chunks) {
+      expect(await readFile(join(input.outputRoot, chunk.archive))).toEqual(await readFile(join(provider.chunkRoot, chunk.archive)));
+    }
   }
   expect(JSON.parse(await readFile(join(input.outputRoot, "runtime-inputs.json"), "utf8"))).toEqual(result);
 });
-it("rejects a different source claim even when all archive bytes are intact", async () => {
+it("rejects a different source claim even when all chunk bytes are intact", async () => {
   const input = await fixture();
   await expect(writeRuntimeInputs({...input, sourceTreeSha256: "c".repeat(64)})).rejects.toThrow("RUNTIME_INPUTS_INVALID");
   await expect(readFile(join(input.outputRoot, "runtime-inputs.json"))).rejects.toMatchObject({code: "ENOENT"});
@@ -73,7 +82,9 @@ it("uses the existing formal stable/RC tag rules without leading zeroes", async 
 });
 it.each(["tool", "provider", "client"])("rejects changed %s bytes before emitting a trusted pin", async part => {
   const input = await fixture();
-  const path = part === "tool" ? input.tool.archivePath : part === "provider" ? input.providers[0].archivePath :
+  const firstChunk = (JSON.parse(await readFile(input.providers[0].chunks.manifestPath, "utf8")) as
+    {chunks: Array<{archive: string}>}).chunks[0].archive;
+  const path = part === "tool" ? input.tool.archivePath : part === "provider" ? join(input.providers[0].chunkRoot, firstChunk) :
     join(input.providers[0].bundleRoot, "client.mjs");
   await writeFile(path, "changed");
   await expect(writeRuntimeInputs(input)).rejects.toThrow();

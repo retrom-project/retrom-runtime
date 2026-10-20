@@ -4,7 +4,7 @@ import {checkSignal} from "./abort.js";
 import {BufferCredits} from "./credits.js";
 import {ContentIOError, fail, toContentIOError} from "./errors.js";
 import {blockRange, fetchRangeBlock, type ContentObjectState} from "./http.js";
-import {fetchWindow, nextFetchWindow, MAX_FETCH_BYTES, type FetchPolicy, type FetchWindow} from "./fetch-policy.js";
+import {fetchWindow, nextFetchWindow, windowScratchBytes, type FetchPolicy, type FetchWindow} from "./fetch-policy.js";
 import {BLOCK_BYTES} from "./source.js";
 import {ByteLRU} from "./lru.js";
 import {BlockScheduler} from "./scheduler.js";
@@ -70,7 +70,11 @@ export class BlockPool {
     if (!window || !this.scheduler.canPrefetch) {return;}
     const taskKey = this.taskKey(object, window.firstBlock, window);
     if (this.scheduler.has(taskKey) || this.cached(object, window)) {return;}
-    const release = this.credits.tryReserveScratch(window.length + 2 * BLOCK_BYTES, MAX_FETCH_BYTES + 3 * BLOCK_BYTES);
+    // Leave this Session's largest demand window (network window or whole small
+    // file, with its native tee) and one output block admissible.
+    const {networkWindowBytes, smallFileThresholdBytes} = this.windows.policy;
+    const demand = windowScratchBytes(Math.max(networkWindowBytes, smallFileThresholdBytes));
+    const release = this.credits.tryReserveScratch(windowScratchBytes(window.length), demand + BLOCK_BYTES);
     if (!release) {return;}
     const generation = object.state.generation;
     try {
@@ -113,8 +117,9 @@ export class BlockPool {
   private async acquire(object: BlockObject, index: number, signal: AbortSignal, window?: FetchWindow, reserved?: () => void): Promise<BufferLease> {
     const generation = object.state.generation, key = this.key(object, index);
     const range = blockRange(object.source, index);
-    // readExact uses an output and one bounded stream block. Reserve before either allocation.
-    const release = reserved ?? await this.credits.reserve(window ? window.length + 2 * BLOCK_BYTES : 2 * range.length, "SCRATCH", signal);
+    // The native tee may retain a complete bounded response as well as the
+    // output window. Reserve both before creating either response consumer.
+    const release = reserved ?? await this.credits.reserve(window ? windowScratchBytes(window.length) : 3 * range.length, "SCRATCH", signal);
     try {
       this.check(object); checkSignal(signal);
       const cached = window ? null : this.cache.get(key), origins: ReadOrigin[] = [];

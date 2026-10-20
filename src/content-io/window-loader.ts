@@ -4,14 +4,14 @@ import type {BlockObject} from "./block-pool.js";
 import {createContentHasher} from "./bounded-stream.js";
 import {fail} from "./errors.js";
 import {type FetchWindow, missingRanges} from "./fetch-policy.js";
-import {fetchRangeInto, fetchWholeStream} from "./http.js";
+import {fetchRangeInto, fetchWholeWindow} from "./http.js";
 import type {ByteLRU} from "./lru.js";
 import {BLOCK_BYTES} from "./source.js";
 import type {ContentStoreManager} from "./store/manager.js";
 import {completedBacking} from "./store/complete.js";
 import type {PersistentBacking} from "./store/backing.js";
 
-/** The caller reserves window.length + two blocks before entering this loader. */
+/** The caller reserves two windows and two blocks before entering this loader. */
 export class WindowLoader {
   constructor(private readonly store: ContentStoreManager, private readonly cache: ByteLRU,
     private readonly key: (object: BlockObject, index: number) => string) {}
@@ -27,7 +27,7 @@ export class WindowLoader {
     }
     if (window.wholeFile && present.size === 0) {
       let offset = 0;
-      for await (const chunk of fetchWholeStream({...object.source, transport: "WHOLE_ALLOWED"}, object.state, signal,
+      for await (const chunk of fetchWholeWindow({...object.source, transport: "WHOLE_ALLOWED"}, object.state, signal,
         this.store.httpTelemetry)) {bytes.set(chunk, offset); offset += chunk.length;}
     } else {
       for (const range of missingRanges(window, present)) {

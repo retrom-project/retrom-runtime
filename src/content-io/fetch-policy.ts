@@ -5,8 +5,11 @@ import {BLOCK_BYTES, integer, record} from "./source.js";
 
 export const TEMPORARY_BYTES = 8 * 1024 * 1024;
 export const CACHE_WRITE_BYTES = 2 * BLOCK_BYTES;
-export const OUTPUT_BYTES = 4 * 1024 * 1024;
-export const MAX_FETCH_BYTES = (TEMPORARY_BYTES - OUTPUT_BYTES) / 2;
+export const OUTPUT_BYTES = 3 * 1024 * 1024;
+// Preserve the 2 MiB maximum window while accounting for native tee buffering,
+// stream blocks and the separate cache-write lane, even with outputs saturated.
+export const MAX_FETCH_BYTES = (TEMPORARY_BYTES - OUTPUT_BYTES - CACHE_WRITE_BYTES - 2 * BLOCK_BYTES) / 2;
+export const windowScratchBytes = (length: number) => 2 * length + 2 * BLOCK_BYTES;
 export type FetchPolicy = ContentFetchPolicyV1;
 export type ContentSessionOptions = Readonly<{fetchPolicy?: Partial<FetchPolicy>; onDiagnostic?: (diagnostic: ContentDiagnostic) => void}>;
 export const DEFAULT_FETCH_POLICY: FetchPolicy = Object.freeze({

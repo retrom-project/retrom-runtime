@@ -4,6 +4,7 @@ import {iterateExact, readExact} from "./bounded-stream.js";
 import {ContentIOError, fail} from "./errors.js";
 import {MAX_FETCH_BYTES} from "./fetch-policy.js";
 import {BLOCK_BYTES, integer} from "./source.js";
+import {windowBody} from "./window-body.js";
 
 export type ContentObjectState = {
   pinnedEtag: string | null;
@@ -66,10 +67,11 @@ async function rangeAttempt(source: ContentSourceV1, state: ContentObjectState, 
     if (response.status === 206) {validateRangeHeader(response.headers.get("Content-Range"), range, source.sizeBytes);}
     await validateEtag(response, source, state);
     validateLength(response, source, range.length);
-    const bytes = destination ?? await readExact(response.body, range.length, signal, dependencies.consumed);
+    const body = windowBody(response, range.length);
+    const bytes = destination ?? await readExact(body, range.length, signal, dependencies.consumed);
     if (destination) {
       let written = 0;
-      for await (const chunk of iterateExact(response.body, range.length, signal, undefined, dependencies.consumed)) {
+      for await (const chunk of iterateExact(body, range.length, signal, undefined, dependencies.consumed)) {
         destination.set(chunk, written); written += chunk.length;
       }
     }
@@ -78,8 +80,17 @@ async function rangeAttempt(source: ContentSourceV1, state: ContentObjectState, 
     return bytes;
   } finally {if (!accepted && !response.body?.locked) {void response.body?.cancel().catch(() => undefined);}}
 }
-export async function* fetchWholeStream(source: ContentSourceV1, state: ContentObjectState, signal?: AbortSignal,
+export function fetchWholeStream(source: ContentSourceV1, state: ContentObjectState, signal?: AbortSignal,
   injected: Partial<HttpDependencies> = {}): AsyncGenerator<Uint8Array<ArrayBuffer>> {
+  return wholeStream(source, state, signal, injected, false);
+}
+export function fetchWholeWindow(source: ContentSourceV1, state: ContentObjectState, signal?: AbortSignal,
+  injected: Partial<HttpDependencies> = {}): AsyncGenerator<Uint8Array<ArrayBuffer>> {
+  if (!integer(source.sizeBytes, 0, MAX_FETCH_BYTES)) {fail("BOUNDS");}
+  return wholeStream(source, state, signal, injected, true);
+}
+async function* wholeStream(source: ContentSourceV1, state: ContentObjectState, signal: AbortSignal | undefined,
+  injected: Partial<HttpDependencies>, window: boolean): AsyncGenerator<Uint8Array<ArrayBuffer>> {
   if (source.transport !== "WHOLE_ALLOWED") {fail("SOURCE_INVALID");}
   const dependencies = {...defaults, ...injected}, generation = state.generation;
   const headersScope = requestScope(signal, 20000);
@@ -88,7 +99,8 @@ export async function* fetchWholeStream(source: ContentSourceV1, state: ContentO
     validState(state, generation, headersScope.signal);
     response = await wholeResponse(source, state, headersScope.signal, dependencies);
     headersScope.dispose();
-    for await (const chunk of iterateExact(response.body, source.sizeBytes, signal, 20000, dependencies.consumed)) {
+    const body = window ? windowBody(response, source.sizeBytes) : response.body;
+    for await (const chunk of iterateExact(body, source.sizeBytes, signal, 20000, dependencies.consumed)) {
       validState(state, generation, signal); yield chunk;
     }
     validState(state, generation, signal);

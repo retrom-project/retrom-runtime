@@ -181,7 +181,7 @@ function assertFormalReleaseEnvironment(commit, version) {
     process.env.GITHUB_SHA !== commit) {throw new Error("PROVIDER_FORMAL_RELEASE_IDENTITY_INVALID");}
 }
 if (!providerOnly) {
-  console.log("release: provider archives ready");
+  console.log("release: provider chunks ready");
 }
 
 async function verifyBuiltProvider(provider) {

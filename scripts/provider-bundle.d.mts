@@ -1,5 +1,4 @@
 export type ProviderBundleInput = {
-  archiveRoot: string;
   assetSources: Map<string, string>;
   bundleRoot: string;
   clientModuleBytes: Uint8Array;
@@ -16,10 +15,8 @@ export type ProviderBundleInput = {
 };
 
 export type ProviderBundleResult = {
-  archivePath: string;
   bundleRoot: string;
   bundleSha256: string;
-  bundleSizeBytes: number;
   fileCount: number;
   manifestSha256: string;
   unpackedSizeBytes: number;
@@ -27,4 +24,7 @@ export type ProviderBundleResult = {
 
 export function buildProviderBundle(input: ProviderBundleInput): Promise<ProviderBundleResult>;
 export function verifyProviderBundle(bundleRoot: string): Promise<void>;
+export function providerBundleSha256(bundleRoot: string): Promise<string>;
+export function deterministicTarGz(entries: Array<[string, Uint8Array]>): Buffer;
+export function readDeterministicTarGz(bytes: Uint8Array): Array<[string, Buffer]>;
 export function providerMediaType(path: string): string;

@@ -25,7 +25,7 @@ describe("deterministic provider bundle", () => {
     ].map(([path, expected]) => providerMediaType(path) === expected)).toEqual(Array(15).fill(true));
   });
 
-  it("registers every file and emits identical archives for identical inputs", async () => {
+  it("registers every file and identifies identical inputs by their integrity file", async () => {
     const root = await temporaryRoot();
     const asset = join(root, "source/core.wasm");
     const license = join(root, "source/LICENSE");
@@ -36,7 +36,7 @@ describe("deterministic provider bundle", () => {
     const first = await build(root, "first", asset, license);
     const second = await build(root, "second", asset, license);
     expect(first.bundleSha256).toBe(second.bundleSha256);
-    expect(await readFile(first.archivePath)).toEqual(await readFile(second.archivePath));
+    expect(first.bundleSha256).toBe(sha256(await readFile(join(first.bundleRoot, "integrity.json"))));
     await verifyProviderBundle(first.bundleRoot);
 
     const integrity = JSON.parse(await readFile(join(first.bundleRoot, "integrity.json"), "utf8")) as {
@@ -77,7 +77,6 @@ describe("deterministic provider bundle", () => {
 
 async function build(root: string, name: string, asset: string, license: string) {
   return buildProviderBundle({
-    archiveRoot: join(root, `${name}-archives`),
     assetSources: new Map([["assets/fixture/core.wasm", asset]]),
     bundleRoot: join(root, name),
     clientModuleBytes: new TextEncoder().encode([

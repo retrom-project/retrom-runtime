@@ -1,8 +1,8 @@
 export type ProviderBuildRecord = {
-  archive: string;
   bundleDirectory: string;
   bundleSha256: string;
-  bundleSizeBytes: number;
+  chunkDirectory: string;
+  chunkManifest: {asset: string; sha256: string; sizeBytes: number};
   fileCount: number;
   manifestSha256: string;
   providerId: string;

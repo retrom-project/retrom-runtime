@@ -84,7 +84,8 @@ describe("EmulatorJS Provider release build", () => {
       expect(await readFile(join(result.bundleRoot,
         "licenses/emulatorjs/4.2.3/licenses/forks/vice_xvic/COPYING"), "utf8"))
         .toBe("vice_xvic fixture license\n");
-      expect(await readFile(result.archivePath)).toHaveLength(result.bundleSizeBytes);
+      expect(result.bundleSha256).toBe(createHash("sha256")
+        .update(await readFile(join(result.bundleRoot, "integrity.json"))).digest("hex"));
       expect(await readFile(join(result.bundleRoot, "licenses/emulatorjs/4.2.3/LICENSE"), "utf8"))
         .toBe("4.2.3 license\n");
     } finally {

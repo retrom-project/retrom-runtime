@@ -51,7 +51,7 @@ describe("retrom-runtime Provider release build", () => {
       expect(asset).not.toContain("fixture:");expect(asset).toContain("content-io-v1");
     }
     expect(first.bundleSha256).toBe(second.bundleSha256);
-    expect(await readFile(first.archivePath)).toEqual(await readFile(second.archivePath));
+    expect(await readFile(join(first.bundleRoot, "integrity.json"))).toEqual(await readFile(join(second.bundleRoot, "integrity.json")));
 
     const provider = JSON.parse(await readFile(join(first.bundleRoot, "provider.json"), "utf8")) as {
       targets: Array<Record<string, unknown>>;

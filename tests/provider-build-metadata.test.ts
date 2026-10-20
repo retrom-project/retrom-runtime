@@ -97,9 +97,9 @@ describe("Provider candidate and formal release identity", () => {
 
 function provider(providerId: string, providerVersion: string) {
   return {
-    archive: `${providerId}/${providerId}-provider-${providerVersion}.tar.gz`,
     bundleDirectory: `${providerId}/${providerId}-${providerVersion}`,
-    bundleSha256: "c".repeat(64), bundleSizeBytes: 100, fileCount: 6,
-    manifestSha256: "d".repeat(64), providerId, providerVersion, unpackedSizeBytes: 200,
+    bundleSha256: "c".repeat(64), chunkDirectory: `${providerId}/chunks`,
+    chunkManifest: {asset: `${providerId}-chunks-${providerVersion}.json`, sha256: "e".repeat(64), sizeBytes: 100},
+    fileCount: 6, manifestSha256: "d".repeat(64), providerId, providerVersion, unpackedSizeBytes: 200,
   };
 }

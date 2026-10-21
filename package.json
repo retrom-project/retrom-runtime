@@ -13,6 +13,7 @@
     "contracts/content-io/v1",
     "scripts/runtime-cli.mjs",
     "scripts/runtime-host-input.mjs",
+    "scripts/runtime-host-content.mjs",
     "scripts/runtime-host-media.mjs",
     "scripts/runtime-normalize-content.mjs",
     "scripts/runtime-jsonl.mjs",

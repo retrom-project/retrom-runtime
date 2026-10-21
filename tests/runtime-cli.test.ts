@@ -16,7 +16,7 @@ const children: ChildProcessWithoutNullStreams[] = [];
 beforeAll(async () => {
   root = await mkdtemp(join(tmpdir(), "retrom-cli-test-"));
   await mkdir(join(root, "scripts"));
-  for (const file of ["runtime-cli.mjs", "runtime-host-input.mjs", "runtime-host-media.mjs", "runtime-normalize-content.mjs", "runtime-jsonl.mjs", "runtime-archive-input.mjs"]) {
+  for (const file of ["runtime-host-content.mjs", "runtime-cli.mjs", "runtime-host-input.mjs", "runtime-host-media.mjs", "runtime-normalize-content.mjs", "runtime-jsonl.mjs", "runtime-archive-input.mjs"]) {
     await cp(resolve("scripts", file), join(root, "scripts", file));
   }
   await cp(resolve("assets/facts"), join(root, "assets/facts"), {recursive: true});
@@ -92,7 +92,7 @@ it("keeps legacy Chinese program paths readable in the independent packaged CLI"
   const path = join(root, "chinese.zip"); await writeFile(path, bytes);
   const input = {config: {content: {kind: "DOS_BUNDLE", entryFile: "chinese.zip"}},
     files: [{logicalKey: "chinese.zip", name: "chinese.zip", sizeBytes: bytes.length,
-      sha256: createHash("sha256").update(bytes).digest("hex")}], locators: {"chinese.zip": path}};
+      sha256: createHash("sha256").update(bytes).digest("hex")}], locators: {"chinese.zip": {path, offset: 0, sizeBytes: bytes.length}}};
   child.stdin.end(JSON.stringify({id: "chinese", command: "dos-entry-candidates", input}) + "\n");
   expect(await read()).toEqual({id: "chinese", result: {entries: ["金庸群侠传/PLAY.BAT"]}});
   expect((await once(child, "close"))[0]).toBe(0);
@@ -131,7 +131,7 @@ it("projects named Parent requirements and preserves the launch error's actual m
   const input = {directory: {platformId: "arcade", defaultCoreId: "fbneo", allowedCoreIds: ["fbneo"]},
     config: {content: {kind: "ARCADE", entryFile: "1941j.zip"}}, files: [{logicalKey: "1941j.zip", name: "1941j.zip",
       sizeBytes: bytes.length, sha256: createHash("sha256").update(bytes).digest("hex")}],
-    locators: {"1941j.zip": archive}, coreId: "fbneo"};
+    locators: {"1941j.zip": {path: archive, offset: 0, sizeBytes: bytes.length}}, coreId: "fbneo"};
   child.stdin.write(JSON.stringify({id: "parents", command: "arcade-parents", input}) + "\n");
   expect((await read()).result).toMatchObject({coreId: "fbneo", parentFiles: [], missingParents: ["1941.zip"]});
   child.stdin.end(JSON.stringify({id: "launch", command: "prepare",
@@ -155,13 +155,13 @@ it("projects content BIOS alone from real PSX and arcade evidence without requir
     directory: {platformId, defaultCoreId: coreId, allowedCoreIds: [coreId]},
     config: {content: {kind: "SINGLE_FILE", entryFile: name}}, files: [{...sample, logicalKey: name, name}], locators: {},
   });
-  const psx = {...request("psx", "mednafen_psx_hw", "disc.bin", metadata[0]), locators: {"disc.bin": join(root, "disc.bin")}};
+  const psx = {...request("psx", "mednafen_psx_hw", "disc.bin", metadata[0]), locators: {"disc.bin": {path: join(root, "disc.bin"), offset: 0, sizeBytes: disc.length}}};
   const clone = {...request("arcade", "fbneo", "kof99h.zip", metadata[1]),
     config: {content: {kind: "ARCADE", entryFile: "kof99h.zip"}, cores: {fbneo: {parentFiles: ["missing-parent.zip"]}}},
-    locators: {"kof99h.zip": join(root, "kof99h.zip")}};
+    locators: {"kof99h.zip": {path: join(root, "kof99h.zip"), offset: 0, sizeBytes: arcade.length}}};
   child.stdin.write(JSON.stringify({id: "bios", command: "batch-content-bios-requirements", input: {items: [
     request("nes", "fceumm", "game.nes"), request("nes", "fceumm", "game.fds"),
-    request("atari7800", "prosystem", "game.a78"), psx, clone, {...psx, locators: {"disc.bin": join(root, "does-not-exist")}},
+    request("atari7800", "prosystem", "game.a78"), psx, clone, {...psx, locators: {"disc.bin": {path: join(root, "does-not-exist"), offset: 0, sizeBytes: disc.length}}},
   ]}}) + "\n");
   const result = await read(); expect(result.id).toBe("bios");
   expect(result.result[0]).toEqual({biosRequirements: [], crcWarnings: [], missingRomMembers: [], error: null});
@@ -182,7 +182,7 @@ it("lists current DOS program paths without validating a stale entry selection o
   const path = join(root, "programs.dosz"); await writeFile(path, bytes);
   const input = {config: {content: {kind: "DOS_BUNDLE", entryFile: "programs.dosz", entryPath: "removed/OLD.EXE"}},
     files: [{logicalKey: "programs.dosz", name: "programs.dosz", sizeBytes: bytes.length,
-      sha256: createHash("sha256").update(bytes).digest("hex")}], locators: {"programs.dosz": path}};
+      sha256: createHash("sha256").update(bytes).digest("hex")}], locators: {"programs.dosz": {path, offset: 0, sizeBytes: bytes.length}}};
   const entries = ["DOS.COM", "dir/Start.BAT", "folder/Game.EXE", "路径/运行.exe"];
   child.stdin.write(JSON.stringify({id: "programs", command: "dos-entry-candidates", input}) + "\n");
   expect(await read()).toEqual({id: "programs", result: {entries}});
@@ -193,16 +193,18 @@ it("lists current DOS program paths without validating a stale entry selection o
   child.stdin.write(JSON.stringify({id: "missing", command: "dos-entry-candidates", input: {...input, files: files}}) + "\n");
   expect(await read()).toEqual({id: "missing", error: "RUNTIME_ENTRY_MISSING"});
   child.stdin.write(JSON.stringify({id: "unavailable", command: "dos-entry-candidates", input: {
-    ...input, locators: {"programs.dosz": join(root, "absent.dosz")},
+    ...input, locators: {"programs.dosz": {path: join(root, "absent.dosz"), offset: 0, sizeBytes: bytes.length}},
   }}) + "\n");
   expect(await read()).toEqual({id: "unavailable", error: "RUNTIME_CONTENT_UNAVAILABLE"});
   const unsafe = zipSync({"../escape.exe": Uint8Array.of(1)}); await writeFile(path, unsafe);
   child.stdin.write(JSON.stringify({id: "unsafe", command: "dos-entry-candidates", input: {...input,
+    locators: {"programs.dosz": {path, offset: 0, sizeBytes: unsafe.length}},
     files: [{...input.files[0], sizeBytes: unsafe.length, sha256: createHash("sha256").update(unsafe).digest("hex")}],
   }}) + "\n");
   expect(await read()).toEqual({id: "unsafe", error: "RUNTIME_ARCHIVE_INVALID"});
   const empty = zipSync({"readme.txt": Uint8Array.of(1)}); await writeFile(path, empty);
   child.stdin.end(JSON.stringify({id: "empty", command: "dos-entry-candidates", input: {...input,
+    locators: {"programs.dosz": {path, offset: 0, sizeBytes: empty.length}},
     files: [{...input.files[0], sizeBytes: empty.length, sha256: createHash("sha256").update(empty).digest("hex")}],
   }}) + "\n");
   expect(await read()).toEqual({id: "empty", result: {entries: []}});

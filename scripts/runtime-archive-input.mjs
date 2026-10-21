@@ -1,11 +1,11 @@
 import {createHash} from "node:crypto";
-import {open} from "node:fs/promises";
+import {openContent} from "./runtime-host-content.mjs";
 import {crc32, createInflateRaw} from "node:zlib";
 import {Readable} from "node:stream";
 import {decodeZIPName} from "../dist/content-io/zip-name.js";
 
 export async function zipMembers(path, {digests = false} = {}) {
-  const handle = await open(path, "r");
+  const handle = await openContent(path);
   try {
     const info = await handle.stat();
     const length = Math.min(info.size, 65557), tail = Buffer.alloc(length);
@@ -79,9 +79,12 @@ async function* compressedChunks(handle, start, length) {
   }
 }
 export function requireLocator(input, file) {
-  const path = input.locators?.[file.logicalKey];
-  if (typeof path !== "string" || !path.startsWith("/")) {throw new Error("RUNTIME_CONTENT_LOCATOR_REQUIRED");}
-  return path;
+  const locator = input.locators?.[file.logicalKey];
+  if (!locator || typeof locator.path !== "string" || !locator.path.startsWith("/") ||
+    !Number.isSafeInteger(locator.offset) || locator.offset < 0 || !Number.isSafeInteger(locator.sizeBytes) ||
+    !Number.isSafeInteger(locator.offset + locator.sizeBytes)) {throw new Error("RUNTIME_CONTENT_LOCATOR_REQUIRED");}
+  if (locator.sizeBytes !== file.sizeBytes) {throw new Error("RUNTIME_CONTENT_CHANGED");}
+  return locator;
 }
 export function safePath(path) {return typeof path === "string" && path.length > 0 && path.length <= 4096 && !path.startsWith("/") &&
   !path.includes("\\") && [...path].every(character => character.charCodeAt(0) >= 32 && character.charCodeAt(0) !== 127) &&

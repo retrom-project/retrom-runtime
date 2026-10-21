@@ -92,7 +92,7 @@ export async function verifyRuntimePackage(repositoryRoot, packageJson) {
           const path = join(directory, file.name), logicalKey = `${prefix}${file.name}`;
           if (file.isDirectory()) {await inspect(path, `${logicalKey}/`); continue;}
           if (!file.isFile()) {throw new Error("RUNTIME_PACKAGE_DETECTOR_INPUT_INVALID");}
-          const bytes = await readFile(path); locators[logicalKey] = path;
+          const bytes = await readFile(path); locators[logicalKey] = {path, offset: 0, sizeBytes: bytes.length};
           facts.push({logicalKey, name: logicalKey, sizeBytes: bytes.length, sha256: createHash("sha256").update(bytes).digest("hex")});
         }
       }

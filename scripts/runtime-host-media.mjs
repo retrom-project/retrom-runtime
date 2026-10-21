@@ -1,5 +1,4 @@
-import {open} from "node:fs/promises";
-import {constants} from "node:fs";
+import {openContent} from "./runtime-host-content.mjs";
 import {arcadeDiskRequirements, parseCHDHeader} from "../dist/runtime/index.js";
 import {requireLocator, safePath} from "./runtime-archive-input.mjs";
 
@@ -7,7 +6,7 @@ export async function mameMediaEvidence(input, coreId) {
   if (coreId !== "mame_arcade") {return {};}
   const chdHeaders = {};
   for (const file of input.files.filter(file => /\.chd$/iu.test(file.logicalKey))) {
-    const handle = await open(requireLocator(input, file), constants.O_RDONLY | constants.O_NOFOLLOW);
+    const handle = await openContent(requireLocator(input, file));
     try {
       const info = await handle.stat(), bytes = Buffer.alloc(124);
       if (!info.isFile() || info.size !== file.sizeBytes) {throw new Error("RUNTIME_CONTENT_CHANGED");}

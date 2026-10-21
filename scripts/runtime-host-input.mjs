@@ -1,6 +1,9 @@
+import {openContent, readContent, contentStream} from "./runtime-host-content.mjs";
+import {pipeline} from "node:stream/promises";
+import {createWriteStream} from "node:fs";
 import {createHash} from "node:crypto";
 import {createReadStream, constants} from "node:fs";
-import {open, readFile, lstat, mkdtemp, copyFile, chmod, rm, readdir, mkdir} from "node:fs/promises";
+import {open, readFile, mkdtemp, copyFile, chmod, rm, readdir, mkdir} from "node:fs/promises";
 import {fileURLToPath} from "node:url";
 import {execFile} from "node:child_process";
 import {promisify} from "node:util";
@@ -21,7 +24,7 @@ export async function configureHostInput(input) {
     if (needsEvidence && !evidence[file.logicalKey] && input.locators?.[file.logicalKey]) {
       const maximum = name === "game.ini" ? 262144 : 24 * 1024 * 1024;
       if (file.sizeBytes > maximum) {throw new Error("RUNTIME_EVIDENCE_TOO_LARGE");}
-      const bytes = await readFile(requireLocator(input, file));
+      const bytes = await readContent(requireLocator(input, file));
       if (bytes.length !== file.sizeBytes || sha256(bytes) !== file.sha256) {throw new Error("RUNTIME_CONTENT_CHANGED");}
       evidence[file.logicalKey] = name === "game.ini" ? {text: new TextDecoder().decode(bytes)} : {bytesBase64: bytes.toString("base64")};
     }
@@ -43,10 +46,9 @@ async function configureScummvm(input) {
   try {
     for (const file of input.files) {
       if (!safePath(file.logicalKey)) {throw new Error("RUNTIME_DETECTION_INPUT_INVALID");}
-      const source = requireLocator(input, file), info = await lstat(source);
-      if (!info.isFile() || info.isSymbolicLink() || info.size !== file.sizeBytes) {throw new Error("RUNTIME_CONTENT_CHANGED");}
+      const source = requireLocator(input, file);
       const destination = join(treeRoot, file.logicalKey); await mkdir(dirname(destination), {recursive: true});
-      await copyFile(source, destination);
+      await pipeline(contentStream(source), createWriteStream(destination, {flags: "wx", mode: 0o600}));
       const hash = createHash("sha256"); for await (const bytes of createReadStream(destination)) {hash.update(bytes);}
       if (hash.digest("hex") !== file.sha256) {throw new Error("RUNTIME_CONTENT_CHANGED");}
     }
@@ -118,7 +120,7 @@ export async function flycastConfigureEvidence(input) {
 async function validateCHD(input, key) {
   const file = input.files.find(file => file.logicalKey === key);
   if (!file) {throw new Error("RUNTIME_FLYCAST_DISC_MISSING");}
-  const handle = await open(requireLocator(input, file), constants.O_RDONLY | constants.O_NOFOLLOW);
+  const handle = await openContent(requireLocator(input, file));
   try {
     const info = await handle.stat(), bytes = Buffer.alloc(124);
     if (!info.isFile() || info.size !== file.sizeBytes) {throw new Error("RUNTIME_CONTENT_CHANGED");}
@@ -261,7 +263,7 @@ async function psxRegion(input, entry) {
   if (!key || !/\.(?:bin|iso|img)$/iu.test(key)) {return null;}
   const file = input.files.find(item => item.logicalKey === key);
   if (!file) {throw new Error("RUNTIME_ENTRY_MISSING");}
-  const handle = await open(requireLocator(input, file), constants.O_RDONLY | constants.O_NOFOLLOW);
+  const handle = await openContent(requireLocator(input, file));
   try {
     const info = await handle.stat();
     if (!info.isFile() || info.size !== file.sizeBytes) {throw new Error("RUNTIME_CONTENT_CHANGED");}
@@ -313,7 +315,7 @@ export async function discoverContentDependencies(input) {
 
 async function cueReferences(input, file) {
   if (!file || file.sizeBytes > 1024 * 1024) {throw new Error("RUNTIME_CUE_INVALID");}
-  const handle = await open(requireLocator(input, file), "r");
+  const handle = await openContent(requireLocator(input, file));
   let bytes;
   try {
     const info = await handle.stat();
@@ -352,9 +354,7 @@ export async function assembleResource(input, signal) {
   try {
     for (const {file, name} of rows) {
       signal?.throwIfAborted();
-      const path = requireLocator(input, file), info = await lstat(path);
-      if (!info.isFile() || info.isSymbolicLink()) {throw new Error("RUNTIME_CONTENT_CHANGED");}
-      const source = await open(path, "r");
+      const source = await openContent(requireLocator(input, file));
       try {
         const info = await source.stat();
         if (!info.isFile() || info.size !== file.sizeBytes || info.size >= 0xffffffff) {throw new Error("RUNTIME_CONTENT_CHANGED");}
@@ -461,10 +461,10 @@ function matchesBIOSMember(members, expected) {
 
 const biosEvidence = new Map();
 async function biosMembers(path) {
-  const key = await biosArchiveDigest(path);
+  const digest = await biosArchiveDigest(path), key = digest.sha256;
   if (!biosEvidence.has(key)) {
     if (biosEvidence.size >= 128) {biosEvidence.delete(biosEvidence.keys().next().value);}
-    const pending = zipMembers(path, {digests: true}).catch(error => {biosEvidence.delete(key); throw error;});
+    const pending = zipMembers({path, offset: 0, sizeBytes: digest.sizeBytes}, {digests: true}).catch(error => {biosEvidence.delete(key); throw error;});
     biosEvidence.set(key, pending);
   }
   return biosEvidence.get(key);
@@ -481,7 +481,7 @@ async function biosArchiveDigest(path) {
       if (!bytesRead) {throw new Error("RUNTIME_CONTENT_CHANGED");}
       hash.update(buffer.subarray(0, bytesRead)); position += bytesRead;
     }
-    return hash.digest("hex");
+    return {sha256: hash.digest("hex"), sizeBytes: info.size};
   } finally {await handle.close();}
 }
 

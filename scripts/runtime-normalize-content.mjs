@@ -1,5 +1,7 @@
-import {open, mkdir, lstat, rm} from "node:fs/promises";
-import {createReadStream, createWriteStream} from "node:fs";
+import {openContent, contentStream} from "./runtime-host-content.mjs";
+import {requireLocator} from "./runtime-archive-input.mjs";
+import {mkdir, rm} from "node:fs/promises";
+import {createWriteStream} from "node:fs";
 import {createHash} from "node:crypto";
 import {createInflateRaw, crc32} from "node:zlib";
 import {pipeline} from "node:stream/promises";
@@ -16,14 +18,13 @@ export async function normalizeContent(input, signal) {
   const executables = input.files.filter(file => /\.exe$/iu.test(file.logicalKey));
   const selected = asar.length === 1 ? asar[0] : executables.length === 1 ? executables[0] : null;
   if (!selected) {throw new Error("RUNTIME_PROJECT_CONTAINER_AMBIGUOUS");}
-  const source = input.locators?.[selected.logicalKey];
-  if (typeof source !== "string" || !source.startsWith("/") || typeof input.outputRoot !== "string" || !input.outputRoot.startsWith("/")) {throw new Error("RUNTIME_CONTENT_LOCATOR_REQUIRED");}
-  const info = await lstat(source);
-  if (!info.isFile() || info.isSymbolicLink() || info.size !== selected.sizeBytes) {throw new Error("RUNTIME_CONTENT_CHANGED");}
+  const source = requireLocator(input, selected);
+  if (typeof input.outputRoot !== "string" || !input.outputRoot.startsWith("/")) {throw new Error("RUNTIME_CONTENT_LOCATOR_REQUIRED");}
+  const info = {size: selected.sizeBytes};
   const rows = asar.length ? await asarEntries(source, info.size, input, selected.logicalKey) : await embeddedZIPEntries(source, info.size);
   if (!rows.some(row => row.logicalKey === "index.html")) {throw new Error("RUNTIME_ENTRY_MISSING");}
   const sourceHash = createHash("sha256");
-  for await (const chunk of createReadStream(source)) {sourceHash.update(chunk);}
+  for await (const chunk of contentStream(source, {signal})) {sourceHash.update(chunk);}
   if (sourceHash.digest("hex") !== selected.sha256) {throw new Error("RUNTIME_CONTENT_CHANGED");}
   const files = []; let total = 0;
   await mkdir(input.outputRoot, {recursive: false, mode: 0o700});
@@ -42,7 +43,7 @@ export async function normalizeContent(input, signal) {
       const destination = createWriteStream(path, {flags: "wx", mode: 0o600});
       if (row.compressedBytes === 0) {destination.end(); await new Promise((complete, reject) => {destination.on("finish", complete); destination.on("error", reject);});}
       else {
-        const reader = createReadStream(row.sourceKey ? input.locators[row.sourceKey] : source, {start: row.offset, end: row.offset + row.compressedBytes - 1});
+        const reader = contentStream(row.sourceKey ? input.locators[row.sourceKey] : source, {start: row.offset, length: row.compressedBytes, signal});
         if (row.deflate) {await pipeline(reader, createInflateRaw(), verify, destination, {signal});} else {await pipeline(reader, verify, destination, {signal});}
       }
       const digest = hash.digest("hex");
@@ -54,7 +55,7 @@ export async function normalizeContent(input, signal) {
 }
 
 async function asarEntries(path, size, input, sourceKey) {
-  const file = await open(path, "r");
+  const file = await openContent(path);
   try {
     const prefix = await readAt(file, 0, 16);
     const headerBytes = prefix.readUInt32LE(4), payloadBytes = prefix.readUInt32LE(8), jsonBytes = prefix.readUInt32LE(12);
@@ -69,7 +70,7 @@ async function asarEntries(path, size, input, sourceKey) {
         if (node.files) {collect(node, `${key}/`, depth + 1, unpacked || node.unpacked === true); continue;}
         if (unpacked || node.unpacked === true) {
           const sidecarKey = `${sourceKey}.unpacked/${key}`, sidecar = input.files.find(file => file.logicalKey === sidecarKey);
-          if (!sidecar || sidecar.sizeBytes !== node.size || typeof input.locators?.[sidecarKey] !== "string" || !input.locators[sidecarKey].startsWith("/")) {throw new Error("RUNTIME_ASAR_SIDECAR_MISSING");}
+          if (!sidecar || sidecar.sizeBytes !== node.size || !input.locators?.[sidecarKey] || input.locators[sidecarKey].sizeBytes !== sidecar.sizeBytes) {throw new Error("RUNTIME_ASAR_SIDECAR_MISSING");}
           result.push({logicalKey: key, sourceKey: sidecarKey, offset: 0, compressedBytes: node.size, sizeBytes: node.size, deflate: false, expectedSHA256: sidecar.sha256}); continue;
         }
         const offset = typeof node.offset === "string" && /^\d+$/u.test(node.offset) ? Number(node.offset) : NaN;
@@ -82,7 +83,7 @@ async function asarEntries(path, size, input, sourceKey) {
 }
 
 async function embeddedZIPEntries(path, size) {
-  const file = await open(path, "r");
+  const file = await openContent(path);
   try {
     const length = Math.min(size, 65557), tail = await readAt(file, size - length, length);
     let end = -1;

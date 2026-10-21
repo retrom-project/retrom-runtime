@@ -21,6 +21,7 @@ export function runtimeCatalog(providerVersion?: string) {
     .flatMap(binding => binding.platformIds))].sort()}));
   return {providers: runtimeProviders.map(provider => projectProviderManifest(providerVersion ? {...provider, providerVersion} : provider)),
     bindings: runtimeBindings.map(binding => ({...binding,
+	  storageLayout: bindingStorageLayout(binding),
       ...nativeArchives(binding),
       ...(binding.contentKinds.includes("ARCADE") ? {dependencyFiles: {extensions: binding.coreId === "mame_arcade" ? ["zip", "chd"] : ["zip"]}} : {}),
       ...(() => {const selection = runtimeProviders.find(provider => provider.providerId === binding.providerId)?.targets
@@ -29,6 +30,12 @@ export function runtimeCatalog(providerVersion?: string) {
       ...(runtimeProviders.find(provider => provider.providerId === binding.providerId)?.targets
         .find(target => target.id === binding.targetId)?.contentRequirements?.kind === "FLYCAST_CARTRIDGE"
         ? {archiveExtensions: ["zip"], dependencyFiles: {extensions: ["zip", "chd"]}} : {})})), platforms: runtimePlatforms, cores};
+}
+
+export function bindingStorageLayout(binding: RuntimeBinding): "ZIP_STORE" | "FILES" {
+  const projects = ["RPG_MAKER_PROJECT", "SIGLUS_PROJECT", "TYRANOSCRIPT_PROJECT", "NXENGINE_PROJECT",
+    "BUTTERSCOTCH_PROJECT", "KIRIKIRI_PROJECT", "ONS_PROJECT", "SCUMMVM_PROJECT"];
+  return binding.contentKinds.some(kind => projects.includes(kind)) ? "ZIP_STORE" : "FILES";
 }
 
 /** A declared archive entry is input to the core, not an upload container to unpack. */

@@ -14,6 +14,9 @@ afterEach(async () => {
   await Promise.all(temporaryRoots.splice(0).map((path) => rm(path, {force: true, recursive: true})));
 });
 
+const mib = 1024 * 1024;
+const hex = (value: number) => createHash("sha256").update(String(value)).digest("hex");
+
 describe("Provider chunk partition", () => {
   it("groups one directory per core, EmulatorJS cores by name and forks by license directory", () => {
     expect([
@@ -33,20 +36,36 @@ describe("Provider chunk partition", () => {
     ]);
   });
 
-  it("splits a group above the size limit by deeper directories, never splitting a single file", () => {
-    const mib = 1024 * 1024;
-    const plan = planProviderChunks([
-      {path: "assets/big/plugins/a.so", sizeBytes: 30 * mib, sha256: "a".repeat(64)},
-      {path: "assets/big/plugins/b.so", sizeBytes: 30 * mib, sha256: "b".repeat(64)},
-      {path: "assets/big/data/x.dat", sizeBytes: 1 * mib, sha256: "c".repeat(64)},
-      {path: "assets/big/huge.wasm", sizeBytes: 80 * mib, sha256: "d".repeat(64)},
-      {path: "assets/small/core.wasm", sizeBytes: 2 * mib, sha256: "e".repeat(64)},
-    ]);
+  it("splits a group above the size limit into path-hash buckets, never splitting a single file", () => {
+    const plugins = Array.from({length: 40}, (_, index) =>
+      ({path: `assets/big/plugins/lib${index}.so`, sizeBytes: 3 * mib, sha256: hex(index)}));
+    const huge = {path: "assets/big/huge.wasm", sizeBytes: 80 * mib, sha256: "d".repeat(64)};
+    const small = {path: "assets/small/core.wasm", sizeBytes: 2 * mib, sha256: "e".repeat(64)};
+    const plan = planProviderChunks([...plugins, huge, small]);
     expect(CHUNK_LIMIT_BYTES).toBe(32 * mib);
-    expect(plan.map((chunk) => chunk.files.map((file) => file.path))).toEqual([
-      ["assets/big/data/x.dat"], ["assets/big/huge.wasm"], ["assets/big/plugins/a.so"], ["assets/big/plugins/b.so"],
-      ["assets/small/core.wasm"],
-    ].sort((left, right) => chunkIdFor(plan, left).localeCompare(chunkIdFor(plan, right))));
+    expect(plan.flatMap((chunk) => chunk.files.map((file) => file.path)).sort())
+      .toEqual([...plugins, huge, small].map((file) => file.path).sort());
+    expect(plan.find((chunk) => chunk.files.some((file) => file.path === huge.path))?.files).toHaveLength(1);
+    expect(plan.find((chunk) => chunk.files.some((file) => file.path === small.path))?.files).toHaveLength(1);
+    const buckets = plan.filter((chunk) => chunk.files[0].path.startsWith("assets/big/plugins/"));
+    expect(buckets.every((chunk) => chunk.unpackedSizeBytes <= CHUNK_LIMIT_BYTES)).toBe(true);
+    // 120 MiB of small files pack into a handful of chunks rather than one chunk per file.
+    expect(buckets.length).toBeGreaterThanOrEqual(4);
+    expect(buckets.length).toBeLessThanOrEqual(16);
+  });
+
+  it("changes only the touched bucket when one file of an oversized group changes, appears or goes", () => {
+    const plugins = Array.from({length: 40}, (_, index) =>
+      ({path: `assets/big/plugins/lib${index}.so`, sizeBytes: 3 * mib, sha256: hex(index)}));
+    const ids = (files: typeof plugins) => new Set(planProviderChunks(files).map((chunk) => chunk.chunkId));
+    const before = ids(plugins);
+    const changed = ids(plugins.map((file, index) => index === 7 ? {...file, sha256: "f".repeat(64)} : file));
+    const added = ids([...plugins, {path: "assets/big/plugins/new.so", sizeBytes: 1024, sha256: "f".repeat(64)}]);
+    const removed = ids(plugins.filter((_, index) => index !== 7));
+    for (const after of [changed, added, removed]) {
+      expect([...after].filter((id) => !before.has(id))).toHaveLength(1);
+      expect([...before].filter((id) => !after.has(id))).toHaveLength(1);
+    }
   });
 
   it("derives the chunk identity only from paths, sizes and file hashes", () => {
@@ -123,10 +142,6 @@ describe("Provider chunk publication", () => {
     expect(names.length).toBe(result.manifest.chunks.length + 1);
   });
 });
-
-function chunkIdFor(plan: ReturnType<typeof planProviderChunks>, paths: string[]) {
-  return plan.find((chunk) => chunk.files[0].path === paths[0])!.chunkId;
-}
 
 async function publish(root: string, name: string, version: string, assets: Record<string, string>) {
   const source = join(root, name, "source");

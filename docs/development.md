@@ -49,7 +49,7 @@ Each release contains:
 Provider bundles are published only as chunks; there is no whole Provider archive. A bundle is identified by `bundleSha256`, the SHA-256 of its `integrity.json`, which lists every path, size, hash and media type. Chunks follow stable rules so unchanged content keeps the same chunk identity across releases and consumers download only changed chunks:
 
 - one chunk per `assets/<core>/` directory, per EmulatorJS core (`assets/<version>/data/cores/<core>-*`), per EmulatorJS version's shared files, and per `licenses/**/forks/<fork>/` directory; the remaining small root files, `assets/content-io/` and other licenses form one common chunk;
-- a chunk above 32 MiB is split by deeper directories until each chunk is at most 32 MiB or a single file.
+- a chunk above 32 MiB keeps each file above 32 MiB as its own chunk and splits the rest by the bits of SHA-256(path), one bit per level, only where a bucket is still above 32 MiB. A file's bucket depends on its path alone, so one changed, added or removed file changes only its own bucket (and at most its sibling) instead of the whole directory.
 
 `chunkId` is the SHA-256 of the chunk's sorted `[path, sizeBytes, sha256]` list, so local deduplication does not depend on compression. Archives are deterministic ustar + gzip. The release gate reads every chunk back, checks its identity and archive digest, and requires the chunks together to reproduce the built bundle exactly once; a release may not exceed 900 assets.
 

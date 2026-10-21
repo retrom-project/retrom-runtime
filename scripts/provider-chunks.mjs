@@ -4,7 +4,7 @@ import {join} from "node:path";
 
 import {deterministicTarGz, providerBundleSha256, readDeterministicTarGz} from "./provider-bundle.mjs";
 
-/** A planned chunk above this size is split by deeper directories; a single larger file stays whole. */
+/** A planned chunk above this size is split into path-hash buckets; a single larger file stays whole. */
 export const CHUNK_LIMIT_BYTES = 32 * 1024 * 1024;
 const emulatorJsCore = /^(assets\/[^/]+\/data\/cores)\/([^/]+)$/u;
 const digest = /^[0-9a-f]{64}$/u;
@@ -34,21 +34,35 @@ export function planProviderChunks(files) {
     const key = chunkGroup(file.path);
     groups.set(key, [...groups.get(key) ?? [], file]);
   }
-  const chunks = [...groups].flatMap(([key, members]) => split(members, key ? key.split("/").length : 0));
+  const chunks = [...groups.values()].flatMap(split);
   return chunks.map(describe).sort((left, right) => compare(left.chunkId, right.chunkId));
 }
 
-function split(files, depth) {
-  const total = files.reduce((sum, file) => sum + file.sizeBytes, 0);
-  if (total <= CHUNK_LIMIT_BYTES || files.length === 1) {return [files];}
-  const deeper = new Map();
-  for (const file of files) {
-    const key = file.path.split("/").slice(0, depth + 1).join("/");
-    deeper.set(key, [...deeper.get(key) ?? [], file]);
-  }
-  if (deeper.size === 1 && [...deeper.keys()][0] === files[0].path) {return [files];}
-  return [...deeper.values()].flatMap((members) => split(members, depth + 1));
+/**
+ * An oversized group keeps each file above the limit whole and splits the rest by the bits of
+ * SHA256(path), one bit per level, only where a bucket is still above the limit. A file's bucket
+ * depends on its path alone, so changing, adding or removing one file touches only its bucket
+ * (plus its sibling when that moves their parent across the limit); every other chunk stays
+ * byte-identical.
+ */
+function split(files) {
+  if (size(files) <= CHUNK_LIMIT_BYTES || files.length === 1) {return [files];}
+  const large = files.filter((file) => file.sizeBytes > CHUNK_LIMIT_BYTES);
+  const rest = files.filter((file) => file.sizeBytes <= CHUNK_LIMIT_BYTES)
+    .map((file) => ({file, bits: createHash("sha256").update(file.path).digest()}));
+  return [...large.map((file) => [file]), ...bucket(rest, 0)];
 }
+
+function bucket(entries, depth) {
+  if (!entries.length) {return [];}
+  const files = entries.map((entry) => entry.file);
+  if (size(files) <= CHUNK_LIMIT_BYTES || entries.length === 1 || depth === 256) {return [files];}
+  const bit = (entry) => (entry.bits[depth >> 3] >> (7 - (depth & 7))) & 1;
+  return [...bucket(entries.filter((entry) => !bit(entry)), depth + 1),
+    ...bucket(entries.filter((entry) => bit(entry)), depth + 1)];
+}
+
+function size(files) {return files.reduce((sum, file) => sum + file.sizeBytes, 0);}
 
 function describe(files) {
   const sorted = [...files].sort((left, right) => compare(left.path, right.path));

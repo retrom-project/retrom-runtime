@@ -89,6 +89,20 @@ it("reads bounded immutable configuration evidence and real DOS executable membe
   expect((await configureHostInput({...dos, platformId: "dos", coreIds: ["dosbox_pure"]})).archiveMembers?.["game.zip"])
     .toEqual(["folder/game.exe", "readme.txt"]);
 });
+it("samples ONS scripts from their package interval so configure detects the real encoding", async () => {
+  // GBK text, XOR 0x84 as stored in nscript.dat, longer than the 1 MiB sample.
+  const line = Buffer.from("3bcbaec9abbababbafd7e90a", "hex"), lines = Buffer.alloc(1024 * 1024 + 7);
+  for (let offset = 0; offset < lines.length; offset += line.length) {line.copy(lines, offset);}
+  const script = lines.map(byte => byte ^ 0x84), font = Buffer.from("font");
+  const input = await tree({"水色/nscript.dat": script, "水色/default.ttf": font, "水色/readme.txt": Buffer.from("not a script")});
+  const physical = join(input.root, "physical-package");
+  await writeFile(physical, Buffer.concat([Buffer.from("PK-HEADER"), script, font]));
+  input.locators["水色/nscript.dat"] = {path: physical, offset: 9, sizeBytes: script.length};
+  const configured = await configureHostInput({...input, platformId: "ons", coreIds: ["onscripter_yuri"]});
+  const sample = Buffer.from(configured.evidence?.["水色/nscript.dat"]?.prefixBase64 ?? "", "base64");
+  expect(sample.equals(script.subarray(0, 1024 * 1024))).toBe(true);
+  expect(Object.keys(configured.evidence ?? {})).toEqual(["水色/nscript.dat"]);
+});
 it("requires the selected verified provider for native detection and verifies staged game bytes first", async () => {
   const input = await tree({"game/sky.dnr": Uint8Array.of(1, 2, 3)});
   const request = {...input, platformId: "scummvm", coreIds: ["scummvm"]};

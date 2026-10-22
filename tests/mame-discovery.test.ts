@@ -26,7 +26,7 @@ it("discovers only identity-matching CHDs from bounded metadata-root facts, irre
   const root = await mkdtemp(join(tmpdir(), "mame-discovery-")); roots.push(root);
   const path = join(root, "game.zip"), bytes = zipSync({}); await writeFile(path, bytes);
   const input = {files: [{name: "shikigam.zip", logicalKey: "shikigam.zip", sizeBytes: bytes.length,
-    sha256: createHash("sha256").update(bytes).digest("hex")}], locators: {"shikigam.zip": path},
+    sha256: createHash("sha256").update(bytes).digest("hex")}], locators: {"shikigam.zip": {path, offset: 0, sizeBytes: bytes.length}},
     directory: {platformId: "arcade", defaultCoreId: "mame_arcade", allowedCoreIds: ["mame_arcade"]}};
   expect(await discoverContentDependencies(input)).toMatchObject({sourceSearch: {extensions: ["chd"], headerBytes: 124}});
   const candidates = [

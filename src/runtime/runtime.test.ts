@@ -175,8 +175,9 @@ describe("unified runtime facts", () => {
       .toEqual({kind: "BUTTERSCOTCH_PROJECT", entryFile: "data.win"});
     expect(configureRuntime({platformId: "kirikiri", coreIds: ["kirikiri2"], files: [file("data.xp3"), file("patch.xp3")]}).content)
       .toEqual({kind: "KIRIKIRI_PROJECT", entryFile: "data.xp3"});
-    expect(configureRuntime({platformId: "ons", coreIds: ["onscripter_yuri"], files: [file("0.txt"), file("1.txt"), file("00.txt")]}).content)
-      .toEqual({kind: "ONS_PROJECT", entryFile: "0.txt"});
+    const script = {prefixBase64: btoa("*define\n".padEnd(128, ";"))};
+    expect(configureRuntime({platformId: "ons", coreIds: ["onscripter_yuri"], files: [file("0.txt"), file("1.txt"), file("00.txt")],
+      evidence: {"0.txt": script}}).content).toEqual({kind: "ONS_PROJECT", entryFile: "0.txt"});
   });
   it("projects a nested KiriKiri startup archive into the same paths as its public file tree", () => {
     const entryFile = "nested/project/data.xp3";

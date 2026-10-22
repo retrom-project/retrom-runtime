@@ -1,6 +1,8 @@
 import {configureHostInput, prepareHostInput, assembleResource, detectScummvm, arcadeTables, identifyHostBIOS, verifyHostBIOS,
   flycastConfigureEvidence, discoverContentDependencies, contentHostBIOSRequirements, hostDOSEntryCandidates, hostArcadeParentOptions} from "./runtime-host-input.mjs";
 import {normalizeContent} from "./runtime-normalize-content.mjs";
+import {bindingStorageLayout, resolveRuntimeTarget} from "../dist/runtime/index.js";
+import {parseRuntimeConfiguration} from "../dist/runtime/index.js";
 import {readFile} from "node:fs/promises";
 import {once} from "node:events";
 import {serveJSONL} from "./runtime-jsonl.mjs";
@@ -16,6 +18,11 @@ async function execute(command, input, signal = new AbortController().signal) {
   signal.throwIfAborted();
   let output;
   switch (command) {
+  case "storage-layout": {
+    const config = parseRuntimeConfiguration(input.config);
+    output = {layout: bindingStorageLayout(resolveRuntimeTarget(input.platformId, input.coreId, config.content).binding)};
+    break;
+  }
   case "catalog": {
     catalog ??= (async () => {
       const tables = await arcadeTables();

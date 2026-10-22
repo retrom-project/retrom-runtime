@@ -12,7 +12,7 @@ async function input(name: string, bytes: Uint8Array) {
   const root = await mkdtemp(join(tmpdir(), "retrom-normalize-test-")); roots.push(root);
   const path = join(root, "source"); await writeFile(path, bytes);
   return {platformId: "tyranoscript", files: [{logicalKey: name, name, sizeBytes: bytes.length,
-    sha256: createHash("sha256").update(bytes).digest("hex")}], locators: {[name]: path}, outputRoot: join(root, "normalized")};
+    sha256: createHash("sha256").update(bytes).digest("hex")}], locators: {[name]: {path, offset: 0, sizeBytes: bytes.length}}, outputRoot: join(root, "normalized")};
 }
 function asar(header: object, data: Uint8Array) {
   const json = Buffer.from(JSON.stringify(header)), payload = 4 + Math.ceil(json.length / 4) * 4;

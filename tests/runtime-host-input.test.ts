@@ -13,13 +13,31 @@ afterEach(async () => {await Promise.all(roots.splice(0).map(path => rm(path, {r
 const sha = (bytes: Uint8Array) => createHash("sha256").update(bytes).digest("hex");
 async function tree(content: Record<string, Uint8Array>) {
   const root = await mkdtemp(join(tmpdir(), "retrom-resource-test-")); roots.push(root);
-  const files: RuntimeContentFile[] = [], locators: Record<string, string> = {};
+  const files: RuntimeContentFile[] = [], locators: Record<string, {path: string; offset: number; sizeBytes: number}> = {};
   for (const [name, bytes] of Object.entries(content)) {
     const path = join(root, `${files.length}.bin`); await writeFile(path, bytes);
-    locators[name] = path; files.push({logicalKey: name, name, sha256: sha(bytes), sizeBytes: bytes.length});
+    locators[name] = {path, offset: 0, sizeBytes: bytes.length}; files.push({logicalKey: name, name, sha256: sha(bytes), sizeBytes: bytes.length});
   }
   return {root, files, locators};
 }
+
+it("uses logical package intervals for evidence, nested native archives and ZIP assembly", async () => {
+  const ini = Buffer.from("[Game]\nLibrary=RGSS104E.dll\nTitle=Package\n");
+  const archive = Buffer.from(zipSync({"PLAY.EXE": Uint8Array.of(1, 2, 3)}));
+  const input = await tree({"Game.ini": ini, "game.zip": archive});
+  const physical = join(input.root, "physical-package");
+  await writeFile(physical, Buffer.concat([Buffer.from("BEFORE"), ini, Buffer.from("BETWEEN"), archive, Buffer.from("AFTER")]));
+  input.locators["Game.ini"] = {path: physical, offset: 6, sizeBytes: ini.length};
+  input.locators["game.zip"] = {path: physical, offset: 6 + ini.length + 7, sizeBytes: archive.length};
+  const configured = await configureHostInput({...input, platformId: "rpgmaker", coreIds: ["rpgmaker"]});
+  expect(configured.evidence?.["Game.ini"]).toEqual({text: ini.toString()});
+  expect(await hostDOSEntryCandidates({...input, config: {content: {kind: "DOS_BUNDLE", entryFile: "game.zip"}}}))
+    .toEqual({entries: ["PLAY.EXE"]});
+  const output = await assembleResource({...input, outputPath: join(input.root, "assembled.zip")});
+  const members = unzipSync(await readFile(output.path));
+  expect(Buffer.from(members["Game.ini"])).toEqual(ini);
+  expect(Buffer.from(members["game.zip"])).toEqual(archive);
+});
 it("streams a deterministic ordinary ZIP with virtual project paths and exact source identities", async () => {
   const input = await tree({"project/Game.ini": Buffer.from("[Game]"), "project/Data/Map.rxdata": Uint8Array.of(1, 2, 3)});
   const paths = {"project/Game.ini": "Game.ini", "project/Data/Map.rxdata": "Data/Map.rxdata"};
@@ -71,6 +89,20 @@ it("reads bounded immutable configuration evidence and real DOS executable membe
   expect((await configureHostInput({...dos, platformId: "dos", coreIds: ["dosbox_pure"]})).archiveMembers?.["game.zip"])
     .toEqual(["folder/game.exe", "readme.txt"]);
 });
+it("samples ONS scripts from their package interval so configure detects the real encoding", async () => {
+  // GBK text, XOR 0x84 as stored in nscript.dat, longer than the 1 MiB sample.
+  const line = Buffer.from("3bcbaec9abbababbafd7e90a", "hex"), lines = Buffer.alloc(1024 * 1024 + 7);
+  for (let offset = 0; offset < lines.length; offset += line.length) {line.copy(lines, offset);}
+  const script = lines.map(byte => byte ^ 0x84), font = Buffer.from("font");
+  const input = await tree({"水色/nscript.dat": script, "水色/default.ttf": font, "水色/readme.txt": Buffer.from("not a script")});
+  const physical = join(input.root, "physical-package");
+  await writeFile(physical, Buffer.concat([Buffer.from("PK-HEADER"), script, font]));
+  input.locators["水色/nscript.dat"] = {path: physical, offset: 9, sizeBytes: script.length};
+  const configured = await configureHostInput({...input, platformId: "ons", coreIds: ["onscripter_yuri"]});
+  const sample = Buffer.from(configured.evidence?.["水色/nscript.dat"]?.prefixBase64 ?? "", "base64");
+  expect(sample.equals(script.subarray(0, 1024 * 1024))).toBe(true);
+  expect(Object.keys(configured.evidence ?? {})).toEqual(["水色/nscript.dat"]);
+});
 it("requires the selected verified provider for native detection and verifies staged game bytes first", async () => {
   const input = await tree({"game/sky.dnr": Uint8Array.of(1, 2, 3)});
   const request = {...input, platformId: "scummvm", coreIds: ["scummvm"]};
@@ -116,10 +148,10 @@ it("retains named firmware ZIP candidates while scoring incorrect or missing mem
     delivery: "EXTERNAL_FILE" as const, virtualPath: "bios.zip", activationOptions: {},
     members: [{name: "bios.bin", sizeBytes: 2, crc32: "ffffffff", sha1: "", required: true}]};
   const file = {...input.files[0], md5: "a".repeat(32)};
-  expect(await identifyHostBIOS({file, path: input.locators[file.name], requirements: [requirement]}))
+  expect(await identifyHostBIOS({file, path: input.locators[file.name].path, requirements: [requirement]}))
     .toMatchObject([{...requirement, candidate: {matchedMembers: 0, totalMembers: 1}}]);
-  expect(await identifyHostBIOS({file: {...file, name: "random.zip"}, path: input.locators[file.name], requirements: [requirement]})).toEqual([]);
-  expect(await identifyHostBIOS({file, path: input.locators[file.name], requirements: [{...requirement,
+  expect(await identifyHostBIOS({file: {...file, name: "random.zip"}, path: input.locators[file.name].path, requirements: [requirement]})).toEqual([]);
+  expect(await identifyHostBIOS({file, path: input.locators[file.name].path, requirements: [{...requirement,
     members: [{...requirement.members[0], sizeBytes: 3}]}]})).toMatchObject([{candidate: {matchedMembers: 0}}]);
 });
 

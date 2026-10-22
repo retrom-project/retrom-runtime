@@ -3,7 +3,7 @@
   "description": "Host-independent browser game runtimes with a shared lifecycle and checkpoint contract",
   "type": "module",
   "license": "MIT",
-  "packageManager": "npm@11.16.0",
+  "packageManager": "npm@11.19.1",
   "files": [
     "dist",
     "assets",

@@ -11,13 +11,15 @@ import {tmpdir} from "node:os";
 import {join, dirname} from "node:path";
 import {gunzipSync, crc32} from "node:zlib";
 import {parseRuntimeConfiguration, contentHash, runtimeBindings, identifyPSXRegion, resolveSavedRuntimeRequest,
-  contentBIOSRequirements, missingROMMember, dosEntryCandidates, arcadeParentOptions, resolveRuntimeTarget, flycastMachine, flycastContentReferences, flycastMedia} from "../dist/runtime/index.js";
+  contentBIOSRequirements, missingROMMember, dosEntryCandidates, arcadeParentOptions, resolveRuntimeTarget, flycastMachine, flycastContentReferences, flycastMedia,
+  onsScriptNames, onsScriptSampleBytes} from "../dist/runtime/index.js";
 import {zipMembers, requireLocator, safePath, sha256} from "./runtime-archive-input.mjs";
 import {discoverMameMedia, mameMediaEvidence} from "./runtime-host-media.mjs";
 
 export async function configureHostInput(input) {
   contentHash(input.files, "TREE");
   const evidence = {...input.evidence}, archiveMembers = {...input.archiveMembers};
+  let onsSamples = 0;
   for (const file of input.files) {
     const name = file.logicalKey.split("/").at(-1).toLowerCase();
     const needsEvidence = input.platformId === "rpgmaker" && ["game.ini", "rpg_rt.ldb"].includes(name);
@@ -27,6 +29,13 @@ export async function configureHostInput(input) {
       const bytes = await readContent(requireLocator(input, file));
       if (bytes.length !== file.sizeBytes || sha256(bytes) !== file.sha256) {throw new Error("RUNTIME_CONTENT_CHANGED");}
       evidence[file.logicalKey] = name === "game.ini" ? {text: new TextDecoder().decode(bytes)} : {bytesBase64: bytes.toString("base64")};
+    }
+    if (input.platformId === "ons" && onsScriptNames.includes(file.logicalKey.split("/").at(-1)) && !evidence[file.logicalKey] &&
+      input.locators?.[file.logicalKey]) {
+      if (++onsSamples > 64) {throw new Error("RUNTIME_EVIDENCE_TOO_LARGE");}
+      const chunks = [], length = Math.min(file.sizeBytes, onsScriptSampleBytes);
+      for await (const chunk of contentStream(requireLocator(input, file), {length})) {chunks.push(chunk);}
+      evidence[file.logicalKey] = {prefixBase64: Buffer.concat(chunks).toString("base64")};
     }
     if (input.platformId === "dos" && /\.(?:zip|dosz)$/u.test(name) && !archiveMembers[file.logicalKey] && input.locators?.[file.logicalKey]) {
       archiveMembers[file.logicalKey] = (await zipMembers(requireLocator(input, file))).map(member => member.name);

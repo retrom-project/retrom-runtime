@@ -6,6 +6,7 @@ import {configurationFailure, logicalPath, object, utf8Compare} from "./validati
 import {validateConfiguredOptions} from "./prepare.js";
 import {detectLcfEngine} from "./lcf.js";
 import {siglusLanguage} from "./siglus.js";
+import {onsScriptEncoding, onsScriptSampleBytes} from "./ons-encoding.js";
 import formats from "./content-formats.json" with {type: "json"};
 import type {FlycastMachine} from "./flycast-arcade.js";
 import {playableArcadeMachine, type ArcadeCatalog} from "./arcade.js";
@@ -15,7 +16,7 @@ export type ConfigureRequest = {
   coreIds: string[];
   files: RuntimeContentFile[];
   /** Bounded evidence is read by the host from these exact immutable files. */
-  evidence?: Record<string, {text?: string; bytesBase64?: string}>;
+  evidence?: Record<string, {text?: string; bytesBase64?: string; prefixBase64?: string}>;
   /** Archive members are inspected by the runtime; the outer archive remains the Game file. */
   archiveMembers?: Record<string, string[]>;
   arcadeCatalogs?: Readonly<Record<string, ArcadeCatalog>>;
@@ -35,7 +36,8 @@ export function configureRuntime(input: ConfigureRequest): RuntimeConfiguration 
   const cores = input.platformId === "arcade" && content.kind === "ARCADE" ? arcadeParents(input, content.entryFile)
     : input.flycastCatalogs && "entryFile" in content ? flycastParents(input, content.entryFile)
     : input.platformId === "scummvm" ? {scummvm: {options: scummvmOptions(input)}}
-    : input.platformId === "ons" ? {onscripter_yuri: {options: {scriptEncoding: "utf8"}}}
+    : input.platformId === "ons" && "entryFile" in content
+      ? {onscripter_yuri: {options: {scriptEncoding: onsScriptEncoding(input.files, content.entryFile, input.evidence)}}}
     : input.platformId === "siglus" && "entryFile" in content ? {siglus: {options: {language: siglusLanguage(input.files, content.entryFile)}}} : undefined;
   const config = parseRuntimeConfiguration({content, ...(cores ? {cores} : {})});
   validateConfiguredOptions(input.platformId, config, input.files);
@@ -189,7 +191,9 @@ function validateEvidence(input: ConfigureRequest) {
   for (const [path, evidence] of Object.entries(input.evidence ?? {})) {
     if (!input.files.some(file => file.logicalKey === path) || !object(evidence) ||
       evidence.text !== undefined && (typeof evidence.text !== "string" || evidence.text.length > 262144) ||
-      evidence.bytesBase64 !== undefined && (typeof evidence.bytesBase64 !== "string" || evidence.bytesBase64.length > 32 * 1024 * 1024)) {
+      evidence.bytesBase64 !== undefined && (typeof evidence.bytesBase64 !== "string" || evidence.bytesBase64.length > 32 * 1024 * 1024) ||
+      evidence.prefixBase64 !== undefined && (typeof evidence.prefixBase64 !== "string" ||
+        evidence.prefixBase64.length > Math.ceil(onsScriptSampleBytes / 3) * 4)) {
       configurationFailure("RUNTIME_EVIDENCE_INVALID");
     }
   }

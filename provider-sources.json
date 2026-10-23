@@ -3173,25 +3173,25 @@
       "repository": "https://github.com/retrom-project/OnscripterYuri",
       "upstreamCommit": "08f744b31cc1907b66a15f0402e62321a131ed81",
       "adapterAbi": "ons-content-io-v1",
-      "tag": "retrom-core-0.7.7beta-r7",
-      "commit": "8684330a24e5d29201d07997871529ec867512cd",
-      "metadataUrl": "https://github.com/retrom-project/OnscripterYuri/releases/download/retrom-core-0.7.7beta-r7/rpg-runtime-release.json",
+      "tag": "retrom-core-0.7.7beta-r8",
+      "commit": "9b555028f8bc5f37d066b79f07af7370c95dfe10",
+      "metadataUrl": "https://github.com/retrom-project/OnscripterYuri/releases/download/retrom-core-0.7.7beta-r8/rpg-runtime-release.json",
       "assets": [
         {
           "filename": "onsyuri.js",
-          "sizeBytes": 216821,
-          "sha256": "acc4392cbe8934580c1b4640c885366893c55c01bb1479c0a38e3cd12b613ed1",
+          "sizeBytes": 217195,
+          "sha256": "cc17f885a2454862776bbc9fb82dc331800dce7410780e94c918eca9c2ae5396",
           "output": "runtime/ons/onsyuri.js",
           "maxSizeBytes": 1048576,
-          "url": "https://github.com/retrom-project/OnscripterYuri/releases/download/retrom-core-0.7.7beta-r7/onsyuri.js"
+          "url": "https://github.com/retrom-project/OnscripterYuri/releases/download/retrom-core-0.7.7beta-r8/onsyuri.js"
         },
         {
           "filename": "onsyuri.wasm",
-          "sizeBytes": 4626242,
-          "sha256": "5f9ebb05607f01691e0b4e62b3d875cdd542e42ab5c8d7c17a94a8d0fa7c0d03",
+          "sizeBytes": 4629005,
+          "sha256": "92e8a1b463948c7bb88f69da0b8a2d78735cbb915d5b98cae643f7bca9740166",
           "output": "runtime/ons/onsyuri.wasm",
           "maxSizeBytes": 16777216,
-          "url": "https://github.com/retrom-project/OnscripterYuri/releases/download/retrom-core-0.7.7beta-r7/onsyuri.wasm"
+          "url": "https://github.com/retrom-project/OnscripterYuri/releases/download/retrom-core-0.7.7beta-r8/onsyuri.wasm"
         },
         {
           "filename": "COPYING",
@@ -3199,7 +3199,7 @@
           "sha256": "32b1062f7da84967e7019d01ab805935caa7ab7321a7ced0e30ebe75e5df1670",
           "output": "licenses/onsyuri/COPYING",
           "maxSizeBytes": 65536,
-          "url": "https://github.com/retrom-project/OnscripterYuri/releases/download/retrom-core-0.7.7beta-r7/COPYING"
+          "url": "https://github.com/retrom-project/OnscripterYuri/releases/download/retrom-core-0.7.7beta-r8/COPYING"
         }
       ]
     },

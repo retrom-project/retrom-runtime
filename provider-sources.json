@@ -3172,7 +3172,7 @@
       "id": "onsyuri",
       "repository": "https://github.com/retrom-project/OnscripterYuri",
       "upstreamCommit": "08f744b31cc1907b66a15f0402e62321a131ed81",
-      "adapterAbi": "ons-save",
+      "adapterAbi": "ons-content-io-v1",
       "tag": "retrom-core-0.7.7beta-r7",
       "commit": "8684330a24e5d29201d07997871529ec867512cd",
       "metadataUrl": "https://github.com/retrom-project/OnscripterYuri/releases/download/retrom-core-0.7.7beta-r7/rpg-runtime-release.json",

@@ -89,7 +89,7 @@ const adapters = [
   defineAdapter({id: "mkxp-libretro-web", kind: "MKXP_LIBRETRO_WEB", abi: "mkxp-content-io-v1",
     checkpoint: {semantics: "INSTANT", writeFormat: "mkxp-state-v1", readFormats: ["mkxp-state-v1"]}, capabilities: rpgCapabilities}),
   adapter("native-web", "NATIVE_WEB", "native-save", "native-save-bundle-v1", nativeCapabilities),
-  adapter("ons-yuri-web", "ONS_YURI_WEB", "ons-save", "ons-save-bundle-v1", standardCapabilities),
+  adapter("ons-yuri-web", "ONS_YURI_WEB", "ons-content-io-v1", "ons-save-bundle-v1", standardCapabilities),
   adapter("tyranoscript-web", "TYRANOSCRIPT_WEB", "tyranoscript-snapshot-v1",
     "tyranoscript-snapshot-v1", isolatedCapabilities),
   adapter("wasm4-web", "WASM4_WEB", "wasm4-state-v1", "wasm4-state-v1", wasm4Capabilities),

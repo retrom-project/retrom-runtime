@@ -7,9 +7,10 @@ import {targetEnvelope} from "../../tests/provider-fixtures.js";
 import {contentBootstrap, currentWindowHost} from "../../tests/provider-adapter-fixture.js";
 import { decodeOnsCheckpoint, encodeOnsCheckpoint } from "./checkpoint.js";
 import { createRuntime } from "../index.js";
+import type {OnsContentBridge} from "./project-files.js";
 
 type HostWindow = Window & {
-  fetch_file?: (fileSystem: FakeFs, path: string) => Promise<number>;
+  g_onsyuri_content?: OnsContentBridge;
   onsyuri?: (options: Record<string, unknown>) => Promise<FakeModule>;
   onsyuriHostReady?: () => void;
   scale_full?: (element: HTMLElement, ratio: number) => void;
@@ -21,7 +22,7 @@ afterEach(() => {
   Reflect.deleteProperty(window.navigator, "getGamepads");
   delete (window as HostWindow).onsyuri;
   delete (window as HostWindow).onsyuriHostReady;
-  delete (window as HostWindow).fetch_file;
+  delete (window as HostWindow).g_onsyuri_content;
   document.head.querySelectorAll("script[data-runtime=ons-yuri]").forEach((script) => script.remove());
   document.body.replaceChildren();
 });
@@ -46,7 +47,7 @@ describe("ONS Yuri runtime", () => {
     await loadRuntimeScript(); await mounted;
     if (phase === "exit") {await runtime.exit().catch(() => undefined);}
     expect(Reflect.get(window, "g_onsyuri_module")).toBeUndefined();
-    expect((window as HostWindow).fetch_file).toBeUndefined();
+    expect((window as HostWindow).g_onsyuri_content).toBeUndefined();
     expect(target.childElementCount).toBe(0);
     expect(document.head.querySelector("script[data-runtime=ons-yuri]")).toBeNull();
   });
@@ -55,7 +56,7 @@ describe("ONS Yuri runtime", () => {
     const module = fakeModule();
     let globalsPresentOnStop = false;
     module._onsyuri_host_stop.mockImplementation(() => {
-      globalsPresentOnStop = !!Reflect.get(window, "g_onsyuri_module") && typeof (window as HostWindow).fetch_file === "function";
+      globalsPresentOnStop = !!Reflect.get(window, "g_onsyuri_module") && (window as HostWindow).g_onsyuri_content?.abi === "ons-content-io-v1";
     });
     (window as HostWindow).onsyuri = vi.fn(async options => {
       Object.assign(options, module);
@@ -197,7 +198,7 @@ describe("ONS Yuri runtime", () => {
     expect(cancelAnimationFrame).toHaveBeenCalled();
   });
 
-  it("opens only files requested by each native instance without reporting a fictitious whole-project download", async () => {
+  it("reads only the files each native instance opens, by range, without a fictitious whole-project download", async () => {
     const projectFiles = [
       { path: "0.txt", bytes: Uint8Array.of(1) },
       { path: "default.ttf", bytes: Uint8Array.of(2, 3) },
@@ -211,14 +212,17 @@ describe("ONS Yuri runtime", () => {
         url: `https://content.example/${path}`,
       })),
     });
-    const fetchMock = vi.fn(async (input: string | URL | Request) => {
+    const fetchMock = vi.fn(async (input: string | URL | Request, init?: RequestInit) => {
       const url = requestUrl(input);
       if (url.endsWith("/index.json")) {return new Response(indexBody, { status: 200 });}
       const file = projectFiles.find(({ path }) => url.endsWith(`/${path}`));
       if (!file) {return new Response(null, { status: 404 });}
-      return new Response(file.bytes.slice(), {
-        headers: { "content-length": String(file.bytes.byteLength) },
-        status: 200,
+      const range = /^bytes=(\d+)-(\d+)$/u.exec(new Headers(input instanceof Request ? input.headers : init?.headers).get("Range") ?? "");
+      const start = range ? Number(range[1]) : 0, end = range ? Math.min(Number(range[2]), file.bytes.byteLength - 1) : file.bytes.byteLength - 1;
+      return new Response(file.bytes.slice(start, end + 1), {
+        headers: {"content-length": String(end - start + 1), etag: `"${file.path}-v1"`,
+          ...(range ? {"content-range": `bytes ${start}-${end}/${file.bytes.byteLength}`} : {})},
+        status: range ? 206 : 200,
       });
     });
     vi.stubGlobal("fetch", fetchMock);
@@ -233,9 +237,14 @@ describe("ONS Yuri runtime", () => {
         Object.assign(options, module);
         const configured = options as FakeModule;
         configured.preRun?.();
+        const bridge = (window as HostWindow).g_onsyuri_content!;
         for (const file of projectFiles) {
-          expect(await (window as HostWindow).fetch_file?.(configured.FS, `/game/${file.path}`)).toBe(1);
+          const handle = await bridge.open(`/game/${file.path}`);
+          expect(handle).toBeGreaterThan(0); expect(bridge.size(handle)).toBe(file.bytes.byteLength);
+          expect(await bridge.read(handle, 0, file.bytes.byteLength)).toEqual(file.bytes);
+          bridge.close(handle);
         }
+        expect(await bridge.open("/game/missing.nsa")).toBe(0);
         return configured;
       });
       const progress: Array<{ loadedBytes: number; totalBytes: number | null; type: "LOAD_PROGRESS" }> = [];
@@ -253,7 +262,8 @@ describe("ONS Yuri runtime", () => {
     }
 
     expect(fetchMock.mock.calls.map(([input]) => requestUrl(input)).filter((url) => !url.endsWith("/index.json")))
-      .toEqual([...projectFiles, ...projectFiles].map(({ path }) => `https://content.example/${path}`));
+      // The second native instance reads the same ranges from the session's cached blocks.
+      .toEqual(projectFiles.map(({ path }) => `https://content.example/${path}`));
     } finally {bootstrap.mockImplementation(previous);}
   });
 

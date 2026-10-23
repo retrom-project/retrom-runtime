@@ -40,7 +40,7 @@ describe("independent package boundary", () => {
     ]);
     expect(retromRuntimeProviderDefinition.adapters.map((adapter) => adapter.abi).sort()).toEqual([
       "apple2js-web-v1", "butterscotch-checkpoint-v2", "easyrpg-save", "fake08-state-v1", "gbe-pokemini-host-v1", "j2me-rms", "jsbeeb-web-v1", "kirikiri-content-io-v1", "mkxp-content-io-v1",
-      "native-save", "np2kai-host-v1", "nxengine-host-v1", "ons-save", "openbor-host-v1", "play-host-v3", "ppsspp-host-v4", "px68k-host-v1", "retrom-mame-dylink-v1", "ruffle-host-v1", "samcoupe-web-v1", "scummvm-host-v1", "siglus-host-v1", "tic80-pmem-v1", "tyranoscript-snapshot-v1", "wasm4-state-v1", "webmsx-host-v1",
+      "native-save", "np2kai-host-v1", "nxengine-host-v1", "ons-content-io-v1", "openbor-host-v1", "play-host-v3", "ppsspp-host-v4", "px68k-host-v1", "retrom-mame-dylink-v1", "ruffle-host-v1", "samcoupe-web-v1", "scummvm-host-v1", "siglus-host-v1", "tic80-pmem-v1", "tyranoscript-snapshot-v1", "wasm4-state-v1", "webmsx-host-v1",
     ]);
     expect((await readdir(join(root, "assets/runtime"))).sort()).toEqual(["butterscotch", "native", "tyranoscript"]);
     for (const asset of [
@@ -121,7 +121,7 @@ describe("independent package boundary", () => {
     expect(() => assertScummvmCandidateMode([candidate], false, false)).toThrow("UNPUBLISHED_CORE_INPUT");
     expect(() => assertScummvmCandidateMode([candidate], true, true)).toThrow("UNPUBLISHED_CORE_INPUT");
     expect(sources.upstreamReleases).toContainEqual(expect.objectContaining({
-      id: "onsyuri", adapterAbi: "ons-save", repository: "https://github.com/retrom-project/OnscripterYuri",
+      id: "onsyuri", adapterAbi: "ons-content-io-v1", repository: "https://github.com/retrom-project/OnscripterYuri",
       tag: "retrom-core-0.7.7beta-r7", commit: "8684330a24e5d29201d07997871529ec867512cd",
       assets: expect.arrayContaining([expect.objectContaining({
         filename: "onsyuri.wasm", sha256: "5f9ebb05607f01691e0b4e62b3d875cdd542e42ab5c8d7c17a94a8d0fa7c0d03",

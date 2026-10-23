@@ -1,29 +1,105 @@
 import type {RuntimeProgressReporter} from "../internal-adapter.js";
 import type {AdapterContentSession} from "../provider/content-inputs.js";
+import type {ContentReaderV1} from "../../contracts/content-io/v1/content-io.js";
 import {checkSignal, combineSignals} from "../content-io/abort.js";
 import {ContentIOError} from "../content-io/errors.js";
 export type OnsProjectFile = {path: string; sizeBytes: number; url: string};
-export type OnsProjectFileNode = OnsProjectFile & {loaded: boolean; loading?: Promise<void>};
-type Writer = {writeFile(path: string, bytes: Uint8Array): void};
+export type OnsProjectFileNode = OnsProjectFile;
 type Content = {contentSession: AdapterContentSession; projectDigest: string; signal?: AbortSignal; onFailure?: (error: Error) => void};
+/** Native ABI of window.g_onsyuri_content, read by the core's fopen() streams. */
+export const onsContentAbi = "ons-content-io-v1";
+// Content I/O serves at most 16 MiB per logical read; larger native reads are split.
+const maximumReadBytes = 16 * 1024 * 1024;
+// The synchronous probe allocates its result up front, so it is only tried for buffer-sized reads.
+const maximumProbeBytes = 1024 * 1024;
+export type OnsContentBridge = {
+  readonly abi: typeof onsContentAbi;
+  /** A positive handle, 0 when the path is not a project file, or -1 on failure. */
+  open(path: string): Promise<number>;
+  size(handle: number): number;
+  /** Cached bytes only: null unless the whole range is already local. */
+  tryRead(handle: number, offset: number, length: number): Uint8Array | null;
+  read(handle: number, offset: number, length: number): Promise<Uint8Array | null>;
+  close(handle: number): void;
+};
+/**
+ * Project files for the ONS core. The core opens files lazily and reads byte ranges through the
+ * bridge, so large archives such as arc.nsa are fetched only where the engine reads them.
+ */
 export function createOnsProjectFileMap(files: OnsProjectFile[], frameWindow: Window, _reportProgress: RuntimeProgressReporter, content?: Content) {
   if (!content) {throw new ContentIOError("ABI_MISMATCH");}
   const controller = new AbortController(), scope = combineSignals([controller.signal, ...(content.signal ? [content.signal] : [])]);
   const map: Record<string, OnsProjectFileNode> = Object.create(null) as Record<string, OnsProjectFileNode>;
-  for (const file of files) {map[`/game/${file.path}`.toLowerCase()] = {...file, path: `/game/${file.path}`, loaded: false};}
+  for (const file of files) {map[`/game/${file.path}`.toLowerCase()] = {...file, path: `/game/${file.path}`};}
   const pending = new Set<Promise<unknown>>();
   const track = <T>(task: Promise<T>) => {
     pending.add(task); void task.finally(() => pending.delete(task)).catch(() => {}); return task;
   };
-  const read = (node: OnsProjectFileNode) => {
-    return track(loadProjectFile(node, frameWindow.document.baseURI, content, scope.signal));
+  const readers = new Map<number, ContentReaderV1>();
+  let nextHandle = 1;
+  const fail = (error: unknown) => {if (!scope.signal.aborted && error instanceof Error) {content.onFailure?.(error);}};
+  const source = (node: OnsProjectFileNode) => {
+    const policy = content.contentSession.inputPolicy("game");
+    return {source: {identity: {kind: "INDEX_ENTRY" as const, projectDigest: content.projectDigest, logicalPath: node.path.slice(6)},
+      url: new URL(node.url, frameWindow.document.baseURI).href, sizeBytes: node.sizeBytes, purpose: "GAME" as const,
+      transport: "RANGE_REQUIRED" as const, etagPolicy: "PIN_STRONG" as const, contentLengthPolicy: policy.contentLengthPolicy}, policy};
+  };
+  const reader = (handle: number) => {
+    const value = readers.get(handle); if (!value) {throw new ContentIOError("SOURCE_INVALID");} return value;
+  };
+  const span = (handle: number, offset: number, length: number) => {
+    const file = reader(handle);
+    if (!Number.isSafeInteger(offset) || !Number.isSafeInteger(length) || offset < 0 || length < 0) {throw new ContentIOError("SOURCE_INVALID");}
+    return {file, bytes: new Uint8Array(Math.max(0, Math.min(length, file.sizeBytes - offset)))};
+  };
+  const bridge: OnsContentBridge = {
+    abi: onsContentAbi,
+    open: path => track((async () => {
+      try {
+        checkSignal(scope.signal);
+        const node = map[path.toLowerCase()];
+        if (!node) {return 0;}
+        const {source: declared, policy} = source(node);
+        const opened = await content.contentSession.open(declared, policy, scope.signal);
+        if (scope.signal.aborted) {await opened.close(); return -1;}
+        const handle = nextHandle++;
+        readers.set(handle, opened);
+        return handle;
+      } catch (error) {fail(error); return -1;}
+    })()),
+    size: handle => reader(handle).sizeBytes,
+    tryRead(handle, offset, length) {
+      if (scope.signal.aborted || length > maximumProbeBytes) {return null;}
+      const {file, bytes} = span(handle, offset, length);
+      return bytes.length === 0 || file.tryReadInto(offset, bytes) === bytes.length ? bytes : null;
+    },
+    read: (handle, offset, length) => track((async () => {
+      try {
+        checkSignal(scope.signal);
+        const {file, bytes} = span(handle, offset, length);
+        for (let done = 0; done < bytes.length;) {
+          const part = bytes.subarray(done, Math.min(bytes.length, done + maximumReadBytes));
+          const read = await file.readInto(offset + done, part, scope.signal);
+          if (read !== part.length) {throw new ContentIOError("SOURCE_INVALID");}
+          done += read;
+        }
+        checkSignal(scope.signal);
+        return bytes;
+      } catch (error) {fail(error); return null;}
+    })()),
+    close(handle) {
+      const file = readers.get(handle); readers.delete(handle);
+      if (file) {void track(file.close()).catch(fail);}
+    },
   };
   return {
+    bridge,
     fileMap: map,
     hasPendingReads: () => pending.size > 0,
     videoSource: content.contentSession.preloaded ? (node: OnsProjectFileNode) => track((async () => {
       checkSignal(scope.signal);
-      const policy = {...content.contentSession.inputPolicy("game"), result: "BLOB" as const};
+      // Preloaded video plays from a leased local Blob, as before; only native reads use ranges.
+      const policy = {...content.contentSession.inputPolicy("game"), mode: "ON_OPEN" as const, bridge: "NONE" as const, result: "BLOB" as const};
       const reader = await content.contentSession.open({identity: {kind: "INDEX_ENTRY", projectDigest: content.projectDigest, logicalPath: node.path.slice(6)},
         url: new URL(node.url, frameWindow.document.baseURI).href, sizeBytes: node.sizeBytes, purpose: "GAME", transport: "WHOLE_ALLOWED",
         etagPolicy: "PIN_STRONG", contentLengthPolicy: policy.contentLengthPolicy}, policy, scope.signal);
@@ -37,31 +113,11 @@ export function createOnsProjectFileMap(files: OnsProjectFile[], frameWindow: Wi
         } catch (error) {await result.release(); throw error;}
       } finally {await reader.close();}
     })()) : undefined,
-    async readBytes(key: string) {
-      checkSignal(scope.signal); const node = map[key.toLowerCase()]; if (!node) {throw new ContentIOError("SOURCE_INVALID");}
-      const bytes = await read(node); checkSignal(scope.signal); return bytes;
+    async close() {
+      controller.abort();
+      const open = [...readers.values()]; readers.clear();
+      await Promise.allSettled([...pending, ...open.map(file => file.close())]);
+      scope.dispose();
     },
-    async fetchFile(fs: Writer, key: string) {
-      try {
-        checkSignal(scope.signal); const node = map[key.toLowerCase()];
-        if (!node) {return 0;} if (node.loaded) {return 1;}
-        node.loading ??= read(node).then(bytes => {checkSignal(scope.signal); fs.writeFile(node.path, bytes); node.loaded = true;})
-          .catch((error: unknown) => {node.loading = undefined; throw error;});
-        await node.loading; checkSignal(scope.signal); return 1;
-      } catch (error) {
-        if (!scope.signal.aborted && error instanceof Error) {content.onFailure?.(error);} return -1;
-      }
-    },
-    async close() {controller.abort(); await Promise.allSettled([...pending]); scope.dispose();},
   };
-}
-async function loadProjectFile(node: OnsProjectFileNode, base: string, content: Content, signal: AbortSignal) {
-  checkSignal(signal); const policy = content.contentSession.inputPolicy("game");
-  const reader = await content.contentSession.open({identity: {kind: "INDEX_ENTRY", projectDigest: content.projectDigest, logicalPath: node.path.slice(6)},
-    url: new URL(node.url, base).href, sizeBytes: node.sizeBytes, purpose: "GAME", transport: "WHOLE_ALLOWED", etagPolicy: "PIN_STRONG",
-    contentLengthPolicy: policy.contentLengthPolicy, }, policy, signal);
-  try {
-    const result = await content.contentSession.materialize(reader.id, {kind: "BYTES", maxBytes: policy.maxFileBytes}, signal);
-    if (result.kind !== "BYTES") {throw new ContentIOError("INTERNAL");} return result.bytes;
-  } finally {await reader.close();}
 }

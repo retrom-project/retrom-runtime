@@ -26,7 +26,7 @@ const gamePolicies: Readonly<Record<string, ContentInputPolicyV1>> = {
   "kirikiri2-kag": rangePolicy("VLFS", limits.indexedFile, { writes: "SESSION_OVERLAY"}),
   "msx-webmsx": eagerPolicy(limits.webmsxMedia),
   nxengine: eagerPolicy(limits.nxengineFile),
-  "onscripter-yuri": eagerPolicy(limits.indexedFile, {mode: "ON_OPEN"}),
+  "onscripter-yuri": rangePolicy("ASYNC", limits.indexedFile),
   openbor: eagerPolicy(limits.openborPak),
   samcoupe: eagerPolicy(16 * 1024 * 1024),
   "rpgmaker-2000": eagerPolicy(limits.indexedFile, {mode: "ON_OPEN"}),

@@ -87,8 +87,14 @@ export async function startFixtureServer({contentModule, modules = {}, staticFil
     if (path[0] === "files" && Object.hasOwn(staticFiles, path[1])) {
       const bytes = staticFiles[path[1]], sha256 = createHash("sha256").update(bytes).digest("hex");
       fileRequests.push({name: path[1], method: request.method, range: request.headers.range ?? null});
-      response.writeHead(200, {"Content-Type": "application/octet-stream", "Content-Length": bytes.length,
-        "ETag": `"sha256-${sha256}"`, "Cross-Origin-Resource-Policy": "same-origin"});
+      const headers = {"Content-Type": "application/octet-stream", "ETag": `"sha256-${sha256}"`, "Cross-Origin-Resource-Policy": "same-origin"};
+      const range = request.headers.range ? /^bytes=(\d+)-(\d+)$/u.exec(request.headers.range) : null;
+      if (range && Number(range[1]) < bytes.length) {
+        const start = Number(range[1]), end = Math.min(Number(range[2]), bytes.length - 1);
+        response.writeHead(206, {...headers, "Content-Length": end - start + 1, "Content-Range": `bytes ${start}-${end}/${bytes.length}`});
+        response.end(bytes.subarray(start, end + 1)); return;
+      }
+      response.writeHead(200, {...headers, "Content-Length": bytes.length});
       response.end(bytes); return;
     }
     const entry = scenarios.get(path[2]);

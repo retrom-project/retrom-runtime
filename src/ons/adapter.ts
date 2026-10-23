@@ -7,6 +7,7 @@ import { installOnsAnalogGamepad } from "./gamepad-input.js";
 import {waitForOnsEngine} from "./startup.js";
 import {
   createOnsProjectFileMap,
+  type OnsContentBridge,
   type OnsProjectFile,
   type OnsProjectFileNode,
 } from "./project-files.js";
@@ -46,6 +47,7 @@ type OnsFactory = (options: Partial<OnsModule>) => Promise<OnsModule>;
 type OnsHostWindow = Window & Record<string, unknown> & {
   onsyuri?: OnsFactory;
   onsyuriHostReady?: () => void;
+  g_onsyuri_content?: OnsContentBridge;
 };
 
 const gameRoot = "/game";
@@ -115,9 +117,8 @@ export async function mountOnsYuri(
     printErr: (message) => {if (message) {console.debug(`[ons-yuri] ${message}`);}},
   };
   host.g_onsyuri_module = moduleOptions;
-  host.g_onsyuri_index = { gamedir: gameRoot, savedir: saveRoot };
-  host.g_onsyuri_filemap = fileMap;
-  host.fetch_file = projectFiles.fetchFile;
+  // The core's fopen() reads project files through this bridge, one byte range at a time.
+  host.g_onsyuri_content = projectFiles.bridge;
   host.flush_save = () => undefined;
   host.onsyuriHostReady = () => ready.resolve();
   host.scale_full = (element: HTMLElement, ratio = 0) => scaleToFrame(frameWindow, element, ratio);
@@ -347,7 +348,7 @@ function loadRuntimeScript(document: Document, url: string) {
 }
 
 function captureGlobals(host: OnsHostWindow) {
-  const names = ["fetch_file", "flush_save", "g_onsyuri_filemap", "g_onsyuri_index", "g_onsyuri_module",
+  const names = ["flush_save", "g_onsyuri_content", "g_onsyuri_module",
     "onsyuriHostReady", "playVideo", "scale_full"] as const;
   return new Map(names.map((name) => [name, host[name]]));
 }

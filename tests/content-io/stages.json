@@ -2814,7 +2814,7 @@
           "src/nxengine",
           "src/provider/metadata.test.ts",
           "src/content-io/store/identity.test.ts",
-          "tests/content-io/ons-on-open.test.ts"
+          "tests/content-io/ons-range.test.ts"
         ]
       },
       {

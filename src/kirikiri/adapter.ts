@@ -7,6 +7,7 @@ import { decodeKirikiriCheckpoint, encodeKirikiriCheckpoint, type KirikiriCheckp
 import type { MountedRuntimeAdapter, RuntimeExitReporter } from "../internal-adapter.js";
 import type {KirikiriParameters} from "./parameters.js";
 import {installGamepadCursor, type GamepadCursor} from "../provider/gamepad-cursor.js";
+import {RuntimeFailureError} from "../provider/failure.js";
 
 import {parseProjectIndex} from "../provider/project-index.js";
 type KirikiriVlfs = {
@@ -53,12 +54,6 @@ const writeTimeoutMs = 10_000;
 const writeQuiescenceMs = 250;
 const maximumProjectFiles = 10_000;
 const saveRoots = ["/save/", "/savedata/"] as const;
-const runtimeTerminationTraps = new Set([
-  "null function",
-  "function signature mismatch",
-  "null function or function signature mismatch",
-  "table index is out of bounds",
-]);
 
 export async function mountKirikiri2(
   config: KirikiriParameters,
@@ -107,9 +102,10 @@ export async function mountKirikiri2(
   let paused = false;
   let exited = false;
   let exitReported = false;
+  let failed = false;
   let runtimeTerminationCleanup: () => void = () => undefined;
   const reportRuntimeExit = () => {
-    if (exitReported) {return;}
+    if (exitReported || failed || exited) {return;}
     exitReported = true;
     reportExitRequested();
   };
@@ -131,11 +127,6 @@ export async function mountKirikiri2(
   try {
     const base = new URL(normalizedBase(config.runtimeBaseUrl), document.baseURI);
     const assets = await content.assets(base);
-    runtimeTerminationCleanup = installKirikiriRuntimeTermination(
-      frameWindow,
-      assets.wasmUrl,
-      reportRuntimeExit,
-    );
     scripts.push(await loadClassicScript(document, assets.vlfsUrl));
     const vlfs = host.VLFS;
     requireVlfs(vlfs);
@@ -159,6 +150,14 @@ export async function mountKirikiri2(
       writes.set(entry.path, entry.data.slice());
     }
     const ready = deferred<void>();
+    const reportFailure = (error: Error) => {
+      if (failed || exitReported || exited) {return;}
+      failed = true;
+      ready.reject(error);
+      contentOptions.onFailure?.(error);
+    };
+    runtimeTerminationCleanup = installKirikiriRuntimeTermination(frameWindow, assets.wasmUrl, error =>
+      reportFailure(new RuntimeFailureError("KIRIKIRI_RUNTIME_TRAP", "CORE", [error.message], {cause: error})));
     const runtimeUrl = assets.scriptUrl;
     const options: Partial<KirikiriModule> = {
       arguments: [],
@@ -166,10 +165,14 @@ export async function mountKirikiri2(
       canvas,
       locateFile: (path) => path === "index.wasm" ? assets.wasmUrl : new URL(path, base).href,
       mainScriptUrlOrBlob: runtimeUrl,
-      onAbort: () => {ready.reject(new Error("KIRIKIRI_RUNTIME_ABORTED"));},
-      onExit: reportRuntimeExit,
+      onAbort: reason => reportFailure(new RuntimeFailureError("KIRIKIRI_RUNTIME_ABORTED", "CORE",
+        [typeof reason === "string" ? reason : reason instanceof Error ? reason.message : "Core aborted"])),
+      onExit: status => {
+        if (status === 0) {reportRuntimeExit();}
+        else {reportFailure(new RuntimeFailureError("KIRIKIRI_RUNTIME_EXIT_FAILED", "CORE", [`Core exit status: ${status}`]));}
+      },
       onRuntimeInitialized: () => undefined,
-      postRun: [() => {ready.resolve();}],
+      postRun: [() => {if (!failed) {ready.resolve();}}],
       preRun: [],
       print: (message) => {if (message) {console.debug(`[kirikiri2] ${message}`);}},
       printErr: (message) => {if (message) {console.debug(`[kirikiri2] ${message}`);}},
@@ -397,15 +400,15 @@ function cleanup(
 function installKirikiriRuntimeTermination(
   frameWindow: Window,
   wasmUrl: string,
-  reportRuntimeExit: () => void,
+  reportRuntimeFailure: (error: Error) => void,
 ) {
   const runtimeGlobals = frameWindow as Window & typeof globalThis;
   const handleRuntimeFailure = (event: Event, error: unknown) => {
-    if (!(error instanceof runtimeGlobals.WebAssembly.RuntimeError) || !runtimeTerminationTraps.has(error.message) ||
+    if (!(error instanceof runtimeGlobals.WebAssembly.RuntimeError) ||
       typeof error.stack !== "string" || !error.stack.includes(`${wasmUrl}:wasm-function[`)) {return;}
     event.preventDefault();
     event.stopImmediatePropagation();
-    reportRuntimeExit();
+    reportRuntimeFailure(error);
   };
   const onError = (event: ErrorEvent) => handleRuntimeFailure(event, event.error);
   const onUnhandledRejection = (event: PromiseRejectionEvent) => handleRuntimeFailure(event, event.reason);

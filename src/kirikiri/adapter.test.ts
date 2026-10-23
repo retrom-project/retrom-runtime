@@ -475,14 +475,26 @@ describe("KiriKiri2 KAG runtime", () => {
     await rejected;
   });
 
-  it("fails closed when multiple XP3 files have no selected entry", async () => {
+  it.each([["data.bin", "/data.bin"], ["startup.tjs", "/"]])("starts the selected %s despite other archives", async (entry, expected) => {
+    enableRuntimeFeatures(); const vlfs = fakeVlfs();
+    mockDownloads(["/data.bin", "/patch.xp3"]);
+    const envelope = config(); envelope.targetOptions.startupXp3Path = entry;
+    const runtime = await createRuntime(envelope, currentWindowHost(null));
+    const mounting = runtime.mount(document.createElement("div")); await loadVlfs(vlfs);
+    const module = await loadCore(vlfs); await mounting;
+    expect(module._startupXp3Path).toBe(expected);
+    await runtime.exit();
+  });
+
+  it("fails closed when the explicit selected entry is absent from the public tree", async () => {
     enableRuntimeFeatures();
     const vlfs = fakeVlfs();
     mockDownloads(["/data.xp3", "/patch.xp3"]);
-    const runtime = await createRuntime(config(), currentWindowHost(null));
+    const envelope = config(); envelope.targetOptions.startupXp3Path = "missing.bin";
+    const runtime = await createRuntime(envelope, currentWindowHost(null));
     const mounting = runtime.mount(document.createElement("div"));
     await loadVlfs(vlfs);
-    await expect(mounting).rejects.toThrow("KIRIKIRI_PROJECT_ENTRY_AMBIGUOUS");
+    await expect(mounting).rejects.toThrow("KIRIKIRI_PROJECT_ENTRY_INVALID");
   });
 });
 

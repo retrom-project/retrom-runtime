@@ -4,7 +4,7 @@ export type ProjectIndexFile = {path: string; sizeBytes: number; sha256: string;
 export type ProjectIndex = {schemaVersion: 1; files: ProjectIndexFile[]};
 
 /** The public file tree contains immutable facts, without engine-specific fields. */
-export function parseProjectIndex(value: unknown, maximumFiles: number): ProjectIndex | null {
+export function parseProjectIndex(value: unknown, maximumFiles: number, casePolicy: "EXACT" | "UNIQUE_FOLDED"): ProjectIndex | null {
   if (!exact(value, ["schemaVersion", "files"]) || value.schemaVersion !== 1 ||
     !Array.isArray(value.files) || !value.files.length || value.files.length > maximumFiles) {return null;}
   const paths = new Set<string>();
@@ -13,8 +13,10 @@ export function parseProjectIndex(value: unknown, maximumFiles: number): Project
     if (!exact(file, ["path", "sizeBytes", "sha256", "mediaType", "url"]) ||
       !canonicalPath(file.path) || !integer(file.sizeBytes) || !isDigest(file.sha256) ||
       typeof file.mediaType !== "string" || !/^[a-z0-9.+-]+\/[a-z0-9.+-]+(?:; charset=utf-8)?$/u.test(file.mediaType) ||
-      !validURL(file.url) || paths.has(file.path.toLowerCase())) {return null;}
-    paths.add(file.path.toLowerCase()); total += file.sizeBytes;
+      !validURL(file.url)) {return null;}
+    const key = casePolicy === "EXACT" ? file.path : file.path.toLowerCase();
+    if (paths.has(key)) {return null;}
+    paths.add(key); total += file.sizeBytes;
     if (!Number.isSafeInteger(total)) {return null;}
   }
   return value as ProjectIndex;

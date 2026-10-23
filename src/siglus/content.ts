@@ -38,7 +38,7 @@ export class SiglusContent {
   private async load(indexURL: string, contentDigest: string) {
     const {contentSession: session} = this.options, signal = this.scope.signal;
     const base = new URL(indexURL, location.href);
-    const index = parseProjectIndex(await fetchMetadataJson(base, indexByteBudget(100000, 4096), signal), 100000);
+    const index = parseProjectIndex(await fetchMetadataJson(base, indexByteBudget(100000, 4096), signal), 100000, "UNIQUE_FOLDED");
     if (!index) {throw new Error("SIGLUS_PROJECT_INDEX_INVALID");}
     const policy = session.inputPolicy("game"), files: {path: string; sizeBytes: number}[] = [];
     for (const file of index.files) {

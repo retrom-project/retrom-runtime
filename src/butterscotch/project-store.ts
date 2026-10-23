@@ -13,7 +13,7 @@ export async function prepareButterscotchProject(config: ProjectConfig, frameWin
   if (!content) {throw new ContentIOError("ABI_MISMATCH");}
   reportProgress({phase:"PROJECT_INDEX",loadedBytes:0,totalBytes:null});
   const base = new URL(config.projectIndexUrl,frameWindow.document.baseURI), budget = indexByteBudget(maximumProjectFiles,1024);
-  const value = parseProjectIndex(await fetchMetadataJson(base,budget,content.signal), maximumProjectFiles);
+  const value = parseProjectIndex(await fetchMetadataJson(base,budget,content.signal), maximumProjectFiles, "UNIQUE_FOLDED");
   if (!value || value.files.filter(file => file.path.toLowerCase() === "data.win").length !== 1 || value.files.some(file => file.sizeBytes < 1)) {throw new Error("BUTTERSCOTCH_PROJECT_INDEX_INVALID");}
   reportProgress({phase:"PROJECT_INDEX",loadedBytes:1,totalBytes:1});
   const policy=content.contentSession.inputPolicy("game");

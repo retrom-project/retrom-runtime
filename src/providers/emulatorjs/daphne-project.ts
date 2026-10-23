@@ -51,7 +51,7 @@ export async function prepareDaphneAssets(runtimeBaseUrl: string, signal: AbortS
 }
 
 function projectFiles(value: unknown, romDigest: string): ProjectFile[] {
-  const index = parseProjectIndex(value, 16);
+  const index = parseProjectIndex(value, 16, "UNIQUE_FOLDED");
   if (!/^[a-f0-9]{64}$/u.test(romDigest) || !index || index.files.length < 3) {throw new Error("DAPHNE_PROJECT_INVALID");}
   const entries = index.files;
   const seen = new Set<string>();

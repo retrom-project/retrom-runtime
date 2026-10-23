@@ -16,7 +16,13 @@ The Target declares `INSTANT` saves. Host capture is available at a stable nativ
 
 ## KiriKiri2 KAG
 
-Configuration selects a `startup.tjs`, `data.xp3` or another actual `.xp3` entry. A selected archive becomes the explicit `startupXp3Path`; project resources remain relative to the selected root. This is the maintained KAG integration, not a declaration that arbitrary KiriKiri/Z, native DLL plugins or every archive protection scheme is supported.
+Configuration selects a `startup.tjs`, `data.xp3` or another actual `.xp3` entry. Bounded XP3 header evidence also identifies archives with other suffixes. An enclosing canonical entry takes precedence over a nested copy; peer projects require an explicit selection. A selected archive becomes `startupXp3Path` regardless of its suffix; a loose root `startup.tjs` starts its directory. Project resources remain relative to the selected root. The saved launch options and checkpoint format remain unchanged.
+
+The Kiri file tree preserves exact paths, including names that differ only in case. Its virtual filesystem enumerates both names and resolves an exact name first; a case-folded alias is usable only when it is unique. Other Targets retain their explicitly declared folded uniqueness requirements. A Wasm trap, abort or nonzero process exit reports a fatal failure and closes the session; only a zero process exit requests normal exit. Native script exceptions still require a reliable core error boundary and cannot be inferred from localized alert text.
+
+This is the maintained KAG integration. Arbitrary KiriKiri/Z, native DLL plugins and archive protection schemes require their own verified support.
+
+Disc dependency discovery follows the selected single-file Target's declared formats. Incidental CUE files in project content stay opaque. Disc CUE parsing accepts explicit Unicode BOMs or strict UTF-8; legacy Shift-JIS/GB18030 candidates must agree on references or resolve uniquely against actual tracks. Ambiguous missing legacy names fail with `RUNTIME_CUE_ENCODING_REQUIRED`.
 
 The Target declares `INSTANT` saves through its bookmark bridge and identity-bound save bundle. Capture waits for native bookmark readiness; restore waits for native completion and renewed readiness in the new instance. Native bookmark support and a compatible project are both required.
 

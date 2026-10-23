@@ -177,7 +177,7 @@ export async function mountKirikiri2(
       print: (message) => {if (message) {console.debug(`[kirikiri2] ${message}`);}},
       printErr: (message) => {if (message) {console.debug(`[kirikiri2] ${message}`);}},
     };
-    const startupPath = selectStartupXp3(project.xp3Paths, config.startupXp3Path);
+    const startupPath = selectStartupPath(project.paths, config.startupXp3Path);
     if (startupPath) {options._startupXp3Path = startupPath;}
     host.Module = options;
     module = options as KirikiriModule;
@@ -279,29 +279,31 @@ async function registerProject(vlfs: KirikiriVlfs, indexUrl: string, documentBas
   try {
     value = await fetchMetadataJson(new URL(indexUrl, documentBaseUrl), indexByteBudget(maximumProjectFiles, 1024), signal);
   } catch {throw new Error("KIRIKIRI_PROJECT_INDEX_UNAVAILABLE");}
-  const index = parseProjectIndex(value, maximumProjectFiles);
+  const index = parseProjectIndex(value, maximumProjectFiles, "EXACT");
   if (!index) {throw new Error("KIRIKIRI_PROJECT_INDEX_INVALID");}
   const base = new URL(indexUrl, documentBaseUrl);
-  const xp3Paths: string[] = [];
+  const paths: string[] = [];
   for (const file of index.files) {
     const path = `/${file.path}`;
     const reader = content.register(contentDigest, file.path, new URL(file.url, base).href, file.sizeBytes);
     vlfs.registerContent(path, {fileId: reader.id, sizeBytes: reader.sizeBytes}, reader);
-    if (file.path.toLowerCase().endsWith(".xp3")) {xp3Paths.push(path);}
+    paths.push(path);
   }
-  return { xp3Paths };
+  return {paths};
 }
 
-function selectStartupXp3(paths: string[], configured: string | null) {
+function selectStartupPath(paths: string[], configured: string | null) {
   const sorted = paths.slice().sort((left, right) => left.localeCompare(right));
   if (configured) {
-    const expected = `/${configured}`.toLowerCase();
-    const match = sorted.find((path) => path.toLowerCase() === expected);
+    const match = sorted.find(path => path === `/${configured}`);
     if (!match) {throw new Error("KIRIKIRI_PROJECT_ENTRY_INVALID");}
-    return match;
+    return /(?:^|\/)startup\.tjs$/iu.test(match) ? match.slice(0, match.lastIndexOf("/") + 1) : match;
   }
-  if (sorted.length > 1) {throw new Error("KIRIKIRI_PROJECT_ENTRY_AMBIGUOUS");}
-  return sorted[0] ?? null;
+  const scripts = sorted.filter(path => /^\/startup\.tjs$/iu.test(path));
+  if (scripts.length === 1) {return "/";}
+  const archives = sorted.filter(path => path.toLowerCase().endsWith(".xp3"));
+  if (scripts.length > 1 || archives.length > 1) {throw new Error("KIRIKIRI_PROJECT_ENTRY_AMBIGUOUS");}
+  return archives[0] ?? null;
 }
 
 function isSavePath(path: string) {return saveRoots.some((root) => path.toLowerCase().startsWith(root));}

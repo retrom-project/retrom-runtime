@@ -516,6 +516,7 @@
         "runner": "vitest",
         "files": [
           "src/content-io/range-reader.test.ts",
+          "src/content-io/network-wait.test.ts",
           "src/content-io/lru.test.ts",
           "src/content-io/scheduler.test.ts",
           "src/content-io/credits.test.ts",
@@ -1289,6 +1290,8 @@
         "files": [
           "src/content-io/bridge/blocking.test.ts",
           "src/content-io/bridge/sync-service.test.ts",
+          "src/content-io/bridge/sync-network.test.ts",
+          "src/content-io/client-network.test.ts",
           "src/content-io/bridge/protocol.test.ts",
           "src/content-io/credits.test.ts",
           "src/content-io/client-lifecycle.test.ts"

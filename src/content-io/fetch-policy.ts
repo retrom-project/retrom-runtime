@@ -11,7 +11,9 @@ export const OUTPUT_BYTES = 3 * 1024 * 1024;
 export const MAX_FETCH_BYTES = (TEMPORARY_BYTES - OUTPUT_BYTES - CACHE_WRITE_BYTES - 2 * BLOCK_BYTES) / 2;
 export const windowScratchBytes = (length: number) => 2 * length + 2 * BLOCK_BYTES;
 export type FetchPolicy = ContentFetchPolicyV1;
-export type ContentSessionOptions = Readonly<{fetchPolicy?: Partial<FetchPolicy>; onDiagnostic?: (diagnostic: ContentDiagnostic) => void}>;
+export type ContentSessionOptions = Readonly<{fetchPolicy?: Partial<FetchPolicy>; onDiagnostic?: (diagnostic: ContentDiagnostic) => void;
+  /** On-demand reads are waiting for the network (WAITING) or every waiting read has succeeded again (RESTORED). */
+  onNetwork?: (state: import("./network-wait.js").ContentNetworkState) => void}>;
 export const DEFAULT_FETCH_POLICY: FetchPolicy = Object.freeze({
   smallFileThresholdBytes: 1024 * 1024, networkWindowBytes: 512 * 1024,
 });

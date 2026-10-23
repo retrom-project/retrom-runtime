@@ -144,7 +144,9 @@ export class ContentSessionService {
       if (readers.size !== 1 || !message.buffer) {fail("SOURCE_INVALID");}
       const file = this.files.get(message.allowedFileIds[0])!;
       if (file.policy.bridge !== "SYNC_WORKER") {fail("SOURCE_INVALID");}
-      this.channels.set(message.consumerChannelId, new SyncConsumerService(message.port, address, file.reader, message.buffer, file.object.key, this.pool.credits, released));
+      this.channels.set(message.consumerChannelId, new SyncConsumerService(message.port, address, file.reader, message.buffer, file.object.key, this.pool.credits, released,
+        (objectKey, codeNumber) => this.send({...base(this.address, 0), type: "DIAGNOSTIC", operation: "READ", codeNumber, objectKey,
+          counts: this.diagnostics.counts(this.pool, this.store, this.jobs, this.channels.size)})));
     }
     this.diagnostics.channel(message.consumerChannelId, message.buffer, this.channels.size);
     this.send({...base(this.address, message.requestId), type: "CHANNEL_OK", consumerChannelId: message.consumerChannelId, consumerEpoch: 1});

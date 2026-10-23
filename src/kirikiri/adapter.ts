@@ -185,7 +185,11 @@ export async function mountKirikiri2(
     module = host.Module as KirikiriModule;
     await withTimeout(ready.promise, readyTimeoutMs, "KIRIKIRI_RUNTIME_TIMEOUT");
     if (restore) {
-      await waitFor(() => module!._krkr2_host_load_bookmark_is_ready() === 1, readyTimeoutMs);
+      try {await waitFor(() => module!._krkr2_host_load_bookmark_is_ready() === 1, readyTimeoutMs);}
+      catch (cause) {
+        throw new RuntimeFailureError("KIRIKIRI_CHECKPOINT_LOADER_TIMEOUT", "CORE",
+          ["Checkpoint restore failed: the core bookmark loader did not become ready."], {cause});
+      }
       await restoreBookmark(module, config.checkpointSlot);
     }
     startupKeyboardCleanup();

@@ -394,6 +394,22 @@ describe("KiriKiri2 KAG runtime", () => {
     await restored.exit();
   });
 
+  it("identifies an unavailable restore loader and cleans up without requesting a bookmark load", async () => {
+    enableRuntimeFeatures(); const vlfs = fakeVlfs(); mockDownloads();
+    const restore = await encodeKirikiriCheckpoint({entries: [{path: "savedata/data1999.ksd", data: Uint8Array.of(1)}], resumeSlot: 1999});
+    const runtime = await createRuntime(config(), currentWindowHost(restore));
+    vi.useFakeTimers();
+    try {
+      const outcome = runtime.mount(document.createElement("div")).catch(error => error as Error);
+      await loadVlfs(vlfs); const module = await loadCore(vlfs, {loadReady: 0});
+      await vi.advanceTimersByTimeAsync(60_100);
+      expect(await outcome).toMatchObject({message: "KIRIKIRI_CHECKPOINT_LOADER_TIMEOUT"});
+      expect(module._krkr2_host_load_bookmark).not.toHaveBeenCalled();
+      expect(module.krkr2StopMainLoop).toHaveBeenCalledOnce();
+      expect(runtime.getState()).toBe("FAILED");
+    } finally {vi.useRealTimers(); await runtime.exit();}
+  });
+
   it("temporarily resumes a paused core until a custom bookmark file is written", async () => {
     enableRuntimeFeatures();
     const vlfs = fakeVlfs();
@@ -569,7 +585,7 @@ async function loadVlfs(vlfs: FakeVlfs) {
 
 async function loadCore(
   vlfs: FakeVlfs,
-  options: { bookmarkReady?: number; restoreResult?: number; restoreState?: number; abort?: boolean; stopping?: Promise<void> } = {},
+  options: { bookmarkReady?: number; loadReady?: number; restoreResult?: number; restoreState?: number; abort?: boolean; stopping?: Promise<void> } = {},
 ) {
   await vi.waitFor(() => expect(runtimeScripts()).toHaveLength(2));
   const configured = (window as HostWindow).Module ?? {};
@@ -578,7 +594,7 @@ async function loadCore(
     resumeMainLoop: vi.fn(),
     krkr2StopMainLoop: vi.fn(() => options.stopping ?? Promise.resolve()),
     _krkr2_host_bookmark_is_ready: vi.fn(() => options.bookmarkReady ?? 1),
-    _krkr2_host_load_bookmark_is_ready: vi.fn(() => 1),
+    _krkr2_host_load_bookmark_is_ready: vi.fn(() => options.loadReady ?? 1),
     _krkr2_host_load_bookmark: vi.fn(() => options.restoreResult ?? 0),
     _krkr2_host_load_bookmark_state: vi.fn(() => options.restoreState ?? 2),
     _krkr2_host_save_bookmark: vi.fn((slot: number) => {

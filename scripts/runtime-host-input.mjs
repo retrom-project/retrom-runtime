@@ -12,7 +12,7 @@ import {join, dirname} from "node:path";
 import {gunzipSync, crc32} from "node:zlib";
 import {parseRuntimeConfiguration, contentHash, runtimeBindings, identifyPSXRegion, resolveSavedRuntimeRequest,
   contentBIOSRequirements, missingROMMember, dosEntryCandidates, arcadeParentOptions, resolveRuntimeTarget, flycastMachine, flycastContentReferences, flycastMedia,
-  onsScriptNames, onsScriptSampleBytes} from "../dist/runtime/index.js";
+  onsScriptNames, onsScriptSampleBytes, contentEntryExtensions, cueContentReferences} from "../dist/runtime/index.js";
 import {zipMembers, requireLocator, safePath, sha256} from "./runtime-archive-input.mjs";
 import {discoverMameMedia, mameMediaEvidence} from "./runtime-host-media.mjs";
 
@@ -297,10 +297,12 @@ async function cueFiles(input, entry) {
 export async function discoverContentDependencies(input) {
   contentHash(input.files, "TREE");
   const found = [];
-  for (const file of input.files.filter(file => file.logicalKey.toLowerCase().endsWith(".cue"))) {
-    found.push(...await cueReferences(input, file));
-  }
   const directory = input.directory;
+  if (directory && contentEntryExtensions(directory.platformId, directory.defaultCoreId).includes("cue")) {
+    for (const file of input.files.filter(file => file.logicalKey.toLowerCase().endsWith(".cue"))) {
+      found.push(...await cueReferences(input, file));
+    }
+  }
   if (directory?.platformId === "arcade" && directory.defaultCoreId === "mame_arcade") {
     const result = discoverMameMedia(input, (await arcadeTables()).mame_arcade);
     return {...result, files: [...found, ...result.files]};
@@ -334,16 +336,7 @@ async function cueReferences(input, file) {
     if (bytesRead !== bytes.length) {throw new Error("RUNTIME_CONTENT_CHANGED");}
   } finally {await handle.close();}
   if (bytes.length !== file.sizeBytes || sha256(bytes) !== file.sha256) {throw new Error("RUNTIME_CONTENT_CHANGED");}
-  const text = new TextDecoder("utf-8", {fatal: true}).decode(bytes);
-  const entry = file.logicalKey, root = entry.slice(0, entry.lastIndexOf("/") + 1), references = [];
-  for (const line of text.split(/\r?\n/u)) {
-    if (!/^\s*FILE\s/iu.test(line)) {continue;}
-    const match = /^\s*FILE\s+(?:"([^"]+)"|(\S+))\s+\S+\s*$/iu.exec(line), name = match?.[1] ?? match?.[2];
-    if (!name || !safePath(name)) {throw new Error("RUNTIME_CUE_INVALID");}
-    references.push({logicalKey: root + name, relativeTo: entry, relativePath: name});
-  }
-  if (!references.length) {throw new Error("RUNTIME_CUE_INVALID");}
-  return references;
+  return cueContentReferences(bytes, file.logicalKey, input.files.map(item => item.logicalKey));
 }
 
 /** Stream an ordinary, deterministic STORE ZIP without retaining the project bytes in memory. */

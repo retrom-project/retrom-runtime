@@ -3,7 +3,7 @@ import {pipeline} from "node:stream/promises";
 import {createWriteStream} from "node:fs";
 import {createHash} from "node:crypto";
 import {createReadStream, constants} from "node:fs";
-import {open, readFile, mkdtemp, copyFile, chmod, rm, readdir, mkdir} from "node:fs/promises";
+import {open, readFile, mkdtemp, copyFile, chmod, rm, readdir, mkdir, stat} from "node:fs/promises";
 import {fileURLToPath} from "node:url";
 import {execFile} from "node:child_process";
 import {promisify} from "node:util";
@@ -495,6 +495,7 @@ async function biosArchiveDigest(path) {
 
 export async function verifyHostBIOS(input) {
   const {requirement, path} = input;
+  if (requirement.archiveRoot?.length) {return verifyArchiveRoot(requirement.archiveRoot, path);}
   if (!requirement.members?.length) {return null;}
   try {
     const members = await biosMembers(path);
@@ -506,4 +507,17 @@ export async function verifyHostBIOS(input) {
     return {status: "invalid", matchedMembers: 0, expectedMembers: requirement.members.length,
       missingMembers: requirement.members.filter(expected => expected.required).map(expected => expected.name)};
   }
+}
+
+/** An archive mounted at a core directory must hold these directories at its root; only the central directory is read. */
+async function verifyArchiveRoot(roots, path) {
+  let names = [];
+  try {
+    const info = await stat(path);
+    names = (await zipMembers({path, offset: 0, sizeBytes: info.size})).map(member => member.name.toLowerCase());
+  } catch {names = [];}
+  const missingMembers = roots.filter(root => !names.some(name => name.startsWith(root.toLowerCase())));
+  const matchedMembers = roots.length - missingMembers.length;
+  return {status: !missingMembers.length ? "valid" : matchedMembers ? "incomplete" : "invalid",
+    matchedMembers, expectedMembers: roots.length, missingMembers};
 }

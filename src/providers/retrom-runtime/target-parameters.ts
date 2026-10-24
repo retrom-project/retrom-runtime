@@ -6,6 +6,7 @@ import type {OpenBORParameters} from "../../openbor/adapter.js";
 import type {Px68kParameters} from "../../px68k/core.js";
 import type {WebMSXParameters} from "../../webmsx/adapter.js";
 import scummvmLayout from "../../scummvm/core-layout.json" with {type: "json"};
+import {officialRtp} from "../../runtime/rpg-rtp.js";
 import type {ScummvmParameters} from "../../scummvm/parameters.js";
 import type {PlayParameters} from "../../play/core.js";
 
@@ -52,6 +53,8 @@ import type {TyranoScriptParameters} from "../../tyranoscript/parameters.js";
 import type {Wasm4Parameters} from "../../wasm4/parameters.js";
 import type {RuffleParameters} from "../../ruffle/adapter.js";
 
+const rgssRtp = {1: officialRtp.RPGXP, 2: officialRtp.RPGVX, 3: officialRtp.RPGVXACE} as const;
+
 export function ruffle(envelope: LaunchEnvelopeV1): RuffleParameters {
   const game = resource(envelope, "game", "ROM_BLOB");
   return {contentDigest: game.sha256, swfSizeBytes: game.sizeBytes,
@@ -95,8 +98,9 @@ export function mkxp(
       },
     projectArchive: seekableSource(game),
     rgssVersion,
+    // The core mounts an RTP by the name Game.ini declares; each RGSS engine has exactly one official package.
     rtpArchives: resources(envelope, "rtp", "SEEKABLE_BLOB").map((entry) => ({
-        ...seekableSource(entry), declaredName: `rtp-${entry.ordinal}`,
+        ...seekableSource(entry), declaredName: rgssRtp[rgssVersion],
       })),
     runtimeBaseUrl: assetBase(envelope, "mkxp"),
     stateBufferBytes: 268435456,

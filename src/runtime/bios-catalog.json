@@ -1136,5 +1136,62 @@
     "activationOptions": {},
     "delivery": "BIOS_BUNDLE",
     "virtualPath": null
+  },
+  {
+    "coreId": "rpgmaker",
+    "providerID": "retrom-runtime",
+    "targetID": "rpgmaker-xp",
+    "logicalName": "Standard.zip",
+    "mode": "REQUIRED",
+    "condition": "RPG_RTP",
+    "sizeBytes": null,
+    "md5": null,
+    "sha256": null,
+    "activationOptions": {},
+    "delivery": "SEEKABLE_BLOB",
+    "virtualPath": null,
+    "resourceRole": "rtp",
+    "archiveRoot": [
+      "Audio/",
+      "Graphics/"
+    ]
+  },
+  {
+    "coreId": "rpgmaker",
+    "providerID": "retrom-runtime",
+    "targetID": "rpgmaker-vx",
+    "logicalName": "RPGVX.zip",
+    "mode": "REQUIRED",
+    "condition": "RPG_RTP",
+    "sizeBytes": null,
+    "md5": null,
+    "sha256": null,
+    "activationOptions": {},
+    "delivery": "SEEKABLE_BLOB",
+    "virtualPath": null,
+    "resourceRole": "rtp",
+    "archiveRoot": [
+      "Audio/",
+      "Graphics/"
+    ]
+  },
+  {
+    "coreId": "rpgmaker",
+    "providerID": "retrom-runtime",
+    "targetID": "rpgmaker-vx-ace",
+    "logicalName": "RPGVXAce.zip",
+    "mode": "REQUIRED",
+    "condition": "RPG_RTP",
+    "sizeBytes": null,
+    "md5": null,
+    "sha256": null,
+    "activationOptions": {},
+    "delivery": "SEEKABLE_BLOB",
+    "virtualPath": null,
+    "resourceRole": "rtp",
+    "archiveRoot": [
+      "Audio/",
+      "Graphics/"
+    ]
   }
 ]

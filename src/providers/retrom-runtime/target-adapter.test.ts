@@ -85,6 +85,18 @@ describe("Provider to core-private parameters", () => {
     },
   );
 
+  it.each([["rpgmaker-xp", "Standard"], ["rpgmaker-vx", "RPGVX"], ["rpgmaker-vx-ace", "RPGVXAce"]] as const)(
+    "[RTP-02] names the %s RTP archive as the core looks it up from Game.ini", async (id, name) => {
+      const request = targetEnvelope(id);
+      const rtp = {kind: "SEEKABLE_BLOB", ordinal: 0, rangeRequired: true, role: "rtp", sha256: "e".repeat(64), sizeBytes: 8192,
+        url: `/runtime/content/bios/${"e".repeat(64)}/${name}.zip`} as const;
+      request.resources.push(rtp);
+      await mountTargetAdapter(request, document.createElement("div"), context());
+      const {kind, rangeRequired, sha256, sizeBytes, url} = rtp;
+      expect(vi.mocked(mountMkxp).mock.calls[0][0].rtpArchives).toEqual([{kind, rangeRequired, sha256, sizeBytes, url, declaredName: name}]);
+    },
+  );
+
   it.each([["rpgmaker-mv", "RPGMV"], ["rpgmaker-mz", "RPGMZ"]])(
     "passes an isolated RPG bridge %s only its own parameters", async (id, bridgeProfile) => {
       const request = targetEnvelope(id);

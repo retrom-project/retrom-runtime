@@ -5,6 +5,7 @@ import type {RPGEngine, RuntimeConfiguration, RuntimeContent, RuntimeContentFile
 import {configurationFailure, logicalPath, object, utf8Compare} from "./validation.js";
 import {validateConfiguredOptions} from "./prepare.js";
 import {detectLcfEngine} from "./lcf.js";
+import {declaredRtp} from "./rpg-rtp.js";
 import {siglusLanguage} from "./siglus.js";
 import {onsScriptEncoding, onsScriptSampleBytes} from "./ons-encoding.js";
 import formats from "./content-formats.json" with {type: "json"};
@@ -168,8 +169,9 @@ function rpgContent(input: ConfigureRequest): RuntimeContent {
   }
   const projects = [...engines].flatMap(([file, engine]) => {
     const path = file.logicalKey.replace(/js\/(?:rpg_core|rmmz_core)\.js$/iu, "index.html");
+    const rtp = declaredRtp(engine, input.evidence?.[file.logicalKey]?.text ?? "");
     return input.files.filter(entry => entry.logicalKey.toLowerCase() === path.toLowerCase())
-      .map(entry => ({kind: "RPG_MAKER_PROJECT" as const, entryFile: entry.logicalKey, engine}));
+      .map(entry => ({kind: "RPG_MAKER_PROJECT" as const, entryFile: entry.logicalKey, engine, ...rtp ? {rtp} : {}}));
   });
   if (input.selection?.entryFile) {
     const selected = projects.filter(project => project.entryFile === input.selection!.entryFile);

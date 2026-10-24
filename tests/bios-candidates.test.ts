@@ -57,3 +57,23 @@ it("supports CRC-only DAT facts and reports installed incomplete or corrupt byte
   await writeFile(path, corrupt);
   expect(await verifyHostBIOS({path, requirement: req})).toMatchObject({status: "invalid", matchedMembers: 0});
 });
+it("[RTP-03] verifies an RTP archive by the directories mkxp mounts at its root, without hashing it", async () => {
+  const rtp = {...requirement, requirementKey: "retrom-runtime/rpgmaker-xp/Standard.zip", logicalName: "Standard.zip",
+    condition: "RPG_RTP", delivery: "SEEKABLE_BLOB" as const, virtualPath: null, members: undefined,
+    resourceRole: "rtp", archiveRoot: ["Audio/", "Graphics/"]};
+  const verify = async (entries: Record<string, Uint8Array> | Uint8Array) => {
+    const root = await mkdtemp(join(tmpdir(), "bios-rtp-")); roots.push(root);
+    const path = join(root, "Standard.zip");
+    await writeFile(path, entries instanceof Uint8Array ? entries : zipSync(entries, {level: 9}));
+    return verifyHostBIOS({requirement: rtp, path});
+  };
+  expect(await verify({"Audio/BGM/001-Battle01.mid": payload, "graphics/Titles/001-Title01.jpg": payload}))
+    .toEqual({status: "valid", matchedMembers: 2, expectedMembers: 2, missingMembers: []});
+  // Compressing the folder itself puts everything below "Standard/", where mkxp cannot find it.
+  expect(await verify({"Standard/Audio/BGM/a.mid": payload, "Standard/Graphics/a.png": payload}))
+    .toEqual({status: "invalid", matchedMembers: 0, expectedMembers: 2, missingMembers: ["Audio/", "Graphics/"]});
+  expect(await verify({"Graphics/a.png": payload}))
+    .toEqual({status: "incomplete", matchedMembers: 1, expectedMembers: 2, missingMembers: ["Audio/"]});
+  expect(await verify(Uint8Array.of(1, 2, 3)))
+    .toEqual({status: "invalid", matchedMembers: 0, expectedMembers: 2, missingMembers: ["Audio/", "Graphics/"]});
+});

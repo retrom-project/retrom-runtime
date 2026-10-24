@@ -1,4 +1,5 @@
-import type {RuntimeConfiguration, RuntimeContent, RuntimeContentFile} from "./types.js";
+import type {RPGEngine, RuntimeConfiguration, RuntimeContent, RuntimeContentFile} from "./types.js";
+import {officialRtp, rgssEngine} from "./rpg-rtp.js";
 import {configurationFailure, exact, identifier, logicalPath, object} from "./validation.js";
 import {rpgEntryFiles} from "./rpg-entry-files.js";
 
@@ -30,6 +31,13 @@ function validateROMSet(value: unknown, content: RuntimeContent) {
     !/^[a-z0-9_]{1,128}$/u.test(value))) {configurationFailure("RUNTIME_ROM_SET_INVALID");}
 }
 
+/** A recorded RTP is only ever the official package of the project's own RGSS engine. */
+function validateRpgContent(value: Record<string, unknown>): void {
+  if (!exact(value, ["kind", "entryFile", "engine"], ["rtp"]) || !logicalPath(value.entryFile) || !engines.includes(String(value.engine))) {configurationFailure();}
+  const engine = value.engine as RPGEngine;
+  if (value.rtp !== undefined && (!rgssEngine(engine) || value.rtp !== officialRtp[engine])) {configurationFailure();}
+}
+
 function parseContent(value: unknown): RuntimeContent {
   if (!object(value) || typeof value.kind !== "string") {configurationFailure();}
   if (value.kind === "SCUMMVM_PROJECT") {
@@ -38,7 +46,7 @@ function parseContent(value: unknown): RuntimeContent {
     if (!exact(value, ["kind", "entryFile"], ["entryPath"]) || !logicalPath(value.entryFile) ||
       value.entryPath !== undefined && !logicalPath(value.entryPath)) {configurationFailure();}
   } else if (value.kind === "RPG_MAKER_PROJECT") {
-    if (!exact(value, ["kind", "entryFile", "engine"]) || !logicalPath(value.entryFile) || !engines.includes(String(value.engine))) {configurationFailure();}
+    validateRpgContent(value);
   } else if (!entryKinds.includes(value.kind) || !exact(value, ["kind", "entryFile"]) || !logicalPath(value.entryFile)) {configurationFailure();}
   return value as RuntimeContent;
 }

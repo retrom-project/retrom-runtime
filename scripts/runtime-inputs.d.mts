@@ -14,3 +14,6 @@ export function writeRuntimeInputs(input: {
   tool: {archivePath: string; sizeBytes: number; sha256: string};
   providers: Array<ProviderBundleResult & {chunkRoot: string; chunks: ProviderChunkPublication}>;
 }): Promise<RuntimeInputs>;
+export function writeRebuiltRuntimeInputs(input: Omit<Parameters<typeof writeRuntimeInputs>[0], "providers"> & {
+  providers: ProviderBundleResult[];
+}): Promise<RuntimeInputs>;

@@ -7,7 +7,7 @@ import {execFileSync} from "node:child_process";
 import {afterEach, expect, it} from "vitest";
 import {buildProviderBundle} from "../scripts/provider-bundle.mjs";
 import {chunkProviderBundle} from "../scripts/provider-chunks.mjs";
-import {writeRuntimeInputs} from "../scripts/runtime-inputs.mjs";
+import {writeRuntimeInputs, writeRebuiltRuntimeInputs} from "../scripts/runtime-inputs.mjs";
 import {buildVersion} from "../scripts/release-version.mjs";
 import {buildRuntimeHostTool} from "../scripts/runtime-host-tool.mjs";
 const roots: string[] = [];
@@ -89,4 +89,23 @@ it.each(["tool", "provider", "client"])("rejects changed %s bytes before emittin
   await writeFile(path, "changed");
   await expect(writeRuntimeInputs(input)).rejects.toThrow();
   await expect(readFile(join(input.outputRoot, "runtime-inputs.json"))).rejects.toMatchObject({code: "ENOENT"});
+});
+
+it("creates complete paired transport from rebuilt bundles without preexisting chunks", async () => {
+  const input = await fixture();
+  const providers = input.providers.map(({bundleRoot, bundleSha256, fileCount, manifestSha256, unpackedSizeBytes}) =>
+    ({bundleRoot, bundleSha256, fileCount, manifestSha256, unpackedSizeBytes}));
+  const result = await writeRebuiltRuntimeInputs({...input, providers});
+  expect(result.release).toBeNull();
+  expect(result.providers).toHaveLength(2);
+  for (const provider of result.providers) {
+    const manifest = JSON.parse(await readFile(join(input.outputRoot, provider.chunkManifest.asset), "utf8")) as
+      {bundleSha256: string; chunks: Array<{archive: string; archiveSha256: string}>};
+    expect(manifest.bundleSha256).toBe(provider.bundleSha256);
+    expect(manifest.chunks.length).toBeGreaterThan(0);
+    for (const chunk of manifest.chunks) {
+      const bytes = await readFile(join(input.outputRoot, chunk.archive));
+      expect(createHash("sha256").update(bytes).digest("hex")).toBe(chunk.archiveSha256);
+    }
+  }
 });

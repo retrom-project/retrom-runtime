@@ -475,6 +475,30 @@ describe("ONS Yuri runtime", () => {
     await runtime.exit();
   });
 
+  it("starts projects that include empty auxiliary files", async () => {
+    const module = fakeModule();
+    (window as HostWindow).onsyuri = vi.fn(async options => {
+      Object.assign(options, module);
+      const configured = options as FakeModule;
+      configured.preRun?.();
+      return configured;
+    });
+    const files = ["0.txt", "default.ttf", "empty.txt"].map(path => ({path,
+      sizeBytes: path === "empty.txt" ? 0 : 1, sha256: "a".repeat(64),
+      mediaType: "application/octet-stream", url: `https://content.example/${path}`}));
+    vi.stubGlobal("fetch", vi.fn(async () => new Response(JSON.stringify({schemaVersion: 1, files}))));
+    const runtime = await createRuntime(config(), currentWindowHost(null));
+    let failure: unknown;
+    const mounting = runtime.mount(document.createElement("div")).catch(error => {failure = error;});
+    await vi.waitFor(() => expect(failure || document.head.querySelector("script[data-runtime=ons-yuri]")).toBeTruthy());
+    if (failure) {throw failure;}
+    await loadRuntimeScript();
+    await mounting;
+    expect(module.callMain).toHaveBeenCalledOnce();
+    expect(runtime.getState()).toBe("RUNNING");
+    await runtime.exit();
+  });
+
   it("rejects a project index with ambiguous case-insensitive paths", async () => {
     const body = JSON.stringify({
       schemaVersion: 1,

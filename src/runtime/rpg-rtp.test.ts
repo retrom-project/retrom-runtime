@@ -44,7 +44,8 @@ describe("[RTP-01] mkxp RTP requirements come from the game's Game.ini", () => {
       .biosRequirements;
     expect(prepare("RPGVXACE", "Game.ini", "RPGVXAce")).toEqual([expect.objectContaining({
       requirementKey: "retrom-runtime/rpgmaker-vx-ace/RPGVXAce.zip", targetId: "rpgmaker-vx-ace", logicalName: "RPGVXAce.zip",
-      required: true, delivery: "SEEKABLE_BLOB", resourceRole: "rtp", archiveRoot: ["Audio/", "Graphics/"]})]);
+      required: true, delivery: "SEEKABLE_BLOB", resourceRole: "rtp",
+      archiveEntries: ["Audio/", "Graphics/Titles1/", "Graphics/Battlebacks1/"], archiveExcludes: ["Game.ini", "Data/"]})]);
     expect(prepare("RPGXP", "Game.ini", "Standard").map(item => item.logicalName)).toEqual(["Standard.zip"]);
     expect(prepare("RPGVX", "Game.ini", "RPGVX").map(item => item.logicalName)).toEqual(["RPGVX.zip"]);
     expect(prepare("RPGXP", "Game.ini")).toEqual([]);

@@ -1151,9 +1151,14 @@
     "delivery": "SEEKABLE_BLOB",
     "virtualPath": null,
     "resourceRole": "rtp",
-    "archiveRoot": [
+    "archiveEntries": [
       "Audio/",
-      "Graphics/"
+      "Graphics/Windowskins/",
+      "Graphics/Autotiles/"
+    ],
+    "archiveExcludes": [
+      "Game.ini",
+      "Data/"
     ]
   },
   {
@@ -1170,9 +1175,14 @@
     "delivery": "SEEKABLE_BLOB",
     "virtualPath": null,
     "resourceRole": "rtp",
-    "archiveRoot": [
+    "archiveEntries": [
       "Audio/",
-      "Graphics/"
+      "Graphics/System/TileA1.png",
+      "Graphics/System/TileB.png"
+    ],
+    "archiveExcludes": [
+      "Game.ini",
+      "Data/"
     ]
   },
   {
@@ -1189,9 +1199,14 @@
     "delivery": "SEEKABLE_BLOB",
     "virtualPath": null,
     "resourceRole": "rtp",
-    "archiveRoot": [
+    "archiveEntries": [
       "Audio/",
-      "Graphics/"
+      "Graphics/Titles1/",
+      "Graphics/Battlebacks1/"
+    ],
+    "archiveExcludes": [
+      "Game.ini",
+      "Data/"
     ]
   }
 ]

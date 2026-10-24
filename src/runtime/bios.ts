@@ -10,8 +10,11 @@ export type BIOSRequirement = {
   md5: string | null; sha256: string | null;
   delivery: "BIOS_BUNDLE" | "EXTERNAL_FILE" | "SEEKABLE_BLOB"; virtualPath: string | null;
   activationOptions: Readonly<Record<string, string>>;
-  /** SEEKABLE_BLOB only: the Launch resource role of this file, and directories its archive root must contain. */
-  resourceRole?: string; archiveRoot?: readonly string[];
+  /**
+   * SEEKABLE_BLOB only: the Launch resource role of this file. archiveEntries must all exist in the archive (a trailing
+   * slash names a directory), and identify and verify it; an archive holding any archiveExcludes entry is not identified.
+   */
+  resourceRole?: string; archiveEntries?: readonly string[]; archiveExcludes?: readonly string[];
   members?: readonly {name: string; sizeBytes: number; crc32: string; sha1: string; required: boolean}[];
 };
 
@@ -27,7 +30,7 @@ export function biosCatalog(): BIOSRequirement[] {
       delivery: item.delivery as BIOSRequirement["delivery"], virtualPath: publicFirmwarePath(item.virtualPath),
       activationOptions: item.activationOptions as Readonly<Record<string, string>>,
       ...("members" in item ? {members: item.members} : {}),
-      ...("resourceRole" in item ? {resourceRole: item.resourceRole, archiveRoot: item.archiveRoot} : {}),
+      ...("resourceRole" in item ? {resourceRole: item.resourceRole, archiveEntries: item.archiveEntries, archiveExcludes: item.archiveExcludes} : {}),
     })));
 }
 

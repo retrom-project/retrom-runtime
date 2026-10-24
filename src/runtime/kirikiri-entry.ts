@@ -17,17 +17,22 @@ export function kirikiriEntry(input: Input): string {
     if (!candidates.includes(input.selection.entryFile)) {configurationFailure("RUNTIME_ENTRY_MISSING");}
     return input.selection.entryFile;
   }
+  if (!candidates.length) {configurationFailure("RUNTIME_ENTRY_MISSING");}
+  // Compare project roots before entry conventions, including different entry types.
+  const root = candidates.map(directory).reduce((left, right) => right.length < left.length ? right : left);
+  if (!candidates.every(path => path.startsWith(root))) {
+    configurationFailure("RUNTIME_ENTRY_REQUIRED", {candidates: JSON.stringify(candidates)});
+  }
+  const project = candidates.filter(path => directory(path) === root);
   const preferred = [
-    candidates.filter(path => /(?:^|\/)startup\.tjs$/iu.test(path)),
-    candidates.filter(path => /(?:^|\/)data\.xp3$/iu.test(path)),
-    candidates.filter(path => /(?:^|\/)data\.[^/]+$/iu.test(path) && isXP3(input, path)),
-    candidates,
+    project.filter(path => /(?:^|\/)startup\.tjs$/iu.test(path)),
+    project.filter(path => /(?:^|\/)data\.xp3$/iu.test(path)),
+    project.filter(path => /(?:^|\/)data\.[^/]+$/iu.test(path) && isXP3(input, path)),
+    project,
   ];
   for (const tier of preferred) {
     if (!tier.length) {continue;}
-    // An enclosing canonical project outranks its nested copy; peer projects still require a decision.
-    const roots = tier.filter(path => tier.every(other => other === path || other.startsWith(directory(path)) && directory(other) !== directory(path)));
-    if (roots.length === 1) {return roots[0];}
+    if (tier.length === 1) {return tier[0];}
     configurationFailure("RUNTIME_ENTRY_REQUIRED", {candidates: JSON.stringify(tier)});
   }
   configurationFailure("RUNTIME_ENTRY_MISSING");

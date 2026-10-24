@@ -54,6 +54,22 @@ describe("mkxp threaded-core status", () => {
     expect(ready).toBe(true);
   });
 
+  it("[NET-14] counts only time without pending content reads toward the first-frame deadline", async () => {
+    const {value, status} = coreStatus();
+    let reading = true;
+    const mounting = waitForMkxpFrame(status, 0, () => reading).catch((error: unknown) => error);
+    // A read waiting for the network for longer than the deadline does not end startup.
+    await vi.advanceTimersByTimeAsync(60_000);
+    reading = false;
+    await vi.advanceTimersByTimeAsync(29_000);
+    value.frames = 1;
+    await vi.advanceTimersByTimeAsync(50);
+    expect(await mounting).toBeUndefined();
+    const idle = waitForMkxpFrame(status, 1, () => false).catch((error: unknown) => error);
+    await vi.advanceTimersByTimeAsync(30_050);
+    expect(await idle).toEqual(new Error("RPG_RUNTIME_TIMEOUT"));
+  });
+
   it("does not mistake advancing frames for a completed restore", async () => {
     const {value, status} = coreStatus();
     const result = waitForMkxpRestore(status).catch((error: unknown) => error);

@@ -14,12 +14,16 @@ export class MkxpContent {
   private readonly controller = new AbortController();
   private native?:NativeModule;
   private closing?:Promise<void>;
+  private pending=0;
+  /** Whether the core is blocked on a content read, which may be waiting for the network. */
+  get reading():boolean {return this.pending>0;}
   readonly bridge = {
     abi,contractSha256,
     readIntoById: async (fileId:string,offset:number,destination:Uint8Array,signal?:AbortSignal) => {
       checkSignal(this.controller.signal);checkSignal(this.signal);
       const entry=this.readers.get(fileId);if(!entry){throw new ContentIOError("SOURCE_INVALID");}
-      return entry.reader.readInto(offset,destination,signal);
+      this.pending++;
+      try {return await entry.reader.readInto(offset,destination,signal);} finally {this.pending--;}
     },
     reportFailure: (code:number) => {
       const name=(Object.keys(errorNumbers) as ContentErrorName[]).find(key=>errorNumbers[key]===code) ?? "INTERNAL";

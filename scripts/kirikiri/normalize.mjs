@@ -1,0 +1,131 @@
+import {mkdir, mkdtemp, open, writeFile} from "node:fs/promises";
+import {dirname, join} from "node:path";
+import {createHash} from "node:crypto";
+import {contentStream} from "../runtime-host-content.mjs";
+import {requireLocator, safePath} from "../runtime-archive-input.mjs";
+import {maximumTree, requireFormat, resourceBytes, adler32} from "./bytes.mjs";
+import {readXp3} from "./xp3.mjs";
+import {convertXp3} from "./convert.mjs";
+import {discoverCxProfiles, discoverTinyProfiles, extractEmbeddedPeModules, createCxFilter} from "./cxdec.mjs";
+
+const digest = bytes => createHash("sha256").update(bytes).digest("hex");
+function tinyFilter(profile) {
+  return {kind: "tiny", profile, apply(bytes, h) {
+    const t = (h ^ profile.xorConstant) >>> 0, key = ((t ^ (t >>> 8) ^ (t >>> 16) ^ (t >>> 24)) & 255) || profile.zeroFallback;
+    for (let i = 0; i < bytes.length; i++) {bytes[i] ^= key;}
+    return bytes;
+  }};
+}
+function profileKey(profile) {
+  if (profile.kind === "tiny") {
+    const value = profile.profile.xorConstant;
+    return `tiny:${(value ^ (value >>> 8) ^ (value >>> 16) ^ (value >>> 24)) & 255}:${profile.profile.zeroFallback}`;
+  }
+  const p = profile.profile;
+  return `classic:${p.mask}:${p.offset}:${p.prologOrder}:${p.evenBranchOrder}:${p.oddBranchOrder}:${digest(p.controlBlock)}`;
+}
+async function nativeProfiles(input, signal) {
+  const profiles = new Map(), visited = new Set(); let totalBytes = 0, moduleCount = 0;
+  function inspect(bytes, depth = 0) {
+    const sha256 = digest(bytes);
+    if (visited.has(sha256)) {return;}
+    visited.add(sha256); totalBytes += bytes.length; moduleCount++;
+    requireFormat(depth <= 3 && moduleCount <= 512 && totalBytes <= 512 * 1024 * 1024, "MODULE_LIMIT");
+    const found = [...discoverCxProfiles(bytes).map(profile => ({kind: "classic", profile})),
+      ...discoverTinyProfiles(bytes).map(profile => ({kind: "tiny", profile}))];
+    for (const value of found) {profiles.set(profileKey(value), {...value, moduleSha256: sha256});}
+    requireFormat(profiles.size <= 64, "FILTER_AMBIGUOUS");
+    for (const embedded of extractEmbeddedPeModules(bytes, {maxTotalBytes: 512 * 1024 * 1024 - totalBytes})) {inspect(embedded, depth + 1);}
+  }
+  for (const file of input.files) {
+    signal?.throwIfAborted();
+    if (!/\.(?:exe|dll|tpm)$/iu.test(file.logicalKey) || file.sizeBytes === 0) {continue;}
+    requireFormat(file.sizeBytes <= 64 * 1024 * 1024, "MODULE_LIMIT");
+    const chunks = []; let size = 0;
+    for await (const bytes of contentStream(requireLocator(input, file), {signal})) {size += bytes.length; chunks.push(bytes);}
+    requireFormat(size === file.sizeBytes, "SOURCE_CHANGED");
+    const bytes = Buffer.concat(chunks, size); requireFormat(digest(bytes) === file.sha256, "SOURCE_CHANGED");
+    inspect(bytes);
+  }
+  requireFormat(profiles.size > 0, "FILTER_UNAVAILABLE");
+  return [...profiles.values()];
+}
+async function samples(archives, signal) {
+  const result = [], seeds = new Set();
+  for (const archive of archives) {
+    for (const entry of archive.entries) {
+      if (entry.size < 32 || entry.size > 4 * 1024 * 1024 || entry.size !== entry.readable || entry.reusedSeed || seeds.has(entry.h)) {continue;}
+      const chunks = []; let size = 0;
+      for await (const bytes of resourceBytes(archive.locator, entry, signal)) {size += bytes.length; chunks.push(bytes);}
+      result.push({h: entry.h, adler: entry.adler, bytes: Buffer.concat(chunks, size)}); seeds.add(entry.h);
+      if (result.length === 8) {return result;}
+    }
+  }
+  requireFormat(result.length > 0, "FILTER_UNAVAILABLE"); return result;
+}
+async function selectFilter(profiles, archives, signal) {
+  const probes = await samples(archives, signal), accepted = [];
+  for (const candidate of profiles) {
+    signal?.throwIfAborted();
+    let filter;
+    try {filter = candidate.kind === "tiny" ? tinyFilter(candidate.profile) : {kind: "classic", ...createCxFilter(candidate.profile)};}
+    catch {continue;}
+    if (probes.every(sample => {
+      const bytes = Buffer.from(sample.bytes); filter.apply(bytes, sample.h, 0);
+      return adler32(bytes) === sample.adler;
+    })) {accepted.push({...filter, verified: probes.length >= 3, inputProfile: candidate});}
+  }
+  requireFormat(accepted.length > 0, "FILTER_UNAVAILABLE"); requireFormat(accepted.length === 1, "FILTER_AMBIGUOUS");
+  return accepted[0];
+}
+/** Runs inside a CPU worker; all writes are below the caller-owned fresh staging root. */
+export async function normalizeKirikiri(input, signal) {
+  const plans = [], groups = new Map();
+  for (const file of input.files) {
+    signal?.throwIfAborted(); requireFormat(safePath(file.logicalKey));
+    const archive = await readXp3(requireLocator(input, file), {signal});
+    if (!archive?.format) {continue;}
+    const key = `${archive.format}\0${archive.salt}`;
+    if (!groups.has(key)) {groups.set(key, []);}
+    groups.get(key).push(archive); plans.push({file, archive, group: key});
+  }
+  if (!plans.length) {return {files: input.files};}
+  requireFormat(!input.files.some(file => /(?:^|\/)xp3filter\.tjs$/iu.test(file.logicalKey)), "ARCHIVE_UNSUPPORTED");
+  const profiles = await nativeProfiles(input, signal), filters = new Map();
+  for (const [key, archives] of groups) {filters.set(key, await selectFilter(profiles, archives, signal));}
+  const auditRoot = await mkdtemp(join(input.outputRoot, ".audit-")), log = await open(join(auditRoot, "entries.jsonl"), "wx", 0o600);
+  const details = []; let detailBytes = 0;
+  const audit = async row => {
+    await log.write(JSON.stringify(row) + "\n");
+    const codes = row.corrections ?? (row.kind === "physical-only" ? ["OUTSIDE_LOGICAL_NAMESPACE"] : []);
+    for (const code of codes) {
+      const detail = {code, file: row.archive, member: row.logicalName ?? row.physicalName,
+        sourceSha256: row.rawStreamSha256, outputSha256: row.outputSha256,
+        sourceSize: row.sourceSize, outputSize: row.outputSize ?? row.readableSize,
+        seed: row.sourceSeed, sourceChecksum: row.sourceAdler32, outputChecksum: row.outputAdler32};
+      detailBytes += Buffer.byteLength(JSON.stringify(detail));
+      requireFormat(details.length < 2048 && detailBytes <= 4 * 1024 * 1024 - 65536, "AUDIT_LIMIT"); details.push(detail);
+    }
+  };
+  const normalized = new Map(), summary = {kind: "KIRIKIRI_XP3", converterVersion: 1, sourceContentHash: input.sourceContentHash,
+    archiveCount: plans.length, verifiedEntries: 0, metadataCorrections: 0, omittedPhysicalEntries: 0, formatCounts: {}, warnings: [], details};
+  let total = input.files.reduce((sum, file) => sum + file.sizeBytes, 0);
+  try {
+    for (const {file, archive, group} of plans) {
+      const path = join(input.outputRoot, file.logicalKey); await mkdir(dirname(path), {recursive: true});
+      const filter = filters.get(group), result = await convertXp3(archive, file, path, filter, audit, signal);
+      total += result.sizeBytes - file.sizeBytes; requireFormat(total <= maximumTree, "ARCHIVE_LIMIT");
+      normalized.set(file.logicalKey, {logicalKey: file.logicalKey, name: file.name, sizeBytes: result.sizeBytes, sha256: result.sha256, path});
+      summary.formatCounts[archive.format] = (summary.formatCounts[archive.format] ?? 0) + 1;
+      for (const key of ["verifiedEntries", "metadataCorrections", "omittedPhysicalEntries"]) {summary[key] += result[key];}
+      await audit({archive: file.logicalKey, kind: "archive", format: archive.format, sourceSha256: file.sha256, sourceSize: file.sizeBytes,
+        outputSha256: result.sha256, outputSize: result.sizeBytes, filterKind: filter.kind, moduleSha256: filter.inputProfile.moduleSha256,
+        profile: filter.kind === "tiny" ? filter.profile : {...filter.inputProfile.profile, controlBlock: undefined,
+          controlBlockSha256: digest(filter.inputProfile.profile.controlBlock)}});
+    }
+    if (summary.metadataCorrections) {summary.warnings.push({code: "SOURCE_METADATA_CORRECTED", count: summary.metadataCorrections});}
+    if (summary.omittedPhysicalEntries) {summary.warnings.push({code: "OUTSIDE_LOGICAL_NAMESPACE", count: summary.omittedPhysicalEntries});}
+    await log.sync(); await writeFile(join(auditRoot, "summary.json"), JSON.stringify(summary) + "\n", {flag: "wx", mode: 0o600});
+  } finally {await log.close();}
+  return {files: input.files.map(file => normalized.get(file.logicalKey) ?? file), normalization: summary};
+}

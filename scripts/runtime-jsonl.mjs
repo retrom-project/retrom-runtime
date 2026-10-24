@@ -5,8 +5,8 @@ const {AbortController} = globalThis;
 export const maximumMessage = 64 * 1024 * 1024;
 const validId = id => typeof id === "string" ? /^[!-~]{1,128}$/u.test(id) : Number.isSafeInteger(id) && id >= 0;
 const failure = error => error instanceof Error ? error.message : "RUNTIME_REQUEST_FAILED";
-const deadline = command => command === "detect-scummvm" ? 60000 :
-  ["assemble-resource", "normalize-content"].includes(command) ? 120000 : 30000;
+const deadline = command => command === "normalize-content" ? 60 * 60 * 1000 : command === "detect-scummvm" ? 60000 :
+  command === "assemble-resource" ? 120000 : 30000;
 
 async function* messages(input) {
   let length = 0, chunks = [];

@@ -19,6 +19,7 @@ beforeAll(async () => {
   for (const file of ["runtime-host-content.mjs", "runtime-cli.mjs", "runtime-host-input.mjs", "runtime-host-media.mjs", "runtime-normalize-content.mjs", "runtime-jsonl.mjs", "runtime-archive-input.mjs"]) {
     await cp(resolve("scripts", file), join(root, "scripts", file));
   }
+  await cp(resolve("scripts/kirikiri"), join(root, "scripts/kirikiri"), {recursive: true});
   await cp(resolve("assets/facts"), join(root, "assets/facts"), {recursive: true});
   await writeFile(join(root, "package.json"), JSON.stringify({type: "module", version: "0.0.0-dev"}));
   await symlink(resolve("node_modules"), join(root, "node_modules"));

@@ -16,6 +16,7 @@
     "scripts/runtime-host-content.mjs",
     "scripts/runtime-host-media.mjs",
     "scripts/runtime-normalize-content.mjs",
+    "scripts/kirikiri",
     "scripts/runtime-jsonl.mjs",
     "scripts/runtime-archive-input.mjs"
   ],

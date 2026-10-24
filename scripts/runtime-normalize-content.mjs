@@ -8,11 +8,13 @@ import {pipeline} from "node:stream/promises";
 import {Transform} from "node:stream";
 import {join, dirname} from "node:path";
 import {contentHash} from "../dist/runtime/index.js";
+import {normalizeKirikiriContent} from "./kirikiri/import.mjs";
 
 const maximumHeader = 16 * 1024 * 1024, maximumTree = 16 * 1024 * 1024 * 1024;
 /** Normalize retained project containers into ordinary immutable game files, never executable processes. */
 export async function normalizeContent(input, signal) {
-  contentHash(input.files, "TREE");
+  const sourceContentHash = contentHash(input.files, "TREE");
+  if (input.platformId === "kirikiri") {return normalizeKirikiriContent(input, sourceContentHash, signal);}
   if (input.platformId !== "tyranoscript" || input.files.some(file => /(?:^|\/)index\.html$/iu.test(file.logicalKey))) {return {files: input.files};}
   const asar = input.files.filter(file => /(?:^|\/)app\.asar$/iu.test(file.logicalKey));
   const executables = input.files.filter(file => /\.exe$/iu.test(file.logicalKey));

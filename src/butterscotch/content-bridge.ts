@@ -29,17 +29,15 @@ export function serveContentReads(buffer: SharedArrayBuffer, offset: number, rea
         const reader = readers[id];
         validateRequest(control, reader, sequence, next, at, length);
         sequence = next;
-        const timeout = setTimeout(() => controller.abort(new ContentIOError("TIMEOUT")), 15000);
-        try {
-          // The public reader owns cache policy, network validation and accounting.
-          const bytes = new Uint8Array(length);
-          const count = await reader.readInto(at, bytes, controller.signal);
-          controller.signal.throwIfAborted();
-          if (count !== length || Atomics.load(control, 6) || Atomics.load(control, 2) !== next) {throw new ContentIOError("RANGE_INVALID");}
-          payload.set(bytes); Atomics.store(control, 4, length);
-          if (Atomics.compareExchange(control, 0, 1, 2) !== 1) {throw new ContentIOError("ABORTED");}
-          Atomics.notify(control, 0);
-        } finally {clearTimeout(timeout);}
+        // The public reader owns cache policy, network validation, accounting and request deadlines; it
+        // waits for the network to return instead of failing, so only closing the bridge ends a read.
+        const bytes = new Uint8Array(length);
+        const count = await reader.readInto(at, bytes, controller.signal);
+        controller.signal.throwIfAborted();
+        if (count !== length || Atomics.load(control, 6) || Atomics.load(control, 2) !== next) {throw new ContentIOError("RANGE_INVALID");}
+        payload.set(bytes); Atomics.store(control, 4, length);
+        if (Atomics.compareExchange(control, 0, 1, 2) !== 1) {throw new ContentIOError("ABORTED");}
+        Atomics.notify(control, 0);
       }
     } catch (cause) {
       const report = !controller.signal.aborted || controller.signal.reason instanceof ContentIOError;

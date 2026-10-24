@@ -57,11 +57,15 @@ export async function waitForMkxpExit(exited: Promise<void>) {
   } finally {clearTimeout(timer);}
 }
 
-export async function waitForMkxpFrame(status: MkxpStatus, after = 0) {
-  const deadline = performance.now() + 30_000;
-  while (performance.now() < deadline) {
+/** Content I/O bounds each read and waits through outages; the deadline covers only time without pending reads. */
+export async function waitForMkxpFrame(status: MkxpStatus, after = 0, reading: () => boolean = () => false) {
+  let idle = 0, last = performance.now();
+  while (idle < 30_000) {
     if (status.frames() > after) {return;}
     await new Promise((resolve) => setTimeout(resolve, 50));
+    const now = performance.now();
+    if (!reading()) {idle += now - last;}
+    last = now;
   }
   throw new Error("RPG_RUNTIME_TIMEOUT");
 }

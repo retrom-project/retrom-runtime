@@ -29,7 +29,8 @@ export function createRetromRuntimePlayer(
 }
 
 class RetromRuntimePlayer implements PlayerRuntimeV1 {
-  private readonly contentOwner = new ProviderContentOwner((error) => {void this.fail(error);}, diagnostic => this.host.reportDiagnostic({code: "CONTENT_IO_METRICS", message: JSON.stringify(diagnostic)}));
+  private readonly contentOwner = new ProviderContentOwner((error) => {void this.fail(error);}, diagnostic => this.host.reportDiagnostic({code: "CONTENT_IO_METRICS", message: JSON.stringify(diagnostic)}),
+    state => {if (!this.stopping()) {this.emit({type: "CONTENT_NETWORK", state});}});
   private readonly startup: StartupTasks;
   private readonly listeners = new Set<(event: RuntimeEventV1) => void>();
   private state: RuntimeStateV1 = "CREATED";

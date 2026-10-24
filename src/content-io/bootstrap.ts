@@ -38,7 +38,7 @@ export async function bootstrapContentSession(options: SourceContext & ContentSe
   options.signal?.addEventListener("abort", abort, {once: true});
   try {
     worker = new Worker(url, {type: "module", name: "retrom-content-io-v1"});
-    session = new ContentSessionClient(worker, options, options.onFailure, {fetchPolicy, onDiagnostic: options.onDiagnostic}); await session.ready; checkSignal(options.signal); return session;
+    session = new ContentSessionClient(worker, options, options.onFailure, {fetchPolicy, onDiagnostic: options.onDiagnostic, onNetwork: options.onNetwork}); await session.ready; checkSignal(options.signal); return session;
   } catch (error) {abort(); throw error;}
   finally {options.signal?.removeEventListener("abort", abort); URL.revokeObjectURL(url);}
 }

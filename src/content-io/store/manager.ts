@@ -45,6 +45,11 @@ export class ContentStoreManager {
       if (retry) {this.retries++;}
     },
   };
+  /** Receives each object's network reachability from its range and window requests. */
+  reachability: (objectKey: string, reachable: boolean) => void = () => {};
+  telemetry(object: BlockObject): Pick<HttpDependencies, "consumed" | "dispatched" | "reachable"> {
+    return {...this.httpTelemetry, reachable: reachable => this.reachability(object.key, reachable)};
+  }
   constructor(origin: string, private readonly credits: BufferCredits, backendReady: (backend: string) => void = () => {},
     private readonly diagnostic: (error: ContentIOError, operation: CacheOperation) => void = () => {},
     requirement: "OPTIONAL" | "REQUIRED" = "OPTIONAL") {
@@ -77,7 +82,7 @@ export class ContentStoreManager {
     }
     const previous=await this.previous(object,index,signal);
     if(previous){if(binding===this.bindings.get(object.key)&&binding&&!this.degraded){await this.save(object,binding,index,previous,signal);}this.cacheBytes+=previous.length;return previous;}
-    const bytes = await fetchRangeBlock(object.source, object.state, index, signal, 15000, this.httpTelemetry);
+    const bytes = await fetchRangeBlock(object.source, object.state, index, signal, 15000, this.telemetry(object));
     if (binding && binding===this.bindings.get(object.key) && !this.degraded) {await this.save(object, binding, index, bytes, signal);}
     return bytes;
   }

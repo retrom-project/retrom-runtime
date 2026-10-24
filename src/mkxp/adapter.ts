@@ -242,7 +242,7 @@ async function mountMkxpUnchecked(
       loadedBytes: remoteContent.manifest.byteLength,
       totalBytes: remoteContent.manifest.byteLength,
     });
-    await waitForMkxpFrame(status);
+    await waitForMkxpFrame(status, 0, () => bridge.reading);
     // Nostalgist's postRun runs before the pthread necessarily installs
     // rwebpad's connection listener. Reconcile existing pads once the core is
     // presenting; later browser connection events remain owned by rwebpad.

@@ -3,17 +3,20 @@ import type {ContentReaderV1} from "../../contracts/content-io/v1/content-io.js"
 import {checkSignal, combineSignals, requestScope} from "./abort.js";
 import {BlockPool, type BlockObject} from "./block-pool.js";
 import {ContentIOError, fail} from "./errors.js";
+import {transientNetworkError, type NetworkWait} from "./network-wait.js";
 import {BLOCK_BYTES, integer, validateReadBounds} from "./source.js";
 export class RangeReader implements ContentReaderV1 {
   readonly abi = "content-io-v1" as const;
   readonly sizeBytes: number;
   private readonly controller = new AbortController();
   private closePromise: Promise<void> | undefined;
-  constructor(readonly id: string, private readonly object: BlockObject, private readonly pool: Pick<BlockPool, "cache" | "key" | "check" | "copy"> & Partial<Pick<BlockPool, "prefetchAfter">>, private readonly onClose: () => Promise<void> = async () => {}, private readonly copied: ReadObserver = () => {}) {
+  constructor(readonly id: string, private readonly object: BlockObject, private readonly pool: Pick<BlockPool, "cache" | "key" | "check" | "copy"> & Partial<Pick<BlockPool, "prefetchAfter">>, private readonly onClose: () => Promise<void> = async () => {}, private readonly copied: ReadObserver = () => {},
+    private readonly network?: NetworkWait) {
     this.sizeBytes = object.source.sizeBytes;
   }
   async readInto(offset: number, destination: Uint8Array, signal?: AbortSignal, copied: ReadObserver = this.copied): Promise<number> {
     this.check(); validateReadBounds(this.sizeBytes, offset, destination.byteLength); checkSignal(signal);
+    if (this.network) {return this.readWaitingForNetwork(this.network, offset, destination, signal, copied);}
     const size = destination.byteLength;
     const combined = combineSignals([this.controller.signal, ...(signal ? [signal] : [])]);
     const scope = requestScope(combined.signal, 15000);
@@ -32,6 +35,39 @@ export class RangeReader implements ContentReaderV1 {
       }
       this.check(); checkSignal(scope.signal); return size;
     } finally {scope.dispose(); combined.dispose();}
+  }
+  /**
+   * Each block attempt keeps the 15-second request bound, but a transient network failure waits for the
+   * network and retries that block instead of failing the read. Only closing the reader or `signal` ends it.
+   */
+  private async readWaitingForNetwork(network: NetworkWait, offset: number, destination: Uint8Array,
+    signal: AbortSignal | undefined, copied: ReadObserver): Promise<number> {
+    const size = destination.byteLength, token = {};
+    const combined = combineSignals([this.controller.signal, ...(signal ? [signal] : [])]);
+    try {
+      for (let written = 0; written < size;) {
+        const position = offset + written, index = Math.floor(position / BLOCK_BYTES), within = position % BLOCK_BYTES;
+        const length = Math.min(size - written, BLOCK_BYTES - within);
+        for (let attempt = 0; ; attempt++) {
+          this.check(); checkSignal(combined.signal);
+          if (destination.byteLength !== size) {fail("BOUNDS");}
+          const scope = requestScope(combined.signal, 15000);
+          try {
+            await this.pool.copy(this.object, index, within, destination.subarray(written, written + length),
+              () => this.check(), {copied, signal: scope.signal, timeoutMs: 15000});
+            break;
+          } catch (error) {
+            if (combined.signal.aborted || !transientNetworkError(error)) {throw error;}
+          } finally {scope.dispose();}
+          await network.wait(token, attempt, combined.signal);
+        }
+        network.leave(token, true);
+        this.check(); checkSignal(combined.signal);
+        this.pool.prefetchAfter?.(this.object, index, this.controller.signal);
+        written += length;
+      }
+      this.check(); checkSignal(combined.signal); return size;
+    } finally {network.leave(token, false); combined.dispose();}
   }
   tryReadInto(offset: number, destination: Uint8Array): number | null {
     this.check(); validateReadBounds(this.sizeBytes, offset, destination.byteLength);

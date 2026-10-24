@@ -1,3 +1,4 @@
+import type {ContentNetworkState} from "../content-io/network-wait.js";
 import type {ContentDiagnostic} from "../content-io/session-diagnostics.js";
 import type {TargetDeclaration} from "./declarations.js";
 import type {AssetIndexV1, LaunchEnvelopeV1, RuntimeResourceV1} from "./module-api.js";
@@ -14,7 +15,8 @@ export class ProviderContentOwner {
   private preload?: ProviderContentPreload;
   private stopped = false;
   private closing: Promise<void> | undefined;
-  constructor(private readonly failure: (error: Error) => void, private readonly diagnostic: (diagnostic: ContentDiagnostic) => void = () => {}) {}
+  constructor(private readonly failure: (error: Error) => void, private readonly diagnostic: (diagnostic: ContentDiagnostic) => void = () => {},
+    private readonly network: (state: ContentNetworkState) => void = () => {}) {}
   get signal(): AbortSignal {return this.controller.signal;}
   async start(target: TargetDeclaration, envelope: LaunchEnvelopeV1, index: AssetIndexV1,
     loading: "ON_DEMAND" | "PRELOAD" = "ON_DEMAND", report: PreloadProgress = () => {}, startup?: StartupTasks): Promise<ContentSessionClient | null> {
@@ -38,7 +40,8 @@ export class ProviderContentOwner {
           (loaded, total) => {task?.progress(loaded, total); report(loaded, total);}));
       }
       session = await withStartupTask(startup, "ENVIRONMENT", () => bootstrapContentSession({runtimeBaseURL, assetIndex: index, storageOrigin: location.origin,
-        allowedOrigins: [...origins], signal: this.controller.signal, onFailure: this.failure, onDiagnostic: this.diagnostic}));
+        allowedOrigins: [...origins], signal: this.controller.signal, onFailure: this.failure, onDiagnostic: this.diagnostic,
+        onNetwork: state => {if (!this.stopped) {this.network(state);}}}));
     } catch (error) {if (this.stopped) {throw new DOMException("Aborted", "AbortError");} throw error;}
     if (this.stopped) {await session.close(); throw new DOMException("Aborted", "AbortError");}
     session.preloaded = loading === "PRELOAD";

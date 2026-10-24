@@ -117,7 +117,8 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
   private readonly eagerDiskMount: boolean;
   private cleanupBIOS?: () => void;
   private coreAssets: EmulatorCoreAssets | null = null;
-  private readonly contentOwner = new ProviderContentOwner(error => this.fail(error.message, error), diagnostic => this.host.reportDiagnostic({code: "CONTENT_IO_METRICS", message: JSON.stringify(diagnostic)}));
+  private readonly contentOwner = new ProviderContentOwner(error => this.fail(error.message, error), diagnostic => this.host.reportDiagnostic({code: "CONTENT_IO_METRICS", message: JSON.stringify(diagnostic)}),
+    state => {if (!["EXITING", "EXITED", "FAILED"].includes(this.state)) {this.emit({type: "CONTENT_NETWORK", state});}});
   private contentSession: ReturnType<typeof bindOptionalTargetContent> = null;
   private readonly hostAbort = () => {this.contentOwner.force(); void this.exit();};
 

@@ -1,7 +1,8 @@
 import {writeSyncMetrics} from "./sync-metrics.js";
 import {ReadAccounting} from "./read-accounting.js";
 import {base, parseMessage} from "./bridge/protocol.js";
-import {blockingRead, checkSlot, closeSyncBuffer, controls} from "./bridge/blocking.js";
+import {blockingRead, checkSlot, closeSyncBuffer, controls, State, TransientSlotError} from "./bridge/blocking.js";
+import {networkRetryDelaysMs} from "./network-wait.js";
 import {fail} from "./errors.js";
 import {ByteLRU} from "./lru.js";
 import {BLOCK_BYTES, integer, isDigest, validateReadBounds} from "./source.js";
@@ -30,22 +31,36 @@ export function createSyncContentReader(options: Options) {
     }
     accounting.copied("MEMORY", destination.length); report(); return destination.length;
   };
+  /**
+   * `timeoutMs` bounds each block attempt. The service gets a shorter bound so it always answers first;
+   * a transient network failure waits and retries the block instead of closing the channel.
+   */
   const readInto = (offset: number, destination: Uint8Array, timeoutMs = 15000): number => {
     check(); validateReadBounds(options.sizeBytes, offset, destination.length);
     if (!integer(timeoutMs, 1, 15000)) {fail("BOUNDS");}
-    const deadline = performance.now() + timeoutMs;
+    const serviceTimeoutMs = timeoutMs > 4000 ? timeoutMs - 2000 : Math.max(1, Math.floor(timeoutMs / 2));
     for (let written = 0; written < destination.length;) {
       check(); const position = offset + written, index = Math.floor(position / BLOCK_BYTES), within = position % BLOCK_BYTES;
       const count = Math.min(destination.length - written, BLOCK_BYTES - within), target = destination.subarray(written, written + count);
       if (!cache.copyInto(key(index), within, target)) {
-        const remaining = Math.floor(deadline - performance.now()); if (remaining <= 0) {closeSyncBuffer(options.buffer, 9); fail("TIMEOUT");}
-        if (sequence >= 2147483647) {closeSyncBuffer(options.buffer,14);cache.clear();fail("CAPACITY_EXCEEDED");}
-        const id = ++sequence, length = Math.min(BLOCK_BYTES, options.sizeBytes - index * BLOCK_BYTES);
-        blockingRead({buffer: options.buffer, epoch: options.epoch, requestId: id, length, timeoutMs: remaining,
-          send: () => options.port.postMessage({...base(address, id), type: "READ", fileId: options.fileId, offset: index * BLOCK_BYTES, length, timeoutMs: remaining}),
-          acknowledge: () => options.port.postMessage({...base(address, 0), type: "SLOT_FREE", completedRequestId: id}),
-          cancel: () => options.port.postMessage({...base(address, 0), type: "CANCEL", cancelRequestId: id}),
-          consume: (bytes, origin) => {check(); cache.put(key(index), bytes); target.set(bytes.subarray(within, within + count)); accounting.copied(origin, count); report();}});
+        const length = Math.min(BLOCK_BYTES, options.sizeBytes - index * BLOCK_BYTES);
+        for (let attempt = 0; ; attempt++) {
+          if (sequence >= 2147483647) {closeSyncBuffer(options.buffer,14);cache.clear();fail("CAPACITY_EXCEEDED");}
+          const id = ++sequence;
+          try {
+            blockingRead({buffer: options.buffer, epoch: options.epoch, requestId: id, length, timeoutMs,
+              send: () => options.port.postMessage({...base(address, id), type: "READ", fileId: options.fileId, offset: index * BLOCK_BYTES, length, timeoutMs: serviceTimeoutMs}),
+              acknowledge: () => options.port.postMessage({...base(address, 0), type: "SLOT_FREE", completedRequestId: id}),
+              cancel: () => options.port.postMessage({...base(address, 0), type: "CANCEL", cancelRequestId: id}),
+              consume: (bytes, origin) => {check(); cache.put(key(index), bytes); target.set(bytes.subarray(within, within + count)); accounting.copied(origin, count); report();}});
+            break;
+          } catch (error) {
+            if (!(error instanceof TransientSlotError)) {throw error;}
+            // Closing the channel stores CLOSED in the state word and wakes this wait at once.
+            Atomics.wait(control, 0, State.IDLE, networkRetryDelaysMs[Math.min(attempt, networkRetryDelaysMs.length - 1)]);
+            check();
+          }
+        }
       } else {accounting.copied("MEMORY", count); report();}
       written += count;
     }

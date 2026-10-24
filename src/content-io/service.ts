@@ -5,7 +5,7 @@ import {BlockPool, type BlockObject} from "./block-pool.js";
 import {SyncConsumerService} from "./bridge/sync-service.js";
 import {AsyncConsumerService} from "./bridge/async-service.js";
 import {base, parseManagement, type Address} from "./bridge/protocol.js";
-import {ContentIOError, fail, toContentIOError} from "./errors.js";
+import {ContentIOError, errorNumbers, fail, toContentIOError} from "./errors.js";
 import {abi, contractSha256} from "./identity.js";
 import {validateManagedPolicy, validateSourcePolicy} from "./policy.js";
 import {RangeReader} from "./range-reader.js";
@@ -27,6 +27,7 @@ export class ContentSessionService {
   private stopping = false;
   private sequence = 0;
   private closed = false;
+  private readonly unreachable = new Set<string>();
   readonly address: Address;
   constructor(private readonly boot: WorkerBootV1) {
     this.address = {sessionId: boot.sessionId, channelId: boot.managementChannelId, epoch: 1};
@@ -37,6 +38,7 @@ export class ContentSessionService {
     this.store = new ContentStoreManager(boot.storageOrigin, this.pool.credits, (backend) => {
       if (backend === "OPFS" || backend === "CACHE_BLOCKS" || backend === "MEMORY") {this.send({...base(this.address, 0), type: "BACKEND_READY", backend});}
     }, (error, operation) => this.report(operation, error.codeNumber));
+    this.store.reachability = (objectKey, reachable) => this.reachability(objectKey, reachable);
     this.windowLoader = new WindowLoader(this.store, this.pool.cache, (object, index) => this.pool.key(object, index));
     this.jobs = new ManagementJobs(this.pool, this.store, this.address, (message, transfer) => this.send(message, transfer), (object, error) => this.revoke(object, error));
     boot.managementPort.onmessage = ({data}: MessageEvent<unknown>) => {
@@ -57,6 +59,16 @@ export class ContentSessionService {
   private report(operation: Extract<ContentMessageV1, {type: "DIAGNOSTIC"}>["operation"], codeNumber = 0): void {
     if (this.boot.diagnostics || codeNumber !== 0) {this.send({...base(this.address, 0), type: "DIAGNOSTIC", operation, codeNumber, objectKey: null,
       counts: this.diagnostics.counts(this.pool, this.store, this.jobs, this.channels.size)});}
+  }
+  /**
+   * A demanded object whose request cannot reach the server is reported at once as a READ network failure, and
+   * its next response as recovery, so the Host can show the outage before the read's own deadline expires.
+   */
+  private reachability(objectKey: string, reachable: boolean): void {
+    if (reachable ? !this.unreachable.delete(objectKey) : this.unreachable.has(objectKey) || !this.pool.demanding(objectKey)) {return;}
+    if (!reachable) {this.unreachable.add(objectKey);}
+    this.send({...base(this.address, 0), type: "DIAGNOSTIC", operation: "READ", codeNumber: reachable ? 0 : errorNumbers.NETWORK_FAILED, objectKey,
+      counts: this.diagnostics.counts(this.pool, this.store, this.jobs, this.channels.size)});
   }
   private async shutdown(requestId: number): Promise<void> {
     this.stopping = true; clearInterval(this.diagnosticTimer);
@@ -144,7 +156,9 @@ export class ContentSessionService {
       if (readers.size !== 1 || !message.buffer) {fail("SOURCE_INVALID");}
       const file = this.files.get(message.allowedFileIds[0])!;
       if (file.policy.bridge !== "SYNC_WORKER") {fail("SOURCE_INVALID");}
-      this.channels.set(message.consumerChannelId, new SyncConsumerService(message.port, address, file.reader, message.buffer, file.object.key, this.pool.credits, released));
+      this.channels.set(message.consumerChannelId, new SyncConsumerService(message.port, address, file.reader, message.buffer, file.object.key, this.pool.credits, released,
+        (objectKey, codeNumber) => this.send({...base(this.address, 0), type: "DIAGNOSTIC", operation: "READ", codeNumber, objectKey,
+          counts: this.diagnostics.counts(this.pool, this.store, this.jobs, this.channels.size)})));
     }
     this.diagnostics.channel(message.consumerChannelId, message.buffer, this.channels.size);
     this.send({...base(this.address, message.requestId), type: "CHANNEL_OK", consumerChannelId: message.consumerChannelId, consumerEpoch: 1});

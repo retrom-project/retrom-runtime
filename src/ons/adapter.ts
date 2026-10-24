@@ -207,7 +207,7 @@ async function loadProjectIndex(url: string, signal?: AbortSignal): Promise<Proj
     value = await fetchMetadataJson(url, indexByteBudget(maximumProjectFiles, 1024), signal);
   } catch {throw new Error("ONS_PROJECT_INDEX_UNAVAILABLE");}
   const index = parseProjectIndex(value, maximumProjectFiles);
-  if (!index || index.files.some(file => file.sizeBytes < 1)) {throw new Error("ONS_PROJECT_INDEX_INVALID");}
+  if (!index) {throw new Error("ONS_PROJECT_INDEX_INVALID");}
   return index;
 }
 

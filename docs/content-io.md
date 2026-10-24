@@ -113,7 +113,8 @@ so a game that keeps playing from cached blocks shows no notice.
 
 Whole-file materialization keeps its own bounded retry and still fails after it. Core bridges add no read deadline of
 their own: mkxp's WasmFS bridge, Butterscotch's native slot, PPSSPP's disc facade and KiriKiri's VLFS wait for the
-runtime reader, which ends a read only on success, a non-network error, closing or abort.
+runtime reader, which ends a read only on success, a non-network error, closing or abort. Startup deadlines that
+cover core reads count only time without a pending read: native-web's ready deadline and mkxp's first-frame deadline.
 
 ## Sequential prefetch
 

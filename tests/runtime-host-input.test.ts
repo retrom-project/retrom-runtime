@@ -9,6 +9,7 @@ import {assembleResource, prepareHostInput, configureHostInput, discoverContentD
 import {gbkProgramName, legacyZip} from "./zip-encoding-fixture.js";
 import type {RuntimeContentFile} from "../src/runtime/types.js";
 const roots: string[] = [];
+const discDirectory = {platformId: "psx", defaultCoreId: "pcsx_rearmed", allowedCoreIds: ["pcsx_rearmed"]};
 afterEach(async () => {await Promise.all(roots.splice(0).map(path => rm(path, {recursive: true, force: true})));});
 const sha = (bytes: Uint8Array) => createHash("sha256").update(bytes).digest("hex");
 async function tree(content: Record<string, Uint8Array>) {
@@ -58,25 +59,25 @@ it("keeps a single CUE disc's actual tracks and rejects a missing referenced tra
 });
 it("discovers the actual safe CUE references before tracks have been copied, retaining existing references", async () => {
   const input = await tree({"disc/main.cue": Buffer.from('FILE "track 1.iso" BINARY\nFILE "audio.wav" WAVE\nFILE "audio.wav" WAVE\n')});
-  expect(await discoverContentDependencies(input)).toEqual({files: [
+  expect(await discoverContentDependencies({...input, directory: discDirectory})).toEqual({files: [
     {logicalKey: "disc/track 1.iso", relativeTo: "disc/main.cue", relativePath: "track 1.iso"},
     {logicalKey: "disc/audio.wav", relativeTo: "disc/main.cue", relativePath: "audio.wav"},
   ]});
   const tracks = await tree({"disc/audio.wav": Uint8Array.of(2)});
-  expect((await discoverContentDependencies({...input, files: [...input.files, ...tracks.files]})).files).toHaveLength(2);
+  expect((await discoverContentDependencies({...input, directory: discDirectory, files: [...input.files, ...tracks.files]})).files).toHaveLength(2);
 });
 it.each(["../track.bin", "/track.bin", "track\\file.bin", "./track.bin"])("rejects unsafe CUE dependency %s", async path => {
   const input = await tree({"disc.cue": Buffer.from(`FILE "${path}" BINARY\n`)});
-  await expect(discoverContentDependencies(input)).rejects.toThrow("RUNTIME_CUE_INVALID");
+  await expect(discoverContentDependencies({...input, directory: discDirectory})).rejects.toThrow("RUNTIME_CUE_INVALID");
 });
 it("requires immutable bounded CUE text and does not inspect ordinary ROM bytes", async () => {
   const input = await tree({"disc.cue": Buffer.from('FILE "track.bin" BINARY\n'), "game.nes": Uint8Array.of(1)});
   input.files[0].sha256 = "0".repeat(64);
-  await expect(discoverContentDependencies(input)).rejects.toThrow("RUNTIME_CONTENT_CHANGED");
+  await expect(discoverContentDependencies({...input, directory: discDirectory})).rejects.toThrow("RUNTIME_CONTENT_CHANGED");
   const invalid = await tree({"disc.cue": Uint8Array.of(255)});
-  await expect(discoverContentDependencies(invalid)).rejects.toThrow();
+  await expect(discoverContentDependencies({...invalid, directory: discDirectory})).rejects.toThrow("RUNTIME_CUE_INVALID");
   const tooLarge = await tree({"disc.cue": new Uint8Array(1024 * 1024 + 1)});
-  await expect(discoverContentDependencies(tooLarge)).rejects.toThrow("RUNTIME_CUE_INVALID");
+  await expect(discoverContentDependencies({...tooLarge, directory: discDirectory})).rejects.toThrow("RUNTIME_CUE_INVALID");
   expect(await discoverContentDependencies({files: [input.files[1]], locators: {}})).toEqual({files: []});
 });
 it("reads bounded immutable configuration evidence and real DOS executable members in the runtime", async () => {

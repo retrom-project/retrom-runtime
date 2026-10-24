@@ -206,7 +206,7 @@ export function targetEnvelope(targetId: string): LaunchEnvelopeV1 {
 function fixtureTargetOptions(targetId: string): LaunchEnvelopeV1["targetOptions"] {
   if (targetId === "siglus") {return {language: "chs"};}
   if (targetId === "onscripter-yuri") {return {scriptEncoding: "utf8"};}
-  if (targetId === "kirikiri2-kag") {return {startupXp3Path: null};}
+  if (targetId === "kirikiri2-kag") {return {startupXp3Path: "data.xp3"};}
   if (targetId === "scummvm") {
     return {engineId: "sky", gameId: "sky", root: "", language: "en", platform: "pc", extra: "", guiOptions: "", filename: null};
   }

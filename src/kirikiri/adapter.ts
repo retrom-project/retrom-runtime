@@ -7,6 +7,7 @@ import { decodeKirikiriCheckpoint, encodeKirikiriCheckpoint, type KirikiriCheckp
 import type { MountedRuntimeAdapter, RuntimeExitReporter } from "../internal-adapter.js";
 import type {KirikiriParameters} from "./parameters.js";
 import {installGamepadCursor, type GamepadCursor} from "../provider/gamepad-cursor.js";
+import {RuntimeFailureError} from "../provider/failure.js";
 
 import {parseProjectIndex} from "../provider/project-index.js";
 type KirikiriVlfs = {
@@ -53,12 +54,6 @@ const writeTimeoutMs = 10_000;
 const writeQuiescenceMs = 250;
 const maximumProjectFiles = 10_000;
 const saveRoots = ["/save/", "/savedata/"] as const;
-const runtimeTerminationTraps = new Set([
-  "null function",
-  "function signature mismatch",
-  "null function or function signature mismatch",
-  "table index is out of bounds",
-]);
 
 export async function mountKirikiri2(
   config: KirikiriParameters,
@@ -107,9 +102,10 @@ export async function mountKirikiri2(
   let paused = false;
   let exited = false;
   let exitReported = false;
+  let failed = false;
   let runtimeTerminationCleanup: () => void = () => undefined;
   const reportRuntimeExit = () => {
-    if (exitReported) {return;}
+    if (exitReported || failed || exited) {return;}
     exitReported = true;
     reportExitRequested();
   };
@@ -131,11 +127,6 @@ export async function mountKirikiri2(
   try {
     const base = new URL(normalizedBase(config.runtimeBaseUrl), document.baseURI);
     const assets = await content.assets(base);
-    runtimeTerminationCleanup = installKirikiriRuntimeTermination(
-      frameWindow,
-      assets.wasmUrl,
-      reportRuntimeExit,
-    );
     scripts.push(await loadClassicScript(document, assets.vlfsUrl));
     const vlfs = host.VLFS;
     requireVlfs(vlfs);
@@ -159,6 +150,14 @@ export async function mountKirikiri2(
       writes.set(entry.path, entry.data.slice());
     }
     const ready = deferred<void>();
+    const reportFailure = (error: Error) => {
+      if (failed || exitReported || exited) {return;}
+      failed = true;
+      ready.reject(error);
+      contentOptions.onFailure?.(error);
+    };
+    runtimeTerminationCleanup = installKirikiriRuntimeTermination(frameWindow, assets.wasmUrl, error =>
+      reportFailure(new RuntimeFailureError("KIRIKIRI_RUNTIME_TRAP", "CORE", [error.message], {cause: error})));
     const runtimeUrl = assets.scriptUrl;
     const options: Partial<KirikiriModule> = {
       arguments: [],
@@ -166,15 +165,19 @@ export async function mountKirikiri2(
       canvas,
       locateFile: (path) => path === "index.wasm" ? assets.wasmUrl : new URL(path, base).href,
       mainScriptUrlOrBlob: runtimeUrl,
-      onAbort: () => {ready.reject(new Error("KIRIKIRI_RUNTIME_ABORTED"));},
-      onExit: reportRuntimeExit,
+      onAbort: reason => reportFailure(new RuntimeFailureError("KIRIKIRI_RUNTIME_ABORTED", "CORE",
+        [typeof reason === "string" ? reason : reason instanceof Error ? reason.message : "Core aborted"])),
+      onExit: status => {
+        if (status === 0) {reportRuntimeExit();}
+        else {reportFailure(new RuntimeFailureError("KIRIKIRI_RUNTIME_EXIT_FAILED", "CORE", [`Core exit status: ${status}`]));}
+      },
       onRuntimeInitialized: () => undefined,
-      postRun: [() => {ready.resolve();}],
+      postRun: [() => {if (!failed) {ready.resolve();}}],
       preRun: [],
       print: (message) => {if (message) {console.debug(`[kirikiri2] ${message}`);}},
       printErr: (message) => {if (message) {console.debug(`[kirikiri2] ${message}`);}},
     };
-    const startupPath = selectStartupXp3(project.xp3Paths, config.startupXp3Path);
+    const startupPath = selectStartupPath(project.paths, config.startupXp3Path);
     if (startupPath) {options._startupXp3Path = startupPath;}
     host.Module = options;
     module = options as KirikiriModule;
@@ -182,7 +185,11 @@ export async function mountKirikiri2(
     module = host.Module as KirikiriModule;
     await withTimeout(ready.promise, readyTimeoutMs, "KIRIKIRI_RUNTIME_TIMEOUT");
     if (restore) {
-      await waitFor(() => module!._krkr2_host_load_bookmark_is_ready() === 1, readyTimeoutMs);
+      try {await waitFor(() => module!._krkr2_host_load_bookmark_is_ready() === 1, readyTimeoutMs);}
+      catch (cause) {
+        throw new RuntimeFailureError("KIRIKIRI_CHECKPOINT_LOADER_TIMEOUT", "CORE",
+          ["Checkpoint restore failed: the core bookmark loader did not become ready."], {cause});
+      }
       await restoreBookmark(module, config.checkpointSlot);
     }
     startupKeyboardCleanup();
@@ -276,29 +283,31 @@ async function registerProject(vlfs: KirikiriVlfs, indexUrl: string, documentBas
   try {
     value = await fetchMetadataJson(new URL(indexUrl, documentBaseUrl), indexByteBudget(maximumProjectFiles, 1024), signal);
   } catch {throw new Error("KIRIKIRI_PROJECT_INDEX_UNAVAILABLE");}
-  const index = parseProjectIndex(value, maximumProjectFiles);
+  const index = parseProjectIndex(value, maximumProjectFiles, "EXACT");
   if (!index) {throw new Error("KIRIKIRI_PROJECT_INDEX_INVALID");}
   const base = new URL(indexUrl, documentBaseUrl);
-  const xp3Paths: string[] = [];
+  const paths: string[] = [];
   for (const file of index.files) {
     const path = `/${file.path}`;
     const reader = content.register(contentDigest, file.path, new URL(file.url, base).href, file.sizeBytes);
     vlfs.registerContent(path, {fileId: reader.id, sizeBytes: reader.sizeBytes}, reader);
-    if (file.path.toLowerCase().endsWith(".xp3")) {xp3Paths.push(path);}
+    paths.push(path);
   }
-  return { xp3Paths };
+  return {paths};
 }
 
-function selectStartupXp3(paths: string[], configured: string | null) {
+function selectStartupPath(paths: string[], configured: string | null) {
   const sorted = paths.slice().sort((left, right) => left.localeCompare(right));
   if (configured) {
-    const expected = `/${configured}`.toLowerCase();
-    const match = sorted.find((path) => path.toLowerCase() === expected);
+    const match = sorted.find(path => path === `/${configured}`);
     if (!match) {throw new Error("KIRIKIRI_PROJECT_ENTRY_INVALID");}
-    return match;
+    return /(?:^|\/)startup\.tjs$/iu.test(match) ? match.slice(0, match.lastIndexOf("/") + 1) : match;
   }
-  if (sorted.length > 1) {throw new Error("KIRIKIRI_PROJECT_ENTRY_AMBIGUOUS");}
-  return sorted[0] ?? null;
+  const scripts = sorted.filter(path => /^\/startup\.tjs$/iu.test(path));
+  if (scripts.length === 1) {return "/";}
+  const archives = sorted.filter(path => path.toLowerCase().endsWith(".xp3"));
+  if (scripts.length > 1 || archives.length > 1) {throw new Error("KIRIKIRI_PROJECT_ENTRY_AMBIGUOUS");}
+  return archives[0] ?? null;
 }
 
 function isSavePath(path: string) {return saveRoots.some((root) => path.toLowerCase().startsWith(root));}
@@ -397,15 +406,15 @@ function cleanup(
 function installKirikiriRuntimeTermination(
   frameWindow: Window,
   wasmUrl: string,
-  reportRuntimeExit: () => void,
+  reportRuntimeFailure: (error: Error) => void,
 ) {
   const runtimeGlobals = frameWindow as Window & typeof globalThis;
   const handleRuntimeFailure = (event: Event, error: unknown) => {
-    if (!(error instanceof runtimeGlobals.WebAssembly.RuntimeError) || !runtimeTerminationTraps.has(error.message) ||
+    if (!(error instanceof runtimeGlobals.WebAssembly.RuntimeError) ||
       typeof error.stack !== "string" || !error.stack.includes(`${wasmUrl}:wasm-function[`)) {return;}
     event.preventDefault();
     event.stopImmediatePropagation();
-    reportRuntimeExit();
+    reportRuntimeFailure(error);
   };
   const onError = (event: ErrorEvent) => handleRuntimeFailure(event, event.error);
   const onUnhandledRejection = (event: PromiseRejectionEvent) => handleRuntimeFailure(event, event.reason);

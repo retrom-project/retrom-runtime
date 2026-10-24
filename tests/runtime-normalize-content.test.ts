@@ -19,6 +19,11 @@ function asar(header: object, data: Uint8Array) {
   const bytes = Buffer.alloc(12 + payload + data.length); bytes.writeUInt32LE(4); bytes.writeUInt32LE(4 + payload, 4);
   bytes.writeUInt32LE(payload, 8); bytes.writeUInt32LE(json.length, 12); json.copy(bytes, 16); bytes.set(data, 12 + payload); return bytes;
 }
+it("continues normal import when a platform has no recognized container", async () => {
+  const request = await input("data/scenario.ks", Buffer.from("[text]"));
+  expect(await normalizeContent(request)).toEqual({files: request.files});
+  await expect(access(request.outputRoot)).rejects.toThrow();
+});
 it("normalizes Electron ASAR into immutable native web files without running its executable", async () => {
   const bytes = Buffer.from("<html>test</html>");
   const request = await input("Desktop/resources/app.asar", asar({files: {"index.html": {size: bytes.length, offset: "0"}}}, bytes));

@@ -184,8 +184,9 @@ function prepareTargetOptions(config: RuntimeConfiguration, target: TargetDeclar
     options.dosEntryPath = config.content.entryPath ?? null;
   } else if (target.adapterId.startsWith("emulatorjs")) {options.dosEntryPath = null;}
   if (target.id === "kirikiri2-kag") {
-    options.startupXp3Path = config.content.kind === "KIRIKIRI_PROJECT" && config.content.entryFile.toLowerCase().endsWith(".xp3")
-      ? projectPaths([config.content.entryFile], config.content.entryFile)[config.content.entryFile] : null;
+    if (config.content.kind !== "KIRIKIRI_PROJECT") {configurationFailure();}
+    options.startupXp3Path = /(?:^|\/)startup\.tjs$/iu.test(config.content.entryFile) ? null
+      : projectPaths([config.content.entryFile], config.content.entryFile)[config.content.entryFile];
   }
   validateSiglusOptions(config, target, options, files);
   if (target.romSetSelection?.driver === "MACHINE_OPTION") {

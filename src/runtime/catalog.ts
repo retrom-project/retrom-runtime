@@ -38,6 +38,14 @@ export function bindingStorageLayout(binding: RuntimeBinding): "ZIP_STORE" | "FI
   return binding.contentKinds.some(kind => projects.includes(kind)) ? "ZIP_STORE" : "FILES";
 }
 
+/** Only a selected single-file target can interpret these files as disc or archive entries. */
+export function contentEntryExtensions(platformId: string, coreId: string): readonly string[] {
+  if (!runtimeBindings.some(binding => binding.coreId === coreId && binding.platformIds.includes(platformId) &&
+    binding.contentKinds.includes("SINGLE_FILE"))) {return [];}
+  const formats = contentFormats.cores as Readonly<Record<string, {extensions: readonly string[]}>>;
+  return formats[coreId]?.extensions ?? [];
+}
+
 /** A declared archive entry is input to the core, not an upload container to unpack. */
 function nativeArchives(binding: RuntimeBinding): {archiveExtensions?: string[]} {
   if (!binding.contentKinds.includes("SINGLE_FILE")) {return {};}

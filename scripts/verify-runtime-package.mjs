@@ -16,7 +16,7 @@ export async function verifyRuntimePackage(repositoryRoot, packageJson) {
     await writeFile(join(stage, "package.json"), JSON.stringify({...packageJson, version: "0.0.0-dev"}));
     const {stdout} = await execute("npm", ["pack", "--ignore-scripts", "--json"], {cwd: stage, timeout: 30000, maxBuffer: 4 * 1024 * 1024});
     const pack = JSON.parse(stdout)[0];
-    for (const path of ["scripts/runtime-cli.mjs", "scripts/runtime-host-input.mjs", "scripts/runtime-normalize-content.mjs", "dist/runtime/index.js", "dist/runtime/platforms.json", "assets/facts/arcade-catalog.json.gz"]) {
+    for (const path of ["scripts/runtime-cli.mjs", "scripts/runtime-host-input.mjs", "scripts/runtime-normalize-content.mjs", "scripts/normalization/registry.mjs", "scripts/normalization/worker.mjs", "scripts/kirikiri/cxdec-pe.mjs", "dist/runtime/index.js", "dist/runtime/platforms.json", "assets/facts/arcade-catalog.json.gz"]) {
       if (!pack.files.some(file => file.path === path)) {throw new Error(`RUNTIME_PACKAGE_FILE_MISSING:${path}`);}
     }
     const unpack = join(temporary, "unpack"); await mkdir(unpack);
@@ -43,6 +43,12 @@ export async function verifyRuntimePackage(repositoryRoot, packageJson) {
     const files = [{logicalKey: "game.nes", name: "game.nes", sha256: "a".repeat(64), sizeBytes: 1}];
     const config = await run("configure", {platformId: "nes", coreIds: ["fceumm"], files});
     if ((await run("normalize-content", {platformId: "nes", files})).files[0].sha256 !== files[0].sha256) {throw new Error("RUNTIME_PACKAGE_NORMALIZE_INVALID");}
+    const xp3 = Buffer.alloc(28); Buffer.from("5850330d0a200a1a8b6701", "hex").copy(xp3); xp3.writeBigUInt64LE(19n, 11);
+    const xp3Path = join(temporary, "plain.xp3"); await writeFile(xp3Path, xp3);
+    const xp3File = {logicalKey: "data.xp3", name: "data.xp3", sizeBytes: xp3.length, sha256: createHash("sha256").update(xp3).digest("hex")};
+    const normalized = await run("normalize-content", {platformId: "kirikiri", files: [xp3File],
+      locators: {"data.xp3": {path: xp3Path, offset: 0, sizeBytes: xp3.length}}, outputRoot: join(temporary, "normalized-xp3")});
+    if (normalized.files[0].sha256 !== xp3File.sha256 || normalized.files[0].path) {throw new Error("RUNTIME_PACKAGE_XP3_WORKER_INVALID");}
     const prepared = await run("prepare", {directory: {platformId: "nes", defaultCoreId: "fceumm", allowedCoreIds: ["fceumm"]},
       config, files, fingerprints: {"emulatorjs/fceumm": "b".repeat(64)}});
     if (prepared.romHash !== files[0].sha256 || prepared.targetId !== "fceumm") {throw new Error("RUNTIME_PACKAGE_PREPARE_INVALID");}

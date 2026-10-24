@@ -19,6 +19,7 @@ vi.mock("./content.js", async importOriginal => {
 
 type FakeModule = {
   locateFile: (path: string) => string;
+  onAbort?: (reason: unknown) => void;
   onExit?: (status: number) => void;
   postRun: Array<() => void>;
   pauseMainLoop: ReturnType<typeof vi.fn>;
@@ -112,11 +113,12 @@ describe("KiriKiri2 KAG runtime", () => {
     "function signature mismatch",
     "null function or function signature mismatch",
     "table index is out of bounds",
+    "unreachable",
   ].flatMap((message) => (["error", "unhandledrejection"] as const)
     .map((transport) => [message, transport] as const));
 
   it.each(runtimeTerminationCases)(
-    "turns the KiriKiri wasm %s termination from %s into one runtime exit",
+    "reports the KiriKiri wasm %s trap from %s as one fatal error",
     async (terminationMessage, transport) => {
     enableRuntimeFeatures();
     const vlfs = fakeVlfs();
@@ -126,20 +128,12 @@ describe("KiriKiri2 KAG runtime", () => {
     runtime.subscribe((event) => events.push(event.type));
     const mounting = runtime.mount(document.createElement("div"));
     await loadVlfs(vlfs);
-    await loadCore(vlfs);
+    const module = await loadCore(vlfs);
     await mounting;
     const unrelated = new WebAssembly.RuntimeError("null function");
     Object.defineProperty(unrelated, "stack", { value: "RuntimeError: null function\n at blob:another-wasm:wasm-function[1852]:0x90236" });
 
     expect(window.dispatchEvent(runtimeFailureEvent(transport, unrelated))).toBe(true);
-    expect(runtime.getState()).toBe("RUNNING");
-
-    const actualCrash = new WebAssembly.RuntimeError("unreachable");
-    Object.defineProperty(actualCrash, "stack", {
-      value: "RuntimeError: unreachable\n" +
-        " at blob:kirikiri-verified-wasm:wasm-function[3000]:0x1334f5",
-    });
-    expect(window.dispatchEvent(runtimeFailureEvent(transport, actualCrash))).toBe(true);
     expect(runtime.getState()).toBe("RUNNING");
 
     const termination = new WebAssembly.RuntimeError(terminationMessage);
@@ -149,8 +143,10 @@ describe("KiriKiri2 KAG runtime", () => {
     });
     expect(window.dispatchEvent(runtimeFailureEvent(transport, termination))).toBe(false);
 
-    await vi.waitFor(() => expect(runtime.getState()).toBe("EXITED"));
-    expect(events.filter((type) => type === "EXIT_REQUESTED")).toHaveLength(1);
+    await vi.waitFor(() => expect(runtime.getState()).toBe("FAILED"));
+    await vi.waitFor(() => expect(module.krkr2StopMainLoop).toHaveBeenCalledOnce());
+    expect(events.filter(type => type === "FATAL_ERROR")).toHaveLength(1);
+    expect(events.filter(type => type === "EXIT_REQUESTED")).toHaveLength(0);
     },
   );
 
@@ -193,6 +189,30 @@ describe("KiriKiri2 KAG runtime", () => {
     await vi.waitFor(() => expect(runtime.getState()).toBe("EXITED"));
     expect(events.filter((type) => type === "EXIT_REQUESTED")).toHaveLength(1);
     expect(runtime.getCheckpointAvailability()).toEqual({ available: false, reason: "NOT_READY" });
+  });
+
+  it.each(["abort", "nonzero-exit"])("reports %s after mount as one fatal failure and cleans up", async mode => {
+    enableRuntimeFeatures();
+    const vlfs = fakeVlfs(); mockDownloads();
+    const runtime = await createRuntime(config(), currentWindowHost(null));
+    const events: Array<{type: string; failure?: {code: string; phase: string}}> = [];
+    runtime.subscribe(event => events.push(event));
+    const mounting = runtime.mount(document.createElement("div"));
+    await loadVlfs(vlfs);
+    const module = await loadCore(vlfs); await mounting;
+    for (let repeat = 0; repeat < 2; repeat++) {
+      if (mode === "abort") {module.onAbort?.("engine stopped");} else {module.onExit?.(7);}
+    }
+    module.onExit?.(0);
+    await vi.waitFor(() => expect(runtime.getState()).toBe("FAILED"));
+    await vi.waitFor(() => expect((window as HostWindow).Module).toBeUndefined());
+    expect(events.filter(event => event.type === "FATAL_ERROR")).toEqual([
+      expect.objectContaining({failure: expect.objectContaining({phase: "PLAYING", code: mode === "abort" ? "KIRIKIRI_RUNTIME_ABORTED" : "KIRIKIRI_RUNTIME_EXIT_FAILED"})}),
+    ]);
+    expect(events.filter(event => event.type === "EXIT_REQUESTED")).toHaveLength(0);
+    expect(runtime.getCheckpointAvailability()).toEqual({available: false, reason: "FAILED"});
+    expect(module.krkr2StopMainLoop).toHaveBeenCalledOnce();
+    await expect(runtime.checkpoint()).rejects.toThrow();
   });
 
   it("does not carry startup input into the ready runtime", async () => {
@@ -374,6 +394,22 @@ describe("KiriKiri2 KAG runtime", () => {
     await restored.exit();
   });
 
+  it("identifies an unavailable restore loader and cleans up without requesting a bookmark load", async () => {
+    enableRuntimeFeatures(); const vlfs = fakeVlfs(); mockDownloads();
+    const restore = await encodeKirikiriCheckpoint({entries: [{path: "savedata/data1999.ksd", data: Uint8Array.of(1)}], resumeSlot: 1999});
+    const runtime = await createRuntime(config(), currentWindowHost(restore));
+    vi.useFakeTimers();
+    try {
+      const outcome = runtime.mount(document.createElement("div")).catch(error => error as Error);
+      await loadVlfs(vlfs); const module = await loadCore(vlfs, {loadReady: 0});
+      await vi.advanceTimersByTimeAsync(60_100);
+      expect(await outcome).toMatchObject({message: "KIRIKIRI_CHECKPOINT_LOADER_TIMEOUT"});
+      expect(module._krkr2_host_load_bookmark).not.toHaveBeenCalled();
+      expect(module.krkr2StopMainLoop).toHaveBeenCalledOnce();
+      expect(runtime.getState()).toBe("FAILED");
+    } finally {vi.useRealTimers(); await runtime.exit();}
+  });
+
   it("temporarily resumes a paused core until a custom bookmark file is written", async () => {
     enableRuntimeFeatures();
     const vlfs = fakeVlfs();
@@ -455,14 +491,26 @@ describe("KiriKiri2 KAG runtime", () => {
     await rejected;
   });
 
-  it("fails closed when multiple XP3 files have no selected entry", async () => {
+  it.each([["data.bin", "/data.bin"], ["startup.tjs", "/"]])("starts the selected %s despite other archives", async (entry, expected) => {
+    enableRuntimeFeatures(); const vlfs = fakeVlfs();
+    mockDownloads(["/data.bin", "/patch.xp3"]);
+    const envelope = config(); envelope.targetOptions.startupXp3Path = entry;
+    const runtime = await createRuntime(envelope, currentWindowHost(null));
+    const mounting = runtime.mount(document.createElement("div")); await loadVlfs(vlfs);
+    const module = await loadCore(vlfs); await mounting;
+    expect(module._startupXp3Path).toBe(expected);
+    await runtime.exit();
+  });
+
+  it("fails closed when the explicit selected entry is absent from the public tree", async () => {
     enableRuntimeFeatures();
     const vlfs = fakeVlfs();
     mockDownloads(["/data.xp3", "/patch.xp3"]);
-    const runtime = await createRuntime(config(), currentWindowHost(null));
+    const envelope = config(); envelope.targetOptions.startupXp3Path = "missing.bin";
+    const runtime = await createRuntime(envelope, currentWindowHost(null));
     const mounting = runtime.mount(document.createElement("div"));
     await loadVlfs(vlfs);
-    await expect(mounting).rejects.toThrow("KIRIKIRI_PROJECT_ENTRY_AMBIGUOUS");
+    await expect(mounting).rejects.toThrow("KIRIKIRI_PROJECT_ENTRY_INVALID");
   });
 });
 
@@ -537,7 +585,7 @@ async function loadVlfs(vlfs: FakeVlfs) {
 
 async function loadCore(
   vlfs: FakeVlfs,
-  options: { bookmarkReady?: number; restoreResult?: number; restoreState?: number; abort?: boolean; stopping?: Promise<void> } = {},
+  options: { bookmarkReady?: number; loadReady?: number; restoreResult?: number; restoreState?: number; abort?: boolean; stopping?: Promise<void> } = {},
 ) {
   await vi.waitFor(() => expect(runtimeScripts()).toHaveLength(2));
   const configured = (window as HostWindow).Module ?? {};
@@ -546,7 +594,7 @@ async function loadCore(
     resumeMainLoop: vi.fn(),
     krkr2StopMainLoop: vi.fn(() => options.stopping ?? Promise.resolve()),
     _krkr2_host_bookmark_is_ready: vi.fn(() => options.bookmarkReady ?? 1),
-    _krkr2_host_load_bookmark_is_ready: vi.fn(() => 1),
+    _krkr2_host_load_bookmark_is_ready: vi.fn(() => options.loadReady ?? 1),
     _krkr2_host_load_bookmark: vi.fn(() => options.restoreResult ?? 0),
     _krkr2_host_load_bookmark_state: vi.fn(() => options.restoreState ?? 2),
     _krkr2_host_save_bookmark: vi.fn((slot: number) => {

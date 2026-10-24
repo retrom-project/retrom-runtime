@@ -10,6 +10,7 @@ import {onsScriptEncoding, onsScriptSampleBytes} from "./ons-encoding.js";
 import formats from "./content-formats.json" with {type: "json"};
 import type {FlycastMachine} from "./flycast-arcade.js";
 import {playableArcadeMachine, type ArcadeCatalog} from "./arcade.js";
+import {kirikiriEntry} from "./kirikiri-entry.js";
 
 export type ConfigureRequest = {
   platformId: string;
@@ -52,7 +53,7 @@ function constructContent(input: ConfigureRequest): RuntimeContent {
   case "dos": return dosContent(input);
   case "arcade": return {kind: "ARCADE", entryFile: arcadeEntry(input).logicalKey};
   case "ons": return {kind: "ONS_PROJECT", entryFile: choosePreferred(input, [/(?:^|\/)nscript\.dat$/u, /(?:^|\/)nscr_sec\.dat$/u, /(?:^|\/)0\.txt$/u, /(?:^|\/)00\.txt$/u]).logicalKey};
-  case "kirikiri": return {kind: "KIRIKIRI_PROJECT", entryFile: choosePreferred(input, [/(?:^|\/)startup\.tjs$/u, /(?:^|\/)data\.xp3$/u, /\.xp3$/u]).logicalKey};
+  case "kirikiri": return {kind: "KIRIKIRI_PROJECT", entryFile: kirikiriEntry(input)};
   case "butterscotch": return {kind: "BUTTERSCOTCH_PROJECT", entryFile: choosePreferred(input, [/(?:^|\/)data\.win$/u, /(?:^|\/)runner\.js$/u, /(?:^|\/)game\.js$/u, /(?:^|\/)data\.js$/u, /(?:^|\/)index\.html$/u]).logicalKey};
   case "tyranoscript": return {kind: "TYRANOSCRIPT_PROJECT", entryFile: choose(name => /(?:^|\/)index\.html$/u.test(name)).logicalKey};
   case "siglus": return {kind: "SIGLUS_PROJECT", entryFile: choose(name => /(?:^|\/)scene\.pck$/u.test(name)).logicalKey};

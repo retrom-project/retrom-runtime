@@ -59,7 +59,7 @@ if (process.argv.includes("--once")) {
   process.stdout.write("pfb provider dev build complete\n");
   process.exit(0);
 }
-for (const path of [join(root, "src"), join(root, "assets"),join(root,"contracts"),join(root,"scripts/content-io")]) {
+for (const path of [join(root, "src"), join(root, "assets"),join(root,"contracts"),join(root,"scripts")]) {
   if (!(await stat(path)).isDirectory()) { continue; }
   for (const directory of await directories(path)) {
     watch(directory, {persistent: true}, () => void rebuild());

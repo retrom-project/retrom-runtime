@@ -5,6 +5,7 @@ import {ContentIOError, fail, toContentIOError} from "../errors.js";
 import {RangeReader} from "../range-reader.js";
 import {BLOCK_BYTES} from "../source.js";
 import {controls, controlBytes, closeSyncBuffer, requested, State} from "./blocking.js";
+import {transientNetworkError} from "../network-wait.js";
 import {wireError} from "./async.js";
 import {base, parseConsumer, type Address} from "./protocol.js";
 export class SyncConsumerService {
@@ -14,9 +15,11 @@ export class SyncConsumerService {
   private release: (() => void) | undefined;
   private timer: ReturnType<typeof setTimeout> | undefined;
   private closed = false;
+  private waitingForNetwork = false;
   private readonly control: Int32Array;
   constructor(readonly port: MessagePort, readonly address: Address, private readonly reader: RangeReader,
-    private readonly buffer: SharedArrayBuffer, private readonly objectKey: string, private readonly credits: BufferCredits, private readonly released: () => void) {
+    private readonly buffer: SharedArrayBuffer, private readonly objectKey: string, private readonly credits: BufferCredits, private readonly released: () => void,
+    private readonly network: (objectKey: string, codeNumber: number) => void = () => {}) {
     this.control = controls(buffer);
     port.onmessage = ({data}: MessageEvent<unknown>) => {try {this.receive(data);} catch (cause) {this.close(toContentIOError(cause));}};
     port.onmessageerror = () => this.close(new ContentIOError("INTERNAL")); port.start();
@@ -60,9 +63,20 @@ export class SyncConsumerService {
       if (Atomics.compareExchange(this.control, 0, State.REQUESTED, State.OK) !== State.REQUESTED) {this.awaitingSlotFreeRequestId = null; return;}
       this.release = release; release = undefined; this.timer = setTimeout(() => this.close(new ContentIOError("TIMEOUT")), 5000);
       Atomics.notify(this.control, 0);
+      if (this.waitingForNetwork) {this.waitingForNetwork = false; this.network(this.objectKey, 0);}
     } catch (cause) {
       const error = toContentIOError(cause);
+      if (!this.closed && transientNetworkError(error) && this.transient(message, error)) {return;}
       this.close(error);
     } finally {release?.(); clearTimeout(deadline); this.controller = undefined;}
+  }
+  /** Keep the channel: hand the consumer a retryable ERROR for this request and report the wait. */
+  private transient(message: Extract<ContentMessageV1, {type: "READ"}>, error: ContentIOError): boolean {
+    if (!requested(this.control, this.address.epoch, message.requestId, message.length)) {return false;}
+    Atomics.store(this.control, 4, error.codeNumber);
+    if (Atomics.compareExchange(this.control, 0, State.REQUESTED, State.ERROR) !== State.REQUESTED) {return false;}
+    Atomics.notify(this.control, 0);
+    if (!this.waitingForNetwork) {this.waitingForNetwork = true; this.network(this.objectKey, error.codeNumber);}
+    return true;
   }
 }

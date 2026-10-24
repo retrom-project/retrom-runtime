@@ -89,6 +89,33 @@ of launching a fresh session without network authorization. ONS video in this
 mode materializes a leased local Blob when opened and releases it at playback
 end or exit; default ONS video continues to use the native media URL.
 
+## Network waits
+
+On-demand range reads survive network loss. Each block attempt keeps its 15-second request bound and the existing HTTP
+retry budget; when an attempt still ends with a request-scoped `TIMEOUT` or `NETWORK_FAILED`, the reader does not fail.
+It waits 1, 2, 4, then 8 seconds between attempts (a browser `online` event retries at once) and retries the same block
+until it succeeds, the reader closes or the caller aborts. Identity, authorization, range, length and checksum errors
+still fail immediately.
+
+Main-thread readers share one session `NetworkWait`: the session reports `WAITING` when the first read starts waiting
+and `RESTORED` once every waiting read has succeeded. Synchronous channels keep the slot instead of closing it: the
+service stores the code in the length word with `ERROR`, the consumer returns the slot to `IDLE`, waits on the state
+word (closing wakes it) and resends. The service asks for a bound two seconds shorter than the consumer's wait so it
+always answers first; a channel whose service never answers still closes. It reports a channel's wait and recovery as
+`READ` diagnostics carrying the object key. The Provider forwards the session state as the public `CONTENT_NETWORK`
+runtime event and stops forwarding once the runtime exits or fails. The core simply stays blocked on its read; nothing
+is replayed and no protocol message changes.
+
+The outage is reported before the read's own deadline. While a consumer is waiting for an object's bytes, the service
+reports that object's first request that fails to reach the server, or has no response headers after 5 seconds, as a
+`READ` diagnostic with `NETWORK_FAILED`, and its next response with code 0. Speculative prefetch alone reports nothing,
+so a game that keeps playing from cached blocks shows no notice.
+
+Whole-file materialization keeps its own bounded retry and still fails after it. Core bridges add no read deadline of
+their own: mkxp's WasmFS bridge, Butterscotch's native slot, PPSSPP's disc facade and KiriKiri's VLFS wait for the
+runtime reader, which ends a read only on success, a non-network error, closing or abort. Startup deadlines that
+cover core reads count only time without a pending read: native-web's ready deadline and mkxp's first-frame deadline.
+
 ## Sequential prefetch
 
 Prefetch is a fixed internal runtime strategy, not a `ContentFetchPolicyV1` field; it does not change the ABI, messages, contract digest or core range reads. After a successful nonempty demand copy touches a window's final 256 KiB block (including the exact block boundary), the IO Worker Reader may submit the immediately following network window. Successful memory-cache reads also qualify. Empty reads, failed cache probes, materialization and prefetch completion do not trigger speculation. Whole-small-file windows and EOF have no successor. Windows of any validated size use the same alignment and EOF clipping as demand reads.

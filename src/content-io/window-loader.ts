@@ -28,12 +28,12 @@ export class WindowLoader {
     if (window.wholeFile && present.size === 0) {
       let offset = 0;
       for await (const chunk of fetchWholeWindow({...object.source, transport: "WHOLE_ALLOWED"}, object.state, signal,
-        this.store.httpTelemetry)) {bytes.set(chunk, offset); offset += chunk.length;}
+        this.store.telemetry(object))) {bytes.set(chunk, offset); offset += chunk.length;}
     } else {
       for (const range of missingRanges(window, present)) {
         const offset = range.start - window.start;
         await fetchRangeInto(object.source, object.state, range.start, bytes.subarray(offset, offset + range.length), signal,
-          this.store.httpTelemetry);
+          this.store.telemetry(object));
       }
     }
     checkSignal(signal);

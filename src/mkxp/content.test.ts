@@ -15,3 +15,16 @@ it("[BR-05] UNIT/mkxp registers capability metadata without opening files and de
  await content.close();expect(reader.close).toHaveBeenCalledOnce();
  await expect(content.bridge.readIntoById(entry.id,0,new Uint8Array(0))).rejects.toThrow("CONTENT_IO_ABORTED");
 });
+it("[NET-14] UNIT/mkxp reports a pending content read so startup does not count network waits",async()=>{
+ let release!:()=>void;
+ const reader={abi,id:crypto.randomUUID(),sizeBytes:1024,readInto:vi.fn(async(_offset:number,bytes:Uint8Array)=>{await new Promise<void>(resolve=>{release=resolve;});return bytes.length;}),tryReadInto:vi.fn(),close:vi.fn(async()=>{}),stream:vi.fn()};
+ const session={open:vi.fn(async()=>reader),materialize:vi.fn(),closeFile:vi.fn()};
+ const content=new MkxpContent({contentSession:targetContentFixture(session, "rpgmaker-xp"),assetIndex:{}},vi.fn());
+ const entry=content.register({url:`${location.origin}/game`,sha256:"a".repeat(64),sizeBytes:1024},"/game/game.mkxpz","GAME");
+ expect(content.reading).toBe(false);
+ const pending=content.bridge.readIntoById(entry.id,0,new Uint8Array(8));
+ await vi.waitFor(()=>expect(reader.readInto).toHaveBeenCalled());
+ expect(content.reading).toBe(true);
+ release();await pending;expect(content.reading).toBe(false);
+ await content.close();
+});

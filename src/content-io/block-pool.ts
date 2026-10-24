@@ -21,6 +21,7 @@ export class BlockPool {
   readonly scheduler = new BlockScheduler<BufferLease>((lease) => lease.release());
   private readonly reported = new WeakSet<BlockObject>();
   private readonly controller = new AbortController();
+  private readonly demand = new Map<string, number>();
   constructor(l1Bytes = 0, private readonly load: BlockLoader = (object, index, signal) =>
     fetchRangeBlock(object.source, object.state, index, signal),
     private readonly failure: (object: BlockObject, error: ContentIOError) => void = () => {},
@@ -37,11 +38,19 @@ export class BlockPool {
   }
   async copy(object: BlockObject, index: number, offset: number, destination: Uint8Array,
     guard: () => void, options: ReadOptions = {}): Promise<void> {
-    for(let attempt=0;;attempt++){
-      try{return await this.copyGeneration(object,index,offset,destination,guard,options);}
-      catch(error){if(!(error instanceof StorageGenerationChanged)||attempt>=2){throw this.report(object, error);}}
+    this.demand.set(object.key, (this.demand.get(object.key) ?? 0) + 1);
+    try {
+      for(let attempt=0;;attempt++){
+        try{return await this.copyGeneration(object,index,offset,destination,guard,options);}
+        catch(error){if(!(error instanceof StorageGenerationChanged)||attempt>=2){throw this.report(object, error);}}
+      }
+    } finally {
+      const count = this.demand.get(object.key)! - 1;
+      if (count === 0) {this.demand.delete(object.key);} else {this.demand.set(object.key, count);}
     }
   }
+  /** Whether a consumer is currently waiting for bytes of the object, as opposed to only speculative prefetch. */
+  demanding(objectKey: string): boolean {return this.demand.has(objectKey);}
   private async copyGeneration(object: BlockObject, index: number, offset: number, destination: Uint8Array,
     guard: () => void, options: ReadOptions): Promise<void> {
     this.check(object); checkSignal(options.signal); guard();

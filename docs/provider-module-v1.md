@@ -45,7 +45,9 @@ through the ordinary FAILED state. Module V1 reports FATAL_ERROR with a structur
 CONTENT/NETWORK/STORAGE/SECURITY/CORE/CONFIGURATION category, retryable and diagnostics. Only known
 temporary network errors are retryable. Native causes are copied before cleanup, stripped of URLs, paths and
 credentials, and bounded to eight entries of 500 characters. Content I/O length, checksum and immutable-identity
-mismatches are CONTENT failures and are not automatically retried. Hosts retain the failure and return navigation
+mismatches are CONTENT failures and are not automatically retried. A managed on-demand read that loses the network does not fail the runtime: it waits and retries,
+and the Provider emits `CONTENT_NETWORK` with `WAITING`, then `RESTORED` when every waiting read has succeeded (see
+[Content I/O network waits](content-io.md#network-waits)). Hosts may show a reconnecting notice; the runtime keeps running. Hosts retain the failure and return navigation
 after teardown; they never classify errors by parsing native messages. Mount completion removes transport
 wrappers and deadlines; frame error, rejection and CSP listeners survive until exit to observe gameplay failures.
 The browser's message-only Resize Observer deferred-delivery notification does not terminate the runtime;

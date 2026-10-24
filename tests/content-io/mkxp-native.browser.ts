@@ -5,7 +5,7 @@ import {dirname, join} from "node:path";
 import type {ContentSessionService} from "../../src/content-io/service.js";
 import {startFixtureServer} from "./fixture-server.mjs";
 const bundle = async (file: string) => (await build({entryPoints: [file], bundle: true, format: "esm", platform: "browser", write: false, target: "es2022"})).outputFiles[0].text;
-test("[BR-05] CORE/mkxp [IO-10] CORE/mkxp-trace-10000 real WasmFS pthread proxy uses public Worker above 4GiB, metadata stat, EOF, readonly, timeout and close @S14", async ({page}, testInfo) => {
+test("[BR-05] CORE/mkxp [IO-10] CORE/mkxp-trace-10000 real WasmFS pthread proxy uses public Worker above 4GiB, metadata stat, EOF, readonly, a read longer than 15 s and close @S14", async ({page}, testInfo) => {
   test.setTimeout(180000);
   const env = process.env.RETROM_CONTENT_IO_ENV;
   if (!env) {throw new Error("CONTENT_IO_ENV_REQUIRED");}
@@ -59,7 +59,7 @@ test("[BR-05] CORE/mkxp [IO-10] CORE/mkxp-trace-10000 real WasmFS pthread proxy 
             reportFailure: (code: number) => failures.push(code),
             readIntoById: async (id: string, offset: number, bytes: Uint8Array, signal: AbortSignal) => {
               calls.push({id,offset,size:bytes.length,ui:typeof document !== "undefined"});
-              if(offset===128) {await new Promise(resolve=>setTimeout(resolve,100));bytes.fill(7);return bytes.length;}
+              if(offset===128) {await new Promise(resolve=>setTimeout(resolve,16000));bytes.fill(7);return bytes.length;}
               if(offset===256) {setTimeout(()=>native?.retromContentClose?.(),5);await new Promise<void>((_,reject)=>signal.addEventListener("abort",()=>reject(signal.reason),{once:true}));}
               const selected = id === "11111111-1111-4111-8111-111111111111" ? reader :
                 id === "22222222-2222-4222-8222-222222222222" ? rtp : null;
@@ -96,7 +96,7 @@ test("[BR-05] CORE/mkxp [IO-10] CORE/mkxp-trace-10000 real WasmFS pthread proxy 
     expect(result.calls.every(call=>call.ui && call.size<=262144)).toBe(true);
     expect(result.calls.some(call=>call.offset>4294967296)).toBe(true);
     expect(new Set(result.calls.map(call=>call.id)).size).toBe(2);
-    expect(result.failures).toEqual([9,11,11]); expect(errors).toEqual([]);
+    expect(result.failures).toEqual([11,11]); expect(errors).toEqual([]);
     expect(server.requests("game").every(request=>request.method==="GET" && request.range)).toBe(true);
   } finally {await server.close();}
 });

@@ -131,14 +131,14 @@
     {
       "id": "butterscotch",
       "repository": "https://github.com/retrom-project/Butterscotch",
-      "tag": "retrom-core-g0a36f3762700-r1",
-      "commit": "f1d57b0b98fd7acc6ca6401f4d6a761b3e05f11e",
+      "tag": "retrom-core-g0a36f3762700-r2",
+      "commit": "fece18d98f6258fcc8f29db4d3ccff99e10ba0e6",
       "adapterAbi": "butterscotch-checkpoint-v2",
-      "metadataUrl": "https://github.com/retrom-project/Butterscotch/releases/download/retrom-core-g0a36f3762700-r1/rpg-runtime-release.json",
+      "metadataUrl": "https://github.com/retrom-project/Butterscotch/releases/download/retrom-core-g0a36f3762700-r2/rpg-runtime-release.json",
       "assets": [
         {
           "filename": "butterscotch.mjs",
-          "url": "https://github.com/retrom-project/Butterscotch/releases/download/retrom-core-g0a36f3762700-r1/butterscotch.mjs",
+          "url": "https://github.com/retrom-project/Butterscotch/releases/download/retrom-core-g0a36f3762700-r2/butterscotch.mjs",
           "output": "runtime/butterscotch/butterscotch.mjs",
           "maxSizeBytes": 1048576,
           "sizeBytes": 107470,
@@ -146,15 +146,15 @@
         },
         {
           "filename": "butterscotch.wasm",
-          "url": "https://github.com/retrom-project/Butterscotch/releases/download/retrom-core-g0a36f3762700-r1/butterscotch.wasm",
+          "url": "https://github.com/retrom-project/Butterscotch/releases/download/retrom-core-g0a36f3762700-r2/butterscotch.wasm",
           "output": "runtime/butterscotch/butterscotch.wasm",
           "maxSizeBytes": 4194304,
-          "sizeBytes": 1906046,
-          "sha256": "5cdde2cf75140dfc8e47ca6ed89825f477c5af062e7ff8352c6b210c47ce235e"
+          "sizeBytes": 1905970,
+          "sha256": "ff95e97c99ada42cbaa5a67ae7e09db6aa77591437b51be17f524cdafa4026b5"
         },
         {
           "filename": "butterscotch-meta.mjs",
-          "url": "https://github.com/retrom-project/Butterscotch/releases/download/retrom-core-g0a36f3762700-r1/butterscotch-meta.mjs",
+          "url": "https://github.com/retrom-project/Butterscotch/releases/download/retrom-core-g0a36f3762700-r2/butterscotch-meta.mjs",
           "output": "runtime/butterscotch/butterscotch-meta.mjs",
           "maxSizeBytes": 262144,
           "sizeBytes": 64908,
@@ -162,7 +162,7 @@
         },
         {
           "filename": "butterscotch-meta.wasm",
-          "url": "https://github.com/retrom-project/Butterscotch/releases/download/retrom-core-g0a36f3762700-r1/butterscotch-meta.wasm",
+          "url": "https://github.com/retrom-project/Butterscotch/releases/download/retrom-core-g0a36f3762700-r2/butterscotch-meta.wasm",
           "output": "runtime/butterscotch/butterscotch-meta.wasm",
           "maxSizeBytes": 262144,
           "sizeBytes": 66804,
@@ -170,7 +170,7 @@
         },
         {
           "filename": "LICENSE",
-          "url": "https://github.com/retrom-project/Butterscotch/releases/download/retrom-core-g0a36f3762700-r1/LICENSE",
+          "url": "https://github.com/retrom-project/Butterscotch/releases/download/retrom-core-g0a36f3762700-r2/LICENSE",
           "output": "licenses/butterscotch/LICENSE",
           "maxSizeBytes": 65536,
           "sizeBytes": 34523,
@@ -2172,22 +2172,22 @@
           "filename": "mkxp-z_libretro.js",
           "output": "runtime/mkxp/mkxp-z_libretro.js",
           "maxSizeBytes": 1048576,
-          "sizeBytes": 259644,
-          "sha256": "203ca8939dc288beed3278aa69501dcf9470a2f8d195683ae52a950662f0b427",
-          "url": "https://github.com/retrom-project/mkxp-z-libretro-emscripten/releases/download/retrom-core-f2efc98-r10/mkxp-z_libretro.js"
+          "sizeBytes": 259439,
+          "sha256": "54e9a1e693370a42b3bc50e3f7ab526af25bce5a8f0b569b2229619b2766a688",
+          "url": "https://github.com/retrom-project/mkxp-z-libretro-emscripten/releases/download/retrom-core-f2efc98-r11/mkxp-z_libretro.js"
         },
         {
           "filename": "mkxp-z_libretro.wasm",
           "output": "runtime/mkxp/mkxp-z_libretro.wasm",
           "maxSizeBytes": 67108864,
-          "sizeBytes": 42669366,
-          "sha256": "54fa468d9624377b4640d9ed628b2046e01d7c240611f71483ea0925d3911dd3",
-          "url": "https://github.com/retrom-project/mkxp-z-libretro-emscripten/releases/download/retrom-core-f2efc98-r10/mkxp-z_libretro.wasm"
+          "sizeBytes": 42669340,
+          "sha256": "51193f0e73c91ba8562d4c9beb28bc29706f73fd5edfae3c30fb940817449556",
+          "url": "https://github.com/retrom-project/mkxp-z-libretro-emscripten/releases/download/retrom-core-f2efc98-r11/mkxp-z_libretro.wasm"
         }
       ],
-      "tag": "retrom-core-f2efc98-r10",
-      "commit": "ae18a057b85e607909b0c0284c1450bafa0820aa",
-      "metadataUrl": "https://github.com/retrom-project/mkxp-z-libretro-emscripten/releases/download/retrom-core-f2efc98-r10/rpg-runtime-release.json"
+      "tag": "retrom-core-f2efc98-r11",
+      "commit": "74d49b6c1b51321ded1c8d3f2c213604059b2f23",
+      "metadataUrl": "https://github.com/retrom-project/mkxp-z-libretro-emscripten/releases/download/retrom-core-f2efc98-r11/rpg-runtime-release.json"
     },
     {
       "id": "kirikiri2",
@@ -2201,31 +2201,31 @@
           "maxSizeBytes": 1048576,
           "sizeBytes": 345050,
           "sha256": "179b7e7c6166f0b0ed63d95150f066e03e2d0188ba815738a57e07b92c5a558e",
-          "url": "https://github.com/retrom-project/kirikiroid2-web/releases/download/retrom-core-g13dda190f837-r2/index.js"
+          "url": "https://github.com/retrom-project/kirikiroid2-web/releases/download/retrom-core-g13dda190f837-r3/index.js"
         },
         {
           "filename": "index.wasm",
           "output": "runtime/kirikiri/index.wasm",
           "maxSizeBytes": 67108864,
           "sizeBytes": 22672432,
-          "sha256": "face89635508946708b1d67627faa229f2de2aed8d297a27e17b15ab96588745",
-          "url": "https://github.com/retrom-project/kirikiroid2-web/releases/download/retrom-core-g13dda190f837-r2/index.wasm"
+          "sha256": "73e368e544790b8cf4b9564e17bef177f09a6006ecc5f7690fd15b1fe834692f",
+          "url": "https://github.com/retrom-project/kirikiroid2-web/releases/download/retrom-core-g13dda190f837-r3/index.wasm"
         },
         {
           "filename": "vlfs.js",
           "output": "runtime/kirikiri/vlfs.js",
           "maxSizeBytes": 262144,
-          "sizeBytes": 50655,
-          "sha256": "5a77bee66a3ae6e2eea4219c92f341dc4e4e1b6ff71613e60ef4ef9616113f75",
-          "url": "https://github.com/retrom-project/kirikiroid2-web/releases/download/retrom-core-g13dda190f837-r2/vlfs.js"
+          "sizeBytes": 50615,
+          "sha256": "7be6f591704ca816c150bebe49f3265a731933615ab210c5279441e1bcfa2ac0",
+          "url": "https://github.com/retrom-project/kirikiroid2-web/releases/download/retrom-core-g13dda190f837-r3/vlfs.js"
         },
         {
           "filename": "assets.zip",
           "output": "runtime/kirikiri/assets.zip",
           "maxSizeBytes": 16777216,
           "sizeBytes": 7853397,
-          "sha256": "d50160dd92ccabac299ac2d2c6ba6b5818fe55d09d1a2f546157326cd7fa14d3",
-          "url": "https://github.com/retrom-project/kirikiroid2-web/releases/download/retrom-core-g13dda190f837-r2/assets.zip"
+          "sha256": "40b4e3d0a4d310515804d29b5bcff7afea2f7df523a45947035ed013458b7459",
+          "url": "https://github.com/retrom-project/kirikiroid2-web/releases/download/retrom-core-g13dda190f837-r3/assets.zip"
         },
         {
           "filename": "LICENSE",
@@ -2233,12 +2233,12 @@
           "maxSizeBytes": 65536,
           "sizeBytes": 43292,
           "sha256": "31887f008d3666961adb51572add59709c12eb56d39066fed62b5267d380042d",
-          "url": "https://github.com/retrom-project/kirikiroid2-web/releases/download/retrom-core-g13dda190f837-r2/LICENSE"
+          "url": "https://github.com/retrom-project/kirikiroid2-web/releases/download/retrom-core-g13dda190f837-r3/LICENSE"
         }
       ],
-      "tag": "retrom-core-g13dda190f837-r2",
-      "commit": "39df3412ae827b213fd3188b6a95c67431b3c02e",
-      "metadataUrl": "https://github.com/retrom-project/kirikiroid2-web/releases/download/retrom-core-g13dda190f837-r2/rpg-runtime-release.json"
+      "tag": "retrom-core-g13dda190f837-r3",
+      "commit": "24f8fc23e9efb3f3609479ff1ceed35d8b74ae90",
+      "metadataUrl": "https://github.com/retrom-project/kirikiroid2-web/releases/download/retrom-core-g13dda190f837-r3/rpg-runtime-release.json"
     },
     {
       "id": "jsbeeb",
@@ -2424,7 +2424,7 @@
           "maxSizeBytes": 1048576,
           "sizeBytes": 196408,
           "sha256": "0ba2010cfdc104197b72ce506552b35721199b655fbf5b1d2ca79ac98b1bc6d6",
-          "url": "https://github.com/retrom-project/ppsspp/releases/download/retrom-core-g2e6fd06ed6c7-r4/LICENSE"
+          "url": "https://github.com/retrom-project/ppsspp/releases/download/retrom-core-g2e6fd06ed6c7-r5/LICENSE"
         },
         {
           "filename": "ppsspp.js",
@@ -2432,15 +2432,15 @@
           "maxSizeBytes": 1048576,
           "sizeBytes": 229785,
           "sha256": "1e28280a4b56aea2d85caefefa55b899407ef61d9a2e021d3423ab9f72866c69",
-          "url": "https://github.com/retrom-project/ppsspp/releases/download/retrom-core-g2e6fd06ed6c7-r4/ppsspp.js"
+          "url": "https://github.com/retrom-project/ppsspp/releases/download/retrom-core-g2e6fd06ed6c7-r5/ppsspp.js"
         },
         {
           "filename": "ppsspp.wasm",
           "output": "runtime/ppsspp/ppsspp.wasm",
           "maxSizeBytes": 134217728,
           "sizeBytes": 12031437,
-          "sha256": "755d779305a055abbf2f254171147e91b77e5ea1ceef83af90d3f7c63ccc237f",
-          "url": "https://github.com/retrom-project/ppsspp/releases/download/retrom-core-g2e6fd06ed6c7-r4/ppsspp.wasm"
+          "sha256": "fdad97ccb031c2630db1e8657c8bdb62887fb82dd486d4dac535d750951254ff",
+          "url": "https://github.com/retrom-project/ppsspp/releases/download/retrom-core-g2e6fd06ed6c7-r5/ppsspp.wasm"
         },
         {
           "filename": "ppsspp.data",
@@ -2448,15 +2448,15 @@
           "maxSizeBytes": 134217728,
           "sizeBytes": 19686927,
           "sha256": "ab748793b4b4458d217cd37fa777cd4c81e34876cc8ca163bbfaf7f3c2b0df22",
-          "url": "https://github.com/retrom-project/ppsspp/releases/download/retrom-core-g2e6fd06ed6c7-r4/ppsspp.data"
+          "url": "https://github.com/retrom-project/ppsspp/releases/download/retrom-core-g2e6fd06ed6c7-r5/ppsspp.data"
         },
         {
           "filename": "ppsspp.worker.mjs",
           "output": "runtime/ppsspp/ppsspp.worker.mjs",
           "maxSizeBytes": 1048576,
-          "sizeBytes": 11399,
-          "sha256": "5bc64c40c35af59e0c8cc2820689de21bfc3043ac41c3306ec94366af301b261",
-          "url": "https://github.com/retrom-project/ppsspp/releases/download/retrom-core-g2e6fd06ed6c7-r4/ppsspp.worker.mjs"
+          "sizeBytes": 11172,
+          "sha256": "70216df6b1f9e7cef3bc126183a4300bd76b7fb1776aace58d705bce234c8848",
+          "url": "https://github.com/retrom-project/ppsspp/releases/download/retrom-core-g2e6fd06ed6c7-r5/ppsspp.worker.mjs"
         },
         {
           "filename": "ppsspp-host.mjs",
@@ -2464,12 +2464,12 @@
           "maxSizeBytes": 1048576,
           "sizeBytes": 8858,
           "sha256": "f06528947ebd7d4c71e6a733c4a06beba2834da81f5e069b921c1cac5648fa93",
-          "url": "https://github.com/retrom-project/ppsspp/releases/download/retrom-core-g2e6fd06ed6c7-r4/ppsspp-host.mjs"
+          "url": "https://github.com/retrom-project/ppsspp/releases/download/retrom-core-g2e6fd06ed6c7-r5/ppsspp-host.mjs"
         }
       ],
-      "tag": "retrom-core-g2e6fd06ed6c7-r4",
-      "commit": "0107382fc31ce958da09d4ec4a9f9e3047803aae",
-      "metadataUrl": "https://github.com/retrom-project/ppsspp/releases/download/retrom-core-g2e6fd06ed6c7-r4/rpg-runtime-release.json"
+      "tag": "retrom-core-g2e6fd06ed6c7-r5",
+      "commit": "be591fb983626f08fc855b58190637f729e4f3f8",
+      "metadataUrl": "https://github.com/retrom-project/ppsspp/releases/download/retrom-core-g2e6fd06ed6c7-r5/rpg-runtime-release.json"
     },
     {
       "id": "mame",

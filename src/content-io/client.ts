@@ -11,9 +11,10 @@ import {closeSyncBuffer, createSyncBuffer} from "./bridge/blocking.js";
 import {ClientJobs} from "./client-jobs.js";
 import type {PreparationProgress} from "./progress.js";
 import {ClientBlocks} from "./client-blocks.js";
-import {ContentIOError, fail} from "./errors.js";
+import {ContentIOError, errorNumbers, fail} from "./errors.js";
 import {abi, contractSha256} from "./identity.js";
 import {RangeReader} from "./range-reader.js";
+import {NetworkWait} from "./network-wait.js";
 import {contentObjectKey, type SourceContext, validateSource} from "./source.js";
 import {validateManagedPolicy, validateSourcePolicy} from "./policy.js";
 type ClientFile = {object: BlockObject; reader: RangeReader; policy: ManagedInputPolicyV1};
@@ -22,6 +23,9 @@ export class ContentSessionClient {
   readonly fetchPolicy: FetchPolicy;
   private readonly accounting = new ReadAccounting();
   private readonly diagnostic: (diagnostic: ContentDiagnostic) => void;
+  private readonly network: NetworkWait;
+  /** Synchronous channels report their waits through worker diagnostics, one token per object. */
+  private readonly syncWaits = new Map<string, object>();
   readonly sessionId = crypto.randomUUID();
   readonly blocks: ClientBlocks;
   private readonly management: PortRPC;
@@ -44,6 +48,7 @@ export class ContentSessionClient {
   private readonly readyTimer: ReturnType<typeof setTimeout>;
   constructor(private readonly worker: Worker, private readonly context: SourceContext, private readonly onFailure: (error: ContentIOError) => void = () => {}, options: ContentSessionOptions = {}) {
     this.fetchPolicy = validateFetchPolicy(options.fetchPolicy); this.diagnostic = options.onDiagnostic ?? (() => {});
+    this.network = new NetworkWait(state => {if (!this.failure && !this.closing) {options.onNetwork?.(state);}});
     const channel = new MessageChannel();
     const address: Address = {sessionId: this.sessionId, channelId: crypto.randomUUID(), epoch: 1};
     this.blocks = new ClientBlocks((object, signal) => this.channel(object, signal));
@@ -64,7 +69,7 @@ export class ContentSessionClient {
     const key = contentObjectKey(source, this.context.storageOrigin);
     if (reply.sizeBytes !== source.sizeBytes || reply.objectKey !== key) {this.fail(new ContentIOError("SOURCE_INVALID")); this.check();}
     const object: BlockObject = {key, source, state: {generation: this.sessionId, pinnedEtag: null, revoked: false}};
-    const reader = new RangeReader(reply.fileId, object, this.blocks, () => this.releaseFile(reply.fileId), this.accounting.copied);
+    const reader = new RangeReader(reply.fileId, object, this.blocks, () => this.releaseFile(reply.fileId), this.accounting.copied, this.network);
     this.files.set(reader.id, {reader, object, policy});
     // Groups are sealed when first opened; adding a file must never widen an existing capability.
     const index = this.groups.length - 1, group = this.groups[index];
@@ -148,6 +153,7 @@ export class ContentSessionClient {
     }
   }
   private reportDiagnostic(message: Extract<Message, {type: "DIAGNOSTIC"}>): void {
+      this.syncNetwork(message);
       if (message.operation === "CLOSE" && this.closing) {this.blocks.cache.clear();}
       const hits = this.accounting.counts, counts = message.counts;
       this.diagnostic({sessionId: this.sessionId, operation: message.operation, codeNumber: message.codeNumber,
@@ -156,6 +162,16 @@ export class ContentSessionClient {
           cacheBytesL1: (counts.cacheBytesL1 ?? 0) + this.blocks.cache.byteLength,
           peakCacheBytesL1: Math.max(counts.peakCacheBytesL1 ?? 0, this.blocks.cache.peakByteLength)}});
       if (message.operation === "CLOSE" && message.codeNumber !== 0) {this.fail(wireError(message.codeNumber));}
+  }
+  /** The worker marks a synchronous channel's transient READ failure and its recovery with the object key. */
+  private syncNetwork(message: Extract<Message, {type: "DIAGNOSTIC"}>): void {
+    if (message.operation !== "READ" || message.objectKey === null) {return;}
+    if (message.codeNumber === errorNumbers.TIMEOUT || message.codeNumber === errorNumbers.NETWORK_FAILED) {
+      const token = this.syncWaits.get(message.objectKey) ?? {};
+      this.syncWaits.set(message.objectKey, token); this.network.enter(token); return;
+    }
+    const token = this.syncWaits.get(message.objectKey);
+    if (message.codeNumber === 0 && token) {this.syncWaits.delete(message.objectKey); this.network.leave(token, true);}
   }
   private async channel(object: BlockObject, signal?: AbortSignal): Promise<{fileId: string; rpc: PortRPC; release: () => void}> {
     const unlock=await this.channelGate.acquire(signal);

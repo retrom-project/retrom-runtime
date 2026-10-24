@@ -106,8 +106,14 @@ always answers first; a channel whose service never answers still closes. It rep
 runtime event and stops forwarding once the runtime exits or fails. The core simply stays blocked on its read; nothing
 is replayed and no protocol message changes.
 
-Whole-file materialization keeps its own bounded retry and still fails after it. Core forks with their own native
-read deadline need that deadline removed before their reads can wait.
+The outage is reported before the read's own deadline. While a consumer is waiting for an object's bytes, the service
+reports that object's first request that fails to reach the server, or has no response headers after 5 seconds, as a
+`READ` diagnostic with `NETWORK_FAILED`, and its next response with code 0. Speculative prefetch alone reports nothing,
+so a game that keeps playing from cached blocks shows no notice.
+
+Whole-file materialization keeps its own bounded retry and still fails after it. Core bridges add no read deadline of
+their own: mkxp's WasmFS bridge, Butterscotch's native slot, PPSSPP's disc facade and KiriKiri's VLFS wait for the
+runtime reader, which ends a read only on success, a non-network error, closing or abort.
 
 ## Sequential prefetch
 

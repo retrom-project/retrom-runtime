@@ -1292,6 +1292,7 @@
           "src/content-io/bridge/sync-service.test.ts",
           "src/content-io/bridge/sync-network.test.ts",
           "src/content-io/client-network.test.ts",
+          "src/content-io/network-reach.test.ts",
           "src/content-io/bridge/protocol.test.ts",
           "src/content-io/credits.test.ts",
           "src/content-io/client-lifecycle.test.ts"

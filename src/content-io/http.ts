@@ -13,7 +13,11 @@ export type ContentObjectState = {
   persistPin?: (etag: string) => Promise<void>;
   pinCommit?: Promise<void>;
 };
-export type HttpDependencies = {fetch: typeof fetch; now: () => number; wait: typeof delay; wallNow: () => number; consumed?: (bytes: number) => void; dispatched?: (kind: "RANGE" | "WHOLE", retry: boolean) => void};
+export type HttpDependencies = {fetch: typeof fetch; now: () => number; wait: typeof delay; wallNow: () => number; consumed?: (bytes: number) => void; dispatched?: (kind: "RANGE" | "WHOLE", retry: boolean) => void;
+  /** False when a request cannot reach the server or has no response after `stalledResponseMs`; true on any response. */
+  reachable?: (reachable: boolean) => void};
+/** A request without response headers for this long reports the network unreachable while it keeps waiting. */
+export const stalledResponseMs = 5000;
 const defaults: HttpDependencies = {fetch: (...args) => globalThis.fetch(...args), now: () => performance.now(), wait: delay, wallNow: () => Date.now()};
 export function blockRange(source: ContentSourceV1, blockIndex: number) {
   if (!integer(blockIndex) || source.sizeBytes === 0 || blockIndex > Math.floor((source.sizeBytes - 1) / BLOCK_BYTES)) {fail("BOUNDS");}
@@ -141,17 +145,21 @@ async function request(source: ContentSourceV1, state: ContentObjectState, signa
   if (range) {headers.Range = range;}
   const etag = expectedEtag(source) ?? state.pinnedEtag;
   if (etag) {headers["If-Match"] = etag;}
+  const stalled = dependencies.reachable ? setTimeout(() => dependencies.reachable?.(false), stalledResponseMs) : undefined;
   try {
     dependencies.dispatched?.(range ? "RANGE" : "WHOLE", retry);
     const pending = dependencies.fetch(source.url, {credentials: "same-origin", redirect: "error", headers, signal,
       cache: source.purpose === "CORE_ASSET" ? "default" : "no-store"});
     void pending.then((response) => {if (signal.aborted) {void response.body?.cancel().catch(() => undefined);}}, () => {});
-    return await abortable(pending, signal);
+    const response = await abortable(pending, signal);
+    dependencies.reachable?.(true);
+    return response;
   } catch (cause) {
     checkSignal(signal);
     if (cause instanceof ContentIOError) {throw cause;}
+    dependencies.reachable?.(false);
     throw new ContentIOError("NETWORK_FAILED", {cause, retryable: true});
-  }
+  } finally {clearTimeout(stalled);}
 }
 function commonHeaders(response: Response, source: ContentSourceV1, signal: AbortSignal, dependencies: HttpDependencies) {
   checkSignal(signal);

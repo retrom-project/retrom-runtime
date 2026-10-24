@@ -5,12 +5,25 @@ import {basename, join, resolve} from "node:path";
 import {execFile} from "node:child_process";
 import {promisify} from "node:util";
 import {verifyProviderBundle} from "./provider-bundle.mjs";
-import {verifyProviderChunks} from "./provider-chunks.mjs";
+import {chunkProviderBundle, verifyProviderChunks} from "./provider-chunks.mjs";
 import {versionFromTag} from "./release-version.mjs";
 
 const repository = "https://github.com/retrom-project/retrom-runtime";
 const digest = /^[a-f0-9]{64}$/u;
 const execute = promisify(execFile);
+
+/** Rebuilt bundles need their own transport closure before a paired pin can be written. */
+export async function writeRebuiltRuntimeInputs(input) {
+  const providers = [];
+  for (const provider of input.providers) {
+    const manifest = JSON.parse(await readFile(join(provider.bundleRoot, "provider.json"), "utf8"));
+    const chunkRoot = join(input.outputRoot, manifest.providerId, "chunks");
+    const chunks = await chunkProviderBundle({bundleRoot: provider.bundleRoot, providerId: manifest.providerId,
+      providerVersion: manifest.providerVersion, outputRoot: chunkRoot});
+    providers.push({...provider, chunkRoot, chunks});
+  }
+  return writeRuntimeInputs({...input, providers});
+}
 
 /** One paired input descriptor for explicit local candidates and tagged releases. */
 export async function writeRuntimeInputs({outputRoot, sourceTreeSha256, release = null, tool, providers}) {

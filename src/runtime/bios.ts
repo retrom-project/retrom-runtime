@@ -8,8 +8,13 @@ export type BIOSRequirement = {
   requirementKey: string; coreId: string; providerId: string; targetId: string;
   logicalName: string; required: boolean; condition: string; sizeBytes: number | null;
   md5: string | null; sha256: string | null;
-  delivery: "BIOS_BUNDLE" | "EXTERNAL_FILE"; virtualPath: string | null;
+  delivery: "BIOS_BUNDLE" | "EXTERNAL_FILE" | "SEEKABLE_BLOB"; virtualPath: string | null;
   activationOptions: Readonly<Record<string, string>>;
+  /**
+   * SEEKABLE_BLOB only: the Launch resource role of this file. archiveEntries must all exist in the archive (a trailing
+   * slash names a directory), and identify and verify it; an archive holding any archiveExcludes entry is not identified.
+   */
+  resourceRole?: string; archiveEntries?: readonly string[]; archiveExcludes?: readonly string[];
   members?: readonly {name: string; sizeBytes: number; crc32: string; sha1: string; required: boolean}[];
 };
 
@@ -22,9 +27,10 @@ export function biosCatalog(): BIOSRequirement[] {
       coreId: item.coreId, providerId: binding.providerId, targetId: binding.targetId,
       logicalName: item.logicalName, required: item.mode !== "OPTIONAL", condition: item.condition,
       sizeBytes: item.sizeBytes, md5: item.md5, sha256: item.sha256,
-      delivery: item.delivery as "BIOS_BUNDLE" | "EXTERNAL_FILE", virtualPath: publicFirmwarePath(item.virtualPath),
+      delivery: item.delivery as BIOSRequirement["delivery"], virtualPath: publicFirmwarePath(item.virtualPath),
       activationOptions: item.activationOptions as Readonly<Record<string, string>>,
       ...("members" in item ? {members: item.members} : {}),
+      ...("resourceRole" in item ? {resourceRole: item.resourceRole, archiveEntries: item.archiveEntries, archiveExcludes: item.archiveExcludes} : {}),
     })));
 }
 
@@ -56,6 +62,7 @@ const conditionalExtensions: Readonly<Record<string, readonly string[]>> = {
 };
 function conditionApplies(condition: string, extension: string, config: RuntimeConfiguration, psxRegion?: import("./psx.js").PSXRegion | null): boolean {
   if (["", "SNES_BSX_FIRMWARE", "SNES_SUFAMI_FIRMWARE"].includes(condition)) {return true;}
+  if (condition === "RPG_RTP") {return config.content.kind === "RPG_MAKER_PROJECT" && config.content.rtp !== undefined;}
   const extensions = conditionalExtensions[condition];
   if (extensions) {return extensions.includes(extension);}
   if (condition === "GAME_GENIE_ADDON_MODE") {return config.cores?.fceumm?.options?.gameGenie === true;}

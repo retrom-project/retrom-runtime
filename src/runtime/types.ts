@@ -5,7 +5,7 @@ export type RPGEngine = "RPG2000" | "RPG2003" | "RPGXP" | "RPGVX" | "RPGVXACE" |
 export type RuntimeContent =
   | {kind: "SINGLE_FILE" | "ARCADE"; entryFile: string}
   | {kind: "DOS_BUNDLE"; entryFile: string; entryPath?: string}
-  | {kind: "RPG_MAKER_PROJECT"; entryFile: string; engine: RPGEngine}
+  | {kind: "RPG_MAKER_PROJECT"; entryFile: string; engine: RPGEngine; rtp?: string}
   | {kind: "SCUMMVM_PROJECT"}
   | {kind: "ONS_PROJECT" | "KIRIKIRI_PROJECT" | "BUTTERSCOTCH_PROJECT" | "TYRANOSCRIPT_PROJECT" |
       "NXENGINE_PROJECT" | "DAPHNE_PROJECT" | "SIGLUS_PROJECT"; entryFile: string};

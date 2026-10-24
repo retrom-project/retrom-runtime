@@ -3,7 +3,7 @@ import {pipeline} from "node:stream/promises";
 import {createWriteStream} from "node:fs";
 import {createHash} from "node:crypto";
 import {createReadStream, constants} from "node:fs";
-import {open, readFile, mkdtemp, copyFile, chmod, rm, readdir, mkdir} from "node:fs/promises";
+import {open, readFile, mkdtemp, copyFile, chmod, rm, readdir, mkdir, stat} from "node:fs/promises";
 import {fileURLToPath} from "node:url";
 import {execFile} from "node:child_process";
 import {promisify} from "node:util";
@@ -453,7 +453,14 @@ export async function identifyHostBIOS(input) {
   const members = await biosMembers(input.path);
   const memberIdentity = sha256(Buffer.from(JSON.stringify(members.map(member => [member.name, member.sizeBytes, member.sha256])
     .sort((left, right) => left[0] < right[0] ? -1 : left[0] > right[0] ? 1 : 0))));
+  const names = members.map(member => member.name);
   return input.requirements.flatMap(requirement => {
+    if (requirement.archiveEntries?.length) {
+      // Content alone identifies these packages; their names and digests vary by release and language.
+      const identified = requirement.archiveEntries.every(entry => hasArchiveEntry(names, entry)) &&
+        !requirement.archiveExcludes?.some(entry => hasArchiveEntry(names, entry));
+      return identified ? [{...requirement, candidate: {memberIdentity, matchedMembers: requirement.archiveEntries.length, totalMembers: members.length}}] : [];
+    }
     if (!requirement.members?.length) {return direct.includes(requirement) ? [requirement] : [];}
     const matched = requirement.members.filter(expected => matchesBIOSMember(members, expected));
     const named = input.file.name.toLowerCase() === requirement.logicalName.toLowerCase();
@@ -495,6 +502,7 @@ async function biosArchiveDigest(path) {
 
 export async function verifyHostBIOS(input) {
   const {requirement, path} = input;
+  if (requirement.archiveEntries?.length) {return verifyArchiveEntries(requirement.archiveEntries, path);}
   if (!requirement.members?.length) {return null;}
   try {
     const members = await biosMembers(path);
@@ -506,4 +514,23 @@ export async function verifyHostBIOS(input) {
     return {status: "invalid", matchedMembers: 0, expectedMembers: requirement.members.length,
       missingMembers: requirement.members.filter(expected => expected.required).map(expected => expected.name)};
   }
+}
+
+/** An archive mounted at a core directory must hold these entries at its root; only the central directory is read. */
+async function verifyArchiveEntries(entries, path) {
+  let names = [];
+  try {
+    const info = await stat(path);
+    names = (await zipMembers({path, offset: 0, sizeBytes: info.size})).map(member => member.name);
+  } catch {names = [];}
+  const missingMembers = entries.filter(entry => !hasArchiveEntry(names, entry));
+  const matchedMembers = entries.length - missingMembers.length;
+  return {status: !missingMembers.length ? "valid" : matchedMembers ? "incomplete" : "invalid",
+    matchedMembers, expectedMembers: entries.length, missingMembers};
+}
+
+/** A trailing slash names a directory holding any member; otherwise the exact file. Names compare case-insensitively. */
+function hasArchiveEntry(names, entry) {
+  const wanted = entry.toLowerCase();
+  return names.some(name => wanted.endsWith("/") ? name.toLowerCase().startsWith(wanted) : name.toLowerCase() === wanted);
 }

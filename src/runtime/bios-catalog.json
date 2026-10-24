@@ -1136,5 +1136,77 @@
     "activationOptions": {},
     "delivery": "BIOS_BUNDLE",
     "virtualPath": null
+  },
+  {
+    "coreId": "rpgmaker",
+    "providerID": "retrom-runtime",
+    "targetID": "rpgmaker-xp",
+    "logicalName": "Standard.zip",
+    "mode": "REQUIRED",
+    "condition": "RPG_RTP",
+    "sizeBytes": null,
+    "md5": null,
+    "sha256": null,
+    "activationOptions": {},
+    "delivery": "SEEKABLE_BLOB",
+    "virtualPath": null,
+    "resourceRole": "rtp",
+    "archiveEntries": [
+      "Audio/",
+      "Graphics/Windowskins/",
+      "Graphics/Autotiles/"
+    ],
+    "archiveExcludes": [
+      "Game.ini",
+      "Data/"
+    ]
+  },
+  {
+    "coreId": "rpgmaker",
+    "providerID": "retrom-runtime",
+    "targetID": "rpgmaker-vx",
+    "logicalName": "RPGVX.zip",
+    "mode": "REQUIRED",
+    "condition": "RPG_RTP",
+    "sizeBytes": null,
+    "md5": null,
+    "sha256": null,
+    "activationOptions": {},
+    "delivery": "SEEKABLE_BLOB",
+    "virtualPath": null,
+    "resourceRole": "rtp",
+    "archiveEntries": [
+      "Audio/",
+      "Graphics/System/TileA1.png",
+      "Graphics/System/TileB.png"
+    ],
+    "archiveExcludes": [
+      "Game.ini",
+      "Data/"
+    ]
+  },
+  {
+    "coreId": "rpgmaker",
+    "providerID": "retrom-runtime",
+    "targetID": "rpgmaker-vx-ace",
+    "logicalName": "RPGVXAce.zip",
+    "mode": "REQUIRED",
+    "condition": "RPG_RTP",
+    "sizeBytes": null,
+    "md5": null,
+    "sha256": null,
+    "activationOptions": {},
+    "delivery": "SEEKABLE_BLOB",
+    "virtualPath": null,
+    "resourceRole": "rtp",
+    "archiveEntries": [
+      "Audio/",
+      "Graphics/Titles1/",
+      "Graphics/Battlebacks1/"
+    ],
+    "archiveExcludes": [
+      "Game.ini",
+      "Data/"
+    ]
   }
 ]

@@ -17,8 +17,9 @@ export function number64(bytes, at = 0) {
 }
 export function uint64(value) {const bytes = Buffer.alloc(8); bytes.writeBigUInt64LE(BigInt(value)); return bytes;}
 export function chunk(tag, bytes) {return Buffer.concat([Buffer.from(tag, "ascii"), uint64(bytes.length), bytes]);}
-export function* chunks(bytes) {
+export function* chunks(bytes, onTag) {
   for (let at = 0; at < bytes.length;) {
+    if (at + 4 <= bytes.length) {onTag?.(bytes.toString("ascii", at, at + 4));}
     requireFormat(at + 12 <= bytes.length);
     const length = number64(bytes, at + 4), start = at + 12;
     requireFormat(length <= bytes.length - start);

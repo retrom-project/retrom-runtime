@@ -12,8 +12,10 @@ game bytes, extracted control table, native execution or x86 emulator is shipped
 - `cxdec.mjs` interprets a bounded expression grammar instead of generated x86.
 - `convert.mjs` streams decompressed resources through the selected filter and
   independently rereads every ordinary output resource before success.
-- `import.mjs` owns the fresh temporary root and a cancellable CPU worker.
-  Cancellation waits for worker termination before reclaiming that root.
+- `normalize.mjs` declares the registered CxFilterFS plugin, with read-only
+  whole-game planning and conversion per related archive group. The shared
+  [normalization pipeline](../normalization/README.md) owns the fresh root,
+  cancellable CPU worker, plan conflict checks and output-manifest verification.
 
 Parameters must be recovered from the supplied archive/modules and uniquely
 confirmed against complete resource samples. Input SHA, output SHA, lengths,
@@ -38,10 +40,11 @@ The detailed temporary `.audit-*` JSONL is intentionally not a game member.
 The host clears its own intermediate packages after successful publication and
 never removes external mounted Pegasus metadata or original packages.
 
-Hxv4 is recognized but rejected with `RUNTIME_KIRIKIRI_NAMES_UNAVAILABLE` until
-complete logical names can be recovered. Unknown filters/parameters, ambiguous
-profiles and additional xp3filter scripts are unsupported. Resource conversion
-does not implement game plugins or establish playable/save compatibility.
+Hxv4 has no registered converter until complete logical names can be recovered.
+It is retained for the ordinary import/entry validation flow; this does not
+establish runtime support. A matched CxFilterFS plan with unknown parameters,
+ambiguous profiles or additional xp3filter scripts fails explicitly. Resource
+conversion does not implement game plugins or establish playable/save compatibility.
 
 Algorithm cross-checks: GARbro `KiriKiriCx.cs` at
 `b09ee4570ccb1daf6ac56710ee8934dc0b8baeb0` (MIT), and the independently published

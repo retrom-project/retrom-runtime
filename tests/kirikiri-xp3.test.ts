@@ -34,17 +34,30 @@ it("leaves an ordinary XP3 immutable and does not create a second package", asyn
   expect(await readFile(request.locators["data.bin"].path)).toEqual(original);
   await expect(access(request.outputRoot)).rejects.toThrow();
 });
-it("reports Hxv4 missing logical names during import instead of accepting an unusable package", async () => {
+it("leaves an unsupported Hxv4 variant to the normal import flow when no converter matches", async () => {
   const request = await input(indexFile(chunk("Hxv4", Buffer.alloc(14))));
   const original = await readFile(request.locators["data.xp3"].path);
-  await expect(normalizeContent(request)).rejects.toThrow("RUNTIME_KIRIKIRI_NAMES_UNAVAILABLE");
+  expect(await normalizeContent(request)).toEqual({files: request.files});
   expect(await readFile(request.locators["data.xp3"].path)).toEqual(original);
+  await expect(access(request.outputRoot)).rejects.toThrow();
+});
+it("does not claim an unknown XP3 index representation merely from its container signature", async () => {
+  const bytes = indexFile(Buffer.alloc(0)); bytes[19] = 3;
+  const request = await input(bytes);
+  expect(await normalizeContent(request)).toEqual({files: request.files});
   await expect(access(request.outputRoot)).rejects.toThrow();
 });
 it("rejects malformed protected name tables without returning unchanged original facts", async () => {
   const request = await input(indexFile(chunk("eliF", Buffer.alloc(5)), true));
   await expect(normalizeContent(request)).rejects.toThrow("RUNTIME_KIRIKIRI_ARCHIVE_INVALID");
   await expect(access(request.outputRoot)).rejects.toThrow();
+});
+it("never downgrades a known protected tag to unmatched after a later index error", async () => {
+  for (const index of [Buffer.from("eliF"), Buffer.concat([chunk("eliF", Buffer.alloc(6)), Buffer.from("truncated")])]) {
+    const request = await input(indexFile(index));
+    await expect(normalizeContent(request)).rejects.toThrow("RUNTIME_KIRIKIRI_ARCHIVE_INVALID");
+    await expect(access(request.outputRoot)).rejects.toThrow();
+  }
 });
 it("does not follow an XP3 pointer into an adjacent member of the physical input object", async () => {
   const descriptor = Buffer.concat([u64(1000000), Buffer.alloc(10)]);
@@ -143,6 +156,32 @@ it("audits a uniform seed-only patch and still rejects checksum errors in mixed-
   const mixed = await withModule(protectedXP3([...resources(), ...patch], "Yuzu"));
   await expect(normalizeContent(mixed)).rejects.toThrow("RUNTIME_KIRIKIRI_CHECKSUM_MISMATCH");
   await expect(access(mixed.outputRoot)).rejects.toThrow();
+});
+it("converts every protected archive group while preserving ordinary archives, patch paths and deterministic content", async () => {
+  const items = resources(), request = await withModule(protectedXP3(items));
+  const patch = [{name: "scene.ks", bytes: Buffer.from("汉化补丁覆盖内容".repeat(20))}, ...items.slice(0, 2)];
+  const append = async (name: string, bytes: Buffer) => {
+    const path = join(request.outputRoot, "..", `source-${request.files.length}`); await writeFile(path, bytes);
+    const file = {logicalKey: name, name, sizeBytes: bytes.length, sha256: createHash("sha256").update(bytes).digest("hex")};
+    request.files.push(file); request.locators[name] = {path, offset: 0, sizeBytes: bytes.length}; return file;
+  };
+  const ordinary = await append("unmodified.xp3", indexFile(Buffer.alloc(0)));
+  await append("patch/patch2.xp3", protectedXP3(patch, "Yuzu"));
+  const unsupported = await append("optional.xp3", indexFile(chunk("Hxv4", Buffer.alloc(14))));
+  const before = await Promise.all(request.files.map(file => readFile(request.locators[file.logicalKey].path)));
+  const first = await normalizeContent(request);
+  expect(first.normalization).toMatchObject({archiveCount: 2, verifiedEntries: 6, formatCounts: {"cxfilterfs-elif": 1, "cxfilterfs-yuzu": 1},
+    plugins: [{id: "kirikiri-cxfilterfs", version: 1, formats: ["cxfilterfs-elif", "cxfilterfs-yuzu"],
+      validation: {outputFilesVerified: 2, resourceEntriesVerified: 6}}]});
+  expect(first.files.find(file => file.logicalKey === ordinary.logicalKey)).toEqual(ordinary);
+  expect(first.files.find(file => file.logicalKey === unsupported.logicalKey)).toEqual(unsupported);
+  const data = decodedResources(await readFile(first.files.find(file => file.logicalKey === "data.xp3")!.path!));
+  const override = decodedResources(await readFile(first.files.find(file => file.logicalKey === "patch/patch2.xp3")!.path!));
+  expect(data.get("scene.ks")).toEqual(items[2].bytes); expect(override.get("scene.ks")).toEqual(patch[0].bytes);
+  const second = await normalizeContent({...request, outputRoot: `${request.outputRoot}-second`});
+  const facts = (result: typeof first) => result.files.map(({logicalKey, sizeBytes, sha256}) => ({logicalKey, sizeBytes, sha256}));
+  expect(facts(second)).toEqual(facts(first)); expect(second.normalization).toEqual(first.normalization);
+  expect(await Promise.all(request.files.map(file => readFile(request.locators[file.logicalKey].path)))).toEqual(before);
 });
 it("cancels its worker and cleans only its own staging directory", async () => {
   const request = await withModule(protectedXP3(resources())), controller = new AbortController();

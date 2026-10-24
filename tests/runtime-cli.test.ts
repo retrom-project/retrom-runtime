@@ -20,6 +20,7 @@ beforeAll(async () => {
     await cp(resolve("scripts", file), join(root, "scripts", file));
   }
   await cp(resolve("scripts/kirikiri"), join(root, "scripts/kirikiri"), {recursive: true});
+  await cp(resolve("scripts/normalization"), join(root, "scripts/normalization"), {recursive: true});
   await cp(resolve("assets/facts"), join(root, "assets/facts"), {recursive: true});
   await writeFile(join(root, "package.json"), JSON.stringify({type: "module", version: "0.0.0-dev"}));
   await symlink(resolve("node_modules"), join(root, "node_modules"));

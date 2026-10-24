@@ -78,21 +78,34 @@ async function selectFilter(profiles, archives, signal) {
   requireFormat(accepted.length > 0, "FILTER_UNAVAILABLE"); requireFormat(accepted.length === 1, "FILTER_AMBIGUOUS");
   return accepted[0];
 }
-/** Runs inside a CPU worker; all writes are below the caller-owned fresh staging root. */
-export async function normalizeKirikiri(input, signal) {
-  const plans = [], groups = new Map();
+/** One whole-game probe produces a plan per related archive group. */
+async function probe(input) {
+  const {signal} = input, groups = new Map();
   for (const file of input.files) {
     signal?.throwIfAborted(); requireFormat(safePath(file.logicalKey));
-    const archive = await readXp3(requireLocator(input, file), {signal});
+    const key = `xp3:${file.logicalKey}`;
+    if (!input.cache.has(key)) {input.cache.set(key, readXp3(requireLocator(input, file), {signal}));}
+    const archive = await input.cache.get(key);
     if (!archive?.format) {continue;}
-    const key = `${archive.format}\0${archive.salt}`;
-    if (!groups.has(key)) {groups.set(key, []);}
-    groups.get(key).push(archive); plans.push({file, archive, group: key});
+    const group = `${archive.format}\0${archive.salt}`;
+    if (!groups.has(group)) {groups.set(group, []);}
+    groups.get(group).push({file, archive});
   }
-  if (!plans.length) {return {files: input.files};}
+  if (!groups.size) {return [];}
   requireFormat(!input.files.some(file => /(?:^|\/)xp3filter\.tjs$/iu.test(file.logicalKey)), "ARCHIVE_UNSUPPORTED");
-  const profiles = await nativeProfiles(input, signal), filters = new Map();
-  for (const [key, archives] of groups) {filters.set(key, await selectFilter(profiles, archives, signal));}
+  if (!input.cache.has("cxfilterfs:profiles")) {input.cache.set("cxfilterfs:profiles", nativeProfiles(input, signal));}
+  const profiles = await input.cache.get("cxfilterfs:profiles"), plans = [];
+  for (const archives of groups.values()) {
+    const filter = await selectFilter(profiles, archives.map(item => item.archive), signal);
+    const claims = archives.map(item => item.file.logicalKey);
+    plans.push({format: archives[0].archive.format, claims, outputs: claims, archives, filter});
+  }
+  return plans;
+}
+
+/** Conversion writes resources only; the common pipeline validates and packages once. */
+async function convert(input, plan) {
+  const {signal} = input;
   const auditRoot = await mkdtemp(join(input.outputRoot, ".audit-")), log = await open(join(auditRoot, "entries.jsonl"), "wx", 0o600);
   const details = []; let detailBytes = 0;
   const audit = async row => {
@@ -107,16 +120,15 @@ export async function normalizeKirikiri(input, signal) {
       requireFormat(details.length < 2048 && detailBytes <= 4 * 1024 * 1024 - 65536, "AUDIT_LIMIT"); details.push(detail);
     }
   };
-  const normalized = new Map(), summary = {kind: "KIRIKIRI_XP3", converterVersion: 1, sourceContentHash: input.sourceContentHash,
-    archiveCount: plans.length, verifiedEntries: 0, metadataCorrections: 0, omittedPhysicalEntries: 0, formatCounts: {}, warnings: [], details};
+  const files = [], summary = {archiveCount: plan.archives.length, verifiedEntries: 0, metadataCorrections: 0,
+    omittedPhysicalEntries: 0, warnings: [], details};
   let total = input.files.reduce((sum, file) => sum + file.sizeBytes, 0);
   try {
-    for (const {file, archive, group} of plans) {
+    for (const {file, archive} of plan.archives) {
       const path = join(input.outputRoot, file.logicalKey); await mkdir(dirname(path), {recursive: true});
-      const filter = filters.get(group), result = await convertXp3(archive, file, path, filter, audit, signal);
+      const {filter} = plan, result = await convertXp3(archive, file, path, filter, audit, signal);
       total += result.sizeBytes - file.sizeBytes; requireFormat(total <= maximumTree, "ARCHIVE_LIMIT");
-      normalized.set(file.logicalKey, {logicalKey: file.logicalKey, name: file.name, sizeBytes: result.sizeBytes, sha256: result.sha256, path});
-      summary.formatCounts[archive.format] = (summary.formatCounts[archive.format] ?? 0) + 1;
+      files.push({logicalKey: file.logicalKey, name: file.name, sizeBytes: result.sizeBytes, sha256: result.sha256, path});
       for (const key of ["verifiedEntries", "metadataCorrections", "omittedPhysicalEntries"]) {summary[key] += result[key];}
       await audit({archive: file.logicalKey, kind: "archive", format: archive.format, sourceSha256: file.sha256, sourceSize: file.sizeBytes,
         outputSha256: result.sha256, outputSize: result.sizeBytes, filterKind: filter.kind, moduleSha256: filter.inputProfile.moduleSha256,
@@ -127,5 +139,8 @@ export async function normalizeKirikiri(input, signal) {
     if (summary.omittedPhysicalEntries) {summary.warnings.push({code: "OUTSIDE_LOGICAL_NAMESPACE", count: summary.omittedPhysicalEntries});}
     await log.sync(); await writeFile(join(auditRoot, "summary.json"), JSON.stringify(summary) + "\n", {flag: "wx", mode: 0o600});
   } finally {await log.close();}
-  return {files: input.files.map(file => normalized.get(file.logicalKey) ?? file), normalization: summary};
+  return {files, summary};
 }
+
+export const cxFilterFS = Object.freeze({id: "kirikiri-cxfilterfs", version: 1, priority: 100, platforms: ["kirikiri"],
+  formats: ["cxfilterfs-elif", "cxfilterfs-hnfn", "cxfilterfs-yuzu", "cxfilterfs-sen"], probe, convert});

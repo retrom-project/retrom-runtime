@@ -1,17 +1,19 @@
 import {Worker} from "node:worker_threads";
 import {mkdir, rm} from "node:fs/promises";
 import {isAbsolute, resolve} from "node:path";
+import {normalizers} from "./registry.mjs";
 
 /** Terminate only this request's CPU work, then reclaim only its owned staging directory. */
-export async function normalizeKirikiriContent(input, sourceContentHash, signal) {
+export async function normalizeContent(input, signal) {
   signal?.throwIfAborted();
+  if (!normalizers.some(plugin => plugin.platforms.includes(input.platformId))) {return {files: input.files};}
   if (typeof input.outputRoot !== "string" || !isAbsolute(input.outputRoot) || resolve(input.outputRoot) !== input.outputRoot) {
     throw new Error("RUNTIME_CONTENT_LOCATOR_REQUIRED");
   }
   await mkdir(input.outputRoot, {mode: 0o700});
   let worker, retain = false;
   try {
-    worker = new Worker(new URL("./worker.mjs", import.meta.url), {workerData: {...input, sourceContentHash},
+    worker = new Worker(new URL("./worker.mjs", import.meta.url), {workerData: input,
       resourceLimits: {maxOldGenerationSizeMb: 512, maxYoungGenerationSizeMb: 64}});
     const result = await new Promise((complete, reject) => {
       let received = false;
@@ -22,7 +24,7 @@ export async function normalizeKirikiriContent(input, sourceContentHash, signal)
         if (message.error) {reject(new Error(message.error));} else {complete(message.result);}
       });
       worker.once("error", reject);
-      worker.once("exit", code => {signal?.removeEventListener("abort", abort); if (code || !received) {reject(new Error("RUNTIME_KIRIKIRI_CONVERSION_FAILED"));}});
+      worker.once("exit", code => {signal?.removeEventListener("abort", abort); if (code || !received) {reject(new Error("RUNTIME_NORMALIZATION_FAILED"));}});
       if (signal?.aborted) {abort();}
     });
     signal?.throwIfAborted(); retain = Boolean(result.normalization); return result;

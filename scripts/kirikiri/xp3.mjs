@@ -2,7 +2,7 @@ import {createHash} from "node:crypto";
 import {openContent} from "../runtime-host-content.mjs";
 import {magic, maximumIndex, maximumFile, requireFormat, number64, chunks, readExact, inflate, text16, normalizeName, safeName} from "./bytes.mjs";
 
-async function indexes(handle, signal) {
+async function indexes(handle, signal, onTag) {
   requireFormat((await readExact(handle, 0, magic.length)).equals(magic));
   let position = number64(await readExact(handle, 11, 8)), total = 0;
   const visited = new Set(), result = [];
@@ -15,7 +15,7 @@ async function indexes(handle, signal) {
     const packed = number64(header), expanded = compressed ? number64(header, 8) : packed;
     requireFormat(packed <= maximumIndex && expanded <= maximumIndex - total, "ARCHIVE_LIMIT"); total += expanded;
     const data = await readExact(handle, position, packed); position += packed;
-    for (const row of chunks(compressed ? inflate(data, expanded) : data)) {result.push(row);}
+    for (const row of chunks(compressed ? inflate(data, expanded) : data, onTag)) {result.push(row);}
     if (!(flag & 0x80)) {return result;}
     position = number64(await readExact(handle, position, 8));
   }
@@ -93,9 +93,23 @@ export async function readXp3(locator, {signal, includePlainEntries = false} = {
   const handle = await openContent(locator);
   try {
     if (!(await readExact(handle, 0, magic.length)).equals(magic)) {return null;}
-    const rows = await indexes(handle, signal), tags = new Set(rows.map(row => row.tag));
-    requireFormat(!tags.has("Hxv4"), "NAMES_UNAVAILABLE");
+    let rows, matched = false;
+    try {rows = await indexes(handle, signal, tag => {matched ||= ["eliF", "hnfn", "Yuzu", "sen:"].includes(tag);});}
+    catch (error) {
+      // An XP3 signature alone does not identify CxFilterFS. An index encoding
+      // we cannot inspect is unmatched; ordinary import owns its validation.
+      // Output verification remains strict, and errors after a known name-table
+      // tag has been identified below are never turned into an unmatched result.
+      if (!matched && !includePlainEntries && !signal?.aborted && /^RUNTIME_KIRIKIRI_ARCHIVE_(?:INVALID|UNSUPPORTED|LIMIT)$/u.test(error.message ?? "")) {
+        return {locator, format: null};
+      }
+      throw error;
+    }
+    const tags = new Set(rows.map(row => row.tag));
+    // No registered converter can recover this namespace. Keep the archive for
+    // ordinary configuration/validation rather than claiming a failed conversion.
     const protectedNames = ["eliF", "hnfn", "Yuzu", "sen:"].some(tag => tags.has(tag));
+    if (tags.has("Hxv4") && !protectedNames) {return {locator, format: null, unsupportedFormat: "hxv4"};}
     if (!protectedNames && !includePlainEntries) {return {locator, format: null};}
     if (protectedNames) {requireFormat(rows.every(row => ["File", "eliF", "hnfn", "Yuzu", "sen:"].includes(row.tag)), "ARCHIVE_UNSUPPORTED");}
     const files = rows.filter(row => row.tag === "File").map(row => parseFile(row.bytes, locator.sizeBytes, protectedNames));

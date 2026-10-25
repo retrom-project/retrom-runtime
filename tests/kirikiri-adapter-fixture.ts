@@ -5,6 +5,7 @@ type FakeModule = {
   locateFile: (path: string) => string;
   onAbort?: (reason: unknown) => void;
   onExit?: (status: number) => void;
+  onNativeExitRequested?: (status: number) => void;
   onScriptException?: (detail: {message: string; script: string; line: number; trace: string}) => void;
   onGameSave?: (event: {phase: "begin" | "end"; id: number; success?: boolean}) => void;
   postRun: Array<() => void>;
@@ -18,6 +19,7 @@ type FakeModule = {
   _krkr2_host_save_bookmark: ReturnType<typeof vi.fn>;
   _krkr2_host_observe_game_saves: ReturnType<typeof vi.fn>;
   _krkr2_host_flush_game_saves: ReturnType<typeof vi.fn>;
+  _krkr2_host_finalize_native_exit: ReturnType<typeof vi.fn>;
   _startupXp3Path?: string;
   [key: string]: unknown;
 };
@@ -87,6 +89,7 @@ export async function loadCore(
     krkr2StopMainLoop: vi.fn(() => options.stopping ?? Promise.resolve()),
     _krkr2_host_observe_game_saves: vi.fn(() => 1),
     _krkr2_host_flush_game_saves: vi.fn(async () => 0),
+    _krkr2_host_finalize_native_exit: vi.fn(async () => 0),
     _krkr2_host_bookmark_is_ready: vi.fn(() => options.bookmarkReady ?? 1),
     _krkr2_host_load_bookmark_is_ready: vi.fn(() => options.loadReady ?? 1),
     _krkr2_host_load_bookmark: vi.fn(() => options.restoreResult ?? 0),

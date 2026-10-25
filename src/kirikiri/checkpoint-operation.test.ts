@@ -274,6 +274,7 @@ function fixture(progress = true) {
   }
   const module = {pauseMainLoop: vi.fn(async (): Promise<void> => undefined), resumeMainLoop: vi.fn(),
     _krkr2_host_flush_game_saves: vi.fn(async () => 0),
+    _krkr2_host_finalize_native_exit: vi.fn(async () => 0),
     krkr2StopMainLoop: vi.fn(async (active?: Promise<unknown>) => {await active?.catch(() => undefined);})};
   return {operation: createKirikiriCheckpointOperation({module, overlay}), module, overlay};
 }

@@ -34,6 +34,7 @@ type KirikiriModule = {
   mainScriptUrlOrBlob: string;
   onAbort(reason: unknown): void;
   onExit(status: number): void;
+  onNativeExitRequested(status: number): void;
   onRuntimeInitialized(): void;
   onScriptException(detail: KirikiriScriptException): void;
   onGameSave(event: {phase: "begin" | "end"; id: number; success?: boolean}): void;
@@ -46,6 +47,7 @@ type KirikiriModule = {
   krkr2StopMainLoop(operation?: Promise<unknown>): Promise<void>;
   _krkr2_host_observe_game_saves(): number;
   _krkr2_host_flush_game_saves(): Promise<number>;
+  _krkr2_host_finalize_native_exit(): Promise<number>;
   _startupXp3Path?: string;
 };
 type KirikiriHostWindow = Window & Record<string, unknown> & {
@@ -101,6 +103,7 @@ export async function mountKirikiri2(
   let exited = false;
   let exitReported = false;
   let normalExitRequested = false;
+  let nativeExitRequested = false;
   let finalExit: Promise<void> | undefined;
   let failed = false;
   let runtimeTerminationCleanup: () => void = () => undefined;
@@ -115,7 +118,7 @@ export async function mountKirikiri2(
     if (!checkpointOperation || finalExit || failed || exited) {return;}
     // finalCheckpoint only queues work here. Its module calls run after the
     // original onExit callback returns and can drain that tick's JSPI stack.
-    finalExit = checkpointOperation.finalCheckpoint().then(async checkpoint => {
+    finalExit = checkpointOperation.finalCheckpoint(nativeExitRequested).then(async checkpoint => {
       if (failed || exited) {return;}
       const screenshot = checkpoint ? await finalCanvasScreenshot(canvas) : null;
       if (failed || exited) {return;}
@@ -125,9 +128,10 @@ export async function mountKirikiri2(
       if (!failed && !exited) {reportFailure(finalExportFailure(error, frameWindow));}
     });
   };
-  const reportRuntimeExit = () => {
+  const reportRuntimeExit = (nativeExit = false) => {
     if (normalExitRequested || exitReported || failed || exited) {return;}
     normalExitRequested = true;
+    nativeExitRequested = nativeExit;
     exportFinalExit();
   };
   const dispose = async () => {
@@ -181,6 +185,11 @@ export async function mountKirikiri2(
         if (status === 0) {reportRuntimeExit();}
         else {reportFailure(new RuntimeFailureError("KIRIKIRI_RUNTIME_EXIT_FAILED", "CORE", [`Core exit status: ${status}`]));}
       },
+      onNativeExitRequested: status => {
+        if (status === 0) {reportRuntimeExit(true);}
+        else {frameWindow.queueMicrotask(() => reportFailure(new RuntimeFailureError(
+          "KIRIKIRI_RUNTIME_EXIT_FAILED", "CORE", [`Core exit status: ${status}`])));}
+      },
       onRuntimeInitialized: () => undefined,
       onScriptException: detail => {
         const error = new RuntimeFailureError("KIRIKIRI_SCRIPT_EXCEPTION", "CORE", [
@@ -205,10 +214,7 @@ export async function mountKirikiri2(
     scripts.push(await loadClassicScript(document, runtimeUrl));
     module = host.Module as KirikiriModule;
     await withTimeout(ready.promise, readyTimeoutMs, "KIRIKIRI_RUNTIME_TIMEOUT");
-    if (typeof module._krkr2_host_observe_game_saves !== "function" ||
-      typeof module._krkr2_host_flush_game_saves !== "function") {
-      throw new Error("KIRIKIRI_GAME_SAVE_ABI_UNAVAILABLE");
-    }
+    requireGameSaveAbi(module);
     checkpointOperation = createKirikiriCheckpointOperation({module, overlay});
     if (normalExitRequested) {exportFinalExit();}
     startupKeyboardCleanup();
@@ -259,6 +265,14 @@ export async function mountKirikiri2(
     screenshot: () => canvasScreenshot(canvas),
     setVolume: null,
   };
+}
+
+function requireGameSaveAbi(module: KirikiriModule) {
+  if (typeof module._krkr2_host_observe_game_saves !== "function" ||
+    typeof module._krkr2_host_flush_game_saves !== "function" ||
+    typeof module._krkr2_host_finalize_native_exit !== "function") {
+    throw new Error("KIRIKIRI_GAME_SAVE_ABI_UNAVAILABLE");
+  }
 }
 
 async function registerProject(vlfs: KirikiriVlfs, indexUrl: string, documentBaseUrl: string,

@@ -53,6 +53,62 @@ it("exports unsynced native files once on normal exit through the public single-
   } finally {await f.runtime.exit();}
 });
 
+it("drains the confirmed native exit before exporting its last writes and stops polling the KAG observer", async () => {
+  const f = await mount(), closing = deferred<void>();
+  nativeSave(f, Uint8Array.of(1));
+  f.module._krkr2_host_finalize_native_exit.mockImplementation(async () => {
+    await closing.promise;
+    f.vlfs.onWriteClose?.("/profiles/玩家/options.ksd", Uint8Array.of(7));
+    return 0;
+  });
+  try {
+    f.module.onNativeExitRequested?.(0); f.module.onNativeExitRequested?.(0);
+    expect(f.module._krkr2_host_finalize_native_exit).not.toHaveBeenCalled();
+    await vi.waitFor(() => expect(f.module._krkr2_host_finalize_native_exit).toHaveBeenCalledOnce());
+    f.module._krkr2_host_observe_game_saves.mockReturnValue(-3);
+    expect(f.runtime.getCheckpointAvailability()).toMatchObject({available: false, reason: "NOT_READY"});
+    expect(f.events.some(event => event.type === "EXIT_REQUESTED")).toBe(false);
+    expect((window as HostWindow).VLFS).toBe(f.vlfs);
+    closing.resolve();
+    await vi.waitFor(() => expect(f.runtime.getState()).toBe("EXITED"));
+    const exits = f.events.filter(event => event.type === "EXIT_REQUESTED");
+    expect(exits).toHaveLength(1);
+    const snapshot = exits[0]?.type === "EXIT_REQUESTED" ? exits[0].finalSnapshot : undefined;
+    const bytes = await decodeStoredCheckpoint(snapshot!.checkpoint.bytes, snapshot!.checkpoint.format, maximumKirikiriCheckpointBytes);
+    expect((await decodeKirikiriCheckpoint(bytes)).entries).toEqual([
+      {path: "profiles/玩家/options.ksd", data: Uint8Array.of(7)},
+      {path: "profiles/玩家/slot.png", data: Uint8Array.of(1)},
+    ]);
+    expect(f.module.resumeMainLoop).not.toHaveBeenCalled();
+    expect(f.module._krkr2_host_save_bookmark).not.toHaveBeenCalled();
+    expect(f.module._krkr2_host_load_bookmark).not.toHaveBeenCalled();
+  } finally {closing.resolve(); await f.runtime.exit();}
+});
+
+it.each(["failed-finalize", "nonzero"])("preserves a real %s failure on confirmed native exit", async mode => {
+  const f = await mount(); nativeSave(f, Uint8Array.of(4, 2));
+  f.module._krkr2_host_finalize_native_exit.mockResolvedValue(-5);
+  try {
+    f.module.onNativeExitRequested?.(mode === "nonzero" ? 9 : 0);
+    await vi.waitFor(() => expect(f.runtime.getState()).toBe("FAILED"));
+    expect(f.events.some(event => event.type === "EXIT_REQUESTED")).toBe(false);
+    expect(f.events.filter(event => event.type === "FATAL_ERROR")).toEqual([
+      expect.objectContaining({failure: expect.objectContaining({code: mode === "nonzero"
+        ? "KIRIKIRI_RUNTIME_EXIT_FAILED" : "KIRIKIRI_GAME_SAVE_FINAL_EXPORT_FAILED"})}),
+    ]);
+  } finally {await f.runtime.exit();}
+});
+
+it("finalizes a native exit with no progress without fabricating a save", async () => {
+  const f = await mount();
+  try {
+    f.module.onNativeExitRequested?.(0);
+    await vi.waitFor(() => expect(f.runtime.getState()).toBe("EXITED"));
+    expect(f.module._krkr2_host_finalize_native_exit).toHaveBeenCalledOnce();
+    expect(f.events.filter(event => event.type === "EXIT_REQUESTED")).toEqual([{type: "EXIT_REQUESTED"}]);
+  } finally {await f.runtime.exit();}
+});
+
 it("waits for the original native tick and final complete write before reporting exit", async () => {
   const f = await mount(), tick = deferred<void>();
   f.module.pauseMainLoop.mockReturnValueOnce(tick.promise);
@@ -75,14 +131,16 @@ it("waits for the original native tick and final complete write before reporting
   } finally {tick.resolve(); await f.runtime.exit();}
 });
 
-it.each(["normal", "host-stop"])("retains a real suspended Wasm tick during final %s", async mode => {
+it.each(["normal", "native", "host-stop"])("retains a real suspended Wasm tick during final %s", async mode => {
   const f = await mount(), reading = deferred<void>();
   Object.defineProperty(actualWasm, "promising", {configurable: true, value: actualJspi.promising});
   Object.defineProperty(actualWasm, "Suspending", {configurable: true, value: actualJspi.Suspending});
   let insideCallback = false;
   const run = actualWasm.promising(suspendingBookmark(actualWasm, () => {
     f.module.onGameSave?.({phase: "begin", id: 1});
-    insideCallback = true; f.module.onExit?.(0); insideCallback = false;
+    insideCallback = true;
+    if (mode === "native") {f.module.onNativeExitRequested?.(0);} else {f.module.onExit?.(0);}
+    insideCallback = false;
     return reading.promise.then(() => {
       f.vlfs.onWriteClose?.("/profiles/玩家/slot.png", Uint8Array.of(4, 2));
       f.module.onGameSave?.({phase: "end", id: 1, success: true});
@@ -101,12 +159,14 @@ it.each(["normal", "host-stop"])("retains a real suspended Wasm tick during fina
     await vi.waitFor(() => expect(f.module.pauseMainLoop).toHaveBeenCalledOnce());
     expect((window as HostWindow).Module).toBe(f.module);
     expect(f.events.some(event => event.type === "EXIT_REQUESTED")).toBe(false);
-    if (mode === "normal") {
+    expect(f.module._krkr2_host_finalize_native_exit).not.toHaveBeenCalled();
+    if (mode !== "host-stop") {
       reading.resolve(); expect(await result).toBe(0);
       await vi.waitFor(() => expect(f.runtime.getState()).toBe("EXITED"));
       expect(f.events.find(event => event.type === "EXIT_REQUESTED")).toMatchObject({
         finalSnapshot: {checkpoint: {format: "kirikiri-game-save-v1-storage-v1"}},
       });
+      expect(f.module._krkr2_host_finalize_native_exit).toHaveBeenCalledTimes(mode === "native" ? 1 : 0);
     } else {
       let closed = false;
       const stopping = f.runtime.exit(); void stopping.then(() => {closed = true;});

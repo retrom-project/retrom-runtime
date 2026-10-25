@@ -6,6 +6,7 @@ export type KirikiriCheckpointModule = {
   resumeMainLoop(): void;
   krkr2StopMainLoop(operation?: Promise<unknown>): Promise<void>;
   _krkr2_host_flush_game_saves(): Promise<number>;
+  _krkr2_host_finalize_native_exit(): Promise<number>;
 };
 
 export function createKirikiriCheckpointOperation(options: {module: KirikiriCheckpointModule; overlay: KirikiriWriteOverlay}) {
@@ -16,6 +17,7 @@ class KirikiriCheckpointOperation {
   private paused = false;
   private closing = false;
   private finalizing = false;
+  private nativeExit = false;
   private active: Promise<{bytes: Uint8Array; format: string} | null> | undefined;
   private final: Promise<{bytes: Uint8Array; format: string} | null> | undefined;
   private stopping: Promise<void> | undefined;
@@ -34,12 +36,13 @@ class KirikiriCheckpointOperation {
     return operation;
   }
 
-  finalCheckpoint() {
+  finalCheckpoint(nativeExit = false) {
     this.requireOpen();
     if (this.final) {return this.final;}
     // onExit can arrive from the original Wasm tick. Mark the terminal intent
     // now, but defer all module calls until its JavaScript callback returns.
     this.finalizing = true;
+    this.nativeExit = nativeExit;
     const previous = this.active;
     const operation = Promise.resolve().then(async () => {
       if (previous) {await previous;}
@@ -101,6 +104,7 @@ class KirikiriCheckpointOperation {
         if ((!final && !this.finalizing) || !normalExitStatus(error)) {throw error;}
       }
       this.requireOpen(); overlay.requireValid();
+      await this.finalizeNativeExit(final);
       if (this.nothingToCapture(final)) {return null;}
       // A pending ordinary capture can be handed to finalCheckpoint by onExit
       // while its original frame drains. That engine must not run scripts again.
@@ -129,6 +133,13 @@ class KirikiriCheckpointOperation {
         else {module.resumeMainLoop();}
       }
     }
+  }
+
+  private async finalizeNativeExit(final: boolean) {
+    if (!final || !this.nativeExit) {return;}
+    const status = await this.options.module._krkr2_host_finalize_native_exit();
+    if (status !== 0) {throw new Error(`KIRIKIRI_NATIVE_EXIT_FINALIZE_FAILED: ${status}`);}
+    this.requireOpen(); this.options.overlay.requireValid();
   }
 
   private nothingToCapture(final: boolean) {

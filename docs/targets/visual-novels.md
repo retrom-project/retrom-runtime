@@ -32,7 +32,7 @@ The core observes completed native KAG `saveBookMarkToFile` calls without replac
 
 The explicit native format is `kirikiri-game-save-v1`, with the public single gzip storage wrapper. Web SQLite writable files use their original virtual file paths, so ordinary existence checks, deletion and restored native files share one object. Archive members remain read-only. The native file layout uses the existing GAME_SAVE v1 contract. It does not read development-only hidden SQLite sidecars or the previous automatic-bookmark format. Existing save records are not deleted or silently converted. Games that bypass the observed KAG native save API require their own verified support; filenames do not select an alternative saving implementation.
 
-A normal core exit drains the active native write before exporting confirmed, changed progress. It never invokes a native SAVE or LOAD command. No progress or an unchanged revision exits without a placeholder; incomplete writes or a failed final export report an error and preserve the previously stored save.
+A confirmed game exit notifies the adapter before Web teardown. The adapter stops polling the native save observer, drains the active JSPI frame, then calls the core's native-exit finalizer to flush system data and detach the observer before releasing TJS objects. Final capture includes teardown writes from the complete virtual-filesystem overlay. A zero process exit also exports confirmed, changed progress. Neither path invokes a native SAVE or LOAD command. No progress or an unchanged revision exits without a placeholder; incomplete writes, a failed flush or a failed final export report an error and preserve the previously stored save.
 
 ## TyranoScript
 

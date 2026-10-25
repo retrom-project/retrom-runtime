@@ -11,12 +11,24 @@ export async function createRuntime(
   value: unknown,
   host: RuntimeHostV1,
 ): Promise<PlayerRuntimeV1>;
+export async function reclaimContentCache(
+  request: ContentCacheReclaimRequestV1,
+): Promise<ContentCacheReclaimResultV1>;
 ```
 
 The host validates a Launch Envelope V1, verifies the module URL and SHA-256 against the active Bundle, imports
 the module, checks the exported identity and calls `createRuntime`. It only consumes `PlayerRuntimeV1`; it never
 chooses EasyRPG, mkxp, native Web or another implementation. The Provider validates the stable `providerId` plus
 `targetId`, current resources, private Target options, optional restore input before mounting.
+
+`reclaimContentCache({targetBytes, signal?})` is independent of a player instance. A Host can call it after an
+actual browser-storage quota failure, including while persisting a final snapshot after `exit()`. It only
+reclaims idle, reconstructible Content I/O objects in the runtime's own cache namespace; it never visits game
+saves, Host drafts or unrelated caches. `targetBytes` is a reclamation target: removing a whole cache object can
+exceed it. The result reports logical committed bytes and removed objects, not a guarantee that the browser has
+already credited physical quota. Active content leases prevent deletion. The same verified module identity and
+SHA-256 validation apply; the Host does not create a runtime, frame or Wasm instance for recovery. Failure remains
+an error and must not be reported as durable save success. See [Content I/O](content-io.md) for recovery bounds.
 
 [`src/providers/retrom-runtime/catalog.ts`](../src/providers/retrom-runtime/catalog.ts) and the [EmulatorJS catalog](../src/providers/emulatorjs/catalog.ts) own their Provider's Target declarations. The generated [support catalog](supported-platforms-and-cores.md) lists their current Targets and product bindings.
 The generated declaration provides current capabilities, checkpoint `writeFormat/readFormats/maxBytes/semantics`, resource

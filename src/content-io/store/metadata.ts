@@ -1,6 +1,6 @@
 import type {ContentSourceV1} from "../../../contracts/content-io/v1/content-io.js";
 import {ContentIOError, fail} from "../errors.js";
-import {namespace, type Backend, type Backing, type BlockReceipt, type GenerationRecord, type ObjectRecord} from "./types.js";
+import {namespace, type Backend, type Backing, type BlockReceipt, type GenerationRecord, type JobRecord, type ObjectRecord} from "./types.js";
 /** Callbacks are synchronous: no fetch, file I/O or hash may enter an IDB transaction. */
 export class ContentMetadata {
   constructor(private readonly db: IDBDatabase) {db.onversionchange = () => db.close();}
@@ -16,6 +16,27 @@ export class ContentMetadata {
       };
       request.onsuccess = () => resolve(new ContentMetadata(request.result)); request.onerror = () => reject(request.error);
       request.onblocked = () => reject(new ContentIOError("CACHE_UNAVAILABLE"));
+    });
+  }
+  /** Recovery does not require a successful write probe or create a schema. */
+  static async openExisting(): Promise<ContentMetadata | undefined> {
+    const factory = globalThis.indexedDB;
+    if (!factory || typeof factory.databases !== "function") {return undefined;}
+    if (!(await factory.databases()).some(database => database.name === namespace)) {return undefined;}
+    return new Promise((resolve, reject) => {
+      const request = factory.open(namespace);
+      let disappeared = false, rejected = false;
+      request.onupgradeneeded = () => {disappeared = true; request.transaction?.abort(); request.result.close();};
+      request.onerror = () => {rejected = true; if (disappeared) {resolve(undefined);} else {reject(request.error);}};
+      request.onblocked = () => {rejected = true; reject(new ContentIOError("CACHE_UNAVAILABLE"));};
+      request.onsuccess = () => {
+        const db = request.result;
+        if (rejected || disappeared) {db.close(); return;}
+        if (db.version !== 1 || !["objects", "generations", "blocks", "jobs"].every(name => db.objectStoreNames.contains(name))) {
+          db.close(); reject(new ContentIOError("CACHE_UNAVAILABLE")); return;
+        }
+        resolve(new ContentMetadata(db));
+      };
     });
   }
   close(): void {this.db.close();}
@@ -111,18 +132,26 @@ export class ContentMetadata {
       };
     });
   }
-  generations(key: string): Promise<GenerationRecord[]> {
+  generations(key: string, limit?: number): Promise<GenerationRecord[]> {
     return this.transaction(["generations"], "readonly", (tx, finish) => {
-      const request = tx.objectStore("generations").index("byObject").getAll(key);
+      const request = tx.objectStore("generations").index("byObject").getAll(key, limit);
       request.onsuccess = () => finish(request.result as GenerationRecord[]);
+    });
+  }
+  jobs(key: string, limit: number): Promise<JobRecord[]> {
+    return this.transaction(["jobs"], "readonly", (tx, finish) => {
+      const request = tx.objectStore("jobs").index("byObject").getAll(key, limit);
+      request.onsuccess = () => finish(request.result as JobRecord[]);
     });
   }
   remove(key: string): Promise<void> {
     return this.transaction(["objects", "generations", "blocks", "jobs"], "readwrite", (tx, finish) => {
       tx.objectStore("objects").delete(key);
       for (const name of ["generations", "blocks", "jobs"]) {
-        const store = tx.objectStore(name), cursor = store.openCursor();
-        cursor.onsuccess = () => {const value = cursor.result; if (!value) {return;} if (value.value.objectKey === key) {value.delete();} value.continue();};
+        const store = tx.objectStore(name);
+        const cursor = name === "jobs" ? store.index("byObject").openCursor(IDBKeyRange.only(key))
+          : store.openCursor(IDBKeyRange.bound([key], [key, []]));
+        cursor.onsuccess = () => {const value = cursor.result; if (!value) {return;} value.delete(); value.continue();};
       }
       finish();
     });
@@ -135,9 +164,13 @@ export class ContentMetadata {
   transaction<Value>(stores: string[], mode: IDBTransactionMode, action: (tx: IDBTransaction, finish: (value: Value) => void) => void): Promise<Value> {
     return new Promise((resolve, reject) => {
       const tx = this.db.transaction(stores, mode); let value: Value, finished = false;
+      let actionFailed = false, actionError: unknown;
       tx.oncomplete = () => {if (finished) {resolve(value);} else {reject(new ContentIOError("CACHE_UNAVAILABLE"));}};
-      tx.onabort = tx.onerror = () => reject(new ContentIOError("CACHE_UNAVAILABLE", {cause: tx.error}));
-      try {action(tx, (result) => {value = result; finished = true;});} catch (cause) {tx.abort(); reject(cause);}
+      // Request errors abort by default. The error event precedes actual transaction
+      // shutdown, so releasing a caller's data lock there would leave work in flight.
+      tx.onabort = () => reject(actionFailed ? actionError : new ContentIOError("CACHE_UNAVAILABLE", {cause: tx.error}));
+      try {action(tx, (result) => {value = result; finished = true;});}
+      catch (cause) {actionFailed = true; actionError = cause; tx.abort();}
     });
   }
 }

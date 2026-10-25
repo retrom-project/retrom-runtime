@@ -17,8 +17,13 @@ export class ContentLocks {
     checkSignal(signal);
     return this.locks.request(`${namespace}:data:${key}`, {mode: "exclusive", signal}, async () => {checkSignal(signal); return action();});
   }
-  async gc<Value>(key: string, action: () => Promise<Value>): Promise<Value | undefined> {
-    return await this.locks.request(`${namespace}:use:${key}`, {mode: "exclusive", ifAvailable: true}, async (lock) => lock ? action() : undefined);
+  async gc<Value>(key: string, action: () => Promise<Value>, signal?: AbortSignal): Promise<Value | undefined> {
+    checkSignal(signal);
+    // Web Locks rejects signal together with ifAvailable. This request cannot queue;
+    // check cancellation again after the native grant instead of racing its result.
+    return await this.locks.request(`${namespace}:use:${key}`, {mode: "exclusive", ifAvailable: true}, async (lock) => {
+      checkSignal(signal); return lock ? action() : undefined;
+    });
   }
   async probe(signal?: AbortSignal): Promise<void> {
     const scope = requestScope(signal, 2000);

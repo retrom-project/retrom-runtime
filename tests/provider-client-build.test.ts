@@ -40,7 +40,7 @@ describe("Provider client module build", () => {
   it.each([
     ["emulatorjs", "src/providers/emulatorjs/module.ts"],
     ["retrom-runtime", "src/providers/retrom-runtime/module.ts"],
-  ] as const)("[PK-01] CONTRACT/client-%s imports the built client with exactly four public exports", async (providerId, entry) => {
+  ] as const)("[PK-01] CONTRACT/client-%s imports the built client with the closed public exports", async (providerId, entry) => {
     const root = await temporaryRoot();
     const result = await buildProviderClient({
       providerVersion: "0.46.0",
@@ -57,12 +57,13 @@ describe("Provider client module build", () => {
     expect(identifiers).toEqual([]);
     const module = await import(`data:text/javascript;base64,${bytes.toString("base64")}`) as Record<string, unknown>;
     expect(Object.keys(module).sort()).toEqual([
-      "createRuntime", "providerApiVersion", "providerId", "providerVersion",
+      "createRuntime", "providerApiVersion", "providerId", "providerVersion", "reclaimContentCache",
     ]);
     expect(module.providerId).toBe(providerId);
     expect(module.providerVersion).toBe("0.46.0");
     expect(module.providerApiVersion).toBe(1);
     expect(module.createRuntime).toBeTypeOf("function");
+    expect(module.reclaimContentCache).toBeTypeOf("function");
   });
 });
 

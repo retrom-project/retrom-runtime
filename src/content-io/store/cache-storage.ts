@@ -7,6 +7,10 @@ export class CacheBlockStore implements DataStore {
   readonly backend = "CACHE_BLOCKS" as const;
   constructor(private readonly cache: Cache, private readonly origin: string) {}
   static async open(origin: string): Promise<CacheBlockStore> {return new CacheBlockStore(await caches.open(namespace), origin);}
+  static async openExisting(origin: string): Promise<CacheBlockStore | undefined> {
+    if (!globalThis.caches || !await caches.has(namespace)) {return undefined;}
+    return new CacheBlockStore(await caches.open(namespace), origin);
+  }
   location(key: string, generation: string, index: number): string {
     validLocation(key, generation); if (!integer(index)) {fail("CACHE_UNAVAILABLE");}
     return `${this.origin}/__retrom_content_io_v1__/block/${key}/${generation}/${index}`;
@@ -23,10 +27,9 @@ export class CacheBlockStore implements DataStore {
       "x-content-io-object": receipt.objectKey, "x-content-io-generation": receipt.generation}}));
   }
   async remove(key: string, generations: readonly string[]): Promise<void> {
-    for (const generation of generations) {
-      const prefix = this.location(key, generation, 0).replace(/0$/u, "");
-      for (const request of await this.cache.keys()) {if (request.url.startsWith(prefix)) {await this.cache.delete(request);}}
-    }
+    const prefixes = generations.map(generation => this.location(key, generation, 0).replace(/0$/u, ""));
+    if (!prefixes.length) {return;}
+    for (const request of await this.cache.keys()) {if (prefixes.some(prefix => request.url.startsWith(prefix))) {await this.cache.delete(request);}}
   }
   async probe(): Promise<void> {
     const url = `${this.origin}/__retrom_content_io_v1__/probe/${crypto.randomUUID()}`;

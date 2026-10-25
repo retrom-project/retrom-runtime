@@ -15,6 +15,12 @@ export class OPFSStore implements DataStore {
     const root = await navigator.storage.getDirectory();
     return new OPFSStore(await root.getDirectoryHandle(namespace, {create: true}));
   }
+  static async openExisting(): Promise<OPFSStore | undefined> {
+    if (typeof globalThis.navigator?.storage?.getDirectory !== "function") {return undefined;}
+    const root = await navigator.storage.getDirectory();
+    try {return new OPFSStore(await root.getDirectoryHandle(namespace));}
+    catch (error) {if (error instanceof DOMException && error.name === "NotFoundError") {return undefined;} throw error;}
+  }
   location(key: string, generation: string): string {validLocation(key, generation); return `objects/${key}/${generation}.data`;}
   async read(receipt: BlockReceipt, complete: boolean): Promise<Uint8Array<ArrayBuffer>> {
     const file = await this.handle(receipt.objectKey, receipt.generation, false);
@@ -32,8 +38,10 @@ export class OPFSStore implements DataStore {
   async file(key: string, generation: string): Promise<File> {return (await this.handle(key, generation, false)).getFile();}
   async remove(key: string, _generations: readonly string[]): Promise<void> {
     if (!isDigest(key)) {fail("CACHE_UNAVAILABLE");}
-    const objects = await this.root.getDirectoryHandle("objects", {create: true});
-    try {await objects.removeEntry(key, {recursive: true});} catch (error) {if (!(error instanceof DOMException) || error.name !== "NotFoundError") {throw error;}}
+    try {
+      const objects = await this.root.getDirectoryHandle("objects");
+      await objects.removeEntry(key, {recursive: true});
+    } catch (error) {if (!(error instanceof DOMException) || error.name !== "NotFoundError") {throw error;}}
   }
   async probe(): Promise<void> {
     const name = `probe-${crypto.randomUUID()}`;

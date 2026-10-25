@@ -894,6 +894,48 @@
         "src/provider/core-asset-urls.test.ts"
       ],
       "ownerStage": "S10"
+    },
+    {
+      "id": "B-094",
+      "repository": "runtime",
+      "path": "src/content-io/store/cache-storage.ts",
+      "symbol": "CacheBlockStore.openExisting",
+      "classification": "COMMON_CONTENT_IO",
+      "reason": "Opens the existing shared raw Content I/O cache for explicit storage-pressure recovery; no write probe, core-specific path, savedata or unrelated cache.",
+      "ownerStage": "S06",
+      "tests": [
+        "runtime:src/content-io/store/existing.test.ts",
+        "runtime:src/content-io/store/reclaim.test.ts",
+        "runtime:tests/content-io/reclaim.browser.ts"
+      ]
+    },
+    {
+      "id": "B-095",
+      "repository": "runtime",
+      "path": "src/content-io/store/metadata.ts",
+      "symbol": "ContentMetadata.openExisting",
+      "classification": "COMMON_CONTENT_IO",
+      "reason": "Discovers and opens only the existing raw Content I/O metadata database, aborting an absent-database upgrade and closing late rejected handles.",
+      "ownerStage": "S06",
+      "tests": [
+        "runtime:src/content-io/store/existing.test.ts",
+        "runtime:src/content-io/store/reclaim.test.ts",
+        "runtime:tests/content-io/reclaim.browser.ts"
+      ]
+    },
+    {
+      "id": "B-096",
+      "repository": "runtime",
+      "path": "src/content-io/store/opfs.ts",
+      "symbol": "OPFSStore.openExisting",
+      "classification": "COMMON_CONTENT_IO",
+      "reason": "Opens the existing raw Content I/O OPFS namespace without creating directories or probing writes; recovery retains object-wide native use/data locks.",
+      "ownerStage": "S06",
+      "tests": [
+        "runtime:src/content-io/store/existing.test.ts",
+        "runtime:src/content-io/store/reclaim.test.ts",
+        "runtime:tests/content-io/reclaim.browser.ts"
+      ]
     }
   ]
 }

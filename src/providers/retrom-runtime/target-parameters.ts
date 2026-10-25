@@ -138,7 +138,6 @@ export function kirikiri(envelope: LaunchEnvelopeV1): KirikiriParameters {
   const startupXp3Path = envelope.targetOptions.startupXp3Path;
   if (startupXp3Path !== null && typeof startupXp3Path !== "string") {invalidRequest();}
   return {
-    checkpointSlot: 1999,
     contentDigest: game.contentDigest,
     projectIndexUrl: game.indexUrl,
     runtimeBaseUrl: assetBase(envelope, "kirikiri"),

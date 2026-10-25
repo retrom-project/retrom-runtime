@@ -34,7 +34,10 @@ export function installRuntimeFrameSurface(
 
   const refresh = () => {
     if (ownsCanvasLayout()) {return;}
-    const canvas = getCanvas() ?? frameDocument.querySelector<HTMLCanvasElement>("canvas");
+    // During asynchronous mount the visible canvas may already exist, while
+    // its layout ownership is still unknown. Wait for the mounted adapter;
+    // styling a guessed canvas here permanently overrides responsive cores.
+    const canvas = getCanvas();
     if (!canvas) {return;}
     fitCanvasToViewport(canvas, frameWindow.innerWidth, frameWindow.innerHeight, getDisplayAspectRatio());
   };

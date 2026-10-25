@@ -121,7 +121,7 @@ describe("Provider to core-private parameters", () => {
     kiri.targetOptions.startupXp3Path = "data.xp3";
     await mountTargetAdapter(kiri, document.createElement("div"), context());
     expect(vi.mocked(mountKirikiri2).mock.calls[0][0]).toEqual({
-      contentDigest:"a".repeat(64), checkpointSlot: 1999, startupXp3Path: "data.xp3", projectIndexUrl: `/runtime/content/project/${"a".repeat(64)}/index.json`,
+      contentDigest:"a".repeat(64), startupXp3Path: "data.xp3", projectIndexUrl: `/runtime/content/project/${"a".repeat(64)}/index.json`,
       runtimeBaseUrl: kiri.runtime.runtimeBaseUrl + "assets/kirikiri/",
     });
   });

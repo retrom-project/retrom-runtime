@@ -10,6 +10,8 @@ import type {GamepadCursor} from "./provider/gamepad-cursor.js";
 
 export type MountedRuntimeAdapter = {
   gamepadCursor?: GamepadCursor;
+  /** Same-origin targets whose core reads the standard Gamepad API can opt into the on-screen pad. */
+  touchGamepad?: true;
   /** CORE owns responsive canvas sizing; otherwise the Provider fits a fixed-resolution canvas. */
   canvasLayout?: "CORE";
   checkpoint(request?: CheckpointRequest): Promise<RuntimeCheckpoint>;

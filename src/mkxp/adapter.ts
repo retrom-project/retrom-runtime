@@ -1,6 +1,7 @@
 import type {AdapterContentOptions} from "../provider/content-inputs.js";
 import {MkxpContent, fetchVerified} from "./content.js";
 import {ContentIOError} from "../content-io/errors.js";
+import {RuntimeFailureError} from "../provider/failure.js";
 import { Nostalgist } from "nostalgist";
 import type { MountedRuntimeAdapter, RuntimeExitReporter, RuntimeProgressReporter } from "../internal-adapter.js";
 import {type MkxpStatus, mkxpStatus, waitForMkxpExit, waitForMkxpFrame, waitForMkxpRestore, waitForMkxpSave} from "./status.js";
@@ -30,6 +31,8 @@ type MkxpRuntime = Pick<Nostalgist,
 type MkxpPrepareOptions = Parameters<typeof Nostalgist.prepare>[0] & {
   emscriptenModule: NonNullable<Parameters<typeof Nostalgist.prepare>[0]["emscriptenModule"]> & {
     retromContentBridge: MkxpContent["bridge"];
+    /** The core samples this realm's (Provider-filtered) Gamepad API instead of its own. */
+    retromGamepadNavigator: Navigator;
     onExit: (status: number) => void;
     preRun: Array<(module: { ENV: Record<string, string> }) => void>;
   };
@@ -50,6 +53,13 @@ const remoteGamePath = "/retrom-content/game.mkxpz";
 const fetchManifestPath = `${systemRoot}/mkxp-z/fetch.manifest`;
 const fetchBaseDirectory = "/retrom-fetch";
 const pauseToggleHotkey = { code: "F6", keyCode: 117 } as const;
+// RetroArch keeps any key bound to a RetroPad or lightgun input away from the core's
+// keyboard callback (lightgun defaults: Enter=start, RShift=select).
+const keyboardRetroPadUnbound = Object.fromEntries(
+  ["up", "down", "left", "right", "a", "b", "x", "y", "l", "r", "l2", "r2", "l3", "r3", "start", "select",
+    "gun_start", "gun_select"]
+    .map((input) => [`input_player1_${input}`, "nul"]),
+);
 const browserDependencies: MkxpMountDependencies = {
   decodeCheckpoint: decodeMkxpCheckpoint,
   encodeCheckpoint: encodeMkxpCheckpoint,
@@ -118,6 +128,9 @@ async function mountMkxpUnchecked(
   // document, so creating the canvas through target.ownerDocument makes a
   // genuine canvas fail that cross-realm instanceof check. Create it in the
   // adapter realm and let append() adopt it into the Player frame.
+  // The core module runs in this realm, but the Player frame owns game input:
+  // the Provider filters that frame's gamepads and adds its on-screen pad there.
+  const inputWindow = target.ownerDocument.defaultView ?? window;
   const canvas = document.createElement("canvas");
   // Nostalgist assigns this exact ID during prepare. Use it from the first DOM
   // insertion so the Player never exposes a transient selector identity.
@@ -143,8 +156,15 @@ async function mountMkxpUnchecked(
   reportProgress({ phase: "RUNTIME_ASSET", loadedBytes: runtimeAssetBytes, totalBytes: runtimeAssetBytes });
   const remoteContent = remoteContentManifest(config, bridge);
   reportProgress({ phase: "PROJECT_INDEX", loadedBytes: 0, totalBytes: remoteContent.manifest.byteLength });
+  let gameException: string | null = null;
   const printDiagnostic = (...args: unknown[]) => {
-    onDiagnostic({ runtime: "mkxp-z", message: args.map(String).join(" ") });
+    const message = args.map(String).join(" ");
+    // Ruby exceptions and native sandbox aborts (traps, forced assertions) both end the game.
+    if (gameException === null && (/^\[libretro ERROR\] \[mkxp-z exception\] (?!\s*from\b)/u.test(message) ||
+      /^(?:\[libretro ERROR\] )?\[mkxp-z @ [^\]]+\] Fatal error: /u.test(message))) {
+      gameException = message.slice(-500);
+    }
+    onDiagnostic({ runtime: "mkxp-z", message });
   };
   let hostCleanup = false;
   let started = false;
@@ -163,6 +183,7 @@ async function mountMkxpUnchecked(
     emscriptenModule: {
       arguments: [remoteGamePath],
       retromContentBridge: bridge.bridge,
+      retromGamepadNavigator: inputWindow.navigator,
       onExit: (status) => {
         if (nativeExited) {return;}
         nativeExited = true;
@@ -186,8 +207,10 @@ async function mountMkxpUnchecked(
       input_save_state: "nul",
       input_load_state: "nul",
       input_pause_toggle: "f6",
-      // RGSS Input::C maps to RetroPad A; make its browser binding explicit.
-      input_player1_a: "x",
+      // The core reads the raw keyboard with mkxp-z's RGSS defaults (Enter/Space/Z
+      // confirm, Escape/X cancel). RetroArch's keyboard-to-RetroPad defaults would
+      // add a second, conflicting mapping (X confirm, Z cancel, Enter Alt).
+      ...keyboardRetroPadUnbound,
       // RGSS C (confirm) / B (cancel) override rwebpad's positional defaults.
       // Gamepad bindings are independent of the keyboard binding above.
       input_player1_a_btn: "0",
@@ -223,13 +246,16 @@ async function mountMkxpUnchecked(
       await waitForMkxpExit(nativeExit);
       onDiagnostic({runtime: "mkxp-z", message: "RPG_RUNTIME_EXIT_ACKNOWLEDGED"});
     }
+    stopGamepadForwarding();
     await bridge.close();
     await nostalgist.exit();
     onDiagnostic({runtime: "mkxp-z", message: "RPG_RUNTIME_EXIT_DISPOSED"});
   });
+  const stopGamepadForwarding = forwardSyntheticGamepadEvents(inputWindow, window);
   const fileSystem = nostalgist.getEmscriptenFS() as MkxpFileSystem;
   try {
-    status = mkxpStatus(nostalgist.getEmscriptenModule());
+    status = mkxpStatus(nostalgist.getEmscriptenModule(),
+      () => new RuntimeFailureError("RPG_RUNTIME_GAME_FAILED", "CORE", gameException === null ? [] : [gameException]));
     installRuntimeFiles(fileSystem, remoteContent.manifest);
     if (restorePayload) {
       const rawState = await dependencies.decodeCheckpoint(restorePayload, config.stateBufferBytes);
@@ -246,7 +272,7 @@ async function mountMkxpUnchecked(
     // Nostalgist's postRun runs before the pthread necessarily installs
     // rwebpad's connection listener. Reconcile existing pads once the core is
     // presenting; later browser connection events remain owned by rwebpad.
-    for (const gamepad of navigator.getGamepads?.() ?? []) {
+    for (const gamepad of inputWindow.navigator.getGamepads?.() ?? []) {
       if (!gamepad?.connected) {continue;}
       const event = new Event("gamepadconnected");
       Object.defineProperty(event, "gamepad", {value: gamepad});
@@ -274,7 +300,9 @@ async function mountMkxpUnchecked(
       target.replaceChildren();
     },
     getCanvas: () => canvas,
-    getCheckpointAvailability: () => ({ available: true, blocker: null }),
+    // RetroArch's rwebpad reads the frame's standard Gamepad API, including the on-screen pad.
+    touchGamepad: true,
+    getCheckpointAvailability: () => {status.assertHealthy(); return { available: true, blocker: null };},
     getFrameCount: () => status.frames(),
     pause: async () => {await pressPrivateHotkey(canvas, pauseToggleHotkey);},
     resume: async () => {await pressPrivateHotkey(canvas, pauseToggleHotkey);},
@@ -285,6 +313,23 @@ async function mountMkxpUnchecked(
     screenshot: () => canvasBlob(canvas),
     setVolume: null,
   } satisfies MountedRuntimeAdapter;
+}
+
+/** Browsers deliver real pad connections to every window; Provider-made pads exist only in the input frame. */
+function forwardSyntheticGamepadEvents(from: Window, to: Window) {
+  if (from === to) {return () => undefined;}
+  const forward = (event: Event) => {
+    if (event.isTrusted || !("gamepad" in event)) {return;}
+    const copy = new Event(event.type);
+    Object.defineProperty(copy, "gamepad", {value: event.gamepad});
+    to.dispatchEvent(copy);
+  };
+  from.addEventListener("gamepadconnected", forward);
+  from.addEventListener("gamepaddisconnected", forward);
+  return () => {
+    from.removeEventListener("gamepadconnected", forward);
+    from.removeEventListener("gamepaddisconnected", forward);
+  };
 }
 
 function installRuntimeFiles(

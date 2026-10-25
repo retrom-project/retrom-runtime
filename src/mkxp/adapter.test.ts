@@ -18,7 +18,7 @@ afterEach(() => {
 });
 
 describe("mkxp runtime mount", () => {
-  it.each([1, 2, 3])("binds bottom to RGSS Confirm and right to Cancel for RGSS %s", async (rgssVersion) => {
+  it.each([1, 2, 3])("binds bottom to RGSS Confirm, right to Cancel and leaves the keyboard to the core for RGSS %s", async (rgssVersion) => {
     const harness = createHarness();
     const config = {...mkxpConfig(), rgssVersion: rgssVersion as 1 | 2 | 3};
     const mounted = await mountMkxp(config, harness.target, null, harness.dependencies);
@@ -26,8 +26,12 @@ describe("mkxp runtime mount", () => {
     expect(harness.prepareOptions?.retroarchConfig).toMatchObject({
       input_player1_a_btn: "0", input_player1_b_btn: "1",
       input_player1_x_btn: "2", input_player1_y_btn: "3",
-      input_player1_a: "x",
     });
+    // Keyboard reaches the core only through its RGSS keyboard table.
+    const retroarchConfig = harness.prepareOptions?.retroarchConfig as Record<string, unknown> | undefined;
+    for (const input of ["up", "down", "left", "right", "a", "b", "x", "y", "start", "select", "gun_start", "gun_select"]) {
+      expect(retroarchConfig?.[`input_player1_${input}`]).toBe("nul");
+    }
     await mounted.exit();
     harness.frame.remove();
   });
@@ -349,7 +353,6 @@ describe("mkxp runtime mount", () => {
       input_save_state: "nul",
       input_load_state: "nul",
       input_pause_toggle: "f6",
-      input_player1_a: "x",
       savestate_file_compression: false,
     });
     expect(harness.canvasIdAtPrepare).toBe("canvas");

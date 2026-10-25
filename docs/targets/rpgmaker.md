@@ -16,9 +16,19 @@ EasyRPG receives a file-tree resource and optional RTP tree. mkxp receives a det
 
 Desktop executables are not browser entry points. Supported ASAR/NW archive normalization extracts ordinary project files without executing native code. A project can still depend on unsupported desktop plugins or engine behavior; identifying its engine does not establish game compatibility.
 
+## MV/MZ display
+
+MV/MZ default to the engine's proportional stretch mode, including in desktop browsers. The game fits the available frame and follows window or fullscreen size changes, retaining its logical resolution and aspect ratio. Unused space remains as black bars. Canvas, video and pointer coordinates use the engine's own scale; the host does not need to resize the game's drawing buffer.
+
+Viewport fitting is independent of browser fullscreen and the `original`, `pixel` and `smooth` image-rendering modes. It also applies before graphics initialization, or immediately if a plugin has already initialized the canvas. The engine's stretch toggle remains available.
+
 ## Loading and saves
 
 All seven Targets support managed on-demand loading and explicit full preload. The loading mode changes resource acquisition, not project identity or the selected engine.
+
+mkxp builds its path cache from ZIP central-directory metadata. It reads local file headers and content only as those files are opened, so listing a large project does not require fetching blocks throughout the archive. Embedded fonts can be selected by either their FreeType family names or localized SFNT aliases.
+
+A terminating mkxp game exception or a native core abort (sandbox trap or forced assertion) emits `FATAL_ERROR` with code `RPG_RUNTIME_GAME_FAILED`, including the original exception or `Fatal error:` diagnostic when available. This stops play and checkpoint creation even when the game already presented opening frames.
 
 All seven currently declare `INSTANT` checkpoint semantics. EasyRPG uses its engine save bundle, mkxp captures native execution state, and MV/MZ capture through their native bridge. Follow current checkpoint availability and the Target's public format; a bundle backed by native files must still satisfy the declared execution-restoration behavior. In-game save slots are separate from host checkpoint selection.
 

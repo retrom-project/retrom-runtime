@@ -20,6 +20,7 @@ import {PlayerRuntimeError} from "../../provider/errors.js";
 import {focusRuntimeInput} from "../../provider/input-focus.js";
 import {providerInputCapabilities} from "../../provider/input-capabilities.js";
 import {RuntimeGamepadFilter, installRuntimeGamepadFilter} from "../../provider/gamepad-filter.js";
+import {installTouchGamepad, type TouchGamepad} from "../../provider/touch-gamepad.js";
 import {installRuntimeFrameSurface, type RuntimeFrameSurface} from "./frame-surface.js";
 import {mountTargetAdapter} from "./target-adapter.js";
 
@@ -48,6 +49,7 @@ class RetromRuntimePlayer implements PlayerRuntimeV1 {
   private shortcutPolicy: RuntimeHostShortcutPolicyV1 | null = null;
   private runtimeWindow: Window | null = null;
   private inputFilter: RuntimeGamepadFilter | null = null;
+  private touchGamepad: TouchGamepad | null = null;
   private inputPolicy: RuntimeInputFilterPolicyV1 | null = null;
   private cleanupInputFilter: (() => void) | null = null;
   private frameSurface: RuntimeFrameSurface | null = null;
@@ -119,6 +121,7 @@ class RetromRuntimePlayer implements PlayerRuntimeV1 {
       }
       this.adapter = adapter;
       this.startupSession = null;
+      this.installTouchGamepad(adapter, runtimeWindow, frameMode);
       await this.applyMountedInputPolicy(adapter, frameMode);
       this.frameSurface?.refresh();
       this.startup.completePreparations();
@@ -134,7 +137,7 @@ class RetromRuntimePlayer implements PlayerRuntimeV1 {
 
   private async applyMountedInputPolicy(adapter: MountedRuntimeAdapter, frameMode: string) {
     adapter.gamepadCursor?.setInputPolicy(this.inputPolicy);
-    if (frameMode === "ISOLATED_ORIGIN_RESOURCE" && this.inputPolicy !== null) {
+    if ((frameMode === "ISOLATED_ORIGIN_RESOURCE" || adapter.setInputFilter) && this.inputPolicy !== null) {
       if (!adapter.setInputFilter) {throw contractError();}
       await adapter.setInputFilter(this.inputPolicy);
       this.assertActive();
@@ -144,6 +147,13 @@ class RetromRuntimePlayer implements PlayerRuntimeV1 {
       await adapter.setHostShortcutPolicy(this.shortcutPolicy, this.reportHostShortcut);
       this.assertActive();
     }
+  }
+
+  /** The on-screen pad feeds the same-origin gamepad filter; isolated realms own their own input. */
+  private installTouchGamepad(adapter: MountedRuntimeAdapter, runtimeWindow: Window, frameMode: string) {
+    if (!adapter.touchGamepad || frameMode !== "SAME_ORIGIN_BLANK" || !this.inputFilter) {return;}
+    this.touchGamepad = installTouchGamepad(runtimeWindow);
+    this.inputFilter.setTouchGamepad(this.touchGamepad);
   }
 
   private installInputFilter(runtimeWindow: Window, frameMode: string) {
@@ -303,12 +313,12 @@ class RetromRuntimePlayer implements PlayerRuntimeV1 {
     this.hostShortcuts.setSuppressed(policy?.suppressInput === true);
     this.inputPolicy = policy ? {...policy} : null;
     this.adapter?.gamepadCursor?.setInputPolicy(policy);
+    if (this.adapter?.setInputFilter) {
+      await this.adapter.setInputFilter(this.inputPolicy);
+      this.assertActive();
+    }
     if (this.envelope.runtime.capabilities.frameMode === "ISOLATED_ORIGIN_RESOURCE") {
-      if (this.adapter) {
-        if (!this.adapter.setInputFilter) {throw contractError();}
-        await this.adapter.setInputFilter(this.inputPolicy);
-        this.assertActive();
-      }
+      if (this.adapter && !this.adapter.setInputFilter) {throw contractError();}
       return;
     }
     if (this.inputFilter) {this.inputFilter.setPolicy(policy);}
@@ -400,6 +410,8 @@ class RetromRuntimePlayer implements PlayerRuntimeV1 {
       this.cleanupInputFilter?.();
       this.cleanupInputFilter = null;
       this.inputFilter = null;
+      this.touchGamepad?.cleanup();
+      this.touchGamepad = null;
       this.frameSurface?.cleanup();
       this.frameSurface = null;
       this.runtimeWindow = null;

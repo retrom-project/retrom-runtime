@@ -1,5 +1,6 @@
 import {inputObserver} from "./input-observations.js";
 import type {RuntimeInputFilterPolicyV1} from "./module-api.js";
+import {mergeTouchGamepad, type TouchGamepad} from "./touch-gamepad.js";
 
 const gamepadSources = new WeakMap<Navigator, () => (Gamepad | null)[]>();
 
@@ -123,6 +124,7 @@ class ChordDetector {
 export class RuntimeGamepadFilter {
   private readonly detector = new ChordDetector();
   private policy: RuntimeInputFilterPolicyV1 | null;
+  private touch: TouchGamepad | null = null;
 
   constructor(policy: RuntimeInputFilterPolicyV1 | null) {this.policy = policy ? {...policy} : null;}
 
@@ -132,7 +134,12 @@ export class RuntimeGamepadFilter {
     this.policy = policy ? {...policy} : null;
   }
 
-  filter(gamepads: readonly (GamepadSnapshot | null)[], nowMs: number): (Gamepad | null)[] {
+  /** The on-screen pad joins before the host policy, so suppression and chords cover it too. */
+  setTouchGamepad(touch: TouchGamepad | null) {this.touch = touch;}
+
+  filter(physical: readonly (GamepadSnapshot | null)[], nowMs: number): (Gamepad | null)[] {
+    this.touch?.observePhysical(physical);
+    const gamepads = this.touch ? mergeTouchGamepad(physical, this.touch.current()) : physical;
     if (!this.policy) {return [...gamepads] as (Gamepad | null)[];}
     if (this.policy.suppressInput) {return gamepads.map((gamepad) => gamepad ? zeroGamepad(gamepad) : null);}
     const active = this.policy.activeGamepadIndex === null ? null :

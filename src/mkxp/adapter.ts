@@ -31,6 +31,8 @@ type MkxpRuntime = Pick<Nostalgist,
 type MkxpPrepareOptions = Parameters<typeof Nostalgist.prepare>[0] & {
   emscriptenModule: NonNullable<Parameters<typeof Nostalgist.prepare>[0]["emscriptenModule"]> & {
     retromContentBridge: MkxpContent["bridge"];
+    /** The core samples this realm's (Provider-filtered) Gamepad API instead of its own. */
+    retromGamepadNavigator: Navigator;
     onExit: (status: number) => void;
     preRun: Array<(module: { ENV: Record<string, string> }) => void>;
   };
@@ -126,6 +128,9 @@ async function mountMkxpUnchecked(
   // document, so creating the canvas through target.ownerDocument makes a
   // genuine canvas fail that cross-realm instanceof check. Create it in the
   // adapter realm and let append() adopt it into the Player frame.
+  // The core module runs in this realm, but the Player frame owns game input:
+  // the Provider filters that frame's gamepads and adds its on-screen pad there.
+  const inputWindow = target.ownerDocument.defaultView ?? window;
   const canvas = document.createElement("canvas");
   // Nostalgist assigns this exact ID during prepare. Use it from the first DOM
   // insertion so the Player never exposes a transient selector identity.
@@ -178,6 +183,7 @@ async function mountMkxpUnchecked(
     emscriptenModule: {
       arguments: [remoteGamePath],
       retromContentBridge: bridge.bridge,
+      retromGamepadNavigator: inputWindow.navigator,
       onExit: (status) => {
         if (nativeExited) {return;}
         nativeExited = true;
@@ -240,10 +246,12 @@ async function mountMkxpUnchecked(
       await waitForMkxpExit(nativeExit);
       onDiagnostic({runtime: "mkxp-z", message: "RPG_RUNTIME_EXIT_ACKNOWLEDGED"});
     }
+    stopGamepadForwarding();
     await bridge.close();
     await nostalgist.exit();
     onDiagnostic({runtime: "mkxp-z", message: "RPG_RUNTIME_EXIT_DISPOSED"});
   });
+  const stopGamepadForwarding = forwardSyntheticGamepadEvents(inputWindow, window);
   const fileSystem = nostalgist.getEmscriptenFS() as MkxpFileSystem;
   try {
     status = mkxpStatus(nostalgist.getEmscriptenModule(),
@@ -264,7 +272,7 @@ async function mountMkxpUnchecked(
     // Nostalgist's postRun runs before the pthread necessarily installs
     // rwebpad's connection listener. Reconcile existing pads once the core is
     // presenting; later browser connection events remain owned by rwebpad.
-    for (const gamepad of navigator.getGamepads?.() ?? []) {
+    for (const gamepad of inputWindow.navigator.getGamepads?.() ?? []) {
       if (!gamepad?.connected) {continue;}
       const event = new Event("gamepadconnected");
       Object.defineProperty(event, "gamepad", {value: gamepad});
@@ -292,6 +300,8 @@ async function mountMkxpUnchecked(
       target.replaceChildren();
     },
     getCanvas: () => canvas,
+    // RetroArch's rwebpad reads the frame's standard Gamepad API, including the on-screen pad.
+    touchGamepad: true,
     getCheckpointAvailability: () => {status.assertHealthy(); return { available: true, blocker: null };},
     getFrameCount: () => status.frames(),
     pause: async () => {await pressPrivateHotkey(canvas, pauseToggleHotkey);},
@@ -303,6 +313,23 @@ async function mountMkxpUnchecked(
     screenshot: () => canvasBlob(canvas),
     setVolume: null,
   } satisfies MountedRuntimeAdapter;
+}
+
+/** Browsers deliver real pad connections to every window; Provider-made pads exist only in the input frame. */
+function forwardSyntheticGamepadEvents(from: Window, to: Window) {
+  if (from === to) {return () => undefined;}
+  const forward = (event: Event) => {
+    if (event.isTrusted || !("gamepad" in event)) {return;}
+    const copy = new Event(event.type);
+    Object.defineProperty(copy, "gamepad", {value: event.gamepad});
+    to.dispatchEvent(copy);
+  };
+  from.addEventListener("gamepadconnected", forward);
+  from.addEventListener("gamepaddisconnected", forward);
+  return () => {
+    from.removeEventListener("gamepadconnected", forward);
+    from.removeEventListener("gamepaddisconnected", forward);
+  };
 }
 
 function installRuntimeFiles(

@@ -115,6 +115,29 @@ describe("Provider-owned lifecycle", () => {
     expect(events.some((event) => event.type === "STATE_CHANGED" && event.state === "RUNNING")).toBe(false);
   });
 
+  it.each(["exit", "abort"] as const)("cancels a startup choice and its live session when %s wins mount", async (cancel) => {
+    const stopped = vi.fn(async () => undefined);
+    vi.mocked(mountTargetAdapter).mockImplementation(async (_envelope, _target, context) => {
+      context.registerStartupSession?.({exit: stopped});
+      await context.requestStartupInteraction?.({id: "entry", title: "Choose an entry", choices: [{id: "3", label: "Third"}]});
+      throw new Error("Cancelled choice must never resolve");
+    });
+    const abort = new AbortController();
+    const player = await createRuntime(wasmEnvelope(), hostFixture({signal: abort.signal}));
+    const events: RuntimeEventV1[] = []; player.subscribe(event => events.push(event));
+    const mounting = player.mount(document.createElement("div"));
+    const rejected = expect(mounting).rejects.toMatchObject({name: "AbortError"});
+    await vi.waitFor(() => expect(events).toContainEqual(expect.objectContaining({type: "STARTUP_INTERACTION", interaction: expect.objectContaining({id: "entry"})})));
+    expect(player.getState()).toBe("MOUNTING");
+    if (cancel === "abort") {abort.abort();} else {await player.exit();}
+    await rejected;
+    await player.exit();
+    expect(stopped).toHaveBeenCalledOnce();
+    expect(player.getState()).toBe("EXITED");
+    expect(events).toContainEqual({type: "STARTUP_INTERACTION", interaction: null});
+    expect(events.some(event => event.type === "FATAL_ERROR" || event.type === "STATE_CHANGED" && event.state === "RUNNING")).toBe(false);
+  });
+
   it("waits for actual readiness and rejects a second mount", async () => {
     const pending = deferred<MountedRuntimeAdapter>();
     const adapter = adapterFixture();

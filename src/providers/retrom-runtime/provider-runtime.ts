@@ -1,3 +1,4 @@
+import {StartupInteraction} from "../../provider/startup-interaction.js";
 import {installCoreAssetFetch} from "../../provider/core-asset-fetch.js";
 import {bindTargetContent} from "../../provider/target-content.js";
 import {RuntimeHostShortcuts} from "../../provider/host-shortcuts.js";
@@ -32,9 +33,11 @@ class RetromRuntimePlayer implements PlayerRuntimeV1 {
   private readonly contentOwner = new ProviderContentOwner((error) => {void this.fail(error);}, diagnostic => this.host.reportDiagnostic({code: "CONTENT_IO_METRICS", message: JSON.stringify(diagnostic)}),
     state => {if (!this.stopping()) {this.emit({type: "CONTENT_NETWORK", state});}});
   private readonly startup: StartupTasks;
+  private readonly startupInteraction = new StartupInteraction(event => this.emit(event));
   private readonly listeners = new Set<(event: RuntimeEventV1) => void>();
   private state: RuntimeStateV1 = "CREATED";
   private adapter: MountedRuntimeAdapter | null = null;
+  private startupSession: Pick<MountedRuntimeAdapter, "exit"> | null = null;
   private exitPromise: Promise<void> | null = null;
   private finalSnapshotPromise: Promise<void> | null = null;
   private operationTail: Promise<void> = Promise.resolve();
@@ -93,6 +96,11 @@ class RetromRuntimePlayer implements PlayerRuntimeV1 {
       }
       const adapter = await this.startup.run("GAME_START", () => mountTargetAdapter(this.envelope, runtimeTarget, {
         startup: this.startup,
+        requestStartupInteraction: this.startupInteraction.request,
+        registerStartupSession: session => {
+          if (this.stopping()) {void session.exit().catch(error => this.reportCleanupFailure(error));}
+          else {this.startupSession = session;}
+        },
         assetIndex: this.assetIndex, contentSession,
         signal: this.host.signal,
         reportFailure: (error) => {void this.fail(error);},
@@ -110,6 +118,7 @@ class RetromRuntimePlayer implements PlayerRuntimeV1 {
         this.assertActive();
       }
       this.adapter = adapter;
+      this.startupSession = null;
       await this.applyMountedInputPolicy(adapter, frameMode);
       this.frameSurface?.refresh();
       this.startup.completePreparations();
@@ -212,7 +221,13 @@ class RetromRuntimePlayer implements PlayerRuntimeV1 {
     });
   }
 
+  async respondToStartupInteraction(id: string, choiceId: string) {
+    if (this.state !== "MOUNTING") {throw contractError();}
+    this.startupInteraction.respond(id, choiceId);
+  }
+
   exit() {
+    this.startupInteraction.cancel();
     this.startup.stop(this.state === "FAILED");
     if (this.exitPromise) {return this.exitPromise;}
     const failed = this.state === "FAILED";
@@ -375,8 +390,9 @@ class RetromRuntimePlayer implements PlayerRuntimeV1 {
     this.availabilityTimer = null;
     this.inputDiagnostics?.stop();
     this.inputDiagnostics = null;
-    const adapter = this.adapter;
+    const adapter = this.adapter ?? this.startupSession;
     this.adapter = null;
+    this.startupSession = null;
     let failure: unknown;
     try {await adapter?.exit();} catch (error) {failure = error;}
     finally {

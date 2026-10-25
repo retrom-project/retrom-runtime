@@ -1,3 +1,5 @@
+import {RuntimeFailureError} from "../provider/failure.js";
+import type {RuntimeStartupInteractionV1} from "../provider/module-api.js";
 import type {CheckpointAvailability, RuntimeCheckpoint, RuntimeLoadProgress} from "../contract.js";
 import type {MountedRuntimeAdapter, RuntimeProgressReporter, RuntimeExitReporter} from "../internal-adapter.js";
 import type {J2meParameters} from "./parameters.js";
@@ -8,10 +10,11 @@ type J2meRuntime = Omit<MountedRuntimeAdapter, "setVolume"> & {
   mount(target: HTMLElement): Promise<void>;
   setVolume(value: number): void;
   getState(): string;
+  respondToStartupInteraction?(id: string, choiceId: string): void;
   setInput(action: J2meGamepadAction, pressed: boolean): void;
   subscribe(listener: (event: CoreEvent) => void): () => void;
 };
-type CoreEvent = RuntimeLoadProgress & {type: string; code?: string};
+type CoreEvent = RuntimeLoadProgress & {type: string; code?: string; reason?: string; interaction?: RuntimeStartupInteractionV1 | null};
 type CoreModule = {
   runtimeAdapter: {adapterAbi: string; checkpointFormat: string; automaticViewport?: boolean};
   createRuntime(config: unknown, options: unknown): J2meRuntime;
@@ -31,6 +34,8 @@ export async function mountJ2me(
   signal?: AbortSignal,
   loadModule: J2meModuleLoader = (url) => import(/* webpackIgnore: true */ /* @vite-ignore */ url),
   startup?: StartupTasks,
+  requestStartupInteraction?: (interaction: RuntimeStartupInteractionV1) => Promise<string>,
+  registerStartupSession?: (session: Pick<MountedRuntimeAdapter, "exit">) => void,
 ): Promise<MountedRuntimeAdapter> {
   if (target.ownerDocument !== frameWindow.document || restorePayload &&
     (!restorePayload.byteLength || restorePayload.byteLength > maximum)) {
@@ -67,7 +72,17 @@ export async function mountJ2me(
       }
       reportProgress(event);
     }
-    if (event.type === "FATAL_ERROR") {reportFailure(new Error(event.code ?? "J2ME_RUNTIME_FAILED"));}
+    if (event.type === "STARTUP_INTERACTION" && event.interaction) {
+      const interaction = event.interaction;
+      if (!requestStartupInteraction || !runtime.respondToStartupInteraction) {
+        reportFailure(new Error("J2ME_STARTUP_INTERACTION_UNAVAILABLE"));
+      } else {
+        void requestStartupInteraction(interaction).then(choiceId => {
+          if (!exited && !signal?.aborted) {runtime.respondToStartupInteraction?.(interaction.id, choiceId);}
+        }).catch(error => {if (!exited && !signal?.aborted && error?.name !== "AbortError") {reportFailure(error);}});
+      }
+    }
+    if (event.type === "FATAL_ERROR") {reportFailure(new RuntimeFailureError(event.code ?? "J2ME_RUNTIME_FAILED", "CORE", event.reason ? [event.reason] : []));}
     if (event.type === "EXIT_REQUESTED" && !exitReported) {exitReported = true; reportExitRequested();}
   });
   const exit = async () => {
@@ -76,6 +91,7 @@ export async function mountJ2me(
     unsubscribe();
     try {input?.dispose();} finally {await runtime.exit();}
   };
+  registerStartupSession?.({exit});
   try {
     if (typeof runtime.acknowledgeCheckpoint !== "function" || typeof runtime.setInput !== "function" ||
       typeof runtime.getState !== "function") {throw new Error("J2ME_CORE_ABI_MISMATCH");}

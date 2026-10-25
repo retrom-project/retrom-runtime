@@ -207,6 +207,8 @@ Other inaccessible isolated frames explicitly remain unavailable. Sessions are c
 
 ## Startup tasks
 
+A core can request a choice before mount completes by emitting `STARTUP_INTERACTION` with an invocation-local `id`, a `title`, and unique `{id, label}` choices. The Provider remains `MOUNTING`; the Host presents these choices and calls the optional `respondToStartupInteraction(id, choiceId)` operation. Invalid or stale answers fail instead of selecting another entry. An event with `interaction: null` clears the question. `exit()` cancels the pending question and releases the startup session without waiting for application startup to return. Selection readiness is not game readiness: regular input and checkpoints keep their normal state restrictions. A core may suspend its execution deadline only while a published choice is actionable; loading and selected application startup remain bounded.
+
 `LOAD_TASK` reports an invocation-local unique `id`, a public `kind`, explicit
 `RUNNING`, `COMPLETED` or `FAILED` state, and optional exact byte progress.
 All declared Targets pass through shared environment and mount barriers. Content I/O

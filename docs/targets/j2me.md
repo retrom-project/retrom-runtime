@@ -7,7 +7,7 @@ heap or execution position. Save in the game first, upload through the Host, the
 in a new Launch. Other Targets declare their own save semantics in the [support catalog](../supported-platforms-and-cores.md).
 
 The core verifies JAR size and SHA-256, reuses verified bytes from persistent content-addressed storage,
-reports loading progress and resolves known compatibility profiles. Core failures and game exits enter the
+reports loading progress and applies only explicit device settings. Content names and hashes never select behavior patches. Core failures and game exits enter the
 common Provider lifecycle. The pinned v0.3.4 release includes verified RMS persistence, native alpha
 composition and demand-driven presentation. J2ME uses the `main` branch and immutable semantic version tags.
 
@@ -50,3 +50,18 @@ bytes directly and must not call live checkpoint/screenshot APIs to obtain them.
 represented by `null`. The final checkpoint obeys the same declared format and byte limit. Live save
 acknowledgments still occur only after durable Host persistence; a final snapshot is detached from the closed
 runtime and needs no acknowledgment. Identical native content retains its revision across repeated writes.
+
+## Startup interaction
+
+All applications construct and start on an AMS thread. A multi-entry JAR publishes the generic
+`STARTUP_INTERACTION` event while the Provider remains MOUNTING. The Host shows its title and choices,
+uses the shared keyboard/gamepad navigation, and replies with
+`respondToStartupInteraction(interaction.id, choice.id)`. `exit()` cancels that startup session independently
+of the pending adapter mount. No entry is automatically chosen from a content identity or assumed to be
+first. A selected MIDlet's actual frame and input readiness are required before RUNNING.
+
+The PFB candidate also fixes exact ZIP entry names, event-driven Display transitions, MIDI serialization
+and native ToneControl replacement, class-initialization ownership and reentrant method resolution.
+RMS commits changed records synchronously with metadata as their commit point and a recoverable undo
+journal. In-flight transactions cannot be exported. The stable RMS file layout and GAME_SAVE semantics
+remain unchanged.

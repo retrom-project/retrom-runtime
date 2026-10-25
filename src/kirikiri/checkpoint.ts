@@ -1,5 +1,5 @@
 export const kirikiriCheckpointMagic = "RTKRKGS1";
-export const kirikiriGameSaveFormat = "kirikiri-game-save-v2";
+export const kirikiriGameSaveFormat = "kirikiri-game-save-v1";
 
 export type KirikiriCheckpointEntry = { path: string; data: Uint8Array | null };
 export type KirikiriCheckpointBundle = { progressPaths: string[]; entries: KirikiriCheckpointEntry[] };

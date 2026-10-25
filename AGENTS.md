@@ -87,7 +87,8 @@ npm run package:check
 - 发布版本只来自 GitHub 的不可移动 `vX.Y.Z`（或 RC）tag；两个 Provider 的 manifest、客户端导出和归档名统一使用去掉 `v` 的版本。不得在 package.json、provider-sources.json 或 catalog 中维护独立发布版本；未打 tag 的构建使用 `0.0.0-dev`，PFB 客户端沿用已校验基座版本。
 - `v*` tag 由 `.github/workflows/release.yml` 构建 GitHub Release；tag 不移动、不覆盖。`vX.Y.Z-rc.N` 可从功能分支发布 GitHub prerelease，稳定 tag 必须已进入 `master`；两者都执行相同代码和聚合门禁。
 - `providerId + targetId` 是长期稳定的 Target 身份。Provider Bundle 是单次部署与 Launch 的不可变产物，不能成为 Game、Review 或 Save 的兼容身份。Provider Module、Launch Envelope 与 checkpoint 行为直接修改现有契约，不因不兼容而升级协议代际，也不保留兼容读取、旧调用识别或旧数据迁移。提交前必须运行协议代际门禁。
-- `coreFingerprint` 只绑定 Provider/Target 与显式核心文件内容摘要；Bundle/Module 摘要继续校验部署产物，不能作为存档兼容条件。修改 checkpoint 编码或恢复语义造成不兼容时必须更新该 Target 的格式声明，不能依赖 adapter 源码 hash 自动失效。无格式变化的 runtime 升级必须保持存档可恢复。
+- 调整协议、schema、checkpoint或持久化布局前，先核对该功能是否已正式发布、用于生产或有用户明确要求保留的消费者/数据。尚未正式生效的功能直接修改当前契约并同步调用方、测试与文档，保留当前版本标识；同一PFB中的提交、分支镜像和验收数据不构成正式版本，不据此新增v2、兼容分支、迁移或专门拒旧的测试。此规则不授权删除数据，也不改变不可变发行tag规则。
+- `coreFingerprint` 只绑定 Provider/Target 与显式核心文件内容摘要；Bundle/Module 摘要继续校验部署产物，不能作为存档兼容条件。对已正式生效的checkpoint编码或恢复语义作不兼容修改时，才要求更新该 Target 的格式声明，不能依赖 adapter 源码 hash 自动失效；尚未正式生效的改动按上一条直接修改当前格式。无格式变化的 runtime 升级必须保持存档可恢复。
 - checkpoint 格式由当前实现声明，`readFormats` 仅包含当前 `writeFormat`。宿主只向前激活更高 Provider 版本；旧存档格式不可读时禁用恢复，不保留旧 Bundle 或设计运行时回滚。
 
 ## 与 Retrom 的本地联调

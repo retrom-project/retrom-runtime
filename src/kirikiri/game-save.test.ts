@@ -23,7 +23,7 @@ afterEach(() => {
 
 it("declares native GAME_SAVE with only the current native-file format", () => {
   expect(config().runtime.checkpoint).toMatchObject({semantics: "GAME_SAVE",
-    writeFormat: "kirikiri-game-save-v2-storage-v1", readFormats: ["kirikiri-game-save-v2-storage-v1"]});
+    writeFormat: "kirikiri-game-save-v1-storage-v1", readFormats: ["kirikiri-game-save-v1-storage-v1"]});
 });
 
 it("syncs files from a completed native save without creating a hidden host slot", async () => {
@@ -47,7 +47,7 @@ it("syncs files from a completed native save without creating a hidden host slot
     expect(runtime.getCheckpointAvailability()).toMatchObject({available: true,
       save: {capture: "IN_GAME", restore: "IN_GAME", captureAvailable: false, dataKind: "PROGRESS"}});
     const checkpoint = await runtime.checkpoint();
-    expect(checkpoint.format).toBe("kirikiri-game-save-v2-storage-v1");
+    expect(checkpoint.format).toBe("kirikiri-game-save-v1-storage-v1");
     const payload = await decodeStoredCheckpoint(checkpoint.bytes, checkpoint.format, 64 * 1024 * 1024);
     expect(await decodeKirikiriCheckpoint(payload)).toEqual({progressPaths: ["profiles/玩家/任意槽.png"], entries: [
       {path: "database/user.sqlite", data: Uint8Array.of(4, 8)},

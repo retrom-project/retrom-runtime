@@ -39,7 +39,7 @@ it("exports unsynced native files once on normal exit through the public single-
     expect(exits).toHaveLength(1);
     const snapshot = exits[0]?.type === "EXIT_REQUESTED" ? exits[0].finalSnapshot : undefined;
     expect(snapshot).toBeDefined();
-    expect(snapshot!.checkpoint.format).toBe("kirikiri-game-save-v1-storage-v1");
+    expect(snapshot!.checkpoint.format).toBe("kirikiri-game-save-v2-storage-v1");
     const native = await decodeStoredCheckpoint(snapshot!.checkpoint.bytes, snapshot!.checkpoint.format, maximumKirikiriCheckpointBytes);
     expect(await decodeKirikiriCheckpoint(native)).toEqual({progressPaths: ["profiles/玩家/slot.png"], entries: [
       {path: "profiles/玩家/options.ksd", data: Uint8Array.of(7)},
@@ -105,7 +105,7 @@ it.each(["normal", "host-stop"])("retains a real suspended Wasm tick during fina
       reading.resolve(); expect(await result).toBe(0);
       await vi.waitFor(() => expect(f.runtime.getState()).toBe("EXITED"));
       expect(f.events.find(event => event.type === "EXIT_REQUESTED")).toMatchObject({
-        finalSnapshot: {checkpoint: {format: "kirikiri-game-save-v1-storage-v1"}},
+        finalSnapshot: {checkpoint: {format: "kirikiri-game-save-v2-storage-v1"}},
       });
     } else {
       let closed = false;
@@ -149,7 +149,7 @@ it.each(["null", "throw", "empty", "oversized"])("keeps valid final progress whe
     await vi.waitFor(() => expect(f.runtime.getState()).toBe("EXITED"));
     const exit = f.events.find(event => event.type === "EXIT_REQUESTED");
     expect(exit).toMatchObject({type: "EXIT_REQUESTED", finalSnapshot: {screenshot: null,
-      checkpoint: {format: "kirikiri-game-save-v1-storage-v1"}}});
+      checkpoint: {format: "kirikiri-game-save-v2-storage-v1"}}});
     expect(f.events.some(event => event.type === "FATAL_ERROR")).toBe(false);
   } finally {await f.runtime.exit();}
 });

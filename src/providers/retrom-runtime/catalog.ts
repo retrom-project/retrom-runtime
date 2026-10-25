@@ -86,7 +86,7 @@ const adapters = [
   }),
   defineAdapter({id: "kirikiri2-web", kind: "KIRIKIRI2_WEB", abi: "kirikiri-content-io-v1",
     capabilities: standardCapabilities,
-    checkpoint: {writeFormat: "kirikiri-game-save-v1", readFormats: ["kirikiri-game-save-v1"], semantics: "GAME_SAVE"}}),
+    checkpoint: {writeFormat: "kirikiri-game-save-v2", readFormats: ["kirikiri-game-save-v2"], semantics: "GAME_SAVE"}}),
   defineAdapter({id: "mkxp-libretro-web", kind: "MKXP_LIBRETRO_WEB", abi: "mkxp-content-io-v1",
     checkpoint: {semantics: "INSTANT", writeFormat: "mkxp-state-v1", readFormats: ["mkxp-state-v1"]}, capabilities: rpgCapabilities}),
   adapter("native-web", "NATIVE_WEB", "native-save", "native-save-bundle-v1", nativeCapabilities),

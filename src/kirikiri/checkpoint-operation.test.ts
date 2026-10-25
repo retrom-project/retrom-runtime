@@ -75,7 +75,7 @@ it("hands an active capture to normal exit without reentering native scripts", a
   await vi.waitFor(() => expect(module.pauseMainLoop).toHaveBeenCalledOnce());
   const final = operation.finalCheckpoint();
   finish();
-  expect(await ordinary).toMatchObject({format: "kirikiri-game-save-v1"});
+  expect(await ordinary).toMatchObject({format: "kirikiri-game-save-v2"});
   expect(await final).not.toBeNull();
   expect(module._krkr2_host_flush_game_saves).not.toHaveBeenCalled();
   expect(module.resumeMainLoop).not.toHaveBeenCalled();
@@ -94,7 +94,7 @@ it("finishes an active capture when the exiting JSPI frame unwinds with ExitStat
   const ordinary = operation.checkpoint();
   await vi.waitFor(() => expect(module.pauseMainLoop).toHaveBeenCalledOnce());
   const final = operation.finalCheckpoint();
-  const ordinaryResult = expect(ordinary).resolves.toMatchObject({format: "kirikiri-game-save-v1"});
+  const ordinaryResult = expect(ordinary).resolves.toMatchObject({format: "kirikiri-game-save-v2"});
   const finalResult = expect(final).resolves.not.toBeNull();
   finish();
   await Promise.all([ordinaryResult, finalResult]);
@@ -147,7 +147,7 @@ it("retains the active exiting frame until stop has drained the final handoff", 
 it("captures complete native files and acknowledges only the persisted revision", async () => {
   const {operation, overlay} = fixture();
   const saved = await operation.checkpoint();
-  expect(saved.format).toBe("kirikiri-game-save-v1");
+  expect(saved.format).toBe("kirikiri-game-save-v2");
   expect(await decodeKirikiriCheckpoint(saved.bytes)).toEqual({progressPaths: ["profile/玩家/slot.png"],
     entries: [{path: "profile/玩家/slot.png", data: Uint8Array.of(4, 2)}]});
   overlay.record("/settings.ksd", Uint8Array.of(1));
@@ -251,7 +251,7 @@ it("drains the original exiting tick before canceling an active final export", a
 it("allows only the fixed SDK's ExitStatus(0) control flow during final drain", async () => {
   const exit = {name: "ExitStatus", status: 0, message: "Program terminated with exit(0)"};
   const {operation, module} = fixture(); module.pauseMainLoop.mockRejectedValueOnce(exit);
-  expect(await operation.finalCheckpoint()).toMatchObject({format: "kirikiri-game-save-v1"});
+  expect(await operation.finalCheckpoint()).toMatchObject({format: "kirikiri-game-save-v2"});
   expect(module.resumeMainLoop).not.toHaveBeenCalled(); await operation.stop();
   const normal = fixture(); normal.module.pauseMainLoop.mockRejectedValueOnce(exit);
   await expect(normal.operation.checkpoint()).rejects.toMatchObject({message: "KIRIKIRI_CHECKPOINT_CREATE_FAILED", cause: exit});

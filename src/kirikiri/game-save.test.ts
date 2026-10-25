@@ -23,7 +23,7 @@ afterEach(() => {
 
 it("declares native GAME_SAVE with only the current native-file format", () => {
   expect(config().runtime.checkpoint).toMatchObject({semantics: "GAME_SAVE",
-    writeFormat: "kirikiri-game-save-v1-storage-v1", readFormats: ["kirikiri-game-save-v1-storage-v1"]});
+    writeFormat: "kirikiri-game-save-v2-storage-v1", readFormats: ["kirikiri-game-save-v2-storage-v1"]});
 });
 
 it("syncs files from a completed native save without creating a hidden host slot", async () => {
@@ -34,6 +34,9 @@ it("syncs files from a completed native save without creating a hidden host slot
   await loadVlfs(vlfs); const module = await loadCore(vlfs); await mounting;
   try {
     vlfs.onWriteClose?.("/profiles/玩家/settings.ksd", Uint8Array.of(7));
+    vlfs.onWriteClose?.("/database/user.sqlite", Uint8Array.of(4, 8));
+    vlfs.onWriteClose?.("/database/user.sqlite-journal", Uint8Array.of(5));
+    vlfs.onUnlink?.("/database/user.sqlite-journal");
     expect(runtime.getCheckpointAvailability()).toMatchObject({available: false, reason: "NO_SAVE"});
     const notify = module.onGameSave as (event: {phase: string; id: number; success?: boolean}) => void;
     expect(notify).toBeTypeOf("function");
@@ -44,9 +47,11 @@ it("syncs files from a completed native save without creating a hidden host slot
     expect(runtime.getCheckpointAvailability()).toMatchObject({available: true,
       save: {capture: "IN_GAME", restore: "IN_GAME", captureAvailable: false, dataKind: "PROGRESS"}});
     const checkpoint = await runtime.checkpoint();
-    expect(checkpoint.format).toBe("kirikiri-game-save-v1-storage-v1");
+    expect(checkpoint.format).toBe("kirikiri-game-save-v2-storage-v1");
     const payload = await decodeStoredCheckpoint(checkpoint.bytes, checkpoint.format, 64 * 1024 * 1024);
     expect(await decodeKirikiriCheckpoint(payload)).toEqual({progressPaths: ["profiles/玩家/任意槽.png"], entries: [
+      {path: "database/user.sqlite", data: Uint8Array.of(4, 8)},
+      {path: "database/user.sqlite-journal", data: null},
       {path: "profiles/玩家/settings.ksd", data: Uint8Array.of(7)},
       {path: "profiles/玩家/任意槽.png", data: Uint8Array.of(1, 2, 3, 4)},
     ]});
@@ -59,12 +64,16 @@ it("imports native files before ordinary startup without requesting an automatic
   enableRuntimeFeatures(); mockDownloads(); const vlfs = fakeVlfs();
   const payload = await encodeKirikiriCheckpoint({progressPaths: ["custom/slot.kdt"], entries: [
     {path: "custom/slot.kdt", data: Uint8Array.of(4, 2)},
+    {path: "database/user.sqlite", data: Uint8Array.of(4, 8)},
+    {path: "database/user.sqlite-journal", data: null},
   ]});
   const runtime = await createRuntime(config(), currentWindowHost(payload));
   const mounting = runtime.mount(document.createElement("div")); await loadVlfs(vlfs);
   const module = await loadCore(vlfs, {bookmarkReady: 0, loadReady: 0, restoreState: 1}); await mounting;
   try {
     expect(vlfs.registerOverlayFile).toHaveBeenCalledWith("/custom/slot.kdt", Uint8Array.of(4, 2));
+    expect(vlfs.registerOverlayFile).toHaveBeenCalledWith("/database/user.sqlite", Uint8Array.of(4, 8));
+    expect(vlfs.unlink).toHaveBeenCalledWith("/database/user.sqlite-journal");
     expect(module._krkr2_host_load_bookmark).not.toHaveBeenCalled();
     expect(module._krkr2_host_load_bookmark_is_ready).not.toHaveBeenCalled();
     expect(module._krkr2_host_load_bookmark_state).not.toHaveBeenCalled();

@@ -39,6 +39,12 @@ and D-pad, with D-pad priority per axis.
 | PX68K | 0 / 8 / 9 / 1 | TRIG1/TRIG2 with the core's default VbtnSwap=0 |
 | MKXP XP/VX/VX Ace | A / B / X / Y | Explicit RetroArch bindings: RGSS Confirm / Cancel / Shift / auxiliary X |
 
+MKXP reads the keyboard directly with desktop mkxp-z's RGSS defaults: arrows
+move; Enter, Space and Z confirm (Z is A and C confirms on XP); Escape, X and
+numpad 0 cancel; Left Shift, A, S, D, Q and W are RGSS A/X/Y/Z/L/R. RetroArch's
+player-1 keyboard RetroPad and lightgun binds are cleared so no key also reaches
+the game through a second, conflicting RetroPad mapping. MKXP has no touch layout.
+
 Theodore's Fire is native B=0; native Y=1 moves its virtual keyboard. Space
 is native A=8. PC88 continues to use native Start=3 for Return on the bottom
 button, with native A=8 (X key) on physical Start.

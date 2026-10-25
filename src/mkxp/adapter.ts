@@ -51,6 +51,13 @@ const remoteGamePath = "/retrom-content/game.mkxpz";
 const fetchManifestPath = `${systemRoot}/mkxp-z/fetch.manifest`;
 const fetchBaseDirectory = "/retrom-fetch";
 const pauseToggleHotkey = { code: "F6", keyCode: 117 } as const;
+// RetroArch keeps any key bound to a RetroPad or lightgun input away from the core's
+// keyboard callback (lightgun defaults: Enter=start, RShift=select).
+const keyboardRetroPadUnbound = Object.fromEntries(
+  ["up", "down", "left", "right", "a", "b", "x", "y", "l", "r", "l2", "r2", "l3", "r3", "start", "select",
+    "gun_start", "gun_select"]
+    .map((input) => [`input_player1_${input}`, "nul"]),
+);
 const browserDependencies: MkxpMountDependencies = {
   decodeCheckpoint: decodeMkxpCheckpoint,
   encodeCheckpoint: encodeMkxpCheckpoint,
@@ -194,8 +201,10 @@ async function mountMkxpUnchecked(
       input_save_state: "nul",
       input_load_state: "nul",
       input_pause_toggle: "f6",
-      // RGSS Input::C maps to RetroPad A; make its browser binding explicit.
-      input_player1_a: "x",
+      // The core reads the raw keyboard with mkxp-z's RGSS defaults (Enter/Space/Z
+      // confirm, Escape/X cancel). RetroArch's keyboard-to-RetroPad defaults would
+      // add a second, conflicting mapping (X confirm, Z cancel, Enter Alt).
+      ...keyboardRetroPadUnbound,
       // RGSS C (confirm) / B (cancel) override rwebpad's positional defaults.
       // Gamepad bindings are independent of the keyboard binding above.
       input_player1_a_btn: "0",

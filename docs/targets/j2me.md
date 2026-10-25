@@ -8,8 +8,9 @@ in a new Launch. Other Targets declare their own save semantics in the [support 
 
 The core verifies JAR size and SHA-256, reuses verified bytes from persistent content-addressed storage,
 reports loading progress and applies only explicit device settings. Content names and hashes never select behavior patches. Core failures and game exits enter the
-common Provider lifecycle. The pinned v0.4.0 release includes generic VM initialization and native I/O safepoints,
+common Provider lifecycle. The pinned v0.4.1 release includes generic VM initialization and native I/O safepoints,
 MIDI/tone playback, Display reentry, synchronous RMS delta commits and public startup choices.
+Array allocation failures raise Java OutOfMemoryError; worker diagnostics are queued without blocking the browser thread.
 Native alpha composition and demand-driven presentation remain supported. J2ME uses the `main` branch and immutable semantic version tags.
 
 GAME_SAVE runtimes expose a stable availability `revision` for changed native records and

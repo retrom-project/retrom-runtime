@@ -24,6 +24,22 @@ it.each(["failed to load font (SDLError)", "script failure (RuntimeError)", "mis
   harness.frame.remove();
 });
 
+it("reports a native sandbox abort with its fatal diagnostic", async () => {
+  const harness = createHarness();
+  const mounted = await mountMkxp(mkxpConfig(), harness.target, null, harness.dependencies);
+  const print = harness.prepareOptions!.emscriptenModule.printErr!;
+  const reason = "[mkxp-z @ ../binding-sandbox/wasm-rt.cpp:74] Fatal error: Sandbox trap";
+  print(reason);
+  print(`[libretro ERROR] ${reason}`);
+  print("Aborted()");
+  harness.runtime.observation.failure = -1;
+  let failure: unknown;
+  try {mounted.getCheckpointAvailability();} catch (error) {failure = error;}
+  expect(failure).toMatchObject({code: "RPG_RUNTIME_GAME_FAILED", category: "CORE", diagnostics: [reason]});
+  await mounted.exit();
+  harness.frame.remove();
+});
+
 it("rejects a game exception before its first frame without waiting for a startup timeout", async () => {
   const harness = createHarness();
   harness.runtime.start.mockImplementation(async () => {harness.runtime.observation.failure = -1;});

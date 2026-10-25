@@ -22,7 +22,7 @@ All seven Targets support managed on-demand loading and explicit full preload. T
 
 mkxp builds its path cache from ZIP central-directory metadata. It reads local file headers and content only as those files are opened, so listing a large project does not require fetching blocks throughout the archive. Embedded fonts can be selected by either their FreeType family names or localized SFNT aliases.
 
-A terminating mkxp game exception emits `FATAL_ERROR` with code `RPG_RUNTIME_GAME_FAILED`, including the original exception diagnostic when available. This stops play and checkpoint creation even when the game already presented opening frames.
+A terminating mkxp game exception or a native core abort (sandbox trap or forced assertion) emits `FATAL_ERROR` with code `RPG_RUNTIME_GAME_FAILED`, including the original exception or `Fatal error:` diagnostic when available. This stops play and checkpoint creation even when the game already presented opening frames.
 
 All seven currently declare `INSTANT` checkpoint semantics. EasyRPG uses its engine save bundle, mkxp captures native execution state, and MV/MZ capture through their native bridge. Follow current checkpoint availability and the Target's public format; a bundle backed by native files must still satisfy the declared execution-restoration behavior. In-game save slots are separate from host checkpoint selection.
 

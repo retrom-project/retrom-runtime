@@ -147,7 +147,9 @@ async function mountMkxpUnchecked(
   let gameException: string | null = null;
   const printDiagnostic = (...args: unknown[]) => {
     const message = args.map(String).join(" ");
-    if (gameException === null && /^\[libretro ERROR\] \[mkxp-z exception\] (?!\s*from\b)/u.test(message)) {
+    // Ruby exceptions and native sandbox aborts (traps, forced assertions) both end the game.
+    if (gameException === null && (/^\[libretro ERROR\] \[mkxp-z exception\] (?!\s*from\b)/u.test(message) ||
+      /^(?:\[libretro ERROR\] )?\[mkxp-z @ [^\]]+\] Fatal error: /u.test(message))) {
       gameException = message.slice(-500);
     }
     onDiagnostic({ runtime: "mkxp-z", message });

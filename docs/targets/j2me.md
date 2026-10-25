@@ -8,8 +8,9 @@ in a new Launch. Other Targets declare their own save semantics in the [support 
 
 The core verifies JAR size and SHA-256, reuses verified bytes from persistent content-addressed storage,
 reports loading progress and applies only explicit device settings. Content names and hashes never select behavior patches. Core failures and game exits enter the
-common Provider lifecycle. The pinned v0.3.4 release includes verified RMS persistence, native alpha
-composition and demand-driven presentation. J2ME uses the `main` branch and immutable semantic version tags.
+common Provider lifecycle. The pinned v0.4.0 release includes generic VM initialization and native I/O safepoints,
+MIDI/tone playback, Display reentry, synchronous RMS delta commits and public startup choices.
+Native alpha composition and demand-driven presentation remain supported. J2ME uses the `main` branch and immutable semantic version tags.
 
 GAME_SAVE runtimes expose a stable availability `revision` for changed native records and
 `acknowledgeCheckpoint(checkpoint)` for the exact payload durably stored by the Host. Exporting does not
@@ -60,7 +61,7 @@ uses the shared keyboard/gamepad navigation, and replies with
 of the pending adapter mount. No entry is automatically chosen from a content identity or assumed to be
 first. A selected MIDlet's actual frame and input readiness are required before RUNNING.
 
-The PFB candidate also fixes exact ZIP entry names, event-driven Display transitions, MIDI serialization
+The release also fixes exact ZIP entry names, event-driven Display transitions, MIDI serialization
 and native ToneControl replacement, class-initialization ownership and reentrant method resolution.
 RMS commits changed records synchronously with metadata as their commit point and a recoverable undo
 journal. In-flight transactions cannot be exported. The stable RMS file layout and GAME_SAVE semantics

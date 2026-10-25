@@ -41,6 +41,7 @@ export function installRpgRuntimeNativeBridge(global, inputFilter) {
   let closed = false;
   let pluginFiles = null;
   let inputDiagnostics = null;
+  let restoreViewport = null;
   const editorMapCache = new Map();
 
   function ownKeys(value, expected) {
@@ -917,6 +918,7 @@ export function installRpgRuntimeNativeBridge(global, inputFilter) {
     case "EDITOR_SELF_SWITCH_SET": return {type: "EDITOR_SELF_SWITCH_SET_RESULT", body: await editorSetSelfSwitch(message.body)};
     case "CLEANUP":
       closed = true;
+      if (restoreViewport) restoreViewport();
       if (pluginFiles) pluginFiles.close();
       inputFilter.stop();
       if (inputDiagnostics) inputDiagnostics.stop();
@@ -1002,6 +1004,26 @@ export function installRpgRuntimeNativeBridge(global, inputFilter) {
     });
   }
 
+  function installViewportFit() {
+    const graphics = global.Graphics;
+    if (!graphics || typeof graphics._defaultStretchMode !== "function") return;
+    const defaultStretchMode = graphics._defaultStretchMode;
+    const stretchEnabled = graphics._stretchEnabled;
+    const fitViewport = () => true;
+    // Use the engine's scaling so canvas, video and pointer coordinates stay aligned.
+    graphics._defaultStretchMode = fitViewport;
+    if (graphics._canvas) {
+      graphics._stretchEnabled = true;
+      graphics._updateAllElements();
+    }
+    restoreViewport = function restoreViewportFit() {
+      if (graphics._defaultStretchMode !== fitViewport) return;
+      graphics._defaultStretchMode = defaultStretchMode;
+      graphics._stretchEnabled = stretchEnabled;
+      if (graphics._canvas) graphics._updateAllElements();
+    };
+  }
+
   function installDesktopCompatibility(bootPrototype) {
     const isReady = bootPrototype.isReady;
     if (typeof isReady === "function") bootPrototype.isReady = function runtimeBootReady() {
@@ -1044,6 +1066,7 @@ export function installRpgRuntimeNativeBridge(global, inputFilter) {
   // Install after plugins have wrapped Boot.start, before the game's window.onload runs it.
   global.addEventListener("load", function prepareEngine(event) {
     if (event.target !== global.document) return;
+    installViewportFit();
     const prototype = global.Scene_Boot && global.Scene_Boot.prototype;
     if (!prototype || typeof prototype.start !== "function") return;
     if (global.Utils && global.Utils.RPGMAKER_NAME === "MV") installDesktopCompatibility(prototype);
@@ -1063,7 +1086,10 @@ export function installRpgRuntimeNativeBridge(global, inputFilter) {
       };
     }
   }, true);
-  global.addEventListener("pagehide", () => { closed = true; }, {once: true});
+  global.addEventListener("pagehide", () => {
+    closed = true;
+    if (restoreViewport) restoreViewport();
+  }, {once: true});
 
   global.addEventListener("message", function connect(eventMessage) {
     const message = eventMessage.data;

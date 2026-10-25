@@ -4,14 +4,15 @@ import type {CheckpointAvailability, RuntimeCheckpoint, RuntimeLoadProgress} fro
 import type {MountedRuntimeAdapter, RuntimeProgressReporter, RuntimeExitReporter} from "../internal-adapter.js";
 import type {J2meParameters} from "./parameters.js";
 import {withStartupTask, type StartupTasks, type StartupTask} from "../provider/startup.js";
-import {installJ2meGamepad, type J2meGamepadAction} from "./input.js";
+import {createJ2meInputState, installJ2meGamepad, type J2meInputAction} from "./input.js";
+import {installJ2meTouchControls} from "./touch-controls.js";
 
 type J2meRuntime = Omit<MountedRuntimeAdapter, "setVolume"> & {
   mount(target: HTMLElement): Promise<void>;
   setVolume(value: number): void;
   getState(): string;
   respondToStartupInteraction?(id: string, choiceId: string): void;
-  setInput(action: J2meGamepadAction, pressed: boolean): void;
+  setInput(action: J2meInputAction, pressed: boolean): void;
   subscribe(listener: (event: CoreEvent) => void): () => void;
 };
 type CoreEvent = RuntimeLoadProgress & {type: string; code?: string; reason?: string; interaction?: RuntimeStartupInteractionV1 | null};
@@ -46,18 +47,21 @@ export async function mountJ2me(
   const module = await withStartupTask(startup, "CORE_ASSETS", () => loadModule(new URL("j2me-runtime.js", runtimeBaseUrl).href));
   if (!validModule(module)) {throw new Error("J2ME_CORE_ABI_MISMATCH");}
   signal?.throwIfAborted();
-  const runtime = module.createRuntime({
-    sessionId: config.sessionId,
-    contentDigest: config.contentDigest,
-    source: {kind: "J2ME_JAR_V1", name: "game.jar", url: new URL(config.jarUrl, window.location.href).href,
-      sizeBytes: config.jarSizeBytes, sha256: config.contentDigest},
-    adapter: {adapterKind: "J2ME_MINIJVM_WEB", adapterId: "j2me-minijvm-web",
-      runtimeBaseUrl, storage: "HOST",
-      ...(module.runtimeAdapter.automaticViewport ? {} : {viewport: {width: 240, height: 320}})},
-  }, {frameWindow, restorePayload, signal});
+  const runtime = module.createRuntime(coreConfiguration(config, runtimeBaseUrl, module.runtimeAdapter.automaticViewport),
+    {frameWindow, restorePayload, signal});
   let exited = false;
   let exitReported = false;
   let input: ReturnType<typeof installJ2meGamepad> | undefined;
+  let touch: ReturnType<typeof installJ2meTouchControls> = null;
+  let inputSuspended = true, suppressed = false;
+  const inputState = createJ2meInputState((action, pressed) => {
+    if (runtime.getState() === "RUNNING") {runtime.setInput(action, pressed);}
+  });
+  const syncInput = () => {
+    const enabled = !inputSuspended && !suppressed && !exited && !exitReported && runtime.getState() === "RUNNING";
+    touch?.setEnabled(enabled);
+    if (enabled) {input?.resume();} else {input?.pause();}
+  };
   const progressTasks = new Map<string, StartupTask>();
   const unsubscribe = runtime.subscribe((event) => {
     if (exited) {return;}
@@ -82,33 +86,39 @@ export async function mountJ2me(
         }).catch(error => {if (!exited && !signal?.aborted && error?.name !== "AbortError") {reportFailure(error);}});
       }
     }
-    if (event.type === "FATAL_ERROR") {reportFailure(new RuntimeFailureError(event.code ?? "J2ME_RUNTIME_FAILED", "CORE", event.reason ? [event.reason] : []));}
-    if (event.type === "EXIT_REQUESTED" && !exitReported) {exitReported = true; reportExitRequested();}
+    if (event.type === "STATE_CHANGED") {syncInput();}
+    if (event.type === "FATAL_ERROR") {
+      inputSuspended = true; syncInput();
+      reportFailure(new RuntimeFailureError(event.code ?? "J2ME_RUNTIME_FAILED", "CORE", event.reason ? [event.reason] : []));
+    }
+    if (event.type === "EXIT_REQUESTED" && !exitReported) {exitReported = true; syncInput(); reportExitRequested();}
   });
   const exit = async () => {
     if (exited) {return;}
     exited = true;
     unsubscribe();
-    try {input?.dispose();} finally {await runtime.exit();}
+    try {touch?.dispose(); input?.dispose();} finally {await runtime.exit();}
   };
   registerStartupSession?.({exit});
   try {
     if (typeof runtime.acknowledgeCheckpoint !== "function" || typeof runtime.setInput !== "function" ||
       typeof runtime.getState !== "function") {throw new Error("J2ME_CORE_ABI_MISMATCH");}
-    input = installJ2meGamepad(frameWindow, (action, pressed) => {
-      if (runtime.getState() === "RUNNING") {runtime.setInput(action, pressed);}
-    }, () => !exited && !exitReported && runtime.getState() === "RUNNING");
-    await runtime.mount(target);
-    input.resume();
+    input = installJ2meGamepad(frameWindow, (action, pressed) => inputState.set("gamepad", action, pressed),
+      () => !exited && !exitReported && runtime.getState() === "RUNNING");
+    touch = installJ2meTouchControls(target, frameWindow, inputState.replace, () => runtime.getCanvas()?.focus({preventScroll: true}));
+    await runtime.mount(touch?.target ?? target);
+    inputSuspended = false; syncInput();
     for (const task of progressTasks.values()) {task.complete();}
   } catch (error) {for (const task of progressTasks.values()) {task.fail();} await exit(); throw error;}
   return {
+    canvasLayout: "CORE",
     acknowledgeCheckpoint: (checkpoint) => {
       if (!runtime.acknowledgeCheckpoint) {throw new Error("J2ME_CORE_ABI_MISMATCH");}
       return runtime.acknowledgeCheckpoint(checkpoint);
     },
     checkpoint: async (): Promise<RuntimeCheckpoint> => {
-      input?.pause();
+      const suspended = inputSuspended;
+      inputSuspended = true; syncInput();
       try {
         const result = await runtime.checkpoint();
         if (result.format !== format || !result.bytes?.byteLength || result.bytes.byteLength > maximum) {
@@ -116,7 +126,7 @@ export async function mountJ2me(
         }
         return {format, bytes: Uint8Array.from(result.bytes)};
       } finally {
-        if (!exited && runtime.getState() === "RUNNING") {input?.resume();}
+        inputSuspended = suspended; syncInput();
       }
     },
     exit,
@@ -124,10 +134,22 @@ export async function mountJ2me(
     getCheckpointAvailability: (): CheckpointAvailability => exited || exitReported
       ? {available: false, blocker: "NOT_READY"} : runtime.getCheckpointAvailability(),
     getFrameCount: () => runtime.getFrameCount(),
-    pause: async () => {input?.pause(); await runtime.pause();},
-    resume: async () => {await runtime.resume(); input?.resume();},
+    pause: async () => {inputSuspended = true; syncInput(); await runtime.pause();},
+    resume: async () => {await runtime.resume(); inputSuspended = false; syncInput();},
+    setInputFilter: async (policy) => {suppressed = policy?.suppressInput === true; syncInput();},
     screenshot: () => runtime.screenshot(),
     setVolume: (value) => runtime.setVolume(value),
+  };
+}
+
+function coreConfiguration(config: J2meParameters, runtimeBaseUrl: string, automaticViewport = false) {
+  return {
+    sessionId: config.sessionId,
+    contentDigest: config.contentDigest,
+    source: {kind: "J2ME_JAR_V1", name: "game.jar", url: new URL(config.jarUrl, window.location.href).href,
+      sizeBytes: config.jarSizeBytes, sha256: config.contentDigest},
+    adapter: {adapterKind: "J2ME_MINIJVM_WEB", adapterId: "j2me-minijvm-web",
+      runtimeBaseUrl, storage: "HOST", ...(automaticViewport ? {} : {viewport: {width: 240, height: 320}})},
   };
 }
 

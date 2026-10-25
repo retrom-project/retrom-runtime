@@ -21,6 +21,16 @@ RMS content comparison, stable-write detection and restore baselines. INSTANT ta
 
 ## Controls
 
+On devices with a coarse pointer, the Provider adds touch controls around the game: a circular joystick
+on the left, and a phone keypad on the right. Its first row is left soft key / Fire (confirm) / right soft key;
+the remaining four rows are 1–9, star, 0 and hash. Fire and digit 5 are independent actions.
+The joystick has a central dead zone and supports diagonals. Releasing or cancelling its pointer recenters it.
+Independent pointers may hold the joystick and keypad together. Touch and gamepad sources share action
+ownership so one source cannot release another source's held key. Pause, checkpoint export, input suppression,
+focus loss, page hiding and exit release touches; resuming does not replay cleared pointers.
+The game retains its responsive aspect ratio with controls outside its display. A narrow portrait host places
+the controls below the game; the host remains responsible for its own orientation policy.
+
 J2ME standard gamepads use the following phone actions. The Provider owns gamepad polling in the game frame and preserves the Host's input filter; the core owns physical keyboard input.
 
 | Standard control | Phone action |

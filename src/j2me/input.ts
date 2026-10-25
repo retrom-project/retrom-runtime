@@ -3,6 +3,31 @@ const buttons = [
   "SOFT_RIGHT", "SOFT_LEFT", "STAR", "POUND", "UP", "DOWN", "LEFT", "RIGHT",
 ] as const;
 export type J2meGamepadAction = typeof buttons[number];
+export type J2meInputAction = J2meGamepadAction | "DIGIT_2" | "DIGIT_4" | "DIGIT_5" | "DIGIT_6" | "DIGIT_8";
+
+/** Each source owns its held actions; releasing one source preserves the others. */
+export function createJ2meInputState(send: (action: J2meInputAction, pressed: boolean) => void) {
+  const sources = new Map<string, Set<J2meInputAction>>();
+  const held = new Set<J2meInputAction>();
+  const update = () => {
+    const desired = new Set([...sources.values()].flatMap(actions => [...actions]));
+    for (const action of held) {if (!desired.has(action)) {held.delete(action); send(action, false);}}
+    for (const action of desired) {if (!held.has(action)) {held.add(action); send(action, true);}}
+  };
+  return {
+    replace(source: string, actions: Iterable<J2meInputAction>) {
+      const next = new Set(actions);
+      if (next.size) {sources.set(source, next);} else {sources.delete(source);}
+      update();
+    },
+    set(source: string, action: J2meInputAction, pressed: boolean) {
+      const next = sources.get(source) ?? new Set<J2meInputAction>();
+      if (pressed) {next.add(action);} else {next.delete(action);}
+      if (next.size) {sources.set(source, next);} else {sources.delete(source);}
+      update();
+    },
+  };
+}
 
 function actions(pad: Gamepad | undefined): Set<J2meGamepadAction> {
   const desired = new Set<J2meGamepadAction>();

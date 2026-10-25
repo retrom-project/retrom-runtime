@@ -134,7 +134,7 @@ class RetromRuntimePlayer implements PlayerRuntimeV1 {
 
   private async applyMountedInputPolicy(adapter: MountedRuntimeAdapter, frameMode: string) {
     adapter.gamepadCursor?.setInputPolicy(this.inputPolicy);
-    if (frameMode === "ISOLATED_ORIGIN_RESOURCE" && this.inputPolicy !== null) {
+    if ((frameMode === "ISOLATED_ORIGIN_RESOURCE" || adapter.setInputFilter) && this.inputPolicy !== null) {
       if (!adapter.setInputFilter) {throw contractError();}
       await adapter.setInputFilter(this.inputPolicy);
       this.assertActive();
@@ -303,12 +303,12 @@ class RetromRuntimePlayer implements PlayerRuntimeV1 {
     this.hostShortcuts.setSuppressed(policy?.suppressInput === true);
     this.inputPolicy = policy ? {...policy} : null;
     this.adapter?.gamepadCursor?.setInputPolicy(policy);
+    if (this.adapter?.setInputFilter) {
+      await this.adapter.setInputFilter(this.inputPolicy);
+      this.assertActive();
+    }
     if (this.envelope.runtime.capabilities.frameMode === "ISOLATED_ORIGIN_RESOURCE") {
-      if (this.adapter) {
-        if (!this.adapter.setInputFilter) {throw contractError();}
-        await this.adapter.setInputFilter(this.inputPolicy);
-        this.assertActive();
-      }
+      if (this.adapter && !this.adapter.setInputFilter) {throw contractError();}
       return;
     }
     if (this.inputFilter) {this.inputFilter.setPolicy(policy);}

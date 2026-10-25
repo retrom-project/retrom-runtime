@@ -250,4 +250,21 @@ describe("retrom-runtime Provider Module V1", () => {
     expect(accessed).not.toHaveBeenCalled();
     await player.exit();
   });
+
+  it("delivers input suppression to optional same-origin controls before and after mounting", async () => {
+    const frame = document.createElement("iframe"); document.body.append(frame);
+    Object.defineProperty(frame.contentWindow!.navigator, "getGamepads", {configurable: true, value: () => []});
+    const setInputFilter = vi.fn(async () => {});
+    const adapter = Object.assign(adapterFixture({getCanvas: () => null}), {setInputFilter});
+    vi.mocked(mountTargetAdapter).mockResolvedValue(adapter);
+    const host = hostFixture({mountFrame: async () => ({contentWindow: frame.contentWindow!, element: frame, origin: location.origin})});
+    const player = createRetromRuntimePlayer(wasmEnvelope(), host, {});
+    const policy = {activeGamepadIndex: null, suppressInput: true};
+    await player.setInputFilter(policy);
+    await player.mount(document.createElement("div"));
+    expect(setInputFilter).toHaveBeenCalledWith(policy);
+    await player.setInputFilter(null);
+    expect(setInputFilter.mock.calls).toEqual([[policy], [null]]);
+    await player.exit();
+  });
 });

@@ -132,13 +132,61 @@ Prefetch reuses prepare, WindowLoader, missing ranges, normal LRU insertion and 
 
 Eager consumers explicitly select BYTES, BLOB or a streaming sink with an upper bound. Adapters announce the known game and runtime-asset totals before preparation starts and forward the materializer’s verified ready-byte progress; they must not wait until all downloads resolve to report their first progress. Concurrent assets in one phase retain their individual ready counts and sum against the fixed phase total. First acquisition completes only after content validation and backing commit, including memory fallback. Reuse of a COMPLETE generation copies the required bytes and delivers its original receipt without computing another block or full-file digest. Client-side changes after successful publication are outside the content consistency check. Receipt identity, byte bounds, missing files and storage errors still follow normal delivery handling. If cache delivery fails and replacement bytes are downloaded, the replacement undergoes first-acquisition validation. Full-body responses have an idle deadline, not a whole-file five-second deadline. Recovery can reuse verified blocks; only WHOLE_ALLOWED sources may restart as a whole GET. A sink restart aborts the old sink, creates a new sink and resets progress with an incremented attempt.
 
-`retrom-content-io-v1` is a new persistent namespace; old private caches are not treated as verified entries. Backends are OPFS, then Cache Storage blocks, then memory/network. Optional cache failures must not prevent reading. A fresh Session discovers committed alternate generations as read-only sources, including blocks stored after an earlier Session fell back from OPFS to Cache Storage. Reads validate their receipts, and only unfinished generations validate local content before demand-driven reuse; fallback never changes another Session’s shared current generation. Network and LRU identity retain the Session object generation; an optional physical cache generation change cannot revoke concurrent reads. New physical generations persist an existing ETag pin before accepting blocks. Objects first encountered after fallback still receive an object record so their generations remain discoverable. Automatic GC removes only quarantined objects; complete content and valid partial blocks are retained regardless of age or an application byte budget. Browser quota exhaustion or explicit site-data removal remain storage availability boundaries, rather than triggers for silently evicting another game. IndexedDB metadata, receipts, per-generation leases and Web Locks protect publication and garbage collection. OPFS-backed Blob/File results hold a separate lease until their explicit release, independent of Reader close.
+`retrom-content-io-v1` is a new persistent namespace; old private caches are not treated as verified entries. Backends are OPFS, then Cache Storage blocks, then memory/network. Optional cache failures must not prevent reading. A fresh Session discovers committed alternate generations as read-only sources, including blocks stored after an earlier Session fell back from OPFS to Cache Storage. Reads validate their receipts, and only unfinished generations validate local content before demand-driven reuse; fallback never changes another Session’s shared current generation. Network and LRU identity retain the Session object generation; an optional physical cache generation change cannot revoke concurrent reads. New physical generations persist an existing ETag pin before accepting blocks. Objects first encountered after fallback still receive an object record so their generations remain discoverable. Routine GC removes only quarantined objects; complete content and valid partial blocks survive age and an application byte budget. Explicit storage-pressure recovery can reclaim idle raw content as described below. IndexedDB metadata, receipts, object-wide use leases and Web Locks protect publication and garbage collection. OPFS-backed Blob/File results hold a separate lease until their explicit release, independent of Reader close.
 
 Workspace consumers require OPFS and publish immutable generations only after validation. With Web Locks, a bounded current-generation pointer is published under a short exclusive lock after all files and the completion receipt commit; downloads hold no publication lock. Reuse acquires the generation use lease before reading its completion marker and checking file availability and size. Completed workspace files are not hashed again. Without Web Locks, each preparation uses a unique generation and neither reads nor writes the shared pointer. Completed generations are retained even if the initiating instance is cancelled immediately after publication. Native writes use a Session overlay. Completed workspace generations are not automatically collected in v1; raw cache blocks and workspace copies can both occupy storage. Ordinary raw-block GC does not remove a leased generation.
 
 Required full-preload preparation and active materialization jobs give each persistent-cache operation up to five seconds, including backend selection, completion verification and Blob file-reference delivery. A staged write includes hashing, locks, file I/O and metadata transactions; a healthy IndexedDB transaction lasting several hundred milliseconds must not fail the required download or cause a completed Blob to be copied and downloaded again under the optional-cache deadline. The materialization budget is held until preparation settles, including cancellation, and is then released. Cancellation remains immediate and an unresponsive backend still has a bounded deadline. Ordinary demand caching outside preparation retains its 500 ms fallback deadline and its original buffer credits.
 
 Completed OPFS Blob delivery acquires a separate file lease and checks the immutable generation receipt and exact file size, then returns the File directly. It does not read all cached blocks into temporary buffers before handing over the same disk file. Missing files, size changes and unavailable file access retain the existing verified-byte recovery path; cancellation releases the acquired lease. BYTES and streaming-sink consumers keep their byte-copy behavior.
+
+### Storage-pressure recovery
+
+`ProviderModuleV1.reclaimContentCache({targetBytes, signal?})` is independent of a
+mounted runtime and can be used after its final checkpoint. It opens only existing
+`retrom-content-io-v1` metadata, OPFS and Cache Storage in the current origin, without
+write probes or schema creation. No caller-selected namespace or directory enters
+this API. It never visits savedata, draft databases, PWA caches, native temporary
+files or published workspace generations. If metadata discovery or Web Locks is
+unavailable it returns zero; an absent backend prevents collecting any object with
+generations in that backend. Other opening or deletion errors retain their cause.
+
+Recovery considers at most the oldest 512 object records, deletes at most 64 whole
+objects, and reads at most 129 generation/job records per candidate. It skips
+objects with more than 128 generations or jobs, active jobs, changed revision,
+current generation or access time, and any shared use lease. Each removal holds an
+exclusive nonwaiting object use lock followed by the exclusive data lock; active
+Readers, PRELOAD and leased Blob/File results therefore remain protected. The use
+request checks cancellation on grant; [Web Locks prohibits combining
+`ifAvailable` with `signal`](https://www.w3.org/TR/web-locks/#api-lock-manager-request).
+
+Before physical deletion, every COMPLETE generation must successfully become
+PARTIAL with its completion assurance and local digest cleared. If any invalidation
+fails, no physical deletion begins. Existing PARTIAL generations need no such
+write. The complete object's backend data is then removed, and metadata is deleted
+last using object-scoped indexes/key ranges. A partial deletion failure propagates;
+remaining metadata cannot falsely claim completion. Future unfinished reads retain
+their ordinary block hashing, missing-block and network validation.
+
+`targetBytes` is a positive safe-integer goal, not a hard deletion limit: one whole
+object, including its retired generations, may exceed it. `reclaimedBytes` counts
+receipted logical bytes, not browser-reported disk usage or guaranteed available
+space. Recovery never relies on `navigator.storage.estimate()` to decide whether a
+save can fit; [storage usage and quota are implementation-defined estimates](https://storage.spec.whatwg.org/#usage-and-quota).
+The Host must observe the actual storage transaction result and retain its original
+failure if recovery or its bounded retry fails.
+
+The five-second admission deadline stops further work; it is not a hard completion
+deadline. Cancellation awaits pending native opens, deletions and metadata
+transactions; a blocked metadata open rejects and closes any subsequently granted
+handle. Cancellation after physical deletion starts completes that whole object
+under both locks before rejecting. There is no detached deletion after the API returns.
+Cache Storage exposes all keys in its namespace as one array; recovery enumerates
+it once per removed object and deletes only that object's recorded generation
+prefixes. Thus candidate/object counts are bounded, but the native key-list size,
+physical bytes and completion time are not hard bounded. Full quota can also
+prevent COMPLETE-to-PARTIAL metadata invalidation; recovery then stops without
+deleting data and cannot guarantee space for a save.
 
 ## Consumer boundaries
 

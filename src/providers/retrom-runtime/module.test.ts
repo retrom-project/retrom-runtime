@@ -73,7 +73,7 @@ describe("retrom-runtime Provider Module V1", () => {
   });
 
   it("exports only the current provider entry and exact identity", async () => {
-    expect(Object.keys(provider).sort()).toEqual(["createRuntime", "providerApiVersion", "providerId", "providerVersion"]);
+    expect(Object.keys(provider).sort()).toEqual(["createRuntime", "providerApiVersion", "providerId", "providerVersion", "reclaimContentCache"]);
     expect(provider).toMatchObject({providerApiVersion: 1, providerId: "retrom-runtime", providerVersion: "0.0.0-dev"});
     expect((await provider.createRuntime(wasmEnvelope(), hostFixture())).getState()).toBe("CREATED");
     await expect(provider.createRuntime({...wasmEnvelope(), providerId: "leaked"}, hostFixture()))

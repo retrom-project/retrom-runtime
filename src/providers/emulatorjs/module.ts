@@ -6,6 +6,7 @@ import {
 } from "../../provider/module-api.js";
 import {emulatorJsProviderDefinition} from "./catalog.js";
 import {createEmulatorJsPlayer} from "./provider-runtime.js";
+export {reclaimContentCache} from "../../content-io/store/reclaim.js";
 
 declare const __RETROM_PROVIDER_ASSET_INDEX__: AssetIndexV1;
 

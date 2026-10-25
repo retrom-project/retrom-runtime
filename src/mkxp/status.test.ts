@@ -5,11 +5,12 @@ afterEach(() => {vi.useRealTimers();});
 
 function coreStatus() {
   vi.useFakeTimers();
-  const value = {frames: 0, restore: 0, acceptsRequest: 1};
+  const value = {frames: 0, restore: 0, failure: 0, acceptsRequest: 1};
   const requests: number[] = [];
   const status = mkxpStatus({
     _runtime_get_frame_count: () => value.frames,
     _runtime_get_state_result: () => value.restore,
+    _runtime_get_game_result: () => value.failure,
     _runtime_request_state: (operation: number) => {
       requests.push(operation);
       return value.acceptsRequest;
@@ -113,5 +114,17 @@ describe("mkxp threaded-core status", () => {
     expect(() => status.frames()).toThrow("RPG_RUNTIME_STATE_UNAVAILABLE");
     value.restore = 2;
     expect(() => status.stateResult()).toThrow("RPG_RUNTIME_STATE_UNAVAILABLE");
+  });
+
+  it("fails a terminated game even when opening frames and an old save receipt exist", () => {
+    const {value, status} = coreStatus();
+    value.frames = 100;
+    value.restore = 1;
+    value.failure = -1;
+    expect(() => status.frames()).toThrow("RPG_RUNTIME_GAME_FAILED");
+    expect(() => status.requestSave()).toThrow("RPG_RUNTIME_GAME_FAILED");
+    expect(() => status.stateResult()).toThrow("RPG_RUNTIME_GAME_FAILED");
+    value.failure = 2;
+    expect(() => status.assertHealthy()).toThrow("RPG_RUNTIME_STATE_UNAVAILABLE");
   });
 });

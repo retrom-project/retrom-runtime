@@ -1,33 +1,45 @@
 type NativeStatus = {
   _runtime_get_frame_count(): number;
   _runtime_get_state_result(): number;
+  _runtime_get_game_result(): number;
   _runtime_request_state(operation: number): number;
   _runtime_request_exit(): void;
 };
 
-export function mkxpStatus(value: unknown) {
+export function mkxpStatus(value: unknown, gameFailure: () => Error = () => new Error("RPG_RUNTIME_GAME_FAILED")) {
   if (!value || typeof value !== "object" ||
     !("_runtime_get_frame_count" in value) || typeof value._runtime_get_frame_count !== "function" ||
     !("_runtime_get_state_result" in value) || typeof value._runtime_get_state_result !== "function" ||
+    !("_runtime_get_game_result" in value) || typeof value._runtime_get_game_result !== "function" ||
     !("_runtime_request_state" in value) || typeof value._runtime_request_state !== "function" ||
     !("_runtime_request_exit" in value) || typeof value._runtime_request_exit !== "function") {
     throw new Error("RPG_RUNTIME_ARTIFACT_INVALID");
   }
   const module = value as NativeStatus;
+  const assertHealthy = () => {
+    const result = module._runtime_get_game_result();
+    if (result === -1) {throw gameFailure();}
+    if (result !== 0) {throw new Error("RPG_RUNTIME_STATE_UNAVAILABLE");}
+  };
   return {
+    assertHealthy,
     requestSave: () => {
+      assertHealthy();
       if (module._runtime_request_state(1) !== 1) {throw new Error("RPG_CHECKPOINT_CREATE_FAILED");}
     },
     requestRestore: () => {
+      assertHealthy();
       if (module._runtime_request_state(2) !== 1) {throw new Error("RPG_CHECKPOINT_RESTORE_FAILED");}
     },
     requestExit: () => {module._runtime_request_exit();},
     frames: () => {
+      assertHealthy();
       const frames = module._runtime_get_frame_count();
       if (!Number.isSafeInteger(frames) || frames < 0) {throw new Error("RPG_RUNTIME_STATE_UNAVAILABLE");}
       return frames;
     },
     stateResult: () => {
+      assertHealthy();
       const result = module._runtime_get_state_result();
       if (result !== -1 && result !== 0 && result !== 1) {throw new Error("RPG_RUNTIME_STATE_UNAVAILABLE");}
       return result;

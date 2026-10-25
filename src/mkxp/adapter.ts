@@ -1,6 +1,7 @@
 import type {AdapterContentOptions} from "../provider/content-inputs.js";
 import {MkxpContent, fetchVerified} from "./content.js";
 import {ContentIOError} from "../content-io/errors.js";
+import {RuntimeFailureError} from "../provider/failure.js";
 import { Nostalgist } from "nostalgist";
 import type { MountedRuntimeAdapter, RuntimeExitReporter, RuntimeProgressReporter } from "../internal-adapter.js";
 import {type MkxpStatus, mkxpStatus, waitForMkxpExit, waitForMkxpFrame, waitForMkxpRestore, waitForMkxpSave} from "./status.js";
@@ -143,8 +144,13 @@ async function mountMkxpUnchecked(
   reportProgress({ phase: "RUNTIME_ASSET", loadedBytes: runtimeAssetBytes, totalBytes: runtimeAssetBytes });
   const remoteContent = remoteContentManifest(config, bridge);
   reportProgress({ phase: "PROJECT_INDEX", loadedBytes: 0, totalBytes: remoteContent.manifest.byteLength });
+  let gameException: string | null = null;
   const printDiagnostic = (...args: unknown[]) => {
-    onDiagnostic({ runtime: "mkxp-z", message: args.map(String).join(" ") });
+    const message = args.map(String).join(" ");
+    if (gameException === null && /^\[libretro ERROR\] \[mkxp-z exception\] (?!\s*from\b)/u.test(message)) {
+      gameException = message.slice(-500);
+    }
+    onDiagnostic({ runtime: "mkxp-z", message });
   };
   let hostCleanup = false;
   let started = false;
@@ -229,7 +235,8 @@ async function mountMkxpUnchecked(
   });
   const fileSystem = nostalgist.getEmscriptenFS() as MkxpFileSystem;
   try {
-    status = mkxpStatus(nostalgist.getEmscriptenModule());
+    status = mkxpStatus(nostalgist.getEmscriptenModule(),
+      () => new RuntimeFailureError("RPG_RUNTIME_GAME_FAILED", "CORE", gameException === null ? [] : [gameException]));
     installRuntimeFiles(fileSystem, remoteContent.manifest);
     if (restorePayload) {
       const rawState = await dependencies.decodeCheckpoint(restorePayload, config.stateBufferBytes);
@@ -274,7 +281,7 @@ async function mountMkxpUnchecked(
       target.replaceChildren();
     },
     getCanvas: () => canvas,
-    getCheckpointAvailability: () => ({ available: true, blocker: null }),
+    getCheckpointAvailability: () => {status.assertHealthy(); return { available: true, blocker: null };},
     getFrameCount: () => status.frames(),
     pause: async () => {await pressPrivateHotkey(canvas, pauseToggleHotkey);},
     resume: async () => {await pressPrivateHotkey(canvas, pauseToggleHotkey);},

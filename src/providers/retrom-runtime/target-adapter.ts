@@ -37,6 +37,8 @@ import * as parameters from "./target-parameters.js";
 import type {ContentSessionClient} from "../../content-io/client.js";
 export type TargetMountContext = {
   startup?: import("../../provider/startup.js").StartupTasks;
+  registerStartupSession?: (session: Pick<MountedRuntimeAdapter, "exit">) => void;
+  requestStartupInteraction?: (interaction: import("../../provider/module-api.js").RuntimeStartupInteractionV1) => Promise<string>;
   contentSession?: ContentSessionClient | null;
   signal?: AbortSignal;
   reportFailure?: (error: Error) => void;
@@ -98,7 +100,7 @@ function mountAdapter(envelope: LaunchEnvelopeV1, target: HTMLElement, input: Ta
       context.signal, reportFailure);
   case "J2ME_MINIJVM_WEB":
     return mountJ2me(parameters.j2me(envelope), target, frameWindow, restorePayload, reportProgress,
-      reportExitRequested, reportFailure, context.signal, undefined, input.startup);
+      reportExitRequested, reportFailure, context.signal, undefined, input.startup, input.requestStartupInteraction, input.registerStartupSession);
   case "SCUMMVM_WEB":
     return mountScummvm(parameters.scummvm(envelope), target, frameWindow, restorePayload, reportProgress,
       reportExitRequested, reportFailure, context.signal, undefined, contentOptions(context));

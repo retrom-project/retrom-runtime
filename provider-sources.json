@@ -2199,17 +2199,17 @@
           "filename": "index.js",
           "output": "runtime/kirikiri/index.js",
           "maxSizeBytes": 1048576,
-          "sizeBytes": 348537,
-          "sha256": "98333d0b1e92f2839e6a84382dad3840dbd75905b5195e146b5aac8a7af4de41",
-          "url": "https://github.com/retrom-project/kirikiroid2-web/releases/download/retrom-core-g13dda190f837-r6/index.js"
+          "sizeBytes": 348538,
+          "sha256": "e837d055630ca3d0ef9b7d1d39071cf993ab61a276e6a77536bed8ef883a100c",
+          "url": "https://github.com/retrom-project/kirikiroid2-web/releases/download/retrom-core-g13dda190f837-r7/index.js"
         },
         {
           "filename": "index.wasm",
           "output": "runtime/kirikiri/index.wasm",
           "maxSizeBytes": 67108864,
-          "sizeBytes": 23754707,
-          "sha256": "d3f72b410106e100e261bb907aef02868132648ada58c3b907798d4717a8df83",
-          "url": "https://github.com/retrom-project/kirikiroid2-web/releases/download/retrom-core-g13dda190f837-r6/index.wasm"
+          "sizeBytes": 23757597,
+          "sha256": "56105ec06bbb138cd2c581a6700ec864685527a640945c6c79665ba95b15ca02",
+          "url": "https://github.com/retrom-project/kirikiroid2-web/releases/download/retrom-core-g13dda190f837-r7/index.wasm"
         },
         {
           "filename": "vlfs.js",
@@ -2217,15 +2217,15 @@
           "maxSizeBytes": 262144,
           "sizeBytes": 51022,
           "sha256": "889b6ceaeb43828e7ce3f0318b8e5b6160c27a2a1b2c8293de85842a6b2fa682",
-          "url": "https://github.com/retrom-project/kirikiroid2-web/releases/download/retrom-core-g13dda190f837-r6/vlfs.js"
+          "url": "https://github.com/retrom-project/kirikiroid2-web/releases/download/retrom-core-g13dda190f837-r7/vlfs.js"
         },
         {
           "filename": "assets.zip",
           "output": "runtime/kirikiri/assets.zip",
           "maxSizeBytes": 16777216,
-          "sizeBytes": 7853397,
-          "sha256": "04ae4dd48b9601a487d6d1a45d420010fd8678525c2c99ee3000ff33fc4c8f36",
-          "url": "https://github.com/retrom-project/kirikiroid2-web/releases/download/retrom-core-g13dda190f837-r6/assets.zip"
+          "sizeBytes": 16189290,
+          "sha256": "c0e2ff6fa58adfb492e15d6f3e472f4f3eb273621f8088775875dc2e9485e082",
+          "url": "https://github.com/retrom-project/kirikiroid2-web/releases/download/retrom-core-g13dda190f837-r7/assets.zip"
         },
         {
           "filename": "LICENSE",
@@ -2233,12 +2233,12 @@
           "maxSizeBytes": 65536,
           "sizeBytes": 43292,
           "sha256": "31887f008d3666961adb51572add59709c12eb56d39066fed62b5267d380042d",
-          "url": "https://github.com/retrom-project/kirikiroid2-web/releases/download/retrom-core-g13dda190f837-r6/LICENSE"
+          "url": "https://github.com/retrom-project/kirikiroid2-web/releases/download/retrom-core-g13dda190f837-r7/LICENSE"
         }
       ],
-      "tag": "retrom-core-g13dda190f837-r6",
-      "commit": "264019d7945dfa7f9aff6ba04de098c00d6ddd30",
-      "metadataUrl": "https://github.com/retrom-project/kirikiroid2-web/releases/download/retrom-core-g13dda190f837-r6/rpg-runtime-release.json"
+      "tag": "retrom-core-g13dda190f837-r7",
+      "commit": "4be3180088ec88f94afef379a139de9dacef8603",
+      "metadataUrl": "https://github.com/retrom-project/kirikiroid2-web/releases/download/retrom-core-g13dda190f837-r7/rpg-runtime-release.json"
     },
     {
       "id": "jsbeeb",

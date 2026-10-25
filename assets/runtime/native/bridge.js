@@ -389,7 +389,7 @@
       ["luk", "\u5E78\u8FD0"]
     ]);
     inputFilter.onHostShortcut((shortcut) => event("HOST_SHORTCUT", { shortcut }));
-    let encoder2 = new TextEncoder(), decoder2 = new TextDecoder("utf-8", { fatal: !0 }), launchId = null, nonce = null, parentOrigin = null, port = null, profile = null, lastRequestId = 0, requestPending = !1, frameCount = 0, engineReadySent = !1, sceneManagerHooked = !1, exitRequested = !1, bootCompleted = !1, titleStarted = !1, closed = !1, pluginFiles = null, inputDiagnostics = null, editorMapCache = /* @__PURE__ */ new Map();
+    let encoder2 = new TextEncoder(), decoder2 = new TextDecoder("utf-8", { fatal: !0 }), launchId = null, nonce = null, parentOrigin = null, port = null, profile = null, lastRequestId = 0, requestPending = !1, frameCount = 0, engineReadySent = !1, sceneManagerHooked = !1, exitRequested = !1, bootCompleted = !1, titleStarted = !1, closed = !1, pluginFiles = null, inputDiagnostics = null, restoreViewport = null, editorMapCache = /* @__PURE__ */ new Map();
     function ownKeys(value, expected) {
       if (!value || typeof value != "object" || Array.isArray(value)) return !1;
       let keys = Object.keys(value).sort();
@@ -1095,7 +1095,7 @@
         case "EDITOR_SELF_SWITCH_SET":
           return { type: "EDITOR_SELF_SWITCH_SET_RESULT", body: await editorSetSelfSwitch(message.body) };
         case "CLEANUP":
-          return closed = !0, pluginFiles && pluginFiles.close(), inputFilter.stop(), inputDiagnostics && inputDiagnostics.stop(), inputDiagnostics = null, { type: "CLEANUP_RESULT", body: {} };
+          return closed = !0, restoreViewport && restoreViewport(), pluginFiles && pluginFiles.close(), inputFilter.stop(), inputDiagnostics && inputDiagnostics.stop(), inputDiagnostics = null, { type: "CLEANUP_RESULT", body: {} };
         default:
           throw new Error("RPG_NATIVE_MESSAGE_INVALID");
       }
@@ -1146,6 +1146,14 @@
         }
       });
     }
+    function installViewportFit() {
+      let graphics = global.Graphics;
+      if (!graphics || typeof graphics._defaultStretchMode != "function") return;
+      let defaultStretchMode = graphics._defaultStretchMode, stretchEnabled = graphics._stretchEnabled, fitViewport = () => !0;
+      graphics._defaultStretchMode = fitViewport, graphics._canvas && (graphics._stretchEnabled = !0, graphics._updateAllElements()), restoreViewport = function() {
+        graphics._defaultStretchMode === fitViewport && (graphics._defaultStretchMode = defaultStretchMode, graphics._stretchEnabled = stretchEnabled, graphics._canvas && graphics._updateAllElements());
+      };
+    }
     function installDesktopCompatibility(bootPrototype) {
       let isReady = bootPrototype.isReady;
       typeof isReady == "function" && (bootPrototype.isReady = function() {
@@ -1183,6 +1191,7 @@
     }
     installCanvasTextAlignCompatibility(), global.addEventListener("load", function(event2) {
       if (event2.target !== global.document) return;
+      installViewportFit();
       let prototype = global.Scene_Boot && global.Scene_Boot.prototype;
       if (!prototype || typeof prototype.start != "function") return;
       global.Utils && global.Utils.RPGMAKER_NAME === "MV" && installDesktopCompatibility(prototype);
@@ -1200,7 +1209,7 @@
         };
       }
     }, !0), global.addEventListener("pagehide", () => {
-      closed = !0;
+      closed = !0, restoreViewport && restoreViewport();
     }, { once: !0 }), global.addEventListener("message", function(eventMessage) {
       let message = eventMessage.data;
       if (!(eventMessage.source !== global.parent || !ownKeys(message, ["launchId", "nonce", "parentOrigin", "pluginFiles", "profile", "protocolVersion", "type"]) || message.type !== "RPG_RUNTIME_NATIVE_CONNECT" || message.protocolVersion !== 1 || typeof message.launchId != "string" || typeof message.nonce != "string" || typeof message.parentOrigin != "string" || eventMessage.origin !== message.parentOrigin || message.profile !== "RPGMV" && message.profile !== "RPGMZ" || eventMessage.ports.length !== 1 || port)) {

@@ -16,6 +16,12 @@ EasyRPG receives a file-tree resource and optional RTP tree. mkxp receives a det
 
 Desktop executables are not browser entry points. Supported ASAR/NW archive normalization extracts ordinary project files without executing native code. A project can still depend on unsupported desktop plugins or engine behavior; identifying its engine does not establish game compatibility.
 
+## MV/MZ display
+
+MV/MZ default to the engine's proportional stretch mode, including in desktop browsers. The game fits the available frame and follows window or fullscreen size changes, retaining its logical resolution and aspect ratio. Unused space remains as black bars. Canvas, video and pointer coordinates use the engine's own scale; the host does not need to resize the game's drawing buffer.
+
+Viewport fitting is independent of browser fullscreen and the `original`, `pixel` and `smooth` image-rendering modes. It also applies before graphics initialization, or immediately if a plugin has already initialized the canvas. The engine's stretch toggle remains available.
+
 ## Loading and saves
 
 All seven Targets support managed on-demand loading and explicit full preload. The loading mode changes resource acquisition, not project identity or the selected engine.

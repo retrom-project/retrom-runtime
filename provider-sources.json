@@ -2172,22 +2172,22 @@
           "filename": "mkxp-z_libretro.js",
           "output": "runtime/mkxp/mkxp-z_libretro.js",
           "maxSizeBytes": 1048576,
-          "sizeBytes": 259439,
-          "sha256": "54e9a1e693370a42b3bc50e3f7ab526af25bce5a8f0b569b2229619b2766a688",
-          "url": "https://github.com/retrom-project/mkxp-z-libretro-emscripten/releases/download/retrom-core-f2efc98-r11/mkxp-z_libretro.js"
+          "sizeBytes": 259675,
+          "sha256": "778f22ccc49566baf35e1c7527b90da3560c94c7f0200283d2a2ba39665a5d05",
+          "url": "https://github.com/retrom-project/mkxp-z-libretro-emscripten/releases/download/retrom-core-f2efc98-r12/mkxp-z_libretro.js"
         },
         {
           "filename": "mkxp-z_libretro.wasm",
           "output": "runtime/mkxp/mkxp-z_libretro.wasm",
           "maxSizeBytes": 67108864,
-          "sizeBytes": 42669340,
-          "sha256": "51193f0e73c91ba8562d4c9beb28bc29706f73fd5edfae3c30fb940817449556",
-          "url": "https://github.com/retrom-project/mkxp-z-libretro-emscripten/releases/download/retrom-core-f2efc98-r11/mkxp-z_libretro.wasm"
+          "sizeBytes": 42674616,
+          "sha256": "fa539bfa0cf20adee2f04f0536ccc3e7730acb627e555e58b15af9fb5738f92b",
+          "url": "https://github.com/retrom-project/mkxp-z-libretro-emscripten/releases/download/retrom-core-f2efc98-r12/mkxp-z_libretro.wasm"
         }
       ],
-      "tag": "retrom-core-f2efc98-r11",
-      "commit": "74d49b6c1b51321ded1c8d3f2c213604059b2f23",
-      "metadataUrl": "https://github.com/retrom-project/mkxp-z-libretro-emscripten/releases/download/retrom-core-f2efc98-r11/rpg-runtime-release.json"
+      "tag": "retrom-core-f2efc98-r12",
+      "commit": "5c777a6cb4a5e4316242caffbfa1e8487d038e71",
+      "metadataUrl": "https://github.com/retrom-project/mkxp-z-libretro-emscripten/releases/download/retrom-core-f2efc98-r12/rpg-runtime-release.json"
     },
     {
       "id": "kirikiri2",

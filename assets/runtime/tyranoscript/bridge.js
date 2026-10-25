@@ -71,6 +71,22 @@
     return observers.get(window2);
   }
 
+  // src/provider/touch-gamepad.ts
+  function mergeTouchGamepad(gamepads, touch) {
+    if (!touch)
+      return [...gamepads];
+    let result = [...gamepads], physical = result[0];
+    return physical ? (result[0] = {
+      axes: [...physical.axes],
+      connected: physical.connected,
+      id: physical.id,
+      index: physical.index,
+      mapping: physical.mapping,
+      timestamp: Math.max(physical.timestamp, touch.timestamp),
+      buttons: physical.buttons.map((button, index) => !!touch.buttons[index]?.pressed ? { pressed: !0, touched: !0, value: 1 } : { pressed: button.pressed, touched: button.touched, value: button.value })
+    }, result) : (result[0] = touch, result);
+  }
+
   // src/provider/gamepad-filter.ts
   var gamepadSources = /* @__PURE__ */ new WeakMap();
   function validInputFilterPolicy(value) {
@@ -143,13 +159,20 @@
   }, RuntimeGamepadFilter = class {
     detector = new ChordDetector();
     policy;
+    touch = null;
     constructor(policy) {
       this.policy = policy ? { ...policy } : null;
     }
     setPolicy(policy) {
       (policy?.activeGamepadIndex !== this.policy?.activeGamepadIndex || policy?.suppressInput !== this.policy?.suppressInput) && this.detector.reset(), this.policy = policy ? { ...policy } : null;
     }
-    filter(gamepads, nowMs) {
+    /** The on-screen pad joins before the host policy, so suppression and chords cover it too. */
+    setTouchGamepad(touch) {
+      this.touch = touch;
+    }
+    filter(physical, nowMs) {
+      this.touch?.observePhysical(physical);
+      let gamepads = this.touch ? mergeTouchGamepad(physical, this.touch.current()) : physical;
       if (!this.policy)
         return [...gamepads];
       if (this.policy.suppressInput)

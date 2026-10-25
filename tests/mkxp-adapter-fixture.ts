@@ -129,7 +129,7 @@ export function createHarness() {
 
 function runtimeFixture(fileSystem: TestFileSystem, onStart: () => void) {
   const environment: Record<string, string> = {};
-  const observation = {frames: 0, restore: 0};
+  const observation = {frames: 0, restore: 0, failure: 0};
   const requestExit = vi.fn(() => undefined);
   const requestState = vi.fn((_operation: number) => 1);
   const forceExit = vi.fn(() => undefined);
@@ -142,6 +142,7 @@ function runtimeFixture(fileSystem: TestFileSystem, onStart: () => void) {
     getEmscriptenModule: () => ({
       _runtime_get_frame_count: () => observation.frames,
       _runtime_get_state_result: () => observation.restore,
+      _runtime_get_game_result: () => observation.failure,
       _runtime_request_state: requestState,
       _runtime_request_exit: requestExit,
     }),

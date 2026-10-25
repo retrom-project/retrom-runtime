@@ -223,7 +223,7 @@ The Content column lists the accepted content kind and, where present, the requi
 | Ruffle (`ruffle`) | Flash (Ruffle) (`flash-ruffle`) | `flash` | `SINGLE_FILE` | `GAME_SAVE` |
 | GBE+ (Pokémon Mini) (`gbe_plus`) | Pokémon Mini (GBE+) (`gbe-pokemini`) | `pokemini` | `SINGLE_FILE` | `INSTANT` |
 | J2ME miniJVM (`j2me`) | Java ME (`j2me`) | `j2me` | `SINGLE_FILE` | `GAME_SAVE` |
-| KiriKiri2 (`kirikiri2`) | KiriKiri2 KAG (`kirikiri2-kag`) | `kirikiri` | `KIRIKIRI_PROJECT` | `INSTANT` |
+| KiriKiri2 (`kirikiri2`) | KiriKiri2 KAG (`kirikiri2-kag`) | `kirikiri` | `KIRIKIRI_PROJECT` | `GAME_SAVE` |
 | MAME Apple II+ (`mame_apple2`) | Apple II+ (MAME) (`mame-apple2`) | `apple2` | `SINGLE_FILE` | `INSTANT` |
 | MAME Apple IIe (`mame_apple2e`) | Apple IIe (MAME) (`mame-apple2e`) | `apple2` | `SINGLE_FILE` | `INSTANT` |
 | MAME Current Arcade (`mame_arcade`) | MAME Current Arcade (`mame-arcade`) | `arcade` | `ARCADE` | `INSTANT` |

@@ -40,8 +40,10 @@ describe("retrom-runtime Provider Module V1", () => {
     const original = canvas.style.cssText;
     const adapter = Object.assign(adapterFixture({getCanvas: () => canvas}), {canvasLayout: "CORE" as const});
     vi.mocked(mountTargetAdapter).mockImplementation(async (_request, target) => {
-      const host = realm.document.createElement("div");
-      host.attachShadow({mode: "open"}).append(canvas); target.append(host);
+      target.append(canvas);
+      // Core initialization can suspend after creating its visible surface.
+      // The Provider must wait for the adapter's layout ownership declaration.
+      await new Promise(resolve => setTimeout(resolve, 0));
       return adapter;
     });
     const host = hostFixture({mountFrame: vi.fn(async () => ({contentWindow: realm, element: frame, origin: location.origin}))});

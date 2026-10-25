@@ -3,7 +3,9 @@ import {KirikiriContent} from "./content.js";
 import type {AdapterContentOptions} from "../provider/content-inputs.js";
 import type {ContentReaderV1} from "../../contracts/content-io/v1/content-io.js";
 import {abi, contractSha256} from "../content-io/identity.js";
-import { decodeKirikiriCheckpoint, encodeKirikiriCheckpoint, type KirikiriCheckpointEntry } from "./checkpoint.js";
+import {decodeKirikiriCheckpoint} from "./checkpoint.js";
+import {createKirikiriCheckpointOperation} from "./checkpoint-operation.js";
+import {KirikiriWriteOverlay} from "./write-overlay.js";
 import type { MountedRuntimeAdapter, RuntimeExitReporter } from "../internal-adapter.js";
 import type {KirikiriParameters} from "./parameters.js";
 import {installGamepadCursor, type GamepadCursor} from "../provider/gamepad-cursor.js";
@@ -16,10 +18,13 @@ type KirikiriVlfs = {
   init(): Promise<void>;
   mkdir(path: string): number;
   onWriteClose: ((path: string, data: Uint8Array) => void) | null;
+  onUnlink: ((path: string) => void) | null;
+  unlink(path: string): number;
   registerOverlayFile(path: string, data: Uint8Array): unknown;
   registerContent(path: string, handle: {fileId: string; sizeBytes: number}, reader: ContentReaderV1): unknown;
   registerZipBlob(blob: Blob, options?: Record<string, unknown>): Promise<unknown>;
 };
+type KirikiriScriptException = {message: string; script: string; line: number; trace: string};
 type KirikiriModule = {
   arguments: string[];
   retromContentBridge: {abi: string; contractSha256: string};
@@ -30,18 +35,17 @@ type KirikiriModule = {
   onAbort(reason: unknown): void;
   onExit(status: number): void;
   onRuntimeInitialized(): void;
+  onScriptException(detail: KirikiriScriptException): void;
+  onGameSave(event: {phase: "begin" | "end"; id: number; success?: boolean}): void;
   postRun: Array<() => void>;
   preRun: Array<() => void>;
   print(message: string): void;
   printErr(message: string): void;
-  pauseMainLoop(): void;
+  pauseMainLoop(): void | Promise<void>;
   resumeMainLoop(): void;
-  krkr2StopMainLoop(): Promise<void>;
-  _krkr2_host_bookmark_is_ready(): number;
-  _krkr2_host_load_bookmark_is_ready(): number;
-  _krkr2_host_load_bookmark(slot: number): number;
-  _krkr2_host_load_bookmark_state(): number;
-  _krkr2_host_save_bookmark(slot: number): number;
+  krkr2StopMainLoop(operation?: Promise<unknown>): Promise<void>;
+  _krkr2_host_observe_game_saves(): number;
+  _krkr2_host_flush_game_saves(): Promise<number>;
   _startupXp3Path?: string;
 };
 type KirikiriHostWindow = Window & Record<string, unknown> & {
@@ -50,10 +54,7 @@ type KirikiriHostWindow = Window & Record<string, unknown> & {
 };
 
 const readyTimeoutMs = 60_000;
-const writeTimeoutMs = 10_000;
-const writeQuiescenceMs = 250;
 const maximumProjectFiles = 10_000;
-const saveRoots = ["/save/", "/savedata/"] as const;
 
 export async function mountKirikiri2(
   config: KirikiriParameters,
@@ -79,12 +80,12 @@ export async function mountKirikiri2(
     alignItems: "center", display: "flex", height: "100%", justifyContent: "center", overflow: "hidden", width: "100%",
   });
   Object.assign(canvas.style, {
-    background: "#000", display: "block", maxHeight: "100%", maxWidth: "100%", outline: "none", touchAction: "none",
+    background: "#000", display: "block", width: "100%", height: "100%", maxHeight: "100%", maxWidth: "100%", outline: "none", touchAction: "none",
   });
   surface.dataset.kirikiriRuntimeSurface = "";
   surface.append(canvas);
   target.replaceChildren(surface);
-  sizeCanvas(frameWindow, surface, canvas);
+  const resizeCleanup = sizeCanvas(frameWindow, surface, canvas);
   const focusCanvas = () => {canvas.focus({ preventScroll: true });};
   canvas.addEventListener("pointerdown", focusCanvas, true);
   const startupKeyboardCleanup = blockStartupKeyboardInput(frameWindow);
@@ -94,33 +95,53 @@ export async function mountKirikiri2(
   const previousModule = host.Module;
   const previousVlfs = host.VLFS;
   const scripts: HTMLScriptElement[] = [];
-  const writes = new Map<string, Uint8Array>();
-  const writeSequences = new Map<string, number>();
-  let writeSequence = 0;
-  let lastWriteAt = 0;
+  const overlay = new KirikiriWriteOverlay();
   let module: KirikiriModule | null = null;
-  let paused = false;
+  let checkpointOperation: ReturnType<typeof createKirikiriCheckpointOperation> | undefined;
   let exited = false;
   let exitReported = false;
+  let normalExitRequested = false;
+  let finalExit: Promise<void> | undefined;
   let failed = false;
   let runtimeTerminationCleanup: () => void = () => undefined;
+  const ready = deferred<void>();
+  const reportFailure = (error: Error) => {
+    if (failed || exitReported || exited) {return;}
+    failed = true;
+    ready.reject(error);
+    contentOptions.onFailure?.(error);
+  };
+  const exportFinalExit = () => {
+    if (!checkpointOperation || finalExit || failed || exited) {return;}
+    // finalCheckpoint only queues work here. Its module calls run after the
+    // original onExit callback returns and can drain that tick's JSPI stack.
+    finalExit = checkpointOperation.finalCheckpoint().then(async checkpoint => {
+      if (failed || exited) {return;}
+      const screenshot = checkpoint ? await finalCanvasScreenshot(canvas) : null;
+      if (failed || exited) {return;}
+      exitReported = true;
+      reportExitRequested(checkpoint ? {checkpoint, screenshot} : undefined);
+    }).catch(error => {
+      if (!failed && !exited) {reportFailure(finalExportFailure(error, frameWindow));}
+    });
+  };
   const reportRuntimeExit = () => {
-    if (exitReported || failed || exited) {return;}
-    exitReported = true;
-    reportExitRequested();
+    if (normalExitRequested || exitReported || failed || exited) {return;}
+    normalExitRequested = true;
+    exportFinalExit();
   };
   const dispose = async () => {
     // Script loading may fail before the core installs the main-loop bridge.
     // Stop scheduling first, cancel reads so a suspended JSPI tick can unwind,
     // and retain Module/VLFS until it has completely returned.
-    const stopping = module?.krkr2StopMainLoop?.();
+    const stopping = checkpointOperation?.stop() ?? module?.krkr2StopMainLoop?.();
     try {await content.close();}
     finally {
       await stopping;
       module?.PThread?.terminateAllThreads();
       cleanup(
         host, previousModule, previousVlfs, target, canvas, focusCanvas,
-        gamepadCleanup, runtimeTerminationCleanup, scripts,
+        gamepadCleanup, resizeCleanup, runtimeTerminationCleanup, scripts,
       );
     }
   };
@@ -133,29 +154,18 @@ export async function mountKirikiri2(
     await vlfs.init();
     vlfs.mkdir("/save");
     vlfs.mkdir("/savedata");
-    vlfs.onWriteClose = (path, data) => {
-      if (!isSavePath(path)) {return;}
-      const normalized = normalizeSavePath(path);
-      writes.set(normalized, data.slice());
-      writeSequence += 1;
-      writeSequences.set(normalized, writeSequence);
-      lastWriteAt = Date.now();
-    };
+    vlfs.onWriteClose = (path, data) => overlay.record(path, data);
+    vlfs.onUnlink = path => overlay.record(path, null);
     await vlfs.registerZipBlob(assets.archive, {stripPrefix: ""});
     const project = await registerProject(vlfs, config.projectIndexUrl, document.baseURI, content, config.contentDigest, contentOptions.signal);
     const restore = restorePayload ? await decodeKirikiriCheckpoint(restorePayload) : null;
     for (const entry of restore?.entries ?? []) {
       const path = `/${entry.path}`;
-      vlfs.registerOverlayFile(path, entry.data.slice());
-      writes.set(entry.path, entry.data.slice());
+      if (entry.data === null) {vlfs.unlink(path);}
+      else {vlfs.registerOverlayFile(path, entry.data.slice());}
+      overlay.record(path, entry.data);
     }
-    const ready = deferred<void>();
-    const reportFailure = (error: Error) => {
-      if (failed || exitReported || exited) {return;}
-      failed = true;
-      ready.reject(error);
-      contentOptions.onFailure?.(error);
-    };
+    if (restore) {overlay.seedProgress(restore.progressPaths);}
     runtimeTerminationCleanup = installKirikiriRuntimeTermination(frameWindow, assets.wasmUrl, error =>
       reportFailure(new RuntimeFailureError("KIRIKIRI_RUNTIME_TRAP", "CORE", [error.message], {cause: error})));
     const runtimeUrl = assets.scriptUrl;
@@ -172,6 +182,17 @@ export async function mountKirikiri2(
         else {reportFailure(new RuntimeFailureError("KIRIKIRI_RUNTIME_EXIT_FAILED", "CORE", [`Core exit status: ${status}`]));}
       },
       onRuntimeInitialized: () => undefined,
+      onScriptException: detail => {
+        const error = new RuntimeFailureError("KIRIKIRI_SCRIPT_EXCEPTION", "CORE", [
+          detail.message.slice(0, 2048),
+          detail.script ? `${detail.script.slice(0, 1024)}:${detail.line}` : "",
+          detail.trace.slice(0, 8192),
+        ].filter(Boolean));
+        // Let the Wasm callback return and the scheduler retain its active
+        // tick before the failure lifecycle requests teardown.
+        frameWindow.queueMicrotask(() => reportFailure(error));
+      },
+      onGameSave: event => overlay.observe(event),
       postRun: [() => {if (!failed) {ready.resolve();}}],
       preRun: [],
       print: (message) => {if (message) {console.debug(`[kirikiri2] ${message}`);}},
@@ -184,14 +205,12 @@ export async function mountKirikiri2(
     scripts.push(await loadClassicScript(document, runtimeUrl));
     module = host.Module as KirikiriModule;
     await withTimeout(ready.promise, readyTimeoutMs, "KIRIKIRI_RUNTIME_TIMEOUT");
-    if (restore) {
-      try {await waitFor(() => module!._krkr2_host_load_bookmark_is_ready() === 1, readyTimeoutMs);}
-      catch (cause) {
-        throw new RuntimeFailureError("KIRIKIRI_CHECKPOINT_LOADER_TIMEOUT", "CORE",
-          ["Checkpoint restore failed: the core bookmark loader did not become ready."], {cause});
-      }
-      await restoreBookmark(module, config.checkpointSlot);
+    if (typeof module._krkr2_host_observe_game_saves !== "function" ||
+      typeof module._krkr2_host_flush_game_saves !== "function") {
+      throw new Error("KIRIKIRI_GAME_SAVE_ABI_UNAVAILABLE");
     }
+    checkpointOperation = createKirikiriCheckpointOperation({module, overlay});
+    if (normalExitRequested) {exportFinalExit();}
     startupKeyboardCleanup();
     gamepadCursor = installGamepadCursor(frameWindow, canvas, {defaultEnabled: true});
     focusCanvas();
@@ -207,39 +226,14 @@ export async function mountKirikiri2(
   const activeVlfs = host.VLFS;
   if (!activeModule || !activeVlfs) {throw new Error("KIRIKIRI_RUNTIME_ARTIFACT_INVALID");}
   return {
+    canvasLayout: "CORE",
     checkpoint: async () => {
-      if (exited) {throw new Error("KIRIKIRI_RUNTIME_INVALID_STATE");}
-      const wasPaused = paused;
-      let pausedForCapture = false;
-      if (wasPaused) {activeModule.resumeMainLoop();}
-      try {
-        await waitFor(() => activeModule._krkr2_host_bookmark_is_ready() === 1, readyTimeoutMs);
-        if (exited) {throw new Error("KIRIKIRI_RUNTIME_INVALID_STATE");}
-        const checkpointWriteSequence = writeSequence;
-        if (activeModule._krkr2_host_save_bookmark(config.checkpointSlot) !== 0) {
-          throw new Error("KIRIKIRI_CHECKPOINT_CREATE_FAILED");
-        }
-        await waitFor(
-          () => hasCausalBookmarkWrite(writeSequences, checkpointWriteSequence) &&
-            Date.now() - lastWriteAt >= writeQuiescenceMs,
-          writeTimeoutMs,
-        );
-        activeModule.pauseMainLoop();
-        pausedForCapture = true;
-        const entries: KirikiriCheckpointEntry[] = [...writes].map(([path, data]) => ({ path, data: data.slice() }));
-        return {
-          bytes: await encodeKirikiriCheckpoint({ entries, resumeSlot: config.checkpointSlot }),
-          format: "kirikiri-save-bundle-v1",
-        };
-      } catch (error) {
-        if (error instanceof Error && ["KIRIKIRI_CHECKPOINT_CREATE_FAILED", "KIRIKIRI_RUNTIME_INVALID_STATE"]
-          .includes(error.message)) {throw error;}
-        throw new Error("KIRIKIRI_CHECKPOINT_CREATE_FAILED");
-      } finally {
-        if (wasPaused && !pausedForCapture) {activeModule.pauseMainLoop();}
-        if (!wasPaused && pausedForCapture) {activeModule.resumeMainLoop();}
-      }
+      overlay.requireValid();
+      const result = await checkpointOperation!.checkpoint();
+      overlay.requireValid();
+      return result;
     },
+    acknowledgeCheckpoint: captured => checkpointOperation!.acknowledge(captured.bytes),
     exit: async () => {
       if (exited) {return;}
       exited = true;
@@ -247,34 +241,24 @@ export async function mountKirikiri2(
     },
     gamepadCursor,
     getCanvas: () => canvas,
-    getCheckpointAvailability: () => activeModule._krkr2_host_bookmark_is_ready() === 1
-      ? { available: true, blocker: null }
-      : { available: false, blocker: "NOT_READY" },
+    getCheckpointAvailability: () => {
+      const save = {capture: "IN_GAME", restore: "IN_GAME", captureAvailable: false, dataKind: "PROGRESS"} as const;
+      if (normalExitRequested || failed || exited) {return {available: false, blocker: "NOT_READY", save};}
+      const observing = activeModule._krkr2_host_observe_game_saves();
+      if (observing < 0) {
+        throw new RuntimeFailureError("KIRIKIRI_GAME_SAVE_OBSERVER_FAILED", "CORE",
+          [`Native save observer returned ${observing}.`]);
+      }
+      const blocker = observing === 1 ? overlay.availability() : "NOT_READY";
+      return blocker ? {available: false, blocker, save}
+        : {available: true, blocker: null, revision: String(overlay.sequence), save};
+    },
     getFrameCount: () => null,
-    pause: async () => {activeModule.pauseMainLoop(); paused = true;},
-    resume: async () => {activeModule.resumeMainLoop(); paused = false;},
+    pause: () => checkpointOperation!.pause(),
+    resume: () => checkpointOperation!.resume(),
     screenshot: () => canvasScreenshot(canvas),
     setVolume: null,
   };
-}
-
-async function restoreBookmark(module: KirikiriModule, slot: number) {
-  if (module._krkr2_host_load_bookmark(slot) !== 0) {
-    throw new Error("KIRIKIRI_CHECKPOINT_RESTORE_FAILED");
-  }
-  try {
-    await waitFor(() => module._krkr2_host_load_bookmark_state() !== 1, readyTimeoutMs);
-  } catch {
-    throw new Error("KIRIKIRI_CHECKPOINT_RESTORE_FAILED");
-  }
-  if (module._krkr2_host_load_bookmark_state() !== 2) {
-    throw new Error("KIRIKIRI_CHECKPOINT_RESTORE_FAILED");
-  }
-  try {
-    await waitFor(() => module._krkr2_host_bookmark_is_ready() === 1, readyTimeoutMs);
-  } catch {
-    throw new Error("KIRIKIRI_CHECKPOINT_RESTORE_FAILED");
-  }
 }
 
 async function registerProject(vlfs: KirikiriVlfs, indexUrl: string, documentBaseUrl: string,
@@ -310,18 +294,6 @@ function selectStartupPath(paths: string[], configured: string | null) {
   return archives[0] ?? null;
 }
 
-function isSavePath(path: string) {return saveRoots.some((root) => path.toLowerCase().startsWith(root));}
-function normalizeSavePath(path: string) {return path.replace(/^\/+/, "").normalize("NFC");}
-function hasCausalBookmarkWrite(sequences: Map<string, number>, checkpointWriteSequence: number) {
-  for (const [path, sequence] of sequences) {
-    if (sequence > checkpointWriteSequence && !isBookmarkBookkeepingPath(path)) {return true;}
-  }
-  return false;
-}
-function isBookmarkBookkeepingPath(path: string) {
-  const name = path.slice(path.lastIndexOf("/") + 1);
-  return /^datas[cu](?:[_~])?\.ksd$/iu.test(name);
-}
 function requireBrowserFeatures(frameWindow: Window) {
   const runtimeGlobals = frameWindow as Window & typeof globalThis;
   const wasm = runtimeGlobals.WebAssembly as typeof WebAssembly & {
@@ -337,10 +309,31 @@ function requireBrowserFeatures(frameWindow: Window) {
 function sizeCanvas(frameWindow: Window, surface: HTMLElement, canvas: HTMLCanvasElement) {
   const resize = () => {
     const ratio = frameWindow.devicePixelRatio || 1;
-    canvas.width = Math.max(1, Math.round((surface.clientWidth || 1280) * ratio));
-    canvas.height = Math.max(1, Math.round((surface.clientHeight || 720) * ratio));
+    const width = Math.max(1, Math.round((surface.clientWidth || frameWindow.innerWidth || 1280) * ratio));
+    const height = Math.max(1, Math.round((surface.clientHeight || frameWindow.innerHeight || 720) * ratio));
+    // Assigning an unchanged dimension clears the WebGL drawing buffer. The
+    // core observes backing dimensions through its existing frame-size bridge.
+    if (canvas.width !== width) {canvas.width = width;}
+    if (canvas.height !== height) {canvas.height = height;}
   };
+  const observerType = (frameWindow as Window & typeof globalThis).ResizeObserver;
+  const observer = observerType ? new observerType(resize) : undefined;
+  observer?.observe(surface);
+  frameWindow.addEventListener("resize", resize);
+  let density: MediaQueryList | undefined;
+  const watchDensity = () => {
+    density?.removeEventListener("change", densityChanged);
+    density = frameWindow.matchMedia?.(`(resolution: ${frameWindow.devicePixelRatio || 1}dppx)`);
+    density?.addEventListener("change", densityChanged, {once: true});
+  };
+  const densityChanged = () => {resize(); watchDensity();};
+  watchDensity();
   resize();
+  return () => {
+    observer?.disconnect();
+    frameWindow.removeEventListener("resize", resize);
+    density?.removeEventListener("change", densityChanged);
+  };
 }
 
 function blockStartupKeyboardInput(frameWindow: Window) {
@@ -390,13 +383,15 @@ function cleanup(
   canvas: HTMLCanvasElement,
   focusCanvas: () => void,
   gamepadCleanup: () => void,
+  resizeCleanup: () => void,
   runtimeTerminationCleanup: () => void,
   scripts: HTMLScriptElement[],
 ) {
-  if (host.VLFS) {host.VLFS.onWriteClose = null;}
+  if (host.VLFS) {host.VLFS.onWriteClose = null; host.VLFS.onUnlink = null;}
   for (const script of scripts) {script.remove();}
   canvas.removeEventListener("pointerdown", focusCanvas, true);
   gamepadCleanup();
+  resizeCleanup();
   runtimeTerminationCleanup();
   target.replaceChildren();
   if (previousModule === undefined) {delete host.Module;} else {host.Module = previousModule;}
@@ -432,6 +427,28 @@ function canvasScreenshot(canvas: HTMLCanvasElement) {
   });
 }
 
+async function finalCanvasScreenshot(canvas: HTMLCanvasElement) {
+  try {
+    const image = await canvasScreenshot(canvas);
+    // The public final-snapshot contract bounds PNG screenshots to 16 MiB.
+    // An unavailable image must not invalidate a complete native file export.
+    return image.size > 0 && image.size <= 16 * 1024 * 1024 && image.type === "image/png" ? image : null;
+  } catch {return null;}
+}
+
+function finalExportFailure(error: unknown, frameWindow: Window) {
+  const runtimeGlobals = frameWindow as Window & typeof globalThis;
+  let cause = error;
+  for (let depth = 0; cause && depth < 4; depth++) {
+    if (cause instanceof runtimeGlobals.WebAssembly.RuntimeError) {
+      return new RuntimeFailureError("KIRIKIRI_RUNTIME_TRAP", "CORE", [cause.message], {cause});
+    }
+    cause = typeof cause === "object" && "cause" in cause ? cause.cause : undefined;
+  }
+  return new RuntimeFailureError("KIRIKIRI_GAME_SAVE_FINAL_EXPORT_FAILED", "CORE",
+    [error instanceof Error ? error.message : "Final native file export failed."], {cause: error});
+}
+
 function normalizedBase(value: string) {return value.endsWith("/") ? value : `${value}/`;}
 function deferred<T>() {
   let resolve!: (value: T | PromiseLike<T>) => void;
@@ -439,14 +456,7 @@ function deferred<T>() {
   const promise = new Promise<T>((accept, decline) => {resolve = accept; reject = decline;});
   return { promise, reject, resolve };
 }
-async function waitFor(predicate: () => boolean, timeout: number) {
-  const deadline = Date.now() + timeout;
-  while (Date.now() < deadline) {
-    if (predicate()) {return;}
-    await new Promise((resolve) => setTimeout(resolve, 50));
-  }
-  throw new Error("KIRIKIRI_RUNTIME_TIMEOUT");
-}
+
 async function withTimeout<T>(promise: Promise<T>, timeout: number, code: string) {
   let timer: ReturnType<typeof setTimeout> | undefined;
   try {
@@ -460,5 +470,6 @@ function stableMountError(error: unknown) {
 }
 
 function requireVlfs(vlfs: KirikiriVlfs | undefined): asserts vlfs is KirikiriVlfs {
-  if (!vlfs || vlfs.contentAbi !== abi || vlfs.contractSha256 !== contractSha256 || typeof vlfs.registerContent !== "function") {throw new Error("CONTENT_IO_ABI_MISMATCH");}
+  if (!vlfs || vlfs.contentAbi !== abi || vlfs.contractSha256 !== contractSha256 ||
+    typeof vlfs.registerContent !== "function" || typeof vlfs.unlink !== "function") {throw new Error("CONTENT_IO_ABI_MISMATCH");}
 }

@@ -7,13 +7,13 @@ import {blockRange, fetchRangeBlock, type ContentObjectState} from "./http.js";
 import {fetchWindow, nextFetchWindow, windowScratchBytes, type FetchPolicy, type FetchWindow} from "./fetch-policy.js";
 import {BLOCK_BYTES} from "./source.js";
 import {ByteLRU} from "./lru.js";
-import {BlockScheduler} from "./scheduler.js";
+import {BlockScheduler, type ReadProgress} from "./scheduler.js";
 export type BlockObject = {key: string; source: ContentSourceV1; state: ContentObjectState};
 class StorageGenerationChanged extends ContentIOError {constructor(){super("CACHE_UNAVAILABLE");}}
 type BufferLease = {start?: number; origins?: ReadOrigin[]; bytes: Uint8Array<ArrayBuffer>; release: () => void};
 export type WindowSource = {policy: FetchPolicy; local: (object: BlockObject, index: number, signal?: AbortSignal) => Promise<Uint8Array<ArrayBuffer> | null>;
-  load: (object: BlockObject, window: FetchWindow, signal: AbortSignal, origins?: ReadOrigin[]) => Promise<Uint8Array<ArrayBuffer>>};
-export type BlockLoader = (object: BlockObject, index: number, signal: AbortSignal) => Promise<Uint8Array<ArrayBuffer>>;
+  load: (object: BlockObject, window: FetchWindow, signal: AbortSignal, origins?: ReadOrigin[], progress?: ReadProgress) => Promise<Uint8Array<ArrayBuffer>>};
+export type BlockLoader = (object: BlockObject, index: number, signal: AbortSignal, progress?: ReadProgress) => Promise<Uint8Array<ArrayBuffer>>;
 /** One pool per Session. Consumers only receive copies, never LRU or network backings. */
 export class BlockPool {
   readonly credits = new BufferCredits();
@@ -22,8 +22,8 @@ export class BlockPool {
   private readonly reported = new WeakSet<BlockObject>();
   private readonly controller = new AbortController();
   private readonly demand = new Map<string, number>();
-  constructor(l1Bytes = 0, private readonly load: BlockLoader = (object, index, signal) =>
-    fetchRangeBlock(object.source, object.state, index, signal),
+  constructor(l1Bytes = 0, private readonly load: BlockLoader = (object, index, signal, progress) =>
+    fetchRangeBlock(object.source, object.state, index, signal, 15000, {progress}),
     private readonly failure: (object: BlockObject, error: ContentIOError) => void = () => {},
     private readonly prepare: (object: BlockObject, signal?: AbortSignal) => Promise<void> = async () => {}, private readonly windows?: WindowSource) {
     if (l1Bytes !== 0 && l1Bytes !== 2 * 1024 * 1024) {fail("CAPACITY_EXCEEDED");}
@@ -63,7 +63,7 @@ export class BlockPool {
     const taskKey = this.taskKey(object, index, window);
     // Join an existing physical request before local I/O can delay promotion or cancellation ownership.
     if (!this.scheduler.has(taskKey) && this.windows && await this.local(object, index, offset, destination, guard, options)) {return;}
-    await this.scheduler.consume(taskKey, (signal) => this.acquire(object, index, signal, window), (lease) => {
+    await this.scheduler.consume(taskKey, (signal, progress) => this.acquire(object, index, signal, window, undefined, progress), (lease) => {
       this.check(object); checkSignal(options.signal); guard();
       if (object.state.generation !== generation) {throw new StorageGenerationChanged();}
       if (destination.byteLength !== length || offset < 0 || length > range.length - offset) {fail("BOUNDS");}
@@ -73,9 +73,9 @@ export class BlockPool {
     }, {...options, whole: window?.wholeFile ?? options.whole});
   }
   /** Internal demand notification; callers never wait for speculative work. */
-  prefetchAfter(object: BlockObject, index: number, signal: AbortSignal): void {
+  prefetchAfter(object: BlockObject, index: number, signal: AbortSignal, readEnd?: number): void {
     if (!this.windows || signal.aborted || this.controller.signal.aborted || object.state.revoked) {return;}
-    const window = nextFetchWindow(object.source.sizeBytes, index, this.windows.policy);
+    const window = nextFetchWindow(object.source.sizeBytes, index, this.windows.policy, readEnd);
     if (!window || !this.scheduler.canPrefetch) {return;}
     const taskKey = this.taskKey(object, window.firstBlock, window);
     if (this.scheduler.has(taskKey) || this.cached(object, window)) {return;}
@@ -87,12 +87,12 @@ export class BlockPool {
     if (!release) {return;}
     const generation = object.state.generation;
     try {
-      void this.scheduler.consume(taskKey, async active => {
+      void this.scheduler.consume(taskKey, async (active, progress) => {
         try {
           await this.prepare(object, active);
           this.check(object); checkSignal(active);
           if (object.state.generation !== generation) {throw new StorageGenerationChanged();}
-          return await this.acquire(object, window.firstBlock, active, window, release);
+          return await this.acquire(object, window.firstBlock, active, window, release, progress);
         } catch (cause) {release(); throw this.report(object, cause);}
       }, () => {}, {signal, priority: "PREFETCH"}).catch(() => {
         // Physical failures already passed through report; ordinary speculative failures are optional.
@@ -123,7 +123,8 @@ export class BlockPool {
       options.copied?.("PERSISTENT", destination.length); return true;
     } finally {release();}
   }
-  private async acquire(object: BlockObject, index: number, signal: AbortSignal, window?: FetchWindow, reserved?: () => void): Promise<BufferLease> {
+  private async acquire(object: BlockObject, index: number, signal: AbortSignal, window?: FetchWindow, reserved?: () => void,
+    progress?: ReadProgress): Promise<BufferLease> {
     const generation = object.state.generation, key = this.key(object, index);
     const range = blockRange(object.source, index);
     // The native tee may retain a complete bounded response as well as the
@@ -132,7 +133,7 @@ export class BlockPool {
     try {
       this.check(object); checkSignal(signal);
       const cached = window ? null : this.cache.get(key), origins: ReadOrigin[] = [];
-      const bytes = window ? await this.windows!.load(object, window, signal, origins) : cached ?? await this.load(object, index, signal);
+      const bytes = window ? await this.windows!.load(object, window, signal, origins, progress) : cached ?? await this.load(object, index, signal, progress);
       this.check(object); checkSignal(signal);
       if (object.state.generation !== generation) {throw new StorageGenerationChanged();}
       if (bytes.byteLength !== (window?.length ?? range.length)) {fail("LENGTH_MISMATCH");}

@@ -1,12 +1,14 @@
 import {rpgPluginScenarioPath} from "../runtime/rpg-plugin-paths.js";
-import type {ContentReaderV1, ContentSourceV1, ManagedInputPolicyV1} from "../../contracts/content-io/v1/content-io.js";
+import type {ContentSourceV1, ManagedInputPolicyV1} from "../../contracts/content-io/v1/content-io.js";
+import type {ProgressContentReader} from "../content-io/range-reader.js";
+import type {ReadProgress} from "../content-io/scheduler.js";
 import {ContentIOError} from "../content-io/errors.js";
 import {canonicalPath, integer, record} from "../content-io/source.js";
 import type {ContentSessionAccess} from "../provider/content-inputs.js";
 import {fetchMetadataJson, indexByteBudget} from "../provider/metadata.js";
 import type {RuntimeWebResourceV1} from "../provider/module-api.js";
 
-type File = {source: ContentSourceV1; mediaType: string; reader?: Promise<ContentReaderV1>};
+type File = {source: ContentSourceV1; mediaType: string; reader?: Promise<ProgressContentReader>};
 export class NativeContentFiles {
   private readonly files = new Map<string, File>();
   private readonly folded = new Map<string, string | null>();
@@ -30,7 +32,7 @@ export class NativeContentFiles {
     }
     if (!canonicalPath(resource.entryFile) || !this.files.has(resource.entryFile)) {throw invalid();}
   }
-  async request(value: unknown): Promise<Record<string, unknown>> {
+  async request(value: unknown, progress?: ReadProgress): Promise<Record<string, unknown>> {
     if (this.closed || this.signal?.aborted) {throw new ContentIOError("ABORTED");}
     if (!record(value) || typeof value.path !== "string" || !canonicalPath(value.path)) {throw invalid();}
     const name = this.resolve(value.path.normalize("NFC"));
@@ -42,7 +44,7 @@ export class NativeContentFiles {
     file.reader ??= this.session.open(file.source, this.policy, this.signal);
     const reader = await file.reader;
     const bytes = new Uint8Array(value.length);
-    await reader.readInto(value.offset, bytes, this.signal);
+    await reader.readInto(value.offset, bytes, this.signal, undefined, progress);
     return {status: 200, bytes};
   }
   /** Desktop plugins synchronously read a small scenario script set; media remains demand-paged. */

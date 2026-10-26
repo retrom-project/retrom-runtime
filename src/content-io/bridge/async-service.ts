@@ -1,6 +1,7 @@
 import type {ReadOrigin} from "../read-accounting.js";
 import type {ContentMessageV1} from "../../../contracts/content-io/v1/content-io.js";
 import {BufferCredits} from "../credits.js";
+import {requestScope} from "../abort.js";
 import {ContentIOError, errorNumbers, fail, toContentIOError} from "../errors.js";
 import {RangeReader} from "../range-reader.js";
 import {BLOCK_BYTES} from "../source.js";
@@ -62,13 +63,18 @@ export class AsyncConsumerService {
     if (this.acknowledged.size > 256) {this.acknowledged.delete(this.acknowledged.values().next().value!);}
   }
   private async read(message: Extract<ContentMessageV1, {type: "READ"}>, reader: RangeReader, task: Reading) {
-    const deadline = setTimeout(() => task.controller.abort(new ContentIOError("TIMEOUT")), message.timeoutMs);
+    const scope = requestScope(task.controller.signal, message.timeoutMs);
     let release: (() => void) | undefined;
+    let networkBytes = 0;
     try {
-      release = await this.credits.reserve(message.length, "OUTPUT", task.controller.signal);
+      release = await this.credits.reserve(message.length, "OUTPUT", scope.signal);
       const bytes = new Uint8Array(message.length);
       let origin: ReadOrigin = "NETWORK";
-      await reader.readInto(message.offset, bytes, task.controller.signal, (value) => {origin = value;});
+      await reader.readInto(message.offset, bytes, scope.signal, (value) => {origin = value;}, count => {
+        scope.renew(); networkBytes += count;
+        if (this.closed || task.controller.signal.aborted) {return;}
+        this.event({...base(this.address, 0), type: "READ_PROGRESS", readRequestId: message.requestId, fileId: reader.id, networkBytes});
+      });
       if (this.closed || task.controller.signal.aborted) {throw task.controller.signal.reason;}
       task.release = release; release = undefined;
       task.timer = setTimeout(() => this.close(new ContentIOError("TIMEOUT")), 5000);
@@ -77,6 +83,6 @@ export class AsyncConsumerService {
     } catch (cause) {
       const error = toContentIOError(cause); task.release?.(); clearTimeout(task.timer); this.pending.delete(message.requestId);
       this.event({...base(this.address, message.requestId), type: "READ_ERROR", codeNumber: error.codeNumber, scope: error.scope});
-    } finally {clearTimeout(deadline); release?.();}
+    } finally {scope.dispose(); release?.();}
   }
 }

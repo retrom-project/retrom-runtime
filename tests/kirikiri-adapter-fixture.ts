@@ -1,5 +1,6 @@
 import {expect, vi} from "vitest";
 import {targetEnvelope} from "./provider-fixtures.js";
+import {contractSha256} from "../src/content-io/identity.js";
 
 type FakeModule = {
   locateFile: (path: string) => string;
@@ -64,7 +65,7 @@ export function fakeVlfs() {
     unlink: vi.fn(() => 0),
     registerOverlayFile: vi.fn(),
     contentAbi: "content-io-v1",
-    contractSha256: "9601f63ba9d1bad095b42b32a3d6167166535be246a87f0efac7c5b125ed27bf",
+    contractSha256,
     registerContent: vi.fn(),
     registerZipBlob: vi.fn(async () => ({ paths: ["/ui/font.ttf"], xp3Paths: [] as string[] })),
   };

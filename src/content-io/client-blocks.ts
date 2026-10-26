@@ -25,14 +25,14 @@ export class ClientBlocks {
     this.check(object); guard(); checkSignal(options.signal);
     const key = this.key(object, index), {start, length} = blockRange(object.source, index), count = destination.byteLength;
     if (this.cache.copyInto(key, offset, destination)) {options.copied?.("MEMORY", count); return;}
-    const started = performance.now();
     if (!this.identities.has(object)) {this.identities.set(object, crypto.randomUUID());}
-    await this.scheduler.consume(`${key}:${this.identities.get(object)}`, async (signal) => {
+    await this.scheduler.consume(`${key}:${this.identities.get(object)}`, async (signal, progress) => {
       const {fileId, rpc, release} = await this.channel(object, signal);
       try {
-      const timeoutMs = Math.max(1, Math.floor(15000 - (performance.now() - started)));
+      const timeoutMs = 15000;
       const message = await rpc.request({type: "READ", fileId, offset: start, length, timeoutMs}, "READ_OK", {signal, timeoutMs,
-        cancel: (requestId) => rpc.send({...base(rpc.address, 0), type: "CANCEL", cancelRequestId: requestId})});
+        cancel: (requestId) => rpc.send({...base(rpc.address, 0), type: "CANCEL", cancelRequestId: requestId}),
+        progress: {fileId, advance: progress}});
       if (message.fileId !== fileId || message.offset !== start || message.length !== length) {
         rpc.close(new ContentIOError("RANGE_INVALID")); fail("RANGE_INVALID");
       }

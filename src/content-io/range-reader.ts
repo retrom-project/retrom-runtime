@@ -1,10 +1,13 @@
 import type {ReadObserver} from "./read-accounting.js";
+import type {ReadProgress} from "./scheduler.js";
 import type {ContentReaderV1} from "../../contracts/content-io/v1/content-io.js";
 import {checkSignal, combineSignals, requestScope} from "./abort.js";
 import {BlockPool, type BlockObject} from "./block-pool.js";
 import {ContentIOError, fail} from "./errors.js";
 import {transientNetworkError, type NetworkWait} from "./network-wait.js";
 import {BLOCK_BYTES, integer, validateReadBounds} from "./source.js";
+/** Provider-internal reader access also carries request-scoped network progress. */
+export type ProgressContentReader = Pick<RangeReader, keyof ContentReaderV1>;
 export class RangeReader implements ContentReaderV1 {
   readonly abi = "content-io-v1" as const;
   readonly sizeBytes: number;
@@ -14,13 +17,13 @@ export class RangeReader implements ContentReaderV1 {
     private readonly network?: NetworkWait) {
     this.sizeBytes = object.source.sizeBytes;
   }
-  async readInto(offset: number, destination: Uint8Array, signal?: AbortSignal, copied: ReadObserver = this.copied): Promise<number> {
+  async readInto(offset: number, destination: Uint8Array, signal?: AbortSignal, copied: ReadObserver = this.copied,
+    progress?: ReadProgress): Promise<number> {
     this.check(); validateReadBounds(this.sizeBytes, offset, destination.byteLength); checkSignal(signal);
-    if (this.network) {return this.readWaitingForNetwork(this.network, offset, destination, signal, copied);}
+    if (this.network) {return this.readWaitingForNetwork(this.network, offset, destination, signal, copied, progress);}
     const size = destination.byteLength;
     const combined = combineSignals([this.controller.signal, ...(signal ? [signal] : [])]);
     const scope = requestScope(combined.signal, 15000);
-    const started = performance.now();
     try {
       for (let written = 0; written < size;) {
         this.check(); checkSignal(scope.signal);
@@ -28,20 +31,21 @@ export class RangeReader implements ContentReaderV1 {
         const position = offset + written, index = Math.floor(position / BLOCK_BYTES), within = position % BLOCK_BYTES;
         const length = Math.min(size - written, BLOCK_BYTES - within);
         await this.pool.copy(this.object, index, within, destination.subarray(written, written + length),
-          () => this.check(), {copied, signal: scope.signal, timeoutMs: Math.max(0, 15000 - (performance.now() - started))});
+          () => this.check(), {copied, signal: scope.signal, timeoutMs: 15000,
+            progress: bytes => {scope.renew(); progress?.(bytes);}});
         this.check(); checkSignal(scope.signal);
-        this.pool.prefetchAfter?.(this.object, index, this.controller.signal);
+        scope.renew(); this.pool.prefetchAfter?.(this.object, index, this.controller.signal, position + length);
         written += length;
       }
       this.check(); checkSignal(scope.signal); return size;
     } finally {scope.dispose(); combined.dispose();}
   }
   /**
-   * Each block attempt keeps the 15-second request bound, but a transient network failure waits for the
+   * Each block attempt keeps a 15-second idle bound, but a transient network failure waits for the
    * network and retries that block instead of failing the read. Only closing the reader or `signal` ends it.
    */
   private async readWaitingForNetwork(network: NetworkWait, offset: number, destination: Uint8Array,
-    signal: AbortSignal | undefined, copied: ReadObserver): Promise<number> {
+    signal: AbortSignal | undefined, copied: ReadObserver, progress?: ReadProgress): Promise<number> {
     const size = destination.byteLength, token = {};
     const combined = combineSignals([this.controller.signal, ...(signal ? [signal] : [])]);
     try {
@@ -54,7 +58,8 @@ export class RangeReader implements ContentReaderV1 {
           const scope = requestScope(combined.signal, 15000);
           try {
             await this.pool.copy(this.object, index, within, destination.subarray(written, written + length),
-              () => this.check(), {copied, signal: scope.signal, timeoutMs: 15000});
+              () => this.check(), {copied, signal: scope.signal, timeoutMs: 15000,
+                progress: bytes => {scope.renew(); progress?.(bytes);}});
             break;
           } catch (error) {
             if (combined.signal.aborted || !transientNetworkError(error)) {throw error;}
@@ -63,7 +68,7 @@ export class RangeReader implements ContentReaderV1 {
         }
         network.leave(token, true);
         this.check(); checkSignal(combined.signal);
-        this.pool.prefetchAfter?.(this.object, index, this.controller.signal);
+        this.pool.prefetchAfter?.(this.object, index, this.controller.signal, position + length);
         written += length;
       }
       this.check(); checkSignal(combined.signal); return size;
@@ -83,7 +88,9 @@ export class RangeReader implements ContentReaderV1 {
       this.pool.cache.copyInto(this.pool.key(this.object, index), within, destination.subarray(written, written + count)); written += count;
     }
     this.copied("MEMORY", length);
-    for (let index = first; index <= last; index++) {this.pool.prefetchAfter?.(this.object, index, this.controller.signal);}
+    for (let index = first; index <= last; index++) {
+      this.pool.prefetchAfter?.(this.object, index, this.controller.signal, Math.min(offset + length, (index + 1) * BLOCK_BYTES));
+    }
     return length;
   }
   async *stream(offset: number, length: number, signal?: AbortSignal): AsyncIterable<Uint8Array> {

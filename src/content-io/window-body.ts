@@ -1,10 +1,10 @@
-import {MAX_FETCH_BYTES} from "./fetch-policy.js";
+import {MAX_SMALL_FILE_BYTES} from "./fetch-policy.js";
 import {fail} from "./errors.js";
 import {integer} from "./source.js";
 
 /** Only bounded network windows may use the native tee's additional buffering. */
 export function windowBody(response: Response, expected: number): ReadableStream<Uint8Array> | null {
-  if (!integer(expected, 0, MAX_FETCH_BYTES)) {fail("BOUNDS");}
+  if (!integer(expected, 0, MAX_SMALL_FILE_BYTES)) {fail("BOUNDS");}
   if (!response.body) {return null;}
   // The browser's HTTP parser enforces Content-Length. Without it, a native
   // tee could eagerly buffer an oversized peer response before JS can reject

@@ -2,6 +2,7 @@ import {afterEach, expect, it, vi} from "vitest";
 import {NativeContentFiles} from "./content-files.js";
 import {rangePolicy} from "../provider/content-policies.js";
 import type {ContentSessionAccess} from "../provider/content-inputs.js";
+import type {ProgressContentReader} from "../content-io/range-reader.js";
 import {rpgMvEnvelope} from "../../tests/provider-fixtures.js";
 
 const entries = [
@@ -13,7 +14,7 @@ afterEach(() => vi.unstubAllGlobals());
 async function fixture(files: unknown[] = entries, kind: "NATIVE_WEB" | "ISOLATED_WEB" = "NATIVE_WEB") {
   vi.stubGlobal("fetch", vi.fn(async () => new Response(JSON.stringify({schemaVersion: 1, files}))));
   const close = vi.fn(async () => {});
-  const readInto = vi.fn(async (_offset: number, into: Uint8Array) => {into.fill(7); return into.length;});
+  const readInto = vi.fn<ProgressContentReader["readInto"]>(async (_offset, into) => {into.fill(7); return into.length;});
   const session = {open: vi.fn<ContentSessionAccess["open"]>(async () => ({id: "file", abi: "content-io-v1" as const, sizeBytes: 8, close, readInto,
     tryReadInto: () => null, stream: async function* () {yield new Uint8Array(8);}})),
     materialize: vi.fn(), closeFile: vi.fn()} satisfies ContentSessionAccess;
@@ -33,6 +34,18 @@ it("maps exact, NFC and unique ASCII aliases to the same immutable file and clos
   expect(session.open.mock.calls[0]?.[0]).toMatchObject({identity: {logicalPath: "Audio/雪.ogg"}, url: new URL("/bytes/audio", location.href).href});
   await content.close(); expect(close).toHaveBeenCalledTimes(1);
   await expect(content.request({type: "STAT", path: "index.html"})).rejects.toThrow("CONTENT_IO_ABORTED");
+});
+it("forwards raw network progress for this read without reporting metadata as progress", async () => {
+  const {content, readInto} = await fixture();
+  readInto.mockImplementation(async (_offset, bytes, _signal, _copied, progress) => {
+    progress?.(8192); progress?.(8192); bytes.fill(7); return bytes.length;
+  });
+  const progress = vi.fn();
+  await content.request({type: "STAT", path: "Audio/雪.ogg"}, progress);
+  expect(progress).not.toHaveBeenCalled();
+  await content.request({type: "READ", path: "Audio/雪.ogg", offset: 0, length: 3}, progress);
+  expect(progress.mock.calls).toEqual([[8192], [8192]]);
+  await content.close();
 });
 it("rejects traversal, unbounded reads and outside files without requesting their URLs", async () => {
   const {content, session} = await fixture();

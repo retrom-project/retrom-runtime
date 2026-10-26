@@ -147,7 +147,7 @@ async function objectResponse(request, response, entry, record, attempt) {
     const writable = response.write(chunk); record.sentBytes += chunk.length; written += chunk.length;
     if (mode === "DISCONNECT" && written >= (entry.disconnectAfterBytes ?? 16384)) {response.destroy(); return;}
     if (!writable) {await writableOrClosed(response);}
-    if (entry.chunkDelayMs) {await delay(entry.chunkDelayMs);}
+    if (entry.chunkDelayMs && written < sendLength) {await delay(entry.chunkDelayMs);}
   }
   if (!response.destroyed && mode !== "HANG_AFTER_EXPECTED_BYTES") {response.end();}
 }

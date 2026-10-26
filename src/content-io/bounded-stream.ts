@@ -16,7 +16,7 @@ export async function readExact(body: ReadableStream<Uint8Array> | null, expecte
   return output;
 }
 export async function* iterateExact(body: ReadableStream<Uint8Array> | null, expected: number, signal?: AbortSignal,
-  idleMs?: number, consumed?: (bytes: number) => void): AsyncGenerator<Uint8Array<ArrayBuffer>> {
+  idleMs?: number, consumed?: (bytes: number) => void, progress?: (bytes: number) => void): AsyncGenerator<Uint8Array<ArrayBuffer>> {
   if (!integer(expected)) {fail("BOUNDS");}
   checkSignal(signal);
   if (!body) {if (expected !== 0) {fail("LENGTH_MISMATCH");} return;}
@@ -29,6 +29,7 @@ export async function* iterateExact(body: ReadableStream<Uint8Array> | null, exp
       if (next.done) {break;}
       if (isBytes(next.value)) {consumed?.(next.value.byteLength);}
       if (!isBytes(next.value) || next.value.byteLength > expected - read) {fail("LENGTH_MISMATCH");}
+      if (next.value.byteLength > 0) {progress?.(next.value.byteLength);}
       read += next.value.byteLength;
       // Drain EOF before storage or another consumer can suspend this final
       // network chunk, which may contain more than one internal cache block.

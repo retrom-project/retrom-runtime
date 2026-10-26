@@ -7,6 +7,7 @@ import {contentObjectKey, validateSource, type SourceContext} from "./source.js"
 import {ContentStoreManager} from "./store/manager.js";
 import {completeBacking, completedBacking} from "./store/complete.js";
 import {WindowLoader} from "./window-loader.js";
+import {DEFAULT_FETCH_POLICY} from "./fetch-policy.js";
 
 /** Preparation owns cache leases until the game exits, including files not opened by the core yet. */
 export class ContentPreloader {
@@ -19,9 +20,9 @@ export class ContentPreloader {
   constructor(private readonly context: SourceContext) {
     this.pool = new BlockPool(0, (object, index, signal) => this.store.read(object, index, signal),
       undefined, (object, signal) => this.store.prepare(object, signal), {
-        policy: {smallFileThresholdBytes: 1024 * 1024, networkWindowBytes: 2 * 1024 * 1024},
+        policy: DEFAULT_FETCH_POLICY,
         local: (object, index, signal) => this.store.local(object, index, signal ?? this.controller.signal),
-        load: (object, window, signal, origins) => windows.load(object, window, signal, origins),
+        load: (object, window, signal, origins, progress) => windows.load(object, window, signal, origins, progress),
       });
     // Required persistence waits for bounded disk work; optional demand caching keeps its fast fallback.
     this.store = new ContentStoreManager(context.storageOrigin, this.pool.credits, undefined, undefined, "REQUIRED");

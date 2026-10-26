@@ -17,7 +17,7 @@ function setup(loadWindow: WindowSource["load"] = generated, size = 10 * B + 17,
       purpose: "GAME", transport: "RANGE_REQUIRED", etagPolicy: "EXPECTED_SHA256", contentLengthPolicy: "EXACT_IF_PRESENT"}};
   const load = vi.fn(loadWindow), local = vi.fn(async () => null), failure = vi.fn();
   const pool = new BlockPool(0, undefined, failure, undefined,
-    {policy: {...DEFAULT_FETCH_POLICY, networkWindowBytes: windowBytes}, local, load});
+    {policy: {...DEFAULT_FETCH_POLICY, smallFileThresholdBytes: 1024 * 1024, networkWindowBytes: windowBytes}, local, load});
   pools.push(pool);
   return {object, pool, load, local, failure, reader: new RangeReader("one", object, pool), other: new RangeReader("two", object, pool)};
 }
@@ -110,7 +110,7 @@ for (const name of ["IDENTITY_CHANGED", "AUTHORIZATION_FAILED"] as const) {
 it("prefetch is skipped under buffer pressure, leaving demand able to read", async () => {
   const {reader, pool, load} = setup();
   await reader.readInto(0, new Uint8Array(1));
-  const release = await pool.credits.reserve(6 * 1024 * 1024, "SCRATCH");
+  const release = await pool.credits.reserve(14 * 1024 * 1024, "SCRATCH");
   await reader.readInto(B, new Uint8Array(1)); await tick(); expect(load).toHaveBeenCalledTimes(1);
   release(); await reader.readInto(B + 1, new Uint8Array(1)); await tick(); expect(load).toHaveBeenCalledTimes(2);
 });
@@ -121,9 +121,9 @@ it.each([[4, 2], [6, 1]])("a %i-block window still prefetches with %i output blo
   expect(load.mock.calls.map(([, w]) => [w.start, w.length])).toEqual([[0, blocks * B], [blocks * B, blocks * B]]);
   for (const release of releases) {release();}
 });
-it("windows whose tee scratch cannot coexist with a demand window skip prefetch and still read", async () => {
+it("2 MiB windows now admit prefetch and reuse it for a following demand", async () => {
   const {reader, load} = setup(undefined, 20 * B + 17, 8 * B);
-  await reader.readInto(7 * B, new Uint8Array(1)); await tick(); expect(load).toHaveBeenCalledTimes(1);
+  await reader.readInto(7 * B, new Uint8Array(1)); await tick(); expect(load).toHaveBeenCalledTimes(2);
   const bytes = new Uint8Array(1); await reader.readInto(8 * B, bytes);
   expect(bytes[0]).toBe(9); expect(load).toHaveBeenCalledTimes(2);
 });

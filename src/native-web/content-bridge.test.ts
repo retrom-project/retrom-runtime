@@ -90,3 +90,24 @@ it("admits at most four reads so queued plugin requests do not spend their Conte
     expect(pending).toHaveLength(5);
   } finally {pair.port2.close(); await mounted.exit();}
 });
+it("reports cumulative data progress for an admitted read before returning its bytes", async () => {
+  const {frame, request, mounted} = await fixture();
+  let finish!: (value: Record<string, unknown>) => void;
+  request.mockImplementation((_value, progress) => {
+    progress?.(8192); progress?.(8192);
+    return new Promise(resolve => {finish = resolve;});
+  });
+  const pair = new MessageChannel(), replies: unknown[] = [];
+  pair.port2.on("message", reply => replies.push(reply));
+  try {
+    window.dispatchEvent(new MessageEvent("message", {source: frame.contentWindow, origin: "https://runtime.test",
+      data: {type: "RETROM_WEB_CONTENT_CONNECT", v: 1}, ports: [pair.port1 as unknown as MessagePort]}));
+    pair.port2.postMessage({id: 1, type: "READ", admission: true, path: "index.html", offset: 0, length: 2});
+    await vi.waitFor(() => expect(replies).toContainEqual({id: 1, type: "READ_PROGRESS", networkBytes: 16384}));
+    expect(replies).toContainEqual({id: 1, type: "READ_STARTED"});
+    expect(replies).toContainEqual({id: 1, type: "READ_PROGRESS", networkBytes: 8192});
+    expect(replies.some(reply => (reply as {status?: number}).status === 200)).toBe(false);
+    finish({status: 200, bytes: new Uint8Array([1, 2])});
+    await vi.waitFor(() => expect(replies).toContainEqual({id: 1, status: 200, bytes: new Uint8Array([1, 2])}));
+  } finally {pair.port2.close(); await mounted.exit();}
+});

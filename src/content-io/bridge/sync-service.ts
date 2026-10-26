@@ -1,6 +1,7 @@
 import type {ReadOrigin} from "../read-accounting.js";
 import type {ContentMessageV1} from "../../../contracts/content-io/v1/content-io.js";
 import {BufferCredits} from "../credits.js";
+import {requestScope} from "../abort.js";
 import {ContentIOError, fail, toContentIOError} from "../errors.js";
 import {RangeReader} from "../range-reader.js";
 import {BLOCK_BYTES} from "../source.js";
@@ -49,12 +50,17 @@ export class SyncConsumerService {
     this.sequence = message.requestId; this.controller = new AbortController(); void this.read(message, this.controller);
   }
   private async read(message: Extract<ContentMessageV1, {type: "READ"}>, controller: AbortController): Promise<void> {
-    const deadline = setTimeout(() => controller.abort(new ContentIOError("TIMEOUT")), message.timeoutMs);
+    const scope = requestScope(controller.signal, message.timeoutMs);
     let release: (() => void) | undefined;
+    let networkBytes = 0;
     try {
-      release = await this.credits.reserve(message.length, "OUTPUT", controller.signal);
+      release = await this.credits.reserve(message.length, "OUTPUT", scope.signal);
       const bytes = new Uint8Array(message.length); let origin: ReadOrigin = "NETWORK";
-      await this.reader.readInto(message.offset, bytes, controller.signal, value => {origin = value;});
+      await this.reader.readInto(message.offset, bytes, scope.signal, value => {origin = value;}, count => {
+        scope.renew(); networkBytes += count;
+        if (!requested(this.control, this.address.epoch, message.requestId, message.length)) {return;}
+        Atomics.store(this.control, 4, networkBytes); Atomics.notify(this.control, 0);
+      });
       if (!requested(this.control, this.address.epoch, message.requestId, message.length)) {return;}
       new Uint8Array(this.buffer, controlBytes, message.length).set(bytes);
       Atomics.store(this.control, 4, message.length);
@@ -68,7 +74,7 @@ export class SyncConsumerService {
       const error = toContentIOError(cause);
       if (!this.closed && transientNetworkError(error) && this.transient(message, error)) {return;}
       this.close(error);
-    } finally {release?.(); clearTimeout(deadline); this.controller = undefined;}
+    } finally {release?.(); scope.dispose(); this.controller = undefined;}
   }
   /** Keep the channel: hand the consumer a retryable ERROR for this request and report the wait. */
   private transient(message: Extract<ContentMessageV1, {type: "READ"}>, error: ContentIOError): boolean {

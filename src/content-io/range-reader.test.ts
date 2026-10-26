@@ -85,13 +85,13 @@ it("stream is pull-driven and stopping does not fetch the rest", async () => {
   for await (const chunk of reader.stream(7, reader.sizeBytes - 7)) {expect(chunk.length).toBe(B - 7); break;}
   expect(load).toHaveBeenCalledTimes(1);
 });
-it("[IO-24] UNIT/reader [X-04] UNIT/reader multi-block reads share a single logical deadline", async () => {
+it("[IO-24] UNIT/reader [X-04] UNIT/reader completed blocks renew a multi-block read's idle deadline", async () => {
   vi.useFakeTimers();
   const {reader} = setup(undefined, async (object, index, signal) => {
     await abortable(new Promise<void>((resolve) => setTimeout(resolve, 8000)), signal); return generated(object, index, signal);
   });
   const pending = reader.readInto(0, new Uint8Array(B + 1));
-  const rejected = expect(pending).rejects.toThrow("TIMEOUT"); await vi.advanceTimersByTimeAsync(15000); await rejected;
+  const success = expect(pending).resolves.toBe(B + 1); await vi.advanceTimersByTimeAsync(16000); await success;
 });
 it("[IO-02] UNIT/random-trace checks 10,000 deterministic reads and cache budget byte-for-byte", async () => {
   const {reader, pool} = setup(80 * B + 17);

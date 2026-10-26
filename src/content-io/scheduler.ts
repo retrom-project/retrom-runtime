@@ -1,10 +1,12 @@
 import {abortError, checkSignal} from "./abort.js";
 import {ContentIOError, fail, toContentIOError} from "./errors.js";
 export type Priority = "FOREGROUND" | "MATERIALIZE" | "PREFETCH";
-export type ScheduleOptions = {signal?: AbortSignal; timeoutMs?: number; priority?: Priority; whole?: boolean};
-type Waiter<Value> = {materialize: boolean; deliver: (value: Value) => void; reject: (error: ContentIOError) => void; clean: () => void};
+export type ReadProgress = (bytes: number) => void;
+export type ScheduleOptions = {signal?: AbortSignal; timeoutMs?: number; priority?: Priority; whole?: boolean; progress?: ReadProgress};
+type Waiter<Value> = {materialize: boolean; deliver: (value: Value) => void; reject: (error: ContentIOError) => void;
+  clean: () => void; renew: () => void; progress?: ReadProgress};
 type Task<Value> = {key: string; priority: Priority; whole: boolean; controller: AbortController;
-  run: (signal: AbortSignal) => Promise<Value>; waiters: Set<Waiter<Value>>; timer?: ReturnType<typeof setTimeout>; deadline?: number};
+  run: (signal: AbortSignal, progress: ReadProgress) => Promise<Value>; waiters: Set<Waiter<Value>>; timer?: ReturnType<typeof setTimeout>; deadline?: number};
 /** A physical operation retains its slot until its abort cleanup has actually finished. */
 export class BlockScheduler<Value> {
   private readonly tasks = new Map<string, Task<Value>>();
@@ -49,11 +51,14 @@ export class BlockScheduler<Value> {
     const shared = task;
     return new Promise<Result>((resolve, reject) => {
       const abort = () => this.cancel(shared, waiter, abortError(options.signal!));
-      const timer = timeout === undefined ? undefined : setTimeout(() =>
-        this.cancel(shared, waiter, new ContentIOError("TIMEOUT")), timeout);
+      let timer: ReturnType<typeof setTimeout> | undefined;
+      const renew = () => {clearTimeout(timer); if (timeout !== undefined) {timer = setTimeout(() =>
+        this.cancel(shared, waiter, new ContentIOError("TIMEOUT")), timeout);}};
       const waiter: Waiter<Value> = {materialize: options.priority === "MATERIALIZE", deliver: (value) => {
         try {resolve(consume(value));} catch (error) {reject(toContentIOError(error));}
-      }, reject, clean: () => {clearTimeout(timer); options.signal?.removeEventListener("abort", abort);}};
+      }, reject, renew, progress: options.progress,
+      clean: () => {clearTimeout(timer); options.signal?.removeEventListener("abort", abort);}};
+      renew();
       shared.waiters.add(waiter); this.updateDeadline(shared);
       options.signal?.addEventListener("abort", abort, {once: true});
       this.dispatch(); this.recordPeak();
@@ -83,6 +88,14 @@ export class BlockScheduler<Value> {
     if (remaining <= 0) {this.cancelTask(task, new ContentIOError("TIMEOUT")); return;}
     task.timer = setTimeout(() => this.cancelTask(task, new ContentIOError("TIMEOUT")), remaining);
   }
+  private progress(task: Task<Value>, bytes: number): void {
+    if (!Number.isSafeInteger(bytes) || bytes <= 0 || task.controller.signal.aborted || !this.running.has(task)) {return;}
+    task.deadline = Date.now() + 15000; this.updateDeadline(task);
+    for (const waiter of [...task.waiters]) {
+      waiter.renew();
+      try {waiter.progress?.(bytes);} catch (error) {this.cancel(task, waiter, toContentIOError(error));}
+    }
+  }
   private dispatch(): void {
     while (!this.closed && this.active < 4) {
       const candidates = this.queue.filter((task) => !task.whole || this.wholeActive === 0);
@@ -103,7 +116,7 @@ export class BlockScheduler<Value> {
   private async run(task: Task<Value>): Promise<void> {
     let value: Value | undefined, acquired = false;
     try {
-      value = await task.run(task.controller.signal); acquired = true;
+      value = await task.run(task.controller.signal, bytes => this.progress(task, bytes)); acquired = true;
       checkSignal(task.controller.signal);
       for (const waiter of task.waiters) {waiter.clean(); waiter.deliver(value);}
     } catch (error) {

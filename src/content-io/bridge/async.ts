@@ -2,7 +2,9 @@ import type {ContentMessageV1} from "../../../contracts/content-io/v1/content-io
 import {abortError, checkSignal} from "../abort.js";
 import {ContentIOError, errorNumbers, fail, toContentIOError} from "../errors.js";
 import {base, parseMessage, type Address, type Message} from "./protocol.js";
-type Pending = {resolve: (message: Message) => void; reject: (error: ContentIOError) => void; clean: () => void; expected: string};
+type Progress = {fileId: string; advance: (bytes: number) => void};
+type Pending = {resolve: (message: Message) => void; reject: (error: ContentIOError) => void; clean: () => void;
+  expected: string; renew: () => void; networkBytes: number; progress?: Progress};
 export function wireError(codeNumber: number): ContentIOError {
   const name = (Object.keys(errorNumbers) as (keyof typeof errorNumbers)[]).find((name) => errorNumbers[name] === codeNumber);
   return new ContentIOError(name ?? "INTERNAL");
@@ -27,7 +29,8 @@ export class PortRPC {
     try {this.port.postMessage(message, transfer); if (message.type === "READ_ACK") {this.awaitingAck.delete(message.ackRequestId);}} catch (cause) {this.close(new ContentIOError("INTERNAL", {cause})); throw this.closed;}
   }
   request<Type extends Message["type"]>(payload: Record<string, unknown>, expected: Type,
-    options: {signal?: AbortSignal; timeoutMs?: number | null; transfer?: Transferable[]; cancel?: (requestId: number) => void} = {}): Promise<Extract<Message, {type: Type}>> {
+    options: {signal?: AbortSignal; timeoutMs?: number | null; transfer?: Transferable[]; cancel?: (requestId: number) => void;
+      progress?: Progress} = {}): Promise<Extract<Message, {type: Type}>> {
     checkSignal(options.signal);
     if (this.closed) {throw this.closed;}
     if (this.pending.size >= 256) {fail("CAPACITY_EXCEEDED");}
@@ -41,8 +44,13 @@ export class PortRPC {
         try {options.cancel?.(requestId);} catch {this.close(new ContentIOError("INTERNAL"));} finally {reject(error);}
       };
       const abort = () => finish(abortError(options.signal!));
-      const timer = options.timeoutMs === null ? undefined : setTimeout(() => finish(new ContentIOError("TIMEOUT")), options.timeoutMs ?? 5000);
+      let timer: ReturnType<typeof setTimeout> | undefined;
+      const renew = () => {clearTimeout(timer); if (options.timeoutMs !== null) {
+        timer = setTimeout(() => finish(new ContentIOError("TIMEOUT")), options.timeoutMs ?? 5000);
+      }};
+      renew();
       this.pending.set(requestId, {expected, resolve: (message) => resolve(message as Extract<Message, {type: Type}>), reject,
+        renew, progress: options.progress, networkBytes: 0,
         clean: () => {clearTimeout(timer); options.signal?.removeEventListener("abort", abort);}});
       options.signal?.addEventListener("abort", abort, {once: true});
       try {this.port.postMessage({...base(this.address, requestId), ...payload}, options.transfer ?? []);}
@@ -56,6 +64,7 @@ export class PortRPC {
   }
   private receive(message: Message) {
     if (this.closed) {return;}
+    if (message.type === "READ_PROGRESS") {this.progress(message); return;}
     if (message.requestId === 0) {this.event(message); return;}
     const pending = this.pending.get(message.requestId);
     if (!pending) {
@@ -68,5 +77,13 @@ export class PortRPC {
     if (message.type !== pending.expected) {const error = new ContentIOError("RANGE_INVALID"); pending.reject(error); throw error;}
     if (message.type === "READ_OK") {this.awaitingAck.add(message.requestId);}
     pending.resolve(message);
+  }
+  private progress(message: Extract<Message, {type: "READ_PROGRESS"}>): void {
+    const pending = this.pending.get(message.readRequestId);
+    if (!pending && this.cancelled.has(message.readRequestId)) {return;}
+    if (!pending?.progress || pending.expected !== "READ_OK" || pending.progress.fileId !== message.fileId) {fail("RANGE_INVALID");}
+    const delta = message.networkBytes - pending.networkBytes;
+    if (delta <= 0) {return;}
+    pending.networkBytes = message.networkBytes; pending.renew(); pending.progress.advance(delta);
   }
 }

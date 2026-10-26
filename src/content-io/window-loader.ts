@@ -1,4 +1,5 @@
 import type {ReadOrigin} from "./read-accounting.js";
+import type {ReadProgress} from "./scheduler.js";
 import {checkSignal} from "./abort.js";
 import type {BlockObject} from "./block-pool.js";
 import {createContentHasher} from "./bounded-stream.js";
@@ -15,7 +16,8 @@ import type {PersistentBacking} from "./store/backing.js";
 export class WindowLoader {
   constructor(private readonly store: ContentStoreManager, private readonly cache: ByteLRU,
     private readonly key: (object: BlockObject, index: number) => string) {}
-  async load(object: BlockObject, window: FetchWindow, signal: AbortSignal, origins: ReadOrigin[] = []): Promise<Uint8Array<ArrayBuffer>> {
+  async load(object: BlockObject, window: FetchWindow, signal: AbortSignal, origins: ReadOrigin[] = [],
+    progress?: ReadProgress): Promise<Uint8Array<ArrayBuffer>> {
     const bytes = new Uint8Array(window.length), present = new Set<number>(), backing = this.store.persistent(object);
     for (let n = 0; n < window.blockCount; n++) {
       checkSignal(signal);
@@ -28,12 +30,12 @@ export class WindowLoader {
     if (window.wholeFile && present.size === 0) {
       let offset = 0;
       for await (const chunk of fetchWholeWindow({...object.source, transport: "WHOLE_ALLOWED"}, object.state, signal,
-        this.store.telemetry(object))) {bytes.set(chunk, offset); offset += chunk.length;}
+        {...this.store.telemetry(object), progress})) {bytes.set(chunk, offset); offset += chunk.length;}
     } else {
       for (const range of missingRanges(window, present)) {
         const offset = range.start - window.start;
         await fetchRangeInto(object.source, object.state, range.start, bytes.subarray(offset, offset + range.length), signal,
-          this.store.telemetry(object));
+          {...this.store.telemetry(object), progress});
       }
     }
     checkSignal(signal);

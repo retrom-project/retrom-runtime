@@ -1,7 +1,7 @@
 // @vitest-environment node
 import {afterEach, expect, it, vi} from "vitest";
 import {fetchRangeInto} from "./http.js";
-import {BlockScheduler} from "./scheduler.js";
+import {BlockScheduler, type ReadProgress} from "./scheduler.js";
 import {abortable} from "./abort.js";
 import type {ContentSourceV1} from "../../contracts/content-io/v1/content-io.js";
 
@@ -24,7 +24,7 @@ function streamFetch(chunk: () => Promise<ReadableStreamReadResult<Uint8Array>>)
   });
 }
 
-it("materializes a 2 MiB Range at 64 KiB/s while retaining the foreground deadline", async () => {
+it("shares one 2 MiB Range at 64 KiB/s with foreground reads for the full 32-second download", async () => {
   vi.useFakeTimers();
   let bytes = 0;
   const fetch = streamFetch(async () => {
@@ -34,9 +34,9 @@ it("materializes a 2 MiB Range at 64 KiB/s while retaining the foreground deadli
     return {done: false, value: new Uint8Array(65536).fill(7)};
   });
   const scheduler = new BlockScheduler<Uint8Array>(), controller = new AbortController();
-  const run = async (signal: AbortSignal) => {
+  const run = async (signal: AbortSignal, progress: ReadProgress) => {
     const target = new Uint8Array(size);
-    await fetchRangeInto(source, {generation: "current", pinnedEtag: null, revoked: false}, 0, target, signal, {fetch});
+    await fetchRangeInto(source, {generation: "current", pinnedEtag: null, revoked: false}, 0, target, signal, {fetch, progress});
     return target;
   };
   const materialized = scheduler.schedule("same", run, {priority: "MATERIALIZE", signal: controller.signal});
@@ -44,9 +44,8 @@ it("materializes a 2 MiB Range at 64 KiB/s while retaining the foreground deadli
   const success = expect(materialized.then(data => ({length: data.byteLength, intact: data.every(byte => byte === 7)})))
     .resolves.toEqual({length: size, intact: true});
   const demand = scheduler.schedule("same", run);
-  const timeout = expect(demand).rejects.toThrow("CONTENT_IO_TIMEOUT");
-  await vi.advanceTimersByTimeAsync(15_000); await timeout;
-  await vi.advanceTimersByTimeAsync(18_000); await success;
+  const foreground = expect(demand).resolves.toHaveLength(size);
+  await vi.advanceTimersByTimeAsync(33_000); await success; await foreground;
   expect(fetch).toHaveBeenCalledOnce();
   expect(scheduler.stats.active).toBe(0); scheduler.close();
 });

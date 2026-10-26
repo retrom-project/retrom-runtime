@@ -3,26 +3,27 @@ import type {ContentFetchPolicyV1} from "../../contracts/content-io/v1/content-i
 import {fail} from "./errors.js";
 import {BLOCK_BYTES, integer, record} from "./source.js";
 
-export const TEMPORARY_BYTES = 8 * 1024 * 1024;
+export const TEMPORARY_BYTES = 16 * 1024 * 1024;
 export const CACHE_WRITE_BYTES = 2 * BLOCK_BYTES;
 export const OUTPUT_BYTES = 3 * 1024 * 1024;
-// Preserve the 2 MiB maximum window while accounting for native tee buffering,
-// stream blocks and the separate cache-write lane, even with outputs saturated.
-export const MAX_FETCH_BYTES = (TEMPORARY_BYTES - OUTPUT_BYTES - CACHE_WRITE_BYTES - 2 * BLOCK_BYTES) / 2;
+// Transfer limits are independent of the temporary pool. Whole small files may
+// exceed a Range window; both reserve the native tee and stream blocks.
+export const MAX_FETCH_BYTES = 2 * 1024 * 1024;
+export const MAX_SMALL_FILE_BYTES = 5 * 1024 * 1024;
 export const windowScratchBytes = (length: number) => 2 * length + 2 * BLOCK_BYTES;
 export type FetchPolicy = ContentFetchPolicyV1;
 export type ContentSessionOptions = Readonly<{fetchPolicy?: Partial<FetchPolicy>; onDiagnostic?: (diagnostic: ContentDiagnostic) => void;
   /** On-demand reads are waiting for the network (WAITING) or every waiting read has succeeded again (RESTORED). */
   onNetwork?: (state: import("./network-wait.js").ContentNetworkState) => void}>;
 export const DEFAULT_FETCH_POLICY: FetchPolicy = Object.freeze({
-  smallFileThresholdBytes: 1024 * 1024, networkWindowBytes: 512 * 1024,
+  smallFileThresholdBytes: MAX_SMALL_FILE_BYTES, networkWindowBytes: MAX_FETCH_BYTES,
 });
 
 export function validateFetchPolicy(value: unknown = {}): FetchPolicy {
   if (!record(value) || Object.keys(value).some(key => !Object.hasOwn(DEFAULT_FETCH_POLICY, key))) {fail("SOURCE_INVALID");}
   const smallFileThresholdBytes = Object.hasOwn(value, "smallFileThresholdBytes") ? value.smallFileThresholdBytes : DEFAULT_FETCH_POLICY.smallFileThresholdBytes;
   const networkWindowBytes = Object.hasOwn(value, "networkWindowBytes") ? value.networkWindowBytes : DEFAULT_FETCH_POLICY.networkWindowBytes;
-  if (!integer(smallFileThresholdBytes, 0, MAX_FETCH_BYTES) || !integer(networkWindowBytes, BLOCK_BYTES, MAX_FETCH_BYTES) ||
+  if (!integer(smallFileThresholdBytes, 0, MAX_SMALL_FILE_BYTES) || !integer(networkWindowBytes, BLOCK_BYTES, MAX_FETCH_BYTES) ||
     networkWindowBytes % BLOCK_BYTES !== 0) {fail("SOURCE_INVALID");}
   return Object.freeze({smallFileThresholdBytes, networkWindowBytes});
 }
@@ -36,11 +37,12 @@ export function fetchWindow(sizeBytes: number, blockIndex: number, policy: Fetch
   return {start, length, firstBlock: start / BLOCK_BYTES, blockCount: Math.ceil(length / BLOCK_BYTES), wholeFile};
 }
 
-/** A real read of the last internal block may fetch only its immediately adjacent window. */
-export function nextFetchWindow(sizeBytes: number, blockIndex: number, policy: FetchPolicy): FetchWindow | undefined {
+/** Successful demand reads in the second half may fetch only the adjacent window. */
+export function nextFetchWindow(sizeBytes: number, blockIndex: number, policy: FetchPolicy,
+  readEnd = Math.min(sizeBytes, (blockIndex + 1) * BLOCK_BYTES)): FetchWindow | undefined {
   const current = fetchWindow(sizeBytes, blockIndex, policy);
   const next = current.start + current.length;
-  if (current.wholeFile || next >= sizeBytes || blockIndex !== current.firstBlock + current.blockCount - 1) {return;}
+  if (current.wholeFile || next >= sizeBytes || readEnd <= current.start + current.length / 2) {return;}
   return fetchWindow(sizeBytes, next / BLOCK_BYTES, policy);
 }
 
@@ -52,7 +54,7 @@ export function missingRanges(window: FetchWindow, present: ReadonlySet<number>)
     if (present.has(index)) {continue;}
     const start = index * BLOCK_BYTES, length = Math.min(BLOCK_BYTES, window.length - relative * BLOCK_BYTES);
     const previous = result.at(-1);
-    if (previous && previous.start + previous.length === start) {previous.length += length;}
+    if (previous && previous.start + previous.length === start && previous.length + length <= MAX_FETCH_BYTES) {previous.length += length;}
     else {result.push({start, length});}
   }
   return result;

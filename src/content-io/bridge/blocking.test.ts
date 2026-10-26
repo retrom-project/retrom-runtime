@@ -19,7 +19,7 @@ it("[IO-22] UNIT/sync-copy [BR-10] UNIT/sync-copy copies output before releasing
 });
 it("[BR-03] UNIT/sync-deadline permanently closes an unresponsive service without a Worker error event", () => {
   const value = options(); value.send.mockImplementation(() => {});
-  vi.spyOn(performance, "now").mockReturnValueOnce(0).mockReturnValue(101);
+  vi.spyOn(performance, "now").mockReturnValueOnce(0).mockReturnValue(2101);
   expect(() => blockingRead(value)).toThrow("TIMEOUT"); expect(value.cancel).toHaveBeenCalledOnce();
   expect(() => blockingRead({...value, requestId: 2})).toThrow("TIMEOUT"); expect(value.send).toHaveBeenCalledOnce();
 });

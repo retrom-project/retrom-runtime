@@ -4,6 +4,7 @@ import {createRuntime} from "../index.js";
 import {decodeStoredCheckpoint} from "../provider/checkpoint-storage.js";
 import {decodeKirikiriCheckpoint} from "./checkpoint.js";
 import {targetEnvelope} from "../../tests/provider-fixtures.js";
+import {contractSha256} from "../content-io/identity.js";
 import {suspendingBookmark, type KirikiriJspi} from "../../tests/kirikiri-checkpoint-fixture.js";
 
 vi.mock("./content.js", async importOriginal => {
@@ -38,7 +39,7 @@ it.each(["/savedata/data0.png", "/profiles/玩家/进度/任意槽.kdt"])(
     onWriteClose: null as ((path: string, bytes: Uint8Array) => void) | null,
     onUnlink: null as ((path: string) => void) | null,
     registerOverlayFile() {}, registerContent() {}, registerZipBlob: async () => ({}),
-    contentAbi: "content-io-v1", contractSha256: "9601f63ba9d1bad095b42b32a3d6167166535be246a87f0efac7c5b125ed27bf",
+    contentAbi: "content-io-v1", contractSha256,
   };
   const nativeWrite = wasm.promising(suspendingBookmark(wasm, () => reading.then(() => {
     vlfs.onWriteClose?.(path, Uint8Array.of(4, 2));

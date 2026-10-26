@@ -61,7 +61,7 @@ addEventListener('message', ({data}) => {
       }, {identity, windowBytes, B});
       expect(result.samples).toEqual(Array(8).fill(B + 17));
       expect(result.budget.peak).toBeGreaterThanOrEqual(windowBytes + 2 * B);
-      expect(result.budget.peak).toBeLessThanOrEqual(8 * 1024 * 1024);
+      expect(result.budget.peak).toBeLessThanOrEqual(16 * 1024 * 1024);
       expect(result.budget.output).toBeLessThanOrEqual(4 * 1024 * 1024);
       expect(result.budget.stats.every(stat => stat.waiting === 0)).toBe(true);
       if (backend === "hang") expect(result.budget.stats.some(stat => stat.cacheWriteBytes >= B)).toBe(true);

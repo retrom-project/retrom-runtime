@@ -34,7 +34,7 @@ it("[NET-10] UNIT/a demanded read reports the outage on its first failed request
     return partial(Number(start), Number(end));
   }));
   const session = new ContentSessionClient(new Worker("unused"), {storageOrigin: "https://example.test", allowedOrigins: ["https://example.test"]},
-    undefined, {onNetwork: state => states.push(state)});
+    undefined, {onNetwork: state => states.push(state), fetchPolicy: {smallFileThresholdBytes: 0, networkWindowBytes: 2 * B}});
   try {
     const reader = await session.open(source, {mode: "RANGE", bridge: "ASYNC", result: "READER", maxFileBytes: 8 * B, workspace: "NONE",
       writes: "DENY", contentLengthPolicy: "EXACT_IF_PRESENT"});

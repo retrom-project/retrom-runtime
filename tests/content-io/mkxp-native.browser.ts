@@ -4,6 +4,7 @@ import {nativeFixture} from "./native-fixture.js";
 import {dirname, join} from "node:path";
 import type {ContentSessionService} from "../../src/content-io/service.js";
 import {startFixtureServer} from "./fixture-server.mjs";
+import {contractSha256} from "../../src/content-io/identity.js";
 const bundle = async (file: string) => (await build({entryPoints: [file], bundle: true, format: "esm", platform: "browser", write: false, target: "es2022"})).outputFiles[0].text;
 test("[BR-05] CORE/mkxp [IO-10] CORE/mkxp-trace-10000 real WasmFS pthread proxy uses public Worker above 4GiB, metadata stat, EOF, readonly, a read longer than 15 s and close @S14", async ({page}, testInfo) => {
   test.setTimeout(180000);
@@ -22,7 +23,7 @@ test("[BR-05] CORE/mkxp [IO-10] CORE/mkxp-trace-10000 real WasmFS pthread proxy 
   const errors: string[] = []; page.on("pageerror", error => errors.push(error.message));
   try {
     await page.goto(`${server.origin}/__test__/page`);
-    const result = await page.evaluate(async ({identity, rtpIdentity}) => {
+    const result = await page.evaluate(async ({identity, rtpIdentity, contractSha256}) => {
       const url = "/__test__/content.mjs";
       const {createContentSession} = await import(url) as typeof import("../../src/content-io/client.js");
       const worker = new Worker("/__test__/worker.mjs", {type: "module"});
@@ -55,7 +56,7 @@ test("[BR-05] CORE/mkxp [IO-10] CORE/mkxp-trace-10000 real WasmFS pthread proxy 
             if (value === "CONTENT_FIXTURE_OK") {resolveDone();}
           },
           printErr: (value: string) => {log.push(value);}, onAbort: (reason: string) => rejectDone(new Error(reason)),
-          retromContentBridge: {abi: "content-io-v1", contractSha256: "9601f63ba9d1bad095b42b32a3d6167166535be246a87f0efac7c5b125ed27bf",
+          retromContentBridge: {abi: "content-io-v1", contractSha256,
             reportFailure: (code: number) => failures.push(code),
             readIntoById: async (id: string, offset: number, bytes: Uint8Array, signal: AbortSignal) => {
               calls.push({id,offset,size:bytes.length,ui:typeof document !== "undefined"});
@@ -73,7 +74,7 @@ test("[BR-05] CORE/mkxp [IO-10] CORE/mkxp-trace-10000 real WasmFS pthread proxy 
         for (let retry = 0; retry < 100 && (closed.pending || closed.temporaryBytes); retry++) {await new Promise(resolve => setTimeout(resolve, 10)); closed = await stats();}
         return {log, calls, failures, callsAtStat, snapshots: await Promise.all(snapshots), closed, l1Peak: session.blocks.cache.peakByteLength};
       } finally {native?.retromContentClose?.(); native?.PThread.terminateAllThreads(); await session.close();}
-    }, {identity, rtpIdentity});
+    }, {identity, rtpIdentity, contractSha256});
     await testInfo.attach("mkxp-native-trace", {body: JSON.stringify({result, requests: [...server.requests("game"), ...server.requests("rtp")]}), contentType: "application/json"});
     expect(result.log).toContain("CONTENT_TRACE_OK"); expect(result.callsAtStat).toBe(0);
     expect(result.snapshots).toHaveLength(40); expect(result.calls.length).toBeGreaterThan(10000);

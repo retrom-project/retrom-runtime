@@ -3,6 +3,7 @@ import {expect, it} from "vitest";
 import {MessageChannel} from "node:worker_threads";
 import {base, parseBoot, parseConsumer, parseManagement, parseMessage} from "./protocol.js";
 import {abi, contractSha256} from "../identity.js";
+import {DEFAULT_FETCH_POLICY} from "../fetch-policy.js";
 const address = {sessionId: crypto.randomUUID(), channelId: crypto.randomUUID(), epoch: 1};
 const read = {...base(address, 1), type: "READ", fileId: crypto.randomUUID(), offset: 0, length: 262144, timeoutMs: 15000};
 it("[BR-11] UNIT/session consumer and management capabilities have disjoint commands", () => {
@@ -26,6 +27,7 @@ it("[PK-02] UNIT/session [BR-12] UNIT/boot boot requires a real port, correct fi
     managementPort: port1, storageOrigin: "https://example.test", allowedOrigins: ["https://example.test"], fetchPolicy: {smallFileThresholdBytes: 0, networkWindowBytes: 262144}, l1BudgetBytes: 2097152, l2BudgetBytes: 14680064};
   try {
     expect(parseBoot(boot, contractSha256)).toEqual(boot);
+    expect(parseBoot({...boot, fetchPolicy: DEFAULT_FETCH_POLICY}, contractSha256).fetchPolicy).toEqual(DEFAULT_FETCH_POLICY);
     expect(() => parseBoot({...boot, contractSha256: "a".repeat(64)}, contractSha256)).toThrow("ABI_MISMATCH");
     expect(() => parseBoot({...boot, l2BudgetBytes: 16777216}, contractSha256)).toThrow("SOURCE_INVALID");
     expect(() => parseBoot({...boot, allowedOrigins: ["https://example.test/path"]}, contractSha256)).toThrow("SOURCE_INVALID");

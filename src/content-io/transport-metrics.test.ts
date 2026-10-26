@@ -37,13 +37,13 @@ it("[IO-24] UNIT/transport-metrics aggregates legacy block, window and materiali
 });
 it("[IO-17] UNIT/transport-metrics counts a threshold whole load once and cache reuse as no dispatch", async () => {
   const {object, pool, store, loader} = setup(DEFAULT_FETCH_POLICY.smallFileThresholdBytes);
-  const window = {start: 0, length: object.source.sizeBytes, firstBlock: 0, blockCount: 4, wholeFile: true};
+  const window = {start: 0, length: object.source.sizeBytes, firstBlock: 0, blockCount: Math.ceil(object.source.sizeBytes / BLOCK_BYTES), wholeFile: true};
   try {
     await store.prepare(object);
     const bytes = await loader.load(object, window, new AbortController().signal);
-    for (let index = 0; index < 4; index++) {pool.cache.put(pool.key(object, index), bytes.subarray(index * BLOCK_BYTES, (index + 1) * BLOCK_BYTES));}
+    for (let index = 0; index < window.blockCount; index++) {pool.cache.put(pool.key(object, index), bytes.subarray(index * BLOCK_BYTES, (index + 1) * BLOCK_BYTES));}
     await loader.load(object, window, new AbortController().signal);
-    expect(store.stats).toMatchObject({networkBytes: 4 * BLOCK_BYTES, rangeRequests: 0, wholeRequests: 1, headRequests: 0, retries: 0});
+    expect(store.stats).toMatchObject({networkBytes: object.source.sizeBytes, rangeRequests: 0, wholeRequests: 1, headRequests: 0, retries: 0});
     expect(fetch).toHaveBeenCalledOnce();
   } finally {pool.close(); store.close();}
 });

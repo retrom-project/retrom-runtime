@@ -48,22 +48,28 @@ function slotError(control: Int32Array): never {
   }
   throw wireError(Atomics.load(control, 5));
 }
+/** The service owns the idle timeout; the consumer also detects an unresponsive service. */
+function waitForResult(control: Int32Array, epoch: number, timeoutMs: number): void {
+  let deadline = performance.now() + timeoutMs + 2000, networkBytes = 0;
+  while (Atomics.load(control, 0) === State.REQUESTED) {
+    checkSlot(control, epoch);
+    const progress = Atomics.load(control, 4);
+    if (progress > networkBytes) {networkBytes = progress; deadline = performance.now() + timeoutMs + 2000;}
+    const remaining = deadline - performance.now(); if (remaining <= 0) {fail("TIMEOUT");}
+    Atomics.wait(control, 0, State.REQUESTED, remaining);
+  }
+}
 export function blockingRead(options: {buffer: SharedArrayBuffer; epoch: number; requestId: number; length: number; timeoutMs: number;
   send: () => void; acknowledge: () => void; cancel: () => void; consume: (bytes: Uint8Array<SharedArrayBuffer>, origin: ReadOrigin) => void}): void {
   if (typeof document !== "undefined") {fail("SOURCE_INVALID");}
   const control = controls(options.buffer); checkSlot(control, options.epoch);
   if (!integer(options.timeoutMs, 1, 15000) || !integer(options.length, 1, BLOCK_BYTES) || !integer(options.requestId, 1, 2147483647)) {fail("BOUNDS");}
-  const deadline = performance.now() + options.timeoutMs;
   try {
     if (Atomics.load(control, 0) !== State.IDLE) {fail("RANGE_INVALID");}
     Atomics.store(control, 2, options.requestId); Atomics.store(control, 7, options.length); Atomics.store(control, 4, 0); Atomics.store(control, 8, 0);
     if (Atomics.compareExchange(control, 0, State.IDLE, State.REQUESTED) !== State.IDLE) {fail("ABORTED");}
     checkSlot(control, options.epoch); options.send();
-    while (Atomics.load(control, 0) === State.REQUESTED) {
-      checkSlot(control, options.epoch);
-      const remaining = deadline - performance.now(); if (remaining <= 0) {fail("TIMEOUT");}
-      Atomics.wait(control, 0, State.REQUESTED, remaining);
-    }
+    waitForResult(control, options.epoch, options.timeoutMs);
     checkSlot(control, options.epoch);
     if (Atomics.load(control, 0) === State.ERROR) {slotError(control);}
     if (Atomics.load(control, 0) !== State.OK || Atomics.load(control, 2) !== options.requestId || Atomics.load(control, 4) !== options.length) {fail("RANGE_INVALID");}

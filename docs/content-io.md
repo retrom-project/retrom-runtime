@@ -16,15 +16,15 @@ Registration and stat consume metadata only. Readers offer exact asynchronous re
 
 Whole executable core assets (`CORE_ASSET`, `WHOLE_ALLOWED`, `NONE_FULL_SHA256`) may use HTTP Brotli or gzip. Fetch supplies decoded bytes: wire Content-Length is not the decoded length. The materializer bounds decoded output to the immutable asset size and verifies its full SHA-256 on first acquisition before execution or persistent publication. Large byte materializations and unfinished cache blocks use native WebCrypto SHA-256 where available, with a JavaScript fallback. Published COMPLETE generations reuse their stored completion receipt without hashing local blocks or complete files again. Range, game and firmware responses retain identity encoding and their existing exact length checks. Cached core bytes are decoded bytes, so reuse does not depend on an HTTP cache or the server's encoding choice.
 
-The Session shares a 16 MiB raw-block LRU budget, 8 MiB temporary-buffer credits (including 3 MiB of output credits and a reserved 512 KiB lane for at most two cache-write copies), four physical network slots and a bounded queue. The synchronous bridge uses a single permanent-epoch mailbox and Atomics; it cannot synchronously call HTTP. Native shutdown completes before normal Content Session close. Forced shutdown revokes reads first.
+The Session shares a 16 MiB raw-block LRU budget, 16 MiB temporary-buffer credits (including 3 MiB of output credits and a reserved 512 KiB lane for at most two cache-write copies), four physical network slots and a bounded queue. The synchronous bridge uses a single permanent-epoch mailbox and Atomics; it cannot synchronously call HTTP. Native shutdown completes before normal Content Session close. Forced shutdown revokes reads first.
 
-Bounded network windows with a validated exact Content-Length and identity encoding use a native Response clone and immediately cancel the unused branch. This lets Chromium record transport completion before closing the JavaScript stream, avoiding a successful EOF being reported as `net::ERR_ABORTED`. Headers are validated before creating the clone; exact-length and EOF checks, idle deadlines and real cancellation remain active. The native tee can buffer a complete response, so it is restricted to windows at most 2 MiB whose wire size the browser's HTTP parser bounds; its additional window is reserved before fetching. Permitted responses without Content-Length retain the strict streaming path so an oversized peer cannot make the tee buffer an unbounded body. Such external responses can still exhibit the browser's EOF reporting bug; the workaround is scoped to exact-length window responses. Whole-file streaming materialization and metadata do not use this path; cloning an arbitrarily large response would defeat backpressure. The total temporary budget stays 8 MiB, with capacity for a maximum window, its extra native buffer, stream blocks and cache writes even when output credits are saturated.
+Bounded network windows with a validated exact Content-Length and identity encoding use a native Response clone and immediately cancel the unused branch. This lets Chromium record transport completion before closing the JavaScript stream, avoiding a successful EOF being reported as `net::ERR_ABORTED`. Headers are validated before creating the clone; exact-length and EOF checks, idle deadlines and real cancellation remain active. The native tee can buffer a complete response, so it is restricted to Range windows at most 2 MiB and whole-small-file windows at most 5 MiB whose wire size the browser's HTTP parser bounds; its additional window is reserved before fetching. Permitted responses without Content-Length retain the strict streaming path so an oversized peer cannot make the tee buffer an unbounded body. Such external responses can still exhibit the browser's EOF reporting bug; the workaround is scoped to exact-length window responses. Whole-file streaming materialization and metadata do not use this path; cloning an arbitrarily large response would defeat backpressure. The total temporary budget is 16 MiB, with capacity for a maximum whole-small-file window, its extra native buffer, stream blocks and cache writes even when output credits are saturated.
 
 ## Session fetch policy
 
-The Session creation options accept a validated, frozen `fetchPolicy`: `smallFileThresholdBytes` defaults to 1 MiB inclusive and `networkWindowBytes` to 512 KiB. Missing fields use the central defaults; unknown fields, unsafe or fractional integers and invalid alignment fail before I/O. The threshold may be zero to disable whole-small-file fetching. Its maximum, and the maximum window, derive from the temporary pool after output reservation, conservatively preserving space for output, a bounded fetch window and pending cache writes (initially 2 MiB). The window must be a positive multiple of the internal block size and no smaller than one block.
+The Session creation options accept a validated, frozen `fetchPolicy`: `smallFileThresholdBytes` defaults to 5 MiB inclusive and `networkWindowBytes` to 2 MiB (5,242,880 and 2,097,152 bytes). Missing fields use the central defaults; unknown fields, unsafe or fractional integers and invalid alignment fail before I/O. The threshold may be zero to disable whole-small-file fetching. The threshold is capped at 5 MiB independently of the 2 MiB Range-window cap. These limits preserve space for output, the response and its native tee buffer, streaming blocks and pending cache writes. The window must be a positive multiple of the internal block size and no smaller than one block.
 
-Only actual reads trigger fetching. A valid cache hit is returned directly. A miss in a small file plans the whole file; an uncached file can use an explicitly authorized whole GET. Larger files use the aligned window containing the requested offset, clipped at EOF. Existing valid blocks split that plan into contiguous missing ranges; they are never downloaded just to fill a window. Concurrent readers share the same window task with independent cancellation. The last cancellation aborts the fetch. No unopened file is fetched. Real reads may initiate one adjacent speculative window as described below.
+Only actual reads trigger fetching. A valid cache hit is returned directly. A miss in a small file plans the whole file; an uncached file can use an explicitly authorized whole GET. Larger files use the aligned window containing the requested offset, clipped at EOF. Existing valid blocks split that plan into contiguous missing ranges capped at 2 MiB, including holes in partially cached small files; cached blocks are never downloaded just to fill a window. Concurrent readers share the same window task with independent cancellation. The last cancellation aborts the fetch. No unopened file is fetched. Real reads may initiate one adjacent speculative window as described below.
 
 Each response retains origin, ETag/If-Match, exact length and applicable full SHA verification. A small-file authorization does not permit a large-file or partial-range 200 response. Fetched bytes split into the existing internal block layout, within the shared network and memory budgets. Fetch configuration never enters source identity or persistent keys; a new Session with different settings reuses old verified blocks. Tests cover non-default thresholds/windows, boundaries, partial cache, concurrency, cancellation and unavailable storage. Product evidence records configuration, requests, bytes and first availability together.
 
@@ -59,23 +59,30 @@ channel close release the activity subscription and timer; abort also cancels
 the bootstrap handshake immediately.
 
 Range materialization, including resuming a partially cached PRELOAD, uses a
-15-second **idle** network deadline: only a nonempty response body chunk renews
-it. Header stalls, empty chunks, cancellation, and the bounded retry budget do
-not gain time from unrelated progress. A 2 MiB Range taking 32 seconds at
-64 KiB/s can complete. Materialization waiters do not impose a total read
-deadline; foreground and prefetch waiters retain their existing 15-second
-bound. The physical request also keeps its original 15-second bound while
-only foreground/prefetch consumers remain; a live materialization waiter allows
-continued network progress, and its cancellation restores that original bound.
-The last cancelled waiter still aborts physical work. ETag, byte count, final hash
-and complete-cache publication checks are unchanged.
+15-second **idle** network deadline. Foreground reads and prefetch use the same
+idle semantics through the HTTP reader, scheduler, Reader and asynchronous or
+synchronous bridge. Only accepted nonempty response data for the physical request
+renews its network deadline and the deadlines of its current waiters. Progress is
+forwarded before buffering a complete 256 KiB block, so even a first block that
+takes more than 15 seconds can finish. Empty data, duplicate counters, metadata,
+unrelated reads and joining or promoting a request do not renew an active read.
+A 2 MiB Range taking 32 seconds at 64 KiB/s can complete without retrying.
+Asynchronous READ_PROGRESS events identify the read request and file and carry a
+monotonically increasing network-byte count. The synchronous mailbox uses its
+length word as the same progress counter while REQUESTED, then as length or error
+code after completion; its watchdog allows two seconds for the service to report
+an idle timeout. Materialization waiters impose no total read deadline. The last
+cancelled waiter still aborts physical work. ETag, byte count, final hash and
+complete-cache publication checks are unchanged.
 
 The Native Web content bridge admits at most four reads before calling Content
 I/O. Concurrent plugin or asset requests wait in a bounded FIFO, so queueing
 does not consume an individual Reader's 15-second deadline. An isolated Worker
 opts into admission notifications on each READ; READ_STARTED begins its own
-read deadline. Successful nonempty content replies renew only queued waits;
-metadata and repeated notifications cannot keep an active read alive. A stalled
+idle read deadline. Advancing READ_PROGRESS counters renew that active request;
+actual data progress and successful nonempty replies also renew waits still queued
+for admission. Metadata, duplicate counters and repeated admission notifications
+cannot keep an active read alive. A stalled
 queue still fails after 15 seconds without content completion. Exit closes the
 queue and readers, and read failures reach startup before Host abort cleanup.
 This transport is shared by MV/MZ and TyranoScript and does not change the
@@ -91,7 +98,7 @@ end or exit; default ONS video continues to use the native media URL.
 
 ## Network waits
 
-On-demand range reads survive network loss. Each block attempt keeps its 15-second request bound and the existing HTTP
+On-demand range reads survive network loss. Each block attempt keeps its 15-second idle bound and the existing HTTP
 retry budget; when an attempt still ends with a request-scoped `TIMEOUT` or `NETWORK_FAILED`, the reader does not fail.
 It waits 1, 2, 4, then 8 seconds between attempts (a browser `online` event retries at once) and retries the same block
 until it succeeds, the reader closes or the caller aborts. Identity, authorization, range, length and checksum errors
@@ -100,11 +107,11 @@ still fail immediately.
 Main-thread readers share one session `NetworkWait`: the session reports `WAITING` when the first read starts waiting
 and `RESTORED` once every waiting read has succeeded. Synchronous channels keep the slot instead of closing it: the
 service stores the code in the length word with `ERROR`, the consumer returns the slot to `IDLE`, waits on the state
-word (closing wakes it) and resends. The service asks for a bound two seconds shorter than the consumer's wait so it
-always answers first; a channel whose service never answers still closes. It reports a channel's wait and recovery as
+word (closing wakes it) and resends. The consumer watchdog allows two seconds beyond the service's idle bound so it
+can receive the service's timeout first; a channel whose service never answers still closes. It reports a channel's wait and recovery as
 `READ` diagnostics carrying the object key. The Provider forwards the session state as the public `CONTENT_NETWORK`
 runtime event and stops forwarding once the runtime exits or fails. The core simply stays blocked on its read; nothing
-is replayed and no protocol message changes.
+is replayed.
 
 The outage is reported before the read's own deadline. While a consumer is waiting for an object's bytes, the service
 reports that object's first request that fails to reach the server, or has no response headers after 5 seconds, as a
@@ -118,15 +125,15 @@ cover core reads count only time without a pending read: native-web's ready dead
 
 ## Sequential prefetch
 
-Prefetch is a fixed internal runtime strategy, not a `ContentFetchPolicyV1` field; it does not change the ABI, messages, contract digest or core range reads. After a successful nonempty demand copy touches a window's final 256 KiB block (including the exact block boundary), the IO Worker Reader may submit the immediately following network window. Successful memory-cache reads also qualify. Empty reads, failed cache probes, materialization and prefetch completion do not trigger speculation. Whole-small-file windows and EOF have no successor. Windows of any validated size use the same alignment and EOF clipping as demand reads.
+Prefetch is a fixed internal runtime strategy, not a `ContentFetchPolicyV1` field. After a successful nonempty demand copy passes a network window's halfway point (strictly beyond 1 MiB for a full default 2 MiB window), the IO Worker Reader may submit the immediately following network window. Successful memory-cache reads also qualify. Empty reads, failed cache probes, materialization and prefetch completion do not trigger speculation. Whole-small-file windows and EOF have no successor. Windows of any validated size use the same alignment and EOF clipping as demand reads.
 
-The Reader's prefetch hook is optional: client-side Readers remain block consumers, and only the IO Worker's BlockPool schedules physical prefetch. Reads fully served from client L1 do not send a new notification or change the bridge contract. A multi-window demand may trigger at each tail it actually consumes; fetching a window alone never starts a chain.
+The Reader's prefetch hook is optional: client-side Readers remain block consumers, and only the IO Worker's BlockPool schedules physical prefetch. Reads fully served from client L1 do not send a new notification or change the bridge contract. A multi-window demand may trigger after each halfway point it actually consumes; fetching a window alone never starts a chain.
 
-Each Session admits at most one active task whose priority is still `PREFETCH`. Speculation is skipped when physical slots are full, any task is queued, another pure prefetch is running, or temporary credits cannot be reserved immediately while leaving space for this Session's largest demand window (the larger of its network window and whole-small-file threshold, including the native tee buffer) and one output block. Under the 8 MiB budget a speculative window and that demand reservation can coexist only for policies up to 1.5 MiB with the default threshold; larger windows still serve demand reads but skip speculation. It never queues speculative work or reserves a new OUTPUT buffer. Foreground and materialization retain their existing fairness rule; both outrank queued PREFETCH operations. This is bounded use of idle resources, not a guarantee that an already running fetch consumes no bandwidth or storage resources.
+Each Session admits at most one active task whose priority is still `PREFETCH`. Speculation is skipped when physical slots are full, any task is queued, another pure prefetch is running, or temporary credits cannot be reserved immediately while leaving space for this Session's largest demand window (the larger of its network window and whole-small-file threshold, including the native tee buffer) and one output block. The 16 MiB temporary budget allows the default 2 MiB speculation and 5 MiB whole-file demand reservation to coexist when sufficient output credits remain; under memory pressure speculation is skipped. It never queues speculative work or reserves a new OUTPUT buffer. Foreground and materialization retain their existing fairness rule; both outrank queued PREFETCH operations. This is bounded use of idle resources, not a guarantee that an already running fetch consumes no bandwidth or storage resources.
 
 Demand and prefetch use exactly the same physical key, including object generation, window and validation policies. Demand joins an existing task before probing persistent storage and promotes it without aborting or restarting its HTTP operation. Promotion frees the speculative concurrency allowance but keeps the physical slot occupied. Every consumer retains independent cancellation; closing the initiating Reader removes only its speculative waiter when another reader still needs the task. The existing physical deadline is not extended by promotion, and aborted work holds credits and its slot until actual cleanup completes.
 
-Prefetch reuses prepare, WindowLoader, missing ranges, normal LRU insertion and persistent saveBlock. Repeated tail reads do not add waiters to an existing task, and fully memory-cached windows are skipped. Ordinary speculative failures do not reject the triggering read; an adopted demand still receives its physical operation's result or failure. Object and Session failures retain the existing revocation/reporting path. Session close cancels all speculation. Consumer hit accounting counts copied bytes only; HTTP telemetry continues to include all actual network bytes, including prefetch.
+Prefetch reuses prepare, WindowLoader, missing ranges, normal LRU insertion and persistent saveBlock. Repeated qualifying reads do not add waiters to an existing task, and fully memory-cached windows are skipped. Ordinary speculative failures do not reject the triggering read; an adopted demand still receives its physical operation's result or failure. Object and Session failures retain the existing revocation/reporting path. Session close cancels all speculation. Consumer hit accounting counts copied bytes only; HTTP telemetry continues to include all actual network bytes, including prefetch.
 
 ## Materialization and storage
 

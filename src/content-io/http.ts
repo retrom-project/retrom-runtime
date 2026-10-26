@@ -1,8 +1,9 @@
 import type {ContentSourceV1} from "../../contracts/content-io/v1/content-io.js";
 import {abortable, checkSignal, delay, requestScope} from "./abort.js";
-import {iterateExact, readExact} from "./bounded-stream.js";
+import {iterateExact} from "./bounded-stream.js";
 import {ContentIOError, fail} from "./errors.js";
-import {MAX_FETCH_BYTES} from "./fetch-policy.js";
+import {MAX_FETCH_BYTES, MAX_SMALL_FILE_BYTES} from "./fetch-policy.js";
+import type {ReadProgress} from "./scheduler.js";
 import {BLOCK_BYTES, integer} from "./source.js";
 import {windowBody} from "./window-body.js";
 
@@ -14,6 +15,7 @@ export type ContentObjectState = {
   pinCommit?: Promise<void>;
 };
 export type HttpDependencies = {fetch: typeof fetch; now: () => number; wait: typeof delay; wallNow: () => number; consumed?: (bytes: number) => void; dispatched?: (kind: "RANGE" | "WHOLE", retry: boolean) => void;
+  progress?: ReadProgress;
   /** False when a request cannot reach the server or has no response after `stalledResponseMs`; true on any response. */
   reachable?: (reachable: boolean) => void};
 /** A request without response headers for this long reports the network unreachable while it keeps waiting. */
@@ -72,12 +74,10 @@ async function rangeAttempt(source: ContentSourceV1, state: ContentObjectState, 
     await validateEtag(response, source, state);
     validateLength(response, source, range.length);
     const body = windowBody(response, range.length);
-    const bytes = destination ?? await readExact(body, range.length, signal, dependencies.consumed);
-    if (destination) {
-      let written = 0;
-      for await (const chunk of iterateExact(body, range.length, signal, undefined, dependencies.consumed)) {
-        destination.set(chunk, written); written += chunk.length;
-      }
+    const bytes = destination ?? new Uint8Array(range.length);
+    let written = 0;
+    for await (const chunk of iterateExact(body, range.length, signal, undefined, dependencies.consumed, dependencies.progress)) {
+      bytes.set(chunk, written); written += chunk.length;
     }
     validState(state, generation, signal);
     accepted = true;
@@ -90,26 +90,30 @@ export function fetchWholeStream(source: ContentSourceV1, state: ContentObjectSt
 }
 export function fetchWholeWindow(source: ContentSourceV1, state: ContentObjectState, signal?: AbortSignal,
   injected: Partial<HttpDependencies> = {}): AsyncGenerator<Uint8Array<ArrayBuffer>> {
-  if (!integer(source.sizeBytes, 0, MAX_FETCH_BYTES)) {fail("BOUNDS");}
+  if (!integer(source.sizeBytes, 0, MAX_SMALL_FILE_BYTES)) {fail("BOUNDS");}
   return wholeStream(source, state, signal, injected, true);
 }
 async function* wholeStream(source: ContentSourceV1, state: ContentObjectState, signal: AbortSignal | undefined,
   injected: Partial<HttpDependencies>, window: boolean): AsyncGenerator<Uint8Array<ArrayBuffer>> {
   if (source.transport !== "WHOLE_ALLOWED") {fail("SOURCE_INVALID");}
   const dependencies = {...defaults, ...injected}, generation = state.generation;
-  const headersScope = requestScope(signal, 20000);
+  const headersScope = requestScope(signal, window ? 15000 : 20000);
+  let bodyScope: ReturnType<typeof requestScope> | undefined;
   let response: Response | undefined;
   try {
     validState(state, generation, headersScope.signal);
     response = await wholeResponse(source, state, headersScope.signal, dependencies);
     headersScope.dispose();
+    bodyScope = requestScope(signal, window ? 15000 : 20000);
     const body = window ? windowBody(response, source.sizeBytes) : response.body;
-    for await (const chunk of iterateExact(body, source.sizeBytes, signal, 20000, dependencies.consumed)) {
+    const progress = (bytes: number) => {bodyScope!.renew(); dependencies.progress?.(bytes);};
+    for await (const chunk of iterateExact(body, source.sizeBytes, bodyScope.signal, undefined, dependencies.consumed, progress)) {
       validState(state, generation, signal); yield chunk;
     }
     validState(state, generation, signal);
   } finally {
     headersScope.dispose();
+    bodyScope?.dispose();
     if (!response?.body?.locked) {void response?.body?.cancel().catch(() => undefined);}
   }
 }

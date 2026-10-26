@@ -16,7 +16,7 @@ export function requireContentSession<T extends ContentSessionAccess>(session?: 
 
 export type ContentSessionAccess = Pick<ContentSessionClient, "materialize" | "closeFile"> & {
   readonly preloaded?: boolean;
-  open(source: ContentSourceV1, policy: ManagedInputPolicyV1, signal?: AbortSignal): Promise<import("../../contracts/content-io/v1/content-io.js").ContentReaderV1>;
+  open(source: ContentSourceV1, policy: ManagedInputPolicyV1, signal?: AbortSignal): Promise<import("../content-io/range-reader.js").ProgressContentReader>;
 };
 export type AdapterContentSession = ContentSessionAccess & {
   inputPolicy(role: string, member?: string): ManagedInputPolicyV1;

@@ -32,13 +32,12 @@ export function createSyncContentReader(options: Options) {
     accounting.copied("MEMORY", destination.length); report(); return destination.length;
   };
   /**
-   * `timeoutMs` bounds each block attempt. The service gets a shorter bound so it always answers first;
+   * `timeoutMs` bounds network inactivity. The consumer adds a short watchdog grace so the service answers first;
    * a transient network failure waits and retries the block instead of closing the channel.
    */
   const readInto = (offset: number, destination: Uint8Array, timeoutMs = 15000): number => {
     check(); validateReadBounds(options.sizeBytes, offset, destination.length);
     if (!integer(timeoutMs, 1, 15000)) {fail("BOUNDS");}
-    const serviceTimeoutMs = timeoutMs > 4000 ? timeoutMs - 2000 : Math.max(1, Math.floor(timeoutMs / 2));
     for (let written = 0; written < destination.length;) {
       check(); const position = offset + written, index = Math.floor(position / BLOCK_BYTES), within = position % BLOCK_BYTES;
       const count = Math.min(destination.length - written, BLOCK_BYTES - within), target = destination.subarray(written, written + count);
@@ -49,7 +48,7 @@ export function createSyncContentReader(options: Options) {
           const id = ++sequence;
           try {
             blockingRead({buffer: options.buffer, epoch: options.epoch, requestId: id, length, timeoutMs,
-              send: () => options.port.postMessage({...base(address, id), type: "READ", fileId: options.fileId, offset: index * BLOCK_BYTES, length, timeoutMs: serviceTimeoutMs}),
+              send: () => options.port.postMessage({...base(address, id), type: "READ", fileId: options.fileId, offset: index * BLOCK_BYTES, length, timeoutMs}),
               acknowledge: () => options.port.postMessage({...base(address, 0), type: "SLOT_FREE", completedRequestId: id}),
               cancel: () => options.port.postMessage({...base(address, 0), type: "CANCEL", cancelRequestId: id}),
               consume: (bytes, origin) => {check(); cache.put(key(index), bytes); target.set(bytes.subarray(within, within + count)); accounting.copied(origin, count); report();}});

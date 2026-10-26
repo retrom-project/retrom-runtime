@@ -26,7 +26,8 @@ test("prefetch shares a delayed HTTP request with demand and persists it for a n
       let adopted!: () => void;
       const joined = new Promise<void>(resolve => {adopted = resolve;});
       const first = await createContentSession(new Worker("/__test__/worker.mjs", {type: "module"}), context,
-        {onDiagnostic: event => {if (event.counts.waiters === 2 && event.counts.inflight === 1) {adopted();}}});
+        {fetchPolicy: {smallFileThresholdBytes: 1048576, networkWindowBytes: 2 * B},
+          onDiagnostic: event => {if (event.counts.waiters === 2 && event.counts.inflight === 1) {adopted();}}});
       let sample = 0;
       try {
         const a = await first.open(source, policy), b = await first.open(source, policy);
@@ -37,7 +38,8 @@ test("prefetch shares a delayed HTTP request with demand and persists it for a n
         const bytes = new Uint8Array(1), demand = b.readInto(2 * B, bytes);
         await joined; await a.close(); await hooks.releaseWindow(); await demand; sample = bytes[0];
       } finally {await first.close();}
-      const second = await createContentSession(new Worker("/__test__/worker.mjs", {type: "module"}), context);
+      const second = await createContentSession(new Worker("/__test__/worker.mjs", {type: "module"}), context,
+        {fetchPolicy: {smallFileThresholdBytes: 1048576, networkWindowBytes: 2 * B}});
       try {
         const reader = await second.open(source, policy), bytes = new Uint8Array(1);
         await reader.readInto(2 * B, bytes);
@@ -64,7 +66,8 @@ test("first [300,900) KiB read produces exactly two required HTTP windows plus o
       const idle = new Promise<void>(resolve => {finished = resolve;});
       const session = await createContentSession(new Worker("/__test__/worker.mjs", {type: "module"}),
         {storageOrigin: location.origin, allowedOrigins: [location.origin]},
-        {onDiagnostic: event => {if (event.counts.rangeRequests === 3 && event.counts.inflight === 0) {finished();}}});
+        {fetchPolicy: {smallFileThresholdBytes: 1048576, networkWindowBytes: 524288},
+          onDiagnostic: event => {if (event.counts.rangeRequests === 3 && event.counts.inflight === 0) {finished();}}});
       try {
         const reader = await session.open({identity: identity.identity, sizeBytes: identity.sizeBytes,
           url: `${location.origin}/objects/cache-trace/game`, purpose: "GAME", transport: "RANGE_REQUIRED",

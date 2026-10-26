@@ -34,7 +34,7 @@ export class ContentSessionService {
     this.pool = new BlockPool(boot.l1BudgetBytes, (object, index, signal) => this.store.read(object, index, signal),
       (object, error) => this.revoke(object, error), (object, signal) => this.store.prepare(object, signal), {policy: boot.fetchPolicy,
         local: (object, index, signal) => this.store.local(object, index, signal ?? new AbortController().signal),
-        load: (object, window, signal, origins) => this.windowLoader.load(object, window, signal, origins)});
+        load: (object, window, signal, origins, progress) => this.windowLoader.load(object, window, signal, origins, progress)});
     this.store = new ContentStoreManager(boot.storageOrigin, this.pool.credits, (backend) => {
       if (backend === "OPFS" || backend === "CACHE_BLOCKS" || backend === "MEMORY") {this.send({...base(this.address, 0), type: "BACKEND_READY", backend});}
     }, (error, operation) => this.report(operation, error.codeNumber));

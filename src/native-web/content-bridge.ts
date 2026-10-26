@@ -75,8 +75,12 @@ async function contentRequest(files: NativeContentFiles, reads: NativeReadQueue,
   data: Record<string, unknown>) {
   if (data.type !== "READ" || data.admission !== true) {return files.request(data);}
   const release = await reads.acquire();
+  let networkBytes = 0;
   try {
     port.postMessage({id: data.id, type: "READ_STARTED"});
-    return await files.request(data);
+    return await files.request(data, bytes => {
+      networkBytes += bytes;
+      port.postMessage({id: data.id, type: "READ_PROGRESS", networkBytes});
+    });
   } finally {release();}
 }

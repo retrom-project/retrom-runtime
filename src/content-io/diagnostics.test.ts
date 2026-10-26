@@ -19,7 +19,8 @@ it("[X-29] UNIT/session-diagnostics reports actual consumer bytes and a drained 
       headers: {ETag: '"stable"', "Content-Length": String(2 * B), "Content-Range": `bytes 0-${2 * B - 1}/${8 * B}`}});
     Object.defineProperty(response, "url", {value: "https://example.test/data"}); return response;
   }));
-  const session = new ContentSessionClient(new Worker("unused"), {storageOrigin: "https://example.test", allowedOrigins: ["https://example.test"]}, undefined, {onDiagnostic: diagnostics});
+  const session = new ContentSessionClient(new Worker("unused"), {storageOrigin: "https://example.test", allowedOrigins: ["https://example.test"]}, undefined,
+    {onDiagnostic: diagnostics, fetchPolicy: {smallFileThresholdBytes: 1024 * 1024, networkWindowBytes: 2 * B}});
   try {
     const reader = await session.open({identity: {kind: "INDEX_ENTRY", projectDigest: "a".repeat(64), logicalPath: "private-name"},
       sizeBytes: 8 * B, url: "https://example.test/data?token=secret", purpose: "GAME", transport: "RANGE_REQUIRED", etagPolicy: "PIN_STRONG", contentLengthPolicy: "EXACT_IF_PRESENT"},

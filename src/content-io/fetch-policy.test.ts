@@ -1,5 +1,5 @@
 import {expect, it} from "vitest";
-import {DEFAULT_FETCH_POLICY, MAX_FETCH_BYTES, fetchWindow, missingRanges, validateFetchPolicy} from "./fetch-policy.js";
+import {DEFAULT_FETCH_POLICY, MAX_FETCH_BYTES, MAX_SMALL_FILE_BYTES, fetchWindow, missingRanges, validateFetchPolicy} from "./fetch-policy.js";
 import {BLOCK_BYTES as B} from "./source.js";
 
 it("[IO-02] UNIT/fetch-config validates and freezes independent settings before I/O", () => {
@@ -9,7 +9,7 @@ it("[IO-02] UNIT/fetch-config validates and freezes independent settings before 
   expect(validateFetchPolicy({smallFileThresholdBytes: 0}).smallFileThresholdBytes).toBe(0);
   for (const value of [null, [], {extra: 1}, {networkWindowBytes: undefined}, {networkWindowBytes: B - 1},
     {networkWindowBytes: B + 1}, {networkWindowBytes: MAX_FETCH_BYTES + B}, {smallFileThresholdBytes: -1},
-    {smallFileThresholdBytes: MAX_FETCH_BYTES + 1}, {smallFileThresholdBytes: 1.5}, {smallFileThresholdBytes: NaN},
+    {smallFileThresholdBytes: MAX_SMALL_FILE_BYTES + 1}, {smallFileThresholdBytes: 1.5}, {smallFileThresholdBytes: NaN},
     {smallFileThresholdBytes: Infinity}, {networkWindowBytes: Number.MAX_SAFE_INTEGER + 1}]) {
     expect(() => validateFetchPolicy(value)).toThrow("SOURCE_INVALID");
   }
@@ -34,7 +34,8 @@ for (const windowBytes of [B, 3 * B, 5 * B, MAX_FETCH_BYTES]) {
             expect(range.start).toBeGreaterThanOrEqual(plan.start); expect(range.start + range.length).toBeLessThanOrEqual(plan.start + plan.length);
             for (let offset = range.start; offset < range.start + range.length; offset += B) {expect(present.has(offset / B)).toBe(false);}
           }
-          expect(missingRanges(plan, new Set())).toEqual([{start: plan.start, length: plan.length}]);
+          expect(missingRanges(plan, new Set())).toEqual(Array.from({length: Math.ceil(plan.length / MAX_FETCH_BYTES)}, (_, n) =>
+            ({start: plan.start + n * MAX_FETCH_BYTES, length: Math.min(MAX_FETCH_BYTES, plan.length - n * MAX_FETCH_BYTES)})));
           expect(missingRanges(plan, new Set(Array.from({length: plan.blockCount}, (_, n) => plan.firstBlock + n)))).toEqual([]);
         }
       }

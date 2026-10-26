@@ -43,7 +43,9 @@ test("[BR-10] BROWSER/session [PK-02] BROWSER/session [PK-03] BROWSER/session @S
     expect(result.before).toBe(0); expect(result.cached).toBe(19); expect(result.copied).toEqual(result.snapshot);
     expect(result.snapshot.some((n) => n !== 0)).toBe(true); expect(result.closed).toBe("CONTENT_IO_ABORTED");
     expect(result.stats).toMatchObject({pending: 0, active: 0, queued: 0, lruBytes: 0, channels: 0, files: 0});
-    expect(server.requests("game").map((request) => request.range)).toEqual(["bytes=0-262143", "bytes=262144-524287"]);
+    const ranges = server.requests("game").map(request => request.range);
+    expect(ranges.filter(range => range !== "bytes=524288-786431")).toEqual(["bytes=0-262143", "bytes=262144-524287"]);
+    expect(new Set(ranges).size).toBe(ranges.length);
   } finally {await server.close();}
 });
 test("[BR-12] BROWSER/session refuses wrong source origin @S05", async ({page}) => {

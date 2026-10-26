@@ -54,7 +54,7 @@ for (const scenario of ["overflow", "cancel"] as const) {
       expect(requests).toBe(1);
       // Accepted socket writes include OS/network-service buffers, so they are
       // not the JS temporary-memory gauge. Detect eager draining of the entire
-      // oversized response; the credit tests assert the separate 8 MiB budget.
+      // oversized response; the credit tests assert the separate 16 MiB budget.
       expect(sentBytes).toBeLessThan(total);
     } finally {await new Promise<void>(resolve => server.close(() => resolve()));}
   });

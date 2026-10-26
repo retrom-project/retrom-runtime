@@ -12,8 +12,8 @@ it("[PK-06] CONTRACT/PSP pins the published ABI-v4 core and verified assets", as
     repository: "https://github.com/retrom-project/ppsspp",
     upstreamCommit: "2e6fd06ed6c77db467dea5fb3f67abd93457da20",
     adapterAbi: "ppsspp-host-v4",
-    tag: "retrom-core-g2e6fd06ed6c7-r5",
-    commit: "be591fb983626f08fc855b58190637f729e4f3f8",
+    tag: "retrom-core-g2e6fd06ed6c7-r6",
+    commit: "fca060d28846b33d08f56af78b10a7cb9ebc3d98",
   });
   expect(psp.metadataUrl).toBe(`${psp.repository}/releases/download/${psp.tag}/rpg-runtime-release.json`);
   expect(psp.assets.map((asset: {filename: string}) => asset.filename).sort()).toEqual([

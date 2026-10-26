@@ -11,8 +11,8 @@ it("pins the published Play ABI-v3 core and its verified assets", async () => {
     repository: "https://github.com/retrom-project/Play-",
     upstreamCommit: "83700b2c31e593bc94e845b4b31b797be84dda59",
     adapterAbi: "play-host-v3",
-    tag: "retrom-core-g83700b2c31e5-r4",
-    commit: "44cf4d84d075e57faeddb763084d9b0dfe821018",
+    tag: "retrom-core-g83700b2c31e5-r5",
+    commit: "c129ec30ce25f78740f252283e0bf61098ec6002",
   });
   expect(play.metadataUrl).toBe(`${play.repository}/releases/download/${play.tag}/rpg-runtime-release.json`);
   expect(play.assets.map((asset: {filename: string}) => asset.filename).sort()).toEqual([

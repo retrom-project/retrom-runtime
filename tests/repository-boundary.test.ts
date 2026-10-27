@@ -122,9 +122,9 @@ describe("independent package boundary", () => {
     expect(() => assertScummvmCandidateMode([candidate], true, true)).toThrow("UNPUBLISHED_CORE_INPUT");
     expect(sources.upstreamReleases).toContainEqual(expect.objectContaining({
       id: "onsyuri", adapterAbi: "ons-content-io-v1", repository: "https://github.com/retrom-project/OnscripterYuri",
-      tag: "retrom-core-0.7.7beta-r9", commit: "edf7dc713324aac09d3f5191117baa7ca106b67b",
+      tag: "retrom-core-0.7.7beta-r10", commit: "f414c6ff732821b5a9208a1f562effadf377e9e4",
       assets: expect.arrayContaining([expect.objectContaining({
-        filename: "onsyuri.wasm", sha256: "6b80c60372be785b6585d1d77800b8d9b9a3ca912ed2f4cd96883190665ea4bc",
+        filename: "onsyuri.wasm", sha256: "e0ec0831150b3954058a25b0bb930bfb4572b44de945a1f3bc65dd7b86a7cc6c",
       })]),
     }));
     expect(await readdir(join(root, "scripts"))).not.toEqual(expect.arrayContaining([

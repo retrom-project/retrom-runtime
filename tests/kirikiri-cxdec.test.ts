@@ -3,7 +3,7 @@ import {createHash} from "node:crypto";
 import {deflateSync, inflateSync} from "node:zlib";
 import {describe, expect, it, vi} from "vitest";
 import {createCxFilter, discoverCxProfiles, discoverTinyProfiles, extractEmbeddedPeModules} from "../scripts/kirikiri/cxdec.mjs";
-import {tinyPE} from "./kirikiri-pe-fixture.js";
+import {tinyPE, tinyFirstBytePE} from "./kirikiri-pe-fixture.js";
 
 vi.mock("node:zlib", async () => {
   const actual = await vi.importActual<typeof import("node:zlib")>("node:zlib");
@@ -120,6 +120,11 @@ describe("classic Cx expression interpreter", () => {
 });
 
 describe("bounded static PE recovery", () => {
+  it("recovers a dual-key Tiny constructor and its first-byte consumer through the vtable", () => {
+    expect(discoverTinyProfiles(tinyFirstBytePE())).toMatchObject([
+      {xorConstant: 0x12345678, zeroFallback: 0x55, firstByte: {zeroFallback: 0x69}}
+    ]);
+  });
   it("recovers Tiny constants only from one connected four-byte fold and its zero-key guard", () => {
     const b = tinyPE();
     expect(discoverTinyProfiles(b)).toMatchObject([{xorConstant: 0x12345678, zeroFallback: 0x55}]);

@@ -234,7 +234,7 @@ The Content column lists the accepted content kind and, where present, the requi
 | WebMSX (`webmsx`) | MSX (WebMSX) (`msx-webmsx`) | `msx` | `SINGLE_FILE` | `INSTANT` |
 | Neko Project II Kai (`np2kai`) | PC-98 (Neko Project II Kai) (`np2kai-pc98`) | `pc98` | `SINGLE_FILE` | `INSTANT` |
 | NXEngine (`nxengine`) | Cave Story (NXEngine) (`nxengine`) | `cavestory` | `NXENGINE_PROJECT` | `GAME_SAVE` |
-| ONScripter Yuri (`onscripter_yuri`) | ONScripter Yuri (`onscripter-yuri`) | `ons` | `ONS_PROJECT` | `INSTANT` |
+| ONScripter Yuri (`onscripter_yuri`) | ONScripter Yuri (`onscripter-yuri`) | `ons` | `ONS_PROJECT` | `GAME_SAVE` |
 | OpenBOR (`openbor`) | OpenBOR (`openbor`) | `openbor` | `SINGLE_FILE` | `GAME_SAVE` |
 | Play! (`play`) | Play! (PlayStation 2) (`play-ps2`) | `ps2` | `SINGLE_FILE` | `INSTANT` |
 | PPSSPP (`ppsspp`) | PPSSPP (PSP) (`ppsspp`) | `psp` | `SINGLE_FILE` | `INSTANT` |

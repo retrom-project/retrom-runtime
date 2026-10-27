@@ -125,7 +125,6 @@ export function ons(envelope: LaunchEnvelopeV1): OnsParameters {
   const encoding = envelope.targetOptions.scriptEncoding;
   if (encoding !== "gbk" && encoding !== "sjis" && encoding !== "utf8") {invalidRequest();}
   return {
-    checkpointSlot: 999,
     contentDigest: game.contentDigest,
     projectIndexUrl: game.indexUrl,
     runtimeBaseUrl: assetBase(envelope, "ons"),

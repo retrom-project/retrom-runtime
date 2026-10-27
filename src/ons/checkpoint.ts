@@ -1,17 +1,18 @@
-export const onsCheckpointMagic = "RTONSSV1";
+export const onsCheckpointMagic = "RTONSGS1";
+export const onsGameSaveFormat = "ons-game-save-v1";
 
 export type OnsCheckpointEntry = { path: string; data: Uint8Array };
-export type OnsCheckpointBundle = { resumeSlot: 999; entries: OnsCheckpointEntry[] };
+export type OnsCheckpointBundle = { entries: OnsCheckpointEntry[] };
 
 type ManifestEntry = { offset: number; path: string; sha256: string; sizeBytes: number };
-type Manifest = { entries: ManifestEntry[]; resumeSlot: 999; schemaVersion: 1 };
+type Manifest = { entries: ManifestEntry[]; schemaVersion: 1 };
 
 const maximumBundleBytes = 64 * 1024 * 1024;
 const maximumManifestBytes = 256 * 1024;
 const maximumEntries = 512;
 
 export async function encodeOnsCheckpoint(bundle: OnsCheckpointBundle) {
-  if (bundle.resumeSlot !== 999 || !Array.isArray(bundle.entries) || bundle.entries.length > maximumEntries) {
+  if (!Array.isArray(bundle.entries) || bundle.entries.length > maximumEntries || !hasNativeProgress(bundle.entries)) {
     throw new Error("ONS_CHECKPOINT_INVALID");
   }
   const entries = bundle.entries.map((entry) => ({ path: entry.path, data: entry.data.slice() }))
@@ -30,7 +31,7 @@ export async function encodeOnsCheckpoint(bundle: OnsCheckpointBundle) {
     offset += entry.data.byteLength;
     previous = entry.path;
   }
-  const manifest: Manifest = { entries: manifestEntries, resumeSlot: 999, schemaVersion: 1 };
+  const manifest: Manifest = { entries: manifestEntries, schemaVersion: 1 };
   const manifestBytes = new TextEncoder().encode(JSON.stringify(manifest));
   const total = onsCheckpointMagic.length + 4 + manifestBytes.byteLength + offset;
   if (!manifestBytes.byteLength || manifestBytes.byteLength > maximumManifestBytes || total > maximumBundleBytes) {
@@ -50,7 +51,7 @@ export async function encodeOnsCheckpoint(bundle: OnsCheckpointBundle) {
 
 export async function decodeOnsCheckpoint(bytes: Uint8Array): Promise<OnsCheckpointBundle> {
   const { manifest, payload } = parseManifest(bytes);
-  if (!manifest || manifest.schemaVersion !== 1 || manifest.resumeSlot !== 999 ||
+  if (!manifest || manifest.schemaVersion !== 1 ||
     !Array.isArray(manifest.entries) || manifest.entries.length > maximumEntries) {
     throw new Error("ONS_CHECKPOINT_INVALID");
   }
@@ -67,8 +68,13 @@ export async function decodeOnsCheckpoint(bytes: Uint8Array): Promise<OnsCheckpo
     offset += entry.sizeBytes;
     previous = entry.path;
   }
-  if (offset !== payload.byteLength) {throw new Error("ONS_CHECKPOINT_INVALID");}
-  return { entries, resumeSlot: 999 };
+  if (offset !== payload.byteLength || !hasNativeProgress(entries)) {throw new Error("ONS_CHECKPOINT_INVALID");}
+  return { entries };
+}
+
+function hasNativeProgress(entries: OnsCheckpointEntry[]) {
+  // This is ONScripter's native slot layout, independent of game identity.
+  return entries.some(entry => /^save[0-9]+\.dat$/u.test(entry.path) && entry.data?.byteLength > 0);
 }
 
 function parseManifest(bytes: Uint8Array): { manifest: Manifest; payload: Uint8Array } {

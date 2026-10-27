@@ -43,8 +43,16 @@ it("maps six Arcade actions plus coin and start to distinct native buttons", () 
     axes: [0, 0], keys: [], buttons: [0, 1, 2, 3, 4, 7, 8, 9, 10, 11],
   });
 });
+it("maps SG-1000 to working keyboard directions, two fire keys and hardware pause without duplicate joystick input", () => {
+  expect(padState([pad([0, 1, 9, 15])], "sg1000")).toEqual({axes: [0, 0], buttons: [], keys: [49, 275, 306, 308]});
+  expect(padState([pad([], [-.8, -.8])], "sg1000")).toEqual({axes: [0, 0], buttons: [], keys: [273, 276]});
+  const core = {_retrom_mame_key: vi.fn(), _retrom_mame_button: vi.fn(), _retrom_mame_axis: vi.fn()};
+  const input = new MameInput(core, "sg1000");
+  input.poll([pad([15, 0])]); input.poll([]);
+  expect(core._retrom_mame_key.mock.calls).toEqual([[275, 1], [306, 1], [275, 0], [306, 0]]);
+  expect(core._retrom_mame_button).not.toHaveBeenCalled();
+});
 it("keeps IIe analog controls and maps Coleco keypad start separately from fire", () => {
   expect(padState([pad([0, 9, 15])], "apple2e")).toEqual({axes: [32767, 0], buttons: [0], keys: [49]});
   expect(padState([pad([0, 9, 15])], "coleco")).toEqual({axes: [0, 0], buttons: [0, 7], keys: [257]});
-  expect(padState([pad([0, 1, 15])], "sg1000")).toEqual({axes: [0, 0], buttons: [0, 7, 8], keys: []});
 });

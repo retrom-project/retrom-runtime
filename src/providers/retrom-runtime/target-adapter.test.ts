@@ -139,10 +139,11 @@ describe("Provider to core-private parameters", () => {
   it("passes isolated Web identity while preserving the host's prepared shell", async () => {
     const request = targetEnvelope("tyranoscript");
     const options = context();
+    options.touchGamepadEnabled = false;
     await mountTargetAdapter(request, document.createElement("div"), options);
     expect(mountTyranoScript).toHaveBeenCalledWith({
       sessionId: request.session.id, uniqueOrigin: "https://runtime.test",
-    }, options.frame, null, options.reportExitRequested);
+    }, options.frame, null, options.reportExitRequested, {touchGamepadEnabled: false});
   });
 
   it("constructs WASM-4 cart data without a fake session or adapter identity", async () => {

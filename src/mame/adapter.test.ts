@@ -4,6 +4,7 @@ import {mountMame} from "./adapter.js";
 import {eagerPolicy} from "../provider/content-policies.js";
 import {CoreDiagnostics} from "../provider/core-diagnostics.js";
 import {RuntimeFailureError} from "../provider/failure.js";
+import {installTouchGamepad} from "../provider/touch-gamepad.js";
 const diagnostics = new CoreDiagnostics();
 const state = vi.hoisted(() => ({core: null as unknown as MameCore}));
 vi.mock("./core.js", async original => ({...await original<typeof import("./core.js")>(),
@@ -27,6 +28,32 @@ beforeEach(() => {
   vi.spyOn(window, "cancelAnimationFrame").mockImplementation(() => {});
 });
 const game = {url: "/game", sizeBytes: 32768, sha256: "a".repeat(64)};
+it.each([
+  {machine: "pv1000", arcade: false, index: 9, label: "Start", keys: [], buttons: [3]},
+  {machine: "sg1000", arcade: false, index: 9, label: "暂停", keys: [49], buttons: []},
+  {machine: "coleco", arcade: false, index: 9, label: "1", keys: [257], buttons: []},
+  {machine: "1942", arcade: true, index: 8, label: "投币", keys: [], buttons: [2]},
+])("offers a shared touch layout with the native system input for $machine", async sample => {
+  const {padState} = await vi.importActual<typeof import("./input.js")>("./input.js");
+  const config = {...sample, game, bios: [], runtimeBaseUrl: "/"} as Parameters<typeof mountMame>[0];
+  const adapter = await mountMame(config, document.body, window, null, content);
+  const focus = vi.spyOn(window, "focus").mockImplementation(() => {});
+  Object.defineProperty(window, "matchMedia", {configurable: true, value: () => ({matches: true})});
+  const options = adapter.touchGamepad;
+  let touch: ReturnType<typeof installTouchGamepad> | undefined;
+  try {
+    expect(options).toBeTruthy();
+    if (!options || options === true) {throw new Error("Expected configured virtual controls");}
+    touch = installTouchGamepad(window, options);
+    const root = document.querySelector("[data-retrom-touch-gamepad]")!;
+    const button = root.querySelector(`[data-button="${sample.index}"]`)!;
+    expect(button.textContent).toBe(sample.label);
+    button.dispatchEvent(new PointerEvent("pointerdown", {bubbles: true, pointerType: "touch", pointerId: 1}));
+    expect(padState([touch.current() as Gamepad], sample.machine, sample.arcade)).toMatchObject({keys: sample.keys, buttons: sample.buttons});
+    await touch.setEnabled(false);
+    expect(touch.current()).toBeNull();
+  } finally {touch?.cleanup(); await adapter.exit(); focus.mockRestore(); Reflect.deleteProperty(window, "matchMedia"); document.body.replaceChildren();}
+});
 it.each(["sg1000", "coleco", "pv1000"] as const)("restores %s immediately after native start is ready without advancing guest time", async machine => {
   const adapter = await mountMame({machine, game, bios: [], runtimeBaseUrl: "/"}, document.body, window, new Uint8Array([1]), content);
   expect(state.core._retrom_mame_start).toHaveBeenCalledOnce();

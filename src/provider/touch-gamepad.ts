@@ -8,6 +8,7 @@ const buttonCount = 17;
 const device = "touch-gamepad";
 
 type GamepadLike = Pick<Gamepad, "axes" | "buttons" | "connected" | "id" | "index" | "mapping" | "timestamp">;
+type ControlPointer = Pick<PointerEvent, "target" | "pointerId" | "clientX" | "clientY" | "preventDefault" | "stopPropagation">;
 
 /** Pressed standard buttons of the on-screen pad; pure so merging is testable without a DOM. */
 export class TouchGamepadState {
@@ -177,7 +178,7 @@ export function installTouchGamepad(frameWindow: Window, options: TouchGamepadOp
       else {control.style.setProperty(`--stick-${axis}`, `${value}px`);}
     }
   };
-  const moveStick = (event: PointerEvent, control: HTMLElement, x: number, y: number) => {
+  const moveStick = (event: ControlPointer, control: HTMLElement, x: number, y: number) => {
     const distance = Math.hypot(x, y), scale = distance > 1 ? 1 / distance : 1;
     const travel = control.getBoundingClientRect().width / 4;
     const point = {x: x * scale * travel, y: y * scale * travel};
@@ -185,7 +186,7 @@ export function installTouchGamepad(frameWindow: Window, options: TouchGamepadOp
     if (owner) {owner.point = point;}
     positionStick(control, point.x, point.y);
   };
-  const moveAnalog = (event: PointerEvent) => {
+  const moveAnalog = (event: ControlPointer) => {
     if (!analog || !knob) {return;}
     const bounds = analog.getBoundingClientRect(), radius = bounds.width / 2;
     if (!(radius > 0)) {return;}
@@ -196,21 +197,33 @@ export function installTouchGamepad(frameWindow: Window, options: TouchGamepadOp
     state.setAxis(0, x, now()); state.setAxis(1, y, now());
     moveStick(event, analog, x, y);
   };
-  const moveDpad = (event: PointerEvent) => {
+  const moveDpad = (event: ControlPointer) => {
     const bounds = pad.getBoundingClientRect(), radius = bounds.width / 2;
     const dx = event.clientX - (bounds.left + radius), dy = event.clientY - (bounds.top + bounds.height / 2);
     hold(event.pointerId, "dpad", dpadDirections(dx, dy, radius));
     if (radius > 0) {moveStick(event, pad, dx / radius, dy / radius);}
   };
-  const swallow = (event: Event) => {event.preventDefault(); event.stopPropagation();};
+  const swallow = (event: Pick<Event, "preventDefault" | "stopPropagation">) => {event.preventDefault(); event.stopPropagation();};
+  const capturePointer = (control: HTMLElement, pointerId: number, capture: boolean) => {
+    if (!capture) {return true;}
+    try {control.setPointerCapture?.(pointerId); return true;}
+    catch (error) {
+      if (!(error instanceof (frameWindow as Window & {DOMException: typeof DOMException}).DOMException)) {throw error;}
+      if (error.name === "NotFoundError") {release(pointerId); return false;}
+      // Pointer-locked cores cannot capture. Window-level release still ends the press.
+      if (error.name !== "InvalidStateError") {throw error;}
+      return true;
+    }
+  };
 
-  const down = (event: PointerEvent) => {
+  const down = (event: ControlPointer, capture = true) => {
     const control = (event.target as Element | null)?.closest?.("[data-control]");
     if (!control || !root.contains(control)) {return;}
     if (root.hidden) {return;}
     swallow(event);
     frameWindow.focus();
-    (control as HTMLElement).setPointerCapture?.(event.pointerId);
+    if (disposed || !root.isConnected) {return;}
+    if (!capturePointer(control as HTMLElement, event.pointerId, capture)) {return;}
     if (control === pad) {moveDpad(event); return;}
     if (control === analog) {
       if ([...owners.values()].some(owner => owner.control === "analog")) {return;}
@@ -219,20 +232,43 @@ export function installTouchGamepad(frameWindow: Window, options: TouchGamepadOp
     const index = [...faces].find(([, element]) => element === control)?.[0];
     if (index !== undefined) {hold(event.pointerId, index, [index]);}
   };
-  const move = (event: PointerEvent) => {
+  const move = (event: ControlPointer) => {
     const owner = owners.get(event.pointerId);
     if (!owner) {return;}
     swallow(event);
     if (owner.control === "dpad") {moveDpad(event);}
     if (owner.control === "analog") {moveAnalog(event);}
   };
-  const up = (event: PointerEvent) => {
+  const up = (event: ControlPointer) => {
     if (!owners.has(event.pointerId)) {return;}
     swallow(event); release(event.pointerId);
   };
-  root.addEventListener("pointerdown", down);
+  const pointerDown = (event: PointerEvent) => {
+    // Under pointer lock Chrome zeros touch PointerEvent coordinates. TouchEvent retains them.
+    if (event.pointerType === "touch" && document.pointerLockElement) {return;}
+    down(event);
+  };
+  const lockedTouch = (event: TouchEvent) => {
+    for (const point of Array.from(event.changedTouches)) {
+      const pointerId = -point.identifier - 1;
+      if (event.type === "touchstart" ? !document.pointerLockElement : !owners.has(pointerId)) {continue;}
+      const input: ControlPointer = {target: point.target, pointerId, clientX: point.clientX, clientY: point.clientY,
+        preventDefault: () => event.preventDefault(), stopPropagation: () => event.stopPropagation()};
+      if (event.type === "touchstart") {
+        down(input, false);
+        // Virtual controls use absolute touches; release the mouse lock so the host toolbar remains reachable.
+        if (owners.has(pointerId)) {document.exitPointerLock?.();}
+      }
+      else if (event.type === "touchmove") {move(input);}
+      else {up(input);}
+    }
+  };
+  root.addEventListener("pointerdown", pointerDown);
+  root.addEventListener("touchstart", lockedTouch, {passive: false});
+  for (const type of ["touchmove", "touchend", "touchcancel"] as const) {frameWindow.addEventListener(type, lockedTouch, {capture: true, passive: false});}
   root.addEventListener("pointermove", move);
   for (const type of ["pointerup", "pointercancel", "lostpointercapture"] as const) {root.addEventListener(type, up);}
+  for (const type of ["pointerup", "pointercancel"] as const) {frameWindow.addEventListener(type, up, true);}
   root.addEventListener("contextmenu", swallow);
 
   let announced = false;
@@ -287,6 +323,8 @@ export function installTouchGamepad(frameWindow: Window, options: TouchGamepadOp
       disposed = true;
       releaseAll();
       frameWindow.removeEventListener("pointerdown", touched, true);
+      for (const type of ["touchmove", "touchend", "touchcancel"] as const) {frameWindow.removeEventListener(type, lockedTouch, true);}
+      for (const type of ["pointerup", "pointercancel"] as const) {frameWindow.removeEventListener(type, up, true);}
       frameWindow.removeEventListener("blur", releaseAll);
       document.removeEventListener("visibilitychange", hiddenPage);
       root.remove(); style.remove();

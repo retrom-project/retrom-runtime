@@ -7,6 +7,7 @@ import {withStartupTask} from "../provider/startup.js";
 import {prepareMameCore, type MameParameters} from "./core.js";
 import {prepareArcadeFiles} from "./files.js";
 import {installInput} from "./input.js";
+import {mameTouchGamepad} from "./touch-gamepad.js";
 import {MameAudio} from "./audio.js";
 import {captureVideo} from "./video.js";
 import {checkpointFormat, checkpointLimit, decodeState, encodeState} from "./state.js";
@@ -83,6 +84,7 @@ export async function mountMameWorker(config: Extract<MameParameters, {arcade: t
     }
   }
   return {
+    touchGamepad: mameTouchGamepad(config.machine, true),
     exit, getCanvas: () => stopped ? null : canvas, getFrameCount: () => frameCount, getDisplayAspectRatio: () => state.aspect,
     getCheckpointAvailability: () => stopped ? {available: false, blocker: "NOT_READY"} : state.checkpointSize > 0 && state.checkpointSize <= checkpointLimit - 108
       ? {available: true, blocker: null} : {available: false, blocker: "UNSUPPORTED"},

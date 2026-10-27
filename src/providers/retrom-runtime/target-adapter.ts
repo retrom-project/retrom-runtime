@@ -97,7 +97,8 @@ function mountAdapter(envelope: LaunchEnvelopeV1, target: HTMLElement, input: Ta
       reportProgress, reportExitRequested, {...contentOptions(context), signal: context.signal});
   case "TYRANOSCRIPT_WEB":
     return mountWithNativeContent(envelope, requireFrame(context), requireContentSession(contentSession),
-      () => mountTyranoScript(parameters.tyranoScript(envelope), requireFrame(context), restorePayload, reportExitRequested),
+      () => mountTyranoScript(parameters.tyranoScript(envelope), requireFrame(context), restorePayload, reportExitRequested,
+        {touchGamepadEnabled: context.touchGamepadEnabled}),
       context.signal, reportFailure);
   case "J2ME_MINIJVM_WEB":
     return mountJ2me(parameters.j2me(envelope), target, frameWindow, restorePayload, reportProgress,

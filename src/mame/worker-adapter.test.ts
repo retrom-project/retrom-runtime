@@ -48,6 +48,9 @@ function content(signal?: AbortSignal) {
 it("resolves assets outside about:blank, forwards input and restores a checkpoint in a new worker", async () => {
   const first = content();
   const adapter = await mountMameWorker(config, frame.contentDocument!.body, frame.contentWindow!, null, first);
+  expect(adapter.touchGamepad).toMatchObject({auxiliary: expect.arrayContaining([
+    {index: 8, label: "投币", side: "center-left"}, {index: 9, label: "开始", side: "center-right"},
+  ])});
   expect(fake.asset.mock.calls[0][0]).toMatch(/^https?:\/\/[^/]+\/provider\/$/u);
   expect(first.contentSession.materialize).not.toHaveBeenCalled();
   expect(fake.boot?.media[0]).toMatchObject({path: "sample/disk.chd", size: 4 * 1024 ** 3});

@@ -78,17 +78,43 @@ Additional adapters select data-only profiles from the same module:
 | WebMSX | Directions and A/B/X/Y mapped by the existing bridge to Space/Escape/X/Enter |
 | SiglusEngine | Analog directions for fine cursor movement, confirmation and menu/back through the shared pointer cursor |
 | Butterscotch (GameMaker) | Directions, A/B/X/Y, L/R and Start/Select forwarded to the Worker |
+| MAME PV-1000 | Directions, A/B and Select/Start through the existing native MAME input mapper |
+| MAME SG-1000 | Directions via Arrow keys, A/B via Left Control/Left Alt and hardware Pause via 1; no parallel native joystick presses |
+| MAME ColecoVision | Directions, A/B and numeric 1/2 (the existing pad's Start/Select bindings) |
+| MAME Current Arcade | Directions, A/B/X/Y, L/R, Coin and Start in both main-thread and Worker adapters |
+| SamCoupeWeb | Directions, confirmation/back and a separate Space/fire action through its Arrow/Enter/Escape/Space bridge in the nested game/input window |
+| TyranoScript | Analog pointer movement and left/right mouse confirmation/menu through the shared cursor inside its isolated page |
 
 Profiles select standard button indices, labels and positions; they do not own
 rendering or pointer handlers. Existing layouts retain their default controls.
 Touching a virtual control focuses its input realm before applying the press,
 so returning from the Host toolbar also resumes cores that guard input on focus.
+Pointer-locked cores may refuse explicit pointer capture; expected capture
+failures do not abort virtual controls, and window-level pointer release/cancel
+still clears held input. Already-cancelled pointers cannot start a new press.
+When pointer lock zeros touch PointerEvent coordinates, the same control state
+uses the real TouchEvent coordinates and releases the mouse lock on a virtual
+press so the Host toolbar stays reachable. Game-surface touches keep their native behavior.
 ONS uses the existing analog-to-arrow adapter for directions. Its confirmation
 and menu controls feed only the native SDL standard-controller A/B bindings
 (Return/Escape); they do not also synthesize keyboard or mouse clicks.
 RPG Maker MZ uses the same isolated `SET_TOUCH_GAMEPAD` command as MV. The Host
 continues to own per-core visibility preferences, including the shared
 `rpgmaker` preference for both engines.
+TyranoScript uses the same shared isolated touch module and `SET_TOUCH_GAMEPAD`
+control. It applies the Host's initial preference before mount completes and
+replays the last acknowledged preference when the game reloads its title page.
+Pause and Host input suppression release controls without changing that preference.
+Its virtual pad feeds a dedicated shared cursor source and hits the DOM element
+under the cursor (ignoring the virtual control overlay), so image-based title/choice buttons work even in engines with
+no arrow-key navigation. Virtual A/B dispatch only mouse actions; they are not
+also projected through the native keyboard/gamepad mapping. Physical gamepads
+and real keyboard input keep their existing engine mappings.
+If a Tyrano engine replaces jQuery's click helper with its mobile tap helper,
+the cursor sends a single `tap` activation instead of `click`, using that engine
+API relationship rather than a game identity or user-agent special case.
+The ColecoVision layout exposes the existing standard pad's numeric 1/2 shortcuts;
+it does not provide the controller's entire numeric keypad.
 
 Same-origin background checkpoint exports release held controls while retaining the previous
 layout visibility, so automatic native saves do not make the controls blink or

@@ -15,6 +15,11 @@ export function padState(pads: readonly (Gamepad | null)[], machine: string = "a
   };
   const axes = [axis(0, 14, 15), axis(1, 12, 13)];
   const direction = [axes[1] < 0, axes[1] > 0, axes[0] < 0, axes[0] > 0];
+  if (machine === "sg1000" && !arcade) {
+    const keys = [[0, 306], [1, 308], [9, 49]].filter(([id]) => pressed(id)).map(([, key]) => key);
+    direction.forEach((down, index) => {if (down) {keys.push([273, 274, 276, 275][index]);}});
+    return {axes: [0, 0], buttons: [], keys: keys.sort((a, b) => a - b)};
+  }
   if (machine === "atom") {
     const keys = [[0, 32], [1, 13], [8, 27], [9, 13]].filter(([id]) => pressed(id)).map(([, key]) => key);
     direction.forEach((down, index) => {if (down) {keys.push([59, 46, 122, 120][index]);}});
@@ -32,7 +37,7 @@ export function padState(pads: readonly (Gamepad | null)[], machine: string = "a
     direction.forEach((down, index) => {if (down) {buttons.push(4 + index);}});
     return {axes: [0, 0], keys: [], buttons: buttons.sort((a, b) => a - b)};
   }
-  if (machine === "pv1000" || machine === "sg1000" || !["apple2p", "apple2e", "atom"].includes(machine)) {
+  if (machine === "pv1000" || !["apple2p", "apple2e", "atom"].includes(machine)) {
     const buttons = [[0, 0], [1, 8], [8, 2], [9, 3]].filter(([id]) => pressed(id)).map(([, button]) => button);
     direction.forEach((down, index) => {if (down) {buttons.push(4 + index);}});
     return {axes: [0, 0], keys: [], buttons: buttons.sort((a, b) => a - b)};

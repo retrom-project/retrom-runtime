@@ -6,6 +6,7 @@ afterEach(() => {
   vi.restoreAllMocks();
   Reflect.deleteProperty(window, "matchMedia");
   Reflect.deleteProperty(navigator, "getGamepads");
+  Reflect.deleteProperty(document, "pointerLockElement");
   document.body.replaceChildren(); document.head.replaceChildren();
 });
 function touchDevice() {
@@ -17,6 +18,63 @@ function pointer(type: string, target: Element, pointerId = 1, x = 0, y = 0) {
     pointerType: "touch", pointerId, clientX: x, clientY: y}));
 }
 function root() {return document.querySelector<HTMLElement>("[data-retrom-touch-gamepad]")!;}
+
+it("keeps buttons usable under pointer lock and releases outside the layout when capture is unavailable", () => {
+  touchDevice(); vi.spyOn(window, "focus").mockImplementation(() => {});
+  const touch = installTouchGamepad(window);
+  try {
+    const a = root().querySelector('[data-face="bottom"]')!;
+    Object.defineProperty(a, "setPointerCapture", {value: () => {throw new DOMException("Pointer lock active", "InvalidStateError");}});
+    pointer("pointerdown", a);
+    expect(touch.current()?.buttons[0].pressed).toBe(true);
+    pointer("pointerup", document.body);
+    expect(touch.current()?.buttons[0].pressed).toBe(false);
+    pointer("pointerdown", a);
+    pointer("pointercancel", document.body);
+    expect(touch.current()?.buttons[0].pressed).toBe(false);
+  } finally {touch.cleanup();}
+});
+
+it("ignores a press if the browser already cancelled its pointer before capture", () => {
+  touchDevice(); vi.spyOn(window, "focus").mockImplementation(() => {});
+  const touch = installTouchGamepad(window);
+  try {
+    const a = root().querySelector('[data-face="bottom"]')!;
+    Object.defineProperty(a, "setPointerCapture", {value: () => {throw new DOMException("Pointer cancelled", "NotFoundError");}});
+    pointer("pointerdown", a);
+    expect(touch.current()?.buttons.every(button => !button.pressed)).toBe(true);
+  } finally {touch.cleanup();}
+});
+
+it("uses real touch coordinates while pointer lock zeros PointerEvent coordinates", () => {
+  touchDevice(); vi.spyOn(window, "focus").mockImplementation(() => {});
+  Object.defineProperty(document, "pointerLockElement", {configurable: true, value: document.body});
+  const unlock = vi.fn();
+  Object.defineProperty(document, "exitPointerLock", {configurable: true, value: unlock});
+  const touch = installTouchGamepad(window);
+  const dispatch = (type: string, target: Element, x: number, y: number) => {
+    const event = new Event(type, {bubbles: true, cancelable: true});
+    Object.defineProperty(event, "changedTouches", {value: [{identifier: 1, target, clientX: x, clientY: y}]});
+    target.dispatchEvent(event);
+  };
+  try {
+    const pad = root().querySelector<HTMLElement>('[data-control="dpad"]')!;
+    vi.spyOn(pad, "getBoundingClientRect").mockReturnValue({left: 0, top: 0, width: 100, height: 100} as DOMRect);
+    pointer("pointerdown", pad);
+    expect(touch.current()?.buttons.every(button => !button.pressed)).toBe(true);
+    dispatch("touchstart", pad, 90, 50);
+    expect(unlock).toHaveBeenCalledOnce();
+    expect(touch.current()?.buttons.flatMap((button, index) => button.pressed ? [index] : [])).toEqual([15]);
+    dispatch("touchmove", pad, 50, 10);
+    expect(touch.current()?.buttons.flatMap((button, index) => button.pressed ? [index] : [])).toEqual([12]);
+    dispatch("touchend", document.body, 50, 10);
+    expect(touch.current()?.buttons.every(button => !button.pressed)).toBe(true);
+    dispatch("touchstart", root().querySelector('[data-face="bottom"]')!, 90, 50);
+    expect(touch.current()?.buttons[0].pressed).toBe(true);
+    dispatch("touchcancel", document.body, 90, 50);
+    expect(touch.current()?.buttons.every(button => !button.pressed)).toBe(true);
+  } finally {touch.cleanup(); Reflect.deleteProperty(document, "exitPointerLock");}
+});
 
 it("exposes only the configured actions and a separate native menu button", () => {
   touchDevice();

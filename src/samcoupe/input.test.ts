@@ -8,6 +8,11 @@ it("maps standard directions and one confirm key per button", () => {
   expect(samGamepadKeys({...pad, mapping: ""})).toEqual(new Set());
 });
 
+it("maps a separate fire button to Space without duplicating Enter or Escape", () => {
+  const buttons = Array.from({length: 17}, (_, index) => ({pressed: index === 2, value: index === 2 ? 1 : 0}));
+  expect(samGamepadKeys({connected: true, mapping: "standard", axes: [], buttons} as unknown as Gamepad)).toEqual(new Set(["Space"]));
+});
+
 it("lets an active gamepad at index one control Sam when index zero is idle", () => {
   const idle = {index: 0, connected: true, mapping: "standard", axes: [0, 0, -0.4, 0],
     buttons: Array.from({length: 16}, () => ({pressed: false, value: 0}))};

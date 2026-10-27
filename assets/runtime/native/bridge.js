@@ -269,8 +269,8 @@
       state.setAxis(0, 0, now()), state.setAxis(1, 0, now()), analog && positionStick(analog);
     }, positionStick = (control, x = 0, y = 0) => {
       control.toggleAttribute("data-active", x !== 0 || y !== 0);
-      for (let [axis, value] of [["x", x], ["y", y]])
-        value === 0 ? control.style.removeProperty(`--stick-${axis}`) : control.style.setProperty(`--stick-${axis}`, `${value}px`);
+      for (let [axis2, value] of [["x", x], ["y", y]])
+        value === 0 ? control.style.removeProperty(`--stick-${axis2}`) : control.style.setProperty(`--stick-${axis2}`, `${value}px`);
     }, moveStick = (event, control, x, y) => {
       let distance = Math.hypot(x, y), scale = distance > 1 ? 1 / distance : 1, travel = control.getBoundingClientRect().width / 4, point = { x: x * scale * travel, y: y * scale * travel }, owner = owners.get(event.pointerId);
       owner && (owner.point = point), positionStick(control, point.x, point.y);
@@ -287,11 +287,25 @@
       hold(event.pointerId, "dpad", dpadDirections(dx, dy, radius)), radius > 0 && moveStick(event, pad, dx / radius, dy / radius);
     }, swallow = (event) => {
       event.preventDefault(), event.stopPropagation();
-    }, down = (event) => {
+    }, capturePointer = (control, pointerId, capture) => {
+      if (!capture)
+        return !0;
+      try {
+        return control.setPointerCapture?.(pointerId), !0;
+      } catch (error) {
+        if (!(error instanceof frameWindow.DOMException))
+          throw error;
+        if (error.name === "NotFoundError")
+          return release(pointerId), !1;
+        if (error.name !== "InvalidStateError")
+          throw error;
+        return !0;
+      }
+    }, down = (event, capture = !0) => {
       let control = event.target?.closest?.("[data-control]");
-      if (!control || !root.contains(control) || root.hidden)
+      if (!control || !root.contains(control) || root.hidden || (swallow(event), frameWindow.focus(), disposed || !root.isConnected) || !capturePointer(control, event.pointerId, capture))
         return;
-      if (swallow(event), frameWindow.focus(), control.setPointerCapture?.(event.pointerId), control === pad) {
+      if (control === pad) {
         moveDpad(event);
         return;
       }
@@ -308,10 +322,32 @@
       owner && (swallow(event), owner.control === "dpad" && moveDpad(event), owner.control === "analog" && moveAnalog(event));
     }, up = (event) => {
       owners.has(event.pointerId) && (swallow(event), release(event.pointerId));
+    }, pointerDown = (event) => {
+      event.pointerType === "touch" && document.pointerLockElement || down(event);
+    }, lockedTouch = (event) => {
+      for (let point of Array.from(event.changedTouches)) {
+        let pointerId = -point.identifier - 1;
+        if (event.type === "touchstart" ? !document.pointerLockElement : !owners.has(pointerId))
+          continue;
+        let input = {
+          target: point.target,
+          pointerId,
+          clientX: point.clientX,
+          clientY: point.clientY,
+          preventDefault: () => event.preventDefault(),
+          stopPropagation: () => event.stopPropagation()
+        };
+        event.type === "touchstart" ? (down(input, !1), owners.has(pointerId) && document.exitPointerLock?.()) : event.type === "touchmove" ? move(input) : up(input);
+      }
     };
-    root.addEventListener("pointerdown", down), root.addEventListener("pointermove", move);
+    root.addEventListener("pointerdown", pointerDown), root.addEventListener("touchstart", lockedTouch, { passive: !1 });
+    for (let type of ["touchmove", "touchend", "touchcancel"])
+      frameWindow.addEventListener(type, lockedTouch, { capture: !0, passive: !1 });
+    root.addEventListener("pointermove", move);
     for (let type of ["pointerup", "pointercancel", "lostpointercapture"])
       root.addEventListener(type, up);
+    for (let type of ["pointerup", "pointercancel"])
+      frameWindow.addEventListener(type, up, !0);
     root.addEventListener("contextmenu", swallow);
     let announced = !1, physicalAtZero = !1, announce = (type) => {
       let event = new frameWindow.Event(type);
@@ -345,13 +381,24 @@
         gamepads.some((gamepad) => gamepad?.buttons.some((button) => button.pressed)) && (physicalHidden = !0, refresh());
       },
       cleanup: () => {
-        disposed || (disposed = !0, releaseAll(), frameWindow.removeEventListener("pointerdown", touched, !0), frameWindow.removeEventListener("blur", releaseAll), document.removeEventListener("visibilitychange", hiddenPage), root.remove(), style.remove());
+        if (!disposed) {
+          disposed = !0, releaseAll(), frameWindow.removeEventListener("pointerdown", touched, !0);
+          for (let type of ["touchmove", "touchend", "touchcancel"])
+            frameWindow.removeEventListener(type, lockedTouch, !0);
+          for (let type of ["pointerup", "pointercancel"])
+            frameWindow.removeEventListener(type, up, !0);
+          frameWindow.removeEventListener("blur", releaseAll), document.removeEventListener("visibilitychange", hiddenPage), root.remove(), style.remove();
+        }
       }
     };
   }
 
   // src/provider/gamepad-filter.ts
   var gamepadSources = /* @__PURE__ */ new WeakMap();
+  function captureGamepadSource(runtimeWindow) {
+    let navigator = runtimeWindow.navigator, getGamepads = navigator.getGamepads;
+    return gamepadSources.get(navigator) ?? (() => Array.from(getGamepads?.call(navigator) ?? []));
+  }
   function validInputFilterPolicy(value) {
     return value === null || typeof value.suppressInput == "boolean" && (value.activeGamepadIndex === null || Number.isSafeInteger(value.activeGamepadIndex) && value.activeGamepadIndex >= 0 && value.activeGamepadIndex <= 255);
   }
@@ -503,7 +550,7 @@
   function cloneGamepad(gamepad, buttons, axes) {
     return {
       axes: [...axes],
-      buttons: buttons.map(({ pressed: pressed2, touched, value }) => ({ pressed: pressed2, touched, value })),
+      buttons: buttons.map(({ pressed: pressed3, touched, value }) => ({ pressed: pressed3, touched, value })),
       connected: gamepad.connected,
       id: gamepad.id,
       index: gamepad.index,
@@ -519,12 +566,224 @@
     );
   }
 
+  // src/provider/gamepad-cursor-surface.ts
+  function createCursorSurface(frameWindow, target, protocol, hitTest = !1, activationEvent = "click") {
+    let document = frameWindow.document, cursor = document.createElement("div");
+    cursor.dataset.gamepadCursor = "", cursor.hidden = !0, cursor.setAttribute("aria-hidden", "true"), Object.assign(cursor.style, {
+      position: "fixed",
+      width: "14px",
+      height: "14px",
+      borderRadius: "50%",
+      background: "rgba(255,255,255,.92)",
+      border: "2px solid rgba(10,10,14,.9)",
+      boxShadow: "0 0 0 2px rgba(255,255,255,.6)",
+      pointerEvents: "none",
+      transform: "translate(-50%, -50%)",
+      zIndex: "2147483647"
+    }), document.body.append(cursor);
+    let point = (position) => {
+      let bounds = target.getBoundingClientRect();
+      return { clientX: bounds.left + position.x * bounds.width, clientY: bounds.top + position.y * bounds.height };
+    }, positionCursor = (position) => {
+      let { clientX, clientY } = point(position);
+      cursor.style.left = `${clientX}px`, cursor.style.top = `${clientY}px`;
+    }, boundary = (type, position) => {
+      if (protocol !== "pointer")
+        return;
+      let realm = frameWindow;
+      target.dispatchEvent(new realm.PointerEvent(type, { ...point(position), pointerId: 1, pointerType: "mouse", isPrimary: !0 }));
+    }, lastPosition = { x: 0.5, y: 0.5 };
+    return {
+      bounds: () => target.getBoundingClientRect(),
+      hide: () => {
+        cursor.hidden || boundary("pointerleave", lastPosition), cursor.hidden = !0;
+      },
+      dispose: () => cursor.remove(),
+      refresh: (position) => {
+        cursor.hidden || positionCursor(position);
+      },
+      reveal: (position) => {
+        cursor.hidden && boundary("pointerenter", position), lastPosition = position, positionCursor(position), cursor.hidden = !1;
+      },
+      send: (type, button, buttons, position) => {
+        let realm = frameWindow, options = { bubbles: !0, composed: !0, cancelable: !0, button, buttons, ...point(position) }, receiver = (hitTest ? document.elementsFromPoint(options.clientX, options.clientY).find((element) => target.contains(element) && !element.closest("[data-retrom-touch-gamepad]")) : null) ?? target;
+        type === "mousedown" && receiver.focus?.({ preventScroll: !0 }), protocol === "pointer" && type.startsWith("mouse") ? receiver.dispatchEvent(new realm.PointerEvent(type.replace("mouse", "pointer"), {
+          ...options,
+          pointerId: 1,
+          pointerType: "mouse",
+          isPrimary: !0
+        })) : receiver.dispatchEvent(new realm.MouseEvent(type === "click" ? activationEvent : type, options)), (type === "mousedown" || type === "mouseup") && inputObserver(frameWindow)?.record({
+          device: "gamepad",
+          control: `Button ${button === 0 ? 0 : 1}`,
+          value: type === "mousedown" ? 1 : 0,
+          stage: "DELIVERED",
+          target: button === 0 ? "MouseLeft" : "MouseRight",
+          reason: null
+        }, frameWindow.performance.now());
+      }
+    };
+  }
+
+  // src/provider/gamepad-cursor.ts
+  var ownedButtons = [0, 1, 4, 12, 13, 14, 15];
+  function installGamepadCursor(frameWindow, target, options) {
+    return new GamepadCursorController(frameWindow, target, options);
+  }
+  var GamepadCursorController = class {
+    constructor(window2, target, options) {
+      this.window = window2;
+      this.options = options;
+      this.enabled = options.defaultEnabled;
+      let navigator = window2.navigator;
+      if (this.descriptor = Object.getOwnPropertyDescriptor(navigator, "getGamepads"), this.nativeGetGamepads = navigator.getGamepads ?? (() => []), this.readGamepads = options.readGamepads ?? captureGamepadSource(window2), !options.readGamepads && this.descriptor && !this.descriptor.configurable)
+        throw new Error("PLAYER_INPUT_FILTER_UNAVAILABLE");
+      this.surface = createCursorSurface(window2, target, options.protocol ?? "mouse", options.hitTest, options.activationEvent), options.readGamepads || Object.defineProperty(navigator, "getGamepads", { configurable: !0, value: this.filteredGamepads }), window2.addEventListener("blur", this.blur), window2.addEventListener("focus", this.focus), window2.document.addEventListener("visibilitychange", this.visibility), this.frame = window2.requestAnimationFrame(this.poll);
+    }
+    surface;
+    nativeGetGamepads;
+    readGamepads;
+    descriptor;
+    enabled;
+    disposed = !1;
+    suspended = !1;
+    unfocused = !1;
+    policy = null;
+    activeIndex = null;
+    neutralReady = !1;
+    releaseGate = !1;
+    previousTime = null;
+    frame = 0;
+    position = { x: 0.5, y: 0.5 };
+    held = 0;
+    downAt = /* @__PURE__ */ new Map();
+    dragged = /* @__PURE__ */ new Set();
+    getState() {
+      return { enabled: this.enabled, defaultEnabled: this.options.defaultEnabled };
+    }
+    setEnabled(enabled) {
+      if (this.disposed || typeof enabled != "boolean")
+        throw new Error("PLAYER_RUNTIME_CONTRACT_INVALID");
+      enabled !== this.enabled && (this.reset(), this.releaseGate = !0, this.enabled = enabled);
+    }
+    setSuspended(suspended) {
+      this.suspended !== suspended && (this.suspended = suspended, this.reset());
+    }
+    setInputPolicy(policy) {
+      (policy?.activeGamepadIndex !== this.policy?.activeGamepadIndex || policy?.suppressInput !== this.policy?.suppressInput) && (this.reset(), this.activeIndex = null), this.policy = policy ? { ...policy } : null;
+    }
+    dispose() {
+      this.disposed || (this.reset(), this.disposed = !0, this.window.cancelAnimationFrame(this.frame), this.window.removeEventListener("blur", this.blur), this.window.removeEventListener("focus", this.focus), this.window.document.removeEventListener("visibilitychange", this.visibility), this.window.navigator.getGamepads === this.filteredGamepads && (this.descriptor ? Object.defineProperty(this.window.navigator, "getGamepads", this.descriptor) : Reflect.deleteProperty(this.window.navigator, "getGamepads")), this.surface.dispose());
+    }
+    blur = () => {
+      this.unfocused = !0, this.reset();
+    };
+    focus = () => {
+      this.unfocused && (this.unfocused = !1, this.reset());
+    };
+    visibility = () => {
+      this.window.document.hidden ? this.blur() : this.focus();
+    };
+    blocked() {
+      return this.suspended || this.unfocused || !!this.policy?.suppressInput;
+    }
+    sample() {
+      try {
+        return this.readGamepads();
+      } catch {
+        return [];
+      }
+    }
+    select(pads) {
+      let requested = this.policy?.activeGamepadIndex ?? this.activeIndex, eligible = pads.filter((pad) => !!(pad?.connected && pad.mapping === "standard"));
+      return requested === null ? eligible[0] ?? null : eligible.find((pad) => pad.index === requested) ?? null;
+    }
+    filteredGamepads = () => {
+      let pads = Array.from(this.nativeGetGamepads.call(this.window.navigator)), selected = this.select(pads);
+      return !this.enabled && !this.releaseGate || !selected ? pads : pads.map((pad) => pad !== selected ? pad : {
+        id: pad.id,
+        index: pad.index,
+        connected: pad.connected,
+        mapping: pad.mapping,
+        timestamp: pad.timestamp,
+        vibrationActuator: pad.vibrationActuator,
+        axes: pad.axes.map((value, index) => index < 2 ? 0 : value),
+        buttons: pad.buttons.map((button, index) => ownedButtons.includes(index) ? { pressed: !1, touched: !1, value: 0 } : { pressed: button.pressed, touched: button.touched, value: button.value })
+      });
+    };
+    poll = (time) => {
+      this.disposed || (this.update(time), this.frame = this.window.requestAnimationFrame(this.poll));
+    };
+    update(time) {
+      let elapsed = this.previousTime === null ? 0 : Math.max(0, Math.min(50, time - this.previousTime));
+      this.previousTime = time;
+      let pad = this.select(this.sample());
+      if (!pad) {
+        this.reset(), this.activeIndex = null;
+        return;
+      }
+      if (this.activeIndex !== pad.index && (this.reset(), this.activeIndex = pad.index), this.blocked()) {
+        this.reset();
+        return;
+      }
+      let vector = direction(pad);
+      if (!this.neutralReady) {
+        this.neutralReady = ownedButtons.every((index) => !pressed2(pad, index)) && vector.x === 0 && vector.y === 0, this.neutralReady && (this.releaseGate = !1);
+        return;
+      }
+      this.enabled && ((vector.x || vector.y) && this.move(vector, elapsed * (pressed2(pad, 4) ? 0.2 : 1)), this.updateButton(0, pressed2(pad, 0)), this.updateButton(2, pressed2(pad, 1)), this.surface.refresh(this.position), (this.held || vector.x || vector.y) && this.surface.reveal(this.position));
+    }
+    move(vector, elapsed) {
+      let bounds = this.surface.bounds(), length = Math.max(1, Math.hypot(vector.x, vector.y));
+      this.position = {
+        x: clamp(this.position.x + vector.x / length * 0.75 * elapsed / Math.max(1, bounds.width)),
+        y: clamp(this.position.y + vector.y / length * 0.75 * elapsed / Math.max(1, bounds.height))
+      };
+      for (let [button, start] of this.downAt)
+        Math.hypot((this.position.x - start.x) * bounds.width, (this.position.y - start.y) * bounds.height) > 4 && this.dragged.add(button);
+      this.surface.reveal(this.position), this.surface.send("mousemove", 0, this.held, this.position);
+    }
+    updateButton(button, next) {
+      let mask = button === 0 ? 1 : 2;
+      if (!!(this.held & mask) !== next) {
+        if (this.surface.reveal(this.position), this.surface.send("mousemove", 0, this.held, this.position), this.held = next ? this.held | mask : this.held & ~mask, this.surface.send(next ? "mousedown" : "mouseup", button, this.held, this.position), next) {
+          this.downAt.set(button, { ...this.position });
+          return;
+        }
+        this.dragged.has(button) || this.surface.send(button === 0 ? "click" : "contextmenu", button, this.held, this.position), this.downAt.delete(button), this.dragged.delete(button);
+      }
+    }
+    reset() {
+      for (let button of [0, 2]) {
+        let mask = button === 0 ? 1 : 2;
+        this.held & mask && (this.held &= ~mask, this.surface.send("mouseup", button, this.held, this.position));
+      }
+      this.downAt.clear(), this.dragged.clear(), this.neutralReady = !1, this.previousTime = null, this.surface.hide();
+    }
+  };
+  function pressed2(pad, index) {
+    return !!(pad.buttons[index]?.pressed || pad.buttons[index]?.value >= 0.5);
+  }
+  function axis(value) {
+    return !Number.isFinite(value) || Math.abs(value) <= 0.2 ? 0 : Math.sign(value) * (Math.abs(value) - 0.2) / 0.8;
+  }
+  function direction(pad) {
+    return {
+      x: Number(pressed2(pad, 15)) - Number(pressed2(pad, 14)) || axis(pad.axes[0] ?? 0),
+      y: Number(pressed2(pad, 13)) - Number(pressed2(pad, 12)) || axis(pad.axes[1] ?? 0)
+    };
+  }
+  function clamp(value) {
+    return Math.max(0, Math.min(1, value));
+  }
+
   // src/provider/isolated-input.ts
   function createIsolatedInputFilter(runtimeWindow) {
     let reportShortcut = () => {
     }, shortcuts = new RuntimeHostShortcuts(["MENU", "PAUSE"], (shortcut) => reportShortcut(shortcut), () => !0);
     shortcuts.bind(runtimeWindow);
-    let filter = new RuntimeGamepadFilter(null), cleanup = null, touch = null, paused = !1, suppressed = !1, refreshTouch = () => touch?.setSuspended(paused || suppressed);
+    let filter = new RuntimeGamepadFilter(null), cleanup = null, touch = null, cursor = null, inputPolicy = null, paused = !1, suppressed = !1, refreshTouch = () => {
+      touch?.setSuspended(paused || suppressed), cursor?.setSuspended(paused || suppressed || !touch?.getState().enabled);
+    };
     return {
       onHostShortcut(report) {
         reportShortcut = report;
@@ -532,10 +791,24 @@
       setHostShortcutPolicy(policy) {
         shortcuts.setPolicy(policy);
       },
-      async setTouchGamepadEnabled(enabled) {
+      async setTouchGamepadEnabled(enabled, options = {}) {
         if (typeof enabled != "boolean")
           throw new Error("PLAYER_RUNTIME_CONTRACT_INVALID");
-        cleanup ??= installRuntimeGamepadFilter(runtimeWindow, filter), touch ? await touch.setEnabled(enabled) : (touch = installTouchGamepad(runtimeWindow, { enabled }), filter.setTouchGamepad(touch)), refreshTouch();
+        if (cleanup ??= installRuntimeGamepadFilter(runtimeWindow, filter), touch)
+          await touch.setEnabled(enabled);
+        else {
+          let { pointerTarget, activationEvent, ...layout } = options;
+          touch = installTouchGamepad(runtimeWindow, { ...layout, enabled }), pointerTarget ? (cursor = installGamepadCursor(runtimeWindow, pointerTarget, {
+            defaultEnabled: !0,
+            hitTest: !0,
+            activationEvent,
+            readGamepads: () => {
+              let pad = touch?.current();
+              return pad ? [pad] : [];
+            }
+          }), cursor.setInputPolicy(inputPolicy)) : filter.setTouchGamepad(touch);
+        }
+        refreshTouch();
       },
       setPaused(value) {
         paused = value, refreshTouch();
@@ -543,10 +816,10 @@
       set(policy) {
         if (policy !== null && (typeof policy != "object" || Array.isArray(policy) || Object.keys(policy).sort().join(",") !== "activeGamepadIndex,suppressInput") || !validInputFilterPolicy(policy))
           throw new Error("PLAYER_INPUT_FILTER_INVALID");
-        shortcuts.setSuppressed(policy?.suppressInput === !0), suppressed = policy?.suppressInput === !0, refreshTouch(), filter.setPolicy(policy), cleanup ??= installRuntimeGamepadFilter(runtimeWindow, filter);
+        shortcuts.setSuppressed(policy?.suppressInput === !0), inputPolicy = policy, suppressed = policy?.suppressInput === !0, refreshTouch(), filter.setPolicy(policy), cursor?.setInputPolicy(policy), cleanup ??= installRuntimeGamepadFilter(runtimeWindow, filter);
       },
       stop() {
-        touch?.cleanup(), touch = null, filter.setTouchGamepad(null), shortcuts.stop(), cleanup?.(), cleanup = null, filter.setPolicy(null);
+        cursor?.dispose(), cursor = null, touch?.cleanup(), touch = null, filter.setTouchGamepad(null), shortcuts.stop(), cleanup?.(), cleanup = null, filter.setPolicy(null);
       }
     };
   }

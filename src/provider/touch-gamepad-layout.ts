@@ -20,6 +20,8 @@ export const touchGamepadProfiles = {
   action: {layout: "STANDARD", auxiliary: [...menuButtons, ...shoulderButtons]},
   analogMenu: {layout: "JOYSTICK", auxiliary: [],
     faces: [{index: 0, label: "确认", slot: "bottom"}, {index: 1, label: "菜单", slot: "right"}]},
+  mini: {layout: "STANDARD", faces: [...standardFaces.slice(0, 2), {index: 2, label: "C", slot: "left"}],
+    auxiliary: [{index: 4, label: "摇动", side: "left"}, {index: 8, label: "电源", side: "center-left"}]},
 } as const satisfies Record<string, TouchGamepadLayoutOptions>;
 
 export function touchGamepadLayout(layout: TouchGamepadLayout = "STANDARD", controls: TouchGamepadLayoutOptions = {}) {

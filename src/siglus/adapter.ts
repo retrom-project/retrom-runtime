@@ -3,6 +3,7 @@ import type {MountedRuntimeAdapter, RuntimeExitReporter} from "../internal-adapt
 import type {RuntimeCheckpoint} from "../contract.js";
 import {loadCoreModule} from "../provider/core-module.js";
 import {installGamepadCursor} from "../provider/gamepad-cursor.js";
+import {touchGamepadProfiles} from "../provider/touch-gamepad-layout.js";
 import {SiglusContent} from "./content.js";
 import {decodeSiglusSave, encodeSiglusSave, siglusSaveFormat, type SiglusSnapshot} from "./checkpoint.js";
 
@@ -69,6 +70,7 @@ export async function mountSiglus(parameters: SiglusParameters, target: HTMLElem
     content.signal?.addEventListener("abort", abort, {once: true}); canvas.focus();
   } catch (error) {await exit(); throw error;}
   return {
+    touchGamepad: touchGamepadProfiles.analogMenu,
     exit, checkpoint, gamepadCursor: cursor,
     acknowledgeCheckpoint: async captured => {
       const revision = captures.get(await digest(captured.bytes));

@@ -92,6 +92,11 @@
       layout: "JOYSTICK",
       auxiliary: [],
       faces: [{ index: 0, label: "\u786E\u8BA4", slot: "bottom" }, { index: 1, label: "\u83DC\u5355", slot: "right" }]
+    },
+    mini: {
+      layout: "STANDARD",
+      faces: [...standardFaces.slice(0, 2), { index: 2, label: "C", slot: "left" }],
+      auxiliary: [{ index: 4, label: "\u6447\u52A8", side: "left" }, { index: 8, label: "\u7535\u6E90", side: "center-left" }]
     }
   };
   function touchGamepadLayout(layout = "STANDARD", controls = {}) {
@@ -286,7 +291,7 @@
       let control = event.target?.closest?.("[data-control]");
       if (!control || !root.contains(control) || root.hidden)
         return;
-      if (swallow(event), control.setPointerCapture?.(event.pointerId), control === pad) {
+      if (swallow(event), frameWindow.focus(), control.setPointerCapture?.(event.pointerId), control === pad) {
         moveDpad(event);
         return;
       }

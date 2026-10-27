@@ -209,6 +209,7 @@ export function installTouchGamepad(frameWindow: Window, options: TouchGamepadOp
     if (!control || !root.contains(control)) {return;}
     if (root.hidden) {return;}
     swallow(event);
+    frameWindow.focus();
     (control as HTMLElement).setPointerCapture?.(event.pointerId);
     if (control === pad) {moveDpad(event); return;}
     if (control === analog) {

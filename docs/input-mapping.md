@@ -73,9 +73,16 @@ Additional adapters select data-only profiles from the same module:
 | WASM-4 | Directions and two action buttons |
 | NXEngine / OpenBOR | Directions, A/B/X/Y, L/R and Start/Select |
 | ONScripter Yuri | Analog directions, confirmation and menu/back |
+| EasyRPG (RPG Maker 2000/2003) | Directions and A/B/X/Y through the existing native controller input |
+| GBE+ (Pokémon Mini) | Directions, A/B/C, Shake and Power through the existing Mini key mapping |
+| WebMSX | Directions and A/B/X/Y mapped by the existing bridge to Space/Escape/X/Enter |
+| SiglusEngine | Analog directions for fine cursor movement, confirmation and menu/back through the shared pointer cursor |
+| Butterscotch (GameMaker) | Directions, A/B/X/Y, L/R and Start/Select forwarded to the Worker |
 
 Profiles select standard button indices, labels and positions; they do not own
 rendering or pointer handlers. Existing layouts retain their default controls.
+Touching a virtual control focuses its input realm before applying the press,
+so returning from the Host toolbar also resumes cores that guard input on focus.
 ONS uses the existing analog-to-arrow adapter for directions. Its confirmation
 and menu controls feed only the native SDL standard-controller A/B bindings
 (Return/Escape); they do not also synthesize keyboard or mouse clicks.

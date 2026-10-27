@@ -18,13 +18,23 @@ test("quality rejects failed, cancelled or skipped checks and browser suites", a
   }
 });
 
-test("PR and release run the same checks and public browser command", async () => {
+test("PR runs source checks and public browser tests before release tagging", async () => {
   const quality = await readFile(new URL("../.github/workflows/quality.yml", import.meta.url), "utf8");
-  const release = await readFile(new URL("../.github/workflows/release.yml", import.meta.url), "utf8");
-  for (const workflow of [quality, release]) {
-    for (const command of ["npm run ci:checks", "npm run test:content-io:ci", "npm run package:check"]) {
-      assert.ok(workflow.includes(`run: ${command}`), command);
-    }
+  for (const command of ["npm run ci:checks", "npm run test:content-io:ci", "npm run package:check"]) {
+    assert.ok(quality.includes(`run: ${command}`), command);
   }
+});
+
+test("release validates identity and artifacts without repeating PR source checks", async () => {
+  const release = await readFile(new URL("../.github/workflows/release.yml", import.meta.url), "utf8");
+  for (const command of ["npm run ci:checks", "npm run lint", "npm run typecheck", "npm test",
+    "npm run test:scripts", "npm run docs:platforms:check", "npm run test:content-io:ci", "npx playwright"]) {
+    assert.ok(!release.includes(`run: ${command}`), command);
+  }
+  assert.ok(release.includes("name: Validate release identity"));
+  assert.ok(release.includes("RETROM_PROVIDER_BUILD_MODE: release"));
+  assert.ok(release.indexOf("run: npm run release:build") >= 0);
+  assert.ok(release.indexOf("run: npm run release:build") < release.indexOf("run: npm run package:check"));
+  assert.ok(release.includes("run: npm run package:check"));
   assert.ok(release.indexOf("run: npm run package:check") < release.indexOf("name: Publish GitHub Release"));
 });

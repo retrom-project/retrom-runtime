@@ -30,6 +30,7 @@ export async function mountPSP(config: PSPParameters, target: HTMLElement, frame
   signal?.addEventListener("abort", abort, {once: true});
   const requireActive = () => {if (exited) {throw new Error("PPSSPP_RUNTIME_EXITED");}};
   return {
+    touchGamepad: {layout: "PSP"},
     checkpoint: async () => {
       requireActive();
       const value = await instance.checkpoint();

@@ -4,7 +4,8 @@ export type CursorPosition = {x: number; y: number};
 export type CursorMouseAction = "mousemove" | "mousedown" | "mouseup" | "click" | "contextmenu";
 
 /** Core differences stop at the event protocol and the actual input element. */
-export function createCursorSurface(frameWindow: Window, target: HTMLElement, protocol: "mouse" | "pointer") {
+export function createCursorSurface(frameWindow: Window, target: HTMLElement, protocol: "mouse" | "pointer", hitTest = false,
+  activationEvent: "click" | "tap" = "click") {
   const document = frameWindow.document;
   const cursor = document.createElement("div");
   cursor.dataset.gamepadCursor = "";
@@ -44,12 +45,15 @@ export function createCursorSurface(frameWindow: Window, target: HTMLElement, pr
     send: (type: CursorMouseAction, button: number, buttons: number, position: CursorPosition) => {
       const realm = frameWindow as Window & {MouseEvent: typeof MouseEvent; PointerEvent: typeof PointerEvent};
       const options = {bubbles: true, composed: true, cancelable: true, button, buttons, ...point(position)};
-      if (type === "mousedown") {target.focus({preventScroll: true});}
+      const hit = hitTest ? document.elementsFromPoint(options.clientX, options.clientY)
+        .find(element => target.contains(element) && !element.closest("[data-retrom-touch-gamepad]")) : null;
+      const receiver = hit ?? target;
+      if (type === "mousedown") {(receiver as HTMLElement).focus?.({preventScroll: true});}
       if (protocol === "pointer" && type.startsWith("mouse")) {
-        target.dispatchEvent(new realm.PointerEvent(type.replace("mouse", "pointer"), {
+        receiver.dispatchEvent(new realm.PointerEvent(type.replace("mouse", "pointer"), {
           ...options, pointerId: 1, pointerType: "mouse", isPrimary: true,
         }));
-      } else {target.dispatchEvent(new realm.MouseEvent(type, options));}
+      } else {receiver.dispatchEvent(new realm.MouseEvent(type === "click" ? activationEvent : type, options));}
       if (type === "mousedown" || type === "mouseup") {
         inputObserver(frameWindow)?.record({device: "gamepad", control: `Button ${button === 0 ? 0 : 1}`,
           value: type === "mousedown" ? 1 : 0, stage: "DELIVERED",

@@ -1,4 +1,4 @@
-import type {RuntimeHostShortcutV1} from "../provider/module-api.js";
+import type {RuntimeHostShortcutV1, RuntimeTouchGamepadV1} from "../provider/module-api.js";
 import type { CheckpointAvailability } from "../contract.js";
 import type { MountedRuntimeAdapter, RuntimeExitReporter } from "../internal-adapter.js";
 import type {TyranoScriptParameters} from "./parameters.js";
@@ -30,8 +30,16 @@ export async function mountTyranoScript(
   frame: HTMLIFrameElement,
   restorePayload: Uint8Array | null,
   reportExitRequested: RuntimeExitReporter = () => undefined,
+  options: {touchGamepadEnabled?: boolean} = {},
 ): Promise<MountedRuntimeAdapter> {
   const channel = new TyranoScriptChannel(config, reportExitRequested);
+  let enabled = options.touchGamepadEnabled ?? true;
+  const setEnabled = async (value: boolean) => {
+    const reply = await channel.request("SET_TOUCH_GAMEPAD", {enabled: value});
+    if (reply.type !== "SET_TOUCH_GAMEPAD_RESULT") {throw new Error("TYRANOSCRIPT_PROTOCOL_INVALID");}
+    enabled = value;
+  };
+  const touchGamepad: RuntimeTouchGamepadV1 = {getState: () => ({enabled}), setEnabled};
   frame.setAttribute("sandbox", "allow-scripts allow-same-origin allow-pointer-lock allow-modals");
   frame.referrerPolicy = "no-referrer";
   try {
@@ -40,6 +48,7 @@ export async function mountTyranoScript(
     if (ready.engine !== "TYRANOSCRIPT") {throw new Error("TYRANOSCRIPT_ENGINE_MISMATCH");}
     if (restorePayload) {await channel.restore(restorePayload);}
     channel.startProbeLoop();
+    await setEnabled(enabled);
   } catch (error) {
     channel.close();
     frame.src = "about:blank";
@@ -47,6 +56,7 @@ export async function mountTyranoScript(
   }
 
   return {
+    getTouchGamepad: () => touchGamepad,
     checkpoint: async () => ({ bytes: await channel.checkpoint(), format: "tyranoscript-snapshot-v1" }),
     exit: async () => {
       channel.stopProbeLoop();
@@ -161,7 +171,7 @@ class TyranoScriptChannel {
     const operation = this.requestTail.then(async () => {
       if (nonce !== this.nonce) {throw new Error("TYRANOSCRIPT_RUNTIME_RELOADED");}
       const reply = await this.sendRequest(type, body, timeoutMs);
-      if (["SET_HOST_SHORTCUT_POLICY", "SET_INPUT_FILTER", "SET_VIDEO_MODE", "SET_VOLUME", "PAUSE", "RESUME"].includes(type)) {
+      if (["SET_HOST_SHORTCUT_POLICY", "SET_INPUT_FILTER", "SET_TOUCH_GAMEPAD", "SET_VIDEO_MODE", "SET_VOLUME", "PAUSE", "RESUME"].includes(type)) {
         if (type === "PAUSE" || type === "RESUME") {this.controls.delete(type === "PAUSE" ? "RESUME" : "PAUSE");}
         this.controls.set(type, body);
       }

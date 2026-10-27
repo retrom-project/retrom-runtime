@@ -36,6 +36,7 @@ import * as parameters from "./target-parameters.js";
 
 import type {ContentSessionClient} from "../../content-io/client.js";
 export type TargetMountContext = {
+  touchGamepadEnabled?: boolean;
   startup?: import("../../provider/startup.js").StartupTasks;
   registerStartupSession?: (session: Pick<MountedRuntimeAdapter, "exit">) => void;
   requestStartupInteraction?: (interaction: import("../../provider/module-api.js").RuntimeStartupInteractionV1) => Promise<string>;
@@ -84,7 +85,7 @@ function mountAdapter(envelope: LaunchEnvelopeV1, target: HTMLElement, input: Ta
   case "NATIVE_WEB":
     return mountWithNativeContent(envelope, requireFrame(context), requireContentSession(contentSession),
       (loading, pluginFiles) => mountNativeRpg(parameters.nativeRpg(envelope, declaration.implementation), requireFrame(context),
-        restorePayload, reportExitRequested, {loading, signal: context.signal}, pluginFiles), context.signal, reportFailure);
+        restorePayload, reportExitRequested, {loading, signal: context.signal, touchGamepadEnabled: context.touchGamepadEnabled}, pluginFiles), context.signal, reportFailure);
   case "ONS_YURI_WEB":
     return mountOnsYuri(parameters.ons(envelope), target, frameWindow, restorePayload, reportProgress, reportExitRequested,
       {...contentOptions(context), signal: context.signal, onFailure: reportFailure});
@@ -96,7 +97,8 @@ function mountAdapter(envelope: LaunchEnvelopeV1, target: HTMLElement, input: Ta
       reportProgress, reportExitRequested, {...contentOptions(context), signal: context.signal});
   case "TYRANOSCRIPT_WEB":
     return mountWithNativeContent(envelope, requireFrame(context), requireContentSession(contentSession),
-      () => mountTyranoScript(parameters.tyranoScript(envelope), requireFrame(context), restorePayload, reportExitRequested),
+      () => mountTyranoScript(parameters.tyranoScript(envelope), requireFrame(context), restorePayload, reportExitRequested,
+        {touchGamepadEnabled: context.touchGamepadEnabled}),
       context.signal, reportFailure);
   case "J2ME_MINIJVM_WEB":
     return mountJ2me(parameters.j2me(envelope), target, frameWindow, restorePayload, reportProgress,

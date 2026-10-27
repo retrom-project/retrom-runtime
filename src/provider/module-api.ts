@@ -60,7 +60,7 @@ export function validateTargetOptionsAgainstSchema(
 export function validateRuntimeHost(value: unknown): RuntimeHostV1 {
   const host = isRecord(value) ? value : null;
   const signal = host && isRecord(host.signal) ? host.signal : null;
-  if (host?.contentLoading !== undefined && host.contentLoading !== "ON_DEMAND" && host.contentLoading !== "PRELOAD") {
+  if (!validHostPreferences(host)) {
     throw new Error("PROVIDER_HOST_INVALID");
   }
   if (!host || typeof host.mountFrame !== "function" || typeof host.loadRestore !== "function" ||
@@ -69,6 +69,11 @@ export function validateRuntimeHost(value: unknown): RuntimeHostV1 {
     throw new Error("PROVIDER_HOST_INVALID");
   }
   return value as RuntimeHostV1;
+}
+
+function validHostPreferences(host: Record<string, unknown> | null) {
+  return (host?.touchGamepadEnabled === undefined || typeof host.touchGamepadEnabled === "boolean") &&
+    (host?.contentLoading === undefined || host.contentLoading === "ON_DEMAND" || host.contentLoading === "PRELOAD");
 }
 
 function validEnvelopeContract(

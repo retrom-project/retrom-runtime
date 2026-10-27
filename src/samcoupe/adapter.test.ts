@@ -4,9 +4,14 @@ import {afterEach, expect, it, vi} from "vitest";
 import {installCoreAssetFetch} from "../provider/core-asset-fetch.js";
 vi.mock("../provider/core-asset-fetch.js", () => ({installCoreAssetFetch: vi.fn(() => vi.fn())}));
 import {mountSamCoupe} from "./adapter.js";
+import {installSamGamepad} from "./input.js";
+vi.mock("./input.js", async original => {
+  const input = await original<typeof import("./input.js")>();
+  return {...input, installSamGamepad: vi.fn(input.installSamGamepad)};
+});
 import {decodeSamDisk, encodeSamDisk, saveFormat} from "./state.js";
 
-afterEach(() => {vi.restoreAllMocks(); document.body.replaceChildren();});
+afterEach(() => {vi.restoreAllMocks(); vi.mocked(installSamGamepad).mockClear(); document.body.replaceChildren();});
 
 it("loads the supplied ROM and restored disk, then checkpoints flushed disk writes", async () => {
   const gameSha256 = "a".repeat(64);
@@ -59,6 +64,14 @@ it("loads the supplied ROM and restored disk, then checkpoints flushed disk writ
     () => undefined);
   expect(installCoreAssetFetch).toHaveBeenCalledWith(target.querySelector("iframe")?.contentWindow,
     expect.objectContaining({contentSession: expect.any(Object)}), expect.any(String), undefined);
+  const controls = adapter.touchGamepad;
+  const inputWindow = target.querySelector("iframe")!.contentWindow;
+  expect(typeof controls === "object" && controls.inputWindow === inputWindow).toBe(true);
+  expect(vi.mocked(installSamGamepad).mock.calls[0][0] === inputWindow).toBe(true);
+  expect(adapter.touchGamepad).toMatchObject({faces: [
+    {index: 0, label: "确认", slot: "bottom"}, {index: 1, label: "返回", slot: "right"},
+    {index: 2, label: "空格", slot: "left"},
+  ]});
   expect(files.get("/Resource/samcoupe.rom")?.byteLength).toBe(32768);
   expect(files.get("/media/game.mgt")).toEqual(restored);
   expect(target.querySelector("iframe")?.contentDocument?.querySelector("canvas")?.id).toBe("canvas");

@@ -34,6 +34,7 @@ export async function mountWebMSX(config: WebMSXParameters, target: HTMLElement,
   if (signal?.aborted) {await exit(); signal.throwIfAborted();}
   const active = () => {if (exited) {throw new Error("WEBMSX_STOPPED");}};
   return {
+    touchGamepad: true,
     canvasLayout: "CORE",
     checkpoint: async () => {
       active();

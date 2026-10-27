@@ -246,6 +246,7 @@ export async function mountKirikiri2(
       await dispose();
     },
     gamepadCursor,
+    touchGamepad: {layout: "POINTER"},
     getCanvas: () => canvas,
     getCheckpointAvailability: () => {
       const save = {capture: "IN_GAME", restore: "IN_GAME", captureAvailable: false, dataKind: "PROGRESS"} as const;

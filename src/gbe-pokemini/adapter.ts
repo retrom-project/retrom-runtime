@@ -4,6 +4,7 @@ import type {MountedRuntimeAdapter, RuntimeProgressReporter} from "../internal-a
 import {loadCore, type CoreLoader, type GBEParameters} from "./core.js";
 import {fetchFile} from "./files.js";
 import {installInput} from "./input.js";
+import {touchGamepadProfiles} from "../provider/touch-gamepad-layout.js";
 import {decodeState, encodeState, stateFormat} from "./state.js";
 const statePath = "/game.min.ss";
 export async function mountGBE(config: GBEParameters, target: HTMLElement, win: Window,
@@ -41,6 +42,7 @@ export async function mountGBE(config: GBEParameters, target: HTMLElement, win: 
   } catch (error) {await exit(); throw error;}
   const active = () => {if (stopped) {throw new Error("GBE_RUNTIME_EXITED");}};
   return {
+    touchGamepad: touchGamepadProfiles.mini,
     async checkpoint() {
       active(); const wasPaused = paused; input.pause(true); core._retrom_pause(1);
       try {

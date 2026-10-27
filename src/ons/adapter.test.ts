@@ -21,6 +21,48 @@ afterEach(() => {
 });
 
 describe("ONS Yuri runtime", () => {
+  it("delivers touch directions and native confirm/menu buttons through its existing input paths", async () => {
+    const module = fakeModule();
+    (window as HostWindow).onsyuri = vi.fn(async options => {
+      Object.assign(options, module); (options as FakeModule).preRun?.(); return options as FakeModule;
+    });
+    mockIndex();
+    const frames: FrameRequestCallback[] = [];
+    vi.spyOn(window, "requestAnimationFrame").mockImplementation(callback => {frames.push(callback); return frames.length;});
+    vi.spyOn(window, "cancelAnimationFrame").mockImplementation(() => undefined);
+    Object.defineProperty(window, "matchMedia", {configurable: true, value: () => ({matches: true})});
+    Object.defineProperty(navigator, "getGamepads", {configurable: true, value: () => [null]});
+    const runtime = await createRuntime(config(), currentWindowHost());
+    const mounting = runtime.mount(document.createElement("div"));
+    await loadRuntimeScript(); await mounting;
+    try {
+      const pad = document.querySelector<HTMLElement>("[data-retrom-touch-gamepad]");
+      expect(pad).not.toBeNull();
+      const analog = pad!.querySelector('[data-control="analog"]')!;
+      vi.spyOn(analog, "getBoundingClientRect").mockReturnValue({left: 0, top: 0, width: 100, height: 100} as DOMRect);
+      const canvas = document.querySelector("#game canvas")!;
+      const directions: string[] = [];
+      canvas.addEventListener("keydown", event => directions.push(`down:${(event as KeyboardEvent).key}`));
+      canvas.addEventListener("keyup", event => directions.push(`up:${(event as KeyboardEvent).key}`));
+      analog.dispatchEvent(new PointerEvent("pointerdown", {bubbles: true, pointerType: "touch", pointerId: 1, clientX: 90, clientY: 50}));
+      frames.shift()?.(1);
+      expect(directions).toEqual(["down:ArrowRight"]);
+      analog.dispatchEvent(new PointerEvent("pointerup", {bubbles: true, pointerId: 1}));
+      frames.shift()?.(2);
+      expect(directions).toEqual(["down:ArrowRight", "up:ArrowRight"]);
+      for (const [slot, index] of [["bottom", 0], ["right", 1]] as const) {
+        const button = pad!.querySelector(`[data-face="${slot}"]`)!;
+        button.dispatchEvent(new PointerEvent("pointerdown", {bubbles: true, pointerType: "touch", pointerId: 2}));
+        expect(navigator.getGamepads()[0]?.buttons.flatMap((value, number) => value.pressed ? [number] : [])).toEqual([index]);
+        button.dispatchEvent(new PointerEvent("pointerup", {bubbles: true, pointerId: 2}));
+      }
+      await runtime.getTouchGamepad!()!.setEnabled(false);
+      expect(pad!.hidden).toBe(true);
+      expect(navigator.getGamepads()[0]).toBeNull();
+    } finally {await runtime.exit(); Reflect.deleteProperty(window, "matchMedia");}
+    expect(document.querySelector("[data-retrom-touch-gamepad]")).toBeNull();
+  });
+
   it("declares native saves instead of capturing execution state", () => {
     expect(config().runtime.checkpoint).toMatchObject({semantics: "GAME_SAVE",
       writeFormat: "ons-game-save-v1-storage-v1", readFormats: ["ons-game-save-v1-storage-v1"]});

@@ -3,7 +3,14 @@ import {createCursorSurface, type CursorPosition} from "./gamepad-cursor-surface
 import {captureGamepadSource} from "./gamepad-filter.js";
 
 const ownedButtons = [0, 1, 4, 12, 13, 14, 15];
-type CursorOptions = {defaultEnabled: boolean; protocol?: "mouse" | "pointer"};
+type CursorOptions = {
+  defaultEnabled: boolean;
+  protocol?: "mouse" | "pointer";
+  /** A dedicated source owns its own inputs and leaves native gamepads untouched. */
+  readGamepads?: () => (Gamepad | null)[];
+  hitTest?: boolean;
+  activationEvent?: "click" | "tap";
+};
 export type GamepadCursor = RuntimeGamepadCursorV1 & {
   setSuspended(suspended: boolean): void;
   setInputPolicy(policy: RuntimeInputFilterPolicyV1 | null): void;
@@ -39,12 +46,12 @@ class GamepadCursorController implements GamepadCursor {
     const navigator = window.navigator;
     this.descriptor = Object.getOwnPropertyDescriptor(navigator, "getGamepads");
     this.nativeGetGamepads = navigator.getGamepads ?? (() => []);
-    this.readGamepads = captureGamepadSource(window);
-    if (this.descriptor && !this.descriptor.configurable) {
+    this.readGamepads = options.readGamepads ?? captureGamepadSource(window);
+    if (!options.readGamepads && this.descriptor && !this.descriptor.configurable) {
       throw new Error("PLAYER_INPUT_FILTER_UNAVAILABLE");
     }
-    this.surface = createCursorSurface(window, target, options.protocol ?? "mouse");
-    Object.defineProperty(navigator, "getGamepads", {configurable: true, value: this.filteredGamepads});
+    this.surface = createCursorSurface(window, target, options.protocol ?? "mouse", options.hitTest, options.activationEvent);
+    if (!options.readGamepads) {Object.defineProperty(navigator, "getGamepads", {configurable: true, value: this.filteredGamepads});}
     window.addEventListener("blur", this.blur);
     window.addEventListener("focus", this.focus);
     window.document.addEventListener("visibilitychange", this.visibility);

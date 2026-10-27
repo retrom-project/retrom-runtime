@@ -1,5 +1,5 @@
 import {isPluginSavePath, type RpgPluginFile} from "./plugin-files.js";
-import type {RuntimeHostShortcutV1} from "../provider/module-api.js";
+import type {RuntimeHostShortcutV1, RuntimeTouchGamepadV1} from "../provider/module-api.js";
 import {NativeInputDiagnostics} from "./input-diagnostics.js";
 import {createNativeGameEditor} from "./editor.js";
 import {nativeReadyDeadline, type NativeReadyOptions} from "./startup-timeout.js";
@@ -43,13 +43,14 @@ export async function mountNativeRpg(
   frame: HTMLIFrameElement,
   restorePayload: Uint8Array | null,
   reportExitRequested: RuntimeExitReporter = () => undefined,
-  readyOptions: NativeReadyOptions = {},
+  readyOptions: NativeReadyOptions & {touchGamepadEnabled?: boolean} = {},
   pluginFiles: RpgPluginFile[] = [],
 ) {
   const channel = new NativeChannel(config, reportExitRequested, pluginFiles);
   frame.setAttribute("sandbox", "allow-scripts allow-same-origin allow-pointer-lock allow-modals");
   frame.referrerPolicy = "no-referrer";
   let expectedEngine: "RPGMV" | "RPGMZ";
+  let touchGamepad: RuntimeTouchGamepadV1 | null = null;
   try {
     await bootstrapNativeFrame(config, frame, channel, readyOptions.signal);
     const ready = await channel.ready(readyOptions);
@@ -62,6 +63,14 @@ export async function mountNativeRpg(
       await channel.restore(bundle);
     }
     channel.startStatusLoop();
+    let enabled = readyOptions.touchGamepadEnabled ?? true;
+    const setEnabled = async (value: boolean) => {
+      const reply = await channel.request("SET_TOUCH_GAMEPAD", {enabled: value});
+      if (reply.type !== "SET_TOUCH_GAMEPAD_RESULT") {throw new Error("RPG_RUNTIME_CONTROL_UNAVAILABLE");}
+      enabled = value;
+    };
+    await setEnabled(enabled);
+    touchGamepad = {getState: () => ({enabled}), setEnabled};
   } catch (error) {
     channel.close();
     frame.src = "about:blank";
@@ -69,6 +78,7 @@ export async function mountNativeRpg(
   }
 
   return {
+    getTouchGamepad: () => touchGamepad,
     checkpoint: async () => ({ bytes: await channel.save(expectedEngine), format: "native-save-bundle-v1" }),
     gameEditor: createNativeGameEditor(channel),
     exit: async () => {

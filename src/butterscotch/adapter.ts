@@ -1,5 +1,6 @@
 import {CoreAssetURLs} from "../provider/core-asset-urls.js";
 import type {AdapterContentOptions} from "../provider/content-inputs.js";
+import {touchGamepadProfiles} from "../provider/touch-gamepad-layout.js";
 import type { MountedRuntimeAdapter, RuntimeExitReporter, RuntimeProgressReporter } from "../internal-adapter.js";
 import type { CheckpointAvailability } from "../contract.js";
 import type {ButterscotchParameters} from "./parameters.js";
@@ -219,6 +220,7 @@ export async function mountButterscotch(
   }
 
   return {
+    touchGamepad: touchGamepadProfiles.action,
     checkpoint: async () => {
       if (exited) {throw new Error("BUTTERSCOTCH_RUNTIME_INVALID_STATE");}
       const response = await command("CHECKPOINT");

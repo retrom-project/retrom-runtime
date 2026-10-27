@@ -1,4 +1,5 @@
 import {installTyranoBrowserStorage} from "./browser-storage.js";
+import {touchGamepadProfiles} from "../../../src/provider/touch-gamepad-layout.ts";
 
 export function installTyranoScriptBridge(global, inputFilter) {
     "use strict";
@@ -992,11 +993,13 @@ export function installTyranoScriptBridge(global, inputFilter) {
                     break;
                 }
                 case "PAUSE":
+                    inputFilter.setPaused(true);
                     pause();
                     send(requestId, "PAUSE_RESULT", {});
                     break;
                 case "RESUME":
                     resume();
+                    inputFilter.setPaused(false);
                     send(requestId, "RESUME_RESULT", {});
                     break;
                 case "SET_VIDEO_MODE":
@@ -1011,6 +1014,18 @@ export function installTyranoScriptBridge(global, inputFilter) {
                     if (!ownKeys(message.body, ["policy"])) throw new Error("TYRANOSCRIPT_PROTOCOL_INVALID");
                     inputFilter.set(message.body.policy);
                     send(requestId, "SET_INPUT_FILTER_RESULT", {});
+                    break;
+                case "SET_TOUCH_GAMEPAD":
+                    if (!ownKeys(message.body, ["enabled"]) || typeof message.body.enabled !== "boolean") {
+                        throw new Error("TYRANOSCRIPT_PROTOCOL_INVALID");
+                    }
+                    await inputFilter.setTouchGamepadEnabled(message.body.enabled, {
+                        ...touchGamepadProfiles.analogMenu,
+                        faces: [{index: 0, label: "确认", slot: "bottom"}, {index: 1, label: "右键", slot: "right"}],
+                        pointerTarget: global.document.getElementById("tyrano_base") || global.document.body,
+                        activationEvent: typeof global.$?.fn?.tap === "function" && global.$.fn.click === global.$.fn.tap ? "tap" : "click",
+                    });
+                    send(requestId, "SET_TOUCH_GAMEPAD_RESULT", {});
                     break;
                 case "SET_VOLUME":
                     if (!ownKeys(message.body, ["value"])) throw new Error("TYRANOSCRIPT_PROTOCOL_INVALID");

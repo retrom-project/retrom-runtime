@@ -140,6 +140,7 @@ async function mountEasyRpgUnchecked(
   await waitForReady(playerModule, expectedEngine, restoreFiles.length > 0, signal);
 
   return {
+    touchGamepad: true,
     checkpoint: async () => {
       if (!playerModule.api.createRuntimeCheckpoint()) {throw new Error("RPG_CHECKPOINT_UNAVAILABLE");}
       const bytes = readCheckpoint(playerModule.FS);

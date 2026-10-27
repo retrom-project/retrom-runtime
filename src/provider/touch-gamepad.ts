@@ -1,18 +1,27 @@
 import {inputObserver} from "./input-observations.js";
+import type {RuntimeTouchGamepadV1} from "./module-api.js";
+import {touchGamepadLayout, touchGamepadStyle, type TouchGamepadOptions} from "./touch-gamepad-layout.js";
 
 /** Standard-mapping indices: bottom/right/left/top face buttons and the D-pad. */
-const faceButtons = [{index: 0, label: "A", slot: "bottom"}, {index: 1, label: "B", slot: "right"},
-  {index: 2, label: "X", slot: "left"}, {index: 3, label: "Y", slot: "top"}] as const;
 const dpad = {up: 12, down: 13, left: 14, right: 15} as const;
 const buttonCount = 17;
 const device = "touch-gamepad";
 
 type GamepadLike = Pick<Gamepad, "axes" | "buttons" | "connected" | "id" | "index" | "mapping" | "timestamp">;
+type ControlPointer = Pick<PointerEvent, "target" | "pointerId" | "clientX" | "clientY" | "preventDefault" | "stopPropagation">;
 
 /** Pressed standard buttons of the on-screen pad; pure so merging is testable without a DOM. */
 export class TouchGamepadState {
   private readonly pressed = new Set<number>();
   private changedAt = 0;
+  private axes = [0, 0, 0, 0];
+
+  setAxis(index: number, value: number, nowMs: number) {
+    const next = Number.isFinite(value) ? Math.max(-1, Math.min(1, value)) : 0;
+    if (this.axes[index] === next) {return false;}
+    this.axes[index] = next; this.changedAt = nowMs;
+    return true;
+  }
 
   set(index: number, down: boolean, nowMs: number) {
     if (this.pressed.has(index) === down) {return false;}
@@ -24,6 +33,7 @@ export class TouchGamepadState {
   releaseAll(nowMs: number) {
     const released = [...this.pressed];
     for (const index of released) {this.set(index, false, nowMs);}
+    for (let index = 0; index < this.axes.length; index++) {this.setAxis(index, 0, nowMs);}
     return released;
   }
 
@@ -31,7 +41,7 @@ export class TouchGamepadState {
 
   snapshot(): GamepadLike {
     return {
-      axes: [0, 0, 0, 0],
+      axes: [...this.axes],
       buttons: Array.from({length: buttonCount}, (_, index) => {
         const down = this.pressed.has(index);
         return {pressed: down, touched: down, value: down ? 1 : 0};
@@ -47,13 +57,15 @@ export function mergeTouchGamepad(gamepads: readonly (GamepadLike | null)[], tou
   if (!touch) {return [...gamepads];}
   const result = [...gamepads];
   const physical = result[0];
-  if (!physical) {result[0] = touch; return result;}
+  if (!physical || physical.mapping !== "standard") {result[0] = touch; return result;}
   result[0] = {
-    axes: [...physical.axes], connected: physical.connected, id: physical.id, index: physical.index,
+    axes: Array.from({length: Math.max(physical.axes.length, touch.axes.length)}, (_, index) =>
+      touch.axes[index] || physical.axes[index] || 0), connected: physical.connected, id: physical.id, index: physical.index,
     mapping: physical.mapping, timestamp: Math.max(physical.timestamp, touch.timestamp),
-    buttons: physical.buttons.map((button, index) => {
+    buttons: Array.from({length: Math.max(physical.buttons.length, touch.buttons.length)}, (_, index) => {
+      const button = physical.buttons[index];
       const down = Boolean(touch.buttons[index]?.pressed);
-      return down ? {pressed: true, touched: true, value: 1} : {pressed: button.pressed, touched: button.touched, value: button.value};
+      return down ? {pressed: true, touched: true, value: 1} : {pressed: button?.pressed ?? false, touched: button?.touched ?? false, value: button?.value ?? 0};
     }),
   } as unknown as GamepadLike;
   return result;
@@ -70,80 +82,67 @@ export function dpadDirections(dx: number, dy: number, radius: number) {
   ] as const)[sector];
 }
 
-export type TouchGamepad = {
+export type TouchGamepad = RuntimeTouchGamepadV1 & {
   /** Current pad for the gamepad filter, or null while hidden. */
   current(): GamepadLike | null;
   /** A physical controller in use hides the touch layout until the next touch. */
   observePhysical(gamepads: readonly (GamepadLike | null)[]): void;
+  releaseAll(): void;
+  setSuspended(suspended: boolean): void;
   cleanup(): void;
 };
 
-const styleText = `
-[data-retrom-touch-gamepad]{position:fixed;inset:0;pointer-events:none;z-index:2147483646;
-  -webkit-user-select:none;user-select:none;-webkit-touch-callout:none;font-family:system-ui,sans-serif}
-[data-retrom-touch-gamepad][hidden]{display:none}
-[data-retrom-touch-gamepad] [data-control]{position:absolute;pointer-events:auto;touch-action:none;box-sizing:border-box;
-  border:2px solid rgba(255,255,255,.55);background:rgba(20,22,30,.35);color:rgba(255,255,255,.85);
-  display:flex;align-items:center;justify-content:center;opacity:.7}
-[data-retrom-touch-gamepad] [data-control="dpad"]{--size:clamp(120px,34vmin,180px);width:var(--size);height:var(--size);
-  left:max(20px,env(safe-area-inset-left));bottom:max(20px,env(safe-area-inset-bottom));border-radius:50%}
-[data-retrom-touch-gamepad] [data-arrow]{position:absolute;width:0;height:0;border:10px solid transparent;pointer-events:none}
-[data-retrom-touch-gamepad] [data-arrow="up"]{top:10%;border-bottom-color:currentColor}
-[data-retrom-touch-gamepad] [data-arrow="down"]{bottom:10%;border-top-color:currentColor}
-[data-retrom-touch-gamepad] [data-arrow="left"]{left:10%;border-right-color:currentColor}
-[data-retrom-touch-gamepad] [data-arrow="right"]{right:10%;border-left-color:currentColor}
-[data-retrom-touch-gamepad] [data-arrow][data-active]{color:#fff}
-[data-retrom-touch-gamepad] [data-face]{--size:clamp(48px,13vmin,68px);--gap:calc(var(--size) * .95);width:var(--size);height:var(--size);
-  border-radius:50%;font-size:calc(var(--size) * .38);font-weight:600;
-  right:calc(max(20px,env(safe-area-inset-right)) + var(--gap));bottom:calc(max(20px,env(safe-area-inset-bottom)) + var(--gap))}
-[data-retrom-touch-gamepad] [data-face="bottom"]{transform:translateY(var(--gap))}
-[data-retrom-touch-gamepad] [data-face="right"]{transform:translateX(var(--gap))}
-[data-retrom-touch-gamepad] [data-face="left"]{transform:translateX(calc(var(--gap) * -1))}
-[data-retrom-touch-gamepad] [data-face="top"]{transform:translateY(calc(var(--gap) * -1))}
-[data-retrom-touch-gamepad] [data-face][data-active]{background:rgba(255,255,255,.4);color:#fff;opacity:.95}
-`;
-
 /** Shows an on-screen standard gamepad on touch-first devices inside a same-origin runtime frame. */
-export function installTouchGamepad(frameWindow: Window): TouchGamepad {
+export function installTouchGamepad(frameWindow: Window, options: TouchGamepadOptions = {}): TouchGamepad {
   const document = frameWindow.document;
   const state = new TouchGamepadState();
   const now = () => frameWindow.performance.now();
   const style = document.createElement("style");
   style.dataset.retromTouchGamepadStyle = "";
-  style.textContent = styleText;
+  style.textContent = touchGamepadStyle;
   document.head.append(style);
   const root = document.createElement("div");
   root.dataset.retromTouchGamepad = "";
+  root.dataset.layout = options.layout ?? "STANDARD";
   root.setAttribute("aria-hidden", "true");
+  const layout = touchGamepadLayout(options.layout, options);
 
   const pad = document.createElement("div");
   pad.dataset.control = "dpad";
-  const arrows = new Map<number, HTMLElement>();
-  for (const [name, index] of Object.entries(dpad)) {
-    const arrow = document.createElement("span");
-    arrow.dataset.arrow = name;
-    pad.append(arrow); arrows.set(index, arrow);
-  }
+  const padKnob = document.createElement("span");
+  padKnob.dataset.knob = ""; pad.append(padKnob);
   root.append(pad);
   const faces = new Map<number, HTMLElement>();
-  for (const {index, label, slot} of faceButtons) {
+  for (const {index, label, slot} of layout.faces) {
     const button = document.createElement("div");
     button.dataset.control = "face"; button.dataset.face = slot; button.textContent = label;
     root.append(button); faces.set(index, button);
   }
+  for (const {index, label, side} of layout.auxiliary) {
+    const button = document.createElement("div");
+    button.dataset.control = "button"; button.dataset.button = String(index);
+    button.dataset.side = side; button.textContent = label;
+    root.append(button); faces.set(index, button);
+  }
+  const analog = layout.analog ? document.createElement("div") : null;
+  const knob = analog ? document.createElement("span") : null;
+  if (analog && knob) {
+    analog.dataset.control = "analog"; knob.dataset.knob = "";
+    analog.append(knob); root.append(analog);
+  }
   document.body.append(root);
 
   // Each touch owns one control; the D-pad follows its finger until release.
-  const owners = new Map<number, {control: "dpad" | number; held: readonly number[]}>();
+  const owners = new Map<number, {control: "dpad" | "analog" | number; held: readonly number[]; point?: {x: number; y: number}}>();
   const heldElsewhere = (pointerId: number, index: number) =>
     [...owners].some(([id, owner]) => id !== pointerId && owner.held.includes(index));
   const apply = (index: number, down: boolean) => {
     if (!state.set(index, down, now())) {return;}
-    (arrows.get(index) ?? faces.get(index))?.toggleAttribute("data-active", down);
+    faces.get(index)?.toggleAttribute("data-active", down);
     inputObserver(frameWindow)?.record({device, control: `Button ${index}`, value: down ? 1 : 0,
       stage: "BROWSER", target: null, reason: null}, now());
   };
-  const hold = (pointerId: number, control: "dpad" | number, next: readonly number[]) => {
+  const hold = (pointerId: number, control: "dpad" | "analog" | number, next: readonly number[]) => {
     const previous = owners.get(pointerId)?.held ?? [];
     owners.set(pointerId, {control, held: next});
     for (const index of previous) {if (!next.includes(index) && !heldElsewhere(pointerId, index)) {apply(index, false);}}
@@ -153,43 +152,123 @@ export function installTouchGamepad(frameWindow: Window): TouchGamepad {
     const owner = owners.get(pointerId);
     if (!owner) {return;}
     owners.delete(pointerId);
+    if (owner.control === "analog") {resetAnalog();}
+    if (owner.control === "dpad") {
+      const remaining = [...owners.values()].reverse().find(value => value.control === "dpad")?.point;
+      positionStick(pad, remaining?.x ?? 0, remaining?.y ?? 0);
+    }
     for (const index of owner.held) {if (!heldElsewhere(pointerId, index)) {apply(index, false);}}
   };
   const releaseAll = () => {
     owners.clear();
+    resetAnalog(); positionStick(pad);
     for (const index of state.releaseAll(now())) {
-      (arrows.get(index) ?? faces.get(index))?.removeAttribute("data-active");
+      faces.get(index)?.removeAttribute("data-active");
       inputObserver(frameWindow)?.record({device, control: `Button ${index}`, value: 0, stage: "BROWSER", target: null, reason: null}, now());
     }
   };
-  const padDirections = (event: PointerEvent) => {
-    const bounds = pad.getBoundingClientRect();
-    return dpadDirections(event.clientX - (bounds.left + bounds.width / 2), event.clientY - (bounds.top + bounds.height / 2), bounds.width / 2);
+  const resetAnalog = () => {
+    state.setAxis(0, 0, now()); state.setAxis(1, 0, now());
+    if (analog) {positionStick(analog);}
   };
-  const swallow = (event: Event) => {event.preventDefault(); event.stopPropagation();};
+  const positionStick = (control: HTMLElement, x = 0, y = 0) => {
+    control.toggleAttribute("data-active", x !== 0 || y !== 0);
+    for (const [axis, value] of [["x", x], ["y", y]] as const) {
+      if (value === 0) {control.style.removeProperty(`--stick-${axis}`);}
+      else {control.style.setProperty(`--stick-${axis}`, `${value}px`);}
+    }
+  };
+  const moveStick = (event: ControlPointer, control: HTMLElement, x: number, y: number) => {
+    const distance = Math.hypot(x, y), scale = distance > 1 ? 1 / distance : 1;
+    const travel = control.getBoundingClientRect().width / 4;
+    const point = {x: x * scale * travel, y: y * scale * travel};
+    const owner = owners.get(event.pointerId);
+    if (owner) {owner.point = point;}
+    positionStick(control, point.x, point.y);
+  };
+  const moveAnalog = (event: ControlPointer) => {
+    if (!analog || !knob) {return;}
+    const bounds = analog.getBoundingClientRect(), radius = bounds.width / 2;
+    if (!(radius > 0)) {return;}
+    const dx = (event.clientX - bounds.left - radius) / radius;
+    const dy = (event.clientY - bounds.top - radius) / radius;
+    const distance = Math.hypot(dx, dy), scale = distance > 1 ? 1 / distance : 1;
+    const x = distance < .15 ? 0 : dx * scale, y = distance < .15 ? 0 : dy * scale;
+    state.setAxis(0, x, now()); state.setAxis(1, y, now());
+    moveStick(event, analog, x, y);
+  };
+  const moveDpad = (event: ControlPointer) => {
+    const bounds = pad.getBoundingClientRect(), radius = bounds.width / 2;
+    const dx = event.clientX - (bounds.left + radius), dy = event.clientY - (bounds.top + bounds.height / 2);
+    hold(event.pointerId, "dpad", dpadDirections(dx, dy, radius));
+    if (radius > 0) {moveStick(event, pad, dx / radius, dy / radius);}
+  };
+  const swallow = (event: Pick<Event, "preventDefault" | "stopPropagation">) => {event.preventDefault(); event.stopPropagation();};
+  const capturePointer = (control: HTMLElement, pointerId: number, capture: boolean) => {
+    if (!capture) {return true;}
+    try {control.setPointerCapture?.(pointerId); return true;}
+    catch (error) {
+      if (!(error instanceof (frameWindow as Window & {DOMException: typeof DOMException}).DOMException)) {throw error;}
+      if (error.name === "NotFoundError") {release(pointerId); return false;}
+      // Pointer-locked cores cannot capture. Window-level release still ends the press.
+      if (error.name !== "InvalidStateError") {throw error;}
+      return true;
+    }
+  };
 
-  const down = (event: PointerEvent) => {
+  const down = (event: ControlPointer, capture = true) => {
     const control = (event.target as Element | null)?.closest?.("[data-control]");
     if (!control || !root.contains(control)) {return;}
+    if (root.hidden) {return;}
     swallow(event);
-    (control as HTMLElement).setPointerCapture?.(event.pointerId);
-    if (control === pad) {hold(event.pointerId, "dpad", padDirections(event)); return;}
+    frameWindow.focus();
+    if (disposed || !root.isConnected) {return;}
+    if (!capturePointer(control as HTMLElement, event.pointerId, capture)) {return;}
+    if (control === pad) {moveDpad(event); return;}
+    if (control === analog) {
+      if ([...owners.values()].some(owner => owner.control === "analog")) {return;}
+      hold(event.pointerId, "analog", []); moveAnalog(event); return;
+    }
     const index = [...faces].find(([, element]) => element === control)?.[0];
     if (index !== undefined) {hold(event.pointerId, index, [index]);}
   };
-  const move = (event: PointerEvent) => {
+  const move = (event: ControlPointer) => {
     const owner = owners.get(event.pointerId);
     if (!owner) {return;}
     swallow(event);
-    if (owner.control === "dpad") {hold(event.pointerId, "dpad", padDirections(event));}
+    if (owner.control === "dpad") {moveDpad(event);}
+    if (owner.control === "analog") {moveAnalog(event);}
   };
-  const up = (event: PointerEvent) => {
+  const up = (event: ControlPointer) => {
     if (!owners.has(event.pointerId)) {return;}
     swallow(event); release(event.pointerId);
   };
-  root.addEventListener("pointerdown", down);
+  const pointerDown = (event: PointerEvent) => {
+    // Under pointer lock Chrome zeros touch PointerEvent coordinates. TouchEvent retains them.
+    if (event.pointerType === "touch" && document.pointerLockElement) {return;}
+    down(event);
+  };
+  const lockedTouch = (event: TouchEvent) => {
+    for (const point of Array.from(event.changedTouches)) {
+      const pointerId = -point.identifier - 1;
+      if (event.type === "touchstart" ? !document.pointerLockElement : !owners.has(pointerId)) {continue;}
+      const input: ControlPointer = {target: point.target, pointerId, clientX: point.clientX, clientY: point.clientY,
+        preventDefault: () => event.preventDefault(), stopPropagation: () => event.stopPropagation()};
+      if (event.type === "touchstart") {
+        down(input, false);
+        // Virtual controls use absolute touches; release the mouse lock so the host toolbar remains reachable.
+        if (owners.has(pointerId)) {document.exitPointerLock?.();}
+      }
+      else if (event.type === "touchmove") {move(input);}
+      else {up(input);}
+    }
+  };
+  root.addEventListener("pointerdown", pointerDown);
+  root.addEventListener("touchstart", lockedTouch, {passive: false});
+  for (const type of ["touchmove", "touchend", "touchcancel"] as const) {frameWindow.addEventListener(type, lockedTouch, {capture: true, passive: false});}
   root.addEventListener("pointermove", move);
   for (const type of ["pointerup", "pointercancel", "lostpointercapture"] as const) {root.addEventListener(type, up);}
+  for (const type of ["pointerup", "pointercancel"] as const) {frameWindow.addEventListener(type, up, true);}
   root.addEventListener("contextmenu", swallow);
 
   let announced = false;
@@ -208,25 +287,44 @@ export function installTouchGamepad(frameWindow: Window): TouchGamepad {
     if (!visible && announced && !physicalAtZero) {announced = false; announce("gamepaddisconnected");}
   };
   const touchFirst = frameWindow.matchMedia?.("(hover: none) and (pointer: coarse)");
+  let enabled = options.enabled ?? true, suspended = false, disposed = false;
+  let touchActive = Boolean(touchFirst?.matches), physicalHidden = false;
+  const refresh = () => setVisible(enabled && !suspended && touchActive && !physicalHidden);
   root.hidden = true;
-  setVisible(Boolean(touchFirst?.matches));
-  const touched = (event: PointerEvent) => {if (event.pointerType === "touch") {setVisible(true);}};
+  refresh();
+  const touched = (event: PointerEvent) => {
+    if (event.pointerType === "touch") {touchActive = true; physicalHidden = false; refresh();}
+  };
   frameWindow.addEventListener("pointerdown", touched, true);
   const hiddenPage = () => {if (document.visibilityState !== "visible") {releaseAll();}};
   frameWindow.addEventListener("blur", releaseAll);
   document.addEventListener("visibilitychange", hiddenPage);
 
   return {
-    current: () => root.hidden ? null : state.snapshot(),
+    getState: () => ({enabled}),
+    releaseAll,
+    setEnabled: async (value) => {
+      if (disposed || typeof value !== "boolean") {throw new Error("PLAYER_RUNTIME_CONTRACT_INVALID");}
+      enabled = value;
+      if (value) {touchActive = true; physicalHidden = false;}
+      refresh();
+    },
+    setSuspended: (value) => {if (!disposed) {suspended = value; refresh();}},
+    current: () => root.hidden || disposed ? null : state.snapshot(),
     observePhysical: (gamepads) => {
+      if (disposed) {return;}
       physicalAtZero = Boolean(gamepads[0]);
       if (root.hidden) {return;}
       const active = gamepads.some((gamepad) => gamepad?.buttons.some((button) => button.pressed));
-      if (active) {setVisible(false);}
+      if (active) {physicalHidden = true; refresh();}
     },
     cleanup: () => {
+      if (disposed) {return;}
+      disposed = true;
       releaseAll();
       frameWindow.removeEventListener("pointerdown", touched, true);
+      for (const type of ["touchmove", "touchend", "touchcancel"] as const) {frameWindow.removeEventListener(type, lockedTouch, true);}
+      for (const type of ["pointerup", "pointercancel"] as const) {frameWindow.removeEventListener(type, up, true);}
       frameWindow.removeEventListener("blur", releaseAll);
       document.removeEventListener("visibilitychange", hiddenPage);
       root.remove(); style.remove();

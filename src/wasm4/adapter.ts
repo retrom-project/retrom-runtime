@@ -3,6 +3,7 @@ import type {AdapterContentOptions} from "../provider/content-inputs.js";
 import type { CheckpointAvailability } from "../contract.js";
 import type { MountedRuntimeAdapter, RuntimeProgressReporter } from "../internal-adapter.js";
 import type {Wasm4Parameters} from "./parameters.js";
+import {touchGamepadProfiles} from "../provider/touch-gamepad-layout.js";
 
 type Wasm4CoreInstance = {
   canvas: HTMLCanvasElement;
@@ -76,6 +77,7 @@ export async function mountWasm4(
 
   let exited = false;
   return {
+    touchGamepad: touchGamepadProfiles.twoButton,
     checkpoint: async () => {
       if (exited) {throw new Error("WASM4_RUNTIME_INVALID_STATE");}
       const raw = instance.checkpoint();

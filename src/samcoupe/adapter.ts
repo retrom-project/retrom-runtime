@@ -75,7 +75,7 @@ export async function mountSamCoupe(config: SamCoupeParameters, target: HTMLElem
     await waitForGameFrame(realm, active, diskPath, () => startedAt > 0 && Date.now() - startedAt >= 500,
       () => engineError, signal);
     canvas.focus();
-    input = installSamGamepad(frameWindow, realm, canvas);
+    input = installSamGamepad(realm, realm, canvas);
   } catch (error) {await exit(); throw error;}
 
   const availability = () => {
@@ -97,6 +97,10 @@ export async function mountSamCoupe(config: SamCoupeParameters, target: HTMLElem
   };
   return {
     canvasLayout: "CORE",
+    touchGamepad: {inputWindow: realm, faces: [
+      {index: 0, label: "确认", slot: "bottom"}, {index: 1, label: "返回", slot: "right"},
+      {index: 2, label: "空格", slot: "left"},
+    ]},
     checkpoint: async () => {
       if (!availability().available) {throw new Error("SAMCOUPE_SAVE_UNAVAILABLE");}
       const module = active();

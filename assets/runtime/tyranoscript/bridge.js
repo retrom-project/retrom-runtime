@@ -71,24 +71,334 @@
     return observers.get(window2);
   }
 
+  // src/provider/touch-gamepad-layout.ts
+  var standardFaces = [
+    { index: 0, label: "A", slot: "bottom" },
+    { index: 1, label: "B", slot: "right" },
+    { index: 2, label: "X", slot: "left" },
+    { index: 3, label: "Y", slot: "top" }
+  ], menuButtons = [
+    { index: 8, label: "Select", side: "center-left" },
+    { index: 9, label: "Start", side: "center-right" }
+  ], shoulderButtons = [{ index: 4, label: "L", side: "left" }, { index: 5, label: "R", side: "right" }], touchGamepadProfiles = {
+    twoButton: { layout: "STANDARD", faces: standardFaces.slice(0, 2) },
+    twoButtonMenu: {
+      layout: "STANDARD",
+      faces: standardFaces.slice(0, 2),
+      auxiliary: [{ index: 9, label: "\u83DC\u5355", side: "center-right" }]
+    },
+    action: { layout: "STANDARD", auxiliary: [...menuButtons, ...shoulderButtons] },
+    analogMenu: {
+      layout: "JOYSTICK",
+      auxiliary: [],
+      faces: [{ index: 0, label: "\u786E\u8BA4", slot: "bottom" }, { index: 1, label: "\u83DC\u5355", slot: "right" }]
+    },
+    mini: {
+      layout: "STANDARD",
+      faces: [...standardFaces.slice(0, 2), { index: 2, label: "C", slot: "left" }],
+      auxiliary: [{ index: 4, label: "\u6447\u52A8", side: "left" }, { index: 8, label: "\u7535\u6E90", side: "center-left" }]
+    }
+  };
+  function touchGamepadLayout(layout = "STANDARD", controls = {}) {
+    let faces = layout === "PSP" ? standardFaces.map((face, index) => ({ ...face, label: ["\xD7", "\u25CB", "\u25A1", "\u25B3"][index] })) : layout === "POINTER" ? [{ ...standardFaces[0], label: "\u786E\u8BA4" }, { ...standardFaces[1], label: "\u8FD4\u56DE" }] : layout === "JOYSTICK" ? standardFaces.slice(0, 2) : standardFaces, auxiliary = layout === "PSP" ? [...menuButtons, ...shoulderButtons] : layout === "JOYSTICK" ? menuButtons : [];
+    return { faces: controls.faces ?? faces, auxiliary: controls.auxiliary ?? auxiliary, analog: layout === "PSP" || layout === "JOYSTICK" };
+  }
+  var touchGamepadStyle = `
+[data-retrom-touch-gamepad]{position:fixed;inset:0;pointer-events:none;z-index:2147483646;
+  -webkit-user-select:none;user-select:none;-webkit-touch-callout:none;font-family:system-ui,sans-serif}
+[data-retrom-touch-gamepad][hidden]{display:none}
+[data-retrom-touch-gamepad] [data-control]{position:absolute;pointer-events:auto;touch-action:none;box-sizing:border-box;
+  border:2px solid rgba(255,255,255,.55);background:rgba(20,22,30,.35);color:rgba(255,255,255,.85);
+  display:flex;align-items:center;justify-content:center;opacity:.7;padding:0}
+[data-retrom-touch-gamepad] [data-control="dpad"],
+[data-retrom-touch-gamepad] [data-control="analog"]{--size:clamp(100px,30vmin,160px);width:var(--size);height:var(--size);
+  left:max(20px,env(safe-area-inset-left));bottom:max(20px,env(safe-area-inset-bottom));border-radius:50%}
+[data-retrom-touch-gamepad] [data-control="analog"]{left:calc(max(20px,env(safe-area-inset-left)) + clamp(100px,30vmin,160px) + 16px)}
+[data-retrom-touch-gamepad][data-layout="JOYSTICK"] [data-control="dpad"]{display:none}
+[data-retrom-touch-gamepad][data-layout="JOYSTICK"] [data-control="analog"]{left:max(20px,env(safe-area-inset-left))}
+[data-retrom-touch-gamepad] [data-knob]{width:50%;height:50%;border-radius:50%;
+  transform:translate(var(--stick-x,0px),var(--stick-y,0px));pointer-events:none;background:rgba(255,0,0,.5)}
+[data-retrom-touch-gamepad] [data-face]{--size:clamp(44px,12vmin,64px);--gap:calc(var(--size) * .95);width:var(--size);height:var(--size);
+  border-radius:50%;font-size:calc(var(--size) * .38);font-weight:600;
+  right:calc(max(20px,env(safe-area-inset-right)) + var(--gap));bottom:calc(max(20px,env(safe-area-inset-bottom)) + var(--gap))}
+[data-retrom-touch-gamepad] [data-face="bottom"]{transform:translateY(var(--gap))}
+[data-retrom-touch-gamepad] [data-face="right"]{transform:translateX(var(--gap))}
+[data-retrom-touch-gamepad] [data-face="left"]{transform:translateX(calc(var(--gap) * -1))}
+[data-retrom-touch-gamepad] [data-face="top"]{transform:translateY(calc(var(--gap) * -1))}
+[data-retrom-touch-gamepad] [data-side]{min-width:52px;min-height:36px;border-radius:8px;font-size:14px;
+  bottom:max(20px,env(safe-area-inset-bottom))}
+[data-retrom-touch-gamepad] [data-side="center-left"]{right:calc(50% + 6px)}
+[data-retrom-touch-gamepad] [data-side="center-right"]{left:calc(50% + 6px)}
+[data-retrom-touch-gamepad] [data-side="left"],
+[data-retrom-touch-gamepad] [data-side="right"]{bottom:calc(max(20px,env(safe-area-inset-bottom)) + clamp(100px,30vmin,160px) + 16px)}
+[data-retrom-touch-gamepad] [data-side="left"]{left:max(20px,env(safe-area-inset-left))}
+[data-retrom-touch-gamepad] [data-side="right"]{right:max(20px,env(safe-area-inset-right))}
+[data-retrom-touch-gamepad] [data-control][data-active]{background:rgba(255,255,255,.4);color:#fff;opacity:.95}
+[data-retrom-touch-gamepad] [data-control="dpad"],
+[data-retrom-touch-gamepad] [data-control="analog"]{border:0;background:rgba(255,0,0,.5);opacity:.5}
+[data-retrom-touch-gamepad] [data-control="dpad"][data-active],
+[data-retrom-touch-gamepad] [data-control="analog"][data-active]{background:rgba(255,0,0,.5);opacity:1}
+@media(max-width:639px){
+ [data-retrom-touch-gamepad][data-layout="PSP"] [data-control="analog"]{left:max(20px,env(safe-area-inset-left));
+  bottom:calc(max(20px,env(safe-area-inset-bottom)) + clamp(100px,30vmin,160px) + 58px)}
+}
+`;
+
   // src/provider/touch-gamepad.ts
+  var dpad = { up: 12, down: 13, left: 14, right: 15 }, buttonCount = 17, device = "touch-gamepad", TouchGamepadState = class {
+    pressed = /* @__PURE__ */ new Set();
+    changedAt = 0;
+    axes = [0, 0, 0, 0];
+    setAxis(index, value, nowMs) {
+      let next = Number.isFinite(value) ? Math.max(-1, Math.min(1, value)) : 0;
+      return this.axes[index] === next ? !1 : (this.axes[index] = next, this.changedAt = nowMs, !0);
+    }
+    set(index, down, nowMs) {
+      return this.pressed.has(index) === down ? !1 : (down ? this.pressed.add(index) : this.pressed.delete(index), this.changedAt = nowMs, !0);
+    }
+    releaseAll(nowMs) {
+      let released = [...this.pressed];
+      for (let index of released)
+        this.set(index, !1, nowMs);
+      for (let index = 0; index < this.axes.length; index++)
+        this.setAxis(index, 0, nowMs);
+      return released;
+    }
+    isPressed(index) {
+      return this.pressed.has(index);
+    }
+    snapshot() {
+      return {
+        axes: [...this.axes],
+        buttons: Array.from({ length: buttonCount }, (_, index) => {
+          let down = this.pressed.has(index);
+          return { pressed: down, touched: down, value: down ? 1 : 0 };
+        }),
+        connected: !0,
+        id: "Retrom touch gamepad (STANDARD GAMEPAD)",
+        index: 0,
+        mapping: "standard",
+        timestamp: this.changedAt
+      };
+    }
+  };
   function mergeTouchGamepad(gamepads, touch) {
     if (!touch)
       return [...gamepads];
     let result = [...gamepads], physical = result[0];
-    return physical ? (result[0] = {
-      axes: [...physical.axes],
+    return !physical || physical.mapping !== "standard" ? (result[0] = touch, result) : (result[0] = {
+      axes: Array.from({ length: Math.max(physical.axes.length, touch.axes.length) }, (_, index) => touch.axes[index] || physical.axes[index] || 0),
       connected: physical.connected,
       id: physical.id,
       index: physical.index,
       mapping: physical.mapping,
       timestamp: Math.max(physical.timestamp, touch.timestamp),
-      buttons: physical.buttons.map((button, index) => !!touch.buttons[index]?.pressed ? { pressed: !0, touched: !0, value: 1 } : { pressed: button.pressed, touched: button.touched, value: button.value })
-    }, result) : (result[0] = touch, result);
+      buttons: Array.from({ length: Math.max(physical.buttons.length, touch.buttons.length) }, (_, index) => {
+        let button = physical.buttons[index];
+        return !!touch.buttons[index]?.pressed ? { pressed: !0, touched: !0, value: 1 } : { pressed: button?.pressed ?? !1, touched: button?.touched ?? !1, value: button?.value ?? 0 };
+      })
+    }, result);
+  }
+  function dpadDirections(dx, dy, radius) {
+    let distance = Math.hypot(dx, dy);
+    if (!(radius > 0) || distance < radius * 0.25)
+      return [];
+    let sector = (Math.round(Math.atan2(dy, dx) / (Math.PI / 4)) % 8 + 8) % 8;
+    return [
+      [dpad.right],
+      [dpad.right, dpad.down],
+      [dpad.down],
+      [dpad.down, dpad.left],
+      [dpad.left],
+      [dpad.left, dpad.up],
+      [dpad.up],
+      [dpad.up, dpad.right]
+    ][sector];
+  }
+  function installTouchGamepad(frameWindow, options = {}) {
+    let document = frameWindow.document, state = new TouchGamepadState(), now = () => frameWindow.performance.now(), style = document.createElement("style");
+    style.dataset.retromTouchGamepadStyle = "", style.textContent = touchGamepadStyle, document.head.append(style);
+    let root = document.createElement("div");
+    root.dataset.retromTouchGamepad = "", root.dataset.layout = options.layout ?? "STANDARD", root.setAttribute("aria-hidden", "true");
+    let layout = touchGamepadLayout(options.layout, options), pad = document.createElement("div");
+    pad.dataset.control = "dpad";
+    let padKnob = document.createElement("span");
+    padKnob.dataset.knob = "", pad.append(padKnob), root.append(pad);
+    let faces = /* @__PURE__ */ new Map();
+    for (let { index, label, slot } of layout.faces) {
+      let button = document.createElement("div");
+      button.dataset.control = "face", button.dataset.face = slot, button.textContent = label, root.append(button), faces.set(index, button);
+    }
+    for (let { index, label, side } of layout.auxiliary) {
+      let button = document.createElement("div");
+      button.dataset.control = "button", button.dataset.button = String(index), button.dataset.side = side, button.textContent = label, root.append(button), faces.set(index, button);
+    }
+    let analog = layout.analog ? document.createElement("div") : null, knob = analog ? document.createElement("span") : null;
+    analog && knob && (analog.dataset.control = "analog", knob.dataset.knob = "", analog.append(knob), root.append(analog)), document.body.append(root);
+    let owners = /* @__PURE__ */ new Map(), heldElsewhere = (pointerId, index) => [...owners].some(([id, owner]) => id !== pointerId && owner.held.includes(index)), apply = (index, down2) => {
+      state.set(index, down2, now()) && (faces.get(index)?.toggleAttribute("data-active", down2), inputObserver(frameWindow)?.record({
+        device,
+        control: `Button ${index}`,
+        value: down2 ? 1 : 0,
+        stage: "BROWSER",
+        target: null,
+        reason: null
+      }, now()));
+    }, hold = (pointerId, control, next) => {
+      let previous = owners.get(pointerId)?.held ?? [];
+      owners.set(pointerId, { control, held: next });
+      for (let index of previous)
+        !next.includes(index) && !heldElsewhere(pointerId, index) && apply(index, !1);
+      for (let index of next)
+        apply(index, !0);
+    }, release = (pointerId) => {
+      let owner = owners.get(pointerId);
+      if (owner) {
+        if (owners.delete(pointerId), owner.control === "analog" && resetAnalog(), owner.control === "dpad") {
+          let remaining = [...owners.values()].reverse().find((value) => value.control === "dpad")?.point;
+          positionStick(pad, remaining?.x ?? 0, remaining?.y ?? 0);
+        }
+        for (let index of owner.held)
+          heldElsewhere(pointerId, index) || apply(index, !1);
+      }
+    }, releaseAll = () => {
+      owners.clear(), resetAnalog(), positionStick(pad);
+      for (let index of state.releaseAll(now()))
+        faces.get(index)?.removeAttribute("data-active"), inputObserver(frameWindow)?.record({ device, control: `Button ${index}`, value: 0, stage: "BROWSER", target: null, reason: null }, now());
+    }, resetAnalog = () => {
+      state.setAxis(0, 0, now()), state.setAxis(1, 0, now()), analog && positionStick(analog);
+    }, positionStick = (control, x = 0, y = 0) => {
+      control.toggleAttribute("data-active", x !== 0 || y !== 0);
+      for (let [axis2, value] of [["x", x], ["y", y]])
+        value === 0 ? control.style.removeProperty(`--stick-${axis2}`) : control.style.setProperty(`--stick-${axis2}`, `${value}px`);
+    }, moveStick = (event, control, x, y) => {
+      let distance = Math.hypot(x, y), scale = distance > 1 ? 1 / distance : 1, travel = control.getBoundingClientRect().width / 4, point = { x: x * scale * travel, y: y * scale * travel }, owner = owners.get(event.pointerId);
+      owner && (owner.point = point), positionStick(control, point.x, point.y);
+    }, moveAnalog = (event) => {
+      if (!analog || !knob)
+        return;
+      let bounds = analog.getBoundingClientRect(), radius = bounds.width / 2;
+      if (!(radius > 0))
+        return;
+      let dx = (event.clientX - bounds.left - radius) / radius, dy = (event.clientY - bounds.top - radius) / radius, distance = Math.hypot(dx, dy), scale = distance > 1 ? 1 / distance : 1, x = distance < 0.15 ? 0 : dx * scale, y = distance < 0.15 ? 0 : dy * scale;
+      state.setAxis(0, x, now()), state.setAxis(1, y, now()), moveStick(event, analog, x, y);
+    }, moveDpad = (event) => {
+      let bounds = pad.getBoundingClientRect(), radius = bounds.width / 2, dx = event.clientX - (bounds.left + radius), dy = event.clientY - (bounds.top + bounds.height / 2);
+      hold(event.pointerId, "dpad", dpadDirections(dx, dy, radius)), radius > 0 && moveStick(event, pad, dx / radius, dy / radius);
+    }, swallow = (event) => {
+      event.preventDefault(), event.stopPropagation();
+    }, capturePointer = (control, pointerId, capture) => {
+      if (!capture)
+        return !0;
+      try {
+        return control.setPointerCapture?.(pointerId), !0;
+      } catch (error) {
+        if (!(error instanceof frameWindow.DOMException))
+          throw error;
+        if (error.name === "NotFoundError")
+          return release(pointerId), !1;
+        if (error.name !== "InvalidStateError")
+          throw error;
+        return !0;
+      }
+    }, down = (event, capture = !0) => {
+      let control = event.target?.closest?.("[data-control]");
+      if (!control || !root.contains(control) || root.hidden || (swallow(event), frameWindow.focus(), disposed || !root.isConnected) || !capturePointer(control, event.pointerId, capture))
+        return;
+      if (control === pad) {
+        moveDpad(event);
+        return;
+      }
+      if (control === analog) {
+        if ([...owners.values()].some((owner) => owner.control === "analog"))
+          return;
+        hold(event.pointerId, "analog", []), moveAnalog(event);
+        return;
+      }
+      let index = [...faces].find(([, element]) => element === control)?.[0];
+      index !== void 0 && hold(event.pointerId, index, [index]);
+    }, move = (event) => {
+      let owner = owners.get(event.pointerId);
+      owner && (swallow(event), owner.control === "dpad" && moveDpad(event), owner.control === "analog" && moveAnalog(event));
+    }, up = (event) => {
+      owners.has(event.pointerId) && (swallow(event), release(event.pointerId));
+    }, pointerDown = (event) => {
+      event.pointerType === "touch" && document.pointerLockElement || down(event);
+    }, lockedTouch = (event) => {
+      for (let point of Array.from(event.changedTouches)) {
+        let pointerId = -point.identifier - 1;
+        if (event.type === "touchstart" ? !document.pointerLockElement : !owners.has(pointerId))
+          continue;
+        let input = {
+          target: point.target,
+          pointerId,
+          clientX: point.clientX,
+          clientY: point.clientY,
+          preventDefault: () => event.preventDefault(),
+          stopPropagation: () => event.stopPropagation()
+        };
+        event.type === "touchstart" ? (down(input, !1), owners.has(pointerId) && document.exitPointerLock?.()) : event.type === "touchmove" ? move(input) : up(input);
+      }
+    };
+    root.addEventListener("pointerdown", pointerDown), root.addEventListener("touchstart", lockedTouch, { passive: !1 });
+    for (let type of ["touchmove", "touchend", "touchcancel"])
+      frameWindow.addEventListener(type, lockedTouch, { capture: !0, passive: !1 });
+    root.addEventListener("pointermove", move);
+    for (let type of ["pointerup", "pointercancel", "lostpointercapture"])
+      root.addEventListener(type, up);
+    for (let type of ["pointerup", "pointercancel"])
+      frameWindow.addEventListener(type, up, !0);
+    root.addEventListener("contextmenu", swallow);
+    let announced = !1, physicalAtZero = !1, announce = (type) => {
+      let event = new frameWindow.Event(type);
+      Object.defineProperty(event, "gamepad", { value: state.snapshot() }), frameWindow.dispatchEvent(event);
+    }, setVisible = (visible) => {
+      root.hidden !== !visible && (root.hidden = !visible, visible || releaseAll(), visible && !announced && !physicalAtZero && (announced = !0, announce("gamepadconnected")), !visible && announced && !physicalAtZero && (announced = !1, announce("gamepaddisconnected")));
+    }, touchFirst = frameWindow.matchMedia?.("(hover: none) and (pointer: coarse)"), enabled = options.enabled ?? !0, suspended = !1, disposed = !1, touchActive = !!touchFirst?.matches, physicalHidden = !1, refresh = () => setVisible(enabled && !suspended && touchActive && !physicalHidden);
+    root.hidden = !0, refresh();
+    let touched = (event) => {
+      event.pointerType === "touch" && (touchActive = !0, physicalHidden = !1, refresh());
+    };
+    frameWindow.addEventListener("pointerdown", touched, !0);
+    let hiddenPage = () => {
+      document.visibilityState !== "visible" && releaseAll();
+    };
+    return frameWindow.addEventListener("blur", releaseAll), document.addEventListener("visibilitychange", hiddenPage), {
+      getState: () => ({ enabled }),
+      releaseAll,
+      setEnabled: async (value) => {
+        if (disposed || typeof value != "boolean")
+          throw new Error("PLAYER_RUNTIME_CONTRACT_INVALID");
+        enabled = value, value && (touchActive = !0, physicalHidden = !1), refresh();
+      },
+      setSuspended: (value) => {
+        disposed || (suspended = value, refresh());
+      },
+      current: () => root.hidden || disposed ? null : state.snapshot(),
+      observePhysical: (gamepads) => {
+        if (disposed || (physicalAtZero = !!gamepads[0], root.hidden))
+          return;
+        gamepads.some((gamepad) => gamepad?.buttons.some((button) => button.pressed)) && (physicalHidden = !0, refresh());
+      },
+      cleanup: () => {
+        if (!disposed) {
+          disposed = !0, releaseAll(), frameWindow.removeEventListener("pointerdown", touched, !0);
+          for (let type of ["touchmove", "touchend", "touchcancel"])
+            frameWindow.removeEventListener(type, lockedTouch, !0);
+          for (let type of ["pointerup", "pointercancel"])
+            frameWindow.removeEventListener(type, up, !0);
+          frameWindow.removeEventListener("blur", releaseAll), document.removeEventListener("visibilitychange", hiddenPage), root.remove(), style.remove();
+        }
+      }
+    };
   }
 
   // src/provider/gamepad-filter.ts
   var gamepadSources = /* @__PURE__ */ new WeakMap();
+  function captureGamepadSource(runtimeWindow) {
+    let navigator = runtimeWindow.navigator, getGamepads = navigator.getGamepads;
+    return gamepadSources.get(navigator) ?? (() => Array.from(getGamepads?.call(navigator) ?? []));
+  }
   function validInputFilterPolicy(value) {
     return value === null || typeof value.suppressInput == "boolean" && (value.activeGamepadIndex === null || Number.isSafeInteger(value.activeGamepadIndex) && value.activeGamepadIndex >= 0 && value.activeGamepadIndex <= 255);
   }
@@ -170,9 +480,11 @@
     setTouchGamepad(touch) {
       this.touch = touch;
     }
+    source(physical) {
+      return this.touch?.observePhysical(physical), [...this.touch ? mergeTouchGamepad(physical, this.touch.current()) : physical];
+    }
     filter(physical, nowMs) {
-      this.touch?.observePhysical(physical);
-      let gamepads = this.touch ? mergeTouchGamepad(physical, this.touch.current()) : physical;
+      let gamepads = this.source(physical);
       if (!this.policy)
         return [...gamepads];
       if (this.policy.suppressInput)
@@ -225,7 +537,7 @@
       enumerable: ownDescriptor?.enumerable ?? !1,
       value: filteredGetGamepads,
       writable: !0
-    }), gamepadSources.set(gamepadNavigator, source), () => {
+    }), gamepadSources.set(gamepadNavigator, () => filter.source(source())), () => {
       gamepadNavigator.getGamepads === filteredGetGamepads && (ownDescriptor ? Object.defineProperty(gamepadNavigator, "getGamepads", ownDescriptor) : Reflect.deleteProperty(gamepadNavigator, "getGamepads"), previousSource ? gamepadSources.set(gamepadNavigator, previousSource) : gamepadSources.delete(gamepadNavigator));
     };
   }
@@ -238,7 +550,7 @@
   function cloneGamepad(gamepad, buttons, axes) {
     return {
       axes: [...axes],
-      buttons: buttons.map(({ pressed: pressed2, touched, value }) => ({ pressed: pressed2, touched, value })),
+      buttons: buttons.map(({ pressed: pressed3, touched, value }) => ({ pressed: pressed3, touched, value })),
       connected: gamepad.connected,
       id: gamepad.id,
       index: gamepad.index,
@@ -254,12 +566,224 @@
     );
   }
 
+  // src/provider/gamepad-cursor-surface.ts
+  function createCursorSurface(frameWindow, target, protocol, hitTest = !1, activationEvent = "click") {
+    let document = frameWindow.document, cursor = document.createElement("div");
+    cursor.dataset.gamepadCursor = "", cursor.hidden = !0, cursor.setAttribute("aria-hidden", "true"), Object.assign(cursor.style, {
+      position: "fixed",
+      width: "14px",
+      height: "14px",
+      borderRadius: "50%",
+      background: "rgba(255,255,255,.92)",
+      border: "2px solid rgba(10,10,14,.9)",
+      boxShadow: "0 0 0 2px rgba(255,255,255,.6)",
+      pointerEvents: "none",
+      transform: "translate(-50%, -50%)",
+      zIndex: "2147483647"
+    }), document.body.append(cursor);
+    let point = (position) => {
+      let bounds = target.getBoundingClientRect();
+      return { clientX: bounds.left + position.x * bounds.width, clientY: bounds.top + position.y * bounds.height };
+    }, positionCursor = (position) => {
+      let { clientX, clientY } = point(position);
+      cursor.style.left = `${clientX}px`, cursor.style.top = `${clientY}px`;
+    }, boundary = (type, position) => {
+      if (protocol !== "pointer")
+        return;
+      let realm = frameWindow;
+      target.dispatchEvent(new realm.PointerEvent(type, { ...point(position), pointerId: 1, pointerType: "mouse", isPrimary: !0 }));
+    }, lastPosition = { x: 0.5, y: 0.5 };
+    return {
+      bounds: () => target.getBoundingClientRect(),
+      hide: () => {
+        cursor.hidden || boundary("pointerleave", lastPosition), cursor.hidden = !0;
+      },
+      dispose: () => cursor.remove(),
+      refresh: (position) => {
+        cursor.hidden || positionCursor(position);
+      },
+      reveal: (position) => {
+        cursor.hidden && boundary("pointerenter", position), lastPosition = position, positionCursor(position), cursor.hidden = !1;
+      },
+      send: (type, button, buttons, position) => {
+        let realm = frameWindow, options = { bubbles: !0, composed: !0, cancelable: !0, button, buttons, ...point(position) }, receiver = (hitTest ? document.elementsFromPoint(options.clientX, options.clientY).find((element) => target.contains(element) && !element.closest("[data-retrom-touch-gamepad]")) : null) ?? target;
+        type === "mousedown" && receiver.focus?.({ preventScroll: !0 }), protocol === "pointer" && type.startsWith("mouse") ? receiver.dispatchEvent(new realm.PointerEvent(type.replace("mouse", "pointer"), {
+          ...options,
+          pointerId: 1,
+          pointerType: "mouse",
+          isPrimary: !0
+        })) : receiver.dispatchEvent(new realm.MouseEvent(type === "click" ? activationEvent : type, options)), (type === "mousedown" || type === "mouseup") && inputObserver(frameWindow)?.record({
+          device: "gamepad",
+          control: `Button ${button === 0 ? 0 : 1}`,
+          value: type === "mousedown" ? 1 : 0,
+          stage: "DELIVERED",
+          target: button === 0 ? "MouseLeft" : "MouseRight",
+          reason: null
+        }, frameWindow.performance.now());
+      }
+    };
+  }
+
+  // src/provider/gamepad-cursor.ts
+  var ownedButtons = [0, 1, 4, 12, 13, 14, 15];
+  function installGamepadCursor(frameWindow, target, options) {
+    return new GamepadCursorController(frameWindow, target, options);
+  }
+  var GamepadCursorController = class {
+    constructor(window2, target, options) {
+      this.window = window2;
+      this.options = options;
+      this.enabled = options.defaultEnabled;
+      let navigator = window2.navigator;
+      if (this.descriptor = Object.getOwnPropertyDescriptor(navigator, "getGamepads"), this.nativeGetGamepads = navigator.getGamepads ?? (() => []), this.readGamepads = options.readGamepads ?? captureGamepadSource(window2), !options.readGamepads && this.descriptor && !this.descriptor.configurable)
+        throw new Error("PLAYER_INPUT_FILTER_UNAVAILABLE");
+      this.surface = createCursorSurface(window2, target, options.protocol ?? "mouse", options.hitTest, options.activationEvent), options.readGamepads || Object.defineProperty(navigator, "getGamepads", { configurable: !0, value: this.filteredGamepads }), window2.addEventListener("blur", this.blur), window2.addEventListener("focus", this.focus), window2.document.addEventListener("visibilitychange", this.visibility), this.frame = window2.requestAnimationFrame(this.poll);
+    }
+    surface;
+    nativeGetGamepads;
+    readGamepads;
+    descriptor;
+    enabled;
+    disposed = !1;
+    suspended = !1;
+    unfocused = !1;
+    policy = null;
+    activeIndex = null;
+    neutralReady = !1;
+    releaseGate = !1;
+    previousTime = null;
+    frame = 0;
+    position = { x: 0.5, y: 0.5 };
+    held = 0;
+    downAt = /* @__PURE__ */ new Map();
+    dragged = /* @__PURE__ */ new Set();
+    getState() {
+      return { enabled: this.enabled, defaultEnabled: this.options.defaultEnabled };
+    }
+    setEnabled(enabled) {
+      if (this.disposed || typeof enabled != "boolean")
+        throw new Error("PLAYER_RUNTIME_CONTRACT_INVALID");
+      enabled !== this.enabled && (this.reset(), this.releaseGate = !0, this.enabled = enabled);
+    }
+    setSuspended(suspended) {
+      this.suspended !== suspended && (this.suspended = suspended, this.reset());
+    }
+    setInputPolicy(policy) {
+      (policy?.activeGamepadIndex !== this.policy?.activeGamepadIndex || policy?.suppressInput !== this.policy?.suppressInput) && (this.reset(), this.activeIndex = null), this.policy = policy ? { ...policy } : null;
+    }
+    dispose() {
+      this.disposed || (this.reset(), this.disposed = !0, this.window.cancelAnimationFrame(this.frame), this.window.removeEventListener("blur", this.blur), this.window.removeEventListener("focus", this.focus), this.window.document.removeEventListener("visibilitychange", this.visibility), this.window.navigator.getGamepads === this.filteredGamepads && (this.descriptor ? Object.defineProperty(this.window.navigator, "getGamepads", this.descriptor) : Reflect.deleteProperty(this.window.navigator, "getGamepads")), this.surface.dispose());
+    }
+    blur = () => {
+      this.unfocused = !0, this.reset();
+    };
+    focus = () => {
+      this.unfocused && (this.unfocused = !1, this.reset());
+    };
+    visibility = () => {
+      this.window.document.hidden ? this.blur() : this.focus();
+    };
+    blocked() {
+      return this.suspended || this.unfocused || !!this.policy?.suppressInput;
+    }
+    sample() {
+      try {
+        return this.readGamepads();
+      } catch {
+        return [];
+      }
+    }
+    select(pads) {
+      let requested = this.policy?.activeGamepadIndex ?? this.activeIndex, eligible = pads.filter((pad) => !!(pad?.connected && pad.mapping === "standard"));
+      return requested === null ? eligible[0] ?? null : eligible.find((pad) => pad.index === requested) ?? null;
+    }
+    filteredGamepads = () => {
+      let pads = Array.from(this.nativeGetGamepads.call(this.window.navigator)), selected = this.select(pads);
+      return !this.enabled && !this.releaseGate || !selected ? pads : pads.map((pad) => pad !== selected ? pad : {
+        id: pad.id,
+        index: pad.index,
+        connected: pad.connected,
+        mapping: pad.mapping,
+        timestamp: pad.timestamp,
+        vibrationActuator: pad.vibrationActuator,
+        axes: pad.axes.map((value, index) => index < 2 ? 0 : value),
+        buttons: pad.buttons.map((button, index) => ownedButtons.includes(index) ? { pressed: !1, touched: !1, value: 0 } : { pressed: button.pressed, touched: button.touched, value: button.value })
+      });
+    };
+    poll = (time) => {
+      this.disposed || (this.update(time), this.frame = this.window.requestAnimationFrame(this.poll));
+    };
+    update(time) {
+      let elapsed = this.previousTime === null ? 0 : Math.max(0, Math.min(50, time - this.previousTime));
+      this.previousTime = time;
+      let pad = this.select(this.sample());
+      if (!pad) {
+        this.reset(), this.activeIndex = null;
+        return;
+      }
+      if (this.activeIndex !== pad.index && (this.reset(), this.activeIndex = pad.index), this.blocked()) {
+        this.reset();
+        return;
+      }
+      let vector = direction(pad);
+      if (!this.neutralReady) {
+        this.neutralReady = ownedButtons.every((index) => !pressed2(pad, index)) && vector.x === 0 && vector.y === 0, this.neutralReady && (this.releaseGate = !1);
+        return;
+      }
+      this.enabled && ((vector.x || vector.y) && this.move(vector, elapsed * (pressed2(pad, 4) ? 0.2 : 1)), this.updateButton(0, pressed2(pad, 0)), this.updateButton(2, pressed2(pad, 1)), this.surface.refresh(this.position), (this.held || vector.x || vector.y) && this.surface.reveal(this.position));
+    }
+    move(vector, elapsed) {
+      let bounds = this.surface.bounds(), length = Math.max(1, Math.hypot(vector.x, vector.y));
+      this.position = {
+        x: clamp(this.position.x + vector.x / length * 0.75 * elapsed / Math.max(1, bounds.width)),
+        y: clamp(this.position.y + vector.y / length * 0.75 * elapsed / Math.max(1, bounds.height))
+      };
+      for (let [button, start] of this.downAt)
+        Math.hypot((this.position.x - start.x) * bounds.width, (this.position.y - start.y) * bounds.height) > 4 && this.dragged.add(button);
+      this.surface.reveal(this.position), this.surface.send("mousemove", 0, this.held, this.position);
+    }
+    updateButton(button, next) {
+      let mask = button === 0 ? 1 : 2;
+      if (!!(this.held & mask) !== next) {
+        if (this.surface.reveal(this.position), this.surface.send("mousemove", 0, this.held, this.position), this.held = next ? this.held | mask : this.held & ~mask, this.surface.send(next ? "mousedown" : "mouseup", button, this.held, this.position), next) {
+          this.downAt.set(button, { ...this.position });
+          return;
+        }
+        this.dragged.has(button) || this.surface.send(button === 0 ? "click" : "contextmenu", button, this.held, this.position), this.downAt.delete(button), this.dragged.delete(button);
+      }
+    }
+    reset() {
+      for (let button of [0, 2]) {
+        let mask = button === 0 ? 1 : 2;
+        this.held & mask && (this.held &= ~mask, this.surface.send("mouseup", button, this.held, this.position));
+      }
+      this.downAt.clear(), this.dragged.clear(), this.neutralReady = !1, this.previousTime = null, this.surface.hide();
+    }
+  };
+  function pressed2(pad, index) {
+    return !!(pad.buttons[index]?.pressed || pad.buttons[index]?.value >= 0.5);
+  }
+  function axis(value) {
+    return !Number.isFinite(value) || Math.abs(value) <= 0.2 ? 0 : Math.sign(value) * (Math.abs(value) - 0.2) / 0.8;
+  }
+  function direction(pad) {
+    return {
+      x: Number(pressed2(pad, 15)) - Number(pressed2(pad, 14)) || axis(pad.axes[0] ?? 0),
+      y: Number(pressed2(pad, 13)) - Number(pressed2(pad, 12)) || axis(pad.axes[1] ?? 0)
+    };
+  }
+  function clamp(value) {
+    return Math.max(0, Math.min(1, value));
+  }
+
   // src/provider/isolated-input.ts
   function createIsolatedInputFilter(runtimeWindow) {
     let reportShortcut = () => {
     }, shortcuts = new RuntimeHostShortcuts(["MENU", "PAUSE"], (shortcut) => reportShortcut(shortcut), () => !0);
     shortcuts.bind(runtimeWindow);
-    let filter = new RuntimeGamepadFilter(null), cleanup = null;
+    let filter = new RuntimeGamepadFilter(null), cleanup = null, touch = null, cursor = null, inputPolicy = null, paused = !1, suppressed = !1, refreshTouch = () => {
+      touch?.setSuspended(paused || suppressed), cursor?.setSuspended(paused || suppressed || !touch?.getState().enabled);
+    };
     return {
       onHostShortcut(report) {
         reportShortcut = report;
@@ -267,13 +791,35 @@
       setHostShortcutPolicy(policy) {
         shortcuts.setPolicy(policy);
       },
+      async setTouchGamepadEnabled(enabled, options = {}) {
+        if (typeof enabled != "boolean")
+          throw new Error("PLAYER_RUNTIME_CONTRACT_INVALID");
+        if (cleanup ??= installRuntimeGamepadFilter(runtimeWindow, filter), touch)
+          await touch.setEnabled(enabled);
+        else {
+          let { pointerTarget, activationEvent, ...layout } = options;
+          touch = installTouchGamepad(runtimeWindow, { ...layout, enabled }), pointerTarget ? (cursor = installGamepadCursor(runtimeWindow, pointerTarget, {
+            defaultEnabled: !0,
+            hitTest: !0,
+            activationEvent,
+            readGamepads: () => {
+              let pad = touch?.current();
+              return pad ? [pad] : [];
+            }
+          }), cursor.setInputPolicy(inputPolicy)) : filter.setTouchGamepad(touch);
+        }
+        refreshTouch();
+      },
+      setPaused(value) {
+        paused = value, refreshTouch();
+      },
       set(policy) {
         if (policy !== null && (typeof policy != "object" || Array.isArray(policy) || Object.keys(policy).sort().join(",") !== "activeGamepadIndex,suppressInput") || !validInputFilterPolicy(policy))
           throw new Error("PLAYER_INPUT_FILTER_INVALID");
-        shortcuts.setSuppressed(policy?.suppressInput === !0), filter.setPolicy(policy), cleanup ??= installRuntimeGamepadFilter(runtimeWindow, filter);
+        shortcuts.setSuppressed(policy?.suppressInput === !0), inputPolicy = policy, suppressed = policy?.suppressInput === !0, refreshTouch(), filter.setPolicy(policy), cursor?.setInputPolicy(policy), cleanup ??= installRuntimeGamepadFilter(runtimeWindow, filter);
       },
       stop() {
-        shortcuts.stop(), cleanup?.(), cleanup = null, filter.setPolicy(null);
+        cursor?.dispose(), cursor = null, touch?.cleanup(), touch = null, filter.setTouchGamepad(null), shortcuts.stop(), cleanup?.(), cleanup = null, filter.setPolicy(null);
       }
     };
   }
@@ -557,18 +1103,18 @@
     }
     function pollLegacyGamepad(kag) {
       if (kag !== legacyKag || exited || paused) return;
-      let gamepad = standardGamepad(), pressed2 = Array.from({ length: LEGACY_GAMEPAD_BUTTON_COUNT }, (_, index) => !!(gamepad && gamepad.buttons && gamepad.buttons[index] && gamepad.buttons[index].pressed));
+      let gamepad = standardGamepad(), pressed3 = Array.from({ length: LEGACY_GAMEPAD_BUTTON_COUNT }, (_, index) => !!(gamepad && gamepad.buttons && gamepad.buttons[index] && gamepad.buttons[index].pressed));
       if (!legacyInputArmed) {
-        legacyButtons = pressed2, legacyInputArmed = !pressed2.some(Boolean);
+        legacyButtons = pressed3, legacyInputArmed = !pressed3.some(Boolean);
         return;
       }
-      pressed2.forEach((active, index) => {
+      pressed3.forEach((active, index) => {
         active !== !!legacyButtons[index] && emitLegacyGamepad(index, active);
-      }), legacyButtons = pressed2;
+      }), legacyButtons = pressed3;
     }
-    function emitLegacyGamepad(index, pressed2) {
+    function emitLegacyGamepad(index, pressed3) {
       let key = legacyButtonKeys.get(index);
-      key && dispatchLegacyKey(pressed2 ? "keydown" : "keyup", key[0], key[1]);
+      key && dispatchLegacyKey(pressed3 ? "keydown" : "keyup", key[0], key[1]);
     }
     function dispatchLegacyKey(type, key, keyCode) {
       if (!global.document || typeof global.document.dispatchEvent != "function" || typeof global.KeyboardEvent != "function") return;
@@ -581,8 +1127,8 @@
       global.document.dispatchEvent(keyboardEvent);
     }
     function releaseLegacyInput() {
-      legacyKag && legacyButtons.forEach((pressed2, index) => {
-        pressed2 && emitLegacyGamepad(index, !1);
+      legacyKag && legacyButtons.forEach((pressed3, index) => {
+        pressed3 && emitLegacyGamepad(index, !1);
       }), legacyButtons = [], legacyInputArmed = !1;
     }
     function envelope(requestId, type, body) {
@@ -936,10 +1482,10 @@
             break;
           }
           case "PAUSE":
-            pause(), send(requestId, "PAUSE_RESULT", {});
+            inputFilter.setPaused(!0), pause(), send(requestId, "PAUSE_RESULT", {});
             break;
           case "RESUME":
-            resume(), send(requestId, "RESUME_RESULT", {});
+            resume(), inputFilter.setPaused(!1), send(requestId, "RESUME_RESULT", {});
             break;
           case "SET_VIDEO_MODE":
             if (!ownKeys(message.body, ["mode"]) || !["pixel", "smooth"].includes(message.body.mode))
@@ -953,6 +1499,16 @@
           case "SET_INPUT_FILTER":
             if (!ownKeys(message.body, ["policy"])) throw new Error("TYRANOSCRIPT_PROTOCOL_INVALID");
             inputFilter.set(message.body.policy), send(requestId, "SET_INPUT_FILTER_RESULT", {});
+            break;
+          case "SET_TOUCH_GAMEPAD":
+            if (!ownKeys(message.body, ["enabled"]) || typeof message.body.enabled != "boolean")
+              throw new Error("TYRANOSCRIPT_PROTOCOL_INVALID");
+            await inputFilter.setTouchGamepadEnabled(message.body.enabled, {
+              ...touchGamepadProfiles.analogMenu,
+              faces: [{ index: 0, label: "\u786E\u8BA4", slot: "bottom" }, { index: 1, label: "\u53F3\u952E", slot: "right" }],
+              pointerTarget: global.document.getElementById("tyrano_base") || global.document.body,
+              activationEvent: typeof global.$?.fn?.tap == "function" && global.$.fn.click === global.$.fn.tap ? "tap" : "click"
+            }), send(requestId, "SET_TOUCH_GAMEPAD_RESULT", {});
             break;
           case "SET_VOLUME":
             if (!ownKeys(message.body, ["value"])) throw new Error("TYRANOSCRIPT_PROTOCOL_INVALID");

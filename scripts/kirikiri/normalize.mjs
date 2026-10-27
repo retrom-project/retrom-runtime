@@ -6,20 +6,17 @@ import {requireLocator, safePath} from "../runtime-archive-input.mjs";
 import {maximumTree, requireFormat, resourceBytes, adler32} from "./bytes.mjs";
 import {readXp3} from "./xp3.mjs";
 import {convertXp3} from "./convert.mjs";
-import {discoverCxProfiles, discoverTinyProfiles, extractEmbeddedPeModules, createCxFilter} from "./cxdec.mjs";
+import {discoverCxProfiles, discoverTinyProfiles, extractEmbeddedPeModules, createCxFilter, createTinyFilter} from "./cxdec.mjs";
 
 const digest = bytes => createHash("sha256").update(bytes).digest("hex");
 function tinyFilter(profile) {
-  return {kind: "tiny", profile, apply(bytes, h) {
-    const t = (h ^ profile.xorConstant) >>> 0, key = ((t ^ (t >>> 8) ^ (t >>> 16) ^ (t >>> 24)) & 255) || profile.zeroFallback;
-    for (let i = 0; i < bytes.length; i++) {bytes[i] ^= key;}
-    return bytes;
-  }};
+  return {kind: "tiny", profile, ...createTinyFilter(profile)};
 }
 function profileKey(profile) {
   if (profile.kind === "tiny") {
-    const value = profile.profile.xorConstant;
-    return `tiny:${(value ^ (value >>> 8) ^ (value >>> 16) ^ (value >>> 24)) & 255}:${profile.profile.zeroFallback}`;
+    const p = profile.profile, value = p.xorConstant;
+    const first = p.firstByte ? `${value & 255}:${p.firstByte.zeroFallback}` : "none";
+    return `tiny:${(value ^ (value >>> 8) ^ (value >>> 16) ^ (value >>> 24)) & 255}:${p.zeroFallback}:${first}`;
   }
   const p = profile.profile;
   return `classic:${p.mask}:${p.offset}:${p.prologOrder}:${p.evenBranchOrder}:${p.oddBranchOrder}:${digest(p.controlBlock)}`;
@@ -143,4 +140,4 @@ async function convert(input, plan) {
 }
 
 export const cxFilterFS = Object.freeze({id: "kirikiri-cxfilterfs", version: 1, priority: 100, platforms: ["kirikiri"],
-  formats: ["cxfilterfs-elif", "cxfilterfs-hnfn", "cxfilterfs-yuzu", "cxfilterfs-sen"], probe, convert});
+  formats: ["cxfilterfs-elif", "cxfilterfs-hnfn", "cxfilterfs-yuzu", "cxfilterfs-neko", "cxfilterfs-sen"], probe, convert});

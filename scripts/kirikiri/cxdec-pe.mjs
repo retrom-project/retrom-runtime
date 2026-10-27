@@ -338,19 +338,58 @@ function xorIs(bytes, at, to, from) {
 
 function tinyFold(bytes, at, source, end) {
   if (at + 31 > end || source > 3) return null;
-  const high = registerMove(bytes, at), middle = registerMove(bytes, at + 5), low = registerMove(bytes, at + 12);
+  const high = registerMove(bytes, at), middle = registerMove(bytes, at + 5);
+  const interleaved = registerMove(bytes, at + 10), low = interleaved ?? registerMove(bytes, at + 12);
   if (!high || !middle || !low || high.from !== source || middle.from !== source || low.from !== source ||
-      high.to === source || high.to > 3 || middle.to === source || middle.to === high.to || middle.to > 3 || low.to !== middle.to) return null;
+      high.to === source || high.to > 3 || middle.to === source || middle.to === high.to || middle.to > 3 ||
+      low.to === source || low.to === high.to || low.to > 3 || interleaved && low.to === middle.to) return null;
   if (!shiftIs(bytes, at + 2, high.to, 24) || !shiftIs(bytes, at + 7, middle.to, 16) ||
-      !xorIs(bytes, at + 10, high.to, middle.to) || !shiftIs(bytes, at + 14, low.to, 8) ||
+      !xorIs(bytes, at + (interleaved ? 12 : 10), high.to, middle.to) || !shiftIs(bytes, at + 14, low.to, 8) ||
       !xorIs(bytes, at + 17, high.to, low.to) || !xorIs(bytes, at + 19, high.to, source)) return null;
   const p = at + 21, base = bytes[p + 1] & 7;
-  if (base === 4 || bytes[p] !== 0x88 || bytes[p + 1] !== (0x40 | high.to << 3 | base) || bytes[p + 2] !== 4) return null;
+  if (base === 4 || [source, high.to, middle.to, low.to].includes(base) || bytes[p] !== 0x88 ||
+      bytes[p + 1] !== (0x40 | high.to << 3 | base) || bytes[p + 2] !== 4) return null;
   const jump = branch(bytes, p + 3, end);
   if (jump?.op !== 0x75) return null;
   const z = p + 3 + jump.length;
   if (z + 4 > end || bytes[z] !== 0xc6 || bytes[z + 1] !== (0x40 | base) || bytes[z + 2] !== 4 || !bytes[z + 3] || jump.target !== z + 4) return null;
-  return {zeroFallback: bytes[z + 3], zeroAt: z};
+  return {zeroFallback: bytes[z + 3], zeroAt: z, end: z + 4, base};
+}
+
+// Only the supported IStream consumer shape: a 64-bit absolute-zero test plus
+// a nonempty read guards field 5; field 4 then drives the ordinary bulk XOR.
+function tinyConsumer(bytes, pe, xorAt, base) {
+  const prefix = Buffer.from([0x8b, 0x44, 0x24, 12, 0x8b, 0x54, 0x24, 16, 0x56, 0x57,
+    0x8b, 0x7c, 0x24, 12, 0x0b, 0x7c, 0x24, 16, 0x8d, 0x34, 0x10,
+    0x75, 9, 0x85, 0xd2, 0x76, 5, 0x8a, 0x51, 5, 0x30, 0x10, 0x8a, 0x51, 4]);
+  const section = pe.sectionAt(xorAt), consumers = [];
+  for (let at = Math.max(section.raw, xorAt - 24); at + 6 <= xorAt; at++) {
+    if (base === 5 || bytes[at] !== 0xc7 || bytes[at + 1] !== base) continue;
+    const table = pe.fromVa(u32(bytes, at + 2), 8, false);
+    if (table === null) continue;
+    const consumer = pe.fromVa(u32(bytes, table + 4), prefix.length, true);
+    if (consumer === null || !bytes.subarray(consumer, consumer + prefix.length).equals(prefix)) continue;
+    const tail = bytes.subarray(consumer + prefix.length, Math.min(pe.sectionAt(consumer).end, consumer + 128));
+    if (tail.includes(Buffer.from([0x30, 0x10]))) consumers.push(consumer);
+  }
+  return consumers.length === 1 ? consumers[0] : null;
+}
+
+function tinyFirstByte(bytes, pe, xorAt, source, fold, end) {
+  let at = fold.end;
+  if (bytes[at] !== 0x88) return {};
+  const base = fold.base;
+  if (bytes[at + 1] !== (0x40 | source << 3 | base) || bytes[at + 2] !== 5) return null;
+  at += 3;
+  const result = registerMove(bytes, at);
+  if (result?.to === 0 && result.from === base) at += 2;
+  if (bytes[at] !== 0x84 || bytes[at + 1] !== (0xc0 | source << 3 | source)) return null;
+  const jump = branch(bytes, at + 2, end), zeroAt = at + 4;
+  if (jump?.op !== 0x75 || jump.length !== 2 || jump.target !== zeroAt + 4 || zeroAt + 4 > end ||
+      bytes[zeroAt] !== 0xc6 || bytes[zeroAt + 1] !== (0x40 | base) || bytes[zeroAt + 2] !== 5 || !bytes[zeroAt + 3]) return null;
+  const consumer = tinyConsumer(bytes, pe, xorAt, base);
+  if (consumer === null) return null;
+  return {firstByte: {zeroFallback: bytes[zeroAt + 3]}, evidence: {firstZeroFallbackVa: pe.toVa(zeroAt), consumerVa: pe.toVa(consumer)}};
 }
 
 /** Tiny folding constructors use one connected SHR/XOR register chain and a guarded zero replacement. */
@@ -364,8 +403,11 @@ export function discoverTinyProfiles(input) {
       else if (bytes[at] === 0x35) {source = 0; length = 5; xorConstant = u32(bytes, at + 1);}
       else continue;
       const fold = tinyFold(bytes, at + length, source, s.end);
-      if (fold) profiles.push({xorConstant, zeroFallback: fold.zeroFallback, evidence: {xorVa: pe.toVa(at), zeroFallbackVa: pe.toVa(fold.zeroAt)}});
+      if (!fold) continue;
+      const first = tinyFirstByte(bytes, pe, at, source, fold, s.end);
+      if (first) profiles.push({xorConstant, zeroFallback: fold.zeroFallback, ...(first.firstByte ? {firstByte: first.firstByte} : {}),
+        evidence: {xorVa: pe.toVa(at), zeroFallbackVa: pe.toVa(fold.zeroAt), ...first.evidence}});
     }
   }
-  return cap(unique(profiles, p => `${p.xorConstant}:${p.zeroFallback}`));
+  return cap(unique(profiles, p => `${p.xorConstant}:${p.zeroFallback}:${p.firstByte?.zeroFallback ?? "none"}`));
 }

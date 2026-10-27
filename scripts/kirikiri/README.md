@@ -6,10 +6,15 @@ representations, independently of the browser engine. No game-name branch,
 game bytes, extracted control table, native execution or x86 emulator is shipped.
 
 - `xp3.mjs` reads bounded XP3 indexes and CxFilterFS name tables. Logical names
-  use ASCII-only case folding and the archive's optional UTF16 title salt.
+  from `eliF`, `hnfn`, `Yuzu`, `neko` and `sen:` use ASCII-only case folding and
+  the archive's optional UTF16 title salt.
 - `cxdec-pe.mjs` discovers supported PE32 constructor/generator relationships
   and bounded embedded modules. Unsupported compiler shapes return no profile.
 - `cxdec.mjs` interprets a bounded expression grammar instead of generated x86.
+  Tiny profiles describe bulk XOR and an optional additional XOR at absolute
+  resource byte zero, with independent zero-key fallbacks. Dual-key recovery
+  connects the constructor's fields to its offset-aware consumer through the
+  PE vtable; constants and both fallbacks come from that supplied module.
 - `convert.mjs` streams decompressed resources through the selected filter and
   independently rereads every ordinary output resource before success.
 - `normalize.mjs` declares the registered CxFilterFS plugin, with read-only
@@ -21,6 +26,8 @@ Parameters must be recovered from the supplied archive/modules and uniquely
 confirmed against complete resource samples. Input SHA, output SHA, lengths,
 checksums, index bounds and zlib termination remain checked. The resource filter
 uses absolute uncompressed offsets, including cross-boundary/split reads.
+Profile deduplication includes the first-byte behavior and low constant byte,
+so equal bulk keys cannot hide conflicting first-byte candidates.
 
 The name table defines the protected logical namespace. Literal physical decoys
 outside it are recorded rather than exposed as competing startup scripts.

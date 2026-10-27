@@ -7,7 +7,7 @@ import {createHash} from "node:crypto";
 import {deflateSync} from "node:zlib";
 import {Worker} from "node:worker_threads";
 import {normalizeContent} from "../scripts/runtime-normalize-content.mjs";
-import {tinyPE} from "./kirikiri-pe-fixture.js";
+import {tinyPE, tinyFirstBytePE} from "./kirikiri-pe-fixture.js";
 
 const roots: string[] = [];
 afterEach(async () => {await Promise.all(roots.splice(0).map(path => rm(path, {recursive: true, force: true})));});
@@ -47,13 +47,13 @@ it("does not claim an unknown XP3 index representation merely from its container
   expect(await normalizeContent(request)).toEqual({files: request.files});
   await expect(access(request.outputRoot)).rejects.toThrow();
 });
-it("rejects malformed protected name tables without returning unchanged original facts", async () => {
-  const request = await input(indexFile(chunk("eliF", Buffer.alloc(5)), true));
+it.each(["eliF", "neko"])("rejects malformed %s name tables without returning unchanged original facts", async tag => {
+  const request = await input(indexFile(chunk(tag, Buffer.alloc(5)), true));
   await expect(normalizeContent(request)).rejects.toThrow("RUNTIME_KIRIKIRI_ARCHIVE_INVALID");
   await expect(access(request.outputRoot)).rejects.toThrow();
 });
-it("never downgrades a known protected tag to unmatched after a later index error", async () => {
-  for (const index of [Buffer.from("eliF"), Buffer.concat([chunk("eliF", Buffer.alloc(6)), Buffer.from("truncated")])]) {
+it.each(["eliF", "neko"])("never downgrades known %s to unmatched after a later index error", async tag => {
+  for (const index of [Buffer.from(tag), Buffer.concat([chunk(tag, Buffer.alloc(6)), Buffer.from("truncated")])]) {
     const request = await input(indexFile(index));
     await expect(normalizeContent(request)).rejects.toThrow("RUNTIME_KIRIKIRI_ARCHIVE_INVALID");
     await expect(access(request.outputRoot)).rejects.toThrow();
@@ -71,13 +71,14 @@ function adler(bytes: Uint8Array) {
   return ((b << 16) | a) >>> 0;
 }
 interface Resource {name: string; bytes: Buffer; declared?: number; h?: number; flags?: number; raw?: boolean}
-function protectedXP3(resources: Resource[], tag = "eliF") {
+function protectedXP3(resources: Resource[], tag = "eliF", firstFallback?: number) {
   const parts: Buffer[] = [], rows: Buffer[] = []; let offset = 19;
   for (const resource of resources) {
     const name = resource.name.replace(/[A-Z]/gu, c => c.toLowerCase()), encoded = Buffer.from(name, "utf16le");
     const physical = Buffer.from(createHash("md5").update(encoded).digest("hex"), "utf16le");
     const h = resource.h ?? adler(resource.bytes), fold = (h ^ 0x12345678) >>> 0, key = ((fold ^ (fold >>> 8) ^ (fold >>> 16) ^ (fold >>> 24)) & 255) || 0x55;
     const body = resource.raw ? resource.bytes : Buffer.from(resource.bytes.map(byte => byte ^ key));
+    if (!resource.raw && firstFallback !== undefined && body.length) body[0] ^= (fold & 255) || firstFallback;
     const info = Buffer.alloc(22), segment = Buffer.alloc(28), seed = Buffer.alloc(4), names = Buffer.alloc(6);
     info.writeUInt32LE(resource.flags ?? 0x80000000); info.writeBigUInt64LE(BigInt(resource.declared ?? body.length), 4);
     info.writeBigUInt64LE(BigInt(body.length), 12); info.writeUInt16LE(physical.length / 2, 20);
@@ -90,9 +91,9 @@ function protectedXP3(resources: Resource[], tag = "eliF") {
   return Buffer.concat([magic, u64(offset), ...parts, Buffer.from([0]), u64(index.length), index]);
 }
 function resources(): Resource[] {return ["startup.tjs", "目录/ÄA.TXT", "scene.ks"].map((name, i) => ({name, bytes: Buffer.from(`resource-${i}:` + "中文资源".repeat(20))}));}
-async function withModule(bytes: Buffer) {
+async function withModule(bytes: Buffer, module = tinyPE()) {
   const request = await input(bytes), path = join(request.outputRoot, "..", "native-profile");
-  const module = tinyPE(); await writeFile(path, module);
+  await writeFile(path, module);
   request.files.push({logicalKey: "plugin/helper.tpm", name: "plugin/helper.tpm", sizeBytes: module.length, sha256: createHash("sha256").update(module).digest("hex")});
   request.locators["plugin/helper.tpm"] = {path, offset: 0, sizeBytes: module.length};
   return request;
@@ -112,6 +113,36 @@ function decodedResources(bytes: Buffer) {
   }
   return result;
 }
+it("normalizes a neko name table using statically recovered dual Tiny keys", async () => {
+  const items = resources(), request = await withModule(protectedXP3(items, "neko", 0x69), tinyFirstBytePE());
+  const original = await readFile(request.locators["data.xp3"].path), result = await normalizeContent(request);
+  expect(result.normalization).toMatchObject({archiveCount: 1, verifiedEntries: 3, formatCounts: {"cxfilterfs-neko": 1}});
+  const decoded = decodedResources(await readFile(result.files.find(file => file.logicalKey === "data.xp3")!.path!));
+  for (const item of items) expect(decoded.get(item.name.replace(/[A-Z]/gu, c => c.toLowerCase()))).toEqual(item.bytes);
+  expect(await readFile(request.locators["data.xp3"].path)).toEqual(original);
+});
+it("keeps first-byte candidates distinct even when their bulk keys collide", async () => {
+  const items = resources(); items[2].bytes = Buffer.alloc(131073, 0x97);
+  const request = await withModule(protectedXP3(items, "neko", 0x69), tinyFirstBytePE());
+  // Equal fold and low byte: one behavior, so accepting both must not become ambiguous.
+  // Equal fold but a different low byte: a distinct first key that must fail checksum.
+  const modules = [tinyFirstBytePE(0x13355678), tinyFirstBytePE(0x12345779), tinyPE()];
+  for (const [i, module] of modules.entries()) {
+    const logicalKey = `plugin/candidate-${i}.dll`, path = join(request.outputRoot, "..", `module-${i}`);
+    await writeFile(path, module);
+    request.files.push({logicalKey, name: logicalKey, sizeBytes: module.length, sha256: createHash("sha256").update(module).digest("hex")});
+    request.locators[logicalKey] = {path, offset: 0, sizeBytes: module.length};
+  }
+  const result = await normalizeContent(request), output = result.files.find(file => file.logicalKey === "data.xp3")!;
+  const decoded = decodedResources(await readFile(output.path!));
+  expect(decoded.get("scene.ks")).toEqual(items[2].bytes);
+  expect(result.normalization).toMatchObject({verifiedEntries: 3, metadataCorrections: 0});
+});
+it("rejects a wrong first-byte key even when every bulk key is correct", async () => {
+  const request = await withModule(protectedXP3(resources(), "neko", 0x69), tinyFirstBytePE(0x12345779));
+  await expect(normalizeContent(request)).rejects.toThrow("RUNTIME_KIRIKIRI_FILTER_UNAVAILABLE");
+  await expect(access(request.outputRoot)).rejects.toThrow();
+});
 it("discovers the native-data filter and publishes complete ordinary resources while retaining the mounted source", async () => {
   const items = resources(), request = await withModule(protectedXP3(items));
   const source = await readFile(request.locators["data.xp3"].path), result = await normalizeContent(request);

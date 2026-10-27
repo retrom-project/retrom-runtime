@@ -36,6 +36,7 @@ describe("fantasy runtime lifecycle", () => {
   it("restores native data before the first frame and saves an authenticated bounded payload", async () => {
     const payload = new Uint8Array(1024); payload[0] = 99;
     const adapter = await mount(await encodeState("tic80", config.contentDigest, payload));
+    expect(adapter.touchGamepad).toEqual({layout: "STANDARD"});
     expect(vi.mocked(core._retrom_restore).mock.invocationCallOrder[0])
       .toBeLessThan(vi.mocked(core._retrom_step).mock.invocationCallOrder[0]);
     const state = await adapter.checkpoint();

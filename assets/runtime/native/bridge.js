@@ -71,20 +71,262 @@
     return observers.get(window2);
   }
 
+  // src/provider/touch-gamepad-layout.ts
+  var standardFaces = [
+    { index: 0, label: "A", slot: "bottom" },
+    { index: 1, label: "B", slot: "right" },
+    { index: 2, label: "X", slot: "left" },
+    { index: 3, label: "Y", slot: "top" }
+  ];
+  function touchGamepadLayout(layout = "STANDARD") {
+    let faces = layout === "PSP" ? standardFaces.map((face, index) => ({ ...face, label: ["\xD7", "\u25CB", "\u25A1", "\u25B3"][index] })) : layout === "POINTER" ? [{ ...standardFaces[0], label: "\u786E\u8BA4" }, { ...standardFaces[1], label: "\u8FD4\u56DE" }] : layout === "JOYSTICK" ? standardFaces.slice(0, 2) : standardFaces, auxiliary = layout === "PSP" || layout === "JOYSTICK" ? [
+      { index: 8, label: "Select", side: "center-left" },
+      { index: 9, label: "Start", side: "center-right" },
+      ...layout === "PSP" ? [{ index: 4, label: "L", side: "left" }, { index: 5, label: "R", side: "right" }] : []
+    ] : [];
+    return { faces, auxiliary, analog: layout === "PSP" || layout === "JOYSTICK" };
+  }
+  var touchGamepadStyle = `
+[data-retrom-touch-gamepad]{position:fixed;inset:0;pointer-events:none;z-index:2147483646;
+  -webkit-user-select:none;user-select:none;-webkit-touch-callout:none;font-family:system-ui,sans-serif}
+[data-retrom-touch-gamepad][hidden]{display:none}
+[data-retrom-touch-gamepad] [data-control]{position:absolute;pointer-events:auto;touch-action:none;box-sizing:border-box;
+  border:2px solid rgba(255,255,255,.55);background:rgba(20,22,30,.35);color:rgba(255,255,255,.85);
+  display:flex;align-items:center;justify-content:center;opacity:.7;padding:0}
+[data-retrom-touch-gamepad] [data-control="dpad"],
+[data-retrom-touch-gamepad] [data-control="analog"]{--size:clamp(100px,30vmin,160px);width:var(--size);height:var(--size);
+  left:max(20px,env(safe-area-inset-left));bottom:max(20px,env(safe-area-inset-bottom));border-radius:50%}
+[data-retrom-touch-gamepad] [data-control="analog"]{left:calc(max(20px,env(safe-area-inset-left)) + clamp(100px,30vmin,160px) + 16px)}
+[data-retrom-touch-gamepad][data-layout="JOYSTICK"] [data-control="dpad"]{display:none}
+[data-retrom-touch-gamepad][data-layout="JOYSTICK"] [data-control="analog"]{left:max(20px,env(safe-area-inset-left))}
+[data-retrom-touch-gamepad] [data-knob]{width:45%;height:45%;border:2px solid currentColor;border-radius:50%;
+  transform:translate(var(--stick-x,0px),var(--stick-y,0px));pointer-events:none;background:rgba(255,255,255,.12)}
+[data-retrom-touch-gamepad] [data-arrow]{position:absolute;width:0;height:0;border:10px solid transparent;pointer-events:none}
+[data-retrom-touch-gamepad] [data-arrow="up"]{top:10%;border-bottom-color:currentColor}
+[data-retrom-touch-gamepad] [data-arrow="down"]{bottom:10%;border-top-color:currentColor}
+[data-retrom-touch-gamepad] [data-arrow="left"]{left:10%;border-right-color:currentColor}
+[data-retrom-touch-gamepad] [data-arrow="right"]{right:10%;border-left-color:currentColor}
+[data-retrom-touch-gamepad] [data-arrow][data-active]{color:#fff}
+[data-retrom-touch-gamepad] [data-face]{--size:clamp(44px,12vmin,64px);--gap:calc(var(--size) * .95);width:var(--size);height:var(--size);
+  border-radius:50%;font-size:calc(var(--size) * .38);font-weight:600;
+  right:calc(max(20px,env(safe-area-inset-right)) + var(--gap));bottom:calc(max(20px,env(safe-area-inset-bottom)) + var(--gap))}
+[data-retrom-touch-gamepad] [data-face="bottom"]{transform:translateY(var(--gap))}
+[data-retrom-touch-gamepad] [data-face="right"]{transform:translateX(var(--gap))}
+[data-retrom-touch-gamepad] [data-face="left"]{transform:translateX(calc(var(--gap) * -1))}
+[data-retrom-touch-gamepad] [data-face="top"]{transform:translateY(calc(var(--gap) * -1))}
+[data-retrom-touch-gamepad] [data-side]{min-width:52px;min-height:36px;border-radius:8px;font-size:14px;
+  bottom:max(20px,env(safe-area-inset-bottom))}
+[data-retrom-touch-gamepad] [data-side="center-left"]{right:calc(50% + 6px)}
+[data-retrom-touch-gamepad] [data-side="center-right"]{left:calc(50% + 6px)}
+[data-retrom-touch-gamepad] [data-side="left"],
+[data-retrom-touch-gamepad] [data-side="right"]{bottom:calc(max(20px,env(safe-area-inset-bottom)) + clamp(100px,30vmin,160px) + 16px)}
+[data-retrom-touch-gamepad] [data-side="left"]{left:max(20px,env(safe-area-inset-left))}
+[data-retrom-touch-gamepad] [data-side="right"]{right:max(20px,env(safe-area-inset-right))}
+[data-retrom-touch-gamepad] [data-control][data-active]{background:rgba(255,255,255,.4);color:#fff;opacity:.95}
+@media(max-width:639px){
+ [data-retrom-touch-gamepad][data-layout="PSP"] [data-control="analog"]{left:max(20px,env(safe-area-inset-left));
+  bottom:calc(max(20px,env(safe-area-inset-bottom)) + clamp(100px,30vmin,160px) + 58px)}
+}
+`;
+
   // src/provider/touch-gamepad.ts
+  var dpad = { up: 12, down: 13, left: 14, right: 15 }, buttonCount = 17, device = "touch-gamepad", TouchGamepadState = class {
+    pressed = /* @__PURE__ */ new Set();
+    changedAt = 0;
+    axes = [0, 0, 0, 0];
+    setAxis(index, value, nowMs) {
+      let next = Number.isFinite(value) ? Math.max(-1, Math.min(1, value)) : 0;
+      return this.axes[index] === next ? !1 : (this.axes[index] = next, this.changedAt = nowMs, !0);
+    }
+    set(index, down, nowMs) {
+      return this.pressed.has(index) === down ? !1 : (down ? this.pressed.add(index) : this.pressed.delete(index), this.changedAt = nowMs, !0);
+    }
+    releaseAll(nowMs) {
+      let released = [...this.pressed];
+      for (let index of released)
+        this.set(index, !1, nowMs);
+      for (let index = 0; index < this.axes.length; index++)
+        this.setAxis(index, 0, nowMs);
+      return released;
+    }
+    isPressed(index) {
+      return this.pressed.has(index);
+    }
+    snapshot() {
+      return {
+        axes: [...this.axes],
+        buttons: Array.from({ length: buttonCount }, (_, index) => {
+          let down = this.pressed.has(index);
+          return { pressed: down, touched: down, value: down ? 1 : 0 };
+        }),
+        connected: !0,
+        id: "Retrom touch gamepad (STANDARD GAMEPAD)",
+        index: 0,
+        mapping: "standard",
+        timestamp: this.changedAt
+      };
+    }
+  };
   function mergeTouchGamepad(gamepads, touch) {
     if (!touch)
       return [...gamepads];
     let result = [...gamepads], physical = result[0];
-    return physical ? (result[0] = {
-      axes: [...physical.axes],
+    return !physical || physical.mapping !== "standard" ? (result[0] = touch, result) : (result[0] = {
+      axes: Array.from({ length: Math.max(physical.axes.length, touch.axes.length) }, (_, index) => touch.axes[index] || physical.axes[index] || 0),
       connected: physical.connected,
       id: physical.id,
       index: physical.index,
       mapping: physical.mapping,
       timestamp: Math.max(physical.timestamp, touch.timestamp),
-      buttons: physical.buttons.map((button, index) => !!touch.buttons[index]?.pressed ? { pressed: !0, touched: !0, value: 1 } : { pressed: button.pressed, touched: button.touched, value: button.value })
-    }, result) : (result[0] = touch, result);
+      buttons: Array.from({ length: Math.max(physical.buttons.length, touch.buttons.length) }, (_, index) => {
+        let button = physical.buttons[index];
+        return !!touch.buttons[index]?.pressed ? { pressed: !0, touched: !0, value: 1 } : { pressed: button?.pressed ?? !1, touched: button?.touched ?? !1, value: button?.value ?? 0 };
+      })
+    }, result);
+  }
+  function dpadDirections(dx, dy, radius) {
+    let distance = Math.hypot(dx, dy);
+    if (!(radius > 0) || distance < radius * 0.25)
+      return [];
+    let sector = (Math.round(Math.atan2(dy, dx) / (Math.PI / 4)) % 8 + 8) % 8;
+    return [
+      [dpad.right],
+      [dpad.right, dpad.down],
+      [dpad.down],
+      [dpad.down, dpad.left],
+      [dpad.left],
+      [dpad.left, dpad.up],
+      [dpad.up],
+      [dpad.up, dpad.right]
+    ][sector];
+  }
+  function installTouchGamepad(frameWindow, options = {}) {
+    let document = frameWindow.document, state = new TouchGamepadState(), now = () => frameWindow.performance.now(), style = document.createElement("style");
+    style.dataset.retromTouchGamepadStyle = "", style.textContent = touchGamepadStyle, document.head.append(style);
+    let root = document.createElement("div");
+    root.dataset.retromTouchGamepad = "", root.dataset.layout = options.layout ?? "STANDARD", root.setAttribute("aria-hidden", "true");
+    let layout = touchGamepadLayout(options.layout), pad = document.createElement("div");
+    pad.dataset.control = "dpad";
+    let arrows = /* @__PURE__ */ new Map();
+    for (let [name, index] of Object.entries(dpad)) {
+      let arrow = document.createElement("span");
+      arrow.dataset.arrow = name, pad.append(arrow), arrows.set(index, arrow);
+    }
+    root.append(pad);
+    let faces = /* @__PURE__ */ new Map();
+    for (let { index, label, slot } of layout.faces) {
+      let button = document.createElement("div");
+      button.dataset.control = "face", button.dataset.face = slot, button.textContent = label, root.append(button), faces.set(index, button);
+    }
+    for (let { index, label, side } of layout.auxiliary) {
+      let button = document.createElement("div");
+      button.dataset.control = "button", button.dataset.button = String(index), button.dataset.side = side, button.textContent = label, root.append(button), faces.set(index, button);
+    }
+    let analog = layout.analog ? document.createElement("div") : null, knob = analog ? document.createElement("span") : null;
+    analog && knob && (analog.dataset.control = "analog", knob.dataset.knob = "", analog.append(knob), root.append(analog)), document.body.append(root);
+    let owners = /* @__PURE__ */ new Map(), heldElsewhere = (pointerId, index) => [...owners].some(([id, owner]) => id !== pointerId && owner.held.includes(index)), apply = (index, down2) => {
+      state.set(index, down2, now()) && ((arrows.get(index) ?? faces.get(index))?.toggleAttribute("data-active", down2), inputObserver(frameWindow)?.record({
+        device,
+        control: `Button ${index}`,
+        value: down2 ? 1 : 0,
+        stage: "BROWSER",
+        target: null,
+        reason: null
+      }, now()));
+    }, hold = (pointerId, control, next) => {
+      let previous = owners.get(pointerId)?.held ?? [];
+      owners.set(pointerId, { control, held: next });
+      for (let index of previous)
+        !next.includes(index) && !heldElsewhere(pointerId, index) && apply(index, !1);
+      for (let index of next)
+        apply(index, !0);
+    }, release = (pointerId) => {
+      let owner = owners.get(pointerId);
+      if (owner) {
+        owners.delete(pointerId), owner.control === "analog" && resetAnalog();
+        for (let index of owner.held)
+          heldElsewhere(pointerId, index) || apply(index, !1);
+      }
+    }, releaseAll = () => {
+      owners.clear(), resetAnalog();
+      for (let index of state.releaseAll(now()))
+        (arrows.get(index) ?? faces.get(index))?.removeAttribute("data-active"), inputObserver(frameWindow)?.record({ device, control: `Button ${index}`, value: 0, stage: "BROWSER", target: null, reason: null }, now());
+    }, resetAnalog = () => {
+      state.setAxis(0, 0, now()), state.setAxis(1, 0, now()), knob?.style.removeProperty("--stick-x"), knob?.style.removeProperty("--stick-y");
+    }, moveAnalog = (event) => {
+      if (!analog || !knob)
+        return;
+      let bounds = analog.getBoundingClientRect(), radius = bounds.width / 2;
+      if (!(radius > 0))
+        return;
+      let dx = (event.clientX - bounds.left - radius) / radius, dy = (event.clientY - bounds.top - radius) / radius, distance = Math.hypot(dx, dy), scale = distance > 1 ? 1 / distance : 1, x = distance < 0.15 ? 0 : dx * scale, y = distance < 0.15 ? 0 : dy * scale;
+      state.setAxis(0, x, now()), state.setAxis(1, y, now()), knob.style.setProperty("--stick-x", `${x * radius * 0.5}px`), knob.style.setProperty("--stick-y", `${y * radius * 0.5}px`);
+    }, padDirections = (event) => {
+      let bounds = pad.getBoundingClientRect();
+      return dpadDirections(event.clientX - (bounds.left + bounds.width / 2), event.clientY - (bounds.top + bounds.height / 2), bounds.width / 2);
+    }, swallow = (event) => {
+      event.preventDefault(), event.stopPropagation();
+    }, down = (event) => {
+      let control = event.target?.closest?.("[data-control]");
+      if (!control || !root.contains(control) || root.hidden)
+        return;
+      if (swallow(event), control.setPointerCapture?.(event.pointerId), control === pad) {
+        hold(event.pointerId, "dpad", padDirections(event));
+        return;
+      }
+      if (control === analog) {
+        if ([...owners.values()].some((owner) => owner.control === "analog"))
+          return;
+        hold(event.pointerId, "analog", []), moveAnalog(event);
+        return;
+      }
+      let index = [...faces].find(([, element]) => element === control)?.[0];
+      index !== void 0 && hold(event.pointerId, index, [index]);
+    }, move = (event) => {
+      let owner = owners.get(event.pointerId);
+      owner && (swallow(event), owner.control === "dpad" && hold(event.pointerId, "dpad", padDirections(event)), owner.control === "analog" && moveAnalog(event));
+    }, up = (event) => {
+      owners.has(event.pointerId) && (swallow(event), release(event.pointerId));
+    };
+    root.addEventListener("pointerdown", down), root.addEventListener("pointermove", move);
+    for (let type of ["pointerup", "pointercancel", "lostpointercapture"])
+      root.addEventListener(type, up);
+    root.addEventListener("contextmenu", swallow);
+    let announced = !1, physicalAtZero = !1, announce = (type) => {
+      let event = new frameWindow.Event(type);
+      Object.defineProperty(event, "gamepad", { value: state.snapshot() }), frameWindow.dispatchEvent(event);
+    }, setVisible = (visible) => {
+      root.hidden !== !visible && (root.hidden = !visible, visible || releaseAll(), visible && !announced && !physicalAtZero && (announced = !0, announce("gamepadconnected")), !visible && announced && !physicalAtZero && (announced = !1, announce("gamepaddisconnected")));
+    }, touchFirst = frameWindow.matchMedia?.("(hover: none) and (pointer: coarse)"), enabled = options.enabled ?? !0, suspended = !1, disposed = !1, touchActive = !!touchFirst?.matches, physicalHidden = !1, refresh = () => setVisible(enabled && !suspended && touchActive && !physicalHidden);
+    root.hidden = !0, refresh();
+    let touched = (event) => {
+      event.pointerType === "touch" && (touchActive = !0, physicalHidden = !1, refresh());
+    };
+    frameWindow.addEventListener("pointerdown", touched, !0);
+    let hiddenPage = () => {
+      document.visibilityState !== "visible" && releaseAll();
+    };
+    return frameWindow.addEventListener("blur", releaseAll), document.addEventListener("visibilitychange", hiddenPage), {
+      getState: () => ({ enabled }),
+      releaseAll,
+      setEnabled: async (value) => {
+        if (disposed || typeof value != "boolean")
+          throw new Error("PLAYER_RUNTIME_CONTRACT_INVALID");
+        enabled = value, value && (touchActive = !0, physicalHidden = !1), refresh();
+      },
+      setSuspended: (value) => {
+        disposed || (suspended = value, refresh());
+      },
+      current: () => root.hidden || disposed ? null : state.snapshot(),
+      observePhysical: (gamepads) => {
+        if (disposed || (physicalAtZero = !!gamepads[0], root.hidden))
+          return;
+        gamepads.some((gamepad) => gamepad?.buttons.some((button) => button.pressed)) && (physicalHidden = !0, refresh());
+      },
+      cleanup: () => {
+        disposed || (disposed = !0, releaseAll(), frameWindow.removeEventListener("pointerdown", touched, !0), frameWindow.removeEventListener("blur", releaseAll), document.removeEventListener("visibilitychange", hiddenPage), root.remove(), style.remove());
+      }
+    };
   }
 
   // src/provider/gamepad-filter.ts
@@ -170,9 +412,11 @@
     setTouchGamepad(touch) {
       this.touch = touch;
     }
+    source(physical) {
+      return this.touch?.observePhysical(physical), [...this.touch ? mergeTouchGamepad(physical, this.touch.current()) : physical];
+    }
     filter(physical, nowMs) {
-      this.touch?.observePhysical(physical);
-      let gamepads = this.touch ? mergeTouchGamepad(physical, this.touch.current()) : physical;
+      let gamepads = this.source(physical);
       if (!this.policy)
         return [...gamepads];
       if (this.policy.suppressInput)
@@ -225,7 +469,7 @@
       enumerable: ownDescriptor?.enumerable ?? !1,
       value: filteredGetGamepads,
       writable: !0
-    }), gamepadSources.set(gamepadNavigator, source), () => {
+    }), gamepadSources.set(gamepadNavigator, () => filter.source(source())), () => {
       gamepadNavigator.getGamepads === filteredGetGamepads && (ownDescriptor ? Object.defineProperty(gamepadNavigator, "getGamepads", ownDescriptor) : Reflect.deleteProperty(gamepadNavigator, "getGamepads"), previousSource ? gamepadSources.set(gamepadNavigator, previousSource) : gamepadSources.delete(gamepadNavigator));
     };
   }
@@ -259,7 +503,7 @@
     let reportShortcut = () => {
     }, shortcuts = new RuntimeHostShortcuts(["MENU", "PAUSE"], (shortcut) => reportShortcut(shortcut), () => !0);
     shortcuts.bind(runtimeWindow);
-    let filter = new RuntimeGamepadFilter(null), cleanup = null;
+    let filter = new RuntimeGamepadFilter(null), cleanup = null, touch = null, paused = !1, suppressed = !1, refreshTouch = () => touch?.setSuspended(paused || suppressed);
     return {
       onHostShortcut(report) {
         reportShortcut = report;
@@ -267,13 +511,21 @@
       setHostShortcutPolicy(policy) {
         shortcuts.setPolicy(policy);
       },
+      async setTouchGamepadEnabled(enabled) {
+        if (typeof enabled != "boolean")
+          throw new Error("PLAYER_RUNTIME_CONTRACT_INVALID");
+        cleanup ??= installRuntimeGamepadFilter(runtimeWindow, filter), touch ? await touch.setEnabled(enabled) : (touch = installTouchGamepad(runtimeWindow, { enabled }), filter.setTouchGamepad(touch)), refreshTouch();
+      },
+      setPaused(value) {
+        paused = value, refreshTouch();
+      },
       set(policy) {
         if (policy !== null && (typeof policy != "object" || Array.isArray(policy) || Object.keys(policy).sort().join(",") !== "activeGamepadIndex,suppressInput") || !validInputFilterPolicy(policy))
           throw new Error("PLAYER_INPUT_FILTER_INVALID");
-        shortcuts.setSuppressed(policy?.suppressInput === !0), filter.setPolicy(policy), cleanup ??= installRuntimeGamepadFilter(runtimeWindow, filter);
+        shortcuts.setSuppressed(policy?.suppressInput === !0), suppressed = policy?.suppressInput === !0, refreshTouch(), filter.setPolicy(policy), cleanup ??= installRuntimeGamepadFilter(runtimeWindow, filter);
       },
       stop() {
-        shortcuts.stop(), cleanup?.(), cleanup = null, filter.setPolicy(null);
+        touch?.cleanup(), touch = null, filter.setTouchGamepad(null), shortcuts.stop(), cleanup?.(), cleanup = null, filter.setPolicy(null);
       }
     };
   }
@@ -980,9 +1232,9 @@
       return { entry: updated };
     }
     function startInputDiagnostics() {
-      let active = !0, sequence = 0, dropped = 0, events = [], held = /* @__PURE__ */ new Map(), values = /* @__PURE__ */ new Map(), removers = [], record = (device, control, value, target, stage) => {
+      let active = !0, sequence = 0, dropped = 0, events = [], held = /* @__PURE__ */ new Map(), values = /* @__PURE__ */ new Map(), removers = [], record = (device2, control, value, target, stage) => {
         if (!active) return;
-        let key = `${device}:${control}`;
+        let key = `${device2}:${control}`;
         if ((values.get(key) || 0) === value) return;
         let previous = held.get(key);
         if (value === 0) values.delete(key);
@@ -994,7 +1246,7 @@
         let atMs = global.performance.now(), observation = {
           sequence: ++sequence,
           atMs,
-          device,
+          device: device2,
           control,
           value,
           target,
@@ -1089,9 +1341,12 @@
         case "SCREENSHOT":
           return { type: "SCREENSHOT_RESULT", body: await screenshot() };
         case "PAUSE":
-          return setPaused(!0), { type: "PAUSE_RESULT", body: {} };
+          return inputFilter.setPaused(!0), setPaused(!0), { type: "PAUSE_RESULT", body: {} };
         case "RESUME":
-          return setPaused(!1), { type: "RESUME_RESULT", body: {} };
+          return setPaused(!1), inputFilter.setPaused(!1), { type: "RESUME_RESULT", body: {} };
+        case "SET_TOUCH_GAMEPAD":
+          if (!ownKeys(message.body, ["enabled"]) || typeof message.body.enabled != "boolean") throw new Error("RPG_NATIVE_MESSAGE_INVALID");
+          return await inputFilter.setTouchGamepadEnabled(message.body.enabled), { type: "SET_TOUCH_GAMEPAD_RESULT", body: {} };
         case "SET_VIDEO_MODE":
           return setVideoMode(message.body.mode), { type: "SET_VIDEO_MODE_RESULT", body: {} };
         case "SET_INPUT_FILTER":

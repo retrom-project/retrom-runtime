@@ -898,8 +898,12 @@ export function installRpgRuntimeNativeBridge(global, inputFilter) {
     case "SAVE": return { type: "SAVE_RESULT", body: await captureNativeSave() };
     case "RESTORE": return { type: "RESTORE_RESULT", body: await restoreNativeSave(message.body.bundle) };
     case "SCREENSHOT": return { type: "SCREENSHOT_RESULT", body: await screenshot() };
-    case "PAUSE": setPaused(true); return { type: "PAUSE_RESULT", body: {} };
-    case "RESUME": setPaused(false); return { type: "RESUME_RESULT", body: {} };
+    case "PAUSE": inputFilter.setPaused(true); setPaused(true); return { type: "PAUSE_RESULT", body: {} };
+    case "RESUME": setPaused(false); inputFilter.setPaused(false); return { type: "RESUME_RESULT", body: {} };
+    case "SET_TOUCH_GAMEPAD":
+      if (!ownKeys(message.body, ["enabled"]) || typeof message.body.enabled !== "boolean") throw new Error("RPG_NATIVE_MESSAGE_INVALID");
+      await inputFilter.setTouchGamepadEnabled(message.body.enabled);
+      return {type: "SET_TOUCH_GAMEPAD_RESULT", body: {}};
     case "SET_VIDEO_MODE": setVideoMode(message.body.mode); return { type: "SET_VIDEO_MODE_RESULT", body: {} };
     case "SET_INPUT_FILTER":
       if (!ownKeys(message.body, ["policy"])) throw new Error("RPG_NATIVE_MESSAGE_INVALID");

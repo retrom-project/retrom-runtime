@@ -45,15 +45,27 @@ numpad 0 cancel; Left Shift, A, S, D, Q and W are RGSS A/X/Y/Z/L/R. RetroArch's
 player-1 keyboard RetroPad and lightgun binds are cleared so no key also reaches
 the game through a second, conflicting RetroPad mapping.
 
-Native same-origin Targets can opt into the Provider's on-screen gamepad; MKXP
-does. On touch-first devices (no hover, coarse pointer) the game frame shows a
-D-pad and A/B/X/Y at the standard bottom/right/left/top positions. It is a
+Native Targets opt into the shared on-screen gamepad with a layout and, when
+needed, their actual input window. TIC-80 and MKXP use STANDARD, PPSSPP uses PSP
+(D-pad, analog stick, Sony face labels, L/R and Start/Select), KiriKiri uses
+POINTER (directions and confirmation/cancel), and Apple2JS uses JOYSTICK in its
+nested frame. RPG Maker MV runs the same module through its isolated input
+bridge. On touch-first devices (no hover, coarse pointer), it is a
 standard-mapping pad merged into slot 0 (OR-ed with a physical player 1 pad)
 before the host input filter, so suppression and Select+Start chords apply to
 it, and each core keeps its own gamepad mapping (MKXP: A confirm, B cancel).
 Each finger owns one control; the D-pad has a central dead zone and diagonals.
-Using a physical controller hides it until the next touch; blur, hiding the page
-or exit release every held control. MKXP samples the frame's filtered Gamepad API
+Using a physical controller temporarily hides it until the next touch. The Host
+passes `touchGamepadEnabled` before mount and can use `getTouchGamepad()` to change
+the preference after mount. Explicitly disabling the pad releases all virtual
+input; touching the game cannot re-enable it. Pause and Host suppression release
+virtual input without changing that preference. Cursor polling reads the merged
+physical/touch source without advancing the Host chord filter.
+Same-origin background checkpoint exports release held controls while retaining the previous
+layout visibility, so automatic native saves do not make the controls blink or
+show a paused game's pad. The Host keeps its toolbar toggle in place while busy.
+
+Blur, hiding the page or exit release every held control. MKXP samples the frame's filtered Gamepad API
 through `Module.retromGamepadNavigator`, because its core module runs in the
 Provider realm.
 

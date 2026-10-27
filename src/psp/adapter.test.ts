@@ -49,6 +49,7 @@ describe("independent PSP adapter", () => {
   it("[BR-07] UNIT/ppsspp-lifecycle restores into a new core, propagates controls and owns cleanup", async () => {
     const {core, create, loader, content, release} = setup(), target = document.createElement("div"), restore = new Uint8Array([3]);
     const adapter = await mountPSP(config, target, window, restore, vi.fn(), vi.fn(), undefined, {loader}, content);
+    expect(adapter.touchGamepad).toEqual({layout: "PSP"});
     expect(create.mock.calls[0]?.[0]).toMatchObject({restore, target, source: {sha256: config.game.sha256, sizeBytes: config.game.sizeBytes}});
     await adapter.pause(); await adapter.resume(); adapter.setVolume?.(0.4);
     expect(core.pause).toHaveBeenCalledOnce(); expect(core.resume).toHaveBeenCalledOnce();

@@ -50,6 +50,7 @@ class RetromRuntimePlayer implements PlayerRuntimeV1 {
   private runtimeWindow: Window | null = null;
   private inputFilter: RuntimeGamepadFilter | null = null;
   private touchGamepad: TouchGamepad | null = null;
+  private cleanupTouchInputFilter: (() => void) | null = null;
   private inputPolicy: RuntimeInputFilterPolicyV1 | null = null;
   private cleanupInputFilter: (() => void) | null = null;
   private frameSurface: RuntimeFrameSurface | null = null;
@@ -104,6 +105,7 @@ class RetromRuntimePlayer implements PlayerRuntimeV1 {
           else {this.startupSession = session;}
         },
         assetIndex: this.assetIndex, contentSession,
+        touchGamepadEnabled: this.host.touchGamepadEnabled ?? true,
         signal: this.host.signal,
         reportFailure: (error) => {void this.fail(error);},
         frame: frame?.element,
@@ -152,8 +154,16 @@ class RetromRuntimePlayer implements PlayerRuntimeV1 {
   /** The on-screen pad feeds the same-origin gamepad filter; isolated realms own their own input. */
   private installTouchGamepad(adapter: MountedRuntimeAdapter, runtimeWindow: Window, frameMode: string) {
     if (!adapter.touchGamepad || frameMode !== "SAME_ORIGIN_BLANK" || !this.inputFilter) {return;}
-    this.touchGamepad = installTouchGamepad(runtimeWindow);
+    const settings = adapter.touchGamepad === true ? undefined : adapter.touchGamepad;
+    const inputWindow = settings?.inputWindow ?? runtimeWindow;
+    if (inputWindow !== runtimeWindow) {
+      this.cleanupTouchInputFilter = installRuntimeGamepadFilter(inputWindow, this.inputFilter);
+    }
+    this.touchGamepad = installTouchGamepad(inputWindow, {
+      layout: settings?.layout, enabled: this.host.touchGamepadEnabled ?? true,
+    });
     this.inputFilter.setTouchGamepad(this.touchGamepad);
+    this.suspendTouchGamepad();
   }
 
   private installInputFilter(runtimeWindow: Window, frameMode: string) {
@@ -254,6 +264,7 @@ class RetromRuntimePlayer implements PlayerRuntimeV1 {
   getCheckpointAvailability() {return this.refreshAvailability();}
   getCanvas() {return this.adapter?.getCanvas() ?? null;}
   getGamepadCursor() {return this.adapter?.gamepadCursor ?? null;}
+  getTouchGamepad() {return this.touchGamepad ?? this.adapter?.getTouchGamepad?.() ?? null;}
   getFrameCount() {
     if (!this.envelope.runtime.capabilities.frameCounter) {return null;}
     const value = this.adapter?.getFrameCount() ?? null;
@@ -312,6 +323,7 @@ class RetromRuntimePlayer implements PlayerRuntimeV1 {
     if (!validInputFilterPolicy(policy)) {throw contractError();}
     this.hostShortcuts.setSuppressed(policy?.suppressInput === true);
     this.inputPolicy = policy ? {...policy} : null;
+    this.suspendTouchGamepad();
     this.adapter?.gamepadCursor?.setInputPolicy(policy);
     if (this.adapter?.setInputFilter) {
       await this.adapter.setInputFilter(this.inputPolicy);
@@ -408,6 +420,7 @@ class RetromRuntimePlayer implements PlayerRuntimeV1 {
     finally {
       this.host.signal.removeEventListener("abort", this.abort);
       this.cleanupInputFilter?.();
+      this.cleanupTouchInputFilter?.(); this.cleanupTouchInputFilter = null;
       this.cleanupInputFilter = null;
       this.inputFilter = null;
       this.touchGamepad?.cleanup();
@@ -501,11 +514,19 @@ class RetromRuntimePlayer implements PlayerRuntimeV1 {
     if (next === this.state) {return;}
     const previous = this.state;
     this.state = next;
+    if (next === "CHECKPOINTING") {this.touchGamepad?.releaseAll();}
     this.adapter?.gamepadCursor?.setSuspended(next !== "RUNNING");
+    this.suspendTouchGamepad();
     this.emit({type: "STATE_CHANGED", previous, state: next});
   }
 
   private emit(event: RuntimeEventV1) {for (const listener of this.listeners) {listener(event);}}
+
+  private suspendTouchGamepad() {
+    // Background native-save exports retain the previous visibility, including a paused game's hidden pad.
+    if (this.state === "CHECKPOINTING" && !this.inputPolicy?.suppressInput) {return;}
+    this.touchGamepad?.setSuspended(this.state !== "RUNNING" || this.inputPolicy?.suppressInput === true);
+  }
 }
 
 function validNativeSave(value: RuntimeNativeSaveCapabilitiesV1 | undefined, native: boolean) {

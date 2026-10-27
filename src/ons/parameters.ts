@@ -5,5 +5,4 @@ export type OnsParameters = {
   contentDigest: string;
   projectIndexUrl: string;
   scriptEncoding: OnsScriptEncoding;
-  checkpointSlot: 999;
 };

@@ -114,7 +114,7 @@ describe("Provider to core-private parameters", () => {
     ons.targetOptions.scriptEncoding = "sjis";
     await mountTargetAdapter(ons, document.createElement("div"), context());
     expect(vi.mocked(mountOnsYuri).mock.calls[0][0]).toEqual({
-      contentDigest:"a".repeat(64), checkpointSlot: 999, scriptEncoding: "sjis", projectIndexUrl: `/runtime/content/project/${"a".repeat(64)}/index.json`,
+      contentDigest:"a".repeat(64), scriptEncoding: "sjis", projectIndexUrl: `/runtime/content/project/${"a".repeat(64)}/index.json`,
       runtimeBaseUrl: ons.runtime.runtimeBaseUrl + "assets/ons/",
     });
     const kiri = targetEnvelope("kirikiri2-kag");

@@ -3,18 +3,11 @@ import {managedAdapterFixture} from "../../tests/managed-adapter-fixture.js";
 import {decodeStoredCheckpoint} from "../provider/checkpoint-storage.js";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import {targetEnvelope} from "../../tests/provider-fixtures.js";
+import {config, fakeModule, loadRuntimeScript, mockIndex, requestUrl, type FakeModule, type HostWindow} from "../../tests/ons-adapter-fixture.js";
 import {contentBootstrap, currentWindowHost} from "../../tests/provider-adapter-fixture.js";
 import { decodeOnsCheckpoint, encodeOnsCheckpoint } from "./checkpoint.js";
 import { createRuntime } from "../index.js";
-import type {OnsContentBridge} from "./project-files.js";
 
-type HostWindow = Window & {
-  g_onsyuri_content?: OnsContentBridge;
-  onsyuri?: (options: Record<string, unknown>) => Promise<FakeModule>;
-  onsyuriHostReady?: () => void;
-  scale_full?: (element: HTMLElement, ratio: number) => void;
-};
 
 afterEach(() => {
   vi.restoreAllMocks();
@@ -28,6 +21,79 @@ afterEach(() => {
 });
 
 describe("ONS Yuri runtime", () => {
+  it("declares native saves instead of capturing execution state", () => {
+    expect(config().runtime.checkpoint).toMatchObject({semantics: "GAME_SAVE",
+      writeFormat: "ons-game-save-v1-storage-v1", readFormats: ["ons-game-save-v1-storage-v1"]});
+  });
+
+  it.each([false, true])("exports changed native files on normal exit (progress: %s)", async progress => {
+    vi.spyOn(HTMLCanvasElement.prototype, "toBlob").mockImplementation(callback => callback(null));
+    const module = fakeModule();
+    let configured: FakeModule | undefined;
+    (window as HostWindow).onsyuri = vi.fn(async options => {
+      Object.assign(options, module); configured = options as FakeModule;
+      configured.preRun?.(); return configured;
+    });
+    mockIndex();
+    const runtime = await createRuntime(config(), currentWindowHost(null));
+    const exits: unknown[] = [];
+    runtime.subscribe(event => {if (event.type === "EXIT_REQUESTED") {exits.push(event);}});
+    const mounting = runtime.mount(document.createElement("div"));
+    await loadRuntimeScript(); await mounting;
+    if (progress) {
+      module.FS.writeFile("/save/save1.dat", Uint8Array.of(4, 2));
+      (window as HostWindow).flush_save?.();
+      module.FS.writeFile("/save/envdata", Uint8Array.of(7));
+    }
+    configured?.onExit?.(0); configured?.onExit?.(0);
+    await vi.waitFor(() => expect(exits).toHaveLength(1));
+    if (progress) {
+      expect(exits[0]).toMatchObject({finalSnapshot: {checkpoint: {format: "ons-game-save-v1-storage-v1"}}});
+      const saved = (exits[0] as {finalSnapshot: {checkpoint: {bytes: Uint8Array; format: string}}}).finalSnapshot.checkpoint;
+      const restored = await decodeOnsCheckpoint(await decodeStoredCheckpoint(saved.bytes, saved.format, 64 * 1024 * 1024));
+      expect(restored.entries).toEqual([{path: "envdata", data: Uint8Array.of(7)}, {path: "save1.dat", data: Uint8Array.of(4, 2)}]);
+    } else {expect(exits[0]).not.toHaveProperty("finalSnapshot");}
+    expect(module._onsyuri_host_save).not.toHaveBeenCalled();
+    expect(module._onsyuri_host_load).not.toHaveBeenCalled();
+    await runtime.exit();
+  });
+
+  it("enables sync after a successful native save even outside an instant-checkpoint wait", async () => {
+    const module = fakeModule();
+    module._onsyuri_host_checkpoint_ready.mockReturnValue(0);
+    (window as HostWindow).onsyuri = vi.fn(async options => {
+      Object.assign(options, module);
+      const configured = options as FakeModule;
+      configured.preRun?.();
+      return configured;
+    });
+    mockIndex();
+    const runtime = await createRuntime(config(), currentWindowHost(null));
+    const mounting = runtime.mount(document.createElement("div"));
+    await loadRuntimeScript(); await mounting;
+    try {
+      module.FS.writeFile("/save/envdata", Uint8Array.of(4));
+      expect(runtime.getCheckpointAvailability()).toMatchObject({available: false, reason: "NO_SAVE"});
+      module.FS.writeFile("/save/save1.dat", Uint8Array.of(1, 2, 3));
+      module.FS.writeFile("/save/save1.compat", Uint8Array.of(5, 6));
+      (window as HostWindow).flush_save?.();
+      expect(runtime.getCheckpointAvailability()).toMatchObject({available: true,
+        save: {capture: "IN_GAME", restore: "IN_GAME", captureAvailable: false, dataKind: "PROGRESS"}});
+      const saved = await runtime.checkpoint();
+      expect(saved.format).toBe("ons-game-save-v1-storage-v1");
+      expect(module._onsyuri_host_save).not.toHaveBeenCalled();
+      expect(module._onsyuri_host_load).not.toHaveBeenCalled();
+      const restored = await decodeOnsCheckpoint(await decodeStoredCheckpoint(saved.bytes, saved.format, 64 * 1024 * 1024));
+      expect(restored.entries.map(entry => entry.path)).toEqual(["envdata", "save1.compat", "save1.dat"]);
+      await runtime.acknowledgeCheckpoint?.(saved);
+      expect(runtime.getCheckpointAvailability()).toMatchObject({available: false, reason: "UNCHANGED"});
+      module.FS.writeFile("/save/save1.dat", Uint8Array.of(7, 8));
+      (window as HostWindow).flush_save?.();
+      await runtime.acknowledgeCheckpoint?.(saved);
+      expect(runtime.getCheckpointAvailability()).toMatchObject({available: true});
+    } finally {await runtime.exit();}
+  });
+
   it.each(["startup", "exit"])("cleans globals when native stop throws during %s", async phase => {
     const module = fakeModule();
     module._onsyuri_host_stop.mockImplementation(() => {throw new Error("ONS_STOP_FAILED");});
@@ -74,51 +140,26 @@ describe("ONS Yuri runtime", () => {
     expect(Reflect.get(window, "g_onsyuri_module")).toBeUndefined();
   });
 
-  it("exposes the native stable-wait boundary and rejects capture while rendering or transitioning", async () => {
+  it("does not turn settings or an old slot into a newly completed native save", async () => {
     const module = fakeModule();
-    module._onsyuri_host_checkpoint_ready.mockReturnValue(0);
-    (window as HostWindow).onsyuri = vi.fn(async (options: Record<string, unknown>) => {
-      Object.assign(options, module);
-      const configured = options as FakeModule;
-      configured.preRun?.();
-      return configured;
+    (window as HostWindow).onsyuri = vi.fn(async options => {
+      Object.assign(options, module); (options as FakeModule).preRun?.(); return options as FakeModule;
     });
     mockIndex();
     const runtime = await createRuntime(config(), currentWindowHost(null));
     const mounting = runtime.mount(document.createElement("div"));
-    await loadRuntimeScript();
-    await mounting;
-    expect(runtime.getCheckpointAvailability()).toEqual({available: false, reason: "BUSY"});
+    await loadRuntimeScript(); await mounting;
+    module.FS.writeFile("/save/envdata", Uint8Array.of(1));
+    module.FS.writeFile("/save/save1.dat", Uint8Array.of(2));
+    expect(runtime.getCheckpointAvailability()).toMatchObject({available: false, reason: "NO_SAVE"});
     await expect(runtime.checkpoint()).rejects.toThrow();
     expect(module._onsyuri_host_save).not.toHaveBeenCalled();
-    module._onsyuri_host_checkpoint_ready.mockReturnValue(1);
-    expect(runtime.getCheckpointAvailability()).toEqual({available: true, reason: null});
-    await expect(runtime.checkpoint()).resolves.toMatchObject({format: "ons-save-bundle-v1-storage-v1"});
     await runtime.exit();
   });
 
-  it("rechecks the native boundary atomically instead of exporting an old slot after readiness changes", async () => {
+  it("requires the native lifecycle ABI before starting the engine", async () => {
     const module = fakeModule();
-    module._onsyuri_host_save.mockReturnValue(-1);
-    (window as HostWindow).onsyuri = vi.fn(async (options: Record<string, unknown>) => {
-      Object.assign(options, module);
-      const configured = options as FakeModule;
-      configured.preRun?.();
-      return configured;
-    });
-    mockIndex();
-    const runtime = await createRuntime(config(), currentWindowHost(null));
-    const mounting = runtime.mount(document.createElement("div"));
-    await loadRuntimeScript();
-    await mounting;
-    await expect(runtime.checkpoint()).rejects.toThrow("ONS_CHECKPOINT_NOT_READY");
-    expect(module._onsyuri_host_save).toHaveBeenCalledOnce();
-    await runtime.exit();
-  });
-
-  it("requires the native checkpoint boundary ABI before starting the engine", async () => {
-    const module = fakeModule();
-    Reflect.deleteProperty(module, "_onsyuri_host_checkpoint_ready");
+    Reflect.deleteProperty(module, "_onsyuri_host_is_ready");
     (window as HostWindow).onsyuri = vi.fn(async (options: Record<string, unknown>) => {
       Object.assign(options, module);
       return options as FakeModule;
@@ -294,7 +335,7 @@ describe("ONS Yuri runtime", () => {
     await runtime.exit();
   });
 
-  it("mounts the tagged core, accepts keyboard focus and checkpoints the reserved slot", async () => {
+  it("mounts the tagged core, accepts keyboard focus and exports native slots", async () => {
     const errorSpy = vi.spyOn(console, "error").mockImplementation(() => undefined);
     const module = fakeModule();
     const factory = vi.fn(async (options: Record<string, unknown>) => {
@@ -323,7 +364,7 @@ describe("ONS Yuri runtime", () => {
     expect(module.callMain).toHaveBeenCalledWith([
       "--root", "/game", "--font", "/game/default.ttf", "--save-dir", "/save", "--enc:utf8",
     ]);
-    expect(runtime.getCheckpointAvailability()).toEqual({ available: true, reason: null });
+    expect(runtime.getCheckpointAvailability()).toMatchObject({ available: false, reason: "NO_SAVE" });
     expect(errorSpy).not.toHaveBeenCalled();
     expect(document.querySelector("#game")!.firstElementChild?.getAttribute("data-ons-runtime-surface")).toBe("");
     expect((document.querySelector("#game")!.firstElementChild as HTMLElement).style.display).toBe("grid");
@@ -332,35 +373,31 @@ describe("ONS Yuri runtime", () => {
     document.querySelector("#game")!.querySelector("canvas")?.dispatchEvent(new Event("pointerdown", { bubbles: true }));
     expect(document.activeElement).toBe(document.querySelector("#game")!.querySelector("canvas"));
 
+    module.FS.writeFile("/save/save2.dat", Uint8Array.of(3, 2, 1));
+    (window as HostWindow).flush_save?.();
     const checkpoint = await runtime.checkpoint();
-    expect(checkpoint.format).toBe("ons-save-bundle-v1-storage-v1");
+    expect(checkpoint.format).toBe("ons-game-save-v1-storage-v1");
     const decoded = await decodeOnsCheckpoint(await decodeStoredCheckpoint(checkpoint.bytes, checkpoint.format, 64 * 1024 * 1024));
-    expect(decoded.resumeSlot).toBe(999);
-    expect(decoded.entries.map((entry) => entry.path)).toContain("save999.dat");
-    expect(module._onsyuri_host_save).toHaveBeenCalledWith(999);
-    expect(module._onsyuri_host_set_paused).toHaveBeenNthCalledWith(1, 1);
-    expect(module._onsyuri_host_set_paused).toHaveBeenLastCalledWith(0);
-    const [pauseOrder, resumeOrder] = module._onsyuri_host_set_paused.mock.invocationCallOrder;
-    const [saveOrder] = module._onsyuri_host_save.mock.invocationCallOrder;
-    expect(pauseOrder).toBeLessThan(saveOrder!);
-    expect(resumeOrder).toBeGreaterThan(saveOrder!);
+    expect(decoded.entries.map((entry) => entry.path)).toContain("save2.dat");
+    expect(module._onsyuri_host_save).not.toHaveBeenCalled();
+    expect(module._onsyuri_host_load).not.toHaveBeenCalled();
+    expect(module._onsyuri_host_set_paused).not.toHaveBeenCalled();
 
     await runtime.exit();
     expect(document.querySelector("#game")).toBeNull();
     expect(document.head.querySelector("script[data-runtime=ons-yuri]")).toBeNull();
   });
 
-  it("writes restore bytes and selects the startup slot before the engine starts", async () => {
+  it("imports native files before ordinary startup and leaves loading to the game", async () => {
     const restore = await encodeOnsCheckpoint({
-      entries: [{ path: "save999.dat", data: Uint8Array.of(8, 6, 7, 5) }],
-      resumeSlot: 999,
+      entries: [{ path: "save2.dat", data: Uint8Array.of(8, 6, 7, 5) }],
     });
     const module = fakeModule();
     (window as HostWindow).onsyuri = vi.fn(async (options: Record<string, unknown>) => {
       Object.assign(options, module);
       const configured = options as FakeModule;
       configured.preRun?.();
-      expect(configured.FS.readFile("/save/save999.dat")).toBeInstanceOf(Uint8Array);
+      expect(configured.FS.readFile("/save/save2.dat")).toBeInstanceOf(Uint8Array);
       return configured;
     });
     mockIndex();
@@ -371,30 +408,20 @@ describe("ONS Yuri runtime", () => {
     await loadRuntimeScript();
     await mounting;
 
-    expect(module._onsyuri_host_set_restore_slot).toHaveBeenCalledWith(999);
-    expect(module._onsyuri_host_set_restore_slot).toHaveBeenCalledBefore(module.callMain);
+    expect(module._onsyuri_host_set_restore_slot).not.toHaveBeenCalled();
+    expect(module._onsyuri_host_load).not.toHaveBeenCalled();
+    expect(runtime.getCheckpointAvailability()).toMatchObject({available: false, reason: "UNCHANGED"});
     await runtime.exit();
   });
 
-  it("rejects startup when the core cannot load the prepared restore slot", async () => {
-    const restore = await encodeOnsCheckpoint({
-      entries: [{ path: "save999.dat", data: Uint8Array.of(1, 2, 3) }],
-      resumeSlot: 999,
-    });
-    const module = fakeModule();
-    module._onsyuri_host_did_restore_fail.mockReturnValue(1);
-    (window as HostWindow).onsyuri = vi.fn(async (options: Record<string, unknown>) => {
-      Object.assign(options, module);
-      const configured = options as FakeModule;
-      configured.preRun?.();
-      return configured;
-    });
+  it("rejects a damaged native save before starting the engine", async () => {
+    const payload = await encodeOnsCheckpoint({entries: [{path: "save1.dat", data: Uint8Array.of(1, 2, 3)}]});
+    payload[payload.length - 1] ^= 1;
+    const factory = vi.fn(); (window as HostWindow).onsyuri = factory;
     mockIndex();
-    const runtime = await createRuntime(config(), currentWindowHost(restore));
-    const mounting = runtime.mount(document.createElement("div"));
-    const rejected = expect(mounting).rejects.toThrow("ONS_CHECKPOINT_RESTORE_FAILED");
-    await loadRuntimeScript();
-    await rejected;
+    const runtime = await createRuntime(config(), currentWindowHost(payload));
+    await expect(runtime.mount(document.createElement("div"))).rejects.toThrow("ONS_CHECKPOINT_RESTORE_FAILED");
+    expect(factory).not.toHaveBeenCalled();
   });
 
   it("streams a requested video from its host URL without materializing it in the core file system", async () => {
@@ -513,106 +540,3 @@ describe("ONS Yuri runtime", () => {
     await expect(runtime.mount(document.createElement("div"))).rejects.toThrow("ONS_PROJECT_INDEX_INVALID");
   });
 });
-
-async function loadRuntimeScript() {
-  await vi.waitFor(() => expect(document.head.querySelector("script[data-runtime=ons-yuri]")).not.toBeNull());
-  document.head.querySelector<HTMLScriptElement>("script[data-runtime=ons-yuri]")?.dispatchEvent(new Event("load"));
-}
-
-function config() {return targetEnvelope("onscripter-yuri");}
-
-function mockIndex() {
-  const body = JSON.stringify({
-    schemaVersion: 1,
-    files: [
-      { path: "0.txt", sizeBytes: 1, sha256: "a".repeat(64), mediaType: "application/octet-stream", url: "https://content.example/0.txt" },
-      { path: "default.ttf", sizeBytes: 1, sha256: "a".repeat(64), mediaType: "application/octet-stream", url: "https://content.example/default.ttf" },
-    ],
-  });
-  vi.stubGlobal("fetch", vi.fn(async () => new Response(body, { status: 200 })));
-}
-
-function fakeModule(): FakeModule {
-  vi.spyOn(HTMLMediaElement.prototype, "pause").mockImplementation(() => undefined);
-  const FS = new FakeFs();
-  const module: FakeModule = {
-    FS,
-    callMain: vi.fn(() => {window.setTimeout(() => (window as HostWindow).onsyuriHostReady?.(), 0);}),
-    _onsyuri_host_load: vi.fn(() => 0),
-    _onsyuri_host_did_restore_fail: vi.fn(() => 0),
-    _onsyuri_host_is_ready: vi.fn(() => 1),
-    _onsyuri_host_checkpoint_ready: vi.fn(() => 1),
-    _onsyuri_host_save: vi.fn((slot: number) => {
-      FS.writeFile(`/save/save${slot}.dat`, Uint8Array.of(1, 2, 3));
-      return 0;
-    }),
-    _onsyuri_host_set_paused: vi.fn(),
-    _onsyuri_host_set_restore_slot: vi.fn(),
-    _onsyuri_host_stop: vi.fn(),
-  };
-  return module;
-}
-
-type FakeModule = {
-  FS: FakeFs;
-  callMain: ReturnType<typeof vi.fn>;
-  onExit?: (status: number) => void;
-  preRun?: () => void;
-  printErr?: (message: string) => void;
-  _onsyuri_host_load: ReturnType<typeof vi.fn>;
-  _onsyuri_host_did_restore_fail: ReturnType<typeof vi.fn>;
-  _onsyuri_host_is_ready: ReturnType<typeof vi.fn>;
-  _onsyuri_host_checkpoint_ready: ReturnType<typeof vi.fn>;
-  _onsyuri_host_save: ReturnType<typeof vi.fn>;
-  _onsyuri_host_set_paused: ReturnType<typeof vi.fn>;
-  _onsyuri_host_set_restore_slot: ReturnType<typeof vi.fn>;
-  _onsyuri_host_stop: ReturnType<typeof vi.fn>;
-  [key: string]: unknown;
-};
-
-class FakeFs {
-  private readonly directories = new Set(["/"]);
-  private readonly files = new Map<string, Uint8Array>();
-
-  mkdirTree(path: string) {
-    const parts = path.split("/").filter(Boolean);
-    let current = "";
-    for (const part of parts) {current += `/${part}`; this.directories.add(current);}
-  }
-
-  writeFile(path: string, bytes: Uint8Array) {
-    const parent = path.slice(0, path.lastIndexOf("/")) || "/";
-    if (!this.directories.has(parent)) {throw new Error("ENOENT");}
-    this.files.set(path, bytes.slice());
-  }
-
-  readFile(path: string) {
-    const value = this.files.get(path);
-    if (!value) {throw new Error("ENOENT");}
-    return value.slice();
-  }
-
-  readdir(path: string) {
-    const prefix = path === "/" ? "/" : `${path}/`;
-    const names = new Set([".", ".."]);
-    for (const item of [...this.directories, ...this.files.keys()]) {
-      if (!item.startsWith(prefix)) {continue;}
-      const name = item.slice(prefix.length).split("/")[0];
-      if (name) {names.add(name);}
-    }
-    return [...names];
-  }
-
-  stat(path: string) {
-    if (this.directories.has(path)) {return { mode: 16384 };}
-    if (this.files.has(path)) {return { mode: 32768 };}
-    throw new Error("ENOENT");
-  }
-
-  isDir(mode: number) {return mode === 16384;}
-  unlink(path: string) {this.files.delete(path);}
-}
-
-function requestUrl(input: RequestInfo | URL) {
-  return input instanceof Request ? input.url : String(input);
-}

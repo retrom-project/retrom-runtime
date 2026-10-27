@@ -1,6 +1,7 @@
 import type {AdapterContentOptions} from "../provider/content-inputs.js";
 import {fetchMetadataJson, indexByteBudget} from "../provider/metadata.js";
-import { decodeOnsCheckpoint, encodeOnsCheckpoint, type OnsCheckpointBundle } from "./checkpoint.js";
+import { decodeOnsCheckpoint, encodeOnsCheckpoint, onsGameSaveFormat, type OnsCheckpointBundle } from "./checkpoint.js";
+import type {RuntimeCheckpoint} from "../contract.js";
 import type { MountedRuntimeAdapter, RuntimeExitReporter, RuntimeProgressReporter } from "../internal-adapter.js";
 import type {OnsParameters} from "./parameters.js";
 import { installOnsAnalogGamepad } from "./gamepad-input.js";
@@ -33,13 +34,8 @@ type OnsModule = {
   preRun?(): void;
   printErr?(message: string): void;
   wait_video?: boolean;
-  _onsyuri_host_load(slot: number): number;
-  _onsyuri_host_did_restore_fail(): number;
   _onsyuri_host_is_ready(): number;
-  _onsyuri_host_checkpoint_ready(): number;
-  _onsyuri_host_save(slot: number): number;
   _onsyuri_host_set_paused(paused: number): void;
-  _onsyuri_host_set_restore_slot(slot: number): void;
   _onsyuri_host_stop(): void;
 };
 
@@ -100,14 +96,27 @@ export async function mountOnsYuri(
     projectDigest: config.contentDigest, onFailure: error => {ready.reject(error); content.onFailure?.(error);}});
   const fileMap = projectFiles.fileMap;
   let module: OnsModule | null = null;
-  let paused = false;
   let exited = false;
+  let nativeExitRequested = false;
+  let hasProgress = restore !== null;
+  let revision = 0;
+  let acknowledged = 0;
+  const captures = new Map<string, number>();
   let videoCleanup: () => void = () => undefined;
   const base = new URL(normalizedBase(config.runtimeBaseUrl), document.baseURI).href;
   const moduleOptions: Partial<OnsModule> = {
     canvas,
     locateFile: (path) => new URL(path, base).href,
-    onExit: () => {if (!exited) {reportExitRequested();}},
+    onExit: () => {
+      if (exited || nativeExitRequested) {return;}
+      nativeExitRequested = true;
+      // Leave the native callback before exporting the completed save files.
+      void Promise.resolve().then(async () => {
+        const checkpoint = hasProgress && revision > acknowledged ? await capture() : null;
+        const screenshot = checkpoint ? await canvasScreenshot(canvas).catch(() => null) : null;
+        reportExitRequested(checkpoint ? {checkpoint, screenshot} : undefined);
+      }).catch(error => content?.onFailure?.(error instanceof Error ? error : new Error(String(error))));
+    },
     onAbort: () => ready.reject(new Error("ONS_RUNTIME_ABORTED")),
     preRun: () => {
       const current = host.g_onsyuri_module as OnsModule | undefined;
@@ -119,7 +128,9 @@ export async function mountOnsYuri(
   host.g_onsyuri_module = moduleOptions;
   // The core's fopen() reads project files through this bridge, one byte range at a time.
   host.g_onsyuri_content = projectFiles.bridge;
-  host.flush_save = () => undefined;
+  // The native writeSaveFile calls this only after its slot and compatibility
+  // sidecar have both been written successfully. Settings writes do not call it.
+  host.flush_save = () => {if (!exited) {hasProgress = true; revision++;}};
   host.onsyuriHostReady = () => ready.resolve();
   host.scale_full = (element: HTMLElement, ratio = 0) => scaleToFrame(frameWindow, element, ratio);
 
@@ -128,18 +139,16 @@ export async function mountOnsYuri(
     script = await loadRuntimeScript(document, new URL("onsyuri.js", base).href);
     if (typeof host.onsyuri !== "function") {throw new Error("ONS_RUNTIME_ARTIFACT_INVALID");}
     module = await host.onsyuri(moduleOptions);
-    if (typeof module._onsyuri_host_checkpoint_ready !== "function" || typeof module._onsyuri_host_stop !== "function") {
+    if (typeof module._onsyuri_host_is_ready !== "function" || typeof module._onsyuri_host_stop !== "function") {
       throw new Error("ONS_RUNTIME_ARTIFACT_INVALID");
     }
     host.g_onsyuri_module = module;
     videoCleanup = installVideo(host, module, video, canvas, fileMap, projectFiles.videoSource);
-    module._onsyuri_host_set_restore_slot(restore?.resumeSlot ?? -1);
     const started = module.callMain(runtimeArgs(config, index));
     void Promise.resolve(started).catch(error => {if (!exited) {ready.reject(error);}});
     const startingModule = module;
     await waitForOnsEngine(ready.promise, () => startingModule._onsyuri_host_is_ready() === 1,
       projectFiles.hasPendingReads, content?.signal);
-    if (module._onsyuri_host_did_restore_fail() === 1) {throw new Error("ONS_CHECKPOINT_RESTORE_FAILED");}
     focusCanvas();
   } catch (error) {
     await cleanup().catch(() => undefined);
@@ -161,41 +170,44 @@ export async function mountOnsYuri(
   }
 
   const activeModule = module;
+  async function capture(): Promise<RuntimeCheckpoint> {
+    if (exited || !module) {throw new Error("ONS_RUNTIME_INVALID_STATE");}
+    if (!hasProgress || revision <= acknowledged) {throw new Error("ONS_NO_SAVE");}
+    const capturedRevision = revision;
+    // Copy the complete directory synchronously; hashing may yield to a later save.
+    const entries = collectFiles(module.FS, saveRoot);
+    const bytes = await encodeOnsCheckpoint({entries});
+    const key = await checkpointDigest(bytes);
+    if (exited) {throw new Error("ONS_RUNTIME_INVALID_STATE");}
+    captures.set(key, capturedRevision);
+    if (captures.size > 32) {captures.delete(captures.keys().next().value!);}
+    return {bytes, format: onsGameSaveFormat};
+  }
   return {
     checkpoint: async () => {
+      if (nativeExitRequested) {throw new Error("ONS_RUNTIME_INVALID_STATE");}
+      return capture();
+    },
+    acknowledgeCheckpoint: async captured => {
       if (exited) {throw new Error("ONS_RUNTIME_INVALID_STATE");}
-      if (activeModule._onsyuri_host_checkpoint_ready() !== 1) {throw new Error("ONS_CHECKPOINT_NOT_READY");}
-      const resume = !paused;
-      if (resume) {activeModule._onsyuri_host_set_paused(1);}
-      try {
-        const status = activeModule._onsyuri_host_save(config.checkpointSlot);
-        if (status === -1) {throw new Error("ONS_CHECKPOINT_NOT_READY");}
-        if (status !== 0) {throw new Error("ONS_CHECKPOINT_CREATE_FAILED");}
-        const entries = collectFiles(activeModule.FS, saveRoot);
-        if (!entries.some((entry) => entry.path === `save${config.checkpointSlot}.dat`)) {
-          throw new Error("ONS_CHECKPOINT_CREATE_FAILED");
-        }
-        return {
-          bytes: await encodeOnsCheckpoint({ entries, resumeSlot: config.checkpointSlot }),
-          format: "ons-save-bundle-v1",
-        };
-      } catch (error) {
-        if (error instanceof Error && ["ONS_CHECKPOINT_CREATE_FAILED", "ONS_CHECKPOINT_NOT_READY"].includes(error.message)) {throw error;}
-        throw new Error("ONS_CHECKPOINT_CREATE_FAILED");
-      } finally {
-        if (resume) {activeModule._onsyuri_host_set_paused(0);}
-      }
+      const capturedRevision = captures.get(await checkpointDigest(captured.bytes));
+      if (capturedRevision !== undefined) {acknowledged = Math.max(acknowledged, capturedRevision);}
     },
     exit: async () => {
       if (exited) {return;}
       await cleanup();
     },
     getCanvas: () => canvas,
-    getCheckpointAvailability: () => activeModule._onsyuri_host_checkpoint_ready() === 1
-      ? {available: true, blocker: null} : {available: false, blocker: "BUSY"},
+    getCheckpointAvailability: () => {
+      const save = {capture: "IN_GAME", restore: "IN_GAME", captureAvailable: false, dataKind: "PROGRESS"} as const;
+      if (exited || nativeExitRequested) {return {available: false, blocker: "NOT_READY", save};}
+      if (!hasProgress) {return {available: false, blocker: "NO_SAVE", save};}
+      if (revision <= acknowledged) {return {available: false, blocker: "UNCHANGED", save};}
+      return {available: true, blocker: null, revision: String(revision), save};
+    },
     getFrameCount: () => null,
-    pause: async () => {activeModule._onsyuri_host_set_paused(1); paused = true;},
-    resume: async () => {activeModule._onsyuri_host_set_paused(0); paused = false;},
+    pause: async () => {activeModule._onsyuri_host_set_paused(1);},
+    resume: async () => {activeModule._onsyuri_host_set_paused(0);},
     screenshot: () => canvasScreenshot(canvas),
     setVolume: null,
   };
@@ -299,12 +311,13 @@ function runtimeArgs(config: OnsParameters, index: ProjectIndex) {
 async function readRestore(payload: Uint8Array | null) {
   if (!payload) {return null;}
   try {
-    const restore = await decodeOnsCheckpoint(payload);
-    if (!restore.entries.some((entry) => entry.path === `save${restore.resumeSlot}.dat`)) {
-      throw new Error("missing slot");
-    }
-    return restore;
+    return await decodeOnsCheckpoint(payload);
   } catch {throw new Error("ONS_CHECKPOINT_RESTORE_FAILED");}
+}
+
+async function checkpointDigest(bytes: Uint8Array) {
+  const hash = await crypto.subtle.digest("SHA-256", bytes.slice());
+  return [...new Uint8Array(hash)].map(byte => byte.toString(16).padStart(2, "0")).join("");
 }
 
 function canvasScreenshot(canvas: HTMLCanvasElement) {

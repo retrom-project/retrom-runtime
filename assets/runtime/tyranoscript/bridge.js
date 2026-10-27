@@ -99,14 +99,8 @@
 [data-retrom-touch-gamepad] [data-control="analog"]{left:calc(max(20px,env(safe-area-inset-left)) + clamp(100px,30vmin,160px) + 16px)}
 [data-retrom-touch-gamepad][data-layout="JOYSTICK"] [data-control="dpad"]{display:none}
 [data-retrom-touch-gamepad][data-layout="JOYSTICK"] [data-control="analog"]{left:max(20px,env(safe-area-inset-left))}
-[data-retrom-touch-gamepad] [data-knob]{width:45%;height:45%;border:2px solid currentColor;border-radius:50%;
-  transform:translate(var(--stick-x,0px),var(--stick-y,0px));pointer-events:none;background:rgba(255,255,255,.12)}
-[data-retrom-touch-gamepad] [data-arrow]{position:absolute;width:0;height:0;border:10px solid transparent;pointer-events:none}
-[data-retrom-touch-gamepad] [data-arrow="up"]{top:10%;border-bottom-color:currentColor}
-[data-retrom-touch-gamepad] [data-arrow="down"]{bottom:10%;border-top-color:currentColor}
-[data-retrom-touch-gamepad] [data-arrow="left"]{left:10%;border-right-color:currentColor}
-[data-retrom-touch-gamepad] [data-arrow="right"]{right:10%;border-left-color:currentColor}
-[data-retrom-touch-gamepad] [data-arrow][data-active]{color:#fff}
+[data-retrom-touch-gamepad] [data-knob]{width:50%;height:50%;border-radius:50%;
+  transform:translate(var(--stick-x,0px),var(--stick-y,0px));pointer-events:none;background:rgba(255,0,0,.5)}
 [data-retrom-touch-gamepad] [data-face]{--size:clamp(44px,12vmin,64px);--gap:calc(var(--size) * .95);width:var(--size);height:var(--size);
   border-radius:50%;font-size:calc(var(--size) * .38);font-weight:600;
   right:calc(max(20px,env(safe-area-inset-right)) + var(--gap));bottom:calc(max(20px,env(safe-area-inset-bottom)) + var(--gap))}
@@ -123,6 +117,10 @@
 [data-retrom-touch-gamepad] [data-side="left"]{left:max(20px,env(safe-area-inset-left))}
 [data-retrom-touch-gamepad] [data-side="right"]{right:max(20px,env(safe-area-inset-right))}
 [data-retrom-touch-gamepad] [data-control][data-active]{background:rgba(255,255,255,.4);color:#fff;opacity:.95}
+[data-retrom-touch-gamepad] [data-control="dpad"],
+[data-retrom-touch-gamepad] [data-control="analog"]{border:0;background:rgba(255,0,0,.5);opacity:.5}
+[data-retrom-touch-gamepad] [data-control="dpad"][data-active],
+[data-retrom-touch-gamepad] [data-control="analog"][data-active]{background:rgba(255,0,0,.5);opacity:1}
 @media(max-width:639px){
  [data-retrom-touch-gamepad][data-layout="PSP"] [data-control="analog"]{left:max(20px,env(safe-area-inset-left));
   bottom:calc(max(20px,env(safe-area-inset-bottom)) + clamp(100px,30vmin,160px) + 58px)}
@@ -207,12 +205,8 @@
     root.dataset.retromTouchGamepad = "", root.dataset.layout = options.layout ?? "STANDARD", root.setAttribute("aria-hidden", "true");
     let layout = touchGamepadLayout(options.layout), pad = document.createElement("div");
     pad.dataset.control = "dpad";
-    let arrows = /* @__PURE__ */ new Map();
-    for (let [name, index] of Object.entries(dpad)) {
-      let arrow = document.createElement("span");
-      arrow.dataset.arrow = name, pad.append(arrow), arrows.set(index, arrow);
-    }
-    root.append(pad);
+    let padKnob = document.createElement("span");
+    padKnob.dataset.knob = "", pad.append(padKnob), root.append(pad);
     let faces = /* @__PURE__ */ new Map();
     for (let { index, label, slot } of layout.faces) {
       let button = document.createElement("div");
@@ -225,7 +219,7 @@
     let analog = layout.analog ? document.createElement("div") : null, knob = analog ? document.createElement("span") : null;
     analog && knob && (analog.dataset.control = "analog", knob.dataset.knob = "", analog.append(knob), root.append(analog)), document.body.append(root);
     let owners = /* @__PURE__ */ new Map(), heldElsewhere = (pointerId, index) => [...owners].some(([id, owner]) => id !== pointerId && owner.held.includes(index)), apply = (index, down2) => {
-      state.set(index, down2, now()) && ((arrows.get(index) ?? faces.get(index))?.toggleAttribute("data-active", down2), inputObserver(frameWindow)?.record({
+      state.set(index, down2, now()) && (faces.get(index)?.toggleAttribute("data-active", down2), inputObserver(frameWindow)?.record({
         device,
         control: `Button ${index}`,
         value: down2 ? 1 : 0,
@@ -243,16 +237,26 @@
     }, release = (pointerId) => {
       let owner = owners.get(pointerId);
       if (owner) {
-        owners.delete(pointerId), owner.control === "analog" && resetAnalog();
+        if (owners.delete(pointerId), owner.control === "analog" && resetAnalog(), owner.control === "dpad") {
+          let remaining = [...owners.values()].reverse().find((value) => value.control === "dpad")?.point;
+          positionStick(pad, remaining?.x ?? 0, remaining?.y ?? 0);
+        }
         for (let index of owner.held)
           heldElsewhere(pointerId, index) || apply(index, !1);
       }
     }, releaseAll = () => {
-      owners.clear(), resetAnalog();
+      owners.clear(), resetAnalog(), positionStick(pad);
       for (let index of state.releaseAll(now()))
-        (arrows.get(index) ?? faces.get(index))?.removeAttribute("data-active"), inputObserver(frameWindow)?.record({ device, control: `Button ${index}`, value: 0, stage: "BROWSER", target: null, reason: null }, now());
+        faces.get(index)?.removeAttribute("data-active"), inputObserver(frameWindow)?.record({ device, control: `Button ${index}`, value: 0, stage: "BROWSER", target: null, reason: null }, now());
     }, resetAnalog = () => {
-      state.setAxis(0, 0, now()), state.setAxis(1, 0, now()), knob?.style.removeProperty("--stick-x"), knob?.style.removeProperty("--stick-y");
+      state.setAxis(0, 0, now()), state.setAxis(1, 0, now()), analog && positionStick(analog);
+    }, positionStick = (control, x = 0, y = 0) => {
+      control.toggleAttribute("data-active", x !== 0 || y !== 0);
+      for (let [axis, value] of [["x", x], ["y", y]])
+        value === 0 ? control.style.removeProperty(`--stick-${axis}`) : control.style.setProperty(`--stick-${axis}`, `${value}px`);
+    }, moveStick = (event, control, x, y) => {
+      let distance = Math.hypot(x, y), scale = distance > 1 ? 1 / distance : 1, travel = control.getBoundingClientRect().width / 4, point = { x: x * scale * travel, y: y * scale * travel }, owner = owners.get(event.pointerId);
+      owner && (owner.point = point), positionStick(control, point.x, point.y);
     }, moveAnalog = (event) => {
       if (!analog || !knob)
         return;
@@ -260,10 +264,10 @@
       if (!(radius > 0))
         return;
       let dx = (event.clientX - bounds.left - radius) / radius, dy = (event.clientY - bounds.top - radius) / radius, distance = Math.hypot(dx, dy), scale = distance > 1 ? 1 / distance : 1, x = distance < 0.15 ? 0 : dx * scale, y = distance < 0.15 ? 0 : dy * scale;
-      state.setAxis(0, x, now()), state.setAxis(1, y, now()), knob.style.setProperty("--stick-x", `${x * radius * 0.5}px`), knob.style.setProperty("--stick-y", `${y * radius * 0.5}px`);
-    }, padDirections = (event) => {
-      let bounds = pad.getBoundingClientRect();
-      return dpadDirections(event.clientX - (bounds.left + bounds.width / 2), event.clientY - (bounds.top + bounds.height / 2), bounds.width / 2);
+      state.setAxis(0, x, now()), state.setAxis(1, y, now()), moveStick(event, analog, x, y);
+    }, moveDpad = (event) => {
+      let bounds = pad.getBoundingClientRect(), radius = bounds.width / 2, dx = event.clientX - (bounds.left + radius), dy = event.clientY - (bounds.top + bounds.height / 2);
+      hold(event.pointerId, "dpad", dpadDirections(dx, dy, radius)), radius > 0 && moveStick(event, pad, dx / radius, dy / radius);
     }, swallow = (event) => {
       event.preventDefault(), event.stopPropagation();
     }, down = (event) => {
@@ -271,7 +275,7 @@
       if (!control || !root.contains(control) || root.hidden)
         return;
       if (swallow(event), control.setPointerCapture?.(event.pointerId), control === pad) {
-        hold(event.pointerId, "dpad", padDirections(event));
+        moveDpad(event);
         return;
       }
       if (control === analog) {
@@ -284,7 +288,7 @@
       index !== void 0 && hold(event.pointerId, index, [index]);
     }, move = (event) => {
       let owner = owners.get(event.pointerId);
-      owner && (swallow(event), owner.control === "dpad" && hold(event.pointerId, "dpad", padDirections(event)), owner.control === "analog" && moveAnalog(event));
+      owner && (swallow(event), owner.control === "dpad" && moveDpad(event), owner.control === "analog" && moveAnalog(event));
     }, up = (event) => {
       owners.has(event.pointerId) && (swallow(event), release(event.pointerId));
     };

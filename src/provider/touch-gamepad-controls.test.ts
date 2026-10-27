@@ -18,6 +18,31 @@ function pointer(type: string, target: Element, pointerId = 1, x = 0, y = 0) {
 }
 function root() {return document.querySelector<HTMLElement>("[data-retrom-touch-gamepad]")!;}
 
+it("follows a direction touch with the stick cap and recentres on cancellation, blur and hiding", async () => {
+  touchDevice();
+  const touch = installTouchGamepad(window);
+  try {
+    const pad = root().querySelector<HTMLElement>('[data-control="dpad"]')!;
+    expect(pad.querySelector("[data-knob]")).not.toBeNull();
+    vi.spyOn(pad, "getBoundingClientRect").mockReturnValue({left: 0, top: 0, width: 100, height: 100} as DOMRect);
+    pointer("pointerdown", pad, 1, 90, 50);
+    expect(touch.current()?.buttons[15]?.pressed).toBe(true);
+    expect(parseFloat(pad.style.getPropertyValue("--stick-x"))).toBeGreaterThan(0);
+    pointer("pointermove", pad, 1, 50, 10);
+    expect(touch.current()?.buttons[15]?.pressed).toBe(false);
+    expect(touch.current()?.buttons[12]?.pressed).toBe(true);
+    expect(parseFloat(pad.style.getPropertyValue("--stick-y"))).toBeLessThan(0);
+    for (const release of [() => pointer("pointercancel", pad), () => window.dispatchEvent(new Event("blur")), () => touch.setEnabled(false)]) {
+      pointer("pointerdown", pad, 1, 10, 50);
+      await release();
+      expect(touch.current()?.buttons.every(button => !button.pressed) ?? true).toBe(true);
+      expect(pad.style.getPropertyValue("--stick-x")).toBe("");
+      expect(pad.style.getPropertyValue("--stick-y")).toBe("");
+      expect(pad.hasAttribute("data-active")).toBe(false);
+    }
+  } finally {touch.cleanup();}
+});
+
 it("keeps a retained controller neutral after cleanup", async () => {
   touchDevice();
   const touch = installTouchGamepad(window);

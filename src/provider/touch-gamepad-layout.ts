@@ -30,14 +30,8 @@ export const touchGamepadStyle = `
 [data-retrom-touch-gamepad] [data-control="analog"]{left:calc(max(20px,env(safe-area-inset-left)) + clamp(100px,30vmin,160px) + 16px)}
 [data-retrom-touch-gamepad][data-layout="JOYSTICK"] [data-control="dpad"]{display:none}
 [data-retrom-touch-gamepad][data-layout="JOYSTICK"] [data-control="analog"]{left:max(20px,env(safe-area-inset-left))}
-[data-retrom-touch-gamepad] [data-knob]{width:45%;height:45%;border:2px solid currentColor;border-radius:50%;
-  transform:translate(var(--stick-x,0px),var(--stick-y,0px));pointer-events:none;background:rgba(255,255,255,.12)}
-[data-retrom-touch-gamepad] [data-arrow]{position:absolute;width:0;height:0;border:10px solid transparent;pointer-events:none}
-[data-retrom-touch-gamepad] [data-arrow="up"]{top:10%;border-bottom-color:currentColor}
-[data-retrom-touch-gamepad] [data-arrow="down"]{bottom:10%;border-top-color:currentColor}
-[data-retrom-touch-gamepad] [data-arrow="left"]{left:10%;border-right-color:currentColor}
-[data-retrom-touch-gamepad] [data-arrow="right"]{right:10%;border-left-color:currentColor}
-[data-retrom-touch-gamepad] [data-arrow][data-active]{color:#fff}
+[data-retrom-touch-gamepad] [data-knob]{width:50%;height:50%;border-radius:50%;
+  transform:translate(var(--stick-x,0px),var(--stick-y,0px));pointer-events:none;background:rgba(255,0,0,.5)}
 [data-retrom-touch-gamepad] [data-face]{--size:clamp(44px,12vmin,64px);--gap:calc(var(--size) * .95);width:var(--size);height:var(--size);
   border-radius:50%;font-size:calc(var(--size) * .38);font-weight:600;
   right:calc(max(20px,env(safe-area-inset-right)) + var(--gap));bottom:calc(max(20px,env(safe-area-inset-bottom)) + var(--gap))}
@@ -54,6 +48,10 @@ export const touchGamepadStyle = `
 [data-retrom-touch-gamepad] [data-side="left"]{left:max(20px,env(safe-area-inset-left))}
 [data-retrom-touch-gamepad] [data-side="right"]{right:max(20px,env(safe-area-inset-right))}
 [data-retrom-touch-gamepad] [data-control][data-active]{background:rgba(255,255,255,.4);color:#fff;opacity:.95}
+[data-retrom-touch-gamepad] [data-control="dpad"],
+[data-retrom-touch-gamepad] [data-control="analog"]{border:0;background:rgba(255,0,0,.5);opacity:.5}
+[data-retrom-touch-gamepad] [data-control="dpad"][data-active],
+[data-retrom-touch-gamepad] [data-control="analog"][data-active]{background:rgba(255,0,0,.5);opacity:1}
 @media(max-width:639px){
  [data-retrom-touch-gamepad][data-layout="PSP"] [data-control="analog"]{left:max(20px,env(safe-area-inset-left));
   bottom:calc(max(20px,env(safe-area-inset-bottom)) + clamp(100px,30vmin,160px) + 58px)}

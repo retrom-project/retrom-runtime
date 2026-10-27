@@ -55,6 +55,9 @@ standard-mapping pad merged into slot 0 (OR-ed with a physical player 1 pad)
 before the host input filter, so suppression and Select+Start chords apply to
 it, and each core keeps its own gamepad mapping (MKXP: A confirm, B cancel).
 Each finger owns one control; the D-pad has a central dead zone and diagonals.
+Both digital and analog sticks use the EmulatorJS-style translucent red circular
+base and half-size red cap. The cap follows its owning touch within the base;
+release, cancellation, blur and hiding recentre it without changing input mapping.
 Using a physical controller temporarily hides it until the next touch. The Host
 passes `touchGamepadEnabled` before mount and can use `getTouchGamepad()` to change
 the preference after mount. Explicitly disabling the pad releases all virtual

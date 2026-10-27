@@ -108,12 +108,8 @@ export function installTouchGamepad(frameWindow: Window, options: TouchGamepadOp
 
   const pad = document.createElement("div");
   pad.dataset.control = "dpad";
-  const arrows = new Map<number, HTMLElement>();
-  for (const [name, index] of Object.entries(dpad)) {
-    const arrow = document.createElement("span");
-    arrow.dataset.arrow = name;
-    pad.append(arrow); arrows.set(index, arrow);
-  }
+  const padKnob = document.createElement("span");
+  padKnob.dataset.knob = ""; pad.append(padKnob);
   root.append(pad);
   const faces = new Map<number, HTMLElement>();
   for (const {index, label, slot} of layout.faces) {
@@ -136,12 +132,12 @@ export function installTouchGamepad(frameWindow: Window, options: TouchGamepadOp
   document.body.append(root);
 
   // Each touch owns one control; the D-pad follows its finger until release.
-  const owners = new Map<number, {control: "dpad" | "analog" | number; held: readonly number[]}>();
+  const owners = new Map<number, {control: "dpad" | "analog" | number; held: readonly number[]; point?: {x: number; y: number}}>();
   const heldElsewhere = (pointerId: number, index: number) =>
     [...owners].some(([id, owner]) => id !== pointerId && owner.held.includes(index));
   const apply = (index: number, down: boolean) => {
     if (!state.set(index, down, now())) {return;}
-    (arrows.get(index) ?? faces.get(index))?.toggleAttribute("data-active", down);
+    faces.get(index)?.toggleAttribute("data-active", down);
     inputObserver(frameWindow)?.record({device, control: `Button ${index}`, value: down ? 1 : 0,
       stage: "BROWSER", target: null, reason: null}, now());
   };
@@ -156,19 +152,38 @@ export function installTouchGamepad(frameWindow: Window, options: TouchGamepadOp
     if (!owner) {return;}
     owners.delete(pointerId);
     if (owner.control === "analog") {resetAnalog();}
+    if (owner.control === "dpad") {
+      const remaining = [...owners.values()].reverse().find(value => value.control === "dpad")?.point;
+      positionStick(pad, remaining?.x ?? 0, remaining?.y ?? 0);
+    }
     for (const index of owner.held) {if (!heldElsewhere(pointerId, index)) {apply(index, false);}}
   };
   const releaseAll = () => {
     owners.clear();
-    resetAnalog();
+    resetAnalog(); positionStick(pad);
     for (const index of state.releaseAll(now())) {
-      (arrows.get(index) ?? faces.get(index))?.removeAttribute("data-active");
+      faces.get(index)?.removeAttribute("data-active");
       inputObserver(frameWindow)?.record({device, control: `Button ${index}`, value: 0, stage: "BROWSER", target: null, reason: null}, now());
     }
   };
   const resetAnalog = () => {
     state.setAxis(0, 0, now()); state.setAxis(1, 0, now());
-    knob?.style.removeProperty("--stick-x"); knob?.style.removeProperty("--stick-y");
+    if (analog) {positionStick(analog);}
+  };
+  const positionStick = (control: HTMLElement, x = 0, y = 0) => {
+    control.toggleAttribute("data-active", x !== 0 || y !== 0);
+    for (const [axis, value] of [["x", x], ["y", y]] as const) {
+      if (value === 0) {control.style.removeProperty(`--stick-${axis}`);}
+      else {control.style.setProperty(`--stick-${axis}`, `${value}px`);}
+    }
+  };
+  const moveStick = (event: PointerEvent, control: HTMLElement, x: number, y: number) => {
+    const distance = Math.hypot(x, y), scale = distance > 1 ? 1 / distance : 1;
+    const travel = control.getBoundingClientRect().width / 4;
+    const point = {x: x * scale * travel, y: y * scale * travel};
+    const owner = owners.get(event.pointerId);
+    if (owner) {owner.point = point;}
+    positionStick(control, point.x, point.y);
   };
   const moveAnalog = (event: PointerEvent) => {
     if (!analog || !knob) {return;}
@@ -179,12 +194,13 @@ export function installTouchGamepad(frameWindow: Window, options: TouchGamepadOp
     const distance = Math.hypot(dx, dy), scale = distance > 1 ? 1 / distance : 1;
     const x = distance < .15 ? 0 : dx * scale, y = distance < .15 ? 0 : dy * scale;
     state.setAxis(0, x, now()); state.setAxis(1, y, now());
-    knob.style.setProperty("--stick-x", `${x * radius * .5}px`);
-    knob.style.setProperty("--stick-y", `${y * radius * .5}px`);
+    moveStick(event, analog, x, y);
   };
-  const padDirections = (event: PointerEvent) => {
-    const bounds = pad.getBoundingClientRect();
-    return dpadDirections(event.clientX - (bounds.left + bounds.width / 2), event.clientY - (bounds.top + bounds.height / 2), bounds.width / 2);
+  const moveDpad = (event: PointerEvent) => {
+    const bounds = pad.getBoundingClientRect(), radius = bounds.width / 2;
+    const dx = event.clientX - (bounds.left + radius), dy = event.clientY - (bounds.top + bounds.height / 2);
+    hold(event.pointerId, "dpad", dpadDirections(dx, dy, radius));
+    if (radius > 0) {moveStick(event, pad, dx / radius, dy / radius);}
   };
   const swallow = (event: Event) => {event.preventDefault(); event.stopPropagation();};
 
@@ -194,7 +210,7 @@ export function installTouchGamepad(frameWindow: Window, options: TouchGamepadOp
     if (root.hidden) {return;}
     swallow(event);
     (control as HTMLElement).setPointerCapture?.(event.pointerId);
-    if (control === pad) {hold(event.pointerId, "dpad", padDirections(event)); return;}
+    if (control === pad) {moveDpad(event); return;}
     if (control === analog) {
       if ([...owners.values()].some(owner => owner.control === "analog")) {return;}
       hold(event.pointerId, "analog", []); moveAnalog(event); return;
@@ -206,7 +222,7 @@ export function installTouchGamepad(frameWindow: Window, options: TouchGamepadOp
     const owner = owners.get(event.pointerId);
     if (!owner) {return;}
     swallow(event);
-    if (owner.control === "dpad") {hold(event.pointerId, "dpad", padDirections(event));}
+    if (owner.control === "dpad") {moveDpad(event);}
     if (owner.control === "analog") {moveAnalog(event);}
   };
   const up = (event: PointerEvent) => {

@@ -35,12 +35,20 @@ jobs:
           else
             git merge-base --is-ancestor "$GITHUB_SHA" origin/master
           fi
-      - run: npm run lint
-      - run: npm run typecheck
-      - run: npm test
+      - run: npm run ci:checks
+      - run: npx playwright install --with-deps chromium
+      - run: npm run test:content-io:ci
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: content-io-browser-release
+          path: .artifacts/content-io/ci/
+          include-hidden-files: true
+          if-no-files-found: ignore
       - run: npm run release:build
         env:
           RETROM_PROVIDER_BUILD_MODE: release
+      - run: npm run package:check
       - name: Publish GitHub Release
         env:
           GH_TOKEN: ${{ github.token }}

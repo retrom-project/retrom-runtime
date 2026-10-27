@@ -6,15 +6,19 @@ Use Node.js 24 and the npm version recorded in [package.json](../package.json).
 
 ```bash
 npm ci
-npm run lint
-npm run typecheck
-npm test
-npm run build
+npm run ci:checks
+npx playwright install --with-deps chromium
+npm run test:content-io:ci
 npm run package:check
-npm run docs:platforms:check
 ```
 
 `npm run build` compiles TypeScript and the project's own browser bridges. It does not compile third-party cores. `npm test` runs this build before the test suite. The package check verifies the packaged runtime and offline host tool independently of the source checkout.
+
+`ci:checks` runs lint, type checking, the Vitest suite, self-contained Node script tests and support-catalog verification. Lint-policy regression tests check the current complexity, file-size and exclusion settings. `test:scripts` includes release and Content I/O tooling tests; the product-baseline evidence test remains in Content I/O stage S00 as `baseline.integration.mjs`, where `CONTENT_IO_ENV` and real PFB evidence are required.
+
+`test:content-io:ci` runs the public synthetic Content I/O fixtures in headless Chromium: preload, fallback, cancellation, persistence, cross-Session reuse and bounded windows. It needs no PFB or downloaded game core. To reuse a local browser, set `RETROM_CHROME_EXECUTABLE`. Results and failure traces go to `.artifacts/content-io/ci/`; private game and host-product acceptance retain their existing stage runners.
+
+On PRs, the browser job runs alongside the existing checks and Provider candidate build. The `quality` job requires both jobs to succeed, including when a dependency fails, is cancelled or is skipped. Configure that GitHub Actions check as required on master. Tagged releases run the same checks and browser command, then validate the package before publishing.
 
 After changing platform names, core names, product bindings or Provider declarations, run `npm run docs:platforms` and commit the generated [support catalog](supported-platforms-and-cores.md) with the change. The quality workflow rejects an outdated catalog.
 
@@ -54,6 +58,8 @@ Provider bundles are published only as chunks; there is no whole Provider archiv
 `chunkId` is the SHA-256 of the chunk's sorted `[path, sizeBytes, sha256]` list, so local deduplication does not depend on compression. Archives are deterministic ustar + gzip. The release gate reads every chunk back, checks its identity and archive digest, and requires the chunks together to reproduce the built bundle exactly once; a release may not exceed 900 assets.
 
 Formal builds require a validated annotated tag at the released commit and `RETROM_PROVIDER_BUILD_MODE=release`. Untagged candidate builds use `0.0.0-dev`; their descriptor has `release: null`. Tagged releases include the actual tag and commit. A PFB client receives the installed base's verified Provider manifest version.
+
+Before downloading core assets, formal `release:build` validates both Provider source catalogs: stable runtime tags reject core tags ending in `-rc.N`; RC runtime tags may pin them. All formal builds reject development core inputs. Upstream resource versions such as EmulatorJS `4.3.0-pre` remain valid. The release builder also enforces this policy when called directly.
 
 Every build records the actual source-tree digest and both verified Provider bundle, chunk-manifest and module hashes alongside the host-tool archive. Consumers must use the matched set rather than combining artifacts based only on a version string.
 

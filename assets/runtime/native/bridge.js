@@ -77,14 +77,26 @@
     { index: 1, label: "B", slot: "right" },
     { index: 2, label: "X", slot: "left" },
     { index: 3, label: "Y", slot: "top" }
-  ];
-  function touchGamepadLayout(layout = "STANDARD") {
-    let faces = layout === "PSP" ? standardFaces.map((face, index) => ({ ...face, label: ["\xD7", "\u25CB", "\u25A1", "\u25B3"][index] })) : layout === "POINTER" ? [{ ...standardFaces[0], label: "\u786E\u8BA4" }, { ...standardFaces[1], label: "\u8FD4\u56DE" }] : layout === "JOYSTICK" ? standardFaces.slice(0, 2) : standardFaces, auxiliary = layout === "PSP" || layout === "JOYSTICK" ? [
-      { index: 8, label: "Select", side: "center-left" },
-      { index: 9, label: "Start", side: "center-right" },
-      ...layout === "PSP" ? [{ index: 4, label: "L", side: "left" }, { index: 5, label: "R", side: "right" }] : []
-    ] : [];
-    return { faces, auxiliary, analog: layout === "PSP" || layout === "JOYSTICK" };
+  ], menuButtons = [
+    { index: 8, label: "Select", side: "center-left" },
+    { index: 9, label: "Start", side: "center-right" }
+  ], shoulderButtons = [{ index: 4, label: "L", side: "left" }, { index: 5, label: "R", side: "right" }], touchGamepadProfiles = {
+    twoButton: { layout: "STANDARD", faces: standardFaces.slice(0, 2) },
+    twoButtonMenu: {
+      layout: "STANDARD",
+      faces: standardFaces.slice(0, 2),
+      auxiliary: [{ index: 9, label: "\u83DC\u5355", side: "center-right" }]
+    },
+    action: { layout: "STANDARD", auxiliary: [...menuButtons, ...shoulderButtons] },
+    analogMenu: {
+      layout: "JOYSTICK",
+      auxiliary: [],
+      faces: [{ index: 0, label: "\u786E\u8BA4", slot: "bottom" }, { index: 1, label: "\u83DC\u5355", slot: "right" }]
+    }
+  };
+  function touchGamepadLayout(layout = "STANDARD", controls = {}) {
+    let faces = layout === "PSP" ? standardFaces.map((face, index) => ({ ...face, label: ["\xD7", "\u25CB", "\u25A1", "\u25B3"][index] })) : layout === "POINTER" ? [{ ...standardFaces[0], label: "\u786E\u8BA4" }, { ...standardFaces[1], label: "\u8FD4\u56DE" }] : layout === "JOYSTICK" ? standardFaces.slice(0, 2) : standardFaces, auxiliary = layout === "PSP" ? [...menuButtons, ...shoulderButtons] : layout === "JOYSTICK" ? menuButtons : [];
+    return { faces: controls.faces ?? faces, auxiliary: controls.auxiliary ?? auxiliary, analog: layout === "PSP" || layout === "JOYSTICK" };
   }
   var touchGamepadStyle = `
 [data-retrom-touch-gamepad]{position:fixed;inset:0;pointer-events:none;z-index:2147483646;
@@ -203,7 +215,7 @@
     style.dataset.retromTouchGamepadStyle = "", style.textContent = touchGamepadStyle, document.head.append(style);
     let root = document.createElement("div");
     root.dataset.retromTouchGamepad = "", root.dataset.layout = options.layout ?? "STANDARD", root.setAttribute("aria-hidden", "true");
-    let layout = touchGamepadLayout(options.layout), pad = document.createElement("div");
+    let layout = touchGamepadLayout(options.layout, options), pad = document.createElement("div");
     pad.dataset.control = "dpad";
     let padKnob = document.createElement("span");
     padKnob.dataset.knob = "", pad.append(padKnob), root.append(pad);

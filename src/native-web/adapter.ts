@@ -63,16 +63,14 @@ export async function mountNativeRpg(
       await channel.restore(bundle);
     }
     channel.startStatusLoop();
-    if (expectedEngine === "RPGMV") {
-      let enabled = readyOptions.touchGamepadEnabled ?? true;
-      const setEnabled = async (value: boolean) => {
-        const reply = await channel.request("SET_TOUCH_GAMEPAD", {enabled: value});
-        if (reply.type !== "SET_TOUCH_GAMEPAD_RESULT") {throw new Error("RPG_RUNTIME_CONTROL_UNAVAILABLE");}
-        enabled = value;
-      };
-      await setEnabled(enabled);
-      touchGamepad = {getState: () => ({enabled}), setEnabled};
-    }
+    let enabled = readyOptions.touchGamepadEnabled ?? true;
+    const setEnabled = async (value: boolean) => {
+      const reply = await channel.request("SET_TOUCH_GAMEPAD", {enabled: value});
+      if (reply.type !== "SET_TOUCH_GAMEPAD_RESULT") {throw new Error("RPG_RUNTIME_CONTROL_UNAVAILABLE");}
+      enabled = value;
+    };
+    await setEnabled(enabled);
+    touchGamepad = {getState: () => ({enabled}), setEnabled};
   } catch (error) {
     channel.close();
     frame.src = "about:blank";

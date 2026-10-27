@@ -1,20 +1,33 @@
 export type TouchGamepadLayout = "STANDARD" | "PSP" | "POINTER" | "JOYSTICK";
-export type TouchGamepadOptions = {layout?: TouchGamepadLayout; enabled?: boolean};
 type Face = {index: number; label: string; slot: "bottom" | "right" | "left" | "top"};
+type Auxiliary = {index: number; label: string; side: "center-left" | "center-right" | "left" | "right"};
+export type TouchGamepadLayoutOptions = {layout?: TouchGamepadLayout; faces?: readonly Face[]; auxiliary?: readonly Auxiliary[]};
+export type TouchGamepadOptions = TouchGamepadLayoutOptions & {enabled?: boolean};
 const standardFaces: Face[] = [
   {index: 0, label: "A", slot: "bottom"}, {index: 1, label: "B", slot: "right"},
   {index: 2, label: "X", slot: "left"}, {index: 3, label: "Y", slot: "top"},
 ];
+const menuButtons: Auxiliary[] = [
+  {index: 8, label: "Select", side: "center-left"}, {index: 9, label: "Start", side: "center-right"},
+];
+const shoulderButtons: Auxiliary[] = [{index: 4, label: "L", side: "left"}, {index: 5, label: "R", side: "right"}];
 
-export function touchGamepadLayout(layout: TouchGamepadLayout = "STANDARD") {
+/** Data-only profiles reuse the same rendering, pointer ownership and standard input state. */
+export const touchGamepadProfiles = {
+  twoButton: {layout: "STANDARD", faces: standardFaces.slice(0, 2)},
+  twoButtonMenu: {layout: "STANDARD", faces: standardFaces.slice(0, 2),
+    auxiliary: [{index: 9, label: "菜单", side: "center-right"}]},
+  action: {layout: "STANDARD", auxiliary: [...menuButtons, ...shoulderButtons]},
+  analogMenu: {layout: "JOYSTICK", auxiliary: [],
+    faces: [{index: 0, label: "确认", slot: "bottom"}, {index: 1, label: "菜单", slot: "right"}]},
+} as const satisfies Record<string, TouchGamepadLayoutOptions>;
+
+export function touchGamepadLayout(layout: TouchGamepadLayout = "STANDARD", controls: TouchGamepadLayoutOptions = {}) {
   const faces = layout === "PSP" ? standardFaces.map((face, index) => ({...face, label: ["×", "○", "□", "△"][index]}))
     : layout === "POINTER" ? [{...standardFaces[0], label: "确认"}, {...standardFaces[1], label: "返回"}]
       : layout === "JOYSTICK" ? standardFaces.slice(0, 2) : standardFaces;
-  const auxiliary = layout === "PSP" || layout === "JOYSTICK" ? [
-    {index: 8, label: "Select", side: "center-left"}, {index: 9, label: "Start", side: "center-right"},
-    ...(layout === "PSP" ? [{index: 4, label: "L", side: "left"}, {index: 5, label: "R", side: "right"}] : []),
-  ] : [];
-  return {faces, auxiliary, analog: layout === "PSP" || layout === "JOYSTICK"};
+  const auxiliary = layout === "PSP" ? [...menuButtons, ...shoulderButtons] : layout === "JOYSTICK" ? menuButtons : [];
+  return {faces: controls.faces ?? faces, auxiliary: controls.auxiliary ?? auxiliary, analog: layout === "PSP" || layout === "JOYSTICK"};
 }
 
 export const touchGamepadStyle = `

@@ -1,6 +1,29 @@
 import { describe, expect, it, vi } from "vitest";
 import { NativeChannel, nativeBootstrapAction, mountNativeRpg } from "./adapter";
 
+it("applies the initial MZ touch preference and toggles the same isolated input bridge", async () => {
+  const frame = document.createElement("iframe"); document.body.append(frame);
+  vi.spyOn(NativeChannel.prototype, "connect").mockImplementation(() => undefined);
+  vi.spyOn(NativeChannel.prototype, "ready").mockResolvedValue({engine: "RPGMZ", engineProfile: "RPGMZ"});
+  vi.spyOn(NativeChannel.prototype, "startStatusLoop").mockImplementation(() => undefined);
+  const request = vi.spyOn(NativeChannel.prototype, "request").mockImplementation(async type => ({
+    type: `${type}_RESULT`, body: {}, launchId: "fixture", nonce: "fixture", protocolVersion: 1, requestId: 1,
+  }));
+  const mounting = mountNativeRpg({sessionId: "fixture", uniqueOrigin: window.location.origin, bridgeProfile: "RPGMZ"},
+    frame, null, () => undefined, {touchGamepadEnabled: false});
+  window.dispatchEvent(new MessageEvent("message", {source: frame.contentWindow, origin: window.location.origin,
+    data: {type: "RPG_RUNTIME_NATIVE_BRIDGE_READY", protocolVersion: 1}}));
+  const adapter = await mounting;
+  try {
+    const controls = adapter.getTouchGamepad();
+    expect(controls?.getState()).toEqual({enabled: false});
+    expect(request).toHaveBeenCalledWith("SET_TOUCH_GAMEPAD", {enabled: false});
+    await controls!.setEnabled(true);
+    expect(request).toHaveBeenLastCalledWith("SET_TOUCH_GAMEPAD", {enabled: true});
+    expect(controls!.getState()).toEqual({enabled: true});
+  } finally {await adapter.exit(); frame.remove(); vi.restoreAllMocks();}
+});
+
 describe("native RPG exit", () => {
   it("preempts an in-flight background status request so cleanup is sent immediately", async () => {
     let runtimePort: MessagePort | null = null;

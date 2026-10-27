@@ -5,6 +5,7 @@ import type {RuntimeCheckpoint} from "../contract.js";
 import type { MountedRuntimeAdapter, RuntimeExitReporter, RuntimeProgressReporter } from "../internal-adapter.js";
 import type {OnsParameters} from "./parameters.js";
 import { installOnsAnalogGamepad } from "./gamepad-input.js";
+import {touchGamepadProfiles} from "../provider/touch-gamepad-layout.js";
 import {waitForOnsEngine} from "./startup.js";
 import {
   createOnsProjectFileMap,
@@ -184,6 +185,7 @@ export async function mountOnsYuri(
     return {bytes, format: onsGameSaveFormat};
   }
   return {
+    touchGamepad: touchGamepadProfiles.analogMenu,
     checkpoint: async () => {
       if (nativeExitRequested) {throw new Error("ONS_RUNTIME_INVALID_STATE");}
       return capture();

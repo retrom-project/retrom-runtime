@@ -5,8 +5,9 @@ import {checkpointFormats, checkpointLimits, decodeState, encodeState} from "./s
 import {controlMask, installKeyboard} from "./input.js";
 import {loadCore, withBytes, type FantasyParameters, type ModuleLoader} from "./core.js";
 import {FantasyAudio} from "./audio.js";
+import {touchGamepadProfiles} from "../provider/touch-gamepad-layout.js";
 
-const touchLayouts = {tic80: {layout: "STANDARD"}, fake08: undefined} as const;
+const touchLayouts = {tic80: {layout: "STANDARD"}, fake08: touchGamepadProfiles.twoButtonMenu} as const;
 
 export async function mountFantasyConsole(config: FantasyParameters, target: HTMLElement,
   frameWindow: Window, restorePayload: Uint8Array | null, progress: RuntimeProgressReporter,

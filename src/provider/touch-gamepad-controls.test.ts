@@ -18,6 +18,23 @@ function pointer(type: string, target: Element, pointerId = 1, x = 0, y = 0) {
 }
 function root() {return document.querySelector<HTMLElement>("[data-retrom-touch-gamepad]")!;}
 
+it("exposes only the configured actions and a separate native menu button", () => {
+  touchDevice();
+  const touch = installTouchGamepad(window, {
+    faces: [{index: 0, label: "A", slot: "bottom"}, {index: 1, label: "B", slot: "right"}],
+    auxiliary: [{index: 9, label: "菜单", side: "center-right"}],
+  });
+  try {
+    expect(root().querySelectorAll("[data-face]")).toHaveLength(2);
+    const menu = root().querySelector('[data-button="9"]')!;
+    pointer("pointerdown", menu);
+    expect(touch.current()?.buttons.flatMap((value, index) => value.pressed ? [index] : [])).toEqual([9]);
+    pointer("pointerup", menu);
+    expect(touch.current()?.buttons.every(value => !value.pressed)).toBe(true);
+    expect(root().querySelector('[data-button="8"]')).toBeNull();
+  } finally {touch.cleanup();}
+});
+
 it("follows a direction touch with the stick cap and recentres on cancellation, blur and hiding", async () => {
   touchDevice();
   const touch = installTouchGamepad(window);

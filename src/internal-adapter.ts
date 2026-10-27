@@ -5,14 +5,14 @@ import type {
   RuntimeLoadProgress,
 } from "./contract.js";
 import type {RuntimeHostShortcutPolicyV1, RuntimeHostShortcutV1, RuntimeVideoModeV1, RuntimeInputDiagnosticsV1, RuntimeGameEditorV1, RuntimeInputFilterPolicyV1, RuntimeTouchGamepadV1} from "./provider/module-api.js";
-import type {TouchGamepadLayout} from "./provider/touch-gamepad-layout.js";
+import type {TouchGamepadLayoutOptions} from "./provider/touch-gamepad-layout.js";
 
 import type {GamepadCursor} from "./provider/gamepad-cursor.js";
 
 export type MountedRuntimeAdapter = {
   gamepadCursor?: GamepadCursor;
   /** Same-origin targets whose core reads the standard Gamepad API can opt into the on-screen pad. */
-  touchGamepad?: true | {layout: TouchGamepadLayout; inputWindow?: Window};
+  touchGamepad?: true | (TouchGamepadLayoutOptions & {inputWindow?: Window});
   getTouchGamepad?(): RuntimeTouchGamepadV1 | null;
   /** CORE owns responsive canvas sizing; otherwise the Provider fits a fixed-resolution canvas. */
   canvasLayout?: "CORE";

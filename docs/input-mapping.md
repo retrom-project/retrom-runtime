@@ -49,7 +49,7 @@ Native Targets opt into the shared on-screen gamepad with a layout and, when
 needed, their actual input window. TIC-80 and MKXP use STANDARD, PPSSPP uses PSP
 (D-pad, analog stick, Sony face labels, L/R and Start/Select), KiriKiri uses
 POINTER (directions and confirmation/cancel), and Apple2JS uses JOYSTICK in its
-nested frame. RPG Maker MV runs the same module through its isolated input
+nested frame. RPG Maker MV/MZ run the same module through their isolated input
 bridge. On touch-first devices (no hover, coarse pointer), it is a
 standard-mapping pad merged into slot 0 (OR-ed with a physical player 1 pad)
 before the host input filter, so suppression and Select+Start chords apply to
@@ -64,6 +64,25 @@ the preference after mount. Explicitly disabling the pad releases all virtual
 input; touching the game cannot re-enable it. Pause and Host suppression release
 virtual input without changing that preference. Cursor polling reads the merged
 physical/touch source without advancing the Host chord filter.
+
+Additional adapters select data-only profiles from the same module:
+
+| Core / Target | Virtual controls |
+| --- | --- |
+| FAKE-08 | Directions, A/B and a native Start/menu button |
+| WASM-4 | Directions and two action buttons |
+| NXEngine / OpenBOR | Directions, A/B/X/Y, L/R and Start/Select |
+| ONScripter Yuri | Analog directions, confirmation and menu/back |
+
+Profiles select standard button indices, labels and positions; they do not own
+rendering or pointer handlers. Existing layouts retain their default controls.
+ONS uses the existing analog-to-arrow adapter for directions. Its confirmation
+and menu controls feed only the native SDL standard-controller A/B bindings
+(Return/Escape); they do not also synthesize keyboard or mouse clicks.
+RPG Maker MZ uses the same isolated `SET_TOUCH_GAMEPAD` command as MV. The Host
+continues to own per-core visibility preferences, including the shared
+`rpgmaker` preference for both engines.
+
 Same-origin background checkpoint exports release held controls while retaining the previous
 layout visibility, so automatic native saves do not make the controls blink or
 show a paused game's pad. The Host keeps its toolbar toggle in place while busy.

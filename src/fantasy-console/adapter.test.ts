@@ -2,6 +2,8 @@ import {afterEach, beforeEach, describe, expect, it, vi} from "vitest";
 import {mountFantasyConsole} from "./adapter.js";
 import {loadCore, type NativeCore, type FantasyParameters} from "./core.js";
 import {decodeState, encodeState} from "./state.js";
+import {installTouchGamepad} from "../provider/touch-gamepad.js";
+import {installRuntimeGamepadFilter, RuntimeGamepadFilter} from "../provider/gamepad-filter.js";
 vi.mock("./core.js", async (original) => ({...await original<typeof import("./core.js")>(), loadCore: vi.fn()}));
 vi.mock("./audio.js", () => ({FantasyAudio: class {
   resume = vi.fn(async () => undefined); pause = vi.fn(async () => undefined);
@@ -33,6 +35,36 @@ function mount(restore: Uint8Array | null = null, signal?: AbortSignal) {
   return mountFantasyConsole(config, document.body, window, restore, vi.fn(), vi.fn(), signal);
 }
 describe("fantasy runtime lifecycle", () => {
+  it("lets FAKE-08 touch controls reach the native menu and releases them when hidden", async () => {
+    const adapter = await mountFantasyConsole({...config, core: "fake08"}, document.body, window, null, vi.fn(), vi.fn());
+    let cleanup: () => void = () => undefined;
+    try {
+      expect(adapter.touchGamepad).toBeDefined();
+      Object.defineProperty(window, "matchMedia", {configurable: true, value: () => ({matches: true})});
+      Object.defineProperty(navigator, "getGamepads", {configurable: true, value: () => []});
+      const filter = new RuntimeGamepadFilter({activeGamepadIndex: 0, suppressInput: false});
+      const remove = installRuntimeGamepadFilter(window, filter);
+      const touch = installTouchGamepad(window, adapter.touchGamepad === true ? {} : adapter.touchGamepad);
+      filter.setTouchGamepad(touch);
+      cleanup = () => {touch.cleanup(); remove();};
+      let now = 0;
+      vi.spyOn(performance, "now").mockImplementation(() => now);
+      const menu = document.querySelector('[data-retrom-touch-gamepad] [data-button="9"]')!;
+      expect(menu).not.toBeNull();
+      menu.dispatchEvent(new PointerEvent("pointerdown", {bubbles: true, pointerType: "touch"}));
+      animation(100);
+      // A single Start waits for the existing host Select+Start chord window.
+      expect(core._retrom_step).toHaveBeenLastCalledWith(0);
+      now = 150; animation(250);
+      expect(core._retrom_step).toHaveBeenLastCalledWith(8);
+      await touch.setEnabled(false); animation(350);
+      expect(core._retrom_step).toHaveBeenLastCalledWith(0);
+    } finally {
+      cleanup(); await adapter.exit();
+      Reflect.deleteProperty(window, "matchMedia"); Reflect.deleteProperty(navigator, "getGamepads");
+    }
+  });
+
   it("restores native data before the first frame and saves an authenticated bounded payload", async () => {
     const payload = new Uint8Array(1024); payload[0] = 99;
     const adapter = await mount(await encodeState("tic80", config.contentDigest, payload));

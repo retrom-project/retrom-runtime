@@ -104,7 +104,7 @@ export function installTouchGamepad(frameWindow: Window, options: TouchGamepadOp
   root.dataset.retromTouchGamepad = "";
   root.dataset.layout = options.layout ?? "STANDARD";
   root.setAttribute("aria-hidden", "true");
-  const layout = touchGamepadLayout(options.layout);
+  const layout = touchGamepadLayout(options.layout, options);
 
   const pad = document.createElement("div");
   pad.dataset.control = "dpad";

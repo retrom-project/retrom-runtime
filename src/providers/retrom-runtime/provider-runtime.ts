@@ -154,13 +154,12 @@ class RetromRuntimePlayer implements PlayerRuntimeV1 {
   /** The on-screen pad feeds the same-origin gamepad filter; isolated realms own their own input. */
   private installTouchGamepad(adapter: MountedRuntimeAdapter, runtimeWindow: Window, frameMode: string) {
     if (!adapter.touchGamepad || frameMode !== "SAME_ORIGIN_BLANK" || !this.inputFilter) {return;}
-    const settings = adapter.touchGamepad === true ? undefined : adapter.touchGamepad;
-    const inputWindow = settings?.inputWindow ?? runtimeWindow;
+    const {inputWindow = runtimeWindow, ...settings} = adapter.touchGamepad === true ? {} : adapter.touchGamepad;
     if (inputWindow !== runtimeWindow) {
       this.cleanupTouchInputFilter = installRuntimeGamepadFilter(inputWindow, this.inputFilter);
     }
     this.touchGamepad = installTouchGamepad(inputWindow, {
-      layout: settings?.layout, enabled: this.host.touchGamepadEnabled ?? true,
+      ...settings, enabled: this.host.touchGamepadEnabled ?? true,
     });
     this.inputFilter.setTouchGamepad(this.touchGamepad);
     this.suspendTouchGamepad();

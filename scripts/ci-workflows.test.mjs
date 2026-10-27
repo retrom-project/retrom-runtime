@@ -20,6 +20,9 @@ test("quality rejects failed, cancelled or skipped checks and browser suites", a
 
 test("PR runs source checks and public browser tests before release tagging", async () => {
   const quality = await readFile(new URL("../.github/workflows/quality.yml", import.meta.url), "utf8");
+  const manifest = JSON.parse(await readFile(new URL("../package.json", import.meta.url), "utf8"));
+  assert.ok(manifest.scripts["ci:checks"].includes("npm run check:duplicates"));
+  assert.ok(quality.includes("path: .artifacts/duplicates/"));
   for (const command of ["npm run ci:checks", "npm run test:content-io:ci", "npm run package:check"]) {
     assert.ok(quality.includes(`run: ${command}`), command);
   }
@@ -28,7 +31,8 @@ test("PR runs source checks and public browser tests before release tagging", as
 test("release validates identity and artifacts without repeating PR source checks", async () => {
   const release = await readFile(new URL("../.github/workflows/release.yml", import.meta.url), "utf8");
   for (const command of ["npm run ci:checks", "npm run lint", "npm run typecheck", "npm test",
-    "npm run test:scripts", "npm run docs:platforms:check", "npm run test:content-io:ci", "npx playwright"]) {
+    "npm run test:scripts", "npm run docs:platforms:check", "npm run test:content-io:ci",
+    "npm run check:duplicates", "npx playwright"]) {
     assert.ok(!release.includes(`run: ${command}`), command);
   }
   assert.ok(release.includes("name: Validate release identity"));

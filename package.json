@@ -35,7 +35,7 @@
     "test": "vitest run",
     "test:scripts": "node --test --test-concurrency=4 scripts/*.test.mjs scripts/content-io/*.test.mjs tests/content-io/*.test.mjs",
     "test:content-io:ci": "playwright test --config tests/content-io/playwright.ci.config.ts",
-    "ci:checks": "npm run lint && npm run typecheck && npm test && npm run test:scripts && npm run docs:platforms:check",
+    "ci:checks": "npm run lint && npm run check:duplicates && npm run typecheck && npm test && npm run test:scripts && npm run docs:platforms:check",
     "build": "node scripts/build-isolated-bridges.mjs && npm run clean && tsc -p tsconfig.build.json",
     "dev:watch": "node scripts/dev-watch.mjs",
     "dev:provider:watch": "node scripts/pfb-provider-watch.mjs",
@@ -55,7 +55,8 @@
     "content-io:evidence:check": "node scripts/content-io/evidence.mjs",
     "content-io:test": "node scripts/content-io/test.mjs",
     "content-io:browser": "node scripts/content-io/browser.mjs",
-    "content-io:assets": "node scripts/content-io/build-assets.mjs"
+    "content-io:assets": "node scripts/content-io/build-assets.mjs",
+    "check:duplicates": "jscpd --config .jscpd.json"
   },
   "dependencies": {
     "@noble/hashes": "2.0.1",
@@ -68,6 +69,7 @@
     "@types/node": "24.13.3",
     "esbuild": "0.27.0",
     "eslint": "9.39.0",
+    "jscpd": "5.4.2",
     "jsdom": "29.1.1",
     "typescript": "5.9.3",
     "typescript-eslint": "8.66.0",

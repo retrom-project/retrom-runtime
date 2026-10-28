@@ -84,6 +84,13 @@ Additional adapters select data-only profiles from the same module:
 | MAME Current Arcade | Directions, A/B/X/Y, L/R, Coin and Start in both main-thread and Worker adapters |
 | SamCoupeWeb | Directions, confirmation/back and a separate Space/fire action through its Arrow/Enter/Escape/Space bridge in the nested game/input window |
 | TyranoScript | Analog pointer movement and left/right mouse confirmation/menu through the shared cursor inside its isolated page |
+| MAME Apple II+ / IIe | Analog joystick and native A/B; separate Space, Enter, Escape and 1 controls through the existing machine input mapper |
+| MAME Acorn Atom | Directions through the existing semicolon/period/Z/X keyboard mapping, Space/Enter, Escape, Shift and REPT (Right Control) |
+| NP2kai (PC-98) | Directions, Space/Escape/Z/X and Enter through the existing PC-98 keyboard mapper |
+| PX68K (X68000) | Directions, A/B/X/Y, L/R and Start/Select through the native joypad mapper; no parallel synthetic keyboard actions |
+| jsbeeb (BBC Micro) | Directions, Return and Space in the actual nested game/input frame using its existing BBC keyboard mappings |
+| Ruffle (Flash) | Directions, A/B/X/Y and Enter through the existing keyboard mapper or the optional shared gamepad cursor |
+| ScummVM | Analog movement through SDL's native virtual mouse, A/B mouse actions and Start for the native global menu |
 
 Profiles select standard button indices, labels and positions; they do not own
 rendering or pointer handlers. Existing layouts retain their default controls.
@@ -115,6 +122,13 @@ the cursor sends a single `tap` activation instead of `click`, using that engine
 API relationship rather than a game identity or user-agent special case.
 The ColecoVision layout exposes the existing standard pad's numeric 1/2 shortcuts;
 it does not provide the controller's entire numeric keypad.
+Ruffle retains its optional Provider cursor API: with the cursor disabled, the
+virtual A/B/X/Y send Space/Escape/X/Enter. With the cursor enabled, its owned
+directions and A/B go to the shared mouse cursor and are filtered out of the
+keyboard mapper, so one virtual press cannot also send a keyboard action.
+Computer layouts cover the existing controller mappings rather than a complete
+keyboard. Apple II software must read its emulated joystick to use the analog
+control; Atom BASIC programs can still require a keyboard RUN command.
 
 Same-origin background checkpoint exports release held controls while retaining the previous
 layout visibility, so automatic native saves do not make the controls blink or

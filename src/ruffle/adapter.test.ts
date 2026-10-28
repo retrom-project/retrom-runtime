@@ -4,6 +4,7 @@ import {Blob as ForeignBlob} from "node:buffer";
 import {afterEach, describe, expect, it, vi} from "vitest";
 import {mountRuffle as mount} from "./adapter.js";
 import type {RufflePlayer, RuffleAPI} from "./player.js";
+import {adapterTouchFixture} from "../../tests/adapter-touch-fixture.js";
 
 const swf = new Uint8Array([70, 87, 83, 9, 8, 0, 0, 0]);
 const config = {swfUrl: "https://content.test/game.swf", swfSizeBytes: swf.length,
@@ -22,6 +23,25 @@ function fixture() {
   return {target, element, api, loader: vi.fn(async () => element)};
 }
 describe("Ruffle adapter", () => {
+  it("delivers one Space action from a virtual press and releases it on hiding", async () => {
+    let ticks: FrameRequestCallback[] = [];
+    vi.spyOn(window, "requestAnimationFrame").mockImplementation(callback => {ticks.push(callback); return ticks.length;});
+    vi.spyOn(window, "cancelAnimationFrame").mockImplementation(() => {});
+    const frame = (time: number) => {const pending = ticks; ticks = []; pending.forEach(tick => tick(time));};
+    const f = fixture();
+    const runtime = await mountRuffle(config, f.target, window, null, () => undefined, undefined, f.loader);
+    const events: string[] = [];
+    const canvas = runtime.getCanvas()!;
+    for (const name of ["keydown", "keyup"]) {canvas.addEventListener(name, event => events.push(`${name}:${(event as KeyboardEvent).code}`));}
+    let touch: ReturnType<typeof adapterTouchFixture> | undefined;
+    try {
+      touch = adapterTouchFixture(runtime);
+      touch.press('[data-face="bottom"]'); frame(0); frame(20);
+      expect(events).toEqual(["keydown:Space"]);
+      await touch.touch.setEnabled(false); frame(40);
+      expect(events).toEqual(["keydown:Space", "keyup:Space"]);
+    } finally {touch?.dispose(); await runtime.exit();}
+  });
   it("accepts duplicate destructor flushes without accepting new data after exit", async () => {
     const f = fixture();
     const runtime = await mountRuffle(config, f.target, window, null, () => undefined, undefined, f.loader);

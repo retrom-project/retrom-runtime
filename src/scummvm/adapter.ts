@@ -128,6 +128,9 @@ export async function mountScummvm(config: ScummvmParameters, target: HTMLElemen
     }
   };
   return {
+    touchGamepad: {layout: "JOYSTICK", faces: [
+      {index: 0, label: "左键", slot: "bottom"}, {index: 1, label: "右键", slot: "right"},
+    ], auxiliary: [{index: 9, label: "菜单", side: "center-right"}]},
     checkpoint: (request) => bridge.checkpoint(request), acknowledgeCheckpoint: (checkpoint) => bridge.acknowledge(checkpoint),
     getCheckpointAvailability: () => bridge.getAvailability(), getCanvas: () => ending || disposed ? null : canvas,
     getFrameCount: () => null, screenshot, pause: () => setPaused(true), resume: () => setPaused(false), setVolume: null,

@@ -33,6 +33,11 @@ it.each([
   {machine: "sg1000", arcade: false, index: 9, label: "暂停", keys: [49], buttons: []},
   {machine: "coleco", arcade: false, index: 9, label: "1", keys: [257], buttons: []},
   {machine: "1942", arcade: true, index: 8, label: "投币", keys: [], buttons: [2]},
+  {machine: "apple2p", arcade: false, index: 3, label: "Enter", keys: [13], buttons: []},
+  {machine: "apple2e", arcade: false, index: 3, label: "Enter", keys: [13], buttons: []},
+  {machine: "atom", arcade: false, index: 8, label: "Esc", keys: [27], buttons: []},
+  {machine: "atom", arcade: false, index: 4, label: "Shift", keys: [304], buttons: []},
+  {machine: "atom", arcade: false, index: 5, label: "REPT", keys: [305], buttons: []},
 ])("offers a shared touch layout with the native system input for $machine", async sample => {
   const {padState} = await vi.importActual<typeof import("./input.js")>("./input.js");
   const config = {...sample, game, bios: [], runtimeBaseUrl: "/"} as Parameters<typeof mountMame>[0];

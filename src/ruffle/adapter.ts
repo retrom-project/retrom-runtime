@@ -60,6 +60,7 @@ export async function mountRuffle(config: RuffleParameters, target: HTMLElement,
 
   const active = () => {if (exited) {throw new Error("RUFFLE_RUNTIME_STOPPED");}};
   return {
+    touchGamepad: {auxiliary: [{index: 9, label: "Enter", side: "center-right"}]},
     canvasLayout: "CORE", gamepadCursor,
     checkpoint: async () => {active(); return storage.checkpoint();},
     acknowledgeCheckpoint: async (checkpoint) => {active(); await storage.acknowledge(checkpoint);},

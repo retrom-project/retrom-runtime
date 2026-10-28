@@ -3,7 +3,21 @@ import {afterEach, expect, it, vi} from "vitest";
 import {mountPx68k as mount} from "./adapter.js";
 import {decodeCheckpoint, encodeCheckpoint} from "./state.js";
 import {px68kFixture} from "../../tests/px68k-adapter-fixture.js";
+import {adapterTouchFixture} from "../../tests/adapter-touch-fixture.js";
 afterEach(() => {vi.restoreAllMocks(); vi.unstubAllGlobals(); document.body.replaceChildren();});
+it("operates native TRIG1 through the virtual pad and releases it when hidden", async () => {
+  const f = px68kFixture();
+  const player = await mountPx68k(f.config, f.target, window, null, vi.fn(), vi.fn(), undefined, f.loader);
+  let touch: ReturnType<typeof adapterTouchFixture> | undefined;
+  try {
+    touch = adapterTouchFixture(player);
+    touch.press('[data-face="bottom"]'); f.frame(100);
+    expect(f.core._retrom_step).toHaveBeenLastCalledWith(1, 0);
+    expect(f.core._retrom_key).not.toHaveBeenCalled();
+    await touch.touch.setEnabled(false); f.frame(120);
+    expect(f.core._retrom_step).toHaveBeenLastCalledWith(0, 0);
+  } finally {touch?.dispose(); await player.exit();}
+});
 it("sends standard bottom/right as TRIG1/TRIG2 without injecting Escape, and keeps keyboard input independent", async () => {
   const f = px68kFixture();
   const buttons = Array.from({length: 16}, () => ({pressed: false, touched: false, value: 0}));

@@ -32,6 +32,14 @@ it("maps Atom directions and action to separate keyboard keys without joystick i
   expect(padState([pad([14, 12, 0])], "atom")).toEqual({axes: [0, 0], buttons: [], keys: [32, 59, 122]});
   expect(padState([pad([], [.8, .8])], "atom")).toEqual({axes: [0, 0], buttons: [], keys: [46, 120]});
 });
+it.each([[4, 304], [5, 305]])("maps Atom auxiliary button %i to its single modifier key %i and releases it", (button, key) => {
+  const core = {_retrom_mame_key: vi.fn(), _retrom_mame_button: vi.fn(), _retrom_mame_axis: vi.fn()};
+  const input = new MameInput(core, "atom");
+  input.poll([pad([button])]); input.poll([]);
+  expect(core._retrom_mame_key.mock.calls).toEqual([[key, 1], [key, 0]]);
+  expect(core._retrom_mame_button).not.toHaveBeenCalled();
+  expect(core._retrom_mame_axis).toHaveBeenLastCalledWith(1, 0);
+});
 it("maps PV-1000 directions, fire and start to native digital controls only", () => {
   expect(padState([pad([15, 0, 9])], "pv1000")).toEqual({axes: [0, 0], buttons: [0, 3, 7], keys: []});
   const core = {_retrom_mame_key: vi.fn(), _retrom_mame_button: vi.fn(), _retrom_mame_axis: vi.fn()};

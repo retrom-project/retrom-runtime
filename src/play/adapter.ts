@@ -1,3 +1,4 @@
+import {mountCheckpointCore} from "../provider/checkpoint-core.js";
 import {abi, contractSha256} from "../content-io/identity.js";
 import {fileContentSource, type AdapterContentOptions} from "../provider/content-inputs.js";
 import type {PlayModule} from "./core.js";
@@ -12,47 +13,14 @@ export async function mountPlay(config: PlayParameters, target: HTMLElement, fra
       (restorePayload.byteLength < 1 || restorePayload.byteLength > 268435456)) {throw new Error("PLAY_RUNTIME_CONFIG_INVALID");}
   signal?.throwIfAborted();
   const loaded = await loader(config, frameWindow, signal, content?.contentSession, content?.reportProgress);
-  let started: Awaited<ReturnType<typeof startPlay>>;
-  try {
-    if (!validPlayModule(loaded.module)) {throw new Error("PLAY_CORE_ABI_MISMATCH");}
-    signal?.throwIfAborted();
-    started = await startPlay(loaded.module, loaded.assets, config, target, restorePayload, reportFailure, signal, content);
-  } catch (error) {loaded.close(); throw error;}
-  const {core, reader} = started;
-  let exited = false;
-  const exit = async () => {
-    if (exited) {return;}
-    exited = true; signal?.removeEventListener("abort", abort);
-    try {await core.stop();} finally {try {await reader.close();} finally {loaded.close();}}
-  };
-  const abort = () => {void exit();};
-  if (signal?.aborted) {await exit(); signal.throwIfAborted();}
-  signal?.addEventListener("abort", abort, {once: true});
-  const requireActive = () => {if (exited) {throw new Error("PLAY_RUNTIME_EXITED");}};
-  return {
-    checkpoint: async () => {
-      requireActive();
-      const value = await core.checkpoint();
-      requireActive();
-      if (!ArrayBuffer.isView(value) || value.byteLength < 1 || value.byteLength > 268435456) {
-        throw new Error("PLAY_CHECKPOINT_INVALID");
-      }
-      const bytes = new Uint8Array(value.byteLength); bytes.set(value);
-      return {bytes, format: "play-state-v1"};
+  return mountCheckpointCore({
+    start: async () => {
+      if (!validPlayModule(loaded.module)) {throw new Error("PLAY_CORE_ABI_MISMATCH");}
+      signal?.throwIfAborted();
+      return startPlay(loaded.module, loaded.assets, config, target, restorePayload, reportFailure, signal, content);
     },
-    exit,
-    getCanvas: () => exited ? null : core.canvas,
-    getFrameCount: () => exited ? null : core.frameCount(),
-    getCheckpointAvailability: () => exited ? {available: false, blocker: "NOT_READY"} : {available: true, blocker: null},
-    pause: async () => {requireActive(); await core.pause();},
-    resume: async () => {requireActive(); await core.resume();},
-    screenshot: async () => {
-      requireActive();
-      const blob = await core.screenshot();
-      return new Blob([await blob.arrayBuffer()], {type: blob.type});
-    },
-    setVolume: null,
-  };
+    closeModule: () => loaded.close(), checkpointFormat: "play-state-v1", errorPrefix: "PLAY", signal,
+  });
 }
 
 async function startPlay(module: PlayModule, assets: Readonly<Record<string, string>>, config: PlayParameters, target: HTMLElement, restorePayload: Uint8Array | null,

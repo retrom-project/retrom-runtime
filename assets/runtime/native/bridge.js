@@ -1267,33 +1267,30 @@
         return [{ id: `${category}:${id}`, label: (name || `\u89D2\u8272 ${id}`).slice(0, 160) }];
       });
     }
-    function editorSkillRows(selectedActorId = null) {
-      let party = global.$gameParty, source = global.$dataSkills;
-      if (typeof party.members != "function" || !Array.isArray(source))
-        throw new Error("RPG_GAME_EDITOR_UNAVAILABLE");
-      let skills = source.slice(1).filter((skill) => skill && Number.isSafeInteger(skill.id) && skill.id > 0 && String(skill.name || "").trim());
-      return party.members().flatMap((actor) => {
-        if (!actor || typeof actor.actorId != "function" || typeof actor.isLearnedSkill != "function") return [];
-        let actorId = actor.actorId();
-        if (!Number.isSafeInteger(actorId) || actorId < 1) return [];
-        if (selectedActorId !== null && actorId !== selectedActorId) return [];
-        let actorName = typeof actor.name == "function" ? actor.name() : `\u89D2\u8272 ${actorId}`;
-        return skills.map((skill) => editorEntry(
-          `${actorId}:${skill.id}`,
-          selectedActorId === null ? `${actorName} \xB7 ${String(skill.name).trim()}` : String(skill.name).trim(),
-          !!actor.isLearnedSkill(skill.id)
-        ));
-      });
-    }
-    function editorStateRows(selectedActorId = null) {
-      let party = global.$gameParty, source = global.$dataStates;
+    function editorRowsForActors(source, selectedActorId, requiredMethod, rows) {
+      let party = global.$gameParty;
       if (typeof party.members != "function" || !Array.isArray(source))
         throw new Error("RPG_GAME_EDITOR_UNAVAILABLE");
       return party.members().flatMap((actor) => {
-        if (!actor || typeof actor.actorId != "function" || typeof actor.isStateAffected != "function") return [];
+        if (!actor || typeof actor.actorId != "function" || typeof actor[requiredMethod] != "function") return [];
         let actorId = actor.actorId();
         if (!Number.isSafeInteger(actorId) || actorId < 1 || selectedActorId !== null && actorId !== selectedActorId) return [];
-        let deathStateId = typeof actor.deathStateId == "function" ? actor.deathStateId() : 1, actorName = typeof actor.name == "function" ? actor.name() : `\u89D2\u8272 ${actorId}`;
+        let actorName = typeof actor.name == "function" ? actor.name() : `\u89D2\u8272 ${actorId}`;
+        return rows(actor, actorId, actorName);
+      });
+    }
+    function editorSkillRows(selectedActorId = null) {
+      let source = global.$dataSkills;
+      return editorRowsForActors(source, selectedActorId, "isLearnedSkill", (actor, actorId, actorName) => source.slice(1).filter((skill) => skill && Number.isSafeInteger(skill.id) && skill.id > 0 && String(skill.name || "").trim()).map((skill) => editorEntry(
+        `${actorId}:${skill.id}`,
+        selectedActorId === null ? `${actorName} \xB7 ${String(skill.name).trim()}` : String(skill.name).trim(),
+        !!actor.isLearnedSkill(skill.id)
+      )));
+    }
+    function editorStateRows(selectedActorId = null) {
+      let source = global.$dataStates;
+      return editorRowsForActors(source, selectedActorId, "isStateAffected", (actor, actorId, actorName) => {
+        let deathStateId = typeof actor.deathStateId == "function" ? actor.deathStateId() : 1;
         return source.slice(1).filter((state) => state && Number.isSafeInteger(state.id) && state.id > 0 && state.id !== deathStateId).map((state) => {
           let name = String(state.name || "").trim() || `\u72B6\u6001 ${state.id}`;
           return editorEntry(
@@ -1305,14 +1302,9 @@
       });
     }
     function editorClassRows(selectedActorId = null) {
-      let party = global.$gameParty, source = global.$dataClasses;
-      if (typeof party.members != "function" || !Array.isArray(source))
-        throw new Error("RPG_GAME_EDITOR_UNAVAILABLE");
-      return party.members().flatMap((actor) => {
-        if (!actor || typeof actor.actorId != "function" || typeof actor.currentClass != "function") return [];
-        let actorId = actor.actorId();
-        if (!Number.isSafeInteger(actorId) || actorId < 1 || selectedActorId !== null && actorId !== selectedActorId) return [];
-        let actorName = typeof actor.name == "function" ? actor.name() : `\u89D2\u8272 ${actorId}`, currentId = actor.currentClass()?.id;
+      let source = global.$dataClasses;
+      return editorRowsForActors(source, selectedActorId, "currentClass", (actor, actorId, actorName) => {
+        let currentId = actor.currentClass()?.id;
         return source.slice(1).filter((gameClass) => gameClass && Number.isSafeInteger(gameClass.id) && gameClass.id > 0).map((gameClass) => {
           let name = String(gameClass.name || "").trim() || `\u804C\u4E1A ${gameClass.id}`;
           return editorEntry(

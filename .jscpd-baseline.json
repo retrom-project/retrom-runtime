@@ -1,27 +1,4 @@
 {
   "version": 1,
-  "fingerprints": {
-    "013b96a418e8dbac": 1,
-    "0bf35269d3ddce40": 1,
-    "142ce47eada020f6": 1,
-    "2f8250f37d10467a": 1,
-    "41dd80b5794de3c9": 1,
-    "46eaabd1856b34be": 1,
-    "5b39ee40568f9562": 1,
-    "61054f9d1e1b69c5": 1,
-    "6272ca278b4ea3d2": 1,
-    "7cc95f571147f749": 1,
-    "9bec7d476b058bea": 1,
-    "af4301416aaca348": 1,
-    "b0be7b7a0565bc46": 1,
-    "ce9b1019d3346bdf": 1,
-    "d35e4f15b0d556bb": 1,
-    "d83e6a3ec6563c80": 1,
-    "deefb61e79f12c36": 1,
-    "e31b1da45977a0b2": 1,
-    "e6d67d762c432cb8": 1,
-    "e7b7c8a84c4d1202": 1,
-    "ee3402ae938b9714": 1,
-    "fab93ed2b79e3ab5": 1
-  }
+  "fingerprints": {}
 }

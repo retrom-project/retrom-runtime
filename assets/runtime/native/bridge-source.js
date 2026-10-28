@@ -476,21 +476,27 @@ export function installRpgRuntimeNativeBridge(global, inputFilter) {
     });
   }
 
-  function editorSkillRows(selectedActorId = null) {
+  function editorRowsForActors(source, selectedActorId, requiredMethod, rows) {
     const party = global.$gameParty;
-    const source = global.$dataSkills;
     if (typeof party.members !== "function" || !Array.isArray(source)) {
       throw new Error("RPG_GAME_EDITOR_UNAVAILABLE");
     }
-    const skills = source.slice(1).filter((skill) => skill && Number.isSafeInteger(skill.id) &&
-      skill.id > 0 && String(skill.name || "").trim());
     return party.members().flatMap((actor) => {
       if (!actor || typeof actor.actorId !== "function" ||
-        typeof actor.isLearnedSkill !== "function") return [];
+        typeof actor[requiredMethod] !== "function") return [];
       const actorId = actor.actorId();
-      if (!Number.isSafeInteger(actorId) || actorId < 1) return [];
-      if (selectedActorId !== null && actorId !== selectedActorId) return [];
+      if (!Number.isSafeInteger(actorId) || actorId < 1 ||
+        selectedActorId !== null && actorId !== selectedActorId) return [];
       const actorName = typeof actor.name === "function" ? actor.name() : `角色 ${actorId}`;
+      return rows(actor, actorId, actorName);
+    });
+  }
+
+  function editorSkillRows(selectedActorId = null) {
+    const source = global.$dataSkills;
+    return editorRowsForActors(source, selectedActorId, "isLearnedSkill", (actor, actorId, actorName) => {
+      const skills = source.slice(1).filter((skill) => skill && Number.isSafeInteger(skill.id) &&
+        skill.id > 0 && String(skill.name || "").trim());
       return skills.map((skill) => editorEntry(`${actorId}:${skill.id}`,
         selectedActorId === null ? `${actorName} · ${String(skill.name).trim()}` : String(skill.name).trim(),
         Boolean(actor.isLearnedSkill(skill.id))));
@@ -498,19 +504,9 @@ export function installRpgRuntimeNativeBridge(global, inputFilter) {
   }
 
   function editorStateRows(selectedActorId = null) {
-    const party = global.$gameParty;
     const source = global.$dataStates;
-    if (typeof party.members !== "function" || !Array.isArray(source)) {
-      throw new Error("RPG_GAME_EDITOR_UNAVAILABLE");
-    }
-    return party.members().flatMap((actor) => {
-      if (!actor || typeof actor.actorId !== "function" ||
-        typeof actor.isStateAffected !== "function") return [];
-      const actorId = actor.actorId();
-      if (!Number.isSafeInteger(actorId) || actorId < 1 ||
-        selectedActorId !== null && actorId !== selectedActorId) return [];
+    return editorRowsForActors(source, selectedActorId, "isStateAffected", (actor, actorId, actorName) => {
       const deathStateId = typeof actor.deathStateId === "function" ? actor.deathStateId() : 1;
-      const actorName = typeof actor.name === "function" ? actor.name() : `角色 ${actorId}`;
       return source.slice(1).filter((state) => state && Number.isSafeInteger(state.id) &&
         state.id > 0 && state.id !== deathStateId).map((state) => {
         const name = String(state.name || "").trim() || `状态 ${state.id}`;
@@ -522,18 +518,8 @@ export function installRpgRuntimeNativeBridge(global, inputFilter) {
   }
 
   function editorClassRows(selectedActorId = null) {
-    const party = global.$gameParty;
     const source = global.$dataClasses;
-    if (typeof party.members !== "function" || !Array.isArray(source)) {
-      throw new Error("RPG_GAME_EDITOR_UNAVAILABLE");
-    }
-    return party.members().flatMap((actor) => {
-      if (!actor || typeof actor.actorId !== "function" ||
-        typeof actor.currentClass !== "function") return [];
-      const actorId = actor.actorId();
-      if (!Number.isSafeInteger(actorId) || actorId < 1 ||
-        selectedActorId !== null && actorId !== selectedActorId) return [];
-      const actorName = typeof actor.name === "function" ? actor.name() : `角色 ${actorId}`;
+    return editorRowsForActors(source, selectedActorId, "currentClass", (actor, actorId, actorName) => {
       const currentId = actor.currentClass()?.id;
       return source.slice(1).filter((gameClass) => gameClass &&
         Number.isSafeInteger(gameClass.id) && gameClass.id > 0).map((gameClass) => {

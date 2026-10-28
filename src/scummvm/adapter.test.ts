@@ -6,6 +6,7 @@ import {mountScummvm} from "./adapter.js";
 import {decodeScummvmSave, encodeScummvmSave, saveDigest} from "./checkpoint.js";
 import {selectionConfig, type ScummvmParameters} from "./parameters.js";
 import type {ScummvmBridge} from "./bridge.js";
+import {adapterTouchFixture} from "../../tests/adapter-touch-fixture.js";
 
 beforeEach(() => {
   vi.stubGlobal("crypto", webcrypto);
@@ -61,6 +62,21 @@ async function restoreFixture() {
 }
 
 describe("ScummVM browser adapter", () => {
+  it("exposes virtual analog movement to the native canvas realm and clears it when hidden", async () => {
+    const f = await fixture(), adapter = await f.mount();
+    let touch: ReturnType<typeof adapterTouchFixture> | undefined;
+    try {
+      touch = adapterTouchFixture(adapter);
+      const canvas = f.factory.mock.calls[0][0].canvas as HTMLCanvasElement;
+      const realm = canvas.ownerDocument.defaultView!;
+      touch.press('[data-control="analog"]');
+      expect(realm.navigator.getGamepads()[0]?.axes[0]).toBeGreaterThan(0);
+      expect(realm.navigator.getGamepads()[0]?.axes[2]).toBe(0);
+      await touch.touch.setEnabled(false);
+      expect(realm.navigator.getGamepads()[0]).toBeNull();
+      expect(touch.root.hidden).toBe(true);
+    } finally {touch?.dispose(); f.host().onEngineStopped(0); await adapter.exit();}
+  });
   it("keeps automatic restore mounting until the exact slot is confirmed by the engine", async () => {
     const f = await fixture(false, false);
     let mounted = false;

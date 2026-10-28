@@ -2,6 +2,7 @@ import {managedAdapterFixture} from "../../tests/managed-adapter-fixture.js";
 import {afterEach, expect, it, vi} from "vitest";
 import {mountNP2 as mount} from "./adapter.js";
 import type {NP2Core} from "./core.js";
+import {adapterTouchFixture} from "../../tests/adapter-touch-fixture.js";
 afterEach(() => {vi.unstubAllGlobals(); document.body.replaceChildren();});
 it("transfers execution state and disk writes into a different runtime instance and cleans up", async () => {
   const disk = new Uint8Array(544), header = new DataView(disk.buffer);
@@ -20,6 +21,14 @@ it("transfers execution state and disk writes into a different runtime instance 
     cores.push(core); return core;
   };
   const first = await mountNP2(config, document.body, window, null, vi.fn(), vi.fn(), undefined, loader);
+  const touch = adapterTouchFixture(first);
+  try {
+    touch.press('[data-face="bottom"]');
+    await vi.waitFor(() => expect(cores[0]._retrom_key).toHaveBeenCalledWith(0x34, 1));
+    await touch.touch.setEnabled(false);
+    await vi.waitFor(() => expect(cores[0]._retrom_key).toHaveBeenCalledWith(0x34, 0));
+    expect(touch.root.hidden).toBe(true);
+  } finally {touch.dispose();}
   vi.spyOn(first.getCanvas()!, "toBlob").mockImplementation(callback => callback({
     size: 1, type: "image/png", arrayBuffer: async () => new Uint8Array([1]).buffer,
   } as Blob));

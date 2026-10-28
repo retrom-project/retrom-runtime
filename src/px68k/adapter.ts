@@ -7,6 +7,7 @@ import {loadCore, withBytes, type ModuleLoader, type Px68kParameters} from "./co
 import {checkpointFormat, decodeCheckpoint, encodeCheckpoint} from "./state.js";
 import {keyCode, keyboardPadMask, padMask} from "./input.js";
 import {Px68kAudio} from "./audio.js";
+import {touchGamepadProfiles} from "../provider/touch-gamepad-layout.js";
 export async function mountPx68k(config: Px68kParameters, target: HTMLElement, frameWindow: Window,
   restorePayload: Uint8Array | null, progress: RuntimeProgressReporter, reportFailure: (error: Error) => void,
   signal?: AbortSignal, loader?: ModuleLoader, content?: AdapterContentOptions): Promise<MountedRuntimeAdapter> {
@@ -70,6 +71,7 @@ export async function mountPx68k(config: Px68kParameters, target: HTMLElement, f
     events.listen(); unlock(); loop.start();
   } catch (error) {await exit(); throw error;}
   return {
+    touchGamepad: touchGamepadProfiles.action,
     exit, getCanvas: () => stopped ? null : canvas, getFrameCount: () => frames,
     getCheckpointAvailability: () => !stopped && core._retrom_ready() === 1 ? {available: true, blocker: null} : {available: false, blocker: "NOT_READY"},
     checkpoint: async () => {

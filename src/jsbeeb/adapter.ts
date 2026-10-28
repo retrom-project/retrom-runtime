@@ -75,6 +75,9 @@ export async function mountJsbeeb(config: JsbeebParameters, target: HTMLElement,
   } catch (error) {cleanup(); throw error;}
   const active = () => {if (exited) {throw new Error("JSBEEB_STOPPED");}};
   return {
+    touchGamepad: {inputWindow: iframe.contentWindow as Window,
+      faces: [{index: 0, label: "回车", slot: "bottom"}],
+      auxiliary: [{index: 9, label: "Space", side: "center-right"}]},
     canvasLayout: "CORE",
     checkpoint: async () => {
       active();

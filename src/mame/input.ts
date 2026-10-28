@@ -21,7 +21,7 @@ export function padState(pads: readonly (Gamepad | null)[], machine: string = "a
     return {axes: [0, 0], buttons: [], keys: keys.sort((a, b) => a - b)};
   }
   if (machine === "atom") {
-    const keys = [[0, 32], [1, 13], [8, 27], [9, 13]].filter(([id]) => pressed(id)).map(([, key]) => key);
+    const keys = [[0, 32], [1, 13], [4, 304], [5, 305], [8, 27], [9, 13]].filter(([id]) => pressed(id)).map(([, key]) => key);
     direction.forEach((down, index) => {if (down) {keys.push([59, 46, 122, 120][index]);}});
     return {axes: [0, 0], buttons: [], keys: [...new Set(keys)].sort((a, b) => a - b)};
   }

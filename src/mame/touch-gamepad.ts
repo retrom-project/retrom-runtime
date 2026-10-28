@@ -8,6 +8,20 @@ export function mameTouchGamepad(machine: string, arcade = false): TouchGamepadL
       {index: 4, label: "L", side: "left"}, {index: 5, label: "R", side: "right"},
     ]};
   }
+  if (machine === "apple2p" || machine === "apple2e") {
+    return {layout: "JOYSTICK", auxiliary: [
+      {index: 2, label: "Space", side: "left"}, {index: 3, label: "Enter", side: "right"},
+      {index: 8, label: "Esc", side: "center-left"}, {index: 9, label: "1", side: "center-right"},
+    ]};
+  }
+  if (machine === "atom") {
+    return {faces: [
+      {index: 0, label: "空格", slot: "bottom"}, {index: 1, label: "回车", slot: "right"},
+    ], auxiliary: [
+      {index: 4, label: "Shift", side: "left"}, {index: 5, label: "REPT", side: "right"},
+      {index: 8, label: "Esc", side: "center-left"},
+    ]};
+  }
   if (machine === "coleco") {
     return {...touchGamepadProfiles.twoButton, auxiliary: [
       {index: 8, label: "2", side: "center-left"}, {index: 9, label: "1", side: "center-right"},

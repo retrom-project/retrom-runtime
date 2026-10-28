@@ -2,6 +2,7 @@ import {targetContentFixture} from "../../tests/target-content-fixture.js";
 // @vitest-environment jsdom
 import {afterEach, expect, it, vi} from "vitest";
 import {mountJsbeeb} from "./adapter.js";
+import {adapterTouchFixture} from "../../tests/adapter-touch-fixture.js";
 
 afterEach(() => {vi.restoreAllMocks(); document.body.replaceChildren();});
 
@@ -31,6 +32,9 @@ it("boots with verified external ROM bytes and restores a checkpoint in a new fr
     const iframe = target.querySelector("iframe")!;
     const focus = vi.spyOn(iframe, "focus");
     const child = iframe.contentWindow as Window & {RetromJsbeeb?: object};
+    child.document.open();
+    child.document.write("<!doctype html><html><head></head><body></body></html>");
+    child.document.close();
     const siteDocument = child.document;
     const canvas = document.createElement("canvas");
     canvas.toBlob = (callback) => callback(new Blob(["png"], {type: "image/png"}));
@@ -52,9 +56,19 @@ it("boots with verified external ROM bytes and restores a checkpoint in a new fr
     expect((frameWindow as Window & {RetromJsbeebBios?: object}).RetromJsbeebBios).toBeDefined();
     expect(await adapter.checkpoint()).toEqual({format: "jsbeeb-snapshot-gzip-v1", bytes: new Uint8Array([31, 139])});
     expect((await adapter.screenshot()).type).toBe("image/png");
+    const touch = adapterTouchFixture(adapter, frameWindow);
+    try {
+      expect(touch.realm).toBe(child);
+      touch.press('[data-face="bottom"]');
+      expect(child.navigator.getGamepads()[0]?.buttons[0].pressed).toBe(true);
+      await touch.touch.setEnabled(false);
+      expect(child.navigator.getGamepads()[0]).toBeNull();
+      expect(touch.root.hidden).toBe(true);
+    } finally {touch.dispose();}
+    const focusCalls = focus.mock.calls.length;
     await adapter.exit();
     siteDocument.dispatchEvent(new Event("pointerdown", {bubbles: true}));
-    expect(focus).toHaveBeenCalledTimes(3);
+    expect(focus).toHaveBeenCalledTimes(focusCalls);
     expect(stop).toHaveBeenCalledOnce();
     expect((frameWindow as Window & {RetromJsbeebBios?: object}).RetromJsbeebBios).toBeUndefined();
     expect(target.querySelector("iframe")).toBeNull();

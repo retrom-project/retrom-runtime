@@ -42,6 +42,10 @@ export async function mountNP2(config: NP2Parameters, target: HTMLElement, win: 
   } catch (error) {await exit(); throw error;}
   const active = () => {if (stopped) {throw new Error("NP2KAI_RUNTIME_EXITED");}};
   return {
+    touchGamepad: {faces: [
+      {index: 0, label: "空格", slot: "bottom"}, {index: 1, label: "Esc", slot: "right"},
+      {index: 2, label: "Z", slot: "left"}, {index: 3, label: "X", slot: "top"},
+    ], auxiliary: [{index: 9, label: "Enter", side: "center-right"}]},
     async checkpoint() {
       active(); const wasPaused = paused; core._retrom_pause(1); controls.pause(true);
       try {

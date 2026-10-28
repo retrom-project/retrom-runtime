@@ -11,7 +11,7 @@ export default defineConfig({
   forbidOnly: true,
   timeout: 30000,
   outputDir: resolve(".artifacts/content-io/ci"),
-  reporter: [["list"], ["json", {outputFile: ".artifacts/content-io/ci/results.json"}]],
+  reporter: [["list"], ["json", {outputFile: resolve(".artifacts/content-io/ci/results.json")}]],
   use: {
     headless: true,
     browserName: "chromium",

@@ -24,7 +24,7 @@ The [native baseline](https://github.com/kucherenko/jscpd/blob/master/docs/rust.
 
 `test:content-io:ci` runs the public synthetic Content I/O fixtures in headless Chromium: preload, fallback, cancellation, persistence, cross-Session reuse and bounded windows. It needs no PFB or downloaded game core. To reuse a local browser, set `RETROM_CHROME_EXECUTABLE`. Results and failure traces go to `.artifacts/content-io/ci/`; private game and host-product acceptance retain their existing stage runners.
 
-On PRs, the browser job runs alongside the existing checks and Provider candidate build. The `quality` job requires both jobs to succeed, including when a dependency fails, is cancelled or is skipped. Configure that GitHub Actions check as required on master. Source quality checks, script tests, support-catalog verification and public browser tests belong to this workflow.
+On PRs, the browser job runs alongside the existing checks and Provider candidate build. The `quality` job requires both jobs to succeed, including when a dependency fails, is cancelled or is skipped. Source quality checks, script tests, support-catalog verification and public browser tests belong to this workflow.
 
 Tagged releases validate the tag identity and source constraints, build the formal release and validate the package before publishing. Lint, type checking, unit/script tests, support-catalog verification and browser tests run before tagging through the PR quality gate. Stable tags must already be on master; RC tags may come from a feature branch after that branch passes the PR gate.
 

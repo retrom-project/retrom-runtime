@@ -18,21 +18,21 @@ export async function ordinaryArchive(locator, signal) {
 export async function fixedXorArchive(locator, signal, providedArchive) {
   const archive = providedArchive ?? await ordinaryArchive(locator, signal);
   if (!archive || archive.format || !archive.entries?.length) {return null;}
-  const seeds = new Set(), probes = [];
+  const seeds = new Set(), probes = [], short = [];
   for (const entry of archive.entries) {
-    if (entry.flags !== 0x80000000 || entry.size > 4 * 1024 * 1024 || seeds.has(entry.adler)) {continue;}
+    if (entry.flags !== 0x80000000 || entry.size > 4 * 1024 * 1024 || seeds.has(entry.adler) || entry.size < 32 && short.length === 8) {continue;}
     const chunks = [];
     for await (const bytes of resourceBytes(locator, entry, signal)) {chunks.push(bytes);}
-    probes.push({bytes: Buffer.concat(chunks), adler: entry.adler}); seeds.add(entry.adler);
+    (entry.size < 32 ? short : probes).push({bytes: Buffer.concat(chunks), adler: entry.adler}); seeds.add(entry.adler);
     if (probes.length === 8) {break;}
   }
-  if (probes.length && probes.every(probe => adler32(probe.bytes) === probe.adler)) {return {plaintext: true};}
-  const authenticated = probes.filter(probe => probe.bytes.length >= 32);
-  if (authenticated.length < 3) {return null;}
+  const clear = [...probes, ...short];
+  if (clear.length && clear.every(probe => adler32(probe.bytes) === probe.adler)) {return {plaintext: true};}
+  if (probes.length < 3) {return null;}
   let key = null;
   for (let candidate = 1; candidate < 256; candidate++) {
     signal?.throwIfAborted();
-    if (authenticated.every(probe => {
+    if (probes.every(probe => {
       const decoded = Buffer.from(probe.bytes);
       for (let i = 0; i < decoded.length; i++) {decoded[i] ^= candidate;}
       return adler32(decoded) === probe.adler;

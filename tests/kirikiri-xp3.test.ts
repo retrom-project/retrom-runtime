@@ -153,6 +153,14 @@ it("does not infer protection from short clear resources merely because a native
   const request = await withModule(ordinaryXP3(items));
   expect(await normalizeContent(request)).toEqual({files: request.files});
 });
+it("keeps short members from exhausting the independent XOR sample budget", async () => {
+  const short = Array.from({length: 8}, (_, index) => ({name: `short-${index}.dat`, bytes: Buffer.from(`tiny-${index}`)}));
+  const items = [...short, ...resources()], request = await input(ordinaryXP3(items, 0x93));
+  const result = await normalizeContent(request);
+  expect(result.normalization).toMatchObject({archiveCount: 1, verifiedEntries: 11});
+  const output = decodedResources(await readFile(result.files[0].path!));
+  for (const item of items) expect(output.get(item.name)).toEqual(item.bytes);
+});
 it("does not infer a fixed XOR from one resource or repeated checksums", async () => {
   for (const items of [resources().slice(0, 1), resources().map(item => ({...item, bytes: resources()[0].bytes}))]) {
     const request = await input(ordinaryXP3(items, 0x93));

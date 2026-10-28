@@ -20,7 +20,7 @@ const profile = () => ({mask: 0x2c5, offset: 0x357, prologOrder: [1, 2, 0],
 const sha = (bytes: Buffer) => createHash("sha256").update(bytes).digest("hex");
 
 // Entirely synthetic PE32 and x86 byte-emission patterns, never executable inputs.
-function fixture(branchProlog = false) {
+function fixture(branchProlog = false, callback = false) {
   const b = Buffer.alloc(0x6000, 0);
   b.write("MZ"); b.writeUInt32LE(0x80, 0x3c); b.write("PE\0\0", 0x80, "binary");
   b.writeUInt16LE(0x14c, 0x84); b.writeUInt16LE(2, 0x86); b.writeUInt16LE(0xe0, 0x94);
@@ -70,6 +70,19 @@ function fixture(branchProlog = false) {
   } else dispatch(0x580, 0x2500, 0x650, profile().prologOrder, prologs);
   dispatch(0x800, 0x2520, 0x900, profile().evenBranchOrder, evens);
   dispatch(0xd00, 0x2550, 0xe00, profile().oddBranchOrder, odds);
+  if (callback) {
+    b.fill(0, 0x440, 0x4c0);
+    // Extraction callback ABI (24 bytes), seed field 20, boundary and the
+    // same region consumer before/after seed ^ (seed >>> 16).
+    put(0x440, [0x83, 0x3e, 24, 0x8b, 0x76, 20, 0x8b, 0xc6, 0x25, ...imm(profile().mask), 0x05, ...imm(profile().offset)]);
+    call(0x458, 0x4d0);
+    put(0x45d, [0x8b, 0xc6, 0xc1, 0xe8, 16, 0x33, 0xc6]); call(0x464, 0x4d0);
+    put(0x480, [0x83, 0xe3, 127, 0xc1, 0xef, 7, 0x8b, 0xc3]); call(0x488, 0x540);
+    put(0x490, [0x57, 0xff, 0xd6, 0xf7, 0xd7, 0x57, 0xff, 0xd6, 0xc3]);
+    // Legacy emitters pass opcode arguments in registers. The control table
+    // is a direct immediate in the table-load prolog rather than a getter.
+    put(0x6b0, [0xb2, 0xbe, 0xb9, ...imm(va(0x3000)), 0xb2, 0x86, 0x68, ...imm(1023), 0xc3]);
+  }
   return b;
 }
 
@@ -120,6 +133,17 @@ describe("classic Cx expression interpreter", () => {
 });
 
 describe("bounded static PE recovery", () => {
+  it("recovers the legacy extraction-callback boundary and direct-table generator without stored game profiles", () => {
+    const b = fixture(true, true);
+    const found = discoverCxProfiles(b);
+    expect(found).toHaveLength(1); expect(found[0]).toMatchObject(profile());
+    const missingFold = Buffer.from(b); missingFold[0x460] = 15;
+    expect(discoverCxProfiles(missingFold)).toEqual([]);
+    const wrongABI = Buffer.from(b); wrongABI[0x442] = 20;
+    expect(discoverCxProfiles(wrongABI)).toEqual([]);
+    const unrelatedBuilder = Buffer.from(b); unrelatedBuilder[0x487] = 0xc2;
+    expect(discoverCxProfiles(unrelatedBuilder)).toEqual([]);
+  });
   it("recovers a dual-key Tiny constructor and its first-byte consumer through the vtable", () => {
     expect(discoverTinyProfiles(tinyFirstBytePE())).toMatchObject([
       {xorConstant: 0x12345678, zeroFallback: 0x55, firstByte: {zeroFallback: 0x69}}

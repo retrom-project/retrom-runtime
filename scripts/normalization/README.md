@@ -30,8 +30,10 @@ through ordinary entry recognition, validation, identity and STORE packaging;
 unmatched is neither import failure nor a claim of playable support.
 
 Plans cover the whole game rather than stopping after its first protected file.
-The CxFilterFS plugin groups related XP3s by table format and salt, confirms the
-filter for each group, and preserves every outer archive path. Ordinary XP3,
+The KiriKiri plugin groups related CxFilterFS XP3s by table format and salt, confirms the
+filter for each group, and preserves every outer archive path. It also handles
+authenticated fixed-XOR/native filters in ordinary-name XP3s and bounded PE
+overlays; see [Kiri import normalization](../kirikiri/README.md). Ordinary XP3,
 unhandled variants and unrelated files retain their bytes. Base/patch archives
 remain separate so their engine-defined overlay order is preserved. Shared XP3,
 bounded locator, path, digest and static-PE helpers own common format primitives.

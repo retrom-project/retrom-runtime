@@ -55,11 +55,10 @@ Use Node.js 24 and the npm version recorded in [package.json](package.json).
 
 ```bash
 npm ci
-npm run lint
-npm run typecheck
-npm test
+npm run ci:checks
+npx playwright install --with-deps chromium
+npm run test:content-io:ci
 npm run package:check
-npm run docs:platforms:check
 ```
 
 `npm test` builds the runtime before running tests. See [Development and releases](docs/development.md) for Provider packaging and release checks.

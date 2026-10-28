@@ -1,4 +1,5 @@
 import {buildVersion} from "./release-version.mjs";
+import {assertFormalCoreSources} from "./release-source-policy.mjs";
 import {validEmulatorJsDevelopmentSource} from "./emulatorjs-development-forks.mjs";
 import {currentInput, materializeEmulatorJsProviderInput} from "./emulatorjs-provider-input.mjs";
 import {asOpenBORCandidateSource, stageOpenBORCandidate} from "./openbor-candidate.mjs";
@@ -48,7 +49,10 @@ const devReleaseOverrides = parseDevReleaseOverrides(
 const candidateReleaseOutputs = new Map();
 const commit = releaseCommit();
 const version = buildVersion();
-if (formalBuild) {assertFormalReleaseEnvironment(commit, version);}
+if (formalBuild) {
+  assertFormalReleaseEnvironment(commit, version);
+  assertFormalCoreSources(sources, emulatorJsSourceCatalog, process.env.GITHUB_REF_NAME);
+}
 const stage = new URL("../release/stage/", import.meta.url);
 const output = new URL("../release/", import.meta.url);
 await rm(stage, { recursive: true, force: true });

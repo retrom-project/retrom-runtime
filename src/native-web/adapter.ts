@@ -1,3 +1,4 @@
+import {completeChannelReply} from "../provider/channel-reply.js";
 import {isPluginSavePath, type RpgPluginFile} from "./plugin-files.js";
 import type {RuntimeHostShortcutV1, RuntimeTouchGamepadV1} from "../provider/module-api.js";
 import {NativeInputDiagnostics} from "./input-diagnostics.js";
@@ -289,9 +290,7 @@ export class NativeChannel {
     if (!this.pending || reply.requestId !== this.lastRequestId) {return;}
     const pending = this.pending;
     this.pending = null;
-    window.clearTimeout(pending.timer);
-    if (reply.type === "ERROR") {pending.reject(new Error(typeof reply.body.code === "string" ? reply.body.code : "RPG_NATIVE_RUNTIME_FAILED"));}
-    else {pending.resolve(reply);}
+    completeChannelReply(pending, reply, "RPG_NATIVE_RUNTIME_FAILED");
   }
 
   private receiveEvent(reply: Reply) {

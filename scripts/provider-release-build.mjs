@@ -15,104 +15,75 @@ const sourceRepository = "https://github.com/retrom-project/retrom-runtime";
 
 export async function buildRetromRuntimeProviderBundle(input) {
   validateInput(input);
-  await createEmptyDirectory(input.outputRoot);
-  await assertDirectory(input.stageRoot);
-
-  const temporaryRoot = await mkdtemp(join(input.outputRoot, ".provider-client-"));
-  try {
-  const generatedRoot = join(temporaryRoot,"content-io");
-  const generated = new Set((await buildContentAssets(generatedRoot)).files.map(file=>file.path));
-  const assetSources = new Map();
-  const assetIndex = {};
-  for (const assetPath of uniqueAssetPaths(input.manifest)) {
-    const source = generated.has(assetPath) ? join(generatedRoot,assetPath.split("/").at(-1)) : join(input.stageRoot, assetPath.replace(/^assets\//u, "runtime/"));
-    const contents = await readRegularFile(source);
-    assetSources.set(assetPath, source);
-    assetIndex[assetPath] = {sha256: sha256(contents), sizeBytes: contents.byteLength};
-  }
-  const licenseSources = await collectLicenses(input.stageRoot);
-  await addRuntimeFingerprints(input.definition, assetIndex, temporaryRoot, licenseSources);
-    const clientPath = join(temporaryRoot, "client.mjs");
-    await buildProviderClient({
-      providerVersion: input.manifest.providerVersion,
-      assetIndex,
-      entryPoint: input.entryPoint,
-      outfile: clientPath,
-    });
-    return await buildProviderBundle({
-      assetSources,
-      bundleRoot: join(input.outputRoot, `${input.manifest.providerId}-${input.manifest.providerVersion}`),
-      clientModuleBytes: await readFile(clientPath),
-      licenseSources,
-      manifest: input.manifest,
-      provenance: provenance(input),
-    });
-  } finally {
-    await rm(temporaryRoot, {force: true, recursive: true});
-  }
+  return buildMaterializedProvider(input, input.stageRoot, async (temporaryRoot) => {
+    const assets = await collectProviderAssets(input.manifest, temporaryRoot,
+      path => join(input.stageRoot, path.replace(/^assets\//u, "runtime/")));
+    const licenseSources = await collectLicenses(input.stageRoot);
+    return {...assets, licenseSources, provenance: {...provenance(input), source: {
+      repository: sourceRepository, version: input.manifest.providerVersion,
+    }}};
+  });
 }
 
 export async function buildEmulatorJsProviderBundle(input) {
   validateInput(input);
   validateSourceCatalog(input.sourceCatalog);
   requireDevelopmentForkMode(input.sourceCatalog, input.allowDevelopmentForks);
+  return buildMaterializedProvider(input, input.sourceRoot, async (temporaryRoot) => {
+    const assets = await collectProviderAssets(input.manifest, temporaryRoot,
+      path => join(input.sourceRoot, path.replace(/^assets\//u, "")), async (path, source, contents) => {
+        if (path !== "assets/4.2.3/data/src/emulator.js") {return {source, contents};}
+        const patched = join(temporaryRoot, "emulatorjs-seekable-startup.js");
+        const bytes = patchSeekableStartup(contents);
+        await writeFile(patched, bytes);
+        return {source: patched, contents: bytes};
+      });
+    verifyEmulatorJsImplementationAssets(input.definition, assets.assetIndex);
+    const licenseSources = await collectEmulatorJsLicenses(input.sourceRoot, input.sourceCatalog);
+    for (const name of ["LICENSE", "THIRD_PARTY_NOTICES.md", "EMULATORJS_THIRD_PARTY_NOTICES.md"]) {
+      licenseSources.set(`licenses/retrom-runtime/${name}`, fileURLToPath(new URL(`../${name}`, import.meta.url)));
+    }
+    return {...assets, licenseSources, provenance: {
+      ...provenance(input), overrides: input.sourceCatalog.overrides, forks: input.sourceCatalog.forks ?? [],
+      ...(input.sourceCatalog.developmentForks?.length ? {developmentForks: input.sourceCatalog.developmentForks} : {}),
+      upstreamReleases: input.sourceCatalog.releases,
+      ...(input.sourceCatalog.developmentCores?.length ? {developmentCores: input.sourceCatalog.developmentCores} : {}),
+    }};
+  });
+}
+
+/** Own the complete temporary workspace and publish the same verified bundle layout for either Provider. */
+async function buildMaterializedProvider(input, materializedRoot, prepare) {
   await createEmptyDirectory(input.outputRoot);
-  await assertDirectory(input.sourceRoot);
+  await assertDirectory(materializedRoot);
   const temporaryRoot = await mkdtemp(join(input.outputRoot, ".provider-client-"));
   try {
-  const generatedRoot = join(temporaryRoot,"content-io");
-  const generated = new Set((await buildContentAssets(generatedRoot)).files.map(file=>file.path));
-  const assetSources = new Map();
-  const assetIndex = {};
-  for (const assetPath of uniqueAssetPaths(input.manifest)) {
-    const source = generated.has(assetPath) ? join(generatedRoot,assetPath.split("/").at(-1)) : join(input.sourceRoot, assetPath.replace(/^assets\//u, ""));
-    let contents = await readRegularFile(source);
-    if (assetPath === "assets/4.2.3/data/src/emulator.js") {
-      contents = patchSeekableStartup(contents);
-      const patched = join(temporaryRoot, "emulatorjs-seekable-startup.js");
-      await writeFile(patched, contents);
-      assetSources.set(assetPath, patched);
-    } else {assetSources.set(assetPath, source);}
-    assetIndex[assetPath] = {sha256: sha256(contents), sizeBytes: contents.byteLength};
-  }
-  verifyEmulatorJsImplementationAssets(input.definition, assetIndex);
-  const licenseSources = await collectEmulatorJsLicenses(input.sourceRoot, input.sourceCatalog);
-  for (const name of ["LICENSE", "THIRD_PARTY_NOTICES.md", "EMULATORJS_THIRD_PARTY_NOTICES.md"]) {
-    licenseSources.set(`licenses/retrom-runtime/${name}`, fileURLToPath(new URL(`../${name}`, import.meta.url)));
-  }
-  await addRuntimeFingerprints(input.definition, assetIndex, temporaryRoot, licenseSources);
+    const {assetSources, assetIndex, licenseSources, provenance: sourceProvenance} = await prepare(temporaryRoot);
+    await addRuntimeFingerprints(input.definition, assetIndex, temporaryRoot, licenseSources);
     const clientPath = join(temporaryRoot, "client.mjs");
-    await buildProviderClient({
-      providerVersion: input.manifest.providerVersion,
-      assetIndex,
-      entryPoint: input.entryPoint,
-      outfile: clientPath,
-    });
-    return await buildProviderBundle({
-      assetSources,
+    await buildProviderClient({providerVersion: input.manifest.providerVersion, assetIndex,
+      entryPoint: input.entryPoint, outfile: clientPath});
+    return await buildProviderBundle({assetSources,
       bundleRoot: join(input.outputRoot, `${input.manifest.providerId}-${input.manifest.providerVersion}`),
-      clientModuleBytes: await readFile(clientPath),
-      licenseSources,
-      manifest: input.manifest,
-      provenance: {
-        ...(input.sourceTreeSha256 ? {runtimeSourceTreeSha256: input.sourceTreeSha256} : {}),
-        adapters: input.definition.adapters.map((adapter) => ({
-          abi: adapter.abi, id: adapter.id, kind: adapter.kind,
-        })).sort((left, right) => compareUtf8(left.id, right.id)),
-        build: {tool: "retrom-runtime-provider-build", version: "1"},
-        declarationSha256: sha256(canonicalJsonBytes(input.manifest)),
-        schemaVersion: 1,
-        overrides: input.sourceCatalog.overrides,
-        forks: input.sourceCatalog.forks ?? [],
-        ...(input.sourceCatalog.developmentForks?.length ? {developmentForks: input.sourceCatalog.developmentForks} : {}),
-        upstreamReleases: input.sourceCatalog.releases,
-        ...(input.sourceCatalog.developmentCores?.length
-          ? {developmentCores: input.sourceCatalog.developmentCores} : {}),
-      },
-    });
+      clientModuleBytes: await readFile(clientPath), licenseSources,
+      manifest: input.manifest, provenance: sourceProvenance});
   } finally {
     await rm(temporaryRoot, {force: true, recursive: true});
   }
+}
+
+async function collectProviderAssets(manifest, temporaryRoot, locate,
+  prepare = (_path, source, contents) => ({source, contents})) {
+  const generatedRoot = join(temporaryRoot, "content-io");
+  const generated = new Set((await buildContentAssets(generatedRoot)).files.map(file => file.path));
+  const assetSources = new Map(), assetIndex = {};
+  for (const path of uniqueAssetPaths(manifest)) {
+    const source = generated.has(path) ? join(generatedRoot, path.split("/").at(-1)) : locate(path);
+    const asset = await prepare(path, source, await readRegularFile(source));
+    assetSources.set(path, asset.source);
+    assetIndex[path] = {sha256: sha256(asset.contents), sizeBytes: asset.contents.byteLength};
+  }
+  return {assetSources, assetIndex};
 }
 
 async function addRuntimeFingerprints(definition, assetIndex, temporaryRoot, sources) {
@@ -165,10 +136,6 @@ function provenance(input) {
     build: {tool: "retrom-runtime-provider-build", version: "1"},
     declarationSha256: sha256(canonicalJsonBytes(input.manifest)),
     schemaVersion: 1,
-    source: {
-      repository: sourceRepository,
-      version: input.manifest.providerVersion,
-    },
   };
 }
 

@@ -6,15 +6,27 @@ Use Node.js 24 and the npm version recorded in [package.json](../package.json).
 
 ```bash
 npm ci
-npm run lint
-npm run typecheck
-npm test
-npm run build
+npm run ci:checks
+npx playwright install --with-deps chromium
+npm run test:content-io:ci
 npm run package:check
-npm run docs:platforms:check
 ```
 
 `npm run build` compiles TypeScript and the project's own browser bridges. It does not compile third-party cores. `npm test` runs this build before the test suite. The package check verifies the packaged runtime and offline host tool independently of the source checkout.
+
+`ci:checks` runs lint, type checking, the Vitest suite, self-contained Node script tests and support-catalog verification. Lint-policy regression tests check the current complexity, file-size and exclusion settings. `test:scripts` includes release and Content I/O tooling tests; the product-baseline evidence test remains in Content I/O stage S00 as `baseline.integration.mjs`, where `CONTENT_IO_ENV` and real PFB evidence are required.
+
+`npm run check:duplicates` runs the pinned jscpd 5.4.2 binary as part of `ci:checks`. It scans project-owned JS/JSX/TS/TSX across the repository and new paths, including production scripts and bridge sources. Clones need at least 120 tokens and 10 lines; comments and whitespace are ignored, consistent identifier renaming is recognized, and JS/TS formats are compared together. Test/declaration files, dependencies, build/cache directories and the two generated isolated `bridge.js` outputs are excluded; their source files remain scanned.
+
+The committed `.jscpd-baseline.json` is empty. All previously recorded clones have been refactored into shared implementations, so any detected clone fails the gate. Detector regression tests exercise new paths, renamed/cross-file/same-file copies, baseline line shifts, additional copies, exclusions and empty scans. The checks job uploads `.artifacts/duplicates/` after success or failure with file/line details. This adds no CI job or release step.
+
+The [native baseline](https://github.com/kucherenko/jscpd/blob/master/docs/rust.md#baseline) uses content fingerprints and copy counts. To deliberately accept additional duplication, run `npm run check:duplicates -- --update-baseline` and review the baseline diff and its justification in the PR. The normal check never updates the baseline.
+
+`test:content-io:ci` runs the public synthetic Content I/O fixtures in headless Chromium: preload, fallback, cancellation, persistence, cross-Session reuse and bounded windows. It needs no PFB or downloaded game core. To reuse a local browser, set `RETROM_CHROME_EXECUTABLE`. Results and failure traces go to `.artifacts/content-io/ci/`; private game and host-product acceptance retain their existing stage runners.
+
+On PRs, the browser job runs alongside the existing checks and Provider candidate build. The `quality` job requires both jobs to succeed, including when a dependency fails, is cancelled or is skipped. Source quality checks, script tests, support-catalog verification and public browser tests belong to this workflow.
+
+Tagged releases validate the tag identity and source constraints, build the formal release and validate the package before publishing. Lint, type checking, unit/script tests, support-catalog verification and browser tests run before tagging through the PR quality gate. Stable tags must already be on master; RC tags may come from a feature branch after that branch passes the PR gate.
 
 After changing platform names, core names, product bindings or Provider declarations, run `npm run docs:platforms` and commit the generated [support catalog](supported-platforms-and-cores.md) with the change. The quality workflow rejects an outdated catalog.
 
@@ -54,6 +66,8 @@ Provider bundles are published only as chunks; there is no whole Provider archiv
 `chunkId` is the SHA-256 of the chunk's sorted `[path, sizeBytes, sha256]` list, so local deduplication does not depend on compression. Archives are deterministic ustar + gzip. The release gate reads every chunk back, checks its identity and archive digest, and requires the chunks together to reproduce the built bundle exactly once; a release may not exceed 900 assets.
 
 Formal builds require a validated annotated tag at the released commit and `RETROM_PROVIDER_BUILD_MODE=release`. Untagged candidate builds use `0.0.0-dev`; their descriptor has `release: null`. Tagged releases include the actual tag and commit. A PFB client receives the installed base's verified Provider manifest version.
+
+Before downloading core assets, formal `release:build` validates both Provider source catalogs: stable runtime tags reject core tags ending in `-rc.N`; RC runtime tags may pin them. All formal builds reject development core inputs. Upstream resource versions such as EmulatorJS `4.3.0-pre` remain valid. The release builder also enforces this policy when called directly.
 
 Every build records the actual source-tree digest and both verified Provider bundle, chunk-manifest and module hashes alongside the host-tool archive. Consumers must use the matched set rather than combining artifacts based only on a version string.
 

@@ -1,21 +1,12 @@
+import {keyboardJoypadMask, standardJoypadMask} from "../provider/joypad-mask.js";
 // Browser standard gamepad -> libretro joypad; keyboard input stays independent.
 export function padMask(pad: Gamepad | null) {
-  if (!pad || !pad.connected || pad.mapping !== "standard") {return 0;}
   // With the native default VbtnSwap=0, B is TRIG1 and A is TRIG2.
-  const mapping = [0, 8, 9, 1, 10, 11, 12, 13, 2, 3, 14, 15, 4, 5, 6, 7];
-  let mask = 0;
-  for (let i = 0; i < mapping.length; i++) {if (pad.buttons[i]?.pressed) {mask |= 1 << mapping[i];}}
-  if ((pad.axes[0] ?? 0) < -.4) {mask |= 1 << 6;}
-  if ((pad.axes[0] ?? 0) > .4) {mask |= 1 << 7;}
-  if ((pad.axes[1] ?? 0) < -.4) {mask |= 1 << 4;}
-  if ((pad.axes[1] ?? 0) > .4) {mask |= 1 << 5;}
-  return mask;
+  return standardJoypadMask(pad, [0, 8, 9, 1, 10, 11, 12, 13, 2, 3, 14, 15, 4, 5, 6, 7]);
 }
 export function keyboardPadMask(keys: ReadonlySet<string>) {
   const mapping: Record<string, number> = {ArrowUp: 4, ArrowDown: 5, ArrowLeft: 6, ArrowRight: 7, KeyZ: 8, KeyX: 0};
-  let mask = 0;
-  for (const code of keys) {const bit = mapping[code]; if (bit !== undefined) {mask |= 1 << bit;}}
-  return mask;
+  return keyboardJoypadMask(keys, mapping);
 }
 export function keyCode(event: Pick<KeyboardEvent, "code" | "key">) {
   const special: Record<string, number> = {Enter: 13, Escape: 27, Space: 32, Backspace: 8, Tab: 9,

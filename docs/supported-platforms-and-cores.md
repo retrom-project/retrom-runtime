@@ -237,7 +237,7 @@ The Content column lists the accepted content kind and, where present, the requi
 | ONScripter Yuri (`onscripter_yuri`) | ONScripter Yuri (`onscripter-yuri`) | `ons` | `ONS_PROJECT` | `GAME_SAVE` |
 | OpenBOR (`openbor`) | OpenBOR (`openbor`) | `openbor` | `SINGLE_FILE` | `GAME_SAVE` |
 | Play! (`play`) | Play! (PlayStation 2) (`play-ps2`) | `ps2` | `SINGLE_FILE` | `INSTANT` |
-| PPSSPP (`ppsspp`) | PPSSPP (PSP) (`ppsspp`) | `psp` | `SINGLE_FILE` | `INSTANT` |
+| PPSSPP (`ppsspp`) | PPSSPP (PSP) (`ppsspp`) | `psp` | `SINGLE_FILE` | `GAME_SAVE` |
 | PX68K (`px68k`) | Sharp X68000 (PX68K) (`px68k`) | `x68000` | `SINGLE_FILE` | `INSTANT` |
 | RPG Maker (`rpgmaker`) | RPG Maker 2000 (`rpgmaker-2000`) | `rpgmaker` | `RPG_MAKER_PROJECT` / `RPG2000` | `INSTANT` |
 | RPG Maker (`rpgmaker`) | RPG Maker 2003 (`rpgmaker-2003`) | `rpgmaker` | `RPG_MAKER_PROJECT` / `RPG2003` | `INSTANT` |

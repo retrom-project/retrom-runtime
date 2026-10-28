@@ -9796,10 +9796,10 @@
         "checkpoint": {
           "maxBytes": 268435456,
           "readFormats": [
-            "ppsspp-state-v1-storage-v1"
+            "ppsspp-game-save-v1-storage-v1"
           ],
-          "writeFormat": "ppsspp-state-v1-storage-v1",
-          "semantics": "INSTANT"
+          "writeFormat": "ppsspp-game-save-v1-storage-v1",
+          "semantics": "GAME_SAVE"
         },
         "displayName": "PPSSPP (PSP)",
         "id": "ppsspp",

@@ -5,6 +5,7 @@ import type {ContentSessionClient} from "../content-io/client.js";
 import type {AdapterContentSession} from "../provider/content-inputs.js";
 import type {SeekableBlobSource} from "../contract.js";
 import type {AssetIndexV1} from "../provider/module-api.js";
+import type {CheckpointAvailability} from "../contract.js";
 
 
 export type PSPParameters = {
@@ -15,6 +16,8 @@ export type PSPParameters = {
 export type PSPCore = {
   canvas: HTMLCanvasElement;
   checkpoint(): Promise<Uint8Array>;
+  getCheckpointAvailability(): CheckpointAvailability;
+  acknowledgeCheckpoint(bytes: Uint8Array): Promise<void>;
   frameCount(): number;
   pause(): Promise<void>;
   resume(): Promise<void>;
@@ -58,5 +61,6 @@ export function validPSPCore(value: unknown): value is PSPCore {
   if (!value || typeof value !== "object") {return false;}
   const core = value as Partial<PSPCore>;
   return core.canvas?.tagName === "CANVAS" && [core.checkpoint, core.frameCount, core.pause, core.resume,
-    core.screenshot, core.stop, core.setVolume].every(method => typeof method === "function");
+    core.screenshot, core.stop, core.setVolume, core.getCheckpointAvailability, core.acknowledgeCheckpoint]
+    .every(method => typeof method === "function");
 }

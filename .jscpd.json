@@ -1,0 +1,45 @@
+{
+  "path": [
+    "."
+  ],
+  "format": [
+    "javascript",
+    "jsx",
+    "typescript",
+    "tsx"
+  ],
+  "minTokens": 120,
+  "minLines": 10,
+  "mode": "weak",
+  "ignoreIdentifiers": "consistent",
+  "crossFormats": "js-ts",
+  "baseline": ".jscpd-baseline.json",
+  "failOnNewClones": 0,
+  "failOnEmpty": true,
+  "reporters": [
+    "console",
+    "json"
+  ],
+  "noColors": true,
+  "workers": 2,
+  "ignore": [
+    "node_modules/**",
+    "dist/**",
+    "release/**",
+    "build/**",
+    ".cache/**",
+    ".artifacts/**",
+    "coverage/**",
+    "**/*.test.*",
+    "**/*.spec.*",
+    "**/*.d.ts",
+    "**/*.d.mts",
+    "**/*.d.cts",
+    "tests/**",
+    "**/__tests__/**",
+    "scripts/content-io/baseline.integration.mjs",
+    "assets/runtime/native/bridge.js",
+    "assets/runtime/tyranoscript/bridge.js"
+  ],
+  "output": ".artifacts/duplicates"
+}

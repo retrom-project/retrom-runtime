@@ -1,3 +1,6 @@
+import {canvasRuntimeEvents} from "../provider/canvas-runtime-events.js";
+import {nativeFrameLoop} from "../provider/native-frame-loop.js";
+import {canvasScreenshot} from "../provider/canvas-screenshot.js";
 import type {AdapterContentOptions} from "../provider/content-inputs.js";
 import type {MountedRuntimeAdapter, RuntimeProgressReporter} from "../internal-adapter.js";
 import {loadCore, withBytes, type ModuleLoader, type Px68kParameters} from "./core.js";
@@ -14,7 +17,7 @@ export async function mountPx68k(config: Px68kParameters, target: HTMLElement, f
   const graphics = canvas.getContext("2d", {alpha: false});
   if (!graphics) {core._retrom_stop(); throw new Error("PX68K_CANVAS_UNAVAILABLE");}
   const audio = new Px68kAudio(44100), keyboardKeys = new Set<string>();
-  let stopped = false, paused = false, frames = restored?.frames ?? 0, request = 0, previous = 0, elapsed = 0;
+  let stopped = false, paused = false, frames = restored?.frames ?? 0;
   const requireActive = () => {if (stopped) {throw new Error("PX68K_RUNTIME_STOPPED");}};
   const draw = () => {
     const width = core._retrom_width(), height = core._retrom_height(), pointer = core._retrom_pixels();
@@ -35,28 +38,21 @@ export async function mountPx68k(config: Px68kParameters, target: HTMLElement, f
   const unlock = () => {if (!paused && !stopped) {void audio.resume().catch(() => undefined);}};
   const exit = async () => {
     if (stopped) {return;} stopped = true;
-    frameWindow.cancelAnimationFrame(request); releaseKeys();
-    for (const type of ["keydown", "keyup"]) {frameWindow.removeEventListener(type, keyboard as EventListener);}
-    frameWindow.removeEventListener("blur", releaseKeys); frameWindow.removeEventListener("pointerdown", unlock);
-    signal?.removeEventListener("abort", abort); core._retrom_stop(); canvas.remove(); await audio.stop();
+    loop.stop(); releaseKeys(); events.dispose(); core._retrom_stop(); canvas.remove(); await audio.stop();
   };
-  const abort = () => {void exit();};
-  const tick = (time: number) => {
-    if (stopped || paused) {return;}
-    elapsed += Math.min(100, previous ? time - previous : 1000 / core._retrom_fps()); previous = time;
-    try {
-      const interval = 1000 / core._retrom_fps();
-      if (!Number.isFinite(interval) || interval < 5 || interval > 100) {throw new Error("PX68K_TIMING_INVALID");}
-      while (elapsed >= interval) {
-        const pads = frameWindow.document.hidden ? [] : Array.from(frameWindow.navigator.getGamepads?.() ?? []).filter((pad) => pad?.connected);
-        const first = padMask(pads[0] ?? null) | (frameWindow.document.hidden ? 0 : keyboardPadMask(keyboardKeys));
-        const second = padMask(pads[1] ?? null);
-        if (core._retrom_step(first, second) !== 1) {throw new Error("PX68K_EXECUTION_FAILED");}
-        frames++; audio.push(core); elapsed -= interval;
-      }
-      draw(); request = frameWindow.requestAnimationFrame(tick);
-    } catch (error) {void exit(); reportFailure(error instanceof Error ? error : new Error("PX68K_EXECUTION_FAILED"));}
-  };
+  const events = canvasRuntimeEvents(frameWindow, {keyboard, releaseKeys, unlock, exit, signal});
+  const loop = nativeFrameLoop(frameWindow, {
+    timingError: "PX68K_TIMING_INVALID", active: () => !stopped && !paused,
+    framesPerSecond: () => core._retrom_fps(), draw,
+    step: () => {
+      const pads = frameWindow.document.hidden ? [] : Array.from(frameWindow.navigator.getGamepads?.() ?? []).filter((pad) => pad?.connected);
+      const first = padMask(pads[0] ?? null) | (frameWindow.document.hidden ? 0 : keyboardPadMask(keyboardKeys));
+      const second = padMask(pads[1] ?? null);
+      if (core._retrom_step(first, second) !== 1) {throw new Error("PX68K_EXECUTION_FAILED");}
+      frames++; audio.push(core);
+    },
+    onFailure: (error) => {void exit(); reportFailure(error instanceof Error ? error : new Error("PX68K_EXECUTION_FAILED"));},
+  });
   try {
     signal?.throwIfAborted();
     if (restored) {
@@ -71,9 +67,7 @@ export async function mountPx68k(config: Px68kParameters, target: HTMLElement, f
       throw new Error("PX68K_RESTORE_FAILED");
     }
     draw(); target.append(canvas); canvas.focus();
-    for (const type of ["keydown", "keyup"]) {frameWindow.addEventListener(type, keyboard as EventListener);}
-    frameWindow.addEventListener("blur", releaseKeys); frameWindow.addEventListener("pointerdown", unlock);
-    signal?.addEventListener("abort", abort, {once: true}); unlock(); request = frameWindow.requestAnimationFrame(tick);
+    events.listen(); unlock(); loop.start();
   } catch (error) {await exit(); throw error;}
   return {
     exit, getCanvas: () => stopped ? null : canvas, getFrameCount: () => frames,
@@ -85,9 +79,9 @@ export async function mountPx68k(config: Px68kParameters, target: HTMLElement, f
       const files: Record<string, Uint8Array> = {[disk]: core.FS.readFile(`/game/${disk}`)};
       return {format: checkpointFormat, bytes: encodeCheckpoint(config.game.sha256, core.HEAPU8.slice(pointer, pointer + size), files, frames)};
     },
-    pause: async () => {requireActive(); paused = true; releaseKeys(); frameWindow.cancelAnimationFrame(request); await audio.pause();},
-    resume: async () => {requireActive(); if (!paused) {return;} paused = false; previous = 0; elapsed = 0; unlock(); request = frameWindow.requestAnimationFrame(tick);},
-    screenshot: async () => {requireActive(); return new Promise<Blob>((resolve, reject) => canvas.toBlob((blob) => blob?.size ? resolve(blob) : reject(new Error("PLAYER_SCREENSHOT_UNAVAILABLE")), "image/png"));},
+    pause: async () => {requireActive(); paused = true; releaseKeys(); loop.stop(); await audio.pause();},
+    resume: async () => {requireActive(); if (!paused) {return;} paused = false; unlock(); loop.resume();},
+    screenshot: () => canvasScreenshot(canvas, requireActive),
     setVolume: (value) => audio.setVolume(value),
   };
 }

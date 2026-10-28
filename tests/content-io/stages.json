@@ -7,7 +7,7 @@
       "scripts/content-io/preflight.mjs",
       "scripts/content-io/preflight.test.mjs",
       "scripts/content-io/baseline.mjs",
-      "scripts/content-io/baseline.test.mjs",
+      "scripts/content-io/baseline.integration.mjs",
       "tests/content-io/entrypoints.json"
     ],
     "tests": [
@@ -15,7 +15,7 @@
         "runner": "node",
         "files": [
           "scripts/content-io/preflight.test.mjs",
-          "scripts/content-io/baseline.test.mjs"
+          "scripts/content-io/baseline.integration.mjs"
         ]
       }
     ],

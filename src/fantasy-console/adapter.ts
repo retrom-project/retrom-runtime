@@ -1,3 +1,4 @@
+import {canvasScreenshot} from "../provider/canvas-screenshot.js";
 import type {AdapterContentOptions} from "../provider/content-inputs.js";
 import {PersistentMemory} from "./pmem.js";
 import type {MountedRuntimeAdapter, RuntimeProgressReporter} from "../internal-adapter.js";
@@ -103,11 +104,7 @@ export async function mountFantasyConsole(config: FantasyParameters, target: HTM
       requireActive(); if (!paused) {return;}
       paused = false; previous = 0; accumulator = 0; unlock(); request = frameWindow.requestAnimationFrame(tick);
     },
-    screenshot: async () => {
-      requireActive();
-      return new Promise<Blob>((resolve, reject) => canvas.toBlob((blob) => blob?.size
-        ? resolve(blob) : reject(new Error("PLAYER_SCREENSHOT_UNAVAILABLE")), "image/png"));
-    },
+    screenshot: () => canvasScreenshot(canvas, requireActive),
     setVolume: (value) => audio.setVolume(value),
   };
 }

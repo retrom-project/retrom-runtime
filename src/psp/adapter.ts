@@ -1,3 +1,4 @@
+import {mountCheckpointCore} from "../provider/checkpoint-core.js";
 import {startPSP} from "./start.js";
 import type {PSPContentOptions} from "./core.js";
 import type {RuntimeProgressReporter} from "../internal-adapter.js";
@@ -12,46 +13,14 @@ export async function mountPSP(config: PSPParameters, target: HTMLElement, frame
       (restorePayload.byteLength < 1 || restorePayload.byteLength > 268435456)) {throw new Error("PPSSPP_RUNTIME_CONFIG_INVALID");}
   signal?.throwIfAborted();
   const loaded = await (dependencies.loader ?? loadPSP)(config, frameWindow, signal, content?.contentSession, reportProgress);
-  let started: Awaited<ReturnType<typeof startPSP>>;
-  try {
-    if (!validPSPModule(loaded.module)) {throw new Error("PPSSPP_CORE_ABI_MISMATCH");}
-    signal?.throwIfAborted();
-    started = await startPSP(loaded.module, loaded.assets, config, target, restorePayload, reportFailure, signal, content);
-  } catch (error) {loaded.close(); throw error;}
-  const {instance, reader} = started;
-  let exited = false;
-  const exit = async () => {
-    if (exited) {return;}
-    exited = true; signal?.removeEventListener("abort", abort);
-    try {await instance.stop();} finally {try {await reader.close();} finally {loaded.close();}}
-  };
-  const abort = () => {void exit();};
-  if (signal?.aborted) {await exit(); signal.throwIfAborted();}
-  signal?.addEventListener("abort", abort, {once: true});
-  const requireActive = () => {if (exited) {throw new Error("PPSSPP_RUNTIME_EXITED");}};
-  return {
-    touchGamepad: {layout: "PSP"},
-    checkpoint: async () => {
-      requireActive();
-      const value = await instance.checkpoint();
-      requireActive();
-      if (!ArrayBuffer.isView(value) || value.byteLength < 1 || value.byteLength > 268435456) {
-        throw new Error("PPSSPP_CHECKPOINT_INVALID");
-      }
-      const bytes = new Uint8Array(value.byteLength); bytes.set(value);
-      return {bytes, format: "ppsspp-state-v1"};
+  return mountCheckpointCore({
+    start: async () => {
+      if (!validPSPModule(loaded.module)) {throw new Error("PPSSPP_CORE_ABI_MISMATCH");}
+      signal?.throwIfAborted();
+      const {instance, reader} = await startPSP(loaded.module, loaded.assets, config, target, restorePayload, reportFailure, signal, content);
+      return {core: instance, reader};
     },
-    exit,
-    getCanvas: () => exited ? null : instance.canvas,
-    getFrameCount: () => exited ? null : instance.frameCount(),
-    getCheckpointAvailability: () => exited ? {available: false, blocker: "NOT_READY"} : {available: true, blocker: null},
-    pause: async () => {requireActive(); await instance.pause();},
-    resume: async () => {requireActive(); await instance.resume();},
-    screenshot: async () => {
-      requireActive();
-      const blob = await instance.screenshot();
-      return new Blob([await blob.arrayBuffer()], {type: blob.type});
-    },
-    setVolume: value => {requireActive(); instance.setVolume(value);},
-  };
+    closeModule: () => loaded.close(), checkpointFormat: "ppsspp-state-v1", errorPrefix: "PPSSPP", signal,
+    touchGamepad: {layout: "PSP"}, setVolume: (core, value) => core.setVolume(value),
+  });
 }

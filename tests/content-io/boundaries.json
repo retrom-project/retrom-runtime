@@ -268,7 +268,7 @@
     {
       "id": "B-024",
       "repository": "runtime",
-      "path": "src/play/adapter.ts",
+      "path": "src/provider/checkpoint-core.ts",
       "symbol": "screenshot",
       "classification": "SAVE_OR_OVERLAY",
       "reason": "Checkpoint/screenshot bytes or runtime-session cleanup POST, independent of immutable game content acquisition.",
@@ -366,18 +366,6 @@
       "repository": "runtime",
       "path": "src/providers/emulatorjs/state-restore.ts",
       "symbol": "installEmulatorJs423StateRestoreCompatibility",
-      "classification": "SAVE_OR_OVERLAY",
-      "reason": "Checkpoint/screenshot bytes or runtime-session cleanup POST, independent of immutable game content acquisition.",
-      "ownerStage": "S09",
-      "tests": [
-        "runtime:scripts/content-io/boundaries.test.mjs"
-      ]
-    },
-    {
-      "id": "B-034",
-      "repository": "runtime",
-      "path": "src/psp/adapter.ts",
-      "symbol": "screenshot",
       "classification": "SAVE_OR_OVERLAY",
       "reason": "Checkpoint/screenshot bytes or runtime-session cleanup POST, independent of immutable game content acquisition.",
       "ownerStage": "S09",

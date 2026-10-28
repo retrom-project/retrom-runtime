@@ -1,3 +1,4 @@
+// Product baseline evidence requires CONTENT_IO_ENV and remains part of stage S00.
 import {test} from "node:test";
 import assert from "node:assert/strict";
 import {readFile} from "node:fs/promises";

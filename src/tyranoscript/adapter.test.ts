@@ -21,6 +21,7 @@ describe("TyranoScript isolated Web adapter", () => {
     const runtimeWindow = frame.contentWindow;
     if (!runtimeWindow) {throw new Error("test iframe unavailable");}
     const commands: string[] = [];
+    const touchCommands: unknown[] = [];
     const hostMessages: unknown[] = [];
     let runtimePort: FakePort | null = null;
     vi.spyOn(runtimeWindow, "postMessage").mockImplementation(((message: unknown, _origin?: string, transfer?: Transferable[]) => {
@@ -31,6 +32,7 @@ describe("TyranoScript isolated Web adapter", () => {
       runtimePort.onmessage = (event) => {
         const request = event.data as RequestEnvelope;
         commands.push(request.type);
+        if (request.type === "SET_TOUCH_GAMEPAD") {touchCommands.push(request.body);}
         const result = commandResult(request);
         runtimePort?.postMessage(result);
       };
@@ -41,13 +43,18 @@ describe("TyranoScript isolated Web adapter", () => {
     }) as typeof runtimeWindow.postMessage);
     const exits = vi.fn();
     const config = runtimeConfig();
-    const mounting = mountTyranoScript(config, frame, Uint8Array.of(1, 2, 3), exits);
+    const mounting = mountTyranoScript(config, frame, Uint8Array.of(1, 2, 3), exits, {touchGamepadEnabled: false});
 
     dispatchRuntimeMessage(runtimeWindow, {
       protocolVersion: 1, type: "GAME_RUNTIME_TYRANOSCRIPT_BRIDGE_READY",
     });
     const adapter = await mounting;
     expect(frame.src).toBe(hostShell);
+    expect(touchCommands).toEqual([{enabled: false}]);
+    expect(adapter.getTouchGamepad?.()?.getState()).toEqual({enabled: false});
+    await adapter.getTouchGamepad?.()?.setEnabled(true);
+    expect(touchCommands).toEqual([{enabled: false}, {enabled: true}]);
+    expect(adapter.getTouchGamepad?.()?.getState()).toEqual({enabled: true});
 
     expect(commands).toContain("RESTORE");
     expect(adapter.getCheckpointAvailability()).toEqual({available: true, blocker: null});
@@ -154,6 +161,7 @@ describe("TyranoScript isolated Web adapter", () => {
     try {
       await adapter.setHostShortcutPolicy!({menu: "KeyM", pause: false}, vi.fn());
       await adapter.setInputFilter!(null);
+      await adapter.getTouchGamepad?.()?.setEnabled(false);
       await adapter.setVideoMode!("pixel");
       await adapter.setVolume!(0.25);
       await adapter.pause();
@@ -168,6 +176,7 @@ describe("TyranoScript isolated Web adapter", () => {
       await vi.waitFor(() => expect(connections[1].requests).toEqual(expect.arrayContaining([
         expect.objectContaining({type: "SET_HOST_SHORTCUT_POLICY", body: {policy: {menu: "KeyM", pause: false}}}),
         expect.objectContaining({type: "SET_INPUT_FILTER", body: {policy: null}}),
+        expect.objectContaining({type: "SET_TOUCH_GAMEPAD", body: {enabled: false}}),
         expect.objectContaining({type: "SET_VIDEO_MODE", body: {mode: "pixel"}}),
         expect.objectContaining({type: "SET_VOLUME", body: {value: 0.25}}),
         expect.objectContaining({type: "PAUSE"}),
@@ -221,6 +230,7 @@ function commandResult(request: RequestEnvelope) {
   };
   const types: Record<string, string> = {
     SET_INPUT_FILTER: "SET_INPUT_FILTER_RESULT",
+    SET_TOUCH_GAMEPAD: "SET_TOUCH_GAMEPAD_RESULT",
     SET_HOST_SHORTCUT_POLICY: "SET_HOST_SHORTCUT_POLICY_RESULT",
     CHECKPOINT: "CHECKPOINT_RESULT", CLEANUP: "CLEANUP_RESULT", PAUSE: "PAUSE_RESULT",
     PROBE: "PROBE_RESULT", RESTORE: "RESTORE_RESULT", RESUME: "RESUME_RESULT",

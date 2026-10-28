@@ -45,15 +45,82 @@ numpad 0 cancel; Left Shift, A, S, D, Q and W are RGSS A/X/Y/Z/L/R. RetroArch's
 player-1 keyboard RetroPad and lightgun binds are cleared so no key also reaches
 the game through a second, conflicting RetroPad mapping.
 
-Native same-origin Targets can opt into the Provider's on-screen gamepad; MKXP
-does. On touch-first devices (no hover, coarse pointer) the game frame shows a
-D-pad and A/B/X/Y at the standard bottom/right/left/top positions. It is a
+Native Targets opt into the shared on-screen gamepad with a layout and, when
+needed, their actual input window. TIC-80 and MKXP use STANDARD, PPSSPP uses PSP
+(D-pad, analog stick, Sony face labels, L/R and Start/Select), KiriKiri uses
+POINTER (directions and confirmation/cancel), and Apple2JS uses JOYSTICK in its
+nested frame. RPG Maker MV/MZ run the same module through their isolated input
+bridge. On touch-first devices (no hover, coarse pointer), it is a
 standard-mapping pad merged into slot 0 (OR-ed with a physical player 1 pad)
 before the host input filter, so suppression and Select+Start chords apply to
 it, and each core keeps its own gamepad mapping (MKXP: A confirm, B cancel).
 Each finger owns one control; the D-pad has a central dead zone and diagonals.
-Using a physical controller hides it until the next touch; blur, hiding the page
-or exit release every held control. MKXP samples the frame's filtered Gamepad API
+Both digital and analog sticks use the EmulatorJS-style translucent red circular
+base and half-size red cap. The cap follows its owning touch within the base;
+release, cancellation, blur and hiding recentre it without changing input mapping.
+Using a physical controller temporarily hides it until the next touch. The Host
+passes `touchGamepadEnabled` before mount and can use `getTouchGamepad()` to change
+the preference after mount. Explicitly disabling the pad releases all virtual
+input; touching the game cannot re-enable it. Pause and Host suppression release
+virtual input without changing that preference. Cursor polling reads the merged
+physical/touch source without advancing the Host chord filter.
+
+Additional adapters select data-only profiles from the same module:
+
+| Core / Target | Virtual controls |
+| --- | --- |
+| FAKE-08 | Directions, A/B and a native Start/menu button |
+| WASM-4 | Directions and two action buttons |
+| NXEngine / OpenBOR | Directions, A/B/X/Y, L/R and Start/Select |
+| ONScripter Yuri | Analog directions, confirmation and menu/back |
+| EasyRPG (RPG Maker 2000/2003) | Directions and A/B/X/Y through the existing native controller input |
+| GBE+ (Pokémon Mini) | Directions, A/B/C, Shake and Power through the existing Mini key mapping |
+| WebMSX | Directions and A/B/X/Y mapped by the existing bridge to Space/Escape/X/Enter |
+| SiglusEngine | Analog directions for fine cursor movement, confirmation and menu/back through the shared pointer cursor |
+| Butterscotch (GameMaker) | Directions, A/B/X/Y, L/R and Start/Select forwarded to the Worker |
+| MAME PV-1000 | Directions, A/B and Select/Start through the existing native MAME input mapper |
+| MAME SG-1000 | Directions via Arrow keys, A/B via Left Control/Left Alt and hardware Pause via 1; no parallel native joystick presses |
+| MAME ColecoVision | Directions, A/B and numeric 1/2 (the existing pad's Start/Select bindings) |
+| MAME Current Arcade | Directions, A/B/X/Y, L/R, Coin and Start in both main-thread and Worker adapters |
+| SamCoupeWeb | Directions, confirmation/back and a separate Space/fire action through its Arrow/Enter/Escape/Space bridge in the nested game/input window |
+| TyranoScript | Analog pointer movement and left/right mouse confirmation/menu through the shared cursor inside its isolated page |
+
+Profiles select standard button indices, labels and positions; they do not own
+rendering or pointer handlers. Existing layouts retain their default controls.
+Touching a virtual control focuses its input realm before applying the press,
+so returning from the Host toolbar also resumes cores that guard input on focus.
+Pointer-locked cores may refuse explicit pointer capture; expected capture
+failures do not abort virtual controls, and window-level pointer release/cancel
+still clears held input. Already-cancelled pointers cannot start a new press.
+When pointer lock zeros touch PointerEvent coordinates, the same control state
+uses the real TouchEvent coordinates and releases the mouse lock on a virtual
+press so the Host toolbar stays reachable. Game-surface touches keep their native behavior.
+ONS uses the existing analog-to-arrow adapter for directions. Its confirmation
+and menu controls feed only the native SDL standard-controller A/B bindings
+(Return/Escape); they do not also synthesize keyboard or mouse clicks.
+RPG Maker MZ uses the same isolated `SET_TOUCH_GAMEPAD` command as MV. The Host
+continues to own per-core visibility preferences, including the shared
+`rpgmaker` preference for both engines.
+TyranoScript uses the same shared isolated touch module and `SET_TOUCH_GAMEPAD`
+control. It applies the Host's initial preference before mount completes and
+replays the last acknowledged preference when the game reloads its title page.
+Pause and Host input suppression release controls without changing that preference.
+Its virtual pad feeds a dedicated shared cursor source and hits the DOM element
+under the cursor (ignoring the virtual control overlay), so image-based title/choice buttons work even in engines with
+no arrow-key navigation. Virtual A/B dispatch only mouse actions; they are not
+also projected through the native keyboard/gamepad mapping. Physical gamepads
+and real keyboard input keep their existing engine mappings.
+If a Tyrano engine replaces jQuery's click helper with its mobile tap helper,
+the cursor sends a single `tap` activation instead of `click`, using that engine
+API relationship rather than a game identity or user-agent special case.
+The ColecoVision layout exposes the existing standard pad's numeric 1/2 shortcuts;
+it does not provide the controller's entire numeric keypad.
+
+Same-origin background checkpoint exports release held controls while retaining the previous
+layout visibility, so automatic native saves do not make the controls blink or
+show a paused game's pad. The Host keeps its toolbar toggle in place while busy.
+
+Blur, hiding the page or exit release every held control. MKXP samples the frame's filtered Gamepad API
 through `Module.retromGamepadNavigator`, because its core module runs in the
 Provider realm.
 

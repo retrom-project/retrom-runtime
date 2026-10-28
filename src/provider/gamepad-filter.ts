@@ -124,7 +124,7 @@ class ChordDetector {
 export class RuntimeGamepadFilter {
   private readonly detector = new ChordDetector();
   private policy: RuntimeInputFilterPolicyV1 | null;
-  private touch: TouchGamepad | null = null;
+  private touch: Pick<TouchGamepad, "current" | "observePhysical"> | null = null;
 
   constructor(policy: RuntimeInputFilterPolicyV1 | null) {this.policy = policy ? {...policy} : null;}
 
@@ -135,11 +135,16 @@ export class RuntimeGamepadFilter {
   }
 
   /** The on-screen pad joins before the host policy, so suppression and chords cover it too. */
-  setTouchGamepad(touch: TouchGamepad | null) {this.touch = touch;}
+  setTouchGamepad(touch: Pick<TouchGamepad, "current" | "observePhysical"> | null) {this.touch = touch;}
 
-  filter(physical: readonly (GamepadSnapshot | null)[], nowMs: number): (Gamepad | null)[] {
+  source(physical: readonly (GamepadSnapshot | null)[]): (Gamepad | null)[] {
     this.touch?.observePhysical(physical);
     const gamepads = this.touch ? mergeTouchGamepad(physical, this.touch.current()) : physical;
+    return [...gamepads] as (Gamepad | null)[];
+  }
+
+  filter(physical: readonly (GamepadSnapshot | null)[], nowMs: number): (Gamepad | null)[] {
+    const gamepads = this.source(physical);
     if (!this.policy) {return [...gamepads] as (Gamepad | null)[];}
     if (this.policy.suppressInput) {return gamepads.map((gamepad) => gamepad ? zeroGamepad(gamepad) : null);}
     const active = this.policy.activeGamepadIndex === null ? null :
@@ -189,7 +194,7 @@ export function installRuntimeGamepadFilter(runtimeWindow: Window, filter: Runti
     configurable: true, enumerable: ownDescriptor?.enumerable ?? false,
     value: filteredGetGamepads, writable: true,
   });
-  gamepadSources.set(gamepadNavigator, source);
+  gamepadSources.set(gamepadNavigator, () => filter.source(source()));
   return () => {
     if (gamepadNavigator.getGamepads !== filteredGetGamepads) {return;}
     if (ownDescriptor) {Object.defineProperty(gamepadNavigator, "getGamepads", ownDescriptor);}

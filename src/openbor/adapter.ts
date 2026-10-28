@@ -8,6 +8,7 @@ import {fetchPak, type PakSource} from "./fetch.js";
 import {installInput} from "./input.js";
 import {installCoreErrors} from "./errors.js";
 import {loadModule, type OpenBOR} from "./module.js";
+import {touchGamepadProfiles} from "../provider/touch-gamepad-layout.js";
 import {decodeSave, encodeSave, isSaveName, saveFormat, type SaveFile} from "./save.js";
 export type OpenBORParameters = {pak: PakSource; runtimeBaseUrl: string};
 export async function mountOpenBOR(config: OpenBORParameters, target: HTMLElement, realm: Window,
@@ -100,6 +101,7 @@ export async function mountOpenBOR(config: OpenBORParameters, target: HTMLElemen
     } catch {return {available: false, blocker: "FAILED", save};}
   };
   return {
+    touchGamepad: touchGamepadProfiles.action,
     exit, getCanvas: () => stopped ? null : canvas, getFrameCount: () => stopped ? null : core?.retromFrames ?? null,
     getCheckpointAvailability: availability,
     checkpoint: async () => {if (!availability().available) {throw new Error("OPENBOR_SAVE_UNAVAILABLE");} return {format: saveFormat, bytes: current()!};},

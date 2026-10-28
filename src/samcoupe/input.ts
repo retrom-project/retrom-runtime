@@ -1,8 +1,8 @@
-type Key = "ArrowUp" | "ArrowDown" | "ArrowLeft" | "ArrowRight" | "Enter" | "Escape";
+type Key = "ArrowUp" | "ArrowDown" | "ArrowLeft" | "ArrowRight" | "Enter" | "Escape" | "Space";
 const keyDetails: Record<Key, [string, number]> = {
   ArrowUp: ["ArrowUp", 38], ArrowDown: ["ArrowDown", 40],
   ArrowLeft: ["ArrowLeft", 37], ArrowRight: ["ArrowRight", 39],
-  Enter: ["Enter", 13], Escape: ["Escape", 27],
+  Enter: ["Enter", 13], Escape: ["Escape", 27], Space: [" ", 32],
 };
 
 export function samGamepadKeys(pad: Pick<Gamepad, "connected" | "mapping" | "axes" | "buttons"> | null): Set<Key> {
@@ -16,6 +16,7 @@ export function samGamepadKeys(pad: Pick<Gamepad, "connected" | "mapping" | "axe
   if (button(15) || axis(0) >= 0.6) {keys.add("ArrowRight");}
   if (button(0)) {keys.add("Enter");}
   if (button(1)) {keys.add("Escape");}
+  if (button(2)) {keys.add("Space");}
   return keys;
 }
 

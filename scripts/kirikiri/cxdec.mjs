@@ -142,6 +142,28 @@ function logicalOffset(value) {
   return BigInt(value);
 }
 
+function nonzeroByte(value) {
+  if (!Number.isInteger(value) || value < 1 || value > 255) throw new Error("CX_PROFILE: expected nonzero byte fallback");
+  return value;
+}
+
+/** Tiny folds one resource seed, optionally adding a second XOR at absolute byte zero. */
+export function createTinyFilter(sourceProfile) {
+  const constant = uint32(sourceProfile?.xorConstant, "CX_PROFILE: invalid Tiny constant");
+  const fallback = nonzeroByte(sourceProfile.zeroFallback);
+  const firstFallback = sourceProfile.firstByte === undefined ? null : nonzeroByte(sourceProfile.firstByte?.zeroFallback);
+  return Object.freeze({apply(bytes, hash, absoluteOffset = 0) {
+    if (!(bytes instanceof Uint8Array)) throw new Error("CX_BYTES: expected Uint8Array");
+    uint32(hash, "CX_HASH: expected unsigned 32-bit resource hash");
+    const offset = logicalOffset(absoluteOffset);
+    if (offset + BigInt(bytes.length) > 0x10000000000000000n) throw new Error("CX_OFFSET: stream exceeds uint64");
+    const t = (hash ^ constant) >>> 0, key = ((t ^ (t >>> 8) ^ (t >>> 16) ^ (t >>> 24)) & 255) || fallback;
+    for (let i = 0; i < bytes.length; i++) bytes[i] ^= key;
+    if (firstFallback !== null && offset === 0n && bytes.length) bytes[0] ^= (t & 255) || firstFallback;
+    return bytes;
+  }});
+}
+
 /** apply changes only the supplied bytes, using absolute uncompressed offsets. */
 export function createCxFilter(sourceProfile) {
   const profile = validateProfile(sourceProfile);

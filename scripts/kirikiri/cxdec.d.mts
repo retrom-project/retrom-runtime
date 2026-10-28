@@ -9,7 +9,15 @@ export interface CxProfile {
   wrappers?: never[];
   evidence?: Record<string, unknown>;
 }
-export interface TinyProfile {xorConstant: number; zeroFallback: number; evidence: Record<string, unknown>}
+export interface TinyProfile {
+  xorConstant: number;
+  zeroFallback: number;
+  firstByte?: {zeroFallback: number};
+  evidence?: Record<string, unknown>;
+}
+export function createTinyFilter(profile: TinyProfile): {
+  apply<T extends Uint8Array>(bytes: T, hash: number, absoluteOffset?: number | bigint): T;
+};
 export function createCxFilter(profile: CxProfile): {
   apply<T extends Uint8Array>(bytes: T, hash: number, absoluteOffset?: number | bigint): T;
   evaluateLane(lane: number, input: number): number;

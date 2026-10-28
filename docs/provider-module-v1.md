@@ -309,6 +309,18 @@ Before loading EmulatorJS, its Provider retires only existing `EmulatorJS-Cache`
 
 Native Web resources declare an immutable index, explicit entryFile, origin and entryUrl. The Host mounts its isolated shell and connects the scoped STAT/READ bridge; script-relative URLs, dynamic imports, Workers and media use ordinary native paths served through that bridge. No derived credential is part of the envelope. HTTP and LOCAL restore descriptors are explicit alternatives; LOCAL is an in-memory review checkpoint returned by RuntimeHost.loadRestore.
 
+## Touch gamepad
+
+`RuntimeHostV1.touchGamepadEnabled?: boolean` supplies the initial preference before mount; omitted means enabled.
+`PlayerRuntimeV1.getTouchGamepad?.()` returns a controller for an installed layout, or `null` when unavailable.
+Its `getState()` reports the enabled preference and `setEnabled(boolean)` applies it immediately. Hiding releases
+virtual buttons and axes. Pausing, host input suppression and physical-controller activity may temporarily hide
+the layout without changing this preference; touching the game does not re-enable an explicitly disabled layout.
+
+The Host owns persistence by selected `coreId` in its own origin. Providers share layout and input code across
+TIC-80, PPSSPP, KiriKiri2, Apple2JS, MV and the existing mkxp integration. Nested and isolated game pages receive
+the same setting through their adapter or verified channel. See [input mapping](input-mapping.md) for layouts.
+
 ## Host keyboard shortcuts
 
 `getInputCapabilities().hostShortcuts` declares which `MENU` and `PAUSE` actions the Host may reserve.

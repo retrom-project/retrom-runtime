@@ -34,6 +34,7 @@ it("writes and restores exact native state", async () => {
   child.RetromApple2 = {mount: async () => ({checkpoint: () => state, restore, exit,
     pause: () => undefined, resume: () => undefined})};
   const adapter = await mounted;
+  expect(adapter.touchGamepad).toEqual({layout: "JOYSTICK", inputWindow: child});
   expect(restore).toHaveBeenCalledWith(state);
   expect(await adapter.checkpoint()).toEqual({format: "apple2js-state-v1", bytes: new TextEncoder().encode(state)});
   const buttons = Array.from({length: 17}, () => ({pressed: false, value: 0}));

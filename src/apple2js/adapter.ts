@@ -60,6 +60,7 @@ export async function mountApple2(config: Apple2Parameters, target: HTMLElement,
   } catch (error) {cleanup(); throw error;}
   const active = () => {if (exited || !session || !canvas) {throw new Error("APPLE2JS_STOPPED");}};
   return {
+    touchGamepad: {layout: "JOYSTICK", inputWindow: iframe.contentWindow as Window},
     canvasLayout: "CORE",
     checkpoint: async () => {
       active();

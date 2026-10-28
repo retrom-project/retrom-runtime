@@ -5,6 +5,7 @@ import {nativeSaves} from "./native-saves.js";
 import {decodeSave} from "./save.js";
 import {keyboardPadMask, padMask} from "./input.js";
 import {NXEngineAudio} from "./audio.js";
+import {touchGamepadProfiles} from "../provider/touch-gamepad-layout.js";
 export async function mountNXEngine(config: NXEngineParameters, target: HTMLElement, frameWindow: Window,
   restorePayload: Uint8Array | null, progress: RuntimeProgressReporter, reportFailure: (error: Error) => void,
   signal?: AbortSignal, loader?: ModuleLoader, content?: AdapterContentOptions): Promise<MountedRuntimeAdapter> {
@@ -70,6 +71,7 @@ export async function mountNXEngine(config: NXEngineParameters, target: HTMLElem
     signal?.addEventListener("abort", abort, {once: true}); unlock(); request = frameWindow.requestAnimationFrame(tick);
   } catch (error) {await exit(); throw error;}
   return {
+    touchGamepad: touchGamepadProfiles.action,
     exit, getCanvas: () => stopped ? null : canvas, getFrameCount: () => frames,
     getCheckpointAvailability: () => stopped ? {available: false, blocker: "NOT_READY"} : saves.availability(),
     checkpoint: async () => {requireActive(); return saves.capture();},

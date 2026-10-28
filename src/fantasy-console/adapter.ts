@@ -5,6 +5,9 @@ import {checkpointFormats, checkpointLimits, decodeState, encodeState} from "./s
 import {controlMask, installKeyboard} from "./input.js";
 import {loadCore, withBytes, type FantasyParameters, type ModuleLoader} from "./core.js";
 import {FantasyAudio} from "./audio.js";
+import {touchGamepadProfiles} from "../provider/touch-gamepad-layout.js";
+
+const touchLayouts = {tic80: {layout: "STANDARD"}, fake08: touchGamepadProfiles.twoButtonMenu} as const;
 
 export async function mountFantasyConsole(config: FantasyParameters, target: HTMLElement,
   frameWindow: Window, restorePayload: Uint8Array | null, progress: RuntimeProgressReporter,
@@ -75,6 +78,7 @@ export async function mountFantasyConsole(config: FantasyParameters, target: HTM
     unlock(); request = frameWindow.requestAnimationFrame(tick);
   } catch (error) {await exit(); throw error;}
   return {
+    touchGamepad: touchLayouts[config.core],
     checkpoint: async () => {
       requireActive();
       const pointer = core._retrom_state(), size = core._retrom_state_size();

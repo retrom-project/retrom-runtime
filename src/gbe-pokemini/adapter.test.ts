@@ -4,6 +4,8 @@ import {sha256} from "@noble/hashes/sha2.js";
 import {mountGBE as mount} from "./adapter.js";
 import type {GBECore} from "./core.js";
 import {encodeState} from "./state.js";
+import {installTouchGamepad} from "../provider/touch-gamepad.js";
+import {installRuntimeGamepadFilter, RuntimeGamepadFilter} from "../provider/gamepad-filter.js";
 afterEach(() => {vi.unstubAllGlobals(); document.body.replaceChildren();});
 function fixture() {
   const game = new Uint8Array(0x2200), bios = new Uint8Array(4096);
@@ -21,6 +23,43 @@ function fixture() {
   _retrom_restore: vi.fn(() => 0)};
   return {config, core, files, loader: async () => core};
 }
+it("delivers virtual Mini C and Shake controls to the core and releases them when hidden", async () => {
+  const f = fixture();
+  let frame: FrameRequestCallback = () => {};
+  vi.spyOn(window, "requestAnimationFrame").mockImplementation(callback => {frame = callback; return 1;});
+  vi.spyOn(window, "cancelAnimationFrame").mockImplementation(() => {});
+  vi.stubGlobal("matchMedia", () => ({matches: true}));
+  const getPads = Object.getOwnPropertyDescriptor(navigator, "getGamepads");
+  Object.defineProperty(navigator, "getGamepads", {configurable: true, value: () => []});
+  const adapter = await mountGBE(f.config, document.body, window, null, vi.fn(), undefined, f.loader);
+  let cleanup = () => {};
+  try {
+    expect(adapter.touchGamepad).toBeDefined();
+    const filter = new RuntimeGamepadFilter(null), remove = installRuntimeGamepadFilter(window, filter);
+    const touch = installTouchGamepad(window, adapter.touchGamepad === true ? {} : adapter.touchGamepad);
+    filter.setTouchGamepad(touch); cleanup = () => {touch.cleanup(); remove();};
+    const root = document.querySelector('[data-retrom-touch-gamepad]')!;
+    expect(root.querySelectorAll('[data-face]')).toHaveLength(3);
+    // Clicking a Host toolbar button blurs the game realm; the next virtual
+    // input must restore focus before the core's existing focus guard polls it.
+    vi.spyOn(window, "focus").mockImplementation(() => window.dispatchEvent(new Event("focus")));
+    window.dispatchEvent(new Event("blur"));
+    const c = root.querySelector('[data-face="left"]')!;
+    c.dispatchEvent(new PointerEvent("pointerdown", {bubbles: true, pointerType: "touch", pointerId: 1})); frame(1);
+    expect(f.core._retrom_key).toHaveBeenLastCalledWith(6, 1);
+    c.dispatchEvent(new PointerEvent("pointerup", {bubbles: true, pointerId: 1})); frame(2);
+    expect(f.core._retrom_key).toHaveBeenLastCalledWith(6, 0);
+    const shake = root.querySelector('[data-button="4"]')!;
+    shake.dispatchEvent(new PointerEvent("pointerdown", {bubbles: true, pointerType: "touch", pointerId: 2})); frame(3);
+    expect(f.core._retrom_key).toHaveBeenLastCalledWith(7, 1);
+    await touch.setEnabled(false); frame(4);
+    expect(f.core._retrom_key).toHaveBeenLastCalledWith(7, 0);
+  } finally {
+    cleanup(); await adapter.exit(); vi.restoreAllMocks();
+    if (getPads) {Object.defineProperty(navigator, "getGamepads", getPads);}
+    else {Reflect.deleteProperty(navigator, "getGamepads");}
+  }
+});
 it("restores a full execution snapshot before resuming a different core and cleans up", async () => {
   const first = fixture();
   const adapter = await mountGBE(first.config, document.body, window, null, vi.fn(), undefined, first.loader);

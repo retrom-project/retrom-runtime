@@ -1,18 +1,21 @@
 import {readFileSync} from "node:fs";
 import {runInNewContext} from "node:vm";
-import {expect, it, vi} from "vitest";
+import {afterEach, expect, it, vi} from "vitest";
+
+afterEach(() => {document.body.replaceChildren(); document.head.replaceChildren();});
 
 type Message = {type: string; requestId: number; body: Record<string, unknown>};
 type Handler = (event: Record<string, unknown> | KeyboardEvent) => void;
 function bridge(name: "native" | "tyranoscript") {
   const handlers = new Map<string, Set<Handler>>(), replies: Message[] = [];
   const parent = {postMessage() {}};
-  const port = {onmessage: null as null | ((event: {data: unknown}) => void), postMessage: (message: Message) => replies.push(message), start() {}};
+  const port = {onmessage: null as null | ((event: {data: unknown}) => void), postMessage: (message: Message) => replies.push(message), start() {}, close() {}};
   const kag = {on() {}, once() {}, off() {}, trigger() {}, chara: {}, event: {}, layer: {},
     ftag: {array_tag: [{name:"s"}],current_order_index:0}, key_mouse:{util:{canShowMenu:()=>true}},
     menu:{}, stat:{current_scenario:"first.ks",f:{}}};
   const global = {parent, document, location: {href:"https://runtime.example/game/www/index.html"}, TYRANO:{kag}, Utils:{RPGMAKER_NAME:"MV"}, SceneManager:{updateMain() {}},
     DataManager:{},StorageManager:{}, navigator:{getGamepads:()=>[]}, performance:{now:()=>100},
+    Event: window.Event, focus() {}, dispatchEvent() {}, matchMedia: () => ({matches: true}),
     requestAnimationFrame:()=>1, cancelAnimationFrame() {}, setInterval:()=>1, clearInterval() {},
     addEventListener(name: string, handler: Handler) {const set=handlers.get(name)??new Set<Handler>();set.add(handler);handlers.set(name,set);},
     removeEventListener(name: string, handler: Handler) {handlers.get(name)?.delete(handler);}};
@@ -32,6 +35,28 @@ function bridge(name: "native" | "tyranoscript") {
     for(const handler of [...handlers.get("keydown")??[]]) {handler(event);}return event;};
   return {connect,parent,port,identity,replies,request,key};
 }
+
+it("Tyrano runs the shared touch pad only through the parent channel and releases input when paused or hidden", async () => {
+  const b = bridge("tyranoscript"); b.connect(b.parent);
+  for (const body of [{enabled: "yes"}, {enabled: true, extra: true}]) {
+    expect((await b.request("SET_TOUCH_GAMEPAD", body)).type).toBe("ERROR");
+  }
+  expect((await b.request("SET_TOUCH_GAMEPAD", {enabled: false})).type).toBe("SET_TOUCH_GAMEPAD_RESULT");
+  const root = document.querySelector<HTMLElement>("[data-retrom-touch-gamepad]")!;
+  expect(root.hidden).toBe(true);
+  await b.request("SET_TOUCH_GAMEPAD", {enabled: true});
+  expect(root.hidden).toBe(false);
+  root.querySelector('[data-face="bottom"]')!.dispatchEvent(new PointerEvent("pointerdown", {bubbles: true, pointerType: "touch", pointerId: 1}));
+  expect(root.querySelector("[data-active]")).not.toBeNull();
+  await b.request("PAUSE", {}); expect(root.hidden).toBe(true);
+  await b.request("RESUME", {}); expect(root.hidden).toBe(false);
+  expect(root.querySelector("[data-active]")).toBeNull();
+  await b.request("SET_TOUCH_GAMEPAD", {enabled: false});
+  document.body.dispatchEvent(new PointerEvent("pointerdown", {bubbles: true, pointerType: "touch"}));
+  expect(root.hidden).toBe(true);
+  await b.request("CLEANUP", {});
+  expect(document.querySelector("[data-retrom-touch-gamepad]")).toBeNull();
+});
 
 it.each(["native","tyranoscript"] as const)("%s accepts shortcut policy only through the verified parent channel and stops on cleanup",async(name)=>{
   const b=bridge(name);

@@ -10,6 +10,7 @@ import {createVideo, captureVideo} from "./video.js";
 import {profiles} from "./profiles.js";
 import {RuntimeFailureError} from "../provider/failure.js";
 import {mountMameWorker} from "./worker-adapter.js";
+import {mameTouchGamepad} from "./touch-gamepad.js";
 export async function mountMame(config: MameParameters, target: HTMLElement, win: Window,
   restorePayload: Uint8Array | null, content: AdapterContentOptions, loader?: ModuleLoader): Promise<MountedRuntimeAdapter> {
   if (config.arcade && config.media?.length) {return mountMameWorker(config, target, win, restorePayload, content);}
@@ -68,6 +69,7 @@ export async function mountMame(config: MameParameters, target: HTMLElement, win
     content.signal?.addEventListener("abort", abort, {once: true}); win.addEventListener("pointerdown", unlock); win.addEventListener("keydown", unlock);
     unlock(); request = win.requestAnimationFrame(tick);
     return {
+      touchGamepad: mameTouchGamepad(config.machine, config.arcade === true),
       exit, getCanvas: () => stopped ? null : canvas, getFrameCount: () => frames,
       getDisplayAspectRatio: () => core._retrom_mame_aspect_ratio(),
       getCheckpointAvailability: () => {

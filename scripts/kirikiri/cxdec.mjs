@@ -173,7 +173,7 @@ export function createCxFilter(sourceProfile) {
     uint32(input, "CX_INPUT: invalid expression input");
     return evaluate(generated[lane].expression, input, profile.words);
   };
-  function region(bytes, hash, offset) {
+  function region(bytes, hash, offset, sparse) {
     const lane = hash & 127, seed = hash >>> 7;
     const r1 = evaluateLane(lane, seed), r2 = evaluateLane(lane, (~seed) >>> 0);
     const high = r2 >>> 16;
@@ -181,23 +181,26 @@ export function createCxFilter(sourceProfile) {
     if (high === low) ++low;
     const key = (r1 & 255) || 1;
     for (let i = 0; i < bytes.length; ++i) bytes[i] ^= key;
+    if (!sparse) {return;}
     const end = offset + BigInt(bytes.length);
     for (const [at, xor] of [[low, (r1 >>> 16) & 255], [high, (r1 >>> 8) & 255]]) {
       const position = BigInt(at);
       if (position >= offset && position < end) bytes[Number(position - offset)] ^= xor;
     }
   }
+  function applyStage(bytes, hash, absoluteOffset, sparse) {
+    if (!(bytes instanceof Uint8Array)) throw new Error("CX_BYTES: expected Uint8Array");
+    uint32(hash, "CX_HASH: expected unsigned 32-bit resource hash");
+    const offset = logicalOffset(absoluteOffset);
+    if (offset + BigInt(bytes.length) > 0x10000000000000000n) throw new Error("CX_OFFSET: stream exceeds uint64");
+    const boundary = BigInt((((hash & profile.mask) >>> 0) + profile.offset) >>> 0);
+    const first = offset < boundary ? Number(boundary - offset < BigInt(bytes.length) ? boundary - offset : BigInt(bytes.length)) : 0;
+    if (first) region(bytes.subarray(0, first), hash, offset, sparse);
+    if (first < bytes.length) region(bytes.subarray(first), (hash ^ (hash >>> 16)) >>> 0, offset + BigInt(first), sparse);
+    return bytes;
+  }
   return Object.freeze({evaluateLane,
     programs: Object.freeze(generated.map(({depth, byteLength}) => Object.freeze({depth, byteLength}))),
-    apply(bytes, hash, absoluteOffset = 0) {
-      if (!(bytes instanceof Uint8Array)) throw new Error("CX_BYTES: expected Uint8Array");
-      uint32(hash, "CX_HASH: expected unsigned 32-bit resource hash");
-      const offset = logicalOffset(absoluteOffset);
-      if (offset + BigInt(bytes.length) > 0x10000000000000000n) throw new Error("CX_OFFSET: stream exceeds uint64");
-      const boundary = BigInt((((hash & profile.mask) >>> 0) + profile.offset) >>> 0);
-      const first = offset < boundary ? Number(boundary - offset < BigInt(bytes.length) ? boundary - offset : BigInt(bytes.length)) : 0;
-      if (first) region(bytes.subarray(0, first), hash, offset);
-      if (first < bytes.length) region(bytes.subarray(first), (hash ^ (hash >>> 16)) >>> 0, offset + BigInt(first));
-      return bytes;
-    }});
+    apply(bytes, hash, absoluteOffset = 0) {return applyStage(bytes, hash, absoluteOffset, true);},
+    applyBulk(bytes, hash, absoluteOffset = 0) {return applyStage(bytes, hash, absoluteOffset, false);}});
 }

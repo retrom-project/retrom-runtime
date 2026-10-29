@@ -12,7 +12,10 @@ game bytes, extracted control table, native execution or x86 emulator is shipped
   and bounded embedded modules. Legacy extraction callbacks are identified by
   their record ABI, seed field, mask/add boundary, paired region consumer and
   high-word fold. Their generator's direct table reference and complete grammar
-  are recovered from the supplied PE. Unsupported compiler shapes return no profile.
+  are recovered from the supplied PE, including file-backed executable tables,
+  bounded instruction scheduling and record-preserving callback delegates.
+  A connected separated-stream constructor, callback and manager establish the
+  availability of the legacy bulk stage. Unsupported compiler shapes return no profile.
 - `pe-xp3.mjs` recognizes a bounded XP3 overlay after valid PE sections, within
   the original logical source slice. It preserves the outer logical filename;
   the converted file is an ordinary XP3 and becomes an entry candidate through
@@ -28,6 +31,9 @@ game bytes, extracted control table, native execution or x86 emulator is shipped
   PE vtable; constants and both fallbacks come from that supplied module.
 - `convert.mjs` streams decompressed resources through the selected filter and
   independently rereads every ordinary output resource before success.
+- `stages.mjs` selects between proven native bulk and sparse stages using each
+  complete resource checksum. Conflicting outputs with the same Adler32 fail;
+  SHA256 and a second source read verify that stage selection and writing agree.
 - `normalize.mjs` declares the registered CxFilterFS plugin, with read-only
   whole-game planning and conversion per related archive group. The shared
   [normalization pipeline](../normalization/README.md) owns the fresh root,
@@ -44,9 +50,13 @@ The name table defines the protected logical namespace. Literal physical decoys
 outside it are recorded rather than exposed as competing startup scripts.
 Unlinked hashed names indicate an incomplete table and fail conversion.
 
-Only the protector's warning metadata can use the verified native short-stream
-behavior: its name marker, raw body marker, nonprotected flags, raw segments and
-small size must all agree. Other short resources fail. A Tiny archive whose
+Only bounded protector warning metadata can use short-stream normalization:
+its safe name marker, complete raw body, strict Shift-JIS decoding, known notice
+prefix, printable characters, nonprotected flags, single raw segment and small
+size must all agree. This does not authenticate the entire notice template.
+Its original checksum is not
+verified; the audit records that loss of source integrity and the corrected
+length. Other short resources fail. A Tiny archive whose
 multiple complete protected records all use one seed is reported as having
 seed-only source checksum metadata. Each mismatch remains an explicit exception;
 the output gets a recomputed checksum and digest. These are not source-integrity

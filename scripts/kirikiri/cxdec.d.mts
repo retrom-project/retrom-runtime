@@ -6,6 +6,8 @@ export interface CxProfile {
   oddBranchOrder: number[];
   controlBlock: Uint8Array;
   generator?: "classic";
+  /** Recovered legacy callback is connected to this separated filter's manager. */
+  legacyBulk?: boolean;
   wrappers?: never[];
   evidence?: Record<string, unknown>;
 }
@@ -20,6 +22,7 @@ export function createTinyFilter(profile: TinyProfile): {
 };
 export function createCxFilter(profile: CxProfile): {
   apply<T extends Uint8Array>(bytes: T, hash: number, absoluteOffset?: number | bigint): T;
+  applyBulk<T extends Uint8Array>(bytes: T, hash: number, absoluteOffset?: number | bigint): T;
   evaluateLane(lane: number, input: number): number;
   programs: ReadonlyArray<{depth: number; byteLength: number}>;
 };

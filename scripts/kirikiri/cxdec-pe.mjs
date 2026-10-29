@@ -41,6 +41,8 @@ function parsePe(bytes) {
   return {sections, imageBase, toVa, fromVa, callTarget, sectionAt};
 }
 
+export function isPeModule(input) {return Boolean(parsePe(bytesOf(input)));}
+
 /** Returns independent PE buffers; cumulative attempted expansion is capped before each inflate. */
 export function extractEmbeddedPeModules(input, options = {}) {
   const bytes = bytesOf(input), marker = Buffer.from("internal module\0"), modules = [];
@@ -112,6 +114,49 @@ function boundaries(bytes, pe) {
   return cap(unique(out, p => `${p.mask}:${p.offset}`));
 }
 
+// Older extraction filters consume the public 24-byte callback record rather
+// than a stream constructor. Track its seed field, same-register mask/add,
+// high-word fold and two calls to the same region consumer.
+function callbackBoundaries(bytes, pe) {
+  const out = [];
+  for (const s of pe.sections.filter(s => s.executable)) {
+    for (let at = s.raw; at + 24 < s.end; at++) {
+      const mod = bytes[at + 1];
+      if (bytes[at] !== 0x8b || mod >> 6 !== 1 || (mod & 7) === 4 || bytes[at + 2] !== 20) {continue;}
+      const seed = mod >> 3 & 7, base = mod & 7;
+      let abi = false;
+      for (let p = Math.max(s.raw, at - 64); p + 2 < at; p++) {
+        if (bytes[p] === 0x83 && bytes[p + 1] === (0x38 | base) && bytes[p + 2] === 24) {abi = true;}
+      }
+      if (!abi) {continue;}
+      const move = registerMove(bytes, at + 3);
+      if (!move || move.from !== seed) {continue;}
+      const reg = move.to, start = at + 5;
+      const andSize = bytes[start] === 0x25 && reg === 0 ? 5 : bytes[start] === 0x81 && bytes[start + 1] === (0xe0 | reg) ? 6 : 0;
+      if (!andSize) {continue;}
+      const mask = u32(bytes, start + andSize - 4), add = start + andSize;
+      const addSize = bytes[add] === 5 && reg === 0 ? 5 : bytes[add] === 0x81 && bytes[add + 1] === (0xc0 | reg) ? 6 : 0;
+      if (!addSize) {continue;}
+      const offset = u32(bytes, add + addSize - 4), end = Math.min(s.end, at + 160), calls = [];
+      if (!mask || mask > 0xffffff || !offset || offset > 0xffffff) {continue;}
+      const folds = [];
+      for (let p = add + addSize; p + 5 < end; p++) {
+        const target = pe.callTarget(p);
+        if (target !== null) {calls.push({at: p, target});}
+        const copy = registerMove(bytes, p);
+        if (copy?.from === seed && shiftIs(bytes, p + 2, copy.to, 16) &&
+            bytes[p + 5] === 0x33 && bytes[p + 6] === (0xc0 | copy.to << 3 | seed)) {
+          folds.push(p);
+        }
+      }
+      if (folds.some(fold => calls.some(first => first.at < fold && calls.some(second => second.at > fold && second.target === first.target)))) {
+        out.push({mask, offset, at: start});
+      }
+    }
+  }
+  return cap(unique(out, p => `${p.mask}:${p.offset}`));
+}
+
 function indirectCall(bytes, at) {return bytes[at] === 0xff && ((bytes[at + 1] >> 3) & 7) === 2;}
 function seedCalls(bytes, start, end, seed) {
   const push = 0x50 + seed;
@@ -162,6 +207,16 @@ function managers(bytes, pe) {
       }
       if (!seeds.size) continue;
       const start = Math.max(s.raw, a - 48), end = Math.min(s.end, a + 0x180);
+      if ([...seeds].some(seed => seedCalls(bytes, a, end, seed))) {
+        // Register-argument legacy builders keep their 128-byte lane cache in
+        // globals. Its complete grammar and direct table reference are checked
+        // below; resource checksums are still the authority for each candidate.
+        for (let c = a; c + 5 < end; c++) {
+          const builder = pe.callTarget(c);
+          const argument = registerMove(bytes, c - 2);
+          if (builder !== null && argument?.to === 0 && argument.from === lane) {out.push({at: a, builder, table: null});}
+        }
+      }
       for (let p = start; p + 5 < end; ++p) {
         if (bytes[p] !== 0x68 || u32(bytes, p + 1) !== 128) continue;
         for (let c = p + 5; c + 5 < Math.min(end, p + 28); ++c) {
@@ -186,15 +241,20 @@ function managers(bytes, pe) {
 function emittedValues(bytes) {
   const values = [];
   for (let i = 0; i < bytes.length; ++i) {
-    if (bytes[i] === 0x68 && i + 4 < bytes.length) {values.push(u32(bytes, i + 1)); i += 4;}
+    if ([0xe8, 0xe9].includes(bytes[i]) && i + 4 < bytes.length) {i += 4;}
+    else if (bytes[i] === 0xeb || bytes[i] >= 0x70 && bytes[i] <= 0x7f) {i++;}
+    else if (bytes[i] === 0x0f && bytes[i + 1] >= 0x80 && bytes[i + 1] <= 0x8f) {i += 5;}
+    else if (bytes[i] === 0x68 && i + 4 < bytes.length) {values.push(u32(bytes, i + 1)); i += 4;}
     else if (bytes[i] === 0x6a && i + 1 < bytes.length) values.push(bytes[++i]);
     else if (bytes[i] === 0xc6 && i + 2 < bytes.length && (bytes[i + 1] & 0xf8) === 0) values.push(bytes[i + 2]);
+    else if (bytes[i] >= 0xb8 && bytes[i] <= 0xbf && i + 4 < bytes.length) {values.push(u32(bytes, i + 1)); i += 4;}
+    else if (bytes[i] >= 0xb0 && bytes[i] <= 0xb7 && i + 1 < bytes.length) {values.push(bytes[++i]);}
   }
   return values;
 }
 
-function classify(bytes, kind) {
-  const values = emittedValues(bytes), has = v => values.includes(v), raw = v => hasU32(bytes, v);
+function classify(bytes, kind, extra = []) {
+  const values = [...emittedValues(bytes), ...extra], has = v => values.includes(v), raw = v => hasU32(bytes, v);
   if (kind === 3) {
     if (has(0xbe) && (has(0x86) || raw(1023))) return 2;
     if (has(0x8b) && has(0xc7)) return 1;
@@ -233,7 +293,15 @@ function semantic(bytes, pe, target, primaryEnd, kind) {
   const s = pe.sectionAt(target);
   if (!s?.executable) return null;
   const end = Math.min(s.end, primaryEnd, target + 160);
-  let block = bytes.subarray(target, end), result = classify(block, kind), followed = 0;
+  const extra = [];
+  for (let at = target; at + 5 < end; at++) {
+    const callee = pe.callTarget(at);
+    if (callee === null) {continue;}
+    const helper = bytes.subarray(callee, Math.min(pe.sectionAt(callee).end, callee + 128));
+    // Only inline byte-emission helpers contribute opcode arguments.
+    if (helper.includes(Buffer.from([0xc6, 0x00]))) {extra.push(...emittedValues(helper));}
+  }
+  let block = bytes.subarray(target, end), result = classify(block, kind, extra), followed = 0;
   if (result !== null) return result;
   for (let at = target; at < end && followed < 8; ++at) {
     const jump = branch(bytes, at, end);
@@ -243,7 +311,7 @@ function semantic(bytes, pe, target, primaryEnd, kind) {
     const section = pe.sectionAt(jump.target);
     if (!section?.executable) continue;
     block = Buffer.concat([block, bytes.subarray(jump.target, Math.min(section.end, jump.target + 24))]);
-    result = classify(block, kind); ++followed;
+    result = classify(block, kind, extra); ++followed;
     if (result !== null) return result;
     at += jump.length - 1;
   }
@@ -277,7 +345,7 @@ function branchPrologs(bytes, pe, s) {
     }
     if (third === null) continue;
     const order = orderAt(bytes, pe, [eq[0].target, eq[1].target, third], 3);
-    if (order) out.push({at, kind: 3, order});
+    if (order) out.push({at, kind: 3, order, targets: [eq[0].target, eq[1].target, third]});
   }
   return out;
 }
@@ -295,7 +363,7 @@ function dispatches(bytes, pe) {
         const targets = Array.from({length: kind}, (_, i) => pe.fromVa(u32(bytes, table + i * 4), 1, true));
         if (targets.some(t => t === null)) continue;
         const order = orderAt(bytes, pe, targets, kind);
-        if (order) out.push({at, kind, order});
+        if (order) out.push({at, kind, order, targets});
       }
     }
   }
@@ -308,14 +376,23 @@ export function discoverCxProfiles(input) {
   if (!pe) return [];
   const manager = managers(bytes, pe);
   if (!manager.length) return [];
-  const splits = boundaries(bytes, pe), switches = dispatches(bytes, pe), profiles = [];
+  const constructorSplits = boundaries(bytes, pe), callbackSplits = callbackBoundaries(bytes, pe), switches = dispatches(bytes, pe), profiles = [];
   for (const m of manager) {
     const nearby = switches.filter(d => Math.abs(pe.toVa(d.at) - pe.toVa(m.builder)) <= 0x20000);
     for (const p of nearby.filter(d => d.kind === 3)) for (const e of nearby.filter(d => d.kind === 8)) for (const o of nearby.filter(d => d.kind === 6)) {
-      for (const split of splits) {
+      const tables = m.table === null ? unique(p.targets.flatMap(target => {
+        const end = Math.min(pe.sectionAt(target).end, target + 160), found = [];
+        for (let at = target; at + 5 <= end; at++) {
+          if (bytes[at] < 0xb8 || bytes[at] > 0xbf) {continue;}
+          const table = pe.fromVa(u32(bytes, at + 1), 4096);
+          if (table !== null) {found.push(table);}
+        }
+        return found;
+      }), value => value) : [m.table];
+      for (const table of tables) for (const split of m.table === null ? callbackSplits : constructorSplits) {
         profiles.push({mask: split.mask, offset: split.offset, prologOrder: p.order, evenBranchOrder: e.order, oddBranchOrder: o.order,
-          controlBlock: Buffer.from(bytes.subarray(m.table, m.table + 4096)), generator: "classic",
-          evidence: {managerVa: pe.toVa(m.at), builderVa: pe.toVa(m.builder), tableVa: pe.toVa(m.table), boundaryVa: pe.toVa(split.at),
+          controlBlock: Buffer.from(bytes.subarray(table, table + 4096)), generator: "classic",
+          evidence: {managerVa: pe.toVa(m.at), builderVa: pe.toVa(m.builder), tableVa: pe.toVa(table), boundaryVa: pe.toVa(split.at),
             dispatchVa: [pe.toVa(p.at), pe.toVa(e.at), pe.toVa(o.at)]}});
         cap(profiles);
       }

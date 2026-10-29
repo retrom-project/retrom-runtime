@@ -12,10 +12,13 @@ Provider lifecycle. The Target declares `GAME_SAVE`: save through the game's own
 menu or autosave, then synchronize the files already written. It cannot capture
 the current execution state. On a new launch, use the game's Continue/Load menu.
 
-`ppsspp-game-save-v1-storage-v1` contains all native slots and metadata under the
-isolated instance's `PSP/SAVEDATA`, plus its virtual PSP MAC identity, under one
-public gzip envelope with a 256 MiB limit. Native IO must finish before export;
-unchanged content does not create another revision. Host persistence acknowledges
+`ppsspp-game-save-v1-storage-v1` contains game-owned files on the isolated instance's
+memory stick, including all `PSP/SAVEDATA` slots and direct native saves elsewhere,
+plus its virtual PSP MAC identity, under one
+public gzip envelope with a 256 MiB limit. Emulator settings (`PSP/SYSTEM`), NAND,
+instant states (`PSP/PPSSPP_STATE`) and `.nomedia` markers are excluded.
+Native IO must finish before export; unchanged content does not create another
+revision. Host persistence acknowledges
 the exact exported content, so a later in-game save remains pending. A fresh game
 without saved progress has no checkpoint. Deleting existing slots is synchronized
 as a real filesystem change, including deletion of the final slot.

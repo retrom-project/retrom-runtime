@@ -49,6 +49,9 @@ type KirikiriModule = {
   _krkr2_host_flush_game_saves(): Promise<number>;
   _krkr2_host_finalize_native_exit(): Promise<number>;
   _krkr2_host_set_engine_mode?(mode: number): number;
+  _krkr2_host_engine_arguments_abi?(): number;
+  _krkr2_host_local_steam_service_abi?(): number;
+  retromLocalSteamService: boolean;
   _krkr2_host_resource_overlay_abi?(): number;
   _resourceOverlayFiles: Array<{path: string; relativePath: string}>;
   _startupXp3Path?: string;
@@ -177,7 +180,8 @@ export async function mountKirikiri2(
       reportFailure(new RuntimeFailureError("KIRIKIRI_RUNTIME_TRAP", "CORE", [error.message], {cause: error})));
     const runtimeUrl = assets.scriptUrl;
     const options: Partial<KirikiriModule> = {
-      arguments: [],
+      arguments: config.engineArguments.slice(),
+      retromLocalSteamService: config.steamService === "LOCAL",
       _resourceOverlayFiles: project.overlayFiles,
       retromContentBridge: {abi: content.abi, contractSha256: content.contractSha256},
       canvas,
@@ -195,6 +199,12 @@ export async function mountKirikiri2(
           "KIRIKIRI_RUNTIME_EXIT_FAILED", "CORE", [`Core exit status: ${status}`])));}
       },
       onRuntimeInitialized: () => {
+        const unsupported = unsupportedNativeOptions(config, host.Module);
+        if (unsupported) {
+          const error = new RuntimeFailureError(unsupported, "CORE");
+          reportFailure(error);
+          throw error;
+        }
         if (project.overlayFiles.length && host.Module?._krkr2_host_resource_overlay_abi?.() !== 1) {
           const error = new RuntimeFailureError("KIRIKIRI_RESOURCE_OVERLAY_UNSUPPORTED", "CORE");
           reportFailure(error);
@@ -283,6 +293,16 @@ export async function mountKirikiri2(
     screenshot: () => canvasScreenshot(canvas),
     setVolume: null,
   };
+}
+
+function unsupportedNativeOptions(config: KirikiriParameters, module: Partial<KirikiriModule> | undefined) {
+  if (config.engineArguments.length && module?._krkr2_host_engine_arguments_abi?.() !== 1) {
+    return "KIRIKIRI_ENGINE_ARGUMENTS_UNSUPPORTED";
+  }
+  if (config.steamService === "LOCAL" && module?._krkr2_host_local_steam_service_abi?.() !== 1) {
+    return "KIRIKIRI_LOCAL_STEAM_SERVICE_UNSUPPORTED";
+  }
+  return null;
 }
 
 function requireGameSaveAbi(module: KirikiriModule) {

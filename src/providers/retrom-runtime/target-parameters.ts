@@ -48,6 +48,7 @@ import type {MkxpParameters} from "../../mkxp/parameters.js";
 import type {NativeRpgParameters} from "../../native-web/parameters.js";
 import type {OnsParameters} from "../../ons/parameters.js";
 import type {KirikiriParameters} from "../../kirikiri/parameters.js";
+import {kirikiriEngineArguments} from "../../kirikiri/arguments.js";
 import type {ButterscotchParameters} from "../../butterscotch/parameters.js";
 import type {TyranoScriptParameters} from "../../tyranoscript/parameters.js";
 import type {Wasm4Parameters} from "../../wasm4/parameters.js";
@@ -140,6 +141,11 @@ export function kirikiri(envelope: LaunchEnvelopeV1): KirikiriParameters {
   if (engineMode !== "KIRIKIRI2" && engineMode !== "KIRIKIRI_Z") {invalidRequest();}
   const overlayRoot = envelope.targetOptions.overlayRoot ?? null;
   if (overlayRoot !== null && typeof overlayRoot !== "string") {invalidRequest();}
+  const steamService = envelope.targetOptions.steamService ?? "DISABLED";
+  if (steamService !== "DISABLED" && steamService !== "LOCAL") {invalidRequest();}
+  let engineArguments: string[];
+  try {engineArguments = kirikiriEngineArguments(envelope.targetOptions.engineArguments);}
+  catch {invalidRequest();}
   return {
     contentDigest: game.contentDigest,
     projectIndexUrl: game.indexUrl,
@@ -147,6 +153,8 @@ export function kirikiri(envelope: LaunchEnvelopeV1): KirikiriParameters {
     startupXp3Path,
     engineMode,
     overlayRoot,
+    engineArguments,
+    steamService,
   };
 }
 

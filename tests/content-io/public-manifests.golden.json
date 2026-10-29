@@ -8799,7 +8799,7 @@
           "writeFormat": "gbe-pokemini-state-v1-storage-v1",
           "semantics": "INSTANT"
         },
-        "displayName": "Pokémon Mini (GBE+)",
+        "displayName": "Pok\u00e9mon Mini (GBE+)",
         "id": "gbe-pokemini",
         "inputs": [
           {
@@ -8933,6 +8933,18 @@
                 "string",
                 "null"
               ]
+            },
+            "engineMode": {
+              "enum": [
+                "KIRIKIRI2",
+                "KIRIKIRI_Z"
+              ],
+              "type": "string"
+            },
+            "overlayRoot": {
+              "format": "safe-path",
+              "maxLength": 240,
+              "type": "string"
             }
           },
           "required": [
@@ -10292,7 +10304,7 @@
           "writeFormat": "samcoupe-disk-save-v1-storage-v1",
           "semantics": "GAME_SAVE"
         },
-        "displayName": "SAM Coupé (SamCoupeWeb)",
+        "displayName": "SAM Coup\u00e9 (SamCoupeWeb)",
         "id": "samcoupe",
         "inputs": [
           {

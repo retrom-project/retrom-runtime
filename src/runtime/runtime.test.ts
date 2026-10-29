@@ -191,6 +191,26 @@ describe("unified runtime facts", () => {
     expect(prepared.resources[0].entryFile).toBe(prepared.targetOptions.startupXp3Path);
     expect(prepared.resources[0].paths).toEqual({[entryFile]: "data.xp3", "nested/project/patch.xp3": "patch.xp3"});
   });
+  it.each(["KIRIKIRI2", "KIRIKIRI_Z"])("prepares the explicit %s script engine mode independently of project identity", engineMode => {
+    const prepared = prepareRuntime({
+      directory: {platformId: "kirikiri", defaultCoreId: "kirikiri2", allowedCoreIds: ["kirikiri2"]},
+      files: [file("arbitrary/startup.tjs"), file("arbitrary/resources.xp3")],
+      config: {content: {kind: "KIRIKIRI_PROJECT", entryFile: "arbitrary/startup.tjs"}, cores: {kirikiri2: {options: {engineMode}}}},
+      fingerprints: {"retrom-runtime/kirikiri2-kag": fingerprint},
+    });
+    expect(prepared.targetOptions.engineMode).toBe(engineMode);
+    expect(prepared.resources[0].paths).toEqual({"arbitrary/startup.tjs": "startup.tjs", "arbitrary/resources.xp3": "resources.xp3"});
+  });
+  it("retains an explicit relative overlay root in a selected Kiri project", () => {
+    const prepared = prepareRuntime({
+      directory: {platformId: "kirikiri", defaultCoreId: "kirikiri2", allowedCoreIds: ["kirikiri2"]},
+      files: [file("bundle/data.xp3"), file("bundle/localization/chapter.ks")],
+      config: {content: {kind: "KIRIKIRI_PROJECT", entryFile: "bundle/data.xp3"}, cores: {kirikiri2: {options: {overlayRoot: "localization"}}}},
+      fingerprints: {"retrom-runtime/kirikiri2-kag": fingerprint},
+    });
+    expect(prepared.targetOptions.overlayRoot).toBe("localization");
+    expect(prepared.resources[0].paths).toEqual({"bundle/data.xp3": "data.xp3", "bundle/localization/chapter.ks": "localization/chapter.ks"});
+  });
   it("imports a DOS bundle with several programs for native menu selection without inventing an entry", () => {
     const input = {platformId: "dos", coreIds: ["dosbox_pure"], files: [file("game.zip")],
       archiveMembers: {"game.zip": ["GAME.EXE", "SETUP.EXE", "START.BAT"]}};

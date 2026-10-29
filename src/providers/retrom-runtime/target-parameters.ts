@@ -136,11 +136,17 @@ export function kirikiri(envelope: LaunchEnvelopeV1): KirikiriParameters {
   const game = resource(envelope, "game", "FILE_TREE");
   const startupXp3Path = envelope.targetOptions.startupXp3Path;
   if (startupXp3Path !== null && typeof startupXp3Path !== "string") {invalidRequest();}
+  const engineMode = envelope.targetOptions.engineMode ?? "KIRIKIRI2";
+  if (engineMode !== "KIRIKIRI2" && engineMode !== "KIRIKIRI_Z") {invalidRequest();}
+  const overlayRoot = envelope.targetOptions.overlayRoot ?? null;
+  if (overlayRoot !== null && typeof overlayRoot !== "string") {invalidRequest();}
   return {
     contentDigest: game.contentDigest,
     projectIndexUrl: game.indexUrl,
     runtimeBaseUrl: assetBase(envelope, "kirikiri"),
     startupXp3Path,
+    engineMode,
+    overlayRoot,
   };
 }
 

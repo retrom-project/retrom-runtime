@@ -34,7 +34,11 @@ const onsOptionsSchema = {
 } as const satisfies TargetOptionsSchema;
 const kirikiriOptionsSchema = {
   additionalProperties: false,
-  properties: {startupXp3Path: {format: "safe-path", maxLength: 240, type: ["string", "null"]}},
+  properties: {
+    startupXp3Path: {format: "safe-path", maxLength: 240, type: ["string", "null"]},
+    engineMode: {enum: ["KIRIKIRI2", "KIRIKIRI_Z"], type: "string"},
+    overlayRoot: {format: "safe-path", maxLength: 240, type: "string"},
+  },
   required: ["startupXp3Path"],
   type: "object",
 } as const satisfies TargetOptionsSchema;

@@ -4,7 +4,7 @@ import {defineAdapter, defineTarget} from "../../provider/declarations.js";
 
 export const pspAdapter = defineAdapter({id: "ppsspp-web", kind: "PPSSPP_WEB", abi: "ppsspp-host-v4",
   capabilities: {checkpoint: true, pause: true, screenshot: true, standardGamepad: true, frameCounter: true, volume: true},
-  checkpoint: {semantics: "INSTANT", writeFormat: "ppsspp-state-v1", readFormats: ["ppsspp-state-v1"]},
+  checkpoint: {semantics: "GAME_SAVE", writeFormat: "ppsspp-game-save-v1", readFormats: ["ppsspp-game-save-v1"]},
 });
 
 export const pspTarget = defineTarget({

@@ -4,13 +4,16 @@ import {mountPSP} from "./adapter.js";
 import {contentSessionFixture} from "../../tests/content-session-fixture.js";
 import {abi as contentAbi, contractSha256} from "../content-io/identity.js";
 import {verifiedContentAsset} from "../content-io/bootstrap.js";
+import type {CheckpointAvailability} from "../contract.js";
 vi.mock("../content-io/bootstrap.js", () => ({verifiedContentAsset: vi.fn(async () => new Blob(["verified sync client"]))}));
 const owners: ReturnType<typeof contentSessionFixture>[] = [];
 const config = {assetIndex: {}, game: {kind: "SEEKABLE_BLOB" as const, rangeRequired: true as const, url: "http://localhost/game", sizeBytes: 3, sha256: "a".repeat(64)}, runtimeBaseUrl: "http://localhost/core/"};
 
 function setup() {
   const core = {canvas: document.createElement("canvas"), checkpoint: vi.fn(async () => new Uint8Array([1, 2])),
-    frameCount: () => 10, pause: vi.fn(), resume: vi.fn(), screenshot: vi.fn(), stop: vi.fn(), setVolume: vi.fn()};
+    frameCount: () => 10, pause: vi.fn(), resume: vi.fn(), screenshot: vi.fn(), stop: vi.fn(), setVolume: vi.fn(),
+    getCheckpointAvailability: vi.fn<() => CheckpointAvailability>(() => ({available: true, blocker: null, revision: "native-save"})),
+    acknowledgeCheckpoint: vi.fn(async (_bytes: Uint8Array) => {})};
   const create = vi.fn(async (_options: unknown) => core);
   const release = vi.fn();
   const loader = async () => ({module: {abi: "ppsspp-host-v4", contentAbi, contractSha256, createPPSSPPHost: create}, assets: {}, close: release});
@@ -54,10 +57,29 @@ describe("independent PSP adapter", () => {
     await adapter.pause(); await adapter.resume(); adapter.setVolume?.(0.4);
     expect(core.pause).toHaveBeenCalledOnce(); expect(core.resume).toHaveBeenCalledOnce();
     expect(core.setVolume).toHaveBeenCalledWith(0.4);
-    expect(await adapter.checkpoint()).toEqual({format: "ppsspp-state-v1", bytes: new Uint8Array([1, 2])});
+    expect(await adapter.checkpoint({intent: "EXPORT"})).toEqual({format: "ppsspp-game-save-v1", bytes: new Uint8Array([1, 2])});
+    expect(adapter.getCheckpointAvailability()).toMatchObject({available: true, revision: "native-save",
+      save: {dataKind: "PROGRESS", capture: "IN_GAME", restore: "IN_GAME", captureAvailable: false}});
+    await expect(adapter.checkpoint({intent: "CAPTURE"})).rejects.toThrow("PPSSPP_SAVE_UNAVAILABLE");
+    await adapter.acknowledgeCheckpoint?.({format: "ppsspp-game-save-v1", bytes: Uint8Array.of(1, 2)});
+    expect(core.acknowledgeCheckpoint).toHaveBeenCalledWith(Uint8Array.of(1, 2));
     await adapter.exit(); await adapter.exit(); expect(core.stop).toHaveBeenCalledOnce(); expect(release).toHaveBeenCalledOnce();
     expect(adapter.getCheckpointAvailability().available).toBe(false);
     await expect(adapter.checkpoint()).rejects.toThrow("PPSSPP_RUNTIME_EXITED");
+  });
+  it("reports native absence, busy IO and acknowledged saves instead of offering an instant snapshot", async () => {
+    const {core, loader, content} = setup();
+    core.getCheckpointAvailability.mockReturnValue({available: false, blocker: "NO_SAVE"});
+    const adapter = await mountPSP(config, document.createElement("div"), window, null, vi.fn(), vi.fn(), undefined, {loader}, content);
+    expect(adapter.getCheckpointAvailability()).toMatchObject({available: false, blocker: "NO_SAVE", save: {captureAvailable: false}});
+    core.getCheckpointAvailability.mockReturnValue({available: false, blocker: "BUSY"});
+    expect(adapter.getCheckpointAvailability()).toMatchObject({available: false, blocker: "BUSY"});
+    core.getCheckpointAvailability.mockReturnValue({available: false, blocker: "UNCHANGED"});
+    expect(adapter.getCheckpointAvailability()).toMatchObject({available: false, blocker: "UNCHANGED"});
+    await expect(adapter.acknowledgeCheckpoint?.({format: "invalid", bytes: Uint8Array.of(1)})).rejects.toThrow("PPSSPP_CHECKPOINT_INVALID");
+    expect(core.acknowledgeCheckpoint).not.toHaveBeenCalled();
+    await adapter.exit();
+    await expect(adapter.acknowledgeCheckpoint?.({format: "ppsspp-game-save-v1", bytes: Uint8Array.of(1)})).rejects.toThrow("PPSSPP_RUNTIME_EXITED");
   });
   it("[BR-12] UNIT/ppsspp-abi rejects an incompatible ABI and empty checkpoints", async () => {
     const args = [config, document.createElement("div"), window, null, vi.fn(), vi.fn(), undefined] as const;

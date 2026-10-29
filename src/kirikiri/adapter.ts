@@ -48,6 +48,9 @@ type KirikiriModule = {
   _krkr2_host_observe_game_saves(): number;
   _krkr2_host_flush_game_saves(): Promise<number>;
   _krkr2_host_finalize_native_exit(): Promise<number>;
+  _krkr2_host_set_engine_mode?(mode: number): number;
+  _krkr2_host_resource_overlay_abi?(): number;
+  _resourceOverlayFiles: Array<{path: string; relativePath: string}>;
   _startupXp3Path?: string;
 };
 type KirikiriHostWindow = Window & Record<string, unknown> & {
@@ -161,7 +164,7 @@ export async function mountKirikiri2(
     vlfs.onWriteClose = (path, data) => overlay.record(path, data);
     vlfs.onUnlink = path => overlay.record(path, null);
     await vlfs.registerZipBlob(assets.archive, {stripPrefix: ""});
-    const project = await registerProject(vlfs, config.projectIndexUrl, document.baseURI, content, config.contentDigest, contentOptions.signal);
+    const project = await registerProject(vlfs, config.projectIndexUrl, document.baseURI, content, config.contentDigest, config.overlayRoot, contentOptions.signal);
     const restore = restorePayload ? await decodeKirikiriCheckpoint(restorePayload) : null;
     for (const entry of restore?.entries ?? []) {
       const path = `/${entry.path}`;
@@ -175,6 +178,7 @@ export async function mountKirikiri2(
     const runtimeUrl = assets.scriptUrl;
     const options: Partial<KirikiriModule> = {
       arguments: [],
+      _resourceOverlayFiles: project.overlayFiles,
       retromContentBridge: {abi: content.abi, contractSha256: content.contractSha256},
       canvas,
       locateFile: (path) => path === "index.wasm" ? assets.wasmUrl : new URL(path, base).href,
@@ -190,7 +194,20 @@ export async function mountKirikiri2(
         else {frameWindow.queueMicrotask(() => reportFailure(new RuntimeFailureError(
           "KIRIKIRI_RUNTIME_EXIT_FAILED", "CORE", [`Core exit status: ${status}`])));}
       },
-      onRuntimeInitialized: () => undefined,
+      onRuntimeInitialized: () => {
+        if (project.overlayFiles.length && host.Module?._krkr2_host_resource_overlay_abi?.() !== 1) {
+          const error = new RuntimeFailureError("KIRIKIRI_RESOURCE_OVERLAY_UNSUPPORTED", "CORE");
+          reportFailure(error);
+          throw error;
+        }
+        const nativeMode = config.engineMode === "KIRIKIRI_Z" ? 1 : 0;
+        const setMode = host.Module?._krkr2_host_set_engine_mode;
+        if ((!setMode && nativeMode !== 0) || (setMode && setMode(nativeMode) !== 0)) {
+          const error = new RuntimeFailureError("KIRIKIRI_ENGINE_MODE_UNSUPPORTED", "CORE");
+          reportFailure(error);
+          throw error;
+        }
+      },
       onScriptException: detail => {
         const error = new RuntimeFailureError("KIRIKIRI_SCRIPT_EXCEPTION", "CORE", [
           detail.message.slice(0, 2048),
@@ -277,7 +294,7 @@ function requireGameSaveAbi(module: KirikiriModule) {
 }
 
 async function registerProject(vlfs: KirikiriVlfs, indexUrl: string, documentBaseUrl: string,
-  content: KirikiriContent, contentDigest: string, signal?: AbortSignal) {
+  content: KirikiriContent, contentDigest: string, overlayRoot: string | null, signal?: AbortSignal) {
   let value: unknown;
   try {
     value = await fetchMetadataJson(new URL(indexUrl, documentBaseUrl), indexByteBudget(maximumProjectFiles, 1024), signal);
@@ -286,13 +303,18 @@ async function registerProject(vlfs: KirikiriVlfs, indexUrl: string, documentBas
   if (!index) {throw new Error("KIRIKIRI_PROJECT_INDEX_INVALID");}
   const base = new URL(indexUrl, documentBaseUrl);
   const paths: string[] = [];
+  const overlayFiles: Array<{path: string; relativePath: string}> = [];
   for (const file of index.files) {
     const path = `/${file.path}`;
     const reader = content.register(contentDigest, file.path, new URL(file.url, base).href, file.sizeBytes);
     vlfs.registerContent(path, {fileId: reader.id, sizeBytes: reader.sizeBytes}, reader);
     paths.push(path);
+    if (overlayRoot !== null && file.path.startsWith(`${overlayRoot}/`)) {
+      overlayFiles.push({path, relativePath: file.path.slice(overlayRoot.length + 1)});
+    }
   }
-  return {paths};
+  if (overlayRoot !== null && !overlayFiles.length) {throw new Error("KIRIKIRI_PROJECT_OVERLAY_INVALID");}
+  return {paths, overlayFiles};
 }
 
 function selectStartupPath(paths: string[], configured: string | null) {

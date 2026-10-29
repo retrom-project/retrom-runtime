@@ -2,6 +2,7 @@ import {open} from "node:fs/promises";
 import {createHash} from "node:crypto";
 import {magic, maximumFile, maximumIndex, requireFormat, uint64, chunk, adler32, resourceBytes, sourceHash} from "./bytes.mjs";
 import {readXp3} from "./xp3.mjs";
+import {resolveSeedOnly} from "./resource-format.mjs";
 
 async function writeAll(handle, bytes) {
   for (let at = 0; at < bytes.length;) {
@@ -17,11 +18,20 @@ function record(entry, offset, size, checksum) {
     ...(entry.time ? [chunk("time", entry.time)] : [])]));
 }
 async function transformed(archive, entry, filter, target, signal) {
+  if (archive.format === "xp3-native" && entry.seedOnly) {
+    requireFormat(filter.verified && entry.flags === 0 && entry.adler === 0 && entry.readable <= 32 * 1024 * 1024, "CHECKSUM_MISMATCH");
+    const chunks = [];
+    for await (const bytes of resourceBytes(archive.locator, entry, signal)) {chunks.push(bytes);}
+    const raw = Buffer.concat(chunks), output = resolveSeedOnly(raw, filter, entry.h);
+    await writeAll(target, output);
+    return {size: output.length, checksum: adler32(output), sha256: createHash("sha256").update(output).digest("hex"),
+      rawSha256: createHash("sha256").update(raw).digest("hex"), corrections: ["REUSED_FILTER_SEED"]};
+  }
   const rawHash = createHash("sha256"), decodedHash = createHash("sha256");
   let size = 0, checksum = 1, prefix = Buffer.alloc(0);
   for await (const bytes of resourceBytes(archive.locator, entry, signal)) {
     if (prefix.length < 64) {prefix = Buffer.concat([prefix, bytes.subarray(0, 64 - prefix.length)]);}
-    rawHash.update(bytes); filter.apply(bytes, entry.h, size);
+    rawHash.update(bytes); filter.apply(bytes, entry.h, size, entry);
     checksum = adler32(bytes, checksum); decodedHash.update(bytes); size += bytes.length;
     requireFormat(size <= entry.readable);
     await writeAll(target, bytes);
@@ -61,7 +71,7 @@ async function verify(path, entries, signal) {
 }
 /** Stream one protected logical namespace to an ordinary, independently reread XP3. */
 export async function convertXp3(archive, file, path, filter, audit, signal) {
-  requireFormat(await sourceHash(archive.locator, signal) === file.sha256, "SOURCE_CHANGED");
+  requireFormat(await sourceHash(archive.sourceLocator ?? archive.locator, signal) === file.sha256, "SOURCE_CHANGED");
   const target = await open(path, "wx", 0o600), records = [], expected = [];
   let position = 19, indexSize = 0, verifiedEntries = 0, metadataCorrections = 0;
   try {
@@ -91,6 +101,6 @@ export async function convertXp3(archive, file, path, filter, audit, signal) {
       sourceFlags: entry.flags, sourceAdler32: entry.adler, rawStreamSha256: digest.digest("hex"), reason: "OUTSIDE_LOGICAL_NAMESPACE"});
   }
   const result = await verify(path, expected, signal);
-  requireFormat(await sourceHash(archive.locator, signal) === file.sha256, "SOURCE_CHANGED");
+  requireFormat(await sourceHash(archive.sourceLocator ?? archive.locator, signal) === file.sha256, "SOURCE_CHANGED");
   return {...file, ...result, path, verifiedEntries, metadataCorrections, omittedPhysicalEntries: archive.omitted.length};
 }

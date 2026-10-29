@@ -29,6 +29,70 @@ afterEach(() => {
 });
 
 describe("KiriKiri2 KAG runtime", () => {
+  it("passes an explicit resource search layer while preserving the complete original file tree", async () => {
+    enableRuntimeFeatures(); const vlfs = fakeVlfs();
+    mockDownloads(["/data.xp3", "/images/title.png", "/translations/custom/images/title.png", "/translations/custom/chapter.ks"]);
+    const envelope = config(); envelope.targetOptions.overlayRoot = "translations/custom";
+    const runtime = await createRuntime(envelope, currentWindowHost(null));
+    const mounting = runtime.mount(document.createElement("div")); await loadVlfs(vlfs);
+    const module = await loadCore(vlfs); await mounting;
+    try {
+      const calls = vlfs.registerContent.mock.calls as unknown as Array<[string, unknown, unknown]>;
+      expect(calls.filter(([path]) => path === "/images/title.png")).toHaveLength(1);
+      expect(calls.some(([path]) => path === "/chapter.ks")).toBe(false);
+      expect(module._resourceOverlayFiles).toEqual([
+        {path: "/translations/custom/images/title.png", relativePath: "images/title.png"},
+        {path: "/translations/custom/chapter.ks", relativePath: "chapter.ks"},
+      ]);
+      expect(module._krkr2_host_resource_overlay_abi).toHaveBeenCalledOnce();
+    } finally {await runtime.exit();}
+  });
+  it.each(["absent", "Translations/custom"])("rejects a missing exact overlay root %s before starting scripts", async overlayRoot => {
+    enableRuntimeFeatures(); const vlfs = fakeVlfs(); mockDownloads(["/data.xp3", "/translations/custom/chapter.ks"]);
+    const envelope = config(); envelope.targetOptions.overlayRoot = overlayRoot;
+    const runtime = await createRuntime(envelope, currentWindowHost(null));
+    const mounting = runtime.mount(document.createElement("div"));
+    const outcome = mounting.catch(error => error as Error); await loadVlfs(vlfs);
+    expect(await outcome).toMatchObject({message: "KIRIKIRI_PROJECT_OVERLAY_INVALID"});
+    expect(runtimeScripts()).toHaveLength(0);
+    expect((window as HostWindow).Module).toBeUndefined();
+  });
+  it("rejects an explicit resource search layer on a core without its ABI", async () => {
+    enableRuntimeFeatures(); const vlfs = fakeVlfs(); mockDownloads(["/data.xp3", "/patches/chapter.ks"]);
+    const envelope = config(); envelope.targetOptions.overlayRoot = "patches";
+    const runtime = await createRuntime(envelope, currentWindowHost(null));
+    const outcome = runtime.mount(document.createElement("div")).catch(error => error as Error);
+    await loadVlfs(vlfs);
+    await expect(loadCore(vlfs, {overlaySupported: false})).rejects.toThrow("KIRIKIRI_RESOURCE_OVERLAY_UNSUPPORTED");
+    expect(await outcome).toMatchObject({message: "KIRIKIRI_RESOURCE_OVERLAY_UNSUPPORTED"});
+  });
+  it.each([["KIRIKIRI2", 0], ["KIRIKIRI_Z", 1]] as const)("selects %s before the core starts game scripts", async (mode, nativeMode) => {
+    enableRuntimeFeatures(); const vlfs = fakeVlfs(); mockDownloads();
+    const envelope = config(); envelope.targetOptions.engineMode = mode;
+    const runtime = await createRuntime(envelope, currentWindowHost(null));
+    const mounting = runtime.mount(document.createElement("div")); await loadVlfs(vlfs);
+    const module = await loadCore(vlfs); await mounting;
+    try {expect(module._krkr2_host_set_engine_mode).toHaveBeenCalledExactlyOnceWith(nativeMode);}
+    finally {await runtime.exit();}
+  });
+  it.each([{engineModeSupported: false}, {engineModeResult: -1}])("rejects an unsupported explicit Z mode without starting in another mode", async options => {
+    enableRuntimeFeatures(); const vlfs = fakeVlfs(); mockDownloads();
+    const envelope = config(); envelope.targetOptions.engineMode = "KIRIKIRI_Z";
+    const runtime = await createRuntime(envelope, currentWindowHost(null));
+    const outcome = runtime.mount(document.createElement("div")).catch(error => error as Error);
+    await loadVlfs(vlfs);
+    await expect(loadCore(vlfs, options)).rejects.toThrow("KIRIKIRI_ENGINE_MODE_UNSUPPORTED");
+    expect(await outcome).toMatchObject({message: "KIRIKIRI_ENGINE_MODE_UNSUPPORTED"});
+    expect((window as HostWindow).Module).toBeUndefined();
+    expect(runtimeScripts()).toHaveLength(0);
+  });
+  it("retains the original default when a core has no optional mode setter", async () => {
+    enableRuntimeFeatures(); const vlfs = fakeVlfs(); mockDownloads();
+    const runtime = await createRuntime(config(), currentWindowHost(null));
+    const mounting = runtime.mount(document.createElement("div")); await loadVlfs(vlfs);
+    await loadCore(vlfs, {engineModeSupported: false}); await mounting;
+    await runtime.exit();
+  });
   it.each(["exit", "mount-abort"] as const)("drains a suspended tick before releasing globals on %s", async (mode) => {
     enableRuntimeFeatures();
     const vlfs = fakeVlfs();

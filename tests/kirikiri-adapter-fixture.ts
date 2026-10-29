@@ -5,6 +5,7 @@ import {contractSha256} from "../src/content-io/identity.js";
 type FakeModule = {
   locateFile: (path: string) => string;
   onAbort?: (reason: unknown) => void;
+  onRuntimeInitialized?: () => void;
   onExit?: (status: number) => void;
   onNativeExitRequested?: (status: number) => void;
   onScriptException?: (detail: {message: string; script: string; line: number; trace: string}) => void;
@@ -19,6 +20,8 @@ type FakeModule = {
   _krkr2_host_load_bookmark_state: ReturnType<typeof vi.fn>;
   _krkr2_host_save_bookmark: ReturnType<typeof vi.fn>;
   _krkr2_host_observe_game_saves: ReturnType<typeof vi.fn>;
+  _krkr2_host_set_engine_mode: ReturnType<typeof vi.fn>;
+  _krkr2_host_resource_overlay_abi: ReturnType<typeof vi.fn>;
   _krkr2_host_flush_game_saves: ReturnType<typeof vi.fn>;
   _krkr2_host_finalize_native_exit: ReturnType<typeof vi.fn>;
   _startupXp3Path?: string;
@@ -80,7 +83,8 @@ export async function loadVlfs(vlfs: FakeVlfs) {
 
 export async function loadCore(
   vlfs: FakeVlfs,
-  options: { bookmarkReady?: number; loadReady?: number; restoreResult?: number; restoreState?: number; abort?: boolean; stopping?: Promise<void> } = {},
+  options: { bookmarkReady?: number; loadReady?: number; restoreResult?: number; restoreState?: number; abort?: boolean; stopping?: Promise<void>;
+    engineModeSupported?: boolean; engineModeResult?: number; overlaySupported?: boolean } = {},
 ) {
   await vi.waitFor(() => expect(runtimeScripts()).toHaveLength(2));
   const configured = (window as HostWindow).Module ?? {};
@@ -89,6 +93,8 @@ export async function loadCore(
     resumeMainLoop: vi.fn(),
     krkr2StopMainLoop: vi.fn(() => options.stopping ?? Promise.resolve()),
     _krkr2_host_observe_game_saves: vi.fn(() => 1),
+    _krkr2_host_set_engine_mode: options.engineModeSupported === false ? undefined : vi.fn(() => options.engineModeResult ?? 0),
+    _krkr2_host_resource_overlay_abi: options.overlaySupported === false ? undefined : vi.fn(() => 1),
     _krkr2_host_flush_game_saves: vi.fn(async () => 0),
     _krkr2_host_finalize_native_exit: vi.fn(async () => 0),
     _krkr2_host_bookmark_is_ready: vi.fn(() => options.bookmarkReady ?? 1),
@@ -103,6 +109,7 @@ export async function loadCore(
   }) as FakeModule;
   (window as HostWindow).Module = module;
   runtimeScripts()[1]!.dispatchEvent(new Event("load"));
+  module.onRuntimeInitialized?.();
   if (options.abort) {(module.onAbort as () => void)();}
   else {module.postRun[0]?.();}
   return module;

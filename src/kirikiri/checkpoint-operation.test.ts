@@ -268,7 +268,7 @@ it.each([{name: "ExitStatus", status: 3}, {status: 0}, new WebAssembly.RuntimeEr
 function fixture(progress = true) {
   const overlay = new KirikiriWriteOverlay();
   if (progress) {
-    overlay.observe({phase: "begin", id: 1});
+    overlay.observe({phase: "begin", id: 1, history: true});
     overlay.record("/profile/玩家/slot.png", Uint8Array.of(4, 2));
     overlay.observe({phase: "end", id: 1, success: true});
   }

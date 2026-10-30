@@ -1,6 +1,7 @@
 import {createHash} from "node:crypto";
 import {openContent} from "../runtime-host-content.mjs";
 import {magic, maximumIndex, maximumFile, requireFormat, number64, chunks, readExact, inflate, text16, normalizeName, safeName} from "./bytes.mjs";
+import {shortWarningShape, validateWarningMetadata} from "./warning-metadata.mjs";
 
 async function indexes(handle, signal, onTag) {
   requireFormat((await readExact(handle, 0, magic.length)).equals(magic));
@@ -21,7 +22,7 @@ async function indexes(handle, signal, onTag) {
   }
   throw new Error("RUNTIME_KIRIKIRI_ARCHIVE_LIMIT");
 }
-function parseFile(data, sourceSize, allowShort) {
+function parseFile(data, sourceSize) {
   const fields = new Map();
   for (const {tag, bytes} of chunks(data)) {
     requireFormat(["info", "segm", "adlr", "time"].includes(tag) && !fields.has(tag), "ARCHIVE_UNSUPPORTED"); fields.set(tag, bytes);
@@ -39,9 +40,9 @@ function parseFile(data, sourceSize, allowShort) {
     requireFormat(readable <= maximumFile && stored <= maximumFile, "ARCHIVE_LIMIT");
     segments.push({mode, offset, expanded, packed: count});
   }
-  requireFormat(stored <= packed && readable <= size &&
-    (stored === packed && readable === size || allowShort && flags === 0 && readable < size));
-  return {physical, name: physical, size, packed, flags, segments, readable, adler: checksum.readUInt32LE(), time};
+  const entry = {physical, name: physical, size, packed, flags, segments, readable, adler: checksum.readUInt32LE(), time};
+  requireFormat(stored <= packed && readable <= size && (stored === packed && readable === size || shortWarningShape(entry)));
+  return entry;
 }
 function parseNames(rows) {
   const names = new Map();
@@ -112,10 +113,14 @@ export async function readXp3(locator, {signal, includePlainEntries = false} = {
     if (tags.has("Hxv4") && !protectedNames) {return {locator, format: null, unsupportedFormat: "hxv4"};}
     if (!protectedNames && !includePlainEntries) {return {locator, format: null};}
     if (protectedNames) {requireFormat(rows.every(row => ["File", "eliF", "hnfn", "Yuzu", "neko", "sen:"].includes(row.tag)), "ARCHIVE_UNSUPPORTED");}
-    const files = rows.filter(row => row.tag === "File").map(row => parseFile(row.bytes, locator.sizeBytes, protectedNames));
-    if (!protectedNames) {return {locator, format: null, entries: files};}
+    const files = rows.filter(row => row.tag === "File").map(row => parseFile(row.bytes, locator.sizeBytes));
+    if (!protectedNames) {
+      await validateWarningMetadata(locator, files, signal);
+      return {locator, format: null, entries: files};
+    }
     const table = await nameTable(rows, handle);
-    return {locator, ...table, ...linkEntries(files, table)};
+    const linked = linkEntries(files, table); await validateWarningMetadata(locator, linked.entries, signal);
+    return {locator, ...table, ...linked};
   } catch (error) {
     if (signal?.aborted || error.message?.startsWith("RUNTIME_")) {throw error;}
     throw new Error("RUNTIME_KIRIKIRI_ARCHIVE_INVALID");

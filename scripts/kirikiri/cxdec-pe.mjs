@@ -1,4 +1,5 @@
 import {inflateSync} from "node:zlib";
+import {registerMove, shiftIs, xor32Is, scheduledOperation, registerPreserved, reachableInstructions} from "./pe-schedule.mjs";
 
 // Static recognition vocabulary cross-checked with xp3-brute 0.3.7 (MIT):
 // https://docs.rs/crate/xp3-brute/0.3.7/source/src/legacy_cxdec.rs
@@ -106,19 +107,44 @@ function boundaries(bytes, pe) {
         if (bytes[a] !== 0x81 || bytes[a + 1] !== (0xc0 | reg)) continue;
         const offset = u32(bytes, a + 2);
         if (!offset || offset > 0xffffff) continue;
-        const after = storesRegister(bytes, a + 6, Math.min(s.end, a + 24), reg, 8);
+        const end = Math.min(s.end, a + 24), after = storesRegister(bytes, a + 6, end, reg, 8);
         if (after.some(base => before.includes(base))) out.push({mask, offset, at: i});
+        const separated = storesRegister(bytes, a + 6, end, reg, 16).filter(base => before.includes(base));
+        for (let p = Math.max(s.raw, i - 24); p + 7 <= i; p++) {
+          const copy = registerMove(bytes, p);
+          if (copy?.from === reg && shiftIs(bytes, p + 2, copy.to, 16) && xor32Is(bytes, p + 5, copy.to, reg) &&
+              storesRegister(bytes, a + 6, end, copy.to, 8).some(base => separated.includes(base))) {
+            out.push({mask, offset, at: i, separated: true});
+          }
+        }
       }
     }
   }
   return cap(unique(out, p => `${p.mask}:${p.offset}`));
 }
 
+function forwardedCallbacks(bytes, pe) {
+  const result = [];
+  for (const s of pe.sections.filter(s => s.executable)) for (let at = s.raw; at + 5 < s.end; at++) {
+    if (bytes[at] !== 0x83 || bytes[at + 1] >> 3 !== 7 || bytes[at + 2] !== 24) {continue;}
+    const base = bytes[at + 1] & 7, guard = branch(bytes, at + 3, s.end);
+    if (!guard || guard.op !== 0x74 || guard.target < at + 5 || guard.target + 6 > Math.min(s.end, at + 96) ||
+        bytes[guard.target] !== 0x50 + base) {continue;}
+    const target = pe.callTarget(guard.target + 1);
+    if (target === null) {continue;}
+    let load = target, saved = 0;
+    while (saved < 4 && bytes[load] >= 0x50 && bytes[load] <= 0x57 && bytes[load] !== 0x54) {load++; saved++;}
+    if (bytes[load] === 0x8b && (bytes[load + 1] & 0xc7) === 0x44 && bytes[load + 2] === 0x24 &&
+        bytes[load + 3] === 4 + saved * 4) {result.push({start: load + 4, base: bytes[load + 1] >> 3 & 7});}
+  }
+  return cap(result);
+}
+
 // Older extraction filters consume the public 24-byte callback record rather
 // than a stream constructor. Track its seed field, same-register mask/add,
 // high-word fold and two calls to the same region consumer.
 function callbackBoundaries(bytes, pe) {
-  const out = [];
+  const out = [], forwarded = forwardedCallbacks(bytes, pe);
   for (const s of pe.sections.filter(s => s.executable)) {
     for (let at = s.raw; at + 24 < s.end; at++) {
       const mod = bytes[at + 1];
@@ -128,13 +154,16 @@ function callbackBoundaries(bytes, pe) {
       for (let p = Math.max(s.raw, at - 64); p + 2 < at; p++) {
         if (bytes[p] === 0x83 && bytes[p + 1] === (0x38 | base) && bytes[p + 2] === 24) {abi = true;}
       }
-      if (!abi) {continue;}
-      const move = registerMove(bytes, at + 3);
-      if (!move || move.from !== seed) {continue;}
-      const reg = move.to, start = at + 5;
+      const delegated = forwarded.some(value => value.base === base && registerPreserved(bytes, value.start, at, base));
+      if (!abi && !delegated) {continue;}
+      const copied = scheduledOperation(bytes, at + 3, s.end, p => registerMove(bytes, p)?.from === seed, [seed]);
+      if (copied === null) {continue;}
+      const reg = registerMove(bytes, copied).to, start = copied + 2;
       const andSize = bytes[start] === 0x25 && reg === 0 ? 5 : bytes[start] === 0x81 && bytes[start + 1] === (0xe0 | reg) ? 6 : 0;
       if (!andSize) {continue;}
-      const mask = u32(bytes, start + andSize - 4), add = start + andSize;
+      const mask = u32(bytes, start + andSize - 4), add = scheduledOperation(bytes, start + andSize, s.end,
+        p => bytes[p] === 5 && reg === 0 || bytes[p] === 0x81 && bytes[p + 1] === (0xc0 | reg), [seed, reg]);
+      if (add === null) {continue;}
       const addSize = bytes[add] === 5 && reg === 0 ? 5 : bytes[add] === 0x81 && bytes[add + 1] === (0xc0 | reg) ? 6 : 0;
       if (!addSize) {continue;}
       const offset = u32(bytes, add + addSize - 4), end = Math.min(s.end, at + 160), calls = [];
@@ -144,13 +173,15 @@ function callbackBoundaries(bytes, pe) {
         const target = pe.callTarget(p);
         if (target !== null) {calls.push({at: p, target});}
         const copy = registerMove(bytes, p);
-        if (copy?.from === seed && shiftIs(bytes, p + 2, copy.to, 16) &&
-            bytes[p + 5] === 0x33 && bytes[p + 6] === (0xc0 | copy.to << 3 | seed)) {
-          folds.push(p);
+        if (copy?.from === seed) {
+          const shift = scheduledOperation(bytes, p + 2, end, at => shiftIs(bytes, at, copy.to, 16), [seed, copy.to]);
+          const fold = shift === null ? null : scheduledOperation(bytes, shift + 3, end, at => xor32Is(bytes, at, copy.to, seed), [seed, copy.to]);
+          if (fold !== null) {folds.push(fold);}
         }
       }
       if (folds.some(fold => calls.some(first => first.at < fold && calls.some(second => second.at > fold && second.target === first.target)))) {
-        out.push({mask, offset, at: start});
+        const consumer = calls.find(first => folds.some(fold => first.at < fold && calls.some(second => second.at > fold && second.target === first.target))).target;
+        out.push({mask, offset, at: start, consumer, delegated});
       }
     }
   }
@@ -226,7 +257,8 @@ function managers(bytes, pe) {
           for (let g = Math.max(start, p - 48); g + 5 <= p; ++g) {
             const getter = pe.callTarget(g);
             if (getter === null || getter + 6 > bytes.length || bytes[getter] !== 0xb8 || bytes[getter + 5] !== 0xc3) continue;
-            const table = pe.fromVa(u32(bytes, getter + 1), 4096, false);
+            // A control table is file-backed data even when its PE section is executable.
+            const table = pe.fromVa(u32(bytes, getter + 1), 4096);
             if (table !== null) out.push({at: a, builder, table, getter});
           }
         }
@@ -370,6 +402,17 @@ function dispatches(bytes, pe) {
   return cap(unique(out, d => `${d.kind}:${d.order}`));
 }
 
+function consumerCallsManager(bytes, pe, consumer, manager) {
+  const end = Math.min(pe.sectionAt(consumer).end, consumer + 96);
+  return reachableInstructions(bytes, consumer, end).some(instruction => {
+    const target = instruction.flow === "call" ? pe.callTarget(instruction.at) : null;
+    if (target === null || target > manager || manager - target > 128) {return false;}
+    // Proximity alone does not link a function entry to the manager's lane AND.
+    return reachableInstructions(bytes, target, Math.min(pe.sectionAt(target).end, manager + 3))
+      .some(instruction => instruction.at === manager);
+  });
+}
+
 /** Candidates require code-linked manager, file-backed table, constructor and complete grammar permutations. */
 export function discoverCxProfiles(input) {
   const bytes = bytesOf(input), pe = parsePe(bytes);
@@ -390,24 +433,21 @@ export function discoverCxProfiles(input) {
         return found;
       }), value => value) : [m.table];
       for (const table of tables) for (const split of m.table === null ? callbackSplits : constructorSplits) {
+        const legacy = split.separated && callbackSplits.find(callback => callback.delegated && callback.mask === split.mask && callback.offset === split.offset &&
+          consumerCallsManager(bytes, pe, callback.consumer, m.at));
         profiles.push({mask: split.mask, offset: split.offset, prologOrder: p.order, evenBranchOrder: e.order, oddBranchOrder: o.order,
           controlBlock: Buffer.from(bytes.subarray(table, table + 4096)), generator: "classic",
+          ...(legacy ? {legacyBulk: true} : {}),
           evidence: {managerVa: pe.toVa(m.at), builderVa: pe.toVa(m.builder), tableVa: pe.toVa(table), boundaryVa: pe.toVa(split.at),
-            dispatchVa: [pe.toVa(p.at), pe.toVa(e.at), pe.toVa(o.at)]}});
+            dispatchVa: [pe.toVa(p.at), pe.toVa(e.at), pe.toVa(o.at)], ...(legacy ? {legacyBoundaryVa: pe.toVa(legacy.at)} : {})}});
         cap(profiles);
       }
     }
   }
-  return unique(profiles, p => `${p.mask}:${p.offset}:${p.prologOrder}:${p.evenBranchOrder}:${p.oddBranchOrder}:${p.controlBlock.toString("hex")}`);
+  return unique(profiles.sort((a, b) => Number(Boolean(a.legacyBulk)) - Number(Boolean(b.legacyBulk))),
+    p => `${p.mask}:${p.offset}:${p.prologOrder}:${p.evenBranchOrder}:${p.oddBranchOrder}:${p.controlBlock.toString("hex")}`);
 }
 
-function registerMove(bytes, at) {
-  const opcode = bytes[at], m = bytes[at + 1];
-  if (![0x89, 0x8b].includes(opcode) || m >> 6 !== 3) return null;
-  return opcode === 0x8b ? {to: m >> 3 & 7, from: m & 7} : {to: m & 7, from: m >> 3 & 7};
-}
-
-function shiftIs(bytes, at, reg, amount) {return bytes[at] === 0xc1 && bytes[at + 1] === (0xe8 | reg) && bytes[at + 2] === amount;}
 function xorIs(bytes, at, to, from) {
   return bytes[at] === 0x32 && bytes[at + 1] === (0xc0 | to << 3 | from) ||
     bytes[at] === 0x30 && bytes[at + 1] === (0xc0 | from << 3 | to);

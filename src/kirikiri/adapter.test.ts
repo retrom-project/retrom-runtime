@@ -29,6 +29,42 @@ afterEach(() => {
 });
 
 describe("KiriKiri2 KAG runtime", () => {
+  it("supplies explicit engine arguments and an opted-in local service before native startup", async () => {
+    enableRuntimeFeatures(); const vlfs = fakeVlfs(); mockDownloads();
+    const envelope = config();
+    envelope.targetOptions.engineArguments = ["-locale=first", "-flag", "-locale=second", "-caption=中文 text", "-empty="];
+    envelope.targetOptions.steamService = "LOCAL";
+    const runtime = await createRuntime(envelope, currentWindowHost(null));
+    const mounting = runtime.mount(document.createElement("div")); await loadVlfs(vlfs);
+    const module = await loadCore(vlfs); await mounting;
+    try {
+      expect(module.arguments).toEqual(envelope.targetOptions.engineArguments);
+      expect(module.retromLocalSteamService).toBe(true);
+      expect(module._krkr2_host_engine_arguments_abi).toHaveBeenCalledOnce();
+      expect(module._krkr2_host_local_steam_service_abi).toHaveBeenCalledOnce();
+    } finally {await runtime.exit();}
+  });
+  it.each([
+    ["engineArguments", ["-locale=value"], {engineArgumentsSupported: false}, "KIRIKIRI_ENGINE_ARGUMENTS_UNSUPPORTED"],
+    ["steamService", "LOCAL", {localSteamSupported: false}, "KIRIKIRI_LOCAL_STEAM_SERVICE_UNSUPPORTED"],
+  ] as const)("rejects unsupported explicit %s before native scripts", async (key, value, options, code) => {
+    enableRuntimeFeatures(); const vlfs = fakeVlfs(); mockDownloads();
+    const envelope = config(); envelope.targetOptions[key] = typeof value === "string" ? value : [...value];
+    const runtime = await createRuntime(envelope, currentWindowHost(null));
+    const outcome = runtime.mount(document.createElement("div")).catch(error => error as Error);
+    await loadVlfs(vlfs);
+    await expect(loadCore(vlfs, options)).rejects.toThrow(code);
+    expect(await outcome).toMatchObject({message: code});
+    expect((window as HostWindow).Module).toBeUndefined();
+  });
+  it("keeps optional native arguments and local services disabled when not configured", async () => {
+    enableRuntimeFeatures(); const vlfs = fakeVlfs(); mockDownloads();
+    const runtime = await createRuntime(config(), currentWindowHost(null));
+    const mounting = runtime.mount(document.createElement("div")); await loadVlfs(vlfs);
+    const module = await loadCore(vlfs, {engineArgumentsSupported: false, localSteamSupported: false}); await mounting;
+    try {expect(module.arguments).toEqual([]); expect(module.retromLocalSteamService).toBe(false);}
+    finally {await runtime.exit();}
+  });
   it("passes an explicit resource search layer while preserving the complete original file tree", async () => {
     enableRuntimeFeatures(); const vlfs = fakeVlfs();
     mockDownloads(["/data.xp3", "/images/title.png", "/translations/custom/images/title.png", "/translations/custom/chapter.ks"]);

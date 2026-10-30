@@ -3,6 +3,7 @@ import {createHash} from "node:crypto";
 import {magic, maximumFile, maximumIndex, requireFormat, uint64, chunk, adler32, resourceBytes, sourceHash} from "./bytes.mjs";
 import {readXp3} from "./xp3.mjs";
 import {resolveSeedOnly} from "./resource-format.mjs";
+import {selectResourceStage} from "./stages.mjs";
 
 async function writeAll(handle, bytes) {
   for (let at = 0; at < bytes.length;) {
@@ -27,11 +28,12 @@ async function transformed(archive, entry, filter, target, signal) {
     return {size: output.length, checksum: adler32(output), sha256: createHash("sha256").update(output).digest("hex"),
       rawSha256: createHash("sha256").update(raw).digest("hex"), corrections: ["REUSED_FILTER_SEED"]};
   }
+  const stage = filter.stages && entry.flags === 0x80000000 ? await selectResourceStage(archive.locator, entry, filter, signal) : null;
+  const apply = entry.warningMetadata ? bytes => bytes : stage?.apply ?? filter.apply;
   const rawHash = createHash("sha256"), decodedHash = createHash("sha256");
-  let size = 0, checksum = 1, prefix = Buffer.alloc(0);
+  let size = 0, checksum = 1;
   for await (const bytes of resourceBytes(archive.locator, entry, signal)) {
-    if (prefix.length < 64) {prefix = Buffer.concat([prefix, bytes.subarray(0, 64 - prefix.length)]);}
-    rawHash.update(bytes); filter.apply(bytes, entry.h, size, entry);
+    rawHash.update(bytes); apply(bytes, entry.h, size, entry);
     checksum = adler32(bytes, checksum); decodedHash.update(bytes); size += bytes.length;
     requireFormat(size <= entry.readable);
     await writeAll(target, bytes);
@@ -39,11 +41,9 @@ async function transformed(archive, entry, filter, target, signal) {
   requireFormat(size === entry.readable);
   const corrections = [];
   if (size !== entry.size || entry.segments.reduce((sum, segment) => sum + segment.packed, 0) !== entry.packed) {
-    // This protector's warning sentinel is metadata, not a truncated script or
-    // image. Both its table name and raw body identify it independently of h.
-    requireFormat(filter.verified && entry.flags === 0 && size < entry.size && entry.size <= 4096 &&
-      entry.name.startsWith("$$$ this is a protected archive. $$$") && entry.name.endsWith(".txt") &&
-      entry.segments.every(segment => segment.mode === 0) && prefix.toString("ascii").startsWith("Warning: Extracting this archive"));
+    // The parser validated the entire bounded raw metadata representation.
+    // This remains an audited correction, never a decoded source checksum pass.
+    requireFormat(filter.verified && entry.warningMetadata === true);
     corrections.push("FORMAT_WARNING_SHORT_STREAM");
   }
   if (checksum !== entry.adler && !corrections.length) {
@@ -53,7 +53,9 @@ async function transformed(archive, entry, filter, target, signal) {
     requireFormat(filter.kind === "tiny" && entry.seedOnly && filter.verified, "CHECKSUM_MISMATCH");
     corrections.push("REUSED_FILTER_SEED");
   }
-  return {size, checksum, sha256: decodedHash.digest("hex"), rawSha256: rawHash.digest("hex"), corrections};
+  const sha256 = decodedHash.digest("hex"), rawSha256 = rawHash.digest("hex");
+  requireFormat(!stage || stage.sha256 === sha256 && stage.rawSha256 === rawSha256, "SOURCE_CHANGED");
+  return {size, checksum, sha256, rawSha256, corrections, ...(stage ? {filterStage: stage.id} : {})};
 }
 async function verify(path, entries, signal) {
   const handle = await open(path, "r"); let sizeBytes;
@@ -86,7 +88,7 @@ export async function convertXp3(archive, file, path, filter, audit, signal) {
       await audit({archive: file.logicalKey, kind: "resource", logicalName: entry.name, physicalName: entry.physical,
         sourceSize: entry.size, sourcePackedSize: entry.packed, sourceAdler32: entry.adler, sourceSeed: entry.h, sourceFlags: entry.flags,
         outputSize: result.size, outputAdler32: result.checksum, outputSha256: result.sha256, rawStreamSha256: result.rawSha256,
-        sourceIntegrityVerified: result.corrections.length === 0, corrections: result.corrections});
+        sourceIntegrityVerified: result.corrections.length === 0, corrections: result.corrections, filterStage: result.filterStage});
     }
     requireFormat(position + 9 + indexSize <= maximumFile, "ARCHIVE_LIMIT");
     await writeAll(target, Buffer.concat([Buffer.from([0]), uint64(indexSize)]));

@@ -38,6 +38,8 @@ const kirikiriOptionsSchema = {
     startupXp3Path: {format: "safe-path", maxLength: 240, type: ["string", "null"]},
     engineMode: {enum: ["KIRIKIRI2", "KIRIKIRI_Z"], type: "string"},
     overlayRoot: {format: "safe-path", maxLength: 240, type: "string"},
+    engineArguments: {type: "array", maxItems: 64, items: {type: "string", minLength: 1, maxLength: 1024}},
+    steamService: {enum: ["DISABLED", "LOCAL"], type: "string"},
   },
   required: ["startupXp3Path"],
   type: "object",

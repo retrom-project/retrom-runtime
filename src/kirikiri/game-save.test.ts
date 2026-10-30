@@ -38,9 +38,9 @@ it("syncs files from a completed native save without creating a hidden host slot
     vlfs.onWriteClose?.("/database/user.sqlite-journal", Uint8Array.of(5));
     vlfs.onUnlink?.("/database/user.sqlite-journal");
     expect(runtime.getCheckpointAvailability()).toMatchObject({available: false, reason: "NO_SAVE"});
-    const notify = module.onGameSave as (event: {phase: string; id: number; success?: boolean}) => void;
+    const notify = module.onGameSave as (event: {phase: string; id: number; success?: boolean; history?: boolean}) => void;
     expect(notify).toBeTypeOf("function");
-    notify({phase: "begin", id: 1});
+    notify({phase: "begin", id: 1, history: true});
     vlfs.onWriteClose?.("/profiles/玩家/任意槽.png", Uint8Array.of(1, 2));
     vlfs.onWriteClose?.("/profiles/玩家/任意槽.png", Uint8Array.of(1, 2, 3, 4));
     notify({phase: "end", id: 1, success: true});

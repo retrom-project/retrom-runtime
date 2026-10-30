@@ -171,6 +171,13 @@ set. This also supports KAG games that override the default `data1999.ksd` filen
 bookmark API. If the host paused the runtime before asking for a checkpoint, the adapter resumes it before waiting
 for the next stable KAG save point and restores the paused state after capture.
 
+A checkpoint's optional `screenshot` describes its save point. KiriKiri attaches the game's own KAG
+`lockSnapshot()` image to the checkpoint that contains a new player bookmark (`saveBookMarkToFile` without
+`savehist=false`), so save menus and confirmation dialogs stay out of the save card. Exports that only carry
+system variables or system bookmarks such as the KAG start anchor are marked `UNCHANGED`, and the Host keeps the
+save's existing screenshot. Other screenshots wait up to 3 seconds for a stable KAG frame while the engine runs,
+so a scene transition is not captured as a black or fading frame.
+
 The KiriKiri Web core does not expose its native pad-key conversion in Emscripten builds. It uses the shared
 Provider gamepad cursor (enabled by default); Ruffle uses the same implementation with PointerEvents (disabled
 by default). Adapters expose `gamepadCursor` with an actual input surface and event protocol, without private

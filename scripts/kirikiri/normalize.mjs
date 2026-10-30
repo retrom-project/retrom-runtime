@@ -9,6 +9,7 @@ import {convertXp3} from "./convert.mjs";
 import {fixedXorArchive, ordinaryArchive} from "./ordinary.mjs";
 import {peXp3} from "./pe-xp3.mjs";
 import {discoverCxProfiles, discoverTinyProfiles, extractEmbeddedPeModules, createCxFilter, createTinyFilter} from "./cxdec.mjs";
+import {probeStage} from "./stages.mjs";
 
 const digest = bytes => createHash("sha256").update(bytes).digest("hex");
 function tinyFilter(profile) {
@@ -32,7 +33,10 @@ async function nativeProfiles(input, signal, archives = []) {
     requireFormat(depth <= 3 && moduleCount <= 512 && totalBytes <= 512 * 1024 * 1024, "MODULE_LIMIT");
     const found = [...discoverCxProfiles(bytes).map(profile => ({kind: "classic", profile})),
       ...discoverTinyProfiles(bytes).map(profile => ({kind: "tiny", profile}))];
-    for (const value of found) {profiles.set(profileKey(value), {...value, moduleSha256: sha256});}
+    for (const value of found) {
+      const key = profileKey(value), previous = profiles.get(key);
+      if (!previous?.profile.legacyBulk || value.profile.legacyBulk) {profiles.set(key, {...value, moduleSha256: sha256});}
+    }
     requireFormat(profiles.size <= 64, "FILTER_AMBIGUOUS");
     for (const embedded of extractEmbeddedPeModules(bytes, {maxTotalBytes: 512 * 1024 * 1024 - totalBytes})) {inspect(embedded, depth + 1);}
   }
@@ -78,9 +82,15 @@ async function selectFilter(profiles, archives, signal) {
   for (const candidate of profiles) {
     signal?.throwIfAborted();
     let filter;
-    try {filter = candidate.kind === "tiny" ? tinyFilter(candidate.profile) : {kind: "classic", ...createCxFilter(candidate.profile)};}
+    try {
+      filter = candidate.kind === "tiny" ? tinyFilter(candidate.profile) : {kind: "classic", ...createCxFilter(candidate.profile)};
+      if (candidate.profile.legacyBulk && archives.every(archive => archive.format === "xp3-native")) {
+        filter.stages = [{id: "classic", apply: filter.apply}, {id: "legacy-bulk", apply: filter.applyBulk}];
+      }
+    }
     catch {continue;}
     if (probes.every(sample => {
+      if (filter.stages) {return Boolean(probeStage(filter, sample.bytes, sample.h, sample.adler));}
       const bytes = Buffer.from(sample.bytes); filter.apply(bytes, sample.h, 0);
       return adler32(bytes) === sample.adler;
     })) {accepted.push({...filter, verified: probes.length >= 3, inputProfile: candidate});}

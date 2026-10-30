@@ -211,6 +211,30 @@ describe("unified runtime facts", () => {
     expect(prepared.targetOptions.overlayRoot).toBe("localization");
     expect(prepared.resources[0].paths).toEqual({"bundle/data.xp3": "data.xp3", "bundle/localization/chapter.ks": "localization/chapter.ks"});
   });
+  it("retains explicit Kiri engine arguments in native priority order and an opted-in local service", () => {
+    const engineArguments = ["-locale=arbitrary", "-flag", "-locale=second", "-caption=中文 text", "-empty="];
+    const prepared = prepareRuntime({
+      directory: {platformId: "kirikiri", defaultCoreId: "kirikiri2", allowedCoreIds: ["kirikiri2"]},
+      files: [file("bundle/data.xp3")],
+      config: {content: {kind: "KIRIKIRI_PROJECT", entryFile: "bundle/data.xp3"},
+        cores: {kirikiri2: {options: {engineArguments, steamService: "LOCAL"}}}},
+      fingerprints: {"retrom-runtime/kirikiri2-kag": fingerprint},
+    });
+    expect(prepared.targetOptions.engineArguments).toEqual(engineArguments);
+    expect(prepared.targetOptions.steamService).toBe("LOCAL");
+  });
+  it.each([
+    ["plain filename"], ["-"], ["-option\u0000truncated"], ["-option=line\nbreak"],
+    ["-datapath=elsewhere"], ["-startup=other.tjs"], ["-option=" + "x".repeat(1024)],
+    Array.from({length: 65}, () => "-flag"),
+  ])("rejects malformed, oversized or platform-owned Kiri arguments %j", (...engineArguments) => {
+    expect(() => prepareRuntime({
+      directory: {platformId: "kirikiri", defaultCoreId: "kirikiri2", allowedCoreIds: ["kirikiri2"]},
+      files: [file("data.xp3")],
+      config: {content: {kind: "KIRIKIRI_PROJECT", entryFile: "data.xp3"}, cores: {kirikiri2: {options: {engineArguments}}}},
+      fingerprints: {"retrom-runtime/kirikiri2-kag": fingerprint},
+    })).toThrow("RUNTIME_OPTIONS_INVALID");
+  });
   it("imports a DOS bundle with several programs for native menu selection without inventing an entry", () => {
     const input = {platformId: "dos", coreIds: ["dosbox_pure"], files: [file("game.zip")],
       archiveMembers: {"game.zip": ["GAME.EXE", "SETUP.EXE", "START.BAT"]}};

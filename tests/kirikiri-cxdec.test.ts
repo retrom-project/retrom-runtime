@@ -4,87 +4,14 @@ import {deflateSync, inflateSync} from "node:zlib";
 import {describe, expect, it, vi} from "vitest";
 import {createCxFilter, discoverCxProfiles, discoverTinyProfiles, extractEmbeddedPeModules} from "../scripts/kirikiri/cxdec.mjs";
 import {tinyPE, tinyFirstBytePE} from "./kirikiri-pe-fixture.js";
+import {profile, fixture, delegatedFixture} from "./kirikiri-classic-fixture.js";
 
 vi.mock("node:zlib", async () => {
   const actual = await vi.importActual<typeof import("node:zlib")>("node:zlib");
   return {...actual, inflateSync: vi.fn(actual.inflateSync)};
 });
 
-function controlBlock() {
-  const b = Buffer.alloc(4096);
-  for (let i = 0; i < 1024; ++i) b.writeUInt32LE((Math.imul(i, 0x9e3779b1) ^ 0xa5a5a5a5) >>> 0, i * 4);
-  return b;
-}
-const profile = () => ({mask: 0x2c5, offset: 0x357, prologOrder: [1, 2, 0],
-  evenBranchOrder: [4, 7, 2, 6, 1, 5, 0, 3], oddBranchOrder: [4, 5, 0, 3, 1, 2], controlBlock: controlBlock()});
 const sha = (bytes: Buffer) => createHash("sha256").update(bytes).digest("hex");
-
-// Entirely synthetic PE32 and x86 byte-emission patterns, never executable inputs.
-function fixture(branchProlog = false, callback = false) {
-  const b = Buffer.alloc(0x6000, 0);
-  b.write("MZ"); b.writeUInt32LE(0x80, 0x3c); b.write("PE\0\0", 0x80, "binary");
-  b.writeUInt16LE(0x14c, 0x84); b.writeUInt16LE(2, 0x86); b.writeUInt16LE(0xe0, 0x94);
-  b.writeUInt16LE(0x10b, 0x98); b.writeUInt32LE(0x10000000, 0xb4); b.writeUInt32LE(0x8000, 0xd0);
-  const section = (at: number, name: string, rva: number, size: number, raw: number, flags: number) => {
-    b.write(name, at); b.writeUInt32LE(size, at + 8); b.writeUInt32LE(rva, at + 12);
-    b.writeUInt32LE(size, at + 16); b.writeUInt32LE(raw, at + 20); b.writeUInt32LE(flags, at + 36);
-  };
-  section(0x178, ".text", 0x1000, 0x2000, 0x400, 0x60000020);
-  section(0x1a0, ".rdata", 0x4000, 0x3000, 0x2400, 0x40000040);
-  const va = (off: number) => 0x10000000 + (off < 0x2400 ? off + 0xc00 : off + 0x1c00);
-  const imm = (value: number) => {const q = Buffer.alloc(4); q.writeUInt32LE(value >>> 0); return [...q];};
-  const put = (at: number, bytes: number[]) => Buffer.from(bytes).copy(b, at);
-  const call = (at: number, target: number) => {b[at] = 0xe8; b.writeInt32LE(va(target) - va(at) - 5, at + 1);};
-  // Same-register constructor store h -> mask/add -> store boundary.
-  put(0x440, [0x89, 0x48, 4, 0x81, 0xe1, ...imm(0x2c5), 0x81, 0xc1, ...imm(0x357), 0x89, 0x48, 8, 0xc3]);
-  // Bounded dynamic manager: lane split, table getter, 128-byte builder and seed/complement call pair.
-  put(0x480, [0x83, 0xe3, 0x7f, 0xc1, 0xed, 7]); call(0x488, 0x520);
-  put(0x490, [0x68, 0x80, 0, 0, 0, 0x53]); call(0x496, 0x540);
-  put(0x49b, [0x55, 0xff, 0xd6, 0xf7, 0xd5, 0x55, 0xff, 0xd6, 0xc3]);
-  put(0x520, [0xb8, ...imm(va(0x3000)), 0xc3]);
-  put(0x540, [0x69, 0xc0, ...imm(0x41c64e6d), 0x05, ...imm(0x3039), 0xc3]);
-  controlBlock().copy(b, 0x3000);
-  const emit = (values: number[]) => values.flatMap(v => [0x68, ...imm(v)]);
-  const prologs = [[0xb8], [0x8b, 0xc7], [0xbe, 0x86, 0x3ff]];
-  const evens = [[0xf7, 0xd0], [0x48], [0xf7, 0xd8], [0x40], [0xbe, 0x25, 0x3ff, 0x86],
-    [0xaaaaaaaa, 0x55555555], [0x35], [0x05, 0x2d]];
-  const odds = [[0xd3, 0xe8], [0xd3, 0xe0], [1, 0xd8], [0xf7, 0xd8, 1], [0x0f, 0xaf, 0xc3], [0x29, 0xd8]];
-  const dispatch = (at: number, table: number, blocks: number, order: number[], patterns: number[][]) => {
-    put(at, [0xff, 0x24, 0x85, ...imm(va(table))]);
-    for (let i = 0; i < order.length; ++i) {
-      b.writeUInt32LE(va(blocks + i * 0x60), table + i * 4);
-      put(blocks + i * 0x60, [...emit(patterns[order[i]]), 0xc3]);
-    }
-  };
-  if (branchProlog) {
-    // Optimized manager spills its shifted key and reloads it into another register.
-    put(0x480, [0xc1, 0xe8, 7, 0x89, 0x45, 8, 0x83, 0xe3, 0x7f]); call(0x48a, 0x520);
-    put(0x49b, [0x8b, 0x5d, 8, 0x53, 0xff, 0xd6, 0xf7, 0xd3, 0x53, 0xff, 0xd6, 0xc3]);
-    // div ECX -> test EDX -> JE remainder 0 -> DEC EDX -> JE remainder 1 -> DEC/JNE guard.
-    put(0x570, [0xb9, 3, 0, 0, 0]);
-    put(0x585, [0xf7, 0xf1, 0x85, 0xd2, 0x0f, 0x84]);
-    b.writeInt32LE(0x650 - 0x58f, 0x58b);
-    put(0x58f, [0x4a, 0x0f, 0x84]); b.writeInt32LE(0x6b0 - 0x596, 0x592);
-    put(0x596, [0x4a, 0x75, 0x50, ...emit(prologs[0]), 0xc3]);
-    put(0x650, [...emit(prologs[1]), 0xc3]); put(0x6b0, [...emit(prologs[2]), 0xc3]);
-  } else dispatch(0x580, 0x2500, 0x650, profile().prologOrder, prologs);
-  dispatch(0x800, 0x2520, 0x900, profile().evenBranchOrder, evens);
-  dispatch(0xd00, 0x2550, 0xe00, profile().oddBranchOrder, odds);
-  if (callback) {
-    b.fill(0, 0x440, 0x4c0);
-    // Extraction callback ABI (24 bytes), seed field 20, boundary and the
-    // same region consumer before/after seed ^ (seed >>> 16).
-    put(0x440, [0x83, 0x3e, 24, 0x8b, 0x76, 20, 0x8b, 0xc6, 0x25, ...imm(profile().mask), 0x05, ...imm(profile().offset)]);
-    call(0x458, 0x4d0);
-    put(0x45d, [0x8b, 0xc6, 0xc1, 0xe8, 16, 0x33, 0xc6]); call(0x464, 0x4d0);
-    put(0x480, [0x83, 0xe3, 127, 0xc1, 0xef, 7, 0x8b, 0xc3]); call(0x488, 0x540);
-    put(0x490, [0x57, 0xff, 0xd6, 0xf7, 0xd7, 0x57, 0xff, 0xd6, 0xc3]);
-    // Legacy emitters pass opcode arguments in registers. The control table
-    // is a direct immediate in the table-load prolog rather than a getter.
-    put(0x6b0, [0xb2, 0xbe, 0xb9, ...imm(va(0x3000)), 0xb2, 0x86, 0x68, ...imm(1023), 0xc3]);
-  }
-  return b;
-}
 
 describe("classic Cx expression interpreter", () => {
   it("matches independent synthetic Rust reference for all 128 lanes and fallback PRNG state", () => {
@@ -133,6 +60,69 @@ describe("classic Cx expression interpreter", () => {
 });
 
 describe("bounded static PE recovery", () => {
+  it("connects a delegated ABI record and scheduled seed to a stack manager with an executable control table", () => {
+    const found = discoverCxProfiles(delegatedFixture());
+    expect(found).toHaveLength(1);
+    expect(found[0]).toMatchObject({...profile(), legacyBulk: true});
+    const wrongABI = delegatedFixture(); wrongABI[0x1602] = 20;
+    expect(discoverCxProfiles(wrongABI)[0]?.legacyBulk).not.toBe(true);
+    const wrongRecord = delegatedFixture(); wrongRecord[0x1620] = 0x57;
+    expect(discoverCxProfiles(wrongRecord)[0]?.legacyBulk).not.toBe(true);
+    const missingFold = delegatedFixture(); missingFold[0x173b] = 15;
+    expect(discoverCxProfiles(missingFold)[0]?.legacyBulk).not.toBe(true);
+  });
+  it("rejects a delegated callback after its record pointer has been overwritten", () => {
+    const b = delegatedFixture();
+    b.copyWithin(0x1709, 0x1707, 0x1722);
+    b.set([0x8b, 0xf0], 0x1707); // mov esi,eax between argument load and seed load
+    expect(discoverCxProfiles(b)[0]?.legacyBulk).not.toBe(true);
+  });
+  it.each([0xc3, 0xb8])("rejects a seed load reached through a return or operand byte (%i)", opcode => {
+    const b = delegatedFixture();
+    b.copyWithin(0x1708, 0x1707, 0x1722);
+    b[0x1707] = opcode; // RET before the seed, or MOV eax,imm32 containing its bytes
+    expect(discoverCxProfiles(b)[0]?.legacyBulk).not.toBe(true);
+  });
+  it("keeps a delegated record through independent register scheduling", () => {
+    const b = delegatedFixture();
+    b.copyWithin(0x1709, 0x1707, 0x1722);
+    b.set([0x8b, 0xc0], 0x1707); // mov eax,eax preserves the forwarded esi
+    expect(discoverCxProfiles(b)[0]?.legacyBulk).toBe(true);
+  });
+  it("rejects a manager call in unreachable bytes after the region consumer returns", () => {
+    const b = delegatedFixture();
+    const va = (off: number) => 0x10000000 + (off < 0x2400 ? off + 0xc00 : off + 0x1c00);
+    b.fill(0x90, 0x1800, 0x1810);
+    b[0x1800] = 0xc3;
+    b[0x1808] = 0xe8;
+    b.writeInt32LE(va(0x480) - va(0x1808) - 5, 0x1809);
+    b[0x180d] = 0xc3;
+    expect(discoverCxProfiles(b)[0]?.legacyBulk).not.toBe(true);
+  });
+  it.each(["immediate", "jump", "manager-return"])("rejects an unconnected manager call hidden by %s", shape => {
+    const b = delegatedFixture();
+    const va = (off: number) => 0x10000000 + (off < 0x2400 ? off + 0xc00 : off + 0x1c00);
+    b.fill(0x90, 0x1800, 0x1811);
+    const call = shape === "immediate" ? 0x1801 : 0x1808;
+    b[call] = 0xe8;
+    b.writeInt32LE(va(shape === "manager-return" ? 0x470 : 0x480) - va(call) - 5, call + 1);
+    b[call + 5] = 0xc3;
+    if (shape === "immediate") {b[0x1800] = 0xb8;}
+    if (shape === "jump") {b.set([0xeb, 14], 0x1800); b[0x1810] = 0xc3;}
+    if (shape === "manager-return") {b[0x470] = 0xc3;}
+    expect(discoverCxProfiles(b)[0]?.legacyBulk).not.toBe(true);
+  });
+  it.each([false, true])("follows a reachable manager call through local branch edges, conditional=%s", conditional => {
+    const b = delegatedFixture();
+    const va = (off: number) => 0x10000000 + (off < 0x2400 ? off + 0xc00 : off + 0x1c00);
+    b.fill(0x90, 0x1800, 0x1811);
+    b.set(conditional ? [0x85, 0xc0, 0x74, 12] : [0xeb, 6, 0xc3], 0x1800);
+    const call = conditional ? 0x1804 : 0x1808;
+    b[call] = 0xe8;
+    b.writeInt32LE(va(0x480) - va(call) - 5, call + 1);
+    b[call + 5] = b[0x1810] = 0xc3;
+    expect(discoverCxProfiles(b)[0]?.legacyBulk).toBe(true);
+  });
   it("recovers the legacy extraction-callback boundary and direct-table generator without stored game profiles", () => {
     const b = fixture(true, true);
     const found = discoverCxProfiles(b);

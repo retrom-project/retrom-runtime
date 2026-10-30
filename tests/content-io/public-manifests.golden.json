@@ -8945,6 +8945,22 @@
               "format": "safe-path",
               "maxLength": 240,
               "type": "string"
+            },
+            "engineArguments": {
+              "type": "array",
+              "maxItems": 64,
+              "items": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 1024
+              }
+            },
+            "steamService": {
+              "enum": [
+                "DISABLED",
+                "LOCAL"
+              ],
+              "type": "string"
             }
           },
           "required": [

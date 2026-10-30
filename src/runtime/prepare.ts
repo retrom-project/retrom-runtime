@@ -1,4 +1,5 @@
 import {rpgPluginScenarioPath} from "./rpg-plugin-paths.js";
+import {kirikiriEngineArguments} from "../kirikiri/arguments.js";
 import {projectProviderManifest} from "../provider/manifest.js";
 import {validateTargetOptionsAgainstSchema} from "../provider/module-api.js";
 import type {TargetOptionsV1} from "../provider/module-api.js";
@@ -184,9 +185,7 @@ function prepareTargetOptions(config: RuntimeConfiguration, target: TargetDeclar
     options.dosEntryPath = config.content.entryPath ?? null;
   } else if (target.adapterId.startsWith("emulatorjs")) {options.dosEntryPath = null;}
   if (target.id === "kirikiri2-kag") {
-    if (config.content.kind !== "KIRIKIRI_PROJECT") {configurationFailure();}
-    options.startupXp3Path = /(?:^|\/)startup\.tjs$/iu.test(config.content.entryFile) ? null
-      : projectPaths([config.content.entryFile], config.content.entryFile)[config.content.entryFile];
+    options = prepareKirikiriOptions(config, options);
   }
   validateSiglusOptions(config, target, options, files);
   if (target.romSetSelection?.driver === "MACHINE_OPTION") {
@@ -197,6 +196,15 @@ function prepareTargetOptions(config: RuntimeConfiguration, target: TargetDeclar
   }
   try {return validateTargetOptionsAgainstSchema(options, target.targetOptionsSchema);}
   catch {configurationFailure("RUNTIME_OPTIONS_INVALID", {coreId});}
+}
+
+function prepareKirikiriOptions(config: RuntimeConfiguration, options: TargetOptionsV1): TargetOptionsV1 {
+  if (config.content.kind !== "KIRIKIRI_PROJECT") {configurationFailure();}
+  try {kirikiriEngineArguments(options.engineArguments);}
+  catch {configurationFailure("RUNTIME_OPTIONS_INVALID", {coreId: "kirikiri2"});}
+  const entryFile = config.content.entryFile;
+  return {...options, startupXp3Path: /(?:^|\/)startup\.tjs$/iu.test(entryFile) ? null
+    : projectPaths([entryFile], entryFile)[entryFile]};
 }
 
 function contentResources(config: RuntimeConfiguration, target: TargetDeclaration, coreId: string,

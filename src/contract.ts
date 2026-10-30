@@ -26,6 +26,8 @@ export type CheckpointAvailability = (
 export type RuntimeCheckpoint = {
   bytes: Uint8Array;
   format: string;
+  /** PNG image of this export's save point, or UNCHANGED when the export adds no player save point. */
+  screenshot?: Blob | "UNCHANGED";
 };
 
 export type FileTreeSource = {

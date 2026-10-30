@@ -20,13 +20,13 @@ function record(entry, offset, size, checksum) {
 }
 async function transformed(archive, entry, filter, target, signal) {
   if (archive.format === "xp3-native" && entry.seedOnly) {
-    requireFormat(filter.verified && entry.flags === 0 && entry.adler === 0 && entry.readable <= 32 * 1024 * 1024, "CHECKSUM_MISMATCH");
+    requireFormat(filter.verified && entry.flags === 0 && entry.adler === 0 && !entry.infoSizeCorrection && entry.readable <= 32 * 1024 * 1024, "CHECKSUM_MISMATCH");
     const chunks = [];
     for await (const bytes of resourceBytes(archive.locator, entry, signal)) {chunks.push(bytes);}
     const raw = Buffer.concat(chunks), output = resolveSeedOnly(raw, filter, entry.h);
     await writeAll(target, output);
     return {size: output.length, checksum: adler32(output), sha256: createHash("sha256").update(output).digest("hex"),
-      rawSha256: createHash("sha256").update(raw).digest("hex"), corrections: ["REUSED_FILTER_SEED"]};
+      rawSha256: createHash("sha256").update(raw).digest("hex"), sourceIntegrityVerified: false, corrections: ["REUSED_FILTER_SEED"]};
   }
   const stage = filter.stages && entry.flags === 0x80000000 ? await selectResourceStage(archive.locator, entry, filter, signal) : null;
   const apply = entry.warningMetadata ? bytes => bytes : stage?.apply ?? filter.apply;
@@ -55,7 +55,12 @@ async function transformed(archive, entry, filter, target, signal) {
   }
   const sha256 = decodedHash.digest("hex"), rawSha256 = rawHash.digest("hex");
   requireFormat(!stage || stage.sha256 === sha256 && stage.rawSha256 === rawSha256, "SOURCE_CHANGED");
-  return {size, checksum, sha256, rawSha256, corrections, ...(stage ? {filterStage: stage.id} : {})};
+  const sourceIntegrityVerified = corrections.length === 0;
+  if (entry.infoSizeCorrection) {
+    requireFormat(sourceIntegrityVerified && checksum === entry.adler, "CHECKSUM_MISMATCH");
+    corrections.push("INFO_CHUNK_SIZE");
+  }
+  return {size, checksum, sha256, rawSha256, corrections, sourceIntegrityVerified, ...(stage ? {filterStage: stage.id} : {})};
 }
 async function verify(path, entries, signal) {
   const handle = await open(path, "r"); let sizeBytes;
@@ -88,7 +93,8 @@ export async function convertXp3(archive, file, path, filter, audit, signal) {
       await audit({archive: file.logicalKey, kind: "resource", logicalName: entry.name, physicalName: entry.physical,
         sourceSize: entry.size, sourcePackedSize: entry.packed, sourceAdler32: entry.adler, sourceSeed: entry.h, sourceFlags: entry.flags,
         outputSize: result.size, outputAdler32: result.checksum, outputSha256: result.sha256, rawStreamSha256: result.rawSha256,
-        sourceIntegrityVerified: result.corrections.length === 0, corrections: result.corrections, filterStage: result.filterStage});
+        sourceIntegrityVerified: result.sourceIntegrityVerified, infoSizeCorrection: entry.infoSizeCorrection,
+        corrections: result.corrections, filterStage: result.filterStage});
     }
     requireFormat(position + 9 + indexSize <= maximumFile, "ARCHIVE_LIMIT");
     await writeAll(target, Buffer.concat([Buffer.from([0]), uint64(indexSize)]));

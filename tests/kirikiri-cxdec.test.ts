@@ -4,7 +4,7 @@ import {deflateSync, inflateSync} from "node:zlib";
 import {describe, expect, it, vi} from "vitest";
 import {createCxFilter, discoverCxProfiles, discoverTinyProfiles, extractEmbeddedPeModules} from "../scripts/kirikiri/cxdec.mjs";
 import {tinyPE, tinyFirstBytePE} from "./kirikiri-pe-fixture.js";
-import {profile, fixture, delegatedFixture} from "./kirikiri-classic-fixture.js";
+import {profile, fixture, delegatedFixture, stackCallbackFixture} from "./kirikiri-classic-fixture.js";
 
 vi.mock("node:zlib", async () => {
   const actual = await vi.importActual<typeof import("node:zlib")>("node:zlib");
@@ -60,6 +60,17 @@ describe("classic Cx expression interpreter", () => {
 });
 
 describe("bounded static PE recovery", () => {
+  it("recovers a stack-record callback and follows only its successful conditional emission tail", () => {
+    const b = stackCallbackFixture();
+    expect(discoverCxProfiles(b)).toHaveLength(1);
+    expect(discoverCxProfiles(b)[0]).toMatchObject(profile());
+    const wrongArgument = Buffer.from(b); wrongArgument[0x1609] = 20;
+    expect(discoverCxProfiles(wrongArgument)).toEqual([]);
+    const wrongSeed = Buffer.from(b); wrongSeed[0x160d] = 16;
+    expect(discoverCxProfiles(wrongSeed)).toEqual([]);
+    const failureTail = Buffer.from(b); failureTail[0xf2d] = 0x84;
+    expect(discoverCxProfiles(failureTail)).toEqual([]);
+  });
   it("connects a delegated ABI record and scheduled seed to a stack manager with an executable control table", () => {
     const found = discoverCxProfiles(delegatedFixture());
     expect(found).toHaveLength(1);

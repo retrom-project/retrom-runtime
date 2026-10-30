@@ -1,7 +1,6 @@
 import {mkdir, mkdtemp, open, writeFile} from "node:fs/promises";
 import {dirname, join} from "node:path";
 import {createHash} from "node:crypto";
-import {contentStream} from "../runtime-host-content.mjs";
 import {requireLocator, safePath} from "../runtime-archive-input.mjs";
 import {maximumTree, requireFormat, resourceBytes, adler32, sourceHash} from "./bytes.mjs";
 import {readXp3} from "./xp3.mjs";
@@ -10,6 +9,7 @@ import {fixedXorArchive, ordinaryArchive} from "./ordinary.mjs";
 import {peXp3} from "./pe-xp3.mjs";
 import {discoverCxProfiles, discoverTinyProfiles, extractEmbeddedPeModules, createCxFilter, createTinyFilter} from "./cxdec.mjs";
 import {probeStage} from "./stages.mjs";
+import {nativeModule} from "./native-module.mjs";
 
 const digest = bytes => createHash("sha256").update(bytes).digest("hex");
 function tinyFilter(profile) {
@@ -43,12 +43,10 @@ async function nativeProfiles(input, signal, archives = []) {
   for (const file of input.files) {
     signal?.throwIfAborted();
     if (!/\.(?:exe|dll|tpm)$/iu.test(file.logicalKey) || file.sizeBytes === 0) {continue;}
-    requireFormat(file.sizeBytes <= 64 * 1024 * 1024, "MODULE_LIMIT");
-    const chunks = []; let size = 0;
-    for await (const bytes of contentStream(requireLocator(input, file), {signal})) {size += bytes.length; chunks.push(bytes);}
-    requireFormat(size === file.sizeBytes, "SOURCE_CHANGED");
-    const bytes = Buffer.concat(chunks, size); requireFormat(digest(bytes) === file.sha256, "SOURCE_CHANGED");
-    inspect(bytes);
+    const locator = requireLocator(input, file);
+    requireFormat(await sourceHash(locator, signal) === file.sha256, "SOURCE_CHANGED");
+    const bytes = await nativeModule(locator, signal);
+    if (bytes) {inspect(bytes);}
   }
   for (const {archive, file} of archives) {
     requireFormat(await sourceHash(archive.sourceLocator ?? archive.locator, signal) === file.sha256, "SOURCE_CHANGED");
@@ -117,7 +115,9 @@ async function probe(input) {
         if (fixed && !fixed.plaintext) {add(file, fixed.archive, fixed.filter, embedded ? "xp3-pe" : fixed.archive.format);}
         else if (!fixed?.plaintext && plain.entries.some(entry => entry.flags === 0x80000000 || entry.seedOnly)) {
           native.push({file, archive: {...plain, format: "xp3-native"}, embedded: Boolean(embedded)});
-        } else if (embedded) {add(file, plain, {kind: "identity", verified: true, inputProfile: {profile: {}}, apply: bytes => bytes}, "xp3-pe");}
+        } else if (embedded || plain.entries.some(entry => entry.infoSizeCorrection)) {
+          add(file, plain, {kind: "identity", verified: true, inputProfile: {profile: {}}, apply: bytes => bytes}, embedded ? "xp3-pe" : "xp3-native");
+        }
       }
       continue;
     }
@@ -159,7 +159,8 @@ async function convert(input, plan) {
       const detail = {code, file: row.archive, member: row.logicalName ?? row.physicalName,
         sourceSha256: row.rawStreamSha256, outputSha256: row.outputSha256,
         sourceSize: row.sourceSize, outputSize: row.outputSize ?? row.readableSize,
-        seed: row.sourceSeed, sourceChecksum: row.sourceAdler32, outputChecksum: row.outputAdler32};
+        seed: row.sourceSeed, sourceChecksum: row.sourceAdler32, outputChecksum: row.outputAdler32,
+        ...(row.infoSizeCorrection ? {sourceInfoChunkSize: row.infoSizeCorrection.declared, outputInfoChunkSize: row.infoSizeCorrection.actual} : {})};
       detailBytes += Buffer.byteLength(JSON.stringify(detail));
       requireFormat(details.length < 2048 && detailBytes <= 4 * 1024 * 1024 - 65536, "AUDIT_LIMIT"); details.push(detail);
     }

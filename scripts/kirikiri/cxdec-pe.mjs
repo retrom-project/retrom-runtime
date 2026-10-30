@@ -140,11 +140,26 @@ function forwardedCallbacks(bytes, pe) {
   return cap(result);
 }
 
+// A standalone cdecl callback may receive the 24-byte record directly, without
+// a forwarding ABI guard. Account for its local frame and saved registers,
+// then require a preserved first-argument pointer at the seed load below.
+function stackCallbacks(bytes, pe) {
+  const result = [];
+  for (const s of pe.sections.filter(s => s.executable)) for (let at = s.raw; at + 12 < s.end; at++) {
+    if (bytes[at] !== 0x83 || bytes[at + 1] !== 0xec || bytes[at + 2] > 128) {continue;}
+    let p = at + 3, saved = 0;
+    while (saved < 4 && bytes[p] >= 0x50 && bytes[p] <= 0x57 && bytes[p] !== 0x54) {p++; saved++;}
+    if (bytes[p] === 0x8b && (bytes[p + 1] & 0xc7) === 0x44 && bytes[p + 2] === 0x24 &&
+        bytes[p + 3] === 4 + bytes[at + 2] + saved * 4) {result.push({start: p + 4, base: bytes[p + 1] >> 3 & 7});}
+  }
+  return cap(result);
+}
+
 // Older extraction filters consume the public 24-byte callback record rather
 // than a stream constructor. Track its seed field, same-register mask/add,
 // high-word fold and two calls to the same region consumer.
 function callbackBoundaries(bytes, pe) {
-  const out = [], forwarded = forwardedCallbacks(bytes, pe);
+  const out = [], forwarded = forwardedCallbacks(bytes, pe), stack = stackCallbacks(bytes, pe);
   for (const s of pe.sections.filter(s => s.executable)) {
     for (let at = s.raw; at + 24 < s.end; at++) {
       const mod = bytes[at + 1];
@@ -155,7 +170,8 @@ function callbackBoundaries(bytes, pe) {
         if (bytes[p] === 0x83 && bytes[p + 1] === (0x38 | base) && bytes[p + 2] === 24) {abi = true;}
       }
       const delegated = forwarded.some(value => value.base === base && registerPreserved(bytes, value.start, at, base));
-      if (!abi && !delegated) {continue;}
+      const direct = stack.some(value => value.base === base && registerPreserved(bytes, value.start, at, base));
+      if (!abi && !delegated && !direct) {continue;}
       const copied = scheduledOperation(bytes, at + 3, s.end, p => registerMove(bytes, p)?.from === seed, [seed]);
       if (copied === null) {continue;}
       const reg = registerMove(bytes, copied).to, start = copied + 2;
@@ -337,9 +353,10 @@ function semantic(bytes, pe, target, primaryEnd, kind) {
   if (result !== null) return result;
   for (let at = target; at < end && followed < 8; ++at) {
     const jump = branch(bytes, at, end);
-    // Conditional failure paths may contain a sibling emission case. Only
-    // unconditional shared success tails contribute to this case's grammar.
-    if (!jump || ![0xeb, 0xe9].includes(jump.op) || Math.abs(jump.target - target) > 0x4000 || jump.target >= target && jump.target < end) continue;
+    // Emission helpers return AL=success. TEST AL,AL / JNE can share a
+    // successful tail; JE failure paths must never contribute sibling opcodes.
+    const success = jump?.op === 0x75 && bytes[at - 2] === 0x84 && bytes[at - 1] === 0xc0;
+    if (!jump || !success && ![0xeb, 0xe9].includes(jump.op) || Math.abs(jump.target - target) > 0x4000 || jump.target >= target && jump.target < end) continue;
     const section = pe.sectionAt(jump.target);
     if (!section?.executable) continue;
     block = Buffer.concat([block, bytes.subarray(jump.target, Math.min(section.end, jump.target + 24))]);
@@ -432,7 +449,9 @@ export function discoverCxProfiles(input) {
         }
         return found;
       }), value => value) : [m.table];
-      for (const table of tables) for (const split of m.table === null ? callbackSplits : constructorSplits) {
+      const splits = m.table === null ? callbackSplits : [...constructorSplits,
+        ...callbackSplits.filter(split => consumerCallsManager(bytes, pe, split.consumer, m.at))];
+      for (const table of tables) for (const split of splits) {
         const legacy = split.separated && callbackSplits.find(callback => callback.delegated && callback.mask === split.mask && callback.offset === split.offset &&
           consumerCallsManager(bytes, pe, callback.consumer, m.at));
         profiles.push({mask: split.mask, offset: split.offset, prologOrder: p.order, evenBranchOrder: e.order, oddBranchOrder: o.order,

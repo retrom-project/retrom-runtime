@@ -11,6 +11,7 @@ import {decodeStoredCheckpoint, encodeStoredCheckpoint, nativeCheckpointFormat} 
 import {startInputDiagnostics} from "../../provider/input-diagnostics.js";
 import type {RuntimeInputDiagnosticsV1} from "../../provider/module-api.js";
 import type {MountedRuntimeAdapter, RuntimeProgressReporter, RuntimeExitReporter} from "../../internal-adapter.js";
+import type {RuntimeCheckpoint} from "../../contract.js";
 import type {
   AssetIndexV1, LaunchEnvelopeV1, PlayerRuntimeV1, RuntimeCheckpointAvailabilityV1, RuntimeCheckpointV1, RuntimeCheckpointRequestV1, RuntimeFinalSnapshotV1, RuntimeNativeSaveCapabilitiesV1,
   RuntimeEventV1, RuntimeHostShortcutPolicyV1, RuntimeHostShortcutV1, RuntimeHostV1, RuntimeInputFilterPolicyV1,
@@ -370,8 +371,7 @@ class RetromRuntimePlayer implements PlayerRuntimeV1 {
         if (this.envelope.runtime.checkpoint?.semantics !== "GAME_SAVE") {throw contractError();}
         const checkpoint = this.validateCheckpoint(snapshot.checkpoint);
         const screenshot = snapshot.screenshot;
-        if (screenshot !== null && (Object.prototype.toString.call(screenshot) !== "[object Blob]" ||
-          !screenshot.size || screenshot.size > 16 * 1024 * 1024 || screenshot.type !== "image/png")) {throw contractError();}
+        if (screenshot !== null && !validScreenshotImage(screenshot)) {throw contractError();}
         finalSnapshot = {checkpoint: await this.storeCheckpoint(checkpoint), screenshot};
       } catch {
         this.host.reportDiagnostic({code: "RETROM_RUNTIME_FINAL_SAVE_INVALID", message: "Final native save did not match the checkpoint contract"});
@@ -496,11 +496,13 @@ class RetromRuntimePlayer implements PlayerRuntimeV1 {
     return {available: false, reason: "FAILED"};
   }
 
-  private validateCheckpoint(checkpoint: {bytes: Uint8Array; format: string}): RuntimeCheckpointV1 {
+  private validateCheckpoint(checkpoint: RuntimeCheckpoint): RuntimeCheckpointV1 {
     const contract = this.envelope.runtime.checkpoint;
     if (!contract || !isUint8Array(checkpoint.bytes) || checkpoint.bytes.byteLength < 1 ||
-      checkpoint.bytes.byteLength > contract.maxBytes || checkpoint.format !== nativeCheckpointFormat(contract.writeFormat)) {throw contractError();}
-    return {bytes: Uint8Array.from(checkpoint.bytes), format: checkpoint.format, metadata: null};
+      checkpoint.bytes.byteLength > contract.maxBytes || checkpoint.format !== nativeCheckpointFormat(contract.writeFormat) ||
+      !validCheckpointScreenshot(checkpoint.screenshot)) {throw contractError();}
+    return {bytes: Uint8Array.from(checkpoint.bytes), format: checkpoint.format, metadata: null,
+      ...(checkpoint.screenshot ? {screenshot: checkpoint.screenshot} : {})};
   }
 
   private async storeCheckpoint(checkpoint: RuntimeCheckpointV1): Promise<RuntimeCheckpointV1> {
@@ -562,3 +564,12 @@ function stableError(error: unknown) {
 }
 function contractError(cause?: unknown) {return new PlayerRuntimeError("PLAYER_RUNTIME_CONTRACT_INVALID", {cause});}
 function capabilityError() {return new PlayerRuntimeError("PLAYER_RUNTIME_CAPABILITY_UNSUPPORTED");}
+
+function validScreenshotImage(value: unknown): value is Blob {
+  return Object.prototype.toString.call(value) === "[object Blob]" && (value as Blob).size > 0 &&
+    (value as Blob).size <= 16 * 1024 * 1024 && (value as Blob).type === "image/png";
+}
+
+function validCheckpointScreenshot(value: unknown) {
+  return value === undefined || value === "UNCHANGED" || validScreenshotImage(value);
+}

@@ -112,7 +112,7 @@ it("finalizes a native exit with no progress without fabricating a save", async 
 it("waits for the original native tick and final complete write before reporting exit", async () => {
   const f = await mount(), tick = deferred<void>();
   f.module.pauseMainLoop.mockReturnValueOnce(tick.promise);
-  f.module.onGameSave?.({phase: "begin", id: 1});
+  f.module.onGameSave?.({phase: "begin", id: 1, history: true});
   f.vlfs.onWriteClose?.("/profiles/玩家/slot.png", Uint8Array.of(1));
   try {
     f.module.onExit?.(0);
@@ -137,7 +137,7 @@ it.each(["normal", "native", "host-stop"])("retains a real suspended Wasm tick d
   Object.defineProperty(actualWasm, "Suspending", {configurable: true, value: actualJspi.Suspending});
   let insideCallback = false;
   const run = actualWasm.promising(suspendingBookmark(actualWasm, () => {
-    f.module.onGameSave?.({phase: "begin", id: 1});
+    f.module.onGameSave?.({phase: "begin", id: 1, history: true});
     insideCallback = true;
     if (mode === "native") {f.module.onNativeExitRequested?.(0);} else {f.module.onExit?.(0);}
     insideCallback = false;
@@ -219,7 +219,7 @@ it.each(["failed-save", "pending-save", "oversized-file"])("rejects %s on exit w
   if (mode === "oversized-file") {
     f.vlfs.onWriteClose?.("/large.bin", new Uint8Array(maximumKirikiriCheckpointBytes + 1));
   } else {
-    f.module.onGameSave?.({phase: "begin", id: 2});
+    f.module.onGameSave?.({phase: "begin", id: 2, history: true});
     f.vlfs.onWriteClose?.("/profiles/玩家/slot.png", Uint8Array.of(9));
     if (mode === "failed-save") {f.module.onGameSave?.({phase: "end", id: 2, success: false});}
   }
@@ -255,6 +255,106 @@ it.each(["abort", "nonzero", "trap"])("keeps %s as a failure even after an earli
   } finally {await f.runtime.exit();}
 });
 
+it("marks exports without a new player bookmark so the Host keeps the save screenshot", async () => {
+  const f = await mount();
+  try {
+    nativeSave(f, Uint8Array.of(4, 2));
+    const player = await f.runtime.checkpoint(); await f.runtime.acknowledgeCheckpoint!(player);
+    expect(player.screenshot).toBeUndefined();
+    // System variables and the KAG start anchor (savehist=false) are synced, but the
+    // frame at that moment is a title, menu or transition rather than the save point.
+    f.vlfs.onWriteClose?.("/profiles/玩家/system.ksd", Uint8Array.of(7));
+    const system = await f.runtime.checkpoint(); await f.runtime.acknowledgeCheckpoint!(system);
+    expect(system.screenshot).toBe("UNCHANGED");
+    f.module.onGameSave?.({phase: "begin", id: 2, history: false});
+    f.vlfs.onWriteClose?.("/profiles/玩家/anchor.ksd", Uint8Array.of(8));
+    f.module.onGameSave?.({phase: "end", id: 2, success: true});
+    const anchor = await f.runtime.checkpoint(); await f.runtime.acknowledgeCheckpoint!(anchor);
+    expect(anchor.screenshot).toBe("UNCHANGED");
+    f.module.onGameSave?.({phase: "begin", id: 3, history: true});
+    f.vlfs.onWriteClose?.("/profiles/玩家/slot.png", Uint8Array.of(9));
+    f.module.onGameSave?.({phase: "end", id: 3, success: true});
+    expect((await f.runtime.checkpoint()).screenshot).toBeUndefined();
+  } finally {await f.runtime.exit();}
+});
+
+it("uses the game's own save-point image instead of the displayed save dialog", async () => {
+  const f = await mount();
+  const putImageData = vi.fn();
+  vi.spyOn(HTMLCanvasElement.prototype, "getContext").mockReturnValue({putImageData} as unknown as CanvasRenderingContext2D);
+  vi.stubGlobal("ImageData", class {constructor(readonly data: Uint8ClampedArray, readonly width: number, readonly height: number) {}});
+  try {
+    f.module.onGameSave?.({phase: "begin", id: 1, history: true});
+    f.vlfs.onWriteClose?.("/profiles/玩家/slot.png", Uint8Array.of(4, 2));
+    f.module.onGameSaveImage?.({id: 1, width: 1, height: 1, pixels: Uint8Array.of(9, 8, 7, 255)});
+    f.module.onGameSave?.({phase: "end", id: 1, success: true});
+    const saved = await f.runtime.checkpoint();
+    expect(saved.screenshot).toBeInstanceOf(Blob);
+    expect((saved.screenshot as Blob).type).toBe("image/png");
+    expect(putImageData).toHaveBeenCalledOnce();
+    expect([...putImageData.mock.calls[0]![0].data]).toEqual([9, 8, 7, 255]);
+  } finally {await f.runtime.exit();}
+});
+
+it("exports a final snapshot without a screenshot when only system files changed", async () => {
+  const f = await mount();
+  try {
+    nativeSave(f, Uint8Array.of(4, 2));
+    const player = await f.runtime.checkpoint(); await f.runtime.acknowledgeCheckpoint!(player);
+    f.screenshot.mockClear();
+    f.vlfs.onWriteClose?.("/profiles/玩家/system.ksd", Uint8Array.of(7));
+    f.module.onExit?.(0);
+    await vi.waitFor(() => expect(f.runtime.getState()).toBe("EXITED"));
+    const exit = f.events.find(event => event.type === "EXIT_REQUESTED");
+    expect(exit?.type === "EXIT_REQUESTED" ? exit.finalSnapshot : undefined).toMatchObject({
+      checkpoint: {screenshot: "UNCHANGED"}, screenshot: null});
+    expect(f.screenshot).not.toHaveBeenCalled();
+  } finally {await f.runtime.exit();}
+});
+
+it("captures a native-save screenshot only after KAG returns to a stable frame", async () => {
+  const f = await mount();
+  let stable = 0;
+  f.module._krkr2_host_bookmark_is_ready.mockImplementation(() => stable);
+  const readinessAtCapture: number[] = [];
+  f.screenshot.mockImplementation(callback => {
+    readinessAtCapture.push(stable);
+    callback(new Blob([Uint8Array.of(1)], {type: "image/png"}));
+  });
+  try {
+    nativeSave(f, Uint8Array.of(4, 2));
+    // Scripts write automatic saves during scene transitions; that frame is not representative.
+    const capture = f.runtime.screenshot();
+    await vi.waitFor(() => expect(f.module._krkr2_host_bookmark_is_ready.mock.calls.length).toBeGreaterThan(1));
+    expect(f.screenshot).not.toHaveBeenCalled();
+    stable = 1;
+    expect((await capture).size).toBeGreaterThan(0);
+    expect(readinessAtCapture).toEqual([1]);
+  } finally {await f.runtime.exit();}
+});
+
+it("captures the paused frame without waiting for KAG to become stable", async () => {
+  const f = await mount();
+  f.module._krkr2_host_bookmark_is_ready.mockReturnValue(0);
+  try {
+    await f.runtime.pause();
+    expect((await f.runtime.screenshot()).size).toBeGreaterThan(0);
+    expect(f.module._krkr2_host_bookmark_is_ready).not.toHaveBeenCalled();
+  } finally {await f.runtime.exit();}
+});
+
+it("bounds the stable-frame wait and still captures the current frame", async () => {
+  const f = await mount();
+  f.module._krkr2_host_bookmark_is_ready.mockReturnValue(0);
+  vi.useFakeTimers({toFake: ["setTimeout", "Date"]});
+  try {
+    const capture = f.runtime.screenshot();
+    await vi.advanceTimersByTimeAsync(3_100);
+    expect((await capture).size).toBeGreaterThan(0);
+    expect(f.screenshot).toHaveBeenCalledOnce();
+  } finally {vi.useRealTimers(); await f.runtime.exit();}
+});
+
 async function mount() {
   enableRuntimeFeatures(); mockDownloads();
   const screenshot = vi.spyOn(HTMLCanvasElement.prototype, "toBlob").mockImplementation(callback => {
@@ -268,7 +368,7 @@ async function mount() {
 }
 
 function nativeSave(f: Awaited<ReturnType<typeof mount>>, bytes: Uint8Array) {
-  f.module.onGameSave?.({phase: "begin", id: 1});
+  f.module.onGameSave?.({phase: "begin", id: 1, history: true});
   f.vlfs.onWriteClose?.("/profiles/玩家/slot.png", bytes);
   f.module.onGameSave?.({phase: "end", id: 1, success: true});
 }

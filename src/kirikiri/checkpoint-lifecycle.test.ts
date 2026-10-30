@@ -53,14 +53,14 @@ it.each(["/savedata/data0.png", "/profiles/玩家/进度/任意槽.kdt"])(
   const module = Object.assign(host.Module!, {
     pauseMainLoop: vi.fn(async () => undefined), resumeMainLoop: vi.fn(),
     krkr2StopMainLoop: vi.fn(async (active?: Promise<unknown>) => {await active?.catch(() => undefined);}),
-    _krkr2_host_observe_game_saves: () => 1,
+    _krkr2_host_bookmark_is_ready: () => 1, _krkr2_host_observe_game_saves: () => 1,
     _krkr2_host_flush_game_saves: async () => 0,
     _krkr2_host_finalize_native_exit: async () => 0,
     _krkr2_host_save_bookmark: vi.fn(), _krkr2_host_load_bookmark: vi.fn(),
   });
   scripts()[1]!.dispatchEvent(new Event("load")); module.postRun[0]?.(); await mounting;
   const notify = module.onGameSave;
-  notify({phase: "begin", id: 1});
+  notify({phase: "begin", id: 1, history: true});
   const writing = nativeWrite(0).then(() => {notify({phase: "end", id: 1, success: true});});
   try {
     expect(runtime.getCheckpointAvailability()).toMatchObject({available: false, reason: "NOT_READY"});
@@ -75,7 +75,7 @@ it.each(["/savedata/data0.png", "/profiles/玩家/进度/任意槽.kdt"])(
 });
 
 type RuntimeWindow = Window & {
-  Module?: {postRun: Array<() => void>; onGameSave(event: {phase: "begin" | "end"; id: number; success?: boolean}): void};
+  Module?: {postRun: Array<() => void>; onGameSave(event: {phase: "begin" | "end"; id: number; success?: boolean; history?: boolean}): void};
   VLFS?: unknown;
 };
 function scripts() {return [...document.head.querySelectorAll<HTMLScriptElement>("script[data-runtime=kirikiri2]")];}

@@ -3,6 +3,8 @@ import {maximumKirikiriCheckpointBytes, maximumKirikiriCheckpointEntries, validK
 /** Native writes belong to this isolated virtual filesystem, not Host paths.
  * Games can choose their own user directory; retain the original relative
  * location so a new instance sees exactly the path the game will read. */
+export type KirikiriSaveImage = {width: number; height: number; pixels: Uint8Array};
+
 export class KirikiriWriteOverlay {
   readonly writes = new Map<string, Uint8Array | null>();
   readonly sequences = new Map<string, number>();
@@ -10,9 +12,13 @@ export class KirikiriWriteOverlay {
   sequence = 0;
   lastWriteAt = 0;
   acknowledged = 0;
+  /** Sequence of the last completed player bookmark; system bookmarks and files do not move it. */
+  savePoint = 0;
+  /** The game's own image of that save point, when the engine published one. */
+  savePointImage: KirikiriSaveImage | null = null;
   private bytes = 0;
   private failure: Error | undefined;
-  private readonly pending = new Map<number, Set<string>>();
+  private readonly pending = new Map<number, PendingSave>();
   private readonly tainted = new Set<string>();
 
   record(path: string, data: Uint8Array | null) {
@@ -26,7 +32,7 @@ export class KirikiriWriteOverlay {
       this.failure = new Error("KIRIKIRI_CHECKPOINT_INVALID");
       return;
     }
-    for (const paths of this.pending.values()) {paths.add(normalized);}
+    for (const call of this.pending.values()) {call.paths.add(normalized);}
     const previous = this.writes.get(normalized);
     if (data === null) {this.tainted.delete(normalized);}
     if (sameData(previous, data)) {return;}
@@ -38,28 +44,28 @@ export class KirikiriWriteOverlay {
 
   requireValid() {if (this.failure) {throw this.failure;}}
 
-  observe(event: {phase: "begin" | "end"; id: number; success?: boolean}) {
+  observe(event: {phase: "begin" | "end"; id: number; success?: boolean; history?: boolean}) {
     if (!Number.isSafeInteger(event.id) || event.id < 1) {this.invalid(); return;}
     if (event.phase === "begin") {
-      if (this.pending.has(event.id) || this.pending.size >= 32) {this.invalid(); return;}
-      this.pending.set(event.id, new Set());
+      if (this.pending.has(event.id) || this.pending.size >= 32 || typeof event.history !== "boolean") {this.invalid(); return;}
+      this.pending.set(event.id, {paths: new Set(), history: event.history});
       return;
     }
-    const paths = this.pending.get(event.id);
-    if (event.phase !== "end" || !paths || typeof event.success !== "boolean") {this.invalid(); return;}
+    const call = this.pending.get(event.id);
+    if (event.phase !== "end" || !call || typeof event.success !== "boolean") {this.invalid(); return;}
     this.pending.delete(event.id);
-    if (!event.success) {
-      this.retainFailedWrites(paths);
-      return;
+    if (event.success) {this.publish(call);}
+    else {this.retainFailedWrites(call.paths);}
+  }
+
+  observeImage(event: {id: number; width: number; height: number; pixels: Uint8Array}) {
+    const call = this.pending.get(event.id);
+    const {width, height, pixels} = event;
+    if (!call?.history || !Number.isSafeInteger(width) || !Number.isSafeInteger(height) || width < 1 || height < 1 ||
+      width > 8192 || height > 8192 || !isUint8Array(pixels) || pixels.byteLength !== width * height * 4) {
+      this.invalid(); return;
     }
-    let changed = false;
-    for (const path of paths) {
-      this.tainted.delete(path);
-      if ((this.writes.get(path)?.byteLength ?? 0) > 0 && !this.progressPaths.has(path)) {
-        this.progressPaths.add(path); changed = true;
-      }
-    }
-    if (changed) {++this.sequence; this.lastWriteAt = Date.now();}
+    call.image = {width, height, pixels};
   }
 
   seedProgress(paths: readonly string[]) {
@@ -73,6 +79,19 @@ export class KirikiriWriteOverlay {
     return this.sequence === this.acknowledged ? "UNCHANGED" : null;
   }
 
+  private publish(call: PendingSave) {
+    let changed = false, written = false;
+    for (const path of call.paths) {
+      this.tainted.delete(path);
+      if ((this.writes.get(path)?.byteLength ?? 0) > 0) {
+        written = true;
+        if (!this.progressPaths.has(path)) {this.progressPaths.add(path); changed = true;}
+      }
+    }
+    if (changed) {++this.sequence; this.lastWriteAt = Date.now();}
+    if (written && call.history) {this.savePoint = this.sequence; this.savePointImage = call.image ?? null;}
+  }
+
   private invalid() {this.failure = new Error("KIRIKIRI_SAVE_OBSERVER_INVALID");}
 
   private retainFailedWrites(paths: Set<string>) {
@@ -83,6 +102,13 @@ export class KirikiriWriteOverlay {
       if (this.writes.get(path) !== null || this.progressPaths.has(path)) {this.tainted.add(path);}
     }
   }
+}
+
+type PendingSave = {paths: Set<string>; history: boolean; image?: KirikiriSaveImage};
+
+// The core publishes from the game frame's realm.
+function isUint8Array(value: unknown): value is Uint8Array {
+  return Object.prototype.toString.call(value) === "[object Uint8Array]";
 }
 
 function sameData(previous: Uint8Array | null | undefined, current: Uint8Array | null) {

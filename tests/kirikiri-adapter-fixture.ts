@@ -9,7 +9,8 @@ type FakeModule = {
   onExit?: (status: number) => void;
   onNativeExitRequested?: (status: number) => void;
   onScriptException?: (detail: {message: string; script: string; line: number; trace: string}) => void;
-  onGameSave?: (event: {phase: "begin" | "end"; id: number; success?: boolean}) => void;
+  onGameSave?: (event: {phase: "begin" | "end"; id: number; success?: boolean; history?: boolean}) => void;
+  onGameSaveImage?: (event: {id: number; width: number; height: number; pixels: Uint8Array}) => void;
   postRun: Array<() => void>;
   pauseMainLoop: ReturnType<typeof vi.fn>;
   resumeMainLoop: ReturnType<typeof vi.fn>;

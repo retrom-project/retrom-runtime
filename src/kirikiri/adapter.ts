@@ -4,8 +4,8 @@ import type {AdapterContentOptions} from "../provider/content-inputs.js";
 import type {ContentReaderV1} from "../../contracts/content-io/v1/content-io.js";
 import {abi, contractSha256} from "../content-io/identity.js";
 import {decodeKirikiriCheckpoint} from "./checkpoint.js";
-import {createKirikiriCheckpointOperation} from "./checkpoint-operation.js";
-import {KirikiriWriteOverlay} from "./write-overlay.js";
+import {createKirikiriCheckpointOperation, type KirikiriCheckpoint} from "./checkpoint-operation.js";
+import {KirikiriWriteOverlay, type KirikiriSaveImage} from "./write-overlay.js";
 import type { MountedRuntimeAdapter, RuntimeExitReporter } from "../internal-adapter.js";
 import type {KirikiriParameters} from "./parameters.js";
 import {installGamepadCursor, type GamepadCursor} from "../provider/gamepad-cursor.js";
@@ -37,7 +37,8 @@ type KirikiriModule = {
   onNativeExitRequested(status: number): void;
   onRuntimeInitialized(): void;
   onScriptException(detail: KirikiriScriptException): void;
-  onGameSave(event: {phase: "begin" | "end"; id: number; success?: boolean}): void;
+  onGameSave(event: {phase: "begin" | "end"; id: number; success?: boolean; history?: boolean}): void;
+  onGameSaveImage(event: {id: number; width: number; height: number; pixels: Uint8Array}): void;
   postRun: Array<() => void>;
   preRun: Array<() => void>;
   print(message: string): void;
@@ -45,6 +46,7 @@ type KirikiriModule = {
   pauseMainLoop(): void | Promise<void>;
   resumeMainLoop(): void;
   krkr2StopMainLoop(operation?: Promise<unknown>): Promise<void>;
+  _krkr2_host_bookmark_is_ready(): number;
   _krkr2_host_observe_game_saves(): number;
   _krkr2_host_flush_game_saves(): Promise<number>;
   _krkr2_host_finalize_native_exit(): Promise<number>;
@@ -63,6 +65,8 @@ type KirikiriHostWindow = Window & Record<string, unknown> & {
 
 const readyTimeoutMs = 60_000;
 const maximumProjectFiles = 10_000;
+const stableScreenshotTimeoutMs = 3_000;
+const stableScreenshotPollMs = 50;
 
 export async function mountKirikiri2(
   config: KirikiriParameters,
@@ -124,9 +128,11 @@ export async function mountKirikiri2(
     if (!checkpointOperation || finalExit || failed || exited) {return;}
     // finalCheckpoint only queues work here. Its module calls run after the
     // original onExit callback returns and can drain that tick's JSPI stack.
-    finalExit = checkpointOperation.finalCheckpoint(nativeExitRequested).then(async checkpoint => {
+    finalExit = checkpointOperation.finalCheckpoint(nativeExitRequested).then(async captured => {
       if (failed || exited) {return;}
-      const screenshot = checkpoint ? await finalCanvasScreenshot(canvas) : null;
+      const checkpoint = captured ? await withSaveImage(frameWindow, captured) : null;
+      const screenshot = !checkpoint || checkpoint.screenshot === "UNCHANGED" ? null
+        : checkpoint.screenshot ?? await finalCanvasScreenshot(canvas);
       if (failed || exited) {return;}
       exitReported = true;
       reportExitRequested(checkpoint ? {checkpoint, screenshot} : undefined);
@@ -229,6 +235,7 @@ export async function mountKirikiri2(
         frameWindow.queueMicrotask(() => reportFailure(error));
       },
       onGameSave: event => overlay.observe(event),
+      onGameSaveImage: event => overlay.observeImage(event),
       postRun: [() => {if (!failed) {ready.resolve();}}],
       preRun: [],
       print: (message) => {if (message) {console.debug(`[kirikiri2] ${message}`);}},
@@ -262,7 +269,7 @@ export async function mountKirikiri2(
     canvasLayout: "CORE",
     checkpoint: async () => {
       overlay.requireValid();
-      const result = await checkpointOperation!.checkpoint();
+      const result = await withSaveImage(frameWindow, await checkpointOperation!.checkpoint());
       overlay.requireValid();
       return result;
     },
@@ -290,7 +297,8 @@ export async function mountKirikiri2(
     getFrameCount: () => null,
     pause: () => checkpointOperation!.pause(),
     resume: () => checkpointOperation!.resume(),
-    screenshot: () => canvasScreenshot(canvas),
+    screenshot: () => stableCanvasScreenshot(frameWindow, canvas, activeModule,
+      () => !checkpointOperation!.isPaused && !normalExitRequested && !failed && !exited),
     setVolume: null,
   };
 }
@@ -306,7 +314,8 @@ function unsupportedNativeOptions(config: KirikiriParameters, module: Partial<Ki
 }
 
 function requireGameSaveAbi(module: KirikiriModule) {
-  if (typeof module._krkr2_host_observe_game_saves !== "function" ||
+  if (typeof module._krkr2_host_bookmark_is_ready !== "function" ||
+    typeof module._krkr2_host_observe_game_saves !== "function" ||
     typeof module._krkr2_host_flush_game_saves !== "function" ||
     typeof module._krkr2_host_finalize_native_exit !== "function") {
     throw new Error("KIRIKIRI_GAME_SAVE_ABI_UNAVAILABLE");
@@ -482,6 +491,38 @@ function canvasScreenshot(canvas: HTMLCanvasElement) {
   return new Promise<Blob>((resolve, reject) => {
     canvas.toBlob((blob) => {if (blob) {resolve(blob);} else {reject(new Error("PLAYER_SCREENSHOT_UNAVAILABLE"));}}, "image/png");
   });
+}
+
+// Game scripts also write automatic saves at scene starts, while the displayed
+// frame is black or still fading in. A running engine is captured at its next
+// stable KAG frame instead; the bounded wait keeps a screenshot for scripts
+// that never stop, and a paused engine keeps the frame the player sees.
+async function stableCanvasScreenshot(frameWindow: Window, canvas: HTMLCanvasElement, module: KirikiriModule,
+  running: () => boolean) {
+  const deadline = Date.now() + stableScreenshotTimeoutMs;
+  while (running() && module._krkr2_host_bookmark_is_ready() !== 1 && Date.now() < deadline) {
+    await new Promise(resolve => frameWindow.setTimeout(resolve, stableScreenshotPollMs));
+  }
+  return canvasScreenshot(canvas);
+}
+
+// A player save carries the game's own save-point image; dialogs and save
+// screens drawn over it stay out of the Host screenshot.
+async function withSaveImage(frameWindow: Window, {image, ...checkpoint}: KirikiriCheckpoint) {
+  if (!image) {return checkpoint;}
+  const screenshot = await encodeSaveImage(frameWindow, image).catch(() => null);
+  return screenshot ? {...checkpoint, screenshot} : checkpoint;
+}
+
+async function encodeSaveImage(frameWindow: Window, {width, height, pixels}: KirikiriSaveImage) {
+  const surface = frameWindow.document.createElement("canvas");
+  surface.width = width; surface.height = height;
+  const context = surface.getContext("2d");
+  if (!context) {throw new Error("PLAYER_SCREENSHOT_UNAVAILABLE");}
+  context.putImageData(new ImageData(new Uint8ClampedArray(pixels), width, height), 0, 0);
+  const image = await canvasScreenshot(surface);
+  if (!image.size || image.size > 16 * 1024 * 1024) {throw new Error("PLAYER_SCREENSHOT_UNAVAILABLE");}
+  return image;
 }
 
 async function finalCanvasScreenshot(canvas: HTMLCanvasElement) {

@@ -1,5 +1,5 @@
 import {digestKirikiriCheckpoint, encodeKirikiriCheckpoint, kirikiriGameSaveFormat} from "./checkpoint.js";
-import type {KirikiriWriteOverlay} from "./write-overlay.js";
+import type {KirikiriSaveImage, KirikiriWriteOverlay} from "./write-overlay.js";
 
 export type KirikiriCheckpointModule = {
   pauseMainLoop(): void | Promise<void>;
@@ -18,13 +18,16 @@ class KirikiriCheckpointOperation {
   private closing = false;
   private finalizing = false;
   private nativeExit = false;
-  private active: Promise<{bytes: Uint8Array; format: string} | null> | undefined;
-  private final: Promise<{bytes: Uint8Array; format: string} | null> | undefined;
+  private active: Promise<KirikiriCheckpoint | null> | undefined;
+  private final: Promise<KirikiriCheckpoint | null> | undefined;
   private stopping: Promise<void> | undefined;
   private readonly cancellation = new AbortController();
   private readonly captures = new Map<string, number>();
+  private capturedSavePoint = 0;
 
   constructor(private readonly options: {module: KirikiriCheckpointModule; overlay: KirikiriWriteOverlay}) {}
+
+  get isPaused() {return this.paused;}
 
   checkpoint() {
     this.requireOpen();
@@ -90,9 +93,9 @@ class KirikiriCheckpointOperation {
     return this.stopping;
   }
 
-  private capture(final: false): Promise<{bytes: Uint8Array; format: string}>;
-  private capture(final: true): Promise<{bytes: Uint8Array; format: string} | null>;
-  private async capture(final: boolean): Promise<{bytes: Uint8Array; format: string} | null> {
+  private capture(final: false): Promise<KirikiriCheckpoint>;
+  private capture(final: true): Promise<KirikiriCheckpoint | null>;
+  private async capture(final: boolean): Promise<KirikiriCheckpoint | null> {
     const {module, overlay} = this.options;
     this.requireOpen();
     try {
@@ -123,7 +126,7 @@ class KirikiriCheckpointOperation {
       this.requireOpen();
       this.captures.set(key, revision);
       if (this.captures.size > 32) {this.captures.delete(this.captures.keys().next().value!);}
-      return {bytes, format: kirikiriGameSaveFormat};
+      return {bytes, format: kirikiriGameSaveFormat, ...this.screenshotState()};
     } catch (cause) {
       if (this.closing) {throw invalidState();}
       throw new Error(final ? "KIRIKIRI_CHECKPOINT_FINAL_FAILED" : "KIRIKIRI_CHECKPOINT_CREATE_FAILED", {cause});
@@ -133,6 +136,16 @@ class KirikiriCheckpointOperation {
         else {module.resumeMainLoop();}
       }
     }
+  }
+
+  // Restored launches and system writes do not move the player's save point;
+  // the displayed frame then represents a title, menu or transition instead.
+  private screenshotState(): Pick<KirikiriCheckpoint, "screenshot" | "image"> {
+    const {savePoint, savePointImage} = this.options.overlay;
+    const unchanged = savePoint === this.capturedSavePoint;
+    this.capturedSavePoint = savePoint;
+    if (unchanged) {return {screenshot: "UNCHANGED"};}
+    return savePointImage ? {image: savePointImage} : {};
   }
 
   private async finalizeNativeExit(final: boolean) {
@@ -166,6 +179,8 @@ class KirikiriCheckpointOperation {
 
   private requireOpen() {if (this.closing) {throw invalidState();}}
 }
+
+export type KirikiriCheckpoint = {bytes: Uint8Array; format: string; screenshot?: "UNCHANGED"; image?: KirikiriSaveImage};
 
 function invalidState() {return new Error("KIRIKIRI_RUNTIME_INVALID_STATE");}
 

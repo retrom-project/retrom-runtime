@@ -2424,7 +2424,7 @@
           "maxSizeBytes": 1048576,
           "sizeBytes": 196408,
           "sha256": "0ba2010cfdc104197b72ce506552b35721199b655fbf5b1d2ca79ac98b1bc6d6",
-          "url": "https://github.com/retrom-project/ppsspp/releases/download/retrom-core-g2e6fd06ed6c7-r7/LICENSE"
+          "url": "https://github.com/retrom-project/ppsspp/releases/download/retrom-core-g2e6fd06ed6c7-r8/LICENSE"
         },
         {
           "filename": "ppsspp.js",
@@ -2432,15 +2432,15 @@
           "maxSizeBytes": 1048576,
           "sizeBytes": 229815,
           "sha256": "050075843178505f05366177a165434e302d1f6b26b133d4f0563633d1db1be9",
-          "url": "https://github.com/retrom-project/ppsspp/releases/download/retrom-core-g2e6fd06ed6c7-r7/ppsspp.js"
+          "url": "https://github.com/retrom-project/ppsspp/releases/download/retrom-core-g2e6fd06ed6c7-r8/ppsspp.js"
         },
         {
           "filename": "ppsspp.wasm",
           "output": "runtime/ppsspp/ppsspp.wasm",
           "maxSizeBytes": 134217728,
           "sizeBytes": 12032234,
-          "sha256": "c311409a077b92849ab7259efab08cad4151128842a3ee668bab77f87bd3b7ca",
-          "url": "https://github.com/retrom-project/ppsspp/releases/download/retrom-core-g2e6fd06ed6c7-r7/ppsspp.wasm"
+          "sha256": "3a138d6a0666f8f753e7cc7eed788fb631765f203969ba9b60669e1d7b2af7a0",
+          "url": "https://github.com/retrom-project/ppsspp/releases/download/retrom-core-g2e6fd06ed6c7-r8/ppsspp.wasm"
         },
         {
           "filename": "ppsspp.data",
@@ -2448,7 +2448,7 @@
           "maxSizeBytes": 134217728,
           "sizeBytes": 19686927,
           "sha256": "ab748793b4b4458d217cd37fa777cd4c81e34876cc8ca163bbfaf7f3c2b0df22",
-          "url": "https://github.com/retrom-project/ppsspp/releases/download/retrom-core-g2e6fd06ed6c7-r7/ppsspp.data"
+          "url": "https://github.com/retrom-project/ppsspp/releases/download/retrom-core-g2e6fd06ed6c7-r8/ppsspp.data"
         },
         {
           "filename": "ppsspp.worker.mjs",
@@ -2456,7 +2456,7 @@
           "maxSizeBytes": 1048576,
           "sizeBytes": 16363,
           "sha256": "3d2db59a6bb88f7932e3856ae2a9931b5463099755831dcca63be2c4870e18da",
-          "url": "https://github.com/retrom-project/ppsspp/releases/download/retrom-core-g2e6fd06ed6c7-r7/ppsspp.worker.mjs"
+          "url": "https://github.com/retrom-project/ppsspp/releases/download/retrom-core-g2e6fd06ed6c7-r8/ppsspp.worker.mjs"
         },
         {
           "filename": "ppsspp-host.mjs",
@@ -2464,12 +2464,12 @@
           "maxSizeBytes": 1048576,
           "sizeBytes": 9355,
           "sha256": "f06485b9158601277b912d7d0ab1fdd78e0c4e1b99f9262488533c8c98c043de",
-          "url": "https://github.com/retrom-project/ppsspp/releases/download/retrom-core-g2e6fd06ed6c7-r7/ppsspp-host.mjs"
+          "url": "https://github.com/retrom-project/ppsspp/releases/download/retrom-core-g2e6fd06ed6c7-r8/ppsspp-host.mjs"
         }
       ],
-      "tag": "retrom-core-g2e6fd06ed6c7-r7",
-      "commit": "b67d8f9b489eb849a4893b34911211b3f5fb71af",
-      "metadataUrl": "https://github.com/retrom-project/ppsspp/releases/download/retrom-core-g2e6fd06ed6c7-r7/rpg-runtime-release.json"
+      "tag": "retrom-core-g2e6fd06ed6c7-r8",
+      "commit": "f4a43763832e79ce8fdd74498c3027a8f1caccb8",
+      "metadataUrl": "https://github.com/retrom-project/ppsspp/releases/download/retrom-core-g2e6fd06ed6c7-r8/rpg-runtime-release.json"
     },
     {
       "id": "mame",

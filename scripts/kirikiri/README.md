@@ -81,9 +81,9 @@ The detailed temporary `.audit-*` JSONL is intentionally not a game member.
 The host clears its own intermediate packages after successful publication and
 never removes external mounted Pegasus metadata or original packages.
 
-Hxv4 has no registered converter until complete logical names can be recovered.
-It is retained for the ordinary import/entry validation flow; this does not
-establish runtime support. A matched CxFilterFS plan with unknown parameters,
+Hxv4 without a recognized supplied bootstrap remains in the ordinary import/entry
+validation flow; this does not establish runtime support. A matched CxFilterFS
+plan with unknown parameters,
 ambiguous profiles or additional xp3filter scripts fails explicitly. Resource
 conversion does not implement game plugins or establish playable/save compatibility.
 
@@ -92,3 +92,33 @@ Algorithm cross-checks: GARbro `KiriKiriCx.cs` at
 `xp3-brute` 0.3.7 expression grammar (MIT, crate VCS
 `eb71626801afd3d86ade797489b984b5cda20582`). The unit vectors use synthetic control
 tables and PE files. Private original-package verification is kept outside Git.
+
+Hxv4 archives with the supported supplied PE bootstrap are normalized without
+trying to invert filename hashes. `hxv4-pe.mjs` recovers the bres salt, original
+startup bytecode, native bootstrap configuration and seed from the source PE.
+`hxv4-crypto.mjs` derives the native Argon2i/SHA3/BLAKE2s material and requires
+XChaCha20-Poly1305 authentication, exact zlib termination and the complete typed
+native table. `hxv4-filter.mjs` interprets the bounded DripValue grammar with
+parameters and control words derived from that source; every complete decoded
+resource retains its original Adler32 verification and is independently reread.
+The immutable input is hashed again after conversion.
+
+The output remains XP3 with all File records in source order and adds the
+current internal `RHx4` index chunk: media-name UTF16-unit count (u32LE), media
+name UTF16LE, record count (u32LE), then 52-byte records containing exact path
+hash (8), file hash (32), source synthetic ID (u32LE), archive slot (u16LE), local
+flags (u16LE) and output File index (u32LE). This preserves the full namespace;
+a dictionary of guessed names is not a completeness gate. Current support is
+unkeyed SipHash-2-4 with little-endian output and BLAKE2s-256 over UTF16LE input
+plus the recovered media name. The native unkeyed constructor shape and actual
+root/startup namespace must agree. Unknown keyed shapes, nonzero archive slots,
+ambiguous bootstrap/profile material, missing/duplicate physical bindings and
+additional table data fail. The descriptor selects only the table nonce; the
+per-record local flag selects the content filter's open behavior.
+
+The browser core must implement this explicit hash namespace, canonical storage
+lookup, directory AutoPath ordering and its true root startup. An ordinary
+literal `startup.tjs` can be a protector dummy and must not replace the hashed
+root startup. Successful normalization alone does not establish playable/save
+compatibility. Hxv4-specific bounded raw warning records use the same explicit
+source-integrity-loss audit policy as other protector metadata.

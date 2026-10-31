@@ -4,7 +4,7 @@ import type {KirikiriSaveImage, KirikiriWriteOverlay} from "./write-overlay.js";
 export type KirikiriCheckpointModule = {
   pauseMainLoop(): void | Promise<void>;
   resumeMainLoop(): void;
-  krkr2StopMainLoop(operation?: Promise<unknown>): Promise<void>;
+  krkr2StopMainLoop(operation?: Promise<unknown>, discardNativeState?: boolean): Promise<void>;
   _krkr2_host_flush_game_saves(): Promise<number>;
   _krkr2_host_finalize_native_exit(): Promise<number>;
 };
@@ -83,12 +83,12 @@ class KirikiriCheckpointOperation {
     if (!this.active) {this.options.module.resumeMainLoop();}
   }
 
-  stop() {
+  stop(discardNativeState = false) {
     if (!this.stopping) {
       this.closing = true; this.cancellation.abort();
       // Stop new ticks synchronously; retain the active native stack and save
       // observer until content cancellation and this capture have drained.
-      this.stopping = this.options.module.krkr2StopMainLoop(this.active);
+      this.stopping = this.options.module.krkr2StopMainLoop(this.active, discardNativeState);
     }
     return this.stopping;
   }

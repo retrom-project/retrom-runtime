@@ -15,7 +15,7 @@ function bytesOf(input) {
   return Buffer.from(input.buffer, input.byteOffset, input.byteLength);
 }
 
-function parsePe(bytes) {
+export function parsePe(bytes) {
   if (bytes.length < 64 || bytes.toString("ascii", 0, 2) !== "MZ") return null;
   const pe = bytes.readUInt32LE(60);
   if (pe > bytes.length - 24 || bytes.readUInt32LE(pe) !== 0x4550 || bytes.readUInt16LE(pe + 4) !== 0x14c) return null;

@@ -9,6 +9,7 @@ import {KirikiriWriteOverlay, type KirikiriSaveImage} from "./write-overlay.js";
 import type { MountedRuntimeAdapter, RuntimeExitReporter } from "../internal-adapter.js";
 import type {KirikiriParameters} from "./parameters.js";
 import {installGamepadCursor, type GamepadCursor} from "../provider/gamepad-cursor.js";
+import {captureGamepadSource} from "../provider/gamepad-filter.js";
 import {RuntimeFailureError} from "../provider/failure.js";
 
 import {parseProjectIndex} from "../provider/project-index.js";
@@ -45,7 +46,7 @@ type KirikiriModule = {
   printErr(message: string): void;
   pauseMainLoop(): void | Promise<void>;
   resumeMainLoop(): void;
-  krkr2StopMainLoop(operation?: Promise<unknown>): Promise<void>;
+  krkr2StopMainLoop(operation?: Promise<unknown>, discardNativeState?: boolean): Promise<void>;
   _krkr2_host_bookmark_is_ready(): number;
   _krkr2_host_observe_game_saves(): number;
   _krkr2_host_flush_game_saves(): Promise<number>;
@@ -54,6 +55,10 @@ type KirikiriModule = {
   _krkr2_host_engine_arguments_abi?(): number;
   _krkr2_host_local_steam_service_abi?(): number;
   retromLocalSteamService: boolean;
+  retromGamepadDevices(): Array<Pick<Gamepad, "id" | "index" | "mapping" | "connected">>;
+  retromGamepadSamples(): (Gamepad | null)[];
+  retromGamepadVibrate(index: number, id: string, left: number, right: number): void;
+  onGamepadInputChanged(active: boolean): void;
   _krkr2_host_resource_overlay_abi?(): number;
   _resourceOverlayFiles: Array<{path: string; relativePath: string}>;
   _startupXp3Path?: string;
@@ -67,6 +72,9 @@ const readyTimeoutMs = 60_000;
 const maximumProjectFiles = 10_000;
 const stableScreenshotTimeoutMs = 3_000;
 const stableScreenshotPollMs = 50;
+// A failed instance is discarded with its workers. Give an outstanding native
+// stack a bounded chance to unwind; a stranded lock must not block release.
+const failedDrainLimitMs = 5_000;
 
 export async function mountKirikiri2(
   config: KirikiriParameters,
@@ -102,7 +110,27 @@ export async function mountKirikiri2(
   canvas.addEventListener("pointerdown", focusCanvas, true);
   const startupKeyboardCleanup = blockStartupKeyboardInput(frameWindow);
   let gamepadCursor: GamepadCursor | undefined;
-  const gamepadCleanup = () => gamepadCursor?.dispose();
+  const readGamepadDevices = captureGamepadSource(frameWindow);
+  let nativeGamepadActive = false;
+  let gamepadOutputPaused = false;
+  let gamepadOutputUnfocused = false;
+  const gamepadActuators = new Set<GamepadHapticActuator>();
+  const stopGamepadOutput = () => {
+    for (const actuator of gamepadActuators) {bestEffortGamepadOutput(() => actuator.reset());}
+    gamepadActuators.clear();
+  };
+  const blurGamepadOutput = () => {gamepadOutputUnfocused = true; stopGamepadOutput();};
+  const focusGamepadOutput = () => {gamepadOutputUnfocused = false;};
+  const visibilityGamepadOutput = () => {if (document.hidden) {stopGamepadOutput();}};
+  frameWindow.addEventListener("blur", blurGamepadOutput);
+  frameWindow.addEventListener("focus", focusGamepadOutput);
+  document.addEventListener("visibilitychange", visibilityGamepadOutput);
+  const gamepadCleanup = () => {
+    gamepadCursor?.dispose(); stopGamepadOutput();
+    frameWindow.removeEventListener("blur", blurGamepadOutput);
+    frameWindow.removeEventListener("focus", focusGamepadOutput);
+    document.removeEventListener("visibilitychange", visibilityGamepadOutput);
+  };
 
   const previousModule = host.Module;
   const previousVlfs = host.VLFS;
@@ -121,6 +149,7 @@ export async function mountKirikiri2(
   const reportFailure = (error: Error) => {
     if (failed || exitReported || exited) {return;}
     failed = true;
+    stopGamepadOutput();
     ready.reject(error);
     contentOptions.onFailure?.(error);
   };
@@ -150,15 +179,19 @@ export async function mountKirikiri2(
     // Script loading may fail before the core installs the main-loop bridge.
     // Stop scheduling first, cancel reads so a suspended JSPI tick can unwind,
     // and retain Module/VLFS until it has completely returned.
-    const stopping = checkpointOperation?.stop() ?? module?.krkr2StopMainLoop?.();
+    const stopping = checkpointOperation?.stop(failed) ?? module?.krkr2StopMainLoop?.(undefined, failed);
     try {await content.close();}
     finally {
-      await stopping;
-      module?.PThread?.terminateAllThreads();
-      cleanup(
-        host, previousModule, previousVlfs, target, canvas, focusCanvas,
-        gamepadCleanup, resizeCleanup, runtimeTerminationCleanup, scripts,
-      );
+      try {await (failed ? withTimeout(Promise.resolve(stopping), failedDrainLimitMs, "KIRIKIRI_DRAIN_TIMEOUT").catch(() => undefined) : stopping);}
+      finally {
+        try {module?.PThread?.terminateAllThreads();}
+        finally {
+          cleanup(
+            host, previousModule, previousVlfs, target, canvas, focusCanvas,
+            gamepadCleanup, resizeCleanup, runtimeTerminationCleanup, scripts,
+          );
+        }
+      }
     }
   };
   try {
@@ -188,6 +221,35 @@ export async function mountKirikiri2(
     const options: Partial<KirikiriModule> = {
       arguments: config.engineArguments.slice(),
       retromLocalSteamService: config.steamService === "LOCAL",
+      retromGamepadDevices: () => {
+        if (exited || failed) {return [];}
+        try {
+          return readGamepadDevices().filter((pad): pad is Gamepad => Boolean(pad?.connected))
+            .map(({id, index, mapping, connected}) => ({id, index, mapping, connected}));
+        } catch {return [];}
+      },
+      retromGamepadSamples: () => {
+        if (exited || failed || normalExitRequested || gamepadOutputPaused) {return [];}
+        try {return gamepadCursor?.readNativeGamepads() ?? Array.from(frameWindow.navigator.getGamepads());}
+        catch {return [];}
+      },
+      onGamepadInputChanged: active => {
+        if (exited || failed) {return;}
+        nativeGamepadActive = active === true;
+        gamepadCursor?.setNativeOwned(nativeGamepadActive);
+      },
+      retromGamepadVibrate: (index, id, left, right) => {
+        if (exited || failed || normalExitRequested || gamepadOutputPaused || gamepadOutputUnfocused || document.hidden) {return;}
+        try {
+          const pad = readGamepadDevices().find(pad => pad?.connected && pad.index === index && pad.id.slice(0, 512) === id);
+          const actuator = pad?.vibrationActuator;
+          if (!actuator || typeof actuator.playEffect !== "function") {return;}
+          gamepadActuators.add(actuator);
+          bestEffortGamepadOutput(() => left || right ? actuator.playEffect("dual-rumble", {
+            duration: 250, startDelay: 0, strongMagnitude: left, weakMagnitude: right,
+          }) : actuator.reset());
+        } catch { /* Device enumeration and optional hardware output are best effort. */ }
+      },
       _resourceOverlayFiles: project.overlayFiles,
       retromContentBridge: {abi: content.abi, contractSha256: content.contractSha256},
       canvas,
@@ -253,6 +315,7 @@ export async function mountKirikiri2(
     if (normalExitRequested) {exportFinalExit();}
     startupKeyboardCleanup();
     gamepadCursor = installGamepadCursor(frameWindow, canvas, {defaultEnabled: true});
+    gamepadCursor.setNativeOwned(nativeGamepadActive);
     focusCanvas();
   } catch (error) {
     startupKeyboardCleanup();
@@ -295,12 +358,17 @@ export async function mountKirikiri2(
         : {available: true, blocker: null, revision: String(overlay.sequence), save};
     },
     getFrameCount: () => null,
-    pause: () => checkpointOperation!.pause(),
-    resume: () => checkpointOperation!.resume(),
+    pause: () => {gamepadOutputPaused = true; stopGamepadOutput(); return checkpointOperation!.pause();},
+    resume: async () => {await checkpointOperation!.resume(); gamepadOutputPaused = false;},
     screenshot: () => stableCanvasScreenshot(frameWindow, canvas, activeModule,
       () => !checkpointOperation!.isPaused && !normalExitRequested && !failed && !exited),
     setVolume: null,
   };
+}
+
+function bestEffortGamepadOutput(operation: () => Promise<GamepadHapticsResult>) {
+  try {void operation().catch(() => undefined);}
+  catch { /* Browser hardware may reject an unsupported or disconnected actuator. */ }
 }
 
 function unsupportedNativeOptions(config: KirikiriParameters, module: Partial<KirikiriModule> | undefined) {

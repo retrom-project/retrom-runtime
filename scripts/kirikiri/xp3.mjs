@@ -3,7 +3,7 @@ import {openContent} from "../runtime-host-content.mjs";
 import {magic, maximumIndex, maximumFile, requireFormat, number64, chunks, readExact, inflate, text16, normalizeName, safeName} from "./bytes.mjs";
 import {shortWarningShape, validateWarningMetadata} from "./warning-metadata.mjs";
 
-async function indexes(handle, signal, onTag) {
+export async function indexes(handle, signal, onTag) {
   requireFormat((await readExact(handle, 0, magic.length)).equals(magic));
   let position = number64(await readExact(handle, 11, 8)), total = 0;
   const visited = new Set(), result = [];
@@ -22,7 +22,7 @@ async function indexes(handle, signal, onTag) {
   }
   throw new Error("RUNTIME_KIRIKIRI_ARCHIVE_LIMIT");
 }
-function parseFile(data, sourceSize, canonicalizeInfoSize) {
+export function parseFile(data, sourceSize, canonicalizeInfoSize) {
   const fields = new Map(); let infoSizeCorrection;
   for (let at = 0; at < data.length;) {
     requireFormat(at + 12 <= data.length);

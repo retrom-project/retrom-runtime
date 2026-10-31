@@ -12,6 +12,8 @@ type CursorOptions = {
   activationEvent?: "click" | "tap";
 };
 export type GamepadCursor = RuntimeGamepadCursorV1 & {
+  readNativeGamepads(): (Gamepad | null)[];
+  setNativeOwned(owned: boolean): void;
   setSuspended(suspended: boolean): void;
   setInputPolicy(policy: RuntimeInputFilterPolicyV1 | null): void;
   dispose(): void;
@@ -29,6 +31,10 @@ class GamepadCursorController implements GamepadCursor {
   private enabled: boolean;
   private disposed = false;
   private suspended = false;
+  private nativeOwned = false;
+  private nativeReady = false;
+  private nativeDrainReserved = false;
+  private nativeSnapshot: (Gamepad | null)[] | undefined;
   private unfocused = false;
   private policy: RuntimeInputFilterPolicyV1 | null = null;
   private activeIndex: number | null = null;
@@ -60,6 +66,16 @@ class GamepadCursorController implements GamepadCursor {
 
   getState() {return {enabled: this.enabled, defaultEnabled: this.options.defaultEnabled};}
 
+  readNativeGamepads() {
+    if (this.disposed) {return [];}
+    this.nativeSnapshot ??= this.filteredGamepads().map(pad => pad ? {
+      id: pad.id, index: pad.index, connected: pad.connected, mapping: pad.mapping, timestamp: pad.timestamp,
+      vibrationActuator: pad.vibrationActuator, axes: [...pad.axes],
+      buttons: pad.buttons.map(({pressed, touched, value}) => ({pressed, touched, value})),
+    } : null);
+    return this.nativeSnapshot;
+  }
+
   setEnabled(enabled: boolean) {
     if (this.disposed || typeof enabled !== "boolean") {throw new Error("PLAYER_RUNTIME_CONTRACT_INVALID");}
     if (enabled === this.enabled) {return;}
@@ -71,13 +87,23 @@ class GamepadCursorController implements GamepadCursor {
   setSuspended(suspended: boolean) {
     if (this.suspended === suspended) {return;}
     this.suspended = suspended;
+    this.nativeReady = false;
     this.reset();
+  }
+
+  setNativeOwned(owned: boolean) {
+    if (this.disposed || this.nativeOwned === owned) {return;}
+    this.reset();
+    this.nativeOwned = owned;
+    this.nativeReady = false;
+    this.releaseGate = true;
   }
 
   setInputPolicy(policy: RuntimeInputFilterPolicyV1 | null) {
     if (policy?.activeGamepadIndex !== this.policy?.activeGamepadIndex || policy?.suppressInput !== this.policy?.suppressInput) {
       this.reset();
       this.activeIndex = null;
+      this.nativeReady = false;
     }
     this.policy = policy ? {...policy} : null;
   }
@@ -96,7 +122,7 @@ class GamepadCursorController implements GamepadCursor {
     this.surface.dispose();
   }
 
-  private readonly blur = () => {this.unfocused = true; this.reset();};
+  private readonly blur = () => {this.unfocused = true; this.nativeReady = false; this.reset();};
   private readonly focus = () => {if (this.unfocused) {this.unfocused = false; this.reset();}};
   private readonly visibility = () => {if (this.window.document.hidden) {this.blur();} else {this.focus();}};
   private blocked() {return this.suspended || this.unfocused || Boolean(this.policy?.suppressInput);}
@@ -112,6 +138,7 @@ class GamepadCursorController implements GamepadCursor {
   private readonly filteredGamepads = () => {
     const pads = Array.from(this.nativeGetGamepads.call(this.window.navigator));
     const selected = this.select(pads);
+    if (this.nativeOwned) {return this.filteredNativeGamepads(pads, selected);}
     if ((!this.enabled && !this.releaseGate) || !selected) {return pads;}
     return pads.map(pad => pad !== selected ? pad : {
       id: pad.id, index: pad.index, connected: pad.connected, mapping: pad.mapping, timestamp: pad.timestamp, vibrationActuator: pad.vibrationActuator,
@@ -122,8 +149,25 @@ class GamepadCursorController implements GamepadCursor {
     });
   };
 
+  private filteredNativeGamepads(pads: (Gamepad | null)[], selected: Gamepad | null) {
+    if (this.blocked()) {return pads.map(pad => pad ? maskedGamepad(pad) : null);}
+    if (!selected) {return pads;}
+    if (!this.nativeReady) {return pads.map(pad => pad !== selected ? pad : maskedGamepad(pad));}
+    if (!this.nativeDrainReserved) {return pads;}
+    this.nativeDrainReserved = false;
+    // A short Start/Select release becomes a filtered pulse. Drain the pulse
+    // from the neutral gate without discarding a new physical button press.
+    const raw = this.select(this.sample());
+    return pads.map(pad => pad !== selected ? pad : {
+      ...maskedGamepad(pad), axes: pad.axes,
+      buttons: pad.buttons.map((button, index) => (index === 8 || index === 9) && (!raw || !pressed(raw, index))
+        ? {pressed: false, touched: false, value: 0} : button),
+    });
+  }
+
   private readonly poll = (time: number) => {
     if (this.disposed) {return;}
+    this.nativeSnapshot = undefined;
     this.update(time);
     this.frame = this.window.requestAnimationFrame(this.poll);
   };
@@ -133,7 +177,8 @@ class GamepadCursorController implements GamepadCursor {
     this.previousTime = time;
     const pad = this.select(this.sample());
     if (!pad) {this.reset(); this.activeIndex = null; return;}
-    if (this.activeIndex !== pad.index) {this.reset(); this.activeIndex = pad.index;}
+    if (this.activeIndex !== pad.index) {this.reset(); this.nativeReady = false; this.activeIndex = pad.index;}
+    if (this.nativeOwned) {this.updateNative(pad); return;}
     if (this.blocked()) {this.reset(); return;}
     const vector = direction(pad);
     if (!this.neutralReady) {
@@ -149,6 +194,13 @@ class GamepadCursorController implements GamepadCursor {
     this.updateButton(2, pressed(pad, 1));
     this.surface.refresh(this.position);
     if (this.held || vector.x || vector.y) {this.surface.reveal(this.position);}
+  }
+
+  private updateNative(pad: Gamepad) {
+    const ready = !this.blocked() && (this.nativeReady || neutralGamepad(pad));
+    if (ready && !this.nativeReady) {this.nativeDrainReserved = true;}
+    this.nativeReady = ready;
+    this.reset();
   }
 
   private move(vector: CursorPosition, elapsed: number) {
@@ -184,6 +236,7 @@ class GamepadCursorController implements GamepadCursor {
   }
 
   private reset() {
+    this.nativeSnapshot = undefined;
     for (const button of [0, 2]) {
       const mask = button === 0 ? 1 : 2;
       if (!(this.held & mask)) {continue;}
@@ -197,6 +250,17 @@ class GamepadCursorController implements GamepadCursor {
 }
 
 function pressed(pad: Gamepad, index: number) {return Boolean(pad.buttons[index]?.pressed || pad.buttons[index]?.value >= 0.5);}
+function neutralGamepad(pad: Gamepad) {
+  return pad.buttons.every(button => !button.pressed && button.value < 0.5) &&
+    pad.axes.every(value => Number.isFinite(value) && Math.abs(value) <= 0.2);
+}
+function maskedGamepad(pad: Gamepad): Gamepad {
+  return {
+    id: pad.id, index: pad.index, connected: pad.connected, mapping: pad.mapping, timestamp: pad.timestamp,
+    vibrationActuator: pad.vibrationActuator,
+    axes: pad.axes.map(() => 0), buttons: pad.buttons.map(() => ({pressed: false, touched: false, value: 0})),
+  };
+}
 function axis(value: number) {
   return !Number.isFinite(value) || Math.abs(value) <= 0.2 ? 0 : Math.sign(value) * (Math.abs(value) - 0.2) / 0.8;
 }

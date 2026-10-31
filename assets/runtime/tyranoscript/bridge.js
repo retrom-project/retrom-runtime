@@ -646,6 +646,10 @@
     enabled;
     disposed = !1;
     suspended = !1;
+    nativeOwned = !1;
+    nativeReady = !1;
+    nativeDrainReserved = !1;
+    nativeSnapshot;
     unfocused = !1;
     policy = null;
     activeIndex = null;
@@ -660,22 +664,37 @@
     getState() {
       return { enabled: this.enabled, defaultEnabled: this.options.defaultEnabled };
     }
+    readNativeGamepads() {
+      return this.disposed ? [] : (this.nativeSnapshot ??= this.filteredGamepads().map((pad) => pad ? {
+        id: pad.id,
+        index: pad.index,
+        connected: pad.connected,
+        mapping: pad.mapping,
+        timestamp: pad.timestamp,
+        vibrationActuator: pad.vibrationActuator,
+        axes: [...pad.axes],
+        buttons: pad.buttons.map(({ pressed: pressed3, touched, value }) => ({ pressed: pressed3, touched, value }))
+      } : null), this.nativeSnapshot);
+    }
     setEnabled(enabled) {
       if (this.disposed || typeof enabled != "boolean")
         throw new Error("PLAYER_RUNTIME_CONTRACT_INVALID");
       enabled !== this.enabled && (this.reset(), this.releaseGate = !0, this.enabled = enabled);
     }
     setSuspended(suspended) {
-      this.suspended !== suspended && (this.suspended = suspended, this.reset());
+      this.suspended !== suspended && (this.suspended = suspended, this.nativeReady = !1, this.reset());
+    }
+    setNativeOwned(owned) {
+      this.disposed || this.nativeOwned === owned || (this.reset(), this.nativeOwned = owned, this.nativeReady = !1, this.releaseGate = !0);
     }
     setInputPolicy(policy) {
-      (policy?.activeGamepadIndex !== this.policy?.activeGamepadIndex || policy?.suppressInput !== this.policy?.suppressInput) && (this.reset(), this.activeIndex = null), this.policy = policy ? { ...policy } : null;
+      (policy?.activeGamepadIndex !== this.policy?.activeGamepadIndex || policy?.suppressInput !== this.policy?.suppressInput) && (this.reset(), this.activeIndex = null, this.nativeReady = !1), this.policy = policy ? { ...policy } : null;
     }
     dispose() {
       this.disposed || (this.reset(), this.disposed = !0, this.window.cancelAnimationFrame(this.frame), this.window.removeEventListener("blur", this.blur), this.window.removeEventListener("focus", this.focus), this.window.document.removeEventListener("visibilitychange", this.visibility), this.window.navigator.getGamepads === this.filteredGamepads && (this.descriptor ? Object.defineProperty(this.window.navigator, "getGamepads", this.descriptor) : Reflect.deleteProperty(this.window.navigator, "getGamepads")), this.surface.dispose());
     }
     blur = () => {
-      this.unfocused = !0, this.reset();
+      this.unfocused = !0, this.nativeReady = !1, this.reset();
     };
     focus = () => {
       this.unfocused && (this.unfocused = !1, this.reset());
@@ -699,7 +718,7 @@
     }
     filteredGamepads = () => {
       let pads = Array.from(this.nativeGetGamepads.call(this.window.navigator)), selected = this.select(pads);
-      return !this.enabled && !this.releaseGate || !selected ? pads : pads.map((pad) => pad !== selected ? pad : {
+      return this.nativeOwned ? this.filteredNativeGamepads(pads, selected) : !this.enabled && !this.releaseGate || !selected ? pads : pads.map((pad) => pad !== selected ? pad : {
         id: pad.id,
         index: pad.index,
         connected: pad.connected,
@@ -710,8 +729,25 @@
         buttons: pad.buttons.map((button, index) => ownedButtons.includes(index) ? { pressed: !1, touched: !1, value: 0 } : { pressed: button.pressed, touched: button.touched, value: button.value })
       });
     };
+    filteredNativeGamepads(pads, selected) {
+      if (this.blocked())
+        return pads.map((pad) => pad ? maskedGamepad(pad) : null);
+      if (!selected)
+        return pads;
+      if (!this.nativeReady)
+        return pads.map((pad) => pad !== selected ? pad : maskedGamepad(pad));
+      if (!this.nativeDrainReserved)
+        return pads;
+      this.nativeDrainReserved = !1;
+      let raw = this.select(this.sample());
+      return pads.map((pad) => pad !== selected ? pad : {
+        ...maskedGamepad(pad),
+        axes: pad.axes,
+        buttons: pad.buttons.map((button, index) => (index === 8 || index === 9) && (!raw || !pressed2(raw, index)) ? { pressed: !1, touched: !1, value: 0 } : button)
+      });
+    }
     poll = (time) => {
-      this.disposed || (this.update(time), this.frame = this.window.requestAnimationFrame(this.poll));
+      this.disposed || (this.nativeSnapshot = void 0, this.update(time), this.frame = this.window.requestAnimationFrame(this.poll));
     };
     update(time) {
       let elapsed = this.previousTime === null ? 0 : Math.max(0, Math.min(50, time - this.previousTime));
@@ -721,7 +757,11 @@
         this.reset(), this.activeIndex = null;
         return;
       }
-      if (this.activeIndex !== pad.index && (this.reset(), this.activeIndex = pad.index), this.blocked()) {
+      if (this.activeIndex !== pad.index && (this.reset(), this.nativeReady = !1, this.activeIndex = pad.index), this.nativeOwned) {
+        this.updateNative(pad);
+        return;
+      }
+      if (this.blocked()) {
         this.reset();
         return;
       }
@@ -731,6 +771,10 @@
         return;
       }
       this.enabled && ((vector.x || vector.y) && this.move(vector, elapsed * (pressed2(pad, 4) ? 0.2 : 1)), this.updateButton(0, pressed2(pad, 0)), this.updateButton(2, pressed2(pad, 1)), this.surface.refresh(this.position), (this.held || vector.x || vector.y) && this.surface.reveal(this.position));
+    }
+    updateNative(pad) {
+      let ready = !this.blocked() && (this.nativeReady || neutralGamepad(pad));
+      ready && !this.nativeReady && (this.nativeDrainReserved = !0), this.nativeReady = ready, this.reset();
     }
     move(vector, elapsed) {
       let bounds = this.surface.bounds(), length = Math.max(1, Math.hypot(vector.x, vector.y));
@@ -753,6 +797,7 @@
       }
     }
     reset() {
+      this.nativeSnapshot = void 0;
       for (let button of [0, 2]) {
         let mask = button === 0 ? 1 : 2;
         this.held & mask && (this.held &= ~mask, this.surface.send("mouseup", button, this.held, this.position));
@@ -762,6 +807,21 @@
   };
   function pressed2(pad, index) {
     return !!(pad.buttons[index]?.pressed || pad.buttons[index]?.value >= 0.5);
+  }
+  function neutralGamepad(pad) {
+    return pad.buttons.every((button) => !button.pressed && button.value < 0.5) && pad.axes.every((value) => Number.isFinite(value) && Math.abs(value) <= 0.2);
+  }
+  function maskedGamepad(pad) {
+    return {
+      id: pad.id,
+      index: pad.index,
+      connected: pad.connected,
+      mapping: pad.mapping,
+      timestamp: pad.timestamp,
+      vibrationActuator: pad.vibrationActuator,
+      axes: pad.axes.map(() => 0),
+      buttons: pad.buttons.map(() => ({ pressed: !1, touched: !1, value: 0 }))
+    };
   }
   function axis(value) {
     return !Number.isFinite(value) || Math.abs(value) <= 0.2 ? 0 : Math.sign(value) * (Math.abs(value) - 0.2) / 0.8;

@@ -27,6 +27,95 @@ function setup(defaultEnabled = true, protocol: "mouse" | "pointer" = "mouse", f
 afterEach(() => {vi.restoreAllMocks(); document.body.replaceChildren(); Reflect.deleteProperty(navigator, "getGamepads");});
 
 describe("shared gamepad cursor", () => {
+  it("drains a reserved host-button pulse from the ownership gate while preserving the next intentional tap", () => {
+    const filter = new RuntimeGamepadFilter({activeGamepadIndex: 2, suppressInput: false});
+    const f = setup(true, "mouse", filter);
+    try {
+      f.cursor.setNativeOwned(true); f.press(8); f.tick(0);
+      expect(f.cursor.readNativeGamepads()[1]?.buttons[8].pressed).toBe(false);
+      f.press(8, false); f.tick(16);
+      expect(f.cursor.readNativeGamepads()[1]?.buttons[8].pressed).toBe(false);
+      f.press(8); f.tick(32);
+      expect(f.cursor.readNativeGamepads()[1]?.buttons[8].pressed).toBe(false);
+      f.press(8, false); f.tick(48);
+      expect(f.cursor.readNativeGamepads()[1]?.buttons[8].pressed).toBe(true);
+      expect(f.events).toHaveLength(0);
+    } finally {f.cursor.dispose(); f.removeFilter();}
+  });
+  it("shares one filtered native snapshot across controllers without consuming a short host-button pulse twice", () => {
+    const filter = new RuntimeGamepadFilter({activeGamepadIndex: 5, suppressInput: false});
+    const f = setup(true, "mouse", filter);
+    const second = {...f.pad, index: 5, buttons: f.pad.buttons.map(button => ({...button})), axes: [...f.pad.axes]};
+    f.native().push(second);
+    f.cursor.setInputPolicy({activeGamepadIndex: 5, suppressInput: false});
+    f.cursor.setNativeOwned(true); f.tick(0);
+    const filtering = vi.spyOn(filter, "filter");
+    try {
+      second.buttons[8] = {pressed: true, touched: true, value: 1}; f.tick(16);
+      f.cursor.readNativeGamepads(); f.cursor.readNativeGamepads();
+      expect(filtering).toHaveBeenCalledOnce();
+      second.buttons[8] = {pressed: false, touched: false, value: 0}; f.tick(32);
+      const firstRead = f.cursor.readNativeGamepads();
+      const secondRead = f.cursor.readNativeGamepads();
+      expect(firstRead.find(pad => pad?.index === 5)?.buttons[8].pressed).toBe(true);
+      expect(secondRead.find(pad => pad?.index === 5)?.buttons[8].pressed).toBe(true);
+      expect(filtering).toHaveBeenCalledTimes(2);
+      f.cursor.setSuspended(true);
+      expect(f.cursor.readNativeGamepads().find(pad => pad?.index === 5)?.buttons[8].pressed).toBe(false);
+      expect(filtering).toHaveBeenCalledTimes(3);
+      f.cursor.setSuspended(false); f.tick(48);
+      expect(f.cursor.readNativeGamepads().find(pad => pad?.index === 5)?.buttons[8].pressed).toBe(false);
+      expect(f.events).toHaveLength(0);
+    } finally {f.cursor.dispose(); f.removeFilter();}
+  });
+  it("blocks native input during blur and suspension and waits for neutral after resuming", () => {
+    const f = setup();
+    try {
+      f.cursor.setNativeOwned(true); f.tick(0); f.press(0); f.tick(16);
+      expect(f.cursor.readNativeGamepads()[1]?.buttons[0].pressed).toBe(true);
+      window.dispatchEvent(new Event("blur")); f.tick(32);
+      expect(f.cursor.readNativeGamepads()[1]?.buttons[0].pressed).toBe(false);
+      window.dispatchEvent(new Event("focus")); f.tick(48);
+      expect(f.cursor.readNativeGamepads()[1]?.buttons[0].pressed).toBe(false);
+      f.press(0, false); f.tick(64); f.press(0); f.tick(80);
+      expect(f.cursor.readNativeGamepads()[1]?.buttons[0].pressed).toBe(true);
+      f.cursor.setSuspended(true); f.tick(96);
+      expect(f.cursor.readNativeGamepads()[1]?.buttons[0].pressed).toBe(false);
+      f.cursor.setSuspended(false); f.tick(112);
+      expect(f.cursor.readNativeGamepads()[1]?.buttons[0].pressed).toBe(false);
+      f.press(0, false); f.tick(128); f.press(0); f.tick(144);
+      expect(f.cursor.readNativeGamepads()[1]?.buttons[0].pressed).toBe(true);
+      expect(f.events).toHaveLength(0);
+    } finally {f.cursor.dispose();}
+  });
+  it("hands a controller to native input after neutral without duplicating an existing mouse press", () => {
+    const f = setup(); f.tick(0); f.press(0); f.tick(16);
+    try {
+      f.cursor.setNativeOwned(true);
+      expect(f.events.map(event => event.type)).toEqual(["mousemove", "mousedown", "mouseup"]);
+      expect(navigator.getGamepads()[1]?.buttons[0].pressed).toBe(false);
+      f.press(0, false); f.tick(32); f.press(0); f.tick(48);
+      expect(navigator.getGamepads()[1]?.buttons[0].pressed).toBe(true);
+      expect(f.events).toHaveLength(3);
+      f.cursor.setNativeOwned(false); f.tick(64);
+      expect(f.events).toHaveLength(3);
+      f.press(0, false); f.tick(80); f.press(1); f.tick(96); f.press(1, false); f.tick(112);
+      expect(f.events.filter(event => event.type === "contextmenu")).toHaveLength(1);
+    } finally {f.cursor.dispose();}
+  });
+  it("keeps host suppression and the selected-controller policy while native input owns the pad", () => {
+    const filter = new RuntimeGamepadFilter({activeGamepadIndex: 2, suppressInput: false});
+    const f = setup(true, "mouse", filter);
+    try {
+      f.cursor.setNativeOwned(true); f.tick(0);
+      f.press(0); f.tick(16);
+      expect(f.cursor.readNativeGamepads()[1]?.buttons[0].pressed).toBe(true);
+      filter.setPolicy({activeGamepadIndex: 2, suppressInput: true});
+      f.cursor.setInputPolicy({activeGamepadIndex: 2, suppressInput: true}); f.tick(32);
+      expect(f.cursor.readNativeGamepads()[1]?.buttons[0].pressed).toBe(false);
+      expect(f.events).toHaveLength(0);
+    } finally {f.cursor.dispose(); f.removeFilter();}
+  });
   it.each(["mouse", "pointer"] as const)("synchronizes cached %s position before stationary clicks after physical pointer use", protocol => {
     const f = setup(true, protocol);
     let position = [0, 0];

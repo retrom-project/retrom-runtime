@@ -158,4 +158,4 @@ async function convert(input, plan) {
   } finally {await log.close();}
   return {files, summary};
 }
-export const hxv4 = Object.freeze({id: "kirikiri-hxv4", version: 1, priority: 110, platforms: ["kirikiri"], formats: ["hxv4-decoded"], probe, convert});
+export const hxv4 = Object.freeze({id: "kirikiri-hxv4", phase: "resource", version: 1, priority: 110, platforms: ["kirikiri"], formats: ["hxv4-decoded"], probe, convert});

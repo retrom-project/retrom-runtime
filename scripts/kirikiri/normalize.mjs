@@ -40,13 +40,20 @@ async function nativeProfiles(input, signal, archives = []) {
     requireFormat(profiles.size <= 64, "FILTER_AMBIGUOUS");
     for (const embedded of extractEmbeddedPeModules(bytes, {maxTotalBytes: 512 * 1024 * 1024 - totalBytes})) {inspect(embedded, depth + 1);}
   }
-  for (const file of input.files) {
-    signal?.throwIfAborted();
-    if (!/\.(?:exe|dll|tpm)$/iu.test(file.logicalKey) || file.sizeBytes === 0) {continue;}
-    const locator = requireLocator(input, file);
-    requireFormat(await sourceHash(locator, signal) === file.sha256, "SOURCE_CHANGED");
-    const bytes = await nativeModule(locator, signal);
-    if (bytes) {inspect(bytes);}
+  const sources = new Set();
+  // An embedded wrapper can replace a module without changing the archive's
+  // filter. Original modules remain evidence, never active output files.
+  for (const view of [input, input.original]) {
+    for (const file of view.files) {
+      signal?.throwIfAborted();
+      if (!/\.(?:exe|dll|tpm)$/iu.test(file.logicalKey) || file.sizeBytes === 0) {continue;}
+      const locator = requireLocator(view, file);
+      requireFormat(await sourceHash(locator, signal) === file.sha256, "SOURCE_CHANGED");
+      if (sources.has(file.sha256)) {continue;}
+      sources.add(file.sha256);
+      const bytes = await nativeModule(locator, signal);
+      if (bytes) {inspect(bytes);}
+    }
   }
   for (const {archive, file} of archives) {
     requireFormat(await sourceHash(archive.sourceLocator ?? archive.locator, signal) === file.sha256, "SOURCE_CHANGED");
@@ -150,7 +157,7 @@ async function probe(input) {
 /** Conversion writes resources only; the common pipeline validates and packages once. */
 async function convert(input, plan) {
   const {signal} = input;
-  const auditRoot = await mkdtemp(join(input.outputRoot, ".audit-")), log = await open(join(auditRoot, "entries.jsonl"), "wx", 0o600);
+  const auditRoot = await mkdtemp(join(input.auditRoot, ".audit-")), log = await open(join(auditRoot, "entries.jsonl"), "wx", 0o600);
   const details = []; let detailBytes = 0;
   const audit = async row => {
     await log.write(JSON.stringify(row) + "\n");
@@ -187,5 +194,5 @@ async function convert(input, plan) {
   return {files, summary};
 }
 
-export const cxFilterFS = Object.freeze({id: "kirikiri-cxfilterfs", version: 1, priority: 100, platforms: ["kirikiri"],
+export const cxFilterFS = Object.freeze({id: "kirikiri-cxfilterfs", phase: "resource", version: 1, priority: 100, platforms: ["kirikiri"],
   formats: ["cxfilterfs-elif", "cxfilterfs-hnfn", "cxfilterfs-yuzu", "cxfilterfs-neko", "cxfilterfs-sen", "xp3-fixed-xor", "xp3-pe", "xp3-native"], probe, convert});

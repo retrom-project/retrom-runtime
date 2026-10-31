@@ -9,6 +9,8 @@ import {Worker} from "node:worker_threads";
 import {normalizeContent} from "../scripts/runtime-normalize-content.mjs";
 import {tinyPE, tinyFirstBytePE} from "./kirikiri-pe-fixture.js";
 import {createTinyFilter} from "../scripts/kirikiri/cxdec.mjs";
+import {cxFilterFS} from "../scripts/kirikiri/normalize.mjs";
+import {runNormalization, type Normalizer} from "../scripts/normalization/pipeline.mjs";
 
 const roots: string[] = [];
 afterEach(async () => {await Promise.all(roots.splice(0).map(path => rm(path, {recursive: true, force: true})));});
@@ -99,6 +101,28 @@ async function withModule(bytes: Buffer, module = tinyPE()) {
   request.locators["plugin/helper.tpm"] = {path, offset: 0, sizeBytes: module.length};
   return request;
 }
+it("authenticates XP3 filters from original modules even when a container overlays their active path", async () => {
+  const items = resources(), request = await withModule(protectedXP3(items)), launcher = Buffer.from("container fixture");
+  const path = join(request.outputRoot, "..", "launcher"); await writeFile(path, launcher); await mkdir(request.outputRoot);
+  request.files.push({logicalKey: "launcher.exe", name: "launcher.exe", sizeBytes: launcher.length, sha256: createHash("sha256").update(launcher).digest("hex")});
+  request.locators["launcher.exe"] = {path, offset: 0, sizeBytes: launcher.length};
+  const replacement = Buffer.from("unsupported thin wrapper"), overlay: Normalizer = {
+    id: "test-container", phase: "container", version: 1, priority: 100, platforms: ["kirikiri"], formats: ["fixture"],
+    async probe() {return [{format: "fixture", claims: ["launcher.exe"], outputs: ["launcher.exe", "plugin/helper.tpm"], overrides: ["plugin/helper.tpm"]}];},
+    async convert(context) {
+      await mkdir(join(context.outputRoot, "plugin"));
+      const files = [];
+      for (const [logicalKey, bytes] of [["launcher.exe", launcher], ["plugin/helper.tpm", replacement]] as const) {
+        const path = join(context.outputRoot, logicalKey); await writeFile(path, bytes);
+        files.push({logicalKey, name: logicalKey, path, sizeBytes: bytes.length, sha256: createHash("sha256").update(bytes).digest("hex")});
+      }
+      return {files};
+    }};
+  const result = await runNormalization(request, [cxFilterFS, overlay]);
+  const decoded = decodedResources(await readFile(result.files.find(file => file.logicalKey === "data.xp3")!.path!));
+  for (const item of items) expect(decoded.get(item.name.replace(/[A-Z]/gu, c => c.toLowerCase()))).toEqual(item.bytes);
+  expect(await readFile(result.files.find(file => file.logicalKey === "plugin/helper.tpm")!.path!)).toEqual(replacement);
+});
 function decodedResources(bytes: Buffer) {
   const index = Number(bytes.readBigUInt64LE(11)), size = Number(bytes.readBigUInt64LE(index + 1)), result = new Map<string, Buffer>();
   for (let at = index + 9; at < index + 9 + size;) {
@@ -356,10 +380,12 @@ it("converts every protected archive group while preserving ordinary archives, p
 });
 it("cancels its worker and cleans only its own staging directory", async () => {
   const request = await withModule(protectedXP3(resources())), controller = new AbortController();
+  const siblings = await readdir(join(request.outputRoot, ".."));
   const source = await readFile(request.locators["data.xp3"].path);
   const result = normalizeContent(request, controller.signal); controller.abort(new Error("TEST_CANCELLED"));
   await expect(result).rejects.toThrow("TEST_CANCELLED");
   await expect(access(request.outputRoot)).rejects.toThrow();
+  expect(await readdir(join(request.outputRoot, ".."))).toEqual(siblings);
   expect(await readFile(request.locators["data.xp3"].path)).toEqual(source);
   await mkdir(request.outputRoot); await writeFile(join(request.outputRoot, "existing"), "untouched");
   await expect(normalizeContent(request)).rejects.toThrow();
@@ -367,6 +393,7 @@ it("cancels its worker and cleans only its own staging directory", async () => {
 });
 it("reclaims completed output when cancellation arrives during worker termination", async () => {
   const request = await withModule(protectedXP3(resources())), controller = new AbortController();
+  const siblings = await readdir(join(request.outputRoot, ".."));
   const source = await readFile(request.locators["data.xp3"].path), terminate = Worker.prototype.terminate;
   const termination = vi.spyOn(Worker.prototype, "terminate").mockImplementation(function (this: Worker) {
     controller.abort(new Error("LATE_CANCELLED"));
@@ -375,6 +402,7 @@ it("reclaims completed output when cancellation arrives during worker terminatio
   try {
     await expect(normalizeContent(request, controller.signal)).rejects.toThrow("LATE_CANCELLED");
     await expect(access(request.outputRoot)).rejects.toThrow();
+    expect(await readdir(join(request.outputRoot, ".."))).toEqual(siblings);
     expect(await readFile(request.locators["data.xp3"].path)).toEqual(source);
   } finally {termination.mockRestore();}
 });

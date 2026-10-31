@@ -74,8 +74,9 @@ async function verify(path, entries, signal) {
 /** Stream one protected logical namespace to an ordinary, independently reread XP3. */
 export async function convertXp3(archive, file, path, filter, audit, signal) {
   requireFormat(await sourceHash(archive.sourceLocator ?? archive.locator, signal) === file.sha256, "SOURCE_CHANGED");
-  const target = await open(path, "wx", 0o600), records = [], expected = [];
-  let position = 19, indexSize = 0, verifiedEntries = 0, metadataCorrections = 0;
+  const target = await open(path, "wx", 0o600), records = [...(archive.extraIndexChunks ?? [])], expected = [];
+  let position = 19, indexSize = records.reduce((sum, bytes) => sum + bytes.length, 0), verifiedEntries = 0, metadataCorrections = 0;
+  requireFormat(indexSize <= maximumIndex, "ARCHIVE_LIMIT");
   try {
     await writeAll(target, Buffer.concat([magic, Buffer.alloc(8)]));
     for (const entry of archive.entries) {

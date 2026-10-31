@@ -34,7 +34,7 @@ async function probeAsar(input) {
     if (!await signature(source, Buffer.from([4, 0, 0, 0]))) {continue;}
     const rows = await asarEntries(source, file.sizeBytes, input, file.logicalKey);
     if (!rows.some(row => row.logicalKey === "index.html")) {throw new Error("RUNTIME_ENTRY_MISSING");}
-    plans.push({format: "electron-asar", claims: [file.logicalKey, ...rows.filter(row => row.sourceKey).map(row => row.sourceKey)],
+    plans.push({format: "electron-asar", launchDomain: file.logicalKey, claims: [file.logicalKey, ...rows.filter(row => row.sourceKey).map(row => row.sourceKey)],
       outputs: rows.map(row => row.logicalKey), file, rows});
   }
   return plans;
@@ -47,7 +47,7 @@ async function probeZIP(input) {
     if (!await signature(source, Buffer.from("MZ")) || !await hasZIP(source)) {continue;}
     const rows = await embeddedZIPEntries(source, file.sizeBytes);
     if (!rows.some(row => row.logicalKey === "index.html")) {continue;}
-    plans.push({format: "nw-embedded-zip", claims: [file.logicalKey], outputs: rows.map(row => row.logicalKey), file, rows});
+    plans.push({format: "nw-embedded-zip", launchDomain: file.logicalKey, claims: [file.logicalKey], outputs: rows.map(row => row.logicalKey), file, rows});
   }
   return plans;
 }
@@ -82,9 +82,9 @@ async function convert(input, plan) {
   if (finalHash.digest("hex") !== plan.file.sha256) {throw new Error("RUNTIME_CONTENT_CHANGED");}
   return {files, summary: {archiveCount: 1, verifiedEntries: files.length}};
 }
-export const electronAsar = Object.freeze({id: "electron-asar", version: 1, priority: 200, platforms: ["tyranoscript"],
+export const electronAsar = Object.freeze({id: "electron-asar", phase: "container", version: 1, priority: 200, platforms: ["tyranoscript"],
   formats: ["electron-asar"], probe: probeAsar, convert});
-export const nwEmbeddedZip = Object.freeze({id: "nw-embedded-zip", version: 1, priority: 300, platforms: ["tyranoscript"],
+export const nwEmbeddedZip = Object.freeze({id: "nw-embedded-zip", phase: "container", version: 1, priority: 300, platforms: ["tyranoscript"],
   formats: ["nw-embedded-zip"], probe: probeZIP, convert});
 
 async function asarEntries(path, size, input, sourceKey) {

@@ -22,10 +22,22 @@ export async function indexes(handle, signal, onTag) {
   }
   throw new Error("RUNTIME_KIRIKIRI_ARCHIVE_LIMIT");
 }
-export function parseFile(data, sourceSize) {
-  const fields = new Map();
-  for (const {tag, bytes} of chunks(data)) {
-    requireFormat(["info", "segm", "adlr", "time"].includes(tag) && !fields.has(tag), "ARCHIVE_UNSUPPORTED"); fields.set(tag, bytes);
+export function parseFile(data, sourceSize, canonicalizeInfoSize) {
+  const fields = new Map(); let infoSizeCorrection;
+  for (let at = 0; at < data.length;) {
+    requireFormat(at + 12 <= data.length);
+    const tag = data.toString("ascii", at, at + 4), declared = number64(data, at + 4), start = at + 12;
+    let length = declared;
+    if (canonicalizeInfoSize && tag === "info" && declared > data.length - start && declared <= 22 + 32767 * 2 + 2) {
+      // Only a terminal info record can borrow its enclosing File boundary.
+      // text16 below must consume an exact counted name (plus optional NUL),
+      // and conversion must authenticate the complete resource checksum.
+      requireFormat(fields.has("segm") && fields.has("adlr"));
+      length = data.length - start; infoSizeCorrection = {declared, actual: length};
+    }
+    requireFormat(length <= data.length - start);
+    requireFormat(["info", "segm", "adlr", "time"].includes(tag) && !fields.has(tag), "ARCHIVE_UNSUPPORTED");
+    fields.set(tag, data.subarray(start, start + length)); at = start + length;
   }
   const info = fields.get("info"), segm = fields.get("segm"), checksum = fields.get("adlr"), time = fields.get("time");
   requireFormat(info?.length >= 22 && segm?.length > 0 && segm.length % 28 === 0 && checksum?.length === 4 && (!time || time.length === 8));
@@ -40,7 +52,8 @@ export function parseFile(data, sourceSize) {
     requireFormat(readable <= maximumFile && stored <= maximumFile, "ARCHIVE_LIMIT");
     segments.push({mode, offset, expanded, packed: count});
   }
-  const entry = {physical, name: physical, size, packed, flags, segments, readable, adler: checksum.readUInt32LE(), time};
+  const entry = {physical, name: physical, size, packed, flags, segments, readable, adler: checksum.readUInt32LE(), time,
+    ...(infoSizeCorrection ? {infoSizeCorrection} : {})};
   requireFormat(stored <= packed && readable <= size && (stored === packed && readable === size || shortWarningShape(entry)));
   return entry;
 }
@@ -89,7 +102,7 @@ function linkEntries(files, table) {
   return {entries, omitted};
 }
 /** Inspect immutable logical slices, including non-.xp3 names, without executing native code. */
-export async function readXp3(locator, {signal, includePlainEntries = false} = {}) {
+export async function readXp3(locator, {signal, includePlainEntries = false, canonicalizeInfoSize = false} = {}) {
   if (locator.sizeBytes < magic.length) {return null;}
   const handle = await openContent(locator);
   try {
@@ -113,7 +126,7 @@ export async function readXp3(locator, {signal, includePlainEntries = false} = {
     if (tags.has("Hxv4") && !protectedNames) {return {locator, format: null, unsupportedFormat: "hxv4"};}
     if (!protectedNames && !includePlainEntries) {return {locator, format: null};}
     if (protectedNames) {requireFormat(rows.every(row => ["File", "eliF", "hnfn", "Yuzu", "neko", "sen:"].includes(row.tag)), "ARCHIVE_UNSUPPORTED");}
-    const files = rows.filter(row => row.tag === "File").map(row => parseFile(row.bytes, locator.sizeBytes));
+    const files = rows.filter(row => row.tag === "File").map(row => parseFile(row.bytes, locator.sizeBytes, canonicalizeInfoSize));
     if (!protectedNames) {
       await validateWarningMetadata(locator, files, signal);
       return {locator, format: null, entries: files};

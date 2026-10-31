@@ -15,7 +15,7 @@ async function input() {
   return {platformId: "test", files, outputRoot};
 }
 function plugin(id: string, claims: string[], priority = 100): Normalizer {
-  return {id, version: 1, priority, platforms: ["test"], formats: ["synthetic"],
+  return {id, phase: "resource", version: 1, priority, platforms: ["test"], formats: ["synthetic"],
     async probe() {return claims.length ? [{format: "synthetic", claims, outputs: claims}] : [];},
     async convert(context, plan) {
       const files = [];
@@ -66,6 +66,13 @@ it("matched failure stops the import instead of trying another converter or retu
   await expect(runNormalization(request, [a, b])).rejects.toThrow("RUNTIME_TEST_CORRUPT_RESOURCE");
   expect(second).not.toHaveBeenCalled();
 });
+it("does not let another plan's claim authorize an undeclared source overwrite", async () => {
+  const request = await input(), a = plugin("a", ["data.xp3"]), b = plugin("b", ["patch.xp3"]), convert = vi.spyOn(a, "convert");
+  a.probe = async () => [{format: "synthetic", claims: ["data.xp3"], outputs: ["patch.xp3"]}];
+  b.probe = async () => [{format: "synthetic", claims: ["patch.xp3"], outputs: ["new.xp3"]}];
+  await expect(runNormalization(request, [a, b])).rejects.toThrow("RUNTIME_NORMALIZATION_CONFLICT");
+  expect(convert).not.toHaveBeenCalled();
+});
 it("validates emitted bytes against the conversion manifest", async () => {
   const request = await input(), a = plugin("a", ["data.xp3"]), convert = a.convert;
   a.convert = async (context, plan) => {
@@ -83,6 +90,6 @@ it("keeps source content identity independent of plugin implementation versions"
   expect(second.normalization?.plugins[0].version).toBe(2);
 });
 it("validates the static registry rather than silently accepting duplicate ids", async () => {
-  const request = await input(), context = {...request, sourceContentHash: "a".repeat(64), cache: new Map()};
+  const request = await input(), context = {...request, original: request, sourceContentHash: "a".repeat(64), cache: new Map()};
   await expect(planNormalization(context, [plugin("a", []), plugin("a", [])])).rejects.toThrow("RUNTIME_NORMALIZATION_REGISTRY_INVALID");
 });

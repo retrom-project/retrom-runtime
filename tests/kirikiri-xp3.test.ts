@@ -1,6 +1,6 @@
 // @vitest-environment node
 import {afterEach, expect, it, vi} from "vitest";
-import {mkdtemp, readFile, rm, writeFile, access, mkdir, readdir} from "node:fs/promises";
+import {mkdtemp, readFile, rm, writeFile, access, mkdir, readdir, open} from "node:fs/promises";
 import {tmpdir} from "node:os";
 import {join} from "node:path";
 import {createHash} from "node:crypto";
@@ -9,6 +9,8 @@ import {Worker} from "node:worker_threads";
 import {normalizeContent} from "../scripts/runtime-normalize-content.mjs";
 import {tinyPE, tinyFirstBytePE} from "./kirikiri-pe-fixture.js";
 import {createTinyFilter} from "../scripts/kirikiri/cxdec.mjs";
+import {cxFilterFS} from "../scripts/kirikiri/normalize.mjs";
+import {runNormalization, type Normalizer} from "../scripts/normalization/pipeline.mjs";
 
 const roots: string[] = [];
 afterEach(async () => {await Promise.all(roots.splice(0).map(path => rm(path, {recursive: true, force: true})));});
@@ -99,6 +101,28 @@ async function withModule(bytes: Buffer, module = tinyPE()) {
   request.locators["plugin/helper.tpm"] = {path, offset: 0, sizeBytes: module.length};
   return request;
 }
+it("authenticates XP3 filters from original modules even when a container overlays their active path", async () => {
+  const items = resources(), request = await withModule(protectedXP3(items)), launcher = Buffer.from("container fixture");
+  const path = join(request.outputRoot, "..", "launcher"); await writeFile(path, launcher); await mkdir(request.outputRoot);
+  request.files.push({logicalKey: "launcher.exe", name: "launcher.exe", sizeBytes: launcher.length, sha256: createHash("sha256").update(launcher).digest("hex")});
+  request.locators["launcher.exe"] = {path, offset: 0, sizeBytes: launcher.length};
+  const replacement = Buffer.from("unsupported thin wrapper"), overlay: Normalizer = {
+    id: "test-container", phase: "container", version: 1, priority: 100, platforms: ["kirikiri"], formats: ["fixture"],
+    async probe() {return [{format: "fixture", claims: ["launcher.exe"], outputs: ["launcher.exe", "plugin/helper.tpm"], overrides: ["plugin/helper.tpm"]}];},
+    async convert(context) {
+      await mkdir(join(context.outputRoot, "plugin"));
+      const files = [];
+      for (const [logicalKey, bytes] of [["launcher.exe", launcher], ["plugin/helper.tpm", replacement]] as const) {
+        const path = join(context.outputRoot, logicalKey); await writeFile(path, bytes);
+        files.push({logicalKey, name: logicalKey, path, sizeBytes: bytes.length, sha256: createHash("sha256").update(bytes).digest("hex")});
+      }
+      return {files};
+    }};
+  const result = await runNormalization(request, [cxFilterFS, overlay]);
+  const decoded = decodedResources(await readFile(result.files.find(file => file.logicalKey === "data.xp3")!.path!));
+  for (const item of items) expect(decoded.get(item.name.replace(/[A-Z]/gu, c => c.toLowerCase()))).toEqual(item.bytes);
+  expect(await readFile(result.files.find(file => file.logicalKey === "plugin/helper.tpm")!.path!)).toEqual(replacement);
+});
 function decodedResources(bytes: Buffer) {
   const index = Number(bytes.readBigUInt64LE(11)), size = Number(bytes.readBigUInt64LE(index + 1)), result = new Map<string, Buffer>();
   for (let at = index + 9; at < index + 9 + size;) {
@@ -251,6 +275,51 @@ it("discovers the native-data filter and publishes complete ordinary resources w
   expect(result.normalization).toMatchObject({archiveCount: 1, verifiedEntries: 3, metadataCorrections: 0});
   expect(await readFile(request.locators["data.xp3"].path)).toEqual(source);
 });
+it("inspects the bounded PE image of a large installer without dropping its unchanged content", async () => {
+  const request = await withModule(protectedXP3(resources()));
+  const module = tinyPE(); module.fill(0, 0x1500, 0x1560);
+  const path = join(request.outputRoot, "..", "installer"), sizeBytes = 65 * 1024 * 1024;
+  const handle = await open(path, "wx");
+  try {await handle.write(module); await handle.truncate(sizeBytes);} finally {await handle.close();}
+  const sha256 = createHash("sha256").update(await readFile(path)).digest("hex"), logicalKey = "installer.exe";
+  request.files.push({logicalKey, name: logicalKey, sizeBytes, sha256}); request.locators[logicalKey] = {path, offset: 0, sizeBytes};
+  const result = await normalizeContent(request);
+  expect(result.normalization).toMatchObject({archiveCount: 1, verifiedEntries: 3});
+  expect(result.files.find(file => file.logicalKey === logicalKey)).toEqual(request.files[2]);
+});
+it("canonicalizes only a terminal info length authenticated by the full resource checksum", async () => {
+  const malformed = (bytes: Buffer) => {
+    const index = Number(bytes.readBigUInt64LE(11)), rows: Buffer[] = [];
+    for (let at = index + 9; at < bytes.length;) {
+      const end = at + 12 + Number(bytes.readBigUInt64LE(at + 4)), fields: Buffer[] = [];
+      for (let p = at + 12; p < end;) {
+        const n = 12 + Number(bytes.readBigUInt64LE(p + 4)); fields.push(Buffer.from(bytes.subarray(p, p + n))); p += n;
+      }
+      const info = fields.shift()!; info.writeBigUInt64LE(88n, 4);
+      rows.push(chunk("File", Buffer.concat([...fields, info]))); at = end;
+    }
+    const rawIndex = Buffer.concat(rows);
+    return Buffer.concat([bytes.subarray(0, index), Buffer.from([0]), u64(rawIndex.length), rawIndex]);
+  };
+  const items = resources().map(item => ({...item, raw: true})), source = malformed(ordinaryXP3(items));
+  const request = await input(source), result = await normalizeContent(request);
+  expect(result.normalization).toMatchObject({archiveCount: 1, metadataCorrections: 3});
+  expect(result.normalization!.details.map(row => row.code)).toEqual(Array(3).fill("INFO_CHUNK_SIZE"));
+  const decoded = decodedResources(await readFile(result.files[0].path!));
+  for (const item of items) expect(decoded.get(item.name)).toEqual(item.bytes);
+  const corrupt = Buffer.from(source); corrupt[19] ^= 1;
+  const bad = await input(corrupt);
+  await expect(normalizeContent(bad)).rejects.toThrow(/CHECKSUM_MISMATCH/u);
+  // A seed-only native patch has no resource checksum to authenticate an index correction.
+  const filter = createTinyFilter({xorConstant: 0x12345678, zeroFallback: 0x55});
+  const crypt = (bytes: Buffer, seed: number) => filter.apply(bytes, seed);
+  const unchecked = await withModule(ordinaryXP3(resources(), crypt));
+  const patch = malformed(ordinaryXP3(resources().map(item => ({...item, bytes: Buffer.concat([Buffer.from([0xff, 0xfe]), Buffer.from(item.name + ": 中文", "utf16le")]), flags: 0, h: 0})), crypt));
+  const path = join(unchecked.outputRoot, "..", "unchecked-patch"); await writeFile(path, patch);
+  unchecked.files.push({logicalKey: "patch.xp3", name: "patch.xp3", sizeBytes: patch.length, sha256: createHash("sha256").update(patch).digest("hex")});
+  unchecked.locators["patch.xp3"] = {path, offset: 0, sizeBytes: patch.length};
+  await expect(normalizeContent(unchecked)).rejects.toThrow(/CHECKSUM_MISMATCH/u);
+});
 it("rejects truncated real resources and checksum failures, and removes all partial outputs", async () => {
   for (const corrupt of [{...resources()[0], declared: 1024, flags: 0}, {...resources()[0], h: 123456}]) {
     const request = await withModule(protectedXP3([...resources(), {...corrupt, name: "bad.tjs"}]));
@@ -311,10 +380,12 @@ it("converts every protected archive group while preserving ordinary archives, p
 });
 it("cancels its worker and cleans only its own staging directory", async () => {
   const request = await withModule(protectedXP3(resources())), controller = new AbortController();
+  const siblings = await readdir(join(request.outputRoot, ".."));
   const source = await readFile(request.locators["data.xp3"].path);
   const result = normalizeContent(request, controller.signal); controller.abort(new Error("TEST_CANCELLED"));
   await expect(result).rejects.toThrow("TEST_CANCELLED");
   await expect(access(request.outputRoot)).rejects.toThrow();
+  expect(await readdir(join(request.outputRoot, ".."))).toEqual(siblings);
   expect(await readFile(request.locators["data.xp3"].path)).toEqual(source);
   await mkdir(request.outputRoot); await writeFile(join(request.outputRoot, "existing"), "untouched");
   await expect(normalizeContent(request)).rejects.toThrow();
@@ -322,6 +393,7 @@ it("cancels its worker and cleans only its own staging directory", async () => {
 });
 it("reclaims completed output when cancellation arrives during worker termination", async () => {
   const request = await withModule(protectedXP3(resources())), controller = new AbortController();
+  const siblings = await readdir(join(request.outputRoot, ".."));
   const source = await readFile(request.locators["data.xp3"].path), terminate = Worker.prototype.terminate;
   const termination = vi.spyOn(Worker.prototype, "terminate").mockImplementation(function (this: Worker) {
     controller.abort(new Error("LATE_CANCELLED"));
@@ -330,6 +402,7 @@ it("reclaims completed output when cancellation arrives during worker terminatio
   try {
     await expect(normalizeContent(request, controller.signal)).rejects.toThrow("LATE_CANCELLED");
     await expect(access(request.outputRoot)).rejects.toThrow();
+    expect(await readdir(join(request.outputRoot, ".."))).toEqual(siblings);
     expect(await readFile(request.locators["data.xp3"].path)).toEqual(source);
   } finally {termination.mockRestore();}
 });

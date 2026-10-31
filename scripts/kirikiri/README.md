@@ -35,7 +35,10 @@ game bytes, extracted control table, native execution or x86 emulator is shipped
   complete resource checksum. Conflicting outputs with the same Adler32 fail;
   SHA256 and a second source read verify that stage selection and writing agree.
 - `normalize.mjs` declares the registered CxFilterFS plugin, with read-only
-  whole-game planning and conversion per related archive group. The shared
+  whole-game resource-phase planning and conversion per related archive group.
+  A preceding container phase can add patch archives or replace native modules;
+  filter discovery inspects both the effective and original modules and still
+  requires independent complete-resource checksums to select a candidate. The shared
   [normalization pipeline](../normalization/README.md) owns the fresh root,
   cancellable CPU worker, plan conflict checks and output-manifest verification.
 

@@ -29,6 +29,68 @@ afterEach(() => {
 });
 
 describe("KiriKiri2 KAG runtime", () => {
+  it("queues real browser haptic calls as best effort and stops them on exit", async () => {
+    enableRuntimeFeatures(); const vlfs = fakeVlfs(); mockDownloads();
+    const actuator = {playEffect: vi.fn().mockRejectedValue(new Error("hardware unavailable")),
+      reset: vi.fn().mockResolvedValue("complete")};
+    const pad = {id: "haptic controller", index: 3, connected: true, mapping: "standard",
+      axes: [0, 0], buttons: Array.from({length: 17}, () => gamepadButton()), vibrationActuator: actuator};
+    Object.defineProperty(window.navigator, "getGamepads", {configurable: true, value: () => [pad]});
+    const runtime = await createRuntime(config(), currentWindowHost(null));
+    const mounting = runtime.mount(document.createElement("div")); await loadVlfs(vlfs);
+    const module = await loadCore(vlfs); await mounting;
+    const bridge = module as unknown as {retromGamepadVibrate: (index: number, id: string, left: number, right: number) => void};
+    try {
+      bridge.retromGamepadVibrate(3, pad.id, 1, 0.5);
+      expect(actuator.playEffect).toHaveBeenCalledWith("dual-rumble", {duration: 250, startDelay: 0, strongMagnitude: 1, weakMagnitude: 0.5});
+      bridge.retromGamepadVibrate(3, "disconnected controller", 1, 1);
+      expect(actuator.playEffect).toHaveBeenCalledOnce();
+      bridge.retromGamepadVibrate(3, pad.id, 0, 0);
+      expect(actuator.reset).toHaveBeenCalledOnce();
+      await runtime.pause();
+      bridge.retromGamepadVibrate(3, pad.id, 1, 1);
+      expect(actuator.playEffect).toHaveBeenCalledOnce();
+      await runtime.resume();
+      bridge.retromGamepadVibrate(3, pad.id, 1, 1);
+      expect(actuator.playEffect).toHaveBeenCalledTimes(2);
+      window.dispatchEvent(new Event("blur"));
+      bridge.retromGamepadVibrate(3, pad.id, 1, 1);
+      expect(actuator.playEffect).toHaveBeenCalledTimes(2);
+      window.dispatchEvent(new Event("focus"));
+      bridge.retromGamepadVibrate(3, pad.id, 1, 1);
+      expect(actuator.playEffect).toHaveBeenCalledTimes(3);
+      const hidden = vi.spyOn(document, "hidden", "get").mockReturnValue(true);
+      document.dispatchEvent(new Event("visibilitychange"));
+      bridge.retromGamepadVibrate(3, pad.id, 1, 1);
+      expect(actuator.playEffect).toHaveBeenCalledTimes(3);
+      hidden.mockReturnValue(false);
+      document.dispatchEvent(new Event("visibilitychange"));
+    } finally {await runtime.exit();}
+    expect(actuator.reset).toHaveBeenCalledTimes(4);
+    bridge.retromGamepadVibrate(3, pad.id, 1, 1);
+    expect(actuator.playEffect).toHaveBeenCalledTimes(3);
+  });
+  it("enumerates controller metadata without consuming the filtered state and releases the native ownership bridge on exit", async () => {
+    enableRuntimeFeatures(); const vlfs = fakeVlfs(); mockDownloads();
+    const pad = {id: "standard controller", index: 3, mapping: "standard", connected: true,
+      axes: [0, 0], buttons: Array.from({length: 17}, () => gamepadButton())};
+    Object.defineProperty(window.navigator, "getGamepads", {configurable: true, value: () => [null, pad]});
+    const runtime = await createRuntime(config(), currentWindowHost(null));
+    const mounting = runtime.mount(document.createElement("div")); await loadVlfs(vlfs);
+    await vi.waitFor(() => expect(runtimeScripts()).toHaveLength(2));
+    const bridge = (window as HostWindow).Module as {retromGamepadDevices: () => unknown[];
+      retromGamepadSamples: () => (Gamepad | null)[]; onGamepadInputChanged: (active: boolean) => void};
+    if (typeof bridge.onGamepadInputChanged === "function") {bridge.onGamepadInputChanged(true);}
+    await loadCore(vlfs); await mounting;
+    try {
+      expect(bridge.retromGamepadDevices()).toEqual([{id: pad.id, index: 3, mapping: "standard", connected: true}]);
+      expect(bridge.retromGamepadSamples()[1]).toMatchObject({id: pad.id, index: 3, connected: true});
+    }
+    finally {await runtime.exit();}
+    expect(bridge.retromGamepadDevices()).toEqual([]);
+    expect(bridge.retromGamepadSamples()).toEqual([]);
+    expect(() => bridge.onGamepadInputChanged(false)).not.toThrow();
+  });
   it("supplies explicit engine arguments and an opted-in local service before native startup", async () => {
     enableRuntimeFeatures(); const vlfs = fakeVlfs(); mockDownloads();
     const envelope = config();
@@ -159,6 +221,27 @@ describe("KiriKiri2 KAG runtime", () => {
     if (mode === "mount-abort") {expect(await mounted).toMatchObject({message: "KIRIKIRI_RUNTIME_ABORTED"});}
   });
 
+  it("releases a failed core whose native stack never unwinds", async () => {
+    enableRuntimeFeatures();
+    const vlfs = fakeVlfs();
+    mockDownloads();
+    const runtime = await createRuntime(config(), currentWindowHost(null));
+    const mounting = runtime.mount(document.createElement("div"));
+    await loadVlfs(vlfs);
+    const module = await loadCore(vlfs, {stopping: new Promise<void>(() => undefined)});
+    await mounting;
+    vi.useFakeTimers({toFake: ["setTimeout", "clearTimeout"]});
+    try {
+      module.onAbort?.("engine stopped");
+      await vi.waitFor(() => expect(module.krkr2StopMainLoop).toHaveBeenCalledOnce());
+      expect((window as HostWindow).Module).toBe(module);
+      await vi.advanceTimersByTimeAsync(5_000);
+    } finally {vi.useRealTimers();}
+    await vi.waitFor(() => expect((window as HostWindow).Module).toBeUndefined());
+    expect((window as HostWindow).VLFS).toBeUndefined();
+    expect(runtime.getState()).toBe("FAILED");
+  });
+
   it("cleans up a core script failure before the main loop is initialized", async () => {
     enableRuntimeFeatures();
     mockDownloads();
@@ -195,6 +278,7 @@ describe("KiriKiri2 KAG runtime", () => {
     "function signature mismatch",
     "null function or function signature mismatch",
     "table index is out of bounds",
+    "memory access out of bounds",
     "unreachable",
   ].flatMap((message) => (["error", "unhandledrejection"] as const)
     .map((transport) => [message, transport] as const));
@@ -227,6 +311,7 @@ describe("KiriKiri2 KAG runtime", () => {
 
     await vi.waitFor(() => expect(runtime.getState()).toBe("FAILED"));
     await vi.waitFor(() => expect(module.krkr2StopMainLoop).toHaveBeenCalledOnce());
+    expect(module.krkr2StopMainLoop).toHaveBeenCalledWith(undefined, true);
     expect(events.filter(type => type === "FATAL_ERROR")).toHaveLength(1);
     expect(events.filter(type => type === "EXIT_REQUESTED")).toHaveLength(0);
     },

@@ -3,7 +3,7 @@ import {adler32, resourceBytes, safeName, requireFormat} from "./bytes.mjs";
 
 export async function ordinaryArchive(locator, signal) {
   let archive;
-  try {archive = await readXp3(locator, {signal, includePlainEntries: true});}
+  try {archive = await readXp3(locator, {signal, includePlainEntries: true, canonicalizeInfoSize: true});}
   catch (error) {
     if (signal?.aborted || !/^RUNTIME_KIRIKIRI_ARCHIVE_/u.test(error.message ?? "")) {throw error;}
     return null;

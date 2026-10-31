@@ -12,22 +12,20 @@ import {join, dirname} from "node:path";
 import {gunzipSync, crc32} from "node:zlib";
 import {parseRuntimeConfiguration, contentHash, runtimeBindings, identifyPSXRegion, resolveSavedRuntimeRequest,
   contentBIOSRequirements, missingROMMember, dosEntryCandidates, arcadeParentOptions, resolveRuntimeTarget, flycastMachine, flycastContentReferences, flycastMedia,
-  onsScriptNames, onsScriptSampleBytes, contentEntryExtensions, cueContentReferences, kirikiriArchiveProbeBytes} from "../dist/runtime/index.js";
+  onsScriptNames, onsScriptSampleBytes, contentEntryExtensions, cueContentReferences} from "../dist/runtime/index.js";
 import {zipMembers, requireLocator, safePath, sha256} from "./runtime-archive-input.mjs";
 import {discoverMameMedia, mameMediaEvidence} from "./runtime-host-media.mjs";
+import {withKirikiriPatchEvidence, hostLaunchOptions} from "./runtime-kirikiri-patches.mjs";
+import {withKirikiriEntryEvidence} from "./runtime-kirikiri-entries.mjs";
 
-export async function configureHostInput(input) {
+export async function configureHostInput(input, signal) {
+  signal?.throwIfAborted();
   contentHash(input.files, "TREE");
-  const evidence = {...input.evidence}, archiveMembers = {...input.archiveMembers};
+  const evidence = {...(input.platformId === "kirikiri" ? await withKirikiriEntryEvidence(input, signal) : input).evidence};
+  const archiveMembers = {...input.archiveMembers};
   let onsSamples = 0;
   for (const file of input.files) {
     const name = file.logicalKey.split("/").at(-1).toLowerCase();
-    if (input.platformId === "kirikiri" && file.sizeBytes >= kirikiriArchiveProbeBytes &&
-      evidence[file.logicalKey]?.prefixBase64 === undefined && input.locators?.[file.logicalKey]) {
-      const chunks = [];
-      for await (const chunk of contentStream(requireLocator(input, file), {length: kirikiriArchiveProbeBytes})) {chunks.push(chunk);}
-      evidence[file.logicalKey] = {...evidence[file.logicalKey], prefixBase64: Buffer.concat(chunks).toString("base64")};
-    }
     const needsEvidence = input.platformId === "rpgmaker" && ["game.ini", "rpg_rt.ldb"].includes(name);
     if (needsEvidence && !evidence[file.logicalKey] && input.locators?.[file.logicalKey]) {
       const maximum = name === "game.ini" ? 262144 : 24 * 1024 * 1024;
@@ -49,8 +47,9 @@ export async function configureHostInput(input) {
   }
   const selection = input.platformId === "scummvm" && !input.selection?.scummvm
     ? {...input.selection, scummvm: await configureScummvm(input)} : input.selection;
-  return {...input, evidence, archiveMembers, selection, ...(input.platformId === "arcade" ? {arcadeCatalogs: await arcadeTables()} : {}),
+  const configured = {...input, evidence, archiveMembers, selection, ...(input.platformId === "arcade" ? {arcadeCatalogs: await arcadeTables()} : {}),
     ...await flycastConfigureEvidence(input)};
+  return input.platformId === "kirikiri" ? withKirikiriPatchEvidence(configured, signal) : configured;
 }
 
 async function configureScummvm(input) {
@@ -74,9 +73,13 @@ async function configureScummvm(input) {
   } finally {await rm(treeRoot, {recursive: true, force: true});}
 }
 
-export async function prepareHostInput(input) {
+export async function prepareHostInput(input, signal) {
+  signal?.throwIfAborted();
   input = resolveSavedRuntimeRequest(input);
   const config = parseRuntimeConfiguration(input.config);
+  if (config.content.kind === "KIRIKIRI_PROJECT") {
+    await hostLaunchOptions({...input, platformId: input.directory.platformId, config}, signal);
+  }
   if (config.content.kind === "DOS_BUNDLE" && config.content.entryPath !== undefined) {
     const file = input.files.find(item => item.logicalKey === config.content.entryFile);
     if (!file) {throw new Error("RUNTIME_ENTRY_MISSING");}

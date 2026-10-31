@@ -1,6 +1,6 @@
 import {Worker} from "node:worker_threads";
-import {mkdir, rm} from "node:fs/promises";
-import {isAbsolute, resolve} from "node:path";
+import {mkdir, mkdtemp, rm} from "node:fs/promises";
+import {dirname, isAbsolute, join, resolve} from "node:path";
 import {normalizers} from "./registry.mjs";
 
 /** Terminate only this request's CPU work, then reclaim only its owned staging directory. */
@@ -11,9 +11,10 @@ export async function normalizeContent(input, signal) {
     throw new Error("RUNTIME_CONTENT_LOCATOR_REQUIRED");
   }
   await mkdir(input.outputRoot, {mode: 0o700});
-  let worker, retain = false;
+  let worker, workspaceRoot, retain = false;
   try {
-    worker = new Worker(new URL("./worker.mjs", import.meta.url), {workerData: input,
+    workspaceRoot = await mkdtemp(join(dirname(input.outputRoot), ".normalization-"));
+    worker = new Worker(new URL("./worker.mjs", import.meta.url), {workerData: {input, workspaceRoot},
       resourceLimits: {maxOldGenerationSizeMb: 512, maxYoungGenerationSizeMb: 64}});
     const result = await new Promise((complete, reject) => {
       let received = false;
@@ -30,6 +31,7 @@ export async function normalizeContent(input, signal) {
     signal?.throwIfAborted(); retain = Boolean(result.normalization); return result;
   } finally {
     await worker?.terminate();
+    if (workspaceRoot) {await rm(workspaceRoot, {recursive: true, force: true});}
     if (!retain || signal?.aborted) {await rm(input.outputRoot, {recursive: true, force: true});}
     signal?.throwIfAborted();
   }

@@ -12,24 +12,20 @@ import {join, dirname} from "node:path";
 import {gunzipSync, crc32} from "node:zlib";
 import {parseRuntimeConfiguration, contentHash, runtimeBindings, identifyPSXRegion, resolveSavedRuntimeRequest,
   contentBIOSRequirements, missingROMMember, dosEntryCandidates, arcadeParentOptions, resolveRuntimeTarget, flycastMachine, flycastContentReferences, flycastMedia,
-  onsScriptNames, onsScriptSampleBytes, contentEntryExtensions, cueContentReferences, kirikiriArchiveProbeBytes} from "../dist/runtime/index.js";
+  onsScriptNames, onsScriptSampleBytes, contentEntryExtensions, cueContentReferences} from "../dist/runtime/index.js";
 import {zipMembers, requireLocator, safePath, sha256} from "./runtime-archive-input.mjs";
 import {discoverMameMedia, mameMediaEvidence} from "./runtime-host-media.mjs";
 import {withKirikiriPatchEvidence, hostLaunchOptions} from "./runtime-kirikiri-patches.mjs";
+import {withKirikiriEntryEvidence} from "./runtime-kirikiri-entries.mjs";
 
 export async function configureHostInput(input, signal) {
   signal?.throwIfAborted();
   contentHash(input.files, "TREE");
-  const evidence = {...input.evidence}, archiveMembers = {...input.archiveMembers};
+  const evidence = {...(input.platformId === "kirikiri" ? await withKirikiriEntryEvidence(input, signal) : input).evidence};
+  const archiveMembers = {...input.archiveMembers};
   let onsSamples = 0;
   for (const file of input.files) {
     const name = file.logicalKey.split("/").at(-1).toLowerCase();
-    if (input.platformId === "kirikiri" && file.sizeBytes >= kirikiriArchiveProbeBytes &&
-      evidence[file.logicalKey]?.prefixBase64 === undefined && input.locators?.[file.logicalKey]) {
-      const chunks = [];
-      for await (const chunk of contentStream(requireLocator(input, file), {length: kirikiriArchiveProbeBytes, signal})) {chunks.push(chunk);}
-      evidence[file.logicalKey] = {...evidence[file.logicalKey], prefixBase64: Buffer.concat(chunks).toString("base64")};
-    }
     const needsEvidence = input.platformId === "rpgmaker" && ["game.ini", "rpg_rt.ldb"].includes(name);
     if (needsEvidence && !evidence[file.logicalKey] && input.locators?.[file.logicalKey]) {
       const maximum = name === "game.ini" ? 262144 : 24 * 1024 * 1024;

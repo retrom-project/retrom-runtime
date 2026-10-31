@@ -2,6 +2,7 @@ import {configureHostInput, prepareHostInput, assembleResource, detectScummvm, a
   flycastConfigureEvidence, discoverContentDependencies, contentHostBIOSRequirements, hostDOSEntryCandidates, hostArcadeParentOptions} from "./runtime-host-input.mjs";
 import {normalizeContent} from "./runtime-normalize-content.mjs";
 import {hostLaunchOptions} from "./runtime-kirikiri-patches.mjs";
+import {hostKirikiriEntryCandidates} from "./runtime-kirikiri-entries.mjs";
 import {bindingStorageLayout, resolveRuntimeTarget} from "../dist/runtime/index.js";
 import {parseRuntimeConfiguration} from "../dist/runtime/index.js";
 import {readFile} from "node:fs/promises";
@@ -37,6 +38,7 @@ async function execute(command, input, signal = new AbortController().signal) {
   case "discover-content": output = await discoverContentDependencies(input); break;
   case "dos-entry-candidates": output = await hostDOSEntryCandidates(input); break;
   case "rpg-entry-candidates": output = rpgEntryCandidates(input); break;
+  case "kirikiri-entry-candidates": output = await hostKirikiriEntryCandidates(input, signal); break;
   case "launch-options": output = await hostLaunchOptions(input, signal); break;
   case "arcade-parents": output = await hostArcadeParentOptions(input); break;
   case "rom-sets": output = arcadeROMSetOptions({...input, arcadeCatalog: (await arcadeTables())[input.coreId]}); break;

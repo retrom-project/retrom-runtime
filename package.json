@@ -14,6 +14,7 @@
     "scripts/runtime-cli.mjs",
     "scripts/runtime-host-input.mjs",
     "scripts/runtime-kirikiri-patches.mjs",
+    "scripts/runtime-kirikiri-entries.mjs",
     "scripts/runtime-host-content.mjs",
     "scripts/runtime-host-media.mjs",
     "scripts/runtime-normalize-content.mjs",

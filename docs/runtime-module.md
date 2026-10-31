@@ -13,6 +13,8 @@ The option is relative to the selected project root, while manifest paths and
 candidate IDs retain complete logical paths. Recognition does not certify the
 language or playability of a patch.
 
+The read-only `kirikiri-entry-candidates` host command accepts platformId, immutable files/locators and optional after/prefix/limit (1–100). It uses the same entry recognition as configuration, including startup.tjs and XP3 signatures under other suffixes. It returns `{entries, nextCursor}`, with UTF-8 path ordering and candidate filtering before pagination. Only bounded header evidence is read and cancellation is retained; no game configuration or content is modified.
+
 The runtime module is the source of game interpretation for both review and play. The generated [support catalog](supported-platforms-and-cores.md) lists the current platforms, product cores, Provider Targets and bindings. Catalog membership and product acceptance evidence are recorded separately.
 
 `RuntimeConfiguration` contains `content` and optional `cores`. Content identifies a single file, arcade archive, DOS bundle and optional internal executable, or a project. RPG Maker projects select the actual one of seven engine implementations. Per-core rules contain declared Target options, arcade Parent logical paths and an optional `romSet` short name from that core’s paired DAT. `cores[coreId].romSet` stays inside the existing game JSON and cannot be borrowed by another core. BIOS file IDs, installation state, import batches, deployment revisions and authorization credentials never enter this JSON.

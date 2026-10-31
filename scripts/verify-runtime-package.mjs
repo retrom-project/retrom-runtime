@@ -16,7 +16,7 @@ export async function verifyRuntimePackage(repositoryRoot, packageJson) {
     await writeFile(join(stage, "package.json"), JSON.stringify({...packageJson, version: "0.0.0-dev"}));
     const {stdout} = await execute("npm", ["pack", "--ignore-scripts", "--json"], {cwd: stage, timeout: 30000, maxBuffer: 4 * 1024 * 1024});
     const pack = JSON.parse(stdout)[0];
-    for (const path of ["scripts/runtime-cli.mjs", "scripts/runtime-host-input.mjs", "scripts/runtime-kirikiri-patches.mjs", "scripts/runtime-normalize-content.mjs", "scripts/normalization/registry.mjs", "scripts/normalization/worker.mjs", "scripts/kirikiri/cxdec-pe.mjs", "dist/runtime/index.js", "dist/runtime/platforms.json", "assets/facts/arcade-catalog.json.gz"]) {
+    for (const path of ["scripts/runtime-cli.mjs", "scripts/runtime-host-input.mjs", "scripts/runtime-kirikiri-patches.mjs", "scripts/runtime-kirikiri-entries.mjs", "scripts/runtime-normalize-content.mjs", "scripts/normalization/registry.mjs", "scripts/normalization/worker.mjs", "scripts/kirikiri/cxdec-pe.mjs", "dist/runtime/index.js", "dist/runtime/platforms.json", "assets/facts/arcade-catalog.json.gz"]) {
       if (!pack.files.some(file => file.path === path)) {throw new Error(`RUNTIME_PACKAGE_FILE_MISSING:${path}`);}
     }
     const unpack = join(temporary, "unpack"); await mkdir(unpack);
@@ -49,6 +49,10 @@ export async function verifyRuntimePackage(repositoryRoot, packageJson) {
     const normalized = await run("normalize-content", {platformId: "kirikiri", files: [xp3File],
       locators: {"data.xp3": {path: xp3Path, offset: 0, sizeBytes: xp3.length}}, outputRoot: join(temporary, "normalized-xp3")});
     if (normalized.files[0].sha256 !== xp3File.sha256 || normalized.files[0].path) {throw new Error("RUNTIME_PACKAGE_XP3_WORKER_INVALID");}
+    const archiveKey = "renamed.bin";
+    const entries = await run("kirikiri-entry-candidates", {platformId: "kirikiri", files: [{...xp3File, logicalKey: archiveKey, name: archiveKey}],
+      locators: {[archiveKey]: {path: xp3Path, offset: 0, sizeBytes: xp3.length}}});
+    if (JSON.stringify(entries) !== JSON.stringify({entries: [archiveKey], nextCursor: null})) {throw new Error("RUNTIME_PACKAGE_KIRIKIRI_ENTRIES_INVALID");}
     const prepared = await run("prepare", {directory: {platformId: "nes", defaultCoreId: "fceumm", allowedCoreIds: ["fceumm"]},
       config, files, fingerprints: {"emulatorjs/fceumm": "b".repeat(64)}});
     if (prepared.romHash !== files[0].sha256 || prepared.targetId !== "fceumm") {throw new Error("RUNTIME_PACKAGE_PREPARE_INVALID");}

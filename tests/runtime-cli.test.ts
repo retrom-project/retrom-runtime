@@ -16,7 +16,7 @@ const children: ChildProcessWithoutNullStreams[] = [];
 beforeAll(async () => {
   root = await mkdtemp(join(tmpdir(), "retrom-cli-test-"));
   await mkdir(join(root, "scripts"));
-  for (const file of ["runtime-host-content.mjs", "runtime-cli.mjs", "runtime-host-input.mjs", "runtime-host-media.mjs", "runtime-kirikiri-patches.mjs", "runtime-normalize-content.mjs", "runtime-jsonl.mjs", "runtime-archive-input.mjs"]) {
+  for (const file of ["runtime-host-content.mjs", "runtime-cli.mjs", "runtime-host-input.mjs", "runtime-host-media.mjs", "runtime-kirikiri-patches.mjs", "runtime-kirikiri-entries.mjs", "runtime-normalize-content.mjs", "runtime-jsonl.mjs", "runtime-archive-input.mjs"]) {
     await cp(resolve("scripts", file), join(root, "scripts", file));
   }
   await cp(resolve("scripts/kirikiri"), join(root, "scripts/kirikiri"), {recursive: true});
@@ -40,6 +40,20 @@ function worker() {
 }
 const files = [{logicalKey: "game.nes", name: "game.nes", sha256: "a".repeat(64), sizeBytes: 1}];
 const directory = {platformId: "nes", defaultCoreId: "fceumm", allowedCoreIds: ["fceumm"]};
+
+it("pages KiriKiri entries through the independently packaged worker", async () => {
+  const {child, read} = worker();
+  const project = ["startup.tjs", "data.xp3", "ordinary.tjs", "image.png"].map(logicalKey => ({...files[0], logicalKey, name: logicalKey}));
+  const input = {platformId: "kirikiri", files: project, limit: 1};
+  child.stdin.end([{id: "first", command: "kirikiri-entry-candidates", input},
+    {id: "filtered", command: "kirikiri-entry-candidates", input: {...input, prefix: "startup"}}]
+    .map(value => JSON.stringify(value)).join("\n") + "\n");
+  expect([await read(), await read()]).toEqual(expect.arrayContaining([
+    {id: "first", result: {entries: ["data.xp3"], nextCursor: "data.xp3"}},
+    {id: "filtered", result: {entries: ["startup.tjs"], nextCursor: null}},
+  ]));
+  expect((await once(child, "close"))[0]).toBe(0);
+});
 
 it("projects RPG entries through the CLI without accepting an obsolete entry or another engine's HTML", async () => {
   const {child, read} = worker();

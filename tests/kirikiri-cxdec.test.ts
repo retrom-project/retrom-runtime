@@ -4,7 +4,7 @@ import {deflateSync, inflateSync} from "node:zlib";
 import {describe, expect, it, vi} from "vitest";
 import {createCxFilter, discoverCxProfiles, discoverTinyProfiles, extractEmbeddedPeModules} from "../scripts/kirikiri/cxdec.mjs";
 import {tinyPE, tinyFirstBytePE} from "./kirikiri-pe-fixture.js";
-import {profile, fixture, delegatedFixture, stackCallbackFixture} from "./kirikiri-classic-fixture.js";
+import {profile, fixture, delegatedFixture, stackCallbackFixture, sectionDecoderFixture} from "./kirikiri-classic-fixture.js";
 
 vi.mock("node:zlib", async () => {
   const actual = await vi.importActual<typeof import("node:zlib")>("node:zlib");
@@ -60,6 +60,29 @@ describe("classic Cx expression interpreter", () => {
 });
 
 describe("bounded static PE recovery", () => {
+  it("recovers a filter from a statically described section decoder without executing its loader", () => {
+    const input = sectionDecoderFixture(), before = Buffer.from(input), found = discoverCxProfiles(input);
+    expect(found).toHaveLength(1);
+    expect(found[0]).toMatchObject(profile());
+    expect(found[0].evidence).toMatchObject({sectionDecoder: {decodedBytes: 0x1ff3, seed: 0xa1b2c3d4,
+      multiplier: 989, increment: 0x3579, stateShift: 5}});
+    expect(input).toEqual(before);
+  });
+  it.each(["section-name", "name-decoy", "section-size", "duplicate-section", "header-member", "state-fold", "case-target", "case-store", "non-permutation", "loop-back"])(
+    "rejects a disconnected section decoder: %s", defect => {
+      const b = sectionDecoderFixture();
+      if (defect === "section-name") {b[0x178] = 88;}
+      if (defect === "name-decoy") {b.write(".binn", 0x60);}
+      if (defect === "section-size") {b.writeUInt32LE(0x2001, 0x180);}
+      if (defect === "duplicate-section") {b.fill(0, 0x1a0, 0x1a8); b.write(".binn", 0x1a0);}
+      if (defect === "header-member") {b[0x583f] = 16;}
+      if (defect === "state-fold") {b[0x5883] = 0x31;}
+      if (defect === "case-target") {b.writeUInt32LE(0x10001000, 0x5b00);}
+      if (defect === "case-store") {b[0x58d8] = 0x89;}
+      if (defect === "non-permutation") {b[0x589c] = 0x54;}
+      if (defect === "loop-back") {b[0x58ed]++;}
+      expect(discoverCxProfiles(b)).toEqual([]);
+    });
   it("recovers a stack-record callback and follows only its successful conditional emission tail", () => {
     const b = stackCallbackFixture();
     expect(discoverCxProfiles(b)).toHaveLength(1);

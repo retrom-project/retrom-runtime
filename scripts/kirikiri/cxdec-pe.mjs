@@ -1,5 +1,6 @@
 import {inflateSync} from "node:zlib";
 import {registerMove, shiftIs, xor32Is, scheduledOperation, registerPreserved, reachableInstructions} from "./pe-schedule.mjs";
+import {decodePeSections} from "./pe-section-decode.mjs";
 
 // Static recognition vocabulary cross-checked with xp3-brute 0.3.7 (MIT):
 // https://docs.rs/crate/xp3-brute/0.3.7/source/src/legacy_cxdec.rs
@@ -26,7 +27,8 @@ function parsePe(bytes) {
     const size = bytes.readUInt32LE(at + 16), raw = bytes.readUInt32LE(at + 20), rva = bytes.readUInt32LE(at + 12);
     if (raw + size > bytes.length || rva + size > 0x100000000 || raw < header + optional + count * 40 && size) return null;
     if (sections.some(s => size && s.size && (rva < s.rva + s.size && s.rva < rva + size || raw < s.raw + s.size && s.raw < raw + size))) return null;
-    sections.push({raw, size, end: raw + size, rva, executable: (bytes.readUInt32LE(at + 36) & 0x20000000) !== 0});
+    sections.push({raw, size, end: raw + size, rva, header: at, virtualSize: bytes.readUInt32LE(at + 8),
+      executable: (bytes.readUInt32LE(at + 36) & 0x20000000) !== 0});
   }
   const sectionAt = off => sections.find(s => off >= s.raw && off < s.end);
   const toVa = off => {const s = sectionAt(off); return s ? imageBase + s.rva + off - s.raw : null;};
@@ -431,9 +433,7 @@ function consumerCallsManager(bytes, pe, consumer, manager) {
 }
 
 /** Candidates require code-linked manager, file-backed table, constructor and complete grammar permutations. */
-export function discoverCxProfiles(input) {
-  const bytes = bytesOf(input), pe = parsePe(bytes);
-  if (!pe) return [];
+function classicProfiles(bytes, pe) {
   const manager = managers(bytes, pe);
   if (!manager.length) return [];
   const constructorSplits = boundaries(bytes, pe), callbackSplits = callbackBoundaries(bytes, pe), switches = dispatches(bytes, pe), profiles = [];
@@ -465,6 +465,18 @@ export function discoverCxProfiles(input) {
   }
   return unique(profiles.sort((a, b) => Number(Boolean(a.legacyBulk)) - Number(Boolean(b.legacyBulk))),
     p => `${p.mask}:${p.offset}:${p.prologOrder}:${p.evenBranchOrder}:${p.oddBranchOrder}:${p.controlBlock.toString("hex")}`);
+}
+
+export function discoverCxProfiles(input) {
+  const bytes = bytesOf(input), pe = parsePe(bytes);
+  if (!pe) {return [];}
+  const profiles = classicProfiles(bytes, pe), recovered = decodePeSections(bytes, pe);
+  if (recovered) {
+    for (const profile of classicProfiles(recovered.bytes, parsePe(recovered.bytes))) {
+      profiles.push({...profile, evidence: {...profile.evidence, sectionDecoder: recovered.evidence}});
+    }
+  }
+  return cap(unique(profiles, p => `${p.mask}:${p.offset}:${p.prologOrder}:${p.evenBranchOrder}:${p.oddBranchOrder}:${Buffer.from(p.controlBlock).toString("hex")}`));
 }
 
 function xorIs(bytes, at, to, from) {

@@ -16,7 +16,7 @@ export async function verifyRuntimePackage(repositoryRoot, packageJson) {
     await writeFile(join(stage, "package.json"), JSON.stringify({...packageJson, version: "0.0.0-dev"}));
     const {stdout} = await execute("npm", ["pack", "--ignore-scripts", "--json"], {cwd: stage, timeout: 30000, maxBuffer: 4 * 1024 * 1024});
     const pack = JSON.parse(stdout)[0];
-    for (const path of ["scripts/runtime-cli.mjs", "scripts/runtime-host-input.mjs", "scripts/runtime-normalize-content.mjs", "scripts/normalization/registry.mjs", "scripts/normalization/worker.mjs", "scripts/kirikiri/cxdec-pe.mjs", "dist/runtime/index.js", "dist/runtime/platforms.json", "assets/facts/arcade-catalog.json.gz"]) {
+    for (const path of ["scripts/runtime-cli.mjs", "scripts/runtime-host-input.mjs", "scripts/runtime-kirikiri-patches.mjs", "scripts/runtime-normalize-content.mjs", "scripts/normalization/registry.mjs", "scripts/normalization/worker.mjs", "scripts/kirikiri/cxdec-pe.mjs", "dist/runtime/index.js", "dist/runtime/platforms.json", "assets/facts/arcade-catalog.json.gz"]) {
       if (!pack.files.some(file => file.path === path)) {throw new Error(`RUNTIME_PACKAGE_FILE_MISSING:${path}`);}
     }
     const unpack = join(temporary, "unpack"); await mkdir(unpack);

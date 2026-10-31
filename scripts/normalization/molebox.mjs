@@ -1,10 +1,11 @@
 import {createHash} from "node:crypto";
-import {mkdir, open, rm, writeFile} from "node:fs/promises";
-import {dirname, join} from "node:path";
+import {mkdir, writeFile} from "node:fs/promises";
+import {join} from "node:path";
 import {openContent, contentStream} from "../runtime-host-content.mjs";
 import {requireLocator, safePath} from "../runtime-archive-input.mjs";
 import {requireMolebox, readMoleboxAt, decodeMolebox, inflateMoleboxBlock, moleboxCRC16} from "./molebox-codec.mjs";
 import {inspectMolebox} from "./molebox-vfs.mjs";
+import {normalizationDestination as destination, verifyNormalizationSource as verifySource} from "./output.mjs";
 
 const folded = value => value.toUpperCase();
 async function probe(context) {
@@ -36,27 +37,6 @@ async function probe(context) {
       launchDomain: file.logicalKey, file, rows, evidence: index.evidence});
   }
   return plans;
-}
-async function verifySource(locator, expected, signal) {
-  const hash = createHash("sha256");
-  for await (const bytes of contentStream(locator, {signal})) {hash.update(bytes);}
-  requireMolebox(hash.digest("hex") === expected, "RUNTIME_CONTENT_CHANGED");
-}
-async function destination(input, logicalKey, source) {
-  requireMolebox(safePath(logicalKey), "RUNTIME_MOLEBOX_PATH_INVALID");
-  const path = join(input.outputRoot, logicalKey); await mkdir(dirname(path), {recursive: true});
-  const handle = await open(path, "wx", 0o600), hash = createHash("sha256"); let length = 0;
-  try {
-    for await (const bytes of source) {
-      input.signal?.throwIfAborted(); hash.update(bytes); length += bytes.length; let written = 0;
-      while (written < bytes.length) {
-        const result = await handle.write(bytes, written, bytes.length - written);
-        requireMolebox(result.bytesWritten > 0, "RUNTIME_NORMALIZATION_OUTPUT_INVALID"); written += result.bytesWritten;
-      }
-    }
-  } catch (error) {await handle.close(); await rm(path, {force: true}); throw error;}
-  await handle.close();
-  return {logicalKey, name: logicalKey, path, sizeBytes: length, sha256: hash.digest("hex")};
 }
 async function *resourceBlocks(input, source, row) {
   const handle = await openContent(source);

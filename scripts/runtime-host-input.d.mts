@@ -5,10 +5,10 @@ export function discoverContentDependencies(input: Pick<HostFiles, "files" | "lo
   sourceCandidates?: {sourcePath: string; sizeBytes: number; headerBase64: string}[];
 }): Promise<{files: Array<{logicalKey: string; relativeTo?: string; relativePath?: string; sourcePath?: string; optional?: boolean}>;
   sourceSearch?: {extensions: string[]; headerBytes: number}}>;
-export function configureHostInput(input: import("../src/runtime/configure.js").ConfigureRequest & {locators: Record<string, import("./runtime-host-content.mjs").HostContentLocator>; providerRoots?: Record<string, string>}): Promise<import("../src/runtime/configure.js").ConfigureRequest>;
+export function configureHostInput(input: import("../src/runtime/configure.js").ConfigureRequest & {locators: Record<string, import("./runtime-host-content.mjs").HostContentLocator>; providerRoots?: Record<string, string>}, signal?: AbortSignal): Promise<import("../src/runtime/configure.js").ConfigureRequest>;
 export function assembleResource(input: HostFiles): Promise<{path: string; sizeBytes: number; sha256: string}>;
 export function parentArchive(input: HostFiles): Promise<{path: string; sizeBytes: number; sha256: string}>;
-export function prepareHostInput(input: PrepareRuntimeRequest & {locators: Record<string, import("./runtime-host-content.mjs").HostContentLocator>}): Promise<PrepareRuntimeRequest>;
+export function prepareHostInput(input: PrepareRuntimeRequest & {locators: Record<string, import("./runtime-host-content.mjs").HostContentLocator>}, signal?: AbortSignal): Promise<PrepareRuntimeRequest>;
 export function contentHostBIOSRequirements(input: ContentBIOSRequest & {locators: Record<string, import("./runtime-host-content.mjs").HostContentLocator>; providerRoots?: Record<string, string>; biosFiles?: Array<{requirementKey: string; filename: string; path: string}>}): Promise<ReturnType<typeof import("../src/runtime/prepare.js").contentBIOSRequirements>>;
 export function hostDOSEntryCandidates(input: {config: unknown; files: RuntimeContentFile[]; locators: Record<string, import("./runtime-host-content.mjs").HostContentLocator>}): Promise<{entries: string[]}>;
 export function hostArcadeParentOptions(input: import("../src/runtime/arcade-parent.js").ArcadeParentRequest & {locators: Record<string, import("./runtime-host-content.mjs").HostContentLocator>}): Promise<ReturnType<typeof import("../src/runtime/arcade-parent.js").arcadeParentOptions>>;

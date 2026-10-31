@@ -56,6 +56,28 @@ Container metadata does not establish which XP3 the original engine selects.
 Reviewers use the existing entry configuration for the intended startup file;
 resource extraction alone does not establish playable support.
 
+The X'moe PSB container adapter recognizes connected PE32 code structures for
+the companion resource name, index XORs, filename hash, payload key and text
+rotation. Bounded candidates can recover an additive section representation;
+the adapter validates independent code/table references rather than executing
+the protection VM or identifying a game. It verifies the complete CHuffman
+index, names and payload ranges, decodes bounded LZ4 blocks, and rebuilds marked
+PSB v2 strings as standard UTF-8 while preserving non-text sections. Other
+native patch mechanisms require separate format evidence.
+
+Converted scripts live under a distinct `.runtime-patches/` directory. The
+original module, companion package and base resources remain present. A bounded
+`.runtime-launches/` manifest binds source and generated file facts. Runtime
+configuration selects a unique recognized patch through the existing explicit
+`overlayRoot` option; reviewers can select original resources or a patch as a
+separate launch scheme without changing the project entry. Alternative resources
+remain separate, so selection precedes the effective resource view, and switching
+these schemes does not require another conversion. Manifest discovery validates
+paths, complete resource membership, size and SHA-256; a present DLL or successful
+launch is not proof of translation. Multiple independent container domains remain
+an explicit import ambiguity. Native file-blocking hooks are not guessed from
+archive names or applied to unrelated content.
+
 The KiriKiri plugin groups related CxFilterFS XP3s by table format and salt, confirms the
 filter for each group, and preserves every outer archive path. It also handles
 authenticated fixed-XOR/native filters in ordinary-name XP3s and bounded PE

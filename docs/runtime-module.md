@@ -1,5 +1,18 @@
 # Runtime configuration and preparation
 
+KiriKiri resource patches can retain separate standard resources with a bounded
+`.runtime-launches/` manifest. `configure` selects one recognized patch through
+the existing `kirikiri2.options.overlayRoot`; multiple patches require an explicit
+choice. The read-only host command `launch-options` accepts `platformId`, `config`,
+`files` and bounded `locators`, and returns `{items: [{id, label, configuration}],
+selectedId}`. Configurations preserve the current draft's entry and unrelated
+options. Original resources and custom overlays remain selectable. Manifest
+paths, source/resource facts and complete overlay membership are checked during
+configuration, discovery and preparation; bad matched metadata fails explicitly.
+The option is relative to the selected project root, while manifest paths and
+candidate IDs retain complete logical paths. Recognition does not certify the
+language or playability of a patch.
+
 The runtime module is the source of game interpretation for both review and play. The generated [support catalog](supported-platforms-and-cores.md) lists the current platforms, product cores, Provider Targets and bindings. Catalog membership and product acceptance evidence are recorded separately.
 
 `RuntimeConfiguration` contains `content` and optional `cores`. Content identifies a single file, arcade archive, DOS bundle and optional internal executable, or a project. RPG Maker projects select the actual one of seven engine implementations. Per-core rules contain declared Target options, arcade Parent logical paths and an optional `romSet` short name from that core’s paired DAT. `cores[coreId].romSet` stays inside the existing game JSON and cannot be borrowed by another core. BIOS file IDs, installation state, import batches, deployment revisions and authorization credentials never enter this JSON.

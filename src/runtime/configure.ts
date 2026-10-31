@@ -12,6 +12,7 @@ import formats from "./content-formats.json" with {type: "json"};
 import type {FlycastMachine} from "./flycast-arcade.js";
 import {playableArcadeMachine, type ArcadeCatalog} from "./arcade.js";
 import {kirikiriEntry} from "./kirikiri-entry.js";
+import {defaultKirikiriPatchOptions} from "./kirikiri-patches.js";
 
 export type ConfigureRequest = {
   platformId: string;
@@ -40,10 +41,16 @@ export function configureRuntime(input: ConfigureRequest): RuntimeConfiguration 
     : input.platformId === "scummvm" ? {scummvm: {options: scummvmOptions(input)}}
     : input.platformId === "ons" && "entryFile" in content
       ? {onscripter_yuri: {options: {scriptEncoding: onsScriptEncoding(input.files, content.entryFile, input.evidence)}}}
-    : input.platformId === "siglus" && "entryFile" in content ? {siglus: {options: {language: siglusLanguage(input.files, content.entryFile)}}} : undefined;
+    : input.platformId === "siglus" && "entryFile" in content ? {siglus: {options: {language: siglusLanguage(input.files, content.entryFile)}}}
+    : content.kind === "KIRIKIRI_PROJECT" ? kirikiriPatchCore(input, content.entryFile) : undefined;
   const config = parseRuntimeConfiguration({content, ...(cores ? {cores} : {})});
   validateConfiguredOptions(input.platformId, config, input.files);
   return config;
+}
+
+function kirikiriPatchCore(input: ConfigureRequest, entryFile: string): RuntimeConfiguration["cores"] {
+  const options = defaultKirikiriPatchOptions({...input, entryFile});
+  return options ? {kirikiri2: {options}} : undefined;
 }
 
 function constructContent(input: ConfigureRequest): RuntimeContent {

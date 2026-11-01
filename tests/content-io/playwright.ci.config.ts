@@ -5,7 +5,7 @@ import {resolve} from "node:path";
 export default defineConfig({
   testDir: ".",
   testMatch: ["fixture.browser.ts", "preload.browser.ts", "fallback.browser.ts", "session.browser.ts",
-    "storage.browser.ts", "window-budget.browser.ts", "window-cancel.browser.ts", "window-reuse.browser.ts"],
+    "storage.browser.ts", "reclaim.browser.ts", "window-budget.browser.ts", "window-cancel.browser.ts", "window-reuse.browser.ts"],
   workers: 1,
   retries: 0,
   forbidOnly: true,

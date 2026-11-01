@@ -21,10 +21,17 @@ game bytes, extracted control table, native execution or x86 emulator is shipped
   per-module operation permutation, split boundary and control table without
   executing native code. The currently supported configuration uses the legacy
   generator and a single 4096-byte table; other modes remain unrecognized.
+- `rolling-xor.mjs` recognizes a connected XP3 callback that builds a 31-byte
+  rolling table from the supplied PE and the resource checksum. The original
+  module must be included in the input; the recovered profile is selected only
+  after independent complete-resource checksum validation.
 - `pe-xp3.mjs` recognizes a bounded XP3 overlay after valid PE sections, within
   the original logical source slice. It preserves the outer logical filename;
   the converted file is an ordinary XP3 and becomes an entry candidate through
-  its signature. Reviewers still select the intended entry when needed.
+  its signature. Windows separators are converted to `/` only when every
+  resulting path is safe and unique under the engine's ASCII case folding.
+  Reviewers still select the intended entry
+  when needed.
 - `ordinary.mjs` inspects ordinary-name archives. Fixed XOR requires a unique
   byte key authenticated by three distinct complete resource checksums. Classic
   and Tiny filters use the supplied native modules, including clear modules in
@@ -42,6 +49,9 @@ game bytes, extracted control table, native execution or x86 emulator is shipped
   SHA256 and a second source read verify that stage selection and writing agree.
 - `normalize.mjs` declares the registered CxFilterFS plugin, with read-only
   whole-game resource-phase planning and conversion per related archive group.
+  It can also recover a byte XOR derived from each resource checksum across
+  ordinary archives, including short archives, after at least three distinct
+  complete-resource checksums and differing seed bytes identify one profile.
   A preceding container phase can add patch archives or replace native modules;
   filter discovery inspects both the effective and original modules and still
   requires independent complete-resource checksums to select a candidate. The shared

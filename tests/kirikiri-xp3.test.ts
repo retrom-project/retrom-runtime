@@ -9,6 +9,7 @@ import {Worker} from "node:worker_threads";
 import {normalizeContent} from "../scripts/runtime-normalize-content.mjs";
 import {tinyPE, tinyFirstBytePE} from "./kirikiri-pe-fixture.js";
 import {configuredPE} from "./kirikiri-configured-fixture.js";
+import {rollingPE} from "./kirikiri-rolling-fixture.js";
 import {createTinyFilter} from "../scripts/kirikiri/cxdec.mjs";
 import {cxFilterFS} from "../scripts/kirikiri/normalize.mjs";
 import {runNormalization, type Normalizer} from "../scripts/normalization/pipeline.mjs";
@@ -172,6 +173,24 @@ it("normalizes ordinary XP3 resources using parameters from a configured native 
     const expected = vectors.get(seed); if (!expected) throw new Error("missing synthetic vector");
     expected.copy(bytes); return bytes;
   }), configuredPE());
+  const result = await normalizeContent(request);
+  expect(result.normalization).toMatchObject({archiveCount: 1, verifiedEntries: 3, formatCounts: {"xp3-native": 1}});
+  const output = decodedResources(await readFile(result.files.find(file => file.logicalKey === "data.xp3")!.path!));
+  for (const item of items) expect(output.get(item.name)).toEqual(item.bytes);
+});
+it("normalizes XP3 resources with a module-supplied rolling table and resource seed", async () => {
+  const ciphertexts = [
+    "3xOvnFZ1slj6UgzK5JVrS5NqqMsgyWGDgbyVl4kiRwD6VHWxrJlh1Qtns4P8MGKsQ3MixzCKWq6Fvs7uSzxppX1OmItAiizkvpi62xk5xTwaee4Xs3F3akclN2wVUowi",
+    "DSAxfRriiMyhj4yIxF2mHubw24HPyv2yi1umF6FH0+T7GFojydGj2OTVr+1mj8EPCzJmFuHEndIw33DIHPrb0sOzxDA6evfd/vaKD/SoUCIJTzE4L2Q96fRJ7zWhsq2q6O0XA1EuMg==",
+    "wDy1dpIJ3lTjZz9Jk8Qba5P5xZ77O5ZAhz4b44F4+fsVki/5cLENyF4YYEgt5IJI0OKn0GL5OexnPMq6USYS7nvIIFuIIpE1YQchds29YQsLQCmJIBbVTGWt0ypPTcdA4QeCY9t+7Eo+Bl+W1B4=",
+  ].map(value => Buffer.from(value, "base64"));
+  const items = ["startup.tjs", "system.tjs", "scene.ks"].map((name, j) => ({name,
+    bytes: Buffer.from(Array.from({length: 96 + j * 7}, (_, i) => (i * 7 + j * 23 + 3) & 255))}));
+  const vectors = new Map(items.map((item, i) => [adler(item.bytes), ciphertexts[i]]));
+  const request = await withModule(ordinaryXP3(items, (bytes, seed) => {
+    const expected = vectors.get(seed); if (!expected) throw new Error("missing synthetic vector");
+    expected.copy(bytes); return bytes;
+  }), rollingPE());
   const result = await normalizeContent(request);
   expect(result.normalization).toMatchObject({archiveCount: 1, verifiedEntries: 3, formatCounts: {"xp3-native": 1}});
   const output = decodedResources(await readFile(result.files.find(file => file.logicalKey === "data.xp3")!.path!));

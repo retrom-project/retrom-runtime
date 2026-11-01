@@ -224,6 +224,27 @@ it("unwraps an XP3 after PE sections and verifies logical offsets without execut
   for (const item of items) expect(output.get(item.name)).toEqual(item.bytes);
   expect(await readFile(request.locators["launcher.exe"].path)).toEqual(original);
 });
+it("normalizes Windows separators in a PE overlay while preserving resource bytes and case", async () => {
+  const items = ["startup.tjs", "System\\Main.tjs", "pic\\A.png"].map((name, index) =>
+    ({name, bytes: Buffer.from(`resource-${index}`), raw: true}));
+  const request = await input(Buffer.concat([tinyPE(), Buffer.alloc(123), ordinaryXP3(items)]), "launcher.exe");
+  const result = await normalizeContent(request);
+  expect(result.normalization).toMatchObject({formatCounts: {"xp3-pe": 1}, verifiedEntries: 3});
+  const output = decodedResources(await readFile(result.files[0].path!));
+  for (const item of items) expect(output.get(item.name.replaceAll("\\", "/"))).toEqual(item.bytes);
+});
+it.each([
+  ["parent traversal", ["system\\..\\startup.tjs"]],
+  ["absolute path", ["\\absolute.tjs"]],
+  ["drive path", ["C:\\startup.tjs"]],
+  ["separator collision", ["System\\Main.tjs", "System/Main.tjs"]],
+  ["case-insensitive separator collision", ["System\\Main.tjs", "system/main.tjs"]],
+])("rejects unsafe or ambiguous PE overlay names after separator normalization: %s", async (_label, names) => {
+  const items = names.map(name => ({name, bytes: Buffer.from("content"), raw: true}));
+  const request = await input(Buffer.concat([tinyPE(), ordinaryXP3(items)]), "launcher.exe");
+  await expect(normalizeContent(request)).rejects.toThrow("RUNTIME_KIRIKIRI_ARCHIVE_UNSUPPORTED");
+  await expect(access(request.outputRoot)).rejects.toThrow();
+});
 it("does not interpret an XP3 marker inside PE sections or beyond its logical source slice", async () => {
   const pe = tinyPE(); ordinaryXP3(resources()).copy(pe, 0x3000);
   for (const bytes of [pe, Buffer.concat([Buffer.from("MZ"), Buffer.alloc(90), ordinaryXP3(resources())])]) {

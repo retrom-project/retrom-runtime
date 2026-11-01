@@ -5,6 +5,9 @@ import {maximumKirikiriCheckpointBytes, maximumKirikiriCheckpointEntries, validK
  * location so a new instance sees exactly the path the game will read. */
 export type KirikiriSaveImage = {width: number; height: number; pixels: Uint8Array};
 
+/** Games may rewrite system files every few seconds; publish those at most this often. */
+export const kirikiriSystemSyncDelayMs = 30_000;
+
 export class KirikiriWriteOverlay {
   readonly writes = new Map<string, Uint8Array | null>();
   readonly sequences = new Map<string, number>();
@@ -20,6 +23,13 @@ export class KirikiriWriteOverlay {
   private failure: Error | undefined;
   private readonly pending = new Map<number, PendingSave>();
   private readonly tainted = new Set<string>();
+  /** Files as the last persisted capture held them; churn that returns to them is no change. */
+  private baseline: ReadonlyMap<string, Uint8Array | null> = new Map();
+  private baselineProgress = 0;
+  private baselineSavePoint = 0;
+  private readonly differing = new Set<string>();
+  /** When the files first differed from the baseline; 0 while they match it. */
+  private changedAt = 0;
 
   record(path: string, data: Uint8Array | null) {
     if (this.failure) {return;}
@@ -40,6 +50,25 @@ export class KirikiriWriteOverlay {
     this.sequences.set(normalized, ++this.sequence);
     this.lastWriteAt = Date.now();
     this.bytes = size;
+    this.compare(normalized);
+    this.noteChange();
+  }
+
+  /** The current files, sharing the overlay's immutable copies. */
+  snapshot(): KirikiriOverlaySnapshot {
+    return {revision: this.sequence, writes: new Map(this.writes), progress: this.progressPaths.size, savePoint: this.savePoint};
+  }
+
+  acknowledge(snapshot: KirikiriOverlaySnapshot) {
+    if (snapshot.revision < this.acknowledged) {return;}
+    this.acknowledged = snapshot.revision;
+    this.baseline = snapshot.writes;
+    this.baselineProgress = snapshot.progress;
+    this.baselineSavePoint = snapshot.savePoint;
+    this.differing.clear();
+    for (const path of this.writes.keys()) {this.compare(path);}
+    this.changedAt = 0;
+    this.noteChange();
   }
 
   requireValid() {if (this.failure) {throw this.failure;}}
@@ -70,13 +99,36 @@ export class KirikiriWriteOverlay {
 
   seedProgress(paths: readonly string[]) {
     for (const path of paths) {this.progressPaths.add(path);}
-    this.acknowledged = this.sequence;
+    this.acknowledge(this.snapshot());
   }
 
   availability() {
     if (this.failure || this.pending.size || this.tainted.size) {return "NOT_READY";}
     if (!this.progressPaths.size) {return "NO_SAVE";}
-    return this.sequence === this.acknowledged ? "UNCHANGED" : null;
+    const unchanged = this.sequence === this.acknowledged ||
+      !this.differing.size && this.progressPaths.size === this.baselineProgress;
+    return unchanged ? "UNCHANGED" : null;
+  }
+
+  /** Availability for background sync. A completed player bookmark is
+   * published at once; changes to other files wait for the system delay. Final
+   * snapshots use availability() and still include every change. */
+  syncAvailability(now = Date.now()) {
+    const availability = this.availability();
+    if (availability !== null || this.savePoint !== this.baselineSavePoint) {return availability;}
+    return now - this.changedAt < kirikiriSystemSyncDelayMs ? "UNCHANGED" : null;
+  }
+
+  private noteChange() {
+    if (!this.changedAt && (this.differing.size || this.progressPaths.size !== this.baselineProgress)) {this.changedAt = Date.now();}
+  }
+
+  // Games commonly rewrite system files through temporary names and backups.
+  // Only the resulting files are saved, so compare them, not the operations.
+  private compare(path: string) {
+    const current = this.writes.get(path);
+    if (this.baseline.has(path) && sameData(this.baseline.get(path), current ?? null)) {this.differing.delete(path);}
+    else {this.differing.add(path);}
   }
 
   private publish(call: PendingSave) {
@@ -88,7 +140,7 @@ export class KirikiriWriteOverlay {
         if (!this.progressPaths.has(path)) {this.progressPaths.add(path); changed = true;}
       }
     }
-    if (changed) {++this.sequence; this.lastWriteAt = Date.now();}
+    if (changed) {++this.sequence; this.lastWriteAt = Date.now(); this.noteChange();}
     if (written && call.history) {this.savePoint = this.sequence; this.savePointImage = call.image ?? null;}
   }
 
@@ -103,6 +155,10 @@ export class KirikiriWriteOverlay {
     }
   }
 }
+
+export type KirikiriOverlaySnapshot = {
+  revision: number; writes: ReadonlyMap<string, Uint8Array | null>; progress: number; savePoint: number;
+};
 
 type PendingSave = {paths: Set<string>; history: boolean; image?: KirikiriSaveImage};
 

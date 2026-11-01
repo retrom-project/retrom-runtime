@@ -353,7 +353,9 @@ export async function mountKirikiri2(
         throw new RuntimeFailureError("KIRIKIRI_GAME_SAVE_OBSERVER_FAILED", "CORE",
           [`Native save observer returned ${observing}.`]);
       }
-      const blocker = observing === 1 ? overlay.availability() : "NOT_READY";
+      // Background sync while playing is coalesced; a paused Host menu or exit sees every change.
+      const pending = checkpointOperation!.isPaused ? overlay.availability() : overlay.syncAvailability();
+      const blocker = observing === 1 ? pending : "NOT_READY";
       return blocker ? {available: false, blocker, save}
         : {available: true, blocker: null, revision: String(overlay.sequence), save};
     },

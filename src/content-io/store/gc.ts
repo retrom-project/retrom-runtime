@@ -3,7 +3,7 @@ import {ContentMetadata} from "./metadata.js";
 import {checkSignal, requestScope} from "../abort.js";
 import {fail} from "../errors.js";
 import {validLocation} from "./opfs.js";
-import type {ContentCacheReclaimRequestV1, ContentCacheReclaimResultV1} from "../../provider/generated/provider-module-v1.js";
+import type {ContentCacheClearRequestV1, ContentCacheClearResultV1, ContentCacheReclaimRequestV1, ContentCacheReclaimResultV1} from "../../provider/generated/provider-module-v1.js";
 import type {DataStore, GenerationRecord, ObjectRecord} from "./types.js";
 export type ReclaimRequest = ContentCacheReclaimRequestV1;
 export type ReclaimResult = ContentCacheReclaimResultV1;
@@ -18,6 +18,27 @@ export class ContentGC {
   collect(request?: ReclaimRequest): Promise<number | ReclaimResult> {
     if (request) {return this.pressure(request);}
     if (!this.running) {this.running = this.run().finally(() => {this.running = undefined;});} return this.running;
+  }
+  async clear(request: ContentCacheClearRequestV1): Promise<ContentCacheClearResultV1> {
+    const scope = requestScope(request.signal, 5000);
+    const result: ContentCacheClearResultV1 = {reclaimedBytes: 0, removedObjects: 0, skippedObjects: 0, nextKey: null};
+    try {
+      const candidates = await this.metadata.listPage(objectLimit + 1, request.afterKey);
+      checkSignal(scope.signal);
+      for (const candidate of candidates.slice(0, objectLimit)) {
+        checkSignal(scope.signal);
+        const bytes = await this.locks.gc(candidate.key, () => this.locks.data(candidate.key, scope.signal,
+          () => this.removeIdle(candidate, scope.signal)), scope.signal);
+        checkSignal(scope.signal);
+        if (bytes === undefined || bytes === null) {result.skippedObjects++;}
+        else {
+          result.reclaimedBytes += bytes; result.removedObjects++;
+          if (!Number.isSafeInteger(result.reclaimedBytes)) {fail("CACHE_UNAVAILABLE");}
+        }
+      }
+      if (candidates.length > objectLimit) {result.nextKey = candidates[objectLimit - 1].key;}
+      return result;
+    } finally {scope.dispose();}
   }
   private async pressure(request: ReclaimRequest): Promise<ReclaimResult> {
     if (!Number.isSafeInteger(request.targetBytes) || request.targetBytes <= 0) {fail("SOURCE_INVALID");}

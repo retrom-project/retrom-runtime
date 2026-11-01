@@ -147,6 +147,30 @@ Required full-preload preparation and active materialization jobs give each pers
 
 Completed OPFS Blob delivery acquires a separate file lease and checks the immutable generation receipt and exact file size, then returns the File directly. It does not read all cached blocks into temporary buffers before handing over the same disk file. Missing files, size changes and unavailable file access retain the existing verified-byte recovery path; cancellation releases the acquired lease. BYTES and streaming-sink consumers keep their byte-copy behavior.
 
+### Browser cache management
+
+`ProviderModuleV1.inspectContentCache({signal?})` opens only existing metadata and
+returns `cachedBytes`, `objectCount` and `canClear`. Bytes sum all receipted
+generations, including retained physical copies; they exclude metadata overhead
+and are not a physical disk-usage estimate. No content file is read or storage
+created. Unsupported metadata discovery fails instead of returning a false zero;
+missing Web Locks permits inspection but disables clearing.
+
+`clearContentCache({afterKey?, signal?})` visits at most 64 objects per call in
+exclusive object-key order. Its result contains `reclaimedBytes`, `removedObjects`,
+`skippedObjects` and `nextKey`; pass a non-null next key as the following call's
+`afterKey`, even when an entire page was busy. The sweep uses the same exclusive
+use/data locks and completion invalidation as pressure recovery. It never opens
+save/draft directories, workspace copies or PWA caches. Objects inserted behind
+the cursor or skipped because of use, changed metadata or unavailable backends
+remain for a later sweep. Deletion errors propagate, and cancellation waits for
+in-flight native work to settle; an unsuccessful batch may have removed some
+objects, so callers must refresh the inventory rather than claim no change.
+
+Both APIs work without a mounted runtime or game launch. Providers share one
+current-origin Content I/O namespace; aggregate it once, not once per Provider.
+Browser `navigator.storage.estimate().usage` is a separate approximate metric.
+
 ### Storage-pressure recovery
 
 `ProviderModuleV1.reclaimContentCache({targetBytes, signal?})` is independent of a

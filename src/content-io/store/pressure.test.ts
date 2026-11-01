@@ -26,6 +26,8 @@ function fixture(states: ObjectRecord["state"][] = ["COMPLETE", "PARTIAL"]) {
   const generations = new Map(objects.map(object => [object.key, [{...object, objectKey: object.key, retiredAtMs: null}] as GenerationRecord[]]));
   const jobs = new Map<string, JobRecord[]>();
   const metadata = {
+    listPage: vi.fn(async (limit: number, afterKey?: string) =>
+      objects.filter(object => afterKey === undefined || object.key > afterKey).slice(0, limit).map(object => ({...object}))),
     list: vi.fn(async (limit: number, state?: ObjectRecord["state"]) =>
       objects.filter(object => !state || state === object.state).slice(0, limit).map(object => ({...object}))),
     object: vi.fn(async (key: string) => structuredClone(objects.find(object => object.key === key))),
@@ -58,6 +60,22 @@ function fixture(states: ObjectRecord["state"][] = ["COMPLETE", "PARTIAL"]) {
   const gc = new ContentGC(metadata as unknown as ContentMetadata, locks as unknown as ContentLocks, stores);
   return {gc, metadata, locks, store, stores, remove, objects, generations, jobs, active, held};
 }
+
+it("advances manual clearing past occupied pages instead of revisiting the oldest candidates", async () => {
+  const f = fixture(Array.from({length: 66}, () => "PARTIAL"));
+  for (const object of f.objects.slice(0, 64)) {f.active.add(object.key);}
+  const first = await f.gc.clear({});
+  expect(first).toEqual({reclaimedBytes: 0, removedObjects: 0, skippedObjects: 64, nextKey: f.objects[63].key});
+  expect(await f.gc.clear({afterKey: first.nextKey!})).toEqual({reclaimedBytes: 256, removedObjects: 2, skippedObjects: 0, nextKey: null});
+  expect(f.remove.mock.calls.map(([key]) => key)).toEqual(f.objects.slice(64).map(object => object.key));
+});
+
+it("keeps a failed manual removal observable and revokes completion before deleting", async () => {
+  const f = fixture(["COMPLETE"]);
+  f.remove.mockRejectedValue(new DOMException("failed", "UnknownError"));
+  await expect(f.gc.clear({})).rejects.toThrow("failed");
+  expect(f.objects[0].state).toBe("PARTIAL"); expect(f.metadata.remove).not.toHaveBeenCalled();
+});
 
 it("reclaims an idle complete object on actual storage pressure even when estimate claims free space", async () => {
   const f = fixture();

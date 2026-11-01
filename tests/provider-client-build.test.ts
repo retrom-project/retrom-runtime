@@ -57,13 +57,15 @@ describe("Provider client module build", () => {
     expect(identifiers).toEqual([]);
     const module = await import(`data:text/javascript;base64,${bytes.toString("base64")}`) as Record<string, unknown>;
     expect(Object.keys(module).sort()).toEqual([
-      "createRuntime", "providerApiVersion", "providerId", "providerVersion", "reclaimContentCache",
+      "clearContentCache", "createRuntime", "inspectContentCache", "providerApiVersion", "providerId", "providerVersion", "reclaimContentCache",
     ]);
     expect(module.providerId).toBe(providerId);
     expect(module.providerVersion).toBe("0.46.0");
     expect(module.providerApiVersion).toBe(1);
     expect(module.createRuntime).toBeTypeOf("function");
     expect(module.reclaimContentCache).toBeTypeOf("function");
+    expect(module.inspectContentCache).toBeTypeOf("function");
+    expect(module.clearContentCache).toBeTypeOf("function");
   });
 });
 

@@ -1,10 +1,11 @@
 import type {PrepareRuntimeRequest, ContentBIOSRequest, RuntimeContentFile, BIOSRequirement} from "../src/runtime/index.js";
 export type HostFiles = {files: RuntimeContentFile[]; locators: Record<string, import("./runtime-host-content.mjs").HostContentLocator>; paths?: Record<string, string>; outputPath: string};
 export function discoverContentDependencies(input: Pick<HostFiles, "files" | "locators"> & {
+  sourceEntries?: string[];
   directory?: import("../src/runtime/types.js").RuntimeDirectory; providerRoots?: Record<string,string>;
   sourceCandidates?: {sourcePath: string; sizeBytes: number; headerBase64: string}[];
 }): Promise<{files: Array<{logicalKey: string; relativeTo?: string; relativePath?: string; sourcePath?: string; optional?: boolean}>;
-  sourceSearch?: {extensions: string[]; headerBytes: number}}>;
+  trees?: string[]; sourceSearch?: {extensions: string[]; headerBytes: number}}>;
 export function configureHostInput(input: import("../src/runtime/configure.js").ConfigureRequest & {locators: Record<string, import("./runtime-host-content.mjs").HostContentLocator>; providerRoots?: Record<string, string>}, signal?: AbortSignal): Promise<import("../src/runtime/configure.js").ConfigureRequest>;
 export function assembleResource(input: HostFiles): Promise<{path: string; sizeBytes: number; sha256: string}>;
 export function parentArchive(input: HostFiles): Promise<{path: string; sizeBytes: number; sha256: string}>;

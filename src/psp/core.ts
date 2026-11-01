@@ -10,6 +10,7 @@ import type {CheckpointAvailability} from "../contract.js";
 
 export type PSPParameters = {
   game: SeekableBlobSource;
+  projectEntryPath?: string | null;
   runtimeBaseUrl: string;
   assetIndex?: AssetIndexV1;
 };
@@ -31,6 +32,7 @@ export type PSPModule = {
   contractSha256: string;
   createPPSSPPHost(options: {
     source: Pick<SeekableBlobSource, "sha256" | "sizeBytes">;
+    projectEntryPath?: string | null;
     content: PSPContent;
     restore: Uint8Array | null;
     target: HTMLElement;

@@ -286,7 +286,7 @@ export function webmsx(envelope: LaunchEnvelopeV1): WebMSXParameters {
 
 export function psp(envelope: LaunchEnvelopeV1, assetIndex: AssetIndexV1): PSPParameters {
   const game = resource(envelope, "game", "SEEKABLE_BLOB");
-  return {game: seekableSource(game),
+  return {game: seekableSource(game), projectEntryPath: typeof envelope.targetOptions.projectEntryPath === "string" ? envelope.targetOptions.projectEntryPath : null,
     runtimeBaseUrl: assetBase(envelope, "ppsspp"), assetIndex};
 }
 

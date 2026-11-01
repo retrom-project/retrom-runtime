@@ -22,6 +22,16 @@ async function tree(content: Record<string, Uint8Array>) {
   return {root, files, locators};
 }
 
+it("discovers a PSP companion tree from the PBP structure without game identity rules", async () => {
+  const header = Buffer.alloc(40); header.set([0,80,66,80]);
+  const input = await tree({"arbitrary.pbp": header, "not-a-pbp.pbp": Buffer.alloc(40)});
+  expect(await discoverContentDependencies({...input,
+    directory: {platformId: "psp", defaultCoreId: "ppsspp", allowedCoreIds: ["ppsspp"]}})).toEqual({files: [], trees: ["arbitrary.pbp"]});
+  expect(await discoverContentDependencies({...input, sourceEntries: [],
+    directory: {platformId: "psp", defaultCoreId: "ppsspp", allowedCoreIds: ["ppsspp"]}})).toEqual({files: [], trees: []});
+  expect(await discoverContentDependencies({...input,
+    directory: {platformId: "nes", defaultCoreId: "fceumm", allowedCoreIds: ["fceumm"]}})).toEqual({files: []});
+});
 it("uses logical package intervals for evidence, nested native archives and ZIP assembly", async () => {
   const ini = Buffer.from("[Game]\nLibrary=RGSS104E.dll\nTitle=Package\n");
   const archive = Buffer.from(zipSync({"PLAY.EXE": Uint8Array.of(1, 2, 3)}));

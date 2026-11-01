@@ -13,6 +13,7 @@ export async function startPSP(module: PSPModule, assets: Readonly<Record<string
     const blob = await verifiedContentAsset(new URL(content.runtimeBaseURL, location.href).href, config.assetIndex, "sync-client.mjs", signal);
     syncClientUrl = URL.createObjectURL(blob);
     core = await module.createPPSSPPHost({source: {sha256: config.game.sha256, sizeBytes: config.game.sizeBytes},
+      projectEntryPath: config.projectEntryPath,
       content: {...channel, abi, contractSha256, syncClientUrl}, restore: restorePayload?.slice() ?? null,
       target, assets, onFailure: reportFailure, signal});
     if (!validPSPCore(core)) {throw new Error("PPSSPP_CORE_ABI_MISMATCH");}

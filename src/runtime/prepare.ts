@@ -1,4 +1,5 @@
 import {rpgPluginScenarioPath} from "./rpg-plugin-paths.js";
+import {pspProjectEntry} from "./psp-content.js";
 import {kirikiriEngineArguments} from "../kirikiri/arguments.js";
 import {projectProviderManifest} from "../provider/manifest.js";
 import {validateTargetOptionsAgainstSchema} from "../provider/module-api.js";
@@ -180,6 +181,7 @@ function prepareTargetOptions(config: RuntimeConfiguration, target: TargetDeclar
   if (target.id === "theodore" && "entryFile" in config.content) {
     options = thomsonModelOptions(options, config.content.entryFile, files);
   }
+  if (target.id === "ppsspp") {options.projectEntryPath = pspProjectEntry(config, files);}
   if (target.id === "dosbox-pure") {
     if (config.content.kind !== "DOS_BUNDLE") {configurationFailure();}
     options.dosEntryPath = config.content.entryPath ?? null;
@@ -212,7 +214,8 @@ function contentResources(config: RuntimeConfiguration, target: TargetDeclaratio
   const game = target.inputs.find(input => input.role === "game");
   if (!game) {configurationFailure("RUNTIME_DECLARATION_INVALID");}
   const parent = config.cores?.[coreId]?.parentFiles ?? [];
-  const resources: ResourcePlan[] = [gameResource(game.kind, config, files)];
+  const pspProject = target.id === "ppsspp" && pspProjectEntry(config, files) !== null;
+  const resources: ResourcePlan[] = [gameResource(game.kind, config, files, pspProject)];
   arcadeResourcePath(resources[0], config, target, coreId, files);
   if (game.kind === "NATIVE_WEB" || game.kind === "ISOLATED_WEB") {
     const bridges = target.assetPaths.filter(path => path.endsWith("/bridge.js"));
@@ -260,12 +263,12 @@ function arcadeResourcePath(resource: ResourcePlan, config: RuntimeConfiguration
   resource.paths = {[key]: `${configuredMachine(coreId, config, name)}.zip`};
 }
 
-function gameResource(kind: ResourceKind, config: RuntimeConfiguration, files: readonly RuntimeContentFile[]): ResourcePlan {
+function gameResource(kind: ResourceKind, config: RuntimeConfiguration, files: readonly RuntimeContentFile[], pspProject = false): ResourcePlan {
   const content = config.content, entry = "entryFile" in content ? content.entryFile : null;
   const plan: ResourcePlan = {role: "game", kind, ordinal: 0, files: []};
   if (entry) {plan.entryFile = entry;}
   if (content.kind === "DOS_BUNDLE") {return {...plan, files: [content.entryFile], paths: {[content.entryFile]: "game.zip"}};}
-  const packed = kind === "SEEKABLE_BLOB" && content.kind === "RPG_MAKER_PROJECT";
+  const packed = kind === "SEEKABLE_BLOB" && (content.kind === "RPG_MAKER_PROJECT" || pspProject);
   if (["FILE_TREE", "NATIVE_WEB", "ISOLATED_WEB"].includes(kind) || packed) {
     const root = entry?.slice(0, entry.lastIndexOf("/") + 1) ?? "";
     const mv = content.kind === "RPG_MAKER_PROJECT" && content.engine === "RPGMV";

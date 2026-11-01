@@ -159,6 +159,24 @@ it("captures complete native files and acknowledges only the persisted revision"
   await operation.stop();
 });
 
+it("does not report a persisted save as changed after native writes restore the same files", async () => {
+  const {operation, overlay} = fixture();
+  overlay.record("/savedata/system.ksd", Uint8Array.of(9));
+  const saved = await operation.checkpoint();
+  await operation.acknowledge(saved.bytes);
+  overlay.record("/savedata/system_.ksd", Uint8Array.of(9));
+  overlay.record("/savedata/system.ksd", null); overlay.record("/savedata/system.ksd", Uint8Array.of(9));
+  overlay.record("/savedata/system_.ksd", null);
+  expect(overlay.availability()).toBe(null);
+  const rotated = await operation.checkpoint();
+  await operation.acknowledge(rotated.bytes);
+  overlay.record("/savedata/system_.ksd", Uint8Array.of(9));
+  overlay.record("/savedata/system.ksd", null); overlay.record("/savedata/system.ksd", Uint8Array.of(9));
+  overlay.record("/savedata/system_.ksd", null);
+  expect(overlay.availability()).toBe("UNCHANGED");
+  await operation.stop();
+});
+
 it.each([false, true])("preserves paused=%s while syncing without running a native save", async paused => {
   const {operation, module} = fixture();
   if (paused) {await operation.pause();}

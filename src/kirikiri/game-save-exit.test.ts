@@ -5,6 +5,7 @@ import {createRuntime} from "../index.js";
 import type {RuntimeEventV1} from "../provider/module-api.js";
 import {decodeStoredCheckpoint} from "../provider/checkpoint-storage.js";
 import {decodeKirikiriCheckpoint, maximumKirikiriCheckpointBytes} from "./checkpoint.js";
+import {kirikiriSystemSyncDelayMs} from "./write-overlay.js";
 import {suspendingBookmark, type KirikiriJspi} from "../../tests/kirikiri-checkpoint-fixture.js";
 
 const actualWasm = window.WebAssembly as KirikiriJspi;
@@ -264,11 +265,22 @@ it("marks exports without a new player bookmark so the Host keeps the save scree
     // System variables and the KAG start anchor (savehist=false) are synced, but the
     // frame at that moment is a title, menu or transition rather than the save point.
     f.vlfs.onWriteClose?.("/profiles/玩家/system.ksd", Uint8Array.of(7));
+    // Other files are published for background sync after the coalescing delay.
+    expect(f.runtime.getCheckpointAvailability()).toMatchObject({available: false, reason: "UNCHANGED"});
+    // A paused Host exit or menu must still export the change.
+    await f.runtime.pause();
+    expect(f.runtime.getCheckpointAvailability().available).toBe(true);
+    await f.runtime.resume();
+    expect(f.runtime.getCheckpointAvailability()).toMatchObject({available: false, reason: "UNCHANGED"});
+    const start = Date.now();
+    vi.spyOn(Date, "now").mockImplementation(() => start + kirikiriSystemSyncDelayMs + performance.now());
+    expect(f.runtime.getCheckpointAvailability().available).toBe(true);
     const system = await f.runtime.checkpoint(); await f.runtime.acknowledgeCheckpoint!(system);
     expect(system.screenshot).toBe("UNCHANGED");
     f.module.onGameSave?.({phase: "begin", id: 2, history: false});
     f.vlfs.onWriteClose?.("/profiles/玩家/anchor.ksd", Uint8Array.of(8));
     f.module.onGameSave?.({phase: "end", id: 2, success: true});
+    vi.spyOn(Date, "now").mockImplementation(() => start + 2 * kirikiriSystemSyncDelayMs + performance.now());
     const anchor = await f.runtime.checkpoint(); await f.runtime.acknowledgeCheckpoint!(anchor);
     expect(anchor.screenshot).toBe("UNCHANGED");
     f.module.onGameSave?.({phase: "begin", id: 3, history: true});

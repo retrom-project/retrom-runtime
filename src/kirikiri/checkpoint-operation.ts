@@ -1,5 +1,5 @@
 import {digestKirikiriCheckpoint, encodeKirikiriCheckpoint, kirikiriGameSaveFormat} from "./checkpoint.js";
-import type {KirikiriSaveImage, KirikiriWriteOverlay} from "./write-overlay.js";
+import type {KirikiriOverlaySnapshot, KirikiriSaveImage, KirikiriWriteOverlay} from "./write-overlay.js";
 
 export type KirikiriCheckpointModule = {
   pauseMainLoop(): void | Promise<void>;
@@ -22,7 +22,7 @@ class KirikiriCheckpointOperation {
   private final: Promise<KirikiriCheckpoint | null> | undefined;
   private stopping: Promise<void> | undefined;
   private readonly cancellation = new AbortController();
-  private readonly captures = new Map<string, number>();
+  private readonly captures = new Map<string, KirikiriOverlaySnapshot>();
   private capturedSavePoint = 0;
 
   constructor(private readonly options: {module: KirikiriCheckpointModule; overlay: KirikiriWriteOverlay}) {}
@@ -61,9 +61,9 @@ class KirikiriCheckpointOperation {
   async acknowledge(bytes: Uint8Array) {
     this.requireOpen();
     const key = await digestKirikiriCheckpoint(bytes);
-    const revision = this.captures.get(key);
-    if (revision !== undefined) {
-      this.options.overlay.acknowledged = Math.max(this.options.overlay.acknowledged, revision);
+    const snapshot = this.captures.get(key);
+    if (snapshot !== undefined) {
+      this.options.overlay.acknowledge(snapshot);
       this.captures.delete(key);
     }
   }
@@ -119,12 +119,12 @@ class KirikiriCheckpointOperation {
       await this.waitForQuiet();
       this.requireOpen(); overlay.requireValid();
       if (this.nothingToCapture(final)) {return null;}
-      const revision = overlay.sequence;
+      const snapshot = overlay.snapshot();
       const bytes = await encodeKirikiriCheckpoint({progressPaths: [...overlay.progressPaths],
-        entries: [...overlay.writes].map(([path, data]) => ({path, data: data?.slice() ?? null}))});
+        entries: [...snapshot.writes].map(([path, data]) => ({path, data: data?.slice() ?? null}))});
       const key = await digestKirikiriCheckpoint(bytes);
       this.requireOpen();
-      this.captures.set(key, revision);
+      this.captures.set(key, snapshot);
       if (this.captures.size > 32) {this.captures.delete(this.captures.keys().next().value!);}
       return {bytes, format: kirikiriGameSaveFormat, ...this.screenshotState()};
     } catch (cause) {

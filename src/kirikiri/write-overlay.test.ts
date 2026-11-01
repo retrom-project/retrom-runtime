@@ -1,5 +1,5 @@
-import {expect, it} from "vitest";
-import {KirikiriWriteOverlay} from "./write-overlay.js";
+import {expect, it, vi} from "vitest";
+import {KirikiriWriteOverlay, kirikiriSystemSyncDelayMs} from "./write-overlay.js";
 import {maximumKirikiriCheckpointBytes, maximumKirikiriCheckpointEntries} from "./checkpoint.js";
 
 it("keeps complete copied writes at custom Unicode user paths and replaces earlier closes", () => {
@@ -63,12 +63,87 @@ it("blocks failed partial writes until the same native files are successfully re
 it("does not dirty an acknowledged save for identical writes and retains native deletions", () => {
   const overlay = new KirikiriWriteOverlay();
   overlay.observe({phase: "begin", id: 1, history: true}); overlay.record("/slot.bmp", Uint8Array.of(1));
-  overlay.observe({phase: "end", id: 1, success: true}); overlay.acknowledged = overlay.sequence;
+  overlay.observe({phase: "end", id: 1, success: true}); overlay.acknowledge(overlay.snapshot());
   overlay.record("/slot.bmp", Uint8Array.of(1));
   expect(overlay.availability()).toBe("UNCHANGED");
   overlay.record("/slot.bmp", null);
   expect(overlay.availability()).toBe(null);
   expect(overlay.writes.get("slot.bmp")).toBeNull();
+});
+
+it("treats temporary-name and backup rotation that restores the saved files as unchanged", () => {
+  const overlay = new KirikiriWriteOverlay(), system = Uint8Array.of(7, 7);
+  overlay.observe({phase: "begin", id: 1, history: false});
+  overlay.record("/savedata/system.ksd", system); overlay.record("/savedata/system~.ksd", system);
+  overlay.observe({phase: "end", id: 1, success: true});
+  overlay.acknowledge(overlay.snapshot());
+  const rotate = (data: Uint8Array) => {
+    overlay.observe({phase: "begin", id: 2, history: false});
+    overlay.record("/savedata/system_.ksd", data);
+    overlay.record("/savedata/system~.ksd", null); overlay.record("/savedata/system~.ksd", system);
+    overlay.record("/savedata/system.ksd", null); overlay.record("/savedata/system.ksd", data);
+    overlay.record("/savedata/system_.ksd", null);
+    overlay.observe({phase: "end", id: 2, success: true});
+  };
+  rotate(system);
+  // The first rotation leaves a deletion record for the temporary name.
+  expect(overlay.availability()).toBe(null);
+  overlay.acknowledge(overlay.snapshot());
+  const acknowledged = overlay.sequence;
+  rotate(Uint8Array.of(7, 7));
+  expect(overlay.sequence).toBeGreaterThan(acknowledged);
+  expect(overlay.availability()).toBe("UNCHANGED");
+  rotate(Uint8Array.of(7, 8));
+  expect(overlay.availability()).toBe(null);
+  rotate(Uint8Array.of(7, 7));
+  expect(overlay.availability()).toBe("UNCHANGED");
+});
+
+it("reports a new progress file even when every recorded file matches the saved files", () => {
+  const overlay = new KirikiriWriteOverlay();
+  overlay.observe({phase: "begin", id: 1, history: true}); overlay.record("/slot0.bmp", Uint8Array.of(1));
+  overlay.observe({phase: "end", id: 1, success: true});
+  overlay.record("/slot1.bmp", Uint8Array.of(2));
+  overlay.acknowledge(overlay.snapshot());
+  overlay.observe({phase: "begin", id: 2, history: true}); overlay.record("/slot1.bmp", Uint8Array.of(2));
+  overlay.observe({phase: "end", id: 2, success: true});
+  expect(overlay.availability()).toBe(null);
+});
+
+it("ignores an older acknowledgement after a newer one", () => {
+  const overlay = new KirikiriWriteOverlay();
+  overlay.observe({phase: "begin", id: 1, history: true}); overlay.record("/slot.bmp", Uint8Array.of(1));
+  overlay.observe({phase: "end", id: 1, success: true});
+  const older = overlay.snapshot();
+  overlay.record("/slot.bmp", Uint8Array.of(2));
+  overlay.acknowledge(overlay.snapshot()); overlay.acknowledge(older);
+  expect(overlay.availability()).toBe("UNCHANGED");
+});
+
+it("publishes a player bookmark at once and coalesces other file changes for background sync", () => {
+  vi.useFakeTimers({now: 1_000});
+  try {
+    const overlay = new KirikiriWriteOverlay();
+    overlay.observe({phase: "begin", id: 1, history: true}); overlay.record("/slot.bmp", Uint8Array.of(1));
+    overlay.observe({phase: "end", id: 1, success: true});
+    expect(overlay.syncAvailability()).toBe(null);
+    overlay.acknowledge(overlay.snapshot());
+    vi.advanceTimersByTime(5_000);
+    overlay.record("/savedata/system.ksd", Uint8Array.of(1));
+    vi.advanceTimersByTime(kirikiriSystemSyncDelayMs - 1);
+    overlay.record("/savedata/system.ksd", Uint8Array.of(2));
+    expect(overlay.availability()).toBe(null);
+    expect(overlay.syncAvailability()).toBe("UNCHANGED");
+    vi.advanceTimersByTime(1);
+    expect(overlay.syncAvailability()).toBe(null);
+    const system = overlay.snapshot();
+    overlay.record("/savedata/system.ksd", Uint8Array.of(3));
+    overlay.acknowledge(system);
+    expect(overlay.syncAvailability()).toBe("UNCHANGED");
+    overlay.observe({phase: "begin", id: 2, history: true}); overlay.record("/slot.bmp", Uint8Array.of(2));
+    overlay.observe({phase: "end", id: 2, success: true});
+    expect(overlay.syncAvailability()).toBe(null);
+  } finally {vi.useRealTimers();}
 });
 
 it("bounds and rejects mismatched native observation events", () => {

@@ -18,6 +18,14 @@ function random(lane, type) {
     return Number(value & 0xffffffffn);
   };
 }
+function legacyRandom(lane) {
+  let state = lane >>> 0;
+  return () => {
+    const previous = state;
+    state = (Math.imul(previous, 0x41c64e6d) + 0x3039) >>> 0;
+    return (state ^ previous << 16 ^ previous >>> 16) >>> 0;
+  };
+}
 const unary = ["not", "neg", "inc", "dec", "shuffle", "xor", "add", "table"];
 const binary = ["addScratch", "subScratch", "scratchMinus", "mul", "shl", "shr"];
 class Generator {
@@ -56,8 +64,8 @@ class Generator {
     this.emit(op, value); return true;
   }
 }
-function lane(params, id) {
-  const next = random(id, params[17] >>> 7);
+function lane(params, id, legacy) {
+  const next = legacy ? legacyRandom(id) : random(id, params[17] >>> 7);
   // Failed attempts retain the PRNG state; only their emitted vector is reset.
   for (let depth = 5; depth >= 1; depth--) {
     const builder = new Generator(params, next);
@@ -93,11 +101,7 @@ function boundary(value) {
 export function createHxManager(material) {
   const {params, table, nonce0} = material;
   requireFormat(validHxParams(params) && table.length === 1024 && nonce0.length === 24 && params[17] >>> 7 <= 1);
-  const lanes = Array.from({length: 128}, (_, i) => lane(params, i));
-  const drip = input => {
-    const id = input & 127, seed = input >>> 7;
-    return BigInt(evaluate(lanes[id], seed, table)) | BigInt(evaluate(lanes[id], ~seed >>> 0, table)) << 32n;
-  };
+  const drip = createDripValue(params, table);
   function state(entryKey, localFlags) {
     let key = entryKey;
     if (!(localFlags & 1)) {key ^= nonce0.readBigUInt64LE();}
@@ -108,6 +112,15 @@ export function createHxManager(material) {
     return {left, right, split, prefix};
   }
   return {drip, state};
+}
+/** The expression grammar is shared; its native PRNG depends on the module format. */
+export function createDripValue(params, table, {legacy = false} = {}) {
+  requireFormat(validHxParams(params) && table.length === 1024 && (!legacy || params[17] === 0));
+  const lanes = Array.from({length: 128}, (_, i) => lane(params, i, legacy));
+  return input => {
+    const id = input & 127, seed = input >>> 7;
+    return BigInt(evaluate(lanes[id], seed, table)) | BigInt(evaluate(lanes[id], ~seed >>> 0, table)) << 32n;
+  };
 }
 export function applyHxState(bytes, offset, state) {
   requireFormat(Number.isSafeInteger(offset) && offset >= 0);

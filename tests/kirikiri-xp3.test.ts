@@ -8,6 +8,7 @@ import {deflateSync} from "node:zlib";
 import {Worker} from "node:worker_threads";
 import {normalizeContent} from "../scripts/runtime-normalize-content.mjs";
 import {tinyPE, tinyFirstBytePE} from "./kirikiri-pe-fixture.js";
+import {configuredPE} from "./kirikiri-configured-fixture.js";
 import {createTinyFilter} from "../scripts/kirikiri/cxdec.mjs";
 import {cxFilterFS} from "../scripts/kirikiri/normalize.mjs";
 import {runNormalization, type Normalizer} from "../scripts/normalization/pipeline.mjs";
@@ -158,6 +159,24 @@ function ordinaryXP3(items: Resource[], key: number | ((bytes: Buffer, seed: num
   const index = Buffer.concat(rows);
   return Buffer.concat([magic, u64(offset), ...parts, Buffer.from([0]), u64(index.length), index]);
 }
+it("normalizes ordinary XP3 resources using parameters from a configured native module", async () => {
+  const ciphertexts = [
+    "/vfs5eLb0MnGv7StqqOYkY6HfHVya2BZVk9EPTozKCEeFwwFAvvw6ebf1M3Kw7ixrkZ9dHNqYZiXjoW8u7KpoN/WzcTD+vHo5x4VDAsCOTAvJl1UU0pBeHduZZybkomA",
+    "GyApLjc8RUpTWGFmb3R9gouQmZ6nrLW6w8jR1t/k7fL7AAkOFxwlKjM4QUZPVF1ia3B5foeMlZqjqHB3fgUMExohKC82PcTL0tng5+71/IOKkZifpq20u0JJUFdeZWxzegEIDxYdJA==",
+    "MDk+R0xVWmNocXZ/hI2Sm6Cprre8xcrT2OHm7/T9AgsQGR4nLDU6Q0hRVl9kbXJ7gImOl5ylqrO4wcbPpayTmoGIj3Z9ZGtSWUBHTjU8IyoRGB8GDfT74unQ197FzLO6oaivlp2Ei3J5YGduVVw=",
+  ].map(value => Buffer.from(value, "base64"));
+  const items = ["startup.tjs", "system.tjs", "scene.ks"].map((name, j) => ({name,
+    bytes: Buffer.from(Array.from({length: 96 + j * 7}, (_, i) => (i * 7 + j * 23 + 3) & 255))}));
+  const vectors = new Map(items.map((item, i) => [adler(item.bytes), ciphertexts[i]]));
+  const request = await withModule(ordinaryXP3(items, (bytes, seed) => {
+    const expected = vectors.get(seed); if (!expected) throw new Error("missing synthetic vector");
+    expected.copy(bytes); return bytes;
+  }), configuredPE());
+  const result = await normalizeContent(request);
+  expect(result.normalization).toMatchObject({archiveCount: 1, verifiedEntries: 3, formatCounts: {"xp3-native": 1}});
+  const output = decodedResources(await readFile(result.files.find(file => file.logicalKey === "data.xp3")!.path!));
+  for (const item of items) expect(output.get(item.name)).toEqual(item.bytes);
+});
 it.each([0x13, 0x8f, 0xe1])("recovers an ordinary XP3 fixed XOR from independent checksums, key=%s", async key => {
   const items = [...resources(), {name: "ReadMe.txt", bytes: Buffer.from("plain warning"), raw: true}];
   const request = await input(ordinaryXP3(items, key), "resources.pack");

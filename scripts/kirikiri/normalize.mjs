@@ -10,12 +10,16 @@ import {peXp3} from "./pe-xp3.mjs";
 import {discoverCxProfiles, discoverTinyProfiles, extractEmbeddedPeModules, createCxFilter, createTinyFilter} from "./cxdec.mjs";
 import {probeStage} from "./stages.mjs";
 import {nativeModule} from "./native-module.mjs";
+import {createConfiguredFilter, discoverConfiguredProfiles} from "./configured-cx.mjs";
 
 const digest = bytes => createHash("sha256").update(bytes).digest("hex");
 function tinyFilter(profile) {
   return {kind: "tiny", profile, ...createTinyFilter(profile)};
 }
 function profileKey(profile) {
+  if (profile.kind === "configured") {
+    return `configured:${digest(profile.profile.params)}:${digest(profile.profile.controlBlock)}`;
+  }
   if (profile.kind === "tiny") {
     const p = profile.profile, value = p.xorConstant;
     const first = p.firstByte ? `${value & 255}:${p.firstByte.zeroFallback}` : "none";
@@ -32,7 +36,8 @@ async function nativeProfiles(input, signal, archives = []) {
     visited.add(sha256); totalBytes += bytes.length; moduleCount++;
     requireFormat(depth <= 3 && moduleCount <= 512 && totalBytes <= 512 * 1024 * 1024, "MODULE_LIMIT");
     const found = [...discoverCxProfiles(bytes).map(profile => ({kind: "classic", profile})),
-      ...discoverTinyProfiles(bytes).map(profile => ({kind: "tiny", profile}))];
+      ...discoverTinyProfiles(bytes).map(profile => ({kind: "tiny", profile})),
+      ...discoverConfiguredProfiles(bytes).map(profile => ({kind: "configured", profile}))];
     for (const value of found) {
       const key = profileKey(value), previous = profiles.get(key);
       if (!previous?.profile.legacyBulk || value.profile.legacyBulk) {profiles.set(key, {...value, moduleSha256: sha256});}
@@ -88,7 +93,8 @@ async function selectFilter(profiles, archives, signal) {
     signal?.throwIfAborted();
     let filter;
     try {
-      filter = candidate.kind === "tiny" ? tinyFilter(candidate.profile) : {kind: "classic", ...createCxFilter(candidate.profile)};
+      filter = candidate.kind === "tiny" ? tinyFilter(candidate.profile) : candidate.kind === "configured" ?
+        {kind: "configured", ...createConfiguredFilter(candidate.profile)} : {kind: "classic", ...createCxFilter(candidate.profile)};
       if (candidate.profile.legacyBulk && archives.every(archive => archive.format === "xp3-native")) {
         filter.stages = [{id: "classic", apply: filter.apply}, {id: "legacy-bulk", apply: filter.applyBulk}];
       }
@@ -184,8 +190,9 @@ async function convert(input, plan) {
       for (const key of ["verifiedEntries", "metadataCorrections", "omittedPhysicalEntries"]) {summary[key] += result[key];}
       await audit({archive: file.logicalKey, kind: "archive", format: archive.format, sourceSha256: file.sha256, sourceSize: file.sizeBytes,
         outputSha256: result.sha256, outputSize: result.sizeBytes, filterKind: filter.kind, moduleSha256: filter.inputProfile.moduleSha256,
-        profile: ["fixed-xor", "identity"].includes(filter.kind) ? filter.inputProfile.profile : filter.kind === "tiny" ? filter.profile : {...filter.inputProfile.profile, controlBlock: undefined,
-          controlBlockSha256: digest(filter.inputProfile.profile.controlBlock)}});
+        profile: ["fixed-xor", "identity"].includes(filter.kind) ? filter.inputProfile.profile : filter.kind === "tiny" ? filter.profile : filter.kind === "configured" ?
+          {paramsSha256: digest(filter.inputProfile.profile.params), controlBlockSha256: digest(filter.inputProfile.profile.controlBlock)} :
+          {...filter.inputProfile.profile, controlBlock: undefined, controlBlockSha256: digest(filter.inputProfile.profile.controlBlock)}});
     }
     if (summary.metadataCorrections) {summary.warnings.push({code: "SOURCE_METADATA_CORRECTED", count: summary.metadataCorrections});}
     if (summary.omittedPhysicalEntries) {summary.warnings.push({code: "OUTSIDE_LOGICAL_NAMESPACE", count: summary.omittedPhysicalEntries});}

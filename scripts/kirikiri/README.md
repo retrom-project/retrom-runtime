@@ -16,6 +16,11 @@ game bytes, extracted control table, native execution or x86 emulator is shipped
   bounded instruction scheduling and record-preserving callback delegates.
   A connected separated-stream constructor, callback and manager establish the
   availability of the legacy bulk stage. Unsupported compiler shapes return no profile.
+- `configured-cx.mjs` recognizes the connected callback and bounded native
+  configuration records for another ordinary-name XP3 filter. It recovers the
+  per-module operation permutation, split boundary and control table without
+  executing native code. The currently supported configuration uses the legacy
+  generator and a single 4096-byte table; other modes remain unrecognized.
 - `pe-xp3.mjs` recognizes a bounded XP3 overlay after valid PE sections, within
   the original logical source slice. It preserves the outer logical filename;
   the converted file is an ordinary XP3 and becomes an entry candidate through
@@ -24,7 +29,8 @@ game bytes, extracted control table, native execution or x86 emulator is shipped
   byte key authenticated by three distinct complete resource checksums. Classic
   and Tiny filters use the supplied native modules, including clear modules in
   a PE's XP3 overlay, and independent checksummed archive resources.
-- `cxdec.mjs` interprets a bounded expression grammar instead of generated x86.
+- `cxdec.mjs` and the shared DripValue interpreter use bounded expression
+  grammars instead of generated x86.
   Tiny profiles describe bulk XOR and an optional additional XOR at absolute
   resource byte zero, with independent zero-key fallbacks. Dual-key recovery
   connects the constructor's fields to its offset-aware consumer through the

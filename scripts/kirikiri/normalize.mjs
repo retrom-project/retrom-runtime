@@ -85,10 +85,11 @@ async function samples(archives, signal) {
       if (result.length === 8) {return result;}
     }
   }
-  requireFormat(result.length > 0, "FILTER_UNAVAILABLE"); return result;
+  return result;
 }
 async function selectFilter(profiles, archives, signal) {
   const probes = await samples(archives, signal), accepted = [];
+  requireFormat(probes.length > 0, "FILTER_UNAVAILABLE");
   for (const candidate of profiles) {
     signal?.throwIfAborted();
     let filter;
@@ -108,6 +109,28 @@ async function selectFilter(profiles, archives, signal) {
   }
   requireFormat(accepted.length > 0, "FILTER_UNAVAILABLE"); requireFormat(accepted.length === 1, "FILTER_AMBIGUOUS");
   return accepted[0];
+}
+async function seedXorFilter(archives, signal) {
+  const probes = await samples(archives, signal);
+  // Distinct low bytes distinguish this resource-dependent family from a
+  // constant XOR, and complete checksums authenticate at least three samples.
+  if (probes.length < 3 || new Set(probes.map(sample => sample.h & 255)).size < 2) {return null;}
+  const matches = [];
+  for (let mask = 0; mask < 256; mask++) {
+    signal?.throwIfAborted();
+    if (probes.every(sample => {
+      const bytes = Buffer.from(sample.bytes), key = (sample.h & 255) ^ mask;
+      for (let i = 0; i < bytes.length; i++) {bytes[i] ^= key;}
+      return adler32(bytes) === sample.adler;
+    })) {matches.push(mask);}
+  }
+  if (matches.length !== 1) {return null;}
+  const mask = matches[0];
+  return {kind: "seed-xor", verified: true, inputProfile: {profile: {mask}}, apply(bytes, seed) {
+    const key = (seed & 255) ^ mask;
+    for (let i = 0; i < bytes.length; i++) {bytes[i] ^= key;}
+    return bytes;
+  }};
 }
 /** One whole-game probe produces a plan per related archive group. */
 async function probe(input) {
@@ -148,8 +171,16 @@ async function probe(input) {
     const claims = archives.map(item => item.file.logicalKey);
     plans.push({format: archives[0].archive.format, claims, outputs: claims, archives, filter});
   }
+  let filter = null;
   if (native.length && profiles.length) {
-    const filter = await selectFilter(profiles, native.map(item => item.archive), signal);
+    try {filter = await selectFilter(profiles, native.map(item => item.archive), signal);}
+    catch (error) {
+      if (error.message !== "RUNTIME_KIRIKIRI_FILTER_UNAVAILABLE") {throw error;}
+      filter = await seedXorFilter(native.map(item => item.archive), signal);
+      if (!filter) {throw error;}
+    }
+  } else if (native.length) {filter = await seedXorFilter(native.map(item => item.archive), signal);}
+  if (filter) {
     requireFormat(filter.verified, "FILTER_UNAVAILABLE");
     const apply = filter.apply;
     const ordinaryFilter = {...filter, apply(bytes, h, offset, entry) {
@@ -190,7 +221,7 @@ async function convert(input, plan) {
       for (const key of ["verifiedEntries", "metadataCorrections", "omittedPhysicalEntries"]) {summary[key] += result[key];}
       await audit({archive: file.logicalKey, kind: "archive", format: archive.format, sourceSha256: file.sha256, sourceSize: file.sizeBytes,
         outputSha256: result.sha256, outputSize: result.sizeBytes, filterKind: filter.kind, moduleSha256: filter.inputProfile.moduleSha256,
-        profile: ["fixed-xor", "identity"].includes(filter.kind) ? filter.inputProfile.profile : filter.kind === "tiny" ? filter.profile : filter.kind === "configured" ?
+        profile: ["fixed-xor", "seed-xor", "identity"].includes(filter.kind) ? filter.inputProfile.profile : filter.kind === "tiny" ? filter.profile : filter.kind === "configured" ?
           {paramsSha256: digest(filter.inputProfile.profile.params), controlBlockSha256: digest(filter.inputProfile.profile.controlBlock)} :
           {...filter.inputProfile.profile, controlBlock: undefined, controlBlockSha256: digest(filter.inputProfile.profile.controlBlock)}});
     }

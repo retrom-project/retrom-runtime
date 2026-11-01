@@ -187,6 +187,34 @@ it.each([0x13, 0x8f, 0xe1])("recovers an ordinary XP3 fixed XOR from independent
   for (const item of items) expect(decoded.get(item.name)).toEqual(item.bytes);
   expect(await readFile(request.locators["resources.pack"].path)).toEqual(original);
 });
+it.each([0, 0xa7])("recovers a checksum-seeded XOR across ordinary archives and a PE overlay: %s", async mask => {
+  const crypt = (bytes: Buffer, seed: number) => {
+    const key = (seed & 0xff) ^ mask;
+    for (let i = 0; i < bytes.length; i++) bytes[i] ^= key;
+    return bytes;
+  };
+  const items = resources(), request = await input(ordinaryXP3(items, crypt));
+  const extra = [{name: "Patch\\Boot.tjs", bytes: Buffer.from("patched resource".repeat(12))}];
+  const executable = Buffer.concat([tinyPE(), ordinaryXP3(extra, crypt)]), path = join(request.outputRoot, "..", "embedded-source");
+  await writeFile(path, executable);
+  request.files.push({logicalKey: "launcher.exe", name: "launcher.exe", sizeBytes: executable.length,
+    sha256: createHash("sha256").update(executable).digest("hex")});
+  request.locators["launcher.exe"] = {path, offset: 0, sizeBytes: executable.length};
+  const result = await normalizeContent(request);
+  expect(result.normalization).toMatchObject({archiveCount: 2, verifiedEntries: 4, formatCounts: {"xp3-native": 1, "xp3-pe": 1}});
+  for (const [file, expected] of [["data.xp3", items], ["launcher.exe", extra]] as const) {
+    const output = decodedResources(await readFile(result.files.find(value => value.logicalKey === file)!.path!));
+    for (const item of expected) expect(output.get(item.name.replaceAll("\\", "/"))).toEqual(item.bytes);
+  }
+});
+it("rejects a later corrupt resource after a checksum-seeded XOR profile is authenticated", async () => {
+  const items = Array.from({length: 8}, (_, i) => ({name: `valid-${i}.tjs`, bytes: Buffer.from(`item-${i}:` + "text".repeat(40 + i))}));
+  const broken = {name: "broken.tjs", bytes: Buffer.from("corrupt".repeat(40)), h: 123};
+  const crypt = (bytes: Buffer, seed: number) => {for (let i = 0; i < bytes.length; i++) bytes[i] ^= (seed & 255) ^ 0xa7;return bytes;};
+  const request = await input(ordinaryXP3([...items, broken], crypt));
+  await expect(normalizeContent(request)).rejects.toThrow("CHECKSUM_MISMATCH");
+  await expect(access(request.outputRoot)).rejects.toThrow();
+});
 it("keeps already readable protected XP3 bytes unchanged", async () => {
   const request = await input(ordinaryXP3(resources()));
   expect(await normalizeContent(request)).toEqual({files: request.files});

@@ -7,6 +7,7 @@ import {
 import {retromRuntimeProviderDefinition} from "./catalog.js";
 import {createRetromRuntimePlayer} from "./provider-runtime.js";
 export {reclaimContentCache} from "../../content-io/store/reclaim.js";
+export {clearContentCache, inspectContentCache} from "../../content-io/store/management.js";
 
 declare const __RETROM_PROVIDER_ASSET_INDEX__: AssetIndexV1;
 

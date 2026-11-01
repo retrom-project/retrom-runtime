@@ -106,14 +106,30 @@ export class ContentMetadata {
     });
   }
   totalBytes(): Promise<number> {
-    return this.transaction(["generations"], "readonly", (tx, finish) => {
+    return this.summary().then(value => value.cachedBytes);
+  }
+  summary(): Promise<{cachedBytes: number; objectCount: number}> {
+    return this.transaction(["objects", "generations"], "readonly", (tx, finish) => {
       let bytes = 0;
+      let objectCount = 0, pending = 2;
+      const complete = () => {if (--pending === 0) {finish({cachedBytes: bytes, objectCount});}};
+      const count = tx.objectStore("objects").count();
+      count.onsuccess = () => {objectCount = count.result; complete();};
       const request = tx.objectStore("generations").openCursor();
       request.onsuccess = () => {
         const cursor = request.result;
-        if (!cursor) {finish(bytes); return;}
-        bytes += (cursor.value as GenerationRecord).committedBytes; cursor.continue();
+        if (!cursor) {complete(); return;}
+        const committed = (cursor.value as GenerationRecord).committedBytes;
+        if (!Number.isSafeInteger(committed) || committed < 0 || !Number.isSafeInteger(bytes + committed)) {tx.abort(); return;}
+        bytes += committed; cursor.continue();
       };
+    });
+  }
+  listPage(limit: number, afterKey?: string): Promise<ObjectRecord[]> {
+    return this.transaction(["objects"], "readonly", (tx, finish) => {
+      const range = afterKey === undefined ? undefined : IDBKeyRange.lowerBound(afterKey, true);
+      const request = tx.objectStore("objects").getAll(range, limit);
+      request.onsuccess = () => finish(request.result as ObjectRecord[]);
     });
   }
   list(limit = 128, state?: ObjectRecord["state"]): Promise<ObjectRecord[]> {

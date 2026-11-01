@@ -7,6 +7,7 @@ async function fixture() {
 export {ContentLocks} from './src/content-io/store/locks.ts';
 export {CacheBlockStore} from './src/content-io/store/cache-storage.ts';
 export {reclaimContentCache} from './src/content-io/store/reclaim.ts';
+export {inspectContentCache, clearContentCache} from './src/content-io/store/management.ts';
 export {createContentSession} from './src/content-io/client.ts';`, resolveDir: process.cwd(), loader: "ts"},
   bundle: true, format: "esm", platform: "browser", write: false})).outputFiles[0].text;
   const worker = (await build({stdin: {contents: "import './src/content-io/worker.ts';", resolveDir: process.cwd(), loader: "ts"},
@@ -15,7 +16,99 @@ export {createContentSession} from './src/content-io/client.ts';`, resolveDir: p
 }
 type API = typeof import("../../src/content-io/store/metadata.js") & typeof import("../../src/content-io/store/locks.js") &
   typeof import("../../src/content-io/store/cache-storage.js") & typeof import("../../src/content-io/store/reclaim.js") &
-  typeof import("../../src/content-io/client.js");
+  typeof import("../../src/content-io/client.js") & typeof import("../../src/content-io/store/management.js");
+
+test("inspection reports a fresh origin without creating a content database or cache", async ({page}) => {
+  const server = await fixture();
+  try {
+    await page.goto(`${server.origin}/__test__/page`);
+    const result = await page.evaluate(async () => {
+      const path = "/__test__/content.mjs", api = await import(path) as API;
+      const before = {databases: await indexedDB.databases(), caches: await caches.keys()};
+      const summary = await api.inspectContentCache();
+      return {before, summary, after: {databases: await indexedDB.databases(), caches: await caches.keys()}};
+    });
+    expect(result.summary).toEqual({cachedBytes: 0, objectCount: 0, canClear: true});
+    expect(result.after).toEqual(result.before);
+  } finally {await server.close();}
+});
+
+test("manual clearing pages beyond another tab's leases and preserves saves and the PWA shell", async ({page, context}) => {
+  const server = await fixture(), other = await context.newPage();
+  try {
+    await page.goto(`${server.origin}/__test__/page`);
+    await other.goto(`${server.origin}/__test__/page`);
+    const keys = await page.evaluate(async () => {
+      const path = "/__test__/content.mjs", api = await import(path) as API;
+      const metadata = await api.ContentMetadata.open(), store = await api.CacheBlockStore.open(location.origin);
+      const keys: string[] = [], bytes = Uint8Array.of(17, 31, 47);
+      const digest = Array.from(new Uint8Array(await crypto.subtle.digest("SHA-256", bytes)), value => value.toString(16).padStart(2, "0")).join("");
+      for (let index = 0; index < 65; index++) {
+        const key = (index + 1).toString(16).padStart(64, "0"); keys.push(key);
+        const source = {identity: {kind: "FILE_SHA256", sha256: digest}, sizeBytes: bytes.length, url: `${location.origin}/${key}`,
+          purpose: "GAME", transport: "RANGE_REQUIRED", etagPolicy: "EXPECTED_SHA256", contentLengthPolicy: "EXACT_IF_PRESENT"} as const;
+        for (let copy = 0; copy < (index === 0 ? 2 : 1); copy++) {
+          const backing = await metadata.attach(key, source, "CACHE_BLOCKS", copy > 0), generation = backing.generation.generation;
+          const receipt = {objectKey: key, generation, backend: "CACHE_BLOCKS", index: 0, length: bytes.length,
+            localSha256: digest, etag: null, provenance: "FULL_VERIFIED", sourceAssurance: "EXPECTED_ETAG",
+            location: store.location(key, generation, 0), commitRevision: 1} as const;
+          await store.write(receipt, bytes);
+          await metadata.update(key, generation, 0, record => {record.committedBytes = bytes.length;}, receipt);
+        }
+      }
+      metadata.close();
+      const shell = await caches.open("retrom-pwa-shell-protected"); await shell.put("/offline", new Response("keep shell"));
+      const root = await navigator.storage.getDirectory(), saves = await root.getDirectoryHandle("saves", {create: true});
+      const writer = await (await saves.getFileHandle("protected", {create: true})).createWritable(); await writer.write("keep native save"); await writer.close();
+      await new Promise<void>((resolve, reject) => {
+        const request = indexedDB.open("retrom-unsynced-saves", 1);
+        request.onupgradeneeded = () => request.result.createObjectStore("drafts");
+        request.onerror = () => reject(request.error);
+        request.onsuccess = () => {
+          const database = request.result, tx = database.transaction("drafts", "readwrite");
+          tx.objectStore("drafts").put(new Blob(["keep draft"]), "protected");
+          tx.oncomplete = () => {database.close(); resolve();}; tx.onabort = () => reject(tx.error);
+        };
+      });
+      return keys;
+    });
+    await other.evaluate(async keys => {
+      const path = "/__test__/content.mjs", api = await import(path) as API;
+      const releases = await Promise.all(keys.map(key => new api.ContentLocks().use(key)));
+      (globalThis as unknown as {releaseTestLocks: () => void}).releaseTestLocks = () => releases.forEach(release => release());
+    }, keys.slice(0, 64));
+    const occupied = await page.evaluate(async () => {
+      const path = "/__test__/content.mjs", api = await import(path) as API;
+      const before = await api.inspectContentCache(), first = await api.clearContentCache({});
+      const second = await api.clearContentCache({afterKey: first.nextKey!});
+      return {before, first, second, after: await api.inspectContentCache()};
+    });
+    expect(occupied.before).toEqual({cachedBytes: 198, objectCount: 65, canClear: true});
+    expect(occupied.first).toEqual({reclaimedBytes: 0, removedObjects: 0, skippedObjects: 64, nextKey: keys[63]});
+    expect(occupied.second).toEqual({reclaimedBytes: 3, removedObjects: 1, skippedObjects: 0, nextKey: null});
+    expect(occupied.after.cachedBytes).toBe(195);
+    await other.evaluate(() => (globalThis as unknown as {releaseTestLocks: () => void}).releaseTestLocks());
+    const cleared = await page.evaluate(async () => {
+      const path = "/__test__/content.mjs", api = await import(path) as API;
+      const removed = await api.clearContentCache({});
+      const saves = await (await navigator.storage.getDirectory()).getDirectoryHandle("saves");
+      const shell = await caches.open("retrom-pwa-shell-protected");
+      const draft = await new Promise<string>((resolve, reject) => {
+        const request = indexedDB.open("retrom-unsynced-saves");
+        request.onerror = () => reject(request.error);
+        request.onsuccess = () => {
+          const database = request.result, tx = database.transaction("drafts", "readonly"), read = tx.objectStore("drafts").get("protected");
+          tx.oncomplete = () => {database.close(); void (read.result as Blob).text().then(resolve, reject);};
+        };
+      });
+      return {removed, summary: await api.inspectContentCache(), draft,
+        native: await (await (await saves.getFileHandle("protected")).getFile()).text(), shell: await (await shell.match("/offline"))!.text()};
+    });
+    expect(cleared.removed).toEqual({reclaimedBytes: 195, removedObjects: 64, skippedObjects: 0, nextKey: null});
+    expect(cleared.summary.cachedBytes).toBe(0); expect(cleared.summary.objectCount).toBe(0);
+    expect(cleared).toMatchObject({draft: "keep draft", native: "keep native save", shell: "keep shell"});
+  } finally {await other.close(); await server.close();}
+});
 
 test("recovery creates no content database or cache on a fresh origin", async ({page}) => {
   const server = await fixture();

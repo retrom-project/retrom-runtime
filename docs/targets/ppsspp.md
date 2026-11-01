@@ -27,3 +27,16 @@ Files and virtual identity are restored before boot, without loading emulator
 state. Only the current declared public format is accepted. [EmulatorJS PSP](emulatorjs-psp.md)
 is an unbound Target with a different checkpoint contract.
 PSP networking is disabled. ROMs and firmware are caller supplied.
+
+PBP homebrew can include files beside its executable and in nested directories.
+Import the complete source directory. Metadata pointing to a PBP also discovers
+its sibling tree, within that entry's source directory. Multi-file PBP content is
+delivered as a seekable STORE ZIP with an explicit entry path; the core mounts
+its files on the isolated memory stick and reads bounded ranges from the package.
+Unchanged source assets are excluded from checkpoints. Writes to an initial file
+create a session copy which is exported as native progress and restored before boot.
+Ordinary single-file discs keep their existing Range path.
+
+Game updates are game content, supplied by the owner. An executable patched to
+require installed update files cannot run from its ISO alone when those files
+are absent; the runtime does not bypass the game's update checks.

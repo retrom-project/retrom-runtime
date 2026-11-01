@@ -11,6 +11,7 @@ describe("independent PSP target", () => {
       readFormats: ["ppsspp-game-save-v1-storage-v1"], maxBytes: 268435456});
     expect(target?.checkpoint?.readFormats).not.toContain("emulatorjs-state-v1-storage-v1");
     expect(target?.inputs).toEqual([{maxFileBytes: 2147483647, cardinality: "ONE", kind: "SEEKABLE_BLOB", optional: false, role: "game"}]);
-    expect(target?.targetOptionsSchema).toEqual({type: "object", additionalProperties: false, properties: {}, required: []});
+    expect(target?.targetOptionsSchema).toEqual({type: "object", additionalProperties: false,
+      properties: {projectEntryPath: {type: ["string", "null"], maxLength: 1024}}, required: []});
   });
 });

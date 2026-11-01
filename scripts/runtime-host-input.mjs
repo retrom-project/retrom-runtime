@@ -307,6 +307,19 @@ export async function discoverContentDependencies(input) {
   contentHash(input.files, "TREE");
   const found = [];
   const directory = input.directory;
+  if (directory?.platformId === "psp" && directory.defaultCoreId === "ppsspp") {
+    const trees = [];
+    for (const file of input.files.filter(file => /\.pbp$/iu.test(file.logicalKey))) {
+      if (input.sourceEntries && !input.sourceEntries.includes(file.logicalKey)) {continue;}
+      const handle = await openContent(requireLocator(input, file));
+      try {
+        const header = Buffer.alloc(40);
+        const {bytesRead} = await handle.read(header, 0, header.length, 0);
+        if (bytesRead === header.length && header.subarray(0, 4).equals(Buffer.from([0, 80, 66, 80]))) {trees.push(file.logicalKey);}
+      } finally {await handle.close();}
+    }
+    return {files: [], trees};
+  }
   if (directory && contentEntryExtensions(directory.platformId, directory.defaultCoreId).includes("cue")) {
     for (const file of input.files.filter(file => file.logicalKey.toLowerCase().endsWith(".cue"))) {
       found.push(...await cueReferences(input, file));

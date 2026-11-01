@@ -9843,7 +9843,15 @@
         "targetOptionsSchema": {
           "type": "object",
           "additionalProperties": false,
-          "properties": {},
+          "properties": {
+            "projectEntryPath": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "maxLength": 1024
+            }
+          },
           "required": []
         }
       },

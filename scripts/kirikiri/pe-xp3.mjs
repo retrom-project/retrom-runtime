@@ -1,5 +1,5 @@
 import {openContent} from "../runtime-host-content.mjs";
-import {magic, readExact, requireFormat, safeName} from "./bytes.mjs";
+import {magic, normalizeName, readExact, requireFormat, safeName} from "./bytes.mjs";
 import {readXp3} from "./xp3.mjs";
 
 /** Find a file-backed XP3 overlay after valid PE sections, within one logical
@@ -41,8 +41,17 @@ export async function peXp3(locator, signal) {
         continue;
       }
       if (!archive?.entries?.length || archive.format || archive.unsupportedFormat) {continue;}
-      requireFormat(archive.entries.every(entry => safeName(entry.name)), "ARCHIVE_UNSUPPORTED");
-      matches.push({...archive, sourceLocator: locator, omitted: [], entries: archive.entries.map(entry => ({...entry, h: entry.adler}))});
+      const names = new Set();
+      const entries = archive.entries.map(entry => {
+        // Preserve output case while rejecting aliases in the engine's
+        // ASCII-case-insensitive, slash-normalized archive namespace.
+        const name = entry.name.replace(/\\/gu, "/");
+        const key = normalizeName(name);
+        requireFormat(safeName(name) && !names.has(key), "ARCHIVE_UNSUPPORTED");
+        names.add(key);
+        return {...entry, name, h: entry.adler};
+      });
+      matches.push({...archive, sourceLocator: locator, omitted: [], entries});
     }
     requireFormat(matches.length <= 1, "ARCHIVE_UNSUPPORTED");
     return matches[0] ?? null;

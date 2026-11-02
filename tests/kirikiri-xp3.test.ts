@@ -8,6 +8,8 @@ import {deflateSync} from "node:zlib";
 import {Worker} from "node:worker_threads";
 import {normalizeContent} from "../scripts/runtime-normalize-content.mjs";
 import {tinyPE, tinyFirstBytePE} from "./kirikiri-pe-fixture.js";
+import {configuredPE} from "./kirikiri-configured-fixture.js";
+import {rollingPE} from "./kirikiri-rolling-fixture.js";
 import {createTinyFilter} from "../scripts/kirikiri/cxdec.mjs";
 import {cxFilterFS} from "../scripts/kirikiri/normalize.mjs";
 import {runNormalization, type Normalizer} from "../scripts/normalization/pipeline.mjs";
@@ -158,6 +160,42 @@ function ordinaryXP3(items: Resource[], key: number | ((bytes: Buffer, seed: num
   const index = Buffer.concat(rows);
   return Buffer.concat([magic, u64(offset), ...parts, Buffer.from([0]), u64(index.length), index]);
 }
+it("normalizes ordinary XP3 resources using parameters from a configured native module", async () => {
+  const ciphertexts = [
+    "/vfs5eLb0MnGv7StqqOYkY6HfHVya2BZVk9EPTozKCEeFwwFAvvw6ebf1M3Kw7ixrkZ9dHNqYZiXjoW8u7KpoN/WzcTD+vHo5x4VDAsCOTAvJl1UU0pBeHduZZybkomA",
+    "GyApLjc8RUpTWGFmb3R9gouQmZ6nrLW6w8jR1t/k7fL7AAkOFxwlKjM4QUZPVF1ia3B5foeMlZqjqHB3fgUMExohKC82PcTL0tng5+71/IOKkZifpq20u0JJUFdeZWxzegEIDxYdJA==",
+    "MDk+R0xVWmNocXZ/hI2Sm6Cprre8xcrT2OHm7/T9AgsQGR4nLDU6Q0hRVl9kbXJ7gImOl5ylqrO4wcbPpayTmoGIj3Z9ZGtSWUBHTjU8IyoRGB8GDfT74unQ197FzLO6oaivlp2Ei3J5YGduVVw=",
+  ].map(value => Buffer.from(value, "base64"));
+  const items = ["startup.tjs", "system.tjs", "scene.ks"].map((name, j) => ({name,
+    bytes: Buffer.from(Array.from({length: 96 + j * 7}, (_, i) => (i * 7 + j * 23 + 3) & 255))}));
+  const vectors = new Map(items.map((item, i) => [adler(item.bytes), ciphertexts[i]]));
+  const request = await withModule(ordinaryXP3(items, (bytes, seed) => {
+    const expected = vectors.get(seed); if (!expected) throw new Error("missing synthetic vector");
+    expected.copy(bytes); return bytes;
+  }), configuredPE());
+  const result = await normalizeContent(request);
+  expect(result.normalization).toMatchObject({archiveCount: 1, verifiedEntries: 3, formatCounts: {"xp3-native": 1}});
+  const output = decodedResources(await readFile(result.files.find(file => file.logicalKey === "data.xp3")!.path!));
+  for (const item of items) expect(output.get(item.name)).toEqual(item.bytes);
+});
+it("normalizes XP3 resources with a module-supplied rolling table and resource seed", async () => {
+  const ciphertexts = [
+    "3xOvnFZ1slj6UgzK5JVrS5NqqMsgyWGDgbyVl4kiRwD6VHWxrJlh1Qtns4P8MGKsQ3MixzCKWq6Fvs7uSzxppX1OmItAiizkvpi62xk5xTwaee4Xs3F3akclN2wVUowi",
+    "DSAxfRriiMyhj4yIxF2mHubw24HPyv2yi1umF6FH0+T7GFojydGj2OTVr+1mj8EPCzJmFuHEndIw33DIHPrb0sOzxDA6evfd/vaKD/SoUCIJTzE4L2Q96fRJ7zWhsq2q6O0XA1EuMg==",
+    "wDy1dpIJ3lTjZz9Jk8Qba5P5xZ77O5ZAhz4b44F4+fsVki/5cLENyF4YYEgt5IJI0OKn0GL5OexnPMq6USYS7nvIIFuIIpE1YQchds29YQsLQCmJIBbVTGWt0ypPTcdA4QeCY9t+7Eo+Bl+W1B4=",
+  ].map(value => Buffer.from(value, "base64"));
+  const items = ["startup.tjs", "system.tjs", "scene.ks"].map((name, j) => ({name,
+    bytes: Buffer.from(Array.from({length: 96 + j * 7}, (_, i) => (i * 7 + j * 23 + 3) & 255))}));
+  const vectors = new Map(items.map((item, i) => [adler(item.bytes), ciphertexts[i]]));
+  const request = await withModule(ordinaryXP3(items, (bytes, seed) => {
+    const expected = vectors.get(seed); if (!expected) throw new Error("missing synthetic vector");
+    expected.copy(bytes); return bytes;
+  }), rollingPE());
+  const result = await normalizeContent(request);
+  expect(result.normalization).toMatchObject({archiveCount: 1, verifiedEntries: 3, formatCounts: {"xp3-native": 1}});
+  const output = decodedResources(await readFile(result.files.find(file => file.logicalKey === "data.xp3")!.path!));
+  for (const item of items) expect(output.get(item.name)).toEqual(item.bytes);
+});
 it.each([0x13, 0x8f, 0xe1])("recovers an ordinary XP3 fixed XOR from independent checksums, key=%s", async key => {
   const items = [...resources(), {name: "ReadMe.txt", bytes: Buffer.from("plain warning"), raw: true}];
   const request = await input(ordinaryXP3(items, key), "resources.pack");
@@ -167,6 +205,34 @@ it.each([0x13, 0x8f, 0xe1])("recovers an ordinary XP3 fixed XOR from independent
   const decoded = decodedResources(await readFile(result.files[0].path!));
   for (const item of items) expect(decoded.get(item.name)).toEqual(item.bytes);
   expect(await readFile(request.locators["resources.pack"].path)).toEqual(original);
+});
+it.each([0, 0xa7])("recovers a checksum-seeded XOR across ordinary archives and a PE overlay: %s", async mask => {
+  const crypt = (bytes: Buffer, seed: number) => {
+    const key = (seed & 0xff) ^ mask;
+    for (let i = 0; i < bytes.length; i++) bytes[i] ^= key;
+    return bytes;
+  };
+  const items = resources(), request = await input(ordinaryXP3(items, crypt));
+  const extra = [{name: "Patch\\Boot.tjs", bytes: Buffer.from("patched resource".repeat(12))}];
+  const executable = Buffer.concat([tinyPE(), ordinaryXP3(extra, crypt)]), path = join(request.outputRoot, "..", "embedded-source");
+  await writeFile(path, executable);
+  request.files.push({logicalKey: "launcher.exe", name: "launcher.exe", sizeBytes: executable.length,
+    sha256: createHash("sha256").update(executable).digest("hex")});
+  request.locators["launcher.exe"] = {path, offset: 0, sizeBytes: executable.length};
+  const result = await normalizeContent(request);
+  expect(result.normalization).toMatchObject({archiveCount: 2, verifiedEntries: 4, formatCounts: {"xp3-native": 1, "xp3-pe": 1}});
+  for (const [file, expected] of [["data.xp3", items], ["launcher.exe", extra]] as const) {
+    const output = decodedResources(await readFile(result.files.find(value => value.logicalKey === file)!.path!));
+    for (const item of expected) expect(output.get(item.name.replaceAll("\\", "/"))).toEqual(item.bytes);
+  }
+});
+it("rejects a later corrupt resource after a checksum-seeded XOR profile is authenticated", async () => {
+  const items = Array.from({length: 8}, (_, i) => ({name: `valid-${i}.tjs`, bytes: Buffer.from(`item-${i}:` + "text".repeat(40 + i))}));
+  const broken = {name: "broken.tjs", bytes: Buffer.from("corrupt".repeat(40)), h: 123};
+  const crypt = (bytes: Buffer, seed: number) => {for (let i = 0; i < bytes.length; i++) bytes[i] ^= (seed & 255) ^ 0xa7;return bytes;};
+  const request = await input(ordinaryXP3([...items, broken], crypt));
+  await expect(normalizeContent(request)).rejects.toThrow("CHECKSUM_MISMATCH");
+  await expect(access(request.outputRoot)).rejects.toThrow();
 });
 it("keeps already readable protected XP3 bytes unchanged", async () => {
   const request = await input(ordinaryXP3(resources()));
@@ -204,6 +270,27 @@ it("unwraps an XP3 after PE sections and verifies logical offsets without execut
   const output = decodedResources(await readFile(result.files[0].path!));
   for (const item of items) expect(output.get(item.name)).toEqual(item.bytes);
   expect(await readFile(request.locators["launcher.exe"].path)).toEqual(original);
+});
+it("normalizes Windows separators in a PE overlay while preserving resource bytes and case", async () => {
+  const items = ["startup.tjs", "System\\Main.tjs", "pic\\A.png"].map((name, index) =>
+    ({name, bytes: Buffer.from(`resource-${index}`), raw: true}));
+  const request = await input(Buffer.concat([tinyPE(), Buffer.alloc(123), ordinaryXP3(items)]), "launcher.exe");
+  const result = await normalizeContent(request);
+  expect(result.normalization).toMatchObject({formatCounts: {"xp3-pe": 1}, verifiedEntries: 3});
+  const output = decodedResources(await readFile(result.files[0].path!));
+  for (const item of items) expect(output.get(item.name.replaceAll("\\", "/"))).toEqual(item.bytes);
+});
+it.each([
+  ["parent traversal", ["system\\..\\startup.tjs"]],
+  ["absolute path", ["\\absolute.tjs"]],
+  ["drive path", ["C:\\startup.tjs"]],
+  ["separator collision", ["System\\Main.tjs", "System/Main.tjs"]],
+  ["case-insensitive separator collision", ["System\\Main.tjs", "system/main.tjs"]],
+])("rejects unsafe or ambiguous PE overlay names after separator normalization: %s", async (_label, names) => {
+  const items = names.map(name => ({name, bytes: Buffer.from("content"), raw: true}));
+  const request = await input(Buffer.concat([tinyPE(), ordinaryXP3(items)]), "launcher.exe");
+  await expect(normalizeContent(request)).rejects.toThrow("RUNTIME_KIRIKIRI_ARCHIVE_UNSUPPORTED");
+  await expect(access(request.outputRoot)).rejects.toThrow();
 });
 it("does not interpret an XP3 marker inside PE sections or beyond its logical source slice", async () => {
   const pe = tinyPE(); ordinaryXP3(resources()).copy(pe, 0x3000);

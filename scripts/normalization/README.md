@@ -56,6 +56,30 @@ Container metadata does not establish which XP3 the original engine selects.
 Reviewers use the existing entry configuration for the intended startup file;
 resource extraction alone does not establish playable support.
 
+The Enigma Protector VFS adapter recognizes a connected PE32 bootstrap and
+its bounded self-XOR stages. It derives the master configuration key from the
+supplied PE sections, verifies both configuration digests, and decodes its
+aPLib data. External mount masks come from the loader's IDEA-encrypted dynamic
+configuration. The importer resolves only those masks within the executable's
+default folder; it does not scan arbitrary companion files by extension.
+
+Embedded and configured external packages retain their native stable descending
+timestamp order. The first virtual same-name file wins, and an action-zero
+virtual file overrides its physical sibling. Original executables and mounted
+packages retain their bytes. The decoder handles the native per-record state
+reset, 8192-byte raw blocks and indexed 65536-byte compressed blocks. Paths,
+counts, expansion, block ranges and stream termination are bounded. DWORD
+zero padding is accepted only for the bootstrap's aligned XOR input.
+
+The supported boundary excludes disk-export actions, COM registration and
+paths outside the executable domain; recognized unsupported metadata fails.
+Package publisher signatures are parsed as counted fields but are not
+authenticated; configuration digest checks do not establish publisher identity.
+The subsequent resource phase independently checks XP3 resources and converts
+their protection normally. No native executable, DLL or protection VM runs
+during import. A converted container alone does not establish engine/plugin,
+language or save compatibility.
+
 The X'moe PSB container adapter recognizes connected PE32 code structures for
 the companion resource name, index XORs, filename hash, payload key and text
 rotation. Bounded candidates can recover an additive section representation;

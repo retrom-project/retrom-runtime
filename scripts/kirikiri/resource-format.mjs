@@ -1,6 +1,7 @@
 import {crc32} from "node:zlib";
 import {isPeModule} from "./cxdec-pe.mjs";
 import {requireFormat} from "./bytes.mjs";
+import {validPrerenderedFont} from "./prerendered-font.mjs";
 
 function png(bytes) {
   if (!bytes.subarray(0, 8).equals(Buffer.from("89504e470d0a1a0a", "hex"))) {return false;}
@@ -38,23 +39,39 @@ function ogg(bytes) {
   return pages > 0;
 }
 function text(bytes) {
-  try {
-    const utf16 = bytes[0] === 0xff && bytes[1] === 0xfe;
-    if (utf16 && bytes.length % 2) {return false;}
-    const value = new TextDecoder(utf16 ? "utf-16le" : "utf-8", {fatal: true}).decode(bytes);
-    return value.length > 0 && !/\p{Cc}/u.test(value.replace(/[\t\r\n]/gu, ""));
-  } catch {return false;}
+  const utf16 = bytes[0] === 0xff && bytes[1] === 0xfe;
+  if (utf16 && bytes.length % 2) {return false;}
+  return (utf16 ? ["utf-16le"] : ["utf-8", "shift_jis"]).some(encoding => {
+    try {
+      const value = new TextDecoder(encoding, {fatal: true}).decode(bytes);
+      if (!value.length || /\p{Cc}/u.test(value.replace(/[\t\r\n]/gu, ""))) {return false;}
+      // A legacy decoder alone admits arbitrary filtered binary bytes. Require
+      // both a KAG label line and a command line as independent script framing.
+      return encoding !== "shift_jis" || /(?:^|[\r\n])\*[^\s[\]\r\n]+[^\r\n]*(?:\r?\n|$)/u.test(value) &&
+        /(?:^|[\r\n])(?:\[[A-Za-z_][^\]\r\n]*\]|@[A-Za-z_][^\r\n]*)/u.test(value);
+    } catch {return false;}
+  });
 }
-function recognized(bytes) {return png(bytes) || ogg(bytes) || isPeModule(bytes) || text(bytes);}
+function recognized(bytes) {return png(bytes) || ogg(bytes) || isPeModule(bytes) || text(bytes) || validPrerenderedFont(bytes);}
 
 /** A seed-only index provides no source checksum. Admit only an unambiguous,
  * complete supported representation under an independently authenticated filter;
  * conversion audits this as corrected metadata, never as a source integrity pass. */
-export function resolveSeedOnly(raw, filter, seed) {
+function representations(raw, filter, seed) {
   requireFormat(raw.length <= 32 * 1024 * 1024, "ARCHIVE_LIMIT");
   const decoded = Buffer.from(raw); filter.apply(decoded, seed, 0);
   const clear = recognized(raw), transformed = recognized(decoded);
   requireFormat(clear || transformed, "CHECKSUM_MISMATCH");
   requireFormat(!(clear && transformed) || raw.equals(decoded), "FILTER_AMBIGUOUS");
+  return {decoded, clear, transformed};
+}
+export function resolveSeedOnly(raw, filter, seed) {
+  const {decoded, clear} = representations(raw, filter, seed);
   return clear ? raw : decoded;
+}
+/** Protected native records are always filtered, even when their seed is not a checksum. */
+export function resolveFilteredSeed(raw, filter, seed) {
+  const {decoded, transformed} = representations(raw, filter, seed);
+  requireFormat(transformed, "CHECKSUM_MISMATCH");
+  return decoded;
 }

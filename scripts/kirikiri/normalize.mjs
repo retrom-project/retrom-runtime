@@ -12,13 +12,14 @@ import {probeStage} from "./stages.mjs";
 import {nativeModule} from "./native-module.mjs";
 import {createConfiguredFilter, discoverConfiguredProfiles} from "./configured-cx.mjs";
 import {createRollingFilter, discoverRollingProfiles} from "./rolling-xor.mjs";
+import {seedMetadataArchive} from "./seed-metadata.mjs";
 
 const digest = bytes => createHash("sha256").update(bytes).digest("hex");
 function tinyFilter(profile) {
   return {kind: "tiny", profile, ...createTinyFilter(profile)};
 }
 function profileKey(profile) {
-  if (profile.kind === "rolling-xor") {return `rolling-xor:${digest(profile.profile.table)}`;}
+  if (profile.kind === "rolling-xor") {return `rolling-xor:${profile.profile.xorConstant ?? 0}:${digest(profile.profile.table)}`;}
   if (profile.kind === "configured") {
     return `configured:${digest(profile.profile.params)}:${digest(profile.profile.controlBlock)}`;
   }
@@ -78,20 +79,24 @@ async function nativeProfiles(input, signal, archives = []) {
 }
 async function samples(archives, signal) {
   const result = [], seeds = new Set();
+  const limit = archives.every(archive => archive.format === "xp3-native") ? 32 : 8;
   for (const archive of archives) {
+    let count = 0;
     for (const entry of archive.entries) {
       if (entry.size < 32 || entry.size > 4 * 1024 * 1024 || entry.size !== entry.readable || entry.reusedSeed || entry.seedOnly || seeds.has(entry.h) ||
           archive.format === "xp3-native" && entry.flags !== 0x80000000) {continue;}
       const chunks = []; let size = 0;
       for await (const bytes of resourceBytes(archive.locator, entry, signal)) {size += bytes.length; chunks.push(bytes);}
       result.push({h: entry.h, adler: entry.adler, bytes: Buffer.concat(chunks, size)}); seeds.add(entry.h);
-      if (result.length === 8) {return result;}
+      if (result.length === limit) {return result;}
+      if (++count === 8) {break;}
     }
   }
   return result;
 }
 async function selectFilter(profiles, archives, signal) {
   const probes = await samples(archives, signal), accepted = [];
+  const ordinary = archives.every(archive => archive.format === "xp3-native");
   requireFormat(probes.length > 0, "FILTER_UNAVAILABLE");
   for (const candidate of profiles) {
     signal?.throwIfAborted();
@@ -105,11 +110,16 @@ async function selectFilter(profiles, archives, signal) {
       }
     }
     catch {continue;}
-    if (probes.every(sample => {
+    const matches = probes.filter(sample => {
       if (filter.stages) {return Boolean(probeStage(filter, sample.bytes, sample.h, sample.adler));}
       const bytes = Buffer.from(sample.bytes); filter.apply(bytes, sample.h, 0);
       return adler32(bytes) === sample.adler;
-    })) {accepted.push({...filter, verified: probes.length >= 3, inputProfile: candidate});}
+    }).length;
+    // Ordinary archives are subsequently checked in full. A seed-only archive
+    // cannot authenticate the filter; require three real checksum matches.
+    if (ordinary ? matches >= 3 : matches === probes.length) {
+      accepted.push({...filter, verified: matches >= 3, inputProfile: candidate});
+    }
   }
   requireFormat(accepted.length > 0, "FILTER_UNAVAILABLE"); requireFormat(accepted.length === 1, "FILTER_AMBIGUOUS");
   return accepted[0];
@@ -190,7 +200,9 @@ async function probe(input) {
     const ordinaryFilter = {...filter, apply(bytes, h, offset, entry) {
       return !entry || entry.flags === 0x80000000 || entry.seedOnly ? apply(bytes, h, offset) : bytes;
     }};
-    for (const {file, archive, embedded} of native) {add(file, archive, ordinaryFilter, embedded ? "xp3-pe" : "xp3-native");}
+    for (const {file, archive, embedded} of native) {
+      add(file, await seedMetadataArchive(archive, ordinaryFilter, signal), ordinaryFilter, embedded ? "xp3-pe" : "xp3-native");
+    }
   } else {requireFormat(!native.some(item => item.embedded), "FILTER_UNAVAILABLE");}
   return plans;
 }
@@ -226,7 +238,8 @@ async function convert(input, plan) {
       await audit({archive: file.logicalKey, kind: "archive", format: archive.format, sourceSha256: file.sha256, sourceSize: file.sizeBytes,
         outputSha256: result.sha256, outputSize: result.sizeBytes, filterKind: filter.kind, moduleSha256: filter.inputProfile.moduleSha256,
         profile: ["fixed-xor", "seed-xor", "identity"].includes(filter.kind) ? filter.inputProfile.profile : filter.kind === "tiny" ? filter.profile : filter.kind === "rolling-xor" ?
-          {tableSha256: digest(filter.inputProfile.profile.table)} : filter.kind === "configured" ?
+          {tableSha256: digest(filter.inputProfile.profile.table), ...(filter.inputProfile.profile.xorConstant === undefined ? {} :
+            {xorConstant: filter.inputProfile.profile.xorConstant, tableLength: filter.inputProfile.profile.table.length})} : filter.kind === "configured" ?
           {paramsSha256: digest(filter.inputProfile.profile.params), controlBlockSha256: digest(filter.inputProfile.profile.controlBlock)} :
           {...filter.inputProfile.profile, controlBlock: undefined, controlBlockSha256: digest(filter.inputProfile.profile.controlBlock)}});
     }

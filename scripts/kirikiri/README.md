@@ -25,6 +25,9 @@ game bytes, extracted control table, native execution or x86 emulator is shipped
   rolling table from the supplied PE and the resource checksum. The original
   module must be included in the input; the recovered profile is selected only
   after independent complete-resource checksum validation.
+  It also follows an engine-owned XP3 stream's RTTI/vtable into its read method,
+  deriving the seed XOR and matching table-generation/consumer period from that
+  supplied PE. Unsupported or disconnected code shapes remain unrecognized.
 - `pe-xp3.mjs` recognizes a bounded XP3 overlay after valid PE sections, within
   the original logical source slice. It preserves the outer logical filename;
   the converted file is an ordinary XP3 and becomes an entry candidate through
@@ -86,10 +89,28 @@ also lack decoded checksums. They require a filter independently authenticated
 by at least three distinct checksummed resources elsewhere in the project.
 `resource-format.mjs` chooses between clear and decoded bytes only when a complete
 supported representation is unambiguous: PNG chunk CRCs, Ogg page CRCs, a valid
-PE mapping, or strictly decoded UTF-8/UTF-16 text without unexpected controls.
+PE mapping, strictly decoded UTF-8/UTF-16 text, or strict Shift-JIS KAG scripts
+with both label and command lines, all without unexpected controls.
+Text recognition preserves the original bytes; it does not select a display
+encoding or transcode scripts. An invalid trailing Shift-JIS lead byte fails,
+and distinct recognized clear and filtered representations remain ambiguous.
 This bounded path preserves clear bootstrap scripts/modules, records every
 resource as corrected source metadata, and writes real output checksums. It
 does not treat format evidence as validation of the missing source checksum.
+
+An ordinary archive with at least three distinct seeds may also use every
+protected record's `adlr` solely as a filter seed. `seed-metadata.mjs` recognizes
+this only when a filter is authenticated by at least three complete checksummed
+resources elsewhere, every record disagrees with its decoded Adler32, and every
+complete filtered representation is supported and unambiguous. A single genuine
+checksum keeps the whole archive on the strict checksum path; mixed or unsupported
+records still fail. The supported TFT font representation validates all indexes
+and glyph RLE spans, with explicit bounds. Conversion records `FILTER_SEED_ONLY`
+and `sourceIntegrityVerified: false` for every such resource, then writes and
+independently verifies real output checksums. The original package and its digest
+remain the source identity. Native profile probing is bounded to eight complete
+samples per archive and 32 per ordinary archive group; these samples do not
+replace full output validation.
 
 `normalization` includes bounded counts and exception details for the host's
 existing diagnostic log, without absolute locators or game configuration state.

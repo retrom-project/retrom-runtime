@@ -1,6 +1,7 @@
 import {rpgPluginScenarioPath} from "./rpg-plugin-paths.js";
 import {pspProjectEntry} from "./psp-content.js";
 import {kirikiriEngineArguments} from "../kirikiri/arguments.js";
+import {kirikiriOverlayArchives} from "../kirikiri/overlays.js";
 import {projectProviderManifest} from "../provider/manifest.js";
 import {validateTargetOptionsAgainstSchema} from "../provider/module-api.js";
 import type {TargetOptionsV1} from "../provider/module-api.js";
@@ -187,7 +188,7 @@ function prepareTargetOptions(config: RuntimeConfiguration, target: TargetDeclar
     options.dosEntryPath = config.content.entryPath ?? null;
   } else if (target.adapterId.startsWith("emulatorjs")) {options.dosEntryPath = null;}
   if (target.id === "kirikiri2-kag") {
-    options = prepareKirikiriOptions(config, options);
+    options = prepareKirikiriOptions(config, options, files);
   }
   validateSiglusOptions(config, target, options, files);
   if (target.romSetSelection?.driver === "MACHINE_OPTION") {
@@ -200,9 +201,14 @@ function prepareTargetOptions(config: RuntimeConfiguration, target: TargetDeclar
   catch {configurationFailure("RUNTIME_OPTIONS_INVALID", {coreId});}
 }
 
-function prepareKirikiriOptions(config: RuntimeConfiguration, options: TargetOptionsV1): TargetOptionsV1 {
+function prepareKirikiriOptions(config: RuntimeConfiguration, options: TargetOptionsV1, files: readonly RuntimeContentFile[]): TargetOptionsV1 {
   if (config.content.kind !== "KIRIKIRI_PROJECT") {configurationFailure();}
-  try {kirikiriEngineArguments(options.engineArguments);}
+  try {
+    kirikiriEngineArguments(options.engineArguments);
+    const root = config.content.entryFile.slice(0, config.content.entryFile.lastIndexOf("/") + 1);
+    const available = new Set(files.map(file => file.logicalKey));
+    if (kirikiriOverlayArchives(options.overlayArchives).some(path => !available.has(root + path))) {throw new Error();}
+  }
   catch {configurationFailure("RUNTIME_OPTIONS_INVALID", {coreId: "kirikiri2"});}
   const entryFile = config.content.entryFile;
   return {...options, startupXp3Path: /(?:^|\/)startup\.tjs$/iu.test(entryFile) ? null

@@ -8946,6 +8946,15 @@
               "maxLength": 240,
               "type": "string"
             },
+            "overlayArchives": {
+              "type": "array",
+              "maxItems": 32,
+              "items": {
+                "format": "safe-path",
+                "maxLength": 240,
+                "type": "string"
+              }
+            },
             "engineArguments": {
               "type": "array",
               "maxItems": 64,

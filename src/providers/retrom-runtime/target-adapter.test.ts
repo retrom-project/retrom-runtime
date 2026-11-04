@@ -121,10 +121,23 @@ describe("Provider to core-private parameters", () => {
     kiri.targetOptions.startupXp3Path = "data.xp3";
     await mountTargetAdapter(kiri, document.createElement("div"), context());
     expect(vi.mocked(mountKirikiri2).mock.calls[0][0]).toEqual({
-      contentDigest:"a".repeat(64), startupXp3Path: "data.xp3", engineMode: "KIRIKIRI2", overlayRoot: null,
+      contentDigest:"a".repeat(64), startupXp3Path: "data.xp3", engineMode: "KIRIKIRI2", overlayRoot: null, overlayArchives: [],
       engineArguments: [], steamService: "DISABLED", projectIndexUrl: `/runtime/content/project/${"a".repeat(64)}/index.json`,
       runtimeBaseUrl: kiri.runtime.runtimeBaseUrl + "assets/kirikiri/",
     });
+  });
+
+  it("passes the explicit archive selection without changing exact filenames or order", async () => {
+    const request = targetEnvelope("kirikiri2-kag");
+    request.targetOptions.overlayArchives = ["z/second.XP3", "a, chosen.xp3"];
+    await mountTargetAdapter(request, document.createElement("div"), context());
+    expect(vi.mocked(mountKirikiri2).mock.calls[0][0].overlayArchives).toEqual(["z/second.XP3", "a, chosen.xp3"]);
+  });
+
+  it.each([["a.xp3", "a.xp3"], "a.xp3", ["../a.xp3"]].map(overlayArchives => ({overlayArchives})))("rejects malformed archive selections before adapter startup %#", ({overlayArchives}) => {
+    const request = targetEnvelope("kirikiri2-kag"); request.targetOptions.overlayArchives = overlayArchives;
+    expect(() => mountTargetAdapter(request, document.createElement("div"), context())).toThrow("PROVIDER_LAUNCH_REQUEST_INVALID");
+    expect(mountKirikiri2).not.toHaveBeenCalled();
   });
 
   it("preserves Butterscotch project identity and session-local saves", async () => {

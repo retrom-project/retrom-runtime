@@ -1,5 +1,6 @@
 import {fetchMetadataJson, indexByteBudget} from "../provider/metadata.js";
 import {KirikiriContent} from "./content.js";
+import {kirikiriResourceOverlayFiles} from "./overlays.js";
 import type {AdapterContentOptions} from "../provider/content-inputs.js";
 import type {ContentReaderV1} from "../../contracts/content-io/v1/content-io.js";
 import {abi, contractSha256} from "../content-io/identity.js";
@@ -206,7 +207,8 @@ export async function mountKirikiri2(
     vlfs.onWriteClose = (path, data) => overlay.record(path, data);
     vlfs.onUnlink = path => overlay.record(path, null);
     await vlfs.registerZipBlob(assets.archive, {stripPrefix: ""});
-    const project = await registerProject(vlfs, config.projectIndexUrl, document.baseURI, content, config.contentDigest, config.overlayRoot, contentOptions.signal);
+    const project = await registerProject(vlfs, config.projectIndexUrl, document.baseURI, content, config.contentDigest,
+      config.overlayRoot, config.overlayArchives, contentOptions.signal);
     const restore = restorePayload ? await decodeKirikiriCheckpoint(restorePayload) : null;
     for (const entry of restore?.entries ?? []) {
       const path = `/${entry.path}`;
@@ -393,7 +395,7 @@ function requireGameSaveAbi(module: KirikiriModule) {
 }
 
 async function registerProject(vlfs: KirikiriVlfs, indexUrl: string, documentBaseUrl: string,
-  content: KirikiriContent, contentDigest: string, overlayRoot: string | null, signal?: AbortSignal) {
+  content: KirikiriContent, contentDigest: string, overlayRoot: string | null, overlayArchives: string[], signal?: AbortSignal) {
   let value: unknown;
   try {
     value = await fetchMetadataJson(new URL(indexUrl, documentBaseUrl), indexByteBudget(maximumProjectFiles, 1024), signal);
@@ -402,17 +404,13 @@ async function registerProject(vlfs: KirikiriVlfs, indexUrl: string, documentBas
   if (!index) {throw new Error("KIRIKIRI_PROJECT_INDEX_INVALID");}
   const base = new URL(indexUrl, documentBaseUrl);
   const paths: string[] = [];
-  const overlayFiles: Array<{path: string; relativePath: string}> = [];
+  const overlayFiles = kirikiriResourceOverlayFiles(index.files.map(file => file.path), overlayRoot, overlayArchives);
   for (const file of index.files) {
     const path = `/${file.path}`;
     const reader = content.register(contentDigest, file.path, new URL(file.url, base).href, file.sizeBytes);
     vlfs.registerContent(path, {fileId: reader.id, sizeBytes: reader.sizeBytes}, reader);
     paths.push(path);
-    if (overlayRoot !== null && file.path.startsWith(`${overlayRoot}/`)) {
-      overlayFiles.push({path, relativePath: file.path.slice(overlayRoot.length + 1)});
-    }
   }
-  if (overlayRoot !== null && !overlayFiles.length) {throw new Error("KIRIKIRI_PROJECT_OVERLAY_INVALID");}
   return {paths, overlayFiles};
 }
 

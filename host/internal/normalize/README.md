@@ -1,36 +1,45 @@
 # Host content normalization
 
 `normalize-content` is the host-only boundary used before entry configuration,
-content identity and the host's shared STORE packager. No conversion module is
-imported by a browser adapter, TJS VM or engine loader. The host first receives
+content identity and the host's shared STORE packager. No conversion code is
+part of a browser adapter, TJS VM or engine loader. The host first receives
 an owned copy; mounted originals, patches, metadata and covers stay read-only.
 
-`registry.mjs` is the complete explicit registration list. A plugin declares a
-stable `id`, positive integer implementation `version`, `platforms`, supported
-`formats`, `phase` (`container` or `resource`) and numeric `priority`. Containers
-expand first. Within each phase, lower priority runs first, then UTF-8 ID order.
-Adding a format requires a plugin and a registration, without changing import
-or packaging. Parameters must come from supplied structures, indexes or static
-modules; editable titles never select behavior.
+`Registry` in `run.go` is the complete explicit registration list. A plugin
+(`pipeline.Plugin`) declares a stable `ID`, positive integer implementation
+`Version`, `Platforms`, supported `Formats`, `Phase` (`container` or `resource`)
+and numeric `Priority`. Containers expand first. Within each phase, lower
+priority runs first, then UTF-8 ID order. Adding a format requires a plugin and a
+registration, without changing import or packaging. Parameters must come from
+supplied structures, indexes or static modules; editable titles never select
+behavior.
 
-- `probe(context)` only reads the complete game's file facts and locators. It
-  returns an empty array when unmatched, or plans for archives/related groups.
-  Each plan declares its format, consumed `claims` and complete output paths.
-  Container plans can explicitly declare existing files in `overrides`; each
+| ID | Phase | Package |
+| --- | --- | --- |
+| `molebox4-steelbox` | container | `molebox*.go` |
+| `enigma-protector-vfs` | container | `enigma*.go` |
+| `xmoe-psb` | container | `xmoe*.go` |
+| `electron-asar`, `nw-embedded-zip` | container | `web.go` |
+| `kirikiri-cxfilterfs`, `kirikiri-hxv4` | resource | [`../kirikiri`](../kirikiri/README.md) |
+
+- `Probe(context)` only reads the complete game's file facts and locators. It
+  returns no plans when unmatched, or plans for archives/related groups.
+  Each plan declares its format, consumed `Claims` and complete output paths.
+  Container plans can explicitly declare existing files in `Overrides`; each
   must have a replacement output. Undeclared writes over retained files fail.
-  A launcher declares its claimed file as `launchDomain`. Multiple independent
+  A launcher declares its claimed file as `LaunchDomain`. Multiple independent
   launch domains fail before conversion rather than combining their payloads.
   A per-phase cache shares bounded XP3 and static-module inspection.
-- `convert(context, plan)` writes standard resources below this operation's
-  private phase `outputRoot` and returns exact file facts and validation counts.
-  Detailed temporary logs can use the separate request-owned `auditRoot` and
+- `Convert(context, plan)` writes standard resources below this operation's
+  private phase `OutputRoot` and returns exact file facts and validation counts.
+  Detailed temporary logs can use the separate request-owned `AuditRoot` and
   never enter the game file manifest. Plugins do not write ZIPs, publish managed
   content or clean arbitrary directories.
 
 The pipeline probes all registrations in a phase and validates its plans before
 converting. The resource phase receives the resulting effective file facts and
 bounded locators, so embedded XP3 files pass through the same resource converters
-as external files. Its `original` view retains immutable reception facts and
+as external files. Its `Original` view retains immutable reception facts and
 locators for filter discovery when an overlay replaces a native module. Original
 modules are evidence only; they do not replace the active overlaid files.
 Overlapping input claims, competing output paths or writes over retained files
@@ -102,36 +111,28 @@ launch is not proof of translation. Multiple independent container domains remai
 an explicit import ambiguity. Native file-blocking hooks are not guessed from
 archive names or applied to unrelated content.
 
-The KiriKiri plugin groups related CxFilterFS XP3s by table format and salt, confirms the
-filter for each group, and preserves every outer archive path. It also handles
-authenticated fixed-XOR/native filters in ordinary-name XP3s and bounded PE
-overlays; see [Kiri import normalization](../kirikiri/README.md). Ordinary XP3,
-unhandled variants and unrelated files retain their bytes. Base/patch archives
-remain separate so their engine-defined overlay order is preserved. Shared XP3,
-bounded locator, path, digest and static-PE helpers own common format primitives.
+Case-insensitive container paths fold with the JavaScript `toUpperCase`/`toLowerCase`
+mapping (`rules.Upper`/`rules.Lower`), including unconditional special casing.
 
-A bounded CPU Worker performs probes and conversion without loading DAT or
-executing native files. Intermediate files use a separate owned workspace, so
-an in-place logical rewrite cannot truncate its input. Once both phases succeed,
-only final files are moved to the host's flat `outputRoot` paths. The parent owns
-both fresh directories, waits for worker termination on error/cancel, and reclaims
-the workspace plus any failed request output. Late cancellation
-during termination is checked before returning success. The host rechecks staged
-facts, packages once, durably publishes and switches references atomically; its
-existing retirement and upload-cleanup policies remain authoritative.
+Probes and conversion run in the caller's goroutine without loading DAT or
+executing native files, and observe the request context for cancellation.
+Intermediate files use a separate owned workspace, so an in-place logical rewrite
+cannot truncate its input. Once both phases succeed, only final files are moved to
+the host's flat `outputRoot` paths. `Normalize` creates both fresh directories and
+reclaims the workspace plus any failed or cancelled request output before it
+returns. A raised format failure becomes a stable reason code, and any other
+failure becomes `RUNTIME_NORMALIZATION_FAILED`. The host rechecks staged facts,
+packages once, durably publishes and switches references atomically; its existing
+retirement and upload-cleanup policies remain authoritative.
 
 The bounded normalization receipt records source TREE hash, plugin ID/version,
 formats, source/output size and SHA, independently verified output count, resource
 validation counts and explicit metadata exceptions. Container receipts include
 overridden inputs and a `CONTAINER_FILE_OVERRIDE` detail with both size/digest
-pairs. Temporary detailed audits
-are not game files. Content/save identity uses actual output path/size/SHA only,
-never a converter version; a converter upgrade does not touch existing games.
+pairs. Temporary detailed audits are not game files. Content/save identity uses
+actual output path/size/SHA only, never a converter version; a converter upgrade
+does not touch existing games.
 
-The fork's Python offline front end calls this same packaged `normalize-content`
-command, with an explicitly supplied tool path. Python owns reception and shared
-STORE publication, and contains no independent decoding/filter implementation.
-
-The generic host command scheduler separately bounds conversion admission,
-waiting and execution. See [host protocol](../../docs/runtime-module.md) for
-budgets; a Worker alone does not isolate interactive command slots.
+Admission and concurrency belong to the embedding server; see the
+[host module contract](../../../docs/host-module.md). Conversion has a one-hour
+command deadline independent of interactive commands.

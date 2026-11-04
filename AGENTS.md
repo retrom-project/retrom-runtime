@@ -5,11 +5,12 @@
 ## 边界
 
 - `src/` 实现 Provider declaration、Provider Module V1、运行时生命周期、Target 私有实现、checkpoint codec 与宿主无关的 Envelope 校验。
-- `assets/` 保存项目自有 bridge、文本资产与 `assets/facts/` 下经过来源摘要校验的声明事实；不得保存第三方核心源码、源码补丁、二进制构建产物或游戏。`src/runtime/` 是配置构造、实际实现选择、BIOS/Parent 要求和内容身份的宿主无关事实源。
+- `assets/` 保存项目自有 bridge、文本资产与 `assets/facts/` 下经过来源摘要校验的声明事实；不得保存第三方核心源码、源码补丁、二进制构建产物或游戏。`src/runtime/` 保存 catalog 与配置、实现选择、BIOS/Parent 要求和内容身份共用的 JSON 事实。
+- `host/` 是服务端宿主唯一实现：Go 模块 `github.com/retrom-project/retrom-runtime/host`，在宿主进程内执行配置构造、实际实现选择、BIOS/Parent 要求、内容身份、审核证据与内容规范化；它嵌入 `src/runtime/` JSON 事实、`assets/facts/` 与由 `npm run host:declarations` 从 Provider declaration 生成的 `host/facts/declarations.json`。契约见 [服务端宿主模块](docs/host-module.md)。
 - `src/providers/*/catalog.ts` 生成的 Provider declaration 是 Target、能力、checkpoint contract 与运行文件的唯一机器事实源；`provider-sources.json`（retrom-runtime）和 `src/providers/emulatorjs/source-catalog.ts`（EmulatorJS）只记录第三方上游/本地构建来源，不能声明 Target 或宿主路由。
 - 本仓库不得编译第三方核心。第三方核心的源码修改、构建脚本、质量门禁和 Release 全部由对应 fork 的
   `retrom/<baseline>` 分支维护（J2ME 原创集成层使用 `main`）；本仓库只聚合固定 fork tag/commit 的 Release 资产并提供统一接口。
-- `tests/` 和与源码同目录的 `*.test.ts` 覆盖运行时行为；宿主产品的导入、发布和权限测试留在宿主仓库。
+- `tests/` 和与源码同目录的 `*.test.ts` 覆盖运行时行为；`host/` 的 Go 单元测试与 `host/testdata/golden` 合成黄金用例覆盖宿主命令契约，有意的契约变更随实现一起更新黄金结果；宿主产品的导入、发布和权限测试留在宿主仓库。
 - 不引用任何宿主应用的源码、生成类型、API 路径、数据库模型或本机绝对路径。
 
 ## 工作方式
@@ -75,8 +76,12 @@ npm run lint
 npm run typecheck
 npm test
 npm run build
+npm run go:check
 npm run package:check
 ```
+
+`go:check` 对 `host/` 执行与 Retrom 后端一致的 gofumpt/goimports、golangci-lint 规则集与阈值（禁止 `nolint` 抑制）、
+1000/1200 行文件上限、declaration 投影同步检查与 Go 测试，不得放宽。
 
 发布 tag 前还必须运行 `npm run provider:input:check`、`npm run provider:build`、`npm run provider:check` 与 `npm run release:build`，确认固定 fork Release、Provider Bundle、许可和聚合包可由干净目录确定性验证。
 
@@ -123,7 +128,7 @@ npm run package:check
 
 - Game 的 JSON 只保存游戏特定 content 规则、各核心 options 与 Parent logical path；不保存 BIOS 安装 ID、来源批次、凭据、Provider 部署 URL 或 Bundle 摘要。
 - ROM hash 是整份 Game active 游戏文件集合的唯一内容身份。单个非项目 ROM 使用原始 SHA；项目（即使只有一个文件）及多文件集合使用排序后的 logical path/size/SHA 树 hash。媒体文件不属于此集合。
-- `scripts/runtime-cli.mjs` 随 npm package 布局离线交付；宿主启动读取 catalog，运行准备调用 prepare，保存列表使用 batch-identity/batch-restorable，不逐条启动 Node，不为列表装配 BIOS 或 Parent。宿主用 `--serve` 共用一个常驻 JSONL 子进程，以唯一请求 ID 关联并发响应；执行、队列、输入与输出均有界，单请求可取消，DAT 首次加载及缓存共享。CPU 密集型归档操作使用不加载 DAT 的有界 worker_threads；不新增网络运行服务、持久队列或授权状态。
-- PFB 的 host 工具必须完整生成后原子发布不可变快照；不能把活跃宿主指向会被 clean 删除的 dist。Provider watcher 与正式构建按当前 Target 的 `coreAssetPaths` 计算核心文件指纹；runtime/adapter、公共加载/输入/UI、发行版本及部署路径不进入存档身份。核心文件变化只影响声明该文件的 Target。游戏自带引擎由完整 ROM hash 覆盖，显式声明空核心文件集。
+- 服务端以 Go 模块在进程内调用宿主命令，不启动 Node、子进程服务或 JSONL 协议：宿主启动读取 catalog，运行准备调用 prepare，保存列表使用 batch-identity/batch-restorable，不为列表装配 BIOS 或 Parent。模块并发安全，按命令设置截止时间并可取消单请求，命令内 panic 只使该请求失败；准入、队列与并发上限由嵌入它的服务端负责。服务端固定的 Go 模块版本必须与其 Provider 正式 Release 是同一个 `vX.Y.Z` tag，PFB 通过 Go workspace 指向同一 PFB 树中的 runtime worktree。
+- Provider watcher 与正式构建按当前 Target 的 `coreAssetPaths` 计算核心文件指纹；runtime/adapter、公共加载/输入/UI、发行版本及部署路径不进入存档身份。核心文件变化只影响声明该文件的 Target。游戏自带引擎由完整 ROM hash 覆盖，显式声明空核心文件集。
 - 运行资源只由宿主现有登录态授权。运行 ID 与 RPC nonce 是资源标识/消息关联值，不是授权凭据。隔离页面通过受限内容桥获取原始文件，不签发 ticket/token/capability 或额外 cookie。
 - 保留现有 Provider Target 和宿主产品绑定。修改平台、核心、Target 或产品绑定后，运行 `npm run docs:platforms`，将生成的支持目录随变更提交；`npm run docs:platforms:check` 验证同步。新增 Target 时补齐对应使用指南并更新 [指南索引](docs/targets/README.md)。运行组件测试与真实产品验收必须分别记录，不能用声明数量或空白画面代替产品证据。

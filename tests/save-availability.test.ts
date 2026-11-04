@@ -3,7 +3,6 @@ import {expect, it} from "vitest";
 import {fingerprintProvider} from "../scripts/runtime-fingerprints.mjs";
 import {emulatorJsProviderDefinition} from "../src/providers/emulatorjs/catalog.js";
 import {retromRuntimeProviderDefinition} from "../src/providers/retrom-runtime/catalog.js";
-import {restorability} from "../src/runtime/identity.js";
 
 const emulator = {...emulatorJsProviderDefinition,
   targets: emulatorJsProviderDefinition.targets.filter(target => ["yabause", "fceumm"].includes(target.id))};
@@ -22,13 +21,8 @@ it("keeps saves available after frontend assets and runtime presentation declara
     "assets/4.2.3/data/src/gamepad.js": {sha256: "b".repeat(64), sizeBytes: 2},
     "assets/content-io/worker.mjs": {sha256: "c".repeat(64), sizeBytes: 3},
   });
-  const current = {coreId: "yabause", providerId: "emulatorjs", targetId: "yabause",
-    coreFingerprint: after.yabause.fingerprint, romHash: "d".repeat(64)};
-  const format = "emulatorjs-state-v1-storage-v1";
-  expect(restorability({gameAvailable: true, saveAvailable: true, current,
-    context: {...current, coreFingerprint: before.yabause.fingerprint, checkpointFormat: format,
-      content: {kind: "SINGLE_FILE", entryFile: "game.chd"}, runtimeOptions: {dosEntryPath: null}},
-    readFormats: [format]})).toEqual({restorable: true, reason: null, warning: null});
+  // Restore admits a Save only for an unchanged core fingerprint; presentation changes must not alter it.
+  expect(after.yabause.fingerprint).toBe(before.yabause.fingerprint);
 });
 
 it("excludes the native host bridge while keeping the packaged core protected", async () => {

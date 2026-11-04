@@ -2,17 +2,18 @@
 
 ## Local development
 
-Use Node.js 24 and the npm version recorded in [package.json](../package.json).
+Use Node.js 24 and the npm version recorded in [package.json](../package.json), and the Go version recorded in [go.mod](../go.mod) for the server host module.
 
 ```bash
 npm ci
 npm run ci:checks
+npm run go:check
 npx playwright install --with-deps chromium
 npm run test:content-io:ci
 npm run package:check
 ```
 
-`npm run build` compiles TypeScript and the project's own browser bridges. It does not compile third-party cores. `npm test` runs this build before the test suite. The package check verifies the packaged runtime and offline host tool independently of the source checkout.
+`npm run build` compiles TypeScript and the project's own browser bridges. It does not compile third-party cores. `npm test` runs this build before the test suite. The package check verifies the packaged browser runtime independently of the source checkout; the npm layout carries no host scripts.
 
 `ci:checks` runs lint, type checking, the Vitest suite, self-contained Node script tests and support-catalog verification. Lint-policy regression tests check the current complexity, file-size and exclusion settings. `test:scripts` includes release and Content I/O tooling tests; the product-baseline evidence test remains in Content I/O stage S00 as `baseline.integration.mjs`, where `CONTENT_IO_ENV` and real PFB evidence are required.
 
@@ -24,7 +25,9 @@ The [native baseline](https://github.com/kucherenko/jscpd/blob/master/docs/rust.
 
 `test:content-io:ci` runs the public synthetic Content I/O fixtures in headless Chromium: preload, fallback, cancellation, persistence, cross-Session reuse and bounded windows. It needs no PFB or downloaded game core. To reuse a local browser, set `RETROM_CHROME_EXECUTABLE`. Results and failure traces go to `.artifacts/content-io/ci/`; private game and host-product acceptance retain their existing stage runners.
 
-On PRs, the browser job runs alongside the existing checks and Provider candidate build. The `quality` job requires both jobs to succeed, including when a dependency fails, is cancelled or is skipped. Source quality checks, script tests, support-catalog verification and public browser tests belong to this workflow.
+`go:check` is the Go host gate. It uses the same gofumpt, goimports and golangci-lint versions and the same lint policy, complexity and file-size limits as the Retrom backend, admits no lint suppression, verifies that `host/facts/declarations.json` matches the Provider declarations (`npm run host:declarations` regenerates it) and runs the Go unit and golden tests. It requires a prior `npm run build`.
+
+On PRs, the browser and Go jobs run alongside the existing checks and Provider candidate build. The `quality` job requires every job to succeed, including when a dependency fails, is cancelled or is skipped. Source quality checks, script tests, support-catalog verification and public browser tests belong to this workflow.
 
 Tagged releases validate the tag identity and source constraints, build the formal release and validate the package before publishing. Lint, type checking, unit/script tests, support-catalog verification and browser tests run before tagging through the PR quality gate. Stable tags must already be on master; RC tags may come from a feature branch after that branch passes the PR gate.
 
@@ -55,8 +58,9 @@ Each release contains:
 | --- | --- |
 | `<providerId>-chunks-X.Y.Z.json` | Chunk manifest of one Provider bundle (EmulatorJS and the independent Web/Wasm Provider) |
 | `<providerId>-chunk-<chunkId>.tar.gz` | One content-addressed chunk of a Provider bundle |
-| `retrom-runtime-host-tool-X.Y.Z.tar.gz` | Offline host tool and production dependencies |
-| `runtime-inputs.json` | Source identity, artifact names, byte sizes and checksums for the matched set |
+| `runtime-inputs.json` | Schema 2 descriptor: source identity, release identity and both Providers' chunk manifests, sizes and checksums |
+
+Servers take the host rules from the Go module `github.com/retrom-project/retrom-runtime/host` at the same `vX.Y.Z` tag; see [Server host module](host-module.md). The release has no host tool archive.
 
 Provider bundles are published only as chunks; there is no whole Provider archive. A bundle is identified by `bundleSha256`, the SHA-256 of its `integrity.json`, which lists every path, size, hash and media type. Chunks follow stable rules so unchanged content keeps the same chunk identity across releases and consumers download only changed chunks:
 
@@ -69,10 +73,10 @@ Formal builds require a validated annotated tag at the released commit and `RETR
 
 Before downloading core assets, formal `release:build` validates both Provider source catalogs: stable runtime tags reject core tags ending in `-rc.N`; RC runtime tags may pin them. All formal builds reject development core inputs. Upstream resource versions such as EmulatorJS `4.3.0-pre` remain valid. The release builder also enforces this policy when called directly.
 
-Every build records the actual source-tree digest and both verified Provider bundle, chunk-manifest and module hashes alongside the host-tool archive. Consumers must use the matched set rather than combining artifacts based only on a version string.
+Every build records the actual source-tree digest and both verified Provider bundle, chunk-manifest and module hashes; both Providers carry the same version. Consumers must use the matched set and the Go module at the same tag rather than combining artifacts based only on a version string.
 
 ## Transport and local candidates
 
-Transport the host-tool archive, both chunk manifests and every chunk archive as flat basenames alongside `runtime-inputs.json`. Provider records name their chunk manifest; consumers use the validated basenames for local-directory or HTTPS transport. The descriptor fixes identity, independently of the transport address.
+Transport both chunk manifests and every chunk archive as flat basenames alongside `runtime-inputs.json`. Provider records name their chunk manifest; consumers use the validated basenames for local-directory or HTTPS transport. The descriptor fixes identity, independently of the transport address.
 
 Local core candidates are explicit development inputs. They do not replace stable release pins or add Target declarations. Candidate assets must match the declared source, metadata and adapter ABI before entering a Provider; core-specific asset closure rules are described in [Maintaining upstream forks](maintaining-forks.md#candidate-asset-closures).

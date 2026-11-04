@@ -20,4 +20,4 @@ Its `INSTANT` checkpoint includes native execution state and the session's `diff
 
 [Flycast NAOMI / NAOMI 2 / Atomiswave](flycast-arcade.md), [NeoCD](neocd.md), [Daphne](daphne.md) and Supermodel have separate platform/Target entries and content rules. Their presence in the catalog does not add those formats to every `arcade` core. Supermodel uses the `model3` platform and its own ZIP input; follow the generated catalog and core preparation facts for that binding.
 
-Sources: [DAT and dependency projection](../../src/runtime/arcade.ts), [CHD media planning](../../src/runtime/arcade-media.ts), [MAME declarations](../../src/providers/retrom-runtime/mame-declaration.ts), and [Worker snapshot files](../../src/mame/worker-state.ts).
+Sources: [DAT and dependency projection](../../host/internal/rules/arcade.go), [CHD media planning](../../host/internal/rules/arcade_media.go), [MAME declarations](../../src/providers/retrom-runtime/mame-declaration.ts), and [Worker snapshot files](../../src/mame/worker-state.ts).

@@ -12,7 +12,6 @@ import {sourceTreeSha256} from "./provider-release.mjs";
 import {execFileSync} from "node:child_process";
 import {fingerprintProvider} from "./runtime-fingerprints.mjs";
 import {readPFBProviderCoreFiles} from "./pfb-provider-cores.mjs";
-import {buildRuntimeHostTool} from "./runtime-host-tool.mjs";
 import {writeRebuiltRuntimeInputs} from "./runtime-inputs.mjs";
 import {assertONSCheckpointCore} from "./ons-core-abi.mjs";
 
@@ -116,11 +115,9 @@ for (const definition of runtimeProviders) {
   process.stdout.write(`${definition.providerId}: ${manifest.targets.length} targets ${result.bundleSha256}\n`);
 }
 await writeFile(join(outputRoot, "active.json"), JSON.stringify({schemaVersion: 1, source: "candidate", release: null, sourceTreeSha256: capturedSource, providers}));
-const tool = await buildRuntimeHostTool({repositoryRoot: root, outputRoot: join(outputRoot, "archives"),
-  version: providers[0].providerVersion, sourceTreeSha256: capturedSource});
 if (sourceTreeSha256(root) !== capturedSource) {throw new Error("RUNTIME_SOURCE_CHANGED");}
 await writeRebuiltRuntimeInputs({outputRoot: join(outputRoot, "archives"), sourceTreeSha256: capturedSource,
-  tool, providers: pairedProviders});
+  providers: pairedProviders});
 for (const proof of installationProofs) {await writeFile(proof.path, JSON.stringify(proof.value));}
 async function fileHash(path) {
   const hash = createHash("sha256"); for await (const chunk of createReadStream(path)) {hash.update(chunk);} return hash.digest("hex");

@@ -34,4 +34,4 @@ All seven currently declare `INSTANT` checkpoint semantics. EasyRPG uses its eng
 
 MV's bounded desktop `fs` plugin surface and scenario preloading are described in [MV desktop plugins](rpgmaker-mv.md). This surface does not provide a general Node.js or NW.js environment.
 
-Sources: [entry detection](../../src/runtime/configure.ts), [resource preparation](../../src/runtime/prepare.ts), and [Provider declarations](../../src/providers/retrom-runtime/catalog.ts).
+Sources: [entry detection](../../host/internal/rules/configure.go), [resource preparation](../../host/internal/rules/prepare.go), and [Provider declarations](../../src/providers/retrom-runtime/catalog.ts).

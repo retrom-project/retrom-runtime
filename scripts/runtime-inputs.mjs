@@ -2,15 +2,12 @@ import {createHash, randomUUID} from "node:crypto";
 import {createReadStream} from "node:fs";
 import {copyFile, lstat, readFile, rename, rm, writeFile} from "node:fs/promises";
 import {basename, join, resolve} from "node:path";
-import {execFile} from "node:child_process";
-import {promisify} from "node:util";
 import {verifyProviderBundle} from "./provider-bundle.mjs";
 import {chunkProviderBundle, verifyProviderChunks} from "./provider-chunks.mjs";
 import {versionFromTag} from "./release-version.mjs";
 
 const repository = "https://github.com/retrom-project/retrom-runtime";
 const digest = /^[a-f0-9]{64}$/u;
-const execute = promisify(execFile);
 
 /** Rebuilt bundles need their own transport closure before a paired pin can be written. */
 export async function writeRebuiltRuntimeInputs(input) {
@@ -25,19 +22,15 @@ export async function writeRebuiltRuntimeInputs(input) {
   return writeRuntimeInputs({...input, providers});
 }
 
-/** One paired input descriptor for explicit local candidates and tagged releases. */
-export async function writeRuntimeInputs({outputRoot, sourceTreeSha256, release = null, tool, providers}) {
+/**
+ * One paired Provider descriptor for explicit local candidates and tagged releases. Servers consume the host rules
+ * as the Go module at the same tag, so the descriptor carries no host tool.
+ */
+export async function writeRuntimeInputs({outputRoot, sourceTreeSha256, release = null, providers}) {
   if (!digest.test(sourceTreeSha256) || !Array.isArray(providers) || providers.length !== 2) {invalid();}
   validateRelease(release);
-  const toolRecord = {archive: basename(tool.archivePath), sizeBytes: tool.sizeBytes, sha256: tool.sha256};
-  if (!/^retrom-runtime-host-tool-[0-9][0-9A-Za-z.-]*\.tar\.gz$/u.test(toolRecord.archive)) {invalid();}
-  await verifyArchive(tool.archivePath, tool.sizeBytes, tool.sha256);
-  const {stdout} = await execute("tar", ["-xOf", tool.archivePath,
-    `${toolRecord.archive.slice(0, -7)}/host-tool.json`], {encoding: "utf8", maxBuffer: 65536, timeout: 10000});
-  const hostTool = JSON.parse(stdout);
-  if (hostTool.schemaVersion !== 1 || hostTool.sourceTreeSha256 !== sourceTreeSha256) {invalid();}
   const records = [];
-  const transport = [tool];
+  const transport = [];
   for (const input of providers) {
     await verifyProviderBundle(input.bundleRoot);
     const manifestPath = input.chunks.manifestPath;
@@ -52,7 +45,8 @@ export async function writeRuntimeInputs({outputRoot, sourceTreeSha256, release 
     if (!client || !digest.test(client.sha256) || manifest.clientModulePath !== "client.mjs") {invalid();}
     const id = manifest.providerId, version = manifest.providerVersion;
     if (!["emulatorjs", "retrom-runtime"].includes(id) || records.some(record => record.providerId === id) ||
-      basename(manifestPath) !== `${id}-chunks-${version}.json` || hostTool.version !== version) {invalid();}
+      records.some(record => record.providerVersion !== version) ||
+      basename(manifestPath) !== `${id}-chunks-${version}.json`) {invalid();}
     if (release && `v${version}` !== release.tag) {invalid();}
     records.push({bundleSha256: input.bundleSha256,
       chunkManifest: {asset: basename(manifestPath), sha256: input.chunks.manifestSha256, sizeBytes: input.chunks.manifestSizeBytes},
@@ -66,7 +60,7 @@ export async function writeRuntimeInputs({outputRoot, sourceTreeSha256, release 
   }
   records.sort((left, right) => left.providerId.localeCompare(right.providerId));
   for (const archive of transport) {await publishTransportArchive(outputRoot, archive);}
-  const descriptor = {schemaVersion: 1, repository, sourceTreeSha256, release, tool: toolRecord, providers: records};
+  const descriptor = {schemaVersion: 2, repository, sourceTreeSha256, release, providers: records};
   await writeFile(join(outputRoot, "runtime-inputs.json"), `${JSON.stringify(descriptor, null, 2)}\n`);
   return descriptor;
 }

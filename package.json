@@ -10,18 +10,7 @@
     "README.md",
     "LICENSE",
     "THIRD_PARTY_NOTICES.md",
-    "contracts/content-io/v1",
-    "scripts/runtime-cli.mjs",
-    "scripts/runtime-host-input.mjs",
-    "scripts/runtime-kirikiri-patches.mjs",
-    "scripts/runtime-kirikiri-entries.mjs",
-    "scripts/runtime-host-content.mjs",
-    "scripts/runtime-host-media.mjs",
-    "scripts/runtime-normalize-content.mjs",
-    "scripts/kirikiri",
-    "scripts/normalization",
-    "scripts/runtime-jsonl.mjs",
-    "scripts/runtime-archive-input.mjs"
+    "contracts/content-io/v1"
   ],
   "exports": {
     ".": {

@@ -1,0 +1,123 @@
+{
+ "command": "prepare",
+ "input": {
+  "directory": {
+   "platformId": "thomson",
+   "defaultCoreId": "theodore",
+   "allowedCoreIds": [
+    "theodore"
+   ]
+  },
+  "files": [
+   {
+    "logicalKey": "renamed.sap",
+    "name": "renamed.sap",
+    "sizeBytes": 128,
+    "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+   }
+  ],
+  "fingerprints": {
+   "emulatorjs/theodore": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+  },
+  "config": {
+   "content": {
+    "kind": "SINGLE_FILE",
+    "entryFile": "renamed.sap"
+   },
+   "cores": {
+    "theodore": {
+     "options": {
+      "thomsonModel": "TO8"
+     }
+    }
+   }
+  },
+  "savedContext": {
+   "coreId": "theodore",
+   "providerId": "emulatorjs",
+   "targetId": "theodore",
+   "coreFingerprint": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+   "romHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+   "checkpointFormat": "emulatorjs-state-v1-storage-v1",
+   "content": {
+    "kind": "SINGLE_FILE",
+    "entryFile": "original.sap"
+   },
+   "runtimeOptions": {
+    "dosEntryPath": null,
+    "thomsonModel": "TO7"
+   }
+  }
+ },
+ "result": {
+  "coreId": "theodore",
+  "providerId": "emulatorjs",
+  "targetId": "theodore",
+  "coreFingerprint": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+  "romHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "config": {
+   "content": {
+    "kind": "SINGLE_FILE",
+    "entryFile": "renamed.sap"
+   },
+   "cores": {
+    "theodore": {
+     "options": {
+      "dosEntryPath": null,
+      "thomsonModel": "TO7"
+     }
+    }
+   }
+  },
+  "targetOptions": {
+   "dosEntryPath": null,
+   "thomsonModel": "TO7"
+  },
+  "dependencies": {
+   "parentFiles": [],
+   "missingParents": [],
+   "biosSets": []
+  },
+  "crcWarnings": [],
+  "biosRequirements": [],
+  "checkpoint": {
+   "maxBytes": 268435456,
+   "readFormats": [
+    "emulatorjs-state-v1-storage-v1"
+   ],
+   "writeFormat": "emulatorjs-state-v1-storage-v1",
+   "semantics": "INSTANT"
+  },
+  "capabilities": {
+   "contentLoading": "PRELOAD_ONLY",
+   "checkpoint": true,
+   "frameCounter": true,
+   "frameMode": "SAME_ORIGIN_BLANK",
+   "inputFilter": true,
+   "nativeSettings": true,
+   "pause": true,
+   "requiresThreads": false,
+   "screenshot": true,
+   "standardGamepad": true,
+   "videoModes": [
+    "adaptive-sharpen",
+    "original",
+    "pixel",
+    "sharp-bilinear",
+    "smooth"
+   ],
+   "volume": true
+  },
+  "resources": [
+   {
+    "role": "game",
+    "kind": "ROM_BLOB",
+    "ordinal": 0,
+    "files": [
+     "renamed.sap"
+    ],
+    "entryFile": "renamed.sap"
+   }
+  ]
+ }
+}

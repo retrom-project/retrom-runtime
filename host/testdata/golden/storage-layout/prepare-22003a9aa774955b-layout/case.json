@@ -1,0 +1,23 @@
+{
+ "command": "storage-layout",
+ "input": {
+  "platformId": "thomson",
+  "coreId": "theodore",
+  "config": {
+   "content": {
+    "kind": "SINGLE_FILE",
+    "entryFile": "game_to8d.sap"
+   },
+   "cores": {
+    "theodore": {
+     "options": {
+      "thomsonModel": "Auto"
+     }
+    }
+   }
+  }
+ },
+ "result": {
+  "layout": "FILES"
+ }
+}

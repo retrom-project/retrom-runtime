@@ -1,0 +1,52 @@
+{
+ "command": "batch-identity",
+ "input": {
+  "items": [
+   {
+    "directory": {
+     "platformId": "thomson",
+     "defaultCoreId": "theodore",
+     "allowedCoreIds": [
+      "theodore"
+     ]
+    },
+    "files": [
+     {
+      "logicalKey": "mo6.sap",
+      "name": "mo6.sap",
+      "sizeBytes": 128,
+      "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+     }
+    ],
+    "fingerprints": {
+     "emulatorjs/theodore": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+    },
+    "config": {
+     "content": {
+      "kind": "SINGLE_FILE",
+      "entryFile": "mo6.sap"
+     },
+     "cores": {
+      "theodore": {
+       "options": {
+        "thomsonModel": "Auto"
+       }
+      }
+     }
+    }
+   }
+  ]
+ },
+ "result": [
+  {
+   "coreId": "theodore",
+   "providerId": "emulatorjs",
+   "targetId": "theodore",
+   "coreFingerprint": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+   "romHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+   "readFormats": [
+    "emulatorjs-state-v1-storage-v1"
+   ]
+  }
+ ]
+}

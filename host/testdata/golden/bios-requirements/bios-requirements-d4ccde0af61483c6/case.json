@@ -1,0 +1,40 @@
+{
+ "command": "bios-requirements",
+ "input": {
+  "providerId": "emulatorjs",
+  "targetId": "mame2003",
+  "config": {
+   "content": {
+    "kind": "ARCADE",
+    "entryFile": "original.zip"
+   },
+   "cores": {
+    "fbneo": {
+     "romSet": "game",
+     "parentFiles": [
+      "parent.zip"
+     ]
+    },
+    "mame2003": {
+     "romSet": "other",
+     "parentFiles": []
+    }
+   }
+  },
+  "files": [
+   {
+    "name": "original.zip",
+    "logicalKey": "original.zip",
+    "sizeBytes": 100,
+    "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+   },
+   {
+    "name": "parent.zip",
+    "logicalKey": "parent.zip",
+    "sizeBytes": 100,
+    "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+   }
+  ]
+ },
+ "result": []
+}

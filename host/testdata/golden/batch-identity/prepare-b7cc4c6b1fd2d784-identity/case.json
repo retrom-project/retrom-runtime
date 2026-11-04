@@ -1,0 +1,57 @@
+{
+ "command": "batch-identity",
+ "input": {
+  "items": [
+   {
+    "directory": {
+     "platformId": "kirikiri",
+     "defaultCoreId": "kirikiri2",
+     "allowedCoreIds": [
+      "kirikiri2"
+     ]
+    },
+    "files": [
+     {
+      "logicalKey": "bundle/data.xp3",
+      "name": "bundle/data.xp3",
+      "sizeBytes": 128,
+      "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+     },
+     {
+      "logicalKey": "bundle/patch3.xp3",
+      "name": "bundle/patch3.xp3",
+      "sizeBytes": 128,
+      "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+     },
+     {
+      "logicalKey": "other/patch.xp3",
+      "name": "other/patch.xp3",
+      "sizeBytes": 128,
+      "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+     }
+    ],
+    "config": {
+     "content": {
+      "kind": "KIRIKIRI_PROJECT",
+      "entryFile": "bundle/data.xp3"
+     },
+     "cores": {
+      "kirikiri2": {
+       "options": {
+        "overlayArchives": "patch3.xp3"
+       }
+      }
+     }
+    },
+    "fingerprints": {
+     "retrom-runtime/kirikiri2-kag": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+    }
+   }
+  ]
+ },
+ "result": [
+  {
+   "error": "RUNTIME_OPTIONS_INVALID"
+  }
+ ]
+}

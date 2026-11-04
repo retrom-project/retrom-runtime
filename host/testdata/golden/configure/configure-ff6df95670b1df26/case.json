@@ -1,0 +1,29 @@
+{
+ "command": "configure",
+ "input": {
+  "platformId": "naomi2",
+  "coreIds": [
+   "flycast-naomi2"
+  ],
+  "files": [
+   {
+    "logicalKey": "wldrider.zip",
+    "name": "wldrider.zip",
+    "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "sizeBytes": 100
+   },
+   {
+    "logicalKey": "wldrider/disc-image.chd",
+    "name": "wldrider/disc-image.chd",
+    "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "sizeBytes": 100
+   }
+  ],
+  "selection": {
+   "entryFile": "wldrider.zip"
+  }
+ },
+ "error": {
+  "code": "RUNTIME_FLYCAST_CATALOG_UNAVAILABLE"
+ }
+}

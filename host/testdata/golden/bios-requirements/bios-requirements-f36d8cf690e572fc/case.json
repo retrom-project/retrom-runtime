@@ -1,0 +1,29 @@
+{
+ "command": "bios-requirements",
+ "input": {
+  "providerId": "emulatorjs",
+  "targetId": "theodore",
+  "config": {
+   "content": {
+    "kind": "SINGLE_FILE",
+    "entryFile": "TO9P.sap"
+   },
+   "cores": {
+    "theodore": {
+     "options": {
+      "thomsonModel": "Auto"
+     }
+    }
+   }
+  },
+  "files": [
+   {
+    "logicalKey": "TO9P.sap",
+    "name": "TO9P.sap",
+    "sizeBytes": 128,
+    "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+   }
+  ]
+ },
+ "result": []
+}

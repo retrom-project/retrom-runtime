@@ -1,0 +1,36 @@
+{
+ "command": "normalize-content",
+ "input": {
+  "platformId": "kirikiri",
+  "files": [
+   {
+    "logicalKey": "data.xp3",
+    "name": "data.xp3",
+    "sha256": "8377c376702815a285f93a1765e93ded40f0000bd9878ae6598aa3d8f1ebd950",
+    "sizeBytes": 1389
+   },
+   {
+    "logicalKey": "plugin/helper.tpm",
+    "name": "plugin/helper.tpm",
+    "sha256": "a66202584964fc53589c0b596d0fea5815e70e94a8047d1256040bfac673c06c",
+    "sizeBytes": 24576
+   }
+  ],
+  "locators": {
+   "data.xp3": {
+    "path": "${CASE}/files/data.xp3",
+    "offset": 0,
+    "sizeBytes": 1389
+   },
+   "plugin/helper.tpm": {
+    "path": "${CASE}/files/plugin/helper.tpm",
+    "offset": 0,
+    "sizeBytes": 24576
+   }
+  },
+  "outputRoot": "${OUT}"
+ },
+ "error": {
+  "code": "RUNTIME_KIRIKIRI_FILTER_UNAVAILABLE"
+ }
+}

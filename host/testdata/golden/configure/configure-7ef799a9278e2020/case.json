@@ -1,0 +1,28 @@
+{
+ "command": "configure",
+ "input": {
+  "root": "${CASE}/files/p0",
+  "files": [
+   {
+    "logicalKey": "project/Game.ini",
+    "name": "project/Game.ini",
+    "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+    "sizeBytes": 35
+   }
+  ],
+  "locators": {
+   "project/Game.ini": {
+    "path": "${CASE}/files/p1",
+    "offset": 0,
+    "sizeBytes": 35
+   }
+  },
+  "platformId": "rpgmaker",
+  "coreIds": [
+   "rpgmaker"
+  ]
+ },
+ "error": {
+  "code": "RUNTIME_CONTENT_CHANGED"
+ }
+}

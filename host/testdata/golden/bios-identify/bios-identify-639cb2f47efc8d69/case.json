@@ -1,0 +1,69 @@
+{
+ "command": "bios-identify",
+ "input": {
+  "path": "${CASE}/files/p0",
+  "file": {
+   "name": "bios.zip",
+   "sizeBytes": 222,
+   "sha256": "5c8efdd67e9e16e2799c8503b07b40183cf993297fc942f965747977ee8c7cc9",
+   "md5": "c2c510755a0967b7719b6ef8a619bf22"
+  },
+  "requirements": [
+   {
+    "requirementKey": "test/bios.zip",
+    "coreId": "test",
+    "logicalName": "bios.zip",
+    "providerId": "test",
+    "targetId": "test",
+    "required": true,
+    "condition": "ARCADE_BIOS",
+    "delivery": "EXTERNAL_FILE",
+    "virtualPath": "bios.zip",
+    "activationOptions": {},
+    "sizeBytes": null,
+    "sha256": null,
+    "md5": null,
+    "members": [
+     {
+      "name": "firmware.bin",
+      "sizeBytes": 3,
+      "crc32": "55bc801d",
+      "sha1": "7037807198c22a7d2b0807371d763779a84fdfcf",
+      "required": true
+     }
+    ]
+   }
+  ]
+ },
+ "result": [
+  {
+   "requirementKey": "test/bios.zip",
+   "coreId": "test",
+   "logicalName": "bios.zip",
+   "providerId": "test",
+   "targetId": "test",
+   "required": true,
+   "condition": "ARCADE_BIOS",
+   "delivery": "EXTERNAL_FILE",
+   "virtualPath": "bios.zip",
+   "activationOptions": {},
+   "sizeBytes": null,
+   "sha256": null,
+   "md5": null,
+   "members": [
+    {
+     "name": "firmware.bin",
+     "sizeBytes": 3,
+     "crc32": "55bc801d",
+     "sha1": "7037807198c22a7d2b0807371d763779a84fdfcf",
+     "required": true
+    }
+   ],
+   "candidate": {
+    "memberIdentity": "86cff350263bc203fdf3d544f23453b0aa189a28e4daf56ca89ecaa2faa8a3d9",
+    "matchedMembers": 1,
+    "totalMembers": 2
+   }
+  }
+ ]
+}

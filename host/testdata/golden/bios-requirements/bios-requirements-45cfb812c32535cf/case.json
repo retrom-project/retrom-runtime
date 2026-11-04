@@ -1,0 +1,29 @@
+{
+ "command": "bios-requirements",
+ "input": {
+  "providerId": "retrom-runtime",
+  "targetId": "rpgmaker-mv",
+  "config": {
+   "content": {
+    "kind": "RPG_MAKER_PROJECT",
+    "entryFile": "index.html",
+    "engine": "RPGMV"
+   }
+  },
+  "files": [
+   {
+    "logicalKey": "index.html",
+    "name": "index.html",
+    "sizeBytes": 128,
+    "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+   },
+   {
+    "logicalKey": "js/rpg_core.js",
+    "name": "rpg_core.js",
+    "sizeBytes": 128,
+    "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+   }
+  ]
+ },
+ "result": []
+}

@@ -1,0 +1,25 @@
+{
+ "command": "normalize-content",
+ "input": {
+  "platformId": "kirikiri",
+  "files": [
+   {
+    "logicalKey": "data.xp3",
+    "name": "data.xp3",
+    "sha256": "bf88932f949be3f8c5d314ee562e242f33639f617980d513b1c9869d605b3895",
+    "sizeBytes": 32
+   }
+  ],
+  "locators": {
+   "data.xp3": {
+    "path": "${CASE}/files/data.xp3",
+    "offset": 0,
+    "sizeBytes": 32
+   }
+  },
+  "outputRoot": "${OUT}"
+ },
+ "error": {
+  "code": "RUNTIME_KIRIKIRI_ARCHIVE_INVALID"
+ }
+}

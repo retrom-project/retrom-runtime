@@ -1,0 +1,41 @@
+{
+ "command": "bios-verify",
+ "input": {
+  "requirement": {
+   "requirementKey": "retrom-runtime/rpgmaker-xp/Standard.zip",
+   "coreId": "test",
+   "logicalName": "Standard.zip",
+   "providerId": "test",
+   "targetId": "rpgmaker-xp",
+   "required": true,
+   "condition": "RPG_RTP",
+   "delivery": "SEEKABLE_BLOB",
+   "virtualPath": null,
+   "activationOptions": {},
+   "sizeBytes": null,
+   "sha256": null,
+   "md5": null,
+   "resourceRole": "rtp",
+   "archiveEntries": [
+    "Audio/",
+    "Graphics/Windowskins/",
+    "Graphics/Autotiles/"
+   ],
+   "archiveExcludes": [
+    "Game.ini",
+    "Data/"
+   ]
+  },
+  "path": "${CASE}/files/p0"
+ },
+ "result": {
+  "status": "invalid",
+  "matchedMembers": 0,
+  "expectedMembers": 3,
+  "missingMembers": [
+   "Audio/",
+   "Graphics/Windowskins/",
+   "Graphics/Autotiles/"
+  ]
+ }
+}

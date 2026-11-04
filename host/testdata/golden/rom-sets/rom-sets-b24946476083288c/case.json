@@ -1,0 +1,95 @@
+{
+ "command": "rom-sets",
+ "input": {
+  "coreId": "fceumm",
+  "directory": {
+   "platformId": "arcade",
+   "defaultCoreId": "fbneo",
+   "allowedCoreIds": [
+    "fbalpha",
+    "fbneo",
+    "mame2003",
+    "mame2003_plus",
+    "mame_arcade"
+   ]
+  },
+  "files": [
+   {
+    "logicalKey": "original.zip",
+    "name": "original.zip",
+    "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "sizeBytes": 1
+   }
+  ],
+  "config": {
+   "content": {
+    "kind": "ARCADE",
+    "entryFile": "original.zip"
+   },
+   "cores": {
+    "fbneo": {
+     "romSet": "chosen"
+    }
+   }
+  },
+  "archives": {
+   "original.zip": []
+  },
+  "arcadeCatalog": {
+   "chosen": {
+    "parent": null,
+    "bios": false,
+    "roms": [],
+    "description": "Chosen Game (version 2)",
+    "year": "1990",
+    "manufacturer": "Maker"
+   },
+   "clone": {
+    "parent": "parent",
+    "bios": false,
+    "roms": [
+     {
+      "name": "p.bin",
+      "size": "1",
+      "crc": "abcdef12",
+      "merge": "p.bin"
+     }
+    ]
+   },
+   "parent": {
+    "parent": null,
+    "bios": false,
+    "roms": [
+     {
+      "name": "p.bin",
+      "size": "1",
+      "crc": "abcdef12"
+     }
+    ]
+   },
+   "firmware": {
+    "parent": null,
+    "bios": true,
+    "roms": []
+   },
+   "device": {
+    "parent": null,
+    "bios": false,
+    "device": true,
+    "roms": []
+   },
+   "inactive": {
+    "parent": null,
+    "bios": false,
+    "runnable": false,
+    "roms": []
+   }
+  },
+  "fingerprints": {
+   "emulatorjs/fbneo": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+  }
+ },
+ "error": {
+  "code": "RUNTIME_CORE_UNAVAILABLE"
+ }
+}

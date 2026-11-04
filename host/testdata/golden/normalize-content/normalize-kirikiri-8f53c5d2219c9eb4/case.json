@@ -1,0 +1,47 @@
+{
+ "command": "normalize-content",
+ "input": {
+  "platformId": "kirikiri",
+  "files": [
+   {
+    "logicalKey": "data.xp3",
+    "name": "data.xp3",
+    "sha256": "a2beba03d75c82e8aeae23d990c884a2bdbc79dcfdcbe86e7e052da6ab87d06a",
+    "sizeBytes": 1389
+   },
+   {
+    "logicalKey": "launcher.exe",
+    "name": "launcher.exe",
+    "sha256": "62e2386cb059ebb950a3fb0a35d3d82be21e755f0680129aa6381d973b8da4a6",
+    "sizeBytes": 17
+   },
+   {
+    "logicalKey": "plugin/helper.tpm",
+    "name": "plugin/helper.tpm",
+    "sha256": "30346b5bb36fa89910867c515bad687d72e46ba5aed11cafd6197fbb9caaeee5",
+    "sizeBytes": 24
+   }
+  ],
+  "locators": {
+   "data.xp3": {
+    "path": "${CASE}/files/data.xp3",
+    "offset": 0,
+    "sizeBytes": 1389
+   },
+   "launcher.exe": {
+    "path": "${CASE}/files/launcher.exe",
+    "offset": 0,
+    "sizeBytes": 17
+   },
+   "plugin/helper.tpm": {
+    "path": "${CASE}/files/plugin/helper.tpm",
+    "offset": 0,
+    "sizeBytes": 24
+   }
+  },
+  "outputRoot": "${OUT}"
+ },
+ "error": {
+  "code": "RUNTIME_KIRIKIRI_FILTER_UNAVAILABLE"
+ }
+}

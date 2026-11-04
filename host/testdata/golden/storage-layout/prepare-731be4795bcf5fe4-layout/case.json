@@ -1,0 +1,23 @@
+{
+ "command": "storage-layout",
+ "input": {
+  "platformId": "thomson",
+  "coreId": "theodore",
+  "config": {
+   "content": {
+    "kind": "SINGLE_FILE",
+    "entryFile": "renamed.sap"
+   },
+   "cores": {
+    "theodore": {
+     "options": {
+      "thomsonModel": "TO8"
+     }
+    }
+   }
+  }
+ },
+ "result": {
+  "layout": "FILES"
+ }
+}

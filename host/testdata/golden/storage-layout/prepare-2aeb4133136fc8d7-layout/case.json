@@ -1,0 +1,17 @@
+{
+ "command": "storage-layout",
+ "input": {
+  "platformId": "rpgmaker",
+  "coreId": "rpgmaker",
+  "config": {
+   "content": {
+    "kind": "RPG_MAKER_PROJECT",
+    "engine": "RPGMV",
+    "entryFile": "Game/www/index.html"
+   }
+  }
+ },
+ "result": {
+  "layout": "ZIP_STORE"
+ }
+}

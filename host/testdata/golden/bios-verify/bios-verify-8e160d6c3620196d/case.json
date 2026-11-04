@@ -1,0 +1,40 @@
+{
+ "command": "bios-verify",
+ "input": {
+  "requirement": {
+   "requirementKey": "retrom-runtime/rpgmaker-vx/RPGVX.zip",
+   "coreId": "test",
+   "logicalName": "RPGVX.zip",
+   "providerId": "test",
+   "targetId": "rpgmaker-vx",
+   "required": true,
+   "condition": "RPG_RTP",
+   "delivery": "SEEKABLE_BLOB",
+   "virtualPath": null,
+   "activationOptions": {},
+   "sizeBytes": null,
+   "sha256": null,
+   "md5": null,
+   "resourceRole": "rtp",
+   "archiveEntries": [
+    "Audio/",
+    "Graphics/System/TileA1.png",
+    "Graphics/System/TileB.png"
+   ],
+   "archiveExcludes": [
+    "Game.ini",
+    "Data/"
+   ]
+  },
+  "path": "${CASE}/files/p0"
+ },
+ "result": {
+  "status": "incomplete",
+  "matchedMembers": 1,
+  "expectedMembers": 3,
+  "missingMembers": [
+   "Graphics/System/TileA1.png",
+   "Graphics/System/TileB.png"
+  ]
+ }
+}

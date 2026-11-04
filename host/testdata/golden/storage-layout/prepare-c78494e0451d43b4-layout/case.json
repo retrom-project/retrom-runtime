@@ -1,0 +1,25 @@
+{
+ "command": "storage-layout",
+ "input": {
+  "platformId": "arcade",
+  "coreId": "fbalpha2012_cps2",
+  "config": {
+   "content": {
+    "kind": "ARCADE",
+    "entryFile": "stored/alias.zip"
+   },
+   "cores": {
+    "fbalpha2012_cps2": {
+     "romSet": "clone",
+     "parentFiles": [
+      "stored/BASE.ZIP",
+      "stored/grand.zip"
+     ]
+    }
+   }
+  }
+ },
+ "result": {
+  "layout": "FILES"
+ }
+}

@@ -1,0 +1,45 @@
+{
+ "command": "discover-content",
+ "input": {
+  "root": "${CASE}/files/p0",
+  "files": [
+   {
+    "logicalKey": "arbitrary.pbp",
+    "name": "arbitrary.pbp",
+    "sha256": "8ac59474b96a5639dd08ae3523af830576256c2839128cafd22d8270ac2c222f",
+    "sizeBytes": 40
+   },
+   {
+    "logicalKey": "not-a-pbp.pbp",
+    "name": "not-a-pbp.pbp",
+    "sha256": "2c34ce1df23b838c5abf2a7f6437cca3d3067ed509ff25f11df6b11b582b51eb",
+    "sizeBytes": 40
+   }
+  ],
+  "locators": {
+   "arbitrary.pbp": {
+    "path": "${CASE}/files/p1",
+    "offset": 0,
+    "sizeBytes": 40
+   },
+   "not-a-pbp.pbp": {
+    "path": "${CASE}/files/p2",
+    "offset": 0,
+    "sizeBytes": 40
+   }
+  },
+  "directory": {
+   "platformId": "psp",
+   "defaultCoreId": "ppsspp",
+   "allowedCoreIds": [
+    "ppsspp"
+   ]
+  }
+ },
+ "result": {
+  "files": [],
+  "trees": [
+   "arbitrary.pbp"
+  ]
+ }
+}

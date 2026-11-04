@@ -1,0 +1,23 @@
+{
+ "command": "storage-layout",
+ "input": {
+  "platformId": "kirikiri",
+  "coreId": "kirikiri2",
+  "config": {
+   "content": {
+    "kind": "KIRIKIRI_PROJECT",
+    "entryFile": "bundle/data.xp3"
+   },
+   "cores": {
+    "kirikiri2": {
+     "options": {
+      "overlayRoot": "localization"
+     }
+    }
+   }
+  }
+ },
+ "result": {
+  "layout": "ZIP_STORE"
+ }
+}

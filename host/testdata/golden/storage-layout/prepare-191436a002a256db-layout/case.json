@@ -1,0 +1,16 @@
+{
+ "command": "storage-layout",
+ "input": {
+  "platformId": "nes",
+  "coreId": "nestopia",
+  "config": {
+   "content": {
+    "kind": "SINGLE_FILE",
+    "entryFile": "game.nes"
+   }
+  }
+ },
+ "result": {
+  "layout": "FILES"
+ }
+}

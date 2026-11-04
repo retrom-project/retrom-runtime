@@ -1,0 +1,111 @@
+{
+ "command": "normalize-content",
+ "input": {
+  "platformId": "kirikiri",
+  "files": [
+   {
+    "logicalKey": "data.xp3",
+    "name": "data.xp3",
+    "sha256": "8ecb7a1cd3ac11558438991630833682e4c50570f75c4f54b588ff6a8894fb42",
+    "sizeBytes": 1735
+   },
+   {
+    "logicalKey": "plugin/helper.tpm",
+    "name": "plugin/helper.tpm",
+    "sha256": "292fdb13e77389e5e6a8310f6e1a0d524266d7ed0836340fee4263ad93c2b97a",
+    "sizeBytes": 24576
+   }
+  ],
+  "locators": {
+   "data.xp3": {
+    "path": "${CASE}/files/data.xp3",
+    "offset": 0,
+    "sizeBytes": 1735
+   },
+   "plugin/helper.tpm": {
+    "path": "${CASE}/files/plugin/helper.tpm",
+    "offset": 0,
+    "sizeBytes": 24576
+   }
+  },
+  "outputRoot": "${OUT}"
+ },
+ "result": {
+  "files": [
+   {
+    "logicalKey": "data.xp3",
+    "name": "data.xp3",
+    "sizeBytes": 1407,
+    "sha256": "316f76b947f9aa21be2c0052203aa45e47a9956734010da0013ba0d7345645de",
+    "path": "${OUT}/data.xp3"
+   },
+   {
+    "logicalKey": "plugin/helper.tpm",
+    "name": "plugin/helper.tpm",
+    "sha256": "292fdb13e77389e5e6a8310f6e1a0d524266d7ed0836340fee4263ad93c2b97a",
+    "sizeBytes": 24576
+   }
+  ],
+  "normalization": {
+   "kind": "CONTENT_NORMALIZATION",
+   "converterVersion": 1,
+   "sourceContentHash": "9f4e82f5b5758dc0a07c9e6942a104f99c98a0b6076f94223148025f17a97bf7",
+   "archiveCount": 1,
+   "verifiedEntries": 3,
+   "metadataCorrections": 1,
+   "omittedPhysicalEntries": 0,
+   "formatCounts": {
+    "cxfilterfs-elif": 1
+   },
+   "warnings": [
+    {
+     "code": "SOURCE_METADATA_CORRECTED",
+     "count": 1
+    }
+   ],
+   "details": [
+    {
+     "code": "FORMAT_WARNING_SHORT_STREAM",
+     "file": "data.xp3",
+     "member": "$$$ this is a protected archive. $$$ warning.txt",
+     "sourceSha256": "91580f2d5d163af8000458ae113335ec8b24f68b9dbbd7d15a8fc1ed82c72dce",
+     "outputSha256": "91580f2d5d163af8000458ae113335ec8b24f68b9dbbd7d15a8fc1ed82c72dce",
+     "sourceSize": 910,
+     "outputSize": 66,
+     "seed": 1754764004,
+     "sourceChecksum": 1754764004,
+     "outputChecksum": 958273709
+    }
+   ],
+   "plugins": [
+    {
+     "id": "kirikiri-cxfilterfs",
+     "version": 1,
+     "formats": [
+      "cxfilterfs-elif"
+     ],
+     "sources": [
+      {
+       "file": "data.xp3",
+       "sizeBytes": 1735,
+       "sha256": "8ecb7a1cd3ac11558438991630833682e4c50570f75c4f54b588ff6a8894fb42"
+      }
+     ],
+     "outputs": [
+      {
+       "file": "data.xp3",
+       "sizeBytes": 1407,
+       "sha256": "316f76b947f9aa21be2c0052203aa45e47a9956734010da0013ba0d7345645de"
+      }
+     ],
+     "validation": {
+      "outputFilesVerified": 1,
+      "resourceEntriesVerified": 3,
+      "metadataCorrections": 1,
+      "omittedPhysicalEntries": 0
+     }
+    }
+   ]
+  }
+ }
+}

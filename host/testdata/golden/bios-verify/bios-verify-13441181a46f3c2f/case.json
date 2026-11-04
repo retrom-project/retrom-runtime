@@ -1,0 +1,37 @@
+{
+ "command": "bios-verify",
+ "input": {
+  "requirement": {
+   "requirementKey": "retrom-runtime/rpgmaker-vx-ace/RPGVXAce.zip",
+   "coreId": "test",
+   "logicalName": "RPGVXAce.zip",
+   "providerId": "test",
+   "targetId": "rpgmaker-vx-ace",
+   "required": true,
+   "condition": "RPG_RTP",
+   "delivery": "SEEKABLE_BLOB",
+   "virtualPath": null,
+   "activationOptions": {},
+   "sizeBytes": null,
+   "sha256": null,
+   "md5": null,
+   "resourceRole": "rtp",
+   "archiveEntries": [
+    "Audio/",
+    "Graphics/Titles1/",
+    "Graphics/Battlebacks1/"
+   ],
+   "archiveExcludes": [
+    "Game.ini",
+    "Data/"
+   ]
+  },
+  "path": "${CASE}/files/p0"
+ },
+ "result": {
+  "status": "valid",
+  "matchedMembers": 3,
+  "expectedMembers": 3,
+  "missingMembers": []
+ }
+}

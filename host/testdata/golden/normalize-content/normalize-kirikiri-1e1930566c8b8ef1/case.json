@@ -1,0 +1,25 @@
+{
+ "command": "normalize-content",
+ "input": {
+  "platformId": "kirikiri",
+  "files": [
+   {
+    "logicalKey": "launcher.exe",
+    "name": "launcher.exe",
+    "sha256": "4b13154f4b5184061503c5cdd530ed6dc7724ce4eaf4604fb2b492ef9d0a81d1",
+    "sizeBytes": 24882
+   }
+  ],
+  "locators": {
+   "launcher.exe": {
+    "path": "${CASE}/files/launcher.exe",
+    "offset": 0,
+    "sizeBytes": 24882
+   }
+  },
+  "outputRoot": "${OUT}"
+ },
+ "error": {
+  "code": "RUNTIME_KIRIKIRI_ARCHIVE_UNSUPPORTED"
+ }
+}

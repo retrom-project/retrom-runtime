@@ -1,0 +1,50 @@
+{
+ "command": "bios-requirements",
+ "input": {
+  "providerId": "retrom-runtime",
+  "targetId": "rpgmaker-vx-ace",
+  "config": {
+   "content": {
+    "kind": "RPG_MAKER_PROJECT",
+    "entryFile": "Game.ini",
+    "engine": "RPGVXACE",
+    "rtp": "RPGVXAce"
+   }
+  },
+  "files": [
+   {
+    "logicalKey": "Game.ini",
+    "name": "Game.ini",
+    "sizeBytes": 128,
+    "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+   }
+  ]
+ },
+ "result": [
+  {
+   "requirementKey": "retrom-runtime/rpgmaker-vx-ace/RPGVXAce.zip",
+   "coreId": "rpgmaker",
+   "providerId": "retrom-runtime",
+   "targetId": "rpgmaker-vx-ace",
+   "logicalName": "RPGVXAce.zip",
+   "required": true,
+   "condition": "RPG_RTP",
+   "sizeBytes": null,
+   "md5": null,
+   "sha256": null,
+   "delivery": "SEEKABLE_BLOB",
+   "virtualPath": null,
+   "activationOptions": {},
+   "resourceRole": "rtp",
+   "archiveEntries": [
+    "Audio/",
+    "Graphics/Titles1/",
+    "Graphics/Battlebacks1/"
+   ],
+   "archiveExcludes": [
+    "Game.ini",
+    "Data/"
+   ]
+  }
+ ]
+}

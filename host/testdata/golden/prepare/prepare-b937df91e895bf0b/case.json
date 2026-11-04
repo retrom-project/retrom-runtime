@@ -1,0 +1,43 @@
+{
+ "command": "prepare",
+ "input": {
+  "directory": {
+   "platformId": "nes",
+   "defaultCoreId": "fceumm",
+   "allowedCoreIds": [
+    "fceumm",
+    "nestopia"
+   ]
+  },
+  "fingerprints": {
+   "emulatorjs/fceumm": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+   "emulatorjs/nestopia": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+  },
+  "files": [
+   {
+    "logicalKey": "game.nes",
+    "name": "game.nes",
+    "sizeBytes": 128,
+    "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+   }
+  ],
+  "config": {
+   "content": {
+    "kind": "SINGLE_FILE",
+    "entryFile": "game.nes"
+   },
+   "cores": {
+    "nestopia": {
+     "options": {
+      "arbitrary": {
+       "unsafe": true
+      }
+     }
+    }
+   }
+  }
+ },
+ "error": {
+  "code": "RUNTIME_OPTIONS_INVALID"
+ }
+}

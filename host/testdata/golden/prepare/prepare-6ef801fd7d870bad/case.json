@@ -1,0 +1,81 @@
+{
+ "command": "prepare",
+ "input": {
+  "directory": {
+   "platformId": "rpgmaker",
+   "defaultCoreId": "rpgmaker",
+   "allowedCoreIds": [
+    "rpgmaker"
+   ]
+  },
+  "files": [
+   {
+    "logicalKey": "www/index.html",
+    "name": "www/index.html",
+    "sizeBytes": 128,
+    "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+   },
+   {
+    "logicalKey": "www/js/rpg_core.js",
+    "name": "www/js/rpg_core.js",
+    "sizeBytes": 128,
+    "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+   },
+   {
+    "logicalKey": "www/js/rmmz_core.js",
+    "name": "www/js/rmmz_core.js",
+    "sizeBytes": 128,
+    "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+   },
+   {
+    "logicalKey": "www/Game.ini",
+    "name": "www/Game.ini",
+    "sizeBytes": 128,
+    "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+   },
+   {
+    "logicalKey": "www/RPG_RT.ldb",
+    "name": "www/RPG_RT.ldb",
+    "sizeBytes": 128,
+    "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+   },
+   {
+    "logicalKey": "www/data/System.json",
+    "name": "www/data/System.json",
+    "sizeBytes": 128,
+    "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+   },
+   {
+    "logicalKey": "www/img/Title.png",
+    "name": "www/img/Title.png",
+    "sizeBytes": 128,
+    "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+   },
+   {
+    "logicalKey": "www/start.html",
+    "name": "www/start.html",
+    "sizeBytes": 128,
+    "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+   },
+   {
+    "logicalKey": "docs/index.html",
+    "name": "docs/index.html",
+    "sizeBytes": 128,
+    "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+   }
+  ],
+  "config": {
+   "content": {
+    "kind": "RPG_MAKER_PROJECT",
+    "engine": "RPGMV",
+    "entryFile": "www/data/System.json"
+   }
+  },
+  "fingerprints": {
+   "retrom-runtime/rpgmaker-mv": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+  }
+ },
+ "error": {
+  "code": "RUNTIME_RPG_ENTRY_INVALID"
+ }
+}

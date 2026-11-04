@@ -1,0 +1,41 @@
+{
+ "command": "bios-requirements",
+ "input": {
+  "providerId": "emulatorjs",
+  "targetId": "mednafen-psx-hw",
+  "files": [
+   {
+    "logicalKey": "disc.cue",
+    "name": "disc.cue",
+    "sizeBytes": 128,
+    "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+   }
+  ],
+  "config": {
+   "content": {
+    "kind": "SINGLE_FILE",
+    "entryFile": "disc.cue"
+   }
+  },
+  "firmwareEvidence": {
+   "psxRegion": "EU"
+  }
+ },
+ "result": [
+  {
+   "requirementKey": "firmware/scph5502.bin",
+   "coreId": "mednafen_psx_hw",
+   "providerId": "emulatorjs",
+   "targetId": "mednafen-psx-hw",
+   "logicalName": "scph5502.bin",
+   "required": true,
+   "condition": "PSX_REGION_EU",
+   "sizeBytes": 524288,
+   "md5": "32736f17079d0b2b7024407c39bd3050",
+   "sha256": null,
+   "delivery": "BIOS_BUNDLE",
+   "virtualPath": null,
+   "activationOptions": {}
+  }
+ ]
+}

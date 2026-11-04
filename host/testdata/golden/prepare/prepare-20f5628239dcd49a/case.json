@@ -1,0 +1,92 @@
+{
+ "command": "prepare",
+ "input": {
+  "directory": {
+   "platformId": "thomson",
+   "defaultCoreId": "theodore",
+   "allowedCoreIds": [
+    "theodore"
+   ]
+  },
+  "files": [
+   {
+    "logicalKey": "unknown.sap",
+    "name": "unknown.sap",
+    "sizeBytes": 128,
+    "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+   }
+  ],
+  "fingerprints": {
+   "emulatorjs/theodore": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+  },
+  "config": {
+   "content": {
+    "kind": "SINGLE_FILE",
+    "entryFile": "unknown.sap"
+   }
+  }
+ },
+ "result": {
+  "coreId": "theodore",
+  "providerId": "emulatorjs",
+  "targetId": "theodore",
+  "coreFingerprint": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+  "romHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "config": {
+   "content": {
+    "kind": "SINGLE_FILE",
+    "entryFile": "unknown.sap"
+   }
+  },
+  "targetOptions": {
+   "thomsonModel": "TO8",
+   "dosEntryPath": null
+  },
+  "dependencies": {
+   "parentFiles": [],
+   "missingParents": [],
+   "biosSets": []
+  },
+  "crcWarnings": [],
+  "biosRequirements": [],
+  "checkpoint": {
+   "maxBytes": 268435456,
+   "readFormats": [
+    "emulatorjs-state-v1-storage-v1"
+   ],
+   "writeFormat": "emulatorjs-state-v1-storage-v1",
+   "semantics": "INSTANT"
+  },
+  "capabilities": {
+   "contentLoading": "PRELOAD_ONLY",
+   "checkpoint": true,
+   "frameCounter": true,
+   "frameMode": "SAME_ORIGIN_BLANK",
+   "inputFilter": true,
+   "nativeSettings": true,
+   "pause": true,
+   "requiresThreads": false,
+   "screenshot": true,
+   "standardGamepad": true,
+   "videoModes": [
+    "adaptive-sharpen",
+    "original",
+    "pixel",
+    "sharp-bilinear",
+    "smooth"
+   ],
+   "volume": true
+  },
+  "resources": [
+   {
+    "role": "game",
+    "kind": "ROM_BLOB",
+    "ordinal": 0,
+    "files": [
+     "unknown.sap"
+    ],
+    "entryFile": "unknown.sap"
+   }
+  ]
+ }
+}

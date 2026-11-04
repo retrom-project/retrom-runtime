@@ -1,0 +1,63 @@
+{
+ "command": "prepare",
+ "input": {
+  "directory": {
+   "platformId": "arcade",
+   "defaultCoreId": "mame_arcade",
+   "allowedCoreIds": [
+    "mame_arcade"
+   ]
+  },
+  "config": {
+   "content": {
+    "kind": "ARCADE",
+    "entryFile": "sample.zip"
+   }
+  },
+  "files": [
+   {
+    "name": "sample.zip",
+    "logicalKey": "sample.zip",
+    "sizeBytes": 22,
+    "sha256": "1111111111111111111111111111111111111111111111111111111111111111"
+   },
+   {
+    "name": "renamed.chd",
+    "logicalKey": "other/renamed.chd",
+    "sizeBytes": 1024,
+    "sha256": "2222222222222222222222222222222222222222222222222222222222222222"
+   }
+  ],
+  "fingerprints": {
+   "retrom-runtime/mame-arcade": "3333333333333333333333333333333333333333333333333333333333333333"
+  },
+  "archives": {
+   "sample.zip": []
+  },
+  "arcadeCatalog": {
+   "sample": {
+    "parent": null,
+    "bios": false,
+    "roms": [],
+    "disks": [
+     {
+      "name": "disk",
+      "sha1": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "region": "disk",
+      "index": "0",
+      "writable": false
+     }
+    ]
+   }
+  },
+  "chdHeaders": {
+   "other/renamed.chd": {
+    "sha1": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "parentSHA1": null
+   }
+  }
+ },
+ "error": {
+  "code": "RUNTIME_CONTENT_LOCATOR_REQUIRED"
+ }
+}

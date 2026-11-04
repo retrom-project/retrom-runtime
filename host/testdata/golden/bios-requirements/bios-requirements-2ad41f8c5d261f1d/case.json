@@ -1,0 +1,28 @@
+{
+ "command": "bios-requirements",
+ "input": {
+  "providerId": "emulatorjs",
+  "targetId": "nestopia",
+  "config": {
+   "content": {
+    "kind": "SINGLE_FILE",
+    "entryFile": "game.nes"
+   }
+  },
+  "files": [
+   {
+    "logicalKey": "game.nes",
+    "name": "game.nes",
+    "sizeBytes": 128,
+    "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+   },
+   {
+    "logicalKey": "parent.zip",
+    "name": "parent.zip",
+    "sizeBytes": 128,
+    "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+   }
+  ]
+ },
+ "result": []
+}

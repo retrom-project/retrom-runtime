@@ -1,0 +1,98 @@
+{
+ "command": "prepare",
+ "input": {
+  "directory": {
+   "platformId": "cavestory",
+   "defaultCoreId": "nxengine",
+   "allowedCoreIds": [
+    "nxengine"
+   ]
+  },
+  "files": [
+   {
+    "logicalKey": "CaveStory/Doukutsu.exe",
+    "name": "CaveStory/Doukutsu.exe",
+    "sizeBytes": 128,
+    "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+   },
+   {
+    "logicalKey": "CaveStory/data/Stage.dat",
+    "name": "CaveStory/data/Stage.dat",
+    "sizeBytes": 128,
+    "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+   }
+  ],
+  "config": {
+   "content": {
+    "kind": "NXENGINE_PROJECT",
+    "entryFile": "CaveStory/Doukutsu.exe"
+   }
+  },
+  "fingerprints": {
+   "retrom-runtime/nxengine": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+  }
+ },
+ "result": {
+  "coreId": "nxengine",
+  "providerId": "retrom-runtime",
+  "targetId": "nxengine",
+  "coreFingerprint": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+  "romHash": "104cc6fff613a8528f05eabe86cc8248f02631e4e73962c1f61e962ba4ec0fb6",
+  "config": {
+   "content": {
+    "kind": "NXENGINE_PROJECT",
+    "entryFile": "CaveStory/Doukutsu.exe"
+   }
+  },
+  "targetOptions": {},
+  "dependencies": {
+   "parentFiles": [],
+   "missingParents": [],
+   "biosSets": []
+  },
+  "crcWarnings": [],
+  "biosRequirements": [],
+  "checkpoint": {
+   "maxBytes": 16384,
+   "readFormats": [
+    "nxengine-game-save-v1-storage-v1"
+   ],
+   "writeFormat": "nxengine-game-save-v1-storage-v1",
+   "semantics": "GAME_SAVE"
+  },
+  "capabilities": {
+   "contentLoading": "PRELOAD_ONLY",
+   "checkpoint": true,
+   "frameCounter": true,
+   "frameMode": "SAME_ORIGIN_BLANK",
+   "inputFilter": true,
+   "nativeSettings": false,
+   "pause": true,
+   "requiresThreads": false,
+   "screenshot": true,
+   "standardGamepad": true,
+   "videoModes": [
+    "original",
+    "pixel",
+    "smooth"
+   ],
+   "volume": true
+  },
+  "resources": [
+   {
+    "role": "game",
+    "kind": "FILE_TREE",
+    "ordinal": 0,
+    "files": [
+     "CaveStory/Doukutsu.exe",
+     "CaveStory/data/Stage.dat"
+    ],
+    "entryFile": "Doukutsu.exe",
+    "paths": {
+     "CaveStory/Doukutsu.exe": "Doukutsu.exe",
+     "CaveStory/data/Stage.dat": "data/Stage.dat"
+    }
+   }
+  ]
+ }
+}

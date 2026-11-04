@@ -1,0 +1,16 @@
+{
+ "command": "storage-layout",
+ "input": {
+  "platformId": "atari7800",
+  "coreId": "prosystem",
+  "config": {
+   "content": {
+    "kind": "SINGLE_FILE",
+    "entryFile": "game.a78"
+   }
+  }
+ },
+ "result": {
+  "layout": "FILES"
+ }
+}

@@ -1,0 +1,38 @@
+{
+ "command": "restorable",
+ "input": {
+  "gameAvailable": true,
+  "saveAvailable": true,
+  "context": {
+   "coreId": "theodore",
+   "providerId": "emulatorjs",
+   "targetId": "theodore",
+   "coreFingerprint": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+   "romHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+   "checkpointFormat": "emulatorjs-state-v1-storage-v1",
+   "content": {
+    "kind": "SINGLE_FILE",
+    "entryFile": "memo5.sap"
+   },
+   "runtimeOptions": {
+    "thomsonModel": "MO5",
+    "dosEntryPath": null
+   }
+  },
+  "current": {
+   "coreId": "theodore",
+   "providerId": "emulatorjs",
+   "targetId": "theodore",
+   "coreFingerprint": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+   "romHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+  },
+  "readFormats": [
+   "emulatorjs-state-v1-storage-v1"
+  ]
+ },
+ "result": {
+  "restorable": true,
+  "reason": null,
+  "warning": null
+ }
+}

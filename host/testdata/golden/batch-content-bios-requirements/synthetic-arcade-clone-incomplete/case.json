@@ -1,0 +1,84 @@
+{
+ "command": "batch-content-bios-requirements",
+ "input": {
+  "items": [
+   {
+    "directory": {
+     "platformId": "arcade",
+     "defaultCoreId": "mame2003",
+     "allowedCoreIds": [
+      "mame2003"
+     ]
+    },
+    "files": [
+     {
+      "logicalKey": "pacman.zip",
+      "name": "pacman.zip",
+      "sizeBytes": 922,
+      "sha256": "8214b59d8c9ef4f0559ca553400522e17c1999d709cc08cc96d63de8e6928666"
+     },
+     {
+      "logicalKey": "puckman.zip",
+      "name": "puckman.zip",
+      "sizeBytes": 1055,
+      "sha256": "144900b382c9ae14c1fca22b3c1bd0f70eac28e4cbc9363537e848ed47e42955"
+     }
+    ],
+    "locators": {
+     "pacman.zip": {
+      "path": "${CASE}/files/pacman.zip",
+      "offset": 0,
+      "sizeBytes": 922
+     },
+     "puckman.zip": {
+      "path": "${CASE}/files/puckman.zip",
+      "offset": 0,
+      "sizeBytes": 1055
+     }
+    },
+    "config": {
+     "content": {
+      "kind": "ARCADE",
+      "entryFile": "pacman.zip"
+     },
+     "cores": {
+      "mame2003": {
+       "parentFiles": [
+        "puckman.zip"
+       ]
+      }
+     }
+    },
+    "fingerprints": {
+     "emulatorjs/mame2003": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+    },
+    "coreId": "mame2003"
+   }
+  ]
+ },
+ "result": [
+  {
+   "biosRequirements": [],
+   "crcWarnings": [],
+   "missingRomMembers": [
+    {
+     "coreId": "mame2003",
+     "romSet": "pacman",
+     "role": "ROM",
+     "member": "pacman.6e",
+     "sizeBytes": 4096,
+     "reason": "MISSING"
+    },
+    {
+     "coreId": "mame2003",
+     "romSet": "pacman",
+     "role": "ROM",
+     "member": "pacman.6f",
+     "sizeBytes": 4096,
+     "reason": "MISSING"
+    }
+   ],
+   "error": null
+  }
+ ]
+}

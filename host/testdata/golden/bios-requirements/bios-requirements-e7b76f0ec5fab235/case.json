@@ -1,0 +1,53 @@
+{
+ "command": "bios-requirements",
+ "input": {
+  "providerId": "retrom-runtime",
+  "targetId": "siglus",
+  "config": {
+   "content": {
+    "kind": "SIGLUS_PROJECT",
+    "entryFile": "game/Scene.pck"
+   },
+   "cores": {
+    "siglus": {
+     "options": {
+      "language": "chs"
+     }
+    }
+   }
+  },
+  "files": [
+   {
+    "name": "game/Scene.pck",
+    "logicalKey": "game/Scene.pck",
+    "sizeBytes": 12,
+    "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+   },
+   {
+    "name": "game/Gameexe.dat",
+    "logicalKey": "game/Gameexe.dat",
+    "sizeBytes": 12,
+    "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+   },
+   {
+    "name": "game/scene.chs",
+    "logicalKey": "game/scene.chs",
+    "sizeBytes": 12,
+    "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+   },
+   {
+    "name": "game/gameexe.chs",
+    "logicalKey": "game/gameexe.chs",
+    "sizeBytes": 12,
+    "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+   },
+   {
+    "name": "game/g00/a.g01",
+    "logicalKey": "game/g00/a.g01",
+    "sizeBytes": 12,
+    "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+   }
+  ]
+ },
+ "result": []
+}

@@ -1,0 +1,128 @@
+{
+ "command": "prepare",
+ "input": {
+  "directory": {
+   "platformId": "kirikiri",
+   "defaultCoreId": "kirikiri2",
+   "allowedCoreIds": [
+    "kirikiri2"
+   ]
+  },
+  "files": [
+   {
+    "logicalKey": "bundle/data.xp3",
+    "name": "bundle/data.xp3",
+    "sizeBytes": 128,
+    "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+   }
+  ],
+  "config": {
+   "content": {
+    "kind": "KIRIKIRI_PROJECT",
+    "entryFile": "bundle/data.xp3"
+   },
+   "cores": {
+    "kirikiri2": {
+     "options": {
+      "engineArguments": [
+       "-locale=arbitrary",
+       "-flag",
+       "-locale=second",
+       "-caption=中文 text",
+       "-empty="
+      ],
+      "steamService": "LOCAL"
+     }
+    }
+   }
+  },
+  "fingerprints": {
+   "retrom-runtime/kirikiri2-kag": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+  }
+ },
+ "result": {
+  "coreId": "kirikiri2",
+  "providerId": "retrom-runtime",
+  "targetId": "kirikiri2-kag",
+  "coreFingerprint": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+  "romHash": "587543503e54782119b5c073233573e69c93c98ac6f0bd8c2d383e403e8dc993",
+  "config": {
+   "content": {
+    "kind": "KIRIKIRI_PROJECT",
+    "entryFile": "bundle/data.xp3"
+   },
+   "cores": {
+    "kirikiri2": {
+     "options": {
+      "engineArguments": [
+       "-locale=arbitrary",
+       "-flag",
+       "-locale=second",
+       "-caption=中文 text",
+       "-empty="
+      ],
+      "steamService": "LOCAL"
+     }
+    }
+   }
+  },
+  "targetOptions": {
+   "engineArguments": [
+    "-locale=arbitrary",
+    "-flag",
+    "-locale=second",
+    "-caption=中文 text",
+    "-empty="
+   ],
+   "steamService": "LOCAL",
+   "startupXp3Path": "data.xp3"
+  },
+  "dependencies": {
+   "parentFiles": [],
+   "missingParents": [],
+   "biosSets": []
+  },
+  "crcWarnings": [],
+  "biosRequirements": [],
+  "checkpoint": {
+   "maxBytes": 67108864,
+   "readFormats": [
+    "kirikiri-game-save-v1-storage-v1"
+   ],
+   "writeFormat": "kirikiri-game-save-v1-storage-v1",
+   "semantics": "GAME_SAVE"
+  },
+  "capabilities": {
+   "contentLoading": "ON_DEMAND_AND_PRELOAD",
+   "checkpoint": true,
+   "frameCounter": false,
+   "frameMode": "SAME_ORIGIN_BLANK",
+   "inputFilter": true,
+   "nativeSettings": false,
+   "pause": true,
+   "requiresThreads": true,
+   "screenshot": true,
+   "standardGamepad": true,
+   "videoModes": [
+    "original",
+    "pixel",
+    "smooth"
+   ],
+   "volume": false
+  },
+  "resources": [
+   {
+    "role": "game",
+    "kind": "FILE_TREE",
+    "ordinal": 0,
+    "files": [
+     "bundle/data.xp3"
+    ],
+    "entryFile": "data.xp3",
+    "paths": {
+     "bundle/data.xp3": "data.xp3"
+    }
+   }
+  ]
+ }
+}

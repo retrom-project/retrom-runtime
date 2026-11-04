@@ -1,0 +1,16 @@
+{
+ "command": "storage-layout",
+ "input": {
+  "platformId": "gbc",
+  "coreId": "gambatte",
+  "config": {
+   "content": {
+    "kind": "SINGLE_FILE",
+    "entryFile": "Infinity.gb"
+   }
+  }
+ },
+ "result": {
+  "layout": "FILES"
+ }
+}

@@ -1,0 +1,52 @@
+{
+ "command": "batch-identity",
+ "input": {
+  "items": [
+   {
+    "directory": {
+     "platformId": "rpgmaker",
+     "defaultCoreId": "rpgmaker",
+     "allowedCoreIds": [
+      "rpgmaker"
+     ]
+    },
+    "files": [
+     {
+      "logicalKey": "project/Game.ini",
+      "name": "project/Game.ini",
+      "sizeBytes": 128,
+      "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+     },
+     {
+      "logicalKey": "project/Data/Map.rxdata",
+      "name": "project/Data/Map.rxdata",
+      "sizeBytes": 128,
+      "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+     }
+    ],
+    "config": {
+     "content": {
+      "kind": "RPG_MAKER_PROJECT",
+      "engine": "RPGXP",
+      "entryFile": "project/Game.ini"
+     }
+    },
+    "fingerprints": {
+     "retrom-runtime/rpgmaker-xp": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+    }
+   }
+  ]
+ },
+ "result": [
+  {
+   "coreId": "rpgmaker",
+   "providerId": "retrom-runtime",
+   "targetId": "rpgmaker-xp",
+   "coreFingerprint": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+   "romHash": "d1b4b54dffc9ea68c086eca691f997df0afbf0c96864660ae8d23b3a8a8cffb9",
+   "readFormats": [
+    "mkxp-state-v1-storage-v1"
+   ]
+  }
+ ]
+}

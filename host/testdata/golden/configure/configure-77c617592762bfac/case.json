@@ -1,0 +1,36 @@
+{
+ "command": "configure",
+ "input": {
+  "platformId": "gbc",
+  "coreIds": [
+   "gambatte",
+   "mgba"
+  ],
+  "files": [
+   {
+    "logicalKey": "Infinity.gb",
+    "name": "Infinity.gb",
+    "sizeBytes": 128,
+    "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+   },
+   {
+    "logicalKey": "instructions.txt",
+    "name": "instructions.txt",
+    "sizeBytes": 128,
+    "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+   },
+   {
+    "logicalKey": "license.txt",
+    "name": "license.txt",
+    "sizeBytes": 128,
+    "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+   }
+  ]
+ },
+ "result": {
+  "content": {
+   "kind": "SINGLE_FILE",
+   "entryFile": "Infinity.gb"
+  }
+ }
+}

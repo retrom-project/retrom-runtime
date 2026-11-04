@@ -1,0 +1,41 @@
+{
+ "command": "configure",
+ "input": {
+  "platformId": "ons",
+  "coreIds": [
+   "onscripter_yuri"
+  ],
+  "files": [
+   {
+    "logicalKey": "水色/0.txt",
+    "name": "水色/0.txt",
+    "sizeBytes": 86,
+    "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+   },
+   {
+    "logicalKey": "水色/default.ttf",
+    "name": "default.ttf",
+    "sizeBytes": 4,
+    "sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+   }
+  ],
+  "evidence": {
+   "水色/0.txt": {
+    "prefixBase64": "KmRlZmluZQo7y67Jq7q6u6/X6VNUQUZGw/u1paOoxcXD+7K7t9bPyLrzo6kKxvO7rqO6cG50Z2QKz/uz/bbUu7C/8gqxo7Tmvfi2yAq2wcihvfi2yAo="
+   }
+  }
+ },
+ "result": {
+  "content": {
+   "kind": "ONS_PROJECT",
+   "entryFile": "水色/0.txt"
+  },
+  "cores": {
+   "onscripter_yuri": {
+    "options": {
+     "scriptEncoding": "gbk"
+    }
+   }
+  }
+ }
+}

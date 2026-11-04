@@ -1,0 +1,146 @@
+{
+ "command": "rom-sets",
+ "input": {
+  "coreId": "fbalpha",
+  "directory": {
+   "platformId": "arcade",
+   "defaultCoreId": "fbalpha",
+   "allowedCoreIds": [
+    "fbalpha",
+    "fbneo",
+    "mame2003",
+    "mame2003_plus",
+    "mame_arcade"
+   ]
+  },
+  "files": [
+   {
+    "logicalKey": "original.zip",
+    "name": "original.zip",
+    "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "sizeBytes": 1
+   }
+  ],
+  "config": {
+   "content": {
+    "kind": "ARCADE",
+    "entryFile": "original.zip"
+   },
+   "cores": {
+    "fbalpha": {
+     "romSet": "chosen"
+    }
+   }
+  },
+  "archives": {
+   "original.zip": []
+  },
+  "arcadeCatalog": {
+   "chosen": {
+    "parent": null,
+    "bios": false,
+    "roms": [],
+    "description": "Chosen Game (version 2)",
+    "year": "1990",
+    "manufacturer": "Maker"
+   },
+   "clone": {
+    "parent": "parent",
+    "bios": false,
+    "roms": [
+     {
+      "name": "p.bin",
+      "size": "1",
+      "crc": "abcdef12",
+      "merge": "p.bin"
+     }
+    ]
+   },
+   "parent": {
+    "parent": null,
+    "bios": false,
+    "roms": [
+     {
+      "name": "p.bin",
+      "size": "1",
+      "crc": "abcdef12"
+     }
+    ]
+   },
+   "firmware": {
+    "parent": null,
+    "bios": true,
+    "roms": []
+   },
+   "device": {
+    "parent": null,
+    "bios": false,
+    "device": true,
+    "roms": []
+   },
+   "inactive": {
+    "parent": null,
+    "bios": false,
+    "runnable": false,
+    "roms": []
+   }
+  },
+  "fingerprints": {
+   "emulatorjs/fbalpha": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+  },
+  "query": "parent"
+ },
+ "result": {
+  "coreId": "fbalpha",
+  "datSHA256": "4c257078e2f2ab66c75602905d68b7fe7e93e114858813a479e2fd08dd5f18a1",
+  "automaticSelection": null,
+  "selected": null,
+  "entries": [
+   {
+    "name": "8ballact",
+    "description": "Eight Ball Action (DK conversion) [Parent set for working drivers]",
+    "year": "1984",
+    "manufacturer": "Seatongrove Ltd (Magic Eletronics USA licence)"
+   },
+   {
+    "name": "btime3",
+    "description": "Burger Time (Data East USA) [graphics issues, use parent romset!]",
+    "year": "1982",
+    "manufacturer": "Data East USA Inc."
+   },
+   {
+    "name": "friskytb",
+    "description": "Frisky Tom (set 3, encrypted) [Broken, please use parent romset!]",
+    "year": "1981",
+    "manufacturer": "Nichibutsu"
+   },
+   {
+    "name": "hero",
+    "description": "Hero [Parent set for working drivers]",
+    "year": "1984",
+    "manufacturer": "Century Electronics / Seatongrove Ltd"
+   },
+   {
+    "name": "hunchbak",
+    "description": "Hunchback (set 1) [Parent set for working drivers]",
+    "year": "1983",
+    "manufacturer": "Century Electronics"
+   },
+   {
+    "name": "huncholy",
+    "description": "Hunchback Olympic [Parent set for working drivers]",
+    "year": "1984",
+    "manufacturer": "Seatongrove Ltd"
+   },
+   {
+    "name": "tetrist",
+    "description": "Tetris (Japan, B-System, YM2610) [buggy - use parent!]",
+    "year": "1989",
+    "manufacturer": "Sega"
+   }
+  ],
+  "total": 7,
+  "offset": 0,
+  "limit": 50
+ }
+}

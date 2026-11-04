@@ -1,0 +1,76 @@
+{
+ "command": "batch-identity",
+ "input": {
+  "items": [
+   {
+    "directory": {
+     "platformId": "arcade",
+     "defaultCoreId": "mame_arcade",
+     "allowedCoreIds": [
+      "mame_arcade"
+     ]
+    },
+    "files": [
+     {
+      "logicalKey": "renamed.zip",
+      "name": "renamed.zip",
+      "sizeBytes": 128,
+      "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+     }
+    ],
+    "fingerprints": {
+     "retrom-runtime/mame-arcade": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+    },
+    "config": {
+     "content": {
+      "kind": "ARCADE",
+      "entryFile": "renamed.zip"
+     },
+     "cores": {
+      "mame_arcade": {
+       "romSet": "other"
+      }
+     }
+    },
+    "archives": {
+     "renamed.zip": []
+    },
+    "arcadeCatalog": {
+     "pacman": {
+      "parent": null,
+      "bios": false,
+      "roms": []
+     }
+    },
+    "savedContext": {
+     "coreId": "mame_arcade",
+     "providerId": "retrom-runtime",
+     "targetId": "mame-arcade",
+     "coreFingerprint": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+     "romHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+     "checkpointFormat": "mame-state-v1-storage-v1",
+     "content": {
+      "kind": "ARCADE",
+      "entryFile": "pacman.zip"
+     },
+     "runtimeOptions": {
+      "machine": "pacman"
+     },
+     "romSet": "pacman"
+    }
+   }
+  ]
+ },
+ "result": [
+  {
+   "coreId": "mame_arcade",
+   "providerId": "retrom-runtime",
+   "targetId": "mame-arcade",
+   "coreFingerprint": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+   "romHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+   "readFormats": [
+    "mame-state-v1-storage-v1"
+   ]
+  }
+ ]
+}

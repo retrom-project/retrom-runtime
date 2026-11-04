@@ -1,0 +1,79 @@
+{
+ "command": "kirikiri-entry-candidates",
+ "input": {
+  "platformId": "rpgmaker",
+  "files": [
+   {
+    "logicalKey": "game/startup.tjs",
+    "name": "game/startup.tjs",
+    "sizeBytes": 33,
+    "sha256": "ecd1243ecae44d01c339805b55890fa7595950298c9d7c42c0bc6805f2428d57"
+   },
+   {
+    "logicalKey": "game/data.xp3",
+    "name": "game/data.xp3",
+    "sizeBytes": 64,
+    "sha256": "141cce7080ac763b12d08da2426770e6c3aaa14de5118ed64104b561424986e1"
+   },
+   {
+    "logicalKey": "game/patch.bin",
+    "name": "game/patch.bin",
+    "sizeBytes": 32,
+    "sha256": "9fcd0f0f52bb7051d784e56526515c98b232c2439882ed6b06ef7a63d754782c"
+   },
+   {
+    "logicalKey": "game/notes.txt",
+    "name": "game/notes.txt",
+    "sizeBytes": 5,
+    "sha256": "a116c9ed46d6207734a43317d30fd88f52ac8634c37d904bbf4e41d865f90475"
+   },
+   {
+    "logicalKey": "game/sub/extra.xp3",
+    "name": "game/sub/extra.xp3",
+    "sizeBytes": 14,
+    "sha256": "6bbf954ab0045bc546f16a6db16c95afef820dccd807348411ea924dabb972e9"
+   },
+   {
+    "logicalKey": "other/readme.txt",
+    "name": "other/readme.txt",
+    "sizeBytes": 6,
+    "sha256": "711a6108ba2ce6ca93dd47d6817f2361db10d8ab6eec89460b2dfc2c325efabe"
+   }
+  ],
+  "locators": {
+   "game/startup.tjs": {
+    "path": "${CASE}/files/game/startup.tjs",
+    "offset": 0,
+    "sizeBytes": 33
+   },
+   "game/data.xp3": {
+    "path": "${CASE}/files/game/data.xp3",
+    "offset": 0,
+    "sizeBytes": 64
+   },
+   "game/patch.bin": {
+    "path": "${CASE}/files/game/patch.bin",
+    "offset": 0,
+    "sizeBytes": 32
+   },
+   "game/notes.txt": {
+    "path": "${CASE}/files/game/notes.txt",
+    "offset": 0,
+    "sizeBytes": 5
+   },
+   "game/sub/extra.xp3": {
+    "path": "${CASE}/files/game/sub/extra.xp3",
+    "offset": 0,
+    "sizeBytes": 14
+   },
+   "other/readme.txt": {
+    "path": "${CASE}/files/other/readme.txt",
+    "offset": 0,
+    "sizeBytes": 6
+   }
+  }
+ },
+ "error": {
+  "code": "RUNTIME_CONFIGURATION_INVALID"
+ }
+}

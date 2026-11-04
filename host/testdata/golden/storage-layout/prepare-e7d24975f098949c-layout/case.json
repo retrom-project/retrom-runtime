@@ -1,0 +1,17 @@
+{
+ "command": "storage-layout",
+ "input": {
+  "platformId": "dos",
+  "coreId": "dosbox_pure",
+  "config": {
+   "content": {
+    "kind": "DOS_BUNDLE",
+    "entryFile": "game.zip",
+    "entryPath": "金庸群侠传/PLAY.BAT"
+   }
+  }
+ },
+ "result": {
+  "layout": "FILES"
+ }
+}

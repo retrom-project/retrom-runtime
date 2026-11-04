@@ -1,0 +1,35 @@
+{
+ "command": "bios-requirements",
+ "input": {
+  "providerId": "retrom-runtime",
+  "targetId": "kirikiri2-kag",
+  "config": {
+   "content": {
+    "kind": "KIRIKIRI_PROJECT",
+    "entryFile": "arbitrary/startup.tjs"
+   },
+   "cores": {
+    "kirikiri2": {
+     "options": {
+      "engineMode": "KIRIKIRI2"
+     }
+    }
+   }
+  },
+  "files": [
+   {
+    "logicalKey": "arbitrary/startup.tjs",
+    "name": "arbitrary/startup.tjs",
+    "sizeBytes": 128,
+    "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+   },
+   {
+    "logicalKey": "arbitrary/resources.xp3",
+    "name": "arbitrary/resources.xp3",
+    "sizeBytes": 128,
+    "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+   }
+  ]
+ },
+ "result": []
+}

@@ -1,0 +1,151 @@
+{
+ "command": "normalize-content",
+ "input": {
+  "platformId": "kirikiri",
+  "files": [
+   {
+    "logicalKey": "data.xp3",
+    "name": "data.xp3",
+    "sha256": "357ea3d034cdbf5f5d60e5e59e8799473dbbf0627ab49148edb9223bd4262e83",
+    "sizeBytes": 1389
+   },
+   {
+    "logicalKey": "plugin/helper.tpm",
+    "name": "plugin/helper.tpm",
+    "sha256": "292fdb13e77389e5e6a8310f6e1a0d524266d7ed0836340fee4263ad93c2b97a",
+    "sizeBytes": 24576
+   },
+   {
+    "logicalKey": "patch.xp3",
+    "name": "patch.xp3",
+    "sha256": "2b45d45a041e88fa6b704ec9d070876e1e3fa1e9eca5856b5974af7193dc99e1",
+    "sizeBytes": 942
+   }
+  ],
+  "locators": {
+   "data.xp3": {
+    "path": "${CASE}/files/data.xp3",
+    "offset": 0,
+    "sizeBytes": 1389
+   },
+   "plugin/helper.tpm": {
+    "path": "${CASE}/files/plugin/helper.tpm",
+    "offset": 0,
+    "sizeBytes": 24576
+   },
+   "patch.xp3": {
+    "path": "${CASE}/files/patch.xp3",
+    "offset": 0,
+    "sizeBytes": 942
+   }
+  },
+  "outputRoot": "${OUT}"
+ },
+ "result": {
+  "files": [
+   {
+    "logicalKey": "data.xp3",
+    "name": "data.xp3",
+    "sizeBytes": 1143,
+    "sha256": "5f572f36d870fde333f7a705631a95f7828caf13134acca65f497e445ed710d2",
+    "path": "${OUT}/data.xp3"
+   },
+   {
+    "logicalKey": "patch.xp3",
+    "name": "patch.xp3",
+    "sizeBytes": 778,
+    "sha256": "80467194f6c59f958e5213f5e80b23c418607177ece4ab3a5766c61d49583269",
+    "path": "${OUT}/patch.xp3"
+   },
+   {
+    "logicalKey": "plugin/helper.tpm",
+    "name": "plugin/helper.tpm",
+    "sha256": "292fdb13e77389e5e6a8310f6e1a0d524266d7ed0836340fee4263ad93c2b97a",
+    "sizeBytes": 24576
+   }
+  ],
+  "normalization": {
+   "kind": "CONTENT_NORMALIZATION",
+   "converterVersion": 1,
+   "sourceContentHash": "365e031a38d9baa31fdc74517fa500754cd452368a7940f9c3914bc2d8b0199c",
+   "archiveCount": 2,
+   "verifiedEntries": 3,
+   "metadataCorrections": 2,
+   "omittedPhysicalEntries": 0,
+   "formatCounts": {
+    "cxfilterfs-yuzu": 2
+   },
+   "warnings": [
+    {
+     "code": "SOURCE_METADATA_CORRECTED",
+     "count": 2
+    }
+   ],
+   "details": [
+    {
+     "code": "REUSED_FILTER_SEED",
+     "file": "patch.xp3",
+     "member": "patch-0.tjs",
+     "sourceSha256": "ec29e0125d02180ca9116d2a0fee706f6a5910682681763a7052382afc7471c4",
+     "outputSha256": "77363b658657e4ab9f287e6da7b6f0fc0a1794876bcbb513a94b5bb974eddb68",
+     "sourceSize": 251,
+     "outputSize": 251,
+     "seed": 123456,
+     "sourceChecksum": 123456,
+     "outputChecksum": 359444548
+    },
+    {
+     "code": "REUSED_FILTER_SEED",
+     "file": "patch.xp3",
+     "member": "patch-1.tjs",
+     "sourceSha256": "5a5e50985de590284ed6b67605f726eb7c25f47206baab0276b302ef00697a77",
+     "outputSha256": "f746a9be89eaa57b8c4441564a6309ee4e9ed5dc22e7e0998773a19acc5f3cee",
+     "sourceSize": 251,
+     "outputSize": 251,
+     "seed": 123456,
+     "sourceChecksum": 123456,
+     "outputChecksum": 375304261
+    }
+   ],
+   "plugins": [
+    {
+     "id": "kirikiri-cxfilterfs",
+     "version": 1,
+     "formats": [
+      "cxfilterfs-yuzu"
+     ],
+     "sources": [
+      {
+       "file": "data.xp3",
+       "sizeBytes": 1389,
+       "sha256": "357ea3d034cdbf5f5d60e5e59e8799473dbbf0627ab49148edb9223bd4262e83"
+      },
+      {
+       "file": "patch.xp3",
+       "sizeBytes": 942,
+       "sha256": "2b45d45a041e88fa6b704ec9d070876e1e3fa1e9eca5856b5974af7193dc99e1"
+      }
+     ],
+     "outputs": [
+      {
+       "file": "data.xp3",
+       "sizeBytes": 1143,
+       "sha256": "5f572f36d870fde333f7a705631a95f7828caf13134acca65f497e445ed710d2"
+      },
+      {
+       "file": "patch.xp3",
+       "sizeBytes": 778,
+       "sha256": "80467194f6c59f958e5213f5e80b23c418607177ece4ab3a5766c61d49583269"
+      }
+     ],
+     "validation": {
+      "outputFilesVerified": 2,
+      "resourceEntriesVerified": 3,
+      "metadataCorrections": 2,
+      "omittedPhysicalEntries": 0
+     }
+    }
+   ]
+  }
+ }
+}

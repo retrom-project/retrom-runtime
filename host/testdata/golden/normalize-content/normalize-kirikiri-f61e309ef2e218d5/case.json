@@ -1,0 +1,88 @@
+{
+ "command": "normalize-content",
+ "input": {
+  "platformId": "kirikiri",
+  "files": [
+   {
+    "logicalKey": "nested/run.exe",
+    "name": "run.exe",
+    "sha256": "12f0b3cb9eade9cc76f054c9bad1505eddaa717758228b03ed17c0a7f47ae7d7",
+    "sizeBytes": 217962
+   }
+  ],
+  "locators": {
+   "nested/run.exe": {
+    "path": "${CASE}/files/nested/run.exe",
+    "offset": 0,
+    "sizeBytes": 217962
+   }
+  },
+  "outputRoot": "${OUT}"
+ },
+ "result": {
+  "files": [
+   {
+    "logicalKey": "nested/assets/story.txt",
+    "name": "nested/assets/story.txt",
+    "path": "${OUT}/nested/assets/story.txt",
+    "sizeBytes": 144000,
+    "sha256": "8350e3f040064b85f4de2d626e21a5c7028abbb8146324853ac1d2565071ead2"
+   },
+   {
+    "logicalKey": "nested/run.exe",
+    "name": "nested/run.exe",
+    "path": "${OUT}/nested/run.exe",
+    "sizeBytes": 217962,
+    "sha256": "12f0b3cb9eade9cc76f054c9bad1505eddaa717758228b03ed17c0a7f47ae7d7"
+   }
+  ],
+  "normalization": {
+   "kind": "CONTENT_NORMALIZATION",
+   "converterVersion": 1,
+   "sourceContentHash": "90e6bc9e2e1c8ba2bb5c5352e1810a8900c67eac436f38ba26fe17d52c5e6365",
+   "archiveCount": 1,
+   "verifiedEntries": 1,
+   "metadataCorrections": 0,
+   "omittedPhysicalEntries": 0,
+   "formatCounts": {
+    "enigma-protector-vfs": 1
+   },
+   "warnings": [],
+   "details": [],
+   "plugins": [
+    {
+     "id": "enigma-protector-vfs",
+     "version": 1,
+     "formats": [
+      "enigma-protector-vfs"
+     ],
+     "sources": [
+      {
+       "file": "nested/run.exe",
+       "sizeBytes": 217962,
+       "sha256": "12f0b3cb9eade9cc76f054c9bad1505eddaa717758228b03ed17c0a7f47ae7d7"
+      }
+     ],
+     "outputs": [
+      {
+       "file": "nested/run.exe",
+       "sizeBytes": 217962,
+       "sha256": "12f0b3cb9eade9cc76f054c9bad1505eddaa717758228b03ed17c0a7f47ae7d7"
+      },
+      {
+       "file": "nested/assets/story.txt",
+       "sizeBytes": 144000,
+       "sha256": "8350e3f040064b85f4de2d626e21a5c7028abbb8146324853ac1d2565071ead2"
+      }
+     ],
+     "validation": {
+      "outputFilesVerified": 2,
+      "resourceEntriesVerified": 1,
+      "metadataCorrections": 0,
+      "omittedPhysicalEntries": 0
+     }
+    }
+   ]
+  }
+ }
+}

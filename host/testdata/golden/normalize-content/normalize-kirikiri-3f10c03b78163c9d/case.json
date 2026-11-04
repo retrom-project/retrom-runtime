@@ -1,0 +1,25 @@
+{
+ "command": "normalize-content",
+ "input": {
+  "platformId": "kirikiri",
+  "files": [
+   {
+    "logicalKey": "nested/launch.exe",
+    "name": "launch.exe",
+    "sha256": "8b1913659c2e5b51e5969c75e6e7c08b7959178a5c909e1cedd44c11509ae978",
+    "sizeBytes": 73462
+   }
+  ],
+  "locators": {
+   "nested/launch.exe": {
+    "path": "${CASE}/files/nested/launch.exe",
+    "offset": 0,
+    "sizeBytes": 73462
+   }
+  },
+  "outputRoot": "${OUT}"
+ },
+ "error": {
+  "code": "RUNTIME_MOLEBOX_UNSUPPORTED"
+ }
+}

@@ -1,0 +1,23 @@
+{
+ "command": "configure",
+ "input": {
+  "platformId": "nes",
+  "coreIds": [
+   "fceumm"
+  ],
+  "files": [
+   {
+    "logicalKey": "game.nes",
+    "name": "game.nes",
+    "sizeBytes": 128,
+    "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+   }
+  ]
+ },
+ "result": {
+  "content": {
+   "kind": "SINGLE_FILE",
+   "entryFile": "game.nes"
+  }
+ }
+}

@@ -1,0 +1,22 @@
+{
+ "command": "bios-requirements",
+ "input": {
+  "providerId": "retrom-runtime",
+  "targetId": "mame-arcade",
+  "config": {
+   "content": {
+    "kind": "ARCADE",
+    "entryFile": "game"
+   }
+  },
+  "files": [
+   {
+    "logicalKey": "game",
+    "name": "vf2.zip",
+    "sizeBytes": 100,
+    "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+   }
+  ]
+ },
+ "result": []
+}

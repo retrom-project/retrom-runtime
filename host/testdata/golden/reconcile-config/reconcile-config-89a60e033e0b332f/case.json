@@ -1,0 +1,264 @@
+{
+ "command": "reconcile-config",
+ "input": {
+  "coreId": "mame2003",
+  "directory": {
+   "platformId": "arcade",
+   "defaultCoreId": "mame2003",
+   "allowedCoreIds": [
+    "mame2003"
+   ]
+  },
+  "files": [
+   {
+    "logicalKey": "original.zip",
+    "name": "original.zip",
+    "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "sizeBytes": 1
+   },
+   {
+    "logicalKey": "parent.zip",
+    "name": "parent.zip",
+    "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "sizeBytes": 1
+   },
+   {
+    "logicalKey": "unrelated.zip",
+    "name": "unrelated.zip",
+    "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "sizeBytes": 1
+   }
+  ],
+  "config": {
+   "content": {
+    "kind": "ARCADE",
+    "entryFile": "original.zip"
+   },
+   "cores": {
+    "mame2003": {
+     "romSet": "chosen",
+     "parentFiles": [
+      "parent.zip"
+     ]
+    },
+    "fbalpha": {
+     "romSet": "clone",
+     "parentFiles": [
+      "parent.zip"
+     ]
+    }
+   }
+  },
+  "archives": {
+   "original.zip": []
+  },
+  "arcadeCatalog": {
+   "chosen": {
+    "parent": null,
+    "bios": false,
+    "roms": []
+   },
+   "clone": {
+    "parent": "parent",
+    "bios": false,
+    "roms": [
+     {
+      "name": "p.bin",
+      "size": "1",
+      "crc": "abcdef12",
+      "merge": "p.bin"
+     }
+    ]
+   },
+   "parent": {
+    "parent": null,
+    "bios": false,
+    "roms": [
+     {
+      "name": "p.bin",
+      "size": "1",
+      "crc": "abcdef12"
+     }
+    ]
+   }
+  },
+  "fingerprints": {
+   "emulatorjs/mame2003": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+  },
+  "previousConfig": {
+   "content": {
+    "kind": "ARCADE",
+    "entryFile": "original.zip"
+   },
+   "cores": {
+    "mame2003": {
+     "romSet": "clone",
+     "parentFiles": [
+      "parent.zip"
+     ]
+    },
+    "fbalpha": {
+     "romSet": "clone",
+     "parentFiles": [
+      "parent.zip"
+     ]
+    }
+   }
+  },
+  "arcadeCatalogs": {
+   "fbalpha": {
+    "chosen": {
+     "parent": null,
+     "bios": false,
+     "roms": []
+    },
+    "clone": {
+     "parent": "parent",
+     "bios": false,
+     "roms": [
+      {
+       "name": "p.bin",
+       "size": "1",
+       "crc": "abcdef12",
+       "merge": "p.bin"
+      }
+     ]
+    },
+    "parent": {
+     "parent": null,
+     "bios": false,
+     "roms": [
+      {
+       "name": "p.bin",
+       "size": "1",
+       "crc": "abcdef12"
+      }
+     ]
+    }
+   },
+   "fbneo": {
+    "chosen": {
+     "parent": null,
+     "bios": false,
+     "roms": []
+    },
+    "clone": {
+     "parent": "parent",
+     "bios": false,
+     "roms": [
+      {
+       "name": "p.bin",
+       "size": "1",
+       "crc": "abcdef12",
+       "merge": "p.bin"
+      }
+     ]
+    },
+    "parent": {
+     "parent": null,
+     "bios": false,
+     "roms": [
+      {
+       "name": "p.bin",
+       "size": "1",
+       "crc": "abcdef12"
+      }
+     ]
+    }
+   },
+   "mame2003": {
+    "chosen": {
+     "parent": null,
+     "bios": false,
+     "roms": []
+    },
+    "clone": {
+     "parent": "parent",
+     "bios": false,
+     "roms": [
+      {
+       "name": "p.bin",
+       "size": "1",
+       "crc": "abcdef12",
+       "merge": "p.bin"
+      }
+     ]
+    },
+    "parent": {
+     "parent": null,
+     "bios": false,
+     "roms": [
+      {
+       "name": "p.bin",
+       "size": "1",
+       "crc": "abcdef12"
+      }
+     ]
+    }
+   },
+   "mame2003_plus": {
+    "chosen": {
+     "parent": null,
+     "bios": false,
+     "roms": []
+    },
+    "clone": {
+     "parent": "parent",
+     "bios": false,
+     "roms": [
+      {
+       "name": "p.bin",
+       "size": "1",
+       "crc": "abcdef12",
+       "merge": "p.bin"
+      }
+     ]
+    },
+    "parent": {
+     "parent": null,
+     "bios": false,
+     "roms": [
+      {
+       "name": "p.bin",
+       "size": "1",
+       "crc": "abcdef12"
+      }
+     ]
+    }
+   },
+   "mame_arcade": {
+    "chosen": {
+     "parent": null,
+     "bios": false,
+     "roms": []
+    },
+    "clone": {
+     "parent": "parent",
+     "bios": false,
+     "roms": [
+      {
+       "name": "p.bin",
+       "size": "1",
+       "crc": "abcdef12",
+       "merge": "p.bin"
+      }
+     ]
+    },
+    "parent": {
+     "parent": null,
+     "bios": false,
+     "roms": [
+      {
+       "name": "p.bin",
+       "size": "1",
+       "crc": "abcdef12"
+      }
+     ]
+    }
+   }
+  }
+ },
+ "error": {
+  "code": "RUNTIME_ROM_SET_INVALID"
+ }
+}

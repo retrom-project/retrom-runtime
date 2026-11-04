@@ -1,0 +1,18 @@
+{
+ "command": "storage-layout",
+ "input": {
+  "platformId": "rpgmaker",
+  "coreId": "rpgmaker",
+  "config": {
+   "content": {
+    "kind": "RPG_MAKER_PROJECT",
+    "entryFile": "Game.ini",
+    "engine": "RPGVXACE",
+    "rtp": "RPGVXAce"
+   }
+  }
+ },
+ "result": {
+  "layout": "ZIP_STORE"
+ }
+}

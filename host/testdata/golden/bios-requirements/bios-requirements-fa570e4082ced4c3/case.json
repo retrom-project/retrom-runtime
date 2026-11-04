@@ -1,0 +1,52 @@
+{
+ "command": "bios-requirements",
+ "input": {
+  "providerId": "emulatorjs",
+  "targetId": "gambatte",
+  "config": {
+   "content": {
+    "kind": "SINGLE_FILE",
+    "entryFile": "Infinity.gb"
+   }
+  },
+  "files": [
+   {
+    "logicalKey": "Infinity.gb",
+    "name": "Infinity.gb",
+    "sizeBytes": 128,
+    "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+   },
+   {
+    "logicalKey": "instructions.txt",
+    "name": "instructions.txt",
+    "sizeBytes": 128,
+    "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+   },
+   {
+    "logicalKey": "license.txt",
+    "name": "license.txt",
+    "sizeBytes": 128,
+    "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+   }
+  ]
+ },
+ "result": [
+  {
+   "requirementKey": "firmware/gb_bios.bin",
+   "coreId": "gambatte",
+   "providerId": "emulatorjs",
+   "targetId": "gambatte",
+   "logicalName": "gb_bios.bin",
+   "required": false,
+   "condition": "GB_CONTENT",
+   "sizeBytes": 256,
+   "md5": "32fbbd84168d3482956eb3c5051637f5",
+   "sha256": "cf053eccb4ccafff9e67339d4e78e98dce7d1ed59be819d2a1ba2232c6fce1c7",
+   "delivery": "BIOS_BUNDLE",
+   "virtualPath": null,
+   "activationOptions": {
+    "gambatte_gb_bootloader": "enabled"
+   }
+  }
+ ]
+}

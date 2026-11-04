@@ -1,0 +1,55 @@
+{
+ "command": "batch-identity",
+ "input": {
+  "items": [
+   {
+    "root": "${CASE}/files/p0",
+    "files": [
+     {
+      "logicalKey": "disc.cue",
+      "name": "disc.cue",
+      "sha256": "1fa4c8e3962bad82e61552ca6880e3db14b386065ad354310946062d039c413d",
+      "sizeBytes": 44
+     },
+     {
+      "logicalKey": "disc.bin",
+      "name": "disc.bin",
+      "sha256": "e27ed4bf3a2f3de13674c38f3d0b135a4dc7a32589aee636ec6465c785e1ac62",
+      "sizeBytes": 65537
+     }
+    ],
+    "locators": {
+     "disc.cue": {
+      "path": "${CASE}/files/p1",
+      "offset": 0,
+      "sizeBytes": 44
+     },
+     "disc.bin": {
+      "path": "${CASE}/files/p2",
+      "offset": 0,
+      "sizeBytes": 65536
+     }
+    },
+    "directory": {
+     "platformId": "psx",
+     "defaultCoreId": "mednafen_psx_hw",
+     "allowedCoreIds": [
+      "mednafen_psx_hw"
+     ]
+    },
+    "fingerprints": {},
+    "config": {
+     "content": {
+      "kind": "SINGLE_FILE",
+      "entryFile": "disc.cue"
+     }
+    }
+   }
+  ]
+ },
+ "result": [
+  {
+   "error": "RUNTIME_IMPLEMENTATION_UNAVAILABLE"
+  }
+ ]
+}

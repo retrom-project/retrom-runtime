@@ -1,0 +1,121 @@
+{
+ "command": "bios-identify",
+ "input": {
+  "path": "${CASE}/files/p0",
+  "file": {
+   "name": "RPGXP_RTP_v1.02.zip",
+   "sizeBytes": 459,
+   "sha256": "f6cc78cf0cd399637ab06d835f2f7b28ebf7819114ac1aeb0439694b116e1b6c",
+   "md5": "b14ddc15e06df54eca8555358b1fbc8f"
+  },
+  "requirements": [
+   {
+    "requirementKey": "retrom-runtime/rpgmaker-xp/Standard.zip",
+    "coreId": "test",
+    "logicalName": "Standard.zip",
+    "providerId": "test",
+    "targetId": "rpgmaker-xp",
+    "required": true,
+    "condition": "RPG_RTP",
+    "delivery": "SEEKABLE_BLOB",
+    "virtualPath": null,
+    "activationOptions": {},
+    "sizeBytes": null,
+    "sha256": null,
+    "md5": null,
+    "resourceRole": "rtp",
+    "archiveEntries": [
+     "Audio/",
+     "Graphics/Windowskins/",
+     "Graphics/Autotiles/"
+    ],
+    "archiveExcludes": [
+     "Game.ini",
+     "Data/"
+    ]
+   },
+   {
+    "requirementKey": "retrom-runtime/rpgmaker-vx/RPGVX.zip",
+    "coreId": "test",
+    "logicalName": "RPGVX.zip",
+    "providerId": "test",
+    "targetId": "rpgmaker-vx",
+    "required": true,
+    "condition": "RPG_RTP",
+    "delivery": "SEEKABLE_BLOB",
+    "virtualPath": null,
+    "activationOptions": {},
+    "sizeBytes": null,
+    "sha256": null,
+    "md5": null,
+    "resourceRole": "rtp",
+    "archiveEntries": [
+     "Audio/",
+     "Graphics/System/TileA1.png",
+     "Graphics/System/TileB.png"
+    ],
+    "archiveExcludes": [
+     "Game.ini",
+     "Data/"
+    ]
+   },
+   {
+    "requirementKey": "retrom-runtime/rpgmaker-vx-ace/RPGVXAce.zip",
+    "coreId": "test",
+    "logicalName": "RPGVXAce.zip",
+    "providerId": "test",
+    "targetId": "rpgmaker-vx-ace",
+    "required": true,
+    "condition": "RPG_RTP",
+    "delivery": "SEEKABLE_BLOB",
+    "virtualPath": null,
+    "activationOptions": {},
+    "sizeBytes": null,
+    "sha256": null,
+    "md5": null,
+    "resourceRole": "rtp",
+    "archiveEntries": [
+     "Audio/",
+     "Graphics/Titles1/",
+     "Graphics/Battlebacks1/"
+    ],
+    "archiveExcludes": [
+     "Game.ini",
+     "Data/"
+    ]
+   }
+  ]
+ },
+ "result": [
+  {
+   "requirementKey": "retrom-runtime/rpgmaker-xp/Standard.zip",
+   "coreId": "test",
+   "logicalName": "Standard.zip",
+   "providerId": "test",
+   "targetId": "rpgmaker-xp",
+   "required": true,
+   "condition": "RPG_RTP",
+   "delivery": "SEEKABLE_BLOB",
+   "virtualPath": null,
+   "activationOptions": {},
+   "sizeBytes": null,
+   "sha256": null,
+   "md5": null,
+   "resourceRole": "rtp",
+   "archiveEntries": [
+    "Audio/",
+    "Graphics/Windowskins/",
+    "Graphics/Autotiles/"
+   ],
+   "archiveExcludes": [
+    "Game.ini",
+    "Data/"
+   ],
+   "candidate": {
+    "memberIdentity": "3ed9ab6c4ee18f2029c799703eb5f9b83b748899af7cb8d87457ed5c8f4a69dd",
+    "matchedMembers": 3,
+    "totalMembers": 3
+   }
+  }
+ ]
+}

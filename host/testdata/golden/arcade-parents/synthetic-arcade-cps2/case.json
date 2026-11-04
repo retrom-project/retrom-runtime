@@ -1,0 +1,63 @@
+{
+ "command": "arcade-parents",
+ "input": {
+  "directory": {
+   "platformId": "arcade",
+   "defaultCoreId": "fbalpha2012_cps2",
+   "allowedCoreIds": [
+    "fbalpha2012_cps2"
+   ]
+  },
+  "files": [
+   {
+    "logicalKey": "1944j.zip",
+    "name": "1944j.zip",
+    "sizeBytes": 31701,
+    "sha256": "1d15b5ddb492a0c36e477b01fe101bc5731ece0fa8b80a37c92391b3200286ab"
+   },
+   {
+    "logicalKey": "1944.zip",
+    "name": "1944.zip",
+    "sizeBytes": 31699,
+    "sha256": "362d199c6df6ab9bc654ef8d0c1a2f93c58e1bf5139acf69ac4b55e21ad3a4cb"
+   }
+  ],
+  "locators": {
+   "1944j.zip": {
+    "path": "${CASE}/files/1944j.zip",
+    "offset": 0,
+    "sizeBytes": 31701
+   },
+   "1944.zip": {
+    "path": "${CASE}/files/1944.zip",
+    "offset": 0,
+    "sizeBytes": 31699
+   }
+  },
+  "fingerprints": {
+   "emulatorjs/fbalpha2012-cps2": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+  },
+  "config": {
+   "content": {
+    "kind": "ARCADE",
+    "entryFile": "1944j.zip"
+   }
+  },
+  "coreId": "fbalpha2012_cps2"
+ },
+ "result": {
+  "coreId": "fbalpha2012_cps2",
+  "parentFiles": [],
+  "missingParents": [
+   "1944.zip"
+  ],
+  "mediaFiles": [],
+  "missingMedia": [],
+  "config": {
+   "content": {
+    "kind": "ARCADE",
+    "entryFile": "1944j.zip"
+   }
+  }
+ }
+}

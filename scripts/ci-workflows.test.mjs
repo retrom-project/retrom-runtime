@@ -3,18 +3,21 @@ import {test} from "node:test";
 import {readFile} from "node:fs/promises";
 import {spawnSync} from "node:child_process";
 
-test("quality rejects failed, cancelled or skipped checks and browser suites", async () => {
+test("quality rejects failed, cancelled or skipped checks, Go host gates and browser suites", async () => {
   const workflow = await readFile(new URL("../.github/workflows/quality.yml", import.meta.url), "utf8");
-  assert.match(workflow, /needs: \[checks, content_io_browser\]/u);
+  assert.match(workflow, /needs: \[checks, go, content_io_browser\]/u);
   assert.match(workflow, /if: \$\{\{ always\(\) \}\}/u);
+  assert.ok(workflow.includes("go-version-file: go.mod"));
+  assert.ok(workflow.includes("run: npm run go:check"));
   const command = workflow.match(/run: (test "\$CHECKS_RESULT"[^\n]+)/u)?.[1];
   assert.ok(command);
-  const run = (checks, browser) => spawnSync("bash", ["-e", "-c", command],
-    {env: {...process.env, CHECKS_RESULT: checks, BROWSER_RESULT: browser}}).status;
-  assert.equal(run("success", "success"), 0);
+  const run = (checks, go, browser) => spawnSync("bash", ["-e", "-c", command],
+    {env: {...process.env, CHECKS_RESULT: checks, GO_RESULT: go, BROWSER_RESULT: browser}}).status;
+  assert.equal(run("success", "success", "success"), 0);
   for (const result of ["failure", "cancelled", "skipped", ""]) {
-    assert.notEqual(run(result, "success"), 0);
-    assert.notEqual(run("success", result), 0);
+    assert.notEqual(run(result, "success", "success"), 0);
+    assert.notEqual(run("success", result, "success"), 0);
+    assert.notEqual(run("success", "success", result), 0);
   }
 });
 

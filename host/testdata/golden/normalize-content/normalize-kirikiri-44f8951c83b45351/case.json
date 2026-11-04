@@ -1,0 +1,116 @@
+{
+ "command": "normalize-content",
+ "input": {
+  "platformId": "kirikiri",
+  "files": [
+   {
+    "logicalKey": "nested/launcher.exe",
+    "name": "launcher.exe",
+    "sha256": "1c422a4826962b4f4b87e43a79c9dd945130977eaa78f5467790f3ef291ea172",
+    "sizeBytes": 13420
+   }
+  ],
+  "locators": {
+   "nested/launcher.exe": {
+    "path": "${CASE}/files/nested/launcher.exe",
+    "offset": 0,
+    "sizeBytes": 13420
+   }
+  },
+  "outputRoot": "${OUT}"
+ },
+ "result": {
+  "files": [
+   {
+    "logicalKey": "nested/launcher.exe",
+    "name": "nested/launcher.exe",
+    "path": "${OUT}/nested/launcher.exe",
+    "sizeBytes": 13420,
+    "sha256": "1c422a4826962b4f4b87e43a79c9dd945130977eaa78f5467790f3ef291ea172"
+   },
+   {
+    "logicalKey": "nested/resources/data.xp3",
+    "name": "nested/resources/data.xp3",
+    "sizeBytes": 577,
+    "sha256": "84f8566cb9da475ebec443e891260c048eb71299cba34e81a70c004d44315112",
+    "path": "${OUT}/nested/resources/data.xp3"
+   }
+  ],
+  "normalization": {
+   "kind": "CONTENT_NORMALIZATION",
+   "converterVersion": 1,
+   "sourceContentHash": "6e04a335afe39d74d66b6143c92738cdcc4fa4e2761c715db35e2bc2bde14602",
+   "archiveCount": 2,
+   "verifiedEntries": 4,
+   "metadataCorrections": 0,
+   "omittedPhysicalEntries": 0,
+   "formatCounts": {
+    "molebox4-steelbox": 1,
+    "xp3-fixed-xor": 1
+   },
+   "warnings": [],
+   "details": [],
+   "plugins": [
+    {
+     "id": "molebox4-steelbox",
+     "version": 1,
+     "formats": [
+      "molebox4-steelbox"
+     ],
+     "sources": [
+      {
+       "file": "nested/launcher.exe",
+       "sizeBytes": 13420,
+       "sha256": "1c422a4826962b4f4b87e43a79c9dd945130977eaa78f5467790f3ef291ea172"
+      }
+     ],
+     "outputs": [
+      {
+       "file": "nested/launcher.exe",
+       "sizeBytes": 13420,
+       "sha256": "1c422a4826962b4f4b87e43a79c9dd945130977eaa78f5467790f3ef291ea172"
+      },
+      {
+       "file": "nested/resources/data.xp3",
+       "sizeBytes": 577,
+       "sha256": "33d34b406ce72649e6211fe35e6d2b5703943e1689643713b6a497af92a5d026"
+      }
+     ],
+     "validation": {
+      "outputFilesVerified": 2,
+      "resourceEntriesVerified": 1,
+      "metadataCorrections": 0,
+      "omittedPhysicalEntries": 0
+     }
+    },
+    {
+     "id": "kirikiri-cxfilterfs",
+     "version": 1,
+     "formats": [
+      "xp3-fixed-xor"
+     ],
+     "sources": [
+      {
+       "file": "nested/resources/data.xp3",
+       "sizeBytes": 577,
+       "sha256": "33d34b406ce72649e6211fe35e6d2b5703943e1689643713b6a497af92a5d026"
+      }
+     ],
+     "outputs": [
+      {
+       "file": "nested/resources/data.xp3",
+       "sizeBytes": 577,
+       "sha256": "84f8566cb9da475ebec443e891260c048eb71299cba34e81a70c004d44315112"
+      }
+     ],
+     "validation": {
+      "outputFilesVerified": 1,
+      "resourceEntriesVerified": 3,
+      "metadataCorrections": 0,
+      "omittedPhysicalEntries": 0
+     }
+    }
+   ]
+  }
+ }
+}

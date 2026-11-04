@@ -1,0 +1,48 @@
+{
+ "command": "discover-content",
+ "input": {
+  "files": [
+   {
+    "name": "shikigam.zip",
+    "logicalKey": "shikigam.zip",
+    "sizeBytes": 22,
+    "sha256": "8739c76e681f900923b900c9df0ef75cf421d39cabb54650c4b9ad19b6a76d85"
+   }
+  ],
+  "locators": {
+   "shikigam.zip": {
+    "path": "${CASE}/files/p0",
+    "offset": 0,
+    "sizeBytes": 22
+   }
+  },
+  "directory": {
+   "platformId": "arcade",
+   "defaultCoreId": "mame_arcade",
+   "allowedCoreIds": [
+    "mame_arcade"
+   ]
+  },
+  "sourceCandidates": [
+   {
+    "sourcePath": "other/renamed.chd",
+    "sizeBytes": 4096,
+    "headerBase64": "TUNvbXBySEQAAAB8AAAABQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQAAAAAAAAAAB8AAAAAAAAAAAAABAAAAACAAAAAAAAAAAAAAAAAAAAAAAAAAAA+kmgvEf1y3ww1+SeLDaWshuvuEAAAAAAAAAAAAAAAAAAAAAAAAAAAA=="
+   },
+   {
+    "sourcePath": "shikigam/shikigam.chd",
+    "sizeBytes": 4096,
+    "headerBase64": "TUNvbXBySEQAAAB8AAAABQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQAAAAAAAAAAB8AAAAAAAAAAAAABAAAAACAAAAAAAAAAAAAAAAAAAAAAAAAAAA+kmgvEf1y3ww1+SeLDaWshuvuEABAQEBAQEBAQEBAQEBAQEBAQEBAQ=="
+   }
+  ]
+ },
+ "result": {
+  "files": [
+   {
+    "logicalKey": "shikigam/shikigam.chd",
+    "sourcePath": "other/renamed.chd",
+    "optional": true
+   }
+  ]
+ }
+}

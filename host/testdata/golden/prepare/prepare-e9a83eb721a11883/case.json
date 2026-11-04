@@ -1,0 +1,91 @@
+{
+ "command": "prepare",
+ "input": {
+  "directory": {
+   "platformId": "dos",
+   "defaultCoreId": "dosbox_pure",
+   "allowedCoreIds": [
+    "dosbox_pure"
+   ]
+  },
+  "config": {
+   "content": {
+    "kind": "DOS_BUNDLE",
+    "entryFile": "game.zip"
+   }
+  },
+  "files": [
+   {
+    "logicalKey": "game.zip",
+    "name": "game.zip",
+    "sizeBytes": 128,
+    "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+   }
+  ],
+  "fingerprints": {
+   "emulatorjs/dosbox-pure": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+  }
+ },
+ "result": {
+  "coreId": "dosbox_pure",
+  "providerId": "emulatorjs",
+  "targetId": "dosbox-pure",
+  "coreFingerprint": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+  "romHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "config": {
+   "content": {
+    "kind": "DOS_BUNDLE",
+    "entryFile": "game.zip"
+   }
+  },
+  "targetOptions": {
+   "dosEntryPath": null
+  },
+  "dependencies": {
+   "parentFiles": [],
+   "missingParents": [],
+   "biosSets": []
+  },
+  "crcWarnings": [],
+  "biosRequirements": [],
+  "checkpoint": {
+   "maxBytes": 268435456,
+   "readFormats": [
+    "emulatorjs-state-v1-storage-v1"
+   ],
+   "writeFormat": "emulatorjs-state-v1-storage-v1",
+   "semantics": "INSTANT"
+  },
+  "capabilities": {
+   "contentLoading": "ON_DEMAND_AND_PRELOAD",
+   "checkpoint": true,
+   "frameCounter": true,
+   "frameMode": "SAME_ORIGIN_BLANK",
+   "inputFilter": true,
+   "nativeSettings": false,
+   "pause": true,
+   "requiresThreads": true,
+   "screenshot": true,
+   "standardGamepad": true,
+   "videoModes": [
+    "original",
+    "pixel"
+   ],
+   "volume": true
+  },
+  "resources": [
+   {
+    "role": "game",
+    "kind": "FILE_TREE",
+    "ordinal": 0,
+    "files": [
+     "game.zip"
+    ],
+    "entryFile": "game.zip",
+    "paths": {
+     "game.zip": "game.zip"
+    }
+   }
+  ]
+ }
+}

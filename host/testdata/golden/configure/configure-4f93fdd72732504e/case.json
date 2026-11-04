@@ -1,0 +1,30 @@
+{
+ "command": "configure",
+ "input": {
+  "platformId": "dos",
+  "coreIds": [
+   "dosbox_pure"
+  ],
+  "files": [
+   {
+    "logicalKey": "game.zip",
+    "name": "game.zip",
+    "sizeBytes": 128,
+    "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+   }
+  ],
+  "archiveMembers": {
+   "game.zip": [
+    "GAME.EXE",
+    "SETUP.EXE",
+    "START.BAT"
+   ]
+  }
+ },
+ "result": {
+  "content": {
+   "kind": "DOS_BUNDLE",
+   "entryFile": "game.zip"
+  }
+ }
+}

@@ -1,0 +1,20 @@
+{
+ "command": "configure",
+ "input": {
+  "platformId": "kirikiri",
+  "coreIds": [
+   "kirikiri2"
+  ],
+  "files": [
+   {
+    "logicalKey": "game/readme.txt",
+    "name": "game/readme.txt",
+    "sizeBytes": 128,
+    "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+   }
+  ]
+ },
+ "error": {
+  "code": "RUNTIME_ENTRY_MISSING"
+ }
+}

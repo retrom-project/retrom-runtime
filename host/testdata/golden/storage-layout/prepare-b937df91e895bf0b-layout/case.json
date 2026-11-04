@@ -1,0 +1,25 @@
+{
+ "command": "storage-layout",
+ "input": {
+  "platformId": "nes",
+  "coreId": "fceumm",
+  "config": {
+   "content": {
+    "kind": "SINGLE_FILE",
+    "entryFile": "game.nes"
+   },
+   "cores": {
+    "nestopia": {
+     "options": {
+      "arbitrary": {
+       "unsafe": true
+      }
+     }
+    }
+   }
+  }
+ },
+ "result": {
+  "layout": "FILES"
+ }
+}

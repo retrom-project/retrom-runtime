@@ -1,0 +1,122 @@
+{
+ "command": "rom-sets",
+ "input": {
+  "coreId": "fbalpha",
+  "directory": {
+   "platformId": "arcade",
+   "defaultCoreId": "fbalpha",
+   "allowedCoreIds": [
+    "fbalpha",
+    "fbneo",
+    "mame2003",
+    "mame2003_plus",
+    "mame_arcade"
+   ]
+  },
+  "files": [
+   {
+    "logicalKey": "original.zip",
+    "name": "original.zip",
+    "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "sizeBytes": 1
+   }
+  ],
+  "config": {
+   "content": {
+    "kind": "ARCADE",
+    "entryFile": "original.zip"
+   },
+   "cores": {
+    "fbalpha": {
+     "romSet": "chosen"
+    }
+   }
+  },
+  "archives": {
+   "original.zip": []
+  },
+  "arcadeCatalog": {
+   "chosen": {
+    "parent": null,
+    "bios": false,
+    "roms": [],
+    "description": "Chosen Game (version 2)",
+    "year": "1990",
+    "manufacturer": "Maker"
+   },
+   "clone": {
+    "parent": "parent",
+    "bios": false,
+    "roms": [
+     {
+      "name": "p.bin",
+      "size": "1",
+      "crc": "abcdef12",
+      "merge": "p.bin"
+     }
+    ]
+   },
+   "parent": {
+    "parent": null,
+    "bios": false,
+    "roms": [
+     {
+      "name": "p.bin",
+      "size": "1",
+      "crc": "abcdef12"
+     }
+    ]
+   },
+   "firmware": {
+    "parent": null,
+    "bios": true,
+    "roms": []
+   },
+   "device": {
+    "parent": null,
+    "bios": false,
+    "device": true,
+    "roms": []
+   },
+   "inactive": {
+    "parent": null,
+    "bios": false,
+    "runnable": false,
+    "roms": []
+   }
+  },
+  "fingerprints": {
+   "emulatorjs/fbalpha": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+  },
+  "query": "maker"
+ },
+ "result": {
+  "coreId": "fbalpha",
+  "datSHA256": "4c257078e2f2ab66c75602905d68b7fe7e93e114858813a479e2fd08dd5f18a1",
+  "automaticSelection": null,
+  "selected": null,
+  "entries": [
+   {
+    "name": "landmakr",
+    "description": "Land Maker (Ver 2.02O 1998/06/02)",
+    "year": "1998",
+    "manufacturer": "Taito Corporation"
+   },
+   {
+    "name": "landmakrj",
+    "description": "Land Maker (Ver 2.01J 1998/06/01)",
+    "year": "1998",
+    "manufacturer": "Taito Corporation"
+   },
+   {
+    "name": "landmakrp",
+    "description": "Land Maker (Ver 2.02O 1998/06/02) (Prototype) [Prototype]",
+    "year": "1998",
+    "manufacturer": "Taito Corporation"
+   }
+  ],
+  "total": 3,
+  "offset": 0,
+  "limit": 50
+ }
+}

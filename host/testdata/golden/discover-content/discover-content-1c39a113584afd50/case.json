@@ -1,0 +1,31 @@
+{
+ "command": "discover-content",
+ "input": {
+  "root": "${CASE}/files/p0",
+  "files": [
+   {
+    "logicalKey": "disc.cue",
+    "name": "disc.cue",
+    "sha256": "10dbf727b03e0380d2e1833349b507774f456f300c2ff8ebd9213712548e2845",
+    "sizeBytes": 26
+   }
+  ],
+  "locators": {
+   "disc.cue": {
+    "path": "${CASE}/files/p1",
+    "offset": 0,
+    "sizeBytes": 26
+   }
+  },
+  "directory": {
+   "platformId": "psx",
+   "defaultCoreId": "pcsx_rearmed",
+   "allowedCoreIds": [
+    "pcsx_rearmed"
+   ]
+  }
+ },
+ "error": {
+  "code": "RUNTIME_CUE_INVALID"
+ }
+}

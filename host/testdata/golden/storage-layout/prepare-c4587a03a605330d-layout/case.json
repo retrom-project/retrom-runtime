@@ -1,0 +1,16 @@
+{
+ "command": "storage-layout",
+ "input": {
+  "platformId": "psp",
+  "coreId": "ppsspp",
+  "config": {
+   "content": {
+    "kind": "SINGLE_FILE",
+    "entryFile": "disc.iso"
+   }
+  }
+ },
+ "result": {
+  "layout": "FILES"
+ }
+}

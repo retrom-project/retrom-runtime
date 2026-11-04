@@ -1,0 +1,151 @@
+{
+ "command": "normalize-content",
+ "input": {
+  "platformId": "kirikiri",
+  "files": [
+   {
+    "logicalKey": "collection/project/data.xp3",
+    "name": "collection/project/data.xp3",
+    "sha256": "7f1507ee2fce0ffb6bb37b6ed46b46e033eeaec58b4a052dfb7bbb1f50d527cf",
+    "sizeBytes": 16
+   },
+   {
+    "logicalKey": "collection/project/launch.dll",
+    "name": "collection/project/launch.dll",
+    "sha256": "f9a82156a70076d0cc843b7eaa0792cfd1490d79e194aead159de154c1646762",
+    "sizeBytes": 21504
+   },
+   {
+    "logicalKey": "collection/project/translation-73.bin",
+    "name": "collection/project/translation-73.bin",
+    "sha256": "c51aed56147e12eedadf0285345aa6305957641b3be24d5b033101b12793c5a6",
+    "sizeBytes": 242
+   }
+  ],
+  "locators": {
+   "collection/project/data.xp3": {
+    "path": "${CASE}/files/collection/project/data.xp3",
+    "offset": 0,
+    "sizeBytes": 16
+   },
+   "collection/project/launch.dll": {
+    "path": "${CASE}/files/collection/project/launch.dll",
+    "offset": 0,
+    "sizeBytes": 21504
+   },
+   "collection/project/translation-73.bin": {
+    "path": "${CASE}/files/collection/project/translation-73.bin",
+    "offset": 0,
+    "sizeBytes": 242
+   }
+  },
+  "outputRoot": "${OUT}"
+ },
+ "result": {
+  "files": [
+   {
+    "logicalKey": "collection/project/.runtime-launches/launch.dll.json",
+    "name": "collection/project/.runtime-launches/launch.dll.json",
+    "path": "${OUT}/collection/project/.runtime-launches/launch.dll.json",
+    "sizeBytes": 596,
+    "sha256": "c63fe12df212fbef9e7250d4e64693683d8b2cf14e9c9f41984ffff52eba5a05"
+   },
+   {
+    "logicalKey": "collection/project/.runtime-patches/launch.dll/intro.ks.scn",
+    "name": "collection/project/.runtime-patches/launch.dll/intro.ks.scn",
+    "path": "${OUT}/collection/project/.runtime-patches/launch.dll/intro.ks.scn",
+    "sizeBytes": 132,
+    "sha256": "0bf9cfe6eea5657956798722ac1ca28c547874f7d7550aeb3598cb7b6ada07e8"
+   },
+   {
+    "logicalKey": "collection/project/data.xp3",
+    "name": "collection/project/data.xp3",
+    "sha256": "7f1507ee2fce0ffb6bb37b6ed46b46e033eeaec58b4a052dfb7bbb1f50d527cf",
+    "sizeBytes": 16
+   },
+   {
+    "logicalKey": "collection/project/launch.dll",
+    "name": "collection/project/launch.dll",
+    "path": "${OUT}/collection/project/launch.dll",
+    "sizeBytes": 21504,
+    "sha256": "f9a82156a70076d0cc843b7eaa0792cfd1490d79e194aead159de154c1646762"
+   },
+   {
+    "logicalKey": "collection/project/translation-73.bin",
+    "name": "collection/project/translation-73.bin",
+    "path": "${OUT}/collection/project/translation-73.bin",
+    "sizeBytes": 242,
+    "sha256": "c51aed56147e12eedadf0285345aa6305957641b3be24d5b033101b12793c5a6"
+   }
+  ],
+  "normalization": {
+   "kind": "CONTENT_NORMALIZATION",
+   "converterVersion": 1,
+   "sourceContentHash": "5ca312a80c4930f9bd6c3b9dfc111f83d955ac8f651861377c85662d73ce6676",
+   "archiveCount": 1,
+   "verifiedEntries": 1,
+   "metadataCorrections": 0,
+   "omittedPhysicalEntries": 0,
+   "formatCounts": {
+    "xmoe-psb": 1
+   },
+   "warnings": [],
+   "details": [
+    {
+     "code": "STATIC_RESOURCE_PATCH",
+     "file": "collection/project/launch.dll",
+     "member": "collection/project/.runtime-launches/launch.dll.json"
+    }
+   ],
+   "plugins": [
+    {
+     "id": "xmoe-psb",
+     "version": 1,
+     "formats": [
+      "xmoe-psb"
+     ],
+     "sources": [
+      {
+       "file": "collection/project/launch.dll",
+       "sizeBytes": 21504,
+       "sha256": "f9a82156a70076d0cc843b7eaa0792cfd1490d79e194aead159de154c1646762"
+      },
+      {
+       "file": "collection/project/translation-73.bin",
+       "sizeBytes": 242,
+       "sha256": "c51aed56147e12eedadf0285345aa6305957641b3be24d5b033101b12793c5a6"
+      }
+     ],
+     "outputs": [
+      {
+       "file": "collection/project/launch.dll",
+       "sizeBytes": 21504,
+       "sha256": "f9a82156a70076d0cc843b7eaa0792cfd1490d79e194aead159de154c1646762"
+      },
+      {
+       "file": "collection/project/translation-73.bin",
+       "sizeBytes": 242,
+       "sha256": "c51aed56147e12eedadf0285345aa6305957641b3be24d5b033101b12793c5a6"
+      },
+      {
+       "file": "collection/project/.runtime-patches/launch.dll/intro.ks.scn",
+       "sizeBytes": 132,
+       "sha256": "0bf9cfe6eea5657956798722ac1ca28c547874f7d7550aeb3598cb7b6ada07e8"
+      },
+      {
+       "file": "collection/project/.runtime-launches/launch.dll.json",
+       "sizeBytes": 596,
+       "sha256": "c63fe12df212fbef9e7250d4e64693683d8b2cf14e9c9f41984ffff52eba5a05"
+      }
+     ],
+     "validation": {
+      "outputFilesVerified": 4,
+      "resourceEntriesVerified": 1,
+      "metadataCorrections": 0,
+      "omittedPhysicalEntries": 0
+     }
+    }
+   ]
+  }
+ }
+}

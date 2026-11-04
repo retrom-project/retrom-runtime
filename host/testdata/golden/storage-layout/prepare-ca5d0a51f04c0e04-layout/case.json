@@ -1,0 +1,16 @@
+{
+ "command": "storage-layout",
+ "input": {
+  "platformId": "dos",
+  "coreId": "dosbox_pure",
+  "config": {
+   "content": {
+    "kind": "DOS_BUNDLE",
+    "entryFile": "game.zip"
+   }
+  }
+ },
+ "result": {
+  "layout": "FILES"
+ }
+}

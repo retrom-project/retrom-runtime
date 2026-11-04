@@ -1,0 +1,103 @@
+{
+ "command": "prepare",
+ "input": {
+  "directory": {
+   "platformId": "arcade",
+   "defaultCoreId": "mame2003",
+   "allowedCoreIds": [
+    "mame2003"
+   ]
+  },
+  "files": [
+   {
+    "logicalKey": "pacman.zip",
+    "name": "pacman.zip",
+    "sizeBytes": 1165,
+    "sha256": "abe924f817cfc3073e670b89be57a90bcf9127faa5495c3806a40f1bdc5c8cb4"
+   }
+  ],
+  "locators": {
+   "pacman.zip": {
+    "path": "${CASE}/files/pacman.zip",
+    "offset": 0,
+    "sizeBytes": 1165
+   }
+  },
+  "config": {
+   "content": {
+    "kind": "ARCADE",
+    "entryFile": "pacman.zip"
+   }
+  },
+  "fingerprints": {
+   "emulatorjs/mame2003": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+  },
+  "coreId": "mame2003"
+ },
+ "result": {
+  "coreId": "mame2003",
+  "providerId": "emulatorjs",
+  "targetId": "mame2003",
+  "coreFingerprint": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+  "romHash": "abe924f817cfc3073e670b89be57a90bcf9127faa5495c3806a40f1bdc5c8cb4",
+  "config": {
+   "content": {
+    "kind": "ARCADE",
+    "entryFile": "pacman.zip"
+   }
+  },
+  "targetOptions": {
+   "dosEntryPath": null
+  },
+  "dependencies": {
+   "parentFiles": [],
+   "missingParents": [],
+   "biosSets": []
+  },
+  "romSet": "pacman",
+  "crcWarnings": [],
+  "biosRequirements": [],
+  "checkpoint": {
+   "maxBytes": 268435456,
+   "readFormats": [
+    "emulatorjs-state-v1-storage-v1"
+   ],
+   "writeFormat": "emulatorjs-state-v1-storage-v1",
+   "semantics": "INSTANT"
+  },
+  "capabilities": {
+   "contentLoading": "PRELOAD_ONLY",
+   "checkpoint": true,
+   "frameCounter": true,
+   "frameMode": "SAME_ORIGIN_BLANK",
+   "inputFilter": true,
+   "nativeSettings": true,
+   "pause": true,
+   "requiresThreads": false,
+   "screenshot": true,
+   "standardGamepad": true,
+   "videoModes": [
+    "adaptive-sharpen",
+    "original",
+    "pixel",
+    "sharp-bilinear",
+    "smooth"
+   ],
+   "volume": true
+  },
+  "resources": [
+   {
+    "role": "game",
+    "kind": "ROM_BLOB",
+    "ordinal": 0,
+    "files": [
+     "pacman.zip"
+    ],
+    "entryFile": "pacman.zip",
+    "paths": {
+     "pacman.zip": "pacman.zip"
+    }
+   }
+  ]
+ }
+}

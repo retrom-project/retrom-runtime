@@ -1,0 +1,172 @@
+{
+ "command": "normalize-content",
+ "input": {
+  "platformId": "kirikiri",
+  "files": [
+   {
+    "logicalKey": "data.xp3",
+    "name": "data.xp3",
+    "sha256": "268973b04a2331dc6e1146fbaef3b552b6a3512522a70b06c73768be88cbe7a0",
+    "sizeBytes": 1143
+   },
+   {
+    "logicalKey": "launcher.exe",
+    "name": "launcher.exe",
+    "sha256": "6a59da0f6201a34387f118c43689407a7d0e80bf43ec37de96f6db070f586028",
+    "sizeBytes": 50015
+   }
+  ],
+  "locators": {
+   "data.xp3": {
+    "path": "${CASE}/files/data.xp3",
+    "offset": 0,
+    "sizeBytes": 1143
+   },
+   "launcher.exe": {
+    "path": "${CASE}/files/launcher.exe",
+    "offset": 0,
+    "sizeBytes": 50015
+   }
+  },
+  "outputRoot": "${OUT}"
+ },
+ "result": {
+  "files": [
+   {
+    "logicalKey": "data.xp3",
+    "name": "data.xp3",
+    "sizeBytes": 1143,
+    "sha256": "4912714863afc3ceb942c73af9efd2a255858be622fcac897cc06658656848c8",
+    "path": "${OUT}/data.xp3"
+   },
+   {
+    "logicalKey": "launcher.exe",
+    "name": "launcher.exe",
+    "sizeBytes": 25348,
+    "sha256": "b083ec7e826120cfbc84f4ae6e3108891968eebda82a8e261be9b5b16411ec83",
+    "path": "${OUT}/launcher.exe"
+   }
+  ],
+  "normalization": {
+   "kind": "CONTENT_NORMALIZATION",
+   "converterVersion": 1,
+   "sourceContentHash": "fbbeb193dc95af20bfeaa67d1d0ab6b0fdcbd5fd4e65ccf6fb683f6e8640d93a",
+   "archiveCount": 2,
+   "verifiedEntries": 3,
+   "metadataCorrections": 5,
+   "omittedPhysicalEntries": 0,
+   "formatCounts": {
+    "xp3-native": 1,
+    "xp3-pe": 1
+   },
+   "warnings": [
+    {
+     "code": "SOURCE_METADATA_CORRECTED",
+     "count": 5
+    }
+   ],
+   "details": [
+    {
+     "code": "REUSED_FILTER_SEED",
+     "file": "launcher.exe",
+     "member": "startup.tjs",
+     "sourceSha256": "2918680d3e4dc8440dd660cbd52d7c223b09fcfaaabaf64a91eed6e5b228dad3",
+     "outputSha256": "706911db61ce917a3afc356f9a2ac97751c1e045a4765eda8d103578c417f38d",
+     "sourceSize": 32,
+     "outputSize": 32,
+     "seed": 0,
+     "sourceChecksum": 0,
+     "outputChecksum": 2697005137
+    },
+    {
+     "code": "REUSED_FILTER_SEED",
+     "file": "launcher.exe",
+     "member": "目录/ÄA.TXT",
+     "sourceSha256": "eea3ef342d762f89fe2a079113efb5552a96b2657e0e32038229e4884542f66a",
+     "outputSha256": "b245956521442aa8408e39914345714fe53a113a568bff94047c051ea32b3c0f",
+     "sourceSize": 28,
+     "outputSize": 28,
+     "seed": 0,
+     "sourceChecksum": 0,
+     "outputChecksum": 2540308537
+    },
+    {
+     "code": "REUSED_FILTER_SEED",
+     "file": "launcher.exe",
+     "member": "scene.ks",
+     "sourceSha256": "0fb4c442b65a7d2dd23f0b7b0a5187dc34c7618e31793d9420094cba4f4d8289",
+     "outputSha256": "18c0a343ac92d4d55918c2643d9267196bbdd1f28729595f68986b49fdf85218",
+     "sourceSize": 26,
+     "outputSize": 26,
+     "seed": 0,
+     "sourceChecksum": 0,
+     "outputChecksum": 1840187097
+    },
+    {
+     "code": "REUSED_FILTER_SEED",
+     "file": "launcher.exe",
+     "member": "bootstrap.tjs",
+     "sourceSha256": "a8f02cfd900360422b47d503fbc5dd019b7a9f50cc92e8a6ea0a5310bb6190d6",
+     "outputSha256": "a8f02cfd900360422b47d503fbc5dd019b7a9f50cc92e8a6ea0a5310bb6190d6",
+     "sourceSize": 32,
+     "outputSize": 32,
+     "seed": 0,
+     "sourceChecksum": 0,
+     "outputChecksum": 2511079122
+    },
+    {
+     "code": "REUSED_FILTER_SEED",
+     "file": "launcher.exe",
+     "member": "native/filter.dll",
+     "sourceSha256": "292fdb13e77389e5e6a8310f6e1a0d524266d7ed0836340fee4263ad93c2b97a",
+     "outputSha256": "292fdb13e77389e5e6a8310f6e1a0d524266d7ed0836340fee4263ad93c2b97a",
+     "sourceSize": 24576,
+     "outputSize": 24576,
+     "seed": 0,
+     "sourceChecksum": 0,
+     "outputChecksum": 27925502
+    }
+   ],
+   "plugins": [
+    {
+     "id": "kirikiri-cxfilterfs",
+     "version": 1,
+     "formats": [
+      "xp3-native",
+      "xp3-pe"
+     ],
+     "sources": [
+      {
+       "file": "data.xp3",
+       "sizeBytes": 1143,
+       "sha256": "268973b04a2331dc6e1146fbaef3b552b6a3512522a70b06c73768be88cbe7a0"
+      },
+      {
+       "file": "launcher.exe",
+       "sizeBytes": 50015,
+       "sha256": "6a59da0f6201a34387f118c43689407a7d0e80bf43ec37de96f6db070f586028"
+      }
+     ],
+     "outputs": [
+      {
+       "file": "data.xp3",
+       "sizeBytes": 1143,
+       "sha256": "4912714863afc3ceb942c73af9efd2a255858be622fcac897cc06658656848c8"
+      },
+      {
+       "file": "launcher.exe",
+       "sizeBytes": 25348,
+       "sha256": "b083ec7e826120cfbc84f4ae6e3108891968eebda82a8e261be9b5b16411ec83"
+      }
+     ],
+     "validation": {
+      "outputFilesVerified": 2,
+      "resourceEntriesVerified": 3,
+      "metadataCorrections": 5,
+      "omittedPhysicalEntries": 0
+     }
+    }
+   ]
+  }
+ }
+}

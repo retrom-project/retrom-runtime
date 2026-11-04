@@ -1,0 +1,35 @@
+{
+ "command": "configure",
+ "input": {
+  "platformId": "psp",
+  "coreIds": [
+   "ppsspp"
+  ],
+  "files": [
+   {
+    "name": "project/launch.pbp",
+    "logicalKey": "project/launch.pbp",
+    "sizeBytes": 128,
+    "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+   },
+   {
+    "name": "project/script.bin",
+    "logicalKey": "project/script.bin",
+    "sizeBytes": 128,
+    "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+   },
+   {
+    "name": "project/music/theme.ogg",
+    "logicalKey": "project/music/theme.ogg",
+    "sizeBytes": 128,
+    "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+   }
+  ]
+ },
+ "result": {
+  "content": {
+   "kind": "SINGLE_FILE",
+   "entryFile": "project/launch.pbp"
+  }
+ }
+}

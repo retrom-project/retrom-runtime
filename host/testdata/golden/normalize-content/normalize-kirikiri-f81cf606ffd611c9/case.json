@@ -1,0 +1,32 @@
+{
+ "command": "normalize-content",
+ "input": {
+  "platformId": "kirikiri",
+  "files": [
+   {
+    "logicalKey": "launcher.exe",
+    "name": "launcher.exe",
+    "sha256": "8c126b9f955146b5f3982345fe924f01424ff58f67e74796ed4b31512ccdc05d",
+    "sizeBytes": 1235
+   }
+  ],
+  "locators": {
+   "launcher.exe": {
+    "path": "${CASE}/files/launcher.exe",
+    "offset": 0,
+    "sizeBytes": 1235
+   }
+  },
+  "outputRoot": "${OUT}"
+ },
+ "result": {
+  "files": [
+   {
+    "logicalKey": "launcher.exe",
+    "name": "launcher.exe",
+    "sha256": "8c126b9f955146b5f3982345fe924f01424ff58f67e74796ed4b31512ccdc05d",
+    "sizeBytes": 1235
+   }
+  ]
+ }
+}

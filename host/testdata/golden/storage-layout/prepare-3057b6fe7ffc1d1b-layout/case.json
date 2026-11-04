@@ -1,0 +1,16 @@
+{
+ "command": "storage-layout",
+ "input": {
+  "platformId": "psx",
+  "coreId": "pcsx_rearmed",
+  "config": {
+   "content": {
+    "kind": "SINGLE_FILE",
+    "entryFile": "game/disc.cue"
+   }
+  }
+ },
+ "result": {
+  "layout": "FILES"
+ }
+}

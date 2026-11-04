@@ -1,0 +1,45 @@
+{
+ "command": "batch-identity",
+ "input": {
+  "items": [
+   {
+    "directory": {
+     "platformId": "psp",
+     "defaultCoreId": "ppsspp",
+     "allowedCoreIds": [
+      "ppsspp"
+     ]
+    },
+    "config": {
+     "content": {
+      "kind": "SINGLE_FILE",
+      "entryFile": "disc.iso"
+     }
+    },
+    "files": [
+     {
+      "name": "disc.iso",
+      "logicalKey": "disc.iso",
+      "sizeBytes": 128,
+      "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+     }
+    ],
+    "fingerprints": {
+     "retrom-runtime/ppsspp": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+    }
+   }
+  ]
+ },
+ "result": [
+  {
+   "coreId": "ppsspp",
+   "providerId": "retrom-runtime",
+   "targetId": "ppsspp",
+   "coreFingerprint": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+   "romHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+   "readFormats": [
+    "ppsspp-game-save-v1-storage-v1"
+   ]
+  }
+ ]
+}

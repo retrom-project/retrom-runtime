@@ -1,0 +1,96 @@
+{
+ "command": "prepare",
+ "input": {
+  "directory": {
+   "platformId": "rpgmaker",
+   "defaultCoreId": "rpgmaker",
+   "allowedCoreIds": [
+    "rpgmaker"
+   ]
+  },
+  "fingerprints": {
+   "retrom-runtime/rpgmaker-xp": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+   "retrom-runtime/rpgmaker-vx": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+   "retrom-runtime/rpgmaker-vx-ace": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+   "retrom-runtime/rpgmaker-mv": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+   "retrom-runtime/rpgmaker-2000": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+  },
+  "config": {
+   "content": {
+    "kind": "RPG_MAKER_PROJECT",
+    "entryFile": "RPG_RT.ldb",
+    "engine": "RPG2000"
+   }
+  },
+  "files": [
+   {
+    "logicalKey": "RPG_RT.ldb",
+    "name": "RPG_RT.ldb",
+    "sizeBytes": 128,
+    "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+   }
+  ]
+ },
+ "result": {
+  "coreId": "rpgmaker",
+  "providerId": "retrom-runtime",
+  "targetId": "rpgmaker-2000",
+  "coreFingerprint": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+  "romHash": "b9914dfb265820e1c103a1305c12a29f07bc6c0588585596fd171302b2da15fc",
+  "config": {
+   "content": {
+    "kind": "RPG_MAKER_PROJECT",
+    "entryFile": "RPG_RT.ldb",
+    "engine": "RPG2000"
+   }
+  },
+  "targetOptions": {},
+  "dependencies": {
+   "parentFiles": [],
+   "missingParents": [],
+   "biosSets": []
+  },
+  "crcWarnings": [],
+  "biosRequirements": [],
+  "checkpoint": {
+   "maxBytes": 67108864,
+   "readFormats": [
+    "easyrpg-save-bundle-v1-storage-v1"
+   ],
+   "writeFormat": "easyrpg-save-bundle-v1-storage-v1",
+   "semantics": "INSTANT"
+  },
+  "capabilities": {
+   "contentLoading": "ON_DEMAND_AND_PRELOAD",
+   "checkpoint": true,
+   "frameCounter": true,
+   "frameMode": "SAME_ORIGIN_BLANK",
+   "inputFilter": true,
+   "nativeSettings": false,
+   "pause": true,
+   "requiresThreads": false,
+   "screenshot": true,
+   "standardGamepad": true,
+   "videoModes": [
+    "original",
+    "pixel",
+    "smooth"
+   ],
+   "volume": false
+  },
+  "resources": [
+   {
+    "role": "game",
+    "kind": "FILE_TREE",
+    "ordinal": 0,
+    "files": [
+     "RPG_RT.ldb"
+    ],
+    "entryFile": "RPG_RT.ldb",
+    "paths": {
+     "RPG_RT.ldb": "RPG_RT.ldb"
+    }
+   }
+  ]
+ }
+}

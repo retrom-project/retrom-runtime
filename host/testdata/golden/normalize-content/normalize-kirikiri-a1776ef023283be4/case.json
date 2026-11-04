@@ -1,0 +1,25 @@
+{
+ "command": "normalize-content",
+ "input": {
+  "platformId": "kirikiri",
+  "files": [
+   {
+    "logicalKey": "nested/run.exe",
+    "name": "run.exe",
+    "sha256": "0989710e0e042cd4cd52aa91f2524f6f9ecb1afc88772d6902712f67d1102235",
+    "sizeBytes": 74090
+   }
+  ],
+  "locators": {
+   "nested/run.exe": {
+    "path": "${CASE}/files/nested/run.exe",
+    "offset": 0,
+    "sizeBytes": 74090
+   }
+  },
+  "outputRoot": "${OUT}"
+ },
+ "error": {
+  "code": "RUNTIME_ENIGMA_INVALID"
+ }
+}

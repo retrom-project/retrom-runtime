@@ -1,0 +1,16 @@
+{
+ "command": "storage-layout",
+ "input": {
+  "platformId": "thomson",
+  "coreId": "theodore",
+  "config": {
+   "content": {
+    "kind": "SINGLE_FILE",
+    "entryFile": "unknown.sap"
+   }
+  }
+ },
+ "result": {
+  "layout": "FILES"
+ }
+}

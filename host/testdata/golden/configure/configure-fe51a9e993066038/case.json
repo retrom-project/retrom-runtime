@@ -1,0 +1,29 @@
+{
+ "command": "configure",
+ "input": {
+  "platformId": "kirikiri",
+  "coreIds": [
+   "kirikiri2"
+  ],
+  "files": [
+   {
+    "logicalKey": "game/data.xp3",
+    "name": "game/data.xp3",
+    "sizeBytes": 128,
+    "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+   },
+   {
+    "logicalKey": "game/Backup/data.xp3",
+    "name": "game/Backup/data.xp3",
+    "sizeBytes": 128,
+    "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+   }
+  ]
+ },
+ "result": {
+  "content": {
+   "kind": "KIRIKIRI_PROJECT",
+   "entryFile": "game/data.xp3"
+  }
+ }
+}

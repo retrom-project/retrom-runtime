@@ -1,0 +1,706 @@
+{
+ "command": "rom-sets",
+ "input": {
+  "coreId": "mame_arcade",
+  "directory": {
+   "platformId": "arcade",
+   "defaultCoreId": "mame_arcade",
+   "allowedCoreIds": [
+    "fbalpha",
+    "fbneo",
+    "mame2003",
+    "mame2003_plus",
+    "mame_arcade"
+   ]
+  },
+  "files": [
+   {
+    "logicalKey": "original.zip",
+    "name": "original.zip",
+    "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "sizeBytes": 1
+   }
+  ],
+  "config": {
+   "content": {
+    "kind": "ARCADE",
+    "entryFile": "original.zip"
+   },
+   "cores": {
+    "mame_arcade": {
+     "romSet": "chosen"
+    }
+   }
+  },
+  "archives": {
+   "original.zip": []
+  },
+  "arcadeCatalog": {
+   "chosen": {
+    "parent": null,
+    "bios": false,
+    "roms": [],
+    "description": "Chosen Game (version 2)",
+    "year": "1990",
+    "manufacturer": "Maker"
+   },
+   "clone": {
+    "parent": "parent",
+    "bios": false,
+    "roms": [
+     {
+      "name": "p.bin",
+      "size": "1",
+      "crc": "abcdef12",
+      "merge": "p.bin"
+     }
+    ]
+   },
+   "parent": {
+    "parent": null,
+    "bios": false,
+    "roms": [
+     {
+      "name": "p.bin",
+      "size": "1",
+      "crc": "abcdef12"
+     }
+    ]
+   },
+   "firmware": {
+    "parent": null,
+    "bios": true,
+    "roms": []
+   },
+   "device": {
+    "parent": null,
+    "bios": false,
+    "device": true,
+    "roms": []
+   },
+   "inactive": {
+    "parent": null,
+    "bios": false,
+    "runnable": false,
+    "roms": []
+   }
+  },
+  "fingerprints": {
+   "retrom-runtime/mame-arcade": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+  },
+  "romSet": "",
+  "query": "",
+  "limit": 100
+ },
+ "result": {
+  "coreId": "mame_arcade",
+  "datSHA256": "0da3eec9b9f761c7c2019ac53c3223af5e4bedaf9923a066be5eb87a099158ef",
+  "automaticSelection": null,
+  "selected": null,
+  "entries": [
+   {
+    "name": "005",
+    "description": "005",
+    "year": "1981",
+    "manufacturer": "Sega"
+   },
+   {
+    "name": "005a",
+    "description": "005 (earlier version?)",
+    "year": "1981",
+    "manufacturer": "Sega"
+   },
+   {
+    "name": "11beat",
+    "description": "Eleven Beat",
+    "year": "1998",
+    "manufacturer": "Hudson Soft"
+   },
+   {
+    "name": "1941",
+    "description": "1941: Counter Attack (World 900227)",
+    "year": "1990",
+    "manufacturer": "Capcom"
+   },
+   {
+    "name": "1941j",
+    "description": "1941: Counter Attack (Japan)",
+    "year": "1990",
+    "manufacturer": "Capcom"
+   },
+   {
+    "name": "1941r1",
+    "description": "1941: Counter Attack (World)",
+    "year": "1990",
+    "manufacturer": "Capcom"
+   },
+   {
+    "name": "1941u",
+    "description": "1941: Counter Attack (USA 900227)",
+    "year": "1990",
+    "manufacturer": "Capcom"
+   },
+   {
+    "name": "1942",
+    "description": "1942 (Revision B)",
+    "year": "1984",
+    "manufacturer": "Capcom"
+   },
+   {
+    "name": "1942a",
+    "description": "1942 (Revision A)",
+    "year": "1984",
+    "manufacturer": "Capcom"
+   },
+   {
+    "name": "1942abl",
+    "description": "1942 (Revision A, bootleg)",
+    "year": "1984",
+    "manufacturer": "bootleg"
+   },
+   {
+    "name": "1942b",
+    "description": "1942 (First Version)",
+    "year": "1984",
+    "manufacturer": "Capcom"
+   },
+   {
+    "name": "1942h",
+    "description": "Supercharger 1942",
+    "year": "1991",
+    "manufacturer": "hack (Two Bit Score)"
+   },
+   {
+    "name": "1942iti",
+    "description": "1942 (bootleg on Vulgus hardware)",
+    "year": "1984",
+    "manufacturer": "bootleg (Itisa)"
+   },
+   {
+    "name": "1942p",
+    "description": "1942 (Tecfri PCB, bootleg?)",
+    "year": "1984",
+    "manufacturer": "bootleg"
+   },
+   {
+    "name": "1942w",
+    "description": "1942 (Williams Electronics license)",
+    "year": "1985",
+    "manufacturer": "Capcom (Williams Electronics license)"
+   },
+   {
+    "name": "1943",
+    "description": "1943: The Battle of Midway (Euro)",
+    "year": "1987",
+    "manufacturer": "Capcom"
+   },
+   {
+    "name": "1943b",
+    "description": "1943: Battle of Midway (bootleg, hack of Japan set)",
+    "year": "1987",
+    "manufacturer": "bootleg"
+   },
+   {
+    "name": "1943bj",
+    "description": "1943: Midway Kaisen (bootleg)",
+    "year": "1987",
+    "manufacturer": "bootleg"
+   },
+   {
+    "name": "1943j",
+    "description": "1943: Midway Kaisen (Japan, Rev B)",
+    "year": "1987",
+    "manufacturer": "Capcom"
+   },
+   {
+    "name": "1943ja",
+    "description": "1943: Midway Kaisen (Japan)",
+    "year": "1987",
+    "manufacturer": "Capcom"
+   },
+   {
+    "name": "1943jah",
+    "description": "1943: Midway Kaisen (Japan, no protection hack)",
+    "year": "1987",
+    "manufacturer": "Capcom"
+   },
+   {
+    "name": "1943kai",
+    "description": "1943 Kai: Midway Kaisen (Japan)",
+    "year": "1987",
+    "manufacturer": "Capcom"
+   },
+   {
+    "name": "1943mii",
+    "description": "1943: The Battle of Midway Mark II (US)",
+    "year": "1987",
+    "manufacturer": "Capcom"
+   },
+   {
+    "name": "1943u",
+    "description": "1943: The Battle of Midway (US, Rev C)",
+    "year": "1987",
+    "manufacturer": "Capcom"
+   },
+   {
+    "name": "1943ua",
+    "description": "1943: The Battle of Midway (US)",
+    "year": "1987",
+    "manufacturer": "Capcom"
+   },
+   {
+    "name": "1944",
+    "description": "1944: The Loop Master (Europe 000620)",
+    "year": "2000",
+    "manufacturer": "Eighting / Raizing (Capcom license)"
+   },
+   {
+    "name": "1944d",
+    "description": "1944: The Loop Master (USA 000620 Phoenix Edition) (bootleg)",
+    "year": "2000",
+    "manufacturer": "bootleg"
+   },
+   {
+    "name": "1944j",
+    "description": "1944: The Loop Master (Japan 000620)",
+    "year": "2000",
+    "manufacturer": "Eighting / Raizing (Capcom license)"
+   },
+   {
+    "name": "1944u",
+    "description": "1944: The Loop Master (USA 000620)",
+    "year": "2000",
+    "manufacturer": "Eighting / Raizing (Capcom license)"
+   },
+   {
+    "name": "1945kiii",
+    "description": "1945k III (newer, OPCX2 PCB)",
+    "year": "2000",
+    "manufacturer": "Oriental Soft"
+   },
+   {
+    "name": "1945kiiin",
+    "description": "1945k III (newer, OPCX1 PCB)",
+    "year": "2000",
+    "manufacturer": "Oriental Soft"
+   },
+   {
+    "name": "1945kiiio",
+    "description": "1945k III (older, OPCX1 PCB)",
+    "year": "1999",
+    "manufacturer": "Oriental Soft"
+   },
+   {
+    "name": "1945kiiipt",
+    "description": "1945k III (Promat license, OPCX1 PCB)",
+    "year": "1999",
+    "manufacturer": "Promat"
+   },
+   {
+    "name": "19xx",
+    "description": "19XX: The War Against Destiny (Europe 960104)",
+    "year": "1996",
+    "manufacturer": "Capcom"
+   },
+   {
+    "name": "19xxa",
+    "description": "19XX: The War Against Destiny (Asia 960104)",
+    "year": "1996",
+    "manufacturer": "Capcom"
+   },
+   {
+    "name": "19xxar1",
+    "description": "19XX: The War Against Destiny (Asia 951207)",
+    "year": "1996",
+    "manufacturer": "Capcom"
+   },
+   {
+    "name": "19xxb",
+    "description": "19XX: The War Against Destiny (Brazil 951218)",
+    "year": "1996",
+    "manufacturer": "Capcom"
+   },
+   {
+    "name": "19xxd",
+    "description": "19XX: The War Against Destiny (USA 951207 Phoenix Edition) (bootleg)",
+    "year": "1996",
+    "manufacturer": "bootleg"
+   },
+   {
+    "name": "19xxh",
+    "description": "19XX: The War Against Destiny (Hispanic 951218)",
+    "year": "1996",
+    "manufacturer": "Capcom"
+   },
+   {
+    "name": "19xxj",
+    "description": "19XX: The War Against Destiny (Japan 960104, yellow case)",
+    "year": "1996",
+    "manufacturer": "Capcom"
+   },
+   {
+    "name": "19xxjr1",
+    "description": "19XX: The War Against Destiny (Japan 951225)",
+    "year": "1996",
+    "manufacturer": "Capcom"
+   },
+   {
+    "name": "19xxjr2",
+    "description": "19XX: The War Against Destiny (Japan 951207)",
+    "year": "1996",
+    "manufacturer": "Capcom"
+   },
+   {
+    "name": "19xxu",
+    "description": "19XX: The War Against Destiny (USA 951207)",
+    "year": "1996",
+    "manufacturer": "Capcom"
+   },
+   {
+    "name": "1on1gov",
+    "description": "1 on 1 Government (Japan)",
+    "year": "2000",
+    "manufacturer": "Tecmo"
+   },
+   {
+    "name": "2020bb",
+    "description": "2020 Super Baseball (set 1)",
+    "year": "1991",
+    "manufacturer": "SNK / Pallas"
+   },
+   {
+    "name": "2020bba",
+    "description": "2020 Super Baseball (set 2)",
+    "year": "1991",
+    "manufacturer": "SNK / Pallas"
+   },
+   {
+    "name": "2020bbh",
+    "description": "2020 Super Baseball (set 3)",
+    "year": "1991",
+    "manufacturer": "SNK / Pallas"
+   },
+   {
+    "name": "280zzzap",
+    "description": "280-ZZZAP (set 1)",
+    "year": "1976",
+    "manufacturer": "Dave Nutting Associates / Midway"
+   },
+   {
+    "name": "280zzzapa",
+    "description": "280-ZZZAP (set 2)",
+    "year": "1976",
+    "manufacturer": "Dave Nutting Associates / Midway"
+   },
+   {
+    "name": "3countb",
+    "description": "3 Count Bout / Fire Suplex (NGM-043 ~ NGH-043)",
+    "year": "1993",
+    "manufacturer": "SNK"
+   },
+   {
+    "name": "3in1mbc",
+    "description": "Gunstar Heroes / Snake Rattle n' Roll / Joe & Mac (Conny bootleg of Mega Drive versions)",
+    "year": "1995",
+    "manufacturer": "bootleg (Conny)"
+   },
+   {
+    "name": "3in1semi",
+    "description": "New HyperMan (3-in-1 with Cookie & Bibi & HyperMan) (set 1)",
+    "year": "1998",
+    "manufacturer": "SemiCom / XESS"
+   },
+   {
+    "name": "3in1semia",
+    "description": "New HyperMan (3-in-1 with Cookie & Bibi & HyperMan) (set 2)",
+    "year": "1998",
+    "manufacturer": "SemiCom / XESS"
+   },
+   {
+    "name": "3kokushi",
+    "description": "Sankokushi (Japan)",
+    "year": "1996",
+    "manufacturer": "Mitchell"
+   },
+   {
+    "name": "3on3dunk",
+    "description": "3 On 3 Dunk Madness (US, prototype? 1997/02/04)",
+    "year": "1996",
+    "manufacturer": "Video System Co."
+   },
+   {
+    "name": "3stooges",
+    "description": "The Three Stooges In Brides Is Brides (set 1)",
+    "year": "1984",
+    "manufacturer": "Mylstar"
+   },
+   {
+    "name": "3stoogesa",
+    "description": "The Three Stooges In Brides Is Brides (set 2)",
+    "year": "1984",
+    "manufacturer": "Mylstar"
+   },
+   {
+    "name": "3wonders",
+    "description": "Three Wonders (World 910520)",
+    "year": "1991",
+    "manufacturer": "Capcom"
+   },
+   {
+    "name": "3wondersb",
+    "description": "Three Wonders (bootleg)",
+    "year": "1991",
+    "manufacturer": "bootleg"
+   },
+   {
+    "name": "3wondersbi",
+    "description": "Three Wonders (Italian bootleg)",
+    "year": "1991",
+    "manufacturer": "bootleg (Electronic Devices)"
+   },
+   {
+    "name": "3wondersh",
+    "description": "Three Wonders (hack)",
+    "year": "1991",
+    "manufacturer": "bootleg"
+   },
+   {
+    "name": "3wondersr1",
+    "description": "Three Wonders (World 910513)",
+    "year": "1991",
+    "manufacturer": "Capcom"
+   },
+   {
+    "name": "3wondersu",
+    "description": "Three Wonders (USA 910520)",
+    "year": "1991",
+    "manufacturer": "Capcom"
+   },
+   {
+    "name": "40love",
+    "description": "Forty-Love (World)",
+    "year": "1984",
+    "manufacturer": "Taito"
+   },
+   {
+    "name": "40lovebl",
+    "description": "Forty-Love (bootleg)",
+    "year": "1984",
+    "manufacturer": "bootleg"
+   },
+   {
+    "name": "40lovej",
+    "description": "Forty-Love (Japan)",
+    "year": "1984",
+    "manufacturer": "Taito"
+   },
+   {
+    "name": "4dwarrio",
+    "description": "4-D Warriors (315-5162)",
+    "year": "1985",
+    "manufacturer": "Coreland / Sega"
+   },
+   {
+    "name": "4enraya",
+    "description": "4 En Raya (set 1)",
+    "year": "1990",
+    "manufacturer": "IDSA"
+   },
+   {
+    "name": "4enrayaa",
+    "description": "4 En Raya (set 2)",
+    "year": "1990",
+    "manufacturer": "IDSA"
+   },
+   {
+    "name": "4in1",
+    "description": "4 Fun in 1",
+    "year": "1981",
+    "manufacturer": "Armenia / Food and Fun"
+   },
+   {
+    "name": "4in1boot",
+    "description": "Puzzle King (PacMan 2, Tetris, HyperMan 2, Snow Bros.)",
+    "year": "2002",
+    "manufacturer": "K1 Soft"
+   },
+   {
+    "name": "600",
+    "description": "600",
+    "year": "1981",
+    "manufacturer": "Konami"
+   },
+   {
+    "name": "64street",
+    "description": "64th. Street: A Detective Story (World)",
+    "year": "1991",
+    "manufacturer": "Jaleco"
+   },
+   {
+    "name": "64streetj",
+    "description": "64th. Street: A Detective Story (Japan, set 1)",
+    "year": "1991",
+    "manufacturer": "Jaleco"
+   },
+   {
+    "name": "64streetja",
+    "description": "64th. Street: A Detective Story (Japan, set 2)",
+    "year": "1991",
+    "manufacturer": "Jaleco"
+   },
+   {
+    "name": "720",
+    "description": "720 Degrees (rev 4)",
+    "year": "1986",
+    "manufacturer": "Atari Games"
+   },
+   {
+    "name": "720g",
+    "description": "720 Degrees (German, rev 2)",
+    "year": "1986",
+    "manufacturer": "Atari Games"
+   },
+   {
+    "name": "720gr1",
+    "description": "720 Degrees (German, rev 1)",
+    "year": "1986",
+    "manufacturer": "Atari Games"
+   },
+   {
+    "name": "720r1",
+    "description": "720 Degrees (rev 1)",
+    "year": "1986",
+    "manufacturer": "Atari Games"
+   },
+   {
+    "name": "720r2",
+    "description": "720 Degrees (rev 2)",
+    "year": "1986",
+    "manufacturer": "Atari Games"
+   },
+   {
+    "name": "720r3",
+    "description": "720 Degrees (rev 3)",
+    "year": "1986",
+    "manufacturer": "Atari Games"
+   },
+   {
+    "name": "7jigen",
+    "description": "7jigen no Youseitachi - Mahjong 7 Dimensions (Japan)",
+    "year": "1990",
+    "manufacturer": "Dynax"
+   },
+   {
+    "name": "7toitsu",
+    "description": "Chi-Toitsu",
+    "year": "1988",
+    "manufacturer": "Yuga"
+   },
+   {
+    "name": "800fath",
+    "description": "800 Fathoms",
+    "year": "1981",
+    "manufacturer": "Amenip (US Billiards Inc. license)"
+   },
+   {
+    "name": "800fatha",
+    "description": "800 Fathoms (older)",
+    "year": "1981",
+    "manufacturer": "Amenip (US Billiards Inc. license)"
+   },
+   {
+    "name": "88games",
+    "description": "'88 Games",
+    "year": "1988",
+    "manufacturer": "Konami"
+   },
+   {
+    "name": "8ball",
+    "description": "Video Eight Ball",
+    "year": "1982",
+    "manufacturer": "Century Electronics"
+   },
+   {
+    "name": "8ball1",
+    "description": "Video Eight Ball (Rev.1)",
+    "year": "1982",
+    "manufacturer": "Century Electronics"
+   },
+   {
+    "name": "8ballact",
+    "description": "Eight Ball Action (DK conversion)",
+    "year": "1984",
+    "manufacturer": "Seatongrove UK, Ltd. (Magic Electronics USA license)"
+   },
+   {
+    "name": "8ballact2",
+    "description": "Eight Ball Action (DKJr conversion)",
+    "year": "1984",
+    "manufacturer": "Seatongrove UK, Ltd. (Magic Electronics USA license)"
+   },
+   {
+    "name": "8bpm",
+    "description": "Eight Ball Action (Pac-Man conversion)",
+    "year": "1985",
+    "manufacturer": "Seatongrove UK, Ltd. (Magic Electronics USA license)"
+   },
+   {
+    "name": "99lstwar",
+    "description": "'99: The Last War (set 1)",
+    "year": "1985",
+    "manufacturer": "Crux / Proma"
+   },
+   {
+    "name": "99lstwara",
+    "description": "'99: The Last War (set 2)",
+    "year": "1985",
+    "manufacturer": "Crux / Proma"
+   },
+   {
+    "name": "99lstwarb",
+    "description": "'99: The Last War (bootleg)",
+    "year": "1985",
+    "manufacturer": "bootleg"
+   },
+   {
+    "name": "99lstwark",
+    "description": "'99: The Last War (Kyugo)",
+    "year": "1985",
+    "manufacturer": "Crux / Kyugo"
+   },
+   {
+    "name": "9ballsht",
+    "description": "9-Ball Shootout (set 1)",
+    "year": "1993",
+    "manufacturer": "E-Scape EnterMedia (Bundra license)"
+   },
+   {
+    "name": "9ballsht2",
+    "description": "9-Ball Shootout (set 2)",
+    "year": "1993",
+    "manufacturer": "E-Scape EnterMedia (Bundra license)"
+   },
+   {
+    "name": "9ballsht3",
+    "description": "9-Ball Shootout (set 3)",
+    "year": "1993",
+    "manufacturer": "E-Scape EnterMedia (Bundra license)"
+   },
+   {
+    "name": "9ballshtc",
+    "description": "9-Ball Shootout Championship",
+    "year": "1993",
+    "manufacturer": "E-Scape EnterMedia (Bundra license)"
+   },
+   {
+    "name": "a51mxr3k",
+    "description": "Area 51 / Maximum Force Duo (R3000, 2/10/98)",
+    "year": "1998",
+    "manufacturer": "Atari Games"
+   }
+  ],
+  "total": 10492,
+  "offset": 0,
+  "limit": 100
+ }
+}

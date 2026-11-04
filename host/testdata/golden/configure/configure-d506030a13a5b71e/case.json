@@ -1,0 +1,71 @@
+{
+ "command": "configure",
+ "input": {
+  "platformId": "arcade",
+  "coreIds": [
+   "fbneo",
+   "fbalpha2012_cps1"
+  ],
+  "files": [
+   {
+    "logicalKey": "1941j.zip",
+    "name": "1941j.zip",
+    "sizeBytes": 128,
+    "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+   },
+   {
+    "logicalKey": "1941.zip",
+    "name": "1941.zip",
+    "sizeBytes": 128,
+    "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+   },
+   {
+    "logicalKey": "other-parent.zip",
+    "name": "other-parent.zip",
+    "sizeBytes": 128,
+    "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+   },
+   {
+    "logicalKey": "README.txt",
+    "name": "README.txt",
+    "sizeBytes": 128,
+    "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+   }
+  ],
+  "arcadeCatalogs": {
+   "fbneo": {
+    "1941": {
+     "parent": null,
+     "bios": false,
+     "roms": []
+    },
+    "1941j": {
+     "parent": "1941",
+     "bios": false,
+     "roms": []
+    }
+   },
+   "fbalpha2012_cps1": {
+    "1941j": {
+     "parent": "other-parent",
+     "bios": false,
+     "roms": []
+    },
+    "other-parent": {
+     "parent": null,
+     "bios": false,
+     "roms": []
+    }
+   }
+  },
+  "selection": {
+   "entryFile": "1941.zip"
+  }
+ },
+ "result": {
+  "content": {
+   "kind": "ARCADE",
+   "entryFile": "1941.zip"
+  }
+ }
+}

@@ -1,0 +1,54 @@
+{
+ "command": "batch-identity",
+ "input": {
+  "items": [
+   {
+    "files": [
+     {
+      "logicalKey": "disc/disc.cue",
+      "name": "disc/disc.cue",
+      "sizeBytes": 41,
+      "sha256": "ba0c3c962e88e6fbdec9ef9d76489b1825b1b50202fa366cc4746a3a38443c05"
+     },
+     {
+      "logicalKey": "disc/トラック.wav",
+      "name": "disc/トラック.wav",
+      "sizeBytes": 1,
+      "sha256": "4bf5122f344554c53bde2ebb8cd2b7e3d1600ad631c385a5d7cce23c7785459a"
+     }
+    ],
+    "locators": {
+     "disc/disc.cue": {
+      "path": "${CASE}/files/p0",
+      "offset": 0,
+      "sizeBytes": 41
+     },
+     "disc/トラック.wav": {
+      "path": "${CASE}/files/p1",
+      "offset": 0,
+      "sizeBytes": 1
+     }
+    },
+    "directory": {
+     "platformId": "psx",
+     "defaultCoreId": "pcsx_rearmed",
+     "allowedCoreIds": [
+      "pcsx_rearmed"
+     ]
+    },
+    "fingerprints": {},
+    "config": {
+     "content": {
+      "kind": "SINGLE_FILE",
+      "entryFile": "disc/disc.cue"
+     }
+    }
+   }
+  ]
+ },
+ "result": [
+  {
+   "error": "RUNTIME_IMPLEMENTATION_UNAVAILABLE"
+  }
+ ]
+}

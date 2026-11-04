@@ -1,0 +1,64 @@
+{
+ "command": "batch-identity",
+ "input": {
+  "items": [
+   {
+    "directory": {
+     "platformId": "arcade",
+     "defaultCoreId": "mame_arcade",
+     "allowedCoreIds": [
+      "mame_arcade"
+     ]
+    },
+    "config": {
+     "content": {
+      "kind": "ARCADE",
+      "entryFile": "sample.zip"
+     }
+    },
+    "files": [
+     {
+      "name": "sample.zip",
+      "logicalKey": "sample.zip",
+      "sizeBytes": 22,
+      "sha256": "1111111111111111111111111111111111111111111111111111111111111111"
+     }
+    ],
+    "fingerprints": {
+     "retrom-runtime/mame-arcade": "3333333333333333333333333333333333333333333333333333333333333333"
+    },
+    "archives": {
+     "sample.zip": []
+    },
+    "arcadeCatalog": {
+     "sample": {
+      "parent": null,
+      "bios": false,
+      "roms": [],
+      "disks": [
+       {
+        "name": "disk",
+        "sha1": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "region": "disk",
+        "index": "0",
+        "writable": false
+       }
+      ]
+     }
+    }
+   }
+  ]
+ },
+ "result": [
+  {
+   "coreId": "mame_arcade",
+   "providerId": "retrom-runtime",
+   "targetId": "mame-arcade",
+   "coreFingerprint": "3333333333333333333333333333333333333333333333333333333333333333",
+   "romHash": "1111111111111111111111111111111111111111111111111111111111111111",
+   "readFormats": [
+    "mame-state-v1-storage-v1"
+   ]
+  }
+ ]
+}

@@ -1,0 +1,25 @@
+{
+ "command": "normalize-content",
+ "input": {
+  "platformId": "kirikiri",
+  "files": [
+   {
+    "logicalKey": "nested/launch.exe",
+    "name": "launch.exe",
+    "sha256": "f9076546289da0ae193ea0177dce82b713015d8b9c6e6fa47fae9ef4745309fc",
+    "sizeBytes": 73462
+   }
+  ],
+  "locators": {
+   "nested/launch.exe": {
+    "path": "${CASE}/files/nested/launch.exe",
+    "offset": 0,
+    "sizeBytes": 73462
+   }
+  },
+  "outputRoot": "${OUT}"
+ },
+ "error": {
+  "code": "RUNTIME_MOLEBOX_LIMIT"
+ }
+}

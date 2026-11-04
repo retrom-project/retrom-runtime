@@ -1,0 +1,29 @@
+{
+ "command": "configure",
+ "input": {
+  "platformId": "kirikiri",
+  "coreIds": [
+   "kirikiri2"
+  ],
+  "files": [
+   {
+    "logicalKey": "data.xp3",
+    "name": "data.xp3",
+    "sizeBytes": 128,
+    "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+   },
+   {
+    "logicalKey": "patch.xp3",
+    "name": "patch.xp3",
+    "sizeBytes": 128,
+    "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+   }
+  ]
+ },
+ "result": {
+  "content": {
+   "kind": "KIRIKIRI_PROJECT",
+   "entryFile": "data.xp3"
+  }
+ }
+}

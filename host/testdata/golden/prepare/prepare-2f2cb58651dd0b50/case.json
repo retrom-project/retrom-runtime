@@ -1,0 +1,128 @@
+{
+ "command": "prepare",
+ "input": {
+  "directory": {
+   "platformId": "model3",
+   "defaultCoreId": "supermodel",
+   "allowedCoreIds": [
+    "supermodel"
+   ]
+  },
+  "fingerprints": {
+   "emulatorjs/supermodel": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+  },
+  "files": [
+   {
+    "logicalKey": "stored/game.zip",
+    "name": "game.zip",
+    "sizeBytes": 100,
+    "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+   },
+   {
+    "logicalKey": "stored/base.zip",
+    "name": "base.zip",
+    "sizeBytes": 100,
+    "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+   },
+   {
+    "logicalKey": "stored/unused.zip",
+    "name": "unused.zip",
+    "sizeBytes": 100,
+    "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+   }
+  ],
+  "config": {
+   "content": {
+    "kind": "SINGLE_FILE",
+    "entryFile": "stored/game.zip"
+   },
+   "cores": {
+    "supermodel": {
+     "parentFiles": [
+      "stored/base.zip"
+     ]
+    }
+   }
+  }
+ },
+ "result": {
+  "coreId": "supermodel",
+  "providerId": "emulatorjs",
+  "targetId": "supermodel",
+  "coreFingerprint": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+  "romHash": "d8ae82cc3024f130b25ebe3d3578570b18815bb2e8d10d854736428c9d188799",
+  "config": {
+   "content": {
+    "kind": "SINGLE_FILE",
+    "entryFile": "stored/game.zip"
+   },
+   "cores": {
+    "supermodel": {
+     "parentFiles": [
+      "stored/base.zip"
+     ]
+    }
+   }
+  },
+  "targetOptions": {
+   "dosEntryPath": null
+  },
+  "dependencies": {
+   "parentFiles": [],
+   "missingParents": [],
+   "biosSets": []
+  },
+  "crcWarnings": [],
+  "biosRequirements": [],
+  "checkpoint": {
+   "maxBytes": 268435456,
+   "readFormats": [
+    "emulatorjs-state-v1-storage-v1"
+   ],
+   "writeFormat": "emulatorjs-state-v1-storage-v1",
+   "semantics": "INSTANT"
+  },
+  "capabilities": {
+   "contentLoading": "PRELOAD_ONLY",
+   "checkpoint": true,
+   "frameCounter": true,
+   "frameMode": "SAME_ORIGIN_BLANK",
+   "inputFilter": true,
+   "nativeSettings": true,
+   "pause": true,
+   "requiresThreads": false,
+   "screenshot": true,
+   "standardGamepad": true,
+   "videoModes": [
+    "adaptive-sharpen",
+    "original",
+    "pixel",
+    "sharp-bilinear",
+    "smooth"
+   ],
+   "volume": true
+  },
+  "resources": [
+   {
+    "role": "game",
+    "kind": "ROM_BLOB",
+    "ordinal": 0,
+    "files": [
+     "stored/game.zip"
+    ],
+    "entryFile": "stored/game.zip"
+   },
+   {
+    "role": "parent",
+    "kind": "EXTERNAL_FILE_SET",
+    "ordinal": 0,
+    "files": [
+     "stored/base.zip"
+    ],
+    "paths": {
+     "stored/base.zip": "base.zip"
+    }
+   }
+  ]
+ }
+}

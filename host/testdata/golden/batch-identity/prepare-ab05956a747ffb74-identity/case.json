@@ -1,0 +1,68 @@
+{
+ "command": "batch-identity",
+ "input": {
+  "items": [
+   {
+    "directory": {
+     "platformId": "thomson",
+     "defaultCoreId": "theodore",
+     "allowedCoreIds": [
+      "theodore"
+     ]
+    },
+    "files": [
+     {
+      "logicalKey": "renamed.sap",
+      "name": "renamed.sap",
+      "sizeBytes": 128,
+      "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+     }
+    ],
+    "fingerprints": {
+     "emulatorjs/theodore": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+    },
+    "config": {
+     "content": {
+      "kind": "SINGLE_FILE",
+      "entryFile": "renamed.sap"
+     },
+     "cores": {
+      "theodore": {
+       "options": {
+        "thomsonModel": "TO8"
+       }
+      }
+     }
+    },
+    "savedContext": {
+     "coreId": "theodore",
+     "providerId": "emulatorjs",
+     "targetId": "theodore",
+     "coreFingerprint": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+     "romHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+     "checkpointFormat": "emulatorjs-state-v1-storage-v1",
+     "content": {
+      "kind": "SINGLE_FILE",
+      "entryFile": "original.sap"
+     },
+     "runtimeOptions": {
+      "dosEntryPath": null,
+      "thomsonModel": "TO7"
+     }
+    }
+   }
+  ]
+ },
+ "result": [
+  {
+   "coreId": "theodore",
+   "providerId": "emulatorjs",
+   "targetId": "theodore",
+   "coreFingerprint": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+   "romHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+   "readFormats": [
+    "emulatorjs-state-v1-storage-v1"
+   ]
+  }
+ ]
+}

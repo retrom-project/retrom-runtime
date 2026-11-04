@@ -1,0 +1,107 @@
+{
+ "command": "prepare",
+ "input": {
+  "directory": {
+   "platformId": "atari7800",
+   "defaultCoreId": "prosystem",
+   "allowedCoreIds": [
+    "prosystem"
+   ]
+  },
+  "fingerprints": {
+   "emulatorjs/prosystem": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+  },
+  "config": {
+   "content": {
+    "kind": "SINGLE_FILE",
+    "entryFile": "game.a78"
+   }
+  },
+  "files": [
+   {
+    "logicalKey": "game.a78",
+    "name": "game.a78",
+    "sizeBytes": 128,
+    "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+   }
+  ]
+ },
+ "result": {
+  "coreId": "prosystem",
+  "providerId": "emulatorjs",
+  "targetId": "prosystem",
+  "coreFingerprint": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+  "romHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "config": {
+   "content": {
+    "kind": "SINGLE_FILE",
+    "entryFile": "game.a78"
+   }
+  },
+  "targetOptions": {
+   "dosEntryPath": null
+  },
+  "dependencies": {
+   "parentFiles": [],
+   "missingParents": [],
+   "biosSets": []
+  },
+  "crcWarnings": [],
+  "biosRequirements": [
+   {
+    "requirementKey": "emulatorjs/prosystem/7800 BIOS (U).rom",
+    "coreId": "prosystem",
+    "providerId": "emulatorjs",
+    "targetId": "prosystem",
+    "logicalName": "7800 BIOS (U).rom",
+    "required": false,
+    "condition": "",
+    "sizeBytes": 4096,
+    "md5": "0763f1ffb006ddbe32e52d497ee848ae",
+    "sha256": "7d94551defcd8e7b045a34255654d6d169a683f63062d51dee3eedabf2042db0",
+    "delivery": "BIOS_BUNDLE",
+    "virtualPath": null,
+    "activationOptions": {}
+   }
+  ],
+  "checkpoint": {
+   "maxBytes": 268435456,
+   "readFormats": [
+    "emulatorjs-state-v1-storage-v1"
+   ],
+   "writeFormat": "emulatorjs-state-v1-storage-v1",
+   "semantics": "INSTANT"
+  },
+  "capabilities": {
+   "contentLoading": "PRELOAD_ONLY",
+   "checkpoint": true,
+   "frameCounter": true,
+   "frameMode": "SAME_ORIGIN_BLANK",
+   "inputFilter": true,
+   "nativeSettings": true,
+   "pause": true,
+   "requiresThreads": false,
+   "screenshot": true,
+   "standardGamepad": true,
+   "videoModes": [
+    "adaptive-sharpen",
+    "original",
+    "pixel",
+    "sharp-bilinear",
+    "smooth"
+   ],
+   "volume": true
+  },
+  "resources": [
+   {
+    "role": "game",
+    "kind": "ROM_BLOB",
+    "ordinal": 0,
+    "files": [
+     "game.a78"
+    ],
+    "entryFile": "game.a78"
+   }
+  ]
+ }
+}

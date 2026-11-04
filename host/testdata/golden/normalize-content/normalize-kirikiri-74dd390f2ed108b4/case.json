@@ -1,0 +1,93 @@
+{
+ "command": "normalize-content",
+ "input": {
+  "platformId": "kirikiri",
+  "files": [
+   {
+    "logicalKey": "data.xp3",
+    "name": "data.xp3",
+    "sha256": "0b8777b09e23dbe692a446547c951d636eddcf9031bf784bda32766ce7a1d2d6",
+    "sizeBytes": 701
+   },
+   {
+    "logicalKey": "plugin/helper.tpm",
+    "name": "plugin/helper.tpm",
+    "sha256": "f84b848672e1d204e1b2fec7151837d67516747443727edb286bf26022e1293f",
+    "sizeBytes": 24576
+   }
+  ],
+  "locators": {
+   "data.xp3": {
+    "path": "${CASE}/files/data.xp3",
+    "offset": 0,
+    "sizeBytes": 701
+   },
+   "plugin/helper.tpm": {
+    "path": "${CASE}/files/plugin/helper.tpm",
+    "offset": 0,
+    "sizeBytes": 24576
+   }
+  },
+  "outputRoot": "${OUT}"
+ },
+ "result": {
+  "files": [
+   {
+    "logicalKey": "data.xp3",
+    "name": "data.xp3",
+    "sizeBytes": 701,
+    "sha256": "cffeaac385b074e6ab929c6d2ce80be9db114dabe18c3cce8a903c3eed256c2b",
+    "path": "${OUT}/data.xp3"
+   },
+   {
+    "logicalKey": "plugin/helper.tpm",
+    "name": "plugin/helper.tpm",
+    "sha256": "f84b848672e1d204e1b2fec7151837d67516747443727edb286bf26022e1293f",
+    "sizeBytes": 24576
+   }
+  ],
+  "normalization": {
+   "kind": "CONTENT_NORMALIZATION",
+   "converterVersion": 1,
+   "sourceContentHash": "8ebdd0c97796c3c4380099e35d089df9f39a53daa88d42e33fc1c6a63132599a",
+   "archiveCount": 1,
+   "verifiedEntries": 3,
+   "metadataCorrections": 0,
+   "omittedPhysicalEntries": 0,
+   "formatCounts": {
+    "xp3-native": 1
+   },
+   "warnings": [],
+   "details": [],
+   "plugins": [
+    {
+     "id": "kirikiri-cxfilterfs",
+     "version": 1,
+     "formats": [
+      "xp3-native"
+     ],
+     "sources": [
+      {
+       "file": "data.xp3",
+       "sizeBytes": 701,
+       "sha256": "0b8777b09e23dbe692a446547c951d636eddcf9031bf784bda32766ce7a1d2d6"
+      }
+     ],
+     "outputs": [
+      {
+       "file": "data.xp3",
+       "sizeBytes": 701,
+       "sha256": "cffeaac385b074e6ab929c6d2ce80be9db114dabe18c3cce8a903c3eed256c2b"
+      }
+     ],
+     "validation": {
+      "outputFilesVerified": 1,
+      "resourceEntriesVerified": 3,
+      "metadataCorrections": 0,
+      "omittedPhysicalEntries": 0
+     }
+    }
+   ]
+  }
+ }
+}

@@ -1,0 +1,23 @@
+{
+ "command": "storage-layout",
+ "input": {
+  "platformId": "model3",
+  "coreId": "supermodel",
+  "config": {
+   "content": {
+    "kind": "SINGLE_FILE",
+    "entryFile": "stored/game.zip"
+   },
+   "cores": {
+    "supermodel": {
+     "parentFiles": [
+      "stored/base.zip"
+     ]
+    }
+   }
+  }
+ },
+ "result": {
+  "layout": "FILES"
+ }
+}

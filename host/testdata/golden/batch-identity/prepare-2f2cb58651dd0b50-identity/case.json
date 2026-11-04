@@ -1,0 +1,64 @@
+{
+ "command": "batch-identity",
+ "input": {
+  "items": [
+   {
+    "directory": {
+     "platformId": "model3",
+     "defaultCoreId": "supermodel",
+     "allowedCoreIds": [
+      "supermodel"
+     ]
+    },
+    "fingerprints": {
+     "emulatorjs/supermodel": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+    },
+    "files": [
+     {
+      "logicalKey": "stored/game.zip",
+      "name": "game.zip",
+      "sizeBytes": 100,
+      "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+     },
+     {
+      "logicalKey": "stored/base.zip",
+      "name": "base.zip",
+      "sizeBytes": 100,
+      "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+     },
+     {
+      "logicalKey": "stored/unused.zip",
+      "name": "unused.zip",
+      "sizeBytes": 100,
+      "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+     }
+    ],
+    "config": {
+     "content": {
+      "kind": "SINGLE_FILE",
+      "entryFile": "stored/game.zip"
+     },
+     "cores": {
+      "supermodel": {
+       "parentFiles": [
+        "stored/base.zip"
+       ]
+      }
+     }
+    }
+   }
+  ]
+ },
+ "result": [
+  {
+   "coreId": "supermodel",
+   "providerId": "emulatorjs",
+   "targetId": "supermodel",
+   "coreFingerprint": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+   "romHash": "d8ae82cc3024f130b25ebe3d3578570b18815bb2e8d10d854736428c9d188799",
+   "readFormats": [
+    "emulatorjs-state-v1-storage-v1"
+   ]
+  }
+ ]
+}

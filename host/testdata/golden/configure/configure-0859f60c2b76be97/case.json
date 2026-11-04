@@ -1,0 +1,35 @@
+{
+ "command": "configure",
+ "input": {
+  "platformId": "kirikiri",
+  "coreIds": [
+   "kirikiri2"
+  ],
+  "files": [
+   {
+    "logicalKey": "game/data.xp3",
+    "name": "game/data.xp3",
+    "sizeBytes": 128,
+    "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+   },
+   {
+    "logicalKey": "game/startup.tjs",
+    "name": "game/startup.tjs",
+    "sizeBytes": 128,
+    "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+   },
+   {
+    "logicalKey": "game/Backup/startup.tjs",
+    "name": "game/Backup/startup.tjs",
+    "sizeBytes": 128,
+    "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+   }
+  ]
+ },
+ "result": {
+  "content": {
+   "kind": "KIRIKIRI_PROJECT",
+   "entryFile": "game/startup.tjs"
+  }
+ }
+}

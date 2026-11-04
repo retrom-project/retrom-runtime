@@ -1,0 +1,49 @@
+{
+ "command": "batch-identity",
+ "input": {
+  "items": [
+   {
+    "root": "${CASE}/files/p0",
+    "files": [
+     {
+      "logicalKey": "game/disc.cue",
+      "name": "game/disc.cue",
+      "sha256": "b6661b1b5d64ec1d62a3bee36673e31dd7e398c9b74f1cec546df04103ceab09",
+      "sizeBytes": 45
+     }
+    ],
+    "locators": {
+     "game/disc.cue": {
+      "path": "${CASE}/files/p1",
+      "offset": 0,
+      "sizeBytes": 45
+     },
+     "game/track.bin": {
+      "path": "${CASE}/files/p2",
+      "offset": 0,
+      "sizeBytes": 1
+     }
+    },
+    "directory": {
+     "platformId": "psx",
+     "defaultCoreId": "pcsx_rearmed",
+     "allowedCoreIds": [
+      "pcsx_rearmed"
+     ]
+    },
+    "fingerprints": {},
+    "config": {
+     "content": {
+      "kind": "SINGLE_FILE",
+      "entryFile": "game/disc.cue"
+     }
+    }
+   }
+  ]
+ },
+ "result": [
+  {
+   "error": "RUNTIME_IMPLEMENTATION_UNAVAILABLE"
+  }
+ ]
+}

@@ -1,0 +1,16 @@
+{
+ "command": "storage-layout",
+ "input": {
+  "platformId": "tic80",
+  "coreId": "tic80",
+  "config": {
+   "content": {
+    "kind": "SINGLE_FILE",
+    "entryFile": "game.tic"
+   }
+  }
+ },
+ "result": {
+  "layout": "FILES"
+ }
+}

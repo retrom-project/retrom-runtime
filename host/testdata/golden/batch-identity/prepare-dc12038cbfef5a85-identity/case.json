@@ -1,0 +1,45 @@
+{
+ "command": "batch-identity",
+ "input": {
+  "items": [
+   {
+    "directory": {
+     "platformId": "tic80",
+     "defaultCoreId": "tic80",
+     "allowedCoreIds": [
+      "tic80"
+     ]
+    },
+    "fingerprints": {
+     "retrom-runtime/tic80": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+    },
+    "config": {
+     "content": {
+      "kind": "SINGLE_FILE",
+      "entryFile": "game.tic"
+     }
+    },
+    "files": [
+     {
+      "logicalKey": "game.tic",
+      "name": "game.tic",
+      "sizeBytes": 128,
+      "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+     }
+    ]
+   }
+  ]
+ },
+ "result": [
+  {
+   "coreId": "tic80",
+   "providerId": "retrom-runtime",
+   "targetId": "tic80",
+   "coreFingerprint": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+   "romHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+   "readFormats": [
+    "tic80-pmem-v1-storage-v1"
+   ]
+  }
+ ]
+}

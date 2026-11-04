@@ -1,0 +1,45 @@
+{
+ "command": "batch-identity",
+ "input": {
+  "items": [
+   {
+    "root": "${CASE}/files/p0",
+    "files": [
+     {
+      "logicalKey": "game.zip",
+      "name": "game.zip",
+      "sha256": "444d739b5b94cbcafd12a122aeb7d47d3e4d57837cec5ad8322f28ad556ea311",
+      "sizeBytes": 137
+     }
+    ],
+    "locators": {
+     "game.zip": {
+      "path": "${CASE}/files/p1",
+      "offset": 0,
+      "sizeBytes": 137
+     }
+    },
+    "directory": {
+     "platformId": "dos",
+     "defaultCoreId": "dosbox_pure",
+     "allowedCoreIds": [
+      "dosbox_pure"
+     ]
+    },
+    "fingerprints": {},
+    "config": {
+     "content": {
+      "kind": "DOS_BUNDLE",
+      "entryFile": "game.zip",
+      "entryPath": "金庸群侠传/PLAY.BAT"
+     }
+    }
+   }
+  ]
+ },
+ "result": [
+  {
+   "error": "RUNTIME_IMPLEMENTATION_UNAVAILABLE"
+  }
+ ]
+}

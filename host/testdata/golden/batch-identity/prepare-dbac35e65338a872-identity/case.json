@@ -1,0 +1,53 @@
+{
+ "command": "batch-identity",
+ "input": {
+  "items": [
+   {
+    "directory": {
+     "platformId": "nes",
+     "defaultCoreId": "fceumm",
+     "allowedCoreIds": [
+      "fceumm",
+      "nestopia"
+     ]
+    },
+    "fingerprints": {
+     "emulatorjs/fceumm": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+     "emulatorjs/nestopia": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+    },
+    "files": [
+     {
+      "logicalKey": "game.nes",
+      "name": "game.nes",
+      "sizeBytes": 128,
+      "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+     },
+     {
+      "logicalKey": "parent.zip",
+      "name": "parent.zip",
+      "sizeBytes": 128,
+      "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+     }
+    ],
+    "config": {
+     "content": {
+      "kind": "SINGLE_FILE",
+      "entryFile": "game.nes"
+     }
+    }
+   }
+  ]
+ },
+ "result": [
+  {
+   "coreId": "fceumm",
+   "providerId": "emulatorjs",
+   "targetId": "fceumm",
+   "coreFingerprint": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+   "romHash": "862cedbeab65fb66f43a05c1f39097f856381fad12e3ec5d278d6fbed3c1ec5d",
+   "readFormats": [
+    "emulatorjs-state-v1-storage-v1"
+   ]
+  }
+ ]
+}

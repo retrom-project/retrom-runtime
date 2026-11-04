@@ -1,0 +1,23 @@
+{
+ "command": "storage-layout",
+ "input": {
+  "platformId": "naomi2",
+  "coreId": "flycast-naomi2",
+  "config": {
+   "content": {
+    "kind": "SINGLE_FILE",
+    "entryFile": "wldrider.zip"
+   },
+   "cores": {
+    "flycast-naomi2": {
+     "parentFiles": [
+      "parent.zip"
+     ]
+    }
+   }
+  }
+ },
+ "result": {
+  "layout": "FILES"
+ }
+}

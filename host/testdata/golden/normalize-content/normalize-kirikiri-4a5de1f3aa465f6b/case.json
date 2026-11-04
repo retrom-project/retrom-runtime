@@ -1,0 +1,47 @@
+{
+ "command": "normalize-content",
+ "input": {
+  "platformId": "kirikiri",
+  "files": [
+   {
+    "logicalKey": "data.xp3",
+    "name": "data.xp3",
+    "sha256": "7f1507ee2fce0ffb6bb37b6ed46b46e033eeaec58b4a052dfb7bbb1f50d527cf",
+    "sizeBytes": 16
+   },
+   {
+    "logicalKey": "launch.dll",
+    "name": "launch.dll",
+    "sha256": "f9a82156a70076d0cc843b7eaa0792cfd1490d79e194aead159de154c1646762",
+    "sizeBytes": 21504
+   },
+   {
+    "logicalKey": "translation-73.bin",
+    "name": "translation-73.bin",
+    "sha256": "6b683f0a887fc2b30a61ea1140a27d79ce831804729ffab780f6bb0e423e3ae7",
+    "sizeBytes": 242
+   }
+  ],
+  "locators": {
+   "data.xp3": {
+    "path": "${CASE}/files/data.xp3",
+    "offset": 0,
+    "sizeBytes": 16
+   },
+   "launch.dll": {
+    "path": "${CASE}/files/launch.dll",
+    "offset": 0,
+    "sizeBytes": 21504
+   },
+   "translation-73.bin": {
+    "path": "${CASE}/files/translation-73.bin",
+    "offset": 0,
+    "sizeBytes": 242
+   }
+  },
+  "outputRoot": "${OUT}"
+ },
+ "error": {
+  "code": "RUNTIME_XMOE_INVALID"
+ }
+}

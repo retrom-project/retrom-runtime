@@ -1,0 +1,57 @@
+{
+ "command": "batch-identity",
+ "input": {
+  "items": [
+   {
+    "directory": {
+     "platformId": "siglus",
+     "defaultCoreId": "siglus",
+     "allowedCoreIds": [
+      "siglus"
+     ]
+    },
+    "config": {
+     "content": {
+      "kind": "SIGLUS_PROJECT",
+      "entryFile": "Other Title/Scene.pck"
+     },
+     "cores": {
+      "siglus": {
+       "options": {
+        "language": "chs"
+       }
+      }
+     }
+    },
+    "files": [
+     {
+      "name": "Other Title/Scene.pck",
+      "logicalKey": "Other Title/Scene.pck",
+      "sizeBytes": 12,
+      "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+     },
+     {
+      "name": "Other Title/Gameexe.dat",
+      "logicalKey": "Other Title/Gameexe.dat",
+      "sizeBytes": 12,
+      "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+     },
+     {
+      "name": "Other Title/scene.chs",
+      "logicalKey": "Other Title/scene.chs",
+      "sizeBytes": 12,
+      "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+     }
+    ],
+    "fingerprints": {
+     "retrom-runtime/siglus": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+    }
+   }
+  ]
+ },
+ "result": [
+  {
+   "error": "RUNTIME_SIGLUS_TRANSLATION_MISSING"
+  }
+ ]
+}

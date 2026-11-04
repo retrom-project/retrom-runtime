@@ -1,0 +1,40 @@
+{
+ "command": "bios-identify",
+ "input": {
+  "file": {
+   "logicalKey": "bios.zip",
+   "name": "random.zip",
+   "sha256": "d3abaf62b1d77fb0904e3467179350c01bb7b85e0365ee9a9678aaee4f0c6bd9",
+   "sizeBytes": 118,
+   "md5": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+  },
+  "path": "${CASE}/files/p0",
+  "requirements": [
+   {
+    "requirementKey": "emulatorjs/fbneo/bios.zip",
+    "coreId": "fbneo",
+    "providerId": "emulatorjs",
+    "targetId": "fbneo",
+    "logicalName": "bios.zip",
+    "required": true,
+    "condition": "ARCADE_BIOS",
+    "sizeBytes": null,
+    "md5": null,
+    "sha256": null,
+    "delivery": "EXTERNAL_FILE",
+    "virtualPath": "bios.zip",
+    "activationOptions": {},
+    "members": [
+     {
+      "name": "bios.bin",
+      "sizeBytes": 2,
+      "crc32": "ffffffff",
+      "sha1": "",
+      "required": true
+     }
+    ]
+   }
+  ]
+ },
+ "result": []
+}

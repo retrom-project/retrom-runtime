@@ -1,0 +1,51 @@
+{
+ "command": "batch-identity",
+ "input": {
+  "items": [
+   {
+    "directory": {
+     "platformId": "rpgmaker",
+     "defaultCoreId": "rpgmaker",
+     "allowedCoreIds": [
+      "rpgmaker"
+     ]
+    },
+    "fingerprints": {
+     "retrom-runtime/rpgmaker-xp": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+     "retrom-runtime/rpgmaker-vx": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+     "retrom-runtime/rpgmaker-vx-ace": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+     "retrom-runtime/rpgmaker-mv": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+     "retrom-runtime/rpgmaker-2000": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+    },
+    "config": {
+     "content": {
+      "kind": "RPG_MAKER_PROJECT",
+      "entryFile": "Game.ini",
+      "engine": "RPGVX",
+      "rtp": "RPGVX"
+     }
+    },
+    "files": [
+     {
+      "logicalKey": "Game.ini",
+      "name": "Game.ini",
+      "sizeBytes": 128,
+      "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+     }
+    ]
+   }
+  ]
+ },
+ "result": [
+  {
+   "coreId": "rpgmaker",
+   "providerId": "retrom-runtime",
+   "targetId": "rpgmaker-vx",
+   "coreFingerprint": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+   "romHash": "dc7419d8b27c3987a3c01ee565dd6f5c0bbd35b04e28d89d51b5c20183b2fcae",
+   "readFormats": [
+    "mkxp-state-v1-storage-v1"
+   ]
+  }
+ ]
+}

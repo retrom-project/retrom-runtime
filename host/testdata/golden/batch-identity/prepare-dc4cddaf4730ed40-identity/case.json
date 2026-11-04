@@ -1,0 +1,47 @@
+{
+ "command": "batch-identity",
+ "input": {
+  "items": [
+   {
+    "directory": {
+     "platformId": "kirikiri",
+     "defaultCoreId": "kirikiri2",
+     "allowedCoreIds": [
+      "kirikiri2"
+     ]
+    },
+    "files": [
+     {
+      "logicalKey": "data.xp3",
+      "name": "data.xp3",
+      "sizeBytes": 128,
+      "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+     }
+    ],
+    "config": {
+     "content": {
+      "kind": "KIRIKIRI_PROJECT",
+      "entryFile": "data.xp3"
+     },
+     "cores": {
+      "kirikiri2": {
+       "options": {
+        "engineArguments": [
+         "-datapath=elsewhere"
+        ]
+       }
+      }
+     }
+    },
+    "fingerprints": {
+     "retrom-runtime/kirikiri2-kag": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+    }
+   }
+  ]
+ },
+ "result": [
+  {
+   "error": "RUNTIME_OPTIONS_INVALID"
+  }
+ ]
+}

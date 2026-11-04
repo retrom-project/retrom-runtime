@@ -1,0 +1,106 @@
+{
+ "command": "normalize-content",
+ "input": {
+  "platformId": "kirikiri",
+  "files": [
+   {
+    "logicalKey": "data.xp3",
+    "name": "data.xp3",
+    "sha256": "ab576b9aa7dd261c167ecbcd3a72b9584d92f47cb7ba0a1485b2d0cdeb7bc767",
+    "sizeBytes": 1143
+   },
+   {
+    "logicalKey": "launcher.exe",
+    "name": "launcher.exe",
+    "sha256": "f62c7c67565735c515e0b25fa2e2ade54b49d134946b83b1b7ed8983d50e1b60",
+    "sizeBytes": 24926
+   }
+  ],
+  "locators": {
+   "data.xp3": {
+    "path": "${CASE}/files/data.xp3",
+    "offset": 0,
+    "sizeBytes": 1143
+   },
+   "launcher.exe": {
+    "path": "${CASE}/files/launcher.exe",
+    "offset": 0,
+    "sizeBytes": 24926
+   }
+  },
+  "outputRoot": "${OUT}"
+ },
+ "result": {
+  "files": [
+   {
+    "logicalKey": "data.xp3",
+    "name": "data.xp3",
+    "sizeBytes": 1143,
+    "sha256": "4912714863afc3ceb942c73af9efd2a255858be622fcac897cc06658656848c8",
+    "path": "${OUT}/data.xp3"
+   },
+   {
+    "logicalKey": "launcher.exe",
+    "name": "launcher.exe",
+    "sizeBytes": 350,
+    "sha256": "ddba94c17250c47773bf0007732a52b52ec527a1ed707974b2d7e9afefac7ae5",
+    "path": "${OUT}/launcher.exe"
+   }
+  ],
+  "normalization": {
+   "kind": "CONTENT_NORMALIZATION",
+   "converterVersion": 1,
+   "sourceContentHash": "1832767058d8ee162fbc41c9070eecc2288cb2894b361044e4ae86db1b055e9c",
+   "archiveCount": 2,
+   "verifiedEntries": 4,
+   "metadataCorrections": 0,
+   "omittedPhysicalEntries": 0,
+   "formatCounts": {
+    "xp3-native": 1,
+    "xp3-pe": 1
+   },
+   "warnings": [],
+   "details": [],
+   "plugins": [
+    {
+     "id": "kirikiri-cxfilterfs",
+     "version": 1,
+     "formats": [
+      "xp3-native",
+      "xp3-pe"
+     ],
+     "sources": [
+      {
+       "file": "data.xp3",
+       "sizeBytes": 1143,
+       "sha256": "ab576b9aa7dd261c167ecbcd3a72b9584d92f47cb7ba0a1485b2d0cdeb7bc767"
+      },
+      {
+       "file": "launcher.exe",
+       "sizeBytes": 24926,
+       "sha256": "f62c7c67565735c515e0b25fa2e2ade54b49d134946b83b1b7ed8983d50e1b60"
+      }
+     ],
+     "outputs": [
+      {
+       "file": "data.xp3",
+       "sizeBytes": 1143,
+       "sha256": "4912714863afc3ceb942c73af9efd2a255858be622fcac897cc06658656848c8"
+      },
+      {
+       "file": "launcher.exe",
+       "sizeBytes": 350,
+       "sha256": "ddba94c17250c47773bf0007732a52b52ec527a1ed707974b2d7e9afefac7ae5"
+      }
+     ],
+     "validation": {
+      "outputFilesVerified": 2,
+      "resourceEntriesVerified": 4,
+      "metadataCorrections": 0,
+      "omittedPhysicalEntries": 0
+     }
+    }
+   ]
+  }
+ }
+}

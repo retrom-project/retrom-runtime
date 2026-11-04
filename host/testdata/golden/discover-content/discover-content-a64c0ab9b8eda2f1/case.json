@@ -1,0 +1,42 @@
+{
+ "command": "discover-content",
+ "input": {
+  "root": "${CASE}/files/p0",
+  "files": [
+   {
+    "logicalKey": "disc/main.cue",
+    "name": "disc/main.cue",
+    "sha256": "fe49ac817c750a4e1bdc211a4ad8bd425668aba73379dde0aa821cbdef890124",
+    "sizeBytes": 70
+   }
+  ],
+  "locators": {
+   "disc/main.cue": {
+    "path": "${CASE}/files/p1",
+    "offset": 0,
+    "sizeBytes": 70
+   }
+  },
+  "directory": {
+   "platformId": "psx",
+   "defaultCoreId": "pcsx_rearmed",
+   "allowedCoreIds": [
+    "pcsx_rearmed"
+   ]
+  }
+ },
+ "result": {
+  "files": [
+   {
+    "logicalKey": "disc/track 1.iso",
+    "relativeTo": "disc/main.cue",
+    "relativePath": "track 1.iso"
+   },
+   {
+    "logicalKey": "disc/audio.wav",
+    "relativeTo": "disc/main.cue",
+    "relativePath": "audio.wav"
+   }
+  ]
+ }
+}

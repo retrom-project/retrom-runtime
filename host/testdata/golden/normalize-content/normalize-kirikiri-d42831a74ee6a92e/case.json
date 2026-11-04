@@ -1,0 +1,36 @@
+{
+ "command": "normalize-content",
+ "input": {
+  "platformId": "kirikiri",
+  "files": [
+   {
+    "logicalKey": "data.xp3",
+    "name": "data.xp3",
+    "sha256": "72c7157f572232d832d3b5c2b2a76dff0488da15449cb60e07c8d9cb4032ab94",
+    "sizeBytes": 2303
+   },
+   {
+    "logicalKey": "plugin/helper.tpm",
+    "name": "plugin/helper.tpm",
+    "sha256": "292fdb13e77389e5e6a8310f6e1a0d524266d7ed0836340fee4263ad93c2b97a",
+    "sizeBytes": 24576
+   }
+  ],
+  "locators": {
+   "data.xp3": {
+    "path": "${CASE}/files/data.xp3",
+    "offset": 0,
+    "sizeBytes": 2303
+   },
+   "plugin/helper.tpm": {
+    "path": "${CASE}/files/plugin/helper.tpm",
+    "offset": 0,
+    "sizeBytes": 24576
+   }
+  },
+  "outputRoot": "${OUT}"
+ },
+ "error": {
+  "code": "RUNTIME_KIRIKIRI_CHECKSUM_MISMATCH"
+ }
+}

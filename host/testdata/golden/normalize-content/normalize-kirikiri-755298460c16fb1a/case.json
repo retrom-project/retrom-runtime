@@ -1,0 +1,144 @@
+{
+ "command": "normalize-content",
+ "input": {
+  "platformId": "kirikiri",
+  "files": [
+   {
+    "logicalKey": "data.xp3",
+    "name": "data.xp3",
+    "sha256": "9593f310e0cf3c0c913f889de894e667621192b68d209d85efdbffb7b8d30a26",
+    "sizeBytes": 132211
+   },
+   {
+    "logicalKey": "plugin/helper.tpm",
+    "name": "plugin/helper.tpm",
+    "sha256": "faa308020093da364ba2825af4f3152fe417e45b0580415855e4d4ba2d3e9ce4",
+    "sizeBytes": 24576
+   },
+   {
+    "logicalKey": "plugin/candidate-0.dll",
+    "name": "plugin/candidate-0.dll",
+    "sha256": "199accc535a4857714737c5a17836cf84f00f0da112dcc0f7ab0253d91788f40",
+    "sizeBytes": 24576
+   },
+   {
+    "logicalKey": "plugin/candidate-1.dll",
+    "name": "plugin/candidate-1.dll",
+    "sha256": "a66202584964fc53589c0b596d0fea5815e70e94a8047d1256040bfac673c06c",
+    "sizeBytes": 24576
+   },
+   {
+    "logicalKey": "plugin/candidate-2.dll",
+    "name": "plugin/candidate-2.dll",
+    "sha256": "292fdb13e77389e5e6a8310f6e1a0d524266d7ed0836340fee4263ad93c2b97a",
+    "sizeBytes": 24576
+   }
+  ],
+  "locators": {
+   "data.xp3": {
+    "path": "${CASE}/files/data.xp3",
+    "offset": 0,
+    "sizeBytes": 132211
+   },
+   "plugin/helper.tpm": {
+    "path": "${CASE}/files/plugin/helper.tpm",
+    "offset": 0,
+    "sizeBytes": 24576
+   },
+   "plugin/candidate-0.dll": {
+    "path": "${CASE}/files/plugin/candidate-0.dll",
+    "offset": 0,
+    "sizeBytes": 24576
+   },
+   "plugin/candidate-1.dll": {
+    "path": "${CASE}/files/plugin/candidate-1.dll",
+    "offset": 0,
+    "sizeBytes": 24576
+   },
+   "plugin/candidate-2.dll": {
+    "path": "${CASE}/files/plugin/candidate-2.dll",
+    "offset": 0,
+    "sizeBytes": 24576
+   }
+  },
+  "outputRoot": "${OUT}"
+ },
+ "result": {
+  "files": [
+   {
+    "logicalKey": "data.xp3",
+    "name": "data.xp3",
+    "sizeBytes": 131965,
+    "sha256": "f5e60f231164ca73651ad1109aee051a8c55b9f89debf8ba9e800a0ecc5a8a25",
+    "path": "${OUT}/data.xp3"
+   },
+   {
+    "logicalKey": "plugin/candidate-0.dll",
+    "name": "plugin/candidate-0.dll",
+    "sha256": "199accc535a4857714737c5a17836cf84f00f0da112dcc0f7ab0253d91788f40",
+    "sizeBytes": 24576
+   },
+   {
+    "logicalKey": "plugin/candidate-1.dll",
+    "name": "plugin/candidate-1.dll",
+    "sha256": "a66202584964fc53589c0b596d0fea5815e70e94a8047d1256040bfac673c06c",
+    "sizeBytes": 24576
+   },
+   {
+    "logicalKey": "plugin/candidate-2.dll",
+    "name": "plugin/candidate-2.dll",
+    "sha256": "292fdb13e77389e5e6a8310f6e1a0d524266d7ed0836340fee4263ad93c2b97a",
+    "sizeBytes": 24576
+   },
+   {
+    "logicalKey": "plugin/helper.tpm",
+    "name": "plugin/helper.tpm",
+    "sha256": "faa308020093da364ba2825af4f3152fe417e45b0580415855e4d4ba2d3e9ce4",
+    "sizeBytes": 24576
+   }
+  ],
+  "normalization": {
+   "kind": "CONTENT_NORMALIZATION",
+   "converterVersion": 1,
+   "sourceContentHash": "d4cf7a6e8ae050042b597ff512a2b1176663536791ae93ffc2765999eadad5b8",
+   "archiveCount": 1,
+   "verifiedEntries": 3,
+   "metadataCorrections": 0,
+   "omittedPhysicalEntries": 0,
+   "formatCounts": {
+    "cxfilterfs-neko": 1
+   },
+   "warnings": [],
+   "details": [],
+   "plugins": [
+    {
+     "id": "kirikiri-cxfilterfs",
+     "version": 1,
+     "formats": [
+      "cxfilterfs-neko"
+     ],
+     "sources": [
+      {
+       "file": "data.xp3",
+       "sizeBytes": 132211,
+       "sha256": "9593f310e0cf3c0c913f889de894e667621192b68d209d85efdbffb7b8d30a26"
+      }
+     ],
+     "outputs": [
+      {
+       "file": "data.xp3",
+       "sizeBytes": 131965,
+       "sha256": "f5e60f231164ca73651ad1109aee051a8c55b9f89debf8ba9e800a0ecc5a8a25"
+      }
+     ],
+     "validation": {
+      "outputFilesVerified": 1,
+      "resourceEntriesVerified": 3,
+      "metadataCorrections": 0,
+      "omittedPhysicalEntries": 0
+     }
+    }
+   ]
+  }
+ }
+}

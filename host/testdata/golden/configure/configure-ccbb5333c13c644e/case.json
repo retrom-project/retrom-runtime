@@ -1,0 +1,31 @@
+{
+ "command": "configure",
+ "input": {
+  "root": "${CASE}/files/p0",
+  "files": [
+   {
+    "logicalKey": "game/sky.dnr",
+    "name": "game/sky.dnr",
+    "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+    "sizeBytes": 3
+   }
+  ],
+  "locators": {
+   "game/sky.dnr": {
+    "path": "${CASE}/files/p1",
+    "offset": 0,
+    "sizeBytes": 3
+   }
+  },
+  "platformId": "scummvm",
+  "coreIds": [
+   "scummvm"
+  ],
+  "providerRoots": {
+   "retrom-runtime": "/verified-provider"
+  }
+ },
+ "error": {
+  "code": "RUNTIME_CONTENT_CHANGED"
+ }
+}

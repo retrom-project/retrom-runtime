@@ -1,0 +1,51 @@
+{
+ "command": "bios-requirements",
+ "input": {
+  "providerId": "emulatorjs",
+  "targetId": "flycast-naomi2",
+  "config": {
+   "content": {
+    "kind": "SINGLE_FILE",
+    "entryFile": "wldrider.zip"
+   },
+   "cores": {
+    "flycast-naomi2": {
+     "parentFiles": [
+      "PARENT.ZIP"
+     ]
+    }
+   }
+  },
+  "files": [
+   {
+    "logicalKey": "wldrider.zip",
+    "name": "wldrider.zip",
+    "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "sizeBytes": 100
+   },
+   {
+    "logicalKey": "PARENT.ZIP",
+    "name": "PARENT.ZIP",
+    "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "sizeBytes": 100
+   }
+  ]
+ },
+ "result": [
+  {
+   "requirementKey": "emulatorjs/flycast-naomi2/naomi2.zip",
+   "coreId": "flycast-naomi2",
+   "providerId": "emulatorjs",
+   "targetId": "flycast-naomi2",
+   "logicalName": "naomi2.zip",
+   "required": true,
+   "condition": "",
+   "sizeBytes": null,
+   "md5": null,
+   "sha256": null,
+   "delivery": "EXTERNAL_FILE",
+   "virtualPath": "dc/naomi2.zip",
+   "activationOptions": {}
+  }
+ ]
+}

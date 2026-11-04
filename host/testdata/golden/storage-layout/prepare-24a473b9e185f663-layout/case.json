@@ -1,0 +1,21 @@
+{
+ "command": "storage-layout",
+ "input": {
+  "platformId": "arcade",
+  "coreId": "mame_arcade",
+  "config": {
+   "content": {
+    "kind": "ARCADE",
+    "entryFile": "renamed.zip"
+   },
+   "cores": {
+    "mame_arcade": {
+     "romSet": "other"
+    }
+   }
+  }
+ },
+ "result": {
+  "layout": "FILES"
+ }
+}

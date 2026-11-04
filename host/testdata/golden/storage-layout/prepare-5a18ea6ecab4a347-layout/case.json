@@ -1,0 +1,25 @@
+{
+ "command": "storage-layout",
+ "input": {
+  "platformId": "arcade",
+  "coreId": "fbalpha",
+  "config": {
+   "content": {
+    "kind": "ARCADE",
+    "entryFile": "stored/alias.zip"
+   },
+   "cores": {
+    "fbalpha": {
+     "romSet": "clone",
+     "parentFiles": [
+      "stored/BASE.ZIP",
+      "stored/grand.zip"
+     ]
+    }
+   }
+  }
+ },
+ "result": {
+  "layout": "FILES"
+ }
+}

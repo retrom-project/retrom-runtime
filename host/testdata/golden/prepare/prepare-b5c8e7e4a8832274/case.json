@@ -1,0 +1,115 @@
+{
+ "command": "prepare",
+ "input": {
+  "directory": {
+   "platformId": "kirikiri",
+   "defaultCoreId": "kirikiri2",
+   "allowedCoreIds": [
+    "kirikiri2"
+   ]
+  },
+  "files": [
+   {
+    "logicalKey": "arbitrary/startup.tjs",
+    "name": "arbitrary/startup.tjs",
+    "sizeBytes": 128,
+    "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+   },
+   {
+    "logicalKey": "arbitrary/resources.xp3",
+    "name": "arbitrary/resources.xp3",
+    "sizeBytes": 128,
+    "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+   }
+  ],
+  "config": {
+   "content": {
+    "kind": "KIRIKIRI_PROJECT",
+    "entryFile": "arbitrary/startup.tjs"
+   },
+   "cores": {
+    "kirikiri2": {
+     "options": {
+      "engineMode": "KIRIKIRI_Z"
+     }
+    }
+   }
+  },
+  "fingerprints": {
+   "retrom-runtime/kirikiri2-kag": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+  }
+ },
+ "result": {
+  "coreId": "kirikiri2",
+  "providerId": "retrom-runtime",
+  "targetId": "kirikiri2-kag",
+  "coreFingerprint": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+  "romHash": "a2c32acc81ef34c92e6453515218093bc6faa7b8d9e0b046749b3ee02f00c1dc",
+  "config": {
+   "content": {
+    "kind": "KIRIKIRI_PROJECT",
+    "entryFile": "arbitrary/startup.tjs"
+   },
+   "cores": {
+    "kirikiri2": {
+     "options": {
+      "engineMode": "KIRIKIRI_Z"
+     }
+    }
+   }
+  },
+  "targetOptions": {
+   "engineMode": "KIRIKIRI_Z",
+   "startupXp3Path": null
+  },
+  "dependencies": {
+   "parentFiles": [],
+   "missingParents": [],
+   "biosSets": []
+  },
+  "crcWarnings": [],
+  "biosRequirements": [],
+  "checkpoint": {
+   "maxBytes": 67108864,
+   "readFormats": [
+    "kirikiri-game-save-v1-storage-v1"
+   ],
+   "writeFormat": "kirikiri-game-save-v1-storage-v1",
+   "semantics": "GAME_SAVE"
+  },
+  "capabilities": {
+   "contentLoading": "ON_DEMAND_AND_PRELOAD",
+   "checkpoint": true,
+   "frameCounter": false,
+   "frameMode": "SAME_ORIGIN_BLANK",
+   "inputFilter": true,
+   "nativeSettings": false,
+   "pause": true,
+   "requiresThreads": true,
+   "screenshot": true,
+   "standardGamepad": true,
+   "videoModes": [
+    "original",
+    "pixel",
+    "smooth"
+   ],
+   "volume": false
+  },
+  "resources": [
+   {
+    "role": "game",
+    "kind": "FILE_TREE",
+    "ordinal": 0,
+    "files": [
+     "arbitrary/startup.tjs",
+     "arbitrary/resources.xp3"
+    ],
+    "entryFile": "startup.tjs",
+    "paths": {
+     "arbitrary/startup.tjs": "startup.tjs",
+     "arbitrary/resources.xp3": "resources.xp3"
+    }
+   }
+  ]
+ }
+}

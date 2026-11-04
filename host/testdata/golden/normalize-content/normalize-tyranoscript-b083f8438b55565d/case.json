@@ -1,0 +1,32 @@
+{
+ "command": "normalize-content",
+ "input": {
+  "platformId": "tyranoscript",
+  "files": [
+   {
+    "logicalKey": "data/scenario.ks",
+    "name": "data/scenario.ks",
+    "sha256": "473e0f14a3cf9699aa19a5194286c67392640cab3dc87f7b5be607fed03f5c16",
+    "sizeBytes": 6
+   }
+  ],
+  "locators": {
+   "data/scenario.ks": {
+    "path": "${CASE}/files/data/scenario.ks",
+    "offset": 0,
+    "sizeBytes": 6
+   }
+  },
+  "outputRoot": "${OUT}"
+ },
+ "result": {
+  "files": [
+   {
+    "logicalKey": "data/scenario.ks",
+    "name": "data/scenario.ks",
+    "sha256": "473e0f14a3cf9699aa19a5194286c67392640cab3dc87f7b5be607fed03f5c16",
+    "sizeBytes": 6
+   }
+  ]
+ }
+}

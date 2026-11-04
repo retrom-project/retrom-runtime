@@ -1,0 +1,29 @@
+{
+ "command": "configure",
+ "input": {
+  "platformId": "cavestory",
+  "coreIds": [
+   "nxengine"
+  ],
+  "files": [
+   {
+    "logicalKey": "Doukutsu.exe",
+    "name": "Doukutsu.exe",
+    "sizeBytes": 128,
+    "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+   },
+   {
+    "logicalKey": "data/Stage.dat",
+    "name": "data/Stage.dat",
+    "sizeBytes": 128,
+    "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+   }
+  ]
+ },
+ "result": {
+  "content": {
+   "kind": "NXENGINE_PROJECT",
+   "entryFile": "Doukutsu.exe"
+  }
+ }
+}

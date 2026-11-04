@@ -1,0 +1,201 @@
+{
+ "command": "normalize-content",
+ "input": {
+  "platformId": "kirikiri",
+  "files": [
+   {
+    "logicalKey": ".runtime-launches/launch.dll.json",
+    "name": ".runtime-launches/launch.dll.json",
+    "sha256": "6abe4df7d7be2d6f1eacbaa8d59d1ecfda6706a5bdad8073d6da3415e1edda38",
+    "sizeBytes": 520
+   },
+   {
+    "logicalKey": ".runtime-patches/launch.dll/intro.ks.scn",
+    "name": ".runtime-patches/launch.dll/intro.ks.scn",
+    "sha256": "0bf9cfe6eea5657956798722ac1ca28c547874f7d7550aeb3598cb7b6ada07e8",
+    "sizeBytes": 132
+   },
+   {
+    "logicalKey": "data.xp3",
+    "name": "data.xp3",
+    "sha256": "7f1507ee2fce0ffb6bb37b6ed46b46e033eeaec58b4a052dfb7bbb1f50d527cf",
+    "sizeBytes": 16
+   },
+   {
+    "logicalKey": "launch.dll",
+    "name": "launch.dll",
+    "sha256": "f9a82156a70076d0cc843b7eaa0792cfd1490d79e194aead159de154c1646762",
+    "sizeBytes": 21504
+   },
+   {
+    "logicalKey": "translation-73.bin",
+    "name": "translation-73.bin",
+    "sha256": "c51aed56147e12eedadf0285345aa6305957641b3be24d5b033101b12793c5a6",
+    "sizeBytes": 242
+   }
+  ],
+  "locators": {
+   ".runtime-launches/launch.dll.json": {
+    "path": "${CASE}/files/.runtime-launches/launch.dll.json",
+    "offset": 0,
+    "sizeBytes": 520
+   },
+   ".runtime-patches/launch.dll/intro.ks.scn": {
+    "path": "${CASE}/files/.runtime-patches/launch.dll/intro.ks.scn",
+    "offset": 0,
+    "sizeBytes": 132
+   },
+   "data.xp3": {
+    "path": "${CASE}/files/data.xp3",
+    "offset": 0,
+    "sizeBytes": 16
+   },
+   "launch.dll": {
+    "path": "${CASE}/files/launch.dll",
+    "offset": 0,
+    "sizeBytes": 21504
+   },
+   "translation-73.bin": {
+    "path": "${CASE}/files/translation-73.bin",
+    "offset": 0,
+    "sizeBytes": 242
+   }
+  },
+  "outputRoot": "${OUT}"
+ },
+ "result": {
+  "files": [
+   {
+    "logicalKey": ".runtime-launches/launch.dll.json",
+    "name": ".runtime-launches/launch.dll.json",
+    "path": "${OUT}/.runtime-launches/launch.dll.json",
+    "sizeBytes": 520,
+    "sha256": "6abe4df7d7be2d6f1eacbaa8d59d1ecfda6706a5bdad8073d6da3415e1edda38"
+   },
+   {
+    "logicalKey": ".runtime-patches/launch.dll/intro.ks.scn",
+    "name": ".runtime-patches/launch.dll/intro.ks.scn",
+    "path": "${OUT}/.runtime-patches/launch.dll/intro.ks.scn",
+    "sizeBytes": 132,
+    "sha256": "0bf9cfe6eea5657956798722ac1ca28c547874f7d7550aeb3598cb7b6ada07e8"
+   },
+   {
+    "logicalKey": "data.xp3",
+    "name": "data.xp3",
+    "sha256": "7f1507ee2fce0ffb6bb37b6ed46b46e033eeaec58b4a052dfb7bbb1f50d527cf",
+    "sizeBytes": 16
+   },
+   {
+    "logicalKey": "launch.dll",
+    "name": "launch.dll",
+    "path": "${OUT}/launch.dll",
+    "sizeBytes": 21504,
+    "sha256": "f9a82156a70076d0cc843b7eaa0792cfd1490d79e194aead159de154c1646762"
+   },
+   {
+    "logicalKey": "translation-73.bin",
+    "name": "translation-73.bin",
+    "path": "${OUT}/translation-73.bin",
+    "sizeBytes": 242,
+    "sha256": "c51aed56147e12eedadf0285345aa6305957641b3be24d5b033101b12793c5a6"
+   }
+  ],
+  "normalization": {
+   "kind": "CONTENT_NORMALIZATION",
+   "converterVersion": 1,
+   "sourceContentHash": "e7abffd7028cd3afa37e23ef3f26fae6369ff91a9f0f618e9d4a3fdffe7fe00b",
+   "archiveCount": 1,
+   "verifiedEntries": 1,
+   "metadataCorrections": 0,
+   "omittedPhysicalEntries": 0,
+   "formatCounts": {
+    "xmoe-psb": 1
+   },
+   "warnings": [],
+   "details": [
+    {
+     "code": "STATIC_RESOURCE_PATCH",
+     "file": "launch.dll",
+     "member": ".runtime-launches/launch.dll.json"
+    },
+    {
+     "code": "CONTAINER_FILE_OVERRIDE",
+     "file": "launch.dll",
+     "member": ".runtime-launches/launch.dll.json",
+     "sourceSha256": "6abe4df7d7be2d6f1eacbaa8d59d1ecfda6706a5bdad8073d6da3415e1edda38",
+     "outputSha256": "6abe4df7d7be2d6f1eacbaa8d59d1ecfda6706a5bdad8073d6da3415e1edda38",
+     "sourceSize": 520,
+     "outputSize": 520
+    },
+    {
+     "code": "CONTAINER_FILE_OVERRIDE",
+     "file": "launch.dll",
+     "member": ".runtime-patches/launch.dll/intro.ks.scn",
+     "sourceSha256": "0bf9cfe6eea5657956798722ac1ca28c547874f7d7550aeb3598cb7b6ada07e8",
+     "outputSha256": "0bf9cfe6eea5657956798722ac1ca28c547874f7d7550aeb3598cb7b6ada07e8",
+     "sourceSize": 132,
+     "outputSize": 132
+    }
+   ],
+   "plugins": [
+    {
+     "id": "xmoe-psb",
+     "version": 1,
+     "formats": [
+      "xmoe-psb"
+     ],
+     "sources": [
+      {
+       "file": ".runtime-launches/launch.dll.json",
+       "sizeBytes": 520,
+       "sha256": "6abe4df7d7be2d6f1eacbaa8d59d1ecfda6706a5bdad8073d6da3415e1edda38"
+      },
+      {
+       "file": ".runtime-patches/launch.dll/intro.ks.scn",
+       "sizeBytes": 132,
+       "sha256": "0bf9cfe6eea5657956798722ac1ca28c547874f7d7550aeb3598cb7b6ada07e8"
+      },
+      {
+       "file": "launch.dll",
+       "sizeBytes": 21504,
+       "sha256": "f9a82156a70076d0cc843b7eaa0792cfd1490d79e194aead159de154c1646762"
+      },
+      {
+       "file": "translation-73.bin",
+       "sizeBytes": 242,
+       "sha256": "c51aed56147e12eedadf0285345aa6305957641b3be24d5b033101b12793c5a6"
+      }
+     ],
+     "outputs": [
+      {
+       "file": "launch.dll",
+       "sizeBytes": 21504,
+       "sha256": "f9a82156a70076d0cc843b7eaa0792cfd1490d79e194aead159de154c1646762"
+      },
+      {
+       "file": "translation-73.bin",
+       "sizeBytes": 242,
+       "sha256": "c51aed56147e12eedadf0285345aa6305957641b3be24d5b033101b12793c5a6"
+      },
+      {
+       "file": ".runtime-patches/launch.dll/intro.ks.scn",
+       "sizeBytes": 132,
+       "sha256": "0bf9cfe6eea5657956798722ac1ca28c547874f7d7550aeb3598cb7b6ada07e8"
+      },
+      {
+       "file": ".runtime-launches/launch.dll.json",
+       "sizeBytes": 520,
+       "sha256": "6abe4df7d7be2d6f1eacbaa8d59d1ecfda6706a5bdad8073d6da3415e1edda38"
+      }
+     ],
+     "validation": {
+      "outputFilesVerified": 4,
+      "resourceEntriesVerified": 1,
+      "metadataCorrections": 0,
+      "omittedPhysicalEntries": 0
+     }
+    }
+   ]
+  }
+ }
+}

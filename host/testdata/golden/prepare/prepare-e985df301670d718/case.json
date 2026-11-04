@@ -1,0 +1,101 @@
+{
+ "command": "prepare",
+ "input": {
+  "directory": {
+   "platformId": "rpgmaker",
+   "defaultCoreId": "rpgmaker",
+   "allowedCoreIds": [
+    "rpgmaker"
+   ]
+  },
+  "files": [
+   {
+    "logicalKey": "project/Game.ini",
+    "name": "project/Game.ini",
+    "sizeBytes": 128,
+    "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+   },
+   {
+    "logicalKey": "project/Data/Map.rxdata",
+    "name": "project/Data/Map.rxdata",
+    "sizeBytes": 128,
+    "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+   }
+  ],
+  "config": {
+   "content": {
+    "kind": "RPG_MAKER_PROJECT",
+    "engine": "RPGXP",
+    "entryFile": "project/Game.ini"
+   }
+  },
+  "fingerprints": {
+   "retrom-runtime/rpgmaker-xp": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+  }
+ },
+ "result": {
+  "coreId": "rpgmaker",
+  "providerId": "retrom-runtime",
+  "targetId": "rpgmaker-xp",
+  "coreFingerprint": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+  "romHash": "d1b4b54dffc9ea68c086eca691f997df0afbf0c96864660ae8d23b3a8a8cffb9",
+  "config": {
+   "content": {
+    "kind": "RPG_MAKER_PROJECT",
+    "engine": "RPGXP",
+    "entryFile": "project/Game.ini"
+   }
+  },
+  "targetOptions": {},
+  "dependencies": {
+   "parentFiles": [],
+   "missingParents": [],
+   "biosSets": []
+  },
+  "crcWarnings": [],
+  "biosRequirements": [],
+  "checkpoint": {
+   "maxBytes": 268435456,
+   "readFormats": [
+    "mkxp-state-v1-storage-v1"
+   ],
+   "writeFormat": "mkxp-state-v1-storage-v1",
+   "semantics": "INSTANT"
+  },
+  "capabilities": {
+   "contentLoading": "ON_DEMAND_AND_PRELOAD",
+   "checkpoint": true,
+   "frameCounter": true,
+   "frameMode": "SAME_ORIGIN_BLANK",
+   "inputFilter": true,
+   "nativeSettings": false,
+   "pause": true,
+   "requiresThreads": true,
+   "screenshot": true,
+   "standardGamepad": true,
+   "videoModes": [
+    "original",
+    "pixel",
+    "smooth"
+   ],
+   "volume": false
+  },
+  "resources": [
+   {
+    "role": "game",
+    "kind": "SEEKABLE_BLOB",
+    "ordinal": 0,
+    "files": [
+     "project/Game.ini",
+     "project/Data/Map.rxdata"
+    ],
+    "entryFile": "Game.ini",
+    "paths": {
+     "project/Game.ini": "Game.ini",
+     "project/Data/Map.rxdata": "Data/Map.rxdata"
+    },
+    "encoding": "ZIP"
+   }
+  ]
+ }
+}

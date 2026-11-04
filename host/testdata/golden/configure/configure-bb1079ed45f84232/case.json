@@ -1,0 +1,28 @@
+{
+ "command": "configure",
+ "input": {
+  "root": "${CASE}/files/p0",
+  "files": [
+   {
+    "logicalKey": "game/sky.dnr",
+    "name": "game/sky.dnr",
+    "sha256": "039058c6f2c0cb492c533b0a4d14ef77cc0f78abccced5287d84a1a2011cfb81",
+    "sizeBytes": 3
+   }
+  ],
+  "locators": {
+   "game/sky.dnr": {
+    "path": "${CASE}/files/p1",
+    "offset": 0,
+    "sizeBytes": 3
+   }
+  },
+  "platformId": "scummvm",
+  "coreIds": [
+   "scummvm"
+  ]
+ },
+ "error": {
+  "code": "RUNTIME_DETECTOR_UNAVAILABLE"
+ }
+}

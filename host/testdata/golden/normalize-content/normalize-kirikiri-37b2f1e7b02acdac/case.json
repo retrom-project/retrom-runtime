@@ -1,0 +1,32 @@
+{
+ "command": "normalize-content",
+ "input": {
+  "platformId": "kirikiri",
+  "files": [
+   {
+    "logicalKey": "data.xp3",
+    "name": "data.xp3",
+    "sha256": "fac753b585de5823d665e8144de39008d3569294873f63e775685c1f2a0217a5",
+    "sizeBytes": 1143
+   }
+  ],
+  "locators": {
+   "data.xp3": {
+    "path": "${CASE}/files/data.xp3",
+    "offset": 0,
+    "sizeBytes": 1143
+   }
+  },
+  "outputRoot": "${OUT}"
+ },
+ "result": {
+  "files": [
+   {
+    "logicalKey": "data.xp3",
+    "name": "data.xp3",
+    "sha256": "fac753b585de5823d665e8144de39008d3569294873f63e775685c1f2a0217a5",
+    "sizeBytes": 1143
+   }
+  ]
+ }
+}

@@ -1,0 +1,126 @@
+{
+ "command": "prepare",
+ "input": {
+  "directory": {
+   "platformId": "arcade",
+   "defaultCoreId": "mame_arcade",
+   "allowedCoreIds": [
+    "fbalpha",
+    "fbneo",
+    "mame2003",
+    "mame2003_plus",
+    "mame_arcade"
+   ]
+  },
+  "config": {
+   "content": {
+    "kind": "ARCADE",
+    "entryFile": "original.zip"
+   },
+   "cores": {
+    "mame_arcade": {
+     "romSet": "game",
+     "parentFiles": [
+      "parent.zip"
+     ]
+    }
+   }
+  },
+  "files": [
+   {
+    "name": "original.zip",
+    "logicalKey": "original.zip",
+    "sizeBytes": 100,
+    "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+   },
+   {
+    "name": "parent.zip",
+    "logicalKey": "parent.zip",
+    "sizeBytes": 100,
+    "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+   }
+  ],
+  "archives": {
+   "original.zip": [],
+   "parent.zip": [
+    {
+     "name": "shared.bin",
+     "sizeBytes": 8,
+     "crc32": "05060708"
+    }
+   ]
+  },
+  "arcadeCatalog": {
+   "game": {
+    "parent": "parent",
+    "bios": false,
+    "roms": [
+     {
+      "name": "program.bin",
+      "size": "4",
+      "crc": "01020304"
+     },
+     {
+      "name": "shared.bin",
+      "size": "8",
+      "crc": "05060708",
+      "merge": "shared.bin"
+     },
+     {
+      "name": "bios.bin",
+      "size": "2",
+      "crc": "090a0b0c"
+     }
+    ]
+   },
+   "parent": {
+    "parent": "firmware",
+    "bios": false,
+    "roms": [
+     {
+      "name": "shared.bin",
+      "size": "8",
+      "crc": "05060708"
+     },
+     {
+      "name": "bios.bin",
+      "size": "2",
+      "crc": "090a0b0c"
+     }
+    ]
+   },
+   "firmware": {
+    "parent": null,
+    "bios": true,
+    "roms": [
+     {
+      "name": "bios.bin",
+      "size": "2",
+      "crc": "090a0b0c"
+     }
+    ]
+   },
+   "other": {
+    "parent": null,
+    "bios": false,
+    "roms": [
+     {
+      "name": "other.bin",
+      "size": "4",
+      "crc": "11111111"
+     }
+    ]
+   }
+  },
+  "fingerprints": {
+   "emulatorjs/fbalpha": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+   "emulatorjs/fbneo": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+   "emulatorjs/mame2003": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+   "emulatorjs/mame2003-plus": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+   "retrom-runtime/mame-arcade": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+  }
+ },
+ "error": {
+  "code": "RUNTIME_CONTENT_LOCATOR_REQUIRED"
+ }
+}

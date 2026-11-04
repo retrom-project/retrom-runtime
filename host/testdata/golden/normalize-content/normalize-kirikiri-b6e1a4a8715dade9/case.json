@@ -1,0 +1,131 @@
+{
+ "command": "normalize-content",
+ "input": {
+  "platformId": "kirikiri",
+  "files": [
+   {
+    "logicalKey": "nested/assets/story.txt",
+    "name": "nested/assets/story.txt",
+    "sha256": "65f08ac41f0baac3f9821f6b6e67141672ef78635e5c47f4cdc5a3895874baed",
+    "sizeBytes": 20
+   },
+   {
+    "logicalKey": "nested/keep.txt",
+    "name": "keep.txt",
+    "sha256": "7d10de8554ed5ca40f9d0f0e0f4375b5b338af3fb96d33c9b2f53b5289b8f4fe",
+    "sizeBytes": 7
+   },
+   {
+    "logicalKey": "nested/run.exe",
+    "name": "nested/run.exe",
+    "sha256": "3a1946e8d20fb6efed113ee4977379f2e6cc3f0a4b2fe278c5c555ea9fc85757",
+    "sizeBytes": 74090
+   }
+  ],
+  "locators": {
+   "nested/assets/story.txt": {
+    "path": "${CASE}/files/nested/assets/story.txt",
+    "offset": 0,
+    "sizeBytes": 20
+   },
+   "nested/keep.txt": {
+    "path": "${CASE}/files/nested/keep.txt",
+    "offset": 0,
+    "sizeBytes": 7
+   },
+   "nested/run.exe": {
+    "path": "${CASE}/files/nested/run.exe",
+    "offset": 0,
+    "sizeBytes": 74090
+   }
+  },
+  "outputRoot": "${OUT}"
+ },
+ "result": {
+  "files": [
+   {
+    "logicalKey": "nested/assets/story.txt",
+    "name": "nested/assets/story.txt",
+    "path": "${OUT}/nested/assets/story.txt",
+    "sizeBytes": 20,
+    "sha256": "65f08ac41f0baac3f9821f6b6e67141672ef78635e5c47f4cdc5a3895874baed"
+   },
+   {
+    "logicalKey": "nested/keep.txt",
+    "name": "keep.txt",
+    "sha256": "7d10de8554ed5ca40f9d0f0e0f4375b5b338af3fb96d33c9b2f53b5289b8f4fe",
+    "sizeBytes": 7
+   },
+   {
+    "logicalKey": "nested/run.exe",
+    "name": "nested/run.exe",
+    "path": "${OUT}/nested/run.exe",
+    "sizeBytes": 74090,
+    "sha256": "3a1946e8d20fb6efed113ee4977379f2e6cc3f0a4b2fe278c5c555ea9fc85757"
+   }
+  ],
+  "normalization": {
+   "kind": "CONTENT_NORMALIZATION",
+   "converterVersion": 1,
+   "sourceContentHash": "e67c5fafd5a1225c59ac388acf2a985b98d136bb93840000881c2052055a5cb9",
+   "archiveCount": 1,
+   "verifiedEntries": 1,
+   "metadataCorrections": 0,
+   "omittedPhysicalEntries": 0,
+   "formatCounts": {
+    "enigma-protector-vfs": 1
+   },
+   "warnings": [],
+   "details": [
+    {
+     "code": "CONTAINER_FILE_OVERRIDE",
+     "file": "nested/run.exe",
+     "member": "nested/assets/story.txt",
+     "sourceSha256": "65f08ac41f0baac3f9821f6b6e67141672ef78635e5c47f4cdc5a3895874baed",
+     "outputSha256": "65f08ac41f0baac3f9821f6b6e67141672ef78635e5c47f4cdc5a3895874baed",
+     "sourceSize": 20,
+     "outputSize": 20
+    }
+   ],
+   "plugins": [
+    {
+     "id": "enigma-protector-vfs",
+     "version": 1,
+     "formats": [
+      "enigma-protector-vfs"
+     ],
+     "sources": [
+      {
+       "file": "nested/assets/story.txt",
+       "sizeBytes": 20,
+       "sha256": "65f08ac41f0baac3f9821f6b6e67141672ef78635e5c47f4cdc5a3895874baed"
+      },
+      {
+       "file": "nested/run.exe",
+       "sizeBytes": 74090,
+       "sha256": "3a1946e8d20fb6efed113ee4977379f2e6cc3f0a4b2fe278c5c555ea9fc85757"
+      }
+     ],
+     "outputs": [
+      {
+       "file": "nested/run.exe",
+       "sizeBytes": 74090,
+       "sha256": "3a1946e8d20fb6efed113ee4977379f2e6cc3f0a4b2fe278c5c555ea9fc85757"
+      },
+      {
+       "file": "nested/assets/story.txt",
+       "sizeBytes": 20,
+       "sha256": "65f08ac41f0baac3f9821f6b6e67141672ef78635e5c47f4cdc5a3895874baed"
+      }
+     ],
+     "validation": {
+      "outputFilesVerified": 2,
+      "resourceEntriesVerified": 1,
+      "metadataCorrections": 0,
+      "omittedPhysicalEntries": 0
+     }
+    }
+   ]
+  }
+ }
+}

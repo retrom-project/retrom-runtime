@@ -1,0 +1,65 @@
+{
+ "command": "prepare",
+ "input": {
+  "directory": {
+   "platformId": "arcade",
+   "defaultCoreId": "mame_arcade",
+   "allowedCoreIds": [
+    "mame_arcade"
+   ]
+  },
+  "config": {
+   "content": {
+    "kind": "ARCADE",
+    "entryFile": "game.zip"
+   }
+  },
+  "files": [
+   {
+    "logicalKey": "game.zip",
+    "name": "game.zip",
+    "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "sizeBytes": 1
+   }
+  ],
+  "arcadeCatalog": {
+   "game": {
+    "parent": "firmware",
+    "bios": false,
+    "roms": [
+     {
+      "name": "bios.bin",
+      "size": "2",
+      "crc": "87654321"
+     }
+    ]
+   },
+   "firmware": {
+    "parent": null,
+    "bios": true,
+    "roms": [
+     {
+      "name": "bios.bin",
+      "size": "2",
+      "crc": "87654321"
+     }
+    ]
+   }
+  },
+  "fingerprints": {
+   "retrom-runtime/mame-arcade": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+  },
+  "archives": {
+   "game.zip": [
+    {
+     "name": "bios.bin",
+     "sizeBytes": 2,
+     "crc32": "ffffffff"
+    }
+   ]
+  }
+ },
+ "error": {
+  "code": "RUNTIME_CONTENT_LOCATOR_REQUIRED"
+ }
+}

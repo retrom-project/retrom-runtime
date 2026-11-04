@@ -1,0 +1,16 @@
+{
+ "command": "storage-layout",
+ "input": {
+  "platformId": "arcade",
+  "coreId": "mame_arcade",
+  "config": {
+   "content": {
+    "kind": "ARCADE",
+    "entryFile": "sample.zip"
+   }
+  }
+ },
+ "result": {
+  "layout": "FILES"
+ }
+}

@@ -1,0 +1,42 @@
+{
+ "command": "bios-requirements",
+ "input": {
+  "providerId": "emulatorjs",
+  "targetId": "mame2003-plus",
+  "config": {
+   "content": {
+    "kind": "ARCADE",
+    "entryFile": "stored/alias.zip"
+   },
+   "cores": {
+    "mame2003_plus": {
+     "romSet": "clone",
+     "parentFiles": [
+      "stored/BASE.ZIP"
+     ]
+    }
+   }
+  },
+  "files": [
+   {
+    "logicalKey": "stored/alias.zip",
+    "name": "alias.zip",
+    "sizeBytes": 100,
+    "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+   },
+   {
+    "logicalKey": "stored/BASE.ZIP",
+    "name": "BASE.ZIP",
+    "sizeBytes": 100,
+    "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+   },
+   {
+    "logicalKey": "stored/grand.zip",
+    "name": "grand.zip",
+    "sizeBytes": 100,
+    "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+   }
+  ]
+ },
+ "result": []
+}

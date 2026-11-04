@@ -1,0 +1,111 @@
+{
+ "command": "prepare",
+ "input": {
+  "directory": {
+   "platformId": "arcade",
+   "defaultCoreId": "fbneo",
+   "allowedCoreIds": [
+    "fbneo"
+   ]
+  },
+  "config": {
+   "content": {
+    "kind": "ARCADE",
+    "entryFile": "child.zip"
+   },
+   "cores": {
+    "fbneo": {
+     "parentFiles": [
+      "parent.zip"
+     ]
+    }
+   }
+  },
+  "files": [
+   {
+    "logicalKey": "child.zip",
+    "name": "child.zip",
+    "sizeBytes": 10,
+    "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+   },
+   {
+    "logicalKey": "parent.zip",
+    "name": "parent.zip",
+    "sizeBytes": 10,
+    "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+   }
+  ],
+  "archives": {
+   "child.zip": [
+    {
+     "name": "bios.bin",
+     "sizeBytes": 2,
+     "crc32": "ffffffff"
+    }
+   ],
+   "parent.zip": [
+    {
+     "name": "parent.bin",
+     "sizeBytes": 4,
+     "crc32": "ffffffff"
+    }
+   ]
+  },
+  "arcadeCatalog": {
+   "child": {
+    "parent": "parent",
+    "bios": false,
+    "roms": [
+     {
+      "name": "parent.bin",
+      "size": "4",
+      "crc": "01020304",
+      "merge": "parent.bin"
+     },
+     {
+      "name": "bios.bin",
+      "size": "2",
+      "crc": "05060708",
+      "merge": "bios.bin"
+     }
+    ]
+   },
+   "parent": {
+    "parent": "firmware",
+    "bios": false,
+    "roms": [
+     {
+      "name": "parent.bin",
+      "size": "4",
+      "crc": "01020304",
+      "merge": "parent.bin"
+     },
+     {
+      "name": "bios.bin",
+      "size": "2",
+      "crc": "05060708",
+      "merge": "bios.bin"
+     }
+    ]
+   },
+   "firmware": {
+    "parent": null,
+    "bios": true,
+    "roms": [
+     {
+      "name": "bios.bin",
+      "size": "2",
+      "crc": "05060708",
+      "merge": "bios.bin"
+     }
+    ]
+   }
+  },
+  "fingerprints": {
+   "emulatorjs/fbneo": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+  }
+ },
+ "error": {
+  "code": "RUNTIME_CONTENT_LOCATOR_REQUIRED"
+ }
+}

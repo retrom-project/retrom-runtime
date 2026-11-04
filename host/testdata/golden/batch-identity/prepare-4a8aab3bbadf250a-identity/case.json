@@ -1,0 +1,57 @@
+{
+ "command": "batch-identity",
+ "input": {
+  "items": [
+   {
+    "config": {
+     "content": {
+      "kind": "KIRIKIRI_PROJECT",
+      "entryFile": "game/data.bin"
+     }
+    },
+    "files": [
+     {
+      "logicalKey": "game/data.bin",
+      "name": "game/data.bin",
+      "sizeBytes": 2011,
+      "sha256": "fd4a572ffd2598df8042fdba566d79e6c3af53111c65024d7f72688958589a04"
+     },
+     {
+      "logicalKey": "game/patch.xp3",
+      "name": "game/patch.xp3",
+      "sizeBytes": 128,
+      "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+     },
+     {
+      "logicalKey": "game/graphics.xp3",
+      "name": "game/graphics.xp3",
+      "sizeBytes": 128,
+      "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+     }
+    ],
+    "fingerprints": {
+     "retrom-runtime/kirikiri2-kag": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+    },
+    "directory": {
+     "platformId": "kirikiri",
+     "defaultCoreId": "kirikiri2",
+     "allowedCoreIds": [
+      "kirikiri2"
+     ]
+    }
+   }
+  ]
+ },
+ "result": [
+  {
+   "coreId": "kirikiri2",
+   "providerId": "retrom-runtime",
+   "targetId": "kirikiri2-kag",
+   "coreFingerprint": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+   "romHash": "32b5126736830aa8a160a6ebceef93ed6b623c09ba95e0c129818d53a6366a09",
+   "readFormats": [
+    "kirikiri-game-save-v1-storage-v1"
+   ]
+  }
+ ]
+}

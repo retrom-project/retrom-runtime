@@ -1,0 +1,89 @@
+{
+ "command": "prepare",
+ "input": {
+  "directory": {
+   "platformId": "psp",
+   "defaultCoreId": "ppsspp",
+   "allowedCoreIds": [
+    "ppsspp"
+   ]
+  },
+  "config": {
+   "content": {
+    "kind": "SINGLE_FILE",
+    "entryFile": "disc.iso"
+   }
+  },
+  "files": [
+   {
+    "name": "disc.iso",
+    "logicalKey": "disc.iso",
+    "sizeBytes": 128,
+    "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+   }
+  ],
+  "fingerprints": {
+   "retrom-runtime/ppsspp": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+  }
+ },
+ "result": {
+  "coreId": "ppsspp",
+  "providerId": "retrom-runtime",
+  "targetId": "ppsspp",
+  "coreFingerprint": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+  "romHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "config": {
+   "content": {
+    "kind": "SINGLE_FILE",
+    "entryFile": "disc.iso"
+   }
+  },
+  "targetOptions": {
+   "projectEntryPath": null
+  },
+  "dependencies": {
+   "parentFiles": [],
+   "missingParents": [],
+   "biosSets": []
+  },
+  "crcWarnings": [],
+  "biosRequirements": [],
+  "checkpoint": {
+   "maxBytes": 268435456,
+   "readFormats": [
+    "ppsspp-game-save-v1-storage-v1"
+   ],
+   "writeFormat": "ppsspp-game-save-v1-storage-v1",
+   "semantics": "GAME_SAVE"
+  },
+  "capabilities": {
+   "contentLoading": "ON_DEMAND_AND_PRELOAD",
+   "checkpoint": true,
+   "frameCounter": true,
+   "frameMode": "SAME_ORIGIN_BLANK",
+   "inputFilter": true,
+   "nativeSettings": false,
+   "pause": true,
+   "requiresThreads": true,
+   "screenshot": true,
+   "standardGamepad": true,
+   "videoModes": [
+    "original",
+    "pixel",
+    "smooth"
+   ],
+   "volume": true
+  },
+  "resources": [
+   {
+    "role": "game",
+    "kind": "SEEKABLE_BLOB",
+    "ordinal": 0,
+    "files": [
+     "disc.iso"
+    ],
+    "entryFile": "disc.iso"
+   }
+  ]
+ }
+}

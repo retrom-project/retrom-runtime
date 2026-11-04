@@ -1,0 +1,38 @@
+{
+ "command": "prepare",
+ "input": {
+  "root": "${CASE}/files/p0",
+  "files": [
+   {
+    "logicalKey": "game.zip",
+    "name": "game.zip",
+    "sha256": "acd72d3527ed3b69cede8774af1bc8ecabe822133316535ae14cf17c1b212229",
+    "sizeBytes": 214
+   }
+  ],
+  "locators": {
+   "game.zip": {
+    "path": "${CASE}/files/p1",
+    "offset": 0,
+    "sizeBytes": 214
+   }
+  },
+  "directory": {
+   "platformId": "dos",
+   "defaultCoreId": "dosbox_pure",
+   "allowedCoreIds": [
+    "dosbox_pure"
+   ]
+  },
+  "fingerprints": {},
+  "config": {
+   "content": {
+    "kind": "DOS_BUNDLE",
+    "entryFile": "game.zip"
+   }
+  }
+ },
+ "error": {
+  "code": "RUNTIME_IMPLEMENTATION_UNAVAILABLE"
+ }
+}

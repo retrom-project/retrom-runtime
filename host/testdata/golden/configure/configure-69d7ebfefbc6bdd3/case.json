@@ -1,0 +1,44 @@
+{
+ "command": "configure",
+ "input": {
+  "platformId": "rpgmaker",
+  "coreIds": [
+   "rpgmaker"
+  ],
+  "files": [
+   {
+    "logicalKey": "nested/index.html",
+    "name": "nested/index.html",
+    "sizeBytes": 128,
+    "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+   },
+   {
+    "logicalKey": "nested/js/rmmz_core.js",
+    "name": "nested/js/rmmz_core.js",
+    "sizeBytes": 128,
+    "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+   },
+   {
+    "logicalKey": "nested/www/index.html",
+    "name": "nested/www/index.html",
+    "sizeBytes": 128,
+    "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+   },
+   {
+    "logicalKey": "nested/www/js/rmmz_core.js",
+    "name": "nested/www/js/rmmz_core.js",
+    "sizeBytes": 128,
+    "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+   },
+   {
+    "logicalKey": "nested/docs/index.html",
+    "name": "nested/docs/index.html",
+    "sizeBytes": 128,
+    "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+   }
+  ]
+ },
+ "error": {
+  "code": "RUNTIME_ENTRY_REQUIRED"
+ }
+}

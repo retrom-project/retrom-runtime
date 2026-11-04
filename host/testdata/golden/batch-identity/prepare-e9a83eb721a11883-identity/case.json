@@ -1,0 +1,45 @@
+{
+ "command": "batch-identity",
+ "input": {
+  "items": [
+   {
+    "directory": {
+     "platformId": "dos",
+     "defaultCoreId": "dosbox_pure",
+     "allowedCoreIds": [
+      "dosbox_pure"
+     ]
+    },
+    "config": {
+     "content": {
+      "kind": "DOS_BUNDLE",
+      "entryFile": "game.zip"
+     }
+    },
+    "files": [
+     {
+      "logicalKey": "game.zip",
+      "name": "game.zip",
+      "sizeBytes": 128,
+      "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+     }
+    ],
+    "fingerprints": {
+     "emulatorjs/dosbox-pure": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+    }
+   }
+  ]
+ },
+ "result": [
+  {
+   "coreId": "dosbox_pure",
+   "providerId": "emulatorjs",
+   "targetId": "dosbox-pure",
+   "coreFingerprint": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+   "romHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+   "readFormats": [
+    "emulatorjs-state-v1-storage-v1"
+   ]
+  }
+ ]
+}

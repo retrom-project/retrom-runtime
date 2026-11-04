@@ -1,0 +1,22 @@
+{
+ "command": "bios-requirements",
+ "input": {
+  "providerId": "retrom-runtime",
+  "targetId": "mame-arcade",
+  "config": {
+   "content": {
+    "kind": "ARCADE",
+    "entryFile": "game.zip"
+   }
+  },
+  "files": [
+   {
+    "logicalKey": "game.zip",
+    "name": "game.zip",
+    "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "sizeBytes": 1
+   }
+  ]
+ },
+ "result": []
+}

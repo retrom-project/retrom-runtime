@@ -1,0 +1,88 @@
+{
+ "command": "batch-identity",
+ "input": {
+  "items": [
+   {
+    "coreId": "mame2003_plus",
+    "directory": {
+     "platformId": "arcade",
+     "defaultCoreId": "mame2003_plus",
+     "allowedCoreIds": [
+      "fbalpha",
+      "fbneo",
+      "mame2003",
+      "mame2003_plus",
+      "mame_arcade"
+     ]
+    },
+    "files": [
+     {
+      "logicalKey": "original.zip",
+      "name": "original.zip",
+      "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "sizeBytes": 1
+     }
+    ],
+    "config": {
+     "content": {
+      "kind": "ARCADE",
+      "entryFile": "original.zip"
+     },
+     "cores": {
+      "mame2003_plus": {
+       "romSet": "chosen"
+      }
+     }
+    },
+    "archives": {
+     "original.zip": []
+    },
+    "arcadeCatalog": {
+     "chosen": {
+      "parent": null,
+      "bios": false,
+      "roms": []
+     },
+     "clone": {
+      "parent": "parent",
+      "bios": false,
+      "roms": [
+       {
+        "name": "p.bin",
+        "size": "1",
+        "crc": "abcdef12",
+        "merge": "p.bin"
+       }
+      ]
+     },
+     "parent": {
+      "parent": null,
+      "bios": false,
+      "roms": [
+       {
+        "name": "p.bin",
+        "size": "1",
+        "crc": "abcdef12"
+       }
+      ]
+     }
+    },
+    "fingerprints": {
+     "emulatorjs/mame2003-plus": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+    }
+   }
+  ]
+ },
+ "result": [
+  {
+   "coreId": "mame2003_plus",
+   "providerId": "emulatorjs",
+   "targetId": "mame2003-plus",
+   "coreFingerprint": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+   "romHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+   "readFormats": [
+    "emulatorjs-state-v1-storage-v1"
+   ]
+  }
+ ]
+}

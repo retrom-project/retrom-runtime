@@ -1,0 +1,22 @@
+{
+ "command": "bios-requirements",
+ "input": {
+  "providerId": "emulatorjs",
+  "targetId": "theodore",
+  "config": {
+   "content": {
+    "kind": "SINGLE_FILE",
+    "entryFile": "pc128.sap"
+   }
+  },
+  "files": [
+   {
+    "logicalKey": "pc128.sap",
+    "name": "pc128.sap",
+    "sizeBytes": 128,
+    "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+   }
+  ]
+ },
+ "result": []
+}

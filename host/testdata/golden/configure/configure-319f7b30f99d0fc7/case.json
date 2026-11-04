@@ -1,0 +1,58 @@
+{
+ "command": "configure",
+ "input": {
+  "platformId": "siglus",
+  "defaultCoreId": "siglus",
+  "allowedCoreIds": [
+   "siglus"
+  ],
+  "coreIds": [
+   "siglus"
+  ],
+  "files": [
+   {
+    "name": "game/Scene.pck",
+    "logicalKey": "game/Scene.pck",
+    "sizeBytes": 12,
+    "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+   },
+   {
+    "name": "game/Gameexe.dat",
+    "logicalKey": "game/Gameexe.dat",
+    "sizeBytes": 12,
+    "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+   },
+   {
+    "name": "game/scene.chs",
+    "logicalKey": "game/scene.chs",
+    "sizeBytes": 12,
+    "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+   },
+   {
+    "name": "game/gameexe.chs",
+    "logicalKey": "game/gameexe.chs",
+    "sizeBytes": 12,
+    "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+   },
+   {
+    "name": "game/g00/a.g01",
+    "logicalKey": "game/g00/a.g01",
+    "sizeBytes": 12,
+    "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+   }
+  ]
+ },
+ "result": {
+  "content": {
+   "kind": "SIGLUS_PROJECT",
+   "entryFile": "game/Scene.pck"
+  },
+  "cores": {
+   "siglus": {
+    "options": {
+     "language": "chs"
+    }
+   }
+  }
+ }
+}

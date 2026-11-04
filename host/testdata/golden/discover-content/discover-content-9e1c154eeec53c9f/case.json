@@ -1,0 +1,36 @@
+{
+ "command": "discover-content",
+ "input": {
+  "files": [
+   {
+    "logicalKey": "data.xp3",
+    "name": "data.xp3",
+    "sizeBytes": 1,
+    "sha256": "4bf5122f344554c53bde2ebb8cd2b7e3d1600ad631c385a5d7cce23c7785459a"
+   },
+   {
+    "logicalKey": "bonus/disc.cue",
+    "name": "bonus/disc.cue",
+    "sizeBytes": 1,
+    "sha256": "a8100ae6aa1940d0b663bb31cd466142ebbdbd5187131b92d93818987832eb89"
+   }
+  ],
+  "locators": {
+   "data.xp3": {
+    "path": "${CASE}/files/p0",
+    "offset": 0,
+    "sizeBytes": 1
+   }
+  },
+  "directory": {
+   "platformId": "kirikiri",
+   "defaultCoreId": "kirikiri2",
+   "allowedCoreIds": [
+    "kirikiri2"
+   ]
+  }
+ },
+ "result": {
+  "files": []
+ }
+}

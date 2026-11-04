@@ -1,0 +1,66 @@
+{
+ "command": "batch-identity",
+ "input": {
+  "items": [
+   {
+    "directory": {
+     "platformId": "dos",
+     "defaultCoreId": "dosbox_pure",
+     "allowedCoreIds": [
+      "dosbox_pure"
+     ]
+    },
+    "files": [
+     {
+      "logicalKey": "renamed.zip",
+      "name": "renamed.zip",
+      "sizeBytes": 128,
+      "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+     }
+    ],
+    "fingerprints": {
+     "emulatorjs/dosbox-pure": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+    },
+    "dosEntries": [
+     "A.EXE",
+     "B.EXE"
+    ],
+    "config": {
+     "content": {
+      "kind": "DOS_BUNDLE",
+      "entryFile": "renamed.zip",
+      "entryPath": "B.EXE"
+     }
+    },
+    "savedContext": {
+     "coreId": "dosbox_pure",
+     "providerId": "emulatorjs",
+     "targetId": "dosbox-pure",
+     "coreFingerprint": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+     "romHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+     "checkpointFormat": "emulatorjs-state-v1-storage-v1",
+     "content": {
+      "kind": "DOS_BUNDLE",
+      "entryFile": "original.zip",
+      "entryPath": "A.EXE"
+     },
+     "runtimeOptions": {
+      "dosEntryPath": "A.EXE"
+     }
+    }
+   }
+  ]
+ },
+ "result": [
+  {
+   "coreId": "dosbox_pure",
+   "providerId": "emulatorjs",
+   "targetId": "dosbox-pure",
+   "coreFingerprint": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+   "romHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+   "readFormats": [
+    "emulatorjs-state-v1-storage-v1"
+   ]
+  }
+ ]
+}

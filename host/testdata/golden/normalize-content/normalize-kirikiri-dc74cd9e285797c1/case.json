@@ -1,0 +1,88 @@
+{
+ "command": "normalize-content",
+ "input": {
+  "platformId": "kirikiri",
+  "files": [
+   {
+    "logicalKey": "nested/run.exe",
+    "name": "run.exe",
+    "sha256": "3a1946e8d20fb6efed113ee4977379f2e6cc3f0a4b2fe278c5c555ea9fc85757",
+    "sizeBytes": 74090
+   }
+  ],
+  "locators": {
+   "nested/run.exe": {
+    "path": "${CASE}/files/nested/run.exe",
+    "offset": 0,
+    "sizeBytes": 74090
+   }
+  },
+  "outputRoot": "${OUT}"
+ },
+ "result": {
+  "files": [
+   {
+    "logicalKey": "nested/assets/story.txt",
+    "name": "nested/assets/story.txt",
+    "path": "${OUT}/nested/assets/story.txt",
+    "sizeBytes": 20,
+    "sha256": "65f08ac41f0baac3f9821f6b6e67141672ef78635e5c47f4cdc5a3895874baed"
+   },
+   {
+    "logicalKey": "nested/run.exe",
+    "name": "nested/run.exe",
+    "path": "${OUT}/nested/run.exe",
+    "sizeBytes": 74090,
+    "sha256": "3a1946e8d20fb6efed113ee4977379f2e6cc3f0a4b2fe278c5c555ea9fc85757"
+   }
+  ],
+  "normalization": {
+   "kind": "CONTENT_NORMALIZATION",
+   "converterVersion": 1,
+   "sourceContentHash": "fc1b6615324a47a96d0da1eaa46593182a2a2778f5a69f2929d1506e3f9833b6",
+   "archiveCount": 1,
+   "verifiedEntries": 1,
+   "metadataCorrections": 0,
+   "omittedPhysicalEntries": 0,
+   "formatCounts": {
+    "enigma-protector-vfs": 1
+   },
+   "warnings": [],
+   "details": [],
+   "plugins": [
+    {
+     "id": "enigma-protector-vfs",
+     "version": 1,
+     "formats": [
+      "enigma-protector-vfs"
+     ],
+     "sources": [
+      {
+       "file": "nested/run.exe",
+       "sizeBytes": 74090,
+       "sha256": "3a1946e8d20fb6efed113ee4977379f2e6cc3f0a4b2fe278c5c555ea9fc85757"
+      }
+     ],
+     "outputs": [
+      {
+       "file": "nested/run.exe",
+       "sizeBytes": 74090,
+       "sha256": "3a1946e8d20fb6efed113ee4977379f2e6cc3f0a4b2fe278c5c555ea9fc85757"
+      },
+      {
+       "file": "nested/assets/story.txt",
+       "sizeBytes": 20,
+       "sha256": "65f08ac41f0baac3f9821f6b6e67141672ef78635e5c47f4cdc5a3895874baed"
+      }
+     ],
+     "validation": {
+      "outputFilesVerified": 2,
+      "resourceEntriesVerified": 1,
+      "metadataCorrections": 0,
+      "omittedPhysicalEntries": 0
+     }
+    }
+   ]
+  }
+ }
+}

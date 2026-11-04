@@ -1,0 +1,61 @@
+{
+ "command": "configure",
+ "input": {
+  "platformId": "arcade",
+  "coreIds": [
+   "mame_arcade"
+  ],
+  "files": [
+   {
+    "logicalKey": "renegade.zip",
+    "name": "renegade.zip",
+    "sizeBytes": 100,
+    "sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+   },
+   {
+    "logicalKey": "mcu.zip",
+    "name": "mcu.zip",
+    "sizeBytes": 100,
+    "sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+   }
+  ],
+  "arcadeCatalogs": {
+   "mame_arcade": {
+    "renegade": {
+     "parent": null,
+     "bios": false,
+     "devices": [
+      "cpu",
+      "mcu"
+     ],
+     "roms": []
+    },
+    "cpu": {
+     "parent": null,
+     "bios": false,
+     "device": true,
+     "roms": []
+    },
+    "mcu": {
+     "parent": null,
+     "bios": false,
+     "device": true,
+     "devices": [
+      "cpu"
+     ],
+     "roms": [
+      {
+       "name": "bootstrap.bin",
+       "size": "115",
+       "crc": "f70a8620",
+       "sha1": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+      }
+     ]
+    }
+   }
+  }
+ },
+ "error": {
+  "code": "RUNTIME_ENTRY_REQUIRED"
+ }
+}

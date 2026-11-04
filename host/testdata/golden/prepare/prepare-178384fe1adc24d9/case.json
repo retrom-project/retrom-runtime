@@ -1,0 +1,132 @@
+{
+ "command": "prepare",
+ "input": {
+  "directory": {
+   "platformId": "kirikiri",
+   "defaultCoreId": "kirikiri2",
+   "allowedCoreIds": [
+    "kirikiri2"
+   ]
+  },
+  "files": [
+   {
+    "logicalKey": "bundle/data.xp3",
+    "name": "bundle/data.xp3",
+    "sizeBytes": 128,
+    "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+   },
+   {
+    "logicalKey": "bundle/补丁/second, chosen.XP3",
+    "name": "bundle/补丁/second, chosen.XP3",
+    "sizeBytes": 128,
+    "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+   },
+   {
+    "logicalKey": "bundle/patch3.xp3",
+    "name": "bundle/patch3.xp3",
+    "sizeBytes": 128,
+    "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+   }
+  ],
+  "config": {
+   "content": {
+    "kind": "KIRIKIRI_PROJECT",
+    "entryFile": "bundle/data.xp3"
+   },
+   "cores": {
+    "kirikiri2": {
+     "options": {
+      "overlayArchives": [
+       "补丁/second, chosen.XP3",
+       "patch3.xp3"
+      ]
+     }
+    }
+   }
+  },
+  "fingerprints": {
+   "retrom-runtime/kirikiri2-kag": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+  }
+ },
+ "result": {
+  "coreId": "kirikiri2",
+  "providerId": "retrom-runtime",
+  "targetId": "kirikiri2-kag",
+  "coreFingerprint": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+  "romHash": "4cafef8de1277c858baa4b9f17a71b60fc76935e7e2020b0c9a6e29919ba7621",
+  "config": {
+   "content": {
+    "kind": "KIRIKIRI_PROJECT",
+    "entryFile": "bundle/data.xp3"
+   },
+   "cores": {
+    "kirikiri2": {
+     "options": {
+      "overlayArchives": [
+       "补丁/second, chosen.XP3",
+       "patch3.xp3"
+      ]
+     }
+    }
+   }
+  },
+  "targetOptions": {
+   "overlayArchives": [
+    "补丁/second, chosen.XP3",
+    "patch3.xp3"
+   ],
+   "startupXp3Path": "data.xp3"
+  },
+  "dependencies": {
+   "parentFiles": [],
+   "missingParents": [],
+   "biosSets": []
+  },
+  "crcWarnings": [],
+  "biosRequirements": [],
+  "checkpoint": {
+   "maxBytes": 67108864,
+   "readFormats": [
+    "kirikiri-game-save-v1-storage-v1"
+   ],
+   "writeFormat": "kirikiri-game-save-v1-storage-v1",
+   "semantics": "GAME_SAVE"
+  },
+  "capabilities": {
+   "contentLoading": "ON_DEMAND_AND_PRELOAD",
+   "checkpoint": true,
+   "frameCounter": false,
+   "frameMode": "SAME_ORIGIN_BLANK",
+   "inputFilter": true,
+   "nativeSettings": false,
+   "pause": true,
+   "requiresThreads": true,
+   "screenshot": true,
+   "standardGamepad": true,
+   "videoModes": [
+    "original",
+    "pixel",
+    "smooth"
+   ],
+   "volume": false
+  },
+  "resources": [
+   {
+    "role": "game",
+    "kind": "FILE_TREE",
+    "ordinal": 0,
+    "files": [
+     "bundle/data.xp3",
+     "bundle/补丁/second, chosen.XP3",
+     "bundle/patch3.xp3"
+    ],
+    "entryFile": "data.xp3",
+    "paths": {
+     "bundle/data.xp3": "data.xp3",
+     "bundle/补丁/second, chosen.XP3": "补丁/second, chosen.XP3",
+     "bundle/patch3.xp3": "patch3.xp3"
+    }
+   }
+  ]
+ }
+}

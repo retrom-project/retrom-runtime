@@ -1,0 +1,20 @@
+{
+ "command": "configure",
+ "input": {
+  "platformId": "model3",
+  "coreIds": [
+   "supermodel"
+  ],
+  "files": [
+   {
+    "logicalKey": "disc.chd",
+    "name": "disc.chd",
+    "sizeBytes": 1024,
+    "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+   }
+  ]
+ },
+ "error": {
+  "code": "RUNTIME_ENTRY_REQUIRED"
+ }
+}

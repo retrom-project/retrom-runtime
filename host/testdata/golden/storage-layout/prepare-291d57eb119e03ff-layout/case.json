@@ -1,0 +1,16 @@
+{
+ "command": "storage-layout",
+ "input": {
+  "platformId": "psx",
+  "coreId": "mednafen_psx_hw",
+  "config": {
+   "content": {
+    "kind": "SINGLE_FILE",
+    "entryFile": "disc.cue"
+   }
+  }
+ },
+ "result": {
+  "layout": "FILES"
+ }
+}

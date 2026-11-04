@@ -1,0 +1,133 @@
+{
+ "command": "prepare",
+ "input": {
+  "directory": {
+   "platformId": "rpgmaker",
+   "defaultCoreId": "rpgmaker",
+   "allowedCoreIds": [
+    "rpgmaker"
+   ]
+  },
+  "files": [
+   {
+    "logicalKey": "Game/www/index.html",
+    "name": "Game/www/index.html",
+    "sizeBytes": 128,
+    "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+   },
+   {
+    "logicalKey": "Game/www/js/rmmz_core.js",
+    "name": "Game/www/js/rmmz_core.js",
+    "sizeBytes": 128,
+    "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+   },
+   {
+    "logicalKey": "Game/scenario/En/001.sl",
+    "name": "Game/scenario/En/001.sl",
+    "sizeBytes": 128,
+    "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+   },
+   {
+    "logicalKey": "Game/scenario/CG.txt",
+    "name": "Game/scenario/CG.txt",
+    "sizeBytes": 128,
+    "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+   },
+   {
+    "logicalKey": "Game/scenario/movie.ogg",
+    "name": "Game/scenario/movie.ogg",
+    "sizeBytes": 128,
+    "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+   },
+   {
+    "logicalKey": "Game/Game.exe",
+    "name": "Game/Game.exe",
+    "sizeBytes": 128,
+    "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+   },
+   {
+    "logicalKey": "Other/scenario/En/001.sl",
+    "name": "Other/scenario/En/001.sl",
+    "sizeBytes": 128,
+    "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+   },
+   {
+    "logicalKey": "Game/readme.txt",
+    "name": "Game/readme.txt",
+    "sizeBytes": 128,
+    "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+   }
+  ],
+  "config": {
+   "content": {
+    "kind": "RPG_MAKER_PROJECT",
+    "engine": "RPGMZ",
+    "entryFile": "Game/www/index.html"
+   }
+  },
+  "fingerprints": {
+   "retrom-runtime/rpgmaker-mz": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+  }
+ },
+ "result": {
+  "coreId": "rpgmaker",
+  "providerId": "retrom-runtime",
+  "targetId": "rpgmaker-mz",
+  "coreFingerprint": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+  "romHash": "9900eb727413bb6c2b640d9d7f34fc32fcb3c7953abb0aea6269803c0befb62d",
+  "config": {
+   "content": {
+    "kind": "RPG_MAKER_PROJECT",
+    "engine": "RPGMZ",
+    "entryFile": "Game/www/index.html"
+   }
+  },
+  "targetOptions": {},
+  "dependencies": {
+   "parentFiles": [],
+   "missingParents": [],
+   "biosSets": []
+  },
+  "crcWarnings": [],
+  "biosRequirements": [],
+  "checkpoint": {
+   "maxBytes": 67108864,
+   "readFormats": [
+    "native-save-bundle-v1-storage-v1"
+   ],
+   "writeFormat": "native-save-bundle-v1-storage-v1",
+   "semantics": "INSTANT"
+  },
+  "capabilities": {
+   "contentLoading": "ON_DEMAND_AND_PRELOAD",
+   "checkpoint": true,
+   "frameCounter": true,
+   "frameMode": "ISOLATED_ORIGIN_RESOURCE",
+   "inputFilter": true,
+   "nativeSettings": false,
+   "pause": true,
+   "requiresThreads": false,
+   "screenshot": true,
+   "standardGamepad": true,
+   "videoModes": [
+    "original",
+    "pixel",
+    "smooth"
+   ],
+   "volume": true
+  },
+  "resources": [
+   {
+    "role": "game",
+    "kind": "NATIVE_WEB",
+    "ordinal": 0,
+    "files": [
+     "Game/www/index.html",
+     "Game/www/js/rmmz_core.js"
+    ],
+    "entryFile": "Game/www/index.html",
+    "bridgeAssetPath": "assets/native/bridge.js"
+   }
+  ]
+ }
+}

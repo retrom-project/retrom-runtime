@@ -1,0 +1,69 @@
+{
+ "command": "normalize-content",
+ "input": {
+  "platformId": "kirikiri",
+  "files": [
+   {
+    "logicalKey": ".runtime-launches/launch.dll.json",
+    "name": ".runtime-launches/launch.dll.json",
+    "sha256": "b6598c03d1534bde2f420c2cbf38156d14d429de7e6bdf155d3775e249f332ec",
+    "sizeBytes": 386
+   },
+   {
+    "logicalKey": ".runtime-patches/launch.dll/intro.ks.scn",
+    "name": ".runtime-patches/launch.dll/intro.ks.scn",
+    "sha256": "65a0b6759ff3f2070e7fd8de773c821e5e359107082110826bb5fe83f119fb81",
+    "sizeBytes": 17
+   },
+   {
+    "logicalKey": "data.xp3",
+    "name": "data.xp3",
+    "sha256": "7f1507ee2fce0ffb6bb37b6ed46b46e033eeaec58b4a052dfb7bbb1f50d527cf",
+    "sizeBytes": 16
+   },
+   {
+    "logicalKey": "launch.dll",
+    "name": "launch.dll",
+    "sha256": "f9a82156a70076d0cc843b7eaa0792cfd1490d79e194aead159de154c1646762",
+    "sizeBytes": 21504
+   },
+   {
+    "logicalKey": "translation-73.bin",
+    "name": "translation-73.bin",
+    "sha256": "c51aed56147e12eedadf0285345aa6305957641b3be24d5b033101b12793c5a6",
+    "sizeBytes": 242
+   }
+  ],
+  "locators": {
+   ".runtime-launches/launch.dll.json": {
+    "path": "${CASE}/files/.runtime-launches/launch.dll.json",
+    "offset": 0,
+    "sizeBytes": 386
+   },
+   ".runtime-patches/launch.dll/intro.ks.scn": {
+    "path": "${CASE}/files/.runtime-patches/launch.dll/intro.ks.scn",
+    "offset": 0,
+    "sizeBytes": 17
+   },
+   "data.xp3": {
+    "path": "${CASE}/files/data.xp3",
+    "offset": 0,
+    "sizeBytes": 16
+   },
+   "launch.dll": {
+    "path": "${CASE}/files/launch.dll",
+    "offset": 0,
+    "sizeBytes": 21504
+   },
+   "translation-73.bin": {
+    "path": "${CASE}/files/translation-73.bin",
+    "offset": 0,
+    "sizeBytes": 242
+   }
+  },
+  "outputRoot": "${OUT}"
+ },
+ "error": {
+  "code": "RUNTIME_NORMALIZATION_CONFLICT"
+ }
+}

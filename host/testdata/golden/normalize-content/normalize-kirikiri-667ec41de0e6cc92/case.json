@@ -1,0 +1,76 @@
+{
+ "command": "normalize-content",
+ "input": {
+  "platformId": "kirikiri",
+  "files": [
+   {
+    "logicalKey": "launcher.exe",
+    "name": "launcher.exe",
+    "sha256": "0d57e16b9b20bf4a2762b92cfe897a484b8f67e259996f70fb66bf401bb95184",
+    "sizeBytes": 26066
+   }
+  ],
+  "locators": {
+   "launcher.exe": {
+    "path": "${CASE}/files/launcher.exe",
+    "offset": 0,
+    "sizeBytes": 26066
+   }
+  },
+  "outputRoot": "${OUT}"
+ },
+ "result": {
+  "files": [
+   {
+    "logicalKey": "launcher.exe",
+    "name": "launcher.exe",
+    "sizeBytes": 1143,
+    "sha256": "4912714863afc3ceb942c73af9efd2a255858be622fcac897cc06658656848c8",
+    "path": "${OUT}/launcher.exe"
+   }
+  ],
+  "normalization": {
+   "kind": "CONTENT_NORMALIZATION",
+   "converterVersion": 1,
+   "sourceContentHash": "8c0837316a1257557bb28f16fe9df72ee883c6d7c8a17f58b34425d8c621907a",
+   "archiveCount": 1,
+   "verifiedEntries": 3,
+   "metadataCorrections": 0,
+   "omittedPhysicalEntries": 0,
+   "formatCounts": {
+    "xp3-pe": 1
+   },
+   "warnings": [],
+   "details": [],
+   "plugins": [
+    {
+     "id": "kirikiri-cxfilterfs",
+     "version": 1,
+     "formats": [
+      "xp3-pe"
+     ],
+     "sources": [
+      {
+       "file": "launcher.exe",
+       "sizeBytes": 26066,
+       "sha256": "0d57e16b9b20bf4a2762b92cfe897a484b8f67e259996f70fb66bf401bb95184"
+      }
+     ],
+     "outputs": [
+      {
+       "file": "launcher.exe",
+       "sizeBytes": 1143,
+       "sha256": "4912714863afc3ceb942c73af9efd2a255858be622fcac897cc06658656848c8"
+      }
+     ],
+     "validation": {
+      "outputFilesVerified": 1,
+      "resourceEntriesVerified": 3,
+      "metadataCorrections": 0,
+      "omittedPhysicalEntries": 0
+     }
+    }
+   ]
+  }
+ }
+}

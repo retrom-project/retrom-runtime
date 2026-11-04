@@ -1,0 +1,150 @@
+version: "2"
+
+linters:
+  default: none
+  enable:
+    - asasalint
+    - bodyclose
+    - canonicalheader
+    - contextcheck
+    - copyloopvar
+    - depguard
+    - dogsled
+    - dupl
+    - err113
+    - errcheck
+    - errorlint
+    - exhaustive
+    - fatcontext
+    - forbidigo
+    - funlen
+    - gochecknoinits
+    - gocognit
+    - gocritic
+    - gocyclo
+    - govet
+    - ineffassign
+    - interfacebloat
+    - lll
+    - makezero
+    - misspell
+    - nakedret
+    - nestif
+    - nilerr
+    - nilnil
+    - noctx
+    - nolintlint
+    - nonamedreturns
+    - prealloc
+    - predeclared
+    - revive
+    - rowserrcheck
+    - sqlclosecheck
+    - staticcheck
+    - unconvert
+    - unparam
+    - unused
+    - whitespace
+    - wrapcheck
+  settings:
+    depguard:
+      rules:
+        pure-rules:
+          files:
+            - "${base-path}/host/internal/rules/**.go"
+            - "${base-path}/host/internal/textcodec/**.go"
+            - "!$test"
+          deny:
+            - pkg: os
+              desc: runtime rules are pure facts and must not access the filesystem
+            - pkg: os/exec
+              desc: runtime rules must not invoke processes
+            - pkg: github.com/retrom-project/retrom-runtime/host/internal/content
+              desc: runtime rules receive host-read evidence and must not read content
+        no-processes:
+          files:
+            - "${base-path}/host/internal/**.go"
+            - "!$test"
+          deny:
+            - pkg: os/exec
+              desc: only the host ScummVM detector boundary may invoke a process
+    dogsled:
+      max-blank-identifiers: 3
+    dupl:
+      threshold: 120
+    errcheck:
+      check-type-assertions: true
+    forbidigo:
+      forbid:
+        - pattern: ^print(ln)?$
+          msg: use structured logging
+        - pattern: ^fmt\.Print.*$
+          msg: use structured logging
+      analyze-types: true
+    funlen:
+      lines: 150
+      statements: 100
+    gocognit:
+      min-complexity: 25
+    gocyclo:
+      min-complexity: 15
+    interfacebloat:
+      max: 10
+    lll:
+      line-length: 120
+    misspell:
+      locale: US
+      ignore-rules:
+        - cancelled
+    nestif:
+      min-complexity: 4
+    nolintlint:
+      allow-unused: false
+      require-explanation: true
+      require-specific: true
+    revive:
+      enable-all-rules: false
+      rules:
+        - name: blank-imports
+        - name: context-as-argument
+        - name: early-return
+        - name: error-naming
+        - name: error-return
+        - name: redefines-builtin-id
+        - name: unconditional-recursion
+        - name: unreachable-code
+        - name: unused-parameter
+
+  exclusions:
+    generated: strict
+    warn-unused: true
+    rules:
+      - path: _test\.go
+        linters:
+          - dupl
+          - err113
+          - lll
+          - wrapcheck
+
+formatters:
+  enable:
+    - gofumpt
+    - goimports
+  settings:
+    gofumpt:
+      module-path: github.com/retrom-project/retrom-runtime
+    goimports:
+      local-prefixes:
+        - github.com/retrom-project/retrom-runtime
+  exclusions:
+    generated: strict
+
+issues:
+  max-issues-per-linter: 0
+  max-same-issues: 0
+
+run:
+  timeout: 5m
+  tests: true
+  modules-download-mode: readonly
+  relative-path-mode: gomod

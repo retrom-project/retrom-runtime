@@ -1,0 +1,89 @@
+{
+ "command": "storage-layout",
+ "input": {
+  "platformId": "kirikiri",
+  "coreId": "kirikiri2",
+  "config": {
+   "content": {
+    "kind": "KIRIKIRI_PROJECT",
+    "entryFile": "data.xp3"
+   },
+   "cores": {
+    "kirikiri2": {
+     "options": {
+      "engineArguments": [
+       "-flag",
+       "-flag",
+       "-flag",
+       "-flag",
+       "-flag",
+       "-flag",
+       "-flag",
+       "-flag",
+       "-flag",
+       "-flag",
+       "-flag",
+       "-flag",
+       "-flag",
+       "-flag",
+       "-flag",
+       "-flag",
+       "-flag",
+       "-flag",
+       "-flag",
+       "-flag",
+       "-flag",
+       "-flag",
+       "-flag",
+       "-flag",
+       "-flag",
+       "-flag",
+       "-flag",
+       "-flag",
+       "-flag",
+       "-flag",
+       "-flag",
+       "-flag",
+       "-flag",
+       "-flag",
+       "-flag",
+       "-flag",
+       "-flag",
+       "-flag",
+       "-flag",
+       "-flag",
+       "-flag",
+       "-flag",
+       "-flag",
+       "-flag",
+       "-flag",
+       "-flag",
+       "-flag",
+       "-flag",
+       "-flag",
+       "-flag",
+       "-flag",
+       "-flag",
+       "-flag",
+       "-flag",
+       "-flag",
+       "-flag",
+       "-flag",
+       "-flag",
+       "-flag",
+       "-flag",
+       "-flag",
+       "-flag",
+       "-flag",
+       "-flag",
+       "-flag"
+      ]
+     }
+    }
+   }
+  }
+ },
+ "result": {
+  "layout": "ZIP_STORE"
+ }
+}

@@ -58,7 +58,9 @@
     "content-io:test": "node scripts/content-io/test.mjs",
     "content-io:browser": "node scripts/content-io/browser.mjs",
     "content-io:assets": "node scripts/content-io/build-assets.mjs",
-    "check:duplicates": "jscpd --config .jscpd.json"
+    "check:duplicates": "jscpd --config .jscpd.json",
+    "go:check": "bash scripts/go-check.sh",
+    "host:declarations": "npm run build && node scripts/host-declarations.mjs"
   },
   "dependencies": {
     "@noble/hashes": "2.0.1",

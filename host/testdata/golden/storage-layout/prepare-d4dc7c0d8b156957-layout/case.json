@@ -1,0 +1,16 @@
+{
+ "command": "storage-layout",
+ "input": {
+  "platformId": "tyranoscript",
+  "coreId": "tyranoscript",
+  "config": {
+   "content": {
+    "kind": "TYRANOSCRIPT_PROJECT",
+    "entryFile": "index.html"
+   }
+  }
+ },
+ "result": {
+  "layout": "ZIP_STORE"
+ }
+}

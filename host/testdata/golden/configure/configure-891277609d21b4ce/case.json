@@ -1,0 +1,30 @@
+{
+ "command": "configure",
+ "input": {
+  "platformId": "rpgmaker",
+  "coreIds": [
+   "rpgmaker"
+  ],
+  "files": [
+   {
+    "logicalKey": "index.html",
+    "name": "index.html",
+    "sizeBytes": 128,
+    "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+   },
+   {
+    "logicalKey": "js/rpg_core.js",
+    "name": "js/rpg_core.js",
+    "sizeBytes": 128,
+    "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+   }
+  ]
+ },
+ "result": {
+  "content": {
+   "kind": "RPG_MAKER_PROJECT",
+   "entryFile": "index.html",
+   "engine": "RPGMV"
+  }
+ }
+}

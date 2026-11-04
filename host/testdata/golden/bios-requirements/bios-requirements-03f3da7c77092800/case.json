@@ -1,0 +1,29 @@
+{
+ "command": "bios-requirements",
+ "input": {
+  "providerId": "emulatorjs",
+  "targetId": "fbneo",
+  "config": {
+   "content": {
+    "kind": "ARCADE",
+    "entryFile": "clone.zip"
+   },
+   "cores": {
+    "fbneo": {
+     "parentFiles": [
+      "base.zip"
+     ]
+    }
+   }
+  },
+  "files": [
+   {
+    "logicalKey": "clone.zip",
+    "name": "clone.zip",
+    "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "sizeBytes": 1
+   }
+  ]
+ },
+ "result": []
+}

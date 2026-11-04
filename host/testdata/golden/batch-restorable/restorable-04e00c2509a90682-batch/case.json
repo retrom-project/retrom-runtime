@@ -1,0 +1,44 @@
+{
+ "command": "batch-restorable",
+ "input": {
+  "items": [
+   {
+    "gameAvailable": true,
+    "saveAvailable": true,
+    "context": {
+     "coreId": "theodore",
+     "providerId": "emulatorjs",
+     "targetId": "theodore",
+     "coreFingerprint": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+     "romHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+     "checkpointFormat": "emulatorjs-state-v1-storage-v1",
+     "content": {
+      "kind": "SINGLE_FILE",
+      "entryFile": "TO9P.sap"
+     },
+     "runtimeOptions": {
+      "thomsonModel": "TO9+",
+      "dosEntryPath": null
+     }
+    },
+    "current": {
+     "coreId": "theodore",
+     "providerId": "emulatorjs",
+     "targetId": "theodore",
+     "coreFingerprint": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+     "romHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+    },
+    "readFormats": [
+     "emulatorjs-state-v1-storage-v1"
+    ]
+   }
+  ]
+ },
+ "result": [
+  {
+   "restorable": true,
+   "reason": null,
+   "warning": null
+  }
+ ]
+}

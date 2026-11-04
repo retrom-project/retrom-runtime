@@ -1,0 +1,47 @@
+{
+ "command": "normalize-content",
+ "input": {
+  "platformId": "kirikiri",
+  "files": [
+   {
+    "logicalKey": "data.xp3",
+    "name": "data.xp3",
+    "sha256": "268973b04a2331dc6e1146fbaef3b552b6a3512522a70b06c73768be88cbe7a0",
+    "sizeBytes": 1143
+   },
+   {
+    "logicalKey": "plugin/helper.tpm",
+    "name": "plugin/helper.tpm",
+    "sha256": "292fdb13e77389e5e6a8310f6e1a0d524266d7ed0836340fee4263ad93c2b97a",
+    "sizeBytes": 24576
+   },
+   {
+    "logicalKey": "patch.xp3",
+    "name": "patch.xp3",
+    "sha256": "5e33a14488236158dbea0be65a4f3a222d6cfab8e7e0ef17f04245dc3ea1f4e1",
+    "sizeBytes": 476
+   }
+  ],
+  "locators": {
+   "data.xp3": {
+    "path": "${CASE}/files/data.xp3",
+    "offset": 0,
+    "sizeBytes": 1143
+   },
+   "plugin/helper.tpm": {
+    "path": "${CASE}/files/plugin/helper.tpm",
+    "offset": 0,
+    "sizeBytes": 24576
+   },
+   "patch.xp3": {
+    "path": "${CASE}/files/patch.xp3",
+    "offset": 0,
+    "sizeBytes": 476
+   }
+  },
+  "outputRoot": "${OUT}"
+ },
+ "error": {
+  "code": "RUNTIME_KIRIKIRI_CHECKSUM_MISMATCH"
+ }
+}

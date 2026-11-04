@@ -1,0 +1,121 @@
+{
+ "command": "prepare",
+ "input": {
+  "directory": {
+   "platformId": "gbc",
+   "defaultCoreId": "gambatte",
+   "allowedCoreIds": [
+    "gambatte"
+   ]
+  },
+  "config": {
+   "content": {
+    "kind": "SINGLE_FILE",
+    "entryFile": "Infinity.gb"
+   }
+  },
+  "files": [
+   {
+    "logicalKey": "Infinity.gb",
+    "name": "Infinity.gb",
+    "sizeBytes": 128,
+    "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+   },
+   {
+    "logicalKey": "instructions.txt",
+    "name": "instructions.txt",
+    "sizeBytes": 128,
+    "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+   },
+   {
+    "logicalKey": "license.txt",
+    "name": "license.txt",
+    "sizeBytes": 128,
+    "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+   }
+  ],
+  "fingerprints": {
+   "emulatorjs/gambatte": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+  }
+ },
+ "result": {
+  "coreId": "gambatte",
+  "providerId": "emulatorjs",
+  "targetId": "gambatte",
+  "coreFingerprint": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+  "romHash": "f215fa35ba37c00be44d402f7ec6c6c2496796570057cb23bacbd92ffd2daf2d",
+  "config": {
+   "content": {
+    "kind": "SINGLE_FILE",
+    "entryFile": "Infinity.gb"
+   }
+  },
+  "targetOptions": {
+   "dosEntryPath": null
+  },
+  "dependencies": {
+   "parentFiles": [],
+   "missingParents": [],
+   "biosSets": []
+  },
+  "crcWarnings": [],
+  "biosRequirements": [
+   {
+    "requirementKey": "firmware/gb_bios.bin",
+    "coreId": "gambatte",
+    "providerId": "emulatorjs",
+    "targetId": "gambatte",
+    "logicalName": "gb_bios.bin",
+    "required": false,
+    "condition": "GB_CONTENT",
+    "sizeBytes": 256,
+    "md5": "32fbbd84168d3482956eb3c5051637f5",
+    "sha256": "cf053eccb4ccafff9e67339d4e78e98dce7d1ed59be819d2a1ba2232c6fce1c7",
+    "delivery": "BIOS_BUNDLE",
+    "virtualPath": null,
+    "activationOptions": {
+     "gambatte_gb_bootloader": "enabled"
+    }
+   }
+  ],
+  "checkpoint": {
+   "maxBytes": 268435456,
+   "readFormats": [
+    "emulatorjs-state-v1-storage-v1"
+   ],
+   "writeFormat": "emulatorjs-state-v1-storage-v1",
+   "semantics": "INSTANT"
+  },
+  "capabilities": {
+   "contentLoading": "PRELOAD_ONLY",
+   "checkpoint": true,
+   "frameCounter": true,
+   "frameMode": "SAME_ORIGIN_BLANK",
+   "inputFilter": true,
+   "nativeSettings": true,
+   "pause": true,
+   "requiresThreads": false,
+   "screenshot": true,
+   "standardGamepad": true,
+   "videoModes": [
+    "adaptive-sharpen",
+    "original",
+    "pixel",
+    "sharp-bilinear",
+    "smooth"
+   ],
+   "volume": true
+  },
+  "resources": [
+   {
+    "role": "game",
+    "kind": "ROM_BLOB",
+    "ordinal": 0,
+    "files": [
+     "Infinity.gb"
+    ],
+    "entryFile": "Infinity.gb"
+   }
+  ]
+ }
+}

@@ -1,0 +1,23 @@
+{
+ "command": "storage-layout",
+ "input": {
+  "platformId": "arcade",
+  "coreId": "fbneo",
+  "config": {
+   "content": {
+    "kind": "ARCADE",
+    "entryFile": "clone.zip"
+   },
+   "cores": {
+    "fbneo": {
+     "parentFiles": [
+      "base.zip"
+     ]
+    }
+   }
+  }
+ },
+ "result": {
+  "layout": "FILES"
+ }
+}

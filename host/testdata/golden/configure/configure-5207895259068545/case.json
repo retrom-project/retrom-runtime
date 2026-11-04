@@ -1,0 +1,53 @@
+{
+ "command": "configure",
+ "input": {
+  "platformId": "kirikiri",
+  "coreIds": [
+   "kirikiri2"
+  ],
+  "files": [
+   {
+    "logicalKey": "collection/project/.runtime-launches/launch.dll.json",
+    "name": "collection/project/.runtime-launches/launch.dll.json",
+    "path": "${CASE}/files/p0",
+    "sizeBytes": 596,
+    "sha256": "c63fe12df212fbef9e7250d4e64693683d8b2cf14e9c9f41984ffff52eba5a05"
+   },
+   {
+    "logicalKey": "collection/project/.runtime-patches/launch.dll/intro.ks.scn",
+    "name": "collection/project/.runtime-patches/launch.dll/intro.ks.scn",
+    "path": "${CASE}/files/p1",
+    "sizeBytes": 132,
+    "sha256": "0bf9cfe6eea5657956798722ac1ca28c547874f7d7550aeb3598cb7b6ada07e8"
+   },
+   {
+    "logicalKey": "collection/project/data.xp3",
+    "name": "collection/project/data.xp3",
+    "sizeBytes": 16,
+    "sha256": "7f1507ee2fce0ffb6bb37b6ed46b46e033eeaec58b4a052dfb7bbb1f50d527cf"
+   },
+   {
+    "logicalKey": "collection/project/launch.dll",
+    "name": "collection/project/launch.dll",
+    "path": "${CASE}/files/p2",
+    "sizeBytes": 21504,
+    "sha256": "f9a82156a70076d0cc843b7eaa0792cfd1490d79e194aead159de154c1646762"
+   },
+   {
+    "logicalKey": "collection/project/translation-73.bin",
+    "name": "collection/project/translation-73.bin",
+    "path": "${CASE}/files/p3",
+    "sizeBytes": 242,
+    "sha256": "c51aed56147e12eedadf0285345aa6305957641b3be24d5b033101b12793c5a6"
+   }
+  ],
+  "evidence": {
+   "collection/project/.runtime-launches/launch.dll.json": {
+    "text": "{\"kind\":\"KIRIKIRI_RESOURCE_PATCH\",\"version\":1,\"sourceFiles\":[{\"logicalKey\":\"collection/project/launch.dll\",\"sizeBytes\":21504,\"sha256\":\"f9a82156a70076d0cc843b7eaa0792cfd1490d79e194aead159de154c1646762\"},{\"logicalKey\":\"collection/project/translation-73.bin\",\"sizeBytes\":242,\"sha256\":\"c51aed56147e12eedadf0285345aa6305957641b3be24d5b033101b12793c5a6\"}],\"overlayRoot\":\"collection/project/.runtime-patches/launch.dll\",\"resources\":[{\"logicalKey\":\"collection/project/.runtime-patches/launch.dll/intro.ks.scn\",\"sizeBytes\":132,\"sha256\":\"0bf9cfe6eea5657956798722ac1ca28c547874f7d7550aeb3598cb7b6ada07e8\"}]}"
+   }
+  }
+ },
+ "error": {
+  "code": "RUNTIME_CONTENT_LOCATOR_REQUIRED"
+ }
+}

@@ -1,0 +1,93 @@
+{
+ "command": "normalize-content",
+ "input": {
+  "platformId": "kirikiri",
+  "files": [
+   {
+    "logicalKey": "data.xp3",
+    "name": "data.xp3",
+    "sha256": "8377c376702815a285f93a1765e93ded40f0000bd9878ae6598aa3d8f1ebd950",
+    "sizeBytes": 1389
+   },
+   {
+    "logicalKey": "plugin/helper.tpm",
+    "name": "plugin/helper.tpm",
+    "sha256": "faa308020093da364ba2825af4f3152fe417e45b0580415855e4d4ba2d3e9ce4",
+    "sizeBytes": 24576
+   }
+  ],
+  "locators": {
+   "data.xp3": {
+    "path": "${CASE}/files/data.xp3",
+    "offset": 0,
+    "sizeBytes": 1389
+   },
+   "plugin/helper.tpm": {
+    "path": "${CASE}/files/plugin/helper.tpm",
+    "offset": 0,
+    "sizeBytes": 24576
+   }
+  },
+  "outputRoot": "${OUT}"
+ },
+ "result": {
+  "files": [
+   {
+    "logicalKey": "data.xp3",
+    "name": "data.xp3",
+    "sizeBytes": 1143,
+    "sha256": "5f572f36d870fde333f7a705631a95f7828caf13134acca65f497e445ed710d2",
+    "path": "${OUT}/data.xp3"
+   },
+   {
+    "logicalKey": "plugin/helper.tpm",
+    "name": "plugin/helper.tpm",
+    "sha256": "faa308020093da364ba2825af4f3152fe417e45b0580415855e4d4ba2d3e9ce4",
+    "sizeBytes": 24576
+   }
+  ],
+  "normalization": {
+   "kind": "CONTENT_NORMALIZATION",
+   "converterVersion": 1,
+   "sourceContentHash": "c9c28f4cf28ef0ce428206b9b66eb0aacf53fea3e567b18c92b55588b0430b97",
+   "archiveCount": 1,
+   "verifiedEntries": 3,
+   "metadataCorrections": 0,
+   "omittedPhysicalEntries": 0,
+   "formatCounts": {
+    "cxfilterfs-neko": 1
+   },
+   "warnings": [],
+   "details": [],
+   "plugins": [
+    {
+     "id": "kirikiri-cxfilterfs",
+     "version": 1,
+     "formats": [
+      "cxfilterfs-neko"
+     ],
+     "sources": [
+      {
+       "file": "data.xp3",
+       "sizeBytes": 1389,
+       "sha256": "8377c376702815a285f93a1765e93ded40f0000bd9878ae6598aa3d8f1ebd950"
+      }
+     ],
+     "outputs": [
+      {
+       "file": "data.xp3",
+       "sizeBytes": 1143,
+       "sha256": "5f572f36d870fde333f7a705631a95f7828caf13134acca65f497e445ed710d2"
+      }
+     ],
+     "validation": {
+      "outputFilesVerified": 1,
+      "resourceEntriesVerified": 3,
+      "metadataCorrections": 0,
+      "omittedPhysicalEntries": 0
+     }
+    }
+   ]
+  }
+ }
+}

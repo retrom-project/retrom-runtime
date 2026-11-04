@@ -1,0 +1,706 @@
+{
+ "command": "rom-sets",
+ "input": {
+  "coreId": "fbalpha",
+  "directory": {
+   "platformId": "arcade",
+   "defaultCoreId": "fbalpha",
+   "allowedCoreIds": [
+    "fbalpha",
+    "fbneo",
+    "mame2003",
+    "mame2003_plus",
+    "mame_arcade"
+   ]
+  },
+  "files": [
+   {
+    "logicalKey": "original.zip",
+    "name": "original.zip",
+    "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "sizeBytes": 1
+   }
+  ],
+  "config": {
+   "content": {
+    "kind": "ARCADE",
+    "entryFile": "original.zip"
+   },
+   "cores": {
+    "fbalpha": {
+     "romSet": "chosen"
+    }
+   }
+  },
+  "archives": {
+   "original.zip": []
+  },
+  "arcadeCatalog": {
+   "chosen": {
+    "parent": null,
+    "bios": false,
+    "roms": [],
+    "description": "Chosen Game (version 2)",
+    "year": "1990",
+    "manufacturer": "Maker"
+   },
+   "clone": {
+    "parent": "parent",
+    "bios": false,
+    "roms": [
+     {
+      "name": "p.bin",
+      "size": "1",
+      "crc": "abcdef12",
+      "merge": "p.bin"
+     }
+    ]
+   },
+   "parent": {
+    "parent": null,
+    "bios": false,
+    "roms": [
+     {
+      "name": "p.bin",
+      "size": "1",
+      "crc": "abcdef12"
+     }
+    ]
+   },
+   "firmware": {
+    "parent": null,
+    "bios": true,
+    "roms": []
+   },
+   "device": {
+    "parent": null,
+    "bios": false,
+    "device": true,
+    "roms": []
+   },
+   "inactive": {
+    "parent": null,
+    "bios": false,
+    "runnable": false,
+    "roms": []
+   }
+  },
+  "fingerprints": {
+   "emulatorjs/fbalpha": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+  },
+  "romSet": "",
+  "query": "",
+  "limit": 100
+ },
+ "result": {
+  "coreId": "fbalpha",
+  "datSHA256": "4c257078e2f2ab66c75602905d68b7fe7e93e114858813a479e2fd08dd5f18a1",
+  "automaticSelection": null,
+  "selected": null,
+  "entries": [
+   {
+    "name": "10yard",
+    "description": "10-Yard Fight (World, set 1)",
+    "year": "1983",
+    "manufacturer": "Irem"
+   },
+   {
+    "name": "10yard85",
+    "description": "10-Yard Fight '85 (US, Taito license)",
+    "year": "1985",
+    "manufacturer": "Irem (Taito license)"
+   },
+   {
+    "name": "10yardj",
+    "description": "10-Yard Fight (Japan)",
+    "year": "1983",
+    "manufacturer": "Irem"
+   },
+   {
+    "name": "1941",
+    "description": "1941 - Counter Attack (900227 World)",
+    "year": "1990",
+    "manufacturer": "Capcom"
+   },
+   {
+    "name": "1941j",
+    "description": "1941 - Counter Attack (Japan)",
+    "year": "1990",
+    "manufacturer": "Capcom"
+   },
+   {
+    "name": "1941r1",
+    "description": "1941 - Counter Attack (World)",
+    "year": "1990",
+    "manufacturer": "Capcom"
+   },
+   {
+    "name": "1941u",
+    "description": "1941 - Counter Attack (900227 USA)",
+    "year": "1990",
+    "manufacturer": "Capcom"
+   },
+   {
+    "name": "1942",
+    "description": "1942 (Revision B)",
+    "year": "1984",
+    "manufacturer": "Capcom"
+   },
+   {
+    "name": "1942a",
+    "description": "1942 (Revision A)",
+    "year": "1984",
+    "manufacturer": "Capcom"
+   },
+   {
+    "name": "1942abl",
+    "description": "1942 (Revision A, bootleg) [Bootleg]",
+    "year": "1984",
+    "manufacturer": "Capcom"
+   },
+   {
+    "name": "1942b",
+    "description": "1942 (First Version)",
+    "year": "1984",
+    "manufacturer": "Capcom"
+   },
+   {
+    "name": "1942c64",
+    "description": "1942 (C64 Music)",
+    "year": "2015",
+    "manufacturer": "hack by Minwah"
+   },
+   {
+    "name": "1942h",
+    "description": "Supercharger 1942",
+    "year": "1991",
+    "manufacturer": "hack (Two Bit Score)"
+   },
+   {
+    "name": "1942w",
+    "description": "1942 (Williams Electronics license)",
+    "year": "1985",
+    "manufacturer": "Capcom (Williams Electronics license)"
+   },
+   {
+    "name": "1943",
+    "description": "1943: The Battle of Midway (Euro)",
+    "year": "1987",
+    "manufacturer": "Capcom"
+   },
+   {
+    "name": "1943b",
+    "description": "1943: The Battle of Midway (bootleg set 1, hack of Japan set) [Bootleg]",
+    "year": "1987",
+    "manufacturer": "bootleg"
+   },
+   {
+    "name": "1943b2",
+    "description": "1943: The Battle of Midway (bootleg set 2, hack of Japan set) [Bootleg]",
+    "year": "1987",
+    "manufacturer": "bootleg"
+   },
+   {
+    "name": "1943bj",
+    "description": "1943: Midway Kaisen (bootleg) [Bootleg]",
+    "year": "1987",
+    "manufacturer": "bootleg"
+   },
+   {
+    "name": "1943j",
+    "description": "1943: Midway Kaisen (Japan, Rev B)",
+    "year": "1987",
+    "manufacturer": "Capcom"
+   },
+   {
+    "name": "1943ja",
+    "description": "1943: Midway Kaisen (Japan)",
+    "year": "1987",
+    "manufacturer": "Capcom"
+   },
+   {
+    "name": "1943jah",
+    "description": "1943: Midway Kaisen (Japan, no protection hack)",
+    "year": "1987",
+    "manufacturer": "Capcom"
+   },
+   {
+    "name": "1943kai",
+    "description": "1943 Kai: Midway Kaisen (Japan)",
+    "year": "1987",
+    "manufacturer": "Capcom"
+   },
+   {
+    "name": "1943mii",
+    "description": "1943: The Battle of Midway Mark II (US)",
+    "year": "1988",
+    "manufacturer": "Capcom"
+   },
+   {
+    "name": "1943u",
+    "description": "1943: The Battle of Midway (US, Rev C)",
+    "year": "1987",
+    "manufacturer": "Capcom"
+   },
+   {
+    "name": "1943ua",
+    "description": "1943: The Battle of Midway (US)",
+    "year": "1987",
+    "manufacturer": "Capcom"
+   },
+   {
+    "name": "1944",
+    "description": "1944 - the loop master (000620 USA)",
+    "year": "2000",
+    "manufacturer": "Capcom / 8ing / Raizing"
+   },
+   {
+    "name": "1944ad",
+    "description": "1944 - the loop master (000620 USA Phoenix Edition, alt) [Bootleg]",
+    "year": "2000",
+    "manufacturer": "bootleg"
+   },
+   {
+    "name": "1944d",
+    "description": "1944 - the loop master (000620 USA Phoenix Edition) [Bootleg]",
+    "year": "2000",
+    "manufacturer": "bootleg"
+   },
+   {
+    "name": "1944j",
+    "description": "1944 - the loop master (000620 Japan)",
+    "year": "2000",
+    "manufacturer": "Capcom / 8ing / Raizing"
+   },
+   {
+    "name": "1945kiii",
+    "description": "1945k III (newer, OPCX2 PCB)",
+    "year": "2000",
+    "manufacturer": "Oriental Soft"
+   },
+   {
+    "name": "1945kiiin",
+    "description": "1945k III (newer, OPCX1 PCB)",
+    "year": "2000",
+    "manufacturer": "Oriental Soft"
+   },
+   {
+    "name": "1945kiiio",
+    "description": "1945k III (older, OPCX1 PCB)",
+    "year": "1999",
+    "manufacturer": "Oriental Soft"
+   },
+   {
+    "name": "19xx",
+    "description": "19XX - the war against destiny (951207 USA)",
+    "year": "1995",
+    "manufacturer": "Capcom"
+   },
+   {
+    "name": "19xxa",
+    "description": "19XX - the war against destiny (960104 Asia)",
+    "year": "1995",
+    "manufacturer": "Capcom"
+   },
+   {
+    "name": "19xxar1",
+    "description": "19XX - the war against destiny (951207 Asia)",
+    "year": "1995",
+    "manufacturer": "Capcom"
+   },
+   {
+    "name": "19xxb",
+    "description": "19XX - the war against destiny (951218 Brazil)",
+    "year": "1995",
+    "manufacturer": "Capcom"
+   },
+   {
+    "name": "19xxd",
+    "description": "19XX - the war against destiny (951207 USA Phoenix Edition) [Bootleg]",
+    "year": "1995",
+    "manufacturer": "bootleg"
+   },
+   {
+    "name": "19xxh",
+    "description": "19XX - the war against destiny (951218 Hispanic)",
+    "year": "1995",
+    "manufacturer": "Capcom"
+   },
+   {
+    "name": "19xxj",
+    "description": "19XX - the war against destiny (960104 Japan, yellow case)",
+    "year": "1996",
+    "manufacturer": "Capcom"
+   },
+   {
+    "name": "19xxjr1",
+    "description": "19XX - the war against destiny (951225 Japan)",
+    "year": "1995",
+    "manufacturer": "Capcom"
+   },
+   {
+    "name": "19xxjr2",
+    "description": "19XX - the war against destiny (951207 Japan)",
+    "year": "1995",
+    "manufacturer": "Capcom"
+   },
+   {
+    "name": "2020bb",
+    "description": "2020 Super Baseball (set 1)",
+    "year": "1991",
+    "manufacturer": "SNK / Pallas"
+   },
+   {
+    "name": "2020bba",
+    "description": "2020 Super Baseball (set 2)",
+    "year": "1991",
+    "manufacturer": "SNK / Pallas"
+   },
+   {
+    "name": "2020bbh",
+    "description": "2020 Super Baseball (set 3)",
+    "year": "1991",
+    "manufacturer": "SNK / Pallas"
+   },
+   {
+    "name": "20pacgal",
+    "description": "Ms. Pac-Man/Galaga - 20th Anniversary Class of 1981 Reunion (V1.08)",
+    "year": "2000",
+    "manufacturer": "Namco / Cosmodog"
+   },
+   {
+    "name": "20pacgalr0",
+    "description": "Ms. Pac-Man/Galaga - 20th Anniversary Class of 1981 Reunion (V1.00)",
+    "year": "2000",
+    "manufacturer": "Namco / Cosmodog"
+   },
+   {
+    "name": "20pacgalr1",
+    "description": "Ms. Pac-Man/Galaga - 20th Anniversary Class of 1981 Reunion (V1.01)",
+    "year": "2000",
+    "manufacturer": "Namco / Cosmodog"
+   },
+   {
+    "name": "20pacgalr2",
+    "description": "Ms. Pac-Man/Galaga - 20th Anniversary Class of 1981 Reunion (V1.02)",
+    "year": "2000",
+    "manufacturer": "Namco / Cosmodog"
+   },
+   {
+    "name": "20pacgalr3",
+    "description": "Ms. Pac-Man/Galaga - 20th Anniversary Class of 1981 Reunion (V1.03)",
+    "year": "2000",
+    "manufacturer": "Namco / Cosmodog"
+   },
+   {
+    "name": "20pacgalr4",
+    "description": "Ms. Pac-Man/Galaga - 20th Anniversary Class of 1981 Reunion (V1.04)",
+    "year": "2000",
+    "manufacturer": "Namco / Cosmodog"
+   },
+   {
+    "name": "25pacman",
+    "description": "Pac-Man - 25th Anniversary Edition (Rev 3.00)",
+    "year": "2006",
+    "manufacturer": "Namco / Cosmodog"
+   },
+   {
+    "name": "25pacmano",
+    "description": "Pac-Man - 25th Anniversary Edition (Rev 2.00)",
+    "year": "2005",
+    "manufacturer": "Namco / Cosmodog"
+   },
+   {
+    "name": "3countb",
+    "description": "3 Count Bout / Fire Suplex (NGM-043)(NGH-043)",
+    "year": "1993",
+    "manufacturer": "SNK"
+   },
+   {
+    "name": "3countba",
+    "description": "3 Count Bout / Fire Suplex (NGM-043)",
+    "year": "1993",
+    "manufacturer": "SNK"
+   },
+   {
+    "name": "3in1semi",
+    "description": "XESS - The New Revolution (SemiCom 3-in-1)",
+    "year": "1997",
+    "manufacturer": "SemiCom"
+   },
+   {
+    "name": "3kokushi",
+    "description": "Sankokushi (Japan) [Graphics corruption on score/bonus screen is normal]",
+    "year": "1996",
+    "manufacturer": "Mitchell"
+   },
+   {
+    "name": "3wonders",
+    "description": "Three Wonders (wonder 3 910520 etc)",
+    "year": "1991",
+    "manufacturer": "Capcom"
+   },
+   {
+    "name": "3wondersb",
+    "description": "Three Wonders (bootleg set 2, wonder 3 910520 etc) [Bootleg]",
+    "year": "1991",
+    "manufacturer": "Capcom"
+   },
+   {
+    "name": "3wondersh",
+    "description": "Three Wonders (bootleg set 1, wonder 3 910520 etc) [Bootleg]",
+    "year": "1991",
+    "manufacturer": "Capcom"
+   },
+   {
+    "name": "3wondersha",
+    "description": "Three Wonders (bootleg set 3, wonder 3 910520 etc) [Bootleg]",
+    "year": "1991",
+    "manufacturer": "Capcom"
+   },
+   {
+    "name": "3wondersr1",
+    "description": "Three Wonders (wonder 3 910513 etc)",
+    "year": "1991",
+    "manufacturer": "Capcom"
+   },
+   {
+    "name": "3wondersu",
+    "description": "Three Wonders (wonder 3 910520 USA)",
+    "year": "1991",
+    "manufacturer": "Capcom"
+   },
+   {
+    "name": "3x3puzzl",
+    "description": "3X3 Puzzle (Enterprise)",
+    "year": "1998",
+    "manufacturer": "Ace Enterprise"
+   },
+   {
+    "name": "3x3puzzla",
+    "description": "3X3 Puzzle (Normal)",
+    "year": "1998",
+    "manufacturer": "Ace Enterprise"
+   },
+   {
+    "name": "4dwarrio",
+    "description": "4-D Warriors (315-5162)",
+    "year": "1985",
+    "manufacturer": "Coreland / Sega"
+   },
+   {
+    "name": "4enraya",
+    "description": "4 En Raya (set 1)",
+    "year": "1990",
+    "manufacturer": "IDSA"
+   },
+   {
+    "name": "4enrayaa",
+    "description": "4 En Raya (set 2)",
+    "year": "1990",
+    "manufacturer": "IDSA"
+   },
+   {
+    "name": "4in1",
+    "description": "4 Fun in 1 [Bootleg]",
+    "year": "1981",
+    "manufacturer": "Armenia / Food and Fun"
+   },
+   {
+    "name": "4in1boot",
+    "description": "Puzzle King [Bootleg]",
+    "year": "2002",
+    "manufacturer": "K1 Soft"
+   },
+   {
+    "name": "4play",
+    "description": "4 player input test [Demo, 4 player input test cartridge]",
+    "year": "???",
+    "manufacturer": "SNK"
+   },
+   {
+    "name": "600",
+    "description": "600",
+    "year": "1981",
+    "manufacturer": "Konami"
+   },
+   {
+    "name": "64street",
+    "description": "64th. Street - A Detective Story (World)",
+    "year": "1991",
+    "manufacturer": "Jaleco"
+   },
+   {
+    "name": "64streetj",
+    "description": "64th. Street - A Detective Story (Japan, set 1)",
+    "year": "1991",
+    "manufacturer": "Jaleco"
+   },
+   {
+    "name": "64streetja",
+    "description": "64th. Street - A Detective Story (Japan, alt)",
+    "year": "1991",
+    "manufacturer": "Jaleco"
+   },
+   {
+    "name": "7ordi",
+    "description": "7 Ordi (Korea)",
+    "year": "2002",
+    "manufacturer": "Yun Sung"
+   },
+   {
+    "name": "7toitsu",
+    "description": "Chi-Toitsu",
+    "year": "1988",
+    "manufacturer": "Yuga"
+   },
+   {
+    "name": "800fath",
+    "description": "800 Fathoms",
+    "year": "1981",
+    "manufacturer": "Amenip (US Billiards Inc. license)"
+   },
+   {
+    "name": "88games",
+    "description": "'88 Games",
+    "year": "1988",
+    "manufacturer": "Konami"
+   },
+   {
+    "name": "8ballact",
+    "description": "Eight Ball Action (DK conversion) [Parent set for working drivers]",
+    "year": "1984",
+    "manufacturer": "Seatongrove Ltd (Magic Eletronics USA licence)"
+   },
+   {
+    "name": "8bpm",
+    "description": "Eight Ball Action (Pac-Man conversion) [imperfect graphics]",
+    "year": "1985",
+    "manufacturer": "Seatongrove Ltd (Magic Eletronics USA license)"
+   },
+   {
+    "name": "99lstwar",
+    "description": "'99: The Last War (set 1)",
+    "year": "1985",
+    "manufacturer": "Crux / Proma"
+   },
+   {
+    "name": "99lstwara",
+    "description": "'99: The Last War (set 2)",
+    "year": "1985",
+    "manufacturer": "Crux / Proma"
+   },
+   {
+    "name": "99lstwarb",
+    "description": "'99: The Last War (bootleg) [Bad colors in some scenes]",
+    "year": "1985",
+    "manufacturer": "bootleg"
+   },
+   {
+    "name": "99lstwark",
+    "description": "'99: The Last War (Kyugo)",
+    "year": "1985",
+    "manufacturer": "Crux / Kyugo"
+   },
+   {
+    "name": "abcop",
+    "description": "A.B. Cop (World, FD1094 317-0169b)",
+    "year": "1990",
+    "manufacturer": "Sega"
+   },
+   {
+    "name": "abcopd",
+    "description": "A.B. Cop (World, FD1094 317-0169b decrypted) [Bootleg]",
+    "year": "1990",
+    "manufacturer": "Sega"
+   },
+   {
+    "name": "abcopj",
+    "description": "A.B. Cop (Japan, FD1094 317-0169b)",
+    "year": "1990",
+    "manufacturer": "Sega"
+   },
+   {
+    "name": "abcopjd",
+    "description": "A.B. Cop (Japan, FD1094 317-0169b decrypted) [Bootleg]",
+    "year": "1990",
+    "manufacturer": "Sega"
+   },
+   {
+    "name": "ablast",
+    "description": "A-Blast (Japan)",
+    "year": "2000",
+    "manufacturer": "Subsino"
+   },
+   {
+    "name": "abscam",
+    "description": "Abscam",
+    "year": "1981",
+    "manufacturer": "GL (US Billiards License)"
+   },
+   {
+    "name": "aburner",
+    "description": "After Burner",
+    "year": "1987",
+    "manufacturer": "Sega"
+   },
+   {
+    "name": "aburner2",
+    "description": "After Burner II",
+    "year": "1987",
+    "manufacturer": "Sega"
+   },
+   {
+    "name": "aburner2g",
+    "description": "After Burner II (German)",
+    "year": "1987",
+    "manufacturer": "Sega"
+   },
+   {
+    "name": "aceattac",
+    "description": "Ace Attacker (FD1094 317-0059)",
+    "year": "1988",
+    "manufacturer": "Sega"
+   },
+   {
+    "name": "aceattaca",
+    "description": "Ace Attacker (Japan, System 16A, FD1094 317-0060)",
+    "year": "1986",
+    "manufacturer": "Sega"
+   },
+   {
+    "name": "acitya",
+    "description": "Atlantic City Action",
+    "year": "1983",
+    "manufacturer": "EPOS Corporation"
+   },
+   {
+    "name": "acrobatm",
+    "description": "Acrobat Mission",
+    "year": "1991",
+    "manufacturer": "UPL (Taito license)"
+   },
+   {
+    "name": "actfancr",
+    "description": "Act-Fancer Cybernetick Hyper Weapon (World revision 3)",
+    "year": "1989",
+    "manufacturer": "Data East Corporation"
+   },
+   {
+    "name": "actfancr1",
+    "description": "Act-Fancer Cybernetick Hyper Weapon (World revision 1)",
+    "year": "1989",
+    "manufacturer": "Data East Corporation"
+   },
+   {
+    "name": "actfancr2",
+    "description": "Act-Fancer Cybernetick Hyper Weapon (World revision 2)",
+    "year": "1989",
+    "manufacturer": "Data East Corporation"
+   }
+  ],
+  "total": 5799,
+  "offset": 0,
+  "limit": 100
+ }
+}

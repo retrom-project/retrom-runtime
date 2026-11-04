@@ -1,0 +1,47 @@
+{
+ "command": "configure",
+ "input": {
+  "platformId": "ons",
+  "coreIds": [
+   "onscripter_yuri"
+  ],
+  "files": [
+   {
+    "logicalKey": "0.txt",
+    "name": "0.txt",
+    "sizeBytes": 128,
+    "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+   },
+   {
+    "logicalKey": "1.txt",
+    "name": "1.txt",
+    "sizeBytes": 128,
+    "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+   },
+   {
+    "logicalKey": "00.txt",
+    "name": "00.txt",
+    "sizeBytes": 128,
+    "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+   }
+  ],
+  "evidence": {
+   "0.txt": {
+    "prefixBase64": "KmRlZmluZQo7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs="
+   }
+  }
+ },
+ "result": {
+  "content": {
+   "kind": "ONS_PROJECT",
+   "entryFile": "0.txt"
+  },
+  "cores": {
+   "onscripter_yuri": {
+    "options": {
+     "scriptEncoding": "utf8"
+    }
+   }
+  }
+ }
+}

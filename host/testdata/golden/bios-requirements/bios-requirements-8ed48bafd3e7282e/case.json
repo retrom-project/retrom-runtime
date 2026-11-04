@@ -1,0 +1,38 @@
+{
+ "command": "bios-requirements",
+ "input": {
+  "providerId": "emulatorjs",
+  "targetId": "prosystem",
+  "config": {
+   "content": {
+    "kind": "SINGLE_FILE",
+    "entryFile": "game.a78"
+   }
+  },
+  "files": [
+   {
+    "logicalKey": "game.a78",
+    "name": "game.a78",
+    "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "sizeBytes": 1
+   }
+  ]
+ },
+ "result": [
+  {
+   "requirementKey": "emulatorjs/prosystem/7800 BIOS (U).rom",
+   "coreId": "prosystem",
+   "providerId": "emulatorjs",
+   "targetId": "prosystem",
+   "logicalName": "7800 BIOS (U).rom",
+   "required": false,
+   "condition": "",
+   "sizeBytes": 4096,
+   "md5": "0763f1ffb006ddbe32e52d497ee848ae",
+   "sha256": "7d94551defcd8e7b045a34255654d6d169a683f63062d51dee3eedabf2042db0",
+   "delivery": "BIOS_BUNDLE",
+   "virtualPath": null,
+   "activationOptions": {}
+  }
+ ]
+}

@@ -1,0 +1,48 @@
+{
+ "command": "configure",
+ "input": {
+  "platformId": "kirikiri",
+  "coreIds": [
+   "kirikiri2"
+  ],
+  "files": [
+   {
+    "logicalKey": "game/data.bin",
+    "name": "game/data.bin",
+    "sizeBytes": 2011,
+    "sha256": "fd4a572ffd2598df8042fdba566d79e6c3af53111c65024d7f72688958589a04"
+   },
+   {
+    "logicalKey": "game/patch.xp3",
+    "name": "game/patch.xp3",
+    "sizeBytes": 128,
+    "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+   },
+   {
+    "logicalKey": "game/graphics.xp3",
+    "name": "game/graphics.xp3",
+    "sizeBytes": 128,
+    "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+   }
+  ],
+  "locators": {
+   "game/data.bin": {
+    "path": "${CASE}/files/p0",
+    "offset": 6,
+    "sizeBytes": 2011
+   }
+  },
+  "evidence": {
+   "game/data.bin": {
+    "prefixBase64": "WFAzDQogChqLZwE="
+   }
+  },
+  "archiveMembers": {}
+ },
+ "result": {
+  "content": {
+   "kind": "KIRIKIRI_PROJECT",
+   "entryFile": "game/data.bin"
+  }
+ }
+}

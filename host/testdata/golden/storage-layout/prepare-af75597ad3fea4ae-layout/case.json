@@ -1,0 +1,23 @@
+{
+ "command": "storage-layout",
+ "input": {
+  "platformId": "kirikiri",
+  "coreId": "kirikiri2",
+  "config": {
+   "content": {
+    "kind": "KIRIKIRI_PROJECT",
+    "entryFile": "arbitrary/startup.tjs"
+   },
+   "cores": {
+    "kirikiri2": {
+     "options": {
+      "engineMode": "KIRIKIRI2"
+     }
+    }
+   }
+  }
+ },
+ "result": {
+  "layout": "ZIP_STORE"
+ }
+}

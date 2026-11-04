@@ -1,0 +1,23 @@
+{
+ "command": "configure",
+ "input": {
+  "platformId": "psp",
+  "coreIds": [
+   "ppsspp"
+  ],
+  "files": [
+   {
+    "name": "disc.iso",
+    "logicalKey": "disc.iso",
+    "sizeBytes": 128,
+    "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+   }
+  ]
+ },
+ "result": {
+  "content": {
+   "kind": "SINGLE_FILE",
+   "entryFile": "disc.iso"
+  }
+ }
+}

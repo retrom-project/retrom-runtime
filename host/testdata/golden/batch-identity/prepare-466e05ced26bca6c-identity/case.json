@@ -1,0 +1,76 @@
+{
+ "command": "batch-identity",
+ "input": {
+  "items": [
+   {
+    "directory": {
+     "platformId": "siglus",
+     "defaultCoreId": "siglus",
+     "allowedCoreIds": [
+      "siglus"
+     ]
+    },
+    "config": {
+     "content": {
+      "kind": "SIGLUS_PROJECT",
+      "entryFile": "game/Scene.pck"
+     },
+     "cores": {
+      "siglus": {
+       "options": {
+        "language": "chs"
+       }
+      }
+     }
+    },
+    "files": [
+     {
+      "name": "game/Scene.pck",
+      "logicalKey": "game/Scene.pck",
+      "sizeBytes": 12,
+      "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+     },
+     {
+      "name": "game/Gameexe.dat",
+      "logicalKey": "game/Gameexe.dat",
+      "sizeBytes": 12,
+      "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+     },
+     {
+      "name": "game/scene.chs",
+      "logicalKey": "game/scene.chs",
+      "sizeBytes": 12,
+      "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+     },
+     {
+      "name": "game/gameexe.chs",
+      "logicalKey": "game/gameexe.chs",
+      "sizeBytes": 12,
+      "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+     },
+     {
+      "name": "game/g00/a.g01",
+      "logicalKey": "game/g00/a.g01",
+      "sizeBytes": 12,
+      "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+     }
+    ],
+    "fingerprints": {
+     "retrom-runtime/siglus": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+    }
+   }
+  ]
+ },
+ "result": [
+  {
+   "coreId": "siglus",
+   "providerId": "retrom-runtime",
+   "targetId": "siglus",
+   "coreFingerprint": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+   "romHash": "5058e1bb28e9fa95dbb23165f0620b083dc6b7bc41bfec7ae36b441c7e56924b",
+   "readFormats": [
+    "siglus-save-files-v1-storage-v1"
+   ]
+  }
+ ]
+}

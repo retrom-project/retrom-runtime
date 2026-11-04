@@ -1,0 +1,21 @@
+{
+ "command": "storage-layout",
+ "input": {
+  "platformId": "arcade",
+  "coreId": "mame2003_plus",
+  "config": {
+   "content": {
+    "kind": "ARCADE",
+    "entryFile": "original.zip"
+   },
+   "cores": {
+    "mame2003_plus": {
+     "romSet": "chosen"
+    }
+   }
+  }
+ },
+ "result": {
+  "layout": "FILES"
+ }
+}

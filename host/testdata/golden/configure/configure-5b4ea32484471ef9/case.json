@@ -1,0 +1,39 @@
+{
+ "command": "configure",
+ "input": {
+  "root": "${CASE}/files/p0",
+  "files": [
+   {
+    "logicalKey": "Game.ini",
+    "name": "Game.ini",
+    "sha256": "e0665bfb5bcf0ac996e5c33a3b1ad36d53757e2616b0d5f2ea9d45b0a62e8614",
+    "sizeBytes": 42
+   },
+   {
+    "logicalKey": "game.zip",
+    "name": "game.zip",
+    "sha256": "2cd729eaa2f8d9bdb65aa2a1e7a15c22353676fa16d24fd050520867da35e2a3",
+    "sizeBytes": 119
+   }
+  ],
+  "locators": {
+   "Game.ini": {
+    "path": "${CASE}/files/p1",
+    "offset": 6,
+    "sizeBytes": 42
+   },
+   "game.zip": {
+    "path": "${CASE}/files/p1",
+    "offset": 55,
+    "sizeBytes": 119
+   }
+  },
+  "platformId": "rpgmaker",
+  "coreIds": [
+   "rpgmaker"
+  ]
+ },
+ "error": {
+  "code": "RUNTIME_RPG_EVIDENCE_REQUIRED"
+ }
+}

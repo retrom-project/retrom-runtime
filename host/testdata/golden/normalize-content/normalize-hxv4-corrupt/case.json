@@ -1,0 +1,36 @@
+{
+ "command": "normalize-content",
+ "input": {
+  "platformId": "kirikiri",
+  "files": [
+   {
+    "logicalKey": "engine.application",
+    "name": "engine.application",
+    "sha256": "e7510f35e22e6716d353e668c5b3854485053cf1167a41f9cf72fdb7d20c7ad4",
+    "sizeBytes": 70656
+   },
+   {
+    "logicalKey": "assets.pack",
+    "name": "assets.pack",
+    "sha256": "cc0348b7a0b06555c45a852f94e6c3f982530cb2ae5f0c8ad9b29512490d3c92",
+    "sizeBytes": 210635
+   }
+  ],
+  "locators": {
+   "engine.application": {
+    "path": "${CASE}/files/engine.application",
+    "offset": 0,
+    "sizeBytes": 70656
+   },
+   "assets.pack": {
+    "path": "${CASE}/files/assets.pack",
+    "offset": 0,
+    "sizeBytes": 210635
+   }
+  },
+  "outputRoot": "${OUT}"
+ },
+ "error": {
+  "code": "RUNTIME_KIRIKIRI_CHECKSUM_MISMATCH"
+ }
+}

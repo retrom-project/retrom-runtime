@@ -1,0 +1,64 @@
+{
+ "command": "prepare",
+ "input": {
+  "directory": {
+   "platformId": "naomi2",
+   "defaultCoreId": "flycast-naomi2",
+   "allowedCoreIds": [
+    "flycast-naomi2"
+   ]
+  },
+  "config": {
+   "content": {
+    "kind": "SINGLE_FILE",
+    "entryFile": "wldrider.zip"
+   }
+  },
+  "files": [
+   {
+    "logicalKey": "wldrider.zip",
+    "name": "wldrider.zip",
+    "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "sizeBytes": 100
+   }
+  ],
+  "fingerprints": {
+   "emulatorjs/flycast-naomi2": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+  },
+  "archives": {
+   "wldrider.zip": [
+    {
+     "name": "game.ic1",
+     "sizeBytes": 101,
+     "crc32": "01020304"
+    }
+   ]
+  },
+  "flycastCatalog": [
+   {
+    "name": "wldrider",
+    "parent": null,
+    "platform": "naomi2",
+    "mediaType": "CARTRIDGE",
+    "disc": null,
+    "files": [
+     {
+      "name": "game.ic1",
+      "sizeBytes": 100,
+      "crc32": "01020304",
+      "optional": false
+     },
+     {
+      "name": "default-eeprom",
+      "sizeBytes": 128,
+      "crc32": null,
+      "optional": true
+     }
+    ]
+   }
+  ]
+ },
+ "error": {
+  "code": "RUNTIME_CONTENT_LOCATOR_REQUIRED"
+ }
+}

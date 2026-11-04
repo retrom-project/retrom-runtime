@@ -1,0 +1,23 @@
+{
+ "command": "bios-requirements",
+ "input": {
+  "providerId": "retrom-runtime",
+  "targetId": "rpgmaker-2000",
+  "config": {
+   "content": {
+    "kind": "RPG_MAKER_PROJECT",
+    "entryFile": "RPG_RT.ldb",
+    "engine": "RPG2000"
+   }
+  },
+  "files": [
+   {
+    "logicalKey": "RPG_RT.ldb",
+    "name": "RPG_RT.ldb",
+    "sizeBytes": 128,
+    "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+   }
+  ]
+ },
+ "result": []
+}

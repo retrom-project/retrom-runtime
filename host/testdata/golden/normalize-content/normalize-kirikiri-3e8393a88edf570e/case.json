@@ -1,0 +1,157 @@
+{
+ "command": "normalize-content",
+ "input": {
+  "platformId": "kirikiri",
+  "files": [
+   {
+    "logicalKey": "data.xp3",
+    "name": "data.xp3",
+    "sha256": "a2beba03d75c82e8aeae23d990c884a2bdbc79dcfdcbe86e7e052da6ab87d06a",
+    "sizeBytes": 1389
+   },
+   {
+    "logicalKey": "plugin/helper.tpm",
+    "name": "plugin/helper.tpm",
+    "sha256": "292fdb13e77389e5e6a8310f6e1a0d524266d7ed0836340fee4263ad93c2b97a",
+    "sizeBytes": 24576
+   },
+   {
+    "logicalKey": "unmodified.xp3",
+    "name": "unmodified.xp3",
+    "sha256": "b5997d4df2d3a26a998a3a80f66f1a708010753accab278d741b0ed0cb7dcc8c",
+    "sizeBytes": 28
+   },
+   {
+    "logicalKey": "patch/patch2.xp3",
+    "name": "patch/patch2.xp3",
+    "sha256": "64b5c58dda81f1a3985e0cef6186c73684a27b4d16abc918d4bb40c1d1758452",
+    "sizeBytes": 1618
+   },
+   {
+    "logicalKey": "optional.xp3",
+    "name": "optional.xp3",
+    "sha256": "6e8c3558d182cdaee9e960fbf4bddef31a3696b7779c1e8a599e4c06f0d22cda",
+    "sizeBytes": 54
+   }
+  ],
+  "locators": {
+   "data.xp3": {
+    "path": "${CASE}/files/data.xp3",
+    "offset": 0,
+    "sizeBytes": 1389
+   },
+   "plugin/helper.tpm": {
+    "path": "${CASE}/files/plugin/helper.tpm",
+    "offset": 0,
+    "sizeBytes": 24576
+   },
+   "unmodified.xp3": {
+    "path": "${CASE}/files/unmodified.xp3",
+    "offset": 0,
+    "sizeBytes": 28
+   },
+   "patch/patch2.xp3": {
+    "path": "${CASE}/files/patch/patch2.xp3",
+    "offset": 0,
+    "sizeBytes": 1618
+   },
+   "optional.xp3": {
+    "path": "${CASE}/files/optional.xp3",
+    "offset": 0,
+    "sizeBytes": 54
+   }
+  },
+  "outputRoot": "${OUT}"
+ },
+ "result": {
+  "files": [
+   {
+    "logicalKey": "data.xp3",
+    "name": "data.xp3",
+    "sizeBytes": 1143,
+    "sha256": "5f572f36d870fde333f7a705631a95f7828caf13134acca65f497e445ed710d2",
+    "path": "${OUT}/data.xp3"
+   },
+   {
+    "logicalKey": "optional.xp3",
+    "name": "optional.xp3",
+    "sha256": "6e8c3558d182cdaee9e960fbf4bddef31a3696b7779c1e8a599e4c06f0d22cda",
+    "sizeBytes": 54
+   },
+   {
+    "logicalKey": "patch/patch2.xp3",
+    "name": "patch/patch2.xp3",
+    "sizeBytes": 1372,
+    "sha256": "85c8aa26c5f1080f40e903a2cc798cf5086a91e73fef6814c2f92d87fd521cae",
+    "path": "${OUT}/patch/patch2.xp3"
+   },
+   {
+    "logicalKey": "plugin/helper.tpm",
+    "name": "plugin/helper.tpm",
+    "sha256": "292fdb13e77389e5e6a8310f6e1a0d524266d7ed0836340fee4263ad93c2b97a",
+    "sizeBytes": 24576
+   },
+   {
+    "logicalKey": "unmodified.xp3",
+    "name": "unmodified.xp3",
+    "sha256": "b5997d4df2d3a26a998a3a80f66f1a708010753accab278d741b0ed0cb7dcc8c",
+    "sizeBytes": 28
+   }
+  ],
+  "normalization": {
+   "kind": "CONTENT_NORMALIZATION",
+   "converterVersion": 1,
+   "sourceContentHash": "e1ccebf9aec30937b61ea801abb1dc3b84124dd3d6dde036673ee479b32d433e",
+   "archiveCount": 2,
+   "verifiedEntries": 6,
+   "metadataCorrections": 0,
+   "omittedPhysicalEntries": 0,
+   "formatCounts": {
+    "cxfilterfs-elif": 1,
+    "cxfilterfs-yuzu": 1
+   },
+   "warnings": [],
+   "details": [],
+   "plugins": [
+    {
+     "id": "kirikiri-cxfilterfs",
+     "version": 1,
+     "formats": [
+      "cxfilterfs-elif",
+      "cxfilterfs-yuzu"
+     ],
+     "sources": [
+      {
+       "file": "data.xp3",
+       "sizeBytes": 1389,
+       "sha256": "a2beba03d75c82e8aeae23d990c884a2bdbc79dcfdcbe86e7e052da6ab87d06a"
+      },
+      {
+       "file": "patch/patch2.xp3",
+       "sizeBytes": 1618,
+       "sha256": "64b5c58dda81f1a3985e0cef6186c73684a27b4d16abc918d4bb40c1d1758452"
+      }
+     ],
+     "outputs": [
+      {
+       "file": "data.xp3",
+       "sizeBytes": 1143,
+       "sha256": "5f572f36d870fde333f7a705631a95f7828caf13134acca65f497e445ed710d2"
+      },
+      {
+       "file": "patch/patch2.xp3",
+       "sizeBytes": 1372,
+       "sha256": "85c8aa26c5f1080f40e903a2cc798cf5086a91e73fef6814c2f92d87fd521cae"
+      }
+     ],
+     "validation": {
+      "outputFilesVerified": 2,
+      "resourceEntriesVerified": 6,
+      "metadataCorrections": 0,
+      "omittedPhysicalEntries": 0
+     }
+    }
+   ]
+  }
+ }
+}

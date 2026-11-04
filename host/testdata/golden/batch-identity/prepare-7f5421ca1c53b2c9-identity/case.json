@@ -1,0 +1,124 @@
+{
+ "command": "batch-identity",
+ "input": {
+  "items": [
+   {
+    "directory": {
+     "platformId": "arcade",
+     "defaultCoreId": "fbneo",
+     "allowedCoreIds": [
+      "fbneo"
+     ]
+    },
+    "fingerprints": {
+     "emulatorjs/fbneo": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+    },
+    "config": {
+     "content": {
+      "kind": "ARCADE",
+      "entryFile": "stored/alias.zip"
+     },
+     "cores": {
+      "fbneo": {
+       "romSet": "clone",
+       "parentFiles": [
+        "stored/BASE.ZIP"
+       ]
+      }
+     }
+    },
+    "files": [
+     {
+      "logicalKey": "stored/alias.zip",
+      "name": "alias.zip",
+      "sizeBytes": 100,
+      "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+     },
+     {
+      "logicalKey": "stored/BASE.ZIP",
+      "name": "BASE.ZIP",
+      "sizeBytes": 100,
+      "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+     },
+     {
+      "logicalKey": "stored/grand.zip",
+      "name": "grand.zip",
+      "sizeBytes": 100,
+      "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+     }
+    ],
+    "arcadeCatalog": {
+     "clone": {
+      "parent": "base",
+      "bios": false,
+      "roms": [
+       {
+        "name": "base.bin",
+        "size": "3",
+        "crc": "11223344",
+        "merge": "base.bin"
+       }
+      ]
+     },
+     "base": {
+      "parent": null,
+      "bios": false,
+      "roms": [
+       {
+        "name": "base.bin",
+        "size": "3",
+        "crc": "11223344"
+       },
+       {
+        "name": "grand.bin",
+        "size": "3",
+        "crc": "87654321",
+        "merge": "grand.bin"
+       }
+      ]
+     },
+     "grand": {
+      "parent": null,
+      "bios": false,
+      "roms": [
+       {
+        "name": "grand.bin",
+        "size": "3",
+        "crc": "87654321"
+       }
+      ]
+     }
+    },
+    "archives": {
+     "stored/alias.zip": [],
+     "stored/BASE.ZIP": [
+      {
+       "name": "base.bin",
+       "sizeBytes": 3,
+       "crc32": "11223344"
+      }
+     ],
+     "stored/grand.zip": [
+      {
+       "name": "grand.bin",
+       "sizeBytes": 3,
+       "crc32": "87654321"
+      }
+     ]
+    }
+   }
+  ]
+ },
+ "result": [
+  {
+   "coreId": "fbneo",
+   "providerId": "emulatorjs",
+   "targetId": "fbneo",
+   "coreFingerprint": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+   "romHash": "ea766a8dafd46ad74d13dc02a058e3ec2afe1e3a2aa88e9348d622cbc3e6e728",
+   "readFormats": [
+    "emulatorjs-state-v1-storage-v1"
+   ]
+  }
+ ]
+}

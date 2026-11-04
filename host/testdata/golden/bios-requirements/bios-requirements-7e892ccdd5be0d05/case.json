@@ -1,0 +1,22 @@
+{
+ "command": "bios-requirements",
+ "input": {
+  "providerId": "emulatorjs",
+  "targetId": "dosbox-pure",
+  "config": {
+   "content": {
+    "kind": "DOS_BUNDLE",
+    "entryFile": "game.zip"
+   }
+  },
+  "files": [
+   {
+    "logicalKey": "game.zip",
+    "name": "game.zip",
+    "sizeBytes": 128,
+    "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+   }
+  ]
+ },
+ "result": []
+}

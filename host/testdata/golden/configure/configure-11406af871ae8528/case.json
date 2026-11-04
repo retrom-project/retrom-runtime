@@ -1,0 +1,35 @@
+{
+ "command": "configure",
+ "input": {
+  "platformId": "butterscotch",
+  "coreIds": [
+   "butterscotch"
+  ],
+  "files": [
+   {
+    "logicalKey": "data.win",
+    "name": "data.win",
+    "sizeBytes": 128,
+    "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+   },
+   {
+    "logicalKey": "options.ini",
+    "name": "options.ini",
+    "sizeBytes": 128,
+    "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+   },
+   {
+    "logicalKey": "helper.js",
+    "name": "helper.js",
+    "sizeBytes": 128,
+    "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+   }
+  ]
+ },
+ "result": {
+  "content": {
+   "kind": "BUTTERSCOTCH_PROJECT",
+   "entryFile": "data.win"
+  }
+ }
+}

@@ -1,0 +1,32 @@
+{
+ "command": "configure",
+ "input": {
+  "platformId": "kirikiri",
+  "coreIds": [
+   "kirikiri2"
+  ],
+  "files": [
+   {
+    "logicalKey": "two/startup.tjs",
+    "name": "two/startup.tjs",
+    "sizeBytes": 128,
+    "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+   },
+   {
+    "logicalKey": "one/data.xp3",
+    "name": "one/data.xp3",
+    "sizeBytes": 128,
+    "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+   }
+  ],
+  "selection": {
+   "entryFile": "one/data.xp3"
+  }
+ },
+ "result": {
+  "content": {
+   "kind": "KIRIKIRI_PROJECT",
+   "entryFile": "one/data.xp3"
+  }
+ }
+}

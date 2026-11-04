@@ -1,0 +1,36 @@
+{
+ "command": "bios-requirements",
+ "input": {
+  "providerId": "retrom-runtime",
+  "targetId": "kirikiri2-kag",
+  "config": {
+   "content": {
+    "kind": "KIRIKIRI_PROJECT",
+    "entryFile": "bundle/data.xp3"
+   },
+   "cores": {
+    "kirikiri2": {
+     "options": {
+      "engineArguments": [
+       "-locale=arbitrary",
+       "-flag",
+       "-locale=second",
+       "-caption=中文 text",
+       "-empty="
+      ],
+      "steamService": "LOCAL"
+     }
+    }
+   }
+  },
+  "files": [
+   {
+    "logicalKey": "bundle/data.xp3",
+    "name": "bundle/data.xp3",
+    "sizeBytes": 128,
+    "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+   }
+  ]
+ },
+ "result": []
+}

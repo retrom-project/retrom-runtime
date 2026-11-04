@@ -1,0 +1,36 @@
+{
+ "command": "discover-content",
+ "input": {
+  "files": [
+   {
+    "logicalKey": "disc.cue",
+    "name": "disc.cue",
+    "sizeBytes": 31,
+    "sha256": "b267099df81ea2eeec054b96eb1c5184c6f13d93337a3701ffef9c230c7cc7e4"
+   }
+  ],
+  "locators": {
+   "disc.cue": {
+    "path": "${CASE}/files/p0",
+    "offset": 0,
+    "sizeBytes": 31
+   }
+  },
+  "directory": {
+   "platformId": "psx",
+   "defaultCoreId": "pcsx_rearmed",
+   "allowedCoreIds": [
+    "pcsx_rearmed"
+   ]
+  }
+ },
+ "result": {
+  "files": [
+   {
+    "logicalKey": "track.bin",
+    "relativeTo": "disc.cue",
+    "relativePath": "track.bin"
+   }
+  ]
+ }
+}

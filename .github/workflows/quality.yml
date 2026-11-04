@@ -41,6 +41,25 @@ jobs:
           include-hidden-files: true
           if-no-files-found: ignore
 
+  go:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache-dependency-path: |
+            go.sum
+            scripts/go-quality/go.sum
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+      - run: npm run go:check
+
   content_io_browser:
     runs-on: ubuntu-latest
     timeout-minutes: 15
@@ -62,11 +81,12 @@ jobs:
 
   quality:
     runs-on: ubuntu-latest
-    needs: [checks, content_io_browser]
+    needs: [checks, go, content_io_browser]
     if: ${{ always() }}
     steps:
       - name: Require all runtime checks
         env:
           CHECKS_RESULT: ${{ needs.checks.result }}
+          GO_RESULT: ${{ needs.go.result }}
           BROWSER_RESULT: ${{ needs.content_io_browser.result }}
-        run: test "$CHECKS_RESULT" = success && test "$BROWSER_RESULT" = success
+        run: test "$CHECKS_RESULT" = success && test "$GO_RESULT" = success && test "$BROWSER_RESULT" = success

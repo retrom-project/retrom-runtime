@@ -1,0 +1,90 @@
+{
+ "command": "bios-identify",
+ "input": {
+  "path": "${CASE}/files/p0",
+  "file": {
+   "name": "Standard.zip",
+   "sizeBytes": 234,
+   "sha256": "3bce8c48754846c4fe25625a33902fa1edf1565ecf7027f3563cc4dd8f77e721",
+   "md5": "f48bb64adc8979041d65cb6a91004496"
+  },
+  "requirements": [
+   {
+    "requirementKey": "retrom-runtime/rpgmaker-xp/Standard.zip",
+    "coreId": "test",
+    "logicalName": "Standard.zip",
+    "providerId": "test",
+    "targetId": "rpgmaker-xp",
+    "required": true,
+    "condition": "RPG_RTP",
+    "delivery": "SEEKABLE_BLOB",
+    "virtualPath": null,
+    "activationOptions": {},
+    "sizeBytes": null,
+    "sha256": null,
+    "md5": null,
+    "resourceRole": "rtp",
+    "archiveEntries": [
+     "Audio/",
+     "Graphics/Windowskins/",
+     "Graphics/Autotiles/"
+    ],
+    "archiveExcludes": [
+     "Game.ini",
+     "Data/"
+    ]
+   },
+   {
+    "requirementKey": "retrom-runtime/rpgmaker-vx/RPGVX.zip",
+    "coreId": "test",
+    "logicalName": "RPGVX.zip",
+    "providerId": "test",
+    "targetId": "rpgmaker-vx",
+    "required": true,
+    "condition": "RPG_RTP",
+    "delivery": "SEEKABLE_BLOB",
+    "virtualPath": null,
+    "activationOptions": {},
+    "sizeBytes": null,
+    "sha256": null,
+    "md5": null,
+    "resourceRole": "rtp",
+    "archiveEntries": [
+     "Audio/",
+     "Graphics/System/TileA1.png",
+     "Graphics/System/TileB.png"
+    ],
+    "archiveExcludes": [
+     "Game.ini",
+     "Data/"
+    ]
+   },
+   {
+    "requirementKey": "retrom-runtime/rpgmaker-vx-ace/RPGVXAce.zip",
+    "coreId": "test",
+    "logicalName": "RPGVXAce.zip",
+    "providerId": "test",
+    "targetId": "rpgmaker-vx-ace",
+    "required": true,
+    "condition": "RPG_RTP",
+    "delivery": "SEEKABLE_BLOB",
+    "virtualPath": null,
+    "activationOptions": {},
+    "sizeBytes": null,
+    "sha256": null,
+    "md5": null,
+    "resourceRole": "rtp",
+    "archiveEntries": [
+     "Audio/",
+     "Graphics/Titles1/",
+     "Graphics/Battlebacks1/"
+    ],
+    "archiveExcludes": [
+     "Game.ini",
+     "Data/"
+    ]
+   }
+  ]
+ },
+ "result": []
+}

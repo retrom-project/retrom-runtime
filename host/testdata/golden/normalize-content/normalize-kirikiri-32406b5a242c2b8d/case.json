@@ -1,0 +1,112 @@
+{
+ "command": "normalize-content",
+ "input": {
+  "platformId": "kirikiri",
+  "files": [
+   {
+    "logicalKey": "nested/launch.exe",
+    "name": "launch.exe",
+    "sha256": "d5a0e70053d10c8d92ca4306a3b237552c7a815850a761849f26de85e0e7708a",
+    "sizeBytes": 73818
+   }
+  ],
+  "locators": {
+   "nested/launch.exe": {
+    "path": "${CASE}/files/nested/launch.exe",
+    "offset": 0,
+    "sizeBytes": 73818
+   }
+  },
+  "outputRoot": "${OUT}"
+ },
+ "result": {
+  "files": [
+   {
+    "logicalKey": "nested/launch.exe",
+    "name": "nested/launch.exe",
+    "path": "${OUT}/nested/launch.exe",
+    "sizeBytes": 73818,
+    "sha256": "d5a0e70053d10c8d92ca4306a3b237552c7a815850a761849f26de85e0e7708a"
+   },
+   {
+    "logicalKey": "nested/resources/boot.ks",
+    "name": "nested/resources/boot.ks",
+    "path": "${OUT}/nested/resources/boot.ks",
+    "sizeBytes": 18,
+    "sha256": "9f5dc8db146a3a95f0b7673e0f4e9bc8b82ad5c2b3671c4620e4ffd8a9817395"
+   },
+   {
+    "logicalKey": "nested/resources/large.bin",
+    "name": "nested/resources/large.bin",
+    "path": "${OUT}/nested/resources/large.bin",
+    "sizeBytes": 60001,
+    "sha256": "4194478d9a321120f0f43e7c1d7cc7985fb0074cf57c9b7a45c0215456d432e9"
+   },
+   {
+    "logicalKey": "nested/resources/notes.txt",
+    "name": "nested/resources/notes.txt",
+    "path": "${OUT}/nested/resources/notes.txt",
+    "sizeBytes": 10,
+    "sha256": "c9ecf5e54c7b3f2640ecca21f96d4c3625a2b7935104f41c5ede29935a9e52c9"
+   }
+  ],
+  "normalization": {
+   "kind": "CONTENT_NORMALIZATION",
+   "converterVersion": 1,
+   "sourceContentHash": "2248387bb4861f97ca3bb5462d709527514790df2ee2ece868ad6a3cc2981297",
+   "archiveCount": 1,
+   "verifiedEntries": 3,
+   "metadataCorrections": 0,
+   "omittedPhysicalEntries": 0,
+   "formatCounts": {
+    "molebox4-steelbox": 1
+   },
+   "warnings": [],
+   "details": [],
+   "plugins": [
+    {
+     "id": "molebox4-steelbox",
+     "version": 1,
+     "formats": [
+      "molebox4-steelbox"
+     ],
+     "sources": [
+      {
+       "file": "nested/launch.exe",
+       "sizeBytes": 73818,
+       "sha256": "d5a0e70053d10c8d92ca4306a3b237552c7a815850a761849f26de85e0e7708a"
+      }
+     ],
+     "outputs": [
+      {
+       "file": "nested/launch.exe",
+       "sizeBytes": 73818,
+       "sha256": "d5a0e70053d10c8d92ca4306a3b237552c7a815850a761849f26de85e0e7708a"
+      },
+      {
+       "file": "nested/resources/boot.ks",
+       "sizeBytes": 18,
+       "sha256": "9f5dc8db146a3a95f0b7673e0f4e9bc8b82ad5c2b3671c4620e4ffd8a9817395"
+      },
+      {
+       "file": "nested/resources/large.bin",
+       "sizeBytes": 60001,
+       "sha256": "4194478d9a321120f0f43e7c1d7cc7985fb0074cf57c9b7a45c0215456d432e9"
+      },
+      {
+       "file": "nested/resources/notes.txt",
+       "sizeBytes": 10,
+       "sha256": "c9ecf5e54c7b3f2640ecca21f96d4c3625a2b7935104f41c5ede29935a9e52c9"
+      }
+     ],
+     "validation": {
+      "outputFilesVerified": 4,
+      "resourceEntriesVerified": 3,
+      "metadataCorrections": 0,
+      "omittedPhysicalEntries": 0
+     }
+    }
+   ]
+  }
+ }
+}

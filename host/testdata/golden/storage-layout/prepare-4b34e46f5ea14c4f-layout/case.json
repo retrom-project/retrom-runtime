@@ -1,0 +1,23 @@
+{
+ "command": "storage-layout",
+ "input": {
+  "platformId": "siglus",
+  "coreId": "siglus",
+  "config": {
+   "content": {
+    "kind": "SIGLUS_PROJECT",
+    "entryFile": "Other Title/Scene.pck"
+   },
+   "cores": {
+    "siglus": {
+     "options": {
+      "language": "chs"
+     }
+    }
+   }
+  }
+ },
+ "result": {
+  "layout": "ZIP_STORE"
+ }
+}

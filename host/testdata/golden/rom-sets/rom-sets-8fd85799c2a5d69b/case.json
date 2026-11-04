@@ -1,0 +1,706 @@
+{
+ "command": "rom-sets",
+ "input": {
+  "coreId": "mame2003",
+  "directory": {
+   "platformId": "arcade",
+   "defaultCoreId": "mame2003",
+   "allowedCoreIds": [
+    "fbalpha",
+    "fbneo",
+    "mame2003",
+    "mame2003_plus",
+    "mame_arcade"
+   ]
+  },
+  "files": [
+   {
+    "logicalKey": "original.zip",
+    "name": "original.zip",
+    "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "sizeBytes": 1
+   }
+  ],
+  "config": {
+   "content": {
+    "kind": "ARCADE",
+    "entryFile": "original.zip"
+   },
+   "cores": {
+    "mame2003": {
+     "romSet": "chosen"
+    }
+   }
+  },
+  "archives": {
+   "original.zip": []
+  },
+  "arcadeCatalog": {
+   "chosen": {
+    "parent": null,
+    "bios": false,
+    "roms": [],
+    "description": "Chosen Game (version 2)",
+    "year": "1990",
+    "manufacturer": "Maker"
+   },
+   "clone": {
+    "parent": "parent",
+    "bios": false,
+    "roms": [
+     {
+      "name": "p.bin",
+      "size": "1",
+      "crc": "abcdef12",
+      "merge": "p.bin"
+     }
+    ]
+   },
+   "parent": {
+    "parent": null,
+    "bios": false,
+    "roms": [
+     {
+      "name": "p.bin",
+      "size": "1",
+      "crc": "abcdef12"
+     }
+    ]
+   },
+   "firmware": {
+    "parent": null,
+    "bios": true,
+    "roms": []
+   },
+   "device": {
+    "parent": null,
+    "bios": false,
+    "device": true,
+    "roms": []
+   },
+   "inactive": {
+    "parent": null,
+    "bios": false,
+    "runnable": false,
+    "roms": []
+   }
+  },
+  "fingerprints": {
+   "emulatorjs/mame2003": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+  },
+  "romSet": "",
+  "query": "",
+  "limit": 100
+ },
+ "result": {
+  "coreId": "mame2003",
+  "datSHA256": "dacf9d5739ddf386705bc703f7f70239ac61b8ab44c438f76f6658c7156da147",
+  "automaticSelection": null,
+  "selected": null,
+  "entries": [
+   {
+    "name": "005",
+    "description": "005",
+    "year": "1981",
+    "manufacturer": "Sega"
+   },
+   {
+    "name": "1941",
+    "description": "1941 - Counter Attack (World)",
+    "year": "1990",
+    "manufacturer": "Capcom"
+   },
+   {
+    "name": "1941j",
+    "description": "1941 - Counter Attack (Japan)",
+    "year": "1990",
+    "manufacturer": "Capcom"
+   },
+   {
+    "name": "1942",
+    "description": "1942 (set 1)",
+    "year": "1984",
+    "manufacturer": "Capcom"
+   },
+   {
+    "name": "1942a",
+    "description": "1942 (set 2)",
+    "year": "1984",
+    "manufacturer": "Capcom"
+   },
+   {
+    "name": "1942b",
+    "description": "1942 (set 3)",
+    "year": "1984",
+    "manufacturer": "Capcom"
+   },
+   {
+    "name": "1943",
+    "description": "1943 - The Battle of Midway (US)",
+    "year": "1987",
+    "manufacturer": "Capcom"
+   },
+   {
+    "name": "1943j",
+    "description": "1943 - The Battle of Midway (Japan)",
+    "year": "1987",
+    "manufacturer": "Capcom"
+   },
+   {
+    "name": "1943kai",
+    "description": "1943 Kai - Midway Kaisen",
+    "year": "1987",
+    "manufacturer": "Capcom"
+   },
+   {
+    "name": "1944",
+    "description": "1944: The Loop Master (US 000620)",
+    "year": "2000",
+    "manufacturer": "Capcom, supported by Eighting/Raizing"
+   },
+   {
+    "name": "1944j",
+    "description": "1944: The Loop Master (Japan 000620)",
+    "year": "2000",
+    "manufacturer": "Capcom, supported by Eighting/Raizing"
+   },
+   {
+    "name": "19xx",
+    "description": "19XX: The War Against Destiny (US 951207)",
+    "year": "1996",
+    "manufacturer": "Capcom"
+   },
+   {
+    "name": "19xxa",
+    "description": "19XX: The War Against Destiny (Asia 951207)",
+    "year": "1996",
+    "manufacturer": "Capcom"
+   },
+   {
+    "name": "19xxh",
+    "description": "19XX: The War Against Destiny (Hispanic 951218)",
+    "year": "1996",
+    "manufacturer": "Capcom"
+   },
+   {
+    "name": "19xxj",
+    "description": "19XX: The War Against Destiny (Japan 951225)",
+    "year": "1996",
+    "manufacturer": "Capcom"
+   },
+   {
+    "name": "19xxjr1",
+    "description": "19XX: The War Against Destiny (Japan 951207)",
+    "year": "1996",
+    "manufacturer": "Capcom"
+   },
+   {
+    "name": "2020bb",
+    "description": "2020 Super Baseball (set 1)",
+    "year": "1991",
+    "manufacturer": "SNK / Pallas"
+   },
+   {
+    "name": "2020bbh",
+    "description": "2020 Super Baseball (set 2)",
+    "year": "1991",
+    "manufacturer": "SNK / Pallas"
+   },
+   {
+    "name": "280zzzap",
+    "description": "Datsun 280 Zzzap",
+    "year": "1976",
+    "manufacturer": "Midway"
+   },
+   {
+    "name": "3countb",
+    "description": "3 Count Bout / Fire Suplex",
+    "year": "1993",
+    "manufacturer": "SNK"
+   },
+   {
+    "name": "3in1semi",
+    "description": "3-in-1 (SemiCom)",
+    "year": "1997",
+    "manufacturer": "SemiCom"
+   },
+   {
+    "name": "3kokushi",
+    "description": "Sankokushi (Japan)",
+    "year": "1996",
+    "manufacturer": "Mitchell"
+   },
+   {
+    "name": "3stooges",
+    "description": "The Three Stooges In Brides Is Brides",
+    "year": "1984",
+    "manufacturer": "Mylstar"
+   },
+   {
+    "name": "3wonders",
+    "description": "Three Wonders (World 910520)",
+    "year": "1991",
+    "manufacturer": "Capcom"
+   },
+   {
+    "name": "3wonderu",
+    "description": "Three Wonders (US 910520)",
+    "year": "1991",
+    "manufacturer": "Capcom"
+   },
+   {
+    "name": "40love",
+    "description": "Forty-Love",
+    "year": "1984",
+    "manufacturer": "Taito Corporation"
+   },
+   {
+    "name": "47pie2",
+    "description": "Idol Janshi Su-Chi-Pie 2 (v1.1)",
+    "year": "1994",
+    "manufacturer": "Jaleco"
+   },
+   {
+    "name": "47pie2o",
+    "description": "Idol Janshi Su-Chi-Pie 2 (v1.0)",
+    "year": "1994",
+    "manufacturer": "Jaleco"
+   },
+   {
+    "name": "4dwarrio",
+    "description": "4-D Warriors",
+    "year": "1985",
+    "manufacturer": "Coreland / Sega"
+   },
+   {
+    "name": "4enraya",
+    "description": "4 En Raya",
+    "year": "1990",
+    "manufacturer": "IDSA"
+   },
+   {
+    "name": "4in1",
+    "description": "4 Fun in 1",
+    "year": "1981",
+    "manufacturer": "Armenia / Food and Fun"
+   },
+   {
+    "name": "4in1boot",
+    "description": "4-in-1 bootleg",
+    "year": "",
+    "manufacturer": "bootleg"
+   },
+   {
+    "name": "600",
+    "description": "600",
+    "year": "1981",
+    "manufacturer": "Konami"
+   },
+   {
+    "name": "64streej",
+    "description": "64th. Street - A Detective Story (Japan)",
+    "year": "1991",
+    "manufacturer": "Jaleco"
+   },
+   {
+    "name": "64street",
+    "description": "64th. Street - A Detective Story (World)",
+    "year": "1991",
+    "manufacturer": "Jaleco"
+   },
+   {
+    "name": "720",
+    "description": "720 Degrees (rev 4)",
+    "year": "1986",
+    "manufacturer": "Atari Games"
+   },
+   {
+    "name": "720g",
+    "description": "720 Degrees (German, rev 2)",
+    "year": "1986",
+    "manufacturer": "Atari Games"
+   },
+   {
+    "name": "720gr1",
+    "description": "720 Degrees (German, rev 1)",
+    "year": "1986",
+    "manufacturer": "Atari Games"
+   },
+   {
+    "name": "720r1",
+    "description": "720 Degrees (rev 1)",
+    "year": "1986",
+    "manufacturer": "Atari Games"
+   },
+   {
+    "name": "720r2",
+    "description": "720 Degrees (rev 2)",
+    "year": "1986",
+    "manufacturer": "Atari Games"
+   },
+   {
+    "name": "720r3",
+    "description": "720 Degrees (rev 3)",
+    "year": "1986",
+    "manufacturer": "Atari Games"
+   },
+   {
+    "name": "7jigen",
+    "description": "7jigen no Youseitachi - Mahjong 7 Dimensions (Japan)",
+    "year": "1990",
+    "manufacturer": "Dynax"
+   },
+   {
+    "name": "7toitsu",
+    "description": "Chi-Toitsu",
+    "year": "1988",
+    "manufacturer": "Yuga"
+   },
+   {
+    "name": "800fath",
+    "description": "800 Fathoms",
+    "year": "1981",
+    "manufacturer": "Amenip (US Billiards Inc. license)"
+   },
+   {
+    "name": "88games",
+    "description": "'88 Games",
+    "year": "1988",
+    "manufacturer": "Konami"
+   },
+   {
+    "name": "8ball",
+    "description": "Video Eight Ball",
+    "year": "1982",
+    "manufacturer": "Century Electronics"
+   },
+   {
+    "name": "8ball1",
+    "description": "Video Eight Ball (Rev.1)",
+    "year": "1982",
+    "manufacturer": "Century Electronics"
+   },
+   {
+    "name": "8ballact",
+    "description": "Eight Ball Action (DK conversion)",
+    "year": "1984",
+    "manufacturer": "Seatongrove Ltd (Magic Eletronics USA licence)"
+   },
+   {
+    "name": "8ballat2",
+    "description": "Eight Ball Action (DKJr conversion)",
+    "year": "1984",
+    "manufacturer": "Seatongrove Ltd (Magic Eletronics USA licence)"
+   },
+   {
+    "name": "8bpm",
+    "description": "Eight Ball Action (Pac-Man conversion)",
+    "year": "1985",
+    "manufacturer": "Seatongrove Ltd (Magic Eletronics USA licence)"
+   },
+   {
+    "name": "99lstwar",
+    "description": "'99: The Last War",
+    "year": "1985",
+    "manufacturer": "Proma"
+   },
+   {
+    "name": "99lstwra",
+    "description": "'99: The Last War (alternate)",
+    "year": "1985",
+    "manufacturer": "Proma"
+   },
+   {
+    "name": "9ballsh2",
+    "description": "9-Ball Shootout (set 2)",
+    "year": "1993",
+    "manufacturer": "E-Scape EnterMedia (Bundra license)"
+   },
+   {
+    "name": "9ballsh3",
+    "description": "9-Ball Shootout (set 3)",
+    "year": "1993",
+    "manufacturer": "E-Scape EnterMedia (Bundra license)"
+   },
+   {
+    "name": "9ballsht",
+    "description": "9-Ball Shootout (set 1)",
+    "year": "1993",
+    "manufacturer": "E-Scape EnterMedia (Bundra license)"
+   },
+   {
+    "name": "a51mxr3k",
+    "description": "Area 51 / Maximum Force Duo (R3000)",
+    "year": "1998",
+    "manufacturer": "Atari Games"
+   },
+   {
+    "name": "aafb",
+    "description": "All American Football (rev E)",
+    "year": "1989",
+    "manufacturer": "Leland Corp."
+   },
+   {
+    "name": "aafbb",
+    "description": "All American Football (rev B)",
+    "year": "1989",
+    "manufacturer": "Leland Corp."
+   },
+   {
+    "name": "aafbc",
+    "description": "All American Football (rev C)",
+    "year": "1989",
+    "manufacturer": "Leland Corp."
+   },
+   {
+    "name": "aafbd2p",
+    "description": "All American Football (rev D, 2 Players)",
+    "year": "1989",
+    "manufacturer": "Leland Corp."
+   },
+   {
+    "name": "abaseb",
+    "description": "Atari Baseball (set 1)",
+    "year": "1979",
+    "manufacturer": "Atari"
+   },
+   {
+    "name": "abaseb2",
+    "description": "Atari Baseball (set 2)",
+    "year": "1979",
+    "manufacturer": "Atari"
+   },
+   {
+    "name": "aburner",
+    "description": "After Burner (Japan)",
+    "year": "1987",
+    "manufacturer": "Sega"
+   },
+   {
+    "name": "aburner2",
+    "description": "After Burner II",
+    "year": "1987",
+    "manufacturer": "Sega"
+   },
+   {
+    "name": "ace",
+    "description": "Ace",
+    "year": "1976",
+    "manufacturer": "Allied Leisure"
+   },
+   {
+    "name": "aceattac",
+    "description": "Ace Attacker",
+    "year": "",
+    "manufacturer": "Sega"
+   },
+   {
+    "name": "acedrvrw",
+    "description": "Ace Driver (Rev. AD2, World)",
+    "year": "1994",
+    "manufacturer": "Namco"
+   },
+   {
+    "name": "acitya",
+    "description": "Atlantic City Action",
+    "year": "1983",
+    "manufacturer": "Epos Corporation"
+   },
+   {
+    "name": "acrobatm",
+    "description": "Acrobat Mission",
+    "year": "1991",
+    "manufacturer": "UPL (Taito license)"
+   },
+   {
+    "name": "actfanc1",
+    "description": "Act-Fancer Cybernetick Hyper Weapon (World revision 1)",
+    "year": "1989",
+    "manufacturer": "Data East Corporation"
+   },
+   {
+    "name": "actfancj",
+    "description": "Act-Fancer Cybernetick Hyper Weapon (Japan revision 1)",
+    "year": "1989",
+    "manufacturer": "Data East Corporation"
+   },
+   {
+    "name": "actfancr",
+    "description": "Act-Fancer Cybernetick Hyper Weapon (World revision 2)",
+    "year": "1989",
+    "manufacturer": "Data East Corporation"
+   },
+   {
+    "name": "aeroboto",
+    "description": "Aeroboto",
+    "year": "1984",
+    "manufacturer": "[Jaleco] (Williams license)"
+   },
+   {
+    "name": "aerofgt",
+    "description": "Aero Fighters",
+    "year": "1992",
+    "manufacturer": "Video System Co."
+   },
+   {
+    "name": "aerofgtb",
+    "description": "Aero Fighters (Turbo Force hardware set 1)",
+    "year": "1992",
+    "manufacturer": "Video System Co."
+   },
+   {
+    "name": "aerofgtc",
+    "description": "Aero Fighters (Turbo Force hardware set 2)",
+    "year": "1992",
+    "manufacturer": "Video System Co."
+   },
+   {
+    "name": "afighter",
+    "description": "Action Fighter",
+    "year": "",
+    "manufacturer": "Sega"
+   },
+   {
+    "name": "agallet",
+    "description": "Air Gallet",
+    "year": "1996",
+    "manufacturer": "Banpresto / Gazelle"
+   },
+   {
+    "name": "ainferno",
+    "description": "Air Inferno (US)",
+    "year": "1990",
+    "manufacturer": "Taito America Corporation"
+   },
+   {
+    "name": "airbustj",
+    "description": "Air Buster (Japan)",
+    "year": "1990",
+    "manufacturer": "Kaneko (Namco license)"
+   },
+   {
+    "name": "airbustr",
+    "description": "Air Buster",
+    "year": "1990",
+    "manufacturer": "Kaneko (Namco license)"
+   },
+   {
+    "name": "airco22b",
+    "description": "Air Combat 22 (Rev. ACS1 Ver.B)",
+    "year": "1995",
+    "manufacturer": "Namco"
+   },
+   {
+    "name": "aircombj",
+    "description": "Air Combat (Japan)",
+    "year": "1992",
+    "manufacturer": "Namco"
+   },
+   {
+    "name": "aircombu",
+    "description": "Air Combat (US)",
+    "year": "1992",
+    "manufacturer": "Namco"
+   },
+   {
+    "name": "airduel",
+    "description": "Air Duel (Japan)",
+    "year": "1990",
+    "manufacturer": "Irem"
+   },
+   {
+    "name": "airraid",
+    "description": "Air Raid (encrypted)",
+    "year": "1987",
+    "manufacturer": "Seibu Kaihatsu"
+   },
+   {
+    "name": "airwolf",
+    "description": "Airwolf",
+    "year": "1987",
+    "manufacturer": "Kyugo"
+   },
+   {
+    "name": "ajax",
+    "description": "Ajax",
+    "year": "1987",
+    "manufacturer": "Konami"
+   },
+   {
+    "name": "ajaxj",
+    "description": "Ajax (Japan)",
+    "year": "1987",
+    "manufacturer": "Konami"
+   },
+   {
+    "name": "akiss",
+    "description": "Mahjong Angel Kiss",
+    "year": "1995",
+    "manufacturer": "Jaleco"
+   },
+   {
+    "name": "akkanvdr",
+    "description": "Akkanvader (Japan)",
+    "year": "1995",
+    "manufacturer": "Taito Corporation"
+   },
+   {
+    "name": "alcon",
+    "description": "Alcon",
+    "year": "1986",
+    "manufacturer": "<unknown>"
+   },
+   {
+    "name": "alexkida",
+    "description": "Alex Kidd: The Lost Stars (set 2)",
+    "year": "1986",
+    "manufacturer": "Sega"
+   },
+   {
+    "name": "alexkidd",
+    "description": "Alex Kidd: The Lost Stars (set 1)",
+    "year": "1986",
+    "manufacturer": "Sega"
+   },
+   {
+    "name": "alibaba",
+    "description": "Ali Baba and 40 Thieves",
+    "year": "1982",
+    "manufacturer": "Sega"
+   },
+   {
+    "name": "alien3",
+    "description": "Alien3: The Gun",
+    "year": "1993",
+    "manufacturer": "Sega"
+   },
+   {
+    "name": "alieninv",
+    "description": "Alien Invasion Part II",
+    "year": "",
+    "manufacturer": "bootleg"
+   },
+   {
+    "name": "aliens",
+    "description": "Aliens (World set 1)",
+    "year": "1990",
+    "manufacturer": "Konami"
+   },
+   {
+    "name": "aliens2",
+    "description": "Aliens (World set 2)",
+    "year": "1990",
+    "manufacturer": "Konami"
+   },
+   {
+    "name": "aliensj",
+    "description": "Aliens (Japan)",
+    "year": "1990",
+    "manufacturer": "Konami"
+   }
+  ],
+  "total": 4711,
+  "offset": 0,
+  "limit": 100
+ }
+}

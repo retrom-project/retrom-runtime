@@ -1,0 +1,17 @@
+{
+ "command": "storage-layout",
+ "input": {
+  "platformId": "rpgmaker",
+  "coreId": "rpgmaker",
+  "config": {
+   "content": {
+    "kind": "RPG_MAKER_PROJECT",
+    "entryFile": "RPG_RT.ldb",
+    "engine": "RPG2000"
+   }
+  }
+ },
+ "result": {
+  "layout": "ZIP_STORE"
+ }
+}

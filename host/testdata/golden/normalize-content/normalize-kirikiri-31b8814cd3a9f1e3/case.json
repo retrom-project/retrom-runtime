@@ -1,0 +1,76 @@
+{
+ "command": "normalize-content",
+ "input": {
+  "platformId": "kirikiri",
+  "files": [
+   {
+    "logicalKey": "data.xp3",
+    "name": "data.xp3",
+    "sha256": "59274f78e0a5e83e14b4758ca4c97d94167cf109a3171d55b76cc404cf35dd17",
+    "sizeBytes": 2183
+   }
+  ],
+  "locators": {
+   "data.xp3": {
+    "path": "${CASE}/files/data.xp3",
+    "offset": 0,
+    "sizeBytes": 2183
+   }
+  },
+  "outputRoot": "${OUT}"
+ },
+ "result": {
+  "files": [
+   {
+    "logicalKey": "data.xp3",
+    "name": "data.xp3",
+    "sizeBytes": 2183,
+    "sha256": "272201692220a9cffbd4dc698914ab2583a0e871130397dff8b31414157cff1d",
+    "path": "${OUT}/data.xp3"
+   }
+  ],
+  "normalization": {
+   "kind": "CONTENT_NORMALIZATION",
+   "converterVersion": 1,
+   "sourceContentHash": "08bf0a491182ea57c5e27fa18842ebac67c98bab21f7bf5542219e6625c82dd1",
+   "archiveCount": 1,
+   "verifiedEntries": 11,
+   "metadataCorrections": 0,
+   "omittedPhysicalEntries": 0,
+   "formatCounts": {
+    "xp3-fixed-xor": 1
+   },
+   "warnings": [],
+   "details": [],
+   "plugins": [
+    {
+     "id": "kirikiri-cxfilterfs",
+     "version": 1,
+     "formats": [
+      "xp3-fixed-xor"
+     ],
+     "sources": [
+      {
+       "file": "data.xp3",
+       "sizeBytes": 2183,
+       "sha256": "59274f78e0a5e83e14b4758ca4c97d94167cf109a3171d55b76cc404cf35dd17"
+      }
+     ],
+     "outputs": [
+      {
+       "file": "data.xp3",
+       "sizeBytes": 2183,
+       "sha256": "272201692220a9cffbd4dc698914ab2583a0e871130397dff8b31414157cff1d"
+      }
+     ],
+     "validation": {
+      "outputFilesVerified": 1,
+      "resourceEntriesVerified": 11,
+      "metadataCorrections": 0,
+      "omittedPhysicalEntries": 0
+     }
+    }
+   ]
+  }
+ }
+}

@@ -1,0 +1,71 @@
+{
+ "command": "batch-identity",
+ "input": {
+  "items": [
+   {
+    "directory": {
+     "platformId": "naomi2",
+     "defaultCoreId": "flycast-naomi2",
+     "allowedCoreIds": [
+      "flycast-naomi2"
+     ]
+    },
+    "config": {
+     "content": {
+      "kind": "SINGLE_FILE",
+      "entryFile": "wldrider.zip"
+     }
+    },
+    "files": [
+     {
+      "logicalKey": "wldrider.zip",
+      "name": "wldrider.zip",
+      "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "sizeBytes": 100
+     }
+    ],
+    "fingerprints": {
+     "emulatorjs/flycast-naomi2": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+    },
+    "archives": {
+     "wldrider.zip": []
+    },
+    "flycastCatalog": [
+     {
+      "name": "wldrider",
+      "parent": null,
+      "platform": "naomi2",
+      "mediaType": "CARTRIDGE",
+      "disc": null,
+      "files": [
+       {
+        "name": "game.ic1",
+        "sizeBytes": 100,
+        "crc32": "01020304",
+        "optional": false
+       },
+       {
+        "name": "default-eeprom",
+        "sizeBytes": 128,
+        "crc32": null,
+        "optional": true
+       }
+      ]
+     }
+    ]
+   }
+  ]
+ },
+ "result": [
+  {
+   "coreId": "flycast-naomi2",
+   "providerId": "emulatorjs",
+   "targetId": "flycast-naomi2",
+   "coreFingerprint": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+   "romHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+   "readFormats": [
+    "flycast-state-v1-storage-v1"
+   ]
+  }
+ ]
+}

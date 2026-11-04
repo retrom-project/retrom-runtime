@@ -1,0 +1,76 @@
+{
+ "command": "normalize-content",
+ "input": {
+  "platformId": "kirikiri",
+  "files": [
+   {
+    "logicalKey": "resources.pack",
+    "name": "resources.pack",
+    "sha256": "c61e2012b4727fe86d647f8125f311fb3820c29e76a60c9d96362e419d9bb94c",
+    "sizeBytes": 1278
+   }
+  ],
+  "locators": {
+   "resources.pack": {
+    "path": "${CASE}/files/resources.pack",
+    "offset": 0,
+    "sizeBytes": 1278
+   }
+  },
+  "outputRoot": "${OUT}"
+ },
+ "result": {
+  "files": [
+   {
+    "logicalKey": "resources.pack",
+    "name": "resources.pack",
+    "sizeBytes": 1278,
+    "sha256": "7160e6b881ebebd1008b5b5d01ed888f0881b03f4c58656b03f171d7500f793a",
+    "path": "${OUT}/resources.pack"
+   }
+  ],
+  "normalization": {
+   "kind": "CONTENT_NORMALIZATION",
+   "converterVersion": 1,
+   "sourceContentHash": "f2f62304d1c5a823621cca8836923f651a916a47a0f6f378de5d5a6e5f7cfdcb",
+   "archiveCount": 1,
+   "verifiedEntries": 4,
+   "metadataCorrections": 0,
+   "omittedPhysicalEntries": 0,
+   "formatCounts": {
+    "xp3-fixed-xor": 1
+   },
+   "warnings": [],
+   "details": [],
+   "plugins": [
+    {
+     "id": "kirikiri-cxfilterfs",
+     "version": 1,
+     "formats": [
+      "xp3-fixed-xor"
+     ],
+     "sources": [
+      {
+       "file": "resources.pack",
+       "sizeBytes": 1278,
+       "sha256": "c61e2012b4727fe86d647f8125f311fb3820c29e76a60c9d96362e419d9bb94c"
+      }
+     ],
+     "outputs": [
+      {
+       "file": "resources.pack",
+       "sizeBytes": 1278,
+       "sha256": "7160e6b881ebebd1008b5b5d01ed888f0881b03f4c58656b03f171d7500f793a"
+      }
+     ],
+     "validation": {
+      "outputFilesVerified": 1,
+      "resourceEntriesVerified": 4,
+      "metadataCorrections": 0,
+      "omittedPhysicalEntries": 0
+     }
+    }
+   ]
+  }
+ }
+}

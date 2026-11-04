@@ -1,0 +1,101 @@
+{
+ "command": "prepare",
+ "input": {
+  "directory": {
+   "platformId": "rpgmaker",
+   "defaultCoreId": "rpgmaker",
+   "allowedCoreIds": [
+    "rpgmaker"
+   ]
+  },
+  "fingerprints": {
+   "retrom-runtime/rpgmaker-xp": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+   "retrom-runtime/rpgmaker-vx": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+   "retrom-runtime/rpgmaker-vx-ace": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+   "retrom-runtime/rpgmaker-mv": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+   "retrom-runtime/rpgmaker-2000": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+  },
+  "config": {
+   "content": {
+    "kind": "RPG_MAKER_PROJECT",
+    "entryFile": "index.html",
+    "engine": "RPGMV"
+   }
+  },
+  "files": [
+   {
+    "logicalKey": "index.html",
+    "name": "index.html",
+    "sizeBytes": 128,
+    "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+   },
+   {
+    "logicalKey": "js/rpg_core.js",
+    "name": "rpg_core.js",
+    "sizeBytes": 128,
+    "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+   }
+  ]
+ },
+ "result": {
+  "coreId": "rpgmaker",
+  "providerId": "retrom-runtime",
+  "targetId": "rpgmaker-mv",
+  "coreFingerprint": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+  "romHash": "3d7ef0126b59ae3e261f6c7e28657b0097706c96e04e1fbbed9450dd8d7e0220",
+  "config": {
+   "content": {
+    "kind": "RPG_MAKER_PROJECT",
+    "entryFile": "index.html",
+    "engine": "RPGMV"
+   }
+  },
+  "targetOptions": {},
+  "dependencies": {
+   "parentFiles": [],
+   "missingParents": [],
+   "biosSets": []
+  },
+  "crcWarnings": [],
+  "biosRequirements": [],
+  "checkpoint": {
+   "maxBytes": 67108864,
+   "readFormats": [
+    "native-save-bundle-v1-storage-v1"
+   ],
+   "writeFormat": "native-save-bundle-v1-storage-v1",
+   "semantics": "INSTANT"
+  },
+  "capabilities": {
+   "contentLoading": "ON_DEMAND_AND_PRELOAD",
+   "checkpoint": true,
+   "frameCounter": true,
+   "frameMode": "ISOLATED_ORIGIN_RESOURCE",
+   "inputFilter": true,
+   "nativeSettings": false,
+   "pause": true,
+   "requiresThreads": false,
+   "screenshot": true,
+   "standardGamepad": true,
+   "videoModes": [
+    "original",
+    "pixel",
+    "smooth"
+   ],
+   "volume": true
+  },
+  "resources": [
+   {
+    "role": "game",
+    "kind": "NATIVE_WEB",
+    "ordinal": 0,
+    "files": [
+     "index.html",
+     "js/rpg_core.js"
+    ],
+    "entryFile": "index.html",
+    "bridgeAssetPath": "assets/native/bridge.js"
+   }
+  ]
+ }
+}

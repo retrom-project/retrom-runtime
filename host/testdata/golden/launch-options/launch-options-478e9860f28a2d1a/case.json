@@ -1,0 +1,30 @@
+{
+ "command": "launch-options",
+ "input": {
+  "platformId": "kirikiri",
+  "config": {
+   "content": {
+    "kind": "KIRIKIRI_PROJECT",
+    "entryFile": "data.xp3"
+   }
+  },
+  "files": [
+   {
+    "logicalKey": "data.xp3",
+    "name": "data.xp3",
+    "sizeBytes": 4,
+    "sha256": "6ca5cab77e702c787b4c14b3d3bf26bad43da606be6eed04ab0b9720120ae081"
+   },
+   {
+    "logicalKey": "translation.dll",
+    "name": "translation.dll",
+    "sizeBytes": 6,
+    "sha256": "120970d812836f19888625587a4606a5ad23cef31c8684e601771552548fc6b9"
+   }
+  ]
+ },
+ "result": {
+  "items": [],
+  "selectedId": ""
+ }
+}

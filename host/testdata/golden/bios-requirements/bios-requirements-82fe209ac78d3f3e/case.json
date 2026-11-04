@@ -1,0 +1,22 @@
+{
+ "command": "bios-requirements",
+ "input": {
+  "providerId": "retrom-runtime",
+  "targetId": "tyranoscript",
+  "config": {
+   "content": {
+    "kind": "TYRANOSCRIPT_PROJECT",
+    "entryFile": "index.html"
+   }
+  },
+  "files": [
+   {
+    "logicalKey": "index.html",
+    "name": "index.html",
+    "sizeBytes": 128,
+    "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+   }
+  ]
+ },
+ "result": []
+}

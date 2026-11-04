@@ -1,0 +1,36 @@
+{
+ "command": "bios-verify",
+ "input": {
+  "path": "${CASE}/files/p0",
+  "requirement": {
+   "requirementKey": "test/bios.zip",
+   "coreId": "test",
+   "logicalName": "bios.zip",
+   "providerId": "test",
+   "targetId": "test",
+   "required": true,
+   "condition": "ARCADE_BIOS",
+   "delivery": "EXTERNAL_FILE",
+   "virtualPath": "bios.zip",
+   "activationOptions": {},
+   "sizeBytes": null,
+   "sha256": null,
+   "md5": null,
+   "members": [
+    {
+     "name": "firmware.bin",
+     "sizeBytes": 3,
+     "crc32": "55bc801d",
+     "sha1": "",
+     "required": true
+    }
+   ]
+  }
+ },
+ "result": {
+  "status": "valid",
+  "matchedMembers": 1,
+  "expectedMembers": 1,
+  "missingMembers": []
+ }
+}

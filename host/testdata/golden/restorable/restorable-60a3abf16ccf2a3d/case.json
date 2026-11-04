@@ -1,0 +1,38 @@
+{
+ "command": "restorable",
+ "input": {
+  "gameAvailable": true,
+  "saveAvailable": true,
+  "context": {
+   "coreId": "mame_arcade",
+   "providerId": "retrom-runtime",
+   "targetId": "mame-arcade",
+   "coreFingerprint": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+   "romHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+   "checkpointFormat": "mame-state-v1-storage-v1",
+   "content": {
+    "kind": "ARCADE",
+    "entryFile": "pacman.zip"
+   },
+   "runtimeOptions": {
+    "machine": "pacman"
+   },
+   "romSet": "pacman"
+  },
+  "current": {
+   "coreId": "mame_arcade",
+   "providerId": "retrom-runtime",
+   "targetId": "mame-arcade",
+   "coreFingerprint": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+   "romHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+  },
+  "readFormats": [
+   "mame-state-v1-storage-v1"
+  ]
+ },
+ "result": {
+  "restorable": true,
+  "reason": null,
+  "warning": null
+ }
+}

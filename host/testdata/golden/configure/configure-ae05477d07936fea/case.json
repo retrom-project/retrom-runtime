@@ -1,0 +1,30 @@
+{
+ "command": "configure",
+ "input": {
+  "platformId": "rpgmaker",
+  "coreIds": [
+   "rpgmaker"
+  ],
+  "files": [
+   {
+    "logicalKey": "Game.ini",
+    "name": "Game.ini",
+    "sizeBytes": 128,
+    "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+   }
+  ],
+  "evidence": {
+   "Game.ini": {
+    "text": "[Game]\r\nScripts=Data\\Scripts.rxdata\r\nRTP1=Standard\r\nRTP2=\r\nRTP3=\r\n"
+   }
+  }
+ },
+ "result": {
+  "content": {
+   "kind": "RPG_MAKER_PROJECT",
+   "entryFile": "Game.ini",
+   "engine": "RPGXP",
+   "rtp": "Standard"
+  }
+ }
+}

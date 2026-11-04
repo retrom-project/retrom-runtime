@@ -1,0 +1,76 @@
+{
+ "command": "normalize-content",
+ "input": {
+  "platformId": "tyranoscript",
+  "files": [
+   {
+    "logicalKey": "Desktop/resources/app.asar",
+    "name": "Desktop/resources/app.asar",
+    "sha256": "41cfdfd1a637a424b540aed3bb3f34ba2f34db223a1b0fc63e3361146c368bff",
+    "sizeBytes": 85
+   }
+  ],
+  "locators": {
+   "Desktop/resources/app.asar": {
+    "path": "${CASE}/files/Desktop/resources/app.asar",
+    "offset": 0,
+    "sizeBytes": 85
+   }
+  },
+  "outputRoot": "${OUT}"
+ },
+ "result": {
+  "files": [
+   {
+    "logicalKey": "index.html",
+    "name": "index.html",
+    "sizeBytes": 17,
+    "sha256": "bc7c8fc96a25bf6ff242fc73cce18291deac4505886b017220a151d0d8192d36",
+    "path": "${OUT}/index.html"
+   }
+  ],
+  "normalization": {
+   "kind": "CONTENT_NORMALIZATION",
+   "converterVersion": 1,
+   "sourceContentHash": "58a9e6e2ece22ee32053dd6b41bee68dca24887eb504ca5610dccdae7557328a",
+   "archiveCount": 1,
+   "verifiedEntries": 1,
+   "metadataCorrections": 0,
+   "omittedPhysicalEntries": 0,
+   "formatCounts": {
+    "electron-asar": 1
+   },
+   "warnings": [],
+   "details": [],
+   "plugins": [
+    {
+     "id": "electron-asar",
+     "version": 1,
+     "formats": [
+      "electron-asar"
+     ],
+     "sources": [
+      {
+       "file": "Desktop/resources/app.asar",
+       "sizeBytes": 85,
+       "sha256": "41cfdfd1a637a424b540aed3bb3f34ba2f34db223a1b0fc63e3361146c368bff"
+      }
+     ],
+     "outputs": [
+      {
+       "file": "index.html",
+       "sizeBytes": 17,
+       "sha256": "bc7c8fc96a25bf6ff242fc73cce18291deac4505886b017220a151d0d8192d36"
+      }
+     ],
+     "validation": {
+      "outputFilesVerified": 1,
+      "resourceEntriesVerified": 1,
+      "metadataCorrections": 0,
+      "omittedPhysicalEntries": 0
+     }
+    }
+   ]
+  }
+ }
+}

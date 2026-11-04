@@ -1,0 +1,44 @@
+{
+ "command": "batch-restorable",
+ "input": {
+  "items": [
+   {
+    "gameAvailable": true,
+    "saveAvailable": true,
+    "context": {
+     "coreId": "mame2003_plus",
+     "providerId": "emulatorjs",
+     "targetId": "mame2003-plus",
+     "coreFingerprint": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+     "romHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+     "checkpointFormat": "emulatorjs-state-v1-storage-v1",
+     "content": {
+      "kind": "ARCADE",
+      "entryFile": "original.zip"
+     },
+     "runtimeOptions": {
+      "dosEntryPath": null
+     },
+     "romSet": "chosen"
+    },
+    "current": {
+     "coreId": "mame2003_plus",
+     "providerId": "emulatorjs",
+     "targetId": "mame2003-plus",
+     "coreFingerprint": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+     "romHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+    },
+    "readFormats": [
+     "emulatorjs-state-v1-storage-v1"
+    ]
+   }
+  ]
+ },
+ "result": [
+  {
+   "restorable": true,
+   "reason": null,
+   "warning": null
+  }
+ ]
+}

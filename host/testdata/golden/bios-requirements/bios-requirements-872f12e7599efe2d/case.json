@@ -1,0 +1,41 @@
+{
+ "command": "bios-requirements",
+ "input": {
+  "providerId": "emulatorjs",
+  "targetId": "supermodel",
+  "config": {
+   "content": {
+    "kind": "SINGLE_FILE",
+    "entryFile": "stored/game.zip"
+   },
+   "cores": {
+    "supermodel": {
+     "parentFiles": [
+      "stored/base.zip"
+     ]
+    }
+   }
+  },
+  "files": [
+   {
+    "logicalKey": "stored/game.zip",
+    "name": "game.zip",
+    "sizeBytes": 100,
+    "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+   },
+   {
+    "logicalKey": "stored/base.zip",
+    "name": "base.zip",
+    "sizeBytes": 100,
+    "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+   },
+   {
+    "logicalKey": "stored/unused.zip",
+    "name": "unused.zip",
+    "sizeBytes": 100,
+    "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+   }
+  ]
+ },
+ "result": []
+}

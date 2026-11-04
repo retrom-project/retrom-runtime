@@ -1,0 +1,23 @@
+{
+ "command": "configure",
+ "input": {
+  "platformId": "model3",
+  "coreIds": [
+   "supermodel"
+  ],
+  "files": [
+   {
+    "logicalKey": "CARTRIDGE.ZIP",
+    "name": "CARTRIDGE.ZIP",
+    "sizeBytes": 1024,
+    "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+   }
+  ]
+ },
+ "result": {
+  "content": {
+   "kind": "SINGLE_FILE",
+   "entryFile": "CARTRIDGE.ZIP"
+  }
+ }
+}

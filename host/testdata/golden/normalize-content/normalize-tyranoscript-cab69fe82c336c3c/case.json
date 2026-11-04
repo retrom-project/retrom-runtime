@@ -1,0 +1,25 @@
+{
+ "command": "normalize-content",
+ "input": {
+  "platformId": "tyranoscript",
+  "files": [
+   {
+    "logicalKey": "resources/app.asar",
+    "name": "resources/app.asar",
+    "sha256": "3d136b8bb136999f30dded9f0098ab5f8186001eeb47202ddb4d8bca0c06c448",
+    "sizeBytes": 69
+   }
+  ],
+  "locators": {
+   "resources/app.asar": {
+    "path": "${CASE}/files/resources/app.asar",
+    "offset": 0,
+    "sizeBytes": 69
+   }
+  },
+  "outputRoot": "${OUT}"
+ },
+ "error": {
+  "code": "RUNTIME_ASAR_INVALID"
+ }
+}

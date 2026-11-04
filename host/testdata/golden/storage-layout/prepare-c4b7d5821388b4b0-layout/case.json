@@ -1,0 +1,17 @@
+{
+ "command": "storage-layout",
+ "input": {
+  "platformId": "dos",
+  "coreId": "dosbox_pure",
+  "config": {
+   "content": {
+    "kind": "DOS_BUNDLE",
+    "entryFile": "renamed.zip",
+    "entryPath": "B.EXE"
+   }
+  }
+ },
+ "result": {
+  "layout": "FILES"
+ }
+}

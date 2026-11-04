@@ -1,0 +1,84 @@
+{
+ "command": "batch-identity",
+ "input": {
+  "items": [
+   {
+    "directory": {
+     "platformId": "arcade",
+     "defaultCoreId": "fbneo",
+     "allowedCoreIds": [
+      "fbneo"
+     ]
+    },
+    "config": {
+     "content": {
+      "kind": "ARCADE",
+      "entryFile": "clone.zip"
+     },
+     "cores": {
+      "fbneo": {
+       "parentFiles": [
+        "base.zip"
+       ]
+      }
+     }
+    },
+    "files": [
+     {
+      "logicalKey": "clone.zip",
+      "name": "clone.zip",
+      "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "sizeBytes": 1
+     }
+    ],
+    "archives": {
+     "clone.zip": []
+    },
+    "arcadeCatalog": {
+     "clone": {
+      "parent": "base",
+      "bios": false,
+      "roms": [
+       {
+        "name": "game.bin",
+        "size": "1",
+        "crc": "12345678",
+        "merge": "game.bin"
+       }
+      ]
+     },
+     "base": {
+      "parent": "firmware",
+      "bios": false,
+      "roms": [
+       {
+        "name": "game.bin",
+        "size": "1",
+        "crc": "12345678"
+       }
+      ]
+     },
+     "firmware": {
+      "parent": null,
+      "bios": true,
+      "roms": [
+       {
+        "name": "bios.bin",
+        "size": "2",
+        "crc": "87654321"
+       }
+      ]
+     }
+    },
+    "fingerprints": {
+     "emulatorjs/fbneo": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+    }
+   }
+  ]
+ },
+ "result": [
+  {
+   "error": "RUNTIME_PARENT_MISSING"
+  }
+ ]
+}

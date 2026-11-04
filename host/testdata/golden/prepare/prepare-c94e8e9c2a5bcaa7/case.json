@@ -1,0 +1,55 @@
+{
+ "command": "prepare",
+ "input": {
+  "directory": {
+   "platformId": "thomson",
+   "defaultCoreId": "theodore",
+   "allowedCoreIds": [
+    "theodore"
+   ]
+  },
+  "files": [
+   {
+    "logicalKey": "renamed.sap",
+    "name": "renamed.sap",
+    "sizeBytes": 128,
+    "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+   }
+  ],
+  "fingerprints": {
+   "emulatorjs/theodore": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+  },
+  "config": {
+   "content": {
+    "kind": "SINGLE_FILE",
+    "entryFile": "renamed.sap"
+   },
+   "cores": {
+    "theodore": {
+     "options": {
+      "thomsonModel": "TO8"
+     }
+    }
+   }
+  },
+  "savedContext": {
+   "coreId": "theodore",
+   "providerId": "emulatorjs",
+   "targetId": "theodore",
+   "coreFingerprint": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+   "romHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+   "checkpointFormat": "emulatorjs-state-v1-storage-v1",
+   "content": {
+    "kind": "SINGLE_FILE",
+    "entryFile": "original.sap"
+   },
+   "runtimeOptions": {
+    "dosEntryPath": null,
+    "thomsonModel": "BOGUS"
+   }
+  }
+ },
+ "error": {
+  "code": "RUNTIME_SAVED_CONTEXT_INVALID"
+ }
+}

@@ -1,0 +1,56 @@
+{
+ "command": "batch-identity",
+ "input": {
+  "items": [
+   {
+    "directory": {
+     "platformId": "rpgmaker",
+     "defaultCoreId": "rpgmaker",
+     "allowedCoreIds": [
+      "rpgmaker"
+     ]
+    },
+    "fingerprints": {
+     "retrom-runtime/rpgmaker-xp": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+     "retrom-runtime/rpgmaker-vx": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+     "retrom-runtime/rpgmaker-vx-ace": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+     "retrom-runtime/rpgmaker-mv": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+     "retrom-runtime/rpgmaker-2000": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+    },
+    "config": {
+     "content": {
+      "kind": "RPG_MAKER_PROJECT",
+      "entryFile": "index.html",
+      "engine": "RPGMV"
+     }
+    },
+    "files": [
+     {
+      "logicalKey": "index.html",
+      "name": "index.html",
+      "sizeBytes": 128,
+      "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+     },
+     {
+      "logicalKey": "js/rpg_core.js",
+      "name": "rpg_core.js",
+      "sizeBytes": 128,
+      "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+     }
+    ]
+   }
+  ]
+ },
+ "result": [
+  {
+   "coreId": "rpgmaker",
+   "providerId": "retrom-runtime",
+   "targetId": "rpgmaker-mv",
+   "coreFingerprint": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+   "romHash": "3d7ef0126b59ae3e261f6c7e28657b0097706c96e04e1fbbed9450dd8d7e0220",
+   "readFormats": [
+    "native-save-bundle-v1-storage-v1"
+   ]
+  }
+ ]
+}

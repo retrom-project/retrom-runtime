@@ -1,0 +1,29 @@
+{
+ "command": "storage-layout",
+ "input": {
+  "platformId": "scummvm",
+  "coreId": "scummvm",
+  "config": {
+   "content": {
+    "kind": "SCUMMVM_PROJECT"
+   },
+   "cores": {
+    "scummvm": {
+     "options": {
+      "engineId": "sky",
+      "gameId": "wrong",
+      "root": "",
+      "language": "en",
+      "platform": "pc",
+      "extra": "",
+      "guiOptions": "",
+      "filename": null
+     }
+    }
+   }
+  }
+ },
+ "result": {
+  "layout": "ZIP_STORE"
+ }
+}

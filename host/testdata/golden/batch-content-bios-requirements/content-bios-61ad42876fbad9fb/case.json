@@ -1,0 +1,281 @@
+{
+ "command": "batch-content-bios-requirements",
+ "input": {
+  "items": [
+   {
+    "root": "${CASE}/files/p0",
+    "files": [
+     {
+      "logicalKey": "mslug3h.zip",
+      "name": "mslug3h.zip",
+      "sha256": "8739c76e681f900923b900c9df0ef75cf421d39cabb54650c4b9ad19b6a76d85",
+      "sizeBytes": 22
+     }
+    ],
+    "locators": {
+     "mslug3h.zip": {
+      "path": "${CASE}/files/p1",
+      "offset": 0,
+      "sizeBytes": 22
+     }
+    },
+    "directory": {
+     "platformId": "arcade",
+     "defaultCoreId": "fbneo",
+     "allowedCoreIds": [
+      "fbneo"
+     ]
+    },
+    "config": {
+     "content": {
+      "kind": "ARCADE",
+      "entryFile": "mslug3h.zip"
+     }
+    },
+    "biosFiles": [
+     {
+      "filename": "neogeo.zip",
+      "path": "${CASE}/files/p2",
+      "requirementKey": "emulatorjs/fbneo/neogeo.zip"
+     }
+    ]
+   }
+  ]
+ },
+ "result": [
+  {
+   "biosRequirements": [
+    {
+     "requirementKey": "emulatorjs/fbneo/neogeo.zip",
+     "coreId": "fbneo",
+     "providerId": "emulatorjs",
+     "targetId": "fbneo",
+     "logicalName": "neogeo.zip",
+     "required": true,
+     "condition": "ARCADE_BIOS",
+     "sizeBytes": null,
+     "md5": null,
+     "sha256": null,
+     "delivery": "EXTERNAL_FILE",
+     "virtualPath": "neogeo.zip",
+     "activationOptions": {},
+     "members": [
+      {
+       "name": "sp-s3.sp1",
+       "sizeBytes": 131072,
+       "crc32": "91b64be3",
+       "sha1": "",
+       "required": true
+      },
+      {
+       "name": "sm1.sm1",
+       "sizeBytes": 131072,
+       "crc32": "94416d67",
+       "sha1": "",
+       "required": true
+      },
+      {
+       "name": "sfix.sfix",
+       "sizeBytes": 131072,
+       "crc32": "c2ea0cfd",
+       "sha1": "",
+       "required": true
+      },
+      {
+       "name": "000-lo.lo",
+       "sizeBytes": 131072,
+       "crc32": "5a86cff2",
+       "sha1": "",
+       "required": true
+      }
+     ]
+    }
+   ],
+   "crcWarnings": [
+    {
+     "role": "BIOS",
+     "file": "neogeo.zip",
+     "member": "sp-s3.sp1",
+     "expectedCRC32": "91b64be3",
+     "actualCRC32": "7ee8cdcd"
+    },
+    {
+     "role": "BIOS",
+     "file": "neogeo.zip",
+     "member": "sm1.sm1",
+     "expectedCRC32": "94416d67",
+     "actualCRC32": "7ee8cdcd"
+    },
+    {
+     "role": "BIOS",
+     "file": "neogeo.zip",
+     "member": "sfix.sfix",
+     "expectedCRC32": "c2ea0cfd",
+     "actualCRC32": "7ee8cdcd"
+    },
+    {
+     "role": "BIOS",
+     "file": "neogeo.zip",
+     "member": "000-lo.lo",
+     "expectedCRC32": "5a86cff2",
+     "actualCRC32": "7ee8cdcd"
+    }
+   ],
+   "missingRomMembers": [
+    {
+     "coreId": "fbneo",
+     "romSet": "mslug3h",
+     "role": "ROM",
+     "member": "256-ph1.p1",
+     "sizeBytes": 1048576,
+     "reason": "MISSING"
+    },
+    {
+     "coreId": "fbneo",
+     "romSet": "mslug3h",
+     "role": "ROM",
+     "member": "256-ph2.sp2",
+     "sizeBytes": 4194304,
+     "reason": "MISSING"
+    },
+    {
+     "coreId": "fbneo",
+     "romSet": "mslug3h",
+     "role": "PARENT",
+     "member": "256-c1.c1",
+     "sizeBytes": 8388608,
+     "reason": "MISSING"
+    },
+    {
+     "coreId": "fbneo",
+     "romSet": "mslug3h",
+     "role": "PARENT",
+     "member": "256-c2.c2",
+     "sizeBytes": 8388608,
+     "reason": "MISSING"
+    },
+    {
+     "coreId": "fbneo",
+     "romSet": "mslug3h",
+     "role": "PARENT",
+     "member": "256-c3.c3",
+     "sizeBytes": 8388608,
+     "reason": "MISSING"
+    },
+    {
+     "coreId": "fbneo",
+     "romSet": "mslug3h",
+     "role": "PARENT",
+     "member": "256-c4.c4",
+     "sizeBytes": 8388608,
+     "reason": "MISSING"
+    },
+    {
+     "coreId": "fbneo",
+     "romSet": "mslug3h",
+     "role": "PARENT",
+     "member": "256-c5.c5",
+     "sizeBytes": 8388608,
+     "reason": "MISSING"
+    },
+    {
+     "coreId": "fbneo",
+     "romSet": "mslug3h",
+     "role": "PARENT",
+     "member": "256-c6.c6",
+     "sizeBytes": 8388608,
+     "reason": "MISSING"
+    },
+    {
+     "coreId": "fbneo",
+     "romSet": "mslug3h",
+     "role": "PARENT",
+     "member": "256-c7.c7",
+     "sizeBytes": 8388608,
+     "reason": "MISSING"
+    },
+    {
+     "coreId": "fbneo",
+     "romSet": "mslug3h",
+     "role": "PARENT",
+     "member": "256-c8.c8",
+     "sizeBytes": 8388608,
+     "reason": "MISSING"
+    },
+    {
+     "coreId": "fbneo",
+     "romSet": "mslug3h",
+     "role": "PARENT",
+     "member": "256-m1.m1",
+     "sizeBytes": 524288,
+     "reason": "MISSING"
+    },
+    {
+     "coreId": "fbneo",
+     "romSet": "mslug3h",
+     "role": "PARENT",
+     "member": "256-v1.v1",
+     "sizeBytes": 4194304,
+     "reason": "MISSING"
+    },
+    {
+     "coreId": "fbneo",
+     "romSet": "mslug3h",
+     "role": "PARENT",
+     "member": "256-v2.v2",
+     "sizeBytes": 4194304,
+     "reason": "MISSING"
+    },
+    {
+     "coreId": "fbneo",
+     "romSet": "mslug3h",
+     "role": "PARENT",
+     "member": "256-v3.v3",
+     "sizeBytes": 4194304,
+     "reason": "MISSING"
+    },
+    {
+     "coreId": "fbneo",
+     "romSet": "mslug3h",
+     "role": "PARENT",
+     "member": "256-v4.v4",
+     "sizeBytes": 4194304,
+     "reason": "MISSING"
+    },
+    {
+     "coreId": "fbneo",
+     "romSet": "neogeo",
+     "role": "BIOS",
+     "member": "sp-s3.sp1",
+     "sizeBytes": 131072,
+     "reason": "MISSING"
+    },
+    {
+     "coreId": "fbneo",
+     "romSet": "neogeo",
+     "role": "BIOS",
+     "member": "sm1.sm1",
+     "sizeBytes": 131072,
+     "reason": "MISSING"
+    },
+    {
+     "coreId": "fbneo",
+     "romSet": "neogeo",
+     "role": "BIOS",
+     "member": "sfix.sfix",
+     "sizeBytes": 131072,
+     "reason": "MISSING"
+    },
+    {
+     "coreId": "fbneo",
+     "romSet": "neogeo",
+     "role": "BIOS",
+     "member": "000-lo.lo",
+     "sizeBytes": 131072,
+     "reason": "MISSING"
+    }
+   ],
+   "error": null
+  }
+ ]
+}

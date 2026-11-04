@@ -1,0 +1,49 @@
+{
+ "command": "batch-restorable",
+ "input": {
+  "items": [
+   {
+    "gameAvailable": true,
+    "saveAvailable": true,
+    "context": {
+     "coreId": "scummvm",
+     "providerId": "retrom-runtime",
+     "targetId": "scummvm",
+     "coreFingerprint": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+     "romHash": "4fefc8bea3fe77004b2ec5b86cc64e5830a8762cbdbc338d459c36f4652b17e1",
+     "checkpointFormat": "scummvm-save-bundle-v1-storage-v1",
+     "content": {
+      "kind": "SCUMMVM_PROJECT"
+     },
+     "runtimeOptions": {
+      "engineId": "sky",
+      "gameId": "sky",
+      "root": "",
+      "language": "en",
+      "platform": "pc",
+      "extra": "",
+      "guiOptions": "",
+      "filename": null
+     }
+    },
+    "current": {
+     "coreId": "scummvm",
+     "providerId": "retrom-runtime",
+     "targetId": "scummvm",
+     "coreFingerprint": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+     "romHash": "4fefc8bea3fe77004b2ec5b86cc64e5830a8762cbdbc338d459c36f4652b17e1"
+    },
+    "readFormats": [
+     "scummvm-save-bundle-v1-storage-v1"
+    ]
+   }
+  ]
+ },
+ "result": [
+  {
+   "restorable": true,
+   "reason": null,
+   "warning": null
+  }
+ ]
+}

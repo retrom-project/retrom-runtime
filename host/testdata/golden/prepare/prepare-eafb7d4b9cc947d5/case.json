@@ -1,0 +1,109 @@
+{
+ "command": "prepare",
+ "input": {
+  "directory": {
+   "platformId": "psp",
+   "defaultCoreId": "ppsspp",
+   "allowedCoreIds": [
+    "ppsspp"
+   ]
+  },
+  "config": {
+   "content": {
+    "kind": "SINGLE_FILE",
+    "entryFile": "project/launch.pbp"
+   }
+  },
+  "files": [
+   {
+    "name": "project/launch.pbp",
+    "logicalKey": "project/launch.pbp",
+    "sizeBytes": 128,
+    "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+   },
+   {
+    "name": "project/script.bin",
+    "logicalKey": "project/script.bin",
+    "sizeBytes": 128,
+    "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+   },
+   {
+    "name": "project/music/theme.ogg",
+    "logicalKey": "project/music/theme.ogg",
+    "sizeBytes": 128,
+    "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+   }
+  ],
+  "fingerprints": {
+   "retrom-runtime/ppsspp": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+  }
+ },
+ "result": {
+  "coreId": "ppsspp",
+  "providerId": "retrom-runtime",
+  "targetId": "ppsspp",
+  "coreFingerprint": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+  "romHash": "414aca23e9766d3ada7366a4de48c4305e7e07f5e339d8304b6236065a8e0aea",
+  "config": {
+   "content": {
+    "kind": "SINGLE_FILE",
+    "entryFile": "project/launch.pbp"
+   }
+  },
+  "targetOptions": {
+   "projectEntryPath": "launch.pbp"
+  },
+  "dependencies": {
+   "parentFiles": [],
+   "missingParents": [],
+   "biosSets": []
+  },
+  "crcWarnings": [],
+  "biosRequirements": [],
+  "checkpoint": {
+   "maxBytes": 268435456,
+   "readFormats": [
+    "ppsspp-game-save-v1-storage-v1"
+   ],
+   "writeFormat": "ppsspp-game-save-v1-storage-v1",
+   "semantics": "GAME_SAVE"
+  },
+  "capabilities": {
+   "contentLoading": "ON_DEMAND_AND_PRELOAD",
+   "checkpoint": true,
+   "frameCounter": true,
+   "frameMode": "SAME_ORIGIN_BLANK",
+   "inputFilter": true,
+   "nativeSettings": false,
+   "pause": true,
+   "requiresThreads": true,
+   "screenshot": true,
+   "standardGamepad": true,
+   "videoModes": [
+    "original",
+    "pixel",
+    "smooth"
+   ],
+   "volume": true
+  },
+  "resources": [
+   {
+    "role": "game",
+    "kind": "SEEKABLE_BLOB",
+    "ordinal": 0,
+    "files": [
+     "project/launch.pbp",
+     "project/script.bin",
+     "project/music/theme.ogg"
+    ],
+    "entryFile": "launch.pbp",
+    "paths": {
+     "project/launch.pbp": "launch.pbp",
+     "project/script.bin": "script.bin",
+     "project/music/theme.ogg": "music/theme.ogg"
+    },
+    "encoding": "ZIP"
+   }
+  ]
+ }
+}

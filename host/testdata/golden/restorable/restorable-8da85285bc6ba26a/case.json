@@ -1,0 +1,37 @@
+{
+ "command": "restorable",
+ "input": {
+  "gameAvailable": true,
+  "saveAvailable": true,
+  "current": {
+   "coreId": "yabause",
+   "providerId": "emulatorjs",
+   "targetId": "yabause",
+   "coreFingerprint": "81b69af0fb72450aff2bfbe5754d60519b835cdc496fecd986a1866b84c04284",
+   "romHash": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd"
+  },
+  "context": {
+   "coreId": "yabause",
+   "providerId": "emulatorjs",
+   "targetId": "yabause",
+   "coreFingerprint": "81b69af0fb72450aff2bfbe5754d60519b835cdc496fecd986a1866b84c04284",
+   "romHash": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+   "checkpointFormat": "emulatorjs-state-v1-storage-v1",
+   "content": {
+    "kind": "SINGLE_FILE",
+    "entryFile": "game.chd"
+   },
+   "runtimeOptions": {
+    "dosEntryPath": null
+   }
+  },
+  "readFormats": [
+   "emulatorjs-state-v1-storage-v1"
+  ]
+ },
+ "result": {
+  "restorable": true,
+  "reason": null,
+  "warning": null
+ }
+}

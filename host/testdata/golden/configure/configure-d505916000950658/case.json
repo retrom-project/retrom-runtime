@@ -1,0 +1,31 @@
+{
+ "command": "configure",
+ "input": {
+  "platformId": "dos",
+  "coreIds": [
+   "dosbox_pure"
+  ],
+  "files": [
+   {
+    "logicalKey": "game.zip",
+    "name": "game.zip",
+    "sizeBytes": 128,
+    "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+   }
+  ],
+  "archiveMembers": {
+   "game.zip": [
+    "nested/START.BAT",
+    "nested/START.BAT",
+    "readme.txt"
+   ]
+  }
+ },
+ "result": {
+  "content": {
+   "kind": "DOS_BUNDLE",
+   "entryFile": "game.zip",
+   "entryPath": "nested/START.BAT"
+  }
+ }
+}

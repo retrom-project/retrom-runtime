@@ -1,0 +1,124 @@
+{
+ "command": "normalize-content",
+ "input": {
+  "platformId": "kirikiri",
+  "files": [
+   {
+    "logicalKey": "data.xp3",
+    "name": "data.xp3",
+    "sha256": "612550937c9fb7d208608e656181a3033c8a3977eb3823400e97255e31cc7cf2",
+    "sizeBytes": 1143
+   }
+  ],
+  "locators": {
+   "data.xp3": {
+    "path": "${CASE}/files/data.xp3",
+    "offset": 0,
+    "sizeBytes": 1143
+   }
+  },
+  "outputRoot": "${OUT}"
+ },
+ "result": {
+  "files": [
+   {
+    "logicalKey": "data.xp3",
+    "name": "data.xp3",
+    "sizeBytes": 1143,
+    "sha256": "4912714863afc3ceb942c73af9efd2a255858be622fcac897cc06658656848c8",
+    "path": "${OUT}/data.xp3"
+   }
+  ],
+  "normalization": {
+   "kind": "CONTENT_NORMALIZATION",
+   "converterVersion": 1,
+   "sourceContentHash": "b065407ecccdde10b83956454c6ccd5e1083607c3faabb5d123666eeb3af96b6",
+   "archiveCount": 1,
+   "verifiedEntries": 0,
+   "metadataCorrections": 3,
+   "omittedPhysicalEntries": 0,
+   "formatCounts": {
+    "xp3-native": 1
+   },
+   "warnings": [
+    {
+     "code": "SOURCE_METADATA_CORRECTED",
+     "count": 3
+    }
+   ],
+   "details": [
+    {
+     "code": "INFO_CHUNK_SIZE",
+     "file": "data.xp3",
+     "member": "startup.tjs",
+     "sourceSha256": "77363b658657e4ab9f287e6da7b6f0fc0a1794876bcbb513a94b5bb974eddb68",
+     "outputSha256": "77363b658657e4ab9f287e6da7b6f0fc0a1794876bcbb513a94b5bb974eddb68",
+     "sourceSize": 251,
+     "outputSize": 251,
+     "seed": 359444548,
+     "sourceChecksum": 359444548,
+     "outputChecksum": 359444548,
+     "sourceInfoChunkSize": 88,
+     "outputInfoChunkSize": 44
+    },
+    {
+     "code": "INFO_CHUNK_SIZE",
+     "file": "data.xp3",
+     "member": "目录/ÄA.TXT",
+     "sourceSha256": "f746a9be89eaa57b8c4441564a6309ee4e9ed5dc22e7e0998773a19acc5f3cee",
+     "outputSha256": "f746a9be89eaa57b8c4441564a6309ee4e9ed5dc22e7e0998773a19acc5f3cee",
+     "sourceSize": 251,
+     "outputSize": 251,
+     "seed": 375304261,
+     "sourceChecksum": 375304261,
+     "outputChecksum": 375304261,
+     "sourceInfoChunkSize": 88,
+     "outputInfoChunkSize": 40
+    },
+    {
+     "code": "INFO_CHUNK_SIZE",
+     "file": "data.xp3",
+     "member": "scene.ks",
+     "sourceSha256": "70b6a6926738d5b13863813c33e68de68bc3ad6a3f5b9496ae34d742b99876e0",
+     "outputSha256": "70b6a6926738d5b13863813c33e68de68bc3ad6a3f5b9496ae34d742b99876e0",
+     "sourceSize": 251,
+     "outputSize": 251,
+     "seed": 391163974,
+     "sourceChecksum": 391163974,
+     "outputChecksum": 391163974,
+     "sourceInfoChunkSize": 88,
+     "outputInfoChunkSize": 38
+    }
+   ],
+   "plugins": [
+    {
+     "id": "kirikiri-cxfilterfs",
+     "version": 1,
+     "formats": [
+      "xp3-native"
+     ],
+     "sources": [
+      {
+       "file": "data.xp3",
+       "sizeBytes": 1143,
+       "sha256": "612550937c9fb7d208608e656181a3033c8a3977eb3823400e97255e31cc7cf2"
+      }
+     ],
+     "outputs": [
+      {
+       "file": "data.xp3",
+       "sizeBytes": 1143,
+       "sha256": "4912714863afc3ceb942c73af9efd2a255858be622fcac897cc06658656848c8"
+      }
+     ],
+     "validation": {
+      "outputFilesVerified": 1,
+      "resourceEntriesVerified": 0,
+      "metadataCorrections": 3,
+      "omittedPhysicalEntries": 0
+     }
+    }
+   ]
+  }
+ }
+}

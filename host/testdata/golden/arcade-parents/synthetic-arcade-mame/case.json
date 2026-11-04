@@ -1,0 +1,46 @@
+{
+ "command": "arcade-parents",
+ "input": {
+  "directory": {
+   "platformId": "arcade",
+   "defaultCoreId": "mame_arcade",
+   "allowedCoreIds": [
+    "mame_arcade"
+   ]
+  },
+  "files": [
+   {
+    "logicalKey": "pacman.zip",
+    "name": "pacman.zip",
+    "sizeBytes": 1165,
+    "sha256": "abe924f817cfc3073e670b89be57a90bcf9127faa5495c3806a40f1bdc5c8cb4"
+   }
+  ],
+  "locators": {
+   "pacman.zip": {
+    "path": "${CASE}/files/pacman.zip",
+    "offset": 0,
+    "sizeBytes": 1165
+   }
+  },
+  "config": {
+   "content": {
+    "kind": "ARCADE",
+    "entryFile": "pacman.zip"
+   }
+  }
+ },
+ "result": {
+  "coreId": "mame_arcade",
+  "parentFiles": [],
+  "missingParents": [],
+  "mediaFiles": [],
+  "missingMedia": [],
+  "config": {
+   "content": {
+    "kind": "ARCADE",
+    "entryFile": "pacman.zip"
+   }
+  }
+ }
+}

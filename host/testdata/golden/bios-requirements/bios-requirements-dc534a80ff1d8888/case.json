@@ -1,0 +1,38 @@
+{
+ "command": "bios-requirements",
+ "input": {
+  "providerId": "emulatorjs",
+  "targetId": "fceumm",
+  "config": {
+   "content": {
+    "kind": "SINGLE_FILE",
+    "entryFile": "game.fds"
+   }
+  },
+  "files": [
+   {
+    "logicalKey": "game.fds",
+    "name": "game.fds",
+    "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "sizeBytes": 1
+   }
+  ]
+ },
+ "result": [
+  {
+   "requirementKey": "emulatorjs/fceumm/disksys.rom",
+   "coreId": "fceumm",
+   "providerId": "emulatorjs",
+   "targetId": "fceumm",
+   "logicalName": "disksys.rom",
+   "required": true,
+   "condition": "FDS_CONTENT",
+   "sizeBytes": 8192,
+   "md5": "ca30b50f880eb660a320674ed365ef7a",
+   "sha256": "99c18490ed9002d9c6d999b9d8d15be5c051bdfa7cc7e73318053c9a994b0178",
+   "delivery": "BIOS_BUNDLE",
+   "virtualPath": null,
+   "activationOptions": {}
+  }
+ ]
+}

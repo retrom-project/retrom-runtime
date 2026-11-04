@@ -1,0 +1,47 @@
+{
+ "command": "prepare",
+ "input": {
+  "directory": {
+   "platformId": "arcade",
+   "defaultCoreId": "mame_arcade",
+   "allowedCoreIds": [
+    "mame_arcade"
+   ]
+  },
+  "files": [
+   {
+    "logicalKey": "renamed.zip",
+    "name": "renamed.zip",
+    "sizeBytes": 128,
+    "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+   }
+  ],
+  "fingerprints": {
+   "retrom-runtime/mame-arcade": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+  },
+  "config": {
+   "content": {
+    "kind": "ARCADE",
+    "entryFile": "renamed.zip"
+   },
+   "cores": {
+    "mame_arcade": {
+     "romSet": "pacman"
+    }
+   }
+  },
+  "archives": {
+   "renamed.zip": []
+  },
+  "arcadeCatalog": {
+   "pacman": {
+    "parent": null,
+    "bios": false,
+    "roms": []
+   }
+  }
+ },
+ "error": {
+  "code": "RUNTIME_CONTENT_LOCATOR_REQUIRED"
+ }
+}

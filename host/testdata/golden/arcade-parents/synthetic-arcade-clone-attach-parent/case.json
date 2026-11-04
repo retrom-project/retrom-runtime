@@ -1,0 +1,69 @@
+{
+ "command": "arcade-parents",
+ "input": {
+  "directory": {
+   "platformId": "arcade",
+   "defaultCoreId": "mame2003",
+   "allowedCoreIds": [
+    "mame2003"
+   ]
+  },
+  "files": [
+   {
+    "logicalKey": "pacman.zip",
+    "name": "pacman.zip",
+    "sizeBytes": 1165,
+    "sha256": "abe924f817cfc3073e670b89be57a90bcf9127faa5495c3806a40f1bdc5c8cb4"
+   },
+   {
+    "logicalKey": "puckman.zip",
+    "name": "puckman.zip",
+    "sizeBytes": 1180,
+    "sha256": "374cac856f6216dbfe06d79fabe1d2c6f4477fc37ef3b08113dd4a26f3ffcaa5"
+   }
+  ],
+  "locators": {
+   "pacman.zip": {
+    "path": "${CASE}/files/pacman.zip",
+    "offset": 0,
+    "sizeBytes": 1165
+   },
+   "puckman.zip": {
+    "path": "${CASE}/files/puckman.zip",
+    "offset": 0,
+    "sizeBytes": 1180
+   }
+  },
+  "config": {
+   "content": {
+    "kind": "ARCADE",
+    "entryFile": "pacman.zip"
+   }
+  },
+  "fingerprints": {
+   "emulatorjs/mame2003": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+  },
+  "coreId": "mame2003",
+  "attachFile": "puckman.zip"
+ },
+ "result": {
+  "coreId": "mame2003",
+  "parentFiles": [],
+  "missingParents": [],
+  "mediaFiles": [],
+  "missingMedia": [],
+  "config": {
+   "content": {
+    "kind": "ARCADE",
+    "entryFile": "pacman.zip"
+   },
+   "cores": {
+    "mame2003": {
+     "parentFiles": [
+      "puckman.zip"
+     ]
+    }
+   }
+  }
+ }
+}

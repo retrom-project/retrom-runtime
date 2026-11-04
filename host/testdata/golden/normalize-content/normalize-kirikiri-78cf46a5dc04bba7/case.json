@@ -1,0 +1,58 @@
+{
+ "command": "normalize-content",
+ "input": {
+  "platformId": "kirikiri",
+  "files": [
+   {
+    "logicalKey": ".runtime-patches/launch.dll/intro.ks.scn",
+    "name": ".runtime-patches/launch.dll/intro.ks.scn",
+    "sha256": "d5b733924978cf2e501109b2f85b2bee97d031f7458b758e379444b83b15253c",
+    "sizeBytes": 14
+   },
+   {
+    "logicalKey": "data.xp3",
+    "name": "data.xp3",
+    "sha256": "7f1507ee2fce0ffb6bb37b6ed46b46e033eeaec58b4a052dfb7bbb1f50d527cf",
+    "sizeBytes": 16
+   },
+   {
+    "logicalKey": "launch.dll",
+    "name": "launch.dll",
+    "sha256": "f9a82156a70076d0cc843b7eaa0792cfd1490d79e194aead159de154c1646762",
+    "sizeBytes": 21504
+   },
+   {
+    "logicalKey": "translation-73.bin",
+    "name": "translation-73.bin",
+    "sha256": "c51aed56147e12eedadf0285345aa6305957641b3be24d5b033101b12793c5a6",
+    "sizeBytes": 242
+   }
+  ],
+  "locators": {
+   ".runtime-patches/launch.dll/intro.ks.scn": {
+    "path": "${CASE}/files/.runtime-patches/launch.dll/intro.ks.scn",
+    "offset": 0,
+    "sizeBytes": 14
+   },
+   "data.xp3": {
+    "path": "${CASE}/files/data.xp3",
+    "offset": 0,
+    "sizeBytes": 16
+   },
+   "launch.dll": {
+    "path": "${CASE}/files/launch.dll",
+    "offset": 0,
+    "sizeBytes": 21504
+   },
+   "translation-73.bin": {
+    "path": "${CASE}/files/translation-73.bin",
+    "offset": 0,
+    "sizeBytes": 242
+   }
+  },
+  "outputRoot": "${OUT}"
+ },
+ "error": {
+  "code": "RUNTIME_NORMALIZATION_CONFLICT"
+ }
+}

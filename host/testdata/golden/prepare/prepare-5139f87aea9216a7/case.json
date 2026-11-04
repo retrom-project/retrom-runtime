@@ -1,0 +1,125 @@
+{
+ "command": "prepare",
+ "input": {
+  "directory": {
+   "platformId": "rpgmaker",
+   "defaultCoreId": "rpgmaker",
+   "allowedCoreIds": [
+    "rpgmaker"
+   ]
+  },
+  "fingerprints": {
+   "retrom-runtime/rpgmaker-xp": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+   "retrom-runtime/rpgmaker-vx": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+   "retrom-runtime/rpgmaker-vx-ace": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+   "retrom-runtime/rpgmaker-mv": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+   "retrom-runtime/rpgmaker-2000": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+  },
+  "config": {
+   "content": {
+    "kind": "RPG_MAKER_PROJECT",
+    "entryFile": "Game.ini",
+    "engine": "RPGXP",
+    "rtp": "Standard"
+   }
+  },
+  "files": [
+   {
+    "logicalKey": "Game.ini",
+    "name": "Game.ini",
+    "sizeBytes": 128,
+    "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+   }
+  ]
+ },
+ "result": {
+  "coreId": "rpgmaker",
+  "providerId": "retrom-runtime",
+  "targetId": "rpgmaker-xp",
+  "coreFingerprint": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+  "romHash": "dc7419d8b27c3987a3c01ee565dd6f5c0bbd35b04e28d89d51b5c20183b2fcae",
+  "config": {
+   "content": {
+    "kind": "RPG_MAKER_PROJECT",
+    "entryFile": "Game.ini",
+    "engine": "RPGXP",
+    "rtp": "Standard"
+   }
+  },
+  "targetOptions": {},
+  "dependencies": {
+   "parentFiles": [],
+   "missingParents": [],
+   "biosSets": []
+  },
+  "crcWarnings": [],
+  "biosRequirements": [
+   {
+    "requirementKey": "retrom-runtime/rpgmaker-xp/Standard.zip",
+    "coreId": "rpgmaker",
+    "providerId": "retrom-runtime",
+    "targetId": "rpgmaker-xp",
+    "logicalName": "Standard.zip",
+    "required": true,
+    "condition": "RPG_RTP",
+    "sizeBytes": null,
+    "md5": null,
+    "sha256": null,
+    "delivery": "SEEKABLE_BLOB",
+    "virtualPath": null,
+    "activationOptions": {},
+    "resourceRole": "rtp",
+    "archiveEntries": [
+     "Audio/",
+     "Graphics/Windowskins/",
+     "Graphics/Autotiles/"
+    ],
+    "archiveExcludes": [
+     "Game.ini",
+     "Data/"
+    ]
+   }
+  ],
+  "checkpoint": {
+   "maxBytes": 268435456,
+   "readFormats": [
+    "mkxp-state-v1-storage-v1"
+   ],
+   "writeFormat": "mkxp-state-v1-storage-v1",
+   "semantics": "INSTANT"
+  },
+  "capabilities": {
+   "contentLoading": "ON_DEMAND_AND_PRELOAD",
+   "checkpoint": true,
+   "frameCounter": true,
+   "frameMode": "SAME_ORIGIN_BLANK",
+   "inputFilter": true,
+   "nativeSettings": false,
+   "pause": true,
+   "requiresThreads": true,
+   "screenshot": true,
+   "standardGamepad": true,
+   "videoModes": [
+    "original",
+    "pixel",
+    "smooth"
+   ],
+   "volume": false
+  },
+  "resources": [
+   {
+    "role": "game",
+    "kind": "SEEKABLE_BLOB",
+    "ordinal": 0,
+    "files": [
+     "Game.ini"
+    ],
+    "entryFile": "Game.ini",
+    "paths": {
+     "Game.ini": "Game.ini"
+    },
+    "encoding": "ZIP"
+   }
+  ]
+ }
+}

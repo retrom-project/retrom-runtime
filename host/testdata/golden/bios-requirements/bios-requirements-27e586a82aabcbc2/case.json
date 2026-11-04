@@ -1,0 +1,28 @@
+{
+ "command": "bios-requirements",
+ "input": {
+  "providerId": "retrom-runtime",
+  "targetId": "mame-arcade",
+  "config": {
+   "content": {
+    "kind": "ARCADE",
+    "entryFile": "sample.zip"
+   }
+  },
+  "files": [
+   {
+    "name": "sample.zip",
+    "logicalKey": "sample.zip",
+    "sizeBytes": 22,
+    "sha256": "1111111111111111111111111111111111111111111111111111111111111111"
+   },
+   {
+    "name": "renamed.chd",
+    "logicalKey": "other/renamed.chd",
+    "sizeBytes": 1024,
+    "sha256": "2222222222222222222222222222222222222222222222222222222222222222"
+   }
+  ]
+ },
+ "result": []
+}

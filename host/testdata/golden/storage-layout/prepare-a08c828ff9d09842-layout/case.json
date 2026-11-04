@@ -1,0 +1,16 @@
+{
+ "command": "storage-layout",
+ "input": {
+  "platformId": "cavestory",
+  "coreId": "nxengine",
+  "config": {
+   "content": {
+    "kind": "NXENGINE_PROJECT",
+    "entryFile": "CaveStory/Doukutsu.exe"
+   }
+  }
+ },
+ "result": {
+  "layout": "ZIP_STORE"
+ }
+}

@@ -1,0 +1,30 @@
+{
+ "command": "configure",
+ "input": {
+  "platformId": "rpgmaker",
+  "coreIds": [
+   "rpgmaker"
+  ],
+  "files": [
+   {
+    "logicalKey": "Game.ini",
+    "name": "Game.ini",
+    "sizeBytes": 128,
+    "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+   }
+  ],
+  "evidence": {
+   "Game.ini": {
+    "text": "[Game]\nRTP=rpgvx\nScripts=Data/Scripts.rvdata\n"
+   }
+  }
+ },
+ "result": {
+  "content": {
+   "kind": "RPG_MAKER_PROJECT",
+   "entryFile": "Game.ini",
+   "engine": "RPGVX",
+   "rtp": "RPGVX"
+  }
+ }
+}

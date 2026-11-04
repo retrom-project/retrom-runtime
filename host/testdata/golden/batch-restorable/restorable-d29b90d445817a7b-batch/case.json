@@ -1,0 +1,41 @@
+{
+ "command": "batch-restorable",
+ "input": {
+  "items": [
+   {
+    "gameAvailable": true,
+    "saveAvailable": true,
+    "current": {
+     "coreId": "fceumm",
+     "providerId": "emulatorjs",
+     "targetId": "fceumm",
+     "coreFingerprint": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+     "romHash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+    },
+    "context": {
+     "coreId": "fceumm",
+     "providerId": "emulatorjs",
+     "targetId": "fceumm",
+     "coreFingerprint": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+     "romHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+     "checkpointFormat": "state-storage-v1",
+     "runtimeOptions": {},
+     "content": {
+      "kind": "SINGLE_FILE",
+      "entryFile": "game.nes"
+     }
+    },
+    "readFormats": [
+     "state-storage-v1"
+    ]
+   }
+  ]
+ },
+ "result": [
+  {
+   "restorable": false,
+   "reason": "CONTENT_CHANGED",
+   "warning": null
+  }
+ ]
+}

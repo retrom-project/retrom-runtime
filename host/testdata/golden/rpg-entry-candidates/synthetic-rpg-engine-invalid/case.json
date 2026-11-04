@@ -1,0 +1,48 @@
+{
+ "command": "rpg-entry-candidates",
+ "input": {
+  "config": {
+   "content": {
+    "kind": "RPG_MAKER_PROJECT",
+    "engine": "RPGMV",
+    "entryFile": "www/index.html"
+   }
+  },
+  "files": [
+   {
+    "logicalKey": "www/js/rpg_core.js",
+    "name": "www/js/rpg_core.js",
+    "sizeBytes": 2,
+    "sha256": "a2c2339691fc48fbd14fb307292dff3e21222712d9240810742d7df0c6d74dfb"
+   },
+   {
+    "logicalKey": "www/index.html",
+    "name": "www/index.html",
+    "sizeBytes": 6,
+    "sha256": "b7d082ee12e91b756ea22e8513b8594eebcf5d39fab813da3cb55794dc888ad7"
+   },
+   {
+    "logicalKey": "mz/js/rmmz_core.js",
+    "name": "mz/js/rmmz_core.js",
+    "sizeBytes": 2,
+    "sha256": "a2c2339691fc48fbd14fb307292dff3e21222712d9240810742d7df0c6d74dfb"
+   },
+   {
+    "logicalKey": "mz/index.html",
+    "name": "mz/index.html",
+    "sizeBytes": 6,
+    "sha256": "b7d082ee12e91b756ea22e8513b8594eebcf5d39fab813da3cb55794dc888ad7"
+   },
+   {
+    "logicalKey": "index.html",
+    "name": "index.html",
+    "sizeBytes": 6,
+    "sha256": "b7d082ee12e91b756ea22e8513b8594eebcf5d39fab813da3cb55794dc888ad7"
+   }
+  ],
+  "engine": "RPGXP1"
+ },
+ "error": {
+  "code": "RUNTIME_CONFIGURATION_INVALID"
+ }
+}

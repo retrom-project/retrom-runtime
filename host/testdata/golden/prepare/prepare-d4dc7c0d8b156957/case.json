@@ -1,0 +1,88 @@
+{
+ "command": "prepare",
+ "input": {
+  "directory": {
+   "platformId": "tyranoscript",
+   "defaultCoreId": "tyranoscript",
+   "allowedCoreIds": [
+    "tyranoscript"
+   ]
+  },
+  "config": {
+   "content": {
+    "kind": "TYRANOSCRIPT_PROJECT",
+    "entryFile": "index.html"
+   }
+  },
+  "files": [
+   {
+    "logicalKey": "index.html",
+    "name": "index.html",
+    "sizeBytes": 128,
+    "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+   }
+  ],
+  "fingerprints": {
+   "retrom-runtime/tyranoscript": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+  }
+ },
+ "result": {
+  "coreId": "tyranoscript",
+  "providerId": "retrom-runtime",
+  "targetId": "tyranoscript",
+  "coreFingerprint": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+  "romHash": "1050e61f16133404a00d6c06fa7ec4af2ee8f5bb4bde61edb1af871c1626f549",
+  "config": {
+   "content": {
+    "kind": "TYRANOSCRIPT_PROJECT",
+    "entryFile": "index.html"
+   }
+  },
+  "targetOptions": {},
+  "dependencies": {
+   "parentFiles": [],
+   "missingParents": [],
+   "biosSets": []
+  },
+  "crcWarnings": [],
+  "biosRequirements": [],
+  "checkpoint": {
+   "maxBytes": 33554432,
+   "readFormats": [
+    "tyranoscript-snapshot-v1-storage-v1"
+   ],
+   "writeFormat": "tyranoscript-snapshot-v1-storage-v1",
+   "semantics": "INSTANT"
+  },
+  "capabilities": {
+   "contentLoading": "ON_DEMAND_AND_PRELOAD",
+   "checkpoint": true,
+   "frameCounter": true,
+   "frameMode": "ISOLATED_ORIGIN_RESOURCE",
+   "inputFilter": true,
+   "nativeSettings": false,
+   "pause": true,
+   "requiresThreads": false,
+   "screenshot": true,
+   "standardGamepad": true,
+   "videoModes": [
+    "original",
+    "pixel",
+    "smooth"
+   ],
+   "volume": true
+  },
+  "resources": [
+   {
+    "role": "game",
+    "kind": "ISOLATED_WEB",
+    "ordinal": 0,
+    "files": [
+     "index.html"
+    ],
+    "entryFile": "index.html",
+    "bridgeAssetPath": "assets/tyranoscript/bridge.js"
+   }
+  ]
+ }
+}

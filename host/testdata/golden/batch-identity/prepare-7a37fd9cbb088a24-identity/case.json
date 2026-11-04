@@ -1,0 +1,78 @@
+{
+ "command": "batch-identity",
+ "input": {
+  "items": [
+   {
+    "directory": {
+     "platformId": "arcade",
+     "defaultCoreId": "fbneo",
+     "allowedCoreIds": [
+      "fbneo"
+     ]
+    },
+    "config": {
+     "content": {
+      "kind": "ARCADE",
+      "entryFile": "game.zip"
+     }
+    },
+    "files": [
+     {
+      "logicalKey": "game.zip",
+      "name": "game.zip",
+      "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "sizeBytes": 1
+     }
+    ],
+    "arcadeCatalog": {
+     "game": {
+      "parent": "firmware",
+      "bios": false,
+      "roms": [
+       {
+        "name": "bios.bin",
+        "size": "2",
+        "crc": "87654321"
+       }
+      ]
+     },
+     "firmware": {
+      "parent": null,
+      "bios": true,
+      "roms": [
+       {
+        "name": "bios.bin",
+        "size": "2",
+        "crc": "87654321"
+       }
+      ]
+     }
+    },
+    "fingerprints": {
+     "emulatorjs/fbneo": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+    },
+    "archives": {
+     "game.zip": [
+      {
+       "name": "bios.bin",
+       "sizeBytes": 2,
+       "crc32": "87654321"
+      }
+     ]
+    }
+   }
+  ]
+ },
+ "result": [
+  {
+   "coreId": "fbneo",
+   "providerId": "emulatorjs",
+   "targetId": "fbneo",
+   "coreFingerprint": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+   "romHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+   "readFormats": [
+    "emulatorjs-state-v1-storage-v1"
+   ]
+  }
+ ]
+}

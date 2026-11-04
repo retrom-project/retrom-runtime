@@ -1,0 +1,93 @@
+{
+ "command": "normalize-content",
+ "input": {
+  "platformId": "kirikiri",
+  "files": [
+   {
+    "logicalKey": "engine.application",
+    "name": "engine.application",
+    "sha256": "e7510f35e22e6716d353e668c5b3854485053cf1167a41f9cf72fdb7d20c7ad4",
+    "sizeBytes": 70656
+   },
+   {
+    "logicalKey": "assets.pack",
+    "name": "assets.pack",
+    "sha256": "5799f3637eb843c43a4289dc5350697085473d7a0c68125d364c0d2cf0efe8ae",
+    "sizeBytes": 210635
+   }
+  ],
+  "locators": {
+   "engine.application": {
+    "path": "${CASE}/files/engine.application",
+    "offset": 0,
+    "sizeBytes": 70656
+   },
+   "assets.pack": {
+    "path": "${CASE}/files/assets.pack",
+    "offset": 0,
+    "sizeBytes": 210635
+   }
+  },
+  "outputRoot": "${OUT}"
+ },
+ "result": {
+  "files": [
+   {
+    "logicalKey": "assets.pack",
+    "name": "assets.pack",
+    "path": "${OUT}/assets.pack",
+    "sizeBytes": 210578,
+    "sha256": "f5181b17182af401513328a296798e724a07bc248fd94666fe5280735b511596"
+   },
+   {
+    "logicalKey": "engine.application",
+    "name": "engine.application",
+    "sha256": "e7510f35e22e6716d353e668c5b3854485053cf1167a41f9cf72fdb7d20c7ad4",
+    "sizeBytes": 70656
+   }
+  ],
+  "normalization": {
+   "kind": "CONTENT_NORMALIZATION",
+   "converterVersion": 1,
+   "sourceContentHash": "fc789ba27ed81b8ef9d4bcf5cb900b3fbf0b3b86944940c2c849744ad46ada8e",
+   "archiveCount": 1,
+   "verifiedEntries": 3,
+   "metadataCorrections": 0,
+   "omittedPhysicalEntries": 0,
+   "formatCounts": {
+    "hxv4-decoded": 1
+   },
+   "warnings": [],
+   "details": [],
+   "plugins": [
+    {
+     "id": "kirikiri-hxv4",
+     "version": 1,
+     "formats": [
+      "hxv4-decoded"
+     ],
+     "sources": [
+      {
+       "file": "assets.pack",
+       "sizeBytes": 210635,
+       "sha256": "5799f3637eb843c43a4289dc5350697085473d7a0c68125d364c0d2cf0efe8ae"
+      }
+     ],
+     "outputs": [
+      {
+       "file": "assets.pack",
+       "sizeBytes": 210578,
+       "sha256": "f5181b17182af401513328a296798e724a07bc248fd94666fe5280735b511596"
+      }
+     ],
+     "validation": {
+      "outputFilesVerified": 1,
+      "resourceEntriesVerified": 3,
+      "metadataCorrections": 0,
+      "omittedPhysicalEntries": 0
+     }
+    }
+   ]
+  }
+ }
+}

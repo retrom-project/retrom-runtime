@@ -1,0 +1,32 @@
+{
+ "command": "normalize-content",
+ "input": {
+  "platformId": "kirikiri",
+  "files": [
+   {
+    "logicalKey": "data.bin",
+    "name": "data.bin",
+    "sha256": "b5997d4df2d3a26a998a3a80f66f1a708010753accab278d741b0ed0cb7dcc8c",
+    "sizeBytes": 28
+   }
+  ],
+  "locators": {
+   "data.bin": {
+    "path": "${CASE}/files/data.bin",
+    "offset": 0,
+    "sizeBytes": 28
+   }
+  },
+  "outputRoot": "${OUT}"
+ },
+ "result": {
+  "files": [
+   {
+    "logicalKey": "data.bin",
+    "name": "data.bin",
+    "sha256": "b5997d4df2d3a26a998a3a80f66f1a708010753accab278d741b0ed0cb7dcc8c",
+    "sizeBytes": 28
+   }
+  ]
+ }
+}

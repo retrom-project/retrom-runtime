@@ -1,0 +1,32 @@
+{
+ "command": "normalize-content",
+ "input": {
+  "platformId": "kirikiri",
+  "files": [
+   {
+    "logicalKey": "nested/launch.exe",
+    "name": "launch.exe",
+    "sha256": "38654fb54f360004cc44cf432755c2713317080628f2793e2c2cf03f11a4f031",
+    "sizeBytes": 1152
+   }
+  ],
+  "locators": {
+   "nested/launch.exe": {
+    "path": "${CASE}/files/nested/launch.exe",
+    "offset": 0,
+    "sizeBytes": 1152
+   }
+  },
+  "outputRoot": "${OUT}"
+ },
+ "result": {
+  "files": [
+   {
+    "logicalKey": "nested/launch.exe",
+    "name": "launch.exe",
+    "sha256": "38654fb54f360004cc44cf432755c2713317080628f2793e2c2cf03f11a4f031",
+    "sizeBytes": 1152
+   }
+  ]
+ }
+}

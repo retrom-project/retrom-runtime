@@ -1,0 +1,30 @@
+{
+ "command": "storage-layout",
+ "input": {
+  "platformId": "kirikiri",
+  "coreId": "kirikiri2",
+  "config": {
+   "content": {
+    "kind": "KIRIKIRI_PROJECT",
+    "entryFile": "bundle/data.xp3"
+   },
+   "cores": {
+    "kirikiri2": {
+     "options": {
+      "engineArguments": [
+       "-locale=arbitrary",
+       "-flag",
+       "-locale=second",
+       "-caption=中文 text",
+       "-empty="
+      ],
+      "steamService": "LOCAL"
+     }
+    }
+   }
+  }
+ },
+ "result": {
+  "layout": "ZIP_STORE"
+ }
+}

@@ -211,6 +211,29 @@ describe("unified runtime facts", () => {
     expect(prepared.targetOptions.overlayRoot).toBe("localization");
     expect(prepared.resources[0].paths).toEqual({"bundle/data.xp3": "data.xp3", "bundle/localization/chapter.ks": "localization/chapter.ks"});
   });
+  it("prepares explicitly ordered exact archive paths relative to the selected Kiri project", () => {
+    const overlayArchives = ["补丁/second, chosen.XP3", "patch3.xp3"];
+    const prepared = prepareRuntime({
+      directory: {platformId: "kirikiri", defaultCoreId: "kirikiri2", allowedCoreIds: ["kirikiri2"]},
+      files: [file("bundle/data.xp3"), file("bundle/补丁/second, chosen.XP3"), file("bundle/patch3.xp3")],
+      config: {content: {kind: "KIRIKIRI_PROJECT", entryFile: "bundle/data.xp3"},
+        cores: {kirikiri2: {options: {overlayArchives}}}},
+      fingerprints: {"retrom-runtime/kirikiri2-kag": fingerprint},
+    });
+    expect(prepared.targetOptions.overlayArchives).toEqual(overlayArchives);
+    expect(prepared.resources[0].paths).toEqual({"bundle/data.xp3": "data.xp3",
+      "bundle/补丁/second, chosen.XP3": "补丁/second, chosen.XP3", "bundle/patch3.xp3": "patch3.xp3"});
+  });
+  it.each([["missing.xp3"], ["Patch3.xp3"], ["other/patch.xp3"], ["patch3.xp3", "patch3.xp3"], ["../other/patch.xp3"], "patch3.xp3"]
+    .map(overlayArchives => ({overlayArchives})))("rejects missing, inexact or malformed Kiri archive selections %#", ({overlayArchives}) => {
+      expect(() => prepareRuntime({
+        directory: {platformId: "kirikiri", defaultCoreId: "kirikiri2", allowedCoreIds: ["kirikiri2"]},
+        files: [file("bundle/data.xp3"), file("bundle/patch3.xp3"), file("other/patch.xp3")],
+        config: {content: {kind: "KIRIKIRI_PROJECT", entryFile: "bundle/data.xp3"},
+          cores: {kirikiri2: {options: {overlayArchives}}}},
+        fingerprints: {"retrom-runtime/kirikiri2-kag": fingerprint},
+      })).toThrow("RUNTIME_OPTIONS_INVALID");
+    });
   it("retains explicit Kiri engine arguments in native priority order and an opted-in local service", () => {
     const engineArguments = ["-locale=arbitrary", "-flag", "-locale=second", "-caption=中文 text", "-empty="];
     const prepared = prepareRuntime({

@@ -5,6 +5,7 @@ export type KirikiriParameters = {
   startupXp3Path: string | null;
   engineMode: "KIRIKIRI2" | "KIRIKIRI_Z";
   overlayRoot: string | null;
+  overlayArchives: string[];
   engineArguments: string[];
   steamService: "DISABLED" | "LOCAL";
 };

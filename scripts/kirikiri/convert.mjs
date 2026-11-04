@@ -2,7 +2,7 @@ import {open} from "node:fs/promises";
 import {createHash} from "node:crypto";
 import {magic, maximumFile, maximumIndex, requireFormat, uint64, chunk, adler32, resourceBytes, sourceHash} from "./bytes.mjs";
 import {readXp3} from "./xp3.mjs";
-import {resolveSeedOnly} from "./resource-format.mjs";
+import {resolveFilteredSeed, resolveSeedOnly} from "./resource-format.mjs";
 import {selectResourceStage} from "./stages.mjs";
 
 async function writeAll(handle, bytes) {
@@ -19,14 +19,17 @@ function record(entry, offset, size, checksum) {
     ...(entry.time ? [chunk("time", entry.time)] : [])]));
 }
 async function transformed(archive, entry, filter, target, signal) {
-  if (archive.format === "xp3-native" && entry.seedOnly) {
-    requireFormat(filter.verified && entry.flags === 0 && entry.adler === 0 && !entry.infoSizeCorrection && entry.readable <= 32 * 1024 * 1024, "CHECKSUM_MISMATCH");
+  if (archive.format === "xp3-native" && (entry.seedOnly || archive.filterSeedOnly)) {
+    requireFormat(filter.verified && (archive.filterSeedOnly ? entry.flags === 0x80000000 : entry.flags === 0 && entry.adler === 0) &&
+      !entry.infoSizeCorrection && entry.readable <= 32 * 1024 * 1024, "CHECKSUM_MISMATCH");
     const chunks = [];
     for await (const bytes of resourceBytes(archive.locator, entry, signal)) {chunks.push(bytes);}
-    const raw = Buffer.concat(chunks), output = resolveSeedOnly(raw, filter, entry.h);
+    const raw = Buffer.concat(chunks), output = archive.filterSeedOnly ? resolveFilteredSeed(raw, filter, entry.h) : resolveSeedOnly(raw, filter, entry.h);
+    requireFormat(!archive.filterSeedOnly || adler32(output) !== entry.adler, "SOURCE_CHANGED");
     await writeAll(target, output);
     return {size: output.length, checksum: adler32(output), sha256: createHash("sha256").update(output).digest("hex"),
-      rawSha256: createHash("sha256").update(raw).digest("hex"), sourceIntegrityVerified: false, corrections: ["REUSED_FILTER_SEED"]};
+      rawSha256: createHash("sha256").update(raw).digest("hex"), sourceIntegrityVerified: false,
+      corrections: [archive.filterSeedOnly ? "FILTER_SEED_ONLY" : "REUSED_FILTER_SEED"]};
   }
   const stage = filter.stages && entry.flags === 0x80000000 ? await selectResourceStage(archive.locator, entry, filter, signal) : null;
   const apply = entry.warningMetadata ? bytes => bytes : stage?.apply ?? filter.apply;

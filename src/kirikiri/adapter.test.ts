@@ -145,6 +145,50 @@ describe("KiriKiri2 KAG runtime", () => {
       expect(module._krkr2_host_resource_overlay_abi).toHaveBeenCalledOnce();
     } finally {await runtime.exit();}
   });
+  it("passes only explicitly selected archives in selection order without changing project paths", async () => {
+    enableRuntimeFeatures(); const vlfs = fakeVlfs();
+    mockDownloads(["/data.xp3", "/patch3.xp3", "/translations/first,chosen.XP3", "/unused.xp3"]);
+    const envelope = config(); envelope.targetOptions.overlayArchives = ["translations/first,chosen.XP3", "patch3.xp3"];
+    const runtime = await createRuntime(envelope, currentWindowHost(null));
+    const mounting = runtime.mount(document.createElement("div")); await loadVlfs(vlfs);
+    const module = await loadCore(vlfs); await mounting;
+    try {
+      const files = module._resourceOverlayFiles as Array<{path: string; relativePath: string}>;
+      // The existing native ABI sorts relative paths before loading archives.
+      expect(files.slice().sort((left, right) => left.relativePath < right.relativePath ? -1 : 1).map(file => file.path))
+        .toEqual(["/translations/first,chosen.XP3", "/patch3.xp3"]);
+      expect(vlfs.registerContent.mock.calls.map(call => call[0])).toContain("/unused.xp3");
+      expect(module._startupXp3Path).toBe("/data.xp3");
+      expect(module._krkr2_host_resource_overlay_abi).toHaveBeenCalledOnce();
+    } finally {await runtime.exit();}
+  });
+  it.each(["missing.xp3", "Patch3.xp3"])("rejects a selected archive without an exact project filename: %s", async path => {
+    enableRuntimeFeatures(); const vlfs = fakeVlfs(); mockDownloads(["/data.xp3", "/patch3.xp3"]);
+    const envelope = config(); envelope.targetOptions.overlayArchives = [path];
+    const runtime = await createRuntime(envelope, currentWindowHost(null));
+    const outcome = runtime.mount(document.createElement("div")).catch(error => error as Error);
+    await loadVlfs(vlfs);
+    expect(await outcome).toMatchObject({message: "KIRIKIRI_PROJECT_OVERLAY_INVALID"});
+    expect(runtimeScripts()).toHaveLength(0);
+    expect((window as HostWindow).Module).toBeUndefined();
+  });
+  it("leaves sibling archive mounting to game scripts without explicit overlays", async () => {
+    enableRuntimeFeatures(); const vlfs = fakeVlfs(); mockDownloads(["/data.xp3", "/patch3.xp3", "/patch99.xp3"]);
+    const runtime = await createRuntime(config(), currentWindowHost(null));
+    const mounting = runtime.mount(document.createElement("div")); await loadVlfs(vlfs);
+    const module = await loadCore(vlfs, {overlaySupported: false}); await mounting;
+    try {expect(module._resourceOverlayFiles).toEqual([]);}
+    finally {await runtime.exit();}
+  });
+  it("requires the existing resource overlay ABI for explicitly selected archives", async () => {
+    enableRuntimeFeatures(); const vlfs = fakeVlfs(); mockDownloads(["/data.xp3", "/patch3.xp3"]);
+    const envelope = config(); envelope.targetOptions.overlayArchives = ["patch3.xp3"];
+    const runtime = await createRuntime(envelope, currentWindowHost(null));
+    const outcome = runtime.mount(document.createElement("div")).catch(error => error as Error);
+    await loadVlfs(vlfs);
+    await expect(loadCore(vlfs, {overlaySupported: false})).rejects.toThrow("KIRIKIRI_RESOURCE_OVERLAY_UNSUPPORTED");
+    expect(await outcome).toMatchObject({message: "KIRIKIRI_RESOURCE_OVERLAY_UNSUPPORTED"});
+  });
   it.each(["absent", "Translations/custom"])("rejects a missing exact overlay root %s before starting scripts", async overlayRoot => {
     enableRuntimeFeatures(); const vlfs = fakeVlfs(); mockDownloads(["/data.xp3", "/translations/custom/chapter.ks"]);
     const envelope = config(); envelope.targetOptions.overlayRoot = overlayRoot;

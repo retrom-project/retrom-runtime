@@ -1,4 +1,5 @@
 import type {PSPParameters} from "../../psp/core.js";
+import {kirikiriOverlayArchives} from "../../kirikiri/overlays.js";
 import type {GBEParameters} from "../../gbe-pokemini/core.js";
 import type {NXEngineParameters} from "../../nxengine/core.js";
 import type {NP2Parameters} from "../../np2kai/adapter.js";
@@ -146,6 +147,9 @@ export function kirikiri(envelope: LaunchEnvelopeV1): KirikiriParameters {
   let engineArguments: string[];
   try {engineArguments = kirikiriEngineArguments(envelope.targetOptions.engineArguments);}
   catch {invalidRequest();}
+  let overlayArchives: string[];
+  try {overlayArchives = kirikiriOverlayArchives(envelope.targetOptions.overlayArchives);}
+  catch {invalidRequest();}
   return {
     contentDigest: game.contentDigest,
     projectIndexUrl: game.indexUrl,
@@ -153,6 +157,7 @@ export function kirikiri(envelope: LaunchEnvelopeV1): KirikiriParameters {
     startupXp3Path,
     engineMode,
     overlayRoot,
+    overlayArchives,
     engineArguments,
     steamService,
   };

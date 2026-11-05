@@ -101,11 +101,12 @@ it("does not resolve ambiguous codec names through another audio variant", async
   await content.close();
 });
 
-it("prepares only bounded scenario text through Content I/O for synchronous desktop plugins", async () => {
+it("prepares only host-marked bounded files through Content I/O for synchronous desktop plugins", async () => {
   const {content, session, readInto} = await fixture([...entries,
-    {...entries[1], path: "scenario/En/opening.sl", sizeBytes: 8},
-    {...entries[1], path: "scenario/CG.txt", sizeBytes: 8},
-    {...entries[1], path: "scenario/movie.ogg", sizeBytes: 8},
+    {...entries[1], path: "Game/scenario/En/opening.sl", sizeBytes: 8, preloadPath: "scenario/En/opening.sl"},
+    {...entries[1], path: "Game/scenario/CG.txt", sizeBytes: 8, preloadPath: "scenario/CG.txt"},
+    // Without the host's mark, a name that looks like scenario text is ordinary demand-paged content.
+    {...entries[1], path: "scenario/movie.sl", sizeBytes: 8},
     {...entries[1], path: "private.txt", sizeBytes: 8},
   ]);
   const files = await content.prepareRpgPluginFiles();
@@ -115,9 +116,13 @@ it("prepares only bounded scenario text through Content I/O for synchronous desk
   expect(readInto).toHaveBeenCalledTimes(2);
   await content.close();
 });
+it("rejects an unsafe host preload path", async () => {
+  await expect(fixture([...entries, {...entries[1], path: "Game/scenario/a.sl", preloadPath: "../a.sl"}]))
+    .rejects.toThrow();
+});
 it("rejects an oversized desktop scenario set before opening any content", async () => {
   const {content, session} = await fixture([...entries, ...Array.from({length: 4097}, (_, n) => ({
-    ...entries[1], path: `scenario/${n}.sl`, sizeBytes: 8,
+    ...entries[1], path: `scenario/${n}.sl`, sizeBytes: 8, preloadPath: `scenario/${n}.sl`,
   }))]);
   await expect(content.prepareRpgPluginFiles()).rejects.toThrow("RPG_PLUGIN_FILES_TOO_LARGE");
   expect(session.open).not.toHaveBeenCalled(); await content.close();

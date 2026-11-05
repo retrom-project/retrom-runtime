@@ -1,0 +1,510 @@
+{
+ "description": "KiriKiri Target option rules shared by the browser adapter (src/kirikiri) and the server host (host/internal/rules). Both test suites assert every vector; change a rule only together with this file.",
+ "vectors": [
+  {
+   "field": "engineArguments",
+   "name": "absent",
+   "valid": true
+  },
+  {
+   "field": "engineArguments",
+   "name": "empty",
+   "valid": true,
+   "value": []
+  },
+  {
+   "field": "engineArguments",
+   "name": "flag",
+   "valid": true,
+   "value": [
+    "-debug"
+   ]
+  },
+  {
+   "field": "engineArguments",
+   "name": "value with spaces",
+   "valid": true,
+   "value": [
+    "-foo=bar baz"
+   ]
+  },
+  {
+   "field": "engineArguments",
+   "name": "order is kept",
+   "valid": true,
+   "value": [
+    "-b=2",
+    "-a=1"
+   ]
+  },
+  {
+   "field": "engineArguments",
+   "name": "non-ASCII name",
+   "valid": true,
+   "value": [
+    "-é"
+   ]
+  },
+  {
+   "field": "engineArguments",
+   "name": "exactly 64 items",
+   "valid": true,
+   "value": [
+    "-a0",
+    "-a1",
+    "-a2",
+    "-a3",
+    "-a4",
+    "-a5",
+    "-a6",
+    "-a7",
+    "-a8",
+    "-a9",
+    "-a10",
+    "-a11",
+    "-a12",
+    "-a13",
+    "-a14",
+    "-a15",
+    "-a16",
+    "-a17",
+    "-a18",
+    "-a19",
+    "-a20",
+    "-a21",
+    "-a22",
+    "-a23",
+    "-a24",
+    "-a25",
+    "-a26",
+    "-a27",
+    "-a28",
+    "-a29",
+    "-a30",
+    "-a31",
+    "-a32",
+    "-a33",
+    "-a34",
+    "-a35",
+    "-a36",
+    "-a37",
+    "-a38",
+    "-a39",
+    "-a40",
+    "-a41",
+    "-a42",
+    "-a43",
+    "-a44",
+    "-a45",
+    "-a46",
+    "-a47",
+    "-a48",
+    "-a49",
+    "-a50",
+    "-a51",
+    "-a52",
+    "-a53",
+    "-a54",
+    "-a55",
+    "-a56",
+    "-a57",
+    "-a58",
+    "-a59",
+    "-a60",
+    "-a61",
+    "-a62",
+    "-a63"
+   ]
+  },
+  {
+   "field": "engineArguments",
+   "name": "exactly 1024 UTF-16 units",
+   "valid": true,
+   "value": [
+    "-aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+   ]
+  },
+  {
+   "field": "engineArguments",
+   "name": "missing dash",
+   "valid": false,
+   "value": [
+    "debug"
+   ]
+  },
+  {
+   "field": "engineArguments",
+   "name": "space in name",
+   "valid": false,
+   "value": [
+    "-a b"
+   ]
+  },
+  {
+   "field": "engineArguments",
+   "name": "datapath is project-owned",
+   "valid": false,
+   "value": [
+    "-datapath=x"
+   ]
+  },
+  {
+   "field": "engineArguments",
+   "name": "datapath case-insensitive",
+   "valid": false,
+   "value": [
+    "-DataPath=x"
+   ]
+  },
+  {
+   "field": "engineArguments",
+   "name": "startup is project-owned",
+   "valid": false,
+   "value": [
+    "-startup=x"
+   ]
+  },
+  {
+   "field": "engineArguments",
+   "name": "control character",
+   "valid": false,
+   "value": [
+    "-x=\u0007"
+   ]
+  },
+  {
+   "field": "engineArguments",
+   "name": "line break",
+   "valid": false,
+   "value": [
+    "-x=a\nb"
+   ]
+  },
+  {
+   "field": "engineArguments",
+   "name": "DEL character",
+   "valid": false,
+   "value": [
+    "-x="
+   ]
+  },
+  {
+   "field": "engineArguments",
+   "name": "non-string item",
+   "valid": false,
+   "value": [
+    1
+   ]
+  },
+  {
+   "field": "engineArguments",
+   "name": "not an array",
+   "valid": false,
+   "value": "-debug"
+  },
+  {
+   "field": "engineArguments",
+   "name": "null",
+   "valid": false,
+   "value": null
+  },
+  {
+   "field": "engineArguments",
+   "name": "65 items",
+   "valid": false,
+   "value": [
+    "-a0",
+    "-a1",
+    "-a2",
+    "-a3",
+    "-a4",
+    "-a5",
+    "-a6",
+    "-a7",
+    "-a8",
+    "-a9",
+    "-a10",
+    "-a11",
+    "-a12",
+    "-a13",
+    "-a14",
+    "-a15",
+    "-a16",
+    "-a17",
+    "-a18",
+    "-a19",
+    "-a20",
+    "-a21",
+    "-a22",
+    "-a23",
+    "-a24",
+    "-a25",
+    "-a26",
+    "-a27",
+    "-a28",
+    "-a29",
+    "-a30",
+    "-a31",
+    "-a32",
+    "-a33",
+    "-a34",
+    "-a35",
+    "-a36",
+    "-a37",
+    "-a38",
+    "-a39",
+    "-a40",
+    "-a41",
+    "-a42",
+    "-a43",
+    "-a44",
+    "-a45",
+    "-a46",
+    "-a47",
+    "-a48",
+    "-a49",
+    "-a50",
+    "-a51",
+    "-a52",
+    "-a53",
+    "-a54",
+    "-a55",
+    "-a56",
+    "-a57",
+    "-a58",
+    "-a59",
+    "-a60",
+    "-a61",
+    "-a62",
+    "-a63",
+    "-a64"
+   ]
+  },
+  {
+   "field": "engineArguments",
+   "name": "1025 UTF-16 units",
+   "valid": false,
+   "value": [
+    "-aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+   ]
+  },
+  {
+   "field": "overlayArchives",
+   "name": "absent",
+   "valid": true
+  },
+  {
+   "field": "overlayArchives",
+   "name": "empty",
+   "valid": true,
+   "value": []
+  },
+  {
+   "field": "overlayArchives",
+   "name": "one archive",
+   "valid": true,
+   "value": [
+    "patch.xp3"
+   ]
+  },
+  {
+   "field": "overlayArchives",
+   "name": "nested and uppercase suffix",
+   "valid": true,
+   "value": [
+    "a/b.XP3"
+   ]
+  },
+  {
+   "field": "overlayArchives",
+   "name": "order is kept",
+   "valid": true,
+   "value": [
+    "z.xp3",
+    "a.xp3"
+   ]
+  },
+  {
+   "field": "overlayArchives",
+   "name": "exactly 32 items",
+   "valid": true,
+   "value": [
+    "p0.xp3",
+    "p1.xp3",
+    "p2.xp3",
+    "p3.xp3",
+    "p4.xp3",
+    "p5.xp3",
+    "p6.xp3",
+    "p7.xp3",
+    "p8.xp3",
+    "p9.xp3",
+    "p10.xp3",
+    "p11.xp3",
+    "p12.xp3",
+    "p13.xp3",
+    "p14.xp3",
+    "p15.xp3",
+    "p16.xp3",
+    "p17.xp3",
+    "p18.xp3",
+    "p19.xp3",
+    "p20.xp3",
+    "p21.xp3",
+    "p22.xp3",
+    "p23.xp3",
+    "p24.xp3",
+    "p25.xp3",
+    "p26.xp3",
+    "p27.xp3",
+    "p28.xp3",
+    "p29.xp3",
+    "p30.xp3",
+    "p31.xp3"
+   ]
+  },
+  {
+   "field": "overlayArchives",
+   "name": "exactly 240 UTF-16 units",
+   "valid": true,
+   "value": [
+    "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.xp3"
+   ]
+  },
+  {
+   "field": "overlayArchives",
+   "name": "wrong suffix",
+   "valid": false,
+   "value": [
+    "patch.zip"
+   ]
+  },
+  {
+   "field": "overlayArchives",
+   "name": "parent segment",
+   "valid": false,
+   "value": [
+    "../x.xp3"
+   ]
+  },
+  {
+   "field": "overlayArchives",
+   "name": "absolute",
+   "valid": false,
+   "value": [
+    "/x.xp3"
+   ]
+  },
+  {
+   "field": "overlayArchives",
+   "name": "empty segment",
+   "valid": false,
+   "value": [
+    "a//b.xp3"
+   ]
+  },
+  {
+   "field": "overlayArchives",
+   "name": "backslash",
+   "valid": false,
+   "value": [
+    "a\\b.xp3"
+   ]
+  },
+  {
+   "field": "overlayArchives",
+   "name": "redirect character",
+   "valid": false,
+   "value": [
+    "x>y.xp3"
+   ]
+  },
+  {
+   "field": "overlayArchives",
+   "name": "duplicate",
+   "valid": false,
+   "value": [
+    "a.xp3",
+    "a.xp3"
+   ]
+  },
+  {
+   "field": "overlayArchives",
+   "name": "non-string item",
+   "valid": false,
+   "value": [
+    null
+   ]
+  },
+  {
+   "field": "overlayArchives",
+   "name": "not an array",
+   "valid": false,
+   "value": "a.xp3"
+  },
+  {
+   "field": "overlayArchives",
+   "name": "33 items",
+   "valid": false,
+   "value": [
+    "p0.xp3",
+    "p1.xp3",
+    "p2.xp3",
+    "p3.xp3",
+    "p4.xp3",
+    "p5.xp3",
+    "p6.xp3",
+    "p7.xp3",
+    "p8.xp3",
+    "p9.xp3",
+    "p10.xp3",
+    "p11.xp3",
+    "p12.xp3",
+    "p13.xp3",
+    "p14.xp3",
+    "p15.xp3",
+    "p16.xp3",
+    "p17.xp3",
+    "p18.xp3",
+    "p19.xp3",
+    "p20.xp3",
+    "p21.xp3",
+    "p22.xp3",
+    "p23.xp3",
+    "p24.xp3",
+    "p25.xp3",
+    "p26.xp3",
+    "p27.xp3",
+    "p28.xp3",
+    "p29.xp3",
+    "p30.xp3",
+    "p31.xp3",
+    "p32.xp3"
+   ]
+  },
+  {
+   "field": "overlayArchives",
+   "name": "241 UTF-16 units",
+   "valid": false,
+   "value": [
+    "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.xp3"
+   ]
+  },
+  {
+   "field": "overlayArchives",
+   "name": "astral character counts two units",
+   "valid": false,
+   "value": [
+    "😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀.xp3"
+   ]
+  },
+  {
+   "field": "overlayArchives",
+   "name": "CJK path",
+   "valid": true,
+   "value": [
+    "补丁/中文.xp3"
+   ]
+  }
+ ]
+}

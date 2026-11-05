@@ -57,7 +57,10 @@ queueing. A cancelled queued request never runs; a running request keeps its slo
   failures stop the operation. All-unmatched input retains its facts for ordinary configuration, identity and shared
   STORE packaging. No native input is executed. Returned final paths are owned host staging state, never game JSON.
 - `prepare`: directory, config, files, selected core, fingerprint map, optional savedContext and host-only locators;
-  returns identity and resource plans. Arcade inspection reads bounded ZIP central directories.
+  returns identity and resource plans. Arcade inspection reads bounded ZIP central directories. A resource plan
+  lists `files`, optional virtual `paths`, and optional `preloadPaths` for files the Target reads before start (MV
+  desktop plugin scenarios); the host publishes `preloadPaths` as the file-index `preloadPath` so the browser never
+  re-derives which files they are.
 - `launch-options`, `kirikiri-entry-candidates`, `rpg-entry-candidates` and `dos-entry-candidates`: read-only entry and
   launch projections described in [runtime configuration](runtime-module.md).
 - `arcade-parents`: Parent and media choices for the selected arcade machine, including a proposed attachment.
@@ -92,6 +95,15 @@ lengths and member SHA values; the host assembles STORE resources itself from th
 Provider release builders and the PFB watcher call `fingerprintProvider` from `scripts/runtime-fingerprints.mjs` with
 the current declarations and verified core asset index. Servers read the integrity-covered result from the selected
 Provider and pass it to `prepare` as the fingerprint map.
+
+## Rules shared with the browser runtime
+
+Server rules live only in this module. The few facts the browser adapters also need are shared as data, not
+reimplemented: the runtime JSON facts under `src/runtime/` (including the RGSS RTP names in `rpg-rtp.json`) and the
+generated Provider declarations. Where a browser adapter must still validate the Envelope it receives on its own,
+the KiriKiri `engineArguments`/`overlayArchives` options, both implementations assert the same vectors in
+`src/kirikiri/target-options.vectors.json`. `tests/catalog-projection.test.ts` keeps the TypeScript catalog projection
+used for the generated support catalog equal to this module's `catalog` result.
 
 ## Verification
 

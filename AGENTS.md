@@ -6,7 +6,7 @@
 
 - `src/` 实现 Provider declaration、Provider Module V1、运行时生命周期、Target 私有实现、checkpoint codec 与宿主无关的 Envelope 校验。
 - `assets/` 保存项目自有 bridge、文本资产与 `assets/facts/` 下经过来源摘要校验的声明事实；不得保存第三方核心源码、源码补丁、二进制构建产物或游戏。`src/runtime/` 保存 catalog 与配置、实现选择、BIOS/Parent 要求和内容身份共用的 JSON 事实。
-- `host/` 是服务端宿主唯一实现：Go 模块 `github.com/retrom-project/retrom-runtime/host`，在宿主进程内执行配置构造、实际实现选择、BIOS/Parent 要求、内容身份、审核证据与内容规范化；它嵌入 `src/runtime/` JSON 事实、`assets/facts/` 与由 `npm run host:declarations` 从 Provider declaration 生成的 `host/facts/declarations.json`。契约见 [服务端宿主模块](docs/host-module.md)。
+- `host/` 是服务端宿主唯一实现：Go 模块 `github.com/retrom-project/retrom-runtime/host`，在宿主进程内执行配置构造、实际实现选择、BIOS/Parent 要求、内容身份、审核证据与内容规范化；它嵌入 `src/runtime/` JSON 事实、`assets/facts/` 与由 `npm run host:declarations` 从 Provider declaration 生成的 `host/facts/declarations.json`。契约见 [服务端宿主模块](docs/host-module.md)。服务端规则只在 `host/` 实现，浏览器 adapter 不复刻 Prepare/配置规则：由服务端决定的结果（如 MV 插件剧本的 `preloadPaths`）通过资源计划交给浏览器；两边都需要的事实以 `src/runtime/` JSON 共享；浏览器仍须独立校验的 Envelope 规则（如 KiriKiri `engineArguments`/`overlayArchives`）必须由 `src/kirikiri/target-options.vectors.json` 这类共享测试向量同时锁定 TS 与 Go 实现，修改规则时同步修改向量。
 - `src/providers/*/catalog.ts` 生成的 Provider declaration 是 Target、能力、checkpoint contract 与运行文件的唯一机器事实源；`provider-sources.json`（retrom-runtime）和 `src/providers/emulatorjs/source-catalog.ts`（EmulatorJS）只记录第三方上游/本地构建来源，不能声明 Target 或宿主路由。
 - 本仓库不得编译第三方核心。第三方核心的源码修改、构建脚本、质量门禁和 Release 全部由对应 fork 的
   `retrom/<baseline>` 分支维护（J2ME 原创集成层使用 `main`）；本仓库只聚合固定 fork tag/commit 的 Release 资产并提供统一接口。

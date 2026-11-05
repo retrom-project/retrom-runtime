@@ -356,7 +356,10 @@ only STAT and bounded READ for the current immutable web index through an
 exact-origin, exact-frame MessagePort. The Host-owned Service Worker projects
 these bytes into native resource responses, including media ranges, while the
 cache remains on the application origin. No arbitrary URL or cache API crosses
-the bridge. The index allows empty files and unique ASCII case aliases.
+the bridge. The index allows empty files and unique ASCII case aliases. Each
+entry is `{path, url, sha256, sizeBytes, mediaType}` with an optional canonical
+`preloadPath`, set only for files the host's resource plan marks for reading
+before start.
 
 MV additionally prepares a bounded set of scenario text for synchronous desktop
 plugin reads before starting the isolated game. These bytes use the same managed

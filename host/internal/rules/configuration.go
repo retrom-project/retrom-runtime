@@ -2,8 +2,16 @@ package rules
 
 import (
 	"encoding/json"
+	"errors"
+	"fmt"
 	"regexp"
+	"sync"
+
+	retromruntime "github.com/retrom-project/retrom-runtime"
 )
+
+// errFactsInvalid reports an embedded runtime fact that cannot be decoded, which is a build defect.
+var errFactsInvalid = errors.New("runtime fact invalid")
 
 // Content is the runtime content rule of a Game.
 type Content struct {
@@ -84,9 +92,21 @@ var (
 	}
 	engines       = []string{"RPG2000", "RPG2003", "RPGXP", "RPGVX", "RPGVXACE", "RPGMV", "RPGMZ"}
 	romSetPattern = regexp.MustCompile(`^[a-z0-9_]{1,128}$`)
-	// OfficialRTP is the run time package each RGSS engine's own installer provides.
-	OfficialRTP = map[string]string{"RPGXP": "Standard", "RPGVX": "RPGVX", "RPGVXACE": "RPGVXAce"}
+	// officialRTP is the run time package each RGSS engine's own installer provides, from the shared runtime fact.
+	officialRTP = sync.OnceValue(loadOfficialRTP)
 )
+
+func loadOfficialRTP() map[string]string {
+	data, err := retromruntime.Facts.ReadFile("src/runtime/rpg-rtp.json")
+	var table map[string]string
+	if err == nil {
+		err = json.Unmarshal(data, &table)
+	}
+	if err != nil || len(table) == 0 {
+		panic(fmt.Errorf("%w: rpg-rtp.json", errFactsInvalid))
+	}
+	return table
+}
 
 // ParseConfiguration accepts only game-specific rules.
 func ParseConfiguration(value any) (*Configuration, error) {
@@ -218,7 +238,7 @@ func validateRPGContent(object map[string]any) error {
 		return Invalid()
 	}
 	if rtp, exists := object["rtp"]; exists {
-		official, rgss := OfficialRTP[engine]
+		official, rgss := officialRTP()[engine]
 		if text, ok := rtp.(string); !rgss || !ok || text != official {
 			return Invalid()
 		}

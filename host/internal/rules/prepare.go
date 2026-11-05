@@ -386,6 +386,9 @@ type ResourcePlan struct {
 	BridgeAssetPath *string           `json:"bridgeAssetPath,omitempty"`
 	Encoding        *string           `json:"encoding,omitempty"`
 	Paths           map[string]string `json:"paths,omitempty"`
+	// PreloadPaths names files the Target reads before start, keyed by logical path, valued by the path the
+	// engine uses. The host publishes them in the resource index; the browser does not re-derive the rule.
+	PreloadPaths map[string]string `json:"preloadPaths,omitempty"`
 }
 
 // Prepare produces the launch identity, options, requirements and resource plan.
@@ -647,7 +650,17 @@ func projectResource(plan *ResourcePlan, content *Content, files []File, packed 
 	root := Root(entry)
 	mv := content.Kind == "RPG_MAKER_PROJECT" && *content.Engine == "RPGMV"
 	for _, file := range files {
-		if strings.HasPrefix(file.LogicalKey, root) || mv && rpgPluginScenarioPath(entry, file.LogicalKey) {
+		scenario, plugin := "", false
+		if mv {
+			scenario, plugin = rpgPluginScenarioPath(entry, file.LogicalKey)
+		}
+		if plugin {
+			if plan.PreloadPaths == nil {
+				plan.PreloadPaths = map[string]string{}
+			}
+			plan.PreloadPaths[file.LogicalKey] = scenario
+		}
+		if strings.HasPrefix(file.LogicalKey, root) || plugin {
 			plan.Files = append(plan.Files, file.LogicalKey)
 		}
 	}

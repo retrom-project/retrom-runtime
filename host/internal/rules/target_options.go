@@ -178,11 +178,15 @@ func prepareKirikiriOptions(config *Configuration, options map[string]any, files
 	return result, nil
 }
 
-// rpgPluginScenarioPath: desktop MV packages can place plugin scenario scripts next to their www directory.
-func rpgPluginScenarioPath(entry, path string) bool {
+// rpgPluginScenarioPath: desktop MV packages can place plugin scenario scripts next to their www directory. It
+// returns the path the plugin reads, relative to that project root.
+func rpgPluginScenarioPath(entry, path string) (string, bool) {
 	root := Root(entry)
 	if HasSuffixFold(root, "www/") {
 		root = root[:len(root)-4]
 	}
-	return strings.HasPrefix(path, root+"scenario/") && (HasSuffixFold(path, ".sl") || HasSuffixFold(path, ".txt"))
+	if !strings.HasPrefix(path, root+"scenario/") || !HasSuffixFold(path, ".sl") && !HasSuffixFold(path, ".txt") {
+		return "", false
+	}
+	return path[len(root):], true
 }

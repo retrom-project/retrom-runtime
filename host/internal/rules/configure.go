@@ -642,7 +642,7 @@ func rpgEngine(request *ConfigureRequest, file *File) (string, error) {
 
 // declaredRTP is the engine's official RTP when the [Game] section declares it in RTP or RTP1-RTP3.
 func declaredRTP(engine, ini string) string {
-	official, rgss := OfficialRTP[engine]
+	official, rgss := officialRTP()[engine]
 	if !rgss {
 		return ""
 	}

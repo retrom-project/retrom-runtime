@@ -1,4 +1,3 @@
-import {rpgPluginScenarioPath} from "../runtime/rpg-plugin-paths.js";
 import type {ContentSourceV1, ManagedInputPolicyV1} from "../../contracts/content-io/v1/content-io.js";
 import type {ProgressContentReader} from "../content-io/range-reader.js";
 import type {ReadProgress} from "../content-io/scheduler.js";
@@ -8,7 +7,7 @@ import type {ContentSessionAccess} from "../provider/content-inputs.js";
 import {fetchMetadataJson, indexByteBudget} from "../provider/metadata.js";
 import type {RuntimeWebResourceV1} from "../provider/module-api.js";
 
-type File = {source: ContentSourceV1; mediaType: string; reader?: Promise<ProgressContentReader>};
+type File = {source: ContentSourceV1; mediaType: string; preloadPath?: string; reader?: Promise<ProgressContentReader>};
 export class NativeContentFiles {
   private readonly files = new Map<string, File>();
   private readonly folded = new Map<string, string | null>();
@@ -47,9 +46,12 @@ export class NativeContentFiles {
     await reader.readInto(value.offset, bytes, this.signal, undefined, progress);
     return {status: 200, bytes};
   }
-  /** Desktop plugins synchronously read a small scenario script set; media remains demand-paged. */
+  /**
+   * Files the host marked for reading before start (desktop plugin scenario scripts), under the path the engine
+   * uses; media remains demand-paged. The host decides membership, so the browser does not re-derive the rule.
+   */
   async prepareRpgPluginFiles(): Promise<Array<{path: string; data: ArrayBuffer}>> {
-    const selected = [...this.files].filter(([path]) => rpgPluginScenarioPath(this.entryFile, path) !== null);
+    const selected = [...this.files].filter(([, file]) => file.preloadPath !== undefined);
     const total = selected.reduce((size, [, file]) => size + file.source.sizeBytes, 0);
     if (selected.length > 4096 || total > 16 * 1024 * 1024) {throw new Error("RPG_PLUGIN_FILES_TOO_LARGE");}
     const result: Array<{path: string; data: ArrayBuffer}> = [];
@@ -59,7 +61,7 @@ export class NativeContentFiles {
         const reply = await this.request({type: "READ", path, offset, length: Math.min(262144, bytes.length - offset)});
         bytes.set(reply.bytes as Uint8Array, offset);
       }
-      result.push({path: rpgPluginScenarioPath(this.entryFile, path)!, data: bytes.buffer});
+      result.push({path: file.preloadPath!, data: bytes.buffer});
     }
     return result;
   }
@@ -89,10 +91,12 @@ function invalid() {return new ContentIOError("SOURCE_INVALID");}
 function parseEntry(item: unknown, base: URL, digest: string, maximum: number): {path: string; file: File} {
   if (!record(item) || typeof item.path !== "string" || !canonicalPath(item.path) ||
     !integer(item.sizeBytes, 0, maximum) || typeof item.url !== "string" ||
-    typeof item.mediaType !== "string" || !/^[a-z0-9.+-]+\/[a-z0-9.+-]+(?:; charset=utf-8)?$/u.test(item.mediaType)) {throw invalid();}
+    typeof item.mediaType !== "string" || !/^[a-z0-9.+-]+\/[a-z0-9.+-]+(?:; charset=utf-8)?$/u.test(item.mediaType) ||
+    item.preloadPath !== undefined && (typeof item.preloadPath !== "string" || !canonicalPath(item.preloadPath))) {throw invalid();}
   const url = new URL(item.url, base);
   if (url.origin !== base.origin || url.username || url.password || url.hash) {throw invalid();}
-  return {path: item.path, file: {mediaType: item.mediaType, source: {
+  return {path: item.path, file: {mediaType: item.mediaType,
+    ...(typeof item.preloadPath === "string" ? {preloadPath: item.preloadPath} : {}), source: {
     identity: {kind: "INDEX_ENTRY", projectDigest: digest, logicalPath: item.path},
     url: url.href, sizeBytes: item.sizeBytes, purpose: "GAME", transport: "RANGE_REQUIRED",
     etagPolicy: "PIN_STRONG", contentLengthPolicy: "EXACT_IF_PRESENT",

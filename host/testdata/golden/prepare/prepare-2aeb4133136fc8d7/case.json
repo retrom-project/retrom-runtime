@@ -78,8 +78,8 @@
   "config": {
    "content": {
     "kind": "RPG_MAKER_PROJECT",
-    "engine": "RPGMV",
-    "entryFile": "Game/www/index.html"
+    "entryFile": "Game/www/index.html",
+    "engine": "RPGMV"
    }
   },
   "targetOptions": {},
@@ -128,7 +128,11 @@
      "Game/scenario/CG.txt"
     ],
     "entryFile": "Game/www/index.html",
-    "bridgeAssetPath": "assets/native/bridge.js"
+    "bridgeAssetPath": "assets/native/bridge.js",
+    "preloadPaths": {
+     "Game/scenario/CG.txt": "scenario/CG.txt",
+     "Game/scenario/En/001.sl": "scenario/En/001.sl"
+    }
    }
   ]
  }

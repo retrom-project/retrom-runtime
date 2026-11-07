@@ -582,9 +582,13 @@ describe("KiriKiri2 KAG runtime", () => {
     expect(cancelAnimationFrame).toHaveBeenCalled();
   });
 
-  it.each([["data.bin", "/data.bin"], ["startup.tjs", "/"]])("starts the selected %s despite other archives", async (entry, expected) => {
+  // A KiriKiri data folder is passed like a native folder selection, so the
+  // engine's exePath is its parent; other folders remain the executable folder.
+  it.each([["data.bin", "/data.bin"], ["startup.tjs", "/"], ["data/startup.tjs", "/data"],
+    ["DATA/startup.tjs", "/DATA"], ["game/startup.tjs", "/game/"], ["game/data/startup.tjs", "/game/data"]])(
+    "starts the selected %s despite other archives", async (entry, expected) => {
     enableRuntimeFeatures(); const vlfs = fakeVlfs();
-    mockDownloads(["/data.bin", "/patch.xp3"]);
+    mockDownloads(["/data.bin", "/patch.xp3", "/data/startup.tjs", "/DATA/startup.tjs", "/game/startup.tjs", "/game/data/startup.tjs"]);
     const envelope = config(); envelope.targetOptions.startupXp3Path = entry;
     const runtime = await createRuntime(envelope, currentWindowHost(null));
     const mounting = runtime.mount(document.createElement("div")); await loadVlfs(vlfs);

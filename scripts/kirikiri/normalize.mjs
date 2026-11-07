@@ -13,6 +13,8 @@ import {nativeModule} from "./native-module.mjs";
 import {createConfiguredFilter, discoverConfiguredProfiles} from "./configured-cx.mjs";
 import {createRollingFilter, discoverRollingProfiles} from "./rolling-xor.mjs";
 import {seedMetadataArchive} from "./seed-metadata.mjs";
+import {createInlineFilter, discoverInlineProfiles} from "./inline-xor.mjs";
+import {discoverNativeTlgProfiles, rewriteNativeTlg} from "./native-tlg.mjs";
 
 const digest = bytes => createHash("sha256").update(bytes).digest("hex");
 function tinyFilter(profile) {
@@ -20,6 +22,7 @@ function tinyFilter(profile) {
 }
 function profileKey(profile) {
   if (profile.kind === "rolling-xor") {return `rolling-xor:${profile.profile.xorConstant ?? 0}:${digest(profile.profile.table)}`;}
+  if (profile.kind === "inline-xor") {return `inline-xor:${JSON.stringify(profile.profile)}`;}
   if (profile.kind === "configured") {
     return `configured:${digest(profile.profile.params)}:${digest(profile.profile.controlBlock)}`;
   }
@@ -41,10 +44,12 @@ async function nativeProfiles(input, signal, archives = []) {
     const found = [...discoverCxProfiles(bytes).map(profile => ({kind: "classic", profile})),
       ...discoverTinyProfiles(bytes).map(profile => ({kind: "tiny", profile})),
       ...discoverConfiguredProfiles(bytes).map(profile => ({kind: "configured", profile})),
-      ...discoverRollingProfiles(bytes).map(profile => ({kind: "rolling-xor", profile}))];
+      ...discoverRollingProfiles(bytes).map(profile => ({kind: "rolling-xor", profile})),
+      ...discoverInlineProfiles(bytes).map(profile => ({kind: "inline-xor", profile}))];
+    const resourceCodecs = discoverNativeTlgProfiles(bytes);
     for (const value of found) {
-      const key = profileKey(value), previous = profiles.get(key);
-      if (!previous?.profile.legacyBulk || value.profile.legacyBulk) {profiles.set(key, {...value, moduleSha256: sha256});}
+      const key = profileKey(value) + JSON.stringify(resourceCodecs), previous = profiles.get(key);
+      if (!previous?.profile.legacyBulk || value.profile.legacyBulk) {profiles.set(key, {...value, resourceCodecs, moduleSha256: sha256});}
     }
     requireFormat(profiles.size <= 64, "FILTER_AMBIGUOUS");
     for (const embedded of extractEmbeddedPeModules(bytes, {maxTotalBytes: 512 * 1024 * 1024 - totalBytes})) {inspect(embedded, depth + 1);}
@@ -103,7 +108,8 @@ async function selectFilter(profiles, archives, signal) {
     let filter;
     try {
       filter = candidate.kind === "tiny" ? tinyFilter(candidate.profile) : candidate.kind === "configured" ?
-        {kind: "configured", ...createConfiguredFilter(candidate.profile)} : candidate.kind === "rolling-xor" ?
+        {kind: "configured", ...createConfiguredFilter(candidate.profile)} : candidate.kind === "inline-xor" ?
+          {kind: "inline-xor", ...createInlineFilter(candidate.profile)} : candidate.kind === "rolling-xor" ?
           {kind: "rolling-xor", ...createRollingFilter(candidate.profile)} : {kind: "classic", ...createCxFilter(candidate.profile)};
       if (candidate.profile.legacyBulk && archives.every(archive => archive.format === "xp3-native")) {
         filter.stages = [{id: "classic", apply: filter.apply}, {id: "legacy-bulk", apply: filter.applyBulk}];
@@ -118,7 +124,8 @@ async function selectFilter(profiles, archives, signal) {
     // Ordinary archives are subsequently checked in full. A seed-only archive
     // cannot authenticate the filter; require three real checksum matches.
     if (ordinary ? matches >= 3 : matches === probes.length) {
-      accepted.push({...filter, verified: matches >= 3, inputProfile: candidate});
+      accepted.push({...filter, verified: matches >= 3, inputProfile: candidate,
+        ...(candidate.resourceCodecs.length ? {rewriteResources: chunks => rewriteNativeTlg(chunks, candidate.resourceCodecs)} : {})});
     }
   }
   requireFormat(accepted.length > 0, "FILTER_UNAVAILABLE"); requireFormat(accepted.length === 1, "FILTER_AMBIGUOUS");
@@ -201,6 +208,9 @@ async function probe(input) {
       return !entry || entry.flags === 0x80000000 || entry.seedOnly ? apply(bytes, h, offset) : bytes;
     }};
     for (const {file, archive, embedded} of native) {
+      // A proven identity needs no conversion or replacement checksum. Keep
+      // these original archive facts rather than interpreting opaque members.
+      if (!embedded && archive.entries.every(entry => entry.seedOnly && filter.unchangedSeed?.(entry.h))) {continue;}
       add(file, await seedMetadataArchive(archive, ordinaryFilter, signal), ordinaryFilter, embedded ? "xp3-pe" : "xp3-native");
     }
   } else {requireFormat(!native.some(item => item.embedded), "FILTER_UNAVAILABLE");}
@@ -237,7 +247,8 @@ async function convert(input, plan) {
       for (const key of ["verifiedEntries", "metadataCorrections", "omittedPhysicalEntries"]) {summary[key] += result[key];}
       await audit({archive: file.logicalKey, kind: "archive", format: archive.format, sourceSha256: file.sha256, sourceSize: file.sizeBytes,
         outputSha256: result.sha256, outputSize: result.sizeBytes, filterKind: filter.kind, moduleSha256: filter.inputProfile.moduleSha256,
-        profile: ["fixed-xor", "seed-xor", "identity"].includes(filter.kind) ? filter.inputProfile.profile : filter.kind === "tiny" ? filter.profile : filter.kind === "rolling-xor" ?
+        resourceCodecs: filter.inputProfile.resourceCodecs,
+        profile: ["fixed-xor", "seed-xor", "identity", "inline-xor"].includes(filter.kind) ? filter.inputProfile.profile : filter.kind === "tiny" ? filter.profile : filter.kind === "rolling-xor" ?
           {tableSha256: digest(filter.inputProfile.profile.table), ...(filter.inputProfile.profile.xorConstant === undefined ? {} :
             {xorConstant: filter.inputProfile.profile.xorConstant, tableLength: filter.inputProfile.profile.table.length})} : filter.kind === "configured" ?
           {paramsSha256: digest(filter.inputProfile.profile.params), controlBlockSha256: digest(filter.inputProfile.profile.controlBlock)} :

@@ -158,6 +158,9 @@ class KirikiriCheckpointOperation {
   private nothingToCapture(final: boolean) {
     const availability = this.options.overlay.availability();
     if (availability === null) {return false;}
+    // A game that ends itself keeps the files it wrote, as on its own platform,
+    // even when only settings or system variables changed before any save slot.
+    if (final && this.nativeExit && availability === "NO_SAVE" && this.options.overlay.changed()) {return false;}
     if (final && (availability === "NO_SAVE" || availability === "UNCHANGED")) {return true;}
     throw new Error(availability === "NOT_READY" ? "KIRIKIRI_NATIVE_SAVE_INCOMPLETE" : "KIRIKIRI_NO_SAVE");
   }

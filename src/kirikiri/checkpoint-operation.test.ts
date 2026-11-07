@@ -283,6 +283,29 @@ it.each([{name: "ExitStatus", status: 3}, {status: 0}, new WebAssembly.RuntimeEr
   expect(module.resumeMainLoop).not.toHaveBeenCalled(); await operation.stop();
 });
 
+it("exports system files when the game ends itself before any native save slot", async () => {
+  const {operation, module, overlay} = fixture(false);
+  overlay.record("/savedata/datasu.ksd", Uint8Array.of(3));
+  const final = await operation.finalCheckpoint(true);
+  expect(module._krkr2_host_finalize_native_exit).toHaveBeenCalledOnce();
+  expect(await decodeKirikiriCheckpoint(final!.bytes)).toEqual({progressPaths: [], entries: [{path: "savedata/datasu.ksd", data: Uint8Array.of(3)}]});
+  await operation.stop();
+});
+
+it("returns no final checkpoint when the game ends itself without writing files", async () => {
+  const {operation} = fixture(false);
+  expect(await operation.finalCheckpoint(true)).toBeNull();
+  await operation.stop();
+});
+
+it("returns no final checkpoint for restored system files the game did not change", async () => {
+  const {operation, overlay} = fixture(false);
+  overlay.record("/savedata/datasu.ksd", Uint8Array.of(3));
+  overlay.seedProgress([]);
+  expect(await operation.finalCheckpoint(true)).toBeNull();
+  await operation.stop();
+});
+
 function fixture(progress = true) {
   const overlay = new KirikiriWriteOverlay();
   if (progress) {

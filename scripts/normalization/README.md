@@ -56,6 +56,18 @@ Container metadata does not establish which XP3 the original engine selects.
 Reviewers use the existing entry configuration for the intended startup file;
 resource extraction alone does not establish playable support.
 
+The Enigma Virtual Box adapter recognizes a PE32 TLS callback whose
+initializer reads the package configuration from the second-last section:
+prefix length, `%DEFAULT FOLDER%\` prefix, counted UTF-16 package masks and
+the embedded package offset. Masks are matched only beside the executable;
+matched files without the `EVB\0` header are ignored, as the native enumerator
+does. Only header layout 3 is read: one length-prefixed preorder metadata block,
+payload offsets relative to its end, fully consumed metadata and bounded
+ranges. Packages are ordered by descending header timestamp and the first
+same-name virtual file wins. Compressed, registered or redirected file records,
+other virtual roots and other layouts fail explicitly. Registry data is not
+applied. Reviewers still select the extracted startup entry.
+
 The Enigma Protector VFS adapter recognizes a connected PE32 bootstrap and
 its bounded self-XOR stages. It derives the master configuration key from the
 supplied PE sections, verifies both configuration digests, and decodes its

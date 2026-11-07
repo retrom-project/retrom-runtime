@@ -1,5 +1,6 @@
 import type {ConfigureRequest} from "./configure.js";
 import {hashBytes} from "./identity.js";
+import {kirikiriProjectRoot} from "./kirikiri-entry.js";
 import type {RuntimeConfiguration, RuntimeContentFile} from "./types.js";
 import {configurationFailure, digest, exact, logicalPath, object, utf8Compare} from "./validation.js";
 
@@ -46,7 +47,7 @@ export function defaultKirikiriPatchOptions(input: Input & {entryFile?: string})
 }
 
 function discover(input: Input, entryFile?: string): Patch[] {
-  const projectRoot = entryFile === undefined ? undefined : directory(entryFile);
+  const projectRoot = entryFile === undefined ? undefined : kirikiriProjectRoot(entryFile);
   const manifests = input.files.flatMap(file => {
     const match = manifestPattern.exec(file.logicalKey);
     if (!match || projectRoot !== undefined && (match[1] ?? "") !== projectRoot) {return [];}
@@ -146,7 +147,6 @@ function withOverlay(configuration: RuntimeConfiguration, overlayRoot?: string):
   return result;
 }
 
-function directory(path: string): string {return path.slice(0, path.lastIndexOf("/") + 1);}
 function invalid(manifest: string, reason: string): never {
   configurationFailure("RUNTIME_PATCH_MANIFEST_INVALID", {manifest, reason});
 }

@@ -10,6 +10,7 @@ import {normalizeContent} from "../scripts/runtime-normalize-content.mjs";
 import {tinyPE, tinyFirstBytePE} from "./kirikiri-pe-fixture.js";
 import {configuredPE} from "./kirikiri-configured-fixture.js";
 import {rollingPE} from "./kirikiri-rolling-fixture.js";
+import {inlineCrypt, inlinePE, inlineTlgPE, tlg5Pixel} from "./kirikiri-inline-fixture.js";
 import {createTinyFilter} from "../scripts/kirikiri/cxdec.mjs";
 import {cxFilterFS} from "../scripts/kirikiri/normalize.mjs";
 import {runNormalization, type Normalizer} from "../scripts/normalization/pipeline.mjs";
@@ -195,6 +196,46 @@ it("normalizes XP3 resources with a module-supplied rolling table and resource s
   expect(result.normalization).toMatchObject({archiveCount: 1, verifiedEntries: 3, formatCounts: {"xp3-native": 1}});
   const output = decodedResources(await readFile(result.files.find(file => file.logicalKey === "data.xp3")!.path!));
   for (const item of items) expect(output.get(item.name)).toEqual(item.bytes);
+});
+it("normalizes an inline XP3 reader only after independent complete resource checksums", async () => {
+  const items = resources(), request = await withModule(ordinaryXP3(items, inlineCrypt), inlinePE());
+  const result = await normalizeContent(request);
+  expect(result.normalization).toMatchObject({archiveCount: 1, verifiedEntries: 3});
+  const output = decodedResources(await readFile(result.files.find(file => file.logicalKey === "data.xp3")!.path!));
+  for (const item of items) expect(output.get(item.name)).toEqual(item.bytes);
+});
+it("canonicalizes a module-specified TLG representation only after decoded source checksums pass", async () => {
+  const items = [...resources(), {name: "pixel.tlg", bytes: tlg5Pixel(true)}];
+  const request = await withModule(ordinaryXP3(items, inlineCrypt), inlineTlgPE());
+  const result = await normalizeContent(request);
+  const output = decodedResources(await readFile(result.files.find(file => file.logicalKey === "data.xp3")!.path!));
+  expect(output.get("pixel.tlg")).toEqual(tlg5Pixel());
+  expect(result.normalization).toMatchObject({verifiedEntries: 4, metadataCorrections: 0});
+  const audit = (await readdir(request.outputRoot)).find(name => name.startsWith(".audit-"))!;
+  const rows = (await readFile(join(request.outputRoot, audit, "entries.jsonl"), "utf8")).trim().split("\n").map(line => JSON.parse(line));
+  expect(rows.find(row => row.logicalName === "pixel.tlg")).toMatchObject({sourceIntegrityVerified: true,
+    decodedSourceSha256: createHash("sha256").update(tlg5Pixel(true)).digest("hex"),
+    outputSha256: createHash("sha256").update(tlg5Pixel()).digest("hex")});
+  const bad = await withModule(ordinaryXP3([...Array.from({length: 8}, (_, i) => ({name: `${i}.dat`, bytes: Buffer.alloc(64, i + 32)})),
+    {name: "pixel.tlg", bytes: tlg5Pixel(true), h: 123}], inlineCrypt), inlineTlgPE());
+  await expect(normalizeContent(bad)).rejects.toThrow(/CHECKSUM_MISMATCH/u);
+  await expect(access(bad.outputRoot)).rejects.toThrow();
+});
+it("rejects a corrupt resource after authenticating an inline reader", async () => {
+  const items = [...Array.from({length: 8}, (_, i) => ({name: `valid-${i}.dat`, bytes: Buffer.alloc(256 + i, i + 32)})),
+    {name: "broken.dat", bytes: Buffer.alloc(64, 0x31), h: 123}];
+  const request = await withModule(ordinaryXP3(items, inlineCrypt), inlinePE());
+  await expect(normalizeContent(request)).rejects.toThrow(/CHECKSUM_MISMATCH/u);
+});
+it("preserves an opaque zero-seed archive when the authenticated reader is an identity for that seed", async () => {
+  const request = await withModule(ordinaryXP3(resources(), inlineCrypt), inlinePE());
+  const clear = ordinaryXP3([0x71, 0x93].map((byte, i) => ({name: `opaque-${i}.dat`, bytes: Buffer.alloc(64, byte), flags: 0, h: 0, raw: true})));
+  const path = join(request.outputRoot, "..", "clear-patch"); await writeFile(path, clear);
+  const file = {logicalKey: "overlay.xp3", name: "overlay.xp3", sizeBytes: clear.length, sha256: createHash("sha256").update(clear).digest("hex")};
+  request.files.push(file); request.locators[file.logicalKey] = {path, offset: 0, sizeBytes: clear.length};
+  const result = await normalizeContent(request);
+  expect(result.normalization).toMatchObject({archiveCount: 1, verifiedEntries: 3, metadataCorrections: 0});
+  expect(result.files.find(item => item.logicalKey === file.logicalKey)).toEqual(file);
 });
 it.each([0x13, 0x8f, 0xe1])("recovers an ordinary XP3 fixed XOR from independent checksums, key=%s", async key => {
   const items = [...resources(), {name: "ReadMe.txt", bytes: Buffer.from("plain warning"), raw: true}];

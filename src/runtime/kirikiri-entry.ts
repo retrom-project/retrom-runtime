@@ -39,6 +39,15 @@ export function kirikiriEntry(input: Input): string {
 }
 
 function directory(path: string) {return path.slice(0, path.lastIndexOf("/") + 1);}
+
+/**
+ * The engine treats a `data` startup folder as the project below the executable
+ * folder, whose sibling archives and folders remain part of the game.
+ */
+export function kirikiriProjectRoot(entryFile: string): string {
+  const root = directory(entryFile);
+  return /(?:^|\/)data\/startup\.tjs$/iu.test(entryFile) ? root.slice(0, root.length - "data/".length) : root;
+}
 function isXP3(input: Input, path: string): boolean {
   const prefix = input.evidence?.[path]?.prefixBase64;
   if (prefix === undefined) {return false;}

@@ -3,7 +3,7 @@ import {enigmaCrypt, enigmaSchedule, enigmaDepack, enigmaLimits, enigmaRange, re
 
 const match = (b, at, pattern) => at >= 0 && at + pattern.length <= b.length && pattern.every((v, i) => v === null || b[at + i] === v);
 const md5 = b => createHash("md5").update(b).digest();
-async function layout(handle, size, signal) {
+export async function enigmaLayout(handle, size, signal) {
   if (size < 64) {return null;}
   const dos = await readEnigma(handle, size, 0, 64, signal), nt = dos.readUInt32LE(60);
   if (dos.toString("ascii", 0, 2) !== "MZ" || nt < 64 || nt > Math.min(size - 24, 1024 * 1024)) {return null;}
@@ -24,7 +24,9 @@ async function layout(handle, size, signal) {
     const section = sections.findLast(s => rva >= s.rva && rva < s.rva + s.virtual);
     return section && length <= section.length - (rva - section.rva) ? section.raw + rva - section.rva : -1;
   };
-  return {sections, fromRva, entry: rest.readUInt32LE(16)};
+  const directories = Math.min(rest.readUInt32LE(92), Math.floor((optional - 96) / 8));
+  const directory = index => index < directories ? {rva: rest.readUInt32LE(96 + 8 * index), size: rest.readUInt32LE(100 + 8 * index)} : null;
+  return {sections, fromRva, entry: rest.readUInt32LE(16), imageBase: rest.readUInt32LE(28), directory};
 }
 function decodeBootstrap(bytes, entry) {
   if (!match(bytes, 10, [0x60, 0xe8, 0, 0, 0, 0, 0x5d, 0x81, 0xed, 16, 0, 0, 0, 0x81, 0xed]) || bytes.readUInt32LE(25) !== entry) {return null;}
@@ -68,7 +70,7 @@ function settings(config) {
 }
 /** Recognize the connected self-decoder/configuration vocabulary; no x86 execution. */
 export async function enigmaPE(handle, size, signal) {
-  const pe = await layout(handle, size, signal);
+  const pe = await enigmaLayout(handle, size, signal);
   if (!pe) {return null;}
   const entryAt = pe.fromRva(pe.entry, 80);
   if (entryAt < 0) {return null;}

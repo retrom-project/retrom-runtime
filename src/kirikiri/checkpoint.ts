@@ -111,7 +111,8 @@ function validManifestEntry(entry: ManifestEntry, offset: number, previous: stri
 }
 
 function validProgress(paths: unknown, entries: ManifestEntry[]): paths is string[] {
-  if (!Array.isArray(paths) || !paths.length || paths.length > maximumEntries) {return false;}
+  // An empty list is a bundle of system files written before any native save slot.
+  if (!Array.isArray(paths) || paths.length > maximumEntries) {return false;}
   const files = new Map(entries.map(entry => [entry.path, entry]));
   let previous = "";
   return paths.every(path => {

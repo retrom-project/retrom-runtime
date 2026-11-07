@@ -59,7 +59,12 @@ describe("KiriKiri checkpoint codec", () => {
     expect((await decodeKirikiriCheckpoint(encoded)).entries[0]?.path).toBe(path);
   });
 
-  it.each([[], ["missing.dat"], ["slot.png", "slot.png"]].map(progressPaths => ({progressPaths})))("rejects invalid native progress references $progressPaths", async ({progressPaths}) => {
+  it("round-trips system files written before any native save slot", async () => {
+    const encoded = await encodeKirikiriCheckpoint({progressPaths: [], entries: [{path: "savedata/datasu.ksd", data: Uint8Array.of(7)}]});
+    expect(await decodeKirikiriCheckpoint(encoded)).toEqual({progressPaths: [], entries: [{path: "savedata/datasu.ksd", data: Uint8Array.of(7)}]});
+  });
+
+  it.each([["missing.dat"], ["slot.png", "slot.png"]].map(progressPaths => ({progressPaths})))("rejects invalid native progress references $progressPaths", async ({progressPaths}) => {
     await expect(encodeKirikiriCheckpoint({progressPaths, entries: [{path: "slot.png", data: Uint8Array.of(1)}]}))
       .rejects.toThrow("KIRIKIRI_CHECKPOINT_INVALID");
   });

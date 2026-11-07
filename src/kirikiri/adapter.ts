@@ -419,7 +419,12 @@ function selectStartupPath(paths: string[], configured: string | null) {
   if (configured) {
     const match = sorted.find(path => path === `/${configured}`);
     if (!match) {throw new Error("KIRIKIRI_PROJECT_ENTRY_INVALID");}
-    return /(?:^|\/)startup\.tjs$/iu.test(match) ? match.slice(0, match.lastIndexOf("/") + 1) : match;
+    if (!/(?:^|\/)startup\.tjs$/iu.test(match)) {return match;}
+    const folder = match.slice(0, match.lastIndexOf("/") + 1);
+    // The engine caches exePath as the storage path of the startup argument before
+    // appending its delimiter. Like a native folder selection, a KiriKiri `data`
+    // folder is passed without the slash so exePath is the executable folder above it.
+    return /\/data\/$/iu.test(folder) ? folder.slice(0, -1) : folder;
   }
   const scripts = sorted.filter(path => /^\/startup\.tjs$/iu.test(path));
   if (scripts.length === 1) {return "/";}

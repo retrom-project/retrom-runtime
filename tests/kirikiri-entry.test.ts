@@ -88,3 +88,27 @@ it("retains ambiguity between peer projects and validates an explicit entry agai
     .toEqual({kind: "KIRIKIRI_PROJECT", entryFile: "two/data.xp3"});
   expect(() => configureRuntime({...input, selection: {entryFile: "readme.txt"}})).toThrow("RUNTIME_ENTRY_MISSING");
 });
+
+it.each([["game/data/startup.tjs", "game/"], ["game/DATA/startup.tjs", "game/"], ["data/startup.tjs", ""]])(
+  "delivers the executable folder around a selected %s data folder", (entryFile, root) => {
+    const files = [file(entryFile), file(root + "data.xp3"), file(root + "parts.xp3"), file(root + "ui/font.ttf"),
+      file(entryFile.replace("startup.tjs", "system/Initialize.tjs")), file("other/outside.xp3")];
+    const config = configureRuntime({...request, files, selection: {entryFile}});
+    const prepared = prepareRuntime({config, files, fingerprints: {"retrom-runtime/kirikiri2-kag": "b".repeat(64)},
+      directory: {platformId: "kirikiri", defaultCoreId: "kirikiri2", allowedCoreIds: ["kirikiri2"]}});
+    const relative = entryFile.slice(root.length);
+    expect(prepared.targetOptions.startupXp3Path).toBe(relative);
+    expect(prepared.resources[0].entryFile).toBe(relative);
+    expect(Object.values(prepared.resources[0].paths ?? {}).sort()).toEqual(
+      ["data.xp3", "parts.xp3", "ui/font.ttf", relative, relative.replace("startup.tjs", "system/Initialize.tjs")].sort()
+        .concat(root ? [] : ["other/outside.xp3"]).sort());
+  });
+
+it("keeps a non-data startup folder as its own project root", () => {
+  const files = [file("game/startup.tjs"), file("game/data.xp3"), file("sibling.xp3")];
+  const config = configureRuntime({...request, files, selection: {entryFile: "game/startup.tjs"}});
+  const prepared = prepareRuntime({config, files, fingerprints: {"retrom-runtime/kirikiri2-kag": "b".repeat(64)},
+    directory: {platformId: "kirikiri", defaultCoreId: "kirikiri2", allowedCoreIds: ["kirikiri2"]}});
+  expect(prepared.targetOptions.startupXp3Path).toBeNull();
+  expect(Object.values(prepared.resources[0].paths ?? {}).sort()).toEqual(["data.xp3", "startup.tjs"]);
+});

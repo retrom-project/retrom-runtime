@@ -4,7 +4,8 @@ import {electronAsar, nwEmbeddedZip} from "./web-containers.mjs";
 import {molebox4} from "./molebox.mjs";
 import {xmoeResourcePatch} from "./xmoe.mjs";
 import {enigmaProtector} from "./enigma.mjs";
+import {enigmaVirtualBox} from "./enigma-virtualbox.mjs";
 
 // Explicit, reviewed host-only registrations. No discovery, game-name dispatch or
 // browser imports: adding a format requires only a plugin and this registration.
-export const normalizers = Object.freeze([molebox4, enigmaProtector, xmoeResourcePatch, cxFilterFS, hxv4, electronAsar, nwEmbeddedZip]);
+export const normalizers = Object.freeze([molebox4, enigmaProtector, enigmaVirtualBox, xmoeResourcePatch, cxFilterFS, hxv4, electronAsar, nwEmbeddedZip]);

@@ -110,6 +110,9 @@ export class KirikiriWriteOverlay {
     return unchanged ? "UNCHANGED" : null;
   }
 
+  /** Whether any file differs from the last persisted or restored capture. */
+  changed() {return this.sequence !== this.acknowledged && this.differing.size > 0;}
+
   /** Availability for background sync. A completed player bookmark is
    * published at once; changes to other files wait for the system delay. Final
    * snapshots use availability() and still include every change. */

@@ -2,6 +2,7 @@ import {rpgPluginScenarioPath} from "./rpg-plugin-paths.js";
 import {pspProjectEntry} from "./psp-content.js";
 import {kirikiriEngineArguments} from "../kirikiri/arguments.js";
 import {kirikiriOverlayArchives} from "../kirikiri/overlays.js";
+import {kirikiriProjectRoot} from "./kirikiri-entry.js";
 import {projectProviderManifest} from "../provider/manifest.js";
 import {validateTargetOptionsAgainstSchema} from "../provider/module-api.js";
 import type {TargetOptionsV1} from "../provider/module-api.js";
@@ -205,14 +206,15 @@ function prepareKirikiriOptions(config: RuntimeConfiguration, options: TargetOpt
   if (config.content.kind !== "KIRIKIRI_PROJECT") {configurationFailure();}
   try {
     kirikiriEngineArguments(options.engineArguments);
-    const root = config.content.entryFile.slice(0, config.content.entryFile.lastIndexOf("/") + 1);
+    const root = kirikiriProjectRoot(config.content.entryFile);
     const available = new Set(files.map(file => file.logicalKey));
     if (kirikiriOverlayArchives(options.overlayArchives).some(path => !available.has(root + path))) {throw new Error();}
   }
   catch {configurationFailure("RUNTIME_OPTIONS_INVALID", {coreId: "kirikiri2"});}
-  const entryFile = config.content.entryFile;
-  return {...options, startupXp3Path: /(?:^|\/)startup\.tjs$/iu.test(entryFile) ? null
-    : projectPaths([entryFile], entryFile)[entryFile]};
+  // A root startup script is the engine default; any other entry is selected explicitly.
+  const relative = projectPaths([config.content.entryFile], config.content.entryFile, kirikiriProjectRoot(config.content.entryFile));
+  const startup = relative[config.content.entryFile];
+  return {...options, startupXp3Path: /^startup\.tjs$/iu.test(startup) ? null : startup};
 }
 
 function contentResources(config: RuntimeConfiguration, target: TargetDeclaration, coreId: string,
@@ -276,12 +278,13 @@ function gameResource(kind: ResourceKind, config: RuntimeConfiguration, files: r
   if (content.kind === "DOS_BUNDLE") {return {...plan, files: [content.entryFile], paths: {[content.entryFile]: "game.zip"}};}
   const packed = kind === "SEEKABLE_BLOB" && (content.kind === "RPG_MAKER_PROJECT" || pspProject);
   if (["FILE_TREE", "NATIVE_WEB", "ISOLATED_WEB"].includes(kind) || packed) {
-    const root = entry?.slice(0, entry.lastIndexOf("/") + 1) ?? "";
+    const root = entry === null ? "" : content.kind === "KIRIKIRI_PROJECT" ? kirikiriProjectRoot(entry)
+      : entry.slice(0, entry.lastIndexOf("/") + 1);
     const mv = content.kind === "RPG_MAKER_PROJECT" && content.engine === "RPGMV";
     plan.files = files.filter(file => file.logicalKey.startsWith(root) ||
       mv && rpgPluginScenarioPath(entry ?? "", file.logicalKey) !== null).map(file => file.logicalKey);
     if (kind === "FILE_TREE" || packed) {
-      plan.paths = projectPaths(plan.files, entry ?? "");
+      plan.paths = projectPaths(plan.files, entry ?? "", root);
       if (entry) {plan.entryFile = plan.paths[entry];}
     }
     if (packed) {plan.encoding = "ZIP";}
@@ -291,8 +294,7 @@ function gameResource(kind: ResourceKind, config: RuntimeConfiguration, files: r
   return {...plan, files: [entry]};
 }
 
-function projectPaths(keys: readonly string[], entry: string): Record<string, string> {
-  const root = entry.slice(0, entry.lastIndexOf("/") + 1);
+function projectPaths(keys: readonly string[], entry: string, root = entry.slice(0, entry.lastIndexOf("/") + 1)): Record<string, string> {
   if (keys.some(key => !key.startsWith(root))) {configurationFailure("RUNTIME_PROJECT_PATH_INVALID");}
   return Object.fromEntries(keys.map(key => [key, key.slice(root.length)]));
 }

@@ -28,6 +28,19 @@ game bytes, extracted control table, native execution or x86 emulator is shipped
   It also follows an engine-owned XP3 stream's RTTI/vtable into its read method,
   deriving the seed XOR and matching table-generation/consumer period from that
   supplied PE. Unsupported or disconnected code shapes remain unrecognized.
+- `inline-xor.mjs` recognizes a bounded inline PE32 archive reader connected to
+  its six-field extraction record constructor. Seed shifts, the prefix boundary
+  and the later position mask come from its instructions. The importer preserves
+  absolute uncompressed offsets and accepts the recovered filter only after
+  independent complete-resource checksums; it never executes the native reader.
+  An all-zero-seed archive stays byte-for-byte unchanged when every recovered
+  key is mathematically zero; this does not invent replacement checksums or
+  claim source-integrity validation for those original archive facts.
+- `native-tlg.mjs` recovers custom TLG5/6 signatures and dimension XORs from a
+  connected PE dispatch and its readers. Conversion retains the decoded source
+  checksum check, canonicalizes only that representation with a bounded header
+  buffer, then independently rereads the output checksum and hash. Neither
+  game identities nor private module bytes are part of the implementation.
 - `pe-xp3.mjs` recognizes a bounded XP3 overlay after valid PE sections, within
   the original logical source slice. It preserves the outer logical filename;
   the converted file is an ordinary XP3 and becomes an entry candidate through

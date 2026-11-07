@@ -7,6 +7,7 @@ export type KirikiriCheckpointModule = {
   krkr2StopMainLoop(operation?: Promise<unknown>, discardNativeState?: boolean): Promise<void>;
   _krkr2_host_flush_game_saves(): Promise<number>;
   _krkr2_host_finalize_native_exit(): Promise<number>;
+  _krkr2_host_set_paused(paused: number): void;
 };
 
 export function createKirikiriCheckpointOperation(options: {module: KirikiriCheckpointModule; overlay: KirikiriWriteOverlay}) {
@@ -15,6 +16,8 @@ export function createKirikiriCheckpointOperation(options: {module: KirikiriChec
 
 class KirikiriCheckpointOperation {
   private paused = false;
+  // Engine-side media (movie threads) held by the host pause; set once per pause.
+  private mediaPaused = false;
   private closing = false;
   private finalizing = false;
   private nativeExit = false;
@@ -74,12 +77,22 @@ class KirikiriCheckpointOperation {
     this.paused = true;
     if (this.active) {await this.active.catch(() => undefined);}
     else {await this.options.module.pauseMainLoop();}
+    // Movie demux/audio threads run outside the main loop; hold them only after
+    // the paused loop has drained so no tick is executing native code.
+    if (this.paused && !this.mediaPaused && !this.closing && !this.finalizing) {
+      this.mediaPaused = true;
+      this.options.module._krkr2_host_set_paused(1);
+    }
   }
 
   async resume() {
     this.requireOpen();
     if (this.finalizing) {return;}
     this.paused = false;
+    if (this.mediaPaused) {
+      this.mediaPaused = false;
+      this.options.module._krkr2_host_set_paused(0);
+    }
     if (!this.active) {this.options.module.resumeMainLoop();}
   }
 

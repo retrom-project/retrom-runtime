@@ -27,6 +27,7 @@ type FakeModule = {
   _krkr2_host_resource_overlay_abi: ReturnType<typeof vi.fn>;
   _krkr2_host_flush_game_saves: ReturnType<typeof vi.fn>;
   _krkr2_host_finalize_native_exit: ReturnType<typeof vi.fn>;
+  _krkr2_host_set_paused: ReturnType<typeof vi.fn>;
   _startupXp3Path?: string;
   [key: string]: unknown;
 };
@@ -103,6 +104,7 @@ export async function loadCore(
     _krkr2_host_resource_overlay_abi: options.overlaySupported === false ? undefined : vi.fn(() => 1),
     _krkr2_host_flush_game_saves: vi.fn(async () => 0),
     _krkr2_host_finalize_native_exit: vi.fn(async () => 0),
+    _krkr2_host_set_paused: vi.fn(),
     _krkr2_host_bookmark_is_ready: vi.fn(() => options.bookmarkReady ?? 1),
     _krkr2_host_load_bookmark_is_ready: vi.fn(() => options.loadReady ?? 1),
     _krkr2_host_load_bookmark: vi.fn(() => options.restoreResult ?? 0),

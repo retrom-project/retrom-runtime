@@ -46,6 +46,8 @@ Selected archives apply in list order, with later members overriding earlier mat
 
 Supported Enigma Protector VFS imports statically decode the supplied launcher's virtual files and explicitly configured companion packages before XP3 conversion. Virtual files can replace physical same-name resources; packages retain native timestamp precedence. This recovers embedded translation scripts as well as separately packaged images without executing the launcher or choosing rules by game identity. See the [container format boundaries](../../scripts/normalization/README.md).
 
+A host pause first drains the current main-loop frame, then calls the core's required `krkr2_host_set_paused(1)` once: movie players hold their clock and speed, and the OpenAL device is suspended, so loaded BGM and movie audio stop even though their threads keep refilling. Resume calls it with `0` before the next frame, restoring the device and then the movies from the same position. Game scripts receive no activation events from a host pause.
+
 This is the maintained KAG integration. Additional frameworks, native DLL plugins and archive protection schemes require their own verified support.
 
 Disc dependency discovery follows the selected single-file Target's declared formats. Incidental CUE files in project content stay opaque. Disc CUE parsing accepts explicit Unicode BOMs or strict UTF-8; legacy Shift-JIS/GB18030 candidates must agree on references or resolve uniquely against actual tracks. Ambiguous missing legacy names fail with `RUNTIME_CUE_ENCODING_REQUIRED`.

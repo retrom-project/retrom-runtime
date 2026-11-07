@@ -292,6 +292,20 @@ it("exports system files when the game ends itself before any native save slot",
   await operation.stop();
 });
 
+it("holds engine media only after the paused loop drains and releases it before the next frame", async () => {
+  const {operation, module} = fixture();
+  const order: string[] = [];
+  module.pauseMainLoop.mockImplementation(async () => {order.push("drain");});
+  module.resumeMainLoop.mockImplementation(() => {order.push("resume");});
+  module._krkr2_host_set_paused.mockImplementation((paused: number) => {order.push(`media:${paused}`);});
+  await operation.pause();
+  await operation.pause();
+  await operation.resume();
+  await operation.resume();
+  expect(order).toEqual(["drain", "media:1", "drain", "media:0", "resume", "resume"]);
+  await operation.stop();
+});
+
 it("returns no final checkpoint when the game ends itself without writing files", async () => {
   const {operation} = fixture(false);
   expect(await operation.finalCheckpoint(true)).toBeNull();
@@ -316,6 +330,7 @@ function fixture(progress = true) {
   const module = {pauseMainLoop: vi.fn(async (): Promise<void> => undefined), resumeMainLoop: vi.fn(),
     _krkr2_host_flush_game_saves: vi.fn(async () => 0),
     _krkr2_host_finalize_native_exit: vi.fn(async () => 0),
+    _krkr2_host_set_paused: vi.fn(),
     krkr2StopMainLoop: vi.fn(async (active?: Promise<unknown>) => {await active?.catch(() => undefined);})};
   return {operation: createKirikiriCheckpointOperation({module, overlay}), module, overlay};
 }

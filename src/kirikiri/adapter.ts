@@ -52,6 +52,7 @@ type KirikiriModule = {
   _krkr2_host_observe_game_saves(): number;
   _krkr2_host_flush_game_saves(): Promise<number>;
   _krkr2_host_finalize_native_exit(): Promise<number>;
+  _krkr2_host_set_paused(paused: number): void;
   _krkr2_host_set_engine_mode?(mode: number): number;
   _krkr2_host_engine_arguments_abi?(): number;
   _krkr2_host_local_steam_service_abi?(): number;
@@ -389,7 +390,8 @@ function requireGameSaveAbi(module: KirikiriModule) {
   if (typeof module._krkr2_host_bookmark_is_ready !== "function" ||
     typeof module._krkr2_host_observe_game_saves !== "function" ||
     typeof module._krkr2_host_flush_game_saves !== "function" ||
-    typeof module._krkr2_host_finalize_native_exit !== "function") {
+    typeof module._krkr2_host_finalize_native_exit !== "function" ||
+    typeof module._krkr2_host_set_paused !== "function") {
     throw new Error("KIRIKIRI_GAME_SAVE_ABI_UNAVAILABLE");
   }
 }

@@ -58,6 +58,15 @@ Each finger owns one control; the D-pad has a central dead zone and diagonals.
 Both digital and analog sticks use the EmulatorJS-style translucent red circular
 base and half-size red cap. The cap follows its owning touch within the base;
 release, cancellation, blur and hiding recentre it without changing input mapping.
+Control placement follows the EmulatorJS provider frame so every core presents
+the stick and buttons in the same place: the 100px stick (inside a 125px touch
+zone) is centred 72.5px from
+the left edge and 132.5px above the bottom; 50px face buttons form a 40px diamond
+centred 75px from the right edge and 135px above the bottom (a two-button pad
+places the lower button down-left of the right one, as EmulatorJS does); menu
+buttons sit 60px and shoulder buttons 255px above the bottom. Side and bottom
+anchors grow with the safe-area insets. The J2ME landscape joystick uses the same
+132.5px centre height and keeps its phone keypad layout.
 Using a physical controller temporarily hides it until the next touch. The Host
 passes `touchGamepadEnabled` before mount and can use `getTouchGamepad()` to change
 the preference after mount. Explicitly disabling the pad releases all virtual

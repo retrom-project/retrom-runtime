@@ -86,6 +86,13 @@ it("mounts the circular joystick and ordered phone keypad only for touch input, 
     .toEqual(["SOFT_LEFT", "FIRE", "SOFT_RIGHT", ...[1,2,3,4,5,6,7,8,9].map(n => `DIGIT_${n}`), "STAR", "DIGIT_0", "POUND"]);
   touchStick(f);
 });
+it("anchors the landscape joystick at the shared touch gamepad height instead of the vertical centre", async () => {
+  const f = await fixture(undefined, undefined, true);
+  const css = (f.target.ownerDocument.head.textContent ?? "").replace(/\s+/gu, "");
+  expect(css).toContain(".j2me-touch-stick{grid-column:1;grid-row:1;position:relative;justify-self:center;align-self:end;");
+  expect(css).toContain("margin-bottom:calc(66.5px-var(--j2me-pad-block))");
+  expect(css).toContain("--j2me-pad-block:16px");
+});
 it("supports joystick diagonals, dead zone and simultaneous independent FIRE and digit 5, releasing on cancellation", async () => {
   const f = await fixture(undefined, undefined, true), stick = touchStick(f);
   pointer(stick, "pointerdown", 1); expect(f.core.setInput).not.toHaveBeenCalled();

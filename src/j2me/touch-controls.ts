@@ -13,12 +13,13 @@ const styleText = `
  --j2me-control-font:14px;--j2me-control-caption:12px;--j2me-control-weight:600;
  --j2me-control-surface:#191f2e;--j2me-control-ink:#edf0f7;--j2me-control-line:#46516a;
  --j2me-control-active:#7861df;--j2me-control-focus:#c0afff;
- box-sizing:border-box;display:grid;grid-template-columns:140px minmax(0,1fr) 172px;gap:16px;
- height:100%;width:100%;align-items:center;padding:16px max(8px,env(safe-area-inset-right)) 16px max(8px,env(safe-area-inset-left));
+ box-sizing:border-box;display:grid;grid-template-columns:140px minmax(0,1fr) 172px;gap:16px;--j2me-pad-block:16px;
+ height:100%;width:100%;align-items:center;padding:var(--j2me-pad-block) max(8px,env(safe-area-inset-right)) 16px max(8px,env(safe-area-inset-left));
  font-family:ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:var(--j2me-control-ink)}
 .j2me-touch-screen{grid-column:2;grid-row:1;min-width:0;min-height:0;height:100%;width:100%;overflow:hidden}
-.j2me-touch-stick{grid-column:1;grid-row:1;position:relative;justify-self:center;box-sizing:border-box;
- width:132px;height:132px;border:1px solid var(--j2me-control-line);border-radius:50%;background:var(--j2me-control-surface)}
+/* The stick centre sits 132.5px above the bottom, matching the shared and EmulatorJS touch gamepads. */
+.j2me-touch-stick{grid-column:1;grid-row:1;position:relative;justify-self:center;align-self:end;box-sizing:border-box;
+ margin-bottom:calc(66.5px - var(--j2me-pad-block));width:132px;height:132px;border:1px solid var(--j2me-control-line);border-radius:50%;background:var(--j2me-control-surface)}
 .j2me-touch-stick::before{content:"";position:absolute;inset:18px;border:1px solid var(--j2me-control-line);border-radius:50%;opacity:.5}
 .j2me-touch-knob{position:absolute;left:50%;top:50%;width:60px;height:60px;box-sizing:border-box;
  border:1px solid var(--j2me-control-line);border-radius:50%;background:var(--j2me-control-surface);
@@ -38,10 +39,10 @@ const styleText = `
  .j2me-touch-layout{grid-template-columns:132px minmax(0,1fr);grid-template-rows:minmax(0,1fr) auto;gap:12px 8px;
   padding:8px max(8px,env(safe-area-inset-right)) max(8px,env(safe-area-inset-bottom)) max(8px,env(safe-area-inset-left))}
  .j2me-touch-screen{grid-column:1/-1;grid-row:1}
- .j2me-touch-stick{grid-column:1;grid-row:2}
+ .j2me-touch-stick{grid-column:1;grid-row:2;align-self:center;margin-bottom:0}
  .j2me-touch-keypad{grid-column:2;grid-row:2;justify-self:end;width:min(100%,188px);gap:4px}
 }
-@media(max-height:320px) and (orientation:landscape){.j2me-touch-layout{padding-block:8px;gap:8px;--j2me-control-gap:4px}}
+@media(max-height:320px) and (orientation:landscape){.j2me-touch-layout{--j2me-pad-block:8px;gap:8px;--j2me-control-gap:4px}}
 `;
 
 type ReplaceInput = (source: string, actions: Iterable<J2meInputAction>) => void;

@@ -1,6 +1,7 @@
 import {PlayerRuntimeError} from "../../provider/errors.js";
 import {retainEmulatorJsDisplayedFrame} from "./displayed-frame.js";
 import {circularDpadStyle, installCircularDpadFeedback} from "./circular-dpad.js";
+import {floatingStickStyle} from "./floating-stick.js";
 import {installEmulatorJsTouchLabels} from "./touch-labels.js";
 const frameStyleText = `
 html,body,#retrom-emulator,.ejs_parent,.ejs_game,.ejs_canvas_parent{width:100%!important;height:100%!important;margin:0!important;overflow:hidden;background:#05060a}
@@ -21,6 +22,7 @@ html.retrom-native-menu-locked.retrom-native-settings-open .ejs_menu_bar>:has(>.
 html.retrom-native-menu-locked.retrom-native-settings-open .ejs_menu_bar>:has(>.ejs_settings_parent)>.ejs_menu_button{visibility:hidden!important;pointer-events:none!important}
 html.retrom-native-menu-locked.retrom-native-settings-open .ejs_menu_bar .ejs_settings_parent{visibility:visible!important;pointer-events:auto!important}
 ${circularDpadStyle}
+${floatingStickStyle}
 `;
 
 export function installEmulatorJsFrameStyle(frameDocument: Document) {
@@ -38,7 +40,8 @@ export function installEmulatorJsFrameStyle(frameDocument: Document) {
   };
 }
 
-export function createEmulatorJsSurface(runtimeWindow: Window) {
+/** A floating stick draws its own knob, so the fixed-centre touch feedback is only installed for fixed sticks. */
+export function createEmulatorJsSurface(runtimeWindow: Window, options: {stickFeedback: boolean} = {stickFeedback: true}) {
   const body = runtimeWindow.document.body;
   if (!body) {throw new PlayerRuntimeError("PLAYER_RUNTIME_CONTRACT_INVALID");}
   const mountPoint = runtimeWindow.document.createElement("div");
@@ -52,6 +55,6 @@ export function createEmulatorJsSurface(runtimeWindow: Window) {
   body.style.overflow = "hidden";
   const restoreFrame = retainEmulatorJsDisplayedFrame(runtimeWindow);
   const removeStyle = installEmulatorJsFrameStyle(runtimeWindow.document);
-  const removeStickFeedback = installCircularDpadFeedback(runtimeWindow.document);
+  const removeStickFeedback = options.stickFeedback ? installCircularDpadFeedback(runtimeWindow.document) : () => undefined;
   return () => {removeStickFeedback(); removeStyle(); restoreFrame();};
 }

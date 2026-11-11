@@ -2,7 +2,17 @@ export type TouchGamepadLayout = "STANDARD" | "PSP" | "POINTER" | "JOYSTICK";
 type Face = {index: number; label: string; slot: "bottom" | "right" | "left" | "top"};
 type Auxiliary = {index: number; label: string; side: "center-left" | "center-right" | "left" | "right"};
 export type TouchGamepadLayoutOptions = {layout?: TouchGamepadLayout; faces?: readonly Face[]; auxiliary?: readonly Auxiliary[]};
-export type TouchGamepadOptions = TouchGamepadLayoutOptions & {enabled?: boolean};
+export type TouchStickMode = "FIXED" | "FLOATING";
+export type TouchGamepadOptions = TouchGamepadLayoutOptions & {
+  enabled?: boolean;
+  /** FLOATING (default) centres the stick on the touch-down point instead of reading from its resting centre. */
+  stickMode?: TouchStickMode;
+  /**
+   * A floating stick also accepts touches anywhere in the lower-left zone. Games that read touches on their own
+   * surface keep the zone to the stick itself so the pad never covers their pointer input. Defaults to non-POINTER layouts.
+   */
+  wideStickZone?: boolean;
+};
 const standardFaces: Face[] = [
   {index: 0, label: "A", slot: "bottom"}, {index: 1, label: "B", slot: "right"},
   {index: 2, label: "X", slot: "left"}, {index: 3, label: "Y", slot: "top"},
@@ -47,7 +57,10 @@ export const touchGamepadStyle = `
   display:flex;align-items:center;justify-content:center;opacity:.7;padding:0}
 [data-retrom-touch-gamepad] [data-control="dpad"],
 [data-retrom-touch-gamepad] [data-control="analog"]{width:var(--stick);height:var(--stick);
-  left:var(--left);bottom:var(--base);border-radius:50%}
+  left:var(--left);bottom:var(--base);border-radius:50%;translate:var(--float-x,0px) var(--float-y,0px)}
+/* The floating zone sits beneath every control and stops short of the centre menu buttons. */
+[data-retrom-touch-gamepad] [data-control="stick-zone"]{left:0;bottom:0;width:min(40%,calc(50% - 64px));height:65%;
+  border:0;background:none;opacity:0}
 [data-retrom-touch-gamepad] [data-control="analog"]{left:calc(var(--left) + var(--stick))}
 [data-retrom-touch-gamepad][data-layout="JOYSTICK"] [data-control="dpad"]{display:none}
 [data-retrom-touch-gamepad][data-layout="JOYSTICK"] [data-control="analog"]{left:var(--left)}

@@ -74,6 +74,16 @@ input; touching the game cannot re-enable it. Pause and Host suppression release
 virtual input without changing that preference. Cursor polling reads the merged
 physical/touch source without advancing the Host chord filter.
 
+The Host also passes `touchStickMode` before mount. In the default `FLOATING` mode the touch-down point becomes the
+stick centre: the first contact carries no direction, directions come from the finger's travel (D-pad dead zone a
+quarter of the radius, analog dead zone 15%), and the centre follows the finger past the rim. A floating stick also
+accepts touches in a lower-left zone, `min(40%, 50% - 64px)` wide and 65% high, placed beneath every control so
+buttons and the centre Select/Start row keep their touches; a zone touch drives the nearest visible stick. Layouts
+that read touches on the game surface (`POINTER`, RPG Maker, TyranoScript and EmulatorJS touch-screen handhelds)
+float only within the stick itself. EmulatorJS's own D-pad and nipplejs zones are claimed in the capture phase in
+floating mode and driven through `simulateInput`; mouse input keeps the native controls. `FIXED` keeps the previous
+resting-centre behaviour.
+
 Additional adapters select data-only profiles from the same module:
 
 | Core / Target | Virtual controls |

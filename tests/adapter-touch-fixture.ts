@@ -25,7 +25,11 @@ export function adapterTouchFixture(adapter: MountedRuntimeAdapter, fallback: Wi
       const control = root.querySelector<HTMLElement>(selector)!;
       expect(control).not.toBeNull();
       vi.spyOn(control, "getBoundingClientRect").mockReturnValue({left: 0, top: 0, width: 100, height: 100} as DOMRect);
-      control.dispatchEvent(new PointerEvent("pointerdown", {bubbles: true, pointerType: "touch", pointerId: 1, clientX: x, clientY: y}));
+      const at = (type: string, clientX: number, clientY: number) =>
+        control.dispatchEvent(new PointerEvent(type, {bubbles: true, pointerType: "touch", pointerId: 1, clientX, clientY}));
+      // Sticks are steered by travel from the touch-down point, which works for fixed and floating sticks alike.
+      if (["dpad", "analog"].includes(control.dataset.control ?? "")) {at("pointerdown", 50, 50); at("pointermove", x, y);}
+      else {at("pointerdown", x, y);}
     },
     release() {inputWindow.dispatchEvent(new PointerEvent("pointerup", {pointerId: 1}));},
     dispose() {

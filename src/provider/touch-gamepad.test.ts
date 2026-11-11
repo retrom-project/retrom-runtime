@@ -71,7 +71,7 @@ describe("on-screen touch gamepad", () => {
     touchFirst(true);
     const connected = vi.fn();
     window.addEventListener("gamepadconnected", connected);
-    const touch = installTouchGamepad(window);
+    const touch = installTouchGamepad(window, {stickMode: "FIXED"});
     const {root, pad, face} = controls();
     expect(root.hidden).toBe(false);
     expect(connected).toHaveBeenCalledOnce();

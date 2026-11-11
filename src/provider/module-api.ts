@@ -73,6 +73,7 @@ export function validateRuntimeHost(value: unknown): RuntimeHostV1 {
 
 function validHostPreferences(host: Record<string, unknown> | null) {
   return (host?.touchGamepadEnabled === undefined || typeof host.touchGamepadEnabled === "boolean") &&
+    (host?.touchStickMode === undefined || host.touchStickMode === "FIXED" || host.touchStickMode === "FLOATING") &&
     (host?.contentLoading === undefined || host.contentLoading === "ON_DEMAND" || host.contentLoading === "PRELOAD");
 }
 

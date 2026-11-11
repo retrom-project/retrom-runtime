@@ -44,7 +44,8 @@ describe("ONS Yuri runtime", () => {
       const directions: string[] = [];
       canvas.addEventListener("keydown", event => directions.push(`down:${(event as KeyboardEvent).key}`));
       canvas.addEventListener("keyup", event => directions.push(`up:${(event as KeyboardEvent).key}`));
-      analog.dispatchEvent(new PointerEvent("pointerdown", {bubbles: true, pointerType: "touch", pointerId: 1, clientX: 90, clientY: 50}));
+      analog.dispatchEvent(new PointerEvent("pointerdown", {bubbles: true, pointerType: "touch", pointerId: 1, clientX: 50, clientY: 50}));
+      analog.dispatchEvent(new PointerEvent("pointermove", {bubbles: true, pointerType: "touch", pointerId: 1, clientX: 90, clientY: 50}));
       frames.shift()?.(1);
       expect(directions).toEqual(["down:ArrowRight"]);
       analog.dispatchEvent(new PointerEvent("pointerup", {bubbles: true, pointerId: 1}));

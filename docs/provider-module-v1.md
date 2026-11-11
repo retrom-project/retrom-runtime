@@ -324,6 +324,12 @@ Its `getState()` reports the enabled preference and `setEnabled(boolean)` applie
 virtual buttons and axes. Pausing, host input suppression and physical-controller activity may temporarily hide
 the layout without changing this preference; touching the game does not re-enable an explicitly disabled layout.
 
+`RuntimeHostV1.touchStickMode?: "FIXED" | "FLOATING"` selects the on-screen stick behaviour for one launch; omitted
+means `FLOATING`. A floating stick takes the touch-down point as its centre, so landing off-centre never starts with a
+direction, and drags the centre along once the finger passes the rim. `FIXED` reads directions from the resting centre.
+`PlayerRuntimeV1.getTouchStick?.()` returns `{getState(): {mode}}` while the runtime renders a stick, or `null`; the
+mode cannot change until the next launch, so a Host records a new choice and applies it on the next mount.
+
 The Host owns persistence by selected `coreId` in its own origin. Providers share layout and input code across
 TIC-80, PPSSPP, KiriKiri2, Apple2JS, MV and the existing mkxp integration. Nested and isolated game pages receive
 the same setting through their adapter or verified channel. See [input mapping](input-mapping.md) for layouts.

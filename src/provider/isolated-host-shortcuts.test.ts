@@ -38,20 +38,20 @@ function bridge(name: "native" | "tyranoscript") {
 
 it("Tyrano runs the shared touch pad only through the parent channel and releases input when paused or hidden", async () => {
   const b = bridge("tyranoscript"); b.connect(b.parent);
-  for (const body of [{enabled: "yes"}, {enabled: true, extra: true}]) {
+  for (const body of [{enabled: "yes", stickMode: "FIXED"}, {enabled: true, stickMode: "FIXED", extra: true}, {enabled: true}, {enabled: true, stickMode: "SLIDE"}]) {
     expect((await b.request("SET_TOUCH_GAMEPAD", body)).type).toBe("ERROR");
   }
-  expect((await b.request("SET_TOUCH_GAMEPAD", {enabled: false})).type).toBe("SET_TOUCH_GAMEPAD_RESULT");
+  expect((await b.request("SET_TOUCH_GAMEPAD", {enabled: false, stickMode: "FIXED"})).type).toBe("SET_TOUCH_GAMEPAD_RESULT");
   const root = document.querySelector<HTMLElement>("[data-retrom-touch-gamepad]")!;
   expect(root.hidden).toBe(true);
-  await b.request("SET_TOUCH_GAMEPAD", {enabled: true});
+  await b.request("SET_TOUCH_GAMEPAD", {enabled: true, stickMode: "FIXED"});
   expect(root.hidden).toBe(false);
   root.querySelector('[data-face="bottom"]')!.dispatchEvent(new PointerEvent("pointerdown", {bubbles: true, pointerType: "touch", pointerId: 1}));
   expect(root.querySelector("[data-active]")).not.toBeNull();
   await b.request("PAUSE", {}); expect(root.hidden).toBe(true);
   await b.request("RESUME", {}); expect(root.hidden).toBe(false);
   expect(root.querySelector("[data-active]")).toBeNull();
-  await b.request("SET_TOUCH_GAMEPAD", {enabled: false});
+  await b.request("SET_TOUCH_GAMEPAD", {enabled: false, stickMode: "FIXED"});
   document.body.dispatchEvent(new PointerEvent("pointerdown", {bubbles: true, pointerType: "touch"}));
   expect(root.hidden).toBe(true);
   await b.request("CLEANUP", {});

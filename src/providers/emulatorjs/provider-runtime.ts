@@ -46,6 +46,7 @@ import {installSupermodelRestore} from "./supermodel-restore.js";
 import {emulatorControlScheme} from "./default-controls.js";
 import {configurePlayerOptions} from "./player-options.js";
 import {installDigitalJoysticks} from "./digital-joystick.js";
+import {installFloatingStick} from "./floating-stick.js";
 import {initializeEmulatorJsGamepads} from "./startup-gamepads.js";
 import {closeEmulatorJsNativeSettings, openEmulatorJsNativeSettings} from "./native-settings.js";
 import {createEmulatorJsVideoModeController} from "./video-mode.js";
@@ -61,6 +62,9 @@ import {installEmulatorJsOutputViewport} from "./output-viewport.js";
 import {acknowledgeLutroStoredSave, installLutroNativeRestore, LutroNativeSaveTracker} from "./lutro-native-save.js";
 
 import {configuredGlobals, type EjsInstance, type EjsWindow} from "./emulator-instance.js";
+
+/** Cores whose games take taps on an emulated touch screen. */
+const touchScreenCores = new Set(["azahar", "desmume", "desmume2015", "melonds"]);
 
 export async function createEmulatorJsPlayer(
   envelope: LaunchEnvelopeV1,
@@ -101,6 +105,7 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
   private supermodelRestore: ReturnType<typeof installSupermodelRestore> | null = null;
   private cleanupGamepadIndex: (() => void) | null = null;
   private digitalJoysticks: ReturnType<typeof installDigitalJoysticks> | null = null;
+  private floatingStick: ReturnType<typeof installFloatingStick> | null = null;
   private nativeObservation: ReturnType<typeof installEmulatorJsNativeObservation> | null = null;
   private cleanupRetroArchConfig: () => void = () => undefined;
   private dosboxCompatibility: ReturnType<typeof installDOSBoxPureStateCompatibility> | null = null;
@@ -150,7 +155,7 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
     const toggle = instance.gameManager?.toggleMainLoop;
     if (!toggle) {throw contractError();}
     if (this.discRange) {await this.discRange.idle();}
-    this.digitalJoysticks?.release();
+    this.digitalJoysticks?.release(); this.floatingStick?.release();
     toggle.call(instance.gameManager, false);
     instance.paused = true;
     this.transition("PAUSED");
@@ -210,6 +215,9 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
   getInputCapabilities() {return providerInputCapabilities(emulatorJsProviderDefinition, this.envelope.runtime.targetId);}
   getCheckpointAvailability() {return {...this.checkpointAvailability};}
   getCanvas() {return this.instance?.canvas ?? null;}
+  /** The EmulatorJS virtual gamepad always offers a left stick; its mode is fixed for this launch. */
+  getTouchStick() {return {getState: () => ({mode: this.touchStickMode})};}
+  private get touchStickMode() {return this.host.touchStickMode ?? "FLOATING";}
   getFrameCount() {return this.instance?.gameManager?.getFrameNum?.() ?? null;}
 
   async setVolume(value: number) {
@@ -298,7 +306,7 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
         (loadedBytes, totalBytes) => this.emit({type: "LOAD_PROGRESS", loadedBytes, totalBytes}));
       this.discRange = daphneVideo(this.daphneProject);
       this.checkMountActive();
-      this.cleanupFrameStyle = createEmulatorJsSurface(runtimeWindow);
+      this.cleanupFrameStyle = createEmulatorJsSurface(runtimeWindow, {stickFeedback: this.touchStickMode === "FIXED"});
       this.startBarrier = createStartBarrier();
       this.configure(runtimeWindow);
       this.coreAssets = new EmulatorCoreAssets(runtimeWindow, {contentSession: requireContentSession(this.contentSession), assetIndex: this.assetIndex},
@@ -306,6 +314,10 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
       await this.coreAssets.prepare(this.implementation.coreAssetPath, this.implementation.release);
       this.checkMountActive();
       this.digitalJoysticks = installDigitalJoysticks(runtimeWindow);
+      if (this.touchStickMode === "FLOATING") {
+        // Touch-screen handhelds read taps on the lower game screen; their stick floats only within itself.
+        this.floatingStick = installFloatingStick(runtimeWindow, {wideZone: !touchScreenCores.has(this.implementation.runtimeCore)});
+      }
       await retireEmulatorDownloadCaches(runtimeWindow.indexedDB, code => this.host.reportDiagnostic({code, message: "Obsolete EmulatorJS download cache could not be fully removed; persistent download caching remains disabled."}));
       this.checkMountActive();
       const disc = await this.prepareContentDisc(runtimeWindow);
@@ -488,6 +500,11 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
     this.restorePayload = null;
   }
 
+  private disposeTouchSticks() {
+    this.digitalJoysticks?.dispose(); this.digitalJoysticks = null;
+    this.floatingStick?.dispose(); this.floatingStick = null;
+  }
+
   private checkMountActive() {
     if (this.host.signal.aborted || this.exitPromise || this.state !== "MOUNTING") {throw new DOMException("Aborted", "AbortError");}
   }
@@ -498,7 +515,7 @@ class EmulatorJsPlayer implements PlayerRuntimeV1 {
     this.clearStartBarrier();
     this.stopNativeObservation();
     this.host.signal.removeEventListener("abort", this.hostAbort);
-    this.digitalJoysticks?.dispose(); this.digitalJoysticks = null;
+    this.disposeTouchSticks();
     await this.stopNative();
     await this.closeContent();
     if (this.runtimeWindow) {

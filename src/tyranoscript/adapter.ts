@@ -1,5 +1,5 @@
 import {completeChannelReply} from "../provider/channel-reply.js";
-import type {RuntimeHostShortcutV1, RuntimeTouchGamepadV1} from "../provider/module-api.js";
+import type {RuntimeHostShortcutV1, RuntimeTouchGamepadV1, RuntimeTouchStickModeV1, RuntimeTouchStickV1} from "../provider/module-api.js";
 import type { CheckpointAvailability } from "../contract.js";
 import type { MountedRuntimeAdapter, RuntimeExitReporter } from "../internal-adapter.js";
 import type {TyranoScriptParameters} from "./parameters.js";
@@ -31,12 +31,14 @@ export async function mountTyranoScript(
   frame: HTMLIFrameElement,
   restorePayload: Uint8Array | null,
   reportExitRequested: RuntimeExitReporter = () => undefined,
-  options: {touchGamepadEnabled?: boolean} = {},
+  options: {touchGamepadEnabled?: boolean; touchStickMode?: RuntimeTouchStickModeV1} = {},
 ): Promise<MountedRuntimeAdapter> {
   const channel = new TyranoScriptChannel(config, reportExitRequested);
   let enabled = options.touchGamepadEnabled ?? true;
+  const stickMode = options.touchStickMode ?? "FLOATING";
+  const touchStick: RuntimeTouchStickV1 = {getState: () => ({mode: stickMode})};
   const setEnabled = async (value: boolean) => {
-    const reply = await channel.request("SET_TOUCH_GAMEPAD", {enabled: value});
+    const reply = await channel.request("SET_TOUCH_GAMEPAD", {enabled: value, stickMode});
     if (reply.type !== "SET_TOUCH_GAMEPAD_RESULT") {throw new Error("TYRANOSCRIPT_PROTOCOL_INVALID");}
     enabled = value;
   };
@@ -58,6 +60,7 @@ export async function mountTyranoScript(
 
   return {
     getTouchGamepad: () => touchGamepad,
+    getTouchStick: () => touchStick,
     checkpoint: async () => ({ bytes: await channel.checkpoint(), format: "tyranoscript-snapshot-v1" }),
     exit: async () => {
       channel.stopProbeLoop();

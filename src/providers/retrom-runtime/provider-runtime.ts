@@ -107,6 +107,7 @@ class RetromRuntimePlayer implements PlayerRuntimeV1 {
         },
         assetIndex: this.assetIndex, contentSession,
         touchGamepadEnabled: this.host.touchGamepadEnabled ?? true,
+        touchStickMode: this.touchStickMode,
         signal: this.host.signal,
         reportFailure: (error) => {void this.fail(error);},
         frame: frame?.element,
@@ -160,7 +161,7 @@ class RetromRuntimePlayer implements PlayerRuntimeV1 {
       this.cleanupTouchInputFilter = installRuntimeGamepadFilter(inputWindow, this.inputFilter);
     }
     this.touchGamepad = installTouchGamepad(inputWindow, {
-      ...settings, enabled: this.host.touchGamepadEnabled ?? true,
+      ...settings, enabled: this.host.touchGamepadEnabled ?? true, stickMode: this.touchStickMode,
     });
     this.inputFilter.setTouchGamepad(this.touchGamepad);
     this.suspendTouchGamepad();
@@ -265,6 +266,12 @@ class RetromRuntimePlayer implements PlayerRuntimeV1 {
   getCanvas() {return this.adapter?.getCanvas() ?? null;}
   getGamepadCursor() {return this.adapter?.gamepadCursor ?? null;}
   getTouchGamepad() {return this.touchGamepad ?? this.adapter?.getTouchGamepad?.() ?? null;}
+  /** The stick mode applies to whichever touch pad this launch renders and stays fixed until the next launch. */
+  getTouchStick() {
+    if (this.touchGamepad) {return {getState: () => ({mode: this.touchStickMode})};}
+    return this.adapter?.getTouchStick?.() ?? null;
+  }
+  private get touchStickMode() {return this.host.touchStickMode ?? "FLOATING";}
   getFrameCount() {
     if (!this.envelope.runtime.capabilities.frameCounter) {return null;}
     const value = this.adapter?.getFrameCount() ?? null;

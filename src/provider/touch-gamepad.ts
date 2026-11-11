@@ -1,6 +1,7 @@
 import {inputObserver} from "./input-observations.js";
 import type {RuntimeTouchGamepadV1} from "./module-api.js";
 import {touchGamepadLayout, touchGamepadStyle, type TouchGamepadOptions} from "./touch-gamepad-layout.js";
+import {createStickZone, floatingSticks, type StickPoint} from "./touch-stick-float.js";
 
 /** Standard-mapping indices: bottom/right/left/top face buttons and the D-pad. */
 const dpad = {up: 12, down: 13, left: 14, right: 15} as const;
@@ -106,6 +107,9 @@ export function installTouchGamepad(frameWindow: Window, options: TouchGamepadOp
   root.dataset.layout = options.layout ?? "STANDARD";
   root.setAttribute("aria-hidden", "true");
   const layout = touchGamepadLayout(options.layout, options);
+  const zone = createStickZone(document, root, options);
+  const floating = root.dataset.stickMode === "FLOATING";
+  const {floatTo, offset, nearest} = floatingSticks(frameWindow);
 
   const pad = document.createElement("div");
   pad.dataset.control = "dpad";
@@ -133,7 +137,7 @@ export function installTouchGamepad(frameWindow: Window, options: TouchGamepadOp
   document.body.append(root);
 
   // Each touch owns one control; the D-pad follows its finger until release.
-  const owners = new Map<number, {control: "dpad" | "analog" | number; held: readonly number[]; point?: {x: number; y: number}}>();
+  const owners = new Map<number, {control: "dpad" | "analog" | number; held: readonly number[]; point?: StickPoint; origin?: StickPoint}>();
   const heldElsewhere = (pointerId: number, index: number) =>
     [...owners].some(([id, owner]) => id !== pointerId && owner.held.includes(index));
   const apply = (index: number, down: boolean) => {
@@ -144,7 +148,7 @@ export function installTouchGamepad(frameWindow: Window, options: TouchGamepadOp
   };
   const hold = (pointerId: number, control: "dpad" | "analog" | number, next: readonly number[]) => {
     const previous = owners.get(pointerId)?.held ?? [];
-    owners.set(pointerId, {control, held: next});
+    owners.set(pointerId, {...owners.get(pointerId), control, held: next});
     for (const index of previous) {if (!next.includes(index) && !heldElsewhere(pointerId, index)) {apply(index, false);}}
     for (const index of next) {apply(index, true);}
   };
@@ -152,8 +156,9 @@ export function installTouchGamepad(frameWindow: Window, options: TouchGamepadOp
     const owner = owners.get(pointerId);
     if (!owner) {return;}
     owners.delete(pointerId);
-    if (owner.control === "analog") {resetAnalog();}
+    if (owner.control === "analog") {resetAnalog(); if (analog) {floatTo(analog);}}
     if (owner.control === "dpad") {
+      if (owner.origin) {floatTo(pad, [...owners.values()].reverse().find(value => value.control === "dpad")?.origin);}
       const remaining = [...owners.values()].reverse().find(value => value.control === "dpad")?.point;
       positionStick(pad, remaining?.x ?? 0, remaining?.y ?? 0);
     }
@@ -161,7 +166,8 @@ export function installTouchGamepad(frameWindow: Window, options: TouchGamepadOp
   };
   const releaseAll = () => {
     owners.clear();
-    resetAnalog(); positionStick(pad);
+    resetAnalog(); positionStick(pad); floatTo(pad);
+    if (analog) {floatTo(analog);}
     for (const index of state.releaseAll(now())) {
       faces.get(index)?.removeAttribute("data-active");
       inputObserver(frameWindow)?.record({device, control: `Button ${index}`, value: 0, stage: "BROWSER", target: null, reason: null}, now());
@@ -186,20 +192,20 @@ export function installTouchGamepad(frameWindow: Window, options: TouchGamepadOp
     if (owner) {owner.point = point;}
     positionStick(control, point.x, point.y);
   };
+  const relative = (event: ControlPointer, control: HTMLElement) =>
+    offset({x: event.clientX, y: event.clientY}, control, owners.get(event.pointerId)?.origin);
   const moveAnalog = (event: ControlPointer) => {
     if (!analog || !knob) {return;}
-    const bounds = analog.getBoundingClientRect(), radius = bounds.width / 2;
+    const {dx: offsetX, dy: offsetY, radius} = relative(event, analog);
     if (!(radius > 0)) {return;}
-    const dx = (event.clientX - bounds.left - radius) / radius;
-    const dy = (event.clientY - bounds.top - radius) / radius;
+    const dx = offsetX / radius, dy = offsetY / radius;
     const distance = Math.hypot(dx, dy), scale = distance > 1 ? 1 / distance : 1;
     const x = distance < .15 ? 0 : dx * scale, y = distance < .15 ? 0 : dy * scale;
     state.setAxis(0, x, now()); state.setAxis(1, y, now());
     moveStick(event, analog, x, y);
   };
   const moveDpad = (event: ControlPointer) => {
-    const bounds = pad.getBoundingClientRect(), radius = bounds.width / 2;
-    const dx = event.clientX - (bounds.left + radius), dy = event.clientY - (bounds.top + bounds.height / 2);
+    const {dx, dy, radius} = relative(event, pad);
     hold(event.pointerId, "dpad", dpadDirections(dx, dy, radius));
     if (radius > 0) {moveStick(event, pad, dx / radius, dy / radius);}
   };
@@ -224,13 +230,20 @@ export function installTouchGamepad(frameWindow: Window, options: TouchGamepadOp
     frameWindow.focus();
     if (disposed || !root.isConnected) {return;}
     if (!capturePointer(control as HTMLElement, event.pointerId, capture)) {return;}
-    if (control === pad) {moveDpad(event); return;}
-    if (control === analog) {
+    const stick = control === zone ? nearest({x: event.clientX, y: event.clientY}, [pad, analog]) : control;
+    if (stick === pad) {startStick(event, pad, "dpad"); moveDpad(event); return;}
+    if (stick === analog && analog) {
       if ([...owners.values()].some(owner => owner.control === "analog")) {return;}
-      hold(event.pointerId, "analog", []); moveAnalog(event); return;
+      startStick(event, analog, "analog"); moveAnalog(event); return;
     }
     const index = [...faces].find(([, element]) => element === control)?.[0];
     if (index !== undefined) {hold(event.pointerId, index, [index]);}
+  };
+  /** A floating stick takes the touch-down point as its centre, so the first contact never carries a direction. */
+  const startStick = (event: ControlPointer, control: HTMLElement, kind: "dpad" | "analog") => {
+    const origin = floating ? {x: event.clientX, y: event.clientY} : undefined;
+    owners.set(event.pointerId, {control: kind, held: owners.get(event.pointerId)?.held ?? [], origin});
+    if (origin) {floatTo(control, origin);}
   };
   const move = (event: ControlPointer) => {
     const owner = owners.get(event.pointerId);

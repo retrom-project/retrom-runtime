@@ -43,17 +43,18 @@ describe("TyranoScript isolated Web adapter", () => {
     }) as typeof runtimeWindow.postMessage);
     const exits = vi.fn();
     const config = runtimeConfig();
-    const mounting = mountTyranoScript(config, frame, Uint8Array.of(1, 2, 3), exits, {touchGamepadEnabled: false});
+    const mounting = mountTyranoScript(config, frame, Uint8Array.of(1, 2, 3), exits, {touchGamepadEnabled: false, touchStickMode: "FIXED"});
 
     dispatchRuntimeMessage(runtimeWindow, {
       protocolVersion: 1, type: "GAME_RUNTIME_TYRANOSCRIPT_BRIDGE_READY",
     });
     const adapter = await mounting;
     expect(frame.src).toBe(hostShell);
-    expect(touchCommands).toEqual([{enabled: false}]);
+    expect(touchCommands).toEqual([{enabled: false, stickMode: "FIXED"}]);
+    expect(adapter.getTouchStick?.()?.getState()).toEqual({mode: "FIXED"});
     expect(adapter.getTouchGamepad?.()?.getState()).toEqual({enabled: false});
     await adapter.getTouchGamepad?.()?.setEnabled(true);
-    expect(touchCommands).toEqual([{enabled: false}, {enabled: true}]);
+    expect(touchCommands).toEqual([{enabled: false, stickMode: "FIXED"}, {enabled: true, stickMode: "FIXED"}]);
     expect(adapter.getTouchGamepad?.()?.getState()).toEqual({enabled: true});
 
     expect(commands).toContain("RESTORE");
@@ -176,7 +177,7 @@ describe("TyranoScript isolated Web adapter", () => {
       await vi.waitFor(() => expect(connections[1].requests).toEqual(expect.arrayContaining([
         expect.objectContaining({type: "SET_HOST_SHORTCUT_POLICY", body: {policy: {menu: "KeyM", pause: false}}}),
         expect.objectContaining({type: "SET_INPUT_FILTER", body: {policy: null}}),
-        expect.objectContaining({type: "SET_TOUCH_GAMEPAD", body: {enabled: false}}),
+        expect.objectContaining({type: "SET_TOUCH_GAMEPAD", body: {enabled: false, stickMode: "FLOATING"}}),
         expect.objectContaining({type: "SET_VIDEO_MODE", body: {mode: "pixel"}}),
         expect.objectContaining({type: "SET_VOLUME", body: {value: 0.25}}),
         expect.objectContaining({type: "PAUSE"}),

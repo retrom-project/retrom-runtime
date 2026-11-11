@@ -114,7 +114,10 @@
   display:flex;align-items:center;justify-content:center;opacity:.7;padding:0}
 [data-retrom-touch-gamepad] [data-control="dpad"],
 [data-retrom-touch-gamepad] [data-control="analog"]{width:var(--stick);height:var(--stick);
-  left:var(--left);bottom:var(--base);border-radius:50%}
+  left:var(--left);bottom:var(--base);border-radius:50%;translate:var(--float-x,0px) var(--float-y,0px)}
+/* The floating zone sits beneath every control and stops short of the centre menu buttons. */
+[data-retrom-touch-gamepad] [data-control="stick-zone"]{left:0;bottom:0;width:min(40%,calc(50% - 64px));height:65%;
+  border:0;background:none;opacity:0}
 [data-retrom-touch-gamepad] [data-control="analog"]{left:calc(var(--left) + var(--stick))}
 [data-retrom-touch-gamepad][data-layout="JOYSTICK"] [data-control="dpad"]{display:none}
 [data-retrom-touch-gamepad][data-layout="JOYSTICK"] [data-control="analog"]{left:var(--left)}
@@ -147,6 +150,42 @@
   bottom:calc(var(--base) + 227px)}
 }
 `;
+
+  // src/provider/touch-stick-float.ts
+  function createStickZone(document, root, options) {
+    let stickMode = options.stickMode ?? "FLOATING";
+    if (root.dataset.stickMode = stickMode, stickMode !== "FLOATING" || !(options.wideStickZone ?? options.layout !== "POINTER"))
+      return null;
+    let zone = document.createElement("div");
+    return zone.dataset.control = "stick-zone", root.append(zone), zone;
+  }
+  function floatingSticks(frameWindow) {
+    let floats = /* @__PURE__ */ new Map(), restCentre = (control) => {
+      let bounds = control.getBoundingClientRect(), offset2 = floats.get(control) ?? { x: 0, y: 0 };
+      return { x: bounds.left + bounds.width / 2 - offset2.x, y: bounds.top + bounds.height / 2 - offset2.y, radius: bounds.width / 2 };
+    }, floatTo = (control, origin) => {
+      if (!origin) {
+        floats.delete(control), control.style.removeProperty("--float-x"), control.style.removeProperty("--float-y");
+        return;
+      }
+      let rest = restCentre(control), offset2 = { x: origin.x - rest.x, y: origin.y - rest.y };
+      floats.set(control, offset2), control.style.setProperty("--float-x", `${offset2.x}px`), control.style.setProperty("--float-y", `${offset2.y}px`);
+    };
+    return { floatTo, offset: (point, control, origin) => {
+      let rest = restCentre(control);
+      if (!origin)
+        return { dx: point.x - rest.x, dy: point.y - rest.y, radius: rest.radius };
+      let dx = point.x - origin.x, dy = point.y - origin.y, distance = Math.hypot(dx, dy);
+      if (rest.radius > 0 && distance > rest.radius) {
+        let excess = (distance - rest.radius) / distance;
+        origin.x += dx * excess, origin.y += dy * excess, dx = point.x - origin.x, dy = point.y - origin.y, floatTo(control, origin);
+      }
+      return { dx, dy, radius: rest.radius };
+    }, nearest: (point, controls) => controls.filter((control) => control !== null && frameWindow.getComputedStyle(control).display !== "none").map((control) => {
+      let rest = restCentre(control);
+      return { control, distance: Math.hypot(point.x - rest.x, point.y - rest.y) };
+    }).sort((left, right) => left.distance - right.distance)[0]?.control ?? null };
+  }
 
   // src/provider/touch-gamepad.ts
   var dpad = { up: 12, down: 13, left: 14, right: 15 }, buttonCount = 17, device = "touch-gamepad", TouchGamepadState = class {
@@ -224,7 +263,7 @@
     style.dataset.retromTouchGamepadStyle = "", style.textContent = touchGamepadStyle, document.head.append(style);
     let root = document.createElement("div");
     root.dataset.retromTouchGamepad = "", root.dataset.layout = options.layout ?? "STANDARD", root.setAttribute("aria-hidden", "true");
-    let layout = touchGamepadLayout(options.layout, options), pad = document.createElement("div");
+    let layout = touchGamepadLayout(options.layout, options), zone = createStickZone(document, root, options), floating = root.dataset.stickMode === "FLOATING", { floatTo, offset, nearest } = floatingSticks(frameWindow), pad = document.createElement("div");
     pad.dataset.control = "dpad";
     let padKnob = document.createElement("span");
     padKnob.dataset.knob = "", pad.append(padKnob), root.append(pad);
@@ -250,7 +289,7 @@
       }, now()));
     }, hold = (pointerId, control, next) => {
       let previous = owners.get(pointerId)?.held ?? [];
-      owners.set(pointerId, { control, held: next });
+      owners.set(pointerId, { ...owners.get(pointerId), control, held: next });
       for (let index of previous)
         !next.includes(index) && !heldElsewhere(pointerId, index) && apply(index, !1);
       for (let index of next)
@@ -258,7 +297,8 @@
     }, release = (pointerId) => {
       let owner = owners.get(pointerId);
       if (owner) {
-        if (owners.delete(pointerId), owner.control === "analog" && resetAnalog(), owner.control === "dpad") {
+        if (owners.delete(pointerId), owner.control === "analog" && (resetAnalog(), analog && floatTo(analog)), owner.control === "dpad") {
+          owner.origin && floatTo(pad, [...owners.values()].reverse().find((value) => value.control === "dpad")?.origin);
           let remaining = [...owners.values()].reverse().find((value) => value.control === "dpad")?.point;
           positionStick(pad, remaining?.x ?? 0, remaining?.y ?? 0);
         }
@@ -266,7 +306,7 @@
           heldElsewhere(pointerId, index) || apply(index, !1);
       }
     }, releaseAll = () => {
-      owners.clear(), resetAnalog(), positionStick(pad);
+      owners.clear(), resetAnalog(), positionStick(pad), floatTo(pad), analog && floatTo(analog);
       for (let index of state.releaseAll(now()))
         faces.get(index)?.removeAttribute("data-active"), inputObserver(frameWindow)?.record({ device, control: `Button ${index}`, value: 0, stage: "BROWSER", target: null, reason: null }, now());
     }, resetAnalog = () => {
@@ -278,16 +318,16 @@
     }, moveStick = (event, control, x, y) => {
       let distance = Math.hypot(x, y), scale = distance > 1 ? 1 / distance : 1, travel = control.getBoundingClientRect().width / 4, point = { x: x * scale * travel, y: y * scale * travel }, owner = owners.get(event.pointerId);
       owner && (owner.point = point), positionStick(control, point.x, point.y);
-    }, moveAnalog = (event) => {
+    }, relative = (event, control) => offset({ x: event.clientX, y: event.clientY }, control, owners.get(event.pointerId)?.origin), moveAnalog = (event) => {
       if (!analog || !knob)
         return;
-      let bounds = analog.getBoundingClientRect(), radius = bounds.width / 2;
+      let { dx: offsetX, dy: offsetY, radius } = relative(event, analog);
       if (!(radius > 0))
         return;
-      let dx = (event.clientX - bounds.left - radius) / radius, dy = (event.clientY - bounds.top - radius) / radius, distance = Math.hypot(dx, dy), scale = distance > 1 ? 1 / distance : 1, x = distance < 0.15 ? 0 : dx * scale, y = distance < 0.15 ? 0 : dy * scale;
+      let dx = offsetX / radius, dy = offsetY / radius, distance = Math.hypot(dx, dy), scale = distance > 1 ? 1 / distance : 1, x = distance < 0.15 ? 0 : dx * scale, y = distance < 0.15 ? 0 : dy * scale;
       state.setAxis(0, x, now()), state.setAxis(1, y, now()), moveStick(event, analog, x, y);
     }, moveDpad = (event) => {
-      let bounds = pad.getBoundingClientRect(), radius = bounds.width / 2, dx = event.clientX - (bounds.left + radius), dy = event.clientY - (bounds.top + bounds.height / 2);
+      let { dx, dy, radius } = relative(event, pad);
       hold(event.pointerId, "dpad", dpadDirections(dx, dy, radius)), radius > 0 && moveStick(event, pad, dx / radius, dy / radius);
     }, swallow = (event) => {
       event.preventDefault(), event.stopPropagation();
@@ -309,18 +349,22 @@
       let control = event.target?.closest?.("[data-control]");
       if (!control || !root.contains(control) || root.hidden || (swallow(event), frameWindow.focus(), disposed || !root.isConnected) || !capturePointer(control, event.pointerId, capture))
         return;
-      if (control === pad) {
-        moveDpad(event);
+      let stick = control === zone ? nearest({ x: event.clientX, y: event.clientY }, [pad, analog]) : control;
+      if (stick === pad) {
+        startStick(event, pad, "dpad"), moveDpad(event);
         return;
       }
-      if (control === analog) {
+      if (stick === analog && analog) {
         if ([...owners.values()].some((owner) => owner.control === "analog"))
           return;
-        hold(event.pointerId, "analog", []), moveAnalog(event);
+        startStick(event, analog, "analog"), moveAnalog(event);
         return;
       }
       let index = [...faces].find(([, element]) => element === control)?.[0];
       index !== void 0 && hold(event.pointerId, index, [index]);
+    }, startStick = (event, control, kind) => {
+      let origin = floating ? { x: event.clientX, y: event.clientY } : void 0;
+      owners.set(event.pointerId, { control: kind, held: owners.get(event.pointerId)?.held ?? [], origin }), origin && floatTo(control, origin);
     }, move = (event) => {
       let owner = owners.get(event.pointerId);
       owner && (swallow(event), owner.control === "dpad" && moveDpad(event), owner.control === "analog" && moveAnalog(event));
@@ -1565,10 +1609,12 @@
             inputFilter.set(message.body.policy), send(requestId, "SET_INPUT_FILTER_RESULT", {});
             break;
           case "SET_TOUCH_GAMEPAD":
-            if (!ownKeys(message.body, ["enabled"]) || typeof message.body.enabled != "boolean")
+            if (!ownKeys(message.body, ["enabled", "stickMode"]) || typeof message.body.enabled != "boolean" || !["FIXED", "FLOATING"].includes(message.body.stickMode))
               throw new Error("TYRANOSCRIPT_PROTOCOL_INVALID");
             await inputFilter.setTouchGamepadEnabled(message.body.enabled, {
               ...touchGamepadProfiles.analogMenu,
+              stickMode: message.body.stickMode,
+              wideStickZone: !1,
               faces: [{ index: 0, label: "\u786E\u8BA4", slot: "bottom" }, { index: 1, label: "\u53F3\u952E", slot: "right" }],
               pointerTarget: global.document.getElementById("tyrano_base") || global.document.body,
               activationEvent: typeof global.$?.fn?.tap == "function" && global.$.fn.click === global.$.fn.tap ? "tap" : "click"

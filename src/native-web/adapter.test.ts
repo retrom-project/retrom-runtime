@@ -17,9 +17,9 @@ it("applies the initial MZ touch preference and toggles the same isolated input 
   try {
     const controls = adapter.getTouchGamepad();
     expect(controls?.getState()).toEqual({enabled: false});
-    expect(request).toHaveBeenCalledWith("SET_TOUCH_GAMEPAD", {enabled: false});
+    expect(request).toHaveBeenCalledWith("SET_TOUCH_GAMEPAD", {enabled: false, stickMode: "FLOATING"});
     await controls!.setEnabled(true);
-    expect(request).toHaveBeenLastCalledWith("SET_TOUCH_GAMEPAD", {enabled: true});
+    expect(request).toHaveBeenLastCalledWith("SET_TOUCH_GAMEPAD", {enabled: true, stickMode: "FLOATING"});
     expect(controls!.getState()).toEqual({enabled: true});
   } finally {await adapter.exit(); frame.remove(); vi.restoreAllMocks();}
 });

@@ -3,7 +3,7 @@ import type {RuntimeHostShortcutPolicyV1, RuntimeHostShortcutV1, RuntimeInputFil
 import {installRuntimeGamepadFilter, RuntimeGamepadFilter, validInputFilterPolicy} from "./gamepad-filter.js";
 import {installTouchGamepad, type TouchGamepad} from "./touch-gamepad.js";
 import {installGamepadCursor, type GamepadCursor} from "./gamepad-cursor.js";
-import type {TouchGamepadLayoutOptions} from "./touch-gamepad-layout.js";
+import type {TouchGamepadOptions} from "./touch-gamepad-layout.js";
 
 /** Runs inside the isolated game realm; the parent sends policy, never cross-origin DOM access. */
 export function createIsolatedInputFilter(runtimeWindow: Window) {
@@ -23,7 +23,7 @@ export function createIsolatedInputFilter(runtimeWindow: Window) {
   return {
     onHostShortcut(report: (shortcut: RuntimeHostShortcutV1) => void) {reportShortcut = report;},
     setHostShortcutPolicy(policy: RuntimeHostShortcutPolicyV1 | null) {shortcuts.setPolicy(policy);},
-    async setTouchGamepadEnabled(enabled: boolean, options: TouchGamepadLayoutOptions & {
+    async setTouchGamepadEnabled(enabled: boolean, options: Omit<TouchGamepadOptions, "enabled"> & {
       pointerTarget?: HTMLElement; activationEvent?: "click" | "tap";
     } = {}) {
       if (typeof enabled !== "boolean") {throw new Error("PLAYER_RUNTIME_CONTRACT_INVALID");}

@@ -86,6 +86,14 @@ describe("retrom-runtime Provider Module V1", () => {
     await expect(provider.createRuntime(wasmEnvelope(), host)).rejects.toThrow("PROVIDER_HOST_INVALID");
   });
 
+  it("accepts only the declared touch stick modes", async () => {
+    for (const touchStickMode of ["FIXED", "FLOATING"] as const) {
+      expect((await provider.createRuntime(wasmEnvelope(), {...hostFixture(), touchStickMode})).getState()).toBe("CREATED");
+    }
+    const host = {...hostFixture(), touchStickMode: "SLIDE"} as unknown as RuntimeHostV1;
+    await expect(provider.createRuntime(wasmEnvelope(), host)).rejects.toThrow("PROVIDER_HOST_INVALID");
+  });
+
   it("rejects unknown nested fields and declaration mismatches at creation", async () => {
     for (const mutate of [
       (v: ReturnType<typeof wasmEnvelope>) => Object.assign(v.session, {adapterId: "leaked"}),

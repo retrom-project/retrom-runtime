@@ -1016,11 +1016,13 @@ export function installTyranoScriptBridge(global, inputFilter) {
                     send(requestId, "SET_INPUT_FILTER_RESULT", {});
                     break;
                 case "SET_TOUCH_GAMEPAD":
-                    if (!ownKeys(message.body, ["enabled"]) || typeof message.body.enabled !== "boolean") {
+                    if (!ownKeys(message.body, ["enabled", "stickMode"]) || typeof message.body.enabled !== "boolean" ||
+                        !["FIXED", "FLOATING"].includes(message.body.stickMode)) {
                         throw new Error("TYRANOSCRIPT_PROTOCOL_INVALID");
                     }
                     await inputFilter.setTouchGamepadEnabled(message.body.enabled, {
                         ...touchGamepadProfiles.analogMenu,
+                        stickMode: message.body.stickMode, wideStickZone: false,
                         faces: [{index: 0, label: "确认", slot: "bottom"}, {index: 1, label: "右键", slot: "right"}],
                         pointerTarget: global.document.getElementById("tyrano_base") || global.document.body,
                         activationEvent: typeof global.$?.fn?.tap === "function" && global.$.fn.click === global.$.fn.tap ? "tap" : "click",

@@ -51,7 +51,7 @@ it("uses real touch coordinates while pointer lock zeros PointerEvent coordinate
   Object.defineProperty(document, "pointerLockElement", {configurable: true, value: document.body});
   const unlock = vi.fn();
   Object.defineProperty(document, "exitPointerLock", {configurable: true, value: unlock});
-  const touch = installTouchGamepad(window);
+  const touch = installTouchGamepad(window, {stickMode: "FIXED"});
   const dispatch = (type: string, target: Element, x: number, y: number) => {
     const event = new Event(type, {bubbles: true, cancelable: true});
     Object.defineProperty(event, "changedTouches", {value: [{identifier: 1, target, clientX: x, clientY: y}]});
@@ -95,7 +95,7 @@ it("exposes only the configured actions and a separate native menu button", () =
 
 it("follows a direction touch with the stick cap and recentres on cancellation, blur and hiding", async () => {
   touchDevice();
-  const touch = installTouchGamepad(window);
+  const touch = installTouchGamepad(window, {stickMode: "FIXED"});
   try {
     const pad = root().querySelector<HTMLElement>('[data-control="dpad"]')!;
     expect(pad.querySelector("[data-knob]")).not.toBeNull();
@@ -148,7 +148,7 @@ it("applies an initial disabled preference and keeps ordinary game touches from 
 
 it("shares a PSP layout with a proportional analog stick, shoulder and start/select controls", async () => {
   touchDevice();
-  const touch = installTouchGamepad(window, {layout: "PSP"});
+  const touch = installTouchGamepad(window, {layout: "PSP", stickMode: "FIXED"});
   try {
     const analog = root().querySelector<HTMLElement>('[data-control="analog"]')!;
     expect(analog).not.toBeNull();

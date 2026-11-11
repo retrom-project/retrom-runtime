@@ -1,6 +1,6 @@
 import {completeChannelReply} from "../provider/channel-reply.js";
 import {isPluginSavePath, type RpgPluginFile} from "./plugin-files.js";
-import type {RuntimeHostShortcutV1, RuntimeTouchGamepadV1} from "../provider/module-api.js";
+import type {RuntimeHostShortcutV1, RuntimeTouchGamepadV1, RuntimeTouchStickModeV1, RuntimeTouchStickV1} from "../provider/module-api.js";
 import {NativeInputDiagnostics} from "./input-diagnostics.js";
 import {createNativeGameEditor} from "./editor.js";
 import {nativeReadyDeadline, type NativeReadyOptions} from "./startup-timeout.js";
@@ -44,7 +44,7 @@ export async function mountNativeRpg(
   frame: HTMLIFrameElement,
   restorePayload: Uint8Array | null,
   reportExitRequested: RuntimeExitReporter = () => undefined,
-  readyOptions: NativeReadyOptions & {touchGamepadEnabled?: boolean} = {},
+  readyOptions: NativeReadyOptions & {touchGamepadEnabled?: boolean; touchStickMode?: RuntimeTouchStickModeV1} = {},
   pluginFiles: RpgPluginFile[] = [],
 ) {
   const channel = new NativeChannel(config, reportExitRequested, pluginFiles);
@@ -52,6 +52,7 @@ export async function mountNativeRpg(
   frame.referrerPolicy = "no-referrer";
   let expectedEngine: "RPGMV" | "RPGMZ";
   let touchGamepad: RuntimeTouchGamepadV1 | null = null;
+  let touchStick: RuntimeTouchStickV1 | null = null;
   try {
     await bootstrapNativeFrame(config, frame, channel, readyOptions.signal);
     const ready = await channel.ready(readyOptions);
@@ -65,8 +66,10 @@ export async function mountNativeRpg(
     }
     channel.startStatusLoop();
     let enabled = readyOptions.touchGamepadEnabled ?? true;
+    const stickMode = readyOptions.touchStickMode ?? "FLOATING";
+    touchStick = {getState: () => ({mode: stickMode})};
     const setEnabled = async (value: boolean) => {
-      const reply = await channel.request("SET_TOUCH_GAMEPAD", {enabled: value});
+      const reply = await channel.request("SET_TOUCH_GAMEPAD", {enabled: value, stickMode});
       if (reply.type !== "SET_TOUCH_GAMEPAD_RESULT") {throw new Error("RPG_RUNTIME_CONTROL_UNAVAILABLE");}
       enabled = value;
     };
@@ -80,6 +83,7 @@ export async function mountNativeRpg(
 
   return {
     getTouchGamepad: () => touchGamepad,
+    getTouchStick: () => touchStick,
     checkpoint: async () => ({ bytes: await channel.save(expectedEngine), format: "native-save-bundle-v1" }),
     gameEditor: createNativeGameEditor(channel),
     exit: async () => {

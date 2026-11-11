@@ -887,8 +887,10 @@ export function installRpgRuntimeNativeBridge(global, inputFilter) {
     case "PAUSE": inputFilter.setPaused(true); setPaused(true); return { type: "PAUSE_RESULT", body: {} };
     case "RESUME": setPaused(false); inputFilter.setPaused(false); return { type: "RESUME_RESULT", body: {} };
     case "SET_TOUCH_GAMEPAD":
-      if (!ownKeys(message.body, ["enabled"]) || typeof message.body.enabled !== "boolean") throw new Error("RPG_NATIVE_MESSAGE_INVALID");
-      await inputFilter.setTouchGamepadEnabled(message.body.enabled);
+      if (!ownKeys(message.body, ["enabled", "stickMode"]) || typeof message.body.enabled !== "boolean" ||
+        !["FIXED", "FLOATING"].includes(message.body.stickMode)) throw new Error("RPG_NATIVE_MESSAGE_INVALID");
+      // RPG Maker reads touches on its own canvas; a floating stick stays within the stick itself.
+      await inputFilter.setTouchGamepadEnabled(message.body.enabled, {stickMode: message.body.stickMode, wideStickZone: false});
       return {type: "SET_TOUCH_GAMEPAD_RESULT", body: {}};
     case "SET_VIDEO_MODE": setVideoMode(message.body.mode); return { type: "SET_VIDEO_MODE_RESULT", body: {} };
     case "SET_INPUT_FILTER":

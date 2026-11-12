@@ -1,6 +1,5 @@
-import {fetchMetadataJson, indexByteBudget} from "../provider/metadata.js";
 import {KirikiriContent} from "./content.js";
-import {kirikiriResourceOverlayFiles} from "./overlays.js";
+import {registerKirikiriProject} from "./project.js";
 import type {AdapterContentOptions} from "../provider/content-inputs.js";
 import type {ContentReaderV1} from "../../contracts/content-io/v1/content-io.js";
 import {abi, contractSha256} from "../content-io/identity.js";
@@ -13,7 +12,6 @@ import {installGamepadCursor, type GamepadCursor} from "../provider/gamepad-curs
 import {captureGamepadSource} from "../provider/gamepad-filter.js";
 import {RuntimeFailureError} from "../provider/failure.js";
 
-import {parseProjectIndex} from "../provider/project-index.js";
 type KirikiriVlfs = {
   contentAbi: string;
   contractSha256: string;
@@ -65,7 +63,6 @@ type KirikiriHostWindow = Window & Record<string, unknown> & {
 };
 
 const readyTimeoutMs = 60_000;
-const maximumProjectFiles = 10_000;
 const stableScreenshotTimeoutMs = 3_000;
 const stableScreenshotPollMs = 50;
 // A failed instance is discarded with its workers. Give an outstanding native
@@ -202,7 +199,7 @@ export async function mountKirikiri2(
     vlfs.onWriteClose = (path, data) => overlay.record(path, data);
     vlfs.onUnlink = path => overlay.record(path, null);
     await vlfs.registerZipBlob(assets.archive, {stripPrefix: ""});
-    const project = await registerProject(vlfs, config.projectIndexUrl, document.baseURI, content, config.contentDigest,
+    const project = await registerKirikiriProject(vlfs, config.projectIndexUrl, document.baseURI, content, config.contentDigest,
       config.overlayRoot, config.overlayArchives, contentOptions.signal);
     const restore = restorePayload ? await decodeKirikiriCheckpoint(restorePayload) : null;
     for (const entry of restore?.entries ?? []) {
@@ -393,26 +390,6 @@ function requireGameSaveAbi(module: KirikiriModule) {
     typeof module._krkr2_host_set_paused !== "function") {
     throw new Error("KIRIKIRI_GAME_SAVE_ABI_UNAVAILABLE");
   }
-}
-
-async function registerProject(vlfs: KirikiriVlfs, indexUrl: string, documentBaseUrl: string,
-  content: KirikiriContent, contentDigest: string, overlayRoot: string | null, overlayArchives: string[], signal?: AbortSignal) {
-  let value: unknown;
-  try {
-    value = await fetchMetadataJson(new URL(indexUrl, documentBaseUrl), indexByteBudget(maximumProjectFiles, 1024), signal);
-  } catch {throw new Error("KIRIKIRI_PROJECT_INDEX_UNAVAILABLE");}
-  const index = parseProjectIndex(value, maximumProjectFiles, "EXACT");
-  if (!index) {throw new Error("KIRIKIRI_PROJECT_INDEX_INVALID");}
-  const base = new URL(indexUrl, documentBaseUrl);
-  const paths: string[] = [];
-  const overlayFiles = kirikiriResourceOverlayFiles(index.files.map(file => file.path), overlayRoot, overlayArchives);
-  for (const file of index.files) {
-    const path = `/${file.path}`;
-    const reader = content.register(contentDigest, file.path, new URL(file.url, base).href, file.sizeBytes);
-    vlfs.registerContent(path, {fileId: reader.id, sizeBytes: reader.sizeBytes}, reader);
-    paths.push(path);
-  }
-  return {paths, overlayFiles};
 }
 
 function selectStartupPath(paths: string[], configured: string | null) {

@@ -1,7 +1,7 @@
 /** Stable binary envelope magic shared by native-save adapters. */
 export const rpgCheckpointMagic = "RTRPGSV1";
 
-export type RpgCheckpointEngine = "RPG2000" | "RPG2003" | "RPGMV" | "RPGMZ";
+export type RpgCheckpointEngine = "RPG2000" | "RPG2003" | "RPGXP" | "RPGVX" | "RPGVXAce" | "RPGMV" | "RPGMZ";
 export type RpgCheckpointStore = "FILESYSTEM" | "LOCAL_STORAGE" | "LOCALFORAGE";
 
 export type RpgCheckpointEntry = {
@@ -13,7 +13,6 @@ export type RpgCheckpointEntry = {
 
 export type RpgCheckpointBundle = {
   engine: RpgCheckpointEngine;
-  resumeSlot: number;
   entries: RpgCheckpointEntry[];
 };
 
@@ -26,7 +25,6 @@ type ManifestEntry = Omit<RpgCheckpointEntry, "data"> & {
 type Manifest = {
   schemaVersion: 1;
   engine: RpgCheckpointEngine;
-  resumeSlot: number;
   entries: ManifestEntry[];
 };
 
@@ -43,16 +41,11 @@ async function digest(bytes: Uint8Array) {
 }
 
 function validEngine(value: unknown): value is RpgCheckpointEngine {
-  return value === "RPG2000" || value === "RPG2003" || value === "RPGMV" || value === "RPGMZ";
+  return ["RPG2000", "RPG2003", "RPGXP", "RPGVX", "RPGVXAce", "RPGMV", "RPGMZ"].includes(String(value));
 }
 
 function validStore(value: unknown): value is RpgCheckpointStore {
   return value === "FILESYSTEM" || value === "LOCAL_STORAGE" || value === "LOCALFORAGE";
-}
-
-function validResumeSlot(engine: RpgCheckpointEngine, slot: number) {
-  return Number.isSafeInteger(slot) && slot >= 1 && slot <= 2_147_483_647 &&
-    (engine !== "RPG2000" && engine !== "RPG2003" || slot === 100);
 }
 
 function validKey(store: RpgCheckpointStore, key: string) {
@@ -63,8 +56,7 @@ function validKey(store: RpgCheckpointStore, key: string) {
 }
 
 function assertHeader(bundle: RpgCheckpointBundle) {
-  if (!validEngine(bundle.engine) || !validResumeSlot(bundle.engine, bundle.resumeSlot) ||
-    !Array.isArray(bundle.entries) || bundle.entries.length > 512) {
+  if (!validEngine(bundle.engine) || !Array.isArray(bundle.entries) || !bundle.entries.length || bundle.entries.length > 512) {
     throw new Error("RPG_CHECKPOINT_INVALID");
   }
 }
@@ -72,7 +64,7 @@ function assertHeader(bundle: RpgCheckpointBundle) {
 export async function encodeRpgCheckpoint(bundle: RpgCheckpointBundle) {
   assertHeader(bundle);
   const ordered = bundle.entries.map((entry) => ({ ...entry, data: new Uint8Array(entry.data) }))
-    .sort((left, right) => left.store.localeCompare(right.store) || left.key.localeCompare(right.key));
+    .sort(rpgSaveEntryOrder);
   const manifestEntries: ManifestEntry[] = [];
   let offset = 0;
   let previous = "";
@@ -103,7 +95,6 @@ export async function encodeRpgCheckpoint(bundle: RpgCheckpointBundle) {
       sizeBytes: entry.sizeBytes,
       store: entry.store,
     })),
-    resumeSlot: bundle.resumeSlot,
     schemaVersion: 1,
   };
   const manifestBytes = new TextEncoder().encode(JSON.stringify(manifest));
@@ -144,12 +135,12 @@ export async function decodeRpgCheckpoint(bytes: Uint8Array, expectedEngine: Rpg
     throw new Error("RPG_CHECKPOINT_INVALID");
   }
   const entries = await decodeManifestEntries(manifest.entries, payload);
-  return { engine: expectedEngine, resumeSlot: manifest.resumeSlot, entries } satisfies RpgCheckpointBundle;
+  return { engine: expectedEngine, entries } satisfies RpgCheckpointBundle;
 }
 
 function validManifestHeader(manifest: Manifest, expectedEngine: RpgCheckpointEngine) {
   return manifest && manifest.schemaVersion === 1 && manifest.engine === expectedEngine &&
-    validResumeSlot(expectedEngine, manifest.resumeSlot) && Array.isArray(manifest.entries) && manifest.entries.length <= 512;
+    Array.isArray(manifest.entries) && manifest.entries.length > 0 && manifest.entries.length <= 512;
 }
 
 async function decodeManifestEntries(manifestEntries: ManifestEntry[], payload: Uint8Array) {
@@ -177,4 +168,9 @@ function validDecodedEntry(entry: ManifestEntry, offset: number, previous: strin
     entry.mediaType === "application/octet-stream" && entry.offset === offset &&
     Number.isSafeInteger(entry.sizeBytes) && entry.sizeBytes >= 0 && /^[0-9a-f]{64}$/.test(entry.sha256) &&
     identity > previous && entry.sizeBytes <= payloadBytes - offset;
+}
+
+export function rpgSaveEntryOrder(left: Pick<RpgCheckpointEntry, "store" | "key">, right: Pick<RpgCheckpointEntry, "store" | "key">) {
+  const a = `${left.store}\0${left.key}`, b = `${right.store}\0${right.key}`;
+  return a < b ? -1 : a > b ? 1 : 0;
 }

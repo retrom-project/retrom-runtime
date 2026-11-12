@@ -41,7 +41,7 @@ function fixture(engine: "MV" | "MZ") {
   dispatch("message", {
     source: runtime.parent, origin: "https://host.test", ports: [port], stopImmediatePropagation() {},
     data: {...identity, parentOrigin: "https://host.test", profile: `RPG${engine}`,
-      type: "RPG_RUNTIME_NATIVE_CONNECT", pluginFiles: []},
+      type: "RPG_RUNTIME_NATIVE_CONNECT", saves: null, pluginFiles: []},
   });
   return {
     graphics,

@@ -1,11 +1,11 @@
-import {createRpgPluginFiles, isPluginSavePath} from "../../../src/native-web/plugin-files.ts";
+import {createRpgWebSaves} from "../../../src/native-web/game-saves.ts";
+import {createRpgPluginFiles} from "../../../src/native-web/plugin-files.ts";
 
 export function installRpgRuntimeNativeBridge(global, inputFilter) {
   "use strict";
 
   const PROTOCOL_VERSION = 1;
   const MAX_CONTROL_BYTES = 64 * 1024;
-  const MAX_ENTRY_BYTES = 64 * 1024 * 1024;
   const MAX_SCREENSHOT_BYTES = 10 * 1024 * 1024;
   const EDITOR_CATEGORIES = Object.freeze([
     {id: "gold", label: "金币"}, {id: "items", label: "道具"},
@@ -24,7 +24,6 @@ export function installRpgRuntimeNativeBridge(global, inputFilter) {
   ]);
   inputFilter.onHostShortcut(shortcut => event("HOST_SHORTCUT", {shortcut}));
   const encoder = new TextEncoder();
-  const decoder = new TextDecoder("utf-8", { fatal: true });
   let launchId = null;
   let nonce = null;
   let parentOrigin = null;
@@ -36,8 +35,7 @@ export function installRpgRuntimeNativeBridge(global, inputFilter) {
   let engineReadySent = false;
   let sceneManagerHooked = false;
   let exitRequested = false;
-  let bootCompleted = false;
-  let titleStarted = false;
+  let nativeSaves = null;
   let closed = false;
   let pluginFiles = null;
   let inputDiagnostics = null;
@@ -74,244 +72,12 @@ export function installRpgRuntimeNativeBridge(global, inputFilter) {
     send(0, type, body);
   }
 
-  function readyForCheckpoint() {
-    const scene = global.SceneManager && global.SceneManager._scene;
-    const sceneMap = global.Scene_Map;
-    const messageBusy = global.$gameMessage && typeof global.$gameMessage.isBusy === "function" &&
-      global.$gameMessage.isBusy();
-    const eventBusy = global.$gameMap && typeof global.$gameMap.isEventRunning === "function" &&
-      global.$gameMap.isEventRunning();
-    return Boolean(scene && sceneMap && scene instanceof sceneMap && !messageBusy && !eventBusy &&
-      global.DataManager && global.StorageManager && global.$gameMap &&
-      typeof global.$gameMap.mapId === "function" && global.$gameMap.mapId() > 0);
-  }
-
   function engineRuntimeReady() {
     const manager = global.SceneManager;
     const utils = global.Utils;
     const expectedName = profile === "RPGMV" ? "MV" : "MZ";
     return Boolean(manager && typeof manager.updateMain === "function" && global.DataManager &&
       global.StorageManager && utils && utils.RPGMAKER_NAME === expectedName);
-  }
-
-  function storageNames(slot) {
-    return profile === "RPGMZ" ? ["global", `file${slot}`] : ["0", String(slot)];
-  }
-
-  function replaceMethod(target, name, create, restorers) {
-    if (!target || typeof target[name] !== "function") return false;
-    const original = target[name];
-    target[name] = create(original);
-    restorers.push(function restoreMethod() { target[name] = original; });
-    return true;
-  }
-
-  function runGameSystemHook(name) {
-    const gameSystem = global.$gameSystem;
-    if (gameSystem && typeof gameSystem[name] === "function") gameSystem[name]();
-  }
-
-  async function captureNativeSave() {
-    if (!readyForCheckpoint()) throw new Error("RPG_CHECKPOINT_UNAVAILABLE");
-    const slot = Number(global.DataManager.maxSavefiles()) + 1;
-    if (!Number.isSafeInteger(slot) || slot < 1) throw new Error("RPG_CHECKPOINT_SLOT_INVALID");
-    const captured = new Map();
-    const storage = global.StorageManager;
-    const restorers = [];
-    const allowed = new Set(storageNames(slot));
-    let supported = false;
-    if (profile === "RPGMV") {
-      supported = replaceMethod(storage, "save", (original) => function runtimeSave(savefileId, json) {
-        const key = String(savefileId);
-        if (!allowed.has(key)) return original.apply(this, arguments);
-        const bytes = encoder.encode(String(json));
-        if (!bytes.byteLength || bytes.byteLength > MAX_ENTRY_BYTES) throw new Error("RPG_CHECKPOINT_TOO_LARGE");
-        captured.set(key, bytes);
-        return undefined;
-      }, restorers);
-    } else {
-      supported = replaceMethod(storage, "saveObject", (original) => async function runtimeSaveObject(saveName, object) {
-        const key = String(saveName);
-        if (!allowed.has(key)) return original.apply(this, arguments);
-        const jsonEx = global.JsonEx;
-        if (!jsonEx || typeof jsonEx.stringify !== "function") {
-          throw new Error("RPG_CHECKPOINT_STORAGE_UNSUPPORTED");
-        }
-        const serialized = jsonEx.stringify(object);
-        if (typeof serialized !== "string") throw new Error("RPG_CHECKPOINT_CREATE_FAILED");
-        const bytes = encoder.encode(serialized);
-        if (!bytes.byteLength || bytes.byteLength > MAX_ENTRY_BYTES) throw new Error("RPG_CHECKPOINT_TOO_LARGE");
-        captured.set(key, bytes);
-        return undefined;
-      }, restorers);
-    }
-    if (!supported) throw new Error("RPG_CHECKPOINT_STORAGE_UNSUPPORTED");
-    try {
-      runGameSystemHook("onBeforeSave");
-      const saved = await global.DataManager.saveGame(slot);
-      if (saved === false || !captured.has(storageNames(slot)[1])) throw new Error("RPG_CHECKPOINT_CREATE_FAILED");
-    } finally {
-      restorers.reverse().forEach((restore) => restore());
-    }
-    const entries = [...captured.entries()].map(([key, bytes]) => ({
-      store: profile === "RPGMZ" ? "LOCALFORAGE" : "LOCAL_STORAGE",
-      key,
-      mediaType: "application/octet-stream",
-      data: bytes.slice().buffer,
-    }));
-    if (profile === "RPGMV" && pluginFiles) {
-      for (const file of pluginFiles.snapshot()) entries.push({
-        store: "FILESYSTEM", key: file.path, mediaType: "application/octet-stream", data: file.data,
-      });
-    }
-    return { bundle: { engine: engine(), resumeSlot: slot, entries } };
-  }
-
-  function validateRestoreBundle(bundle) {
-    if (!bundle || bundle.engine !== engine() || !Number.isSafeInteger(bundle.resumeSlot) ||
-      bundle.resumeSlot < 1 || !Array.isArray(bundle.entries) || bundle.entries.length < 1 || bundle.entries.length > 130) {
-      throw new Error("RPG_CHECKPOINT_RESTORE_INVALID");
-    }
-    const allowed = new Set(storageNames(bundle.resumeSlot));
-    const expectedStore = profile === "RPGMZ" ? "LOCALFORAGE" : "LOCAL_STORAGE";
-    const entries = new Map();
-    const files = [];
-    const fileKeys = new Set();
-    let totalBytes = 0;
-    for (const entry of bundle.entries) {
-      if (!ownKeys(entry, ["data", "key", "mediaType", "store"]) ||
-        typeof entry.key !== "string" || entry.mediaType !== "application/octet-stream" ||
-        !(entry.data instanceof ArrayBuffer) || entry.data.byteLength > MAX_ENTRY_BYTES) {
-        throw new Error("RPG_CHECKPOINT_RESTORE_INVALID");
-      }
-      totalBytes += entry.data.byteLength;
-      if (totalBytes > MAX_ENTRY_BYTES) throw new Error("RPG_CHECKPOINT_RESTORE_INVALID");
-      if (profile === "RPGMV" && entry.store === "FILESYSTEM" && isPluginSavePath(entry.key) && !fileKeys.has(entry.key)) {
-        fileKeys.add(entry.key);
-        files.push({path: entry.key, data: entry.data});
-      } else if (entry.store === expectedStore && allowed.has(entry.key) && !entries.has(entry.key) && entry.data.byteLength) {
-        entries.set(entry.key, new Uint8Array(entry.data));
-      } else throw new Error("RPG_CHECKPOINT_RESTORE_INVALID");
-    }
-    if (!entries.has(storageNames(bundle.resumeSlot)[1])) throw new Error("RPG_CHECKPOINT_RESTORE_INVALID");
-    return { slot: bundle.resumeSlot, entries, files };
-  }
-
-  async function restoreNativeSave(bundle) {
-    const validated = validateRestoreBundle(bundle);
-    const deadline = performance.now() + 30000;
-    const releaseInput = suppressRestoreInput();
-    try {
-      if (!global.DataManager || typeof global.DataManager.isDatabaseLoaded !== "function") {
-        throw new Error("RPG_CHECKPOINT_DATABASE_UNAVAILABLE");
-      }
-      await waitForRestore(() => global.DataManager.isDatabaseLoaded(), deadline, "RPG_CHECKPOINT_DATABASE_TIMEOUT");
-      await waitForRestore(() => bootCompleted, deadline);
-      await prepareRestoreTitle(deadline);
-      return await loadNativeSave(validated, deadline);
-    } finally {
-      releaseInput();
-    }
-  }
-
-  function suppressRestoreInput() {
-    const restorers = [];
-    for (const input of [global.Input, global.TouchInput]) {
-      if (!input || typeof input.clear !== "function") continue;
-      input.clear();
-      replaceMethod(input, "update", () => function restoreInputUpdate() { this.clear(); }, restorers);
-      restorers.push(() => input.clear());
-    }
-    return () => restorers.reverse().forEach(restore => restore());
-  }
-
-  async function prepareRestoreTitle(deadline) {
-    const manager = global.SceneManager;
-    const title = global.Scene_Title;
-    if (typeof title !== "function") throw new Error("RPG_CHECKPOINT_RESTORE_UNSUPPORTED");
-    // Boot plugins may enter an opening map. Let the actual title lifecycle finish
-    // their transient state before loading game objects, including custom title hooks.
-    // Finish fades too: restored game globals may change a transition plugin's mode.
-    if (!titleStarted && !(manager._scene instanceof title) && !(manager._nextScene instanceof title)) {
-      manager.goto(title);
-    }
-    await waitForRestore(() => titleStarted && !manager.isSceneChanging() &&
-      isCurrentSceneStarted() && !manager.isCurrentSceneBusy(), deadline);
-  }
-
-  function isCurrentSceneStarted() {
-    const manager = global.SceneManager;
-    // MV owns this state on SceneManager; MZ moved it onto Scene_Base.
-    if (typeof manager.isCurrentSceneStarted === "function") return manager.isCurrentSceneStarted();
-    const scene = manager._scene;
-    return !!scene && typeof scene.isStarted === "function" && scene.isStarted();
-  }
-
-  async function loadNativeSave(validated, deadline) {
-    const storage = global.StorageManager;
-    const restorers = [];
-    let supported = false;
-    if (profile === "RPGMV") {
-      supported = replaceMethod(storage, "load", (original) => function runtimeLoad(savefileId) {
-        const value = validated.entries.get(String(savefileId));
-        return value ? decoder.decode(value) : original.apply(this, arguments);
-      }, restorers);
-      replaceMethod(storage, "exists", (original) => function runtimeExists(savefileId) {
-        return validated.entries.has(String(savefileId)) || original.apply(this, arguments);
-      }, restorers);
-    } else {
-      supported = replaceMethod(storage, "loadObject", (original) => async function runtimeLoadObject(saveName) {
-        const value = validated.entries.get(String(saveName));
-        if (!value) return original.apply(this, arguments);
-        const jsonEx = global.JsonEx;
-        if (!jsonEx || typeof jsonEx.parse !== "function") {
-          throw new Error("RPG_CHECKPOINT_STORAGE_UNSUPPORTED");
-        }
-        return jsonEx.parse(decoder.decode(value));
-      }, restorers);
-      replaceMethod(storage, "exists", (original) => function runtimeExists(saveName) {
-        return validated.entries.has(String(saveName)) || original.apply(this, arguments);
-      }, restorers);
-    }
-    if (!supported) throw new Error("RPG_CHECKPOINT_STORAGE_UNSUPPORTED");
-    if (profile === "RPGMV") global.DataManager._globalInfo = null;
-    const previousFiles = pluginFiles && pluginFiles.snapshot();
-    try {
-      if (pluginFiles) pluginFiles.restore(validated.files);
-      const loaded = await global.DataManager.loadGame(validated.slot);
-      if (loaded === false) throw new Error("RPG_CHECKPOINT_RESTORE_FAILED");
-      if (closed) throw new Error("RPG_NATIVE_CHANNEL_CLOSED");
-      if (performance.now() >= deadline) throw new Error("RPG_CHECKPOINT_RESTORE_TIMEOUT");
-      if (global.SceneManager && global.Scene_Map) global.SceneManager.goto(global.Scene_Map);
-      runGameSystemHook("onAfterLoad");
-      await waitForMap(deadline);
-    } catch (error) {
-      if (pluginFiles && previousFiles) pluginFiles.restore(previousFiles);
-      throw error;
-    } finally {
-      restorers.reverse().forEach((restore) => restore());
-    }
-    return {};
-  }
-
-  function waitForRestore(ready, deadline, timeoutCode = "RPG_CHECKPOINT_RESTORE_TIMEOUT") {
-    return new Promise((resolve, reject) => {
-      function poll() {
-        try {
-          if (closed) throw new Error("RPG_NATIVE_CHANNEL_CLOSED");
-          if (performance.now() >= deadline) throw new Error(timeoutCode);
-          if (ready()) { resolve(); return; }
-          global.requestAnimationFrame(poll);
-        } catch (error) {
-          reject(error);
-        }
-      }
-      poll();
-    });
-  }
-
-  function waitForMap(deadline) {
-    return waitForRestore(() => isCurrentSceneStarted() && readyForCheckpoint(), deadline);
   }
 
   async function screenshot() {
@@ -871,7 +637,7 @@ export function installRpgRuntimeNativeBridge(global, inputFilter) {
       if (!ownKeys(message.body, ["policy"])) {throw new Error("PLAYER_HOST_SHORTCUT_POLICY_INVALID");}
       inputFilter.setHostShortcutPolicy(message.body.policy);
       return {type: "SET_HOST_SHORTCUT_POLICY_RESULT", body: {}};
-    case "STATUS": return { type: "STATUS_RESULT", body: { ready: readyForCheckpoint(), frameCount,
+    case "STATUS": return { type: "STATUS_RESULT", body: { availability: await nativeSaves.availability(), frameCount,
       ...(inputDiagnostics ? {inputDiagnostics: inputDiagnostics.read()} : {}) } };
     case "INPUT_DIAGNOSTICS":
       if (typeof message.body.enabled !== "boolean") throw new Error("RPG_NATIVE_MESSAGE_INVALID");
@@ -881,8 +647,13 @@ export function installRpgRuntimeNativeBridge(global, inputFilter) {
     case "CLEAR_INPUT_DIAGNOSTICS":
       if (inputDiagnostics) inputDiagnostics.clear();
       return {type: "CLEAR_INPUT_DIAGNOSTICS_RESULT", body: {}};
-    case "SAVE": return { type: "SAVE_RESULT", body: await captureNativeSave() };
-    case "RESTORE": return { type: "RESTORE_RESULT", body: await restoreNativeSave(message.body.bundle) };
+    case "SAVE": {
+      const checkpoint = await nativeSaves.capture();
+      return {type: "SAVE_RESULT", body: {data: checkpoint.bytes.buffer, screenshot: checkpoint.screenshot || null}};
+    }
+    case "ACKNOWLEDGE_SAVE":
+      nativeSaves.acknowledge(message.body.bundle);
+      return {type: "ACKNOWLEDGE_SAVE_RESULT", body: {availability: await nativeSaves.availability()}};
     case "SCREENSHOT": return { type: "SCREENSHOT_RESULT", body: await screenshot() };
     case "PAUSE": inputFilter.setPaused(true); setPaused(true); return { type: "PAUSE_RESULT", body: {} };
     case "RESUME": setPaused(false); inputFilter.setPaused(false); return { type: "RESUME_RESULT", body: {} };
@@ -933,7 +704,7 @@ export function installRpgRuntimeNativeBridge(global, inputFilter) {
     try {
       const result = await dispatch(message);
       const transfers = [];
-      if (result.type === "SAVE_RESULT") result.body.bundle.entries.forEach((entry) => transfers.push(entry.data));
+      if (result.type === "SAVE_RESULT") transfers.push(result.body.data);
       if (result.type === "SCREENSHOT_RESULT") transfers.push(result.body.data);
       send(message.requestId, result.type, result.body, transfers);
     } catch (error) {
@@ -945,7 +716,7 @@ export function installRpgRuntimeNativeBridge(global, inputFilter) {
 
   function observeFrame() {
     frameCount += 1;
-    if (!engineReadySent && engineRuntimeReady()) {
+    if (!engineReadySent && nativeSaves && nativeSaves.isReady() && engineRuntimeReady()) {
       engineReadySent = true;
       event("READY", { engine: engine(), engineProfile: profile });
     }
@@ -954,7 +725,17 @@ export function installRpgRuntimeNativeBridge(global, inputFilter) {
   function requestExit() {
     if (exitRequested) return;
     exitRequested = true;
-    event("EXIT_REQUESTED", {});
+    void (async () => {
+      try {
+        const availability = await nativeSaves.availability();
+        if (availability.available) {
+          const checkpoint = await nativeSaves.capture();
+          event("EXIT_REQUESTED", {data: checkpoint.bytes.buffer});
+          return;
+        }
+      } catch (error) { event("ERROR", {code: error.message || "RPG_GAME_SAVE_EXPORT_FAILED"}); }
+      event("EXIT_REQUESTED", {});
+    })();
   }
 
   function installSceneManagerHook() {
@@ -1027,56 +808,36 @@ export function installRpgRuntimeNativeBridge(global, inputFilter) {
       return pluginFiles.fs;
     };
     global.StorageManager.localFileDirectoryPath = () => pluginFiles.saveDirectory;
-    const manager = global.DataManager;
-    if (typeof manager.makeSavefileInfo === "function") {
-      const makeInfo = manager.makeSavefileInfo;
-      manager.makeSavefileInfo = function runtimeSavefileInfo() {
-        const info = makeInfo.apply(this, arguments);
-        return {...info, runtimeGameTitle: global.$dataSystem.gameTitle};
-      };
+
+  }
+
+  async function waitForNativeStorage() {
+    const deadline = performance.now() + 30000;
+    while (!nativeSaves) {
+      if (closed) throw new Error("RPG_NATIVE_CHANNEL_CLOSED");
+      if (performance.now() >= deadline) throw new Error("RPG_NATIVE_BOOTSTRAP_TIMEOUT");
+      await new Promise(resolve => global.setTimeout(resolve, 10));
     }
-    if (typeof manager.isThisGameFile === "function") {
-      const isThisGameFile = manager.isThisGameFile;
-      manager.isThisGameFile = function runtimeIsThisGameFile(id) {
-        const info = this.loadGlobalInfo()[id];
-        if (!info || !Object.hasOwn(info, "runtimeGameTitle")) return isThisGameFile.apply(this, arguments);
-        if (info.runtimeGameTitle !== global.$dataSystem.gameTitle) return false;
-        const loadInfo = this.loadGlobalInfo;
-        // Keep plugin display text and all original engine/plugin identity checks.
-        this.loadGlobalInfo = function runtimeIdentityInfo() {
-          const result = loadInfo.apply(this, arguments).slice();
-          result[id] = {...result[id], title: info.runtimeGameTitle};
-          return result;
-        };
-        try { return isThisGameFile.apply(this, arguments); }
-        finally { this.loadGlobalInfo = loadInfo; }
-      };
-    }
+    await nativeSaves.initialize();
   }
 
   installCanvasTextAlignCompatibility();
   // Install after plugins have wrapped Boot.start, before the game's window.onload runs it.
-  global.addEventListener("load", function prepareEngine(event) {
-    if (event.target !== global.document) return;
+  global.addEventListener("load", function prepareEngine(loadEvent) {
+    if (loadEvent.target !== global.document) return;
     installViewportFit();
     const prototype = global.Scene_Boot && global.Scene_Boot.prototype;
     if (!prototype || typeof prototype.start !== "function") return;
     if (global.Utils && global.Utils.RPGMAKER_NAME === "MV") installDesktopCompatibility(prototype);
-    const start = prototype.start;
-    prototype.start = function runtimeBootStart() {
-      const result = start.apply(this, arguments);
-      bootCompleted = true;
-      return result;
+    const manager = global.SceneManager;
+    if (!manager || typeof manager.run !== "function") return;
+    const run = manager.run;
+    manager.run = function runtimeStart() {
+      const args = arguments, owner = this;
+      void waitForNativeStorage().then(() => {
+        if (!closed) run.apply(owner, args);
+      }).catch(error => event("ERROR", {code: error.message || "RPG_GAME_SAVE_IMPORT_FAILED"}));
     };
-    const title = global.Scene_Title && global.Scene_Title.prototype;
-    if (title && typeof title.start === "function") {
-      const startTitle = title.start;
-      title.start = function runtimeTitleStart() {
-        const result = startTitle.apply(this, arguments);
-        titleStarted = true;
-        return result;
-      };
-    }
   }, true);
   global.addEventListener("pagehide", () => {
     closed = true;
@@ -1085,7 +846,7 @@ export function installRpgRuntimeNativeBridge(global, inputFilter) {
 
   global.addEventListener("message", function connect(eventMessage) {
     const message = eventMessage.data;
-    if (eventMessage.source !== global.parent || !ownKeys(message, ["launchId", "nonce", "parentOrigin", "pluginFiles", "profile", "protocolVersion", "type"]) ||
+    if (eventMessage.source !== global.parent || !ownKeys(message, ["launchId", "nonce", "parentOrigin", "pluginFiles", "profile", "protocolVersion", "saves", "type"]) ||
       message.type !== "RPG_RUNTIME_NATIVE_CONNECT" || message.protocolVersion !== PROTOCOL_VERSION ||
       typeof message.launchId !== "string" || typeof message.nonce !== "string" ||
       typeof message.parentOrigin !== "string" || eventMessage.origin !== message.parentOrigin ||
@@ -1105,6 +866,8 @@ export function installRpgRuntimeNativeBridge(global, inputFilter) {
       try { pluginFiles = createRpgPluginFiles(global.location.href, message.pluginFiles); }
       catch (error) { event("ERROR", {code: error.message}); return; }
     }
+    try {nativeSaves = createRpgWebSaves(global, profile, message.saves, pluginFiles);}
+    catch (error) {event("ERROR", {code: error.message}); return;}
     pollForEngine();
   }, true);
 

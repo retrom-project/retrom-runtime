@@ -8799,7 +8799,7 @@
           "writeFormat": "gbe-pokemini-state-v1-storage-v1",
           "semantics": "INSTANT"
         },
-        "displayName": "Pok\u00e9mon Mini (GBE+)",
+        "displayName": "Pokémon Mini (GBE+)",
         "id": "gbe-pokemini",
         "inputs": [
           {
@@ -9948,10 +9948,10 @@
         "checkpoint": {
           "maxBytes": 67108864,
           "readFormats": [
-            "easyrpg-save-bundle-v1-storage-v1"
+            "rpgmaker-game-save-v1-storage-v1"
           ],
-          "writeFormat": "easyrpg-save-bundle-v1-storage-v1",
-          "semantics": "INSTANT"
+          "writeFormat": "rpgmaker-game-save-v1-storage-v1",
+          "semantics": "GAME_SAVE"
         },
         "displayName": "RPG Maker 2000",
         "id": "rpgmaker-2000",
@@ -10005,10 +10005,10 @@
         "checkpoint": {
           "maxBytes": 67108864,
           "readFormats": [
-            "easyrpg-save-bundle-v1-storage-v1"
+            "rpgmaker-game-save-v1-storage-v1"
           ],
-          "writeFormat": "easyrpg-save-bundle-v1-storage-v1",
-          "semantics": "INSTANT"
+          "writeFormat": "rpgmaker-game-save-v1-storage-v1",
+          "semantics": "GAME_SAVE"
         },
         "displayName": "RPG Maker 2003",
         "id": "rpgmaker-2003",
@@ -10061,10 +10061,10 @@
         "checkpoint": {
           "maxBytes": 67108864,
           "readFormats": [
-            "native-save-bundle-v1-storage-v1"
+            "rpgmaker-game-save-v1-storage-v1"
           ],
-          "writeFormat": "native-save-bundle-v1-storage-v1",
-          "semantics": "INSTANT"
+          "writeFormat": "rpgmaker-game-save-v1-storage-v1",
+          "semantics": "GAME_SAVE"
         },
         "displayName": "RPG Maker MV",
         "id": "rpgmaker-mv",
@@ -10110,10 +10110,10 @@
         "checkpoint": {
           "maxBytes": 67108864,
           "readFormats": [
-            "native-save-bundle-v1-storage-v1"
+            "rpgmaker-game-save-v1-storage-v1"
           ],
-          "writeFormat": "native-save-bundle-v1-storage-v1",
-          "semantics": "INSTANT"
+          "writeFormat": "rpgmaker-game-save-v1-storage-v1",
+          "semantics": "GAME_SAVE"
         },
         "displayName": "RPG Maker MZ",
         "id": "rpgmaker-mz",
@@ -10158,12 +10158,12 @@
           "volume": false
         },
         "checkpoint": {
-          "maxBytes": 268435456,
+          "maxBytes": 67108864,
           "readFormats": [
-            "mkxp-state-v1-storage-v1"
+            "rpgmaker-game-save-v1-storage-v1"
           ],
-          "writeFormat": "mkxp-state-v1-storage-v1",
-          "semantics": "INSTANT"
+          "writeFormat": "rpgmaker-game-save-v1-storage-v1",
+          "semantics": "GAME_SAVE"
         },
         "displayName": "RPG Maker VX",
         "id": "rpgmaker-vx",
@@ -10215,12 +10215,12 @@
           "volume": false
         },
         "checkpoint": {
-          "maxBytes": 268435456,
+          "maxBytes": 67108864,
           "readFormats": [
-            "mkxp-state-v1-storage-v1"
+            "rpgmaker-game-save-v1-storage-v1"
           ],
-          "writeFormat": "mkxp-state-v1-storage-v1",
-          "semantics": "INSTANT"
+          "writeFormat": "rpgmaker-game-save-v1-storage-v1",
+          "semantics": "GAME_SAVE"
         },
         "displayName": "RPG Maker VX Ace",
         "id": "rpgmaker-vx-ace",
@@ -10272,12 +10272,12 @@
           "volume": false
         },
         "checkpoint": {
-          "maxBytes": 268435456,
+          "maxBytes": 67108864,
           "readFormats": [
-            "mkxp-state-v1-storage-v1"
+            "rpgmaker-game-save-v1-storage-v1"
           ],
-          "writeFormat": "mkxp-state-v1-storage-v1",
-          "semantics": "INSTANT"
+          "writeFormat": "rpgmaker-game-save-v1-storage-v1",
+          "semantics": "GAME_SAVE"
         },
         "displayName": "RPG Maker XP",
         "id": "rpgmaker-xp",
@@ -10337,7 +10337,7 @@
           "writeFormat": "samcoupe-disk-save-v1-storage-v1",
           "semantics": "GAME_SAVE"
         },
-        "displayName": "SAM Coup\u00e9 (SamCoupeWeb)",
+        "displayName": "SAM Coupé (SamCoupeWeb)",
         "id": "samcoupe",
         "inputs": [
           {

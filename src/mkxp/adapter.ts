@@ -1,28 +1,16 @@
+import {rpgGameSaveFormat} from "../rpgmaker/format.js";
 import type {AdapterContentOptions} from "../provider/content-inputs.js";
 import {MkxpContent, fetchVerified} from "./content.js";
 import {ContentIOError} from "../content-io/errors.js";
 import {RuntimeFailureError} from "../provider/failure.js";
 import { Nostalgist } from "nostalgist";
 import type { MountedRuntimeAdapter, RuntimeExitReporter, RuntimeProgressReporter } from "../internal-adapter.js";
-import {type MkxpStatus, mkxpStatus, waitForMkxpExit, waitForMkxpFrame, waitForMkxpRestore, waitForMkxpSave} from "./status.js";
-import {
-  decodeMkxpCheckpoint,
-  decodeMkxpRastate,
-  encodeMkxpCheckpoint,
-  encodeMkxpRastate,
-  mkxpRastateEnvelopeBytes,
-} from "./state.js";
+import {mkxpStatus, waitForMkxpExit, waitForMkxpFrame} from "./status.js";
+import {decodeRpgCheckpoint} from "../checkpoint.js";
+import {RpgGameSaves} from "../rpgmaker/game-saves.js";
+import {readRpgSaveFiles, installRpgSaveFiles, type RpgSaveFileSystem} from "../rpgmaker/native-files.js";
 
 import type {MkxpParameters} from "./parameters.js";
-
-type MkxpFileSystem = {
-  analyzePath(path: string): { exists: boolean };
-  mkdirTree(path: string): void;
-  readFile(path: string): Uint8Array;
-  stat(path: string): { size: number };
-  unlink(path: string): void;
-  writeFile(path: string, contents: Uint8Array): void;
-};
 
 type MkxpRuntime = Pick<Nostalgist,
   "exit" | "getEmscriptenFS" | "start"
@@ -39,16 +27,12 @@ type MkxpPrepareOptions = Parameters<typeof Nostalgist.prepare>[0] & {
 };
 
 type MkxpMountDependencies = {
-  decodeCheckpoint: typeof decodeMkxpCheckpoint;
-  encodeCheckpoint: typeof encodeMkxpCheckpoint;
   fetchVerified: typeof fetchVerified;
   prepare: (options: MkxpPrepareOptions) => Promise<MkxpRuntime>;
 };
 
 const systemRoot = "/home/web_user/retroarch/userdata/system";
-const stateRoot = "/home/web_user/retroarch/userdata/states";
-const coreStateRoot = `${stateRoot}/mkxp-z`;
-const statePath = `${coreStateRoot}/game.state`;
+const saveRoot = "/home/web_user/retroarch/userdata/saves";
 const remoteGamePath = "/retrom-content/game.mkxpz";
 const fetchManifestPath = `${systemRoot}/mkxp-z/fetch.manifest`;
 const fetchBaseDirectory = "/retrom-fetch";
@@ -61,8 +45,6 @@ const keyboardRetroPadUnbound = Object.fromEntries(
     .map((input) => [`input_player1_${input}`, "nul"]),
 );
 const browserDependencies: MkxpMountDependencies = {
-  decodeCheckpoint: decodeMkxpCheckpoint,
-  encodeCheckpoint: encodeMkxpCheckpoint,
   fetchVerified,
   prepare: (options) => Nostalgist.prepare(options),
 };
@@ -123,6 +105,8 @@ async function mountMkxpUnchecked(
   if (!window.crossOriginIsolated || typeof SharedArrayBuffer === "undefined") {
     throw new Error("RPG_RUNTIME_THREADS_REQUIRED");
   }
+  const engine = config.rgssVersion === 1 ? "RPGXP" : config.rgssVersion === 2 ? "RPGVX" : "RPGVXAce";
+  const restored = restorePayload ? await decodeRpgCheckpoint(restorePayload, engine) : null;
   // Nostalgist validates the element against the HTMLCanvasElement constructor
   // in its own module realm. The Player target lives in a same-origin child
   // document, so creating the canvas through target.ownerDocument makes a
@@ -172,6 +156,7 @@ async function mountMkxpUnchecked(
   let exitPromise: Promise<void> | undefined;
   let status: ReturnType<typeof mkxpStatus> | undefined;
   let resolveNativeExit!: () => void;
+  let saves: RpgGameSaves | null = null;
   const nativeExit = new Promise<void>((resolve) => {resolveNativeExit = resolve;});
   const nostalgist = await dependencies.prepare({
     core: {
@@ -190,7 +175,10 @@ async function mountMkxpUnchecked(
         resolveNativeExit();
         onDiagnostic({ runtime: "mkxp-z", message: `RPG_RUNTIME_CORE_EXIT:${status}` });
         if (hostCleanup) {return;}
-        reportExitRequested();
+        void (async () => {
+          if (saves?.availability().available) {reportExitRequested({checkpoint: {...await saves.capture(), format: rpgGameSaveFormat}, screenshot: null});}
+          else {reportExitRequested();}
+        })().catch(error => {onDiagnostic({runtime: "mkxp-z", message: `RPG_GAME_SAVE_FINAL_EXPORT_FAILED:${mountFailureMessage(error)}`}); reportExitRequested();});
       },
       // Emscripten creates its ENV object after applying Module overrides and
       // overwrites a caller-provided Module.ENV. Populate the final object at
@@ -200,7 +188,7 @@ async function mountMkxpUnchecked(
       printErr: printDiagnostic,
     },
     retroarchConfig: {
-      savefile_directory: "/home/web_user/retroarch/userdata/saves",
+      savefile_directory: saveRoot,
       savestate_directory: "/home/web_user/retroarch/userdata/states",
       system_directory: systemRoot,
       input_menu_toggle: "nul",
@@ -217,16 +205,10 @@ async function mountMkxpUnchecked(
       input_player1_b_btn: "1",
       input_player1_x_btn: "2",
       input_player1_y_btn: "3",
-      // The host persists the exact raw core payload and validates an exact
-      // RASTATE1 runtime envelope. RetroArch otherwise defaults to rzip for
-      // savestates, which changes the file format and defers file visibility.
-      savestate_file_compression: false,
-      savestate_thumbnail_enable: false,
       log_verbosity: true,
     },
     retroarchCoreConfig: {
       "mkxp-z_rgssVersion": String(config.rgssVersion),
-      "mkxp-z_saveStateSize": String(config.stateBufferBytes / (1024 * 1024)),
     },
   });
   bridge.attach(nostalgist.getEmscriptenModule() as Parameters<MkxpContent["attach"]>[0]);
@@ -257,10 +239,9 @@ async function mountMkxpUnchecked(
     status = mkxpStatus(nostalgist.getEmscriptenModule(),
       () => new RuntimeFailureError("RPG_RUNTIME_GAME_FAILED", "CORE", gameException === null ? [] : [gameException]));
     installRuntimeFiles(fileSystem, remoteContent.manifest);
-    if (restorePayload) {
-      const rawState = await dependencies.decodeCheckpoint(restorePayload, config.stateBufferBytes);
-      installRestoreState(fileSystem, rawState, config.stateBufferBytes);
-    }
+    installRpgSaveFiles(fileSystem, saveRoot, restored?.entries ?? []);
+    saves = new RpgGameSaves(engine, () => readRpgSaveFiles(fileSystem, saveRoot), restored,
+      entry => /\.(rxdata|rvdata|rvdata2)$/iu.test(entry.key));
     started = true;
     await nostalgist.start();
     reportProgress({
@@ -278,11 +259,7 @@ async function mountMkxpUnchecked(
       Object.defineProperty(event, "gamepad", {value: gamepad});
       window.dispatchEvent(event);
     }
-    if (restorePayload) {
-      status.requestRestore();
-      await waitForMkxpRestore(status);
-      fileSystem.unlink(statePath);
-    }
+
   } catch (error) {
     try {await exitCore();}
     catch (cleanupError) {
@@ -291,10 +268,11 @@ async function mountMkxpUnchecked(
     throw error;
   }
   return {
-    checkpoint: async () => ({
-      bytes: await saveStateBytes(status!, fileSystem, config.stateBufferBytes, dependencies.encodeCheckpoint),
-      format: "mkxp-state-v1",
-    }),
+    checkpoint: async () => {status.assertHealthy(); return {...await saves!.capture(), format: rpgGameSaveFormat};},
+    acknowledgeCheckpoint: async checkpoint => {
+      if (checkpoint.format !== rpgGameSaveFormat) {throw new Error("RPG_GAME_SAVE_INVALID");}
+      await saves!.acknowledge(checkpoint.bytes);
+    },
     exit: async () => {
       await exitCore();
       target.replaceChildren();
@@ -302,7 +280,7 @@ async function mountMkxpUnchecked(
     getCanvas: () => canvas,
     // RetroArch's rwebpad reads the frame's standard Gamepad API, including the on-screen pad.
     touchGamepad: true,
-    getCheckpointAvailability: () => {status.assertHealthy(); return { available: true, blocker: null };},
+    getCheckpointAvailability: () => {status.assertHealthy(); return saves!.availability();},
     getFrameCount: () => status.frames(),
     pause: async () => {await pressPrivateHotkey(canvas, pauseToggleHotkey);},
     resume: async () => {await pressPrivateHotkey(canvas, pauseToggleHotkey);},
@@ -332,15 +310,13 @@ function forwardSyntheticGamepadEvents(from: Window, to: Window) {
   };
 }
 
+type MkxpFileSystem = RpgSaveFileSystem & {analyzePath(path: string): {exists: boolean}};
+
 function installRuntimeFiles(
   fileSystem: MkxpFileSystem,
   fetchManifest: Uint8Array,
 ) {
   fileSystem.mkdirTree(`${systemRoot}/mkxp-z`);
-  // Nostalgist only creates the per-core state directory when its `state`
-  // option is present. This adapter cannot use that option because custom mkxp-z is
-  // absent from Nostalgist's core map, so own the exact directory here.
-  fileSystem.mkdirTree(coreStateRoot);
   fileSystem.writeFile(fetchManifestPath, fetchManifest);
   if (!fileSystem.analyzePath(fetchManifestPath).exists) {throw new Error("RPG_RUNTIME_CONTENT_UNAVAILABLE");}
 }
@@ -384,30 +360,6 @@ function canvasBlob(canvas: HTMLCanvasElement) {
   }, "image/png"));
 }
 
-async function saveStateBytes(
-  status: MkxpStatus,
-  fileSystem: MkxpFileSystem,
-  expectedSize: number,
-  encodeCheckpoint: typeof encodeMkxpCheckpoint,
-) {
-  status.requestSave();
-  // Native preallocation exposes the full file length before any payload is
-  // written. Only the owning core's close/free receipt authorizes reading it.
-  await waitForMkxpSave(status);
-  const expectedPayloadSize = expectedSize + mkxpRastateEnvelopeBytes;
-  try {
-    if (fileSystem.stat(statePath).size !== expectedPayloadSize) {throw new Error("RPG_CHECKPOINT_CREATE_FAILED");}
-    const state = fileSystem.readFile(statePath);
-    const core = decodeMkxpRastate(state, expectedSize);
-    fileSystem.unlink(statePath);
-    return await encodeCheckpoint(core, expectedSize);
-  } catch {throw new Error("RPG_CHECKPOINT_CREATE_FAILED");}
-}
-
-function installRestoreState(fileSystem: MkxpFileSystem, state: Uint8Array, expectedSize: number) {
-  writeState(fileSystem, statePath, state, expectedSize);
-}
-
 async function pressPrivateHotkey(
   canvas: HTMLCanvasElement,
   hotkey: typeof pauseToggleHotkey,
@@ -426,14 +378,4 @@ async function pressPrivateHotkey(
   canvas.dispatchEvent(new KeyboardEventConstructor("keydown", options));
   await new Promise((resolve) => setTimeout(resolve, 100));
   canvas.dispatchEvent(new KeyboardEventConstructor("keyup", options));
-}
-
-function writeState(fileSystem: MkxpFileSystem, path: string, state: Uint8Array, expectedSize: number) {
-  let rastate: Uint8Array;
-  try {rastate = encodeMkxpRastate(state, expectedSize);}
-  catch {throw new Error("RPG_CHECKPOINT_RESTORE_FAILED");}
-  fileSystem.writeFile(path, rastate);
-  if (!fileSystem.analyzePath(path).exists || fileSystem.stat(path).size !== expectedSize + mkxpRastateEnvelopeBytes) {
-    throw new Error("RPG_CHECKPOINT_RESTORE_FAILED");
-  }
 }

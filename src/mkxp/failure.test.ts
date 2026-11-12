@@ -54,7 +54,7 @@ it("keeps recoverable graphics diagnostics separate from the native game failure
   const harness = createHarness();
   const mounted = await mountMkxp(mkxpConfig(), harness.target, null, harness.dependencies);
   harness.prepareOptions!.emscriptenModule.printErr!("[ERROR] [HW] Requesting OpenGL context, but RetroArch is compiled against OpenGLES.");
-  expect(mounted.getCheckpointAvailability()).toEqual({available: true, blocker: null});
+  expect(mounted.getCheckpointAvailability()).toMatchObject({available: false, blocker: "NO_SAVE"});
   expect(mounted.getFrameCount()).toBe(599);
   await mounted.exit();
   harness.frame.remove();

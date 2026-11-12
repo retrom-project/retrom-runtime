@@ -28,9 +28,15 @@ All seven Targets support managed on-demand loading and explicit full preload. T
 
 mkxp builds its path cache from ZIP central-directory metadata. It reads local file headers and content only as those files are opened, so listing a large project does not require fetching blocks throughout the archive. Embedded fonts can be selected by either their FreeType family names or localized SFNT aliases.
 
-A terminating mkxp game exception or a native core abort (sandbox trap or forced assertion) emits `FATAL_ERROR` with code `RPG_RUNTIME_GAME_FAILED`, including the original exception or `Fatal error:` diagnostic when available. This stops play and checkpoint creation even when the game already presented opening frames.
+A terminating mkxp game exception or a native core abort (sandbox trap or forced assertion) emits `FATAL_ERROR` with code `RPG_RUNTIME_GAME_FAILED`, including the original exception or `Fatal error:` diagnostic when available. This stops play and native save export even when the game already presented opening frames.
 
-All seven currently declare `INSTANT` checkpoint semantics. EasyRPG uses its engine save bundle, mkxp captures native execution state, and MV/MZ capture through their native bridge. Follow current checkpoint availability and the Target's public format; a bundle backed by native files must still satisfy the declared execution-restoration behavior. In-game save slots are separate from host checkpoint selection.
+All seven Targets declare `GAME_SAVE` semantics with the current `rpgmaker-game-save-v1-storage-v1` format. Save in the game's own menu or at its save points, then let the host synchronize the native data. The host never forces a new native slot or captures execution state. Restoring imports the complete native storage before the engine boots and starts the normal game flow; choose Continue / Load inside the game. Saving restrictions remain owned by the game.
+
+EasyRPG transfers all files in its `Save` directory, including native `.lsd` slots and settings. mkxp transfers its native save-directory tree, including RGSS `.rxdata`, `.rvdata`, `.rvdata2` slots and shared files. MV/MZ transfer the isolated game's raw localStorage, MZ localForage strings, and MV's bounded desktop-plugin save files. Native string encoding is preserved. Only the Provider's public storage boundary applies transport gzip.
+
+Exports are bounded, nonempty bundles. The host acknowledges exactly the export it durably persisted; later writes remain eligible for synchronization. A newly imported bundle starts as synchronized. Settings-only changes retain the previous progress screenshot. Game-owned exit includes unsynchronized native data when available. No native progress exists until the game creates it; the host's synchronization action does not bypass game save restrictions.
+
+Restoring replaces the isolated run's native storage before boot, including removal of keys absent from the bundle when a preview restarts within the same run. Reloading without a restore descriptor retains that run's existing native browser storage.
 
 MV's bounded desktop `fs` plugin surface and scenario preloading are described in [MV desktop plugins](rpgmaker-mv.md). This surface does not provide a general Node.js or NW.js environment.
 

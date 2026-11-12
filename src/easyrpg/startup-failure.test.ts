@@ -8,7 +8,7 @@ it("rejects an uncaught Embind failure even when the factory promise stays pendi
   const target = document.createElement("div"); document.body.append(target);
   Object.defineProperty(window, "createEasyRpgPlayer", {configurable: true, value: () => new Promise(() => {})});
   const mounting = mountEasyRpg({sessionId: "session", engineMode: "rpg2k", runtimeBaseUrl: "/core/",
-    projectRootUrl: "/game/", rtpSource: null, checkpointSlot: 100}, target, window, null, {signal: new AbortController().signal, reportExitRequested: () => {}});
+    projectRootUrl: "/game/", rtpSource: null}, target, window, null, {signal: new AbortController().signal, reportExitRequested: () => {}});
   const result = mounting.catch(error => error);
   await vi.advanceTimersByTimeAsync(0);
   document.head.querySelector("script")?.dispatchEvent(new Event("load"));

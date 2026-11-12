@@ -1,4 +1,7 @@
-import { decodeRpgCheckpoint, encodeRpgCheckpoint } from "../checkpoint.js";
+import {rpgGameSaveFormat} from "../rpgmaker/format.js";
+import {RpgGameSaves} from "../rpgmaker/game-saves.js";
+import {readRpgSaveFiles, replaceRpgSaveFiles, safeSavePath, type RpgMutableSaveFileSystem} from "../rpgmaker/native-files.js";
+import { decodeRpgCheckpoint } from "../checkpoint.js";
 import type { MountedRuntimeAdapter, RuntimeExitReporter } from "../internal-adapter.js";
 
 import type {EasyRpgParameters} from "./parameters.js";
@@ -8,11 +11,6 @@ import type {StartupTasks} from "../provider/startup.js";
 
 export type EasyRpgStartup = {signal: AbortSignal; reportExitRequested: RuntimeExitReporter; tasks?: StartupTasks};
 
-type EasyFileSystem = {
-  analyzePath(path: string): { exists: boolean };
-  readFile(path: string): Uint8Array;
-};
-
 type EasyState = {
   engine: "RPG2000" | "RPG2003";
   ready: boolean;
@@ -21,9 +19,8 @@ type EasyState = {
 };
 
 type EasyModule = {
-  FS: EasyFileSystem;
+  FS: RpgMutableSaveFileSystem;
   api: {
-    createRuntimeCheckpoint(): boolean;
     runtimeState(): string;
   };
   canvas: HTMLCanvasElement;
@@ -37,13 +34,12 @@ type EasyModuleOptions = {
   game: string;
   noExitRuntime: true;
   onRuntimeExitRequested(): void;
+  onRuntimeInitialized(this: Pick<EasyModule, "FS">): void;
   saveFs: undefined;
   locateFile(path: string): string;
   runtimeEngineMode: string;
   runtimeProjectRootUrl: string;
   runtimeRtpRemoteFiles: Array<{ lookupPath: string; path: string; url: string }>;
-  runtimeRestoreSlot?: number;
-  runtimeRestoreFiles: Array<{ path: string; bytes: Uint8Array }>;
 };
 
 type EasyWindow = Window & {
@@ -56,7 +52,7 @@ type RuntimeFileTreeIndex = {
 };
 
 const maximumRtpFiles = 20_000;
-const savePath = "Save/Save100.lsd";
+const saveRoot = "Save";
 
 export async function mountEasyRpg(
   config: EasyRpgParameters,
@@ -110,10 +106,12 @@ async function mountEasyRpgUnchecked(
   status.id = "status";
   target.append(canvas, status);
 
-  const [rtpFiles, restoreFiles] = await Promise.all([
-    loadRtp(config),
-    decodeRestore(config, restorePayload),
-  ]);
+  const expectedEngine = config.engineMode === "rpg2k" ? "RPG2000" : "RPG2003";
+  const [rtpFiles, restored] = await Promise.all([loadRtp(config),
+    restorePayload ? decodeRpgCheckpoint(restorePayload, expectedEngine) : null]);
+  for (const entry of restored?.entries ?? []) {
+    if (entry.store !== "FILESYSTEM" || !safeSavePath(entry.key)) {throw new Error("RPG_GAME_SAVE_INVALID");}
+  }
   signal.throwIfAborted();
   const script = await loadScript(document, `${config.runtimeBaseUrl}easyrpg-player.js`, signal);
   deadline.initialize();
@@ -122,36 +120,38 @@ async function mountEasyRpgUnchecked(
     script.remove();
     throw new Error("RPG_RUNTIME_ARTIFACT_INVALID");
   }
+  let saves: RpgGameSaves | null = null;
   const playerModule = await createPlayer({
     game: config.sessionId,
     noExitRuntime: true,
-    onRuntimeExitRequested: () => reportExitRequested(),
+    onRuntimeInitialized() {
+      if (restored) {replaceRpgSaveFiles(this.FS, saveRoot, restored.entries);}
+    },
+    onRuntimeExitRequested: () => {
+      void (async () => {
+        if (saves?.availability().available) {reportExitRequested({checkpoint: {...await saves.capture(), format: rpgGameSaveFormat}, screenshot: null});}
+        else {reportExitRequested();}
+      })().catch(error => {console.error("RPG_GAME_SAVE_FINAL_EXPORT_FAILED", error); reportExitRequested();});
+    },
     saveFs: undefined,
     locateFile: (path) => `${config.runtimeBaseUrl}${path}`,
     runtimeEngineMode: config.engineMode,
     runtimeProjectRootUrl: config.projectRootUrl,
     runtimeRtpRemoteFiles: rtpFiles,
-    ...(restoreFiles.length ? { runtimeRestoreSlot: config.checkpointSlot } : {}),
-    runtimeRestoreFiles: restoreFiles,
   });
   if (signal.aborted) {playerModule.pauseMainLoop(); signal.throwIfAborted();}
   playerModule.initApi();
-  const expectedEngine = config.engineMode === "rpg2k" ? "RPG2000" : "RPG2003";
-  await waitForReady(playerModule, expectedEngine, restoreFiles.length > 0, signal);
+  await waitForReady(playerModule, expectedEngine, signal);
+  saves = new RpgGameSaves(expectedEngine, () => readRpgSaveFiles(playerModule.FS, saveRoot), restored,
+    entry => /^Save\d+\.lsd$/iu.test(entry.key));
+  const nativeSaves = saves;
 
   return {
     touchGamepad: true,
-    checkpoint: async () => {
-      if (!playerModule.api.createRuntimeCheckpoint()) {throw new Error("RPG_CHECKPOINT_UNAVAILABLE");}
-      const bytes = readCheckpoint(playerModule.FS);
-      return {
-        bytes: await encodeRpgCheckpoint({
-          engine: expectedEngine,
-          resumeSlot: config.checkpointSlot,
-          entries: [{ store: "FILESYSTEM", key: savePath, mediaType: "application/octet-stream", data: bytes }],
-        }),
-        format: "easyrpg-save-bundle-v1",
-      };
+    checkpoint: async () => ({...await nativeSaves.capture(), format: rpgGameSaveFormat}),
+    acknowledgeCheckpoint: async checkpoint => {
+      if (checkpoint.format !== rpgGameSaveFormat) {throw new Error("RPG_GAME_SAVE_INVALID");}
+      await nativeSaves.acknowledge(checkpoint.bytes);
     },
     exit: async () => {
       playerModule.pauseMainLoop();
@@ -159,9 +159,7 @@ async function mountEasyRpgUnchecked(
       target.replaceChildren();
     },
     getCanvas: () => playerModule.canvas,
-    getCheckpointAvailability: () => readState(playerModule).canCheckpoint
-      ? { available: true, blocker: null }
-      : { available: false, blocker: "BUSY" },
+    getCheckpointAvailability: () => nativeSaves.availability(),
     getFrameCount: () => readState(playerModule).frameCount,
     pause: async () => {playerModule.pauseMainLoop();},
     resume: async () => {playerModule.resumeMainLoop();},
@@ -190,7 +188,6 @@ function validInteger(value: unknown, minimum = -2_147_483_648) {
 async function waitForReady(
   module: EasyModule,
   expectedEngine: EasyState["engine"],
-  restoring: boolean,
   signal: AbortSignal,
 ) {
   if (module.runtimeFileSystemReady !== true) {
@@ -203,7 +200,7 @@ async function waitForReady(
     const state = startupState(module);
     if (state && (state.ready || state.frameCount > 0)) {
       engineMismatch = state.engine !== expectedEngine;
-      if (!engineMismatch && (!restoring || state.ready)) {return;}
+      if (!engineMismatch) {return;}
       if (state.ready) {throw new Error("RPG_ENGINE_PROFILE_MISMATCH");}
     }
     await new Promise<void>((resolve) => window.setTimeout(resolve, 50));
@@ -217,28 +214,6 @@ function startupState(module: EasyModule) {
     if (error instanceof Error && error.message === "RPG_RUNTIME_STATE_UNAVAILABLE") {return null;}
     throw error;
   }
-}
-
-async function decodeRestore(config: EasyRpgParameters, payload: Uint8Array | null) {
-  if (!payload) {return [];}
-  const expectedEngine = config.engineMode === "rpg2k" ? "RPG2000" : "RPG2003";
-  const bundle = await decodeRpgCheckpoint(payload, expectedEngine);
-  if (bundle.resumeSlot !== config.checkpointSlot || bundle.entries.length !== 1) {
-    throw new Error("RPG_CHECKPOINT_RESTORE_INVALID");
-  }
-  const entry = bundle.entries[0];
-  if (entry.store !== "FILESYSTEM" || entry.key !== savePath) {throw new Error("RPG_CHECKPOINT_RESTORE_INVALID");}
-  return [{ path: entry.key, bytes: entry.data }];
-}
-
-function readCheckpoint(fileSystem: EasyFileSystem) {
-  const candidates = [savePath, `/${savePath}`];
-  for (const candidate of candidates) {
-    if (!fileSystem.analyzePath(candidate).exists) {continue;}
-    const value = fileSystem.readFile(candidate);
-    if (value.byteLength) {return new Uint8Array(value).slice();}
-  }
-  throw new Error("RPG_CHECKPOINT_CREATE_FAILED");
 }
 
 async function loadRtp(config: EasyRpgParameters) {

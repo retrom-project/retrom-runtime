@@ -21,7 +21,7 @@ function bridge(name: "native" | "tyranoscript") {
     removeEventListener(name: string, handler: Handler) {handlers.get(name)?.delete(handler);}};
   runInNewContext(readFileSync(`assets/runtime/${name}/bridge.js`,"utf8"), {window:global,TextEncoder,TextDecoder,URL});
   const identity = {protocolVersion:1,nonce:"abcdefghijklmnop",[name==="native"?"launchId":"sessionId"]:"session"};
-  const configuration = {...identity,parentOrigin:"https://host.example",type:name==="native"?"RPG_RUNTIME_NATIVE_CONNECT":"GAME_RUNTIME_TYRANOSCRIPT_CONNECT",...(name==="native"?{profile:"RPGMV",pluginFiles:[]}:{})};
+  const configuration = {...identity,parentOrigin:"https://host.example",type:name==="native"?"RPG_RUNTIME_NATIVE_CONNECT":"GAME_RUNTIME_TYRANOSCRIPT_CONNECT",...(name==="native"?{profile:"RPGMV",pluginFiles:[],saves:null}:{})};
   const connect=(source: unknown,origin="https://host.example")=>{
     for(const handler of [...handlers.get("message")??[]]) {handler({source,origin,ports:[port],data:configuration,stopImmediatePropagation() {}});}
   };

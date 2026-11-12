@@ -85,7 +85,7 @@ const adapters = [
   adapter("fake08-web", "FAKE08_WEB", "fake08-state-v1", "fake08-state-v1", capabilities(true, true, true)),
   adapter("butterscotch-web", "BUTTERSCOTCH_WEB", "butterscotch-checkpoint-v2",
     "butterscotch-checkpoint-v2", standardCapabilities),
-  adapter("easyrpg-web", "EASYRPG_WEB", "easyrpg-save", "easyrpg-save-bundle-v1", rpgCapabilities),
+  rpgAdapter("easyrpg-web", "EASYRPG_WEB", "easyrpg-save", rpgCapabilities),
   defineAdapter({
     id: "j2me-minijvm-web", kind: "J2ME_MINIJVM_WEB", abi: "j2me-rms",
     capabilities: capabilities(true, true, true),
@@ -94,9 +94,8 @@ const adapters = [
   defineAdapter({id: "kirikiri2-web", kind: "KIRIKIRI2_WEB", abi: "kirikiri-content-io-v1",
     capabilities: standardCapabilities,
     checkpoint: {writeFormat: "kirikiri-game-save-v1", readFormats: ["kirikiri-game-save-v1"], semantics: "GAME_SAVE"}}),
-  defineAdapter({id: "mkxp-libretro-web", kind: "MKXP_LIBRETRO_WEB", abi: "mkxp-content-io-v1",
-    checkpoint: {semantics: "INSTANT", writeFormat: "mkxp-state-v1", readFormats: ["mkxp-state-v1"]}, capabilities: rpgCapabilities}),
-  adapter("native-web", "NATIVE_WEB", "native-save", "native-save-bundle-v1", nativeCapabilities),
+  rpgAdapter("mkxp-libretro-web", "MKXP_LIBRETRO_WEB", "mkxp-content-io-v1", rpgCapabilities),
+  rpgAdapter("native-web", "NATIVE_WEB", "native-save", nativeCapabilities),
   defineAdapter({id: "ons-yuri-web", kind: "ONS_YURI_WEB", abi: "ons-content-io-v1",
     capabilities: standardCapabilities,
     checkpoint: {writeFormat: "ons-game-save-v1", readFormats: ["ons-game-save-v1"], semantics: "GAME_SAVE"}}),
@@ -227,6 +226,11 @@ function capabilities(
   };
 }
 
+function rpgAdapter(id: string, kind: string, abi: string, capabilities: ProviderCapabilities) {
+  return defineAdapter({id, kind, abi, capabilities,
+    checkpoint: {semantics: "GAME_SAVE", writeFormat: "rpgmaker-game-save-v1", readFormats: ["rpgmaker-game-save-v1"]}});
+}
+
 function adapter(
   id: string,
   kind: string,
@@ -278,7 +282,7 @@ function target(
 function mkxpTarget(id: string, displayName: string, rgssVersion: 1 | 2 | 3) {
   const result = target(
     id, displayName, "mkxp-libretro-web", noOptionsSchema, true, "SAME_ORIGIN_BLANK", "SEEKABLE_BLOB",
-    256 * 1024 * 1024,
+    64 * 1024 * 1024,
     ["assets/mkxp/mkxp-z_libretro.js", "assets/mkxp/mkxp-z_libretro.wasm"], {rgssVersion},
   );
   return defineTarget({

@@ -5,7 +5,7 @@ import type {AdapterContentOptions} from "../provider/content-inputs.js";
 import type {ContentReaderV1} from "../../contracts/content-io/v1/content-io.js";
 import {abi, contractSha256} from "../content-io/identity.js";
 import {decodeKirikiriCheckpoint} from "./checkpoint.js";
-import {createKirikiriCheckpointOperation, type KirikiriCheckpoint} from "./checkpoint-operation.js";
+import {createKirikiriCheckpointOperation, type KirikiriCheckpoint, type KirikiriCheckpointModule} from "./checkpoint-operation.js";
 import {KirikiriWriteOverlay, type KirikiriSaveImage} from "./write-overlay.js";
 import type { MountedRuntimeAdapter, RuntimeExitReporter } from "../internal-adapter.js";
 import type {KirikiriParameters} from "./parameters.js";
@@ -27,7 +27,7 @@ type KirikiriVlfs = {
   registerZipBlob(blob: Blob, options?: Record<string, unknown>): Promise<unknown>;
 };
 type KirikiriScriptException = {message: string; script: string; line: number; trace: string};
-type KirikiriModule = {
+type KirikiriModule = KirikiriCheckpointModule & {
   arguments: string[];
   retromContentBridge: {abi: string; contractSha256: string};
   PThread?: {terminateAllThreads(): void};
@@ -45,14 +45,8 @@ type KirikiriModule = {
   preRun: Array<() => void>;
   print(message: string): void;
   printErr(message: string): void;
-  pauseMainLoop(): void | Promise<void>;
-  resumeMainLoop(): void;
-  krkr2StopMainLoop(operation?: Promise<unknown>, discardNativeState?: boolean): Promise<void>;
   _krkr2_host_bookmark_is_ready(): number;
   _krkr2_host_observe_game_saves(): number;
-  _krkr2_host_flush_game_saves(): Promise<number>;
-  _krkr2_host_finalize_native_exit(): Promise<number>;
-  _krkr2_host_set_paused(paused: number): void;
   _krkr2_host_set_engine_mode?(mode: number): number;
   _krkr2_host_engine_arguments_abi?(): number;
   _krkr2_host_local_steam_service_abi?(): number;
@@ -340,6 +334,10 @@ export async function mountKirikiri2(
       return result;
     },
     acknowledgeCheckpoint: captured => checkpointOperation!.acknowledge(captured.bytes),
+    requestClose: async () => {
+      await checkpointOperation!.requestExit();
+      gamepadOutputPaused = false;
+    },
     exit: async () => {
       if (exited) {return;}
       exited = true;
@@ -391,6 +389,7 @@ function requireGameSaveAbi(module: KirikiriModule) {
     typeof module._krkr2_host_observe_game_saves !== "function" ||
     typeof module._krkr2_host_flush_game_saves !== "function" ||
     typeof module._krkr2_host_finalize_native_exit !== "function" ||
+    typeof module._krkr2_host_request_exit !== "function" ||
     typeof module._krkr2_host_set_paused !== "function") {
     throw new Error("KIRIKIRI_GAME_SAVE_ABI_UNAVAILABLE");
   }

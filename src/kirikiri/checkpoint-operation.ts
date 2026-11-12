@@ -7,6 +7,7 @@ export type KirikiriCheckpointModule = {
   krkr2StopMainLoop(operation?: Promise<unknown>, discardNativeState?: boolean): Promise<void>;
   _krkr2_host_flush_game_saves(): Promise<number>;
   _krkr2_host_finalize_native_exit(): Promise<number>;
+  _krkr2_host_request_exit(): number;
   _krkr2_host_set_paused(paused: number): void;
 };
 
@@ -31,6 +32,19 @@ class KirikiriCheckpointOperation {
   constructor(private readonly options: {module: KirikiriCheckpointModule; overlay: KirikiriWriteOverlay}) {}
 
   get isPaused() {return this.paused;}
+
+  async requestExit() {
+    this.requireOpen();
+    if (this.active || this.finalizing) {throw invalidState();}
+    // Queue the native user-close event only between drained frames. The
+    // request itself does not execute script or I/O; subsequent ordinary ticks
+    // own the confirmation, veto and finalizer, including suspended reads.
+    await this.options.module.pauseMainLoop();
+    this.requireOpen();
+    const status = this.options.module._krkr2_host_request_exit();
+    if (status !== 0) {throw new Error(`KIRIKIRI_CLOSE_REQUEST_FAILED: ${status}`);}
+    await this.resume();
+  }
 
   checkpoint() {
     this.requireOpen();

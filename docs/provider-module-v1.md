@@ -150,6 +150,13 @@ the ONS adapter config and constructor are private implementation details of the
 Each session must use its own frame. `exit()` pauses the core and removes library-owned DOM and globals; the host
 then discards that frame to release Emscripten's document-level input hooks.
 
+An optional `requestClose()` asks the native window to close and restores live
+input for its confirmation UI. Its promise acknowledges dispatch, not accepted
+closure: a refusal or cancellation leaves the session running. The Host hides
+its own exit dialog, waits for `EXIT_REQUESTED` and persists its final snapshot
+before offering navigation or restart. `exit()` remains unconditional resource
+cleanup for cancellation, failures and unsupported native close requests.
+
 `EXIT_REQUESTED` is an optional lifecycle event rather than a Target admission requirement. An adapter that can
 reliably observe a game ending through its title/menu UI or process boundary may translate it into one
 `EXIT_REQUESTED` event. The shared controller then immediately leaves the running state, makes checkpoint capture
@@ -160,16 +167,21 @@ the host ends those sessions through `exit()`.
 KiriKiri is also an independent Provider Target. A Host launches target `kirikiri2-kag` through
 Provider Module V1 and never imports the KiriKiri adapter config or constructor.
 
-The KiriKiri Target accepts games exposing the standard KAG `saveBookMark`/`loadBookMark` API. Its checkpoint
-contains the small native KAG save files written under
-`/savedata` or `/save`; it is not a raw Wasm memory snapshot. A pure TJS/custom-engine title without these KAG
-methods fails closed as unsupported instead of producing a checkpoint that cannot be restored. The host supplies
-a project file index and, only when that project contains multiple XP3 archives, the explicit project-relative XP3
-entry selected during import. Runtime slot `1999` is outside the normal KAG save menu. The adapter keeps the core
-running until the successful slot request causes a non-bookkeeping save write, then captures the complete quiescent save-file
-set. This also supports KAG games that override the default `data1999.ksd` filename while retaining the standard
-bookmark API. If the host paused the runtime before asking for a checkpoint, the adapter resumes it before waiting
-for the next stable KAG save point and restores the paused state after capture.
+The KiriKiri Target exports the native files observed from a completed player
+save, including KAG calls and image-backed native serialization. It preserves
+their original paths and includes system data in the same checkpoint; this is
+`GAME_SAVE`, not a Wasm memory snapshot. A new instance imports the complete
+bundle before startup, and the player loads through the game's own UI. Normal
+Host close queues the existing window close event. Native confirmation and veto
+remain game behavior. Once accepted, the adapter drains the original tick and
+its finalizer writes before finalization and export. Ordinary background/manual
+exports only flush supported metadata; they never close the native window.
+
+The host supplies a project file index and the explicit project-relative XP3
+entry selected during import. The adapter captures the complete quiescent
+save-file set without creating an extra bookmark or choosing a player slot.
+An ordinary export drains the frame and retains the Host's paused/running
+state after capture.
 
 A checkpoint's optional `screenshot` describes its save point. KiriKiri attaches the game's own KAG
 `lockSnapshot()` image to the checkpoint that contains a new player bookmark (`saveBookMarkToFile` without

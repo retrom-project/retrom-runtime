@@ -814,13 +814,22 @@ export function installRpgRuntimeNativeBridge(global, inputFilter) {
     if (typeof isReady === "function") bootPrototype.isReady = function runtimeBootReady() {
       return Boolean(pluginFiles) && isReady.apply(this, arguments);
     };
-    global.require = function requirePluginModule(name) {
-      if (name !== "fs") throw new Error("RPG_PLUGIN_MODULE_UNSUPPORTED");
-      if (!pluginFiles) throw new Error("RPG_PLUGIN_FILES_NOT_READY");
-      return pluginFiles.fs;
-    };
     global.StorageManager.localFileDirectoryPath = () => pluginFiles.saveDirectory;
 
+  }
+
+  function installPluginModules() {
+    const writes = new Set(["mkdirSync", "writeFileSync", "unlinkSync"]);
+    const fs = Object.freeze(Object.fromEntries(["existsSync", "readdirSync", "readFileSync", ...writes]
+      .map(name => [name, (...args) => {
+        if (!pluginFiles) throw new Error("RPG_PLUGIN_FILES_NOT_READY");
+        if (writes.has(name) && profile !== "RPGMV") throw new Error("RPG_PLUGIN_FILE_READ_ONLY");
+        return pluginFiles.fs[name](...args);
+      }])));
+    global.require = function requirePluginModule(name) {
+      if (name !== "fs") throw new Error("RPG_PLUGIN_MODULE_UNSUPPORTED");
+      return fs;
+    };
   }
 
   async function waitForNativeStorage() {
@@ -834,6 +843,7 @@ export function installRpgRuntimeNativeBridge(global, inputFilter) {
   }
 
   installCanvasTextAlignCompatibility();
+  installPluginModules();
   // Install after plugins have wrapped Boot.start, before the game's window.onload runs it.
   global.addEventListener("load", function prepareEngine(loadEvent) {
     if (loadEvent.target !== global.document) return;
@@ -874,11 +884,9 @@ export function installRpgRuntimeNativeBridge(global, inputFilter) {
     port = eventMessage.ports[0];
     port.onmessage = (portEvent) => { void receive(portEvent.data); };
     port.start();
-    if (profile === "RPGMV") {
-      try { pluginFiles = createRpgPluginFiles(global.location.href, message.pluginFiles); }
-      catch (error) { event("ERROR", {code: error.message}); return; }
-    }
-    try {nativeSaves = createRpgWebSaves(global, profile, message.saves, pluginFiles);}
+    try { pluginFiles = createRpgPluginFiles(global.location.href, message.pluginFiles); }
+    catch (error) { event("ERROR", {code: error.message}); return; }
+    try {nativeSaves = createRpgWebSaves(global, profile, message.saves, profile === "RPGMV" ? pluginFiles : null);}
     catch (error) {event("ERROR", {code: error.message}); return;}
     pollForEngine();
   }, true);

@@ -8,9 +8,12 @@ import {createKirikiriCheckpointOperation, type KirikiriCheckpoint, type Kirikir
 import {KirikiriWriteOverlay, type KirikiriSaveImage} from "./write-overlay.js";
 import type { MountedRuntimeAdapter, RuntimeExitReporter } from "../internal-adapter.js";
 import type {KirikiriParameters} from "./parameters.js";
+import {resolveKirikiriEngineMode} from "./engine-mode.js";
 import {installGamepadCursor, type GamepadCursor} from "../provider/gamepad-cursor.js";
 import {captureGamepadSource} from "../provider/gamepad-filter.js";
 import {RuntimeFailureError} from "../provider/failure.js";
+import {combineSignals} from "../content-io/abort.js";
+import {installKirikiriDialogInput, type KirikiriDialogModule} from "./dialog-input.js";
 
 type KirikiriVlfs = {
   contentAbi: string;
@@ -25,7 +28,7 @@ type KirikiriVlfs = {
   registerZipBlob(blob: Blob, options?: Record<string, unknown>): Promise<unknown>;
 };
 type KirikiriScriptException = {message: string; script: string; line: number; trace: string};
-type KirikiriModule = KirikiriCheckpointModule & {
+type KirikiriModule = KirikiriCheckpointModule & KirikiriDialogModule & {
   arguments: string[];
   retromContentBridge: {abi: string; contractSha256: string};
   PThread?: {terminateAllThreads(): void};
@@ -76,11 +79,14 @@ export async function mountKirikiri2(
   restorePayload: Uint8Array | null,
   reportExitRequested: RuntimeExitReporter = () => undefined,
   contentOptions?: AdapterContentOptions & {signal?: AbortSignal},
+  registerStartupSession?: (session: Pick<MountedRuntimeAdapter, "exit">) => void,
 ): Promise<MountedRuntimeAdapter> {
   if (target.ownerDocument !== frameWindow.document) {throw new Error("KIRIKIRI_RUNTIME_TARGET_INVALID");}
   requireBrowserFeatures(frameWindow);
   if (!contentOptions) {throw new Error("CONTENT_IO_ABI_MISMATCH");}
-  const content = new KirikiriContent(contentOptions, contentOptions.signal);
+  const startupAbort = new AbortController();
+  const scope = combineSignals([startupAbort.signal, ...contentOptions.signal ? [contentOptions.signal] : []]);
+  const content = new KirikiriContent(contentOptions, scope.signal);
   const host = frameWindow as KirikiriHostWindow;
   const document = frameWindow.document;
   const surface = document.createElement("div");
@@ -101,7 +107,6 @@ export async function mountKirikiri2(
   const resizeCleanup = sizeCanvas(frameWindow, surface, canvas);
   const focusCanvas = () => {canvas.focus({ preventScroll: true });};
   canvas.addEventListener("pointerdown", focusCanvas, true);
-  const startupKeyboardCleanup = blockStartupKeyboardInput(frameWindow);
   let gamepadCursor: GamepadCursor | undefined;
   const readGamepadDevices = captureGamepadSource(frameWindow);
   let nativeGamepadActive = false;
@@ -112,6 +117,11 @@ export async function mountKirikiri2(
     for (const actuator of gamepadActuators) {bestEffortGamepadOutput(() => actuator.reset());}
     gamepadActuators.clear();
   };
+  const dialogInput = installKirikiriDialogInput(frameWindow, active => {
+    gamepadCursor?.setSuspended(active);
+    if (active) {stopGamepadOutput();}
+  });
+  const startupKeyboardCleanup = dialogInput.finishStartup;
   const blurGamepadOutput = () => {gamepadOutputUnfocused = true; stopGamepadOutput();};
   const focusGamepadOutput = () => {gamepadOutputUnfocused = false;};
   const visibilityGamepadOutput = () => {if (document.hidden) {stopGamepadOutput();}};
@@ -168,17 +178,19 @@ export async function mountKirikiri2(
     nativeExitRequested = nativeExit;
     exportFinalExit();
   };
-  const dispose = async () => {
+  let disposing: Promise<void> | undefined;
+  const dispose = () => disposing ??= (async () => {
     // Script loading may fail before the core installs the main-loop bridge.
     // Stop scheduling first, cancel reads so a suspended JSPI tick can unwind,
     // and retain Module/VLFS until it has completely returned.
     const stopping = checkpointOperation?.stop(failed) ?? module?.krkr2StopMainLoop?.(undefined, failed);
-    try {await content.close();}
+    try {module?.krkr2DisposeDialogs?.(); await content.close();}
     finally {
       try {await (failed ? withTimeout(Promise.resolve(stopping), failedDrainLimitMs, "KIRIKIRI_DRAIN_TIMEOUT").catch(() => undefined) : stopping);}
       finally {
         try {module?.PThread?.terminateAllThreads();}
         finally {
+          startupKeyboardCleanup(); scope.dispose();
           cleanup(
             host, previousModule, previousVlfs, target, canvas, focusCanvas,
             gamepadCleanup, resizeCleanup, runtimeTerminationCleanup, scripts,
@@ -186,7 +198,16 @@ export async function mountKirikiri2(
         }
       }
     }
+  })();
+  const exit = async () => {
+    if (exited) {return;}
+    exited = true;
+    // A native failure already rejected readiness with its diagnostic. Keep
+    // that error rather than replacing it with the cleanup cancellation.
+    if (!failed) {startupAbort.abort();}
+    await dispose();
   };
+  registerStartupSession?.({exit});
   try {
     const base = new URL(normalizedBase(config.runtimeBaseUrl), document.baseURI);
     const assets = await content.assets(base);
@@ -200,7 +221,8 @@ export async function mountKirikiri2(
     vlfs.onUnlink = path => overlay.record(path, null);
     await vlfs.registerZipBlob(assets.archive, {stripPrefix: ""});
     const project = await registerKirikiriProject(vlfs, config.projectIndexUrl, document.baseURI, content, config.contentDigest,
-      config.overlayRoot, config.overlayArchives, contentOptions.signal);
+      config.overlayRoot, config.overlayArchives, scope.signal);
+    const engineMode = await resolveKirikiriEngineMode(config.engineMode, project.files, scope.signal);
     const restore = restorePayload ? await decodeKirikiriCheckpoint(restorePayload) : null;
     for (const entry of restore?.entries ?? []) {
       const path = `/${entry.path}`;
@@ -215,6 +237,8 @@ export async function mountKirikiri2(
     const options: Partial<KirikiriModule> = {
       arguments: config.engineArguments.slice(),
       retromLocalSteamService: config.steamService === "LOCAL",
+      onConfirmDialogChanged: dialogInput.onConfirmDialogChanged,
+      retromDialogGamepads: dialogInput.retromDialogGamepads,
       retromGamepadDevices: () => {
         if (exited || failed) {return [];}
         try {
@@ -223,7 +247,7 @@ export async function mountKirikiri2(
         } catch {return [];}
       },
       retromGamepadSamples: () => {
-        if (exited || failed || normalExitRequested || gamepadOutputPaused) {return [];}
+        if (exited || failed || normalExitRequested || gamepadOutputPaused || dialogInput.active) {return [];}
         try {return gamepadCursor?.readNativeGamepads() ?? Array.from(frameWindow.navigator.getGamepads());}
         catch {return [];}
       },
@@ -233,7 +257,7 @@ export async function mountKirikiri2(
         gamepadCursor?.setNativeOwned(nativeGamepadActive);
       },
       retromGamepadVibrate: (index, id, left, right) => {
-        if (exited || failed || normalExitRequested || gamepadOutputPaused || gamepadOutputUnfocused || document.hidden) {return;}
+        if (exited || failed || normalExitRequested || gamepadOutputPaused || gamepadOutputUnfocused || document.hidden || dialogInput.active) {return;}
         try {
           const pad = readGamepadDevices().find(pad => pad?.connected && pad.index === index && pad.id.slice(0, 512) === id);
           const actuator = pad?.vibrationActuator;
@@ -272,13 +296,19 @@ export async function mountKirikiri2(
           reportFailure(error);
           throw error;
         }
-        const nativeMode = config.engineMode === "KIRIKIRI_Z" ? 1 : 0;
+        let nativeMode = engineMode === "KIRIKIRI_Z" ? 1 : 0;
         const setMode = host.Module?._krkr2_host_set_engine_mode;
-        if ((!setMode && nativeMode !== 0) || (setMode && setMode(nativeMode) !== 0)) {
+        let applied = setMode ? setMode(nativeMode) === 0 : nativeMode === 0;
+        if (!applied && config.engineMode === "AUTO" && nativeMode === 1) {
+          nativeMode = 0;
+          applied = !setMode || setMode(nativeMode) === 0;
+        }
+        if (!applied) {
           const error = new RuntimeFailureError("KIRIKIRI_ENGINE_MODE_UNSUPPORTED", "CORE");
           reportFailure(error);
           throw error;
         }
+        console.debug(`[kirikiri2] Engine mode: ${nativeMode === 1 ? "KIRIKIRI_Z" : "KIRIKIRI2"} (${config.engineMode === "AUTO" ? "automatic" : "explicit"})`);
       },
       onScriptException: detail => {
         const error = new RuntimeFailureError("KIRIKIRI_SCRIPT_EXCEPTION", "CORE", [
@@ -303,13 +333,14 @@ export async function mountKirikiri2(
     module = options as KirikiriModule;
     scripts.push(await loadClassicScript(document, runtimeUrl));
     module = host.Module as KirikiriModule;
-    await withTimeout(ready.promise, readyTimeoutMs, "KIRIKIRI_RUNTIME_TIMEOUT");
+    await dialogInput.waitForReady(ready.promise, scope.signal, readyTimeoutMs);
     requireGameSaveAbi(module);
     checkpointOperation = createKirikiriCheckpointOperation({module, overlay});
     if (normalExitRequested) {exportFinalExit();}
     startupKeyboardCleanup();
     gamepadCursor = installGamepadCursor(frameWindow, canvas, {defaultEnabled: true});
     gamepadCursor.setNativeOwned(nativeGamepadActive);
+    gamepadCursor.setSuspended(dialogInput.active);
     focusCanvas();
   } catch (error) {
     startupKeyboardCleanup();
@@ -335,11 +366,8 @@ export async function mountKirikiri2(
       await checkpointOperation!.requestExit();
       gamepadOutputPaused = false;
     },
-    exit: async () => {
-      if (exited) {return;}
-      exited = true;
-      await dispose();
-    },
+    exit,
+    setInputFilter: async policy => {dialogInput.setInputFilter(policy);},
     gamepadCursor,
     touchGamepad: {layout: "POINTER"},
     getCanvas: () => canvas,
@@ -450,18 +478,6 @@ function sizeCanvas(frameWindow: Window, surface: HTMLElement, canvas: HTMLCanva
     observer?.disconnect();
     frameWindow.removeEventListener("resize", resize);
     density?.removeEventListener("change", densityChanged);
-  };
-}
-
-function blockStartupKeyboardInput(frameWindow: Window) {
-  const eventTypes = ["keydown", "keypress", "keyup"] as const;
-  const block = (event: KeyboardEvent) => {
-    event.preventDefault();
-    event.stopImmediatePropagation();
-  };
-  for (const eventType of eventTypes) {frameWindow.addEventListener(eventType, block, true);}
-  return () => {
-    for (const eventType of eventTypes) {frameWindow.removeEventListener(eventType, block, true);}
   };
 }
 

@@ -2,6 +2,35 @@ import {describe, expect, it} from "vitest";
 import {createNativeGameEditor} from "./editor.js";
 
 describe("native-web game editor", () => {
+  it("transfers collection scopes, null slots and fractional values through the public editor", async () => {
+    const values = [
+      {id: "1", label: "Stats", value: "数组 · 2 项", valueType: "collection", children: "variables:1"},
+      {id: "1:1", label: "[0]", value: null, valueType: "null"},
+      {id: "1:2", label: "[1]", value: 2.5, valueType: "number", min: -100, max: 100, step: "any"},
+    ];
+    const requests: unknown[] = [];
+    const editor = createNativeGameEditor({request: async (type: string, body: Record<string, unknown>) => {
+      requests.push({type, body});
+      return type === "EDITOR_ENTRIES"
+        ? {type: "EDITOR_ENTRIES_RESULT", body: {entries: values, nextOffset: null}}
+        : {type: "EDITOR_SET_RESULT", body: {entry: {...values[2], value: body.value}}};
+    }} as unknown as Parameters<typeof createNativeGameEditor>[0]);
+    await expect(editor.entries("variables:1", "", 0, 40)).resolves.toMatchObject({entries: values});
+    await expect(editor.set("variables:1", "1:2", 3.75)).resolves.toMatchObject({value: 3.75});
+    expect(requests).toContainEqual({type: "EDITOR_SET", body: {category: "variables:1", id: "1:2", value: 3.75}});
+    await expect(editor.set("variables:1", "1:2", Infinity)).rejects.toThrow("RPG_GAME_EDITOR_INVALID");
+  });
+
+  it.each([
+    {id: "1", label: "Stats", value: "Array", valueType: "collection", children: "bad/category"},
+    {id: "1", label: "Stats", value: "Array", valueType: "collection"},
+    {id: "1", label: "Score", value: 2.5, valueType: "number"},
+    {id: "1", label: "Score", value: 2.5, valueType: "number", step: "any", min: 10, max: 1},
+  ])("rejects malformed structured metadata %#", async entry => {
+    const editor = createNativeGameEditor({request: async () => ({type: "EDITOR_ENTRIES_RESULT",
+      body: {entries: [entry], nextOffset: null}})} as unknown as Parameters<typeof createNativeGameEditor>[0]);
+    await expect(editor.entries("variables", "", 0, 40)).rejects.toThrow("RPG_GAME_EDITOR_INVALID");
+  });
   it("accepts the expanded RPG Maker category list through the public adapter", async () => {
     const ids = ["gold", "items", "weapons", "armors", "variables", "switches",
       "actors", "skills", "states", "classes", "party", "self_switches"];

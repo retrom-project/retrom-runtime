@@ -1,4 +1,4 @@
-import {expect, it} from "vitest";
+import {expect, it, vi} from "vitest";
 import {decodeRpgCheckpoint} from "../checkpoint.js";
 import {nativeGameFixture} from "../../tests/native-game-save-fixture.js";
 
@@ -55,7 +55,7 @@ it("confirms only the acknowledged native export and includes unsynchronized dat
   await game.request("ACKNOWLEDGE_SAVE", {bundle});
   expect((await game.request("STATUS")).body.availability).toMatchObject({available: true});
   game.read("SceneManager.exit(); SceneManager.exit()");
-  await new Promise(resolve => setTimeout(resolve, 10));
+  await vi.waitFor(() => expect(game.replies.filter(reply => reply.type === "EXIT_REQUESTED")).toHaveLength(1));
   const exits = game.replies.filter(reply => reply.type === "EXIT_REQUESTED");
   expect(exits).toHaveLength(1);
   const final = await decodeRpgCheckpoint(new Uint8Array(exits[0].body.data as ArrayBuffer), "RPGMV");

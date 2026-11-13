@@ -36,7 +36,7 @@ const kirikiriOptionsSchema = {
   additionalProperties: false,
   properties: {
     startupXp3Path: {format: "safe-path", maxLength: 240, type: ["string", "null"]},
-    engineMode: {enum: ["KIRIKIRI2", "KIRIKIRI_Z"], type: "string"},
+    engineMode: {enum: ["AUTO", "KIRIKIRI2", "KIRIKIRI_Z"], type: "string"},
     overlayRoot: {format: "safe-path", maxLength: 240, type: "string"},
     overlayArchives: {type: "array", maxItems: 32, items: {format: "safe-path", maxLength: 240, type: "string"}},
     engineArguments: {type: "array", maxItems: 64, items: {type: "string", minLength: 1, maxLength: 1024}},

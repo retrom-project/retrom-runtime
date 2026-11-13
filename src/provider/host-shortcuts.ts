@@ -77,6 +77,6 @@ function editable(event: KeyboardEvent) {
   return event.composedPath().some(target => {
     const element = target as Element;
     return typeof element.matches === "function" && (element.matches("input,select,textarea") ||
-      element.closest('[contenteditable]:not([contenteditable="false"])') !== null);
+      element.closest('[contenteditable]:not([contenteditable="false"]), dialog[aria-modal="true"], [role="dialog"][aria-modal="true"], [role="alertdialog"][aria-modal="true"]') !== null);
   });
 }

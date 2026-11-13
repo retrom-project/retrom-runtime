@@ -29,5 +29,5 @@ export async function registerKirikiriProject(vlfs: ProjectFilesystem, indexUrl:
     paths.push(path);
   }
   await installMoleboxFilesystem(vlfs, registered, signal);
-  return {paths, overlayFiles};
+  return {paths, overlayFiles, files: registered};
 }

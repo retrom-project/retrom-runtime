@@ -36,6 +36,18 @@ it.each(["input", "textarea", "select", "div"]) ("leaves editable %s controls al
   const node = document.createElement(tag); if (tag === "div") {node.setAttribute("contenteditable", "true");}
   document.body.append(node); expect(key("KeyM", {}, node).defaultPrevented).toBe(false); expect(report).not.toHaveBeenCalled();
 });
+it.each(["dialog", "alertdialog"])("leaves keys inside a modal %s with its controls", role => {
+  const {shortcuts, report} = setup(); shortcuts.setPolicy({menu: "Escape", pause: true});
+  const dialog = document.createElement("dialog"), button = document.createElement("button");
+  dialog.setAttribute("role", role); dialog.setAttribute("aria-modal", "true");
+  dialog.append(button); document.body.append(dialog);
+  expect(key("Escape", {}, button).defaultPrevented).toBe(false);
+  expect(key("KeyP", {}, button).defaultPrevented).toBe(false);
+  expect(report).not.toHaveBeenCalled();
+  const outside = document.createElement("button"); document.body.append(outside);
+  expect(key("Escape", {}, outside).defaultPrevented).toBe(true);
+  expect(report).toHaveBeenCalledOnce();
+});
 it("stops capture under suppression, null policy and teardown; blur allows a fresh press", () => {
   const {shortcuts, report} = setup(); shortcuts.setPolicy({menu:"KeyM",pause:false});
   key("KeyM"); key("KeyM"); expect(report).toHaveBeenCalledOnce();

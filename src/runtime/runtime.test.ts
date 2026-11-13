@@ -191,7 +191,7 @@ describe("unified runtime facts", () => {
     expect(prepared.resources[0].entryFile).toBe(prepared.targetOptions.startupXp3Path);
     expect(prepared.resources[0].paths).toEqual({[entryFile]: "data.xp3", "nested/project/patch.xp3": "patch.xp3"});
   });
-  it.each(["KIRIKIRI2", "KIRIKIRI_Z"])("prepares the explicit %s script engine mode independently of project identity", engineMode => {
+  it.each(["AUTO", "KIRIKIRI2", "KIRIKIRI_Z"])("prepares the %s script engine mode independently of project identity", engineMode => {
     const prepared = prepareRuntime({
       directory: {platformId: "kirikiri", defaultCoreId: "kirikiri2", allowedCoreIds: ["kirikiri2"]},
       files: [file("arbitrary/startup.tjs"), file("arbitrary/resources.xp3")],

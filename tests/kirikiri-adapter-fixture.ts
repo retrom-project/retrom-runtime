@@ -89,7 +89,7 @@ export async function loadVlfs(vlfs: FakeVlfs) {
 export async function loadCore(
   vlfs: FakeVlfs,
   options: { bookmarkReady?: number; loadReady?: number; restoreResult?: number; restoreState?: number; abort?: boolean; stopping?: Promise<void>;
-    engineModeSupported?: boolean; engineModeResult?: number; overlaySupported?: boolean;
+    engineModeSupported?: boolean; engineModeResult?: number | ((mode: number) => number); overlaySupported?: boolean;
     engineArgumentsSupported?: boolean; localSteamSupported?: boolean } = {},
 ) {
   await vi.waitFor(() => expect(runtimeScripts()).toHaveLength(2));
@@ -99,7 +99,8 @@ export async function loadCore(
     resumeMainLoop: vi.fn(),
     krkr2StopMainLoop: vi.fn(() => options.stopping ?? Promise.resolve()),
     _krkr2_host_observe_game_saves: vi.fn(() => 1),
-    _krkr2_host_set_engine_mode: options.engineModeSupported === false ? undefined : vi.fn(() => options.engineModeResult ?? 0),
+    _krkr2_host_set_engine_mode: options.engineModeSupported === false ? undefined : vi.fn((mode: number) =>
+      typeof options.engineModeResult === "function" ? options.engineModeResult(mode) : options.engineModeResult ?? 0),
     _krkr2_host_engine_arguments_abi: options.engineArgumentsSupported === false ? undefined : vi.fn(() => 1),
     _krkr2_host_local_steam_service_abi: options.localSteamSupported === false ? undefined : vi.fn(() => 1),
     _krkr2_host_resource_overlay_abi: options.overlaySupported === false ? undefined : vi.fn(() => 1),

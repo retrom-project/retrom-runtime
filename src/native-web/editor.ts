@@ -103,22 +103,32 @@ function readEvent(raw: unknown): RuntimeGameEditEventV1 {
 
 function readEntry(raw: unknown): RuntimeGameEditEntryV1 {
   if (!record(raw) || typeof raw.id !== "string" || !token.test(raw.id) || !label(raw.label, 160) ||
-    !["number", "text", "boolean", "unsupported"].includes(String(raw.valueType))) {throw invalid();}
-  if (!validValue(raw.valueType, raw.value) || !validBounds(raw.valueType, raw.min, raw.max)) {throw invalid();}
+    !["number", "text", "boolean", "collection", "null", "unsupported"].includes(String(raw.valueType))) {throw invalid();}
+  if (!validValue(raw.valueType, raw.value, raw.step) || !validBounds(raw.valueType, raw.min, raw.max) ||
+    !validMetadata(raw)) {throw invalid();}
   return raw as RuntimeGameEditEntryV1;
 }
 
-function validValue(kind: unknown, value: unknown) {
-  if (kind === "number") {return typeof value === "number" && Number.isSafeInteger(value);}
+function validValue(kind: unknown, value: unknown, step: unknown) {
+  if (kind === "number") {return numeric(value) && (step === "any" || Number.isSafeInteger(value));}
   if (kind === "text") {return typeof value === "string" && value.length <= 500;}
   if (kind === "boolean") {return typeof value === "boolean";}
-  return kind === "unsupported" && value === null;
+  if (kind === "collection") {return label(value, 160);}
+  return (kind === "null" || kind === "unsupported") && value === null;
+}
+
+function validMetadata(raw: Record<string, unknown>) {
+  if (raw.valueType === "collection") {
+    return typeof raw.children === "string" && token.test(raw.children) && raw.step === undefined;
+  }
+  return raw.children === undefined && (raw.step === undefined || raw.valueType === "number" &&
+    (raw.step === 1 || raw.step === "any"));
 }
 
 function validBounds(kind: unknown, minimum: unknown, maximum: unknown) {
   if (kind !== "number") {return minimum === undefined && maximum === undefined;}
-  return (minimum === undefined || typeof minimum === "number" && Number.isSafeInteger(minimum)) &&
-    (maximum === undefined || typeof maximum === "number" && Number.isSafeInteger(maximum));
+  return (minimum === undefined || numeric(minimum)) && (maximum === undefined || numeric(maximum)) &&
+    (minimum === undefined || maximum === undefined || Number(minimum) <= Number(maximum));
 }
 
 function record(value: unknown): value is Record<string, unknown> {
@@ -131,7 +141,11 @@ function label(value: unknown, maximum: number): value is string {
 
 function scalar(value: unknown) {
   return typeof value === "boolean" || typeof value === "string" && value.length <= 500 ||
-    typeof value === "number" && Number.isSafeInteger(value);
+    numeric(value);
+}
+
+function numeric(value: unknown): value is number {
+  return typeof value === "number" && Number.isFinite(value) && Math.abs(value) <= Number.MAX_SAFE_INTEGER;
 }
 
 function invalid() {return new Error("RPG_GAME_EDITOR_INVALID");}

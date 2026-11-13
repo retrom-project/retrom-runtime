@@ -1,5 +1,6 @@
 import {createRpgWebSaves} from "../../../src/native-web/game-saves.ts";
 import {createRpgPluginFiles} from "../../../src/native-web/plugin-files.ts";
+import {createRpgVariableEditor, pageEditorEntries} from "../../../src/native-web/editor-variables.ts";
 
 export function installRpgRuntimeNativeBridge(global, inputFilter) {
   "use strict";
@@ -41,6 +42,8 @@ export function installRpgRuntimeNativeBridge(global, inputFilter) {
   let inputDiagnostics = null;
   let restoreViewport = null;
   const editorMapCache = new Map();
+  const variableEditor = createRpgVariableEditor(() => global.$gameVariables,
+    id => Number.isSafeInteger(id) && id > 0 && id < (global.$dataSystem?.variables?.length || 0));
 
   function ownKeys(value, expected) {
     if (!value || typeof value !== "object" || Array.isArray(value)) return false;
@@ -356,9 +359,8 @@ export function installRpgRuntimeNativeBridge(global, inputFilter) {
         const value = owner.value(id);
         const fallback = category === "variables" ? "变量" : "开关";
         const displayName = String(name || "").trim();
-        const row = editorEntry(String(id), displayName || `${fallback} ${id}`, value,
-          category === "variables" && typeof value === "number" ? -999999999 : undefined,
-          category === "variables" && typeof value === "number" ? 999999999 : undefined);
+        const row = category === "variables" ? variableEditor.entry(id, displayName || `${fallback} ${id}`)
+          : editorEntry(String(id), displayName || `${fallback} ${id}`, value);
         (displayName ? named : unnamed).push(row);
       });
       return [...named, ...unnamed];
@@ -372,11 +374,14 @@ export function installRpgRuntimeNativeBridge(global, inputFilter) {
       !Number.isSafeInteger(body.limit) || body.limit < 1 || body.limit > 40) {
       throw new Error("RPG_GAME_EDITOR_INVALID");
     }
+    if (!editorReady()) throw new Error("RPG_GAME_EDITOR_NOT_READY");
+    if (body.category.startsWith("variables:")) {
+      return variableEditor.entries(body.category, body.query, body.offset, body.limit);
+    }
     const query = body.query.trim().toLowerCase();
     const rows = editorRows(body.category).filter((row) =>
       !query || row.id.includes(query) || row.label.toLowerCase().includes(query));
-    return {entries: rows.slice(body.offset, body.offset + body.limit),
-      nextOffset: body.offset + body.limit < rows.length ? body.offset + body.limit : null};
+    return pageEditorEntries(rows, body.offset, body.limit);
   }
 
   function editorPageRequest(body, withMap) {
@@ -492,6 +497,15 @@ export function installRpgRuntimeNativeBridge(global, inputFilter) {
   function editorSet(body) {
     if (!body || typeof body.category !== "string" || typeof body.id !== "string" ||
       !/^[a-z0-9:_-]{1,60}$/u.test(body.id)) throw new Error("RPG_GAME_EDITOR_INVALID");
+    if (body.category === "variables" || body.category.startsWith("variables:")) {
+      if (!editorReady()) throw new Error("RPG_GAME_EDITOR_NOT_READY");
+      const entry = variableEditor.set(body.category, body.id, body.value);
+      if (body.category === "variables") {
+        const name = global.$dataSystem.variables[Number(body.id)];
+        entry.label = (String(name || "").trim() || `变量 ${body.id}`).slice(0, 160);
+      }
+      return {entry};
+    }
     const entry = editorRows(body.category).find((row) => row.id === body.id);
     if (!entry || entry.valueType === "unsupported" ||
       (entry.valueType === "text" ? typeof body.value !== "string"
@@ -508,8 +522,6 @@ export function installRpgRuntimeNativeBridge(global, inputFilter) {
       const source = {items: global.$dataItems, weapons: global.$dataWeapons, armors: global.$dataArmors}[body.category];
       const item = source[Number(body.id)];
       global.$gameParty.gainItem(item, value - global.$gameParty.numItems(item), false);
-    } else if (body.category === "variables") {
-      global.$gameVariables.setValue(Number(body.id), value);
     } else if (body.category === "switches") {
       global.$gameSwitches.setValue(Number(body.id), value);
     } else if (body.category === "skills" || body.category.startsWith("skills:")) {

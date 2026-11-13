@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
-import { createContext, runInContext, runInNewContext } from "node:vm";
+import { runInNewContext } from "node:vm";
 import { describe, expect, it, vi } from "vitest";
 
 type BridgeEvent = {
@@ -27,10 +27,10 @@ describe("native-web RPG Maker bridge", () => {
     const replies: unknown[] = [];
     const nativeExit = vi.fn();
     const setImageRendering = vi.fn();
-    const sceneManager = { _scene: null, exit: nativeExit, updateMain: () => undefined };
+    const sceneManager = { _scene: null, exit: nativeExit, run: () => undefined, updateMain: () => undefined };
     const runtime = {
       location: {href: "https://runtime.example/game/www/index.html"},
-      DataManager: {},
+      DataManager: {}, localStorage, Scene_Boot: class {start() {}},
       document: {querySelectorAll: () => [{style: {setProperty: setImageRendering}}]},
       SceneManager: sceneManager,
       StorageManager: {},
@@ -41,7 +41,7 @@ describe("native-web RPG Maker bridge", () => {
       parent: { postMessage: () => undefined },
       requestAnimationFrame: () => 1,
     };
-    runInNewContext(source, { URL, TextDecoder, TextEncoder, window: runtime });
+    runInNewContext(source, { URL, TextDecoder, TextEncoder, performance, window: runtime });
     const port: FakePort = {
       onmessage: null,
       postMessage: (message) => replies.push(message),
@@ -55,12 +55,14 @@ describe("native-web RPG Maker bridge", () => {
         parentOrigin: "https://host.example",
         profile: "RPGMV",
         protocolVersion: 1,
-        type: "RPG_RUNTIME_NATIVE_CONNECT", pluginFiles: [],
+        type: "RPG_RUNTIME_NATIVE_CONNECT", saves: null, pluginFiles: [],
       },
       origin: "https://host.example", source: runtime.parent,
       ports: [port],
       stopImmediatePropagation: () => undefined,
     });
+    listeners.get("load")?.forEach(listener => listener({target: runtime.document} as unknown as BridgeEvent));
+    sceneManager.run(); await new Promise(resolve => setTimeout(resolve, 0));
     sceneManager.updateMain();
 
     expect(replies).toContainEqual({
@@ -91,6 +93,7 @@ describe("native-web RPG Maker bridge", () => {
     sceneManager.exit();
     sceneManager.exit();
     expect(nativeExit).toHaveBeenCalledTimes(2);
+    await new Promise(resolve => setTimeout(resolve, 0));
     expect(replies.filter((reply) => (reply as {type?: string}).type === "EXIT_REQUESTED")).toEqual([{
       body: {},
       launchId: "01980000-0000-7000-8000-000000000001",
@@ -141,7 +144,7 @@ describe("native-web RPG Maker bridge", () => {
     listeners.get("message")?.[0]?.({
       data: {
         launchId, nonce, parentOrigin: "https://host.example", profile: "RPGMV",
-        protocolVersion: 1, type: "RPG_RUNTIME_NATIVE_CONNECT", pluginFiles: [],
+        protocolVersion: 1, type: "RPG_RUNTIME_NATIVE_CONNECT", saves: null, pluginFiles: [],
       },
       origin: "https://host.example", source: runtime.parent,
       ports: [port],
@@ -162,285 +165,6 @@ describe("native-web RPG Maker bridge", () => {
     await vi.waitFor(() => expect(replies).toContainEqual(expect.objectContaining({
       requestId: 1, type: "CLEANUP_RESULT",
     })));
-  });
-
-  it("waits for both the database and the complete MV plugin boot hook before restoring", async () => {
-    const source = readFileSync(
-      resolve(process.cwd(), "assets/runtime/native/bridge.js"),
-      "utf8",
-    );
-    const listeners = new Map<string, Array<(event: BridgeEvent) => void>>();
-    const replies: unknown[] = [];
-    const animationFrames: Array<() => void> = [];
-    let databaseLoaded = false;
-    let loadedSave = "";
-    let particlesReady = false;
-    class SceneBoot { start() { particlesReady = true; } }
-    const afterLoad = vi.fn();
-    class SceneMap { isStarted() {return true;} }
-    class SceneTitle extends SceneMap { start() {} }
-    const storage = {
-      exists: (slot: number) => slot < 0,
-      load: (slot: number) => String(slot).slice(0, 0),
-    };
-    const sceneManager = {
-      _scene: null as SceneMap | null,
-      goto: (Type: typeof SceneMap) => {
-        sceneManager._scene = new Type();
-        if (sceneManager._scene instanceof SceneTitle) {sceneManager._scene.start();}
-      },
-      isSceneChanging: () => false,
-      isCurrentSceneBusy: () => false,
-      updateMain: () => undefined,
-    };
-    const dataManager = {
-      _globalInfo: [] as Array<unknown> | null,
-      isDatabaseLoaded: () => databaseLoaded,
-      loadGlobalInfo() {
-        if (this._globalInfo) {return this._globalInfo;}
-        const value = storage.load(0);
-        return this._globalInfo = value ? JSON.parse(value) as Array<unknown> : [];
-      },
-      loadGame(slot: number) {
-        if (!this.loadGlobalInfo()[slot]) {return false;}
-        if (!particlesReady) {throw new Error("PARTICLES_NOT_INITIALIZED");}
-        loadedSave = storage.load(slot);
-        return true;
-      },
-    };
-    const runtime = {
-      location: {href: "https://runtime.example/game/www/index.html"},
-      $gameMap: { isEventRunning: () => false, mapId: () => 1 },
-      $gameMessage: { isBusy: () => false },
-      document: {},
-      $gamePlayer: { x: 11, y: 8 },
-      $gameSystem: { onAfterLoad: afterLoad },
-      $gameVariables: { value: () => 1 },
-      DataManager: dataManager,
-      Scene_Boot: SceneBoot,
-      Scene_Title: SceneTitle,
-      Scene_Map: SceneMap,
-      SceneManager: sceneManager,
-      StorageManager: storage,
-      Utils: { RPGMAKER_NAME: "MV" },
-      addEventListener: (name: string, callback: (event: BridgeEvent) => void) => {
-        listeners.set(name, [...(listeners.get(name) ?? []), callback]);
-      },
-      parent: { postMessage: () => undefined },
-      requestAnimationFrame: (callback: () => void) => {animationFrames.push(callback); return animationFrames.length;},
-    };
-    const context = createContext({URL, performance, TextDecoder, TextEncoder, window: runtime});
-    runInContext(source, context);
-    const saveData = runInContext(
-      "Uint8Array.from([115,97,118,101,100,45,97,116,45,98]).buffer",
-      context,
-    ) as ArrayBuffer;
-    const globalInfoJSON = JSON.stringify([...Array(21).fill(null), {title: "fixture"}]);
-    const globalInfoValues = [...new TextEncoder().encode(globalInfoJSON)].join(",");
-    const globalInfo = runInContext(`Uint8Array.from([${globalInfoValues}]).buffer`, context) as ArrayBuffer;
-    const port: FakePort = {
-      onmessage: null,
-      postMessage: (message) => replies.push(message),
-      start: () => undefined,
-    };
-    const launchId = "01980000-0000-7000-8000-000000000001";
-    const nonce = "test-nonce";
-    listeners.get("message")?.[0]?.({
-      data: { launchId, nonce, parentOrigin: "https://host.example", profile: "RPGMV", protocolVersion: 1, type: "RPG_RUNTIME_NATIVE_CONNECT", pluginFiles: [] },
-      origin: "https://host.example", source: runtime.parent,
-      ports: [port],
-      stopImmediatePropagation: () => undefined,
-    });
-
-    listeners.get("load")?.forEach(listener => listener({target: runtime.document} as unknown as BridgeEvent));
-    port.onmessage?.({data: {
-      body: {bundle: {
-        engine: "RPGMV",
-        entries: [
-          {data: globalInfo, key: "0", mediaType: "application/octet-stream", store: "LOCAL_STORAGE"},
-          {data: saveData, key: "21", mediaType: "application/octet-stream", store: "LOCAL_STORAGE"},
-        ],
-        resumeSlot: 21,
-      }},
-      launchId,
-      nonce,
-      protocolVersion: 1,
-      requestId: 1,
-      type: "RESTORE",
-    }});
-    await Promise.resolve();
-    expect(loadedSave).toBe("");
-    expect(replies.some((reply) => (reply as {type?: string}).type === "RESTORE_RESULT")).toBe(false);
-
-    databaseLoaded = true;
-    animationFrames.shift()?.();
-    await new Promise(resolve => setTimeout(resolve, 0));
-    expect(loadedSave).toBe("");
-    expect(replies).toEqual([]);
-    new SceneBoot().start();
-    animationFrames.shift()?.();
-    await vi.waitFor(() => expect(replies).toContainEqual({
-      body: {},
-      launchId,
-      nonce,
-      protocolVersion: 1,
-      requestId: 1,
-      type: "RESTORE_RESULT",
-    }));
-    expect(loadedSave).toBe("saved-at-b");
-    expect(afterLoad).toHaveBeenCalledOnce();
-  });
-
-  it("round-trips MZ saves through JsonEx so restored game objects keep their semantics", async () => {
-    const source = readFileSync(
-      resolve(process.cwd(), "assets/runtime/native/bridge.js"),
-      "utf8",
-    );
-    const listeners = new Map<string, Array<(event: BridgeEvent) => void>>();
-    const replies: unknown[] = [];
-    const animationFrames: Array<() => void> = [];
-    let restoredMarker = "";
-    let mapSceneStarted = true;
-    const beforeSave = vi.fn();
-    const afterLoad = vi.fn();
-    class SceneBoot { start() {} }
-    class SceneTitle { start() {} isStarted() {return true;} }
-    class SceneMap {
-      isStarted() {return mapSceneStarted;}
-    }
-    const storage: {
-      exists: (key: string) => boolean;
-      loadObject: (key: string) => Promise<unknown>;
-      saveObject: (key: string, value: unknown) => Promise<void>;
-    } = {
-      exists: () => false,
-      loadObject: async () => null,
-      saveObject: async () => undefined,
-    };
-    const sceneManager = {
-      _scene: new SceneMap() as SceneMap | SceneTitle,
-      goto: (Type: typeof SceneMap | typeof SceneTitle) => {
-        sceneManager._scene = new Type();
-        if (sceneManager._scene instanceof SceneTitle) {sceneManager._scene.start();}
-      },
-      isSceneChanging: () => false,
-      isCurrentSceneBusy: () => false,
-      updateMain: () => undefined,
-    };
-    const dataManager = {
-      isDatabaseLoaded: () => true,
-      maxSavefiles: () => 20,
-      async saveGame(slot: number) {
-        await storage.saveObject(`file${slot}`, {
-          marker: beforeSave.mock.calls.length ? "save-point-b" : "missing-before-save",
-        });
-        await storage.saveObject("global", [{ slot }]);
-        return true;
-      },
-      async loadGame(slot: number) {
-        const value = await storage.loadObject(`file${slot}`) as { restoredMarker?: () => string } | null;
-        restoredMarker = value?.restoredMarker?.() ?? "missing-prototype";
-        return true;
-      },
-    };
-    const jsonEx = {
-      stringify: (value: unknown) => JSON.stringify({ encodedByJsonEx: true, value }),
-      parse: (json: string) => {
-        const decoded = JSON.parse(json) as { encodedByJsonEx?: boolean; value?: unknown };
-        if (decoded.encodedByJsonEx !== true) {throw new Error("missing JsonEx envelope");}
-        return { ...(decoded.value as object), restoredMarker: () => "save-point-b" };
-      },
-    };
-    const runtime = {
-      document: {},
-      location: {href: "https://runtime.example/game/www/index.html"},
-      $gameMap: { isEventRunning: () => false, mapId: () => 3 },
-      $gameMessage: { isBusy: () => false },
-      $gamePlayer: { x: 9, y: 13 },
-      $gameSystem: { onAfterLoad: afterLoad, onBeforeSave: beforeSave },
-      $gameVariables: { value: () => 0 },
-      DataManager: dataManager,
-      ColorManager: {_windowskin: null as {getPixel: () => string} | null},
-      Graphics: {width: 0, height: 0},
-      JsonEx: jsonEx,
-      Scene_Boot: SceneBoot,
-      Scene_Title: SceneTitle,
-      Scene_Map: SceneMap,
-      SceneManager: sceneManager,
-      StorageManager: storage,
-      Utils: { RPGMAKER_NAME: "MZ" },
-      addEventListener: (name: string, callback: (event: BridgeEvent) => void) => {
-        listeners.set(name, [...(listeners.get(name) ?? []), callback]);
-      },
-      parent: { postMessage: () => undefined },
-      requestAnimationFrame: (callback: () => void) => {animationFrames.push(callback); return animationFrames.length;},
-    };
-    const context = createContext({ JSON, performance, TextDecoder, TextEncoder, window: runtime });
-    runInContext(source, context);
-    const port: FakePort = {
-      onmessage: null,
-      postMessage: (message) => replies.push(message),
-      start: () => undefined,
-    };
-    const launchId = "01980000-0000-7000-8000-000000000001";
-    const nonce = "test-nonce";
-    listeners.get("message")?.[0]?.({
-      data: { launchId, nonce, parentOrigin: "https://host.example", profile: "RPGMZ", protocolVersion: 1, type: "RPG_RUNTIME_NATIVE_CONNECT", pluginFiles: [] },
-      origin: "https://host.example", source: runtime.parent,
-      ports: [port],
-      stopImmediatePropagation: () => undefined,
-    });
-
-    listeners.get("load")?.forEach(listener => listener({target: runtime.document} as unknown as BridgeEvent));
-    port.onmessage?.({data: { body: {}, launchId, nonce, protocolVersion: 1, requestId: 1, type: "SAVE" }});
-    await vi.waitFor(() => expect(replies.some((reply) => (reply as {type?: string}).type === "SAVE_RESULT")).toBe(true));
-    const saveReply = replies.find((reply) => (reply as {type?: string}).type === "SAVE_RESULT") as {
-      body: {bundle: {
-        engine: string;
-        entries: Array<{data: ArrayBuffer; key: string; mediaType: string; store: string}>;
-        resumeSlot: number;
-      }};
-    };
-    const fileEntry = saveReply.body.bundle.entries.find((entry) => entry.key === "file21");
-    expect(fileEntry && new TextDecoder().decode(fileEntry.data)).toContain('"encodedByJsonEx":true');
-    expect(fileEntry && new TextDecoder().decode(fileEntry.data)).toContain('"marker":"save-point-b"');
-    expect(beforeSave).toHaveBeenCalledOnce();
-    const restoredBundle = {
-      ...saveReply.body.bundle,
-      entries: saveReply.body.bundle.entries.map((entry) => {
-        const values = [...new Uint8Array(entry.data)].join(",");
-        return {...entry, data: runInContext(`Uint8Array.from([${values}]).buffer`, context) as ArrayBuffer};
-      }),
-    };
-    port.onmessage?.({data: {
-      body: {bundle: restoredBundle},
-      launchId,
-      nonce,
-      protocolVersion: 1,
-      requestId: 2,
-      type: "RESTORE",
-    }});
-
-    await Promise.resolve();
-    expect(restoredMarker).toBe("");
-    runtime.ColorManager._windowskin = {getPixel: () => "#ffffff"};
-    mapSceneStarted = false;
-    animationFrames.shift()?.();
-    await Promise.resolve();
-    expect(restoredMarker).toBe("");
-    runtime.Graphics.width = 816;
-    runtime.Graphics.height = 624;
-    // Real MZ Boot.isReady waits for its system images and graphics before start.
-    new SceneBoot().start();
-    animationFrames.shift()?.();
-    await vi.waitFor(() => expect(restoredMarker).toBe("save-point-b"));
-    expect(replies).not.toContainEqual(expect.objectContaining({type: "RESTORE_RESULT"}));
-    mapSceneStarted = true;
-    animationFrames.shift()?.();
-    await vi.waitFor(() => expect(replies.length).toBeGreaterThan(1));
-    expect(replies).toContainEqual(expect.objectContaining({type: "RESTORE_RESULT"}));
-    expect(restoredMarker).toBe("save-point-b");
-    expect(afterLoad).toHaveBeenCalledOnce();
   });
 
 });

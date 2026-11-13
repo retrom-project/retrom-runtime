@@ -56,7 +56,7 @@ describe("Provider to core-private parameters", () => {
       const options = {...context(), signal: new AbortController().signal};
       await mountTargetAdapter(request, target, options);
       expect(mountEasyRpg).toHaveBeenCalledWith({
-        sessionId: request.session.id, engineMode, checkpointSlot: 100,
+        sessionId: request.session.id, engineMode,
         projectRootUrl: `/runtime/content/project/${"a".repeat(64)}/index.json/`, rtpSource: null,
         runtimeBaseUrl: request.runtime.runtimeBaseUrl + "assets/easyrpg/",
       }, target, window, null, {signal: options.signal, reportExitRequested: options.reportExitRequested, tasks: options.startup});
@@ -80,7 +80,6 @@ describe("Provider to core-private parameters", () => {
           url: `/runtime/content/project/${"a".repeat(64)}/game.mkxpz`,
         },
         rgssVersion, rtpArchives: [], runtimeBaseUrl: request.runtime.runtimeBaseUrl + "assets/mkxp/",
-        stateBufferBytes: 268435456,
       });
     },
   );

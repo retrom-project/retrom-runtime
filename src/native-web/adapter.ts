@@ -1,14 +1,15 @@
 import {completeChannelReply} from "../provider/channel-reply.js";
-import {isPluginSavePath, type RpgPluginFile} from "./plugin-files.js";
+import {type RpgPluginFile} from "./plugin-files.js";
+import {rpgGameSaveFormat} from "../rpgmaker/format.js";
+import {inGameSave} from "../rpgmaker/game-saves.js";
+import type {CheckpointAvailability, RuntimeCheckpoint} from "../contract.js";
 import type {RuntimeHostShortcutV1, RuntimeTouchGamepadV1, RuntimeTouchStickModeV1, RuntimeTouchStickV1} from "../provider/module-api.js";
 import {NativeInputDiagnostics} from "./input-diagnostics.js";
 import {createNativeGameEditor} from "./editor.js";
 import {nativeReadyDeadline, type NativeReadyOptions} from "./startup-timeout.js";
 import {
   decodeRpgCheckpoint,
-  encodeRpgCheckpoint,
   type RpgCheckpointBundle,
-  type RpgCheckpointStore,
 } from "../checkpoint.js";
 import type { MountedRuntimeAdapter, RuntimeExitReporter } from "../internal-adapter.js";
 
@@ -54,15 +55,11 @@ export async function mountNativeRpg(
   let touchGamepad: RuntimeTouchGamepadV1 | null = null;
   let touchStick: RuntimeTouchStickV1 | null = null;
   try {
-    await bootstrapNativeFrame(config, frame, channel, readyOptions.signal);
+    await bootstrapNativeFrame(config, frame, channel, readyOptions.signal, restorePayload);
     const ready = await channel.ready(readyOptions);
     expectedEngine = config.bridgeProfile;
     if (ready.engine !== expectedEngine || ready.engineProfile !== config.bridgeProfile) {
       throw new Error("RPG_ENGINE_PROFILE_MISMATCH");
-    }
-    if (restorePayload) {
-      const bundle = await decodeRpgCheckpoint(restorePayload, expectedEngine);
-      await channel.restore(bundle);
     }
     channel.startStatusLoop();
     let enabled = readyOptions.touchGamepadEnabled ?? true;
@@ -84,7 +81,8 @@ export async function mountNativeRpg(
   return {
     getTouchGamepad: () => touchGamepad,
     getTouchStick: () => touchStick,
-    checkpoint: async () => ({ bytes: await channel.save(expectedEngine), format: "native-save-bundle-v1" }),
+    checkpoint: () => channel.save(expectedEngine),
+    acknowledgeCheckpoint: checkpoint => channel.acknowledge(checkpoint),
     gameEditor: createNativeGameEditor(channel),
     exit: async () => {
       channel.prepareCleanup();
@@ -93,9 +91,7 @@ export async function mountNativeRpg(
       frame.src = "about:blank";
     },
     getCanvas: () => null,
-    getCheckpointAvailability: () => channel.checkpointAvailable()
-      ? { available: true, blocker: null }
-      : { available: false, blocker: "BUSY" },
+    getCheckpointAvailability: () => channel.checkpointAvailability(),
     getFrameCount: () => channel.frames(),
     startInputDiagnostics: () => channel.inputDiagnostics.start(),
     setHostShortcutPolicy: async (policy, report) => {
@@ -132,7 +128,7 @@ export class NativeChannel {
   private readyValue: { engine: string; engineProfile: string } | null = null;
   private readyWaiter: {resolve: (reply: Reply) => void; reject: (reason: Error) => void; dispose: () => void} | null = null;
   private frameCount = 0;
-  private available = false;
+  private availability: CheckpointAvailability = {available: false, blocker: "NOT_READY", save: inGameSave};
   private statusTimer: number | null = null;
   private statusActive = false;
   private exiting = false;
@@ -143,14 +139,15 @@ export class NativeChannel {
     this.port.port1.start();
   }
 
-  connect(target: Window) {
+  connect(target: Window, saves: RpgCheckpointBundle | null = null) {
     if (this.connected) {throw new Error("RPG_NATIVE_PROTOCOL_INVALID");}
     this.connected = true;
+    const bundle = saves ? transferredBundle(saves) : null;
     target.postMessage({
       type: "RPG_RUNTIME_NATIVE_CONNECT", protocolVersion,
       launchId: this.config.sessionId, nonce: this.nonce, parentOrigin: window.location.origin,
-      profile: this.config.bridgeProfile, pluginFiles: this.pluginFiles,
-    }, this.config.uniqueOrigin, [this.port.port2, ...this.pluginFiles.map(file => file.data)]);
+      profile: this.config.bridgeProfile, pluginFiles: this.pluginFiles, saves: bundle,
+    }, this.config.uniqueOrigin, [this.port.port2, ...this.pluginFiles.map(file => file.data), ...transferables(bundle)]);
   }
 
   ready(options: NativeReadyOptions = {}) {
@@ -194,24 +191,29 @@ export class NativeChannel {
     });
   }
 
-  async save(expectedEngine: string) {
+  async save(expectedEngine: "RPGMV" | "RPGMZ") {
     const reply = await this.request("SAVE", {});
-    if (reply.type !== "SAVE_RESULT") {throw new Error("RPG_CHECKPOINT_CREATE_FAILED");}
-    const bundle = readBundle(reply.body.bundle, expectedEngine);
-    return encodeRpgCheckpoint(bundle);
+    if (reply.type !== "SAVE_RESULT") {throw new Error("RPG_GAME_SAVE_EXPORT_FAILED");}
+    const checkpoint = await this.readSave(reply.body, expectedEngine);
+    return {...checkpoint, ...(reply.body.screenshot === "UNCHANGED" ? {screenshot: "UNCHANGED" as const} : {})};
   }
 
-  async restore(bundle: Awaited<ReturnType<typeof decodeRpgCheckpoint>>) {
-    const body = {
-      bundle: {
-        engine: bundle.engine, resumeSlot: bundle.resumeSlot,
-        entries: bundle.entries.map((entry) => ({
-          store: entry.store, key: entry.key, mediaType: entry.mediaType, data: entry.data.slice().buffer,
-        })),
-      },
-    };
-    const reply = await this.request("RESTORE", body, 30000);
-    if (reply.type !== "RESTORE_RESULT") {throw new Error("RPG_CHECKPOINT_RESTORE_FAILED");}
+  async acknowledge(checkpoint: RuntimeCheckpoint) {
+    if (checkpoint.format !== rpgGameSaveFormat) {throw new Error("RPG_GAME_SAVE_INVALID");}
+    const bundle = await decodeRpgCheckpoint(checkpoint.bytes, this.config.bridgeProfile);
+    const reply = await this.request("ACKNOWLEDGE_SAVE", {bundle: transferredBundle(bundle)});
+    if (reply.type !== "ACKNOWLEDGE_SAVE_RESULT") {throw new Error("RPG_GAME_SAVE_ACKNOWLEDGE_FAILED");}
+    this.availability = readAvailability(reply.body.availability);
+  }
+
+  private async readSave(body: Record<string, unknown>, engine: "RPGMV" | "RPGMZ"): Promise<RuntimeCheckpoint> {
+    const data = body.data;
+    if (!(data instanceof ArrayBuffer) || !data.byteLength || data.byteLength > maximumCheckpointBytes) {
+      throw new Error("RPG_GAME_SAVE_INVALID");
+    }
+    const bytes = new Uint8Array(data);
+    await decodeRpgCheckpoint(bytes, engine);
+    return {bytes, format: rpgGameSaveFormat};
   }
 
   async screenshot() {
@@ -226,7 +228,7 @@ export class NativeChannel {
   }
 
   frames() { return this.frameCount; }
-  checkpointAvailable() { return this.available; }
+  checkpointAvailability() { return this.availability; }
 
   startStatusLoop() {
     this.statusActive = true;
@@ -234,12 +236,12 @@ export class NativeChannel {
       try {
         const reply = await this.request("STATUS", {}, 5000);
         if (reply.type === "STATUS_RESULT") {
-          this.available = reply.body.ready === true;
+          this.availability = readAvailability(reply.body.availability);
           this.updateFrames(reply.body.frameCount);
           this.inputDiagnostics.update(reply.body.inputDiagnostics);
         }
       } catch {
-        this.available = false;
+        this.availability = {available: false, blocker: "NOT_READY", save: inGameSave};
       }
       if (this.statusActive) {
         this.statusTimer = window.setTimeout(() => { void poll(); }, 500);
@@ -304,7 +306,6 @@ export class NativeChannel {
     } else if (reply.type === "READY") {
       const ready = readReady(reply.body);
       this.readyValue = ready;
-      this.available = true;
       if (this.readyWaiter) {
         const waiter = this.readyWaiter;
         this.readyWaiter = null;
@@ -312,10 +313,24 @@ export class NativeChannel {
         waiter.resolve(reply);
       }
 
-    } else if (reply.type === "EXIT_REQUESTED" && Object.keys(reply.body).length === 0) {
-      this.available = false;
-      this.reportExitRequested();
+    } else if (reply.type === "ERROR") {
+      this.readyWaiter?.dispose();
+      this.readyWaiter?.reject(new Error(typeof reply.body.code === "string" ? reply.body.code : "RPG_NATIVE_RUNTIME_FAILED"));
+      this.readyWaiter = null;
+    } else if (reply.type === "EXIT_REQUESTED" && !this.exiting) {
+      this.exiting = true;
+      this.availability = {available: false, blocker: "NOT_READY", save: inGameSave};
+      this.stopStatusLoop();
+      void this.reportNativeExit(reply.body);
     }
+  }
+
+  private async reportNativeExit(body: Record<string, unknown>) {
+    if (body.data === undefined) {this.reportExitRequested(); return;}
+    try {
+      const checkpoint = await this.readSave(body, this.config.bridgeProfile);
+      this.reportExitRequested({checkpoint, screenshot: null});
+    } catch {this.reportExitRequested();}
   }
 
   private updateFrames(value: unknown) {
@@ -324,7 +339,7 @@ export class NativeChannel {
 
 }
 
-async function bootstrapNativeFrame(config: NativeRpgParameters, frame: HTMLIFrameElement, channel: NativeChannel, signal?: AbortSignal) {
+async function bootstrapNativeFrame(config: NativeRpgParameters, frame: HTMLIFrameElement, channel: NativeChannel, signal?: AbortSignal, restorePayload: Uint8Array | null = null) {
   if (signal?.aborted) {throw new DOMException("Aborted", "AbortError");}
   const target = frame.contentWindow;
   if (!target) {throw new Error("PLAYER_FRAME_UNAVAILABLE");}
@@ -338,9 +353,16 @@ async function bootstrapNativeFrame(config: NativeRpgParameters, frame: HTMLIFra
       signal?.removeEventListener("abort", abort);
       if (error) {reject(error);} else {resolve();}
     }
+    let connecting = false;
     function receive(event: MessageEvent) {
       if (event.source !== runtimeWindow || event.origin !== config.uniqueOrigin) {return;}
-      if (nativeBootstrapAction(event.data) === "CONNECT") {channel.connect(runtimeWindow); finish();}
+      if (nativeBootstrapAction(event.data) !== "CONNECT" || connecting) {return;}
+      connecting = true;
+      void (async () => {
+        const saves = restorePayload ? await decodeRpgCheckpoint(restorePayload, config.bridgeProfile) : null;
+        signal?.throwIfAborted();
+        channel.connect(runtimeWindow, saves);
+      })().then(() => finish(), error => finish(error as Error));
     }
     window.addEventListener("message", receive, true);
     signal?.addEventListener("abort", abort, {once: true});
@@ -369,25 +391,29 @@ function readReady(body: Record<string, unknown>) {
   return { engine: body.engine, engineProfile: body.engineProfile };
 }
 
-function readBundle(value: unknown, engine: string): RpgCheckpointBundle {
-  if (!value || typeof value !== "object" || Array.isArray(value)) {throw new Error("RPG_CHECKPOINT_CREATE_FAILED");}
-  const bundle = value as { engine?: unknown; resumeSlot?: unknown; entries?: unknown };
-  if (bundle.engine !== engine || !Number.isSafeInteger(bundle.resumeSlot) || Number(bundle.resumeSlot) < 1 ||
-    !Array.isArray(bundle.entries) || !bundle.entries.length || bundle.entries.length > 130) {throw new Error("RPG_CHECKPOINT_CREATE_FAILED");}
-  const expectedStore = engine === "RPGMV" ? "LOCAL_STORAGE" : "LOCALFORAGE";
-  const allowed = engine === "RPGMV" ? ["0", String(bundle.resumeSlot)] : ["global", `file${bundle.resumeSlot}`];
-  const entries = bundle.entries.map((raw) => {
-    if (!raw || typeof raw !== "object" || Array.isArray(raw)) {throw new Error("RPG_CHECKPOINT_CREATE_FAILED");}
-    const entry = raw as { store?: unknown; key?: unknown; mediaType?: unknown; data?: unknown };
-    const pluginFile = engine === "RPGMV" && entry.store === "FILESYSTEM" &&
-      typeof entry.key === "string" && isPluginSavePath(entry.key);
-    if (typeof entry.key !== "string" || (!pluginFile && (entry.store !== expectedStore || !allowed.includes(entry.key))) ||
-      entry.mediaType !== "application/octet-stream" || !(entry.data instanceof ArrayBuffer) || (!pluginFile && !entry.data.byteLength) ||
-      entry.data.byteLength > maximumCheckpointBytes) {throw new Error("RPG_CHECKPOINT_CREATE_FAILED");}
-    const store: RpgCheckpointStore = pluginFile ? "FILESYSTEM" : expectedStore;
-    return { store, key: entry.key, mediaType: "application/octet-stream" as const, data: new Uint8Array(entry.data) };
-  });
-  return { engine: engine as "RPGMV" | "RPGMZ", resumeSlot: Number(bundle.resumeSlot), entries };
+function transferredBundle(bundle: RpgCheckpointBundle) {
+  return {engine: bundle.engine, entries: bundle.entries.map(entry => ({
+    store: entry.store, key: entry.key, mediaType: entry.mediaType, data: entry.data.slice().buffer,
+  }))};
+}
+
+function readAvailability(value: unknown): CheckpointAvailability {
+  if (!value || typeof value !== "object" || !("available" in value)) {throw new Error("RPG_NATIVE_PROTOCOL_INVALID");}
+  const save = {...inGameSave, dataKind: readDataKind(value)};
+  if (value.available === true && "revision" in value && typeof value.revision === "string") {
+    return {available: true, blocker: null, revision: value.revision, save};
+  }
+  if (value.available === false && "blocker" in value && ["NOT_READY", "NO_SAVE", "UNCHANGED"].includes(String(value.blocker))) {
+    return {available: false, blocker: value.blocker as "NOT_READY" | "NO_SAVE" | "UNCHANGED", save};
+  }
+  throw new Error("RPG_NATIVE_PROTOCOL_INVALID");
+}
+
+function readDataKind(value: object): "PROGRESS" | "STORAGE" | undefined {
+  const save = "save" in value && value.save && typeof value.save === "object" ? value.save : null;
+  const kind = save && "dataKind" in save ? save.dataKind : undefined;
+  if (kind === undefined || kind === "PROGRESS" || kind === "STORAGE") {return kind;}
+  throw new Error("RPG_NATIVE_PROTOCOL_INVALID");
 }
 
 function transferables(value: unknown): Transferable[] {

@@ -932,6 +932,398 @@
     };
   }
 
+  // node_modules/@noble/hashes/utils.js
+  function isBytes(a) {
+    return a instanceof Uint8Array || ArrayBuffer.isView(a) && a.constructor.name === "Uint8Array";
+  }
+  function abytes(value, length, title = "") {
+    let bytes = isBytes(value), len = value?.length, needsLen = length !== void 0;
+    if (!bytes || needsLen && len !== length) {
+      let prefix = title && `"${title}" `, ofLen = needsLen ? ` of length ${length}` : "", got = bytes ? `length=${len}` : `type=${typeof value}`;
+      throw new Error(prefix + "expected Uint8Array" + ofLen + ", got " + got);
+    }
+    return value;
+  }
+  function aexists(instance, checkFinished = !0) {
+    if (instance.destroyed)
+      throw new Error("Hash instance has been destroyed");
+    if (checkFinished && instance.finished)
+      throw new Error("Hash#digest() has already been called");
+  }
+  function aoutput(out, instance) {
+    abytes(out, void 0, "digestInto() output");
+    let min = instance.outputLen;
+    if (out.length < min)
+      throw new Error('"digestInto() output" expected to be of length >=' + min);
+  }
+  function clean(...arrays) {
+    for (let i = 0; i < arrays.length; i++)
+      arrays[i].fill(0);
+  }
+  function createView(arr) {
+    return new DataView(arr.buffer, arr.byteOffset, arr.byteLength);
+  }
+  function rotr(word, shift) {
+    return word << 32 - shift | word >>> shift;
+  }
+  function createHasher(hashCons, info = {}) {
+    let hashC = (msg, opts) => hashCons(opts).update(msg).digest(), tmp = hashCons(void 0);
+    return hashC.outputLen = tmp.outputLen, hashC.blockLen = tmp.blockLen, hashC.create = (opts) => hashCons(opts), Object.assign(hashC, info), Object.freeze(hashC);
+  }
+  var oidNist = (suffix) => ({
+    oid: Uint8Array.from([6, 9, 96, 134, 72, 1, 101, 3, 4, 2, suffix])
+  });
+
+  // node_modules/@noble/hashes/_md.js
+  function Chi(a, b, c) {
+    return a & b ^ ~a & c;
+  }
+  function Maj(a, b, c) {
+    return a & b ^ a & c ^ b & c;
+  }
+  var HashMD = class {
+    blockLen;
+    outputLen;
+    padOffset;
+    isLE;
+    // For partial updates less than block size
+    buffer;
+    view;
+    finished = !1;
+    length = 0;
+    pos = 0;
+    destroyed = !1;
+    constructor(blockLen, outputLen, padOffset, isLE) {
+      this.blockLen = blockLen, this.outputLen = outputLen, this.padOffset = padOffset, this.isLE = isLE, this.buffer = new Uint8Array(blockLen), this.view = createView(this.buffer);
+    }
+    update(data) {
+      aexists(this), abytes(data);
+      let { view, buffer, blockLen } = this, len = data.length;
+      for (let pos = 0; pos < len; ) {
+        let take = Math.min(blockLen - this.pos, len - pos);
+        if (take === blockLen) {
+          let dataView = createView(data);
+          for (; blockLen <= len - pos; pos += blockLen)
+            this.process(dataView, pos);
+          continue;
+        }
+        buffer.set(data.subarray(pos, pos + take), this.pos), this.pos += take, pos += take, this.pos === blockLen && (this.process(view, 0), this.pos = 0);
+      }
+      return this.length += data.length, this.roundClean(), this;
+    }
+    digestInto(out) {
+      aexists(this), aoutput(out, this), this.finished = !0;
+      let { buffer, view, blockLen, isLE } = this, { pos } = this;
+      buffer[pos++] = 128, clean(this.buffer.subarray(pos)), this.padOffset > blockLen - pos && (this.process(view, 0), pos = 0);
+      for (let i = pos; i < blockLen; i++)
+        buffer[i] = 0;
+      view.setBigUint64(blockLen - 8, BigInt(this.length * 8), isLE), this.process(view, 0);
+      let oview = createView(out), len = this.outputLen;
+      if (len % 4)
+        throw new Error("_sha2: outputLen must be aligned to 32bit");
+      let outLen = len / 4, state = this.get();
+      if (outLen > state.length)
+        throw new Error("_sha2: outputLen bigger than state");
+      for (let i = 0; i < outLen; i++)
+        oview.setUint32(4 * i, state[i], isLE);
+    }
+    digest() {
+      let { buffer, outputLen } = this;
+      this.digestInto(buffer);
+      let res = buffer.slice(0, outputLen);
+      return this.destroy(), res;
+    }
+    _cloneInto(to) {
+      to ||= new this.constructor(), to.set(...this.get());
+      let { blockLen, buffer, length, finished, destroyed, pos } = this;
+      return to.destroyed = destroyed, to.finished = finished, to.length = length, to.pos = pos, length % blockLen && to.buffer.set(buffer), to;
+    }
+    clone() {
+      return this._cloneInto();
+    }
+  }, SHA256_IV = /* @__PURE__ */ Uint32Array.from([
+    1779033703,
+    3144134277,
+    1013904242,
+    2773480762,
+    1359893119,
+    2600822924,
+    528734635,
+    1541459225
+  ]);
+
+  // node_modules/@noble/hashes/sha2.js
+  var SHA256_K = /* @__PURE__ */ Uint32Array.from([
+    1116352408,
+    1899447441,
+    3049323471,
+    3921009573,
+    961987163,
+    1508970993,
+    2453635748,
+    2870763221,
+    3624381080,
+    310598401,
+    607225278,
+    1426881987,
+    1925078388,
+    2162078206,
+    2614888103,
+    3248222580,
+    3835390401,
+    4022224774,
+    264347078,
+    604807628,
+    770255983,
+    1249150122,
+    1555081692,
+    1996064986,
+    2554220882,
+    2821834349,
+    2952996808,
+    3210313671,
+    3336571891,
+    3584528711,
+    113926993,
+    338241895,
+    666307205,
+    773529912,
+    1294757372,
+    1396182291,
+    1695183700,
+    1986661051,
+    2177026350,
+    2456956037,
+    2730485921,
+    2820302411,
+    3259730800,
+    3345764771,
+    3516065817,
+    3600352804,
+    4094571909,
+    275423344,
+    430227734,
+    506948616,
+    659060556,
+    883997877,
+    958139571,
+    1322822218,
+    1537002063,
+    1747873779,
+    1955562222,
+    2024104815,
+    2227730452,
+    2361852424,
+    2428436474,
+    2756734187,
+    3204031479,
+    3329325298
+  ]), SHA256_W = /* @__PURE__ */ new Uint32Array(64), SHA2_32B = class extends HashMD {
+    constructor(outputLen) {
+      super(64, outputLen, 8, !1);
+    }
+    get() {
+      let { A, B, C, D, E, F, G, H } = this;
+      return [A, B, C, D, E, F, G, H];
+    }
+    // prettier-ignore
+    set(A, B, C, D, E, F, G, H) {
+      this.A = A | 0, this.B = B | 0, this.C = C | 0, this.D = D | 0, this.E = E | 0, this.F = F | 0, this.G = G | 0, this.H = H | 0;
+    }
+    process(view, offset) {
+      for (let i = 0; i < 16; i++, offset += 4)
+        SHA256_W[i] = view.getUint32(offset, !1);
+      for (let i = 16; i < 64; i++) {
+        let W15 = SHA256_W[i - 15], W2 = SHA256_W[i - 2], s0 = rotr(W15, 7) ^ rotr(W15, 18) ^ W15 >>> 3, s1 = rotr(W2, 17) ^ rotr(W2, 19) ^ W2 >>> 10;
+        SHA256_W[i] = s1 + SHA256_W[i - 7] + s0 + SHA256_W[i - 16] | 0;
+      }
+      let { A, B, C, D, E, F, G, H } = this;
+      for (let i = 0; i < 64; i++) {
+        let sigma1 = rotr(E, 6) ^ rotr(E, 11) ^ rotr(E, 25), T1 = H + sigma1 + Chi(E, F, G) + SHA256_K[i] + SHA256_W[i] | 0, T2 = (rotr(A, 2) ^ rotr(A, 13) ^ rotr(A, 22)) + Maj(A, B, C) | 0;
+        H = G, G = F, F = E, E = D + T1 | 0, D = C, C = B, B = A, A = T1 + T2 | 0;
+      }
+      A = A + this.A | 0, B = B + this.B | 0, C = C + this.C | 0, D = D + this.D | 0, E = E + this.E | 0, F = F + this.F | 0, G = G + this.G | 0, H = H + this.H | 0, this.set(A, B, C, D, E, F, G, H);
+    }
+    roundClean() {
+      clean(SHA256_W);
+    }
+    destroy() {
+      this.set(0, 0, 0, 0, 0, 0, 0, 0), clean(this.buffer);
+    }
+  }, _SHA256 = class extends SHA2_32B {
+    // We cannot use array here since array allows indexing by variable
+    // which means optimizer/compiler cannot use registers.
+    A = SHA256_IV[0] | 0;
+    B = SHA256_IV[1] | 0;
+    C = SHA256_IV[2] | 0;
+    D = SHA256_IV[3] | 0;
+    E = SHA256_IV[4] | 0;
+    F = SHA256_IV[5] | 0;
+    G = SHA256_IV[6] | 0;
+    H = SHA256_IV[7] | 0;
+    constructor() {
+      super(32);
+    }
+  };
+  var sha256 = /* @__PURE__ */ createHasher(
+    () => new _SHA256(),
+    /* @__PURE__ */ oidNist(1)
+  );
+
+  // src/checkpoint.ts
+  var rpgCheckpointMagic = "RTRPGSV1";
+  function hex(bytes) {
+    return [...bytes].map((value) => value.toString(16).padStart(2, "0")).join("");
+  }
+  async function digest(bytes) {
+    let value = await crypto.subtle.digest("SHA-256", bytes.slice());
+    return hex(new Uint8Array(value));
+  }
+  function validEngine(value) {
+    return ["RPG2000", "RPG2003", "RPGXP", "RPGVX", "RPGVXAce", "RPGMV", "RPGMZ"].includes(String(value));
+  }
+  function validStore(value) {
+    return value === "FILESYSTEM" || value === "LOCAL_STORAGE" || value === "LOCALFORAGE";
+  }
+  function validKey(store, key) {
+    return !key || new TextEncoder().encode(key).byteLength > 1024 || key.includes("\0") || key.normalize("NFC") !== key ? !1 : store !== "FILESYSTEM" ? !0 : !key.startsWith("/") && !key.includes("\\") && !key.includes("//") && key.split("/").every((part) => part !== "" && part !== "." && part !== "..");
+  }
+  function assertHeader(bundle) {
+    if (!validEngine(bundle.engine) || !Array.isArray(bundle.entries) || !bundle.entries.length || bundle.entries.length > 512)
+      throw new Error("RPG_CHECKPOINT_INVALID");
+  }
+  async function encodeRpgCheckpoint(bundle) {
+    assertHeader(bundle);
+    let ordered = bundle.entries.map((entry) => ({ ...entry, data: new Uint8Array(entry.data) })).sort(rpgSaveEntryOrder), manifestEntries = [], offset = 0, previous = "";
+    for (let entry of ordered) {
+      let identity = `${entry.store}\0${entry.key}`;
+      if (!validStore(entry.store) || !validKey(entry.store, entry.key) || entry.mediaType !== "application/octet-stream" || identity <= previous)
+        throw new Error("RPG_CHECKPOINT_INVALID");
+      manifestEntries.push({
+        store: entry.store,
+        key: entry.key,
+        mediaType: entry.mediaType,
+        offset,
+        sizeBytes: entry.data.byteLength,
+        sha256: await digest(entry.data)
+      }), offset += entry.data.byteLength, previous = identity;
+    }
+    let manifest = {
+      engine: bundle.engine,
+      entries: manifestEntries.map((entry) => ({
+        key: entry.key,
+        mediaType: entry.mediaType,
+        offset: entry.offset,
+        sha256: entry.sha256,
+        sizeBytes: entry.sizeBytes,
+        store: entry.store
+      })),
+      schemaVersion: 1
+    }, manifestBytes = new TextEncoder().encode(JSON.stringify(manifest)), total = rpgCheckpointMagic.length + 4 + manifestBytes.byteLength + offset;
+    if (!manifestBytes.byteLength || manifestBytes.byteLength > 262144 || total > 67108864)
+      throw new Error("RPG_CHECKPOINT_INVALID");
+    let result = new Uint8Array(total);
+    result.set(new TextEncoder().encode(rpgCheckpointMagic)), new DataView(result.buffer).setUint32(rpgCheckpointMagic.length, manifestBytes.byteLength), result.set(manifestBytes, rpgCheckpointMagic.length + 4);
+    let payloadOffset = rpgCheckpointMagic.length + 4 + manifestBytes.byteLength;
+    for (let entry of ordered)
+      result.set(entry.data, payloadOffset), payloadOffset += entry.data.byteLength;
+    return result;
+  }
+  function parseManifest(bytes) {
+    if (bytes.byteLength < rpgCheckpointMagic.length + 4 || bytes.byteLength > 67108864 || new TextDecoder().decode(bytes.subarray(0, rpgCheckpointMagic.length)) !== rpgCheckpointMagic)
+      throw new Error("RPG_CHECKPOINT_INVALID");
+    let manifestSize = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength).getUint32(rpgCheckpointMagic.length), start = rpgCheckpointMagic.length + 4, end = start + manifestSize;
+    if (!manifestSize || manifestSize > 262144 || end > bytes.byteLength)
+      throw new Error("RPG_CHECKPOINT_INVALID");
+    let parsed;
+    try {
+      parsed = JSON.parse(new TextDecoder("utf-8", { fatal: !0 }).decode(bytes.subarray(start, end)));
+    } catch {
+      throw new Error("RPG_CHECKPOINT_INVALID");
+    }
+    return { manifest: parsed, payload: bytes.subarray(end) };
+  }
+  async function decodeRpgCheckpoint(bytes, expectedEngine) {
+    let { manifest, payload } = parseManifest(bytes);
+    if (!validManifestHeader(manifest, expectedEngine))
+      throw new Error("RPG_CHECKPOINT_INVALID");
+    let entries = await decodeManifestEntries(manifest.entries, payload);
+    return { engine: expectedEngine, entries };
+  }
+  function validManifestHeader(manifest, expectedEngine) {
+    return manifest && manifest.schemaVersion === 1 && manifest.engine === expectedEngine && Array.isArray(manifest.entries) && manifest.entries.length > 0 && manifest.entries.length <= 512;
+  }
+  async function decodeManifestEntries(manifestEntries, payload) {
+    let entries = [], offset = 0, previous = "";
+    for (let entry of manifestEntries) {
+      let identity = `${entry.store}\0${entry.key}`;
+      if (!validDecodedEntry(entry, offset, previous, payload.byteLength))
+        throw new Error("RPG_CHECKPOINT_INVALID");
+      let data = payload.slice(offset, offset + entry.sizeBytes);
+      if (await digest(data) !== entry.sha256)
+        throw new Error("RPG_CHECKPOINT_INVALID");
+      entries.push({ store: entry.store, key: entry.key, mediaType: entry.mediaType, data }), offset += entry.sizeBytes, previous = identity;
+    }
+    if (offset !== payload.byteLength)
+      throw new Error("RPG_CHECKPOINT_INVALID");
+    return entries;
+  }
+  function validDecodedEntry(entry, offset, previous, payloadBytes) {
+    let identity = `${entry.store}\0${entry.key}`;
+    return validStore(entry.store) && validKey(entry.store, entry.key) && entry.mediaType === "application/octet-stream" && entry.offset === offset && Number.isSafeInteger(entry.sizeBytes) && entry.sizeBytes >= 0 && /^[0-9a-f]{64}$/.test(entry.sha256) && identity > previous && entry.sizeBytes <= payloadBytes - offset;
+  }
+  function rpgSaveEntryOrder(left, right) {
+    let a = `${left.store}\0${left.key}`, b = `${right.store}\0${right.key}`;
+    return a < b ? -1 : a > b ? 1 : 0;
+  }
+
+  // src/rpgmaker/game-saves.ts
+  var inGameSave = { capture: "IN_GAME", restore: "IN_GAME", captureAvailable: !1 }, RpgGameSaves = class {
+    constructor(engine, read, restored, isProgress2 = () => !0) {
+      this.engine = engine;
+      this.read = read;
+      this.isProgress = isProgress2;
+      this.baseline = signature(restored?.entries ?? []), this.baselineEntries = copyEntries(restored?.entries ?? []);
+    }
+    baseline;
+    baselineEntries;
+    availability() {
+      let entries = this.read(), save = { ...inGameSave, dataKind: entries.some(this.isProgress) ? "PROGRESS" : "STORAGE" };
+      if (!entries.length)
+        return { available: !1, blocker: "NO_SAVE", save };
+      let revision = signature(entries);
+      return revision === this.baseline ? { available: !1, blocker: "UNCHANGED", save } : { available: !0, blocker: null, revision, save };
+    }
+    async capture() {
+      let entries = this.read();
+      if (!entries.length || signature(entries) === this.baseline)
+        throw new Error("RPG_GAME_SAVE_UNAVAILABLE");
+      let unchanged = signature(entries.filter(this.isProgress)) === signature(this.baselineEntries.filter(this.isProgress));
+      return {
+        bytes: await encodeRpgCheckpoint({ engine: this.engine, entries }),
+        ...unchanged ? { screenshot: "UNCHANGED" } : {}
+      };
+    }
+    async acknowledge(bytes) {
+      let bundle = await decodeRpgCheckpoint(bytes, this.engine);
+      this.acknowledgeBundle(bundle);
+    }
+    acknowledgeBundle(bundle) {
+      if (bundle.engine !== this.engine)
+        throw new Error("RPG_GAME_SAVE_INVALID");
+      this.baseline = signature(bundle.entries), this.baselineEntries = copyEntries(bundle.entries);
+    }
+  };
+  function copyEntries(entries) {
+    return entries.map((entry) => ({ ...entry, data: entry.data.slice() }));
+  }
+  function signature(entries) {
+    let hash = sha256.create(), encoder3 = new TextEncoder();
+    for (let entry of [...entries].sort(rpgSaveEntryOrder))
+      hash.update(encoder3.encode(JSON.stringify([entry.store, entry.key, entry.data.byteLength]))), hash.update(entry.data);
+    return [...hash.digest()].map((byte) => byte.toString(16).padStart(2, "0")).join("");
+  }
+
   // src/native-web/plugin-files.ts
   var encoder = new TextEncoder(), decoder = new TextDecoder();
   function canonical(path) {
@@ -1034,6 +1426,128 @@
     };
   }
 
+  // src/native-web/game-saves.ts
+  var encoder2 = new TextEncoder(), decoder2 = new TextDecoder("utf-8", { fatal: !0 }), maximumBytes = 64 * 1024 * 1024;
+  function createRpgWebSaves(global, engine, initial, pluginFiles) {
+    let restored = initial === null ? null : readWebSaveBundle(initial, engine), forage = [], ready = !1, initialization = null, read = () => {
+      let entries = [], storage = global.localStorage;
+      if (storage.length > 512)
+        throw new Error("RPG_GAME_SAVE_INVALID");
+      for (let index = 0; index < storage.length; index++) {
+        let key = storage.key(index);
+        key !== null && entries.push(textEntry("LOCAL_STORAGE", key, storage.getItem(key)));
+      }
+      for (let file of pluginFiles?.snapshot() ?? [])
+        entries.push({
+          store: "FILESYSTEM",
+          key: file.path,
+          mediaType: "application/octet-stream",
+          data: new Uint8Array(file.data)
+        });
+      return entries.push(...forage), validateSize(entries), entries;
+    }, saves = new RpgGameSaves(engine, read, restored, (entry) => isProgress(entry, global, engine));
+    restored && global.localStorage.clear();
+    for (let entry of restored?.entries ?? [])
+      entry.store === "LOCAL_STORAGE" && global.localStorage.setItem(entry.key, decoder2.decode(entry.data));
+    pluginFiles && pluginFiles.restore((restored?.entries ?? []).filter((entry) => entry.store === "FILESYSTEM").map((entry) => ({ path: entry.key, data: entry.data.slice().buffer })));
+    let refresh = async () => {
+      if (engine !== "RPGMZ")
+        return;
+      let storage = global.localforage;
+      if (!storage)
+        throw new Error("RPG_GAME_SAVE_STORAGE_UNAVAILABLE");
+      let keys = await storage.keys();
+      if (keys.length > 512)
+        throw new Error("RPG_GAME_SAVE_INVALID");
+      let entries = [];
+      for (let key of keys.sort()) {
+        if (key === global.StorageManager?.forageTestKey?.())
+          continue;
+        let value = await storage.getItem(key);
+        value !== null && entries.push(textEntry("LOCALFORAGE", key, value));
+      }
+      validateSize(entries), forage = entries;
+    };
+    return {
+      initialize() {
+        return initialization ??= (async () => {
+          if (engine === "RPGMZ") {
+            if (!global.localforage)
+              throw new Error("RPG_GAME_SAVE_STORAGE_UNAVAILABLE");
+            restored && await global.localforage.clear();
+            for (let entry of restored?.entries ?? [])
+              entry.store === "LOCALFORAGE" && await global.localforage.setItem(entry.key, decoder2.decode(entry.data));
+          }
+          await refresh(), ready = !0;
+        })();
+      },
+      async availability() {
+        return ready ? (await refresh(), saves.availability()) : { available: !1, blocker: "NOT_READY" };
+      },
+      async capture() {
+        if (!ready)
+          throw new Error("RPG_GAME_SAVE_NOT_READY");
+        return await refresh(), saves.capture();
+      },
+      acknowledge(bundle) {
+        saves.acknowledgeBundle(readWebSaveBundle(bundle, engine));
+      },
+      isReady: () => ready
+    };
+  }
+  function readWebSaveBundle(value, engine) {
+    if (!value || typeof value != "object" || !("engine" in value) || value.engine !== engine || !("entries" in value) || !Array.isArray(value.entries) || !value.entries.length || value.entries.length > 512)
+      throw new Error("RPG_GAME_SAVE_INVALID");
+    let entries = [], seen = /* @__PURE__ */ new Set();
+    for (let entry of value.entries) {
+      let parsed = parseWebEntry(entry, engine), identity = `${entry.store}\0${entry.key}`;
+      if (seen.has(identity))
+        throw new Error("RPG_GAME_SAVE_INVALID");
+      seen.add(identity), entries.push(parsed);
+    }
+    return validateSize(entries), { engine, entries };
+  }
+  function parseWebEntry(entry, engine) {
+    if (!entry || typeof entry != "object" || typeof entry.key != "string" || !entry.key || encoder2.encode(entry.key).length > 1024 || entry.key.includes("\0") || entry.key.normalize("NFC") !== entry.key || entry.mediaType !== "application/octet-stream" || !(entry.data instanceof ArrayBuffer) || !validStore2(entry.store, entry.key, engine))
+      throw new Error("RPG_GAME_SAVE_INVALID");
+    let data = new Uint8Array(entry.data).slice();
+    return entry.store !== "FILESYSTEM" && decoder2.decode(data), { store: entry.store, key: entry.key, data, mediaType: "application/octet-stream" };
+  }
+  function validStore2(store, key, engine) {
+    return store === "LOCAL_STORAGE" || engine === "RPGMZ" && store === "LOCALFORAGE" || engine === "RPGMV" && store === "FILESYSTEM" && isPluginSavePath(key);
+  }
+  function textEntry(store, key, value) {
+    if (typeof value != "string" || !key || encoder2.encode(key).length > 1024 || key.includes("\0") || key.normalize("NFC") !== key)
+      throw new Error("RPG_GAME_SAVE_INVALID");
+    return { store, key, mediaType: "application/octet-stream", data: encoder2.encode(value) };
+  }
+  function validateSize(entries) {
+    if (entries.length > 512 || entries.reduce((total, entry) => total + entry.data.byteLength, 0) > maximumBytes)
+      throw new Error("RPG_GAME_SAVE_INVALID");
+  }
+  function isProgress(entry, global, engine) {
+    if (entry.store === "FILESYSTEM")
+      return /(?:^|\/)file\d+\.rpgsave$/iu.test(entry.key);
+    let maximum = global.DataManager?.maxSavefiles?.();
+    if (typeof maximum != "number" || !Number.isSafeInteger(maximum) || maximum < 1 || maximum > 512)
+      return !1;
+    try {
+      for (let slot = engine === "RPGMZ" ? 0 : 1; slot <= maximum; slot++)
+        if (nativeProgressKey(global, engine, entry.store, slot) === entry.key)
+          return !0;
+    } catch {
+    }
+    return !1;
+  }
+  function nativeProgressKey(global, engine, store, slot) {
+    if (engine === "RPGMV" && store === "LOCAL_STORAGE")
+      return global.StorageManager?.webStorageKey?.(slot);
+    if (engine === "RPGMZ" && store === "LOCALFORAGE") {
+      let name = global.DataManager?.makeSavename?.(slot);
+      return name === void 0 ? void 0 : global.StorageManager?.forageKey?.(name);
+    }
+  }
+
   // assets/runtime/native/bridge-source.js
   function installRpgRuntimeNativeBridge(global, inputFilter) {
     "use strict";
@@ -1066,7 +1580,7 @@
       ["luk", "\u5E78\u8FD0"]
     ]);
     inputFilter.onHostShortcut((shortcut) => event("HOST_SHORTCUT", { shortcut }));
-    let encoder2 = new TextEncoder(), decoder2 = new TextDecoder("utf-8", { fatal: !0 }), launchId = null, nonce = null, parentOrigin = null, port = null, profile = null, lastRequestId = 0, requestPending = !1, frameCount = 0, engineReadySent = !1, sceneManagerHooked = !1, exitRequested = !1, bootCompleted = !1, titleStarted = !1, closed = !1, pluginFiles = null, inputDiagnostics = null, restoreViewport = null, editorMapCache = /* @__PURE__ */ new Map();
+    let encoder3 = new TextEncoder(), launchId = null, nonce = null, parentOrigin = null, port = null, profile = null, lastRequestId = 0, requestPending = !1, frameCount = 0, engineReadySent = !1, sceneManagerHooked = !1, exitRequested = !1, nativeSaves = null, closed = !1, pluginFiles = null, inputDiagnostics = null, restoreViewport = null, editorMapCache = /* @__PURE__ */ new Map();
     function ownKeys(value, expected) {
       if (!value || typeof value != "object" || Array.isArray(value)) return !1;
       let keys = Object.keys(value).sort();
@@ -1083,175 +1597,16 @@
     function send(requestId, type, body, transfer) {
       if (!port) return;
       let message = envelope(requestId, type, body);
-      if (encoder2.encode(JSON.stringify(message)).byteLength > 65536)
+      if (encoder3.encode(JSON.stringify(message)).byteLength > 65536)
         throw new Error("RPG_NATIVE_CONTROL_TOO_LARGE");
       port.postMessage(message, transfer || []);
     }
     function event(type, body) {
       send(0, type, body);
     }
-    function readyForCheckpoint() {
-      let scene = global.SceneManager && global.SceneManager._scene, sceneMap = global.Scene_Map, messageBusy = global.$gameMessage && typeof global.$gameMessage.isBusy == "function" && global.$gameMessage.isBusy(), eventBusy = global.$gameMap && typeof global.$gameMap.isEventRunning == "function" && global.$gameMap.isEventRunning();
-      return !!(scene && sceneMap && scene instanceof sceneMap && !messageBusy && !eventBusy && global.DataManager && global.StorageManager && global.$gameMap && typeof global.$gameMap.mapId == "function" && global.$gameMap.mapId() > 0);
-    }
     function engineRuntimeReady() {
       let manager = global.SceneManager, utils = global.Utils, expectedName = profile === "RPGMV" ? "MV" : "MZ";
       return !!(manager && typeof manager.updateMain == "function" && global.DataManager && global.StorageManager && utils && utils.RPGMAKER_NAME === expectedName);
-    }
-    function storageNames(slot) {
-      return profile === "RPGMZ" ? ["global", `file${slot}`] : ["0", String(slot)];
-    }
-    function replaceMethod(target, name, create, restorers) {
-      if (!target || typeof target[name] != "function") return !1;
-      let original = target[name];
-      return target[name] = create(original), restorers.push(function() {
-        target[name] = original;
-      }), !0;
-    }
-    function runGameSystemHook(name) {
-      let gameSystem = global.$gameSystem;
-      gameSystem && typeof gameSystem[name] == "function" && gameSystem[name]();
-    }
-    async function captureNativeSave() {
-      if (!readyForCheckpoint()) throw new Error("RPG_CHECKPOINT_UNAVAILABLE");
-      let slot = Number(global.DataManager.maxSavefiles()) + 1;
-      if (!Number.isSafeInteger(slot) || slot < 1) throw new Error("RPG_CHECKPOINT_SLOT_INVALID");
-      let captured = /* @__PURE__ */ new Map(), storage = global.StorageManager, restorers = [], allowed = new Set(storageNames(slot)), supported = !1;
-      if (profile === "RPGMV" ? supported = replaceMethod(storage, "save", (original) => function(savefileId, json) {
-        let key = String(savefileId);
-        if (!allowed.has(key)) return original.apply(this, arguments);
-        let bytes = encoder2.encode(String(json));
-        if (!bytes.byteLength || bytes.byteLength > 67108864) throw new Error("RPG_CHECKPOINT_TOO_LARGE");
-        captured.set(key, bytes);
-      }, restorers) : supported = replaceMethod(storage, "saveObject", (original) => async function(saveName, object) {
-        let key = String(saveName);
-        if (!allowed.has(key)) return original.apply(this, arguments);
-        let jsonEx = global.JsonEx;
-        if (!jsonEx || typeof jsonEx.stringify != "function")
-          throw new Error("RPG_CHECKPOINT_STORAGE_UNSUPPORTED");
-        let serialized = jsonEx.stringify(object);
-        if (typeof serialized != "string") throw new Error("RPG_CHECKPOINT_CREATE_FAILED");
-        let bytes = encoder2.encode(serialized);
-        if (!bytes.byteLength || bytes.byteLength > 67108864) throw new Error("RPG_CHECKPOINT_TOO_LARGE");
-        captured.set(key, bytes);
-      }, restorers), !supported) throw new Error("RPG_CHECKPOINT_STORAGE_UNSUPPORTED");
-      try {
-        if (runGameSystemHook("onBeforeSave"), await global.DataManager.saveGame(slot) === !1 || !captured.has(storageNames(slot)[1])) throw new Error("RPG_CHECKPOINT_CREATE_FAILED");
-      } finally {
-        restorers.reverse().forEach((restore) => restore());
-      }
-      let entries = [...captured.entries()].map(([key, bytes]) => ({
-        store: profile === "RPGMZ" ? "LOCALFORAGE" : "LOCAL_STORAGE",
-        key,
-        mediaType: "application/octet-stream",
-        data: bytes.slice().buffer
-      }));
-      if (profile === "RPGMV" && pluginFiles)
-        for (let file of pluginFiles.snapshot()) entries.push({
-          store: "FILESYSTEM",
-          key: file.path,
-          mediaType: "application/octet-stream",
-          data: file.data
-        });
-      return { bundle: { engine: engine(), resumeSlot: slot, entries } };
-    }
-    function validateRestoreBundle(bundle) {
-      if (!bundle || bundle.engine !== engine() || !Number.isSafeInteger(bundle.resumeSlot) || bundle.resumeSlot < 1 || !Array.isArray(bundle.entries) || bundle.entries.length < 1 || bundle.entries.length > 130)
-        throw new Error("RPG_CHECKPOINT_RESTORE_INVALID");
-      let allowed = new Set(storageNames(bundle.resumeSlot)), expectedStore = profile === "RPGMZ" ? "LOCALFORAGE" : "LOCAL_STORAGE", entries = /* @__PURE__ */ new Map(), files = [], fileKeys = /* @__PURE__ */ new Set(), totalBytes = 0;
-      for (let entry of bundle.entries) {
-        if (!ownKeys(entry, ["data", "key", "mediaType", "store"]) || typeof entry.key != "string" || entry.mediaType !== "application/octet-stream" || !(entry.data instanceof ArrayBuffer) || entry.data.byteLength > 67108864)
-          throw new Error("RPG_CHECKPOINT_RESTORE_INVALID");
-        if (totalBytes += entry.data.byteLength, totalBytes > 67108864) throw new Error("RPG_CHECKPOINT_RESTORE_INVALID");
-        if (profile === "RPGMV" && entry.store === "FILESYSTEM" && isPluginSavePath(entry.key) && !fileKeys.has(entry.key))
-          fileKeys.add(entry.key), files.push({ path: entry.key, data: entry.data });
-        else if (entry.store === expectedStore && allowed.has(entry.key) && !entries.has(entry.key) && entry.data.byteLength)
-          entries.set(entry.key, new Uint8Array(entry.data));
-        else throw new Error("RPG_CHECKPOINT_RESTORE_INVALID");
-      }
-      if (!entries.has(storageNames(bundle.resumeSlot)[1])) throw new Error("RPG_CHECKPOINT_RESTORE_INVALID");
-      return { slot: bundle.resumeSlot, entries, files };
-    }
-    async function restoreNativeSave(bundle) {
-      let validated = validateRestoreBundle(bundle), deadline = performance.now() + 3e4, releaseInput = suppressRestoreInput();
-      try {
-        if (!global.DataManager || typeof global.DataManager.isDatabaseLoaded != "function")
-          throw new Error("RPG_CHECKPOINT_DATABASE_UNAVAILABLE");
-        return await waitForRestore(() => global.DataManager.isDatabaseLoaded(), deadline, "RPG_CHECKPOINT_DATABASE_TIMEOUT"), await waitForRestore(() => bootCompleted, deadline), await prepareRestoreTitle(deadline), await loadNativeSave(validated, deadline);
-      } finally {
-        releaseInput();
-      }
-    }
-    function suppressRestoreInput() {
-      let restorers = [];
-      for (let input of [global.Input, global.TouchInput])
-        !input || typeof input.clear != "function" || (input.clear(), replaceMethod(input, "update", () => function() {
-          this.clear();
-        }, restorers), restorers.push(() => input.clear()));
-      return () => restorers.reverse().forEach((restore) => restore());
-    }
-    async function prepareRestoreTitle(deadline) {
-      let manager = global.SceneManager, title = global.Scene_Title;
-      if (typeof title != "function") throw new Error("RPG_CHECKPOINT_RESTORE_UNSUPPORTED");
-      !titleStarted && !(manager._scene instanceof title) && !(manager._nextScene instanceof title) && manager.goto(title), await waitForRestore(() => titleStarted && !manager.isSceneChanging() && isCurrentSceneStarted() && !manager.isCurrentSceneBusy(), deadline);
-    }
-    function isCurrentSceneStarted() {
-      let manager = global.SceneManager;
-      if (typeof manager.isCurrentSceneStarted == "function") return manager.isCurrentSceneStarted();
-      let scene = manager._scene;
-      return !!scene && typeof scene.isStarted == "function" && scene.isStarted();
-    }
-    async function loadNativeSave(validated, deadline) {
-      let storage = global.StorageManager, restorers = [], supported = !1;
-      if (profile === "RPGMV" ? (supported = replaceMethod(storage, "load", (original) => function(savefileId) {
-        let value = validated.entries.get(String(savefileId));
-        return value ? decoder2.decode(value) : original.apply(this, arguments);
-      }, restorers), replaceMethod(storage, "exists", (original) => function(savefileId) {
-        return validated.entries.has(String(savefileId)) || original.apply(this, arguments);
-      }, restorers)) : (supported = replaceMethod(storage, "loadObject", (original) => async function(saveName) {
-        let value = validated.entries.get(String(saveName));
-        if (!value) return original.apply(this, arguments);
-        let jsonEx = global.JsonEx;
-        if (!jsonEx || typeof jsonEx.parse != "function")
-          throw new Error("RPG_CHECKPOINT_STORAGE_UNSUPPORTED");
-        return jsonEx.parse(decoder2.decode(value));
-      }, restorers), replaceMethod(storage, "exists", (original) => function(saveName) {
-        return validated.entries.has(String(saveName)) || original.apply(this, arguments);
-      }, restorers)), !supported) throw new Error("RPG_CHECKPOINT_STORAGE_UNSUPPORTED");
-      profile === "RPGMV" && (global.DataManager._globalInfo = null);
-      let previousFiles = pluginFiles && pluginFiles.snapshot();
-      try {
-        if (pluginFiles && pluginFiles.restore(validated.files), await global.DataManager.loadGame(validated.slot) === !1) throw new Error("RPG_CHECKPOINT_RESTORE_FAILED");
-        if (closed) throw new Error("RPG_NATIVE_CHANNEL_CLOSED");
-        if (performance.now() >= deadline) throw new Error("RPG_CHECKPOINT_RESTORE_TIMEOUT");
-        global.SceneManager && global.Scene_Map && global.SceneManager.goto(global.Scene_Map), runGameSystemHook("onAfterLoad"), await waitForMap(deadline);
-      } catch (error) {
-        throw pluginFiles && previousFiles && pluginFiles.restore(previousFiles), error;
-      } finally {
-        restorers.reverse().forEach((restore) => restore());
-      }
-      return {};
-    }
-    function waitForRestore(ready, deadline, timeoutCode = "RPG_CHECKPOINT_RESTORE_TIMEOUT") {
-      return new Promise((resolve, reject) => {
-        function poll() {
-          try {
-            if (closed) throw new Error("RPG_NATIVE_CHANNEL_CLOSED");
-            if (performance.now() >= deadline) throw new Error(timeoutCode);
-            if (ready()) {
-              resolve();
-              return;
-            }
-            global.requestAnimationFrame(poll);
-          } catch (error) {
-            reject(error);
-          }
-        }
-        poll();
-      });
-    }
-    function waitForMap(deadline) {
-      return waitForRestore(() => isCurrentSceneStarted() && readyForCheckpoint(), deadline);
     }
     async function screenshot() {
       for (let attempt = 0; attempt < 60; attempt += 1) {
@@ -1719,7 +2074,7 @@
           return inputFilter.setHostShortcutPolicy(message.body.policy), { type: "SET_HOST_SHORTCUT_POLICY_RESULT", body: {} };
         case "STATUS":
           return { type: "STATUS_RESULT", body: {
-            ready: readyForCheckpoint(),
+            availability: await nativeSaves.availability(),
             frameCount,
             ...inputDiagnostics ? { inputDiagnostics: inputDiagnostics.read() } : {}
           } };
@@ -1728,10 +2083,12 @@
           return inputDiagnostics && inputDiagnostics.stop(), inputDiagnostics = message.body.enabled ? startInputDiagnostics() : null, { type: "INPUT_DIAGNOSTICS_RESULT", body: {} };
         case "CLEAR_INPUT_DIAGNOSTICS":
           return inputDiagnostics && inputDiagnostics.clear(), { type: "CLEAR_INPUT_DIAGNOSTICS_RESULT", body: {} };
-        case "SAVE":
-          return { type: "SAVE_RESULT", body: await captureNativeSave() };
-        case "RESTORE":
-          return { type: "RESTORE_RESULT", body: await restoreNativeSave(message.body.bundle) };
+        case "SAVE": {
+          let checkpoint = await nativeSaves.capture();
+          return { type: "SAVE_RESULT", body: { data: checkpoint.bytes.buffer, screenshot: checkpoint.screenshot || null } };
+        }
+        case "ACKNOWLEDGE_SAVE":
+          return nativeSaves.acknowledge(message.body.bundle), { type: "ACKNOWLEDGE_SAVE_RESULT", body: { availability: await nativeSaves.availability() } };
         case "SCREENSHOT":
           return { type: "SCREENSHOT_RESULT", body: await screenshot() };
         case "PAUSE":
@@ -1773,11 +2130,11 @@
       }
     }
     async function receive(message) {
-      if (!(!ownKeys(message, ["body", "launchId", "nonce", "protocolVersion", "requestId", "type"]) || message.protocolVersion !== 1 || message.launchId !== launchId || message.nonce !== nonce || !Number.isSafeInteger(message.requestId) || message.requestId !== lastRequestId + 1 || typeof message.type != "string" || !ownKeys(message.body, Object.keys(message.body || {}).sort()) || requestPending || encoder2.encode(JSON.stringify(message)).byteLength > 65536)) {
+      if (!(!ownKeys(message, ["body", "launchId", "nonce", "protocolVersion", "requestId", "type"]) || message.protocolVersion !== 1 || message.launchId !== launchId || message.nonce !== nonce || !Number.isSafeInteger(message.requestId) || message.requestId !== lastRequestId + 1 || typeof message.type != "string" || !ownKeys(message.body, Object.keys(message.body || {}).sort()) || requestPending || encoder3.encode(JSON.stringify(message)).byteLength > 65536)) {
         lastRequestId = message.requestId, requestPending = !0;
         try {
           let result = await dispatch(message), transfers = [];
-          result.type === "SAVE_RESULT" && result.body.bundle.entries.forEach((entry) => transfers.push(entry.data)), result.type === "SCREENSHOT_RESULT" && transfers.push(result.body.data), send(message.requestId, result.type, result.body, transfers);
+          result.type === "SAVE_RESULT" && transfers.push(result.body.data), result.type === "SCREENSHOT_RESULT" && transfers.push(result.body.data), send(message.requestId, result.type, result.body, transfers);
         } catch (error) {
           send(message.requestId, "ERROR", { code: error && error.message || "RPG_NATIVE_RUNTIME_FAILED" });
         } finally {
@@ -1786,10 +2143,21 @@
       }
     }
     function observeFrame() {
-      frameCount += 1, !engineReadySent && engineRuntimeReady() && (engineReadySent = !0, event("READY", { engine: engine(), engineProfile: profile }));
+      frameCount += 1, !engineReadySent && nativeSaves && nativeSaves.isReady() && engineRuntimeReady() && (engineReadySent = !0, event("READY", { engine: engine(), engineProfile: profile }));
     }
     function requestExit() {
-      exitRequested || (exitRequested = !0, event("EXIT_REQUESTED", {}));
+      exitRequested || (exitRequested = !0, (async () => {
+        try {
+          if ((await nativeSaves.availability()).available) {
+            let checkpoint = await nativeSaves.capture();
+            event("EXIT_REQUESTED", { data: checkpoint.bytes.buffer });
+            return;
+          }
+        } catch (error) {
+          event("ERROR", { code: error.message || "RPG_GAME_SAVE_EXPORT_FAILED" });
+        }
+        event("EXIT_REQUESTED", {});
+      })());
     }
     function installSceneManagerHook() {
       let manager = global.SceneManager;
@@ -1835,56 +2203,36 @@
         if (!pluginFiles) throw new Error("RPG_PLUGIN_FILES_NOT_READY");
         return pluginFiles.fs;
       }, global.StorageManager.localFileDirectoryPath = () => pluginFiles.saveDirectory;
-      let manager = global.DataManager;
-      if (typeof manager.makeSavefileInfo == "function") {
-        let makeInfo = manager.makeSavefileInfo;
-        manager.makeSavefileInfo = function() {
-          return { ...makeInfo.apply(this, arguments), runtimeGameTitle: global.$dataSystem.gameTitle };
-        };
-      }
-      if (typeof manager.isThisGameFile == "function") {
-        let isThisGameFile = manager.isThisGameFile;
-        manager.isThisGameFile = function(id) {
-          let info = this.loadGlobalInfo()[id];
-          if (!info || !Object.hasOwn(info, "runtimeGameTitle")) return isThisGameFile.apply(this, arguments);
-          if (info.runtimeGameTitle !== global.$dataSystem.gameTitle) return !1;
-          let loadInfo = this.loadGlobalInfo;
-          this.loadGlobalInfo = function() {
-            let result = loadInfo.apply(this, arguments).slice();
-            return result[id] = { ...result[id], title: info.runtimeGameTitle }, result;
-          };
-          try {
-            return isThisGameFile.apply(this, arguments);
-          } finally {
-            this.loadGlobalInfo = loadInfo;
-          }
-        };
-      }
     }
-    installCanvasTextAlignCompatibility(), global.addEventListener("load", function(event2) {
-      if (event2.target !== global.document) return;
+    async function waitForNativeStorage() {
+      let deadline = performance.now() + 3e4;
+      for (; !nativeSaves; ) {
+        if (closed) throw new Error("RPG_NATIVE_CHANNEL_CLOSED");
+        if (performance.now() >= deadline) throw new Error("RPG_NATIVE_BOOTSTRAP_TIMEOUT");
+        await new Promise((resolve) => global.setTimeout(resolve, 10));
+      }
+      await nativeSaves.initialize();
+    }
+    installCanvasTextAlignCompatibility(), global.addEventListener("load", function(loadEvent) {
+      if (loadEvent.target !== global.document) return;
       installViewportFit();
       let prototype = global.Scene_Boot && global.Scene_Boot.prototype;
       if (!prototype || typeof prototype.start != "function") return;
       global.Utils && global.Utils.RPGMAKER_NAME === "MV" && installDesktopCompatibility(prototype);
-      let start = prototype.start;
-      prototype.start = function() {
-        let result = start.apply(this, arguments);
-        return bootCompleted = !0, result;
+      let manager = global.SceneManager;
+      if (!manager || typeof manager.run != "function") return;
+      let run = manager.run;
+      manager.run = function() {
+        let args = arguments, owner = this;
+        waitForNativeStorage().then(() => {
+          closed || run.apply(owner, args);
+        }).catch((error) => event("ERROR", { code: error.message || "RPG_GAME_SAVE_IMPORT_FAILED" }));
       };
-      let title = global.Scene_Title && global.Scene_Title.prototype;
-      if (title && typeof title.start == "function") {
-        let startTitle = title.start;
-        title.start = function() {
-          let result = startTitle.apply(this, arguments);
-          return titleStarted = !0, result;
-        };
-      }
     }, !0), global.addEventListener("pagehide", () => {
       closed = !0, restoreViewport && restoreViewport();
     }, { once: !0 }), global.addEventListener("message", function(eventMessage) {
       let message = eventMessage.data;
-      if (!(eventMessage.source !== global.parent || !ownKeys(message, ["launchId", "nonce", "parentOrigin", "pluginFiles", "profile", "protocolVersion", "type"]) || message.type !== "RPG_RUNTIME_NATIVE_CONNECT" || message.protocolVersion !== 1 || typeof message.launchId != "string" || typeof message.nonce != "string" || typeof message.parentOrigin != "string" || eventMessage.origin !== message.parentOrigin || message.profile !== "RPGMV" && message.profile !== "RPGMZ" || eventMessage.ports.length !== 1 || port)) {
+      if (!(eventMessage.source !== global.parent || !ownKeys(message, ["launchId", "nonce", "parentOrigin", "pluginFiles", "profile", "protocolVersion", "saves", "type"]) || message.type !== "RPG_RUNTIME_NATIVE_CONNECT" || message.protocolVersion !== 1 || typeof message.launchId != "string" || typeof message.nonce != "string" || typeof message.parentOrigin != "string" || eventMessage.origin !== message.parentOrigin || message.profile !== "RPGMV" && message.profile !== "RPGMZ" || eventMessage.ports.length !== 1 || port)) {
         if (eventMessage.stopImmediatePropagation(), launchId = message.launchId, nonce = message.nonce, parentOrigin = message.parentOrigin, profile = message.profile, port = eventMessage.ports[0], port.onmessage = (portEvent) => {
           receive(portEvent.data);
         }, port.start(), profile === "RPGMV")
@@ -1894,6 +2242,12 @@
             event("ERROR", { code: error.message });
             return;
           }
+        try {
+          nativeSaves = createRpgWebSaves(global, profile, message.saves, pluginFiles);
+        } catch (error) {
+          event("ERROR", { code: error.message });
+          return;
+        }
         pollForEngine();
       }
     }, !0), global.parent.postMessage({ type: "RPG_RUNTIME_NATIVE_BRIDGE_READY", protocolVersion: 1 }, "*"), global.__RPG_RUNTIME_NATIVE_BRIDGE__ = Object.freeze({ protocolVersion: 1 });

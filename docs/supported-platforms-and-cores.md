@@ -239,13 +239,13 @@ The Content column lists the accepted content kind and, where present, the requi
 | Play! (`play`) | Play! (PlayStation 2) (`play-ps2`) | `ps2` | `SINGLE_FILE` | `INSTANT` |
 | PPSSPP (`ppsspp`) | PPSSPP (PSP) (`ppsspp`) | `psp` | `SINGLE_FILE` | `GAME_SAVE` |
 | PX68K (`px68k`) | Sharp X68000 (PX68K) (`px68k`) | `x68000` | `SINGLE_FILE` | `INSTANT` |
-| RPG Maker (`rpgmaker`) | RPG Maker 2000 (`rpgmaker-2000`) | `rpgmaker` | `RPG_MAKER_PROJECT` / `RPG2000` | `INSTANT` |
-| RPG Maker (`rpgmaker`) | RPG Maker 2003 (`rpgmaker-2003`) | `rpgmaker` | `RPG_MAKER_PROJECT` / `RPG2003` | `INSTANT` |
-| RPG Maker (`rpgmaker`) | RPG Maker MV (`rpgmaker-mv`) | `rpgmaker` | `RPG_MAKER_PROJECT` / `RPGMV` | `INSTANT` |
-| RPG Maker (`rpgmaker`) | RPG Maker MZ (`rpgmaker-mz`) | `rpgmaker` | `RPG_MAKER_PROJECT` / `RPGMZ` | `INSTANT` |
-| RPG Maker (`rpgmaker`) | RPG Maker VX (`rpgmaker-vx`) | `rpgmaker` | `RPG_MAKER_PROJECT` / `RPGVX` | `INSTANT` |
-| RPG Maker (`rpgmaker`) | RPG Maker VX Ace (`rpgmaker-vx-ace`) | `rpgmaker` | `RPG_MAKER_PROJECT` / `RPGVXACE` | `INSTANT` |
-| RPG Maker (`rpgmaker`) | RPG Maker XP (`rpgmaker-xp`) | `rpgmaker` | `RPG_MAKER_PROJECT` / `RPGXP` | `INSTANT` |
+| RPG Maker (`rpgmaker`) | RPG Maker 2000 (`rpgmaker-2000`) | `rpgmaker` | `RPG_MAKER_PROJECT` / `RPG2000` | `GAME_SAVE` |
+| RPG Maker (`rpgmaker`) | RPG Maker 2003 (`rpgmaker-2003`) | `rpgmaker` | `RPG_MAKER_PROJECT` / `RPG2003` | `GAME_SAVE` |
+| RPG Maker (`rpgmaker`) | RPG Maker MV (`rpgmaker-mv`) | `rpgmaker` | `RPG_MAKER_PROJECT` / `RPGMV` | `GAME_SAVE` |
+| RPG Maker (`rpgmaker`) | RPG Maker MZ (`rpgmaker-mz`) | `rpgmaker` | `RPG_MAKER_PROJECT` / `RPGMZ` | `GAME_SAVE` |
+| RPG Maker (`rpgmaker`) | RPG Maker VX (`rpgmaker-vx`) | `rpgmaker` | `RPG_MAKER_PROJECT` / `RPGVX` | `GAME_SAVE` |
+| RPG Maker (`rpgmaker`) | RPG Maker VX Ace (`rpgmaker-vx-ace`) | `rpgmaker` | `RPG_MAKER_PROJECT` / `RPGVXACE` | `GAME_SAVE` |
+| RPG Maker (`rpgmaker`) | RPG Maker XP (`rpgmaker-xp`) | `rpgmaker` | `RPG_MAKER_PROJECT` / `RPGXP` | `GAME_SAVE` |
 | SamCoupeWeb (`samcoupeweb`) | SAM Coupé (SamCoupeWeb) (`samcoupe`) | `samcoupe` | `SINGLE_FILE` | `GAME_SAVE` |
 | ScummVM (`scummvm`) | ScummVM (`scummvm`) | `scummvm` | `SCUMMVM_PROJECT` | `GAME_SAVE` |
 | SiglusEngine (siglus_rs) (`siglus`) | SiglusEngine (`siglus`) | `siglus` | `SIGLUS_PROJECT` | `GAME_SAVE` |

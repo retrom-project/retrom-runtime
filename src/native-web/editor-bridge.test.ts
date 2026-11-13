@@ -110,7 +110,7 @@ describe("native-web RPG Maker game editor bridge", () => {
     const identity = {launchId: "01980000-0000-7000-8000-000000000001", nonce: "test-nonce", protocolVersion: 1};
     listeners.get("message")?.[0]?.({
       data: {...identity, parentOrigin: "https://host.example",
-        profile: `RPG${edition}`, type: "RPG_RUNTIME_NATIVE_CONNECT", pluginFiles: []},
+        profile: `RPG${edition}`, type: "RPG_RUNTIME_NATIVE_CONNECT", saves: null, pluginFiles: []},
       origin: "https://host.example", source: runtime.parent, ports: [port], stopImmediatePropagation: () => undefined,
     });
     async function request(requestId: number, type: string, body: Record<string, unknown>) {

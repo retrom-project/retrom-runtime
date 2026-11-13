@@ -1,5 +1,5 @@
 import {afterEach, describe, expect, it, vi} from "vitest";
-import {mkxpStatus, waitForMkxpFrame, waitForMkxpRestore, waitForMkxpSave} from "./status.js";
+import {mkxpStatus, waitForMkxpFrame} from "./status.js";
 
 afterEach(() => {vi.useRealTimers();});
 
@@ -21,22 +21,6 @@ function coreStatus() {
 }
 
 describe("mkxp threaded-core status", () => {
-  it("uses acknowledged state requests and rejects an overlapping native operation", () => {
-    const {value, status, requests} = coreStatus();
-    status.requestSave();
-    status.requestRestore();
-    expect(requests).toEqual([1, 2]);
-    value.acceptsRequest = 0;
-    expect(() => status.requestSave()).toThrow("RPG_CHECKPOINT_CREATE_FAILED");
-    expect(() => status.requestRestore()).toThrow("RPG_CHECKPOINT_RESTORE_FAILED");
-  });
-
-  it("fails save immediately on a native I/O failure, never on a file-length guess", async () => {
-    const {value, status} = coreStatus();
-    value.restore = -1;
-    await expect(waitForMkxpSave(status)).rejects.toThrow("RPG_CHECKPOINT_CREATE_FAILED");
-  });
-
   it("requires the core status ABI rather than falling back to fixture evidence", () => {
     for (const module of [null, {}, {_runtime_get_frame_count: () => 1}]) {
       expect(() => mkxpStatus(module)).toThrow("RPG_RUNTIME_ARTIFACT_INVALID");
@@ -71,49 +55,10 @@ describe("mkxp threaded-core status", () => {
     expect(await idle).toEqual(new Error("RPG_RUNTIME_TIMEOUT"));
   });
 
-  it("does not mistake advancing frames for a completed restore", async () => {
-    const {value, status} = coreStatus();
-    const result = waitForMkxpRestore(status).catch((error: unknown) => error);
-    value.frames = 1000;
-    await vi.advanceTimersByTimeAsync(30_000);
-    expect(await result).toEqual(new Error("RPG_CHECKPOINT_RESTORE_FAILED"));
-  });
-
-  it("waits for presentation after successful deserialization before declaring ready", async () => {
-    const {value, status} = coreStatus();
-    let ready = false;
-    const restoring = waitForMkxpRestore(status).then(() => {ready = true;});
-    value.frames = 50;
-    value.restore = 1;
-    await vi.advanceTimersByTimeAsync(100);
-    expect(ready).toBe(false);
-    value.frames = 51;
-    await vi.advanceTimersByTimeAsync(50);
-    await restoring;
-    expect(ready).toBe(true);
-  });
-
-  it("does not declare a stalled core ready after successful deserialization", async () => {
-    const {value, status} = coreStatus();
-    value.restore = 1;
-    value.frames = 50;
-    const result = waitForMkxpRestore(status).catch((error: unknown) => error);
-    await vi.advanceTimersByTimeAsync(30_000);
-    expect(await result).toEqual(new Error("RPG_CHECKPOINT_RESTORE_FAILED"));
-  });
-
-  it("reports a core restore failure immediately", async () => {
-    const {value, status} = coreStatus();
-    value.restore = -1;
-    await expect(waitForMkxpRestore(status)).rejects.toThrow("RPG_CHECKPOINT_RESTORE_FAILED");
-  });
-
   it("rejects malformed native observations", () => {
     const {value, status} = coreStatus();
     value.frames = NaN;
     expect(() => status.frames()).toThrow("RPG_RUNTIME_STATE_UNAVAILABLE");
-    value.restore = 2;
-    expect(() => status.stateResult()).toThrow("RPG_RUNTIME_STATE_UNAVAILABLE");
   });
 
   it("fails a terminated game even when opening frames and an old save receipt exist", () => {
@@ -122,8 +67,6 @@ describe("mkxp threaded-core status", () => {
     value.restore = 1;
     value.failure = -1;
     expect(() => status.frames()).toThrow("RPG_RUNTIME_GAME_FAILED");
-    expect(() => status.requestSave()).toThrow("RPG_RUNTIME_GAME_FAILED");
-    expect(() => status.stateResult()).toThrow("RPG_RUNTIME_GAME_FAILED");
     value.failure = 2;
     expect(() => status.assertHealthy()).toThrow("RPG_RUNTIME_STATE_UNAVAILABLE");
   });

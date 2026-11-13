@@ -22,9 +22,9 @@ it("enables native bridge observation on demand without polling or changing engi
     addEventListener: (name: string, handler: Handler) => handlers.set(name, handler),
     removeEventListener: (name: string) => handlers.delete(name),
   };
-  runInNewContext(readFileSync("assets/runtime/native/bridge.js", "utf8"), {window: runtime, TextEncoder, TextDecoder});
+  runInNewContext(readFileSync("assets/runtime/native/bridge.js", "utf8"), {window: runtime, URL, TextEncoder, TextDecoder});
   const identity = {launchId: "fixture", nonce: "fixture", protocolVersion: 1};
-  handlers.get("message")?.({data: {...identity, type: "RPG_RUNTIME_NATIVE_CONNECT", pluginFiles: [],
+  handlers.get("message")?.({data: {...identity, type: "RPG_RUNTIME_NATIVE_CONNECT", saves: null, pluginFiles: [],
     parentOrigin: "https://host.example", profile: "RPGMV"}, origin: "https://host.example", source: runtime.parent, ports: [port], stopImmediatePropagation: () => undefined});
   let requestId = 0;
   const request = async (type: string, body: Record<string, unknown> = {}) => {

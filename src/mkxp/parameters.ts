@@ -13,5 +13,4 @@ export type MkxpParameters = {
   projectArchive: SeekableBlobSource;
   rtpArchives: Array<SeekableBlobSource & {declaredName: string}>;
   rgssVersion: 1 | 2 | 3;
-  stateBufferBytes: 268435456;
 };

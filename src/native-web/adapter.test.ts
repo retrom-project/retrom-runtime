@@ -1,5 +1,26 @@
 import { describe, expect, it, vi } from "vitest";
 import { NativeChannel, nativeBootstrapAction, mountNativeRpg } from "./adapter";
+import {encodeRpgCheckpoint} from "../checkpoint.js";
+import {rpgGameSaveFormat} from "../rpgmaker/format.js";
+
+it("publishes the acknowledged native revision immediately and retains its progress classification", async () => {
+  const channel = new NativeChannel({sessionId: "fixture", uniqueOrigin: "https://runtime.example", bridgeProfile: "RPGMV"}, () => undefined);
+  let runtimePort: MessagePort | null = null;
+  channel.connect({postMessage: (_message: unknown, _origin: string, transfer: Transferable[]) => {
+    runtimePort = transfer[0] as MessagePort;
+  }} as unknown as Window);
+  const port = runtimePort as unknown as MessagePort;
+  port.onmessage = event => port.postMessage({...event.data, type: event.data.type + "_RESULT", body: {
+    availability: {available: false, blocker: "UNCHANGED", save: {dataKind: "PROGRESS"}},
+  }});
+  port.start();
+  try {
+    await channel.acknowledge({format: rpgGameSaveFormat, bytes: await encodeRpgCheckpoint({engine: "RPGMV", entries: [
+      {store: "LOCAL_STORAGE", key: "RPG File1", mediaType: "application/octet-stream", data: Uint8Array.of(49)},
+    ]})});
+    expect(channel.checkpointAvailability()).toMatchObject({available: false, blocker: "UNCHANGED", save: {dataKind: "PROGRESS"}});
+  } finally {channel.close(); port.close();}
+});
 
 it("applies the initial MZ touch preference and toggles the same isolated input bridge", async () => {
   const frame = document.createElement("iframe"); document.body.append(frame);

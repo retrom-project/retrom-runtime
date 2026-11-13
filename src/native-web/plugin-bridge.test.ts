@@ -1,135 +1,95 @@
-import {readFileSync} from "node:fs";
-import {createContext, runInContext} from "node:vm";
-import {expect, it, vi} from "vitest";
+import {expect, it} from "vitest";
+import {decodeRpgCheckpoint} from "../checkpoint.js";
+import {nativeGameFixture} from "../../tests/native-game-save-fixture.js";
 
-// Project-owned engine/plugin fixture: shared files, map titles, and the MV load call order.
-function fixture() {
-  const listeners = new Map<string, Array<(event: unknown) => void>>();
-  const replies: Array<{type: string; body: Record<string, unknown>}> = [];
-  const port = {onmessage: null as null | ((event: {data: unknown}) => void), start() {},
-    postMessage(message: {type: string; body: Record<string, unknown>}) {replies.push(message);}};
-  const context = createContext({TextEncoder, TextDecoder, URL, performance, setTimeout,
-    addEventListener: (name: string, callback: (event: unknown) => void) => listeners.set(name, [...listeners.get(name) ?? [], callback]),
-    requestAnimationFrame: (callback: () => void) => setTimeout(callback, 0),
-    parent: {postMessage() {}}, document: {}, location: {href: "https://game.test/run/id/A%20Game/www/index.html"},
-  });
-  runInContext(`window = globalThis;
-    var local = new Map();
-    var StorageManager = {localFileDirectoryPath: () => {throw Error('desktop path');},
-      save: (id, json) => local.set(id, json), load: id => local.get(id), exists: id => local.has(id)};
-    var Utils = {RPGMAKER_NAME: 'MV'};
-    var $dataSystem = {gameTitle: 'Game'};
-    var $gameMap = {mapId: () => 1, isEventRunning: () => false};
-    var $gameMessage = {isBusy: () => false};
-    var $gameSystem = {onBeforeSave() {}, onAfterLoad() {}};
-    var shared, position = 7;
-    var Scene_Map = class {isStarted() {return true;}};
-    var Scene_Title = class {start() {} isStarted() {return true;}};
-    var Scene_Boot = class {start() {DataManager.createGameObjects();}};
-    var SceneManager = {_scene: null, updateMain() {}, isSceneChanging: () => false, isCurrentSceneBusy: () => false,
-      goto(Type = Scene_Map) {this._scene = new Type(); if(this._scene instanceof Scene_Title) this._scene.start();}};
-    var DataManager = {_globalId: 'RPGMV', _globalInfo: null, isDatabaseLoaded: () => true, maxSavefiles: () => 20,
-      createGameObjects() {
-        const fs = require('fs'), path = StorageManager.localFileDirectoryPath() + 'common.rpgsave';
-        shared = fs.existsSync(path) ? JSON.parse(fs.readFileSync(path, {encoding: 'utf8'})) : {};
-      },
-      makeSavefileInfo() {return {globalId: this._globalId, title: 'Map display name'};},
-      loadGlobalInfo() {return this._globalInfo ??= JSON.parse(StorageManager.load(0) || '[]');},
-      isThisGameFile(id) {
-        const info = this.loadGlobalInfo()[id];
-        return !!info && info.globalId === this._globalId && info.title === $dataSystem.gameTitle;
-      },
-      saveGame(id) {
-        StorageManager.save(id, JSON.stringify({position}));
-        const info = this.loadGlobalInfo(); info[id] = this.makeSavefileInfo();
-        StorageManager.save(0, JSON.stringify(info)); return true;
-      },
-      loadGame(id) {
-        if (!this.isThisGameFile(id)) return false;
-        this.createGameObjects(); position = JSON.parse(StorageManager.load(id)).position; return true;
-      }
-    };
-  `, context);
-  runInContext(readFileSync("assets/runtime/native/bridge.js", "utf8"), context);
-  const identity = {launchId: "fixture", nonce: "nonce", protocolVersion: 1};
-  listeners.get("message")?.forEach(listener => listener({source: context.parent, origin: "https://host.test", ports: [port],
-    stopImmediatePropagation() {}, data: {...identity, parentOrigin: "https://host.test", profile: "RPGMV",
-      type: "RPG_RUNTIME_NATIVE_CONNECT", pluginFiles: runInContext(`[{path:'scenario/En/start.sl', data: new Uint8Array(new TextEncoder().encode('story')).buffer}]`, context)}}));
-  let id = 0;
-  return {context, replies,
-    hide() {listeners.get("pagehide")?.forEach(listener => listener({}));},
-    boot() {listeners.get("load")?.forEach(listener => listener({target: context.document})); runInContext("new Scene_Boot().start(); SceneManager.goto();", context);},
-    async request(type: string, body: Record<string, unknown> = {}) {
-      const before = replies.length;
-      context.requestJSON = JSON.stringify(body, (_key, value) =>
-        Object.prototype.toString.call(value) === "[object ArrayBuffer]" ? [...new Uint8Array(value)] : value);
-      const transferred = runInContext("JSON.parse(requestJSON, (key, value) => key === 'data' ? new Uint8Array(value).buffer : value)", context);
-      port.onmessage?.({data: {...identity, requestId: ++id, type, body: transferred}});
-      await vi.waitFor(() => expect(replies.length).toBeGreaterThan(before));
-      return replies.at(-1)!;
-    },
-  };
-}
-
-it("boots desktop save plugins, reads scenarios and restores shared files before game objects in a fresh instance", async () => {
-  const first = fixture(); first.boot();
-  expect(runInContext("shared", first.context)).toEqual({});
-  expect(runInContext("require('fs').readFileSync('/run/id/A Game/scenario/En/start.sl', 'utf8')", first.context)).toBe("story");
-  runInContext(`shared = {flag: true, count: 23}; require('fs').writeFileSync(StorageManager.localFileDirectoryPath()+'common.rpgsave', JSON.stringify(shared));`, first.context);
-  const saved = await first.request("SAVE");
-  expect(saved.type).toBe("SAVE_RESULT");
-  const bundle = saved.body.bundle as {entries: Array<{data: ArrayBuffer; store: string; key: string}>};
-  expect(bundle.entries).toContainEqual(expect.objectContaining({store: "FILESYSTEM", key: "save/common.rpgsave"}));
-  const second = fixture(); second.boot();
-  expect(runInContext("shared", second.context)).toEqual({});
-  // Recreate transferred ArrayBuffers in the second realm, like a real MessagePort.
-  second.context.snapshotJSON = JSON.stringify({...bundle, entries: bundle.entries.map(entry => ({...entry, data: [...new Uint8Array(entry.data)]}))});
-  const restored = runInContext("JSON.parse(snapshotJSON, (key, value) => key === 'data' ? new Uint8Array(value).buffer : value)", second.context);
-  expect((await second.request("RESTORE", {bundle: restored})).type).toBe("RESTORE_RESULT");
-  expect(runInContext("shared", second.context)).toEqual({flag: true, count: 23});
-  expect(runInContext("position", second.context)).toBe(7);
+it("restores every native slot and shared plugin file before a caching plugin boots in a fresh instance", async () => {
+  const first = nativeGameFixture("MV"); await first.boot();
+  expect(first.read("require('fs').existsSync('save/common.rpgsave')")).toBe(false);
+  expect((await first.request("STATUS")).body.availability).toMatchObject({available: false, blocker: "NO_SAVE"});
+  first.read(`DataManager.saveGame(1); DataManager.saveGame(2);
+    require('fs').writeFileSync('save/common.rpgsave', '{"unlocked":true}');`);
+  const exported = await first.request("SAVE");
+  expect(exported.type).toBe("SAVE_RESULT");
+  const bundle = await decodeRpgCheckpoint(new Uint8Array(exported.body.data as ArrayBuffer), "RPGMV");
+  expect(bundle.entries.map(entry => entry.key).sort()).toEqual(["RPG File1", "RPG File2", "RPG Global", "save/common.rpgsave"]);
+  const second = nativeGameFixture("MV", bundle); await second.boot();
+  // The plugin caches its index during boot, exactly as in the reported failure.
+  expect(second.read("DataManager._globalInfoCache[1]")).toEqual({title: "Native fixture"});
+  expect(second.read("DataManager._globalInfoCache[2]")).toEqual({title: "Native fixture"});
+  expect(second.read("trace")).toEqual(["boot"]);
+  expect(second.read("SceneManager._scene.name")).toBe("title");
+  expect(second.read("DataManager.loadGame(2)")).toEqual({position: 42});
+  expect(second.read("require('fs').readFileSync('save/common.rpgsave','utf8')")).toBe('{"unlocked":true}');
+  expect((await second.request("STATUS")).body.availability).toMatchObject({available: false, blocker: "UNCHANGED"});
   await first.request("CLEANUP"); await second.request("CLEANUP");
 });
-it("keeps map display titles while validating game identity for native slots", () => {
-  const game = fixture(); game.boot();
-  runInContext("DataManager.saveGame(1);", game.context);
-  expect(runInContext("DataManager.loadGlobalInfo()[1].title", game.context)).toBe("Map display name");
-  expect(runInContext("DataManager.isThisGameFile(1)", game.context)).toBe(true);
-  runInContext("DataManager._globalInfo[1].runtimeGameTitle = 'Other game';", game.context);
-  expect(runInContext("DataManager.isThisGameFile(1)", game.context)).toBe(false);
-  runInContext("DataManager._globalInfo[1].runtimeGameTitle = 'Game'; DataManager._globalInfo[1].globalId = 'foreign';", game.context);
-  expect(runInContext("DataManager.isThisGameFile(1)", game.context)).toBe(false);
-});
-it("rejects out-of-scope shared files and restores the previous files if the engine rejects a save", async () => {
-  const game = fixture(); game.boot();
-  runInContext("require('fs').writeFileSync('save/common.rpgsave', 'old')", game.context);
+
+it("waits for asynchronous MZ storage import before starting the engine, retaining all native encodings", async () => {
+  const bytes = new TextEncoder().encode('native compressed bytes \u0000\u00ff');
+  const game = nativeGameFixture("MZ", {engine: "RPGMZ", entries: [
+    {store: "LOCALFORAGE", key: "rmmzsave.1.global", mediaType: "application/octet-stream", data: bytes},
+    {store: "LOCALFORAGE", key: "rmmzsave.1.file1", mediaType: "application/octet-stream", data: bytes},
+    {store: "LOCALFORAGE", key: "rmmzsave.1.file2", mediaType: "application/octet-stream", data: bytes},
+  ]});
+  game.read("var finishImport; blockImport = new Promise(resolve => {finishImport = resolve;})");
+  const booting = game.boot(); await new Promise(resolve => setTimeout(resolve, 10));
+  expect(game.read("trace")).toEqual([]);
+  game.read("finishImport()"); await booting;
+  expect(game.read("forage.size")).toBe(3);
+  expect(game.read("trace")).toEqual(["boot"]);
+  game.read("forage.set('rmmzsave.1.file2','updated'); forage.set('rmmzsave.test','temporary')");
   const saved = await game.request("SAVE");
-  const bundle = saved.body.bundle as {entries: Array<{key: string; store: string; data: ArrayBuffer}>};
-  const common = bundle.entries.find(entry => entry.store === "FILESYSTEM")!;
-  common.key = "scenario/overwrite.sl";
-  expect((await game.request("RESTORE", {bundle})).body.code).toBe("RPG_CHECKPOINT_RESTORE_INVALID");
-  common.key = "save/common.rpgsave";
-  common.data = runInContext("new Uint8Array([110,101,119]).buffer", game.context);
-  runInContext("DataManager.loadGame = () => false", game.context);
-  expect((await game.request("RESTORE", {bundle})).body.code).toBe("RPG_CHECKPOINT_RESTORE_FAILED");
-  expect(runInContext("require('fs').readFileSync('save/common.rpgsave','utf8')", game.context)).toBe("old");
+  const bundle = await decodeRpgCheckpoint(new Uint8Array(saved.body.data as ArrayBuffer), "RPGMZ");
+  expect(bundle.entries.map(entry => entry.key)).not.toContain("rmmzsave.test");
+  expect(new TextDecoder().decode(bundle.entries.find(entry => entry.key.endsWith('file1'))!.data)).toBe('native compressed bytes \u0000\u00ff');
+  expect(game.read("trace")).not.toContain("load");
   await game.request("CLEANUP");
 });
-it("times out or cancels a restore while plugin boot is incomplete without entering the map", async () => {
-  for (const cancel of [false, true]) {
-    const game = fixture(); game.boot();
-    const saved = await game.request("SAVE");
-    const second = fixture();
-    let now = 0; second.context.performance = {now: () => now};
-    second.context.snapshotJSON = JSON.stringify(saved.body.bundle, (_key, value) =>
-      Object.prototype.toString.call(value) === "[object ArrayBuffer]" ? [...new Uint8Array(value)] : value);
-    const bundle = runInContext("JSON.parse(snapshotJSON, (key, value) => key === 'data' ? new Uint8Array(value).buffer : value)", second.context);
-    const restoring = second.request("RESTORE", {bundle});
-    await new Promise(resolve => setTimeout(resolve, 0));
-    if (cancel) {second.hide();}
-    else {now = 30001;}
-    expect((await restoring).body.code).toBe(cancel ? "RPG_NATIVE_CHANNEL_CLOSED" : "RPG_CHECKPOINT_RESTORE_TIMEOUT");
-    expect(runInContext("SceneManager._scene", second.context)).toBe(null);
-    await game.request("CLEANUP");
-  }
+
+it("confirms only the acknowledged native export and includes unsynchronized data in a native exit", async () => {
+  const game = nativeGameFixture("MV"); await game.boot();
+  game.read("DataManager.saveGame(1)");
+  const exported = await game.request("SAVE");
+  const bundle = await decodeRpgCheckpoint(new Uint8Array(exported.body.data as ArrayBuffer), "RPGMV");
+  game.read("DataManager.saveGame(2)");
+  await game.request("ACKNOWLEDGE_SAVE", {bundle});
+  expect((await game.request("STATUS")).body.availability).toMatchObject({available: true});
+  game.read("SceneManager.exit(); SceneManager.exit()");
+  await new Promise(resolve => setTimeout(resolve, 10));
+  const exits = game.replies.filter(reply => reply.type === "EXIT_REQUESTED");
+  expect(exits).toHaveLength(1);
+  const final = await decodeRpgCheckpoint(new Uint8Array(exits[0].body.data as ArrayBuffer), "RPGMV");
+  expect(final.entries.some(entry => entry.key === 'RPG File2')).toBe(true);
+  await game.request("CLEANUP");
+});
+
+it("recognizes native progress through the engine's actual storage keys without changing plugin metadata", async () => {
+  const game = nativeGameFixture("MV"); await game.boot();
+  game.read(`StorageManager.webStorageKey = id => 'project-slot-' + id;
+    localStorage.setItem(StorageManager.webStorageKey(1),'native progress');`);
+  const status = await game.request("STATUS");
+  expect(status.body.availability).toMatchObject({available: true, save: {dataKind: "PROGRESS"}});
+  expect((await game.request("SAVE")).body.screenshot).toBeNull();
+  await game.request("CLEANUP");
+});
+
+it.each(["MV", "MZ"] as const)("%s replaces the isolated native directory when restoring within the same run", async engine => {
+  const store = engine === "MV" ? "LOCAL_STORAGE" : "LOCALFORAGE";
+  const key = engine === "MV" ? "RPG File1" : "rmmzsave.1.file1";
+  const game = nativeGameFixture(engine, {engine: engine === "MV" ? "RPGMV" : "RPGMZ", entries: [
+    {store, key, mediaType: "application/octet-stream", data: new TextEncoder().encode("native slot 1")},
+  ]}, {local: {"RPG File2": "later slot"}, forage: {"rmmzsave.1.file2": "later slot"}});
+  await game.boot();
+  expect(game.read("({local: [...local.keys()], forage: [...forage.keys()]})")).toMatchObject(engine === "MV"
+    ? {local: [key]} : {local: [], forage: [key]});
+  expect((await game.request("STATUS")).body.availability).toMatchObject({available: false, blocker: "UNCHANGED"});
+  await game.request("CLEANUP");
+});
+
+it("retains the current run's native data on a reload without a restore descriptor", async () => {
+  const game = nativeGameFixture("MV", null, {local: {"RPG File1": "native slot 1"}});
+  await game.boot();
+  expect(game.read("localStorage.getItem('RPG File1')")).toBe("native slot 1");
+  expect((await game.request("STATUS")).body.availability).toMatchObject({available: true});
+  await game.request("CLEANUP");
 });

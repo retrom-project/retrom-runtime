@@ -6,5 +6,4 @@ export type EasyRpgParameters = {
   runtimeBaseUrl: string;
   projectRootUrl: string;
   rtpSource: FileTreeSource | null;
-  checkpointSlot: 100;
 };

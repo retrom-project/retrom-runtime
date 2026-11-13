@@ -2,6 +2,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { mountEasyRpg } from "./adapter";
 import { encodeRpgCheckpoint } from "../checkpoint";
 
+import {rpgSaveFileSystem} from "../../tests/rpg-save-files-fixture.js";
 import type {EasyRpgParameters} from "./parameters.js";
 
 afterEach(() => {
@@ -16,8 +17,8 @@ afterEach(() => {
 describe("EasyRPG adapter cleanup", () => {
   it("waits for the restored map without requiring fixture variables or a position proof", async () => {
     const payload = await encodeRpgCheckpoint({
-      engine: "RPG2003", resumeSlot: 100,
-      entries: [{store: "FILESYSTEM", key: "Save/Save100.lsd", mediaType: "application/octet-stream", data: new Uint8Array([1])}],
+      engine: "RPG2003",
+      entries: [{store: "FILESYSTEM", key: "Save01.lsd", mediaType: "application/octet-stream", data: new Uint8Array([1])}],
     });
     const target = document.createElement("div");
     document.body.append(target);
@@ -27,7 +28,7 @@ describe("EasyRPG adapter cleanup", () => {
       .mockReturnValue(JSON.stringify({engine: "RPG2003", ready: true, canCheckpoint: true,
         frameCount: 20}));
     const createPlayer = vi.fn().mockResolvedValue({
-      FS: {}, canvas: document.createElement("canvas"), runtimeFileSystemReady: true,
+      FS: rpgSaveFileSystem().fs, canvas: document.createElement("canvas"), runtimeFileSystemReady: true,
       initApi: vi.fn(), pauseMainLoop: vi.fn(), resumeMainLoop: vi.fn(),
       api: {runtimeState: readRuntimeState},
     });
@@ -36,9 +37,9 @@ describe("EasyRPG adapter cleanup", () => {
     await vi.waitFor(() => expect(document.head.querySelector("script[data-rpg-runtime=easyrpg]")).not.toBeNull());
     document.head.querySelector("script[data-rpg-runtime=easyrpg]")?.dispatchEvent(new Event("load"));
     const mounted = await mounting;
-    expect(createPlayer).toHaveBeenCalledWith(expect.objectContaining({runtimeRestoreSlot: 100}));
-    expect(readRuntimeState).toHaveBeenCalledTimes(2);
-    expect(mounted.getCheckpointAvailability()).toEqual({available: true, blocker: null});
+    expect(createPlayer.mock.calls[0][0]).not.toHaveProperty("runtimeRestoreSlot");
+    expect(readRuntimeState).toHaveBeenCalledTimes(1);
+    expect(mounted.getCheckpointAvailability()).toMatchObject({available: false, blocker: "NO_SAVE"});
     expect(mounted.getFrameCount()).toBe(20);
     await mounted.exit();
   });
@@ -51,7 +52,7 @@ describe("EasyRPG adapter cleanup", () => {
     Object.defineProperty(window, "createEasyRpgPlayer", {
       configurable: true,
       value: vi.fn().mockResolvedValue({
-        FS: {}, canvas: document.createElement("canvas"), runtimeFileSystemReady: true,
+        FS: rpgSaveFileSystem().fs, canvas: document.createElement("canvas"), runtimeFileSystemReady: true,
         initApi: vi.fn(), pauseMainLoop: vi.fn(), resumeMainLoop: vi.fn(),
         api: {runtimeState: () => JSON.stringify({
           engine: initialized ? "RPG2003" : "RPG2000", ready: false, canCheckpoint: false,
@@ -101,7 +102,7 @@ describe("EasyRPG adapter cleanup", () => {
     Object.defineProperty(window, "createEasyRpgPlayer", {
       configurable: true,
       value: vi.fn().mockResolvedValue({
-        FS: {}, api: { runtimeState: () => "{}" }, canvas,
+        FS: rpgSaveFileSystem().fs, api: { runtimeState: () => "{}" }, canvas,
         runtimeFileSystemReady: false, initApi: vi.fn(), pauseMainLoop: vi.fn(), resumeMainLoop: vi.fn(),
       }),
     });
@@ -122,7 +123,7 @@ describe("EasyRPG adapter cleanup", () => {
     document.body.append(target);
     const canvas = document.createElement("canvas");
     const createPlayer = vi.fn().mockResolvedValue({
-      FS: {},
+      FS: rpgSaveFileSystem().fs,
       api: {
         createRuntimeCheckpoint: vi.fn(),
         runtimeState: () => JSON.stringify({
@@ -152,7 +153,7 @@ describe("EasyRPG adapter cleanup", () => {
     const options = createPlayer.mock.calls[0]?.[0] as {onRuntimeExitRequested?: () => void};
     options.onRuntimeExitRequested?.();
     expect(reportExitRequested).toHaveBeenCalledOnce();
-    expect(mounted.getCheckpointAvailability()).toEqual({available: true, blocker: null});
+    expect(mounted.getCheckpointAvailability()).toMatchObject({available: false, blocker: "NO_SAVE"});
     await mounted.exit();
     delete (window as Window & { createEasyRpgPlayer?: unknown }).createEasyRpgPlayer;
     target.remove();
@@ -165,7 +166,7 @@ describe("EasyRPG adapter cleanup", () => {
     Object.defineProperty(window, "createEasyRpgPlayer", {
       configurable: true,
       value: vi.fn().mockResolvedValue({
-        FS: {},
+        FS: rpgSaveFileSystem().fs,
         api: {
           createRuntimeCheckpoint: vi.fn(),
           runtimeState: () => JSON.stringify({
@@ -184,7 +185,7 @@ describe("EasyRPG adapter cleanup", () => {
 
     const mounted = await mounting;
     expect(mounted.getFrameCount()).toBe(120);
-    expect(mounted.getCheckpointAvailability()).toEqual({available: false, blocker: "BUSY"});
+    expect(mounted.getCheckpointAvailability()).toMatchObject({available: false, blocker: "NO_SAVE"});
     await mounted.exit();
     target.remove();
   });
@@ -205,7 +206,7 @@ describe("EasyRPG adapter cleanup", () => {
     Object.defineProperty(response, "url", { configurable: true, value: indexUrl });
     const fetchMock = vi.spyOn(globalThis, "fetch").mockResolvedValue(response);
     const createPlayer = vi.fn().mockResolvedValue({
-      FS: {},
+      FS: rpgSaveFileSystem().fs,
       api: {
         createRuntimeCheckpoint: vi.fn(),
         runtimeState: () => JSON.stringify({
@@ -248,7 +249,7 @@ describe("EasyRPG adapter cleanup", () => {
       expect(canvas).not.toBeNull();
       canvas?.getContext("webgl", { alpha: false, preserveDrawingBuffer: false });
       return {
-        FS: {},
+        FS: rpgSaveFileSystem().fs,
         api: {
           createRuntimeCheckpoint: vi.fn(),
           runtimeState: () => JSON.stringify({
@@ -318,7 +319,7 @@ describe("EasyRPG adapter cleanup", () => {
         canvas.height = 4;
         Object.defineProperty(canvas, "toBlob", { configurable: true, value: toBlob });
         return {
-          FS: {},
+          FS: rpgSaveFileSystem().fs,
           api: {
             createRuntimeCheckpoint: vi.fn(),
             runtimeState: () => JSON.stringify({
@@ -355,7 +356,7 @@ describe("EasyRPG adapter cleanup", () => {
     Object.defineProperty(window, "createEasyRpgPlayer", {
       configurable: true,
       value: vi.fn().mockResolvedValue({
-        FS: {}, api: { runtimeState, createRuntimeCheckpoint: vi.fn() }, canvas,
+        FS: rpgSaveFileSystem().fs, api: { runtimeState, createRuntimeCheckpoint: vi.fn() }, canvas,
         runtimeFileSystemReady: true, initApi: vi.fn(), pauseMainLoop: vi.fn(), resumeMainLoop: vi.fn(),
       }),
     });
@@ -366,7 +367,7 @@ describe("EasyRPG adapter cleanup", () => {
 
     const mounted = await mounting;
     expect(runtimeState).toHaveBeenCalledTimes(2);
-    expect(mounted.getCheckpointAvailability()).toEqual({available: true, blocker: null});
+    expect(mounted.getCheckpointAvailability()).toMatchObject({available: false, blocker: "NO_SAVE"});
     await mounted.exit();
     delete (window as Window & { createEasyRpgPlayer?: unknown }).createEasyRpgPlayer;
     target.remove();
@@ -383,6 +384,5 @@ function easyConfig(generation: "RPG2000" | "RPG2003" = "RPG2000"): EasyRpgParam
     runtimeBaseUrl: "/runtime/easyrpg/",
     projectRootUrl: root,
     rtpSource: null,
-    checkpointSlot: 100,
   };
 }

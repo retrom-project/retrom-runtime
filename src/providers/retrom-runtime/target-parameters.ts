@@ -69,7 +69,6 @@ export function easyRpg(envelope: LaunchEnvelopeV1, implementation: Readonly<Rec
   if (implementation.engineMode !== "rpg2k" && implementation.engineMode !== "rpg2k3") {invalidRequest();}
   return {
     sessionId: envelope.session.id,
-    checkpointSlot: 100,
     engineMode: implementation.engineMode,
     projectRootUrl: `${game.indexUrl}/`,
     rtpSource: rtp ? fileTreeSource(rtp) : null,
@@ -105,7 +104,6 @@ export function mkxp(
         ...seekableSource(entry), declaredName: rgssRtp[rgssVersion],
       })),
     runtimeBaseUrl: assetBase(envelope, "mkxp"),
-    stateBufferBytes: 268435456,
   };
 }
 

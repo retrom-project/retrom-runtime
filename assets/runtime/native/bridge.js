@@ -1324,8 +1324,13 @@
     return [...hash.digest()].map((byte) => byte.toString(16).padStart(2, "0")).join("");
   }
 
+  // src/runtime/rpg-plugin-paths.ts
+  function isRpgPluginTextPath(path) {
+    return /^(?:scenario\/.+\.(?:sl|txt)|js\/plugins\/.+\.(?:talk|txt|csv|json))$/iu.test(path);
+  }
+
   // src/native-web/plugin-files.ts
-  var encoder = new TextEncoder(), decoder = new TextDecoder();
+  var maximumBytes = 16 * 1024 * 1024, maximumSaveFiles = 128, encoder = new TextEncoder(), decoder = new TextDecoder();
   function canonical(path) {
     return typeof path == "string" && path.length > 0 && encoder.encode(path).length <= 1024 && !/[\\:?#]/u.test(path) && !path.includes("\0") && path.normalize("NFC") === path && path.split("/").every((part) => part && part !== "." && part !== "..");
   }
@@ -1346,20 +1351,20 @@
     }
   };
   function createRpgPluginFiles(href, content) {
-    let root = decodeURIComponent(new URL(".", href).pathname).replace(/www\/$/iu, ""), readonly = /* @__PURE__ */ new Map(), saves = /* @__PURE__ */ new Map(), size = 0;
+    let assetRoot = decodeURIComponent(new URL(".", href).pathname), root = assetRoot.replace(/www\/$/iu, ""), readonly = /* @__PURE__ */ new Map(), saves = /* @__PURE__ */ new Map(), size = 0;
     if (!Array.isArray(content) || content.length > 4096)
       throw new Error("RPG_PLUGIN_FILES_TOO_LARGE");
     for (let entry of content) {
-      if (!canonical(entry.path) || !/^scenario\/.+\.(sl|txt)$/iu.test(entry.path) || readonly.has(entry.path) || !(entry.data instanceof ArrayBuffer))
+      if (!canonical(entry.path) || !isRpgPluginTextPath(entry.path) || readonly.has(entry.path) || !(entry.data instanceof ArrayBuffer))
         throw new Error("RPG_PLUGIN_FILE_INVALID");
-      if (size += entry.data.byteLength, size > 16777216)
+      if (size += entry.data.byteLength, size > maximumBytes)
         throw new Error("RPG_PLUGIN_FILES_TOO_LARGE");
       readonly.set(entry.path, new Uint8Array(entry.data));
     }
     function key(path) {
       if (typeof path != "string")
         throw new Error("RPG_PLUGIN_PATH_INVALID");
-      let relative = path.startsWith(root) ? path.slice(root.length) : path;
+      let relative = (path.startsWith(assetRoot) ? path.slice(assetRoot.length) : path.startsWith(root) ? path.slice(root.length) : path).replace(/^(?:\.\/)+/u, "").replace(/\/$/u, "");
       if (!canonical(relative))
         throw new Error("RPG_PLUGIN_PATH_INVALID");
       return relative;
@@ -1372,12 +1377,12 @@
     }
     function validateSaves(files) {
       let result = /* @__PURE__ */ new Map(), bytes = 0;
-      if (files.length > 128)
+      if (files.length > maximumSaveFiles)
         throw new Error("RPG_PLUGIN_FILES_TOO_LARGE");
       for (let file of files) {
         if (!isPluginSavePath(file.path) || result.has(file.path) || !(file.data instanceof ArrayBuffer))
           throw new Error("RPG_PLUGIN_FILE_INVALID");
-        if (bytes += file.data.byteLength, bytes > 16777216)
+        if (bytes += file.data.byteLength, bytes > maximumBytes)
           throw new Error("RPG_PLUGIN_FILES_TOO_LARGE");
         result.set(file.path, new Uint8Array(file.data).slice());
       }
@@ -1390,7 +1395,11 @@
           if (path === `${root}save/` || path === `${root}save` || path === "save" || path === "save/")
             return !0;
           let name = key(path);
-          return saves.has(name) || readonly.has(name);
+          return saves.has(name) || readonly.has(name) || [...readonly.keys(), ...saves.keys()].some((file) => file.startsWith(`${name}/`));
+        },
+        readdirSync(path) {
+          let prefix = `${key(path)}/`;
+          return [...new Set([...readonly.keys(), ...saves.keys()].filter((name) => name.startsWith(prefix)).map((name) => name.slice(prefix.length).split("/")[0]))].sort();
         },
         mkdirSync(path) {
           if (path !== `${root}save/` && path !== `${root}save` && path !== "save" && path !== "save/")
@@ -1427,7 +1436,7 @@
   }
 
   // src/native-web/game-saves.ts
-  var encoder2 = new TextEncoder(), decoder2 = new TextDecoder("utf-8", { fatal: !0 }), maximumBytes = 64 * 1024 * 1024;
+  var encoder2 = new TextEncoder(), decoder2 = new TextDecoder("utf-8", { fatal: !0 }), maximumBytes2 = 64 * 1024 * 1024;
   function createRpgWebSaves(global, engine, initial, pluginFiles) {
     let restored = initial === null ? null : readWebSaveBundle(initial, engine), forage = [], ready = !1, initialization = null, read = () => {
       let entries = [], storage = global.localStorage;
@@ -1522,7 +1531,7 @@
     return { store, key, mediaType: "application/octet-stream", data: encoder2.encode(value) };
   }
   function validateSize(entries) {
-    if (entries.length > 512 || entries.reduce((total, entry) => total + entry.data.byteLength, 0) > maximumBytes)
+    if (entries.length > 512 || entries.reduce((total, entry) => total + entry.data.byteLength, 0) > maximumBytes2)
       throw new Error("RPG_GAME_SAVE_INVALID");
   }
   function isProgress(entry, global, engine) {
@@ -2340,11 +2349,18 @@
       let isReady = bootPrototype.isReady;
       typeof isReady == "function" && (bootPrototype.isReady = function() {
         return !!pluginFiles && isReady.apply(this, arguments);
-      }), global.require = function(name) {
-        if (name !== "fs") throw new Error("RPG_PLUGIN_MODULE_UNSUPPORTED");
+      }), global.StorageManager.localFileDirectoryPath = () => pluginFiles.saveDirectory;
+    }
+    function installPluginModules() {
+      let writes = /* @__PURE__ */ new Set(["mkdirSync", "writeFileSync", "unlinkSync"]), fs = Object.freeze(Object.fromEntries(["existsSync", "readdirSync", "readFileSync", ...writes].map((name) => [name, (...args) => {
         if (!pluginFiles) throw new Error("RPG_PLUGIN_FILES_NOT_READY");
-        return pluginFiles.fs;
-      }, global.StorageManager.localFileDirectoryPath = () => pluginFiles.saveDirectory;
+        if (writes.has(name) && profile !== "RPGMV") throw new Error("RPG_PLUGIN_FILE_READ_ONLY");
+        return pluginFiles.fs[name](...args);
+      }])));
+      global.require = function(name) {
+        if (name !== "fs") throw new Error("RPG_PLUGIN_MODULE_UNSUPPORTED");
+        return fs;
+      };
     }
     async function waitForNativeStorage() {
       let deadline = performance.now() + 3e4;
@@ -2355,7 +2371,7 @@
       }
       await nativeSaves.initialize();
     }
-    installCanvasTextAlignCompatibility(), global.addEventListener("load", function(loadEvent) {
+    installCanvasTextAlignCompatibility(), installPluginModules(), global.addEventListener("load", function(loadEvent) {
       if (loadEvent.target !== global.document) return;
       installViewportFit();
       let prototype = global.Scene_Boot && global.Scene_Boot.prototype;
@@ -2375,17 +2391,17 @@
     }, { once: !0 }), global.addEventListener("message", function(eventMessage) {
       let message = eventMessage.data;
       if (!(eventMessage.source !== global.parent || !ownKeys(message, ["launchId", "nonce", "parentOrigin", "pluginFiles", "profile", "protocolVersion", "saves", "type"]) || message.type !== "RPG_RUNTIME_NATIVE_CONNECT" || message.protocolVersion !== 1 || typeof message.launchId != "string" || typeof message.nonce != "string" || typeof message.parentOrigin != "string" || eventMessage.origin !== message.parentOrigin || message.profile !== "RPGMV" && message.profile !== "RPGMZ" || eventMessage.ports.length !== 1 || port)) {
-        if (eventMessage.stopImmediatePropagation(), launchId = message.launchId, nonce = message.nonce, parentOrigin = message.parentOrigin, profile = message.profile, port = eventMessage.ports[0], port.onmessage = (portEvent) => {
+        eventMessage.stopImmediatePropagation(), launchId = message.launchId, nonce = message.nonce, parentOrigin = message.parentOrigin, profile = message.profile, port = eventMessage.ports[0], port.onmessage = (portEvent) => {
           receive(portEvent.data);
-        }, port.start(), profile === "RPGMV")
-          try {
-            pluginFiles = createRpgPluginFiles(global.location.href, message.pluginFiles);
-          } catch (error) {
-            event("ERROR", { code: error.message });
-            return;
-          }
+        }, port.start();
         try {
-          nativeSaves = createRpgWebSaves(global, profile, message.saves, pluginFiles);
+          pluginFiles = createRpgPluginFiles(global.location.href, message.pluginFiles);
+        } catch (error) {
+          event("ERROR", { code: error.message });
+          return;
+        }
+        try {
+          nativeSaves = createRpgWebSaves(global, profile, message.saves, profile === "RPGMV" ? pluginFiles : null);
         } catch (error) {
           event("ERROR", { code: error.message });
           return;

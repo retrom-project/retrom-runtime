@@ -1,4 +1,4 @@
-import {rpgPluginScenarioPath} from "../runtime/rpg-plugin-paths.js";
+import {rpgPluginTextPath} from "../runtime/rpg-plugin-paths.js";
 import type {ContentSourceV1, ManagedInputPolicyV1} from "../../contracts/content-io/v1/content-io.js";
 import type {ProgressContentReader} from "../content-io/range-reader.js";
 import type {ReadProgress} from "../content-io/scheduler.js";
@@ -47,9 +47,9 @@ export class NativeContentFiles {
     await reader.readInto(value.offset, bytes, this.signal, undefined, progress);
     return {status: 200, bytes};
   }
-  /** Desktop plugins synchronously read a small scenario script set; media remains demand-paged. */
+  /** Preload bounded plugin text; engine data and media remain demand-paged. */
   async prepareRpgPluginFiles(): Promise<Array<{path: string; data: ArrayBuffer}>> {
-    const selected = [...this.files].filter(([path]) => rpgPluginScenarioPath(this.entryFile, path) !== null);
+    const selected = [...this.files].filter(([path]) => rpgPluginTextPath(this.entryFile, path) !== null);
     const total = selected.reduce((size, [, file]) => size + file.source.sizeBytes, 0);
     if (selected.length > 4096 || total > 16 * 1024 * 1024) {throw new Error("RPG_PLUGIN_FILES_TOO_LARGE");}
     const result: Array<{path: string; data: ArrayBuffer}> = [];
@@ -59,7 +59,7 @@ export class NativeContentFiles {
         const reply = await this.request({type: "READ", path, offset, length: Math.min(262144, bytes.length - offset)});
         bytes.set(reply.bytes as Uint8Array, offset);
       }
-      result.push({path: rpgPluginScenarioPath(this.entryFile, path)!, data: bytes.buffer});
+      result.push({path: rpgPluginTextPath(this.entryFile, path)!, data: bytes.buffer});
     }
     return result;
   }

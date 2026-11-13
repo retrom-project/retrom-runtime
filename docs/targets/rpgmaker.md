@@ -46,6 +46,6 @@ Exports are bounded, nonempty bundles. The host acknowledges exactly the export 
 
 Restoring replaces the isolated run's native storage before boot, including removal of keys absent from the bundle when a preview restarts within the same run. Reloading without a restore descriptor retains that run's existing native browser storage.
 
-MV's bounded desktop `fs` plugin surface and scenario preloading are described in [MV desktop plugins](rpgmaker-mv.md). This surface does not provide a general Node.js or NW.js environment.
+MV/MZ's bounded `fs` plugin surface and text-data preloading are described in [desktop plugins](rpgmaker-mv.md). This surface does not provide a general Node.js or NW.js environment.
 
 Sources: [entry detection](../../src/runtime/configure.ts), [resource preparation](../../src/runtime/prepare.ts), and [Provider declarations](../../src/providers/retrom-runtime/catalog.ts).

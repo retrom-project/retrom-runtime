@@ -2,6 +2,21 @@
 import {expect, it} from "vitest";
 import {createRpgPluginFiles} from "./plugin-files.js";
 const href = "https://runtime.test/run/id/Game%20Name/www/index.html";
+it("lists bounded plugin text directories and reads exact immutable bytes through relative and absolute paths", () => {
+  const data = new TextEncoder().encode("actor\tHello world").buffer;
+  const files = createRpgPluginFiles(href, [
+    {path: "js/plugins/data/1_0001_9999.talk", data},
+    {path: "js/plugins/data/nested/config.json", data},
+  ]);
+  expect(files.fs.readdirSync("./js/plugins/data/")).toEqual(["1_0001_9999.talk", "nested"]);
+  expect(files.fs.readFileSync("./js/plugins/data/1_0001_9999.talk", "utf8")).toBe("actor\tHello world");
+  expect(files.fs.readFileSync("/run/id/Game Name/www/js/plugins/data/1_0001_9999.talk", "utf8"))
+    .toBe("actor\tHello world");
+  expect(files.fs.existsSync("./js/plugins/data/")).toBe(true);
+  expect(() => files.fs.writeFileSync("js/plugins/data/1_0001_9999.talk", "bad")).toThrow("RPG_PLUGIN_FILE_READ_ONLY");
+  expect(() => files.fs.readdirSync("./../data")).toThrow("RPG_PLUGIN_PATH_INVALID");
+  expect(files.snapshot()).toEqual([]);
+});
 it("keeps immutable scenarios separate from writable saves with exact bytes and snapshot isolation", () => {
   const files = createRpgPluginFiles(href, [{path: "scenario/En/start.sl", data: new TextEncoder().encode("物語").buffer}]);
   expect(files.fs.readFileSync("/run/id/Game Name/scenario/En/start.sl", "utf8")).toBe("物語");

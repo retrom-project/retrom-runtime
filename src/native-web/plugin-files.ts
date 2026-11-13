@@ -1,4 +1,5 @@
 /** Bounded desktop-plugin files; no Node process, network URLs, or host filesystem. */
+import {isRpgPluginTextPath} from "../runtime/rpg-plugin-paths.js";
 export type RpgPluginFile = {path: string; data: ArrayBuffer};
 const maximumBytes = 16 * 1024 * 1024;
 const maximumSaveFiles = 128;
@@ -23,13 +24,14 @@ class PluginBytes extends Uint8Array {
 }
 
 export function createRpgPluginFiles(href: string, content: RpgPluginFile[]) {
-  const root = decodeURIComponent(new URL(".", href).pathname).replace(/www\/$/iu, "");
+  const assetRoot = decodeURIComponent(new URL(".", href).pathname);
+  const root = assetRoot.replace(/www\/$/iu, "");
   const readonly = new Map<string, Uint8Array>();
   let saves = new Map<string, Uint8Array>();
   let size = 0;
   if (!Array.isArray(content) || content.length > 4096) {throw new Error("RPG_PLUGIN_FILES_TOO_LARGE");}
   for (const entry of content) {
-    if (!canonical(entry.path) || !/^scenario\/.+\.(sl|txt)$/iu.test(entry.path) ||
+    if (!canonical(entry.path) || !isRpgPluginTextPath(entry.path) ||
       readonly.has(entry.path) || !(entry.data instanceof ArrayBuffer)) {throw new Error("RPG_PLUGIN_FILE_INVALID");}
     size += entry.data.byteLength;
     if (size > maximumBytes) {throw new Error("RPG_PLUGIN_FILES_TOO_LARGE");}
@@ -37,7 +39,8 @@ export function createRpgPluginFiles(href: string, content: RpgPluginFile[]) {
   }
   function key(path: string) {
     if (typeof path !== "string") {throw new Error("RPG_PLUGIN_PATH_INVALID");}
-    const relative = path.startsWith(root) ? path.slice(root.length) : path;
+    const relative = (path.startsWith(assetRoot) ? path.slice(assetRoot.length)
+      : path.startsWith(root) ? path.slice(root.length) : path).replace(/^(?:\.\/)+/u, "").replace(/\/$/u, "");
     if (!canonical(relative)) {throw new Error("RPG_PLUGIN_PATH_INVALID");}
     return relative;
   }
@@ -64,7 +67,14 @@ export function createRpgPluginFiles(href: string, content: RpgPluginFile[]) {
   const fs = Object.freeze({
     existsSync(path: string) {
       if (path === `${root}save/` || path === `${root}save` || path === "save" || path === "save/") {return true;}
-      const name = key(path); return saves.has(name) || readonly.has(name);
+      const name = key(path);
+      return saves.has(name) || readonly.has(name) || [...readonly.keys(), ...saves.keys()]
+        .some(file => file.startsWith(`${name}/`));
+    },
+    readdirSync(path: string) {
+      const prefix = `${key(path)}/`;
+      return [...new Set([...readonly.keys(), ...saves.keys()].filter(name => name.startsWith(prefix))
+        .map(name => name.slice(prefix.length).split("/")[0]!))].sort();
     },
     mkdirSync(path: string) {
       if (path !== `${root}save/` && path !== `${root}save` && path !== "save" && path !== "save/") {

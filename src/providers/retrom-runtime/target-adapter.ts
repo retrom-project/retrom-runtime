@@ -93,7 +93,7 @@ function mountAdapter(envelope: LaunchEnvelopeV1, target: HTMLElement, input: Ta
       {...contentOptions(context), signal: context.signal, onFailure: reportFailure});
   case "KIRIKIRI2_WEB":
     return mountKirikiri2(parameters.kirikiri(envelope), target, frameWindow, restorePayload, reportExitRequested,
-      contentOptions(context));
+      contentOptions(context), input.registerStartupSession);
   case "BUTTERSCOTCH_WEB":
     return mountButterscotch(parameters.butterscotch(envelope), target, frameWindow, restorePayload,
       reportProgress, reportExitRequested, {...contentOptions(context), signal: context.signal});

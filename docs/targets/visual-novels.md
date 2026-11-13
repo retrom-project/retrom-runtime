@@ -18,6 +18,12 @@ The explicit native format is `ons-game-save-v1`, with the public single gzip st
 
 ## KiriKiri2 KAG
 
+Two-button script confirmations use the core's in-page modal, which remains
+visible over fullscreen content. The native caller waits for a real choice;
+keyboard and standard gamepad input belong to the modal until release. Reading
+a startup prompt pauses the startup deadline, and exiting cancels the pending
+dialog before the native stack drains.
+
 Configuration selects a `startup.tjs`, `data.xp3` or another actual `.xp3` entry. Bounded XP3 header evidence also identifies archives with other suffixes. All candidates first determine the containing project root, before entry types are ranked: a root archive outranks a nested copy's `startup.tjs`, and peer roots require an explicit selection even when their entry types differ. Within the chosen root, `startup.tjs`, `data.xp3`, signature-backed `data.*`, then other archives retain their priority; multiple candidates in the same tier still require a choice. An explicit selection can choose any valid candidate, including a nested project. A selected archive becomes `startupXp3Path` regardless of its suffix; a loose root `startup.tjs` starts its directory. A selected `data/startup.tjs` follows the engine's data-folder convention: the folder above `data/` is the project root and executable folder, so sibling archives and folders are delivered and `System.exePath` names that folder rather than `data/`. Project resources remain relative to the selected root. The saved launch options and checkpoint format remain unchanged.
 
 Host import normalization can convert verified CxFilterFS `eliF`/`hnfn`/`Yuzu`/`neko`/`sen:` variants into ordinary XP3 before configuration. Names and optional salts come from the archive; supported Tiny/classic Cx parameters come from static PE data/code relationships in supplied EXE/DLL/TPM files. Tiny supports bulk XOR and a verified variant with an additional first-byte XOR at absolute resource offset zero. These files are never executed. Successful normalization preserves archive layering and returns new immutable content facts; source metadata anomalies are explicit diagnostic details, not complete-source integrity passes. Matched CxFilterFS with missing parameters, extra filters or ambiguous profiles fails; titles do not select conversion rules. See [normalization contract](../runtime-module.md).

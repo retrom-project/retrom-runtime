@@ -185,6 +185,21 @@ class RetromRuntimePlayer implements PlayerRuntimeV1 {
   pause() {return this.enqueue(() => this.changePause("PAUSED"));}
   resume() {return this.enqueue(() => this.changePause("RUNNING"));}
 
+  get requestClose(): (() => Promise<void>) | undefined {
+    if (!this.adapter?.requestClose) {return undefined;}
+    return () => this.enqueue(async () => {
+      const adapter = this.requireAdapter();
+      if (!adapter.requestClose || this.state !== "RUNNING" && this.state !== "PAUSED") {throw contractError();}
+      await adapter.requestClose();
+      // Dispatch may synchronously accept closure in another adapter. Never
+      // revive that instance; only a live confirmation/refusal resumes input.
+      if (this.stopping()) {return;}
+      this.transition("RUNNING");
+      focusRuntimeInput(adapter.getCanvas(), this.runtimeWindow);
+      this.refreshAvailability();
+    });
+  }
+
   checkpoint(request?: RuntimeCheckpointRequestV1) {
     return this.enqueue(async () => {
       this.requireCapability("checkpoint");

@@ -6,6 +6,43 @@ import {suspendingBookmark, type KirikiriJspi} from "../../tests/kirikiri-checkp
 
 afterEach(() => {vi.useRealTimers();});
 
+it("drains a paused native frame before dispatch and resumes ticks for the close confirmation", async () => {
+  const {operation, module} = fixture();
+  await operation.pause();
+  let finish!: () => void;
+  module.pauseMainLoop.mockImplementationOnce(() => new Promise<void>(resolve => {finish = resolve;}));
+  const request = operation.requestExit();
+  expect(module._krkr2_host_request_exit).not.toHaveBeenCalled();
+  finish(); await request;
+  expect(module._krkr2_host_request_exit).toHaveBeenCalledOnce();
+  expect(operation.isPaused).toBe(false);
+  expect(module._krkr2_host_set_paused).toHaveBeenLastCalledWith(0);
+  expect(module.resumeMainLoop).toHaveBeenCalledOnce();
+  expect(module._krkr2_host_flush_game_saves).not.toHaveBeenCalled();
+  expect(module._krkr2_host_finalize_native_exit).not.toHaveBeenCalled();
+  await operation.stop();
+});
+
+it("does not queue a close after cancellation while its original frame drains", async () => {
+  const {operation, module} = fixture();
+  let finish!: () => void;
+  module.pauseMainLoop.mockImplementationOnce(() => new Promise<void>(resolve => {finish = resolve;}));
+  const request = operation.requestExit().catch(error => error as Error);
+  await operation.stop(); finish();
+  expect(await request).toMatchObject({message: "KIRIKIRI_RUNTIME_INVALID_STATE"});
+  expect(module._krkr2_host_request_exit).not.toHaveBeenCalled();
+  expect(module.resumeMainLoop).not.toHaveBeenCalled();
+});
+
+it.each([-4, -5])("preserves close dispatch failure %s without finalizing the native instance", async status => {
+  const {operation, module} = fixture();
+  await operation.pause(); module._krkr2_host_request_exit.mockReturnValueOnce(status);
+  await expect(operation.requestExit()).rejects.toThrow(`KIRIKIRI_CLOSE_REQUEST_FAILED: ${status}`);
+  expect(module._krkr2_host_finalize_native_exit).not.toHaveBeenCalled();
+  expect(module.resumeMainLoop).not.toHaveBeenCalled();
+  await operation.stop();
+});
+
 it("flushes late native metadata after the frame drains and includes it in the same save", async () => {
   const {operation, module, overlay} = fixture();
   const flush = vi.fn(async () => {
@@ -330,6 +367,7 @@ function fixture(progress = true) {
   const module = {pauseMainLoop: vi.fn(async (): Promise<void> => undefined), resumeMainLoop: vi.fn(),
     _krkr2_host_flush_game_saves: vi.fn(async () => 0),
     _krkr2_host_finalize_native_exit: vi.fn(async () => 0),
+    _krkr2_host_request_exit: vi.fn(() => 0),
     _krkr2_host_set_paused: vi.fn(),
     krkr2StopMainLoop: vi.fn(async (active?: Promise<unknown>) => {await active?.catch(() => undefined);})};
   return {operation: createKirikiriCheckpointOperation({module, overlay}), module, overlay};

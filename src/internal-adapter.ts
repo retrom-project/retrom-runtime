@@ -20,6 +20,7 @@ export type MountedRuntimeAdapter = {
   checkpoint(request?: CheckpointRequest): Promise<RuntimeCheckpoint>;
   acknowledgeCheckpoint?(checkpoint: RuntimeCheckpoint): Promise<void>;
   exit(): Promise<void>;
+  requestClose?(): Promise<void>;
   getCanvas(): HTMLCanvasElement | null;
   /** Display ratio may differ from frame-buffer dimensions for non-square pixels. */
   getDisplayAspectRatio?(): number;

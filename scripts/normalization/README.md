@@ -45,12 +45,23 @@ Plans cover the whole game rather than stopping after its first protected file.
 The KiriKiri container plugin recognizes the supported PE32 Molebox 4/STEELBOX
 loader vocabulary. It derives the substitution table, header fields, stage and
 catalog password from connected loader structures, validates catalog/package
-CRC32 and the complete named VFS tree, and checks every extracted block's CRC16.
+CRC32 and the complete VFS tree, and checks every extracted block's CRC16.
 Embedded packages follow their native mount order; later entries shadow earlier
 entries. Files retain their paths relative to the executable, the original EXE
-retains its bytes, and unrelated external siblings remain present. Additional
-DLL/registry injection, external dynamic mounts, hidden nodes and conditional
-physical-file fallback fail explicitly. Other loader shapes need their own
+retains its bytes, and unrelated external siblings remain present. Hidden files
+retain the loader's MD5 lookup key of the C-locale uppercase UTF-16 path; their
+opaque backing data and namespace descriptor stay outside game enumeration.
+The KiriKiri adapter installs this immutable query namespace before VM startup,
+so a hidden resource opens by its native query without inventing its filename.
+Executable node flags describe data and never authorize native execution.
+Exact shared block aliases are accepted only with identical decoding fields;
+partial overlaps and conflicting aliases fail. Multiple launch wrappers in the same
+folder coalesce only when a namespace contains every other entry with identical
+native name hashes, flags and verified payloads, including a shared executable.
+Equal namespaces use stable path order; independent or conflicting launch
+domains still fail before conversion. Original wrapper bytes remain present.
+Additional DLL/registry injection, external dynamic mounts and conditional physical-file fallback fail
+explicitly. Other loader shapes need their own
 format evidence; recognizing an EXE never authorizes executing its Windows code.
 Container metadata does not establish which XP3 the original engine selects.
 Reviewers use the existing entry configuration for the intended startup file;

@@ -36,6 +36,12 @@ game bytes, extracted control table, native execution or x86 emulator is shipped
   An all-zero-seed archive stays byte-for-byte unchanged when every recovered
   key is mathematically zero; this does not invent replacement checksums or
   claim source-integrity validation for those original archive facts.
+- `prefix-xor.mjs` recognizes an ABI-checked extraction callback connected to
+  the native filter-registration API and its shared import resolver. The seed
+  shift and preserved-prefix boundary come from the supplied PE instructions;
+  no module name or fixed filter parameters select this path. At least three
+  complete source checksums must authenticate the profile, and conversion
+  still verifies every resource with absolute uncompressed read offsets.
 - `native-tlg.mjs` recovers custom TLG5/6 signatures and dimension XORs from a
   connected PE dispatch and its readers. Conversion retains the decoded source
   checksum check, canonicalizes only that representation with a bounded header

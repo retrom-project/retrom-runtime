@@ -29,6 +29,37 @@ afterEach(() => {
   document.body.replaceChildren();
 });
 
+it("dispatches a Host close request, keeps a refusal live, then captures late close writes after acceptance", async () => {
+  const f = await mount(); nativeSave(f, Uint8Array.of(1));
+  const request = vi.fn(() => 0);
+  Object.assign(f.module, {_krkr2_host_request_exit: request});
+  try {
+    await f.runtime.pause();
+    expect(f.runtime).toHaveProperty("requestClose", expect.any(Function));
+    const close = f.runtime as typeof f.runtime & {requestClose(): Promise<void>};
+    await close.requestClose();
+    expect(request).toHaveBeenCalledOnce();
+    expect(f.runtime.getState()).toBe("RUNNING");
+    expect(f.events.some(event => event.type === "EXIT_REQUESTED")).toBe(false);
+    expect(f.module.krkr2StopMainLoop).not.toHaveBeenCalled();
+    // The first script close was refused/canceled. A later request can succeed.
+    await f.runtime.pause(); await close.requestClose();
+    const tick = deferred<void>();
+    f.module.pauseMainLoop.mockImplementationOnce(() => tick.promise);
+    f.module.onNativeExitRequested?.(0);
+    f.vlfs.onWriteClose?.("/profiles/玩家/options.ksd", Uint8Array.of(2));
+    expect(f.events.some(event => event.type === "EXIT_REQUESTED")).toBe(false);
+    tick.resolve();
+    await vi.waitFor(() => expect(f.runtime.getState()).toBe("EXITED"));
+    const event = f.events.find(event => event.type === "EXIT_REQUESTED");
+    const saved = event?.type === "EXIT_REQUESTED" ? event.finalSnapshot!.checkpoint : undefined;
+    const bytes = await decodeStoredCheckpoint(saved!.bytes, saved!.format, maximumKirikiriCheckpointBytes);
+    expect((await decodeKirikiriCheckpoint(bytes)).entries).toContainEqual({path: "profiles/玩家/options.ksd", data: Uint8Array.of(2)});
+    expect(request).toHaveBeenCalledTimes(2);
+    expect(f.module._krkr2_host_save_bookmark).not.toHaveBeenCalled();
+  } finally {await f.runtime.exit();}
+});
+
 it("exports unsynced native files once on normal exit through the public single-gzip final snapshot", async () => {
   const f = await mount(); nativeSave(f, Uint8Array.of(4, 2));
   f.vlfs.onWriteClose?.("/profiles/玩家/options.ksd", Uint8Array.of(7));

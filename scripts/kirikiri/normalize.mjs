@@ -14,6 +14,7 @@ import {createConfiguredFilter, discoverConfiguredProfiles} from "./configured-c
 import {createRollingFilter, discoverRollingProfiles} from "./rolling-xor.mjs";
 import {seedMetadataArchive} from "./seed-metadata.mjs";
 import {createInlineFilter, discoverInlineProfiles} from "./inline-xor.mjs";
+import {createPrefixFilter, discoverPrefixProfiles} from "./prefix-xor.mjs";
 import {discoverNativeTlgProfiles, rewriteNativeTlg} from "./native-tlg.mjs";
 
 const digest = bytes => createHash("sha256").update(bytes).digest("hex");
@@ -22,7 +23,7 @@ function tinyFilter(profile) {
 }
 function profileKey(profile) {
   if (profile.kind === "rolling-xor") {return `rolling-xor:${profile.profile.xorConstant ?? 0}:${digest(profile.profile.table)}`;}
-  if (profile.kind === "inline-xor") {return `inline-xor:${JSON.stringify(profile.profile)}`;}
+  if (["inline-xor", "prefix-xor"].includes(profile.kind)) {return `${profile.kind}:${JSON.stringify(profile.profile)}`;}
   if (profile.kind === "configured") {
     return `configured:${digest(profile.profile.params)}:${digest(profile.profile.controlBlock)}`;
   }
@@ -45,7 +46,8 @@ async function nativeProfiles(input, signal, archives = []) {
       ...discoverTinyProfiles(bytes).map(profile => ({kind: "tiny", profile})),
       ...discoverConfiguredProfiles(bytes).map(profile => ({kind: "configured", profile})),
       ...discoverRollingProfiles(bytes).map(profile => ({kind: "rolling-xor", profile})),
-      ...discoverInlineProfiles(bytes).map(profile => ({kind: "inline-xor", profile}))];
+      ...discoverInlineProfiles(bytes).map(profile => ({kind: "inline-xor", profile})),
+      ...discoverPrefixProfiles(bytes).map(profile => ({kind: "prefix-xor", profile}))];
     const resourceCodecs = discoverNativeTlgProfiles(bytes);
     for (const value of found) {
       const key = profileKey(value) + JSON.stringify(resourceCodecs), previous = profiles.get(key);
@@ -107,7 +109,8 @@ async function selectFilter(profiles, archives, signal) {
     signal?.throwIfAborted();
     let filter;
     try {
-      filter = candidate.kind === "tiny" ? tinyFilter(candidate.profile) : candidate.kind === "configured" ?
+      filter = candidate.kind === "prefix-xor" ? {kind: "prefix-xor", ...createPrefixFilter(candidate.profile)} :
+        candidate.kind === "tiny" ? tinyFilter(candidate.profile) : candidate.kind === "configured" ?
         {kind: "configured", ...createConfiguredFilter(candidate.profile)} : candidate.kind === "inline-xor" ?
           {kind: "inline-xor", ...createInlineFilter(candidate.profile)} : candidate.kind === "rolling-xor" ?
           {kind: "rolling-xor", ...createRollingFilter(candidate.profile)} : {kind: "classic", ...createCxFilter(candidate.profile)};
@@ -248,7 +251,7 @@ async function convert(input, plan) {
       await audit({archive: file.logicalKey, kind: "archive", format: archive.format, sourceSha256: file.sha256, sourceSize: file.sizeBytes,
         outputSha256: result.sha256, outputSize: result.sizeBytes, filterKind: filter.kind, moduleSha256: filter.inputProfile.moduleSha256,
         resourceCodecs: filter.inputProfile.resourceCodecs,
-        profile: ["fixed-xor", "seed-xor", "identity", "inline-xor"].includes(filter.kind) ? filter.inputProfile.profile : filter.kind === "tiny" ? filter.profile : filter.kind === "rolling-xor" ?
+        profile: ["fixed-xor", "seed-xor", "identity", "inline-xor", "prefix-xor"].includes(filter.kind) ? filter.inputProfile.profile : filter.kind === "tiny" ? filter.profile : filter.kind === "rolling-xor" ?
           {tableSha256: digest(filter.inputProfile.profile.table), ...(filter.inputProfile.profile.xorConstant === undefined ? {} :
             {xorConstant: filter.inputProfile.profile.xorConstant, tableLength: filter.inputProfile.profile.table.length})} : filter.kind === "configured" ?
           {paramsSha256: digest(filter.inputProfile.profile.params), controlBlockSha256: digest(filter.inputProfile.profile.controlBlock)} :

@@ -34,7 +34,8 @@ function blocksAt(metadata, offset, count, fileSize, base, dataEnd, spans, budge
     requireMolebox(packed > 0 && sizeBytes === Math.min(fileSize - i * moleboxLimits.block, moleboxLimits.block) &&
       position >= base && position <= dataEnd && packed <= dataEnd - position && (!(flags & 4) || packed % 8 === 0) &&
       (flags & 2 || (flags & 4 ? packed === Math.ceil(sizeBytes / 8) * 8 : packed === sizeBytes)));
-    blocks.push({offset: position, packed, sizeBytes, flags, crc16}); spans.push({start: position, end: position + packed});
+    blocks.push({offset: position, packed, sizeBytes, flags, crc16});
+    spans.push({start: position, end: position + packed, sizeBytes, flags, crc16});
   }
   return blocks;
 }
@@ -49,13 +50,17 @@ function treeRows(metadata, rootOffset, listOffset, count, base, dataEnd, key, t
     requireMolebox(!visited.has(offset)); visited.add(offset);
     const node = moleboxRange(metadata, offset, 52), flags = node.readUInt32LE(40), directory = (flags & 0x80000000) !== 0;
     requireMolebox(node.readUInt32LE() === 0 && node.readUInt32LE(4) === 0 && node.readUInt32LE(36) === 0);
-    requireMolebox(directory ? flags === 0x80000000 : (flags & ~6) === 0, "RUNTIME_MOLEBOX_UNSUPPORTED");
-    // Hidden names and conditional physical-file fallback change native lookup
-    // or enumeration. They cannot be restored as unconditional loose files.
-    const name = nodeName(metadata, node.readUInt32LE(8), node.readUInt32LE(12), root), path = root ? "" : parent + name;
+    requireMolebox(directory ? flags === 0x80000000 : (flags & ~0x17) === 0, "RUNTIME_MOLEBOX_UNSUPPORTED");
+    // Bit 0 removes a file's name and enumeration, not its MD5 lookup. Bit 4
+    // marks an executable; conditional physical fallback is bits 5/6.
+    const hidden = !directory && Boolean(flags & 1), hash = node.subarray(20, 36).toString("hex");
+    const name = hidden ? null : nodeName(metadata, node.readUInt32LE(8), node.readUInt32LE(12), root);
+    const path = root ? "" : hidden ? null : parent + name;
     if (!root) {
-      requireMolebox(safePath(path), "RUNTIME_MOLEBOX_PATH_INVALID");
-      requireMolebox(expected.has(offset) && !paths.has(folded(path))); paths.add(folded(path));
+      if (path !== null) {requireMolebox(safePath(path), "RUNTIME_MOLEBOX_PATH_INVALID");}
+      else {requireMolebox(!node.readUInt32LE(8) && !node.readUInt32LE(12));}
+      const identity = directory ? folded(path) : hash;
+      requireMolebox(expected.has(offset) && !paths.has(identity)); paths.add(identity);
     } else {requireMolebox(directory);}
     const length = node.readUInt32LE(44), children = node.readUInt32LE(48);
     if (directory) {
@@ -65,14 +70,18 @@ function treeRows(metadata, rootOffset, listOffset, count, base, dataEnd, key, t
     } else {
       requireMolebox(length <= moleboxLimits.file && budget.tree + length <= moleboxLimits.tree, "RUNTIME_MOLEBOX_LIMIT");
       budget.tree += length;
-      rows.push({name: path, sizeBytes: length, flags, key, table, packageIndex,
+      rows.push({name: path, hash, directory: parent.replace(/\/$/u, ""), sizeBytes: length, flags, key, table, packageIndex,
         blocks: blocksAt(metadata, offset + 52, children, length, base, dataEnd, spans, budget)});
     }
   }
   walk(rootOffset, "", 0, true);
   requireMolebox(visited.size === expected.size + 1 && [...expected].every(offset => visited.has(offset)));
   spans.sort((a, b) => a.start - b.start);
-  requireMolebox(spans.every((span, i) => i === 0 || span.start >= spans[i - 1].end));
+  requireMolebox(spans.every((span, i) => {
+    const previous = spans[i - 1];
+    return !previous || span.start >= previous.end || span.start === previous.start && span.end === previous.end &&
+      span.sizeBytes === previous.sizeBytes && span.flags === previous.flags && span.crc16 === previous.crc16;
+  }));
   return rows;
 }
 async function packageRows(handle, sourceSize, footerOffset, seed, loader, budget, signal, packageIndex) {
@@ -93,7 +102,8 @@ async function packageRows(handle, sourceSize, footerOffset, seed, loader, budge
 
 /** Inspect one immutable PE slice; named VFS files retain the native mount order.
  * This exposes resources only. Additional DLL/registry injection, external mounts,
- * hidden nodes and physical-file fallback need separate evidence-backed support.
+ * Hidden files retain their native hash identity and are not loose-file names.
+ * Physical-file fallback still needs separate support.
  */
 export async function inspectMolebox(handle, sourceSize, signal) {
   const loader = await readMoleboxLoader(handle, sourceSize, signal);
@@ -121,10 +131,10 @@ export async function inspectMolebox(handle, sourceSize, signal) {
     const position = catalog.readUInt32LE(entry);
     requireMolebox(position + 48 <= catalogOffset - length);
     const rows = await packageRows(handle, sourceSize, position, catalog.subarray(mount + 8, mount + 24), loader, budget, signal, i);
-    for (const row of rows) {selected.set(folded(row.name), row);}
+    for (const row of rows) {selected.set(row.hash, row);}
   }
   requireMolebox(selected.size > 0 && selected.size <= moleboxLimits.entries, "RUNTIME_MOLEBOX_LIMIT");
-  return {rows: [...selected.values()].sort((a, b) => Buffer.from(a.name).compare(Buffer.from(b.name))),
+  return {rows: [...selected.values()].sort((a, b) => Buffer.from(a.name ?? a.hash).compare(Buffer.from(b.name ?? b.hash))),
     evidence: {...loader.evidence, packageCount: count, metadataBytes: budget.metadata, verifiedMetadataCRC32: count + 1,
       sourceBlocks: budget.blocks}};
 }

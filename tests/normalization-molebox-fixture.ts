@@ -42,7 +42,7 @@ function checksum16(bytes: Uint8Array) {
   return value;
 }
 function relative(bytes: Buffer, call: number, target: number) {bytes[call] = 0xe8; bytes.writeInt32LE(target - call - 5, call + 1);}
-export interface Resource {name: string; bytes: Buffer; mode?: number; flags?: number}
+export interface Resource {name: string; bytes: Buffer; mode?: number; flags?: number; aliasOf?: number}
 export interface FixtureOptions {
   relocate?: boolean; invalidName?: boolean; hidden?: boolean; badCatalog?: boolean; injected?: boolean; expandedStage?: number;
   multiplePackages?: boolean; cycle?: boolean; duplicate?: boolean; externalMount?: boolean; resources?: Resource[];
@@ -93,11 +93,13 @@ export function sourcePE(options: FixtureOptions) {
 function metadata(resources: Resource[], blockStarts: number[]) {
   const bytes = Buffer.alloc(65536); let at = 4; const records: number[] = [];
   function node(name: string, entries: Resource[], directory: boolean) {
-    const encoded = Buffer.from(name + "\0", "utf16le"), nameOffset = at; encoded.copy(bytes, at); at += encoded.length;
+    const hidden = !directory && Boolean((entries[0].flags ?? 6) & 1);
+    const encoded = Buffer.from(hidden ? "" : name + "\0", "utf16le"), nameOffset = at; encoded.copy(bytes, at); at += encoded.length;
     const record = at; records.push(record);
     const count = directory ? entries.length : Math.ceil(entries[0].bytes.length / 49152);
     at += 52 + count * (directory ? 4 : 12);
-    bytes.writeUInt32LE(name ? nameOffset : 0, record + 8); bytes.writeUInt32LE(name.length, record + 12);
+    bytes.writeUInt32LE(name && !hidden ? nameOffset : 0, record + 8); bytes.writeUInt32LE(hidden ? 0 : name.length, record + 12);
+    if (name) createHash("md5").update(Buffer.from((directory ? name : "resources\\" + name).toUpperCase(), "utf16le")).digest().copy(bytes, record + 20);
     bytes.writeUInt32LE(directory ? 0x80000000 : entries[0].flags ?? 6, record + 40); bytes.writeUInt32LE(count, record + 48);
     return record;
   }
@@ -138,6 +140,7 @@ function keyedMarker(seed: Uint8Array) {
 function packResources(resources: Resource[], base: number, seed: Buffer, options: FixtureOptions = {}) {
   const expanded = key(seed), parts: Buffer[] = [Buffer.alloc(12)], starts: number[] = []; let offset = 12;
   for (const resource of resources) {
+    if (resource.aliasOf !== undefined) {starts.push(starts[resource.aliasOf]); continue;}
     starts.push(offset);
     for (let at = 0; at < resource.bytes.length; at += 49152) {
       let bytes = resource.bytes.subarray(at, at + 49152); const mode = resource.mode ?? 6;

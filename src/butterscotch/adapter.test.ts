@@ -12,6 +12,8 @@ import {targetContentFixture} from "../../tests/target-content-fixture.js";
 import { mountButterscotch as mount } from "./adapter.js";
 import type {ButterscotchParameters} from "./parameters.js";
 import {deferred} from "../../tests/provider-adapter-fixture.js";
+import {retromRuntimeProviderDefinition} from "../providers/retrom-runtime/catalog.js";
+import {projectProviderManifest} from "../provider/manifest.js";
 
 vi.mock("./project-store.js", () => ({prepareButterscotchProject: vi.fn(async (config: ButterscotchParameters) => ({
   gamePath: `/butterscotch/projects/${config.contentDigest}/00000000-0000-4000-8000-000000000000/data/data.win`,
@@ -51,6 +53,36 @@ it("[ST-04] UNIT/workspace-denied never starts native code and releases the cons
 });
 
 describe("Butterscotch Web adapter", () => {
+  it("declares native game saves and a distinct format from execution snapshots", () => {
+    const target = projectProviderManifest(retromRuntimeProviderDefinition).targets.find(target => target.id === "butterscotch-gamemaker");
+    expect(target?.checkpoint).toMatchObject({semantics: "GAME_SAVE",
+      writeFormat: "butterscotch-game-save-v1-storage-v1",
+      readFormats: ["butterscotch-game-save-v1-storage-v1"]});
+  });
+
+  it("imports native files before game initialization and confirms only persisted bytes", async () => {
+    installIsolatedBrowserGlobals();
+    const workers: FakeWorker[] = [];
+    Object.defineProperty(window, "Worker", {configurable: true,
+      value: class extends FakeWorker {constructor(url: URL) {super(url); workers.push(this);}}});
+    Object.defineProperty(HTMLCanvasElement.prototype, "transferControlToOffscreen", {configurable: true, value: () => ({})});
+    Object.defineProperty(window.navigator, "storage", {configurable: true, value: {getDirectory: async () => new MemoryDirectory()}});
+    const restore = Uint8Array.of(66, 83, 71, 83, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0);
+    const adapter = await mountButterscotch(config(), document.createElement("div"), window, restore);
+    try {
+      expect(workers[0].messages.find(message => message.type === "START")).toMatchObject({restoreBytes: restore});
+      expect(workers[0].commands).not.toContain("RESTORE");
+      expect(adapter.getCheckpointAvailability()).toMatchObject({available: true,
+        save: {dataKind: "STORAGE", capture: "IN_GAME", restore: "IN_GAME", captureAvailable: false}});
+      const saved = await adapter.checkpoint();
+      expect(saved.format).toBe("butterscotch-game-save-v1");
+      expect(adapter.getCheckpointAvailability().available).toBe(true);
+      expect(adapter.acknowledgeCheckpoint).toBeTypeOf("function");
+      await adapter.acknowledgeCheckpoint!(saved);
+      expect(adapter.getCheckpointAvailability()).toMatchObject({available: false, blocker: "UNCHANGED"});
+    } finally {await adapter.exit();}
+  });
+
   it.each(["host", "core"])("awaits project cleanup on %s exit before resolving the adapter", async source => {
     installIsolatedBrowserGlobals();
     const workers: FakeWorker[] = [];
@@ -84,7 +116,7 @@ describe("Butterscotch Web adapter", () => {
     vi.spyOn(window, "cancelAnimationFrame").mockImplementation(() => undefined);
     const target = document.createElement("div");
     document.body.append(target);
-    const adapter = await mountButterscotch(config(), target, window, Uint8Array.of(66, 83, 67, 80, 2, 0, 0, 0, 0, 0, 0, 0));
+    const adapter = await mountButterscotch(config(), target, window, Uint8Array.of(66, 83, 71, 83, 1, 0, 0, 0, 1, 0, 0, 0));
     const canvas = adapter.getCanvas()!;
     const key = (type: string) => new KeyboardEvent(type, {bubbles: true, code: "ArrowDown"});
     canvas.dispatchEvent(key("keydown"));
@@ -121,7 +153,7 @@ describe("Butterscotch Web adapter", () => {
     expect(workers[0].messages).toHaveLength(count);
   });
 
-  it("mounts cached project bytes, restores, maps input and creates a bounded core checkpoint", async () => {
+  it("mounts cached project bytes, imports native saves, maps input and exports bounded files", async () => {
     installIsolatedBrowserGlobals();
     const workers: FakeWorker[] = [];
     Object.defineProperty(window, "Worker", {
@@ -147,7 +179,7 @@ describe("Butterscotch Web adapter", () => {
     mockProject();
     const target = document.createElement("div");
     document.body.append(target);
-    const restore = Uint8Array.of(66, 83, 67, 80, 2, 0, 0, 0, 0, 0, 0, 0);
+    const restore = Uint8Array.of(66, 83, 71, 83, 1, 0, 0, 0, 1, 0, 0, 0);
 
     const adapter = await mountButterscotch(config(), target, window, restore, () => undefined, () => undefined);
     const canvas = adapter.getCanvas();
@@ -171,15 +203,14 @@ describe("Butterscotch Web adapter", () => {
     await expect(adapter.screenshot()).resolves.toEqual(expect.objectContaining({type: "image/png"}));
 
     expect(checkpoint).toEqual({
-      bytes: Uint8Array.of(66, 83, 67, 80, 2, 0, 0, 0, 4, 0, 0, 0, 1, 2, 3, 4),
-      format: "butterscotch-checkpoint-v2",
+      bytes: Uint8Array.of(66, 83, 71, 83, 1, 0, 0, 0, 4, 0, 0, 0, 1, 2, 3, 4),
+      format: "butterscotch-game-save-v1",
+      screenshot: "UNCHANGED",
     });
-    expect(workers[0]?.commands).toContain("RESTORE");
-    // Restore must publish all currently connected slots while the runner is
-    // still paused. Waiting for the first RAF exposes a false disconnect to GML.
-    const resumeIndex = workers[0].messages.findIndex(message => message.command === "RESUME");
-    const restoredIndex = workers[0].messages.findIndex(message => message.command === "RESTORE");
-    expect(workers[0].messages.slice(restoredIndex + 1, resumeIndex)).toContainEqual({type: "GAMEPAD", gamepads: [null, snapshot]});
+    expect(workers[0]?.commands).not.toContain("RESTORE");
+    expect(workers[0]?.messages.find(message => message.type === "START")).toMatchObject({
+      restoreBytes: restore, gamepads: [null, snapshot],
+    });
     expect(CoreAssetURLs).toHaveBeenCalled();
     expect(workers[0]?.messages).toContainEqual(expect.objectContaining({type: "START",
       moduleUrl: new URL("/runtime/retrom-runtime/v0.8.0/butterscotch.mjs", location.href).href,
@@ -187,7 +218,7 @@ describe("Butterscotch Web adapter", () => {
     expect(workers[0]?.url.pathname).toBe("/runtime/retrom-runtime/v0.8.0/worker.mjs");
     expect(workers[0]?.messages).toContainEqual(expect.objectContaining({ keyCode: 38, pressed: true, type: "KEY" }));
     expect(workers[0]?.messages).toContainEqual(expect.objectContaining({ type: "GAMEPAD" }));
-    expect(adapter.getCheckpointAvailability()).toEqual({ available: true, blocker: null });
+    expect(adapter.getCheckpointAvailability()).toMatchObject({ available: true, blocker: null });
     expect(document.activeElement).toBe(canvas);
     expect(Number.parseFloat(canvas.style.width)).toBeCloseTo(1_333.333, 2);
     expect(Number.parseFloat(canvas.style.height)).toBeCloseTo(1_000, 2);
@@ -228,12 +259,12 @@ describe("Butterscotch Web adapter", () => {
     await adapter.exit();
   });
 
-  it("distinguishes transient startup work from an unsupported core checkpoint shape", async () => {
+  it("reports missing files and export failures without VM resource blockers", async () => {
     installIsolatedBrowserGlobals();
     const workers: FakeWorker[] = [];
     Object.defineProperty(window, "Worker", {
       configurable: true,
-      value: class extends FakeWorker {constructor(url: URL) {super(url, 1); workers.push(this);}},
+      value: class extends FakeWorker {constructor(url: URL) {super(url, "NO_SAVE"); workers.push(this);}},
     });
     Object.defineProperty(HTMLCanvasElement.prototype, "transferControlToOffscreen", {
       configurable: true, value: () => ({ height: 480, width: 640 }),
@@ -246,11 +277,11 @@ describe("Butterscotch Web adapter", () => {
       config(), document.createElement("div"), window, null, () => undefined, () => undefined,
     );
 
-    expect(adapter.getCheckpointAvailability()).toEqual({ available: false, blocker: "BUSY" });
-    workers[0]?.emit({ available: false, status: 5, type: "checkpointAvailability" });
-    expect(adapter.getCheckpointAvailability()).toEqual({ available: false, blocker: "UNSUPPORTED" });
-    workers[0]?.emit({ available: true, status: 0, type: "checkpointAvailability" });
-    expect(adapter.getCheckpointAvailability()).toEqual({ available: true, blocker: null });
+    expect(adapter.getCheckpointAvailability()).toMatchObject({ available: false, blocker: "NO_SAVE" });
+    workers[0]?.emit({ available: false, status: "FAILED", type: "checkpointAvailability" });
+    expect(adapter.getCheckpointAvailability()).toMatchObject({ available: false, blocker: "FAILED" });
+    workers[0]?.emit({ available: true, revision: "new-save", status: "READY", type: "checkpointAvailability" });
+    expect(adapter.getCheckpointAvailability()).toMatchObject({ available: true, blocker: null });
     await adapter.exit();
   });
 });
@@ -259,13 +290,13 @@ class FakeWorker extends EventTarget {
   readonly messages: Array<Record<string, unknown>> = [];
   readonly commands: string[] = [];
   terminated = false;
-  constructor(readonly url: URL, private readonly initialStatus = 0) {super();}
+  constructor(readonly url: URL, private readonly initialStatus = "READY") {super();}
   postMessage(message: Record<string, unknown>) {
     this.messages.push(message);
     if (message.type === "START") {
       queueMicrotask(() => {
         this.emit({ type: "runnerReady" });
-        this.emit({ available: this.initialStatus === 0, status: this.initialStatus, type: "checkpointAvailability" });
+        this.emit({ available: this.initialStatus === "READY", status: this.initialStatus, revision: "first-save", type: "checkpointAvailability" });
       });
       return;
     }
@@ -276,11 +307,12 @@ class FakeWorker extends EventTarget {
       command, ok: true, requestId: message.requestId, type: "HOST_RESPONSE",
     };
     if (command === "STATUS") {
-      response.available = this.initialStatus === 0;
+      response.available = this.initialStatus === "READY";
       response.status = this.initialStatus;
+      response.revision = "first-save";
     }
     if (command === "CHECKPOINT") {
-      response.bytes = Uint8Array.of(66, 83, 67, 80, 2, 0, 0, 0, 4, 0, 0, 0, 1, 2, 3, 4);
+      response.bytes = Uint8Array.of(66, 83, 71, 83, 1, 0, 0, 0, 4, 0, 0, 0, 1, 2, 3, 4);
     }
     if (command === "SCREENSHOT") {response.bytes = Uint8Array.of(137, 80, 78, 71);}
     queueMicrotask(() => this.emit(response));

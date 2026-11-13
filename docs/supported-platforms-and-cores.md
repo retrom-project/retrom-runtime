@@ -218,7 +218,7 @@ The Content column lists the accepted content kind and, where present, the requi
 | --- | --- | --- | --- | --- |
 | Apple2JS (`apple2js`) | Apple IIe (Apple2JS) (`apple2-apple2js`) | `apple2` | `SINGLE_FILE` | `INSTANT` |
 | jsbeeb (`jsbeeb`) | BBC Micro (jsbeeb) (`bbc-jsbeeb`) | `bbc` | `SINGLE_FILE` | `INSTANT` |
-| Butterscotch (`butterscotch`) | GameMaker (Butterscotch) (`butterscotch-gamemaker`) | `butterscotch` | `BUTTERSCOTCH_PROJECT` | `INSTANT` |
+| Butterscotch (`butterscotch`) | GameMaker (Butterscotch) (`butterscotch-gamemaker`) | `butterscotch` | `BUTTERSCOTCH_PROJECT` | `GAME_SAVE` |
 | FAKE-08 (`fake08`) | PICO-8 (FAKE-08) (`fake08`) | `pico8` | `SINGLE_FILE` | `INSTANT` |
 | Ruffle (`ruffle`) | Flash (Ruffle) (`flash-ruffle`) | `flash` | `SINGLE_FILE` | `GAME_SAVE` |
 | GBE+ (Pokémon Mini) (`gbe_plus`) | Pokémon Mini (GBE+) (`gbe-pokemini`) | `pokemini` | `SINGLE_FILE` | `INSTANT` |

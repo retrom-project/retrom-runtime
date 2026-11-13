@@ -6,6 +6,7 @@ import type { CheckpointAvailability } from "../contract.js";
 import type {ButterscotchParameters} from "./parameters.js";
 import { prepareButterscotchProject } from "./project-store.js";
 import { createButterscotchAudio } from "./audio.js";
+import {nativeSaves} from "./native-save.js";
 
 type HostMessage = {
   buffer?: SharedArrayBuffer;
@@ -15,18 +16,18 @@ type HostMessage = {
   code?: string;
   ok?: boolean;
   requestId?: string;
-  status?: number;
+  status?: string;
+  revision?: string;
   type?: string;
   samples?: Float32Array;
 };
-type HostCommand = "CHECKPOINT" | "PAUSE" | "RESTORE" | "RESUME" | "SCREENSHOT" | "STATUS" | "STOP";
+type HostCommand = "CHECKPOINT" | "PAUSE" | "RESUME" | "SCREENSHOT" | "STATUS" | "STOP";
 type WorkerWindow = Window & {
   ResizeObserver?: typeof ResizeObserver;
   SharedArrayBuffer?: typeof SharedArrayBuffer;
   Worker: typeof Worker;
 };
 
-const checkpointFormat = "butterscotch-checkpoint-v2";
 const commandTimeoutMs = 30_000;
 const keyCodes = new Map([
   ["ArrowLeft", 37], ["ArrowUp", 38], ["ArrowRight", 39], ["ArrowDown", 40],
@@ -92,8 +93,7 @@ export async function mountButterscotch(
   const pending = new Map<string, { reject: (error: Error) => void; resolve: (message: HostMessage) => void }>();
   const ready = deferred<void>();
   const pressedKeys = new Set<number>();
-  let checkpointAvailable = false;
-  let checkpointStatus = 1;
+  const saves = nativeSaves(restorePayload);
   let exited = false;
   let paused = false;
   let exitReported = false;
@@ -114,14 +114,15 @@ export async function mountButterscotch(
     if (message.type === "AUDIO") {if (message.samples) {audio?.enqueue(message.samples);} return;}
     if (message.type === "runnerReady") {ready.resolve(); return;}
     if (message.type === "runnerExit") {
-      checkpointAvailable = false;
       exited = true;
-      if (!exitReported) {exitReported = true; reportExitRequested();}
+      if (!exitReported) {
+        exitReported = true;
+        reportExitRequested(saves.final(copyBytes(message.bytes)));
+      }
       return;
     }
     if (message.type === "checkpointAvailability") {
-      checkpointAvailable = message.available === true && !exited;
-      checkpointStatus = normalizedCheckpointStatus(message.status, checkpointAvailable);
+      saves.update(message);
       return;
     }
     if (message.type === "FATAL") {ready.reject(new Error(message.code ?? "BUTTERSCOTCH_RUNTIME_FAILED")); return;}
@@ -163,6 +164,7 @@ export async function mountButterscotch(
     const moduleUrl = new URL("butterscotch.mjs", runtimeBase).href;
     const wasmUrl = await assets.url("assets/butterscotch/butterscotch.wasm");
     const offscreen = canvas.transferControlToOffscreen();
+    const restoreBytes = restorePayload?.slice() ?? null;
     worker.postMessage({
       canvas: offscreen,
       audioEnabled: audio !== null,
@@ -171,23 +173,14 @@ export async function mountButterscotch(
       files: project.files,
       persistentSaves: project.persistentSaves,
       moduleUrl,
-      restore: restorePayload !== null,
+      restoreBytes,
+      gamepads: gamepads(frameWindow),
       savePath: project.savePath,
       type: "START",
       wasmUrl,
-    }, [offscreen]);
+    }, restoreBytes ? [offscreen, restoreBytes.buffer] : [offscreen]);
     await withTimeout(ready.promise, commandTimeoutMs, "BUTTERSCOTCH_RUNTIME_TIMEOUT");
-    if (restorePayload) {
-      const restore = restorePayload.slice();
-      await command("RESTORE", { bytes: restore }, [restore.buffer]);
-      // The runner must see connected devices on its first restored frame.
-      // Worker messages are ordered, so publish the whole snapshot before RESUME.
-      sendGamepads(frameWindow, worker);
-      await command("RESUME");
-    }
-    const status = await command("STATUS");
-    checkpointAvailable = status.available === true;
-    checkpointStatus = normalizedCheckpointStatus(status.status, checkpointAvailable);
+    saves.update(await command("STATUS"));
     gamepadFrame = frameWindow.requestAnimationFrame(pollGamepadFrame);
     focusCanvas();
   } catch (error) {
@@ -224,16 +217,11 @@ export async function mountButterscotch(
     checkpoint: async () => {
       if (exited) {throw new Error("BUTTERSCOTCH_RUNTIME_INVALID_STATE");}
       const response = await command("CHECKPOINT");
-      const bytes = copyBytes(response.bytes);
-      if (!bytes || bytes.byteLength <= 12 || bytes.byteLength > 16 * 1024 * 1024) {
-        throw new Error("BUTTERSCOTCH_CHECKPOINT_CREATE_FAILED");
-      }
-      checkpointAvailable = true;
-      return { bytes, format: checkpointFormat };
+      return saves.capture(copyBytes(response.bytes));
     },
+    acknowledgeCheckpoint: async checkpoint => {saves.acknowledge(checkpoint);},
     exit: async () => {
       if (target.childElementCount === 0) {return;}
-      checkpointAvailable = false;
       if (!exited) {await command("STOP").catch(() => undefined);}
       exited = true;
       await cleanup();
@@ -241,7 +229,7 @@ export async function mountButterscotch(
     getCanvas: () => canvas,
     getCheckpointAvailability: (): CheckpointAvailability => exited
       ? { available: false, blocker: "NOT_READY" }
-      : checkpointAvailability(checkpointAvailable, checkpointStatus),
+      : saves.availability(),
     getFrameCount: () => null,
     pause: async () => {
       if (exited) {throw new Error("BUTTERSCOTCH_RUNTIME_INVALID_STATE");}
@@ -281,16 +269,18 @@ function sendKey(worker: Worker, pressedKeys: Set<number>, event: KeyboardEvent,
   worker.postMessage({ keyCode, pressed, type: "KEY" });
 }
 
-function sendGamepads(frameWindow: Window, worker: Worker) {
+function gamepads(frameWindow: Window) {
   // Browser array positions are device slots; compacting holes changes controller identity.
-  const gamepads = typeof frameWindow.navigator.getGamepads === "function"
+  return typeof frameWindow.navigator.getGamepads === "function"
     ? Array.from(frameWindow.navigator.getGamepads()).slice(0, 4)
       .map((gamepad) => gamepad?.connected && gamepad.mapping === "standard" ? ({
         axes: [...gamepad.axes].slice(0, 4),
         buttons: [...gamepad.buttons].slice(0, 17).map((button) => button.value),
       }) : null)
     : [];
-  worker.postMessage({ gamepads, type: "GAMEPAD" });
+}
+function sendGamepads(frameWindow: Window, worker: Worker) {
+  worker.postMessage({gamepads: gamepads(frameWindow), type: "GAMEPAD"});
 }
 
 function browserSupported(frameWindow: Window) {
@@ -303,14 +293,6 @@ function browserSupported(frameWindow: Window) {
 function stableMountError(error: unknown) {
   if (error instanceof Error && /^(?:BUTTERSCOTCH|CONTENT_IO)_[A-Z0-9_]+$/u.test(error.message)) {return error;}
   return new Error("BUTTERSCOTCH_RUNTIME_FAILED");
-}
-function checkpointAvailability(available: boolean, status: number): CheckpointAvailability {
-  if (available) {return { available: true, blocker: null };}
-  return { available: false, blocker: status >= 5 && status <= 7 ? "UNSUPPORTED" : "BUSY" };
-}
-function normalizedCheckpointStatus(value: unknown, available: boolean) {
-  if (available) {return 0;}
-  return Number.isSafeInteger(value) && Number(value) >= 1 && Number(value) <= 7 ? Number(value) : 1;
 }
 function copyBytes(value: unknown) {
   if (!ArrayBuffer.isView(value)) {return null;}

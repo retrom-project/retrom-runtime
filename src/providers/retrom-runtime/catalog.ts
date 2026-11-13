@@ -83,8 +83,9 @@ const adapters = [
     capabilities: capabilities(true, true, true),
     checkpoint: {writeFormat: "tic80-pmem-v1", readFormats: ["tic80-pmem-v1"], semantics: "GAME_SAVE"}}),
   adapter("fake08-web", "FAKE08_WEB", "fake08-state-v1", "fake08-state-v1", capabilities(true, true, true)),
-  adapter("butterscotch-web", "BUTTERSCOTCH_WEB", "butterscotch-checkpoint-v2",
-    "butterscotch-checkpoint-v2", standardCapabilities),
+  defineAdapter({id: "butterscotch-web", kind: "BUTTERSCOTCH_WEB", abi: "butterscotch-native-save-v1",
+    capabilities: standardCapabilities,
+    checkpoint: {writeFormat: "butterscotch-game-save-v1", readFormats: ["butterscotch-game-save-v1"], semantics: "GAME_SAVE"}}),
   rpgAdapter("easyrpg-web", "EASYRPG_WEB", "easyrpg-save", rpgCapabilities),
   defineAdapter({
     id: "j2me-minijvm-web", kind: "J2ME_MINIJVM_WEB", abi: "j2me-rms",

@@ -1,8 +1,110 @@
+const maximumBytes = 16 * 1024 * 1024;
+const maximumFiles = 4096;
+const encoder = new TextEncoder();
+const decoder = new TextDecoder("utf-8", {fatal: true, ignoreBOM: true});
+
+function invalid() {return new Error("BUTTERSCOTCH_NATIVE_SAVE_INVALID");}
+function validPath(path) {
+  return path.length > 0 && !/[\u0000-\u001f\u007f\\:]/u.test(path) &&
+    path.split("/").every(part => part !== "" && part !== "." && part !== "..") &&
+    path.split("/").length <= 32 && encoder.encode(path).length <= 1024;
+}
+
+// BSGS, version 1, file count; each record is path length, data length, UTF-8 path,
+// then uncompressed file bytes. The Provider applies its one public gzip layer.
+export function encodeNativeSave(files) {
+  if (!files.length || files.length > maximumFiles) {throw invalid();}
+  const entries = [...files].sort(([a], [b]) => a < b ? -1 : a > b ? 1 : 0);
+  let size = 12; const names = new Set();
+  for (const [path, bytes] of entries) {
+    const parts = path.split("/");
+    if (!validPath(path) || !(bytes instanceof Uint8Array) || names.has(path) ||
+        parts.some((_, index) => index > 0 && names.has(parts.slice(0, index).join("/")))) {throw invalid();}
+    size += 8 + encoder.encode(path).length + bytes.byteLength;
+    if (size > maximumBytes) {throw invalid();}
+    names.add(path);
+  }
+  const result = new Uint8Array(size), view = new DataView(result.buffer);
+  result.set([66, 83, 71, 83]); view.setUint32(4, 1, true); view.setUint32(8, entries.length, true);
+  let offset = 12;
+  for (const [path, bytes] of entries) {
+    const name = encoder.encode(path);
+    view.setUint32(offset, name.length, true); view.setUint32(offset + 4, bytes.length, true); offset += 8;
+    result.set(name, offset); offset += name.length; result.set(bytes, offset); offset += bytes.length;
+  }
+  return result;
+}
+
+export function decodeNativeSave(bytes) {
+  if (!(bytes instanceof Uint8Array) || bytes.length < 21 || bytes.length > maximumBytes) {throw invalid();}
+  const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+  if (view.getUint32(0, true) !== 0x53475342 || view.getUint32(4, true) !== 1) {throw invalid();}
+  const count = view.getUint32(8, true);
+  if (count < 1 || count > maximumFiles) {throw invalid();}
+  const files = []; let offset = 12;
+  for (let i = 0; i < count; i++) {
+    if (offset + 8 > bytes.length) {throw invalid();}
+    const pathSize = view.getUint32(offset, true), dataSize = view.getUint32(offset + 4, true); offset += 8;
+    if (pathSize < 1 || pathSize > 1024 || offset + pathSize + dataSize > bytes.length) {throw invalid();}
+    let path;
+    try {path = decoder.decode(bytes.subarray(offset, offset + pathSize));} catch {throw invalid();}
+    if (!validPath(path)) {throw invalid();}
+    offset += pathSize;
+    files.push([path, bytes.slice(offset, offset + dataSize)]); offset += dataSize;
+  }
+  if (offset !== bytes.length) {throw invalid();}
+  // Validate uniqueness and file/directory conflicts before writing any file.
+  encodeNativeSave(files);
+  return files;
+}
+
+export function readNativeSave(fs, root) {
+  const files = []; let size = 12, entries = 0;
+  function visit(directory, depth) {
+    if (depth > 32) {throw invalid();}
+    for (const name of fs.readdir(directory).filter(name => name !== "." && name !== "..").sort()) {
+      if (++entries > maximumFiles || !validPath(name) || name.includes("/")) {throw invalid();}
+      const absolute = directory + "/" + name, stat = fs.lstat(absolute);
+      const kind = stat.mode & 0o170000;
+      if (kind === 0o040000) {visit(absolute, depth + 1); continue;}
+      if (kind !== 0o100000 || !Number.isSafeInteger(stat.size) || stat.size < 0) {throw invalid();}
+      const path = absolute.slice(root.length + 1);
+      size += 8 + encoder.encode(path).length + stat.size;
+      if (size > maximumBytes) {throw invalid();}
+      const bytes = fs.readFile(absolute);
+      if (bytes.byteLength !== stat.size) {throw invalid();}
+      files.push([path, bytes]);
+    }
+  }
+  visit(root, 0);
+  return files.length ? encodeNativeSave(files) : null;
+}
+
+export function importNativeSave(fs, root, bytes) {
+  const files = bytes === null ? [] : decodeNativeSave(bytes);
+  fs.mkdirTree(root);
+  if (fs.readdir(root).some(name => name !== "." && name !== "..")) {throw invalid();}
+  for (const [path, data] of files) {
+    const parent = path.lastIndexOf("/");
+    if (parent >= 0) {fs.mkdirTree(root + "/" + path.slice(0, parent));}
+    fs.writeFile(root + "/" + path, data);
+  }
+}
+
+
 let runtime = null;
 let paused = false;
 let availabilityTimer = null;
 let audioTimer = null;
 let runtimeCanvas = null;
+let savePath = null;
+let active = false;
+let queue = Promise.resolve();
+function enqueue(operation) {queue = queue.then(operation).catch(() => undefined);}
+async function revision(bytes) {
+  const hash = await crypto.subtle.digest("SHA-256", bytes);
+  return Array.from(new Uint8Array(hash), byte => byte.toString(16).padStart(2, "0")).join("");
+}
 const audioFramesPerPull = 2048;
 // Four browser slots, each containing connected + 17 buttons + 4 axes.
 const gamepadStride = 22;
@@ -14,7 +116,7 @@ self.addEventListener("message", ({ data }) => {
   if (!runtime) {return;}
   if (data?.type === "KEY") {setKey(data.keyCode, data.pressed); return;}
   if (data?.type === "GAMEPAD") {setGamepads(data.gamepads); return;}
-  if (data?.type === "HOST_COMMAND") {void command(data);}
+  if (data?.type === "HOST_COMMAND") {enqueue(() => command(data));}
 });
 
 async function start(data) {
@@ -26,6 +128,7 @@ async function start(data) {
     const factory = (await import(data.moduleUrl)).default;
     runtime = await factory({
       canvas: data.canvas,
+      onRunnerExit: () => {enqueue(coreExit);},
       locateFile: (path) => path.endsWith(".wasm") ? data.wasmUrl : new URL(path, data.moduleUrl).href,
     });
     stage = "CANVAS";
@@ -45,10 +148,15 @@ async function start(data) {
     runtime._setAudioSampleRate(data.audioSampleRate);
     stage = "GAMEPAD_ABI";
     if (typeof runtime._setGamepads !== "function") {throw new Error("gamepad snapshot ABI required");}
-    if (data.restore) {runtime._setRunnerPaused(1); paused = true;}
+    stage = "NATIVE_SAVE";
+    if (!runtime.FS || typeof runtime._flushRunnerSaves !== "function") {throw new Error("native save ABI required");}
+    savePath = data.savePath;
+    importNativeSave(runtime.FS, savePath, data.restoreBytes);
+    setGamepads(data.gamepads ?? []);
     stage = "RUNNER";
     runtime.ccall("startRunner", null, ["string", "string"], [data.gamePath, data.savePath]);
-    availabilityTimer = setInterval(reportAvailability, 250);
+    active = true;
+    availabilityTimer = setInterval(() => enqueue(reportAvailability), 1000);
     if (data.audioEnabled) {audioTimer = setInterval(pullAudio, audioFramesPerPull / data.audioSampleRate * 1000);}
   } catch {
     postMessage({ code: `BUTTERSCOTCH_RUNTIME_${stage}_FAILED`, type: "FATAL" });
@@ -67,8 +175,7 @@ async function command(data) {
   try {
     switch (data.command) {
     case "STATUS": {
-      const status = runtime._getRunnerCheckpointStatus();
-      respond(data, { available: status === 0 && runtime._isRunnerCheckpointAvailable() === 1, status });
+      respond(data, await saveStatus());
       return;
     }
     case "PAUSE":
@@ -87,14 +194,12 @@ async function command(data) {
     case "SCREENSHOT":
       await createScreenshot(data);
       return;
-    case "RESTORE":
-      restoreCheckpoint(data);
-      return;
     case "STOP":
       clearInterval(availabilityTimer);
       clearInterval(audioTimer);
       availabilityTimer = null;
       audioTimer = null;
+      active = false;
       runtime._stopRunner();
       if (gamepadPointer) {runtime._free(gamepadPointer); gamepadPointer = 0;}
       respond(data);
@@ -128,44 +233,45 @@ function pullAudio() {
   }
 }
 
-async function createCheckpoint(data) {
-  const resume = !paused;
+function captureNativeFiles() {
+  const resume = active && !paused;
   if (resume) {runtime._setRunnerPaused(1); paused = true;}
   try {
-    const status = runtime._getRunnerCheckpointStatus();
-    if (status !== 0 || runtime._isRunnerCheckpointAvailable() !== 1) {
-      respond(data, { code: "BUTTERSCOTCH_CHECKPOINT_UNAVAILABLE", ok: false, status });
-      return;
-    }
-    const pointer = runtime._createRunnerCheckpoint();
-    const size = pointer ? runtime._getRunnerCheckpointSize() : 0;
-    if (!pointer || size <= 12 || size > 16 * 1024 * 1024) {
-      respond(data, { code: "BUTTERSCOTCH_CHECKPOINT_CREATE_FAILED", ok: false });
-      return;
-    }
-    const bytes = runtime.HEAPU8.slice(pointer, pointer + size);
-    postMessage({ bytes, command: data.command, ok: true, requestId: data.requestId, type: "HOST_RESPONSE" },
-      [bytes.buffer]);
+    if (active && runtime._flushRunnerSaves() !== 0) {throw new Error("native flush");}
+    return readNativeSave(runtime.FS, savePath);
   } finally {
     if (resume) {runtime._setRunnerPaused(0); paused = false;}
-    reportAvailability();
   }
 }
 
-function restoreCheckpoint(data) {
-  const bytes = data.bytes;
-  if (!(bytes instanceof Uint8Array) || bytes.byteLength <= 12 || bytes.byteLength > 16 * 1024 * 1024) {
-    respond(data, { code: "BUTTERSCOTCH_CHECKPOINT_RESTORE_FAILED", ok: false });
-    return;
+async function saveStatus() {
+  try {
+    const bytes = captureNativeFiles();
+    return bytes ? {available: true, revision: await revision(bytes), status: "READY"}
+      : {available: false, status: "NO_SAVE"};
+  } catch {return {available: false, status: "FAILED"};}
+}
+
+async function createCheckpoint(data) {
+  const bytes = captureNativeFiles();
+  if (!bytes) {respond(data, {code: "BUTTERSCOTCH_NATIVE_SAVE_UNAVAILABLE", ok: false}); return;}
+  const signature = await revision(bytes);
+  postMessage({bytes, revision: signature, command: data.command, ok: true, requestId: data.requestId, type: "HOST_RESPONSE"},
+    [bytes.buffer]);
+}
+
+async function coreExit() {
+  const wasActive = active;
+  active = false;
+  clearInterval(availabilityTimer); clearInterval(audioTimer);
+  if (!wasActive) {return;}
+  try {
+    const bytes = captureNativeFiles();
+    const signature = bytes ? await revision(bytes) : undefined;
+    postMessage({type: "runnerExit", bytes, revision: signature}, bytes ? [bytes.buffer] : []);
+  } catch {
+    postMessage({type: "runnerExit"});
   }
-  runtime._setRunnerPaused(1);
-  paused = true;
-  const pointer = runtime._malloc(bytes.byteLength);
-  runtime.HEAPU8.set(bytes, pointer);
-  const restored = runtime._restoreRunnerCheckpoint(pointer, bytes.byteLength) === 0;
-  runtime._free(pointer);
-  respond(data, restored ? {} : { code: "BUTTERSCOTCH_CHECKPOINT_RESTORE_FAILED", ok: false });
-  reportAvailability();
 }
 
 function setKey(keyCode, pressed) {
@@ -195,11 +301,8 @@ function setGamepads(gamepads) {
   runtime._setGamepads(gamepadPointer, 4);
 }
 
-function reportAvailability() {
-  if (runtime) {
-    const status = runtime._getRunnerCheckpointStatus();
-    postMessage({ available: status === 0 && runtime._isRunnerCheckpointAvailable() === 1, status, type: "checkpointAvailability" });
-  }
+async function reportAvailability() {
+  if (runtime && active) {postMessage({...await saveStatus(), type: "checkpointAvailability"});}
 }
 
 function respond(request, fields = {}) {

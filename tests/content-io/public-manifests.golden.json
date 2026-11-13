@@ -8642,10 +8642,10 @@
         "checkpoint": {
           "maxBytes": 16777216,
           "readFormats": [
-            "butterscotch-checkpoint-v2-storage-v1"
+            "butterscotch-game-save-v1-storage-v1"
           ],
-          "writeFormat": "butterscotch-checkpoint-v2-storage-v1",
-          "semantics": "INSTANT"
+          "writeFormat": "butterscotch-game-save-v1-storage-v1",
+          "semantics": "GAME_SAVE"
         },
         "displayName": "GameMaker (Butterscotch)",
         "id": "butterscotch-gamemaker",
@@ -8799,7 +8799,7 @@
           "writeFormat": "gbe-pokemini-state-v1-storage-v1",
           "semantics": "INSTANT"
         },
-        "displayName": "Pokémon Mini (GBE+)",
+        "displayName": "Pok\u00e9mon Mini (GBE+)",
         "id": "gbe-pokemini",
         "inputs": [
           {
@@ -10337,7 +10337,7 @@
           "writeFormat": "samcoupe-disk-save-v1-storage-v1",
           "semantics": "GAME_SAVE"
         },
-        "displayName": "SAM Coupé (SamCoupeWeb)",
+        "displayName": "SAM Coup\u00e9 (SamCoupeWeb)",
         "id": "samcoupe",
         "inputs": [
           {

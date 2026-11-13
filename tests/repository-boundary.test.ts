@@ -39,7 +39,7 @@ describe("independent package boundary", () => {
       "play-web", "ppsspp-web", "px68k-web", "ruffle-web", "samcoupe-web", "scummvm-web", "siglus-web", "tic80-web", "tyranoscript-web", "wasm4-web", "webmsx-web",
     ]);
     expect(retromRuntimeProviderDefinition.adapters.map((adapter) => adapter.abi).sort()).toEqual([
-      "apple2js-web-v1", "butterscotch-checkpoint-v2", "easyrpg-save", "fake08-state-v1", "gbe-pokemini-host-v1", "j2me-rms", "jsbeeb-web-v1", "kirikiri-content-io-v1", "mkxp-content-io-v1",
+      "apple2js-web-v1", "butterscotch-native-save-v1", "easyrpg-save", "fake08-state-v1", "gbe-pokemini-host-v1", "j2me-rms", "jsbeeb-web-v1", "kirikiri-content-io-v1", "mkxp-content-io-v1",
       "native-save", "np2kai-host-v1", "nxengine-host-v1", "ons-content-io-v1", "openbor-host-v1", "play-host-v3", "ppsspp-host-v4", "px68k-host-v1", "retrom-mame-dylink-v1", "ruffle-host-v1", "samcoupe-web-v1", "scummvm-host-v1", "siglus-host-v1", "tic80-pmem-v1", "tyranoscript-snapshot-v1", "wasm4-state-v1", "webmsx-host-v1",
     ]);
     expect((await readdir(join(root, "assets/runtime"))).sort()).toEqual(["butterscotch", "native", "tyranoscript"]);
@@ -88,11 +88,6 @@ describe("independent package boundary", () => {
     const sources = JSON.parse(await readFile(join(root, "provider-sources.json"), "utf8"));
     expect(sources).not.toHaveProperty("sourceBuilds");
     expect(sources.upstreamReleases).toEqual(expect.arrayContaining([expect.objectContaining({
-      adapterAbi: "butterscotch-checkpoint-v2",
-      id: "butterscotch",
-      repository: "https://github.com/retrom-project/Butterscotch",
-      tag: "retrom-core-g0a36f3762700-r2",
-    }), expect.objectContaining({
       adapterAbi: "tyranoscript-snapshot-v1",
       id: "tyranoscript",
       repository: "https://github.com/retrom-project/tyranoscript",
@@ -104,11 +99,15 @@ describe("independent package boundary", () => {
       tag: "retrom-core-gca2600db8de4-r1",
     })]));
     const releaseIds = sources.upstreamReleases.map((release: { id: string }) => release.id).sort();
-    expect(releaseIds).toEqual(["apple2js", "butterscotch", "easyrpg", "fake08", "gbe_plus", "j2me", "jsbeeb", "kirikiri2", "mame", "mkxp", "np2kai", "nxengine", "onsyuri", "openbor", "play", "ppsspp", "px68k", "ruffle", "samcoupeweb", "scummvm", "siglus", "tic80", "tyranoscript", "wasm4", "webmsx"]);
+    expect(releaseIds).toEqual(["apple2js", "easyrpg", "fake08", "gbe_plus", "j2me", "jsbeeb", "kirikiri2", "mame", "mkxp", "np2kai", "nxengine", "onsyuri", "openbor", "play", "ppsspp", "px68k", "ruffle", "samcoupeweb", "scummvm", "siglus", "tic80", "tyranoscript", "wasm4", "webmsx"]);
     expect(sources.upstreamReleases).toContainEqual(expect.objectContaining({
       id: "apple2js", tag: "retrom-core-gee0aed25f73c-r1", adapterAbi: "apple2js-web-v1",
     }));
-    expect(sources.developmentInputs ?? []).toEqual([]);
+    expect(sources.developmentInputs).toEqual([expect.objectContaining({
+      id: "butterscotch", repository: "https://github.com/retrom-project/Butterscotch",
+      upstreamCommit: "0c94bfb05e3cb4b8946a38f8085747035dd37f94", adapterAbi: "butterscotch-native-save-v1",
+    })]);
+    expect(validCoreDevelopmentInput(sources.developmentInputs[0])).toBe(true);
     const siglus = sources.upstreamReleases.find((release: {id: string}) => release.id === "siglus");
     expect(siglus).toEqual(expect.objectContaining({
       repository: "https://github.com/retrom-project/siglus_rs", tag: "retrom-core-g5f358ef1360b-r4",

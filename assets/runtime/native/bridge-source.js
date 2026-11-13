@@ -819,6 +819,7 @@ export function installRpgRuntimeNativeBridge(global, inputFilter) {
   }
 
   function installPluginModules() {
+    const os = Object.freeze({EOL: "\n"});
     const writes = new Set(["mkdirSync", "writeFileSync", "unlinkSync"]);
     const fs = Object.freeze(Object.fromEntries(["existsSync", "readdirSync", "readFileSync", ...writes]
       .map(name => [name, (...args) => {
@@ -827,6 +828,7 @@ export function installRpgRuntimeNativeBridge(global, inputFilter) {
         return pluginFiles.fs[name](...args);
       }])));
     global.require = function requirePluginModule(name) {
+      if (name === "os") return os;
       if (name !== "fs") throw new Error("RPG_PLUGIN_MODULE_UNSUPPORTED");
       return fs;
     };

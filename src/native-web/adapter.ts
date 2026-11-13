@@ -55,7 +55,7 @@ export async function mountNativeRpg(
   let touchGamepad: RuntimeTouchGamepadV1 | null = null;
   let touchStick: RuntimeTouchStickV1 | null = null;
   try {
-    await bootstrapNativeFrame(config, frame, channel, readyOptions.signal, restorePayload);
+    await bootstrapNativeFrame(config, frame, channel, readyOptions, restorePayload);
     const ready = await channel.ready(readyOptions);
     expectedEngine = config.bridgeProfile;
     if (ready.engine !== expectedEngine || ready.engineProfile !== config.bridgeProfile) {
@@ -339,18 +339,21 @@ export class NativeChannel {
 
 }
 
-async function bootstrapNativeFrame(config: NativeRpgParameters, frame: HTMLIFrameElement, channel: NativeChannel, signal?: AbortSignal, restorePayload: Uint8Array | null = null) {
+async function bootstrapNativeFrame(config: NativeRpgParameters, frame: HTMLIFrameElement, channel: NativeChannel,
+  options: NativeReadyOptions = {}, restorePayload: Uint8Array | null = null) {
+  const signal = options.signal;
   if (signal?.aborted) {throw new DOMException("Aborted", "AbortError");}
   const target = frame.contentWindow;
   if (!target) {throw new Error("PLAYER_FRAME_UNAVAILABLE");}
   const runtimeWindow: Window = target;
   await new Promise<void>((resolve, reject) => {
-    const timer = window.setTimeout(() => finish(new Error("RPG_NATIVE_BOOTSTRAP_TIMEOUT")), bootstrapTimeoutMs);
-    const abort = () => finish(new DOMException("Aborted", "AbortError"));
+    let dispose = () => {};
+    let finished = false;
     function finish(error?: Error) {
-      window.clearTimeout(timer);
+      if (finished) {return;}
+      finished = true;
+      dispose();
       window.removeEventListener("message", receive, true);
-      signal?.removeEventListener("abort", abort);
       if (error) {reject(error);} else {resolve();}
     }
     let connecting = false;
@@ -360,12 +363,14 @@ async function bootstrapNativeFrame(config: NativeRpgParameters, frame: HTMLIFra
       connecting = true;
       void (async () => {
         const saves = restorePayload ? await decodeRpgCheckpoint(restorePayload, config.bridgeProfile) : null;
+        if (finished) {return;}
         signal?.throwIfAborted();
         channel.connect(runtimeWindow, saves);
       })().then(() => finish(), error => finish(error as Error));
     }
     window.addEventListener("message", receive, true);
-    signal?.addEventListener("abort", abort, {once: true});
+    dispose = nativeReadyDeadline(options, error => finish(error),
+      {milliseconds: bootstrapTimeoutMs, code: "RPG_NATIVE_BOOTSTRAP_TIMEOUT"});
   });
 }
 

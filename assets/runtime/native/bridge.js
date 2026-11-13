@@ -2352,12 +2352,14 @@
       }), global.StorageManager.localFileDirectoryPath = () => pluginFiles.saveDirectory;
     }
     function installPluginModules() {
-      let writes = /* @__PURE__ */ new Set(["mkdirSync", "writeFileSync", "unlinkSync"]), fs = Object.freeze(Object.fromEntries(["existsSync", "readdirSync", "readFileSync", ...writes].map((name) => [name, (...args) => {
+      let os = Object.freeze({ EOL: `
+` }), writes = /* @__PURE__ */ new Set(["mkdirSync", "writeFileSync", "unlinkSync"]), fs = Object.freeze(Object.fromEntries(["existsSync", "readdirSync", "readFileSync", ...writes].map((name) => [name, (...args) => {
         if (!pluginFiles) throw new Error("RPG_PLUGIN_FILES_NOT_READY");
         if (writes.has(name) && profile !== "RPGMV") throw new Error("RPG_PLUGIN_FILE_READ_ONLY");
         return pluginFiles.fs[name](...args);
       }])));
       global.require = function(name) {
+        if (name === "os") return os;
         if (name !== "fs") throw new Error("RPG_PLUGIN_MODULE_UNSUPPORTED");
         return fs;
       };

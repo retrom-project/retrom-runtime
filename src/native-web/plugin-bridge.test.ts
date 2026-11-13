@@ -2,6 +2,16 @@ import {expect, it, vi} from "vitest";
 import {decodeRpgCheckpoint} from "../checkpoint.js";
 import {nativeGameFixture} from "../../tests/native-game-save-fixture.js";
 
+it.each(["MV", "MZ"] as const)("%s lets directory-reporting plugins format portable text before boot", async engine => {
+  const game = nativeGameFixture(engine);
+  game.read("var reportEol = require('os').EOL");
+  await game.boot();
+  game.read("var report = ['Plugins', ...require('fs').readdirSync('./js/plugins/')].join(reportEol)");
+  expect(game.read("report + reportEol + 'Ready'")).toBe("Plugins\nReady");
+  expect(game.read("typeof process")).toBe("undefined");
+  await game.request("CLEANUP");
+});
+
 it.each(["MV", "MZ"] as const)("%s lets a plugin capture fs before window load without enabling a Node process", async engine => {
   const game = nativeGameFixture(engine);
   expect(game.read("typeof require")).toBe("function");

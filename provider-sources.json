@@ -131,48 +131,49 @@
     {
       "id": "butterscotch",
       "repository": "https://github.com/retrom-project/Butterscotch",
-      "tag": "retrom-core-g0a36f3762700-r2",
-      "commit": "fece18d98f6258fcc8f29db4d3ccff99e10ba0e6",
-      "adapterAbi": "butterscotch-checkpoint-v2",
-      "metadataUrl": "https://github.com/retrom-project/Butterscotch/releases/download/retrom-core-g0a36f3762700-r2/rpg-runtime-release.json",
+      "tag": "retrom-core-g0c94bfb05e3c-r1",
+      "commit": "ac5a72297ebb6c681bedf43a03dce3fb8f49a3e8",
+      "upstreamCommit": "0c94bfb05e3cb4b8946a38f8085747035dd37f94",
+      "adapterAbi": "butterscotch-native-save-v1",
+      "metadataUrl": "https://github.com/retrom-project/Butterscotch/releases/download/retrom-core-g0c94bfb05e3c-r1/rpg-runtime-release.json",
       "assets": [
         {
           "filename": "butterscotch.mjs",
-          "url": "https://github.com/retrom-project/Butterscotch/releases/download/retrom-core-g0a36f3762700-r2/butterscotch.mjs",
           "output": "runtime/butterscotch/butterscotch.mjs",
           "maxSizeBytes": 1048576,
-          "sizeBytes": 107470,
-          "sha256": "e3c64e2edac87cf6795ad4708bed1f7530b35414bf80d26280b2330b01570ac9"
+          "url": "https://github.com/retrom-project/Butterscotch/releases/download/retrom-core-g0c94bfb05e3c-r1/butterscotch.mjs",
+          "sizeBytes": 127960,
+          "sha256": "818f8d6677a292c53fc0b8fb45b00bf16af347adc70d4d330f8ebd0e5f8c9692"
         },
         {
           "filename": "butterscotch.wasm",
-          "url": "https://github.com/retrom-project/Butterscotch/releases/download/retrom-core-g0a36f3762700-r2/butterscotch.wasm",
           "output": "runtime/butterscotch/butterscotch.wasm",
           "maxSizeBytes": 4194304,
-          "sizeBytes": 1905970,
-          "sha256": "ff95e97c99ada42cbaa5a67ae7e09db6aa77591437b51be17f524cdafa4026b5"
+          "url": "https://github.com/retrom-project/Butterscotch/releases/download/retrom-core-g0c94bfb05e3c-r1/butterscotch.wasm",
+          "sizeBytes": 2178176,
+          "sha256": "4461ff346d8d883ef7f4230a21c8f5fbae4c4185fba24e4b2319a34c29d566c9"
         },
         {
           "filename": "butterscotch-meta.mjs",
-          "url": "https://github.com/retrom-project/Butterscotch/releases/download/retrom-core-g0a36f3762700-r2/butterscotch-meta.mjs",
           "output": "runtime/butterscotch/butterscotch-meta.mjs",
           "maxSizeBytes": 262144,
+          "url": "https://github.com/retrom-project/Butterscotch/releases/download/retrom-core-g0c94bfb05e3c-r1/butterscotch-meta.mjs",
           "sizeBytes": 64908,
           "sha256": "c43d3a667fd33c9ededfea179c11987422371888ebebed6d559f2fea159e7a8c"
         },
         {
           "filename": "butterscotch-meta.wasm",
-          "url": "https://github.com/retrom-project/Butterscotch/releases/download/retrom-core-g0a36f3762700-r2/butterscotch-meta.wasm",
           "output": "runtime/butterscotch/butterscotch-meta.wasm",
           "maxSizeBytes": 262144,
-          "sizeBytes": 66804,
-          "sha256": "5ed8b1a21b43e42fa6570126f960df72584f0b856262eec42594bde5d268c75c"
+          "url": "https://github.com/retrom-project/Butterscotch/releases/download/retrom-core-g0c94bfb05e3c-r1/butterscotch-meta.wasm",
+          "sizeBytes": 71235,
+          "sha256": "a73344a4e8e875ea22915c3244b6c8f3047d0e7c8081c9621e75b9adac822cd1"
         },
         {
           "filename": "LICENSE",
-          "url": "https://github.com/retrom-project/Butterscotch/releases/download/retrom-core-g0a36f3762700-r2/LICENSE",
           "output": "licenses/butterscotch/LICENSE",
           "maxSizeBytes": 65536,
+          "url": "https://github.com/retrom-project/Butterscotch/releases/download/retrom-core-g0c94bfb05e3c-r1/LICENSE",
           "sizeBytes": 34523,
           "sha256": "0d96a4ff68ad6d4b6f1f30f713b18d5184912ba8dd389f86aa7710db079abcb0"
         }

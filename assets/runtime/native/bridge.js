@@ -1548,6 +1548,144 @@
     }
   }
 
+  // src/native-web/editor-variables.ts
+  function createRpgVariableEditor(owner, validId) {
+    let paths = /* @__PURE__ */ new Map(), identities = /* @__PURE__ */ new Map();
+    function identify(path) {
+      let key = JSON.stringify([path.root, path.keys]), previous = identities.get(key);
+      if (previous)
+        return previous;
+      if (paths.size >= 16384)
+        throw invalid();
+      let id = `${path.root}:${paths.size + 1}`;
+      return paths.set(id, path), identities.set(key, id), id;
+    }
+    function describe(id, label, value, depth) {
+      let base = { id, label: label.slice(0, 160) };
+      if (numeric(value))
+        return {
+          ...base,
+          value,
+          valueType: "number",
+          min: -Number.MAX_SAFE_INTEGER,
+          max: Number.MAX_SAFE_INTEGER,
+          step: "any"
+        };
+      if (typeof value == "boolean")
+        return { ...base, value, valueType: "boolean" };
+      if (typeof value == "string" && value.length <= 500)
+        return { ...base, value, valueType: "text" };
+      if (value === null)
+        return { ...base, value: null, valueType: "null" };
+      if (collection(value) && depth < 16) {
+        let count = Object.keys(value).length;
+        return {
+          ...base,
+          value: `${Array.isArray(value) ? "\u6570\u7EC4" : "\u5BF9\u8C61"} \xB7 ${count} \u9879`,
+          valueType: "collection",
+          children: `variables:${id}`
+        };
+      }
+      return { ...base, value: null, valueType: "unsupported" };
+    }
+    function rootPath(id) {
+      if (!/^[1-9]\d*$/u.test(id) || !validId(Number(id)))
+        throw invalid();
+      return { root: Number(id), keys: [], category: "variables", label: id };
+    }
+    function pathFor(id) {
+      return paths.get(id) ?? rootPath(id);
+    }
+    function scope(category) {
+      if (!category.startsWith("variables:"))
+        throw invalid();
+      let path = pathFor(category.slice(10));
+      if (path.keys.length >= 16)
+        throw invalid();
+      let value = readPath(owner().value(path.root), path.keys);
+      if (!collection(value))
+        throw invalid();
+      return { path, value };
+    }
+    function child(category, parent, value, key) {
+      let label = Array.isArray(value) ? `[${key}]` : key || '""', path = { root: parent.root, keys: [...parent.keys, key], category, label }, id = identify(path), descriptor = Object.getOwnPropertyDescriptor(value, key);
+      if (!descriptor || !("value" in descriptor))
+        return { id, label: label.slice(0, 160), value: null, valueType: "unsupported" };
+      let entry = describe(id, label, descriptor.value, path.keys.length);
+      return descriptor.writable === !1 && entry.valueType !== "collection" && entry.valueType !== "null" ? { id, label: entry.label, value: null, valueType: "unsupported" } : entry;
+    }
+    return {
+      entry(id, label) {
+        return describe(String(id), label, owner().value(id), 0);
+      },
+      entries(category, query, offset, limit) {
+        let { path, value } = scope(category), filter = query.trim().toLowerCase(), keys = Object.keys(value).filter((key) => !filter || key.toLowerCase().includes(filter)), rows = keys.slice(offset, offset + limit).map((key) => child(category, path, value, key)), page = pageEditorEntries(rows, 0, limit), next = offset + page.entries.length;
+        return { entries: page.entries, nextOffset: next < keys.length ? next : null };
+      },
+      set(category, id, value) {
+        let path = pathFor(id);
+        if (path.category !== category)
+          throw invalid();
+        let root = owner().value(path.root), current = readPath(root, path.keys);
+        if (!validWrite(current, value))
+          throw invalid();
+        let replacement = replacePath(root, path.keys, value);
+        return owner().setValue(path.root, replacement), describe(id, path.label, readPath(owner().value(path.root), path.keys), path.keys.length);
+      }
+    };
+  }
+  function pageEditorEntries(rows, offset, limit) {
+    let entries = [], encoder3 = new TextEncoder(), bytes = 0;
+    for (let row of rows.slice(offset, offset + limit)) {
+      let size = encoder3.encode(JSON.stringify(row)).byteLength + 1;
+      if (bytes + size > 48 * 1024)
+        break;
+      bytes += size, entries.push(row);
+    }
+    let next = offset + entries.length;
+    return { entries, nextOffset: next < rows.length ? next : null };
+  }
+  function collection(value) {
+    if (!value || typeof value != "object")
+      return !1;
+    if (Array.isArray(value))
+      return !0;
+    let prototype = Object.getPrototypeOf(value);
+    return prototype === null || Object.getPrototypeOf(prototype) === null;
+  }
+  function readPath(root, keys) {
+    let value = root;
+    for (let key of keys) {
+      if (!collection(value))
+        throw invalid();
+      let descriptor = Object.getOwnPropertyDescriptor(value, key);
+      if (!descriptor || !("value" in descriptor))
+        throw invalid();
+      value = descriptor.value;
+    }
+    return value;
+  }
+  function replacePath(root, keys, value) {
+    if (!keys.length)
+      return value;
+    if (!collection(root))
+      throw invalid();
+    let [key, ...tail] = keys, descriptor = Object.getOwnPropertyDescriptor(root, key);
+    if (!descriptor || !("value" in descriptor) || descriptor.writable === !1)
+      throw invalid();
+    let descriptors = Object.getOwnPropertyDescriptors(root);
+    return descriptors[key] = { ...descriptor, value: replacePath(descriptor.value, tail, value) }, Array.isArray(root) ? Object.defineProperties([], descriptors) : Object.create(Object.getPrototypeOf(root), descriptors);
+  }
+  function numeric(value) {
+    return typeof value == "number" && Number.isFinite(value) && Math.abs(value) <= Number.MAX_SAFE_INTEGER;
+  }
+  function validWrite(current, value) {
+    return numeric(current) && numeric(value) || typeof current == "boolean" && typeof value == "boolean" || typeof current == "string" && typeof value == "string" && value.length <= 500;
+  }
+  function invalid() {
+    return new Error("RPG_GAME_EDITOR_INVALID");
+  }
+
   // assets/runtime/native/bridge-source.js
   function installRpgRuntimeNativeBridge(global, inputFilter) {
     "use strict";
@@ -1580,7 +1718,10 @@
       ["luk", "\u5E78\u8FD0"]
     ]);
     inputFilter.onHostShortcut((shortcut) => event("HOST_SHORTCUT", { shortcut }));
-    let encoder3 = new TextEncoder(), launchId = null, nonce = null, parentOrigin = null, port = null, profile = null, lastRequestId = 0, requestPending = !1, frameCount = 0, engineReadySent = !1, sceneManagerHooked = !1, exitRequested = !1, nativeSaves = null, closed = !1, pluginFiles = null, inputDiagnostics = null, restoreViewport = null, editorMapCache = /* @__PURE__ */ new Map();
+    let encoder3 = new TextEncoder(), launchId = null, nonce = null, parentOrigin = null, port = null, profile = null, lastRequestId = 0, requestPending = !1, frameCount = 0, engineReadySent = !1, sceneManagerHooked = !1, exitRequested = !1, nativeSaves = null, closed = !1, pluginFiles = null, inputDiagnostics = null, restoreViewport = null, editorMapCache = /* @__PURE__ */ new Map(), variableEditor = createRpgVariableEditor(
+      () => global.$gameVariables,
+      (id) => Number.isSafeInteger(id) && id > 0 && id < (global.$dataSystem?.variables?.length || 0)
+    );
     function ownKeys(value, expected) {
       if (!value || typeof value != "object" || Array.isArray(value)) return !1;
       let keys = Object.keys(value).sort();
@@ -1824,13 +1965,7 @@
           throw new Error("RPG_GAME_EDITOR_UNAVAILABLE");
         let named = [], unnamed = [];
         return names.slice(1).forEach((name, index) => {
-          let id = index + 1, value = owner.value(id), fallback = category === "variables" ? "\u53D8\u91CF" : "\u5F00\u5173", displayName = String(name || "").trim(), row = editorEntry(
-            String(id),
-            displayName || `${fallback} ${id}`,
-            value,
-            category === "variables" && typeof value == "number" ? -999999999 : void 0,
-            category === "variables" && typeof value == "number" ? 999999999 : void 0
-          );
+          let id = index + 1, value = owner.value(id), fallback = category === "variables" ? "\u53D8\u91CF" : "\u5F00\u5173", displayName = String(name || "").trim(), row = category === "variables" ? variableEditor.entry(id, displayName || `${fallback} ${id}`) : editorEntry(String(id), displayName || `${fallback} ${id}`, value);
           (displayName ? named : unnamed).push(row);
         }), [...named, ...unnamed];
       }
@@ -1839,11 +1974,11 @@
     function editorList(body) {
       if (!body || typeof body.category != "string" || typeof body.query != "string" || body.query.length > 80 || !Number.isSafeInteger(body.offset) || body.offset < 0 || !Number.isSafeInteger(body.limit) || body.limit < 1 || body.limit > 40)
         throw new Error("RPG_GAME_EDITOR_INVALID");
+      if (!editorReady()) throw new Error("RPG_GAME_EDITOR_NOT_READY");
+      if (body.category.startsWith("variables:"))
+        return variableEditor.entries(body.category, body.query, body.offset, body.limit);
       let query = body.query.trim().toLowerCase(), rows = editorRows(body.category).filter((row) => !query || row.id.includes(query) || row.label.toLowerCase().includes(query));
-      return {
-        entries: rows.slice(body.offset, body.offset + body.limit),
-        nextOffset: body.offset + body.limit < rows.length ? body.offset + body.limit : null
-      };
+      return pageEditorEntries(rows, body.offset, body.limit);
     }
     function editorPageRequest(body, withMap) {
       if (!body || typeof body.query != "string" || body.query.length > 80 || !Number.isSafeInteger(body.offset) || body.offset < 0 || !Number.isSafeInteger(body.limit) || body.limit < 1 || body.limit > 40 || withMap && !editorMapInfo(body.mapId)) throw new Error("RPG_GAME_EDITOR_INVALID");
@@ -1931,6 +2066,15 @@
     }
     function editorSet(body) {
       if (!body || typeof body.category != "string" || typeof body.id != "string" || !/^[a-z0-9:_-]{1,60}$/u.test(body.id)) throw new Error("RPG_GAME_EDITOR_INVALID");
+      if (body.category === "variables" || body.category.startsWith("variables:")) {
+        if (!editorReady()) throw new Error("RPG_GAME_EDITOR_NOT_READY");
+        let entry2 = variableEditor.set(body.category, body.id, body.value);
+        if (body.category === "variables") {
+          let name = global.$dataSystem.variables[Number(body.id)];
+          entry2.label = (String(name || "").trim() || `\u53D8\u91CF ${body.id}`).slice(0, 160);
+        }
+        return { entry: entry2 };
+      }
       let entry = editorRows(body.category).find((row) => row.id === body.id);
       if (!entry || entry.valueType === "unsupported" || (entry.valueType === "text" ? typeof body.value != "string" : entry.valueType !== typeof body.value) || entry.valueType === "number" && (!Number.isSafeInteger(body.value) || body.value < entry.min || body.value > entry.max) || entry.valueType === "text" && body.value.length > 500)
         throw new Error("RPG_GAME_EDITOR_INVALID");
@@ -1940,9 +2084,7 @@
       else if (["items", "weapons", "armors"].includes(body.category)) {
         let item = { items: global.$dataItems, weapons: global.$dataWeapons, armors: global.$dataArmors }[body.category][Number(body.id)];
         global.$gameParty.gainItem(item, value - global.$gameParty.numItems(item), !1);
-      } else if (body.category === "variables")
-        global.$gameVariables.setValue(Number(body.id), value);
-      else if (body.category === "switches")
+      } else if (body.category === "switches")
         global.$gameSwitches.setValue(Number(body.id), value);
       else if (body.category === "skills" || body.category.startsWith("skills:")) {
         let [actorId, skillId] = body.id.split(":").map(Number), actor = global.$gameParty.members().find((candidate) => candidate.actorId() === actorId);

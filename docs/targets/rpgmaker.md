@@ -22,6 +22,14 @@ MV/MZ default to the engine's proportional stretch mode, including in desktop br
 
 Viewport fitting is independent of browser fullscreen and the `original`, `pixel` and `smooth` image-rendering modes. It also applies before graphics initialization, or immediately if a plugin has already initialized the canvas. The engine's stretch toggle remains available.
 
+## MV/MZ game editor
+
+The optional public game editor exposes ordinary variables and paged children of arrays and plain objects. Collection entries provide an opaque `children` category; use it with the same `entries` and `set` methods. Nested labels are array indices or object property names. Large collections are never serialized as a single control message. Pages contain at most 40 entries and stay below the isolated bridge's byte limit.
+
+Variable numbers accept finite values within JavaScript's safe numeric range, including fractions, and declare `step: "any"`. Gold, item counts, actor levels and other integer controls retain their existing bounds. Writes use the game's variable setter and return the actual value, including any rounding imposed by the engine or plugins. Nested edits copy only the changed ancestors, preserving sparse slots and untouched sibling references before invoking the root variable's setter.
+
+Null slots are visible as empty values. Class instances, functions, accessor properties and unsupported scalar values remain read-only. The editor does not replace engine instances with JSON objects or call property getters to discover editable values. Nested navigation is limited to 16 levels and session path registration is bounded; identifiers retain property names so object reordering cannot redirect a pending write. Modifications become durable only after an ordinary in-game save and native synchronization.
+
 ## Loading and saves
 
 All seven Targets support managed on-demand loading and explicit full preload. The loading mode changes resource acquisition, not project identity or the selected engine.

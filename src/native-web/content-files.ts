@@ -1,4 +1,5 @@
 import {rpgPluginTextPath} from "../runtime/rpg-plugin-paths.js";
+import {decodeMvImage, mvImageKey, validateMvImage} from "./mv-images.js";
 import type {ContentSourceV1, ManagedInputPolicyV1} from "../../contracts/content-io/v1/content-io.js";
 import type {ProgressContentReader} from "../content-io/range-reader.js";
 import type {ReadProgress} from "../content-io/scheduler.js";
@@ -8,7 +9,8 @@ import type {ContentSessionAccess} from "../provider/content-inputs.js";
 import {fetchMetadataJson, indexByteBudget} from "../provider/metadata.js";
 import type {RuntimeWebResourceV1} from "../provider/module-api.js";
 
-type File = {source: ContentSourceV1; mediaType: string; reader?: Promise<ProgressContentReader>};
+type File = {source: ContentSourceV1; mediaType: string; reader?: Promise<ProgressContentReader>;
+  imageKey?: Uint8Array; imageHeader?: Promise<void>};
 export class NativeContentFiles {
   private readonly files = new Map<string, File>();
   private readonly folded = new Map<string, string | null>();
@@ -17,7 +19,7 @@ export class NativeContentFiles {
   private closed = false;
   constructor(private readonly session: ContentSessionAccess, private readonly policy: ManagedInputPolicyV1,
     private readonly signal?: AbortSignal) {}
-  async load(resource: RuntimeWebResourceV1): Promise<void> {
+  async load(resource: RuntimeWebResourceV1, rpgMakerMv = false): Promise<void> {
     this.nativeAudio = resource.kind === "NATIVE_WEB";
     this.entryFile = resource.entryFile;
     const base = new URL(resource.indexUrl, location.href);
@@ -31,6 +33,7 @@ export class NativeContentFiles {
       this.folded.set(folded, this.folded.has(folded) ? null : path);
     }
     if (!canonicalPath(resource.entryFile) || !this.files.has(resource.entryFile)) {throw invalid();}
+    if (rpgMakerMv && this.nativeAudio) {await this.prepareMvImages();}
   }
   async request(value: unknown, progress?: ReadProgress): Promise<Record<string, unknown>> {
     if (this.closed || this.signal?.aborted) {throw new ContentIOError("ABORTED");}
@@ -38,14 +41,55 @@ export class NativeContentFiles {
     const name = this.resolve(value.path.normalize("NFC"));
     const file = name ? this.files.get(name) : undefined;
     if (!file) {return {status: 404};}
-    if (value.type === "STAT") {return {status: 200, path: name, sizeBytes: file.source.sizeBytes, mediaType: file.mediaType};}
+    const sizeBytes = file.source.sizeBytes - (file.imageKey ? 16 : 0);
+    if (value.type === "STAT") {return {status: 200, path: name, sizeBytes, mediaType: file.mediaType};}
     if (value.type !== "READ" || !integer(value.offset) || !integer(value.length, 0, 262144) ||
-      value.offset > file.source.sizeBytes || value.length > file.source.sizeBytes - value.offset) {throw invalid();}
+      value.offset > sizeBytes || value.length > sizeBytes - value.offset) {throw invalid();}
+    const bytes = await this.readContent(file, value.offset, value.length, progress);
+    return {status: 200, bytes};
+  }
+  private async readContent(file: File, offset: number, length: number, progress?: ReadProgress) {
+    const key = file.imageKey;
+    if (!key) {return this.read(file, offset, length, progress);}
+    if (length > 0) {
+      file.imageHeader ??= this.read(file, 0, 32, progress).then(bytes => validateMvImage(bytes, key));
+      await file.imageHeader;
+    }
+    return decodeMvImage(await this.read(file, offset + 16, length, progress), key, offset);
+  }
+  private async read(file: File, offset: number, length: number, progress?: ReadProgress) {
     file.reader ??= this.session.open(file.source, this.policy, this.signal);
     const reader = await file.reader;
-    const bytes = new Uint8Array(value.length);
-    await reader.readInto(value.offset, bytes, this.signal, undefined, progress);
-    return {status: 200, bytes};
+    const bytes = new Uint8Array(length);
+    await reader.readInto(offset, bytes, this.signal, undefined, progress);
+    return bytes;
+  }
+  private async prepareMvImages() {
+    const root = this.entryFile.slice(0, this.entryFile.lastIndexOf("/") + 1);
+    const imageRoot = asciiFold(root + "img/");
+    const images = [...this.files].filter(([path, file]) => asciiFold(path).startsWith(imageRoot) &&
+      /\.rpgmvp$/iu.test(path) && file.source.sizeBytes >= 32 && this.folded.get(asciiFold(path)) !== null &&
+      this.find(path.slice(0, -7) + ".png") === undefined);
+    if (!images.length) {return;}
+    const systemPath = this.find(root + "data/System.json");
+    const system = systemPath ? this.files.get(systemPath) : undefined;
+    if (!system) {return;}
+    if (system.source.sizeBytes > 8 * 1024 * 1024) {throw invalid();}
+    const bytes = new Uint8Array(system.source.sizeBytes);
+    for (let offset = 0; offset < bytes.length; offset += 262144) {
+      bytes.set(await this.read(system, offset, Math.min(262144, bytes.length - offset)), offset);
+    }
+    const key = mvImageKey(bytes);
+    if (!key) {return;}
+    // Some desktop plugins request images while their script loads, before MV
+    // initializes Decrypter from System.json. Expose a seekable PNG view while
+    // keeping transport, cache identity and stored game bytes encrypted.
+    for (const [path, file] of images) {
+      const pngPath = path.slice(0, -7) + ".png";
+      if (this.find(pngPath) !== undefined) {continue;}
+      this.files.set(pngPath, {source: file.source, mediaType: "image/png", imageKey: key});
+      this.folded.set(asciiFold(pngPath), pngPath);
+    }
   }
   /** Preload bounded plugin text; engine data and media remain demand-paged. */
   async prepareRpgPluginFiles(): Promise<Array<{path: string; data: ArrayBuffer}>> {

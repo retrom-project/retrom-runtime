@@ -60,7 +60,7 @@ export async function mountWithNativeContent(envelope: LaunchEnvelopeV1, frame: 
   };
   const abort = () => {void close();};
   try {
-    await files.load(resource);
+    await files.load(resource, envelope.runtime.targetId === "rpgmaker-mv");
     if (signal?.aborted) {throw new DOMException("Aborted", "AbortError");}
     const pluginFiles = ["rpgmaker-mv", "rpgmaker-mz"].includes(envelope.runtime.targetId)
       ? await files.prepareRpgPluginFiles() : [];

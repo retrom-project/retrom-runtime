@@ -8936,6 +8936,7 @@
             },
             "engineMode": {
               "enum": [
+                "AUTO",
                 "KIRIKIRI2",
                 "KIRIKIRI_Z"
               ],

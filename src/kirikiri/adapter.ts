@@ -8,6 +8,7 @@ import {createKirikiriCheckpointOperation, type KirikiriCheckpoint, type Kirikir
 import {KirikiriWriteOverlay, type KirikiriSaveImage} from "./write-overlay.js";
 import type { MountedRuntimeAdapter, RuntimeExitReporter } from "../internal-adapter.js";
 import type {KirikiriParameters} from "./parameters.js";
+import {resolveKirikiriEngineMode} from "./engine-mode.js";
 import {installGamepadCursor, type GamepadCursor} from "../provider/gamepad-cursor.js";
 import {captureGamepadSource} from "../provider/gamepad-filter.js";
 import {RuntimeFailureError} from "../provider/failure.js";
@@ -201,6 +202,7 @@ export async function mountKirikiri2(
     await vlfs.registerZipBlob(assets.archive, {stripPrefix: ""});
     const project = await registerKirikiriProject(vlfs, config.projectIndexUrl, document.baseURI, content, config.contentDigest,
       config.overlayRoot, config.overlayArchives, contentOptions.signal);
+    const engineMode = await resolveKirikiriEngineMode(config.engineMode, project.files, contentOptions.signal);
     const restore = restorePayload ? await decodeKirikiriCheckpoint(restorePayload) : null;
     for (const entry of restore?.entries ?? []) {
       const path = `/${entry.path}`;
@@ -272,13 +274,19 @@ export async function mountKirikiri2(
           reportFailure(error);
           throw error;
         }
-        const nativeMode = config.engineMode === "KIRIKIRI_Z" ? 1 : 0;
+        let nativeMode = engineMode === "KIRIKIRI_Z" ? 1 : 0;
         const setMode = host.Module?._krkr2_host_set_engine_mode;
-        if ((!setMode && nativeMode !== 0) || (setMode && setMode(nativeMode) !== 0)) {
+        let applied = setMode ? setMode(nativeMode) === 0 : nativeMode === 0;
+        if (!applied && config.engineMode === "AUTO" && nativeMode === 1) {
+          nativeMode = 0;
+          applied = !setMode || setMode(nativeMode) === 0;
+        }
+        if (!applied) {
           const error = new RuntimeFailureError("KIRIKIRI_ENGINE_MODE_UNSUPPORTED", "CORE");
           reportFailure(error);
           throw error;
         }
+        console.debug(`[kirikiri2] Engine mode: ${nativeMode === 1 ? "KIRIKIRI_Z" : "KIRIKIRI2"} (${config.engineMode === "AUTO" ? "automatic" : "explicit"})`);
       },
       onScriptException: detail => {
         const error = new RuntimeFailureError("KIRIKIRI_SCRIPT_EXCEPTION", "CORE", [

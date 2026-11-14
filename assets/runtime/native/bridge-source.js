@@ -8,6 +8,7 @@ export function installRpgRuntimeNativeBridge(global, inputFilter) {
 
   const PROTOCOL_VERSION = 1;
   const MAX_CONTROL_BYTES = 64 * 1024;
+  const MAX_QUEUED_REQUESTS = 8;
   const MAX_SCREENSHOT_BYTES = 10 * 1024 * 1024;
   const EDITOR_CATEGORIES = Object.freeze([
     {id: "gold", label: "金币"}, {id: "items", label: "道具"},
@@ -33,6 +34,7 @@ export function installRpgRuntimeNativeBridge(global, inputFilter) {
   let profile = null;
   let lastRequestId = 0;
   let requestPending = false;
+  const controlQueue = [];
   let frameCount = 0;
   let engineReadySent = false;
   let sceneManagerHooked = false;
@@ -707,25 +709,36 @@ export function installRpgRuntimeNativeBridge(global, inputFilter) {
   }
 
   async function receive(message) {
-    if (!ownKeys(message, ["body", "launchId", "nonce", "protocolVersion", "requestId", "type"]) ||
+    if (closed || !ownKeys(message, ["body", "launchId", "nonce", "protocolVersion", "requestId", "type"]) ||
       message.protocolVersion !== PROTOCOL_VERSION || message.launchId !== launchId || message.nonce !== nonce ||
-      !Number.isSafeInteger(message.requestId) || message.requestId !== lastRequestId + 1 ||
-      typeof message.type !== "string" || !ownKeys(message.body, Object.keys(message.body || {}).sort()) || requestPending ||
+      !Number.isSafeInteger(message.requestId) || message.requestId <= lastRequestId ||
+      typeof message.type !== "string" || !ownKeys(message.body, Object.keys(message.body || {}).sort()) ||
+      controlQueue.length >= MAX_QUEUED_REQUESTS ||
       encoder.encode(JSON.stringify(message)).byteLength > MAX_CONTROL_BYTES) {
       return;
     }
+    // A timed-out caller can send another request before the old read completes. Keep accepted
+    // controls ordered, reject replays, and allow gaps after a request could not be queued.
     lastRequestId = message.requestId;
+    controlQueue.push(message);
+    if (requestPending) return;
     requestPending = true;
     try {
-      const result = await dispatch(message);
-      const transfers = [];
-      if (result.type === "SAVE_RESULT") transfers.push(result.body.data);
-      if (result.type === "SCREENSHOT_RESULT") transfers.push(result.body.data);
-      send(message.requestId, result.type, result.body, transfers);
-    } catch (error) {
-      send(message.requestId, "ERROR", { code: error && error.message || "RPG_NATIVE_RUNTIME_FAILED" });
+      while (!closed && controlQueue.length) {
+        const current = controlQueue.shift();
+        try {
+          const result = await dispatch(current);
+          const transfers = [];
+          if (result.type === "SAVE_RESULT") transfers.push(result.body.data);
+          if (result.type === "SCREENSHOT_RESULT") transfers.push(result.body.data);
+          send(current.requestId, result.type, result.body, transfers);
+        } catch (error) {
+          send(current.requestId, "ERROR", { code: error && error.message || "RPG_NATIVE_RUNTIME_FAILED" });
+        }
+      }
     } finally {
       requestPending = false;
+      if (closed) controlQueue.length = 0;
     }
   }
 

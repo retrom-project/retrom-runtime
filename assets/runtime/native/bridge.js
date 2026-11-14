@@ -1792,7 +1792,7 @@
       ["luk", "\u5E78\u8FD0"]
     ]);
     inputFilter.onHostShortcut((shortcut) => event("HOST_SHORTCUT", { shortcut }));
-    let encoder3 = new TextEncoder(), launchId = null, nonce = null, parentOrigin = null, port = null, profile = null, lastRequestId = 0, requestPending = !1, frameCount = 0, engineReadySent = !1, sceneManagerHooked = !1, exitRequested = !1, nativeSaves = null, closed = !1, pluginFiles = null, pluginReads = /* @__PURE__ */ new Set(), inputDiagnostics = null, restoreViewport = null, editorMapCache = /* @__PURE__ */ new Map(), variableEditor = createRpgVariableEditor(
+    let encoder3 = new TextEncoder(), launchId = null, nonce = null, parentOrigin = null, port = null, profile = null, lastRequestId = 0, requestPending = !1, controlQueue = [], frameCount = 0, engineReadySent = !1, sceneManagerHooked = !1, exitRequested = !1, nativeSaves = null, closed = !1, pluginFiles = null, pluginReads = /* @__PURE__ */ new Set(), inputDiagnostics = null, restoreViewport = null, editorMapCache = /* @__PURE__ */ new Map(), variableEditor = createRpgVariableEditor(
       () => global.$gameVariables,
       (id) => Number.isSafeInteger(id) && id > 0 && id < (global.$dataSystem?.variables?.length || 0)
     );
@@ -2346,15 +2346,20 @@
       }
     }
     async function receive(message) {
-      if (!(!ownKeys(message, ["body", "launchId", "nonce", "protocolVersion", "requestId", "type"]) || message.protocolVersion !== 1 || message.launchId !== launchId || message.nonce !== nonce || !Number.isSafeInteger(message.requestId) || message.requestId !== lastRequestId + 1 || typeof message.type != "string" || !ownKeys(message.body, Object.keys(message.body || {}).sort()) || requestPending || encoder3.encode(JSON.stringify(message)).byteLength > 65536)) {
-        lastRequestId = message.requestId, requestPending = !0;
+      if (!(closed || !ownKeys(message, ["body", "launchId", "nonce", "protocolVersion", "requestId", "type"]) || message.protocolVersion !== 1 || message.launchId !== launchId || message.nonce !== nonce || !Number.isSafeInteger(message.requestId) || message.requestId <= lastRequestId || typeof message.type != "string" || !ownKeys(message.body, Object.keys(message.body || {}).sort()) || controlQueue.length >= 8 || encoder3.encode(JSON.stringify(message)).byteLength > 65536) && (lastRequestId = message.requestId, controlQueue.push(message), !requestPending)) {
+        requestPending = !0;
         try {
-          let result = await dispatch(message), transfers = [];
-          result.type === "SAVE_RESULT" && transfers.push(result.body.data), result.type === "SCREENSHOT_RESULT" && transfers.push(result.body.data), send(message.requestId, result.type, result.body, transfers);
-        } catch (error) {
-          send(message.requestId, "ERROR", { code: error && error.message || "RPG_NATIVE_RUNTIME_FAILED" });
+          for (; !closed && controlQueue.length; ) {
+            let current = controlQueue.shift();
+            try {
+              let result = await dispatch(current), transfers = [];
+              result.type === "SAVE_RESULT" && transfers.push(result.body.data), result.type === "SCREENSHOT_RESULT" && transfers.push(result.body.data), send(current.requestId, result.type, result.body, transfers);
+            } catch (error) {
+              send(current.requestId, "ERROR", { code: error && error.message || "RPG_NATIVE_RUNTIME_FAILED" });
+            }
+          }
         } finally {
-          requestPending = !1;
+          requestPending = !1, closed && (controlQueue.length = 0);
         }
       }
     }

@@ -1,5 +1,6 @@
 import {createRpgWebSaves} from "../../../src/native-web/game-saves.ts";
 import {createRpgPluginFiles} from "../../../src/native-web/plugin-files.ts";
+import {installRpgPluginTextXhr} from "../../../src/native-web/plugin-text-xhr.ts";
 import {createRpgVariableEditor, pageEditorEntries} from "../../../src/native-web/editor-variables.ts";
 
 export function installRpgRuntimeNativeBridge(global, inputFilter) {
@@ -694,6 +695,7 @@ export function installRpgRuntimeNativeBridge(global, inputFilter) {
     case "EDITOR_SELF_SWITCH_SET": return {type: "EDITOR_SELF_SWITCH_SET_RESULT", body: await editorSetSelfSwitch(message.body)};
     case "CLEANUP":
       closed = true;
+      restorePluginTextXhr();
       if (restoreViewport) restoreViewport();
       if (pluginFiles) pluginFiles.close();
       inputFilter.stop();
@@ -871,6 +873,7 @@ export function installRpgRuntimeNativeBridge(global, inputFilter) {
 
   installCanvasTextAlignCompatibility();
   installPluginModules();
+  const restorePluginTextXhr = installRpgPluginTextXhr(global, global.location.href, () => pluginFiles);
   // Install after plugins have wrapped Boot.start, before the game's window.onload runs it.
   global.addEventListener("load", function prepareEngine(loadEvent) {
     if (loadEvent.target !== global.document) return;
@@ -890,6 +893,7 @@ export function installRpgRuntimeNativeBridge(global, inputFilter) {
   }, true);
   global.addEventListener("pagehide", () => {
     closed = true;
+    restorePluginTextXhr();
     if (restoreViewport) restoreViewport();
   }, {once: true});
 

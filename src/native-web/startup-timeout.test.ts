@@ -113,3 +113,45 @@ it("immediately cancels the bootstrap handshake and releases its timers", async 
     expect(vi.getTimerCount()).toBe(0);
   } finally {frame.remove();}
 });
+
+it("keeps the bridge handshake alive during content reads and connects after they finish", async () => {
+  vi.useFakeTimers();
+  const frame = document.createElement("iframe"); document.body.append(frame);
+  const controller = new AbortController(), loading = new NativeContentActivity(), done = loading.begin();
+  vi.spyOn(NativeChannel.prototype, "connect").mockImplementation(() => {});
+  vi.spyOn(NativeChannel.prototype, "ready").mockResolvedValue({engine: "RPGMV", engineProfile: "RPGMV"});
+  vi.spyOn(NativeChannel.prototype, "startStatusLoop").mockImplementation(() => {});
+  vi.spyOn(NativeChannel.prototype, "request").mockImplementation(async type => ({type: `${type}_RESULT`, body: {},
+    launchId: "fixture", nonce: "fixture", protocolVersion: 1, requestId: 1}));
+  let failure: Error | undefined;
+  const mounted = mountNativeRpg({sessionId: "fixture", uniqueOrigin: "https://runtime.test", bridgeProfile: "RPGMV"},
+    frame, null, undefined, {loading, signal: controller.signal}).catch((error: Error) => {failure = error; return null;});
+  try {
+    await vi.advanceTimersByTimeAsync(45_000);
+    expect(failure).toBeUndefined();
+    done();
+    await vi.advanceTimersByTimeAsync(9_999);
+    window.dispatchEvent(new MessageEvent("message", {source: frame.contentWindow, origin: "https://runtime.test",
+      data: {type: "RPG_RUNTIME_NATIVE_BRIDGE_READY", protocolVersion: 1}}));
+    const adapter = await mounted;
+    expect(adapter).not.toBeNull();
+    await adapter!.exit();
+    expect(vi.getTimerCount()).toBe(0);
+  } finally {controller.abort(); await mounted; frame.remove(); vi.restoreAllMocks();}
+});
+
+it("still expires a bridge handshake after ten idle seconds", async () => {
+  vi.useFakeTimers();
+  const frame = document.createElement("iframe"); document.body.append(frame);
+  const loading = new NativeContentActivity(), done = loading.begin();
+  const mounted = mountNativeRpg({sessionId: "fixture", uniqueOrigin: "https://runtime.test", bridgeProfile: "RPGMV"},
+    frame, null, undefined, {loading});
+  const rejected = expect(mounted).rejects.toThrow("RPG_NATIVE_BOOTSTRAP_TIMEOUT");
+  try {
+    done();
+    await vi.advanceTimersByTimeAsync(10_000);
+    await rejected;
+    expect(frame.src).toBe("about:blank");
+    expect(vi.getTimerCount()).toBe(0);
+  } finally {frame.remove();}
+});

@@ -2,6 +2,30 @@ import {expect, it, vi} from "vitest";
 import {decodeRpgCheckpoint} from "../checkpoint.js";
 import {nativeGameFixture} from "../../tests/native-game-save-fixture.js";
 
+it.each(["MV", "MZ"] as const)("%s lets directory-reporting plugins format portable text before boot", async engine => {
+  const game = nativeGameFixture(engine);
+  game.read("var reportEol = require('os').EOL");
+  await game.boot();
+  game.read("var report = ['Plugins', ...require('fs').readdirSync('./js/plugins/')].join(reportEol)");
+  expect(game.read("report + reportEol + 'Ready'")).toBe("Plugins\nReady");
+  expect(game.read("typeof process")).toBe("undefined");
+  await game.request("CLEANUP");
+});
+
+it.each(["MV", "MZ"] as const)("%s lets a plugin capture fs before window load without enabling a Node process", async engine => {
+  const game = nativeGameFixture(engine);
+  expect(game.read("typeof require")).toBe("function");
+  game.read("var pluginFs = require('fs')");
+  expect(game.read("typeof process")).toBe("undefined");
+  await game.boot();
+  expect(game.read("pluginFs.readdirSync('./js/plugins/data/')")).toEqual([]);
+  expect(() => game.read("require('child_process')")).toThrow("RPG_PLUGIN_MODULE_UNSUPPORTED");
+  if (engine === "MZ") {
+    expect(() => game.read("pluginFs.writeFileSync('save/common.rpgsave', '{}')")).toThrow("RPG_PLUGIN_FILE_READ_ONLY");
+  }
+  await game.request("CLEANUP");
+});
+
 it("restores every native slot and shared plugin file before a caching plugin boots in a fresh instance", async () => {
   const first = nativeGameFixture("MV"); await first.boot();
   expect(first.read("require('fs').existsSync('save/common.rpgsave')")).toBe(false);

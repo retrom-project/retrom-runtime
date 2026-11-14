@@ -4,7 +4,8 @@ export type NativeReadyOptions = {
 };
 
 /** Content I/O bounds each read; the engine deadline covers only time without reads. */
-export function nativeReadyDeadline(options: NativeReadyOptions, fail: (error: Error) => void): () => void {
+export function nativeReadyDeadline(options: NativeReadyOptions, fail: (error: Error) => void,
+  timeout = {milliseconds: 30_000, code: "RPG_RUNTIME_TIMEOUT"}): () => void {
   let timer: ReturnType<typeof setTimeout> | undefined;
   let unsubscribe: (() => void) | undefined;
   let closed = false;
@@ -19,7 +20,7 @@ export function nativeReadyDeadline(options: NativeReadyOptions, fail: (error: E
     if (closed) {return;}
     if (error) {finish(error); return;}
     clearTimeout(timer);
-    if (!busy) {timer = setTimeout(() => finish(new Error("RPG_RUNTIME_TIMEOUT")), 30_000);}
+    if (!busy) {timer = setTimeout(() => finish(new Error(timeout.code)), timeout.milliseconds);}
   };
   if (options.signal?.aborted) {abort(); return dispose;}
   options.signal?.addEventListener("abort", abort, {once: true});

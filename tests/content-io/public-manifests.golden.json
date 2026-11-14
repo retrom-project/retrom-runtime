@@ -8616,6 +8616,70 @@
       },
       {
         "assetPaths": [
+          "assets/content-io/sync-client.mjs",
+          "assets/content-io/worker.mjs",
+          "assets/ethornell/audio-worklet.mjs",
+          "assets/ethornell/ethornell-worker.mjs",
+          "assets/ethornell/ethornell.mjs",
+          "assets/ethornell/ethornell_bg.wasm",
+          "assets/ethornell/font.ttf"
+        ],
+        "capabilities": {
+          "contentLoading": "ON_DEMAND_AND_PRELOAD",
+          "checkpoint": true,
+          "frameCounter": true,
+          "frameMode": "SAME_ORIGIN_BLANK",
+          "inputFilter": true,
+          "nativeSettings": false,
+          "pause": true,
+          "requiresThreads": true,
+          "screenshot": true,
+          "standardGamepad": true,
+          "videoModes": [
+            "original",
+            "pixel",
+            "smooth"
+          ],
+          "volume": true
+        },
+        "checkpoint": {
+          "maxBytes": 134217728,
+          "readFormats": [
+            "bgi-save-files-v1-storage-v1"
+          ],
+          "writeFormat": "bgi-save-files-v1-storage-v1",
+          "semantics": "GAME_SAVE"
+        },
+        "displayName": "BGI / Ethornell",
+        "id": "bgi",
+        "inputs": [
+          {
+            "cardinality": "ONE",
+            "kind": "FILE_TREE",
+            "optional": false,
+            "role": "game",
+            "maxFileBytes": 9007199254740991
+          }
+        ],
+        "targetOptionsSchema": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "textEncoding"
+          ],
+          "properties": {
+            "textEncoding": {
+              "type": "string",
+              "enum": [
+                "cp932",
+                "gbk"
+              ]
+            }
+          }
+        }
+      },
+      {
+        "assetPaths": [
           "assets/butterscotch/butterscotch.mjs",
           "assets/butterscotch/butterscotch.wasm",
           "assets/butterscotch/worker.mjs",
@@ -8799,7 +8863,7 @@
           "writeFormat": "gbe-pokemini-state-v1-storage-v1",
           "semantics": "INSTANT"
         },
-        "displayName": "Pok\u00e9mon Mini (GBE+)",
+        "displayName": "Pokémon Mini (GBE+)",
         "id": "gbe-pokemini",
         "inputs": [
           {
@@ -10338,7 +10402,7 @@
           "writeFormat": "samcoupe-disk-save-v1-storage-v1",
           "semantics": "GAME_SAVE"
         },
-        "displayName": "SAM Coup\u00e9 (SamCoupeWeb)",
+        "displayName": "SAM Coupé (SamCoupeWeb)",
         "id": "samcoupe",
         "inputs": [
           {

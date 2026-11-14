@@ -1,3 +1,4 @@
+import {mountBgi} from "../../bgi/adapter.js";
 import {withStartupTask} from "../../provider/startup.js";
 import {mountWithNativeContent} from "../../native-web/content-bridge.js";
 import {mountMame} from "../../mame/adapter.js";
@@ -67,6 +68,8 @@ function mountAdapter(envelope: LaunchEnvelopeV1, target: HTMLElement, input: Ta
   const {frameWindow, restorePayload, reportProgress, reportExitRequested, contentSession} = context;
   const reportFailure = failureReporter(context);
   switch (adapter.kind) {
+  case "BGI_WEB":
+    return mountBgi(parameters.bgi(envelope), target, frameWindow, restorePayload, contentOptions(context), reportExitRequested);
   case "SIGLUS_WEB":
     return mountSiglus(parameters.siglus(envelope), target, frameWindow, restorePayload, contentOptions(context), reportExitRequested);
   case "NXENGINE_WEB":

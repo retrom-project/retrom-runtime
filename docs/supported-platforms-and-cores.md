@@ -10,16 +10,16 @@ Catalog membership describes an integration, not compatibility with every game. 
 
 | Item | Count |
 | --- | --- |
-| Platforms (`platformId`) | 96 |
-| Bound cores (`coreId`) | 104 |
-| Product bindings | 111 |
-| Bound Provider Targets | 111 |
-| Declared Provider Targets | 112 |
+| Platforms (`platformId`) | 97 |
+| Bound cores (`coreId`) | 105 |
+| Product bindings | 112 |
+| Bound Provider Targets | 112 |
+| Declared Provider Targets | 113 |
 
 | Provider | Declared Targets | Bound Targets |
 | --- | --- | --- |
 | `emulatorjs` | 76 | 75 |
-| `retrom-runtime` | 36 | 36 |
+| `retrom-runtime` | 37 | 37 |
 
 A platform is a hardware system or game-engine family. A `coreId` is the host-selectable core identity. A Target is identified by `providerId + targetId` and declares the actual runtime capabilities. A binding connects a core and its platforms/content kinds to one Target. These counts differ because one core can serve several platforms or Targets: RPG Maker has separate engine Targets, while Genesis Plus GX separates cartridge and CD execution.
 
@@ -46,6 +46,7 @@ Every core listed below has a product binding for that platform. Entries are sor
 | Sammy Atomiswave (`atomiswave`) | Flycast Atomiswave (`flycast-atomiswave`) |
 | BBC Micro (`bbc`) | jsbeeb (`jsbeeb`) |
 | 步步高 RPG (`bbkrpg`) | GAM4980 (`gam4980`) |
+| BGI / Ethornell (`bgi`) | Ethornell (ethornell-rs) (`ethornell`) |
 | GameMaker (`butterscotch`) | Butterscotch (`butterscotch`) |
 | Commodore 128 (`c128`) | VICE x128 (`vice_x128`) |
 | Commodore 64 (`c64`) | VICE C64 (`vice_x64`); VICE x64sc (`vice_x64sc`) |
@@ -218,6 +219,7 @@ The Content column lists the accepted content kind and, where present, the requi
 | --- | --- | --- | --- | --- |
 | Apple2JS (`apple2js`) | Apple IIe (Apple2JS) (`apple2-apple2js`) | `apple2` | `SINGLE_FILE` | `INSTANT` |
 | jsbeeb (`jsbeeb`) | BBC Micro (jsbeeb) (`bbc-jsbeeb`) | `bbc` | `SINGLE_FILE` | `INSTANT` |
+| Ethornell (ethornell-rs) (`ethornell`) | BGI / Ethornell (`bgi`) | `bgi` | `BGI_PROJECT` | `GAME_SAVE` |
 | Butterscotch (`butterscotch`) | GameMaker (Butterscotch) (`butterscotch-gamemaker`) | `butterscotch` | `BUTTERSCOTCH_PROJECT` | `GAME_SAVE` |
 | FAKE-08 (`fake08`) | PICO-8 (FAKE-08) (`fake08`) | `pico8` | `SINGLE_FILE` | `INSTANT` |
 | Ruffle (`ruffle`) | Flash (Ruffle) (`flash-ruffle`) | `flash` | `SINGLE_FILE` | `GAME_SAVE` |

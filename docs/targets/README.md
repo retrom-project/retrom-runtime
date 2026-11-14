@@ -35,6 +35,7 @@ The [general EmulatorJS guide](emulatorjs-single-file.md) covers ordinary cartri
 | [RPG Maker](rpgmaker.md) | `rpgmaker-2000`, `rpgmaker-2003`, `rpgmaker-xp`, `rpgmaker-vx`, `rpgmaker-vx-ace`, `rpgmaker-mv`, `rpgmaker-mz` |
 | [MV desktop plugin boundary](rpgmaker-mv.md) | Additional behavior for `rpgmaker-mv` |
 | [Visual novel engines](visual-novels.md) | `onscripter-yuri`, `kirikiri2-kag`, `tyranoscript` |
+| [BGI / Ethornell](bgi.md) | `bgi` |
 | [SiglusEngine](siglus.md) | `siglus` |
 | [GameMaker / Butterscotch](gamemaker.md) | `butterscotch-gamemaker` |
 | [JavaScript computer emulators](computer-runtimes.md) | `apple2-apple2js`, `bbc-jsbeeb`, `samcoupe` |

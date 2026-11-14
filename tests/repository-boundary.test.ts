@@ -22,7 +22,7 @@ describe("independent package boundary", () => {
     const sources = JSON.parse(await readFile(join(root, "provider-sources.json"), "utf8"));
     expect(retromRuntimeProviderDefinition.providerId).toBe("retrom-runtime");
     expect(retromRuntimeProviderDefinition.targets.map((target) => target.id)).toEqual([
-      "apple2-apple2js", "bbc-jsbeeb", "butterscotch-gamemaker", "fake08", "flash-ruffle", "gbe-pokemini", "j2me", "kirikiri2-kag", "mame-apple2", "mame-apple2e", "mame-arcade", "mame-atom", "mame-coleco", "mame-pv1000", "mame-sg1000", "msx-webmsx", "np2kai-pc98", "nxengine", "onscripter-yuri", "openbor", "play-ps2", "ppsspp", "px68k", "rpgmaker-2000", "rpgmaker-2003",
+      "apple2-apple2js", "bbc-jsbeeb", "bgi", "butterscotch-gamemaker", "fake08", "flash-ruffle", "gbe-pokemini", "j2me", "kirikiri2-kag", "mame-apple2", "mame-apple2e", "mame-arcade", "mame-atom", "mame-coleco", "mame-pv1000", "mame-sg1000", "msx-webmsx", "np2kai-pc98", "nxengine", "onscripter-yuri", "openbor", "play-ps2", "ppsspp", "px68k", "rpgmaker-2000", "rpgmaker-2003",
       "rpgmaker-mv", "rpgmaker-mz", "rpgmaker-vx", "rpgmaker-vx-ace", "rpgmaker-xp", "samcoupe", "scummvm", "siglus", "tic80", "tyranoscript", "wasm4",
     ]);
     expect(sources.localAssets.map((asset: { output: string }) => asset.output).sort()).toEqual([
@@ -35,11 +35,11 @@ describe("independent package boundary", () => {
 
   it("contains one clean Provider-private adapter role without migration-era aliases", async () => {
     expect(retromRuntimeProviderDefinition.adapters.map((adapter) => adapter.id).sort()).toEqual([
-      "apple2js-web", "butterscotch-web", "easyrpg-web", "fake08-web", "gbe-pokemini-web", "j2me-minijvm-web", "jsbeeb-web", "kirikiri2-web", "mame-dylink", "mkxp-libretro-web", "native-web", "np2kai-web", "nxengine-web", "ons-yuri-web", "openbor-web",
+      "apple2js-web", "butterscotch-web", "easyrpg-web", "ethornell-web", "fake08-web", "gbe-pokemini-web", "j2me-minijvm-web", "jsbeeb-web", "kirikiri2-web", "mame-dylink", "mkxp-libretro-web", "native-web", "np2kai-web", "nxengine-web", "ons-yuri-web", "openbor-web",
       "play-web", "ppsspp-web", "px68k-web", "ruffle-web", "samcoupe-web", "scummvm-web", "siglus-web", "tic80-web", "tyranoscript-web", "wasm4-web", "webmsx-web",
     ]);
     expect(retromRuntimeProviderDefinition.adapters.map((adapter) => adapter.abi).sort()).toEqual([
-      "apple2js-web-v1", "butterscotch-native-save-v1", "easyrpg-save", "fake08-state-v1", "gbe-pokemini-host-v1", "j2me-rms", "jsbeeb-web-v1", "kirikiri-content-io-v1", "mkxp-content-io-v1",
+      "apple2js-web-v1", "butterscotch-native-save-v1", "easyrpg-save", "ethornell-host-v1", "fake08-state-v1", "gbe-pokemini-host-v1", "j2me-rms", "jsbeeb-web-v1", "kirikiri-content-io-v1", "mkxp-content-io-v1",
       "native-save", "np2kai-host-v1", "nxengine-host-v1", "ons-content-io-v1", "openbor-host-v1", "play-host-v3", "ppsspp-host-v4", "px68k-host-v1", "retrom-mame-dylink-v1", "ruffle-host-v1", "samcoupe-web-v1", "scummvm-host-v1", "siglus-host-v1", "tic80-pmem-v1", "tyranoscript-snapshot-v1", "wasm4-state-v1", "webmsx-host-v1",
     ]);
     expect((await readdir(join(root, "assets/runtime"))).sort()).toEqual(["butterscotch", "native", "tyranoscript"]);
@@ -103,7 +103,11 @@ describe("independent package boundary", () => {
     expect(sources.upstreamReleases).toContainEqual(expect.objectContaining({
       id: "apple2js", tag: "retrom-core-gee0aed25f73c-r1", adapterAbi: "apple2js-web-v1",
     }));
-    expect(sources.developmentInputs).toEqual([]);
+    expect(sources.developmentInputs.map((input: {id: string}) => input.id)).toEqual(["ethornell"]);
+    const ethornell = sources.developmentInputs[0];
+    expect(validCoreDevelopmentInput(ethornell)).toBe(true);
+    expect(() => assertScummvmCandidateMode([ethornell], false, false)).toThrow("UNPUBLISHED_CORE_INPUT");
+    expect(() => assertScummvmCandidateMode([ethornell], true, true)).toThrow("UNPUBLISHED_CORE_INPUT");
     expect(sources.upstreamReleases).toContainEqual(expect.objectContaining({
       id: "butterscotch", repository: "https://github.com/retrom-project/Butterscotch",
       upstreamCommit: "0c94bfb05e3cb4b8946a38f8085747035dd37f94", adapterAbi: "butterscotch-native-save-v1",

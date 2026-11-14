@@ -414,5 +414,9 @@
   {
     "id": "siglus",
     "displayName": "SiglusEngine (siglus_rs)"
+  },
+  {
+    "id": "ethornell",
+    "displayName": "Ethornell (ethornell-rs)"
   }
 ]

@@ -3294,5 +3294,59 @@
       "output": "runtime/tyranoscript/bridge.js"
     }
   ],
-  "developmentInputs": []
+  "developmentInputs": [
+    {
+      "id": "ethornell",
+      "repository": "https://github.com/retrom-project/ethornell-rs",
+      "upstreamCommit": "7cfc2fba8261e59c68095ab1ddc4f1f3534c27d8",
+      "adapterAbi": "ethornell-host-v1",
+      "assets": [
+        {
+          "filename": "ethornell.mjs",
+          "output": "runtime/ethornell/ethornell.mjs",
+          "maxSizeBytes": 33554432
+        },
+        {
+          "filename": "ethornell-worker.mjs",
+          "output": "runtime/ethornell/ethornell-worker.mjs",
+          "maxSizeBytes": 33554432
+        },
+        {
+          "filename": "ethornell_bg.wasm",
+          "output": "runtime/ethornell/ethornell_bg.wasm",
+          "maxSizeBytes": 134217728
+        },
+        {
+          "filename": "audio-worklet.mjs",
+          "output": "runtime/ethornell/audio-worklet.mjs",
+          "maxSizeBytes": 33554432
+        },
+        {
+          "filename": "font.ttf",
+          "output": "runtime/ethornell/font.ttf",
+          "maxSizeBytes": 33554432
+        },
+        {
+          "filename": "LICENSE-MPL-2.0",
+          "output": "licenses/ethornell/LICENSE-MPL-2.0",
+          "maxSizeBytes": 33554432
+        },
+        {
+          "filename": "FONT-OFL.txt",
+          "output": "licenses/ethornell/FONT-OFL.txt",
+          "maxSizeBytes": 33554432
+        },
+        {
+          "filename": "THIRD-PARTY-NOTICES.md",
+          "output": "licenses/ethornell/THIRD-PARTY-NOTICES.md",
+          "maxSizeBytes": 33554432
+        },
+        {
+          "filename": "ethornell-source.tar.gz",
+          "output": "licenses/ethornell/ethornell-source.tar.gz",
+          "maxSizeBytes": 134217728
+        }
+      ]
+    }
+  ]
 }

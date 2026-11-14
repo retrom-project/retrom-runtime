@@ -41,6 +41,7 @@ export function configureRuntime(input: ConfigureRequest): RuntimeConfiguration 
     : input.platformId === "scummvm" ? {scummvm: {options: scummvmOptions(input)}}
     : input.platformId === "ons" && "entryFile" in content
       ? {onscripter_yuri: {options: {scriptEncoding: onsScriptEncoding(input.files, content.entryFile, input.evidence)}}}
+    : input.platformId === "bgi" ? {ethornell: {options: {textEncoding: "cp932"}}}
     : input.platformId === "siglus" && "entryFile" in content ? {siglus: {options: {language: siglusLanguage(input.files, content.entryFile)}}}
     : content.kind === "KIRIKIRI_PROJECT" ? kirikiriPatchCore(input, content.entryFile) : undefined;
   const config = parseRuntimeConfiguration({content, ...(cores ? {cores} : {})});
@@ -64,6 +65,7 @@ function constructContent(input: ConfigureRequest): RuntimeContent {
   case "kirikiri": return {kind: "KIRIKIRI_PROJECT", entryFile: kirikiriEntry(input)};
   case "butterscotch": return {kind: "BUTTERSCOTCH_PROJECT", entryFile: choosePreferred(input, [/(?:^|\/)data\.win$/u, /(?:^|\/)runner\.js$/u, /(?:^|\/)game\.js$/u, /(?:^|\/)data\.js$/u, /(?:^|\/)index\.html$/u]).logicalKey};
   case "tyranoscript": return {kind: "TYRANOSCRIPT_PROJECT", entryFile: choose(name => /(?:^|\/)index\.html$/u.test(name)).logicalKey};
+  case "bgi": return {kind: "BGI_PROJECT", entryFile: choose(name => /(?:^|\/)system\.arc$/u.test(name)).logicalKey};
   case "siglus": return {kind: "SIGLUS_PROJECT", entryFile: choose(name => /(?:^|\/)scene\.pck$/u.test(name)).logicalKey};
   case "cavestory": return {kind: "NXENGINE_PROJECT", entryFile: choose(name => /(?:^|\/)doukutsu\.exe$/u.test(name)).logicalKey};
   case "daphne": return {kind: "DAPHNE_PROJECT", entryFile: choose(name => /\.(?:txt|framefile)$/u.test(name)).logicalKey};

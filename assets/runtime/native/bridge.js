@@ -1326,7 +1326,7 @@
 
   // src/runtime/rpg-plugin-paths.ts
   function isRpgPluginTextPath(path) {
-    return /^(?:scenario\/.+\.(?:sl|txt)|js\/plugins\/.+\.(?:talk|txt|csv|json))$/iu.test(path);
+    return /\.csv$/iu.test(path) || /^(?:scenario\/.+\.(?:sl|txt)|js\/plugins\/.+\.(?:talk|txt|json))$/iu.test(path);
   }
 
   // src/native-web/plugin-files.ts
@@ -1727,7 +1727,7 @@
       ["luk", "\u5E78\u8FD0"]
     ]);
     inputFilter.onHostShortcut((shortcut) => event("HOST_SHORTCUT", { shortcut }));
-    let encoder3 = new TextEncoder(), launchId = null, nonce = null, parentOrigin = null, port = null, profile = null, lastRequestId = 0, requestPending = !1, frameCount = 0, engineReadySent = !1, sceneManagerHooked = !1, exitRequested = !1, nativeSaves = null, closed = !1, pluginFiles = null, inputDiagnostics = null, restoreViewport = null, editorMapCache = /* @__PURE__ */ new Map(), variableEditor = createRpgVariableEditor(
+    let encoder3 = new TextEncoder(), launchId = null, nonce = null, parentOrigin = null, port = null, profile = null, lastRequestId = 0, requestPending = !1, frameCount = 0, engineReadySent = !1, sceneManagerHooked = !1, exitRequested = !1, nativeSaves = null, closed = !1, pluginFiles = null, pluginReads = /* @__PURE__ */ new Set(), inputDiagnostics = null, restoreViewport = null, editorMapCache = /* @__PURE__ */ new Map(), variableEditor = createRpgVariableEditor(
       () => global.$gameVariables,
       (id) => Number.isSafeInteger(id) && id > 0 && id < (global.$dataSystem?.variables?.length || 0)
     );
@@ -2353,16 +2353,37 @@
     }
     function installPluginModules() {
       let os = Object.freeze({ EOL: `
-` }), writes = /* @__PURE__ */ new Set(["mkdirSync", "writeFileSync", "unlinkSync"]), fs = Object.freeze(Object.fromEntries(["existsSync", "readdirSync", "readFileSync", ...writes].map((name) => [name, (...args) => {
+` }), writes = /* @__PURE__ */ new Set(["mkdirSync", "writeFileSync", "unlinkSync"]), fs = Object.freeze({ ...Object.fromEntries(["existsSync", "readdirSync", "readFileSync", ...writes].map((name) => [name, (...args) => {
         if (!pluginFiles) throw new Error("RPG_PLUGIN_FILES_NOT_READY");
         if (writes.has(name) && profile !== "RPGMV") throw new Error("RPG_PLUGIN_FILE_READ_ONLY");
         return pluginFiles.fs[name](...args);
-      }])));
+      }])), readFile: readPluginFile });
       global.require = function(name) {
         if (name === "os") return os;
         if (name !== "fs") throw new Error("RPG_PLUGIN_MODULE_UNSUPPORTED");
         return fs;
       };
+    }
+    function readPluginFile(path, options, callback) {
+      if (typeof options == "function" && (callback = options, options = void 0), typeof callback != "function") throw new TypeError("RPG_PLUGIN_CALLBACK_REQUIRED");
+      let operation = (async () => {
+        await Promise.resolve();
+        let data;
+        try {
+          let deadline = performance.now() + 3e4;
+          for (; !pluginFiles; ) {
+            if (closed) throw new Error("RPG_NATIVE_CHANNEL_CLOSED");
+            if (performance.now() >= deadline) throw new Error("RPG_NATIVE_BOOTSTRAP_TIMEOUT");
+            await new Promise((resolve) => global.setTimeout(resolve, 10));
+          }
+          data = pluginFiles.fs.readFileSync(path, options);
+        } catch (error) {
+          callback(error);
+          return;
+        }
+        callback(null, data);
+      })();
+      pluginReads.add(operation), operation.finally(() => pluginReads.delete(operation)).catch((error) => event("ERROR", { code: error.message || "RPG_PLUGIN_READ_FAILED" }));
     }
     async function waitForNativeStorage() {
       let deadline = performance.now() + 3e4;
@@ -2371,7 +2392,7 @@
         if (performance.now() >= deadline) throw new Error("RPG_NATIVE_BOOTSTRAP_TIMEOUT");
         await new Promise((resolve) => global.setTimeout(resolve, 10));
       }
-      await nativeSaves.initialize();
+      for (await nativeSaves.initialize(); pluginReads.size; ) await Promise.all([...pluginReads]);
     }
     installCanvasTextAlignCompatibility(), installPluginModules(), global.addEventListener("load", function(loadEvent) {
       if (loadEvent.target !== global.document) return;

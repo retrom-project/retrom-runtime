@@ -2,6 +2,48 @@ import {expect, it, vi} from "vitest";
 import {decodeRpgCheckpoint} from "../checkpoint.js";
 import {nativeGameFixture} from "../../tests/native-game-save-fixture.js";
 
+it.each(["MV", "MZ"] as const)("%s completes callback CSV reads requested before connection before engine boot", async engine => {
+  const game = nativeGameFixture(engine, null, {
+    pluginFiles: [{path: "csv/Menu.csv", data: new TextEncoder().encode("title\t开始游戏").buffer}],
+    beforeConnect: `var csvResult = null, callbackBeforeReturn = false, returned = false;
+      require('fs').readFile('./csv/Menu.csv', 'utf8', (error, data) => {
+        if (error) throw error;
+        callbackBeforeReturn = !returned; csvResult = data; trace.push('csv');
+      });
+      returned = true;`,
+  });
+  await game.boot();
+  expect(game.read("csvResult")).toBe("title\t开始游戏");
+  expect(game.read("callbackBeforeReturn")).toBe(false);
+  expect(game.read("trace")).toEqual(["csv", "boot"]);
+  expect(game.read("typeof process")).toBe("undefined");
+  await game.request("CLEANUP");
+});
+
+it("returns callback read errors without exposing external paths or turning failed reads into empty files", async () => {
+  const game = nativeGameFixture("MZ"); await game.boot();
+  game.read(`var readErrors = [], readReturned = false;
+    require('fs').readFile('csv/missing.csv', (error, data) => readErrors.push([error.message, data, readReturned]));
+    require('fs').readFile('../csv/private.csv', 'utf8', error => readErrors.push([error.message]));
+    readReturned = true;`);
+  await vi.waitFor(() => expect(game.read("readErrors.length")).toBe(2));
+  expect(game.read("readErrors")).toEqual([
+    ["RPG_PLUGIN_FILE_NOT_FOUND", undefined, true], ["RPG_PLUGIN_PATH_INVALID"],
+  ]);
+  await game.request("CLEANUP");
+});
+
+it("reports plugin CSV callback exceptions through the runtime error channel", async () => {
+  const game = nativeGameFixture("MZ", null, {
+    pluginFiles: [{path: "csv/Menu.csv", data: new TextEncoder().encode("invalid CSV").buffer}],
+    beforeConnect: `require('fs').readFile('csv/Menu.csv', 'utf8', () => {throw new Error('CSV_PARSE_FAILED');});`,
+  });
+  await vi.waitFor(() => expect(game.replies).toContainEqual(expect.objectContaining({
+    type: "ERROR", body: {code: "CSV_PARSE_FAILED"},
+  })));
+  await game.request("CLEANUP");
+});
+
 it.each(["MV", "MZ"] as const)("%s lets directory-reporting plugins format portable text before boot", async engine => {
   const game = nativeGameFixture(engine);
   game.read("var reportEol = require('os').EOL");

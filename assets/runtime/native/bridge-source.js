@@ -39,6 +39,7 @@ export function installRpgRuntimeNativeBridge(global, inputFilter) {
   let nativeSaves = null;
   let closed = false;
   let pluginFiles = null;
+  const pluginReads = new Set();
   let inputDiagnostics = null;
   let restoreViewport = null;
   const editorMapCache = new Map();
@@ -821,17 +822,40 @@ export function installRpgRuntimeNativeBridge(global, inputFilter) {
   function installPluginModules() {
     const os = Object.freeze({EOL: "\n"});
     const writes = new Set(["mkdirSync", "writeFileSync", "unlinkSync"]);
-    const fs = Object.freeze(Object.fromEntries(["existsSync", "readdirSync", "readFileSync", ...writes]
+    const fs = Object.freeze({...Object.fromEntries(["existsSync", "readdirSync", "readFileSync", ...writes]
       .map(name => [name, (...args) => {
         if (!pluginFiles) throw new Error("RPG_PLUGIN_FILES_NOT_READY");
         if (writes.has(name) && profile !== "RPGMV") throw new Error("RPG_PLUGIN_FILE_READ_ONLY");
         return pluginFiles.fs[name](...args);
-      }])));
+      }])), readFile: readPluginFile});
     global.require = function requirePluginModule(name) {
       if (name === "os") return os;
       if (name !== "fs") throw new Error("RPG_PLUGIN_MODULE_UNSUPPORTED");
       return fs;
     };
+  }
+
+  function readPluginFile(path, options, callback) {
+    if (typeof options === "function") { callback = options; options = undefined; }
+    if (typeof callback !== "function") throw new TypeError("RPG_PLUGIN_CALLBACK_REQUIRED");
+    const operation = (async () => {
+      await Promise.resolve();
+      let data;
+      try {
+        const deadline = performance.now() + 30000;
+        while (!pluginFiles) {
+          if (closed) throw new Error("RPG_NATIVE_CHANNEL_CLOSED");
+          if (performance.now() >= deadline) throw new Error("RPG_NATIVE_BOOTSTRAP_TIMEOUT");
+          await new Promise(resolve => global.setTimeout(resolve, 10));
+        }
+        data = pluginFiles.fs.readFileSync(path, options);
+      }
+      catch (error) { callback(error); return; }
+      callback(null, data);
+    })();
+    pluginReads.add(operation);
+    void operation.finally(() => pluginReads.delete(operation))
+      .catch(error => event("ERROR", {code: error.message || "RPG_PLUGIN_READ_FAILED"}));
   }
 
   async function waitForNativeStorage() {
@@ -842,6 +866,7 @@ export function installRpgRuntimeNativeBridge(global, inputFilter) {
       await new Promise(resolve => global.setTimeout(resolve, 10));
     }
     await nativeSaves.initialize();
+    while (pluginReads.size) await Promise.all([...pluginReads]);
   }
 
   installCanvasTextAlignCompatibility();

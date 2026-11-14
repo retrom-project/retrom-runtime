@@ -120,10 +120,12 @@ it("preloads plugin data text through Content I/O while leaving engine JSON and 
     {...entries[1], path: "js/plugins/data/1_0001_9999.talk", sizeBytes: 8},
     {...entries[1], path: "js/plugins/data/options.json", sizeBytes: 8},
     {...entries[1], path: "js/plugins/data/portrait.png", sizeBytes: 8},
+    {...entries[1], path: "csv/Menu.csv", sizeBytes: 8},
+    {...entries[1], path: "translations/nested/dialogue.csv", sizeBytes: 8},
   ]);
   expect((await content.prepareRpgPluginFiles()).map(file => file.path))
-    .toEqual(["js/plugins/data/1_0001_9999.talk", "js/plugins/data/options.json"]);
-  expect(session.open).toHaveBeenCalledTimes(2);
+    .toEqual(["js/plugins/data/1_0001_9999.talk", "js/plugins/data/options.json", "csv/Menu.csv", "translations/nested/dialogue.csv"]);
+  expect(session.open).toHaveBeenCalledTimes(4);
   await content.close();
 });
 it("rejects an oversized desktop scenario set before opening any content", async () => {

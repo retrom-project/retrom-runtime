@@ -3,9 +3,10 @@ import {webcrypto} from "node:crypto";
 import {createContext, runInContext} from "node:vm";
 import {expect, vi} from "vitest";
 import type {RpgCheckpointBundle} from "../src/checkpoint.js";
+import type {RpgPluginFile} from "../src/native-web/plugin-files.js";
 
 export function nativeGameFixture(engine: "MV" | "MZ", restored: RpgCheckpointBundle | null = null,
-  existing: {local?: Record<string, string>; forage?: Record<string, string>} = {}) {
+  existing: {local?: Record<string, string>; forage?: Record<string, string>; pluginFiles?: RpgPluginFile[]; beforeConnect?: string} = {}) {
   const listeners = new Map<string, Array<(event: unknown) => void>>();
   const replies: Array<{type: string; requestId: number; body: Record<string, unknown>}> = [];
   const port = {onmessage: null as null | ((event: {data: unknown}) => void), start() {},
@@ -48,9 +49,11 @@ export function nativeGameFixture(engine: "MV" | "MZ", restored: RpgCheckpointBu
     return read("JSON.parse(transferred, (key,value) => key === 'data' ? new Uint8Array(value).buffer : value)");
   };
   const identity = {launchId: "fixture", nonce: "nonce", protocolVersion: 1};
+  if (existing.beforeConnect) read(existing.beforeConnect);
   listeners.get("message")?.forEach(listener => listener({source: context.parent, origin: "https://host.test", ports: [port],
     stopImmediatePropagation() {}, data: {...identity, parentOrigin: "https://host.test", profile: "RPG" + engine,
-      type: "RPG_RUNTIME_NATIVE_CONNECT", saves: transfer(restored), pluginFiles: []}}));
+      type: "RPG_RUNTIME_NATIVE_CONNECT", saves: transfer(restored),
+      pluginFiles: transfer((existing.pluginFiles ?? []).map(file => ({path: file.path, data: new Uint8Array(file.data)})))}}));
   let id = 0;
   return {read, context, replies,
     async boot() {

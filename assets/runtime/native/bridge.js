@@ -1326,7 +1326,7 @@
 
   // src/runtime/rpg-plugin-paths.ts
   function isRpgPluginTextPath(path) {
-    return /^(?:scenario\/.+\.(?:sl|txt)|js\/plugins\/.+\.(?:talk|txt|csv|json))$/iu.test(path);
+    return /^data\/.+\.json$/iu.test(path) ? !/^data\/(?:Actors|Animations|Armors|Classes|CommonEvents|Enemies|Items|MapInfos|Skills|States|System|Tilesets|Troops|Weapons|Map\d+)\.json$/iu.test(path) : /\.csv$/iu.test(path) || /^(?:scenario\/.+\.(?:sl|txt)|js\/plugins\/.+\.(?:talk|txt|json))$/iu.test(path);
   }
 
   // src/native-web/plugin-files.ts
@@ -1557,6 +1557,71 @@
     }
   }
 
+  // src/native-web/plugin-text-xhr.ts
+  function installRpgPluginTextXhr(realm, href, files) {
+    if (!realm.XMLHttpRequest)
+      return () => {
+      };
+    let prototype = realm.XMLHttpRequest.prototype, { open, send, abort } = prototype, root = new URL(".", href), active = /* @__PURE__ */ new Set(), pending = /* @__PURE__ */ new WeakMap(), responses = /* @__PURE__ */ new WeakMap(), release = (xhr) => {
+      let url = pending.get(xhr);
+      url && (realm.URL.revokeObjectURL(url), active.delete(url), pending.delete(xhr));
+    };
+    function text(input) {
+      let url = new URL(input, href);
+      if (url.origin !== root.origin || url.username || url.password || !url.pathname.startsWith(root.pathname))
+        return null;
+      let path;
+      try {
+        path = decodeURIComponent(url.pathname.slice(root.pathname.length));
+      } catch {
+        return null;
+      }
+      if (!isRpgPluginTextPath(path))
+        return null;
+      let content = files();
+      if (!content)
+        throw new Error("RPG_PLUGIN_FILES_NOT_READY");
+      return content.fs.existsSync(path) ? (url.hash = "", {
+        url: url.href,
+        bytes: content.fs.readFileSync(path),
+        type: /\.json$/iu.test(path) ? "application/json" : "text/plain;charset=utf-8"
+      }) : null;
+    }
+    let wrappedOpen = function(method, url, async = !0, username, password) {
+      if (release(this), responses.has(this)) {
+        let previous = responses.get(this);
+        previous ? Object.defineProperty(this, "responseURL", previous) : Reflect.deleteProperty(this, "responseURL"), responses.delete(this);
+      }
+      let content = !async && method.toUpperCase() === "GET" ? text(url) : null;
+      if (!content)
+        return open.call(this, method, url, async, username, password);
+      let blob = realm.URL.createObjectURL(new realm.Blob([content.bytes], { type: content.type }));
+      active.add(blob), pending.set(this, blob);
+      try {
+        open.call(this, method, blob, !1, username, password), responses.set(this, Object.getOwnPropertyDescriptor(this, "responseURL")), Object.defineProperty(this, "responseURL", { configurable: !0, get: () => content.url });
+      } catch (error) {
+        throw release(this), error;
+      }
+    }, wrappedSend = function(body) {
+      try {
+        return send.call(this, body);
+      } finally {
+        release(this);
+      }
+    }, wrappedAbort = function() {
+      try {
+        return abort.call(this);
+      } finally {
+        release(this);
+      }
+    };
+    return prototype.open = wrappedOpen, prototype.send = wrappedSend, prototype.abort = wrappedAbort, () => {
+      for (let url of active)
+        realm.URL.revokeObjectURL(url);
+      active.clear(), prototype.open === wrappedOpen && (prototype.open = open), prototype.send === wrappedSend && (prototype.send = send), prototype.abort === wrappedAbort && (prototype.abort = abort);
+    };
+  }
+
   // src/native-web/editor-variables.ts
   function createRpgVariableEditor(owner, validId) {
     let paths = /* @__PURE__ */ new Map(), identities = /* @__PURE__ */ new Map();
@@ -1727,7 +1792,7 @@
       ["luk", "\u5E78\u8FD0"]
     ]);
     inputFilter.onHostShortcut((shortcut) => event("HOST_SHORTCUT", { shortcut }));
-    let encoder3 = new TextEncoder(), launchId = null, nonce = null, parentOrigin = null, port = null, profile = null, lastRequestId = 0, requestPending = !1, frameCount = 0, engineReadySent = !1, sceneManagerHooked = !1, exitRequested = !1, nativeSaves = null, closed = !1, pluginFiles = null, inputDiagnostics = null, restoreViewport = null, editorMapCache = /* @__PURE__ */ new Map(), variableEditor = createRpgVariableEditor(
+    let encoder3 = new TextEncoder(), launchId = null, nonce = null, parentOrigin = null, port = null, profile = null, lastRequestId = 0, requestPending = !1, frameCount = 0, engineReadySent = !1, sceneManagerHooked = !1, exitRequested = !1, nativeSaves = null, closed = !1, pluginFiles = null, pluginReads = /* @__PURE__ */ new Set(), inputDiagnostics = null, restoreViewport = null, editorMapCache = /* @__PURE__ */ new Map(), variableEditor = createRpgVariableEditor(
       () => global.$gameVariables,
       (id) => Number.isSafeInteger(id) && id > 0 && id < (global.$dataSystem?.variables?.length || 0)
     );
@@ -2275,7 +2340,7 @@
         case "EDITOR_SELF_SWITCH_SET":
           return { type: "EDITOR_SELF_SWITCH_SET_RESULT", body: await editorSetSelfSwitch(message.body) };
         case "CLEANUP":
-          return closed = !0, restoreViewport && restoreViewport(), pluginFiles && pluginFiles.close(), inputFilter.stop(), inputDiagnostics && inputDiagnostics.stop(), inputDiagnostics = null, { type: "CLEANUP_RESULT", body: {} };
+          return closed = !0, restorePluginTextXhr(), restoreViewport && restoreViewport(), pluginFiles && pluginFiles.close(), inputFilter.stop(), inputDiagnostics && inputDiagnostics.stop(), inputDiagnostics = null, { type: "CLEANUP_RESULT", body: {} };
         default:
           throw new Error("RPG_NATIVE_MESSAGE_INVALID");
       }
@@ -2353,16 +2418,37 @@
     }
     function installPluginModules() {
       let os = Object.freeze({ EOL: `
-` }), writes = /* @__PURE__ */ new Set(["mkdirSync", "writeFileSync", "unlinkSync"]), fs = Object.freeze(Object.fromEntries(["existsSync", "readdirSync", "readFileSync", ...writes].map((name) => [name, (...args) => {
+` }), writes = /* @__PURE__ */ new Set(["mkdirSync", "writeFileSync", "unlinkSync"]), fs = Object.freeze({ ...Object.fromEntries(["existsSync", "readdirSync", "readFileSync", ...writes].map((name) => [name, (...args) => {
         if (!pluginFiles) throw new Error("RPG_PLUGIN_FILES_NOT_READY");
         if (writes.has(name) && profile !== "RPGMV") throw new Error("RPG_PLUGIN_FILE_READ_ONLY");
         return pluginFiles.fs[name](...args);
-      }])));
+      }])), readFile: readPluginFile });
       global.require = function(name) {
         if (name === "os") return os;
         if (name !== "fs") throw new Error("RPG_PLUGIN_MODULE_UNSUPPORTED");
         return fs;
       };
+    }
+    function readPluginFile(path, options, callback) {
+      if (typeof options == "function" && (callback = options, options = void 0), typeof callback != "function") throw new TypeError("RPG_PLUGIN_CALLBACK_REQUIRED");
+      let operation = (async () => {
+        await Promise.resolve();
+        let data;
+        try {
+          let deadline = performance.now() + 3e4;
+          for (; !pluginFiles; ) {
+            if (closed) throw new Error("RPG_NATIVE_CHANNEL_CLOSED");
+            if (performance.now() >= deadline) throw new Error("RPG_NATIVE_BOOTSTRAP_TIMEOUT");
+            await new Promise((resolve) => global.setTimeout(resolve, 10));
+          }
+          data = pluginFiles.fs.readFileSync(path, options);
+        } catch (error) {
+          callback(error);
+          return;
+        }
+        callback(null, data);
+      })();
+      pluginReads.add(operation), operation.finally(() => pluginReads.delete(operation)).catch((error) => event("ERROR", { code: error.message || "RPG_PLUGIN_READ_FAILED" }));
     }
     async function waitForNativeStorage() {
       let deadline = performance.now() + 3e4;
@@ -2371,9 +2457,11 @@
         if (performance.now() >= deadline) throw new Error("RPG_NATIVE_BOOTSTRAP_TIMEOUT");
         await new Promise((resolve) => global.setTimeout(resolve, 10));
       }
-      await nativeSaves.initialize();
+      for (await nativeSaves.initialize(); pluginReads.size; ) await Promise.all([...pluginReads]);
     }
-    installCanvasTextAlignCompatibility(), installPluginModules(), global.addEventListener("load", function(loadEvent) {
+    installCanvasTextAlignCompatibility(), installPluginModules();
+    let restorePluginTextXhr = installRpgPluginTextXhr(global, global.location.href, () => pluginFiles);
+    global.addEventListener("load", function(loadEvent) {
       if (loadEvent.target !== global.document) return;
       installViewportFit();
       let prototype = global.Scene_Boot && global.Scene_Boot.prototype;
@@ -2389,7 +2477,7 @@
         }).catch((error) => event("ERROR", { code: error.message || "RPG_GAME_SAVE_IMPORT_FAILED" }));
       };
     }, !0), global.addEventListener("pagehide", () => {
-      closed = !0, restoreViewport && restoreViewport();
+      closed = !0, restorePluginTextXhr(), restoreViewport && restoreViewport();
     }, { once: !0 }), global.addEventListener("message", function(eventMessage) {
       let message = eventMessage.data;
       if (!(eventMessage.source !== global.parent || !ownKeys(message, ["launchId", "nonce", "parentOrigin", "pluginFiles", "profile", "protocolVersion", "saves", "type"]) || message.type !== "RPG_RUNTIME_NATIVE_CONNECT" || message.protocolVersion !== 1 || typeof message.launchId != "string" || typeof message.nonce != "string" || typeof message.parentOrigin != "string" || eventMessage.origin !== message.parentOrigin || message.profile !== "RPGMV" && message.profile !== "RPGMZ" || eventMessage.ports.length !== 1 || port)) {

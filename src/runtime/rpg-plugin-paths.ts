@@ -9,7 +9,10 @@ export function rpgPluginScenarioPath(entry: string, path: string): string | nul
 
 /** Small data files synchronously consumed by desktop-style MV/MZ plugins. */
 export function isRpgPluginTextPath(path: string) {
-  return /^(?:scenario\/.+\.(?:sl|txt)|js\/plugins\/.+\.(?:talk|txt|csv|json))$/iu.test(path);
+  if (/^data\/.+\.json$/iu.test(path)) {
+    return !/^data\/(?:Actors|Animations|Armors|Classes|CommonEvents|Enemies|Items|MapInfos|Skills|States|System|Tilesets|Troops|Weapons|Map\d+)\.json$/iu.test(path);
+  }
+  return /\.csv$/iu.test(path) || /^(?:scenario\/.+\.(?:sl|txt)|js\/plugins\/.+\.(?:talk|txt|json))$/iu.test(path);
 }
 
 export function rpgPluginTextPath(entry: string, path: string): string | null {

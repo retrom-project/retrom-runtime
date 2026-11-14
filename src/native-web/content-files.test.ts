@@ -102,7 +102,7 @@ it("does not resolve ambiguous codec names through another audio variant", async
 });
 
 it("prepares only bounded scenario text through Content I/O for synchronous desktop plugins", async () => {
-  const {content, session, readInto} = await fixture([...entries,
+  const {content, session, readInto} = await fixture([...entries.slice(0, 2),
     {...entries[1], path: "scenario/En/opening.sl", sizeBytes: 8},
     {...entries[1], path: "scenario/CG.txt", sizeBytes: 8},
     {...entries[1], path: "scenario/movie.ogg", sizeBytes: 8},
@@ -116,14 +116,21 @@ it("prepares only bounded scenario text through Content I/O for synchronous desk
   await content.close();
 });
 it("preloads plugin data text through Content I/O while leaving engine JSON and media demand-paged", async () => {
-  const {content, session} = await fixture([...entries,
+  const {content, session} = await fixture([...entries.slice(0, 2),
     {...entries[1], path: "js/plugins/data/1_0001_9999.talk", sizeBytes: 8},
     {...entries[1], path: "js/plugins/data/options.json", sizeBytes: 8},
     {...entries[1], path: "js/plugins/data/portrait.png", sizeBytes: 8},
+    {...entries[1], path: "csv/Menu.csv", sizeBytes: 8},
+    {...entries[1], path: "translations/nested/dialogue.csv", sizeBytes: 8},
+    {...entries[1], path: "data/en/Menu.json", sizeBytes: 8},
+    {...entries[1], path: "data/PluginSettings.json", sizeBytes: 8},
+    {...entries[1], path: "data/Map001.json", sizeBytes: 8},
+    {...entries[1], path: "data/CommonEvents.json", sizeBytes: 8},
   ]);
   expect((await content.prepareRpgPluginFiles()).map(file => file.path))
-    .toEqual(["js/plugins/data/1_0001_9999.talk", "js/plugins/data/options.json"]);
-  expect(session.open).toHaveBeenCalledTimes(2);
+    .toEqual(["js/plugins/data/1_0001_9999.talk", "js/plugins/data/options.json", "csv/Menu.csv", "translations/nested/dialogue.csv",
+      "data/en/Menu.json", "data/PluginSettings.json"]);
+  expect(session.open).toHaveBeenCalledTimes(6);
   await content.close();
 });
 it("rejects an oversized desktop scenario set before opening any content", async () => {

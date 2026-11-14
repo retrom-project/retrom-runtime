@@ -1,5 +1,6 @@
 import {createRpgWebSaves} from "../../../src/native-web/game-saves.ts";
 import {createRpgPluginFiles} from "../../../src/native-web/plugin-files.ts";
+import {installRpgPluginTextXhr} from "../../../src/native-web/plugin-text-xhr.ts";
 import {createRpgVariableEditor, pageEditorEntries} from "../../../src/native-web/editor-variables.ts";
 
 export function installRpgRuntimeNativeBridge(global, inputFilter) {
@@ -39,6 +40,7 @@ export function installRpgRuntimeNativeBridge(global, inputFilter) {
   let nativeSaves = null;
   let closed = false;
   let pluginFiles = null;
+  const pluginReads = new Set();
   let inputDiagnostics = null;
   let restoreViewport = null;
   const editorMapCache = new Map();
@@ -693,6 +695,7 @@ export function installRpgRuntimeNativeBridge(global, inputFilter) {
     case "EDITOR_SELF_SWITCH_SET": return {type: "EDITOR_SELF_SWITCH_SET_RESULT", body: await editorSetSelfSwitch(message.body)};
     case "CLEANUP":
       closed = true;
+      restorePluginTextXhr();
       if (restoreViewport) restoreViewport();
       if (pluginFiles) pluginFiles.close();
       inputFilter.stop();
@@ -821,17 +824,40 @@ export function installRpgRuntimeNativeBridge(global, inputFilter) {
   function installPluginModules() {
     const os = Object.freeze({EOL: "\n"});
     const writes = new Set(["mkdirSync", "writeFileSync", "unlinkSync"]);
-    const fs = Object.freeze(Object.fromEntries(["existsSync", "readdirSync", "readFileSync", ...writes]
+    const fs = Object.freeze({...Object.fromEntries(["existsSync", "readdirSync", "readFileSync", ...writes]
       .map(name => [name, (...args) => {
         if (!pluginFiles) throw new Error("RPG_PLUGIN_FILES_NOT_READY");
         if (writes.has(name) && profile !== "RPGMV") throw new Error("RPG_PLUGIN_FILE_READ_ONLY");
         return pluginFiles.fs[name](...args);
-      }])));
+      }])), readFile: readPluginFile});
     global.require = function requirePluginModule(name) {
       if (name === "os") return os;
       if (name !== "fs") throw new Error("RPG_PLUGIN_MODULE_UNSUPPORTED");
       return fs;
     };
+  }
+
+  function readPluginFile(path, options, callback) {
+    if (typeof options === "function") { callback = options; options = undefined; }
+    if (typeof callback !== "function") throw new TypeError("RPG_PLUGIN_CALLBACK_REQUIRED");
+    const operation = (async () => {
+      await Promise.resolve();
+      let data;
+      try {
+        const deadline = performance.now() + 30000;
+        while (!pluginFiles) {
+          if (closed) throw new Error("RPG_NATIVE_CHANNEL_CLOSED");
+          if (performance.now() >= deadline) throw new Error("RPG_NATIVE_BOOTSTRAP_TIMEOUT");
+          await new Promise(resolve => global.setTimeout(resolve, 10));
+        }
+        data = pluginFiles.fs.readFileSync(path, options);
+      }
+      catch (error) { callback(error); return; }
+      callback(null, data);
+    })();
+    pluginReads.add(operation);
+    void operation.finally(() => pluginReads.delete(operation))
+      .catch(error => event("ERROR", {code: error.message || "RPG_PLUGIN_READ_FAILED"}));
   }
 
   async function waitForNativeStorage() {
@@ -842,10 +868,12 @@ export function installRpgRuntimeNativeBridge(global, inputFilter) {
       await new Promise(resolve => global.setTimeout(resolve, 10));
     }
     await nativeSaves.initialize();
+    while (pluginReads.size) await Promise.all([...pluginReads]);
   }
 
   installCanvasTextAlignCompatibility();
   installPluginModules();
+  const restorePluginTextXhr = installRpgPluginTextXhr(global, global.location.href, () => pluginFiles);
   // Install after plugins have wrapped Boot.start, before the game's window.onload runs it.
   global.addEventListener("load", function prepareEngine(loadEvent) {
     if (loadEvent.target !== global.document) return;
@@ -865,6 +893,7 @@ export function installRpgRuntimeNativeBridge(global, inputFilter) {
   }, true);
   global.addEventListener("pagehide", () => {
     closed = true;
+    restorePluginTextXhr();
     if (restoreViewport) restoreViewport();
   }, {once: true});
 

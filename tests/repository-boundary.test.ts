@@ -99,15 +99,18 @@ describe("independent package boundary", () => {
       tag: "retrom-core-gca2600db8de4-r1",
     })]));
     const releaseIds = sources.upstreamReleases.map((release: { id: string }) => release.id).sort();
-    expect(releaseIds).toEqual(["apple2js", "butterscotch", "easyrpg", "fake08", "gbe_plus", "j2me", "jsbeeb", "kirikiri2", "mame", "mkxp", "np2kai", "nxengine", "onsyuri", "openbor", "play", "ppsspp", "px68k", "ruffle", "samcoupeweb", "scummvm", "siglus", "tic80", "tyranoscript", "wasm4", "webmsx"]);
+    expect(releaseIds).toEqual(["apple2js", "butterscotch", "easyrpg", "ethornell", "fake08", "gbe_plus", "j2me", "jsbeeb", "kirikiri2", "mame", "mkxp", "np2kai", "nxengine", "onsyuri", "openbor", "play", "ppsspp", "px68k", "ruffle", "samcoupeweb", "scummvm", "siglus", "tic80", "tyranoscript", "wasm4", "webmsx"]);
     expect(sources.upstreamReleases).toContainEqual(expect.objectContaining({
       id: "apple2js", tag: "retrom-core-gee0aed25f73c-r1", adapterAbi: "apple2js-web-v1",
     }));
-    expect(sources.developmentInputs.map((input: {id: string}) => input.id)).toEqual(["ethornell"]);
-    const ethornell = sources.developmentInputs[0];
-    expect(validCoreDevelopmentInput(ethornell)).toBe(true);
-    expect(() => assertScummvmCandidateMode([ethornell], false, false)).toThrow("UNPUBLISHED_CORE_INPUT");
-    expect(() => assertScummvmCandidateMode([ethornell], true, true)).toThrow("UNPUBLISHED_CORE_INPUT");
+    expect(sources.developmentInputs ?? []).toEqual([]);
+    const ethornell = sources.upstreamReleases.find((release: {id: string}) => release.id === "ethornell");
+    expect(ethornell).toEqual(expect.objectContaining({
+      repository: "https://github.com/retrom-project/ethornell-rs", tag: "retrom-core-g7cfc2fba8261-r1",
+      commit: "cd0906ce3c956e6c3f0825807d92d2a958543d16", adapterAbi: "ethornell-host-v1",
+      assets: expect.arrayContaining([expect.objectContaining({filename: "ethornell_bg.wasm",
+        sha256: "694b95adf45177700f6c6abecb33e33a46ebe2c571f81bffe27744958d79062b"})]),
+    }));
     expect(sources.upstreamReleases).toContainEqual(expect.objectContaining({
       id: "butterscotch", repository: "https://github.com/retrom-project/Butterscotch",
       upstreamCommit: "0c94bfb05e3cb4b8946a38f8085747035dd37f94", adapterAbi: "butterscotch-native-save-v1",

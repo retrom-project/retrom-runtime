@@ -3278,8 +3278,92 @@
           "sha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4"
         }
       ]
+    },
+    {
+      "id": "ethornell",
+      "repository": "https://github.com/retrom-project/ethornell-rs",
+      "upstreamCommit": "7cfc2fba8261e59c68095ab1ddc4f1f3534c27d8",
+      "adapterAbi": "ethornell-host-v1",
+      "tag": "retrom-core-g7cfc2fba8261-r1",
+      "commit": "cd0906ce3c956e6c3f0825807d92d2a958543d16",
+      "metadataUrl": "https://github.com/retrom-project/ethornell-rs/releases/download/retrom-core-g7cfc2fba8261-r1/rpg-runtime-release.json",
+      "assets": [
+        {
+          "filename": "ethornell.mjs",
+          "sha256": "a095009f89255e404eb1b45705d7ba37e84b3912eddeb820f2298bf92c7dc504",
+          "sizeBytes": 6424,
+          "output": "runtime/ethornell/ethornell.mjs",
+          "maxSizeBytes": 33554432,
+          "url": "https://github.com/retrom-project/ethornell-rs/releases/download/retrom-core-g7cfc2fba8261-r1/ethornell.mjs"
+        },
+        {
+          "filename": "ethornell-worker.mjs",
+          "sha256": "7701230b41e775229c8c344b3919987e7f97ce730841ca5b890a593205eef3cf",
+          "sizeBytes": 43992,
+          "output": "runtime/ethornell/ethornell-worker.mjs",
+          "maxSizeBytes": 33554432,
+          "url": "https://github.com/retrom-project/ethornell-rs/releases/download/retrom-core-g7cfc2fba8261-r1/ethornell-worker.mjs"
+        },
+        {
+          "filename": "ethornell_bg.wasm",
+          "sha256": "694b95adf45177700f6c6abecb33e33a46ebe2c571f81bffe27744958d79062b",
+          "sizeBytes": 11170128,
+          "output": "runtime/ethornell/ethornell_bg.wasm",
+          "maxSizeBytes": 134217728,
+          "url": "https://github.com/retrom-project/ethornell-rs/releases/download/retrom-core-g7cfc2fba8261-r1/ethornell_bg.wasm"
+        },
+        {
+          "filename": "audio-worklet.mjs",
+          "sha256": "fbddeac9b96851a4ab64c47e7e6aaa2a8da843b15fec6897065e125ed708e57c",
+          "sizeBytes": 1545,
+          "output": "runtime/ethornell/audio-worklet.mjs",
+          "maxSizeBytes": 33554432,
+          "url": "https://github.com/retrom-project/ethornell-rs/releases/download/retrom-core-g7cfc2fba8261-r1/audio-worklet.mjs"
+        },
+        {
+          "filename": "font.ttf",
+          "sha256": "a3041811a78c361b1de50f953c805e0244951c21c5bd412f7232ef0d899af0da",
+          "sizeBytes": 17772300,
+          "output": "runtime/ethornell/font.ttf",
+          "maxSizeBytes": 33554432,
+          "url": "https://github.com/retrom-project/ethornell-rs/releases/download/retrom-core-g7cfc2fba8261-r1/font.ttf"
+        },
+        {
+          "filename": "LICENSE-MPL-2.0",
+          "sha256": "fab3dd6bdab226f1c08630b1dd917e11fcb4ec5e1e020e2c16f83a0a13863e85",
+          "sizeBytes": 16726,
+          "output": "licenses/ethornell/LICENSE-MPL-2.0",
+          "maxSizeBytes": 33554432,
+          "url": "https://github.com/retrom-project/ethornell-rs/releases/download/retrom-core-g7cfc2fba8261-r1/LICENSE-MPL-2.0"
+        },
+        {
+          "filename": "FONT-OFL.txt",
+          "sha256": "1c05c68c34f9708415aada51f17e1b0092d2cea709bf4a94cd38114f9e73d7d9",
+          "sizeBytes": 4388,
+          "output": "licenses/ethornell/FONT-OFL.txt",
+          "maxSizeBytes": 33554432,
+          "url": "https://github.com/retrom-project/ethornell-rs/releases/download/retrom-core-g7cfc2fba8261-r1/FONT-OFL.txt"
+        },
+        {
+          "filename": "THIRD-PARTY-NOTICES.md",
+          "sha256": "f75cb057bb32aef3f85d8dc4c472a8a9b7e87acc660f2a000f76da8cc4b4be4a",
+          "sizeBytes": 381588,
+          "output": "licenses/ethornell/THIRD-PARTY-NOTICES.md",
+          "maxSizeBytes": 33554432,
+          "url": "https://github.com/retrom-project/ethornell-rs/releases/download/retrom-core-g7cfc2fba8261-r1/THIRD-PARTY-NOTICES.md"
+        },
+        {
+          "filename": "ethornell-source.tar.gz",
+          "sha256": "78636b7618bd0dfaff40ee4c18ebf937ec391af8f57bdc937924311dbcab95b4",
+          "sizeBytes": 16604592,
+          "output": "licenses/ethornell/ethornell-source.tar.gz",
+          "maxSizeBytes": 134217728,
+          "url": "https://github.com/retrom-project/ethornell-rs/releases/download/retrom-core-g7cfc2fba8261-r1/ethornell-source.tar.gz"
+        }
+      ]
     }
   ],
+  "developmentInputs": [],
   "localAssets": [
     {
       "source": "assets/runtime/native/bridge.js",
@@ -3292,61 +3376,6 @@
     {
       "source": "assets/runtime/tyranoscript/bridge.js",
       "output": "runtime/tyranoscript/bridge.js"
-    }
-  ],
-  "developmentInputs": [
-    {
-      "id": "ethornell",
-      "repository": "https://github.com/retrom-project/ethornell-rs",
-      "upstreamCommit": "7cfc2fba8261e59c68095ab1ddc4f1f3534c27d8",
-      "adapterAbi": "ethornell-host-v1",
-      "assets": [
-        {
-          "filename": "ethornell.mjs",
-          "output": "runtime/ethornell/ethornell.mjs",
-          "maxSizeBytes": 33554432
-        },
-        {
-          "filename": "ethornell-worker.mjs",
-          "output": "runtime/ethornell/ethornell-worker.mjs",
-          "maxSizeBytes": 33554432
-        },
-        {
-          "filename": "ethornell_bg.wasm",
-          "output": "runtime/ethornell/ethornell_bg.wasm",
-          "maxSizeBytes": 134217728
-        },
-        {
-          "filename": "audio-worklet.mjs",
-          "output": "runtime/ethornell/audio-worklet.mjs",
-          "maxSizeBytes": 33554432
-        },
-        {
-          "filename": "font.ttf",
-          "output": "runtime/ethornell/font.ttf",
-          "maxSizeBytes": 33554432
-        },
-        {
-          "filename": "LICENSE-MPL-2.0",
-          "output": "licenses/ethornell/LICENSE-MPL-2.0",
-          "maxSizeBytes": 33554432
-        },
-        {
-          "filename": "FONT-OFL.txt",
-          "output": "licenses/ethornell/FONT-OFL.txt",
-          "maxSizeBytes": 33554432
-        },
-        {
-          "filename": "THIRD-PARTY-NOTICES.md",
-          "output": "licenses/ethornell/THIRD-PARTY-NOTICES.md",
-          "maxSizeBytes": 33554432
-        },
-        {
-          "filename": "ethornell-source.tar.gz",
-          "output": "licenses/ethornell/ethornell-source.tar.gz",
-          "maxSizeBytes": 134217728
-        }
-      ]
     }
   ]
 }

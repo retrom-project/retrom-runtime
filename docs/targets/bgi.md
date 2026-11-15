@@ -7,6 +7,12 @@ names. Keep accompanying loose resources, fonts and executable files: the core
 can read engine configuration from them but never executes Windows programs or DLLs.
 Android APK/OBB packages are not this Target's input format.
 
+For an installation disc or an archive of its contents, run the original installer
+first and import the complete installed directory, optionally repacked as a ZIP.
+Keep the original media unchanged. Retrom does not run installers or infer an
+installed project by removing disc-check files; installation metadata and optional
+components remain part of the game's actual content requirements.
+
 ## Content and browser
 
 The Target supports `ON_DEMAND_AND_PRELOAD` through shared Content I/O Range

@@ -335,3 +335,10 @@ function mameArcade(envelope: LaunchEnvelopeV1): Extract<import("../../mame/core
     media: media?.files ?? [],
     deviceBios: external?.files ?? [], runtimeBaseUrl: envelope.runtime.runtimeBaseUrl};
 }
+
+export function bgi(envelope: LaunchEnvelopeV1): import("../../bgi/adapter.js").BgiParameters {
+  const game = resource(envelope, "game", "FILE_TREE"), textEncoding = envelope.targetOptions.textEncoding;
+  if (textEncoding !== "cp932" && textEncoding !== "gbk") {invalidRequest();}
+  return {projectIndexURL: game.indexUrl, contentDigest: game.contentDigest,
+    runtimeBaseURL: assetBase(envelope, "ethornell"), textEncoding};
+}

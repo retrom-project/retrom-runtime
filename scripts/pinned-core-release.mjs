@@ -22,7 +22,7 @@ export function validMameRelease(release) {
 }
 
 export function usesPinnedCoreAssets(id) {
-  return ["np2kai", "px68k", "tyranoscript", "openbor", "gbe_plus", "nxengine", "ppsspp", "mame", "siglus"].includes(id);
+  return ["np2kai", "px68k", "tyranoscript", "openbor", "gbe_plus", "nxengine", "ppsspp", "mame", "siglus", "ethornell"].includes(id);
 }
 export async function stagePinnedCoreIfNeeded(release, metadata, download, stage) {
   if (!usesPinnedCoreAssets(release.id)) {return false;}
@@ -36,11 +36,12 @@ export function validPinnedCoreAssets(release) {
       Number.isSafeInteger(asset.sizeBytes) && asset.sizeBytes > 0 && asset.sizeBytes <= asset.maxSizeBytes);
 }
 export async function stagePinnedCoreRelease(release, metadata, download, stage) {
+  const files = completeMetadataFiles(release, metadata);
   if (!validPinnedCoreAssets(release) || metadata?.schemaVersion !== 1 ||
     metadata.repository !== release.repository || metadata.tag !== release.tag ||
     metadata.commit !== release.commit || metadata.adapterAbi !== release.adapterAbi ||
-    !Array.isArray(metadata.files) || metadata.files.length !== release.assets.length ||
-    release.assets.some(asset => metadata.files.filter(file => file.filename === asset.filename &&
+    files.length !== release.assets.length ||
+    release.assets.some(asset => files.filter(file => file?.filename === asset.filename &&
       file.sizeBytes === asset.sizeBytes && file.sha256 === asset.sha256).length !== 1)) {
     throw new Error("PINNED_CORE_METADATA_INVALID");
   }
@@ -88,4 +89,16 @@ export async function stagePinnedCoreRelease(release, metadata, download, stage)
     const target = new URL(path, stage);
     await mkdir(new URL(".", target), {recursive: true}); await writeFile(target, bytes);
   }
+}
+
+function completeMetadataFiles(release, metadata) {
+  if (!Array.isArray(metadata?.files)) {return [];}
+  const source = metadata.sourceArchive;
+  // A separately advertised source archive joins the bundle only when explicitly pinned.
+  if (source === null || typeof source !== "object" || Array.isArray(source) ||
+    !Array.isArray(release?.assets) || !release.assets.some(asset => asset.filename === source.filename)) {return metadata.files;}
+  const matching = metadata.files.filter(file => file?.filename === source.filename);
+  if (matching.length === 0) {return [...metadata.files, source];}
+  return matching.length === 1 && matching[0].sizeBytes === source.sizeBytes &&
+    matching[0].sha256 === source.sha256 ? metadata.files : [];
 }

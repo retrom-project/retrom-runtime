@@ -33,7 +33,7 @@ export function runtimeCatalog(providerVersion?: string) {
 }
 
 export function bindingStorageLayout(binding: RuntimeBinding): "ZIP_STORE" | "FILES" {
-  const projects = ["RPG_MAKER_PROJECT", "SIGLUS_PROJECT", "TYRANOSCRIPT_PROJECT", "NXENGINE_PROJECT",
+  const projects = ["RPG_MAKER_PROJECT", "BGI_PROJECT", "SIGLUS_PROJECT", "TYRANOSCRIPT_PROJECT", "NXENGINE_PROJECT",
     "BUTTERSCOTCH_PROJECT", "KIRIKIRI_PROJECT", "ONS_PROJECT", "SCUMMVM_PROJECT"];
   return binding.contentKinds.some(kind => projects.includes(kind)) ? "ZIP_STORE" : "FILES";
 }

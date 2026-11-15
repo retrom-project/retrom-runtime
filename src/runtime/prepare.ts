@@ -180,6 +180,7 @@ function prepareContent(request: PrepareRuntimeRequest, config: RuntimeConfigura
 function prepareTargetOptions(config: RuntimeConfiguration, target: TargetDeclaration, coreId: string,
   files: readonly RuntimeContentFile[]): TargetOptionsV1 {
   let options = {...config.cores?.[coreId]?.options};
+  validateBgiEntry(config, target);
   if (target.id === "theodore" && "entryFile" in config.content) {
     options = thomsonModelOptions(options, config.content.entryFile, files);
   }
@@ -200,6 +201,13 @@ function prepareTargetOptions(config: RuntimeConfiguration, target: TargetDeclar
   }
   try {return validateTargetOptionsAgainstSchema(options, target.targetOptionsSchema);}
   catch {configurationFailure("RUNTIME_OPTIONS_INVALID", {coreId});}
+}
+
+function validateBgiEntry(config: RuntimeConfiguration, target: TargetDeclaration) {
+  if (target.id !== "bgi") {return;}
+  if (config.content.kind !== "BGI_PROJECT" || !/(?:^|\/)system\.arc$/iu.test(config.content.entryFile)) {
+    configurationFailure("RUNTIME_ENTRY_INVALID");
+  }
 }
 
 function prepareKirikiriOptions(config: RuntimeConfiguration, options: TargetOptionsV1, files: readonly RuntimeContentFile[]): TargetOptionsV1 {

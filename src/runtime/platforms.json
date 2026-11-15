@@ -382,5 +382,9 @@
   {
     "id": "siglus",
     "displayName": "SiglusEngine"
+  },
+  {
+    "id": "bgi",
+    "displayName": "BGI / Ethornell"
   }
 ]

@@ -1,3 +1,4 @@
+import {bgiAdapter, bgiTarget} from "./bgi-declaration.js";
 import {mameAdapter, mameAppleTarget, mameApple2eTarget, mameAtomTarget, mameColecoTarget,
   mamePV1000Target, mameSG1000Target, mameArcadeTarget} from "./mame-declaration.js";
 import {providerVersion} from "../../provider/version.js";
@@ -53,6 +54,7 @@ const isolatedCapabilities = capabilities(true, true, true);
 const wasm4Capabilities = capabilities(true, true, false);
 
 const adapters = [
+  bgiAdapter,
   siglusAdapter,
   mameAdapter,
   defineAdapter({id: "nxengine-web", kind: "NXENGINE_WEB", abi: "nxengine-host-v1",
@@ -129,6 +131,7 @@ const targets = [
     contentIO: {game: runtimeGamePolicy("bbc-jsbeeb"), external: eagerPolicy(1024 * 1024)},
     hostKeyboardShortcuts: ["MENU"],
   }),
+  bgiTarget,
   defineTarget({...target(
     "butterscotch-gamemaker", "GameMaker (Butterscotch)", "butterscotch-web", noOptionsSchema,
     true, "SAME_ORIGIN_BLANK", "FILE_TREE", 16 * 1024 * 1024,

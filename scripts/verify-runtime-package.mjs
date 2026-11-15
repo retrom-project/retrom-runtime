@@ -39,7 +39,7 @@ export async function verifyRuntimePackage(repositoryRoot, packageJson) {
       child.stdin.end(JSON.stringify(input)); return result;
     };
     const catalog = await run("catalog", {});
-    if (catalog.bindings.length !== 111 || catalog.platforms.length !== 96 || catalog.providers.reduce((sum, item) => sum + item.targets.length, 0) !== 112) {throw new Error("RUNTIME_PACKAGE_CATALOG_INVALID");}
+    if (catalog.bindings.length !== 112 || catalog.platforms.length !== 97 || catalog.providers.reduce((sum, item) => sum + item.targets.length, 0) !== 113) {throw new Error("RUNTIME_PACKAGE_CATALOG_INVALID");}
     const files = [{logicalKey: "game.nes", name: "game.nes", sha256: "a".repeat(64), sizeBytes: 1}];
     const config = await run("configure", {platformId: "nes", coreIds: ["fceumm"], files});
     if ((await run("normalize-content", {platformId: "nes", files})).files[0].sha256 !== files[0].sha256) {throw new Error("RUNTIME_PACKAGE_NORMALIZE_INVALID");}

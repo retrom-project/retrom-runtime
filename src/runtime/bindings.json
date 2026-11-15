@@ -1239,5 +1239,16 @@
     "contentKinds": [
       "SIGLUS_PROJECT"
     ]
+  },
+  {
+    "coreId": "ethornell",
+    "providerId": "retrom-runtime",
+    "targetId": "bgi",
+    "platformIds": [
+      "bgi"
+    ],
+    "contentKinds": [
+      "BGI_PROJECT"
+    ]
   }
 ]
